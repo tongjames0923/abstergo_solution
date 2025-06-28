@@ -1,0 +1,4 @@
+tbs:
+  holder:
+    main-context-holder-type: com.tbs.common.holder.impl.SpringManagedContextHolder
+    use-thread-local-stored-context: true
