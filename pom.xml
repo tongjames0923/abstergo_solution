@@ -11,8 +11,11 @@
     </parent>
     <packaging>pom</packaging>
     <modules>
-        <module>common</module>
+
         <module>app</module>
+        <module>swagger</module>
+        <module>web</module>
+        <module>common</module>
     </modules>
     <groupId>com.tbs</groupId>
     <artifactId>solution</artifactId>
