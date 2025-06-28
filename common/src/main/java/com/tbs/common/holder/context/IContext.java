@@ -23,6 +23,18 @@ public interface IContext extends Serializable {
     boolean isValid();
 
     /**
+     * 重建上下文，使上下文重新生效
+     *
+     * @return
+     */
+    IContext rebuildContext();
+
+    /**
+     * 外部提示该上下文可能失效
+     */
+    void markInvalid();
+
+    /**
      * 获取上下文数据
      *
      * @param key

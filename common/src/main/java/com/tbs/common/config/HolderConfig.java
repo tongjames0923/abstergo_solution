@@ -15,20 +15,34 @@ import org.springframework.context.annotation.Configuration;
 import javax.annotation.Resource;
 
 /**
+ * 上下文持有者配置类
  * @author abstergo
  */
 @Configuration
 public class HolderConfig {
 
+    /**
+     * 配置属性
+     */
     @Resource
     private HolderProperty holderProperty;
 
+    /**
+     * 默认的存储上下文
+     *
+     * @return
+     */
     @Bean
     @ConditionalOnProperty(name = "tbs.holder.use-thread-local-stored-context", havingValue = "true")
     IContext defaultLocalStoredContext() {
         return new LocalStoredContext();
     }
 
+    /**
+     * 默认的存储上下文
+     *
+     * @return
+     */
     @Bean
     @ConditionalOnProperty(name = "tbs.holder.use-thread-local-stored-context", havingValue = "true")
     IContext defaultThreadLocalContext() {

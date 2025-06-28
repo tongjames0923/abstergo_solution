@@ -9,6 +9,11 @@ public abstract class AbstractNamedContext implements IContext {
     private String contextId;
     private boolean valid = true;
 
+    /**
+     * 构造函数
+     *
+     * @param contextId 上下文ID
+     */
     public AbstractNamedContext(String contextId) {
         this.contextId = contextId;
     }
@@ -28,6 +33,15 @@ public abstract class AbstractNamedContext implements IContext {
     }
 
     /**
+     * 重建上下文
+     *
+     * @return 新的上下文
+     */
+    protected IContext rebuild() {
+        return this;
+    }
+
+    /**
      * 重置上下文ID
      */
     protected void resetContextId(String contextId) {
@@ -42,5 +56,15 @@ public abstract class AbstractNamedContext implements IContext {
     @Override
     public boolean isValid() {
         return this.valid;
+    }
+
+    @Override
+    public IContext rebuildContext() {
+        return rebuild();
+    }
+
+    @Override
+    public void markInvalid() {
+        invalidate();
     }
 }
