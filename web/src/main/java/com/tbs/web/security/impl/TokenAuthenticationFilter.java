@@ -9,15 +9,11 @@ import com.tbs.web.security.model.TokenModel;
 import com.tbs.web.security.ITokenHandler;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.uitl.AjaxUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import org.springframework.web.servlet.function.ServerResponse;
 
 import javax.annotation.Resource;
 import javax.servlet.FilterChain;
@@ -64,6 +60,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
+
         TokenModel tokenModel = null;
         UserDetails principal = null;
         try {
@@ -83,7 +80,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             writeIntoBody(response, result);
             return;
         }
-
         filterChain.doFilter(request, response);
     }
 }

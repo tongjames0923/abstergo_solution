@@ -1,44 +1,26 @@
 package com.tbs.web.config;
 
-import com.alibaba.fastjson2.JSON;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
-import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
 import com.tbs.web.security.ITokenHandler;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.impl.*;
-import com.tbs.web.security.model.TokenModel;
-import com.tbs.web.uitl.AjaxUtil;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfiguration;
-import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import javax.annotation.Resource;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
 
 /**
  * Web 配置
@@ -88,8 +70,8 @@ public class WebConfig {
     public SecurityFilterChain noAuthsecurityWebFilterChain(HttpSecurity http,
         AuthExceptionHandler authExceptionHandler) throws Exception {
         setSecurity(http);
-        http.exceptionHandling(authExceptionHandler);
-
+        http.exceptionHandling().authenticationEntryPoint(authExceptionHandler)
+            .accessDeniedHandler(authExceptionHandler);
         return http.build();
     }
 
@@ -100,7 +82,8 @@ public class WebConfig {
         throws Exception {
         setSecurity(http);
         http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        http.exceptionHandling(authExceptionHandler);
+        http.exceptionHandling().authenticationEntryPoint(authExceptionHandler)
+            .accessDeniedHandler(authExceptionHandler);
         return http.build();
     }
 
