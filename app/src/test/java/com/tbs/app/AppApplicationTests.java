@@ -1,6 +1,7 @@
 package com.tbs.app;
 
-import com.tbs.common.util.HolderUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.UuidUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -9,9 +10,10 @@ class AppApplicationTests {
 
     @Test
     void contextLoads() {
-        HolderUtil.put(HolderUtil.getDefaultLocalStoredContext(), "joke", "test");
-        System.out.println(HolderUtil.get(HolderUtil.getDefaultLocalStoredContext(), "joke"));
-
+        for (int i = 0; i < 10; i++) {
+            System.out.println(UuidUtil.getInstance().getUuidString());
+        }
+        throw new FormattedRuntimeException(new UnsupportedOperationException("not support"), "");
     }
 
 }
