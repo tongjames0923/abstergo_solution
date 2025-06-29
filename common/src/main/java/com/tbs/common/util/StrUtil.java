@@ -70,4 +70,22 @@ public class StrUtil extends cn.hutool.core.util.StrUtil {
     public static String format(String template, Object... params) {
         return MessageFormatter.arrayFormat(template, params).getMessage();
     }
+
+    /**
+     * 将字节数组转换为十六进制字符串。
+     *
+     * @param bytes 字节数组
+     * @return 十六进制字符串
+     */
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder(2 * bytes.length);
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
+    }
 }

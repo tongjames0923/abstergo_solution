@@ -8,7 +8,29 @@ import com.tbs.common.util.StrUtil;
  * @author abstergo
  */
 public class FormattedRuntimeException extends RuntimeException {
+
+    private static <T extends Throwable> String causeByExceptionMessage(T cause, String message, Object... params) {
+        StringBuilder sb = new StringBuilder();
+        if (cause != null) {
+            sb.append(StrUtil.format("异常类型:{},异常信息:{}.", cause.getClass().getName(), cause.getMessage()));
+        }
+        if (StrUtil.isNotEmpty(message)) {
+            sb.append(StrUtil.format(" 更多信息:{} .", StrUtil.format(message, params)));
+        }
+        return sb.toString();
+    }
+
+    /**
+     * 带格式的运行时异常
+     */
     public FormattedRuntimeException(String message, Object... params) {
         super(StrUtil.format(message, params));
+    }
+
+    /**
+     * 带格式的运行时异常
+     */
+    public <T extends Throwable> FormattedRuntimeException(T cause, String message, Object... params) {
+        super(causeByExceptionMessage(cause, message, params));
     }
 }
