@@ -16,6 +16,7 @@ import javax.annotation.Resource;
 
 /**
  * 上下文持有者配置类
+ *
  * @author abstergo
  */
 @Configuration
@@ -33,7 +34,8 @@ public class HolderConfig {
      * @return
      */
     @Bean
-    @ConditionalOnProperty(name = "tbs.holder.use-thread-local-stored-context", havingValue = "true")
+    @ConditionalOnProperty(name = "tbs.holder.use-thread-local-stored-context", havingValue = "true",
+        matchIfMissing = true)
     IContext defaultLocalStoredContext() {
         return new LocalStoredContext();
     }
