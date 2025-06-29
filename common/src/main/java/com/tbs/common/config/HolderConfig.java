@@ -6,7 +6,7 @@ import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.holder.context.impl.LocalStoredContext;
 import com.tbs.common.holder.context.impl.ThreadLocalStoredContext;
-import com.tbs.common.property.HolderProperty;
+import com.tbs.common.config.property.HolderProperty;
 import com.tbs.common.util.SpringUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

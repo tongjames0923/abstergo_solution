@@ -1,4 +1,4 @@
-package com.tbs.common.property;
+package com.tbs.common.config.property;
 
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.impl.ImportedContextHolder;

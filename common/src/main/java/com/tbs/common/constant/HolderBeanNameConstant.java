@@ -6,5 +6,8 @@ package com.tbs.common.constant;
  * @author abstergo
  */
 public class HolderBeanNameConstant {
+    /**
+     * 主上下文持有器Bean名称
+     */
     public static final String MAIN_CONTEXT_HOLDER="mainContextHolder";
 }
