@@ -1,11 +1,16 @@
 package com.tbs.web.config.property;
 
+import com.tbs.web.result.IAjaxBuilderProvider;
+import com.tbs.web.result.impl.SimpleBuilderProvider;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * @author abstergo
+ */
 @Component
 @ConfigurationProperties(prefix = "tbs.web")
 @Data
@@ -60,5 +65,5 @@ public class WebProperty {
     /**
      * 返回结果构建器
      */
-    private String resultBuilderProvier = DEFAULT_RESULT_BUILDER_PROVIDER;
+    private Class<? extends IAjaxBuilderProvider> resultBuilderProvier = SimpleBuilderProvider.class;
 }

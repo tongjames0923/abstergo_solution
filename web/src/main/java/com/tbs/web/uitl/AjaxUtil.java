@@ -14,11 +14,16 @@ import javax.annotation.Resource;
  */
 @Component
 public class AjaxUtil {
-    // 注入Ajax构建器提供者，用于获取构建Ajax结果的对象
+
+    /**
+     * IAjaxBuilderProvider实例，用于创建AjaxResult对象
+     */
     @Resource
     private IAjaxBuilderProvider ajaxBuilderProvider;
 
-    // 静态实例，用于实现单例模式
+    /**
+     * AjaxUtil实例，用于单例模式
+     */
     private static AjaxUtil ajaxUtil;
 
     /**

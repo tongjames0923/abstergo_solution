@@ -8,6 +8,9 @@ import com.tbs.common.exception.FormattedRuntimeException;
  * @author tbs
  */
 public class InvalidTokenException extends FormattedRuntimeException {
+    /**
+     * 构造方法
+     */
     public InvalidTokenException(String message, Object... params) {
         super(message, params);
     }
