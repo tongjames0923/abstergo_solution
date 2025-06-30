@@ -5,10 +5,8 @@ import com.tbs.common.util.StrUtil;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.model.TokenModel;
 import com.tbs.web.uitl.AjaxUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -25,6 +23,7 @@ import java.io.PrintWriter;
  * 认证异常处理
  * @author tongj
  */
+@Slf4j
 public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
     private void writeIntoBody(HttpServletResponse response, AjaxResult custom) throws IOException {
@@ -37,13 +36,12 @@ public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDen
         writer = httpResponse.getWriter();
         writer.print(jsonResponse);
         writer.flush();
-        writer.close();
     }
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
         AuthenticationException authException) throws IOException, ServletException {
-
+        log.error("认证异常", authException);
         writeIntoBody(response, AjaxUtil.getInstance()
             .custom(AjaxResult.DEFAULT_UNAUTHORIZED_CODE, authException.getLocalizedMessage(), authException));
     }
@@ -51,6 +49,7 @@ public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDen
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
         AccessDeniedException accessDeniedException) throws IOException, ServletException {
+        log.error("权限异常", accessDeniedException);
         TokenModel token = null;
         UserDetails principal = null;
         if (SecurityContextHolder.getContext().getAuthentication().getCredentials() != null) {

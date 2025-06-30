@@ -1,10 +1,10 @@
 package com.tbs.web.config.property;
 
 import com.tbs.web.enums.TokenSource;
-import com.tbs.web.security.ITokenHandler;
 import com.tbs.web.security.ITokenPicker;
+import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.impl.DefaultTokenPicker;
-import com.tbs.web.security.impl.NoImplTokenHandler;
+import com.tbs.web.security.impl.NotImplUserAuthService;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -39,9 +39,5 @@ public class WebAuthProperty {
      */
     private Class<? extends ITokenPicker> tokenPickerImpl = DefaultTokenPicker.class;
 
-    /**
-     * token处理器实现类,默认是无实现的，即不处理token，需要自定义后才能使用
-     */
-    private Class<? extends ITokenHandler> tokenHandlerImpl = NoImplTokenHandler.class;
-
+    private Class<? extends IUserAuthService> userAuthServiceImpl = NotImplUserAuthService.class;
 }

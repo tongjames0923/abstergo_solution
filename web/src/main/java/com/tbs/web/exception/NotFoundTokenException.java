@@ -1,15 +1,19 @@
 package com.tbs.web.exception;
 
-import com.tbs.common.exception.FormattedRuntimeException;
+import org.springframework.security.core.AuthenticationException;
 
 /**
  * 找不到Token异常
  *
  * @author tongj
  */
-public class NotFoundTokenException extends FormattedRuntimeException {
+public class NotFoundTokenException extends AuthenticationException {
 
-    public NotFoundTokenException(String message, Object... params) {
-        super(message, params);
+    public NotFoundTokenException(String msg) {
+        super(msg);
+    }
+
+    public NotFoundTokenException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 }

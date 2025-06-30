@@ -5,12 +5,14 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.web.security.model.TokenModel;
-import com.tbs.web.security.ITokenHandler;
 import com.tbs.web.security.ITokenPicker;
+import com.tbs.web.security.model.TokenModel;
 import com.tbs.web.uitl.AjaxUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -28,6 +30,7 @@ import java.io.PrintWriter;
  *
  * @author tongj
  */
+@Slf4j
 @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
@@ -35,9 +38,8 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Resource
     private ITokenPicker tokenPicker;
 
-    @Lazy
     @Resource
-    private ITokenHandler tokenHandler;
+    private AuthenticationManager manager;
 
     private void writeIntoBody(HttpServletResponse response, AjaxResult ajaxResult) {
         HttpServletResponse httpResponse = (HttpServletResponse)response;
@@ -66,20 +68,22 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         try {
             HttpServletRequest serverRequest = request;
             tokenModel = tokenPicker.pick(serverRequest);
-            if (tokenModel != null) {
-                principal = tokenHandler.handle(tokenModel);
-                SecurityContextHolder.getContext()
-                    .setAuthentication(TokenAuthentication.createSuccess(principal, tokenModel));
+            if (tokenModel == null) {
+                throw new NotFoundTokenException("未找到令牌");
             }
-        } catch (NotFoundTokenException e) {
-            SecurityContextHolder.getContext().setAuthentication(TokenAuthentication.createFail(principal, tokenModel));
-        } catch (InvalidTokenException e) {
-            SecurityContextHolder.getContext().setAuthentication(TokenAuthentication.createFail(principal, tokenModel));
+            auth(manager.authenticate(TokenAuthentication.create(tokenModel)));
+
+        } catch (NotFoundTokenException | InvalidTokenException e) {
+            auth(TokenAuthentication.badTokenCreate(e.getLocalizedMessage()));
         } catch (Exception e) {
             AjaxResult result = AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE, e.getMessage(), null);
             writeIntoBody(response, result);
             return;
         }
         filterChain.doFilter(request, response);
+    }
+
+    private void auth(Authentication a) {
+        SecurityContextHolder.getContext().setAuthentication(a);
     }
 }
