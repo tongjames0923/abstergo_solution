@@ -3,12 +3,12 @@ tbs:
     main-context-holder-type: com.tbs.common.holder.impl.SpringManagedContextHolder
     use-thread-local-stored-context: true
   web:
-    enable-anonymous: false
     permit-all-paths:
       - /public/**
     secured-paths:
       - /private/**
     auth:
       enable: true
+      user-auth-service-impl: com.tbs.app.config.UserAuthServiceImpl
   swagger:
     base-package: com.tbs.app.controller
