@@ -46,8 +46,10 @@ public class SpringUtil extends cn.hutool.extra.spring.SpringUtil {
             return c.getConstructor(null).newInstance();
         } catch (NoSuchMethodException e) {
             throw new FormattedRuntimeException(e, "无参构造函数不存在");
-        } catch (InvocationTargetException | InstantiationException | IllegalAccessException e) {
+        } catch (InstantiationException | IllegalAccessException e) {
             throw new FormattedRuntimeException(e, "构建bean失败");
+        } catch (InvocationTargetException e) {
+            throw new FormattedRuntimeException(e.getTargetException(), "构建bean失败");
         }
     }
 
