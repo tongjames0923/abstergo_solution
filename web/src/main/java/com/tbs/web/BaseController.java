@@ -1,6 +1,7 @@
 package com.tbs.web;
 
 import com.tbs.web.security.model.TokenModel;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -16,7 +17,7 @@ public class BaseController {
      * @return
      */
     public TokenModel getCurrentTokenModel() {
-        return (TokenModel)SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        return (TokenModel)getAuthentication().getCredentials();
     }
 
     /**
@@ -25,7 +26,7 @@ public class BaseController {
      * @return
      */
     public UserDetails getCurrentUser() {
-        return (UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        return (UserDetails)getAuthentication().getPrincipal();
     }
 
     /**
@@ -40,4 +41,12 @@ public class BaseController {
         return SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
     }
 
+    /**
+     * 获取当前用户的认证信息
+     *
+     * @return
+     */
+    public Authentication getAuthentication() {
+        return SecurityContextHolder.getContext().getAuthentication();
+    }
 }
