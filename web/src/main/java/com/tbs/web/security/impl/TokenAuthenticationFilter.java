@@ -69,12 +69,12 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
             HttpServletRequest serverRequest = request;
             tokenModel = tokenPicker.pick(serverRequest);
             if (tokenModel == null) {
-                throw new NotFoundTokenException("未找到令牌");
+                throw new NotFoundTokenException("未找到令牌.");
             }
             auth(manager.authenticate(TokenAuthentication.create(tokenModel)));
 
         } catch (NotFoundTokenException | InvalidTokenException e) {
-            auth(TokenAuthentication.badTokenCreate(e.getLocalizedMessage()));
+            auth(TokenAuthentication.badTokenCreate(e, ""));
         } catch (Exception e) {
             AjaxResult result = AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE, e.getMessage(), null);
             writeIntoBody(response, result);
