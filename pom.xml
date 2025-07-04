@@ -15,6 +15,7 @@
         <module>app</module>
         <module>swagger</module>
         <module>web</module>
+        <module>async</module>
         <module>common</module>
     </modules>
     <groupId>com.tbs</groupId>
