@@ -3,6 +3,8 @@ package com.tbs.web.security.impl;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson2.JSON;
+import com.tbs.common.ExceptionUtil;
+import com.tbs.common.util.AssertUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.exception.NotFoundTokenException;
@@ -57,41 +59,33 @@ public class DefaultTokenPicker implements ITokenPicker {
 
     @Override
     public TokenModel pick(HttpServletRequest request) throws NotFoundTokenException {
-        String token, sourceField, sourceValue;
+        String token = "", sourceField, sourceValue = "";
         sourceField = webAuthProperty.getTokenFiledName();
         switch (webAuthProperty.getTokenSource()) {
             case BODY:
                 String body = getBody(request);
-                if (StrUtil.isEmpty(body)) {
-                    throw new NotFoundTokenException("请求体空,未找到Token");
-                }
+                AssertUtil.hasText(body, "请求体空,未找到Token");
                 Map<String, Object> map = JSON.parseObject(body, Map.class);
                 token = map.get(webAuthProperty.getTokenFiledName()).toString();
                 sourceValue = body;
                 break;
             case COOKIE:
                 sourceValue = getFromCookie(request, webAuthProperty.getTokenFiledName());
-                if (StrUtil.isEmpty(sourceValue)) {
-                    throw new NotFoundTokenException("未找到Token");
-                }
+                AssertUtil.hasText(sourceValue, "未找到Token");
                 token = sourceValue;
                 break;
             case HEADER:
                 sourceValue = request.getHeader(webAuthProperty.getTokenFiledName());
-                if (StrUtil.isEmpty(sourceValue)) {
-                    throw new NotFoundTokenException("未找到Token");
-                }
+                AssertUtil.hasText(sourceValue, "未找到Token");
                 token = sourceValue;
                 break;
             case PARAM:
                 sourceValue = getFromParam(request, webAuthProperty.getTokenFiledName());
-                if (StrUtil.isEmpty(sourceValue)) {
-                    throw new NotFoundTokenException("未找到Token");
-                }
+                AssertUtil.hasText(sourceValue, "未找到Token");
                 token = sourceValue;
                 break;
             default:
-                throw new NotFoundTokenException("未找到Token");
+                AssertUtil.throwError(() -> new NotFoundTokenException("未找到Token"));
         }
         Date createDate = new Date();
         return TokenModel.create(token, webAuthProperty.getTokenSource(), sourceField, sourceValue,

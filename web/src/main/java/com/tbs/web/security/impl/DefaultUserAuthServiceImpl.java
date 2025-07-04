@@ -1,5 +1,6 @@
 package com.tbs.web.security.impl;
 
+import com.tbs.common.util.AssertUtil;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.web.exception.SimpleAuthException;
@@ -29,10 +30,8 @@ public class DefaultUserAuthServiceImpl implements UserDetailsService, Authentic
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
         TokenAuthentication tokenAuthentication = (TokenAuthentication)authentication;
-        if (!tokenAuthentication.hasToken()) {
-            throw new SimpleAuthException(
-                StrUtil.isEmpty(tokenAuthentication.getMessage()) ? "未找到Token" : tokenAuthentication.getMessage());
-        }
+        AssertUtil.isTrue(!tokenAuthentication.hasToken(), () -> new SimpleAuthException(
+            StrUtil.isEmpty(tokenAuthentication.getMessage()) ? "未找到Token" : tokenAuthentication.getMessage()));
         userAuthService.authToken(tokenAuthentication.getCurrentTokenModel());
         UserDetails principal = userAuthService.loadUserInfoByToken(tokenAuthentication.getCurrentTokenModel());
         return TokenAuthentication.createFinal(tokenAuthentication.getCurrentTokenModel(), principal);

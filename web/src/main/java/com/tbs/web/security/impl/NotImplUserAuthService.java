@@ -1,6 +1,7 @@
 package com.tbs.web.security.impl;
 
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.AssertUtil;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.model.TokenModel;
 import org.springframework.security.core.AuthenticationException;
@@ -14,7 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 public class NotImplUserAuthService implements IUserAuthService {
 
     public NotImplUserAuthService() {
-        throw new FormattedRuntimeException("未实现用户登陆验证服务");
+        AssertUtil.throwError(() -> new FormattedRuntimeException("未实现用户登陆验证服务"));
     }
 
     @Override

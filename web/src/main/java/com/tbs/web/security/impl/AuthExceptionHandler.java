@@ -20,6 +20,7 @@ import java.io.PrintWriter;
 
 /**
  * 认证异常处理
+ *
  * @author tongj
  */
 @Slf4j
@@ -60,7 +61,7 @@ public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDen
         }
         TokenAuthentication tokenAuthentication = (TokenAuthentication)authentication;
         AjaxResult result = AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_FORBIDDEN_CODE,
-            StrUtil.isEmpty(tokenAuthentication.getMessage()) ? "权限异常" : tokenAuthentication.getMessage(), null);
+            StrUtil.isEmpty(tokenAuthentication.getMessage()) ? "无权限访问" : tokenAuthentication.getMessage(), null);
         writeIntoBody(response, result);
 
         return;

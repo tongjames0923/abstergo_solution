@@ -1,7 +1,11 @@
 package com.tbs.web.security.impl;
 
 import com.alibaba.fastjson2.JSON;
+import com.tbs.common.ExceptionUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.AssertUtil;
+import com.tbs.common.util.SpringUtil;
+import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.result.AjaxResult;
@@ -15,8 +19,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.web.util.matcher.AndRequestMatcher;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+import org.springframework.util.AntPathMatcher;
+import org.springframework.util.PathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -24,6 +34,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 令牌过滤器
@@ -41,6 +53,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     @Resource
     private AuthenticationManager manager;
 
+    RequestMatcher matcher;
+
+    @PostConstruct
+    void init() {
+        WebProperty property = SpringUtil.getBean(WebProperty.class);
+        List<RequestMatcher> matchers = new ArrayList<>(property.getSecuredPaths().size());
+        property.getSecuredPaths().stream().forEach(path -> matchers.add(new AntPathRequestMatcher(path)));
+        matcher = new AndRequestMatcher(matchers);
+    }
+
     private void writeIntoBody(HttpServletResponse response, AjaxResult ajaxResult) {
         HttpServletResponse httpResponse = (HttpServletResponse)response;
         httpResponse.setCharacterEncoding("UTF-8");
@@ -52,11 +74,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         try {
             writer = httpResponse.getWriter();
         } catch (IOException e) {
-            throw new FormattedRuntimeException(e, "写入Body异常");
+            AssertUtil.throwError(() -> ExceptionUtil.newException(e));
         }
         writer.print(jsonResponse);
         writer.flush();
         writer.close();
+    }
+
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
+        return !matcher.matches(request);
     }
 
     @Override
@@ -68,9 +95,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         try {
             HttpServletRequest serverRequest = request;
             tokenModel = tokenPicker.pick(serverRequest);
-            if (tokenModel == null) {
-                throw new NotFoundTokenException("未找到令牌.");
-            }
+            AssertUtil.notNull(tokenModel, () -> new NotFoundTokenException("未找到令牌."));
             auth(manager.authenticate(TokenAuthentication.create(tokenModel)));
 
         } catch (NotFoundTokenException | InvalidTokenException e) {
