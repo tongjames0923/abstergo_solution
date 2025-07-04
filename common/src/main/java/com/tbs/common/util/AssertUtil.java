@@ -1,22 +1,32 @@
 package com.tbs.common.util;
 
 import cn.hutool.core.util.ArrayUtil;
+import com.tbs.common.IErrorThrowEvent;
 import com.tbs.common.exception.FormattedRuntimeException;
+import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * 断言工具类
  *
  * @author tbs
  */
+
+@Component
 public class AssertUtil {
 
     /**
@@ -61,13 +71,29 @@ public class AssertUtil {
         }
     }
 
+    @Getter
+    private static List<IErrorThrowEvent> errorThrowEvents = new CopyOnWriteArrayList<>();
+
+    @Resource
+    private Map<String, IErrorThrowEvent> ets;
+
+    @PostConstruct
+    void init() {
+        errorThrowEvents = ets.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList());
+    }
+
     /**
      * 抛出异常
      *
      * @param exceptionSupplier
      */
     public static <T extends RuntimeException> void throwError(Supplier<T> exceptionSupplier) {
-        throw exceptionSupplier.get();
+
+        var e = exceptionSupplier.get();
+        if (errorThrowEvents.stream().anyMatch(event -> event.handle(e))) {
+            return;
+        }
+        throw e;
     }
 
     /**
