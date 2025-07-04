@@ -1,5 +1,6 @@
 package com.tbs.common.config;
 
+import com.tbs.common.ExceptionUtil;
 import com.tbs.common.constant.HolderBeanNameConstant;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.IContextHolder;
@@ -7,6 +8,7 @@ import com.tbs.common.holder.context.IContext;
 import com.tbs.common.holder.context.impl.LocalStoredContext;
 import com.tbs.common.holder.context.impl.ThreadLocalStoredContext;
 import com.tbs.common.config.property.HolderProperty;
+import com.tbs.common.util.AssertUtil;
 import com.tbs.common.util.SpringUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -59,14 +61,13 @@ public class HolderConfig {
     @Bean(name = HolderBeanNameConstant.MAIN_CONTEXT_HOLDER)
     public IContextHolder getMainContextHolder() {
         return SpringUtil.buildBeanFromProperties(null, holderProperty.getMainContextHolderType(), (clazz) -> {
-            if (clazz == null) {
-                throw new FormattedRuntimeException("HolderProperty.mainContextHolderType is null");
-            }
+            AssertUtil.notNull(clazz, () -> ExceptionUtil.newException("构造类型不能为空"));
             try {
                 return clazz.getConstructor().newInstance();
             } catch (Exception e) {
-                throw new FormattedRuntimeException("HolderProperty.mainContextHolderType  Error to build bean");
+                AssertUtil.throwError(() -> ExceptionUtil.newException(e, "主要上下文环境持有器构建失败"));
             }
+            return null;
         });
     }
 

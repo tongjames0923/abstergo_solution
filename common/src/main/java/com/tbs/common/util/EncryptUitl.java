@@ -1,6 +1,7 @@
 package com.tbs.common.util;
 
 import cn.hutool.core.lang.UUID;
+import com.tbs.common.ExceptionUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 
 import java.security.MessageDigest;
@@ -32,7 +33,7 @@ public class EncryptUitl {
         try {
             digest = MessageDigest.getInstance(instance);
         } catch (NoSuchAlgorithmException e) {
-            throw new FormattedRuntimeException(e, "");
+            AssertUtil.throwError(() -> ExceptionUtil.newException(e, "获取加密实例异常"));
         }
         return digest.digest(hash);
     }

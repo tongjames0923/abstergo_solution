@@ -1,4 +1,4 @@
-package com.tbs.common;
+package com.tbs.common.function;
 
 import java.io.Serializable;
 import java.util.function.Consumer;

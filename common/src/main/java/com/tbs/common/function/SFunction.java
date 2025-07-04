@@ -1,14 +1,14 @@
-package com.tbs.common;
+package com.tbs.common.function;
 
 import java.io.Serializable;
 import java.util.function.Function;
 
 /**
- * 函数式接口
+ * 序列化的Function
  *
- * @author tongj
  * @param <T>
  * @param <P>
+ * @author tongj
  */
 @FunctionalInterface
 public interface SFunction<T, P> extends Function<T, P>, Serializable {

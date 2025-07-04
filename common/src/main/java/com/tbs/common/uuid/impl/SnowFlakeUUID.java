@@ -1,5 +1,6 @@
 package com.tbs.common.uuid.impl;
 
+import com.tbs.common.util.AssertUtil;
 import com.tbs.common.uuid.IUuidGenerator;
 
 import java.nio.charset.StandardCharsets;
@@ -60,14 +61,10 @@ public class SnowFlakeUUID implements IUuidGenerator {
      * @param datacenterId 数据中心ID (0~31) 此方法是判断传入的机房号和机器号是否超过了最大值，即31，或者小于0
      */
     public SnowFlakeUUID(long workerId, long datacenterId) {
-        if (workerId > maxWorkerId || workerId < 0) {
-            throw new IllegalArgumentException(
-                String.format("worker Id can t be greater than %d or less than 0", maxWorkerId));
-        }
-        if (datacenterId > maxDatacenterId || datacenterId < 0) {
-            throw new IllegalArgumentException(
-                String.format("datacenter Id can t be greater than %d or less than 0", maxDatacenterId));
-        }
+        AssertUtil.isTrue(workerId <= maxWorkerId && workerId >= 0, "worker Id can t be greater than %d or less than 0",
+            maxWorkerId);
+        AssertUtil.isTrue(datacenterId <= maxDatacenterId && datacenterId >= 0,
+            "datacenter Id can t be greater than %d or less than 0", maxDatacenterId);
         this.workerId = workerId;
         this.datacenterId = datacenterId;
     }
@@ -87,11 +84,8 @@ public class SnowFlakeUUID implements IUuidGenerator {
         long timestamp = timeGen();
 
         //如果当前时间小于上一次ID生成的时间戳，说明系统时钟回退过这个时候应当抛出异常
-        if (timestamp < lastTimestamp) {
-            throw new RuntimeException(
-                String.format("Clock moved backwards.Refusing to generate id for %d milliseconds",
-                    lastTimestamp - timestamp));
-        }
+        AssertUtil.isTrue(timestamp > lastTimestamp,
+            "Clock moved backwards.  Refusing to generate id for {} milliseconds", timestamp - lastTimestamp);
 
         //如果是同一时间生成的，则进行毫秒内序列
         if (lastTimestamp == timestamp) {

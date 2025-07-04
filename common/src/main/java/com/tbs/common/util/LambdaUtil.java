@@ -1,6 +1,7 @@
 package com.tbs.common.util;
 
-import com.tbs.common.SFunction;
+import com.tbs.common.ExceptionUtil;
+import com.tbs.common.function.SFunction;
 import com.tbs.common.exception.FormattedRuntimeException;
 
 import java.beans.Introspector;
@@ -9,6 +10,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+//FIXME 需要完善这些代码的逻辑，field和method部分功能似乎一样
 
 /**
  * Lambda 工具类，用于从 Lambda 表达式中提取对应的 Field、Method 或字段名/方法名
@@ -46,13 +49,15 @@ public class LambdaUtil {
                     Class<?> targetClass = Class.forName(lambda.getImplClass().replace('/', '.'));
                     return targetClass.getDeclaredField(fieldName);
                 } catch (Exception e) {
-                    throw new RuntimeException("Failed to extract field from lambda", e);
+                    AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
                 }
+                return null;
             });
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract field from lambda", e);
+            AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
         }
+        return null;
     }
 
     /**
@@ -77,8 +82,9 @@ public class LambdaUtil {
             });
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract field name from lambda", e);
+            AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
         }
+        return null;
     }
 
     /**
@@ -102,15 +108,16 @@ public class LambdaUtil {
                             return method;
                         }
                     }
-                    throw new FormattedRuntimeException("No method found with name: " + methodName);
+                    AssertUtil.throwError(() -> ExceptionUtil.newException("未找到对应的方法"));
                 } catch (Exception e) {
-                    throw new FormattedRuntimeException(e.getMessage());
+                    AssertUtil.throwError(() -> ExceptionUtil.newException(e, "获取方法异常"));
                 }
+                return null;
             });
-
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract method from lambda", e);
+            AssertUtil.throwError(() -> ExceptionUtil.newException(e, "获取方法异常"));
         }
+        return null;
     }
 
     /**

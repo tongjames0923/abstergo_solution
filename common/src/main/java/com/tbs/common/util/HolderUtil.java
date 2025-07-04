@@ -1,5 +1,6 @@
 package com.tbs.common.util;
 
+import com.tbs.common.ExceptionUtil;
 import com.tbs.common.constant.HolderBeanNameConstant;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.IContextHolder;
@@ -105,12 +106,8 @@ public final class HolderUtil {
     }
 
     public static IContext validContext(IContext context) {
-        if (context == null) {
-            throw new FormattedRuntimeException("环境上下文为空");
-        }
-        if (!context.isValid()) {
-            throw new FormattedRuntimeException("环境上下文{0}已失效", context.getContextId());
-        }
+        AssertUtil.notNull(context, "环境上下文不能为空");
+        AssertUtil.isTrue(!context.isValid(), "环境上下文{0}已失效", context.getContextId());
         return context;
     }
 
