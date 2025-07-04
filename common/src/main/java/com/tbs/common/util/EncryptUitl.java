@@ -1,8 +1,6 @@
 package com.tbs.common.util;
 
 import cn.hutool.core.lang.UUID;
-import com.tbs.common.ExceptionUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
