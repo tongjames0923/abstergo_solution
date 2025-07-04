@@ -7,10 +7,10 @@ package com.tbs.common;
  */
 public interface IErrorThrowEvent {
     /**
-     * 处理异常
+     * 当AssertUtil抛出异常时调用
      *
      * @param throwable
      * @return 是否继续抛出异常
      */
-    boolean handle(Throwable throwable);
+    boolean onAssertUtilThrow(Throwable throwable);
 }

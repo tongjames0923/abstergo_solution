@@ -1,13 +1,11 @@
 package com.tbs.common.util;
 
-import cn.hutool.core.util.ArrayUtil;
 import com.tbs.common.IErrorThrowEvent;
 import com.tbs.common.exception.FormattedRuntimeException;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -90,7 +88,7 @@ public class AssertUtil {
     public static <T extends RuntimeException> void throwError(Supplier<T> exceptionSupplier) {
 
         var e = exceptionSupplier.get();
-        if (errorThrowEvents.stream().anyMatch(event -> event.handle(e))) {
+        if (errorThrowEvents.stream().anyMatch(event -> event.onAssertUtilThrow(e))) {
             return;
         }
         throw e;
