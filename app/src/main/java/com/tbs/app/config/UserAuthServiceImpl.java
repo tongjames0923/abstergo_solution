@@ -1,6 +1,7 @@
 package com.tbs.app.config;
 
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.AssertUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.SimpleAuthException;
@@ -28,7 +29,8 @@ public class UserAuthServiceImpl implements IUserAuthService {
         } else if ("2".equals(uniqueKey)) {
             return User.builder().username("TOM").password("123456").authorities("USER").build();
         }
-        throw new SimpleAuthException("用户不存在");
+        AssertUtil.throwError(() -> new SimpleAuthException("唯一Key用户不存在"));
+        return null;
     }
 
     @Override
@@ -38,16 +40,16 @@ public class UserAuthServiceImpl implements IUserAuthService {
         } else if ("TOM".equals(token.getToken())) {
             return User.builder().username("TOM").password("123456").authorities("USER").build();
         }
-        throw new InvalidTokenException("TOKEN无效");
+        AssertUtil.throwError(() -> new SimpleAuthException("Token用户不存在"));
+        return null;
     }
 
     @Override
     public TokenModel login(String username, String password) {
         UserDetails details = loadUserInfoByUniqueKey(username);
-        if (!Objects.equals(details.getPassword(), password)) {
-            throw new FormattedRuntimeException("用户名或密码错误");
-        }
-
+        AssertUtil.isTrue(!Objects.equals(details.getPassword(), password), () -> {
+            return new SimpleAuthException("用户名或密码错误");
+        });
         return TokenModel.create(details.getUsername(), authProperty.getTokenSource(), authProperty.getTokenFiledName(),
             details.getUsername(), null);
     }
@@ -59,7 +61,7 @@ public class UserAuthServiceImpl implements IUserAuthService {
                 return;
             }
         }
-        throw new InvalidTokenException("TOKEN无效");
+        AssertUtil.throwError(() -> new SimpleAuthException("Token错误"));
     }
 
     @Override

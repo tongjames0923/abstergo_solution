@@ -12,3 +12,6 @@ tbs:
       user-auth-service-impl: com.tbs.app.config.UserAuthServiceImpl
   swagger:
     base-package: com.tbs.app.controller
+logging:
+  level:
+    com.tbs: debug
