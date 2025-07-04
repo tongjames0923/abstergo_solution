@@ -1,6 +1,10 @@
 package com.tbs.web.config.property;
 
-import com.tbs.web.enums.*;
+import com.tbs.web.enums.TokenSource;
+import com.tbs.web.security.ITokenPicker;
+import com.tbs.web.security.IUserAuthService;
+import com.tbs.web.security.impl.DefaultTokenPicker;
+import com.tbs.web.security.impl.NotImplUserAuthService;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -9,8 +13,6 @@ import org.springframework.stereotype.Component;
 @Component
 @ConfigurationProperties(prefix = "tbs.web.auth")
 public class WebAuthProperty {
-
-    public static final String DEFAULT_TOKEN_PICKER = "default";
 
     /**
      * 是否启用
@@ -33,8 +35,9 @@ public class WebAuthProperty {
     private int tokenExpireTime = 3600;
 
     /**
-     * token获取器实现类,若为default则使用默认实现，其他的使用Spring Bean名
+     * token获取器实现类
      */
-    private String tokenPickerImpl = DEFAULT_TOKEN_PICKER;
+    private Class<? extends ITokenPicker> tokenPickerImpl = DefaultTokenPicker.class;
 
+    private Class<? extends IUserAuthService> userAuthServiceImpl = NotImplUserAuthService.class;
 }

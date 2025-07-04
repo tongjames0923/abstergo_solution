@@ -2,6 +2,11 @@ package com.tbs.common.util;
 
 import com.tbs.common.BaseEnum;
 
+/**
+ * 枚举工具类
+ *
+ * @author abstergo
+ */
 public class EnumUtil {
     /**
      * 根据 code 查找匹配的枚举值

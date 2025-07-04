@@ -12,7 +12,8 @@ public class FormattedRuntimeException extends RuntimeException {
     private static <T extends Throwable> String causeByExceptionMessage(T cause, String message, Object... params) {
         StringBuilder sb = new StringBuilder();
         if (cause != null) {
-            sb.append(StrUtil.format("异常类型:{},异常信息:{}.", cause.getClass().getName(), cause.getMessage()));
+            sb.append(
+                StrUtil.format("异常类型:{},异常信息:{}.", cause.getClass().getName(), cause.getLocalizedMessage()));
         }
         if (StrUtil.isNotEmpty(message)) {
             sb.append(StrUtil.format(" 更多信息:{} .", StrUtil.format(message, params)));

@@ -3,15 +3,12 @@ package com.tbs.web.security.impl;
 import com.alibaba.fastjson2.JSON;
 import com.tbs.common.util.StrUtil;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.web.security.model.TokenModel;
 import com.tbs.web.uitl.AjaxUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.config.Customizer;
-import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configurers.ExceptionHandlingConfigurer;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
@@ -25,6 +22,7 @@ import java.io.PrintWriter;
  * 认证异常处理
  * @author tongj
  */
+@Slf4j
 public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
 
     private void writeIntoBody(HttpServletResponse response, AjaxResult custom) throws IOException {
@@ -37,13 +35,12 @@ public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDen
         writer = httpResponse.getWriter();
         writer.print(jsonResponse);
         writer.flush();
-        writer.close();
     }
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
         AuthenticationException authException) throws IOException, ServletException {
-
+        log.error("认证异常", authException);
         writeIntoBody(response, AjaxUtil.getInstance()
             .custom(AjaxResult.DEFAULT_UNAUTHORIZED_CODE, authException.getLocalizedMessage(), authException));
     }
@@ -51,32 +48,19 @@ public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDen
     @Override
     public void handle(HttpServletRequest request, HttpServletResponse response,
         AccessDeniedException accessDeniedException) throws IOException, ServletException {
-        TokenModel token = null;
-        UserDetails principal = null;
-        if (SecurityContextHolder.getContext().getAuthentication().getCredentials() != null) {
-            token = (TokenModel)SecurityContextHolder.getContext().getAuthentication().getCredentials();
-        }
-        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() != null) {
-            principal = (UserDetails)SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        }
-        if (token == null) {
-            AjaxResult result = null;
-            result = AjaxUtil.getInstance()
-                .custom(AjaxResult.DEFAULT_UNAUTHORIZED_CODE, AjaxResult.DEFAULT_UNAUTHORIZED_MESSAGE, null);
-            writeIntoBody(response, result);
+        log.error("权限异常", accessDeniedException);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            writeIntoBody(response, AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE, "空授权信息", null));
             return;
         }
-        if (principal == null) {
-            AjaxResult result = null;
-            result = AjaxUtil.getInstance()
-                .custom(AjaxResult.DEFAULT_FORBIDDEN_CODE, AjaxResult.DEFAULT_FORBIDDEN_MESSAGE, null);
-            writeIntoBody(response, result);
-            return;
+        if (!(authentication instanceof TokenAuthentication)) {
+            writeIntoBody(response, AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE,
+                StrUtil.format("授权信息错误:{}", accessDeniedException.getLocalizedMessage()), null));
         }
-
-        AjaxResult result = null;
-        result = AjaxUtil.getInstance()
-            .custom(AjaxResult.DEFAULT_ERROR_CODE, StrUtil.format("{} 不存在所需权限", principal.getUsername()), null);
+        TokenAuthentication tokenAuthentication = (TokenAuthentication)authentication;
+        AjaxResult result = AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_FORBIDDEN_CODE,
+            StrUtil.isEmpty(tokenAuthentication.getMessage()) ? "权限异常" : tokenAuthentication.getMessage(), null);
         writeIntoBody(response, result);
 
         return;

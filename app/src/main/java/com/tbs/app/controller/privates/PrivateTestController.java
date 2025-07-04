@@ -11,13 +11,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/private")
 public class PrivateTestController extends BaseController {
-    @PreAuthorize("hasRole('USER')")
+    @PreAuthorize("hasAuthority('USER')")
     @GetMapping("/test")
     public AjaxResult test() {
         return AjaxUtil.getInstance().success(null);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     @GetMapping("/testAuth")
     public AjaxResult testAuth() {
         return AjaxUtil.getInstance().success(null);
