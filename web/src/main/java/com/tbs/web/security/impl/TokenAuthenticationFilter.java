@@ -1,8 +1,8 @@
 package com.tbs.web.security.impl;
 
 import com.alibaba.fastjson2.JSON;
-import com.tbs.common.util.ExceptionUtil;
 import com.tbs.common.util.AssertUtil;
+import com.tbs.common.util.ExceptionUtil;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.exception.InvalidTokenException;
@@ -52,6 +52,9 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
     RequestMatcher matcher;
 
+    /**
+     * 初始化路径匹配器
+     */
     @PostConstruct
     void init() {
         WebProperty property = SpringUtil.getBean(WebProperty.class);

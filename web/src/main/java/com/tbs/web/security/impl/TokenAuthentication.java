@@ -34,12 +34,25 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
         super(authorities);
     }
 
+    /**
+     * 创建令牌
+     *
+     * @param model
+     * @return
+     */
     public static TokenAuthentication create(TokenModel model) {
         TokenAuthentication authentication = new TokenAuthentication(new ArrayList<>(8));
         authentication.setCurrentTokenModel(model);
         return authentication;
     }
 
+    /**
+     * 创建最终令牌
+     *
+     * @param model
+     * @param userDetails
+     * @return
+     */
     public static TokenAuthentication createFinal(TokenModel model, UserDetails userDetails) {
         TokenAuthentication authentication = new TokenAuthentication(userDetails.getAuthorities());
         authentication.setCurrentTokenModel(model);
