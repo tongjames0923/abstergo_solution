@@ -1,6 +1,7 @@
 package com.tbs.lock;
 
 import java.time.Duration;
+import java.util.concurrent.locks.Condition;
 
 /**
  * 锁
@@ -35,5 +36,12 @@ public interface ILock {
      * 释放锁
      */
     void unLock();
+
+    /**
+     * 创建条件变量
+     *
+     * @return
+     */
+    Condition newCondition();
 
 }

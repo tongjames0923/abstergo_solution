@@ -4,6 +4,7 @@ import com.tbs.lock.ILock;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -51,5 +52,10 @@ public class LockAdapter implements ILock {
         lock.unlock();
         flag.remove();
         isLock.set(false);
+    }
+
+    @Override
+    public Condition newCondition() {
+        return lock.newCondition();
     }
 }

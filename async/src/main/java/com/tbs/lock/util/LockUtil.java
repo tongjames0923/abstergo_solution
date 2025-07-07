@@ -1,0 +1,109 @@
+package com.tbs.lock.util;
+
+import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.lock.ILock;
+import com.tbs.lock.ILockProvider;
+import lombok.Getter;
+import org.springframework.stereotype.Component;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+
+/**
+ * @author abstergo
+ */
+@Component
+public class LockUtil {
+
+    /**
+     * -- GETTER -- 获取锁工具实例
+     *
+     * @return
+     */
+    @Getter
+    private static LockUtil instance = null;
+
+    @Resource
+    private ILockProvider lockProvider;
+
+    @PostConstruct
+    public void init() {
+        instance = this;
+    }
+
+    /**
+     * 获取锁
+     *
+     * @param lockName
+     * @return
+     */
+    public ILock getLockerByStr(String lockName) {
+        return lockProvider.getLocker(lockName);
+    }
+
+    /**
+     * 获取锁
+     *
+     * @param target
+     * @return
+     */
+    public ILock getLockerByObj(Object target) {
+        if (target instanceof String) {
+            return getLockerByStr((String)target);
+        }
+        return lockProvider.getLocker(target);
+    }
+
+    /**
+     * 获取锁
+     *
+     * @param clazz
+     * @return
+     */
+    public ILock getLockerByClass(Class<?> clazz) {
+        return lockProvider.getLocker(clazz.getPackageName() + "." + clazz.getSimpleName());
+    }
+
+    /**
+     * 获取锁并执行
+     *
+     * @param lockName
+     * @param runnable
+     */
+    public void lockThen(String lockName, Runnable runnable) {
+        lockThen(getLockerByStr(lockName), runnable);
+    }
+
+    /**
+     * 获取锁并执行
+     *
+     * @param target
+     * @param runnable
+     */
+    public void lockThen(Object target, Runnable runnable) {
+        lockThen(getLockerByObj(target), runnable);
+    }
+
+    public void lockThen(Class<?> clazz, Runnable runnable) {
+        lockThen(getLockerByClass(clazz), runnable);
+    }
+
+    /**
+     * 获取锁并执行
+     *
+     * @param lock
+     * @param runnable
+     */
+    public void lockThen(ILock lock, Runnable runnable) {
+        if (lock.tryLock(null)) {
+            try {
+                runnable.run();
+            } finally {
+                lock.unLock();
+            }
+        } else {
+            throw new FormattedRuntimeException("锁{} 加锁失败", lock.toString());
+        }
+    }
+
+}
