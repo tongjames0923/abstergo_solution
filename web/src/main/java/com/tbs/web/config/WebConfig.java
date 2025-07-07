@@ -1,6 +1,6 @@
 package com.tbs.web.config;
 
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.result.IAjaxBuilderProvider;
@@ -43,9 +43,9 @@ public class WebConfig {
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     public ITokenPicker tokenPicker() {
-        return SpringUtil.buildBeanFromProperties(() -> {
+        return BeanUtil.buildBeanFromProperties(() -> {
             return new DefaultTokenPicker();
-        }, webAuthProperty.getTokenPickerImpl(), SpringUtil::buildByEmptyArgs);
+        }, webAuthProperty.getTokenPickerImpl(), BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
@@ -138,15 +138,15 @@ public class WebConfig {
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
     public IUserAuthService notImplUserAuthService() {
-        return SpringUtil.buildBeanFromProperties(NotImplUserAuthService::new, webAuthProperty.getUserAuthServiceImpl(),
-            SpringUtil::buildByEmptyArgs);
+        return BeanUtil.buildBeanFromProperties(NotImplUserAuthService::new, webAuthProperty.getUserAuthServiceImpl(),
+            BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
     public IAjaxBuilderProvider ajaxBuilderProvider() {
-        return SpringUtil.buildBeanFromProperties(() -> {
+        return BeanUtil.buildBeanFromProperties(() -> {
             return new SimpleBuilderProvider();
-        }, webProperty.getResultBuilderProvier(), SpringUtil::buildByEmptyArgs);
+        }, webProperty.getResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
     }
 
 }
