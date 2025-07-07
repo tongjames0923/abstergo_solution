@@ -1,5 +1,6 @@
 package com.tbs.common.config;
 
+import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.ExceptionUtil;
 import com.tbs.common.constant.HolderBeanNameConstant;
 import com.tbs.common.holder.IContextHolder;
@@ -8,7 +9,6 @@ import com.tbs.common.holder.context.impl.LocalStoredContext;
 import com.tbs.common.holder.context.impl.ThreadLocalStoredContext;
 import com.tbs.common.config.property.HolderProperty;
 import com.tbs.common.util.AssertUtil;
-import com.tbs.common.util.SpringUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -59,7 +59,7 @@ public class HolderConfig {
      */
     @Bean(name = HolderBeanNameConstant.MAIN_CONTEXT_HOLDER)
     public IContextHolder getMainContextHolder() {
-        return SpringUtil.buildBeanFromProperties(null, holderProperty.getMainContextHolderType(), (clazz) -> {
+        return BeanUtil.buildBeanFromProperties(null, holderProperty.getMainContextHolderType(), (clazz) -> {
             AssertUtil.notNull(clazz, () -> ExceptionUtil.newException("构造类型不能为空"));
             try {
                 return clazz.getConstructor().newInstance();

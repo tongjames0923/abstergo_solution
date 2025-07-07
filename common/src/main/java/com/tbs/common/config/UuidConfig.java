@@ -1,7 +1,7 @@
 package com.tbs.common.config;
 
 import com.tbs.common.config.property.UuidProperty;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.BeanUtil;
 import com.tbs.common.uuid.IUuidGenerator;
 import com.tbs.common.uuid.impl.SnowFlakeUUID;
 import org.springframework.context.annotation.Bean;
@@ -18,15 +18,15 @@ import javax.annotation.Resource;
 public class UuidConfig {
     @Resource
     private UuidProperty uuidProperty;
-    
+
     @Bean
     public IUuidGenerator mainUuidGenerator() {
         if (uuidProperty.getType() == SnowFlakeUUID.class) {
             return new SnowFlakeUUID(uuidProperty.getSnowFlakeWorkerId(), uuidProperty.getSnowFlakeDataCenterId());
         } else {
-            return SpringUtil.buildBeanFromProperties(() -> {
+            return BeanUtil.buildBeanFromProperties(() -> {
                 return new SnowFlakeUUID();
-            }, uuidProperty.getType(), SpringUtil::buildByEmptyArgs);
+            }, uuidProperty.getType(), BeanUtil::buildByEmptyArgs);
         }
     }
 
