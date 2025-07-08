@@ -14,7 +14,7 @@
 ## 架构设计
 
 ### 模块划分
-
+```
 com.tbs.boardcast
 ├── bus # 事件队列核心实现
 ├── dispatcher # 事件分发机制
@@ -22,6 +22,8 @@ com.tbs.boardcast
 ├── publisher # 事件发布机制
 ├── subscriber # 事件订阅处理
 └── config # Spring 集成配置
+```
+
 
 ### 核心组件关系
 

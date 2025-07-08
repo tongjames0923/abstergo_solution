@@ -136,9 +136,7 @@ lockUtil.
 
 lockThen("myLock",() ->{
     // 执行临界区代码 
-    System.out.
-
-println("正在执行受保护代码"); });
+    System.out.println("正在执行受保护代码"); });
 ```
 
 ## 配置说明
