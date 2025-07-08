@@ -38,20 +38,6 @@ public interface IEvent<T> {
     void setEventData(T eventData);
 
     /**
-     * 设置事件状态
-     *
-     * @param eventStatus
-     */
-    void setEventStatus(EventStatusEnum eventStatus);
-
-    /**
-     * 获取事件状态
-     *
-     * @return
-     */
-    EventStatusEnum getEventStatus();
-
-    /**
      * 获取事件优先级
      *
      * @return
@@ -59,12 +45,5 @@ public interface IEvent<T> {
     default int getEventPriority() {
         return 0;
     }
-
-    /**
-     * 等待事件处理完成
-     *
-     * @return
-     */
-    EventStatusEnum untilEventComplete();
 
 }

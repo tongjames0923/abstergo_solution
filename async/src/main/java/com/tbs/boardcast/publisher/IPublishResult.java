@@ -1,7 +1,11 @@
 package com.tbs.boardcast.publisher;
 
+import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.event.IEvent;
+
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 /**
  * 发布结果
@@ -43,4 +47,26 @@ public interface IPublishResult<T> {
      * @param throwable
      */
     void setThrowable(Throwable throwable);
+
+    /**
+     * 等待事件处理完成
+     *
+     * @return
+     */
+    EventStatusEnum untilEventComplete();
+
+    /**
+     * 设置事件状态
+     *
+     * @param eventStatus
+     */
+    void setEventStatus(EventStatusEnum eventStatus);
+
+    /**
+     * 获取事件状态
+     *
+     * @return
+     */
+    EventStatusEnum getEventStatus();
+    
 }

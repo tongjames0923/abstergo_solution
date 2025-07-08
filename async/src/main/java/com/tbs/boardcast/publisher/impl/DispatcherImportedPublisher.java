@@ -1,6 +1,10 @@
 package com.tbs.boardcast.publisher.impl;
 
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
+import com.tbs.boardcast.enums.HandleMode;
+import com.tbs.boardcast.event.IEvent;
+import com.tbs.boardcast.publisher.AbstractPublisher;
+import com.tbs.boardcast.publisher.IPublishResult;
 import lombok.Getter;
 
 /**
@@ -24,4 +28,8 @@ public class DispatcherImportedPublisher extends AbstractPublisher {
         this.eventDispatcher = eventDispatcher;
     }
 
+    @Override
+    protected <T> IPublishResult<T> makePublishResult(IEvent<T> event, HandleMode handleMode) {
+        return new SpringManagedListenablePublishResult<>(event, this, handleMode);
+    }
 }

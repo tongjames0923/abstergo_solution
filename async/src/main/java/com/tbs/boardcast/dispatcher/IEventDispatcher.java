@@ -1,6 +1,8 @@
 package com.tbs.boardcast.dispatcher;
 
 import com.tbs.boardcast.bus.IEventBus;
+import com.tbs.boardcast.publisher.IPublishResult;
+import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 
 import java.util.concurrent.ExecutorService;
@@ -39,6 +41,14 @@ public interface IEventDispatcher {
      * @return
      */
     IEventBus getEventBus();
+
+    /**
+     * 处理事件处理异常
+     *
+     * @param throwable
+     * @param publishResult
+     */
+    <T> void handleError(Throwable throwable, IPublishResult<T> publishResult);
 
     /**
      * 处理事件

@@ -4,9 +4,13 @@ import com.tbs.boardcast.bus.IEventBus;
 import com.tbs.boardcast.bus.impl.SimpleEventBus;
 import com.tbs.boardcast.config.property.BoardcastProperty;
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
-import com.tbs.boardcast.dispatcher.impl.SimpleEventDispatcher;
+import com.tbs.boardcast.dispatcher.impl.AbstractEventDispatcher;
+import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.common.util.BeanUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.cglib.proxy.Dispatcher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -32,7 +36,14 @@ public class BoardcastConfig {
     @Bean
     @ConditionalOnMissingBean(IEventDispatcher.class)
     public IEventDispatcher dispatcher() {
-        return new SimpleEventDispatcher(Executors.newSingleThreadExecutor());
+        return new AbstractEventDispatcher(Executors.newSingleThreadExecutor()) {
+            private final Logger logger = LoggerFactory.getLogger(AbstractEventDispatcher.class);
+
+            @Override
+            public <T> void handleError(Throwable throwable, IPublishResult<T> publishResult) {
+                logger.error("处理消息时产生错误！！！", throwable);
+            }
+        };
     }
 
 }

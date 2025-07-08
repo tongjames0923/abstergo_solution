@@ -14,7 +14,7 @@ public interface IPublisher {
      *
      * @return
      */
-    String getPushblisherId();
+    String getPushlisherId();
 
     /**
      * 发布

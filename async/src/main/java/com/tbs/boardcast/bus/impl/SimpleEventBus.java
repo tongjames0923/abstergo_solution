@@ -48,12 +48,13 @@ public class SimpleEventBus implements IEventBus {
     public <T> void inqueueEvent(IPublishResult<T> publishResult) {
         AssertUtil.notNull(publishResult, "publishResult can not be null");
         AssertUtil.notNull(publishResult.getEvent(), "event can not be null");
-        if (publishResult.getEvent().getEventStatus() == null ||
-            publishResult.getEvent().getEventStatus() == EventStatusEnum.IDLE ||
-            publishResult.getEvent().getEventStatus() == EventStatusEnum.REQUIRE_RETRY) {
-            publishResult.getEvent().setEventStatus(EventStatusEnum.IN_QUEUE);
+        if (publishResult.getEventStatus() == null ||
+            publishResult.getEventStatus() == EventStatusEnum.IDLE ||
+            publishResult.getEventStatus() == EventStatusEnum.REQUIRE_RETRY) {
+            publishResult.setEventStatus(EventStatusEnum.IN_QUEUE);
         } else {
-            AssertUtil.throwError(() -> new FormattedRuntimeException("事件状态错误"));
+            AssertUtil.throwError(
+                () -> new FormattedRuntimeException("事件状态错误,入队的状态仅允许IDLE，REQUIRE_RETRY,IN_QUEUE"));
         }
         LockUtil.getInstance().lockThen(lock, () -> {
             logger.debug("添加事件到队列:{}", publishResult.getEvent().getEventName());
@@ -70,7 +71,8 @@ public class SimpleEventBus implements IEventBus {
             if (eventQueue.isEmpty()) {
                 try {
                     logger.debug("等待事件");
-                    condition.await(duration.toMillis(), TimeUnit.MILLISECONDS);
+                    boolean r = condition.await(duration.toMillis(), TimeUnit.MILLISECONDS);
+                    logger.debug("等待事件结束，是否超时：{}", !r);
                 } catch (InterruptedException e) {
                     logger.error("条件等待异常", e);
                     Thread.currentThread().interrupt(); // 恢复中断状态
@@ -78,14 +80,13 @@ public class SimpleEventBus implements IEventBus {
             }
             if (!eventQueue.isEmpty()) {
                 result[0] = eventQueue.poll();
-                logger.debug("获取事件:{}", result[0].getEvent().getEventName());
+                logger.debug("获取事件:{}", result[0].getEvent().getEventId());
             }
         });
 
         if (result[0] != null) {
-            result[0].getEvent().setEventStatus(EventStatusEnum.IN_PROCESS);
+            result[0].setEventStatus(EventStatusEnum.IN_PROCESS);
         }
-
         return result[0];
     }
 

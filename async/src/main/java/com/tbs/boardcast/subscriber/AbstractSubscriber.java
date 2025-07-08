@@ -61,7 +61,7 @@ public abstract class AbstractSubscriber {
     public void recive(IPublishResult<?> event, IPublisher publisher) {
         try {
             onReceive(event.getEvent(), publisher);
-            event.getEvent().setEventStatus(EventStatusEnum.DONE);
+            event.setEventStatus(EventStatusEnum.DONE);
         } catch (Throwable e) {
             event.setThrowable(e);
         }

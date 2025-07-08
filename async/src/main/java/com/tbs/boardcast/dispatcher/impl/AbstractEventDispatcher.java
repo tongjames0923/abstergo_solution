@@ -6,6 +6,7 @@ import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 import org.slf4j.Logger;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
 import javax.annotation.Resource;
@@ -19,12 +20,12 @@ import java.util.concurrent.ExecutorService;
  *
  * @author abstergo
  */
-public class SimpleEventDispatcher implements IEventDispatcher, InitializingBean {
+public abstract class AbstractEventDispatcher implements IEventDispatcher, InitializingBean, DisposableBean {
 
     @Resource
     private IEventBus eventBus;
 
-    private static Logger logger = org.slf4j.LoggerFactory.getLogger(SimpleEventDispatcher.class);
+    private static Logger logger = org.slf4j.LoggerFactory.getLogger(AbstractEventDispatcher.class);
 
     private ExecutorService executorService;
     private boolean started = false;
@@ -36,7 +37,7 @@ public class SimpleEventDispatcher implements IEventDispatcher, InitializingBean
      *
      * @param executorService
      */
-    public SimpleEventDispatcher(ExecutorService executorService) {
+    public AbstractEventDispatcher(ExecutorService executorService) {
         this.executorService = executorService;
     }
 
@@ -67,25 +68,30 @@ public class SimpleEventDispatcher implements IEventDispatcher, InitializingBean
         }
         started = true;
         getExecutorService().execute(() -> {
+            logger.trace("开始处理事件");
             while (started) {
-
-                IPublishResult<?> iPublishResult = getEventBus().nextUnhandledEvent(Duration.ofMinutes(1));
-                if (iPublishResult == null) {
-                    continue;
-                }
-                for (AbstractSubscriber subscriber : subscriberMap.values()) {
-                    if (subscriber.supportEvent(iPublishResult.getEvent().getEventName()) &&
-                        subscriber.supportPublisher(iPublishResult.getPublisher())) {
-                        if (iPublishResult.getHandleMode() == HandleMode.SYNC) {
-                            subscriber.recive(iPublishResult, iPublishResult.getPublisher());
-                        } else {
-                            subscriber.reciveAsync(iPublishResult, iPublishResult.getPublisher());
+                IPublishResult<?> iPublishResult = null;
+                try {
+                    iPublishResult = getEventBus().nextUnhandledEvent(Duration.ofMinutes(1));
+                    if (iPublishResult == null) {
+                        logger.trace("空事件超时");
+                        continue;
+                    }
+                    for (AbstractSubscriber subscriber : subscriberMap.values()) {
+                        if (subscriber.supportEvent(iPublishResult.getEvent().getEventName()) &&
+                            subscriber.supportPublisher(iPublishResult.getPublisher())) {
+                            if (iPublishResult.getHandleMode() == HandleMode.SYNC) {
+                                subscriber.recive(iPublishResult, iPublishResult.getPublisher());
+                            } else {
+                                subscriber.reciveAsync(iPublishResult, iPublishResult.getPublisher());
+                            }
                         }
                     }
+                } catch (Throwable e) {
+                    handleError(e, iPublishResult);
                 }
-
             }
-
+            logger.trace("停止处理事件");
         });
 
     }
@@ -98,5 +104,10 @@ public class SimpleEventDispatcher implements IEventDispatcher, InitializingBean
     @Override
     public void afterPropertiesSet() throws Exception {
         handleEvent();
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        stopHandle();
     }
 }
