@@ -25,7 +25,7 @@ class AppApplicationTests {
         task.add(publisher.pushlishAsync(new SimpleEventImpl<>("3", "test")));
         task.add(publisher.pushlishSync(new SimpleEventImpl<>("4", "test")));
         for (IPublishResult<?> result : task) {
-            result.getEvent().untilEventComplete();
+            result.untilEventComplete();
         }
     }
 

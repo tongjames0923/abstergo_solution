@@ -14,4 +14,4 @@ tbs:
     base-package: com.tbs.app.controller
 logging:
   level:
-    com.tbs: debug
+    com.tbs: trace
