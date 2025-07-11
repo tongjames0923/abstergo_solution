@@ -57,7 +57,7 @@ public final class HolderUtil {
      * @param contextId
      * @return
      */
-    public static IContext getContext(String contextId) {
+    public static <T> IContext<T> getContext(String contextId) {
         return getContextHolder().getContextByContextId(contextId);
     }
 
@@ -66,7 +66,7 @@ public final class HolderUtil {
      *
      * @return
      */
-    public static IContext getDefaultLocalStoredContext() {
+    public static <T> IContext<T> getDefaultLocalStoredContext() {
         return getContext(LocalStoredMapImplContext.LOCAL_STORED_CONTEXT_ID);
     }
 
@@ -75,7 +75,7 @@ public final class HolderUtil {
      *
      * @return
      */
-    public static IContext getDeaultThreadLocalStoredContext() {
+    public static <T> IContext<T> getDeaultThreadLocalStoredContext() {
         return getContext(ThreadLocalStoredContext.THREAD_LOCAL_STORED_CONTEXT_ID);
     }
 
@@ -97,13 +97,20 @@ public final class HolderUtil {
      * @param value   值
      * @return this
      */
-    public static HolderUtil put(IContext context, String key, Object value) {
+    public static <T> HolderUtil put(IContext<T> context, String key, T value) {
         validContext(context);
         context.getSource().set(key, value);
         return instance;
     }
 
-    public static IContext validContext(IContext context) {
+    /**
+     * 验证上下文是否有效
+     *
+     * @param context
+     * @param <T>
+     * @return
+     */
+    public static <T> IContext validContext(IContext<T> context) {
         AssertUtil.notNull(context, "环境上下文不能为空");
         AssertUtil.isTrue(!context.isValid(), "环境上下文{0}已失效", context.getContextId());
         return context;
@@ -116,7 +123,7 @@ public final class HolderUtil {
      * @param key     键
      * @return 值
      */
-    public static Object get(IContext context, String key) {
+    public static <T> T get(IContext<T> context, String key) {
         validContext(context);
         return context.getSource().get(key);
     }
@@ -129,7 +136,7 @@ public final class HolderUtil {
      * @param value   值
      * @return this
      */
-    public static <T> HolderUtil put(IContext context, Class<? extends T> clazz, T value) {
+    public static <T> HolderUtil putByClass(IContext<T> context, Class<?> clazz, T value) {
         validContext(context);
         context.getSource().set(getClassValueKey(clazz), value);
         return instance;
@@ -142,9 +149,9 @@ public final class HolderUtil {
      * @param value   值 不能为空
      * @return this
      */
-    public static <T> HolderUtil put(IContext context, @NotNull T value) {
+    public static <T> HolderUtil put(IContext<T> context, @NotNull T value) {
         validContext(context);
-        return put(context, value.getClass(), value);
+        return putByClass(context, value.getClass(), value);
     }
 
     /**

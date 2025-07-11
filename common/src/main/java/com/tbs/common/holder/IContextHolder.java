@@ -15,6 +15,6 @@ public interface IContextHolder {
      * @param contextId
      * @return
      */
-    IContext getContextByContextId(String contextId);
-    
+    <T> IContext<T> getContextByContextId(String contextId);
+
 }
