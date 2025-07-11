@@ -1,9 +1,11 @@
 package com.tbs.common.holder.context.impl;
 
+import com.tbs.common.holder.AbstractMapImplDictionary;
+import com.tbs.common.holder.IDictionary;
 import com.tbs.common.holder.context.AbstractNamedContext;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 线程存储上下文
@@ -33,32 +35,22 @@ public class ThreadLocalStoredContext extends AbstractNamedContext {
     /**
      * 线程存储上下文
      */
-    private ThreadLocal<HashMap<String, Object>> threadLocal = new InheritableThreadLocal<>();
+    private ThreadLocal<IDictionary<String, Object>> threadLocal = new InheritableThreadLocal<>();
 
-    /**
-     * 获取存储的Map
-     *
-     * @return 存储的Map
-     */
-    private Map<String, Object> getMap() {
+
+    @Override
+    public IDictionary<String, Object> getSource() {
         if (threadLocal.get() == null) {
-            threadLocal.set(new HashMap<>());
+            threadLocal.set(new AbstractMapImplDictionary<>() {
+                private Map<String, Object> map = new ConcurrentHashMap<>(8);
+
+                @Override
+                protected Map<String, Object> getMap() {
+                    return map;
+                }
+            });
         }
+
         return threadLocal.get();
-    }
-
-    @Override
-    public Object get(String key) {
-        return getMap().get(key);
-    }
-
-    @Override
-    public void set(String key, Object value) {
-        getMap().put(key, value);
-    }
-
-    @Override
-    public void remove(String key) {
-        getMap().remove(key);
     }
 }

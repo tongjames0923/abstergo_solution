@@ -5,7 +5,7 @@ import com.tbs.common.util.ExceptionUtil;
 import com.tbs.common.constant.HolderBeanNameConstant;
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
-import com.tbs.common.holder.context.impl.LocalStoredContext;
+import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import com.tbs.common.holder.context.impl.ThreadLocalStoredContext;
 import com.tbs.common.config.property.HolderProperty;
 import com.tbs.common.util.AssertUtil;
@@ -38,7 +38,7 @@ public class HolderConfig {
     @ConditionalOnProperty(name = "tbs.holder.use-thread-local-stored-context", havingValue = "true",
         matchIfMissing = true)
     IContext defaultLocalStoredContext() {
-        return new LocalStoredContext();
+        return new LocalStoredMapImplContext();
     }
 
     /**

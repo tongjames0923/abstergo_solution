@@ -3,7 +3,7 @@ package com.tbs.common.util;
 import com.tbs.common.constant.HolderBeanNameConstant;
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
-import com.tbs.common.holder.context.impl.LocalStoredContext;
+import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import com.tbs.common.holder.context.impl.ThreadLocalStoredContext;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -67,7 +67,7 @@ public final class HolderUtil {
      * @return
      */
     public static IContext getDefaultLocalStoredContext() {
-        return getContext(LocalStoredContext.LOCAL_STORED_CONTEXT_ID);
+        return getContext(LocalStoredMapImplContext.LOCAL_STORED_CONTEXT_ID);
     }
 
     /**
@@ -99,7 +99,7 @@ public final class HolderUtil {
      */
     public static HolderUtil put(IContext context, String key, Object value) {
         validContext(context);
-        context.set(key, value);
+        context.getSource().set(key, value);
         return instance;
     }
 
@@ -118,7 +118,7 @@ public final class HolderUtil {
      */
     public static Object get(IContext context, String key) {
         validContext(context);
-        return context.get(key);
+        return context.getSource().get(key);
     }
 
     /**
@@ -131,7 +131,7 @@ public final class HolderUtil {
      */
     public static <T> HolderUtil put(IContext context, Class<? extends T> clazz, T value) {
         validContext(context);
-        context.set(getClassValueKey(clazz), value);
+        context.getSource().set(getClassValueKey(clazz), value);
         return instance;
     }
 
@@ -156,7 +156,7 @@ public final class HolderUtil {
      */
     public static <T> T get(IContext context, Class<? extends T> clazz) {
         validContext(context);
-        return BeanUtil.getIfBase(context.get(getClassValueKey(clazz)), clazz);
+        return BeanUtil.getIfBase(context.getSource().get(getClassValueKey(clazz)), clazz);
     }
 
 }

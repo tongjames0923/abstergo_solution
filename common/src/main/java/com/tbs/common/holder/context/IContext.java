@@ -1,5 +1,7 @@
 package com.tbs.common.holder.context;
 
+import com.tbs.common.holder.IDictionary;
+
 import java.io.Serializable;
 
 /**
@@ -35,43 +37,11 @@ public interface IContext extends Serializable {
     void markInvalid();
 
     /**
-     * 获取上下文数据
+     * 获取源数据
      *
-     * @param key
      * @return
      */
-    Object get(String key);
+    IDictionary<String, Object> getSource();
 
-    /**
-     * 获取上下文数据
-     *
-     * @param key
-     * @param clazz
-     * @return
-     */
-    default <T> T get(String key, Class<T> clazz) {
-        if (clazz == null) {
-            return null;
-        }
-        Object value = get(key);
-        if (value == null) {
-            return null;
-        }
-        return clazz.cast(value);
-    }
 
-    /**
-     * 设置上下文数据
-     *
-     * @param key
-     * @param value
-     */
-    void set(String key, Object value);
-
-    /**
-     * 移除上下文数据
-     *
-     * @param key
-     */
-    void remove(String key);
 }
