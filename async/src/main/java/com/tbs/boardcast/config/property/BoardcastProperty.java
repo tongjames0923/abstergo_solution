@@ -2,6 +2,8 @@ package com.tbs.boardcast.config.property;
 
 import com.tbs.boardcast.bus.IEventBus;
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
+import com.tbs.common.holder.context.AbstractNamedContext;
+import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -23,5 +25,11 @@ public class BoardcastProperty {
      * 默认事件分发器
      */
     private Class<? extends IEventDispatcher> eventDispatcherType;
+
+    /**
+     * 默认订阅者上下文
+     */
+    private Class<? extends AbstractNamedContext> subscriberContextType = LocalStoredMapImplContext.class;
+
 
 }

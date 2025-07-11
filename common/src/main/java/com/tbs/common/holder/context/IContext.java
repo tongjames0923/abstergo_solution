@@ -29,7 +29,7 @@ public interface IContext<V> extends Serializable {
      *
      * @return
      */
-    IContext rebuildContext();
+    IContext<V> rebuildContext();
 
     /**
      * 外部提示该上下文可能失效

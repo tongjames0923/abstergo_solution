@@ -5,7 +5,7 @@ package com.tbs.common.holder.context;
  *
  * @author abstergo
  */
-public abstract class AbstractNamedContext implements IContext {
+public abstract class AbstractNamedContext<V> implements IContext<V> {
     private String contextId;
     private boolean valid = true;
 
@@ -59,7 +59,7 @@ public abstract class AbstractNamedContext implements IContext {
     }
 
     @Override
-    public IContext rebuildContext() {
+    public IContext<V> rebuildContext() {
         return rebuild();
     }
 

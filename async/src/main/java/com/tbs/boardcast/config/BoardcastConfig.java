@@ -7,8 +7,8 @@ import com.tbs.boardcast.constant.BeanNameConstant;
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
 import com.tbs.boardcast.dispatcher.impl.AbstractEventDispatcher;
 import com.tbs.boardcast.publisher.IPublishResult;
-import com.tbs.boardcast.subscriber.AbstractSubscriber;
-import com.tbs.common.holder.context.IContext;
+import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.holder.context.AbstractNamedContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import com.tbs.common.util.BeanUtil;
 import org.slf4j.Logger;
@@ -37,8 +37,16 @@ public class BoardcastConfig {
     }
 
     @Bean
-    IContext<AbstractSubscriber> subscriberContext() {
-        return new LocalStoredMapImplContext(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID);
+    AbstractNamedContext subscriberContext() {
+        return BeanUtil.buildBeanFromProperties(() -> {
+            return new LocalStoredMapImplContext(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID);
+        }, boardcastProperty.getSubscriberContextType(), (c) -> {
+            try {
+                return c.getConstructor(String.class).newInstance(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID);
+            } catch (Throwable e) {
+                throw new FormattedRuntimeException("HolderProperty.subscriberContextType  Error to build bean");
+            }
+        });
     }
 
     @Bean
