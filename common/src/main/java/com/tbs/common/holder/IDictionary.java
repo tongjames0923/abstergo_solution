@@ -1,5 +1,6 @@
 package com.tbs.common.holder;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -82,19 +83,19 @@ public interface IDictionary<K, V> {
      *
      * @return
      */
-    Iterable<Map.Entry<K, V>> entries();
+    Collection<Map.Entry<K, V>> entries();
 
     /**
      * 获取所有键
      *
      * @return
      */
-    Iterable<K> keys();
+    Collection<K> keys();
 
     /**
      * 获取所有值
      *
      * @return
      */
-    Iterable<V> values();
+    Collection<V> values();
 }

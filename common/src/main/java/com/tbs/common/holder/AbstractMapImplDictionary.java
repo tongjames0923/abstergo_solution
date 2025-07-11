@@ -1,5 +1,6 @@
 package com.tbs.common.holder;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
@@ -63,17 +64,17 @@ public abstract class AbstractMapImplDictionary<K, V> implements IDictionary<K, 
     }
 
     @Override
-    public Iterable<Map.Entry<K, V>> entries() {
+    public Collection<Map.Entry<K, V>> entries() {
         return getMap().entrySet();
     }
 
     @Override
-    public Iterable<K> keys() {
+    public Collection<K> keys() {
         return getMap().keySet();
     }
 
     @Override
-    public Iterable<V> values() {
+    public Collection<V> values() {
         return getMap().values();
     }
 }
