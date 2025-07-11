@@ -3,14 +3,17 @@ package com.tbs.boardcast.config;
 import com.tbs.boardcast.bus.IEventBus;
 import com.tbs.boardcast.bus.impl.SimpleEventBus;
 import com.tbs.boardcast.config.property.BoardcastProperty;
+import com.tbs.boardcast.constant.BeanNameConstant;
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
 import com.tbs.boardcast.dispatcher.impl.AbstractEventDispatcher;
 import com.tbs.boardcast.publisher.IPublishResult;
+import com.tbs.boardcast.subscriber.AbstractSubscriber;
+import com.tbs.common.holder.context.IContext;
+import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import com.tbs.common.util.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.cglib.proxy.Dispatcher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -31,6 +34,11 @@ public class BoardcastConfig {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new SimpleEventBus();
         }, boardcastProperty.getEventBusType(), BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    IContext<AbstractSubscriber> subscriberContext() {
+        return new LocalStoredMapImplContext(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID);
     }
 
     @Bean

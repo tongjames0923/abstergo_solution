@@ -9,7 +9,7 @@ import java.io.Serializable;
  *
  * @author abstergo
  */
-public interface IContext extends Serializable {
+public interface IContext<V> extends Serializable {
     /**
      * 获取上下文ID
      *
@@ -41,7 +41,7 @@ public interface IContext extends Serializable {
      *
      * @return
      */
-    IDictionary<String, Object> getSource();
+    IDictionary<String, V> getSource();
 
 
 }

@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "tbs.boardcast")
 @Data
 public class BoardcastProperty {
+
     /**
      * 默认事件总线
      */
@@ -22,4 +23,5 @@ public class BoardcastProperty {
      * 默认事件分发器
      */
     private Class<? extends IEventDispatcher> eventDispatcherType;
+
 }

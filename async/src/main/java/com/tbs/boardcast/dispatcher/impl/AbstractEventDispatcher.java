@@ -1,18 +1,20 @@
 package com.tbs.boardcast.dispatcher.impl;
 
 import com.tbs.boardcast.bus.IEventBus;
+import com.tbs.boardcast.constant.BeanNameConstant;
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
 import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
+import com.tbs.common.holder.context.IContext;
+import com.tbs.common.util.HolderUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -30,7 +32,12 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, Initi
     private ExecutorService executorService;
     private boolean started = false;
 
-    private Map<String, AbstractSubscriber> subscriberMap = new HashMap<>();
+    IContext<AbstractSubscriber> subscriberContext;
+
+    @PostConstruct
+    public void init() {
+        subscriberContext = HolderUtil.getContext(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID);
+    }
 
     /**
      * 构造函数
@@ -43,12 +50,12 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, Initi
 
     @Override
     public void register(AbstractSubscriber subscriber) {
-        subscriberMap.put(subscriber.getSubscriberId(), subscriber);
+        subscriberContext.getSource().set(subscriber.getSubscriberId(), subscriber);
     }
 
     @Override
     public void unregister(AbstractSubscriber subscriber) {
-        subscriberMap.remove(subscriber.getSubscriberId());
+        subscriberContext.getSource().remove(subscriber.getSubscriberId());
     }
 
     @Override
@@ -77,7 +84,7 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, Initi
                         logger.trace("空事件超时");
                         continue;
                     }
-                    for (AbstractSubscriber subscriber : subscriberMap.values()) {
+                    for (AbstractSubscriber subscriber : subscriberContext.getSource().values()) {
                         if (subscriber.supportEvent(iPublishResult.getEvent().getEventName()) &&
                             subscriber.supportPublisher(iPublishResult.getPublisher())) {
                             if (iPublishResult.getHandleMode() == HandleMode.SYNC) {
