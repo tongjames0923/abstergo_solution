@@ -33,6 +33,13 @@ public @interface ExpireOn {
     TimeUnit timeUnit() default TimeUnit.SECONDS;
 
     /**
+     * 缓存名称
+     *
+     * @return
+     */
+    String[] cacheNames() default {};
+
+    /**
      * 是否失效所有缓存
      *
      * @return
