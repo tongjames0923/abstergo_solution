@@ -1,7 +1,6 @@
 package com.tbs.app.controller.publics;
 
 import com.tbs.cache.annotation.ExpireOn;
-import com.tbs.cache.constant.CacheNameConstant;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.IUserAuthService;
@@ -19,7 +18,7 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/public")
 public class PublicTestController extends BaseController {
-    @Cacheable(key = "#value", value = CacheNameConstant.TTL_CACHE)
+    @Cacheable(key = "#value",value = "test")
     @ExpireOn(value = 5)
     @GetMapping("/test")
     public AjaxResult test(String value) throws InterruptedException {
