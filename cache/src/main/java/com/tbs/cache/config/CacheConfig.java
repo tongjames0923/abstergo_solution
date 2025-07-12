@@ -1,38 +1,63 @@
 package com.tbs.cache.config;
 
-import com.tbs.cache.config.property.CacheProperty;
-import com.tbs.cache.impl.manager.AbstractContextCacheManager;
-import com.tbs.cache.impl.manager.SimpleCcontextCacheManager;
+import com.tbs.cache.core.AbstractTtlAwareAdaptCacheManager;
+import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.impl.ImportedTtlAwareAdaptCacheManager;
+import com.tbs.cache.core.impl.LocalExpireActuator;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.AssertUtil;
 import com.tbs.common.util.BeanUtil;
-import com.tbs.common.util.ExceptionUtil;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
+import org.springframework.cache.interceptor.CacheResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 
 import javax.annotation.Resource;
 
+/**
+ * 缓存配置
+ *
+ * @author tongj
+ */
 @Configuration
 @EnableCaching
 public class CacheConfig {
 
     @Resource
-    private CacheProperty cacheProperty;
+    CacheProperty cacheProperty;
 
     @Bean
-    AbstractContextCacheManager cacheManager() {
+    public IExpiredActuator expiredActuator() {
         return BeanUtil.buildBeanFromProperties(() -> {
-            return new SimpleCcontextCacheManager(cacheProperty.getCacheNameContextId(),
-                cacheProperty.getCacheContextId(), cacheProperty.isAcceptNull());
-        }, cacheProperty.getCacheManagerClass(), (c) -> {
+            return new LocalExpireActuator();
+        }, cacheProperty.getExpiredActuator(), BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean("cacheManagerImpl")
+    CacheManager cacheManager() {
+        return BeanUtil.buildBeanFromProperties(() -> {
+            return new ConcurrentMapCacheManager();
+        }, cacheProperty.getCacheManagerImplementation(), (c) -> {
             try {
-                return c.getConstructor(String.class, String.class, boolean.class)
-                    .newInstance(cacheProperty.getCacheNameContextId(), cacheProperty.getCacheContextId(),
-                        cacheProperty.isAcceptNull());
-            } catch (Throwable e) {
-                AssertUtil.throwError(() -> ExceptionUtil.newException(e, "缓存管理器构建失败"));
+                return c.getConstructor().newInstance();
+            } catch (Exception e) {
+                AssertUtil.throwError(() -> new FormattedRuntimeException(e, "构建CacheManager失败"));
             }
             return null;
         });
     }
+
+    @Bean
+    @Primary
+    public AbstractTtlAwareAdaptCacheManager cacheManager(@Qualifier("cacheManagerImpl") CacheManager cacheManager,
+        IExpiredActuator expiredActuator) {
+
+        return new ImportedTtlAwareAdaptCacheManager(cacheManager, expiredActuator);
+    }
+
+
 }
