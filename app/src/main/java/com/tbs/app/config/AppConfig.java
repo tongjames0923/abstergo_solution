@@ -5,9 +5,11 @@ import com.tbs.boardcast.event.IEvent;
 import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.boardcast.publisher.impl.DispatcherImportedPublisher;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
+import com.tbs.cache.core.ICacheListenner;
 import com.tbs.common.IErrorThrowEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -35,6 +37,38 @@ public class AppConfig {
     @Bean
     IPublisher publisher(IEventDispatcher dispatcher) {
         return new DispatcherImportedPublisher("publisher", dispatcher);
+    }
+
+    @Bean
+    ICacheListenner cacheListenner() {
+        return new ICacheListenner() {
+            private Logger logger = LoggerFactory.getLogger(AppConfig.class);
+
+            @Override
+            public boolean support(Cache cache) {
+                return true;
+            }
+
+            @Override
+            public void onGet(String cacheName, Object key, Object value) {
+                logger.info("get cache {} {} {}", cacheName, key, value);
+            }
+
+            @Override
+            public void onPut(String cacheName, Object key, Object value) {
+                logger.info("put cache {} {} {}", cacheName, key, value);
+            }
+
+            @Override
+            public void onEvict(String cacheName, Object key) {
+                logger.info("evict cache {} {}", cacheName, key);
+            }
+
+            @Override
+            public void onClear(String cacheName) {
+                logger.info("clear cache {}", cacheName);
+            }
+        };
     }
 
     @Bean
