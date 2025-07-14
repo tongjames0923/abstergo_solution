@@ -4,6 +4,8 @@ import com.tbs.common.util.AssertUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
@@ -22,6 +24,8 @@ import java.util.stream.Collectors;
  */
 public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager {
 
+    private static final Logger log = LoggerFactory.getLogger(AbstractTtlAwareAdaptCacheManager.class);
+
     @Data
     @AllArgsConstructor
     public static final class MethodExpireInfo {
@@ -29,7 +33,7 @@ public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager 
         private Object key;
         private long expireTimeMillis;
         private boolean expireAll = false;
-
+        private String methodName;
     }
 
     @Resource
@@ -75,8 +79,10 @@ public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager 
     public void setMethodExpireDate(@NotNull MethodExpireInfo info) {
         AssertUtil.notNull(info.getKey(), "methodKeyName can not be null");
         if (info.isExpireAll()) {
+            log.trace("set method expire all: {}", info.getKey());
             getExpiredActuator().expireAll(getCache(info.getCacheName()), info.getExpireTimeMillis());
         } else {
+            log.trace("set method expire: {}, {}", info.getKey(), info.getExpireTimeMillis());
             getExpiredActuator().expire(getCache(info.getCacheName()), info.getKey(), info.getExpireTimeMillis());
         }
     }
