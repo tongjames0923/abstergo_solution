@@ -7,8 +7,13 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 
 /**
  * 抽象TTL缓存管理器
@@ -27,52 +32,14 @@ public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager 
 
     }
 
-    public static final class AdaptCache implements Cache {
-        private Cache cache;
+    @Resource
+    Map<String, ICacheListenner> cacheListennerMap;
 
-        public AdaptCache(Cache cache) {
-            this.cache = cache;
-        }
+    private List<ICacheListenner> cacheListenners;
 
-        @Override
-        public String getName() {
-            return cache.getName();
-        }
-
-        @Override
-        public Object getNativeCache() {
-            return cache.getNativeCache();
-        }
-
-        @Override
-        public ValueWrapper get(Object key) {
-            return cache.get(key);
-        }
-
-        @Override
-        public <T> T get(Object key, Class<T> type) {
-            return cache.get(key, type);
-        }
-
-        @Override
-        public <T> T get(Object key, Callable<T> valueLoader) {
-            return cache.get(key, valueLoader);
-        }
-
-        @Override
-        public void put(Object key, Object value) {
-            cache.put(key, value);
-        }
-
-        @Override
-        public void evict(Object key) {
-            cache.evict(key);
-        }
-
-        @Override
-        public void clear() {
-            cache.clear();
-        }
+    @PostConstruct
+    void init() {
+        cacheListenners = cacheListennerMap.values().stream().collect(Collectors.toList());
     }
 
     /**
@@ -91,7 +58,7 @@ public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager 
 
     @Override
     public Cache getCache(String name) {
-        return new AdaptCache(getCacheManager().getCache(name));
+        return new TtlAdaptCache(getCacheManager().getCache(name), cacheListenners);
     }
 
     @Override

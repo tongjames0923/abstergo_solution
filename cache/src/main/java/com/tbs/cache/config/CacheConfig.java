@@ -8,6 +8,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.AssertUtil;
 import com.tbs.common.util.BeanUtil;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
@@ -31,6 +32,7 @@ public class CacheConfig {
     CacheProperty cacheProperty;
 
     @Bean
+    @ConditionalOnMissingBean(value = IExpiredActuator.class)
     public IExpiredActuator expiredActuator() {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new LocalExpireActuator();
@@ -55,9 +57,7 @@ public class CacheConfig {
     @Primary
     public AbstractTtlAwareAdaptCacheManager cacheManager(@Qualifier("cacheManagerImpl") CacheManager cacheManager,
         IExpiredActuator expiredActuator) {
-
         return new ImportedTtlAwareAdaptCacheManager(cacheManager, expiredActuator);
     }
-
 
 }
