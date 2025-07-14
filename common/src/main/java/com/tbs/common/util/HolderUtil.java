@@ -4,7 +4,6 @@ import com.tbs.common.constant.HolderBeanNameConstant;
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
-import com.tbs.common.holder.context.impl.ThreadLocalStoredContext;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
@@ -68,15 +67,6 @@ public final class HolderUtil {
      */
     public static <T> IContext<T> getDefaultLocalStoredContext() {
         return getContext(LocalStoredMapImplContext.LOCAL_STORED_CONTEXT_ID);
-    }
-
-    /**
-     * 获取默认的ThreadLocalStoredContext
-     *
-     * @return
-     */
-    public static <T> IContext<T> getDeaultThreadLocalStoredContext() {
-        return getContext(ThreadLocalStoredContext.THREAD_LOCAL_STORED_CONTEXT_ID);
     }
 
     /**

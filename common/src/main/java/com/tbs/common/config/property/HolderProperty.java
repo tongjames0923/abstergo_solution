@@ -24,11 +24,5 @@ public class HolderProperty {
     @Getter
     @Setter
     private boolean useLocalStoredContext = false;
-    /**
-     * 是否启用一个默认的线程存储context
-     */
-    @Getter
-    @Setter
-    private boolean useThreadLocalStoredContext = false;
 
 }

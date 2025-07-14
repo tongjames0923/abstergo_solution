@@ -6,7 +6,6 @@ import com.tbs.common.constant.HolderBeanNameConstant;
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
-import com.tbs.common.holder.context.impl.ThreadLocalStoredContext;
 import com.tbs.common.config.property.HolderProperty;
 import com.tbs.common.util.AssertUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -41,16 +40,6 @@ public class HolderConfig {
         return new LocalStoredMapImplContext();
     }
 
-    /**
-     * 默认的存储上下文
-     *
-     * @return
-     */
-    @Bean
-    @ConditionalOnProperty(name = "tbs.holder.use-thread-local-stored-context", havingValue = "true")
-    IContext defaultThreadLocalContext() {
-        return new ThreadLocalStoredContext();
-    }
 
     /**
      * 获取主上下文
