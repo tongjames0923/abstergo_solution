@@ -1,9 +1,12 @@
 package com.tbs.web;
 
 import com.tbs.web.security.model.TokenModel;
+import com.tbs.web.trace.core.TraceObject;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+
+import javax.annotation.Resource;
 
 /**
  * 基础的控制器, 提供获取当前用户和TokenModel的方法
@@ -11,6 +14,10 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author tongj
  */
 public class BaseController {
+
+    @Resource
+    private TraceObject traceObject;
+
     /**
      * 获取当前用户的TokenModel
      *
@@ -48,5 +55,14 @@ public class BaseController {
      */
     public Authentication getAuthentication() {
         return SecurityContextHolder.getContext().getAuthentication();
+    }
+
+    /**
+     * 获取当前用户的TraceObject
+     *
+     * @return
+     */
+    public TraceObject getTraceObject() {
+        return traceObject;
     }
 }
