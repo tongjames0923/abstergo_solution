@@ -1,6 +1,7 @@
 package com.tbs.common.holder.context.impl;
 
 import com.tbs.common.holder.context.AbstractLocalStroreNamedContext;
+import com.tbs.common.holder.context.IContext;
 import com.tbs.common.util.AssertUtil;
 
 import java.util.HashMap;
@@ -28,6 +29,11 @@ public class LocalStoredMapImplContext<V> extends AbstractLocalStroreNamedContex
 
     public LocalStoredMapImplContext(String contextId) {
         this(contextId, new HashMap<>(16));
+    }
+
+    @Override
+    protected IContext<V> rebuild() {
+        return this;
     }
 
     /**

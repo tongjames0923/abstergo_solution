@@ -37,9 +37,7 @@ public abstract class AbstractNamedContext<V> implements IContext<V> {
      *
      * @return 新的上下文
      */
-    protected IContext<V> rebuild() {
-        return this;
-    }
+    protected abstract IContext<V> rebuild();
 
     /**
      * 重置上下文ID
@@ -60,6 +58,7 @@ public abstract class AbstractNamedContext<V> implements IContext<V> {
 
     @Override
     public IContext<V> rebuildContext() {
+        validate();
         return rebuild();
     }
 
