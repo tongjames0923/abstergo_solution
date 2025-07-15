@@ -1,8 +1,10 @@
 package com.tbs.common.util;
 
 import com.tbs.common.constant.HolderBeanNameConstant;
+import com.tbs.common.function.SConsumer;
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
+import com.tbs.common.holder.context.IContextDataSource;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -11,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.Collection;
 
 /**
  * 上下文工具类
@@ -70,6 +73,21 @@ public final class HolderUtil {
     }
 
     /**
+     * 操作数据源
+     *
+     * @param context
+     * @param consumer
+     */
+    public static <V> void operateDataSource(IContext<V> context, SConsumer<IContextDataSource> consumer) {
+        if (context == null) {
+            return;
+        }
+        if (BeanUtil.isBaseFrom(context.getClass(), IContextDataSource.class)) {
+            consumer.accept((IContextDataSource)context);
+        }
+    }
+
+    /**
      * 根据类型生成类型值对应的key
      *
      * @param clazz
@@ -89,7 +107,20 @@ public final class HolderUtil {
      */
     public static <T> HolderUtil put(IContext<T> context, String key, T value) {
         validContext(context);
-        context.getSource().set(key, value);
+        operateDataSource(context, dataSource -> dataSource.set(key, value));
+        return instance;
+    }
+
+    /**
+     * 删除值
+     *
+     * @param context 上下文
+     * @param key     键
+     * @return this
+     */
+    public static HolderUtil remove(IContext context, String key) {
+        validContext(context);
+        operateDataSource(context, dataSource -> dataSource.remove(key));
         return instance;
     }
 
@@ -115,7 +146,9 @@ public final class HolderUtil {
      */
     public static <T> T get(IContext<T> context, String key) {
         validContext(context);
-        return context.getSource().get(key);
+        Object[] result = new Object[1];
+        operateDataSource(context, dataSource -> result[0] = dataSource.get(key));
+        return (T)result[0];
     }
 
     /**
@@ -128,7 +161,7 @@ public final class HolderUtil {
      */
     public static <T> HolderUtil putByClass(IContext<T> context, Class<?> clazz, T value) {
         validContext(context);
-        context.getSource().set(getClassValueKey(clazz), value);
+        put(context, getClassValueKey(clazz), value);
         return instance;
     }
 
@@ -153,7 +186,15 @@ public final class HolderUtil {
      */
     public static <T> T get(IContext context, Class<? extends T> clazz) {
         validContext(context);
-        return BeanUtil.getIfBase(context.getSource().get(getClassValueKey(clazz)), clazz);
+        Object result = get(context, getClassValueKey(clazz));
+        return BeanUtil.getIfBase(result, clazz);
+    }
+
+    public static <T> Collection<T> values(IContext<T> context) {
+        validContext(context);
+        Collection<T> result = new java.util.ArrayList<>();
+        operateDataSource(context, dataSource -> result.addAll(dataSource.values()));
+        return result;
     }
 
 }

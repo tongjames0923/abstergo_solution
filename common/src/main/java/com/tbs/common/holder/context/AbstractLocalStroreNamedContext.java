@@ -1,15 +1,24 @@
-package com.tbs.common.holder;
+package com.tbs.common.holder.context;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Map实现字典
+ * 本地存储的命名上下文抽象类
  *
  * @author abstergo
  */
-public abstract class AbstractMapImplDictionary<K, V> implements IDictionary<K, V> {
+public abstract class AbstractLocalStroreNamedContext<K, V> extends AbstractNamedContext<V>
+    implements IContextDataSource<K, V> {
+    /**
+     * 构造函数
+     *
+     * @param contextId 上下文ID
+     */
+    public AbstractLocalStroreNamedContext(String contextId) {
+        super(contextId);
+    }
 
     /**
      * 获取Map
@@ -77,4 +86,5 @@ public abstract class AbstractMapImplDictionary<K, V> implements IDictionary<K, 
     public Collection<V> values() {
         return getMap().values();
     }
+
 }

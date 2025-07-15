@@ -1,16 +1,15 @@
-package com.tbs.common.holder;
+package com.tbs.common.holder.context;
 
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
 
 /**
- * 自定义字典容器接口
+ * 上下文数据源接口
  *
  * @author abstergo
  */
-public interface IDictionary<K, V> {
-
+public interface IContextDataSource<K,V> {
     /**
      * 获取字典项
      *

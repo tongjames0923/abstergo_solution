@@ -37,7 +37,7 @@ public abstract class AbstractNamedContext<V> implements IContext<V> {
      *
      * @return 新的上下文
      */
-    protected IContext rebuild() {
+    protected IContext<V> rebuild() {
         return this;
     }
 

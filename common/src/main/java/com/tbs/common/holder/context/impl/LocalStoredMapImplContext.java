@@ -1,8 +1,7 @@
 package com.tbs.common.holder.context.impl;
 
-import com.tbs.common.holder.AbstractMapImplDictionary;
-import com.tbs.common.holder.IDictionary;
-import com.tbs.common.holder.context.AbstractNamedContext;
+import com.tbs.common.holder.context.AbstractLocalStroreNamedContext;
+import com.tbs.common.util.AssertUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,39 +11,49 @@ import java.util.Map;
  *
  * @author abstergo
  */
-public class LocalStoredMapImplContext extends AbstractNamedContext {
+public class LocalStoredMapImplContext<V> extends AbstractLocalStroreNamedContext<String, V> {
     /**
      * 本地存储上下文ID
      */
     public static final String LOCAL_STORED_CONTEXT_ID = "local-stored-context";
 
-    private IDictionary<String, Object> source = new AbstractMapImplDictionary<String, Object>() {
-        private Map<String, Object> map = new HashMap<>();
-
-        @Override
-        protected Map<String, Object> getMap() {
-            return map;
-        }
-    };
+    private Map<String, V> map;
 
     /**
      * 构造函数
      */
     public LocalStoredMapImplContext() {
-        this(LOCAL_STORED_CONTEXT_ID);
+        this(LOCAL_STORED_CONTEXT_ID, new HashMap<>(16));
+    }
+
+    public LocalStoredMapImplContext(String contextId) {
+        this(contextId, new HashMap<>(16));
+    }
+
+    /**
+     * 构造函数
+     *
+     * @param map 存储对象
+     */
+    public LocalStoredMapImplContext(Map<String, V> map) {
+        this(LOCAL_STORED_CONTEXT_ID, map);
     }
 
     /**
      * 构造函数
      *
      * @param contextId 上下文ID
+     * @param map       存储对象
      */
-    public LocalStoredMapImplContext(String contextId) {
+    public LocalStoredMapImplContext(String contextId, Map<String, V> map) {
         super(contextId);
+        AssertUtil.notNull(map, "map can not be null");
+        this.map = map;
     }
 
     @Override
-    public IDictionary<String, Object> getSource() {
-        return source;
+    protected Map<String, V> getMap() {
+        return map;
     }
+
 }
