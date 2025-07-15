@@ -50,12 +50,12 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, Initi
 
     @Override
     public void register(AbstractSubscriber subscriber) {
-        subscriberContext.getSource().set(subscriber.getSubscriberId(), subscriber);
+        HolderUtil.put(subscriberContext, subscriber.getSubscriberId(), subscriber);
     }
 
     @Override
     public void unregister(AbstractSubscriber subscriber) {
-        subscriberContext.getSource().remove(subscriber.getSubscriberId());
+        HolderUtil.remove(subscriberContext, subscriber.getSubscriberId());
     }
 
     @Override
@@ -84,7 +84,7 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, Initi
                         logger.trace("空事件超时");
                         continue;
                     }
-                    for (AbstractSubscriber subscriber : subscriberContext.getSource().values()) {
+                    for (AbstractSubscriber subscriber : HolderUtil.values(subscriberContext)) {
                         if (subscriber.supportEvent(iPublishResult.getEvent().getEventName()) &&
                             subscriber.supportPublisher(iPublishResult.getPublisher())) {
                             if (iPublishResult.getHandleMode() == HandleMode.SYNC) {
