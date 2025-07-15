@@ -40,6 +40,12 @@ public class TraceObject implements Serializable {
      */
     private Date disposeTime;
 
+    /**
+     * 链路追踪ID对应的上下文ID对应的子链路追踪ID
+     */
+    private TraceObject childTraceObject;
+
+
     public TraceObject(String traceId) {
         this.traceId = traceId;
     }
@@ -69,5 +75,8 @@ public class TraceObject implements Serializable {
         return this;
     }
 
-
+    public TraceObject setChildTraceObject(TraceObject childTraceObject) {
+        this.childTraceObject = childTraceObject;
+        return this;
+    }
 }

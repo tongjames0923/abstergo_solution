@@ -83,6 +83,12 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
     public IContext<TraceObject> rebuildContext() {
         if (isValid()) {
             log.warn("链路跟踪对象尚未失效时被重建");
+            if (CollUtil.isNotEmpty(getContextListenners())) {
+                for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
+                    iTraceContextListenner.onTraceContextChanged(
+                        ITraceContextListenner.CONTEXT_CHANGE_TYPE_CONTEXT_DROPED, this, null, null);
+                }
+            }
         }
         Collection<ITraceIdObjectFounder> traceIdObjectFounders = getTraceIdObjectFounders();
         if (CollUtil.isNotEmpty(traceIdObjectFounders)) {
@@ -131,7 +137,8 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
         handleRequestStart(getTrace(), request, response);
         if (CollUtil.isNotEmpty(getContextListenners())) {
             for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
-                iTraceContextListenner.onTraceAvaliable(getTrace(), request, response, this);
+                iTraceContextListenner.onTraceContextChanged(ITraceContextListenner.CONTEXT_CHANGE_TYPE_CONTEXT_CREATED,
+                    this, request, response);
             }
         }
     }
@@ -147,7 +154,8 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
         markInvalid();
         if (CollUtil.isNotEmpty(getContextListenners())) {
             for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
-                iTraceContextListenner.onTraceUnavaliable(getTrace(), request, response, this);
+                iTraceContextListenner.onTraceContextChanged(
+                    ITraceContextListenner.CONTEXT_CHANGE_TYPE_CONTEXT_DESTROYED, this, request, response);
             }
         }
     }
@@ -158,7 +166,18 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
      * @return
      */
     public TraceObject getTrace() {
-        return traceObject;
+        return getLastOne(traceObject);
     }
+
+    private TraceObject getLastOne(TraceObject to) {
+        if (to == null) {
+            return null;
+        }
+        if (to.getChildTraceObject() == null) {
+            return to;
+        }
+        return getLastOne(to.getChildTraceObject());
+    }
+
 
 }

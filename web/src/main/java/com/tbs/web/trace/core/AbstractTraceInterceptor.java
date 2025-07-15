@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
+ * 链路跟踪的拦截器
  * @author abstergo
  */
 public abstract class AbstractTraceInterceptor implements HandlerInterceptor {

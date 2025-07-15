@@ -1,6 +1,5 @@
 package com.tbs.web.trace.core;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 /**
