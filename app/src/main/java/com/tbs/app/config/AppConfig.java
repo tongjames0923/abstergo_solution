@@ -7,6 +7,7 @@ import com.tbs.boardcast.publisher.impl.DispatcherImportedPublisher;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 import com.tbs.cache.core.ICacheListenner;
 import com.tbs.common.IErrorThrowEvent;
+import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -14,6 +15,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -42,6 +44,9 @@ public class AppConfig {
     @Bean
     ICacheListenner cacheListenner() {
         return new ICacheListenner() {
+
+            @Resource
+            AbstractTraceContext traceContext;
             private Logger logger = LoggerFactory.getLogger(AppConfig.class);
 
             @Override
@@ -51,22 +56,23 @@ public class AppConfig {
 
             @Override
             public void onGet(String cacheName, Object key, Object value) {
-                logger.info("get cache {} {} {}", cacheName, key, value);
+                logger.info("trace:{} ,get cache {} {} {}", traceContext.getTrace(), cacheName, key, value);
             }
 
             @Override
             public void onPut(String cacheName, Object key, Object value) {
-                logger.info("put cache {} {} {}", cacheName, key, value);
+                logger.info("trace:{} ,put cache {} {} {}", traceContext.getTrace(), cacheName, key, value);
             }
 
             @Override
             public void onEvict(String cacheName, Object key) {
-                logger.info("evict cache {} {}", cacheName, key);
+                logger.info("trace:{} ,evict cache {} {}", traceContext.getTrace(), cacheName, key);
             }
 
             @Override
             public void onClear(String cacheName) {
-                logger.info("clear cache {}", cacheName);
+
+                logger.info("trace:{} ,clear cache {}", traceContext.getTrace(), cacheName);
             }
         };
     }
