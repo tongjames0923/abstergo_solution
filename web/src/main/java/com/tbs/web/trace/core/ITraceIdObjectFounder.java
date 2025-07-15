@@ -15,5 +15,5 @@ public interface ITraceIdObjectFounder {
      * @param request
      * @return
      */
-    Optional<TraceObject> findTraceObject(HttpServletRequest request);
+    Optional<TraceObject> findTraceObject();
 }

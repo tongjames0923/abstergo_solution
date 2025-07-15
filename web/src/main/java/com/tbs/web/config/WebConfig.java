@@ -8,6 +8,7 @@ import com.tbs.web.result.impl.SimpleBuilderProvider;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.impl.*;
+import com.tbs.web.trace.core.AbstractTraceInterceptor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -20,6 +21,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
 
@@ -32,7 +35,7 @@ import javax.annotation.Resource;
 @EnableWebMvc
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-public class WebConfig {
+public class WebConfig implements WebMvcConfigurer {
 
     @Resource
     private WebProperty webProperty;
@@ -149,4 +152,12 @@ public class WebConfig {
         }, webProperty.getResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
     }
 
+    @Resource
+    private AbstractTraceInterceptor traceInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(traceInterceptor).addPathPatterns("/**");
+        WebMvcConfigurer.super.addInterceptors(registry);
+    }
 }

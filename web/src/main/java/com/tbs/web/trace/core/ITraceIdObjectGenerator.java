@@ -14,6 +14,6 @@ public interface ITraceIdObjectGenerator {
      * @param request
      * @return
      */
-    TraceObject generateTraceObject(HttpServletRequest request);
-    
+    TraceObject generateTraceObject();
+
 }
