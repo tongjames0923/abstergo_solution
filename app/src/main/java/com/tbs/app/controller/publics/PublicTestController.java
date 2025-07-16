@@ -1,5 +1,6 @@
 package com.tbs.app.controller.publics;
 
+import com.tbs.app.service.TestService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
@@ -18,12 +19,14 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/public")
 public class PublicTestController extends BaseController {
+
+    @Resource
+    TestService service;
     @Cacheable(key = "#value",value = "test")
     @ExpireOn(value = 5)
     @GetMapping("/test")
     public AjaxResult test(String value) throws InterruptedException {
-        Thread.currentThread().join(1000);
-        return AjaxUtil.getInstance().success(value);
+        return AjaxUtil.getInstance().success(service.test());
     }
 
     @Resource
