@@ -3,12 +3,14 @@ package com.tbs.web.trace.core;
 import com.tbs.common.holder.context.AbstractNamedContext;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.UuidUtil;
 import com.tbs.web.trace.tool.ITraceContextListenner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
@@ -24,7 +26,18 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
 
     private static final Logger log = LoggerFactory.getLogger(AbstractTraceContext.class);
 
-    TraceObject traceObject = null;
+    /**
+     * 获取方法调用树提供者
+     *
+     * @return
+     */
+    protected abstract IMethodInvokeTreeProvider getMethodInvokeTreeProvider();
+
+    private TraceObject getRootObject() {
+        return getMethodInvokeTreeProvider().getTree().getRoot() == null ? null
+            : getMethodInvokeTreeProvider().getTree().getRoot().getValue();
+    }
+
 
     /**
      * 获取当前TraceObject
@@ -58,25 +71,34 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
 
     @Override
     public boolean isValid() {
-        return super.isValid() && traceObject != null && traceObject.isValid();
+        return super.isValid() && getRootObject() != null && getRootObject().isValid();
     }
 
     @Override
     protected void invalidate() {
         super.invalidate();
-        if (traceObject != null) {
-            traceObject.setValid(false);
-            traceObject.setDisposeTime(new Date());
+        if (getRootObject() != null) {
+            getRootObject().setValid(false);
+            getRootObject().setDisposeTime(new Date());
         }
     }
 
     @Override
     protected void validate() {
         super.validate();
-        if (traceObject != null) {
-            traceObject.setValid(true);
-            traceObject.setAvaliableTime(new Date());
+        if (getRootObject() != null) {
+            getRootObject().setValid(true);
+            getRootObject().setAvaliableTime(new Date());
         }
+    }
+
+    /**
+     * 设置根对象
+     *
+     * @param rootObject
+     */
+    private void setRootObject(TraceObject rootObject) {
+        getMethodInvokeTreeProvider().setMethodRoot(rootObject);
     }
 
     @Override
@@ -95,13 +117,13 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
             for (ITraceIdObjectFounder traceIdObjectFounder : traceIdObjectFounders) {
                 Optional<TraceObject> traceObject = traceIdObjectFounder.findTraceObject();
                 if (traceObject.isPresent()) {
-                    this.traceObject = traceObject.get();
+                    setRootObject(traceObject.get());
                     break;
                 }
             }
         }
-        if (traceObject == null) {
-            traceObject = getTraceIdObjectGenerator().generateTraceObject();
+        if (getRootObject() == null) {
+            setRootObject(getTraceIdObjectGenerator().generateTraceObject());
         }
         return super.rebuildContext();
     }
@@ -134,7 +156,7 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
      */
     public void makeContextAvaliable(HttpServletRequest request, HttpServletResponse response) {
         rebuildContext();
-        handleRequestStart(getTrace(), request, response);
+        handleRequestStart(getRootTrace(), request, response);
         if (CollUtil.isNotEmpty(getContextListenners())) {
             for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
                 iTraceContextListenner.onTraceContextChanged(ITraceContextListenner.CONTEXT_CHANGE_TYPE_CONTEXT_CREATED,
@@ -150,7 +172,7 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
      * @param response
      */
     public void makeContextUnavaliable(HttpServletRequest request, HttpServletResponse response) {
-        handleRequestEnd(getTrace(), request, response);
+        handleRequestEnd(getRootTrace(), request, response);
         markInvalid();
         if (CollUtil.isNotEmpty(getContextListenners())) {
             for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
@@ -165,19 +187,49 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
      *
      * @return
      */
-    public TraceObject getTrace() {
-        return getLastOne(traceObject);
+    public TraceObject getRootTrace() {
+        return getRootObject();
     }
 
-    private TraceObject getLastOne(TraceObject to) {
-        if (to == null) {
-            return null;
-        }
-        if (to.getChildTraceObject() == null) {
-            return to;
-        }
-        return getLastOne(to.getChildTraceObject());
+    /**
+     * 获取当前方法调用的TraceObject
+     *
+     * @return
+     */
+    public TraceObject getCurrentMethodTraceObject() {
+        return getMethodInvokeTreeProvider().getCurrentTraceObject();
     }
 
+    /**
+     * 方法调用开始
+     *
+     * @param traceId
+     * @param method
+     * @param args
+     * @param target
+     */
+    public void beginMethod(String traceId, Method method, Object[] args, Object target) {
+        MethodTraceObject traceObject =
+            new MethodTraceObject(UuidUtil.getInstance().getUuidString(), method, args, target);
+        getMethodInvokeTreeProvider().beginMethodFrom(traceId, traceObject);
+        if (CollUtil.isNotEmpty(getContextListenners())) {
+            for (ITraceContextListenner listenner : getContextListenners()) {
+                listenner.onMethodInvokeBegin(traceObject, getMethodInvokeTreeProvider());
+            }
+        }
+    }
 
+    /**
+     * 方法调用结束
+     *
+     * @param traceId
+     */
+    public void endMethod(String traceId) {
+        TraceObject traceObject = getMethodInvokeTreeProvider().endMethod(traceId);
+        if (CollUtil.isNotEmpty(getContextListenners())) {
+            for (ITraceContextListenner listenner : getContextListenners()) {
+                listenner.onMethodInvokeEnd(traceObject, getMethodInvokeTreeProvider());
+            }
+        }
+    }
 }

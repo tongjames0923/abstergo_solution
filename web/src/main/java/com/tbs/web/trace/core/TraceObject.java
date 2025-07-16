@@ -1,7 +1,6 @@
 package com.tbs.web.trace.core;
 
 import lombok.Getter;
-import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -12,7 +11,6 @@ import java.util.Date;
  * @author abstergo
  */
 @Getter
-@ToString
 public class TraceObject implements Serializable {
     private static final long serialVersionUID = 1L;
     /**
@@ -41,10 +39,9 @@ public class TraceObject implements Serializable {
     private Date disposeTime;
 
     /**
-     * 链路追踪ID对应的上下文ID对应的子链路追踪ID
+     * 父级调用Id
      */
-    private TraceObject childTraceObject;
-
+    private String parentTraceId;
 
     public TraceObject(String traceId) {
         this.traceId = traceId;
@@ -75,8 +72,29 @@ public class TraceObject implements Serializable {
         return this;
     }
 
-    public TraceObject setChildTraceObject(TraceObject childTraceObject) {
-        this.childTraceObject = childTraceObject;
+    public TraceObject setParentTraceId(String parentTraceId) {
+        this.parentTraceId = parentTraceId;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "TraceObject{" +
+            "traceId='" +
+            traceId +
+            '\'' +
+            ", valid=" +
+            valid +
+            ", contextId='" +
+            contextId +
+            '\'' +
+            ", avaliableTime=" +
+            avaliableTime +
+            ", disposeTime=" +
+            disposeTime +
+            ", parentTraceId='" +
+            parentTraceId +
+            '\'' +
+            '}';
     }
 }

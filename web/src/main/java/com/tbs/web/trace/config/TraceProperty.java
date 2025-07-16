@@ -1,7 +1,9 @@
 package com.tbs.web.trace.config;
 
 import com.tbs.web.trace.core.AbstractTraceContext;
+import com.tbs.web.trace.core.IMethodInvokeTreeProvider;
 import com.tbs.web.trace.core.ITraceIdObjectGenerator;
+import com.tbs.web.trace.impl.SimpleMethodInvokeTreeProvider;
 import com.tbs.web.trace.impl.SpringManagedTraceContext;
 import com.tbs.web.trace.impl.UuidTraceObjectGenerator;
 import lombok.Data;
@@ -26,4 +28,14 @@ public class TraceProperty {
      * 链路追踪上下文
      */
     private Class<? extends AbstractTraceContext> traceContext = SpringManagedTraceContext.class;
+
+    /**
+     * 链路追踪排除路径
+     */
+    private String[] excludePaths = new String[0];
+
+    /**
+     * 函数链路追踪提供者
+     */
+    private Class<? extends IMethodInvokeTreeProvider> methodInvokeTreeProvider = SimpleMethodInvokeTreeProvider.class;
 }

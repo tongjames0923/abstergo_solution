@@ -8,6 +8,7 @@ import com.tbs.web.result.impl.SimpleBuilderProvider;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.impl.*;
+import com.tbs.web.trace.config.TraceProperty;
 import com.tbs.web.trace.core.AbstractTraceInterceptor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -155,9 +156,11 @@ public class WebConfig implements WebMvcConfigurer {
     @Resource
     private AbstractTraceInterceptor traceInterceptor;
 
+    @Resource
+    TraceProperty traceProperty;
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(traceInterceptor).addPathPatterns("/**");
+        registry.addInterceptor(traceInterceptor).excludePathPatterns(traceProperty.getExcludePaths());
         WebMvcConfigurer.super.addInterceptors(registry);
     }
 }
