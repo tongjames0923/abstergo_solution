@@ -1,0 +1,20 @@
+package com.tbs.sql.query;
+
+/**
+ * SQL组装接口
+ *
+ * @author abstergo
+ */
+public interface ISqlAssembler {
+    /**
+     * 组装SQL
+     *
+     * @param selectSql
+     * @param whereSql
+     * @param orderSql
+     * @param groupSql
+     * @param limitSql
+     * @return
+     */
+    public String assemble(String selectSql, String whereSql, String orderSql, String groupSql, String limitSql);
+}
