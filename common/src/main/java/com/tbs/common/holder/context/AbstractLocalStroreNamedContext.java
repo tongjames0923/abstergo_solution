@@ -68,8 +68,8 @@ public abstract class AbstractLocalStroreNamedContext<K, V> extends AbstractName
     }
 
     @Override
-    public void putIfAbsent(K key, V value) {
-        getMap().putIfAbsent(key, value);
+    public boolean putIfAbsent(K key, V value) {
+        return null == getMap().putIfAbsent(key, value);
     }
 
     @Override

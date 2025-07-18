@@ -9,6 +9,7 @@ import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.Ordered;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -21,7 +22,7 @@ import java.util.Collection;
  * @author abstergo
  */
 @Component
-public final class HolderUtil {
+public final class HolderUtil implements Ordered {
 
     /**
      * 上下文持有者
@@ -197,4 +198,8 @@ public final class HolderUtil {
         return result;
     }
 
+    @Override
+    public int getOrder() {
+        return Ordered.HIGHEST_PRECEDENCE;
+    }
 }

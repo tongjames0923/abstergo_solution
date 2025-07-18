@@ -1,12 +1,12 @@
 package com.tbs.sql.ef.impl;
 
-import tbs.framework.base.SFunction;
+import com.tbs.common.function.SFunction;
+import com.tbs.common.util.LambdaUtil;
 import com.tbs.sql.ef.IQueryOrderProvider;
 import com.tbs.sql.ef.IQueryQueryBuilder;
 import com.tbs.sql.enums.QueryOrderEnum;
 import com.tbs.sql.model.SqlOrderInfo;
 import com.tbs.sql.utils.SqlUtils;
-import tbs.framework.utils.LambdaUtils;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -30,7 +30,7 @@ public class EntityQueryOrderProvider<T> implements IQueryOrderProvider<T> {
     public <P> IQueryOrderProvider<T> orderBy(SFunction<T, P> accessor, QueryOrderEnum order) {
         SqlOrderInfo info = new SqlOrderInfo();
         info.setOrder(order);
-        info.setFiledName(SqlUtils.getFiledNameWithMapping(LambdaUtils.getField(accessor)));
+        info.setFiledName(SqlUtils.getFiledNameWithMapping(LambdaUtil.getField(accessor)));
         orderInfos.add(info);
         return this;
     }

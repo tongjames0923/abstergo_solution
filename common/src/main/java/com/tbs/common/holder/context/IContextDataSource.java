@@ -74,8 +74,9 @@ public interface IContextDataSource<K,V> {
      *
      * @param key
      * @param value
+     * @return 添加成功返回true
      */
-    void putIfAbsent(K key, V value);
+    boolean putIfAbsent(K key, V value);
 
     /**
      * 获取所有键值对
