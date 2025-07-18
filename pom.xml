@@ -11,7 +11,6 @@
     </parent>
     <packaging>pom</packaging>
     <modules>
-
         <module>app</module>
         <module>swagger</module>
         <module>web</module>
@@ -19,6 +18,7 @@
         <module>common</module>
         <module>cache</module>
         <module>sql</module>
+        <module>app_system</module>
     </modules>
     <groupId>com.tbs</groupId>
     <artifactId>solution</artifactId>

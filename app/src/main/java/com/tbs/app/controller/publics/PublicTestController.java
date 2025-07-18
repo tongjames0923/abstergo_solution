@@ -29,11 +29,11 @@ public class PublicTestController extends BaseController {
         return AjaxUtil.getInstance().success(service.test());
     }
 
-    @Resource
-    private IUserAuthService userAuthService;
+//    @Resource
+//    private IUserAuthService userAuthService;
 
-    @GetMapping("/login")
-    public AjaxResult login(Long userId, String password) {
-        return AjaxUtil.getInstance().success(userAuthService.login(String.valueOf(userId), password));
-    }
+//    @GetMapping("/login")
+//    public AjaxResult login(Long userId, String password) {
+//        return AjaxUtil.getInstance().success(userAuthService.login(String.valueOf(userId), password));
+//    }
 }

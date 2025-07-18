@@ -9,9 +9,19 @@ tbs:
       - /private/**
     auth:
       enable: true
-      user-auth-service-impl: com.tbs.app.config.UserAuthServiceImpl
+      user-auth-service-impl: com.tbs.app.service.impl.SimpleUserAuthServiceImpl
   swagger:
     base-package: com.tbs.app.controller
 logging:
   level:
     com.tbs: trace
+# Spring配置
+spring:
+
+  # 资源信息
+  messages:
+    # 国际化资源文件路径
+    basename: i18n/messages
+  profiles:
+    active: druid
+
