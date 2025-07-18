@@ -1,11 +1,15 @@
 package com.tbs.web.uitl;
 
+import com.alibaba.fastjson2.JSON;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.PrintWriter;
 
 /**
  * Ajax工具类，用于构建统一的Ajax响应结果 提供了成功、失败和错误等不同情况下的响应结果构建方法
@@ -20,6 +24,24 @@ public class AjaxUtil {
      */
     @Resource
     private IAjaxBuilderProvider ajaxBuilderProvider;
+
+    /**
+     * 静态方法，用于将AjaxResult对象写入HTTP响应中
+     *
+     * @param response   HTTP响应对象
+     * @param ajaxResult Ajax结果对象
+     */
+    public static void writeInfoResp(HttpServletResponse response, AjaxResult ajaxResult) throws IOException {
+        HttpServletResponse httpResponse = (HttpServletResponse)response;
+        httpResponse.setCharacterEncoding("UTF-8");
+        httpResponse.setContentType("application/json");
+        String jsonResponse = JSON.toJSONString(ajaxResult.getMap());
+        PrintWriter writer = null;
+        writer = httpResponse.getWriter();
+        writer.print(jsonResponse);
+        writer.flush();
+    }
+
 
     /**
      * AjaxUtil实例，用于单例模式

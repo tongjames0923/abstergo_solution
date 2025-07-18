@@ -1,8 +1,6 @@
 package com.tbs.web.security.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.tbs.common.util.AssertUtil;
-import com.tbs.common.util.ExceptionUtil;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.exception.InvalidTokenException;
@@ -16,6 +14,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.util.matcher.AndRequestMatcher;
@@ -30,7 +29,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -63,23 +61,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         matcher = new AndRequestMatcher(matchers);
     }
 
-    private void writeIntoBody(HttpServletResponse response, AjaxResult ajaxResult) {
-        HttpServletResponse httpResponse = (HttpServletResponse)response;
-        httpResponse.setCharacterEncoding("UTF-8");
-        httpResponse.setContentType("application/json; charset=utf-8");
-
-        // 返回JSON响应
-        String jsonResponse = JSON.toJSONString(ajaxResult.getMap());
-        PrintWriter writer = null;
-        try {
-            writer = httpResponse.getWriter();
-        } catch (IOException e) {
-            AssertUtil.throwError(() -> ExceptionUtil.newException(e));
-        }
-        writer.print(jsonResponse);
-        writer.flush();
-        writer.close();
-    }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
@@ -100,9 +81,13 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
         } catch (NotFoundTokenException | InvalidTokenException e) {
             auth(TokenAuthentication.badTokenCreate(e, ""));
+        } catch (AuthenticationException e) {
+            AjaxUtil.writeInfoResp(response,
+                AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_UNAUTHORIZED_CODE, e.getMessage(), e));
+            return;
         } catch (Exception e) {
             AjaxResult result = AjaxUtil.getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE, e.getMessage(), null);
-            writeIntoBody(response, result);
+            AjaxUtil.writeInfoResp(response, result);
             return;
         }
         filterChain.doFilter(request, response);
