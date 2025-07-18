@@ -39,5 +39,8 @@ public class WebAuthProperty {
      */
     private Class<? extends ITokenPicker> tokenPickerImpl = DefaultTokenPicker.class;
 
+    /**
+     * 用户认证服务实现类
+     */
     private Class<? extends IUserAuthService> userAuthServiceImpl = NotImplUserAuthService.class;
 }

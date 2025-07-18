@@ -142,7 +142,9 @@ public class WebConfig implements WebMvcConfigurer {
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
     public IUserAuthService notImplUserAuthService() {
-        return BeanUtil.buildBeanFromProperties(NotImplUserAuthService::new, webAuthProperty.getUserAuthServiceImpl(),
+        return BeanUtil.buildBeanFromProperties(() -> {
+                return new NotImplUserAuthService();
+            }, webAuthProperty.getUserAuthServiceImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 
