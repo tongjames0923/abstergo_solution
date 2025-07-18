@@ -2,7 +2,7 @@
 spring:
     jpa:
       hibernate:
-        ddl-auto: create
+        ddl-auto: update
     datasource:
         type: com.alibaba.druid.pool.DruidDataSource
         password: '!Ty1997923'
