@@ -87,7 +87,7 @@ public class AssertUtil {
      */
     public static <T extends RuntimeException> void throwError(Supplier<T> exceptionSupplier) {
 
-        var e = exceptionSupplier.get();
+        T e = exceptionSupplier.get();
         if (errorThrowEvents.stream().anyMatch(event -> event.onAssertUtilThrow(e))) {
             return;
         }
