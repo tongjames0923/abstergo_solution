@@ -18,6 +18,7 @@
         <module>async</module>
         <module>common</module>
         <module>cache</module>
+        <module>sql</module>
     </modules>
     <groupId>com.tbs</groupId>
     <artifactId>solution</artifactId>
