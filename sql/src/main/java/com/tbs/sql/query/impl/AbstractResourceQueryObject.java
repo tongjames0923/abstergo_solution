@@ -6,8 +6,6 @@ import com.tbs.sql.model.SqlSelectInfoModel;
 import com.tbs.sql.query.IQuery;
 
 import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,10 +22,6 @@ public abstract class AbstractResourceQueryObject implements IQuery {
 
     private Map<String, SqlSelectInfoModel> sqlSelectInfoModelMap = new HashMap<>(32);
 
-    protected AbstractResourceQueryObject(String resourcePath) {
-        this.resourcePath = resourcePath;
-    }
-
     protected SqlSelectInfoModel loadSql(String resourcePath) {
         try (BufferedReader reader = ResourceUtil.getUtf8Reader(resourcePath)) {
             final StringBuilder sql = new StringBuilder();
@@ -39,6 +33,14 @@ public abstract class AbstractResourceQueryObject implements IQuery {
         } catch (Exception e) {
             throw new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath);
         }
+    }
+
+    protected void setResourcePath(String resourcePath) {
+        this.resourcePath = resourcePath;
+    }
+
+    protected String getResourcePath() {
+        return resourcePath;
     }
 
     @Override
