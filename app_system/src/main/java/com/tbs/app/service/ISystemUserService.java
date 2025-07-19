@@ -1,6 +1,7 @@
 package com.tbs.app.service;
 
 import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.sql.query.impl.AbstractResourceQueryObject;
 
 import java.util.List;
 
@@ -9,7 +10,8 @@ import java.util.List;
  *
  * @author abstergo
  */
-public interface ISystemUserService extends ISaveableService<SystemUser, Long>, IDeleteableService<SystemUser, Long> {
+public interface ISystemUserService extends ISaveableService<SystemUser, Long>, IDeleteableService<SystemUser, Long>,
+    ISearchableService<AbstractResourceQueryObject, SystemUser, Long> {
     /**
      * 根据用户名密码查询用户
      *
