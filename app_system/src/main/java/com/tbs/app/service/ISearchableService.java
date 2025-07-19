@@ -1,15 +1,15 @@
 package com.tbs.app.service;
 
+import com.tbs.app.pojo.model.ClassQueryObject;
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.IQuery;
 
 /**
  * 搜索可提供搜索的服务
  *
  * @author abstergo
  */
-public interface ISearchableService<QO extends IQuery, E, K> {
+public interface ISearchableService<E, K> {
     /**
      * 查询
      *
@@ -17,7 +17,7 @@ public interface ISearchableService<QO extends IQuery, E, K> {
      * @param page 分页参数
      * @return
      */
-    PageVO<E> queryBy(QO qo, IPage page);
+    PageVO<E> queryBy(ClassQueryObject<E> qo, IPage page);
 
     /**
      * 根据id查询

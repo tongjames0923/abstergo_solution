@@ -1,5 +1,6 @@
 package com.tbs.app.pojo.model;
 
+import com.alibaba.fastjson2.JSON;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -40,5 +41,10 @@ public class PageVO<T> implements Serializable {
     public PageVO<T> setData(List<T> data) {
         this.data = data;
         return this;
+    }
+
+    @Override
+    public String toString() {
+        return "PageVO{" + "total=" + total + ", data=" + JSON.toJSONString(data) + '}';
     }
 }

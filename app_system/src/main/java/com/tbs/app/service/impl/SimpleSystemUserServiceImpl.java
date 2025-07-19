@@ -5,6 +5,7 @@ import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.mapper.SystemUserMapper;
 import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.pojo.model.ClassQueryObject;
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.service.AbstractService;
 import com.tbs.app.service.ISystemUserService;
@@ -12,7 +13,6 @@ import com.tbs.common.util.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.impl.AbstractResourceQueryObject;
 
 import javax.annotation.Resource;
 import java.util.Collection;
@@ -116,7 +116,7 @@ public class SimpleSystemUserServiceImpl extends AbstractService<SystemUser, Sys
     }
 
     @Override
-    public PageVO<SystemUser> queryBy(AbstractResourceQueryObject abstractResourceQueryObject, IPage page) {
+    public PageVO<SystemUser> queryBy(ClassQueryObject<SystemUser> abstractResourceQueryObject, IPage page) {
         return PageVO.build(getMapper().queryByQO(abstractResourceQueryObject, page, SystemUser.class),
             getMapper().countByQO(abstractResourceQueryObject));
     }
