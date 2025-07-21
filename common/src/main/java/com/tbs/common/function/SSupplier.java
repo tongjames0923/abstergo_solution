@@ -9,5 +9,5 @@ import java.util.function.Supplier;
  * @param <T>
  */
 @FunctionalInterface
-public interface SSupplier<T> extends Supplier<Object>, Serializable {
+public interface SSupplier<T> extends Supplier<T>, Serializable {
 }
