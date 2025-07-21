@@ -14,6 +14,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
 
@@ -23,7 +25,7 @@ import javax.annotation.Resource;
  * @author abstergo
  */
 @Configuration
-public class TraceConfig {
+public class TraceConfig implements WebMvcConfigurer {
 
     @Resource
     private TraceProperty traceProperty;
@@ -71,4 +73,13 @@ public class TraceConfig {
         });
     }
 
+    @Resource
+    @Lazy
+    private AbstractTraceInterceptor traceInterceptor;
+
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        registry.addInterceptor(traceInterceptor).excludePathPatterns(traceProperty.getExcludePaths());
+        WebMvcConfigurer.super.addInterceptors(registry);
+    }
 }

@@ -5,11 +5,11 @@ import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
-import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.IUserAuthService;
-import com.tbs.web.security.impl.*;
-import com.tbs.web.trace.config.TraceProperty;
-import com.tbs.web.trace.core.AbstractTraceInterceptor;
+import com.tbs.web.security.impl.AuthExceptionHandler;
+import com.tbs.web.security.impl.DefaultUserAuthServiceImpl;
+import com.tbs.web.security.impl.NotImplUserAuthService;
+import com.tbs.web.security.impl.TokenAuthenticationFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,9 +21,10 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
-import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
-import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
 
@@ -36,7 +37,7 @@ import javax.annotation.Resource;
 @EnableWebMvc
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
-public class WebConfig implements WebMvcConfigurer {
+public class WebConfig {
 
     @Resource
     private WebProperty webProperty;
@@ -44,25 +45,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Resource
     private WebAuthProperty webAuthProperty;
 
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    public ITokenPicker tokenPicker() {
-        return BeanUtil.buildBeanFromProperties(() -> {
-            return new DefaultTokenPicker();
-        }, webAuthProperty.getTokenPickerImpl(), BeanUtil::buildByEmptyArgs);
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    public TokenAuthenticationFilter tokenAuthenticationFilter(WebProperty property) {
-        return new TokenAuthenticationFilter();
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    public AuthExceptionHandler authExceptionHandler() {
-        return new AuthExceptionHandler();
-    }
 
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "false", matchIfMissing = true)
@@ -94,13 +76,25 @@ public class WebConfig implements WebMvcConfigurer {
         return configuration.getAuthenticationManager();
     }
 
+    public CorsConfigurationSource corsFilter() {
+        final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        final CorsConfiguration corsConfiguration = new CorsConfiguration();
+        // 1 设置访问源地址
+        corsConfiguration.addAllowedOrigin("*");
+        // 2 设置访问源请求头
+        corsConfiguration.addAllowedHeader("*");
+        // 3 设置访问源请求方法
+        corsConfiguration.addAllowedMethod("*");
+        corsConfiguration.setMaxAge(24 * 60 * 60L);
+        //        corsConfiguration.setAllowCredentials(true);
+        source.registerCorsConfiguration("/**", corsConfiguration);
+        return source;
+    }
+
     private void setSecurity(HttpSecurity http) throws Exception {
         if (webProperty.isEnableCors()) {
-            http.cors();
-        } else {
-            http.cors().disable();
+            http.cors().configurationSource(corsFilter());
         }
-
         if (webProperty.isEnableCsrf()) {
             http.csrf();
         } else {
@@ -134,35 +128,9 @@ public class WebConfig implements WebMvcConfigurer {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    AuthenticationProvider authenticationProvider() {
-        return new DefaultUserAuthServiceImpl();
-    }
-
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
-    public IUserAuthService notImplUserAuthService() {
-        return BeanUtil.buildBeanFromProperties(() -> {
-                return new NotImplUserAuthService();
-            }, webAuthProperty.getUserAuthServiceImpl(),
-            BeanUtil::buildByEmptyArgs);
-    }
-
-    @Bean
     public IAjaxBuilderProvider ajaxBuilderProvider() {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new SimpleBuilderProvider();
         }, webProperty.getResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
-    }
-
-    @Resource
-    private AbstractTraceInterceptor traceInterceptor;
-
-    @Resource
-    TraceProperty traceProperty;
-    @Override
-    public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(traceInterceptor).excludePathPatterns(traceProperty.getExcludePaths());
-        WebMvcConfigurer.super.addInterceptors(registry);
     }
 }
