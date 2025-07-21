@@ -5,9 +5,12 @@ import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.uitl.AjaxUtil;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -27,7 +30,7 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
     private IOnErrorAjaxProvider onErrorAjaxProvider;
 
     @ExceptionHandler(Throwable.class)
-    public AjaxResult handleException(Exception e) {
+    public AjaxResult handleException(Throwable e) {
         return onErrorAjaxProvider.onError(e);
     }
 
