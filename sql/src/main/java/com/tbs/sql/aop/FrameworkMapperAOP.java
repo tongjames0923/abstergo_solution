@@ -5,7 +5,7 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.sql.mapper.impl.EntitySelectFetchMapper;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.IQuery;
+import com.tbs.sql.query.IQueryCriteria;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -42,7 +42,7 @@ public class FrameworkMapperAOP {
     Object query(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Map<String, Object> f = new HashMap<>();
-        List<Map<String, Object>> list = entitySelectFetchMapper.queryByQO((IQuery)args[0], (IPage)args[1], f);
+        List<Map<String, Object>> list = entitySelectFetchMapper.queryByQO((IQueryCriteria)args[0], (IPage)args[1], f);
         if (CollUtil.isEmpty(list)) {
             return new ArrayList<>(0);
         }
@@ -56,6 +56,6 @@ public class FrameworkMapperAOP {
     Object count(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
         Map<String, Object> f = new HashMap<>();
-        return entitySelectFetchMapper.countByQO((IQuery)args[0], f);
+        return entitySelectFetchMapper.countByQO((IQueryCriteria)args[0], f);
     }
 }

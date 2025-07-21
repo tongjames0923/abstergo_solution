@@ -2,7 +2,7 @@ package com.tbs.sql.provider.impl;
 
 import com.tbs.sql.model.FetchObject;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.IQuery;
+import com.tbs.sql.query.IQueryCriteria;
 import com.tbs.sql.utils.QueryUtil;
 
 import java.util.HashMap;
@@ -35,7 +35,7 @@ public class QuerySelectProvider {
         return "select count(*) from (" + sql + ") as t1";
     }
 
-    public String dynamicSql(IQuery _query, IPage _page, Map<String, Object> _prs) throws IllegalAccessException {
+    public String dynamicSql(IQueryCriteria _query, IPage _page, Map<String, Object> _prs) throws IllegalAccessException {
         final QueryUtil queryUtil = QueryUtil.getInstance();
         if (_prs == null) {
             _prs = new HashMap<>();
@@ -43,7 +43,7 @@ public class QuerySelectProvider {
         return queryUtil.getQuery(_query, _page, _prs);
     }
 
-    public String dynamicCountSql(IQuery _query, Map<String, Object> _prs) throws IllegalAccessException {
+    public String dynamicCountSql(IQueryCriteria _query, Map<String, Object> _prs) throws IllegalAccessException {
         final QueryUtil queryUtil = QueryUtil.getInstance();
         if (_prs == null) {
             _prs = new HashMap<>();

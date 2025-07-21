@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * @author abstergo
  */
-public interface IQuery extends Serializable {
+public interface IQueryCriteria extends Serializable {
 
     /**
      * 获取查询SQL信息

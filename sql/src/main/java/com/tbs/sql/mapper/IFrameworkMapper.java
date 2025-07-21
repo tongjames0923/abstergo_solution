@@ -2,7 +2,7 @@ package com.tbs.sql.mapper;
 
 
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.IQuery;
+import com.tbs.sql.query.IQueryCriteria;
 import tk.mybatis.mapper.additional.idlist.IdListMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateSelectiveMapper;
@@ -28,7 +28,7 @@ public interface IFrameworkMapper<T, K>
      * @param <Q>
      * @return
      */
-    <E, Q extends IQuery> List<E> queryByQO(Q qo, IPage page, Class<E> entityClass);
+    <E, Q extends IQueryCriteria> List<E> queryByQO(Q qo, IPage page, Class<E> entityClass);
 
     /**
      * 根据查询条件查询数量
@@ -36,5 +36,5 @@ public interface IFrameworkMapper<T, K>
      * @param qo
      * @return
      */
-    Long countByQO(IQuery qo);
+    Long countByQO(IQueryCriteria qo);
 }

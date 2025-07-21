@@ -15,7 +15,7 @@ import com.tbs.sql.order.IQueryOrderBy;
 import com.tbs.sql.properties.SqlProperty;
 import com.tbs.sql.provider.ICustomWhereProvider;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.IQuery;
+import com.tbs.sql.query.IQueryCriteria;
 import com.tbs.sql.query.ISqlAssembler;
 import lombok.Getter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -240,7 +240,7 @@ public class QueryUtil {
      * @param params      参数 用于填充参数
      * @return 查询SQL
      */
-    public <T extends IQuery> String getQuery(T queryObject, IPage page, Map<String, Object> params) {
+    public <T extends IQueryCriteria> String getQuery(T queryObject, IPage page, Map<String, Object> params) {
         if (queryObject == null) {
             throw new SqlExtractionException("Query object cannot be null", this);
         }
@@ -268,9 +268,9 @@ public class QueryUtil {
             throw new SqlExtractionException("Entity cannot be null", this);
         }
         String baseSelect = "";
-        if (BeanUtil.isBaseFrom(fetchObject.getEntity().getClass(), IQuery.class)) {
+        if (BeanUtil.isBaseFrom(fetchObject.getEntity().getClass(), IQueryCriteria.class)) {
             baseSelect = selectSqlDialect.getSelectSqlExtractor()
-                .extractSelectSql(((IQuery)fetchObject.getEntity()).getSelectSQLInfo());
+                .extractSelectSql(((IQueryCriteria)fetchObject.getEntity()).getSelectSQLInfo());
         } else {
             baseSelect = selectSqlDialect.getSelectSqlExtractor()
                 .extractSelectSql(EntityInfoPuller.pullFromClass(fetchObject.getEntity().getClass()));

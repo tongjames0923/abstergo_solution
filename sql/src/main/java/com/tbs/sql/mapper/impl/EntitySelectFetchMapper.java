@@ -3,7 +3,7 @@ package com.tbs.sql.mapper.impl;
 import com.tbs.sql.model.FetchObject;
 import com.tbs.sql.provider.impl.QuerySelectProvider;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.IQuery;
+import com.tbs.sql.query.IQueryCriteria;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.SelectProvider;
 
@@ -49,7 +49,7 @@ public interface EntitySelectFetchMapper {
      *     生成动态SQL语句，以实现根据查询对象动态查询数据库，并结合分页对象实现分页查询
      */
     @SelectProvider(type = QuerySelectProvider.class, method = "dynamicSql")
-    List<Map<String, Object>> queryByQO(IQuery _query, IPage _page, Map<String, Object> _prs);
+    List<Map<String, Object>> queryByQO(IQueryCriteria _query, IPage _page, Map<String, Object> _prs);
 
     /**
      * 根据查询对象统计记录数
@@ -61,5 +61,5 @@ public interface EntitySelectFetchMapper {
      *     生成动态SQL语句，以实现根据查询对象动态统计数据库中满足条件的记录数
      */
     @SelectProvider(type = QuerySelectProvider.class, method = "dynamicCountSql")
-    Long countByQO(IQuery _query, Map<String, Object> _prs);
+    Long countByQO(IQueryCriteria _query, Map<String, Object> _prs);
 }

@@ -3,7 +3,7 @@ package com.tbs.sql.query.impl;
 import cn.hutool.core.io.resource.ResourceUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.sql.model.SqlSelectInfoModel;
-import com.tbs.sql.query.IQuery;
+import com.tbs.sql.query.IQueryCriteria;
 
 import java.io.BufferedReader;
 import java.util.HashMap;
@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * @author tongj
  */
-public abstract class AbstractResourceQueryObject implements IQuery {
+public abstract class AbstractResourceBaseQueryCriteria implements IQueryCriteria {
 
     private String resourcePath;
 
