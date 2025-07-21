@@ -1,8 +1,8 @@
 package com.tbs.app;
 
 import cn.hutool.core.date.DateUtil;
-import com.tbs.app.pojo.SystemUserQuery;
-import com.tbs.app.service.ISystemUserService;
+import com.tbs.app.pojo.CommonSystemUserQueryCriteria;
+import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.sql.model.QueryPageModel;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -26,7 +26,7 @@ class AppApplicationTests {
         Date now = new Date();
         Date last3Day = DateUtil.offsetDay(now, -3);
         var p = systemUserService.queryBy(
-            new SystemUserQuery().setUserNameEquals("1196489944").setCreateTimeGreaterThan(last3Day),
+            new CommonSystemUserQueryCriteria().setUserNameEquals("1196489944").setCreateTimeGreaterThan(last3Day),
             QueryPageModel.of(1L, 10L));
         logger.info("{}", p);
     }

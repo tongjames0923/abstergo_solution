@@ -9,7 +9,7 @@ tbs:
       - /private/**
     auth:
       enable: true
-      user-auth-service-impl: com.tbs.app.service.impl.SimpleUserAuthServiceImpl
+      user-auth-service-impl: com.tbs.app.service.business.impl.SimpleUserAuthServiceImpl
     enable-cors: true
   swagger:
     base-package: com.tbs.app.controller
