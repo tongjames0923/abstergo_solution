@@ -2,6 +2,7 @@ package com.tbs.web.result.impl;
 
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.uitl.AjaxUtil;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.MediaType;
@@ -9,21 +10,26 @@ import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
+
+import javax.annotation.Resource;
 
 /**
  * 响应结果处理
  *
  * @author tongj
  */
-@ControllerAdvice
+@RestControllerAdvice
 public class ResponseAjaxAspect implements ResponseBodyAdvice {
 
-    @ExceptionHandler(Exception.class)
-    public AjaxResult handleException(Exception e) {
-        return AjaxUtil.getInstance().error(e.getMessage(), e);
-    }
+    @Resource
+    private IOnErrorAjaxProvider onErrorAjaxProvider;
 
+    @ExceptionHandler(Throwable.class)
+    public AjaxResult handleException(Exception e) {
+        return onErrorAjaxProvider.onError(e);
+    }
 
     @Override
     public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,

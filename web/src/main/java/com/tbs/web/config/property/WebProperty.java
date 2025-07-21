@@ -1,7 +1,9 @@
 package com.tbs.web.config.property;
 
 import com.tbs.web.result.IAjaxBuilderProvider;
+import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
+import com.tbs.web.result.impl.SimpleErrorAjaxProvider;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -66,4 +68,9 @@ public class WebProperty {
      * 返回结果构建器
      */
     private Class<? extends IAjaxBuilderProvider> resultBuilderProvier = SimpleBuilderProvider.class;
+
+    /**
+     * 错误结果构建器
+     */
+    private Class<? extends IOnErrorAjaxProvider> errorResultBuilderProvier = SimpleErrorAjaxProvider.class;
 }

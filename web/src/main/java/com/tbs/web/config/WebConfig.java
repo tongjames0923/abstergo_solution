@@ -4,7 +4,9 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.result.IAjaxBuilderProvider;
+import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
+import com.tbs.web.result.impl.SimpleErrorAjaxProvider;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.impl.AuthExceptionHandler;
 import com.tbs.web.security.impl.DefaultUserAuthServiceImpl;
@@ -45,7 +47,6 @@ public class WebConfig {
     @Resource
     private WebAuthProperty webAuthProperty;
 
-
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "false", matchIfMissing = true)
     public SecurityFilterChain noAuthsecurityWebFilterChain(HttpSecurity http,
@@ -60,8 +61,7 @@ public class WebConfig {
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     public SecurityFilterChain securityWebFilterChain(HttpSecurity http,
         TokenAuthenticationFilter tokenAuthenticationFilter, AuthExceptionHandler authExceptionHandler,
-        DefaultUserAuthServiceImpl provider)
-        throws Exception {
+        DefaultUserAuthServiceImpl provider) throws Exception {
         setSecurity(http);
         http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.exceptionHandling().authenticationEntryPoint(authExceptionHandler)
@@ -132,5 +132,12 @@ public class WebConfig {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new SimpleBuilderProvider();
         }, webProperty.getResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    public IOnErrorAjaxProvider errorResultBuilderProvider() {
+        return BeanUtil.buildBeanFromProperties(() -> {
+            return new SimpleErrorAjaxProvider();
+        }, webProperty.getErrorResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
     }
 }
