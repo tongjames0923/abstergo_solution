@@ -1,6 +1,9 @@
-package com.tbs.app.service;
+package com.tbs.app.service.business;
 
 import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.service.IDeleteableService;
+import com.tbs.app.service.ISaveableService;
+import com.tbs.app.service.ISearchableService;
 
 import java.util.List;
 
@@ -18,13 +21,5 @@ public interface ISystemUserService extends ISaveableService<SystemUser, Long>, 
      * @return
      */
     List<SystemUser> queryByUserName(String username);
-
-    /**
-     * 保存用户
-     *
-     * @param systemUser
-     * @return
-     */
-    List<SystemUser> save(SystemUser systemUser);
 
 }

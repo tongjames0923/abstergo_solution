@@ -3,7 +3,7 @@ package com.tbs.app.pojo.model;
 import com.tbs.app.config.SystemSqlProperty;
 import com.tbs.common.util.AssertUtil;
 import com.tbs.common.util.SpringUtil;
-import com.tbs.sql.query.impl.AbstractResourceQueryObject;
+import com.tbs.sql.query.impl.AbstractResourceBaseQueryCriteria;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -13,7 +13,7 @@ import java.lang.reflect.Type;
  *
  * @author abstergo
  */
-public class ClassQueryObject<T> extends AbstractResourceQueryObject {
+public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria {
     private static SystemSqlProperty sqlProperty;
 
     static String initString(Class<?> type) {
@@ -24,7 +24,7 @@ public class ClassQueryObject<T> extends AbstractResourceQueryObject {
         return String.format("%s%s%s", sqlProperty.getSqlPrefix(), type.getSimpleName(), sqlProperty.getSqlSuffix());
     }
 
-    public final <T> Class<T> getType(ClassQueryObject<T> target) {
+    public final <T> Class<T> getType(ClassBaseQueryCriteria<T> target) {
         Type superClass = target.getClass().getGenericSuperclass();
         Class<T> type = null;
         if (superClass instanceof ParameterizedType) {
@@ -41,7 +41,7 @@ public class ClassQueryObject<T> extends AbstractResourceQueryObject {
         return type;
     }
 
-    public ClassQueryObject() {
+    public ClassBaseQueryCriteria() {
         String file = initString(getType(this));
         setResourcePath(file);
     }

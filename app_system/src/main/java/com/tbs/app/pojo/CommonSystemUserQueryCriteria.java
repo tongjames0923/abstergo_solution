@@ -1,7 +1,7 @@
 package com.tbs.app.pojo;
 
 import com.tbs.app.pojo.entity.SystemUser;
-import com.tbs.app.pojo.model.ClassQueryObject;
+import com.tbs.app.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
 import com.tbs.sql.enums.QueryContrastEnum;
@@ -13,7 +13,7 @@ import java.util.Date;
  * @author abstergo
  */
 @Getter
-public class SystemUserQuery extends ClassQueryObject<SystemUser> {
+public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<SystemUser> {
     @QueryMapping(value = "id")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private String idEquals;
@@ -39,42 +39,42 @@ public class SystemUserQuery extends ClassQueryObject<SystemUser> {
     @QueryField(contrast = QueryContrastEnum.LESS)
     private Date updateTimeLessThan;
 
-    public SystemUserQuery setIdEquals(String idEquals) {
+    public CommonSystemUserQueryCriteria setIdEquals(String idEquals) {
         this.idEquals = idEquals;
         return this;
     }
 
-    public SystemUserQuery setUserNameEquals(String userNameEquals) {
+    public CommonSystemUserQueryCriteria setUserNameEquals(String userNameEquals) {
         this.userNameEquals = userNameEquals;
         return this;
     }
 
-    public SystemUserQuery setNickNameLike(String nickNameLike) {
+    public CommonSystemUserQueryCriteria setNickNameLike(String nickNameLike) {
         this.nickNameLike = nickNameLike;
         return this;
     }
 
-    public SystemUserQuery setFlagEquals(Integer flagEquals) {
+    public CommonSystemUserQueryCriteria setFlagEquals(Integer flagEquals) {
         this.flagEquals = flagEquals;
         return this;
     }
 
-    public SystemUserQuery setCreateTimeGreaterThan(Date createTimeGreaterThan) {
+    public CommonSystemUserQueryCriteria setCreateTimeGreaterThan(Date createTimeGreaterThan) {
         this.createTimeGreaterThan = createTimeGreaterThan;
         return this;
     }
 
-    public SystemUserQuery setCreateTimeLessThan(Date createTimeLessThan) {
+    public CommonSystemUserQueryCriteria setCreateTimeLessThan(Date createTimeLessThan) {
         this.createTimeLessThan = createTimeLessThan;
         return this;
     }
 
-    public SystemUserQuery setUpdateTimeGreaterThan(Date updateTimeGreaterThan) {
+    public CommonSystemUserQueryCriteria setUpdateTimeGreaterThan(Date updateTimeGreaterThan) {
         this.updateTimeGreaterThan = updateTimeGreaterThan;
         return this;
     }
 
-    public SystemUserQuery setUpdateTimeLessThan(Date updateTimeLessThan) {
+    public CommonSystemUserQueryCriteria setUpdateTimeLessThan(Date updateTimeLessThan) {
         this.updateTimeLessThan = updateTimeLessThan;
         return this;
     }

@@ -23,10 +23,6 @@ public class PageVO<T> implements Serializable {
      */
     private List<T> data;
 
-    public static <T> PageVO<T> build(List<T> list, Long total) {
-        return new PageVO<T>().setData(list).setTotal(total);
-    }
-
     //    public static <T> PageVO<T> buildAsyncAndWait(Supplier<List<T>> listSupplier, Supplier<Long> totalSupplier) {
     //        PageVO<T> pageVO = new PageVO<>();
     //        return ThreadUtil.getInstance().<PageVO<T>>createAsyncCall(pageVO).run(PageVO::setTotal, totalSupplier)

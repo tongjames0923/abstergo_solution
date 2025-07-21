@@ -2,8 +2,8 @@ package com.tbs.app.config;
 
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.constraint.impl.SimpleUserValidator;
-import com.tbs.app.service.ISystemUserService;
-import com.tbs.app.service.impl.SimpleSystemUserServiceImpl;
+import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
 import com.tbs.common.holder.context.AbstractNamedContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import lombok.Data;

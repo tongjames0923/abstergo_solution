@@ -2,6 +2,7 @@ package com.tbs.app.pojo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -17,8 +18,9 @@ import java.util.Date;
     @Index(name = "idx_time", columnList = "create_time,update_time")})
 @Entity
 @Getter
-public class SystemUser implements Serializable {
+public class SystemUser implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
+    @Setter
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -52,25 +54,21 @@ public class SystemUser implements Serializable {
     /**
      * 创建时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @Column(name = "create_time")
+    @Setter
     private Date createTime;
     /**
      * 修改时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @Column(name = "update_time")
+    @Setter
     private Date updateTime;
     /**
      * 状态
      */
     @Column(name = "flag")
+    @Setter
     private Integer flag;
-
-    public SystemUser setId(Long id) {
-        this.id = id;
-        return this;
-    }
 
     public SystemUser setUsername(String username) {
         this.username = username;
@@ -97,18 +95,4 @@ public class SystemUser implements Serializable {
         return this;
     }
 
-    public SystemUser setCreateTime(Date createTime) {
-        this.createTime = createTime;
-        return this;
-    }
-
-    public SystemUser setUpdateTime(Date updateTime) {
-        this.updateTime = updateTime;
-        return this;
-    }
-
-    public SystemUser setFlag(Integer flag) {
-        this.flag = flag;
-        return this;
-    }
 }

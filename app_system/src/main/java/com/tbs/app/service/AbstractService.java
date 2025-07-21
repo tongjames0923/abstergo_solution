@@ -4,16 +4,18 @@ import com.tbs.sql.ef.IEntityQueryWrapper;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import lombok.Getter;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 /**
  * @author abstergo
  */
-public abstract class AbstractService<E, Mapper extends IFrameworkMapper<E, Long>> {
+public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K>> {
     @Getter
     @Resource
     protected Mapper mapper;
 
+    @Getter
     @Resource
     protected IEntityQueryWrapper<E> queryWrapper;
 
@@ -26,11 +28,28 @@ public abstract class AbstractService<E, Mapper extends IFrameworkMapper<E, Long
      */
     protected abstract E newEntity();
 
-    public IEntityQueryWrapper<E> getQueryWrapper() {
-        if (entity == null) {
-            entity = newEntity();
-            queryWrapper.makeQueryable(entity);
-        }
-        return queryWrapper;
+    /**
+     * 获取实体对象类型
+     *
+     * @return
+     */
+    protected Class<E> getEntityClass() {
+        return (Class<E>)entity.getClass();
     }
+
+    /**
+     * 获取实体对象模板类
+     *
+     * @return
+     */
+    protected E getEntity() {
+        return entity;
+    }
+
+    @PostConstruct
+    void init() {
+        entity = newEntity();
+        queryWrapper.makeQueryable(entity);
+    }
+
 }

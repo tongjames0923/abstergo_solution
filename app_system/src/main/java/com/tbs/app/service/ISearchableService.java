@@ -2,7 +2,7 @@ package com.tbs.app.service;
 
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.impl.AbstractResourceQueryObject;
+import com.tbs.sql.query.impl.AbstractResourceBaseQueryCriteria;
 
 /**
  * 搜索可提供搜索的服务
@@ -17,7 +17,7 @@ public interface ISearchableService<E, K> {
      * @param page 分页参数
      * @return
      */
-    PageVO<E> queryBy(AbstractResourceQueryObject qo, IPage page);
+    PageVO<E> queryBy(AbstractResourceBaseQueryCriteria qo, IPage page);
 
     /**
      * 根据id查询
