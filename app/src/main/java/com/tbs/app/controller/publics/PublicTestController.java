@@ -4,7 +4,6 @@ import com.tbs.app.service.TestService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.uitl.AjaxUtil;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -27,6 +26,11 @@ public class PublicTestController extends BaseController {
     @GetMapping("/test")
     public AjaxResult test(String value) throws InterruptedException {
         return AjaxUtil.getInstance().success(service.test());
+    }
+
+    @GetMapping("/test1")
+    public AjaxResult test1() throws InterruptedException {
+        return AjaxUtil.getInstance().success(1);
     }
 
 //    @Resource
