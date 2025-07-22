@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.web.enums.TokenSource;
 import lombok.Data;
 
-import java.io.Serializable;
 import java.util.Date;
 
 /**
@@ -13,7 +12,7 @@ import java.util.Date;
  * @author tongj
  */
 @Data
-public class TokenModel implements Serializable {
+public class SimpleTokenModel implements com.tbs.web.security.ITokenModel {
     private static final long serialVersionUID = 1L;
     /**
      * token
@@ -47,7 +46,7 @@ public class TokenModel implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;
 
-    protected TokenModel() {
+    protected SimpleTokenModel() {
     }
 
     /**
@@ -60,9 +59,9 @@ public class TokenModel implements Serializable {
      * @param expireTime
      * @return
      */
-    public static TokenModel create(String token, TokenSource source, String sourceField, String sourceValue,
+    public static SimpleTokenModel create(String token, TokenSource source, String sourceField, String sourceValue,
         Date expireTime) {
-        TokenModel model = new TokenModel();
+        SimpleTokenModel model = new SimpleTokenModel();
         model.token = token;
         model.source = source;
         model.sourceField = sourceField;

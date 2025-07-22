@@ -21,7 +21,7 @@ import javax.annotation.Resource;
  * @author jiangnan
  * @date 2022/02/07
  **/
-public class DefaultUserAuthServiceImpl implements UserDetailsService, AuthenticationProvider {
+public class UserAuthServiceImpl implements UserDetailsService, AuthenticationProvider {
 
     @Lazy
     @Resource
@@ -32,9 +32,9 @@ public class DefaultUserAuthServiceImpl implements UserDetailsService, Authentic
         TokenAuthentication tokenAuthentication = (TokenAuthentication)authentication;
         AssertUtil.isTrue(!tokenAuthentication.hasToken(), () -> new SimpleAuthException(
             StrUtil.isEmpty(tokenAuthentication.getMessage()) ? "未找到Token" : tokenAuthentication.getMessage()));
-        userAuthService.authToken(tokenAuthentication.getCurrentTokenModel());
-        UserDetails principal = userAuthService.loadUserInfoByToken(tokenAuthentication.getCurrentTokenModel());
-        return TokenAuthentication.createFinal(tokenAuthentication.getCurrentTokenModel(), principal);
+        userAuthService.authToken(tokenAuthentication.getTokenModel());
+        UserDetails principal = userAuthService.loadUserInfoByToken(tokenAuthentication.getTokenModel());
+        return TokenAuthentication.createFinal(tokenAuthentication.getTokenModel(), principal);
     }
 
     @Override

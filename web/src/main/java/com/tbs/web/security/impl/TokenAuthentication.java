@@ -1,7 +1,7 @@
 package com.tbs.web.security.impl;
 
 import com.tbs.common.util.StrUtil;
-import com.tbs.web.security.model.TokenModel;
+import com.tbs.web.security.ITokenModel;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -22,7 +22,7 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
     private UserDetails currentUserDetails;
     @Getter
     @Setter
-    private TokenModel currentTokenModel;
+    private ITokenModel tokenModel;
 
     @Getter
     @Setter
@@ -40,9 +40,9 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
      * @param model
      * @return
      */
-    public static TokenAuthentication create(TokenModel model) {
+    public static TokenAuthentication create(ITokenModel model) {
         TokenAuthentication authentication = new TokenAuthentication(new ArrayList<>(8));
-        authentication.setCurrentTokenModel(model);
+        authentication.setTokenModel(model);
         return authentication;
     }
 
@@ -53,9 +53,9 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
      * @param userDetails
      * @return
      */
-    public static TokenAuthentication createFinal(TokenModel model, UserDetails userDetails) {
+    public static TokenAuthentication createFinal(ITokenModel model, UserDetails userDetails) {
         TokenAuthentication authentication = new TokenAuthentication(userDetails.getAuthorities());
-        authentication.setCurrentTokenModel(model);
+        authentication.setTokenModel(model);
         authentication.setCurrentUserDetails(userDetails);
         authentication.setAuthenticated(true);
         return authentication;
@@ -87,12 +87,12 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
      * @return
      */
     public boolean hasToken() {
-        return getCurrentTokenModel() != null;
+        return getTokenModel() != null;
     }
 
     @Override
     public Object getCredentials() {
-        return getCurrentTokenModel();
+        return getTokenModel();
     }
 
     @Override

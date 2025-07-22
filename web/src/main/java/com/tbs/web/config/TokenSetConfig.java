@@ -12,6 +12,11 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
 
+/**
+ * token设置
+ *
+ * @author abstergo
+ */
 @Configuration
 public class TokenSetConfig {
 

@@ -4,7 +4,7 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.impl.AuthExceptionHandler;
-import com.tbs.web.security.impl.DefaultUserAuthServiceImpl;
+import com.tbs.web.security.impl.UserAuthServiceImpl;
 import com.tbs.web.security.impl.NotImplUserAuthService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -33,7 +33,7 @@ public class AuthConfig {
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     AuthenticationProvider authenticationProvider() {
-        return new DefaultUserAuthServiceImpl();
+        return new UserAuthServiceImpl();
     }
 
     @Bean

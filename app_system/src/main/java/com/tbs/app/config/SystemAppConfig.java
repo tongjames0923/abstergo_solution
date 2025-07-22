@@ -9,7 +9,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import com.tbs.common.util.BeanUtil;
-import com.tbs.web.security.model.TokenModel;
+import com.tbs.web.security.model.SimpleTokenModel;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
@@ -37,7 +37,7 @@ public class SystemAppConfig {
     }
 
     @Bean
-    IContext<TokenModel> tokenModelContext() {
+    IContext<SimpleTokenModel> tokenModelContext() {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new LocalStoredMapImplContext<>(SystemAppConstant.TOKEN_CONTEXT_ID);
         }, systemAppProperty.getTokenContextImpl(), (c) -> {

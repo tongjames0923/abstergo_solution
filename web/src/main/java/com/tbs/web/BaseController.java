@@ -1,7 +1,8 @@
 package com.tbs.web;
 
-import com.tbs.web.security.model.TokenModel;
+import com.tbs.web.security.model.SimpleTokenModel;
 import com.tbs.web.trace.core.TraceObject;
+import lombok.Getter;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -14,8 +15,15 @@ import javax.annotation.Resource;
  *
  * @author tongj
  */
+@Getter
 public class BaseController {
 
+    /**
+     * -- GETTER --
+     *  获取当前用户的TraceObject
+     *
+     * @return
+     */
     @Lazy
     @Resource
     private TraceObject traceObject;
@@ -25,8 +33,8 @@ public class BaseController {
      *
      * @return
      */
-    public TokenModel getCurrentTokenModel() {
-        return (TokenModel)getAuthentication().getCredentials();
+    public SimpleTokenModel getCurrentTokenModel() {
+        return (SimpleTokenModel)getAuthentication().getCredentials();
     }
 
     /**
@@ -59,12 +67,4 @@ public class BaseController {
         return SecurityContextHolder.getContext().getAuthentication();
     }
 
-    /**
-     * 获取当前用户的TraceObject
-     *
-     * @return
-     */
-    public TraceObject getTraceObject() {
-        return traceObject;
-    }
 }

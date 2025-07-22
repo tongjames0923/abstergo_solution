@@ -1,6 +1,5 @@
 package com.tbs.web.security;
 
-import com.tbs.web.security.model.TokenModel;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -24,7 +23,7 @@ public interface IUserAuthService {
      * @param token
      * @return
      */
-    UserDetails loadUserInfoByToken(TokenModel token);
+    UserDetails loadUserInfoByToken(ITokenModel token);
 
     /**
      * 用户登陆
@@ -33,21 +32,21 @@ public interface IUserAuthService {
      * @param password
      * @return
      */
-    TokenModel login(String username, String password);
+    ITokenModel login(String username, String password);
 
     /**
      * 认证token
      *
-     * @param tokenModel
+     * @param simpleTokenModel
      * @throws AuthenticationException
      */
-    void authToken(TokenModel tokenModel) throws AuthenticationException;
+    void authToken(ITokenModel simpleTokenModel) throws AuthenticationException;
 
     /**
      * 用户登出
      *
-     * @param tokenModel
+     * @param simpleTokenModel
      * @return
      */
-    boolean logout(TokenModel tokenModel);
+    boolean logout(ITokenModel simpleTokenModel);
 }

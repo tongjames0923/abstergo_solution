@@ -23,8 +23,6 @@ import java.io.IOException;
  */
 @Slf4j
 public class AuthExceptionHandler implements AuthenticationEntryPoint, AccessDeniedHandler {
-
-
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response,
         AuthenticationException authException) throws IOException, ServletException {

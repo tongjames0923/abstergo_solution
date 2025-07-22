@@ -2,8 +2,8 @@ package com.tbs.web.security.impl;
 
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.AssertUtil;
+import com.tbs.web.security.ITokenModel;
 import com.tbs.web.security.IUserAuthService;
-import com.tbs.web.security.model.TokenModel;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -24,22 +24,22 @@ public class NotImplUserAuthService implements IUserAuthService {
     }
 
     @Override
-    public UserDetails loadUserInfoByToken(TokenModel token) {
+    public UserDetails loadUserInfoByToken(ITokenModel token) {
         return null;
     }
 
     @Override
-    public TokenModel login(String username, String password) {
+    public ITokenModel login(String username, String password) {
         return null;
     }
 
     @Override
-    public void authToken(TokenModel tokenModel) throws AuthenticationException {
+    public void authToken(ITokenModel simpleTokenModel) throws AuthenticationException {
 
     }
 
     @Override
-    public boolean logout(TokenModel tokenModel) {
+    public boolean logout(ITokenModel simpleTokenModel) {
         return false;
     }
 }

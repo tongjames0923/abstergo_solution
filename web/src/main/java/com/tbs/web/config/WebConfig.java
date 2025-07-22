@@ -7,16 +7,13 @@ import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
 import com.tbs.web.result.impl.SimpleErrorAjaxProvider;
-import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.impl.AuthExceptionHandler;
-import com.tbs.web.security.impl.DefaultUserAuthServiceImpl;
-import com.tbs.web.security.impl.NotImplUserAuthService;
+import com.tbs.web.security.impl.UserAuthServiceImpl;
 import com.tbs.web.security.impl.TokenAuthenticationFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -31,7 +28,13 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import javax.annotation.Resource;
 
 /**
- * Web 配置
+ * Web 配置类
+ *
+ * 主要负责以下功能配置：
+ * 1. Spring Security 安全配置
+ * 2. CORS 跨域配置
+ * 3. HTTP 安全特性配置（CSRF、HTTP Basic、表单登录等）
+ * 4. 请求结果构建器配置
  *
  * @author tongj
  */
@@ -41,12 +44,30 @@ import javax.annotation.Resource;
 @EnableMethodSecurity(prePostEnabled = true)
 public class WebConfig {
 
+    /**
+     * Web 配置属性 用于获取跨域、CSRF等Web相关配置参数
+     */
     @Resource
     private WebProperty webProperty;
 
+    /**
+     * 认证相关配置属性
+     * 用于获取认证启用状态、登录路径等认证相关参数
+     */
     @Resource
     private WebAuthProperty webAuthProperty;
 
+    /**
+     * 无认证模式下的安全配置
+     *
+     * 当配置项 tbs.web.auth.enable 为 false 或未配置时生效
+     * 配置异常处理（认证入口点和访问拒绝处理器）
+     *
+     * @param http Security HTTP 安全对象
+     * @param authExceptionHandler 认证异常处理器
+     * @return 安全过滤器链
+     * @throws Exception 配置异常
+     */
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "false", matchIfMissing = true)
     public SecurityFilterChain noAuthsecurityWebFilterChain(HttpSecurity http,
@@ -57,11 +78,24 @@ public class WebConfig {
         return http.build();
     }
 
+    /**
+     * 启用认证模式下的安全配置
+     *
+     * 当配置项 tbs.web.auth.enable 为 true 时生效
+     * 配置令牌认证过滤器、异常处理、用户详情服务和认证提供者
+     *
+     * @param http Security HTTP 安全对象
+     * @param tokenAuthenticationFilter 令牌认证过滤器
+     * @param authExceptionHandler 认证异常处理器
+     * @param provider 默认用户认证服务提供者
+     * @return 安全过滤器链
+     * @throws Exception 配置异常
+     */
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     public SecurityFilterChain securityWebFilterChain(HttpSecurity http,
         TokenAuthenticationFilter tokenAuthenticationFilter, AuthExceptionHandler authExceptionHandler,
-        DefaultUserAuthServiceImpl provider) throws Exception {
+        UserAuthServiceImpl provider) throws Exception {
         setSecurity(http);
         http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.exceptionHandling().authenticationEntryPoint(authExceptionHandler)
@@ -71,11 +105,26 @@ public class WebConfig {
         return http.build();
     }
 
+    /**
+     * 创建认证管理器
+     *
+     * @param configuration 认证配置
+     * @return 认证管理器
+     * @throws Exception 配置异常
+     */
     @Bean
     AuthenticationManager manager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
     }
 
+    /**
+     * 创建 CORS 配置源
+     *
+     * 配置允许所有来源、所有头、所有方法的跨域请求
+     * 设置预检请求缓存时间为24小时
+     *
+     * @return CORS 配置源
+     */
     public CorsConfigurationSource corsFilter() {
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         final CorsConfiguration corsConfiguration = new CorsConfiguration();
@@ -91,6 +140,14 @@ public class WebConfig {
         return source;
     }
 
+    /**
+     * 配置 HTTP 安全设置
+     *
+     * 根据 webProperty 配置启用/禁用各种安全特性
+     *
+     * @param http Security HTTP 安全对象
+     * @throws Exception 配置异常
+     */
     private void setSecurity(HttpSecurity http) throws Exception {
         if (webProperty.isEnableCors()) {
             http.cors().configurationSource(corsFilter());
@@ -127,6 +184,13 @@ public class WebConfig {
 
     }
 
+    /**
+     * 创建 AJAX 结果构建器提供者
+     *
+     * 使用 BeanUtil 根据配置构建结果构建器
+     *
+     * @return AJAX 结果构建器提供者
+     */
     @Bean
     public IAjaxBuilderProvider ajaxBuilderProvider() {
         return BeanUtil.buildBeanFromProperties(() -> {
@@ -134,6 +198,13 @@ public class WebConfig {
         }, webProperty.getResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
     }
 
+    /**
+     * 创建错误结果构建器提供者
+     *
+     * 使用 BeanUtil 根据配置构建错误结果构建器
+     *
+     * @return 错误结果构建器提供者
+     */
     @Bean
     public IOnErrorAjaxProvider errorResultBuilderProvider() {
         return BeanUtil.buildBeanFromProperties(() -> {

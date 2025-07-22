@@ -2,7 +2,6 @@ package com.tbs.web.security;
 
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.NotFoundTokenException;
-import com.tbs.web.security.model.TokenModel;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -20,5 +19,5 @@ public interface ITokenPicker {
      * @throws NotFoundTokenException 找不到Token
      * @throws InvalidTokenException  过期Token
      */
-    TokenModel pick(HttpServletRequest request) throws NotFoundTokenException;
+    ITokenModel pick(HttpServletRequest request) throws NotFoundTokenException;
 }

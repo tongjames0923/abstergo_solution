@@ -7,7 +7,7 @@ import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.ITokenPicker;
-import com.tbs.web.security.model.TokenModel;
+import com.tbs.web.security.model.SimpleTokenModel;
 import com.tbs.web.uitl.AjaxUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -71,13 +71,13 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
 
-        TokenModel tokenModel = null;
+        SimpleTokenModel simpleTokenModel = null;
         UserDetails principal = null;
         try {
             HttpServletRequest serverRequest = request;
-            tokenModel = tokenPicker.pick(serverRequest);
-            AssertUtil.notNull(tokenModel, () -> new NotFoundTokenException("未找到令牌."));
-            auth(manager.authenticate(TokenAuthentication.create(tokenModel)));
+            com.tbs.web.security.ITokenModel tokenModel = tokenPicker.pick(serverRequest);
+            AssertUtil.notNull(simpleTokenModel, () -> new NotFoundTokenException("未找到令牌."));
+            auth(manager.authenticate(TokenAuthentication.create(simpleTokenModel)));
 
         } catch (NotFoundTokenException | InvalidTokenException e) {
             auth(TokenAuthentication.badTokenCreate(e, ""));

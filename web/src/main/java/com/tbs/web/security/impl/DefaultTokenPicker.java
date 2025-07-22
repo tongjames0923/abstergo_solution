@@ -6,7 +6,7 @@ import com.alibaba.fastjson2.JSON;
 import com.tbs.common.util.AssertUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.exception.NotFoundTokenException;
-import com.tbs.web.security.model.TokenModel;
+import com.tbs.web.security.model.SimpleTokenModel;
 import com.tbs.web.security.ITokenPicker;
 
 import javax.annotation.Resource;
@@ -56,7 +56,7 @@ public class DefaultTokenPicker implements ITokenPicker {
     }
 
     @Override
-    public TokenModel pick(HttpServletRequest request) throws NotFoundTokenException {
+    public com.tbs.web.security.ITokenModel pick(HttpServletRequest request) throws NotFoundTokenException {
         String token = "", sourceField, sourceValue = "";
         sourceField = webAuthProperty.getTokenFiledName();
         switch (webAuthProperty.getTokenSource()) {
@@ -86,7 +86,7 @@ public class DefaultTokenPicker implements ITokenPicker {
                 AssertUtil.throwError(() -> new NotFoundTokenException("未找到Token"));
         }
         Date createDate = new Date();
-        return TokenModel.create(token, webAuthProperty.getTokenSource(), sourceField, sourceValue,
+        return SimpleTokenModel.create(token, webAuthProperty.getTokenSource(), sourceField, sourceValue,
             DateUtil.offset(createDate, DateField.SECOND, webAuthProperty.getTokenExpireTime()));
     }
 }
