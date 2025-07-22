@@ -2,8 +2,7 @@ package com.tbs.async.delegate;
 
 import com.tbs.common.delegate.AbstractDelegateInvoker;
 import com.tbs.common.delegate.IDelegateFlag;
-import com.tbs.common.delegate.IDelegateFlagProvider;
-import com.tbs.common.delegate.IDelegateTarget;
+import com.tbs.common.delegate.provider.IDelegateFlagProvider;
 import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
@@ -22,10 +21,16 @@ public class AsyncDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
      */
     private ExecutorService executorService;
 
-    public AsyncDelegateInvoker(IDelegateTarget<T> delegateTarget, IDelegateFlagProvider delegateFlagProvider,
-        ExecutorService executorService) {
-        super(delegateTarget, delegateFlagProvider);
+    private IDelegateFlagProvider delegateFlagProvider;
+
+    public AsyncDelegateInvoker(IDelegateFlagProvider delegateFlagProvider, ExecutorService executorService) {
         this.executorService = executorService;
+        this.delegateFlagProvider = delegateFlagProvider;
+    }
+
+    @Override
+    protected IDelegateFlagProvider getDelegateFlagProvider() {
+        return delegateFlagProvider;
     }
 
     @Override
