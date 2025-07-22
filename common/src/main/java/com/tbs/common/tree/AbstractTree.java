@@ -1,8 +1,24 @@
 package com.tbs.common.tree;
 
+/**
+ * 抽象树结构
+ *
+ * @param <K>
+ * @param <V>
+ * @author abstergo
+ */
 public abstract class AbstractTree<K, V> implements ITree<K, V> {
-    protected ITreeNode<K, V> root;
-    protected int size;
+    private ITreeNode<K, V> root;
+    private int size;
+
+    /**
+     * 设置树大小
+     *
+     * @param s
+     */
+    protected void setSize(int delta) {
+        size += delta;
+    }
 
     @Override
     public ITreeNode<K, V> getRoot() {
@@ -24,7 +40,12 @@ public abstract class AbstractTree<K, V> implements ITree<K, V> {
         return size == 0;
     }
 
-    // 默认的插入逻辑（子类可以覆盖）
+    /**
+     * 插入节点
+     *
+     * @param parentKey
+     * @param newNode
+     */
     @Override
     public void insert(K parentKey, ITreeNode<K, V> newNode) {
         if (root == null) {
@@ -35,9 +56,21 @@ public abstract class AbstractTree<K, V> implements ITree<K, V> {
         insertNode(root, parentKey, newNode);
     }
 
+    /**
+     * 插入节点
+     *
+     * @param currentNode
+     * @param parentKey
+     * @param newNode
+     */
     protected abstract void insertNode(ITreeNode<K, V> currentNode, K parentKey, ITreeNode<K, V> newNode);
 
-    // 默认的删除逻辑（子类可以覆盖）
+    /**
+     * 删除节点
+     *
+     * @param key
+     * @return
+     */
     @Override
     public boolean delete(K key) {
         if (root == null) {
@@ -50,5 +83,14 @@ public abstract class AbstractTree<K, V> implements ITree<K, V> {
         return deleted;
     }
 
+    /**
+     * 删除节点
+     *
+     * @param parent
+     * @param currentNode
+     * @param key
+     * @return
+     */
     protected abstract boolean deleteNode(ITreeNode<K, V> parent, ITreeNode<K, V> currentNode, K key);
+
 }

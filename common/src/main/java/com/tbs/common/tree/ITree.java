@@ -1,5 +1,6 @@
 package com.tbs.common.tree;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -53,6 +54,28 @@ public interface ITree<K, V> {
      * @return
      */
     Optional<ITreeNode<K, V>> find(K key); // 按键查找节点
+
+    /**
+     * 获取树的高度
+     *
+     * @return
+     */
+    int height();
+
+    /**
+     * 获取叶子节点
+     *
+     * @return
+     */
+    List<ITreeNode<K, V>> getLeafNodes();
+
+    /**
+     * 获取指定深度的节点
+     *
+     * @param depth
+     * @return
+     */
+    List<ITreeNode<K, V>> getNodesByDepth(int depth);
 
     /**
      * 插入新节点

@@ -5,6 +5,13 @@ import com.tbs.common.tree.ITreeNode;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * 简单树节点实现
+ *
+ * @param <K>
+ * @param <V>
+ * @author abstergo
+ */
 public class SimpleTreeNode<K, V> implements ITreeNode<K, V> {
     private K key;
     private V value;

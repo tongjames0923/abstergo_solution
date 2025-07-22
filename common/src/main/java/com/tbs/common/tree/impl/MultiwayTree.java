@@ -25,7 +25,7 @@ public class MultiwayTree<K, V> extends AbstractTree<K, V> {
                 currentNode.setChildren(children);
             }
             children.add(newNode);
-            size++;
+            setSize(1);
             return;
         }
 
@@ -41,7 +41,8 @@ public class MultiwayTree<K, V> extends AbstractTree<K, V> {
     protected boolean deleteNode(ITreeNode<K, V> parent, ITreeNode<K, V> currentNode, K key) {
         if (currentNode.getKey().equals(key)) {
             if (parent == null) {
-                root = null; // 删除根节点
+                // 删除根节点
+                setRoot(null);
             } else {
                 List<ITreeNode<K, V>> siblings = parent.getChildren();
                 if (siblings != null) {
@@ -64,8 +65,8 @@ public class MultiwayTree<K, V> extends AbstractTree<K, V> {
 
     @Override
     public void traverse(Consumer<ITreeNode<K, V>> visitor) {
-        if (root != null) {
-            traverseNode(root, visitor);
+        if (getRoot() != null) {
+            traverseNode(getRoot(), visitor);
         }
     }
 
@@ -81,10 +82,80 @@ public class MultiwayTree<K, V> extends AbstractTree<K, V> {
 
     @Override
     public Optional<ITreeNode<K, V>> find(K key) {
-        if (root == null) {
+        if (getRoot() == null) {
             return Optional.empty();
         }
-        return findNode(root, key);
+        return findNode(getRoot(), key);
+    }
+
+    @Override
+    public int height() {
+        return calculateHeight(getRoot());
+    }
+
+    private int calculateHeight(ITreeNode<K, V> node) {
+        if (node == null) {
+            return 0;
+        }
+
+        List<ITreeNode<K, V>> children = node.getChildren();
+        if (children == null || children.isEmpty()) {
+            return 1;
+        }
+
+        int maxChildHeight = 0;
+        for (ITreeNode<K, V> child : children) {
+            int childHeight = calculateHeight(child);
+            if (childHeight > maxChildHeight) {
+                maxChildHeight = childHeight;
+            }
+        }
+
+        return maxChildHeight + 1;
+    }
+
+    @Override
+    public List<ITreeNode<K, V>> getLeafNodes() {
+        List<ITreeNode<K, V>> leafNodes = new ArrayList<>();
+        if (getRoot() != null) {
+            collectLeafNodes(getRoot(), leafNodes);
+        }
+        return leafNodes;
+    }
+
+    private void collectLeafNodes(ITreeNode<K, V> node, List<ITreeNode<K, V>> leafNodes) {
+        List<ITreeNode<K, V>> children = node.getChildren();
+        if (children == null || children.isEmpty()) {
+            leafNodes.add(node);
+        } else {
+            for (ITreeNode<K, V> child : children) {
+                collectLeafNodes(child, leafNodes);
+            }
+        }
+    }
+
+    @Override
+    public List<ITreeNode<K, V>> getNodesByDepth(int depth) {
+        List<ITreeNode<K, V>> nodes = new ArrayList<>(4);
+        if (getRoot() != null && depth > 0) {
+            collectNodesByDepth(getRoot(), depth, 1, nodes);
+        }
+        return nodes;
+    }
+
+    private void collectNodesByDepth(ITreeNode<K, V> node, int targetDepth, int currentDepth,
+        List<ITreeNode<K, V>> nodes) {
+        if (currentDepth == targetDepth) {
+            nodes.add(node);
+            return;
+        }
+
+        List<ITreeNode<K, V>> children = node.getChildren();
+        if (children != null && !children.isEmpty()) {
+            for (ITreeNode<K, V> child : children) {
+                collectNodesByDepth(child, targetDepth, currentDepth + 1, nodes);
+            }
+        }
     }
 
     private Optional<ITreeNode<K, V>> findNode(ITreeNode<K, V> node, K key) {
