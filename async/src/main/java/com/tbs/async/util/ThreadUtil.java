@@ -1,7 +1,5 @@
 package com.tbs.async.util;
 
-import com.tbs.async.ThreadCallableTask;
-import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.util.SpringUtil;
 import org.springframework.stereotype.Component;
 
@@ -9,7 +7,6 @@ import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.*;
-import java.util.function.Supplier;
 
 /**
  * 线程工具类
@@ -92,38 +89,6 @@ public class ThreadUtil {
     public <T> List<Future<T>> callAndAwait(List<Callable<T>> tasks, long timeout, TimeUnit unit)
         throws InterruptedException {
         return getExecutorService().invokeAll(tasks, timeout, unit);
-    }
-
-    /**
-     * 运行异步任务
-     *
-     * <p>该方法用于运行异步任务并返回结果。
-     *
-     * @param tasks 要运行任务的列表
-     * @param <T>   任务返回结果类型
-     * @return 任务结果列表
-     */
-    public <T, P> ThreadCallableTask<T, P> asyncCall(T t, SBiConsumer<T, P> function, Supplier<P> supplier) {
-        ThreadCallableTask<T, P> task = new ThreadCallableTask<>(t, function, supplier);
-        task.setFuture(CompletableFuture.supplyAsync(() -> {
-            function.accept(t, supplier.get());
-            return t;
-        }, getExecutorService()));
-        return task;
-    }
-
-    /**
-     * 创建异步任务
-     *
-     * <p>该方法用于创建异步任务。
-     *
-     * @param t   任务参数
-     * @param <T> 任务参数类型
-     * @param <P> 任务返回结果类型
-     * @return 异步任务构建器
-     */
-    public <T> ThreadCallableTask.Builder<T> createAsyncCall(T t) {
-        return new ThreadCallableTask.Builder<T>(t);
     }
 
 }
