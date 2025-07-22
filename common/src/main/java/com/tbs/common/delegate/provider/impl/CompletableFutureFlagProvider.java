@@ -1,7 +1,8 @@
-package com.tbs.common.delegate.impl;
+package com.tbs.common.delegate.provider.impl;
 
 import com.tbs.common.delegate.IDelegateFlag;
-import com.tbs.common.delegate.IDelegateFlagProvider;
+import com.tbs.common.delegate.impl.CompletableFutureDelegateFlag;
+import com.tbs.common.delegate.provider.IDelegateFlagProvider;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.IDelegateTarget;
 

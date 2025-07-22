@@ -1,5 +1,6 @@
 package com.tbs.common.delegate;
 
+import com.tbs.common.delegate.provider.IDelegateFlagProvider;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.function.SConsumer;
@@ -18,6 +19,12 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 
     IDelegateTarget<T> delegateTarget;
 
+    @Override
+    public void setTarget(IDelegateTarget<T> delegateTarget) {
+        AssertUtil.notNull(delegateTarget, "delegateTarget can not be null");
+        this.delegateTarget = delegateTarget;
+    }
+
     @Data
     @AllArgsConstructor
     private static final class InvokeTask<A, B> {
@@ -29,25 +36,14 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 
     AtomicInteger index = new AtomicInteger(0);
 
-    private IDelegateFlagProvider delegateFlagProvider;
-
     /**
      * 获取委托执行标志提供者
      *
      * @return
      */
-    protected IDelegateFlagProvider getDelegateFlagProvider() {
-        return delegateFlagProvider;
-    }
+    protected abstract IDelegateFlagProvider getDelegateFlagProvider();
 
     private Queue<InvokeTask> tasks = new PriorityQueue<>(Comparator.comparing(InvokeTask::getIndex));
-
-    public AbstractDelegateInvoker(IDelegateTarget<T> delegateTarget, IDelegateFlagProvider delegateFlagProvider) {
-        AssertUtil.notNull(delegateTarget, "delegateTarget can not be null");
-        AssertUtil.notNull(delegateFlagProvider, "delegateFlagProvider can not be null");
-        this.delegateTarget = delegateTarget;
-        this.delegateFlagProvider = delegateFlagProvider;
-    }
 
     @Override
     public IDelegateTarget<T> getTarget() {
@@ -56,12 +52,16 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 
     @Override
     public <P> IDelegateInvoker<T> takeIn(SBiConsumer<T, P> method, SSupplier<P> p) {
+        AssertUtil.notNull(method, "method can not be null");
+        AssertUtil.notNull(p, "val provider can not be null");
         tasks.add(new InvokeTask<>(method, p, index.addAndGet(1), true));
         return this;
     }
 
     @Override
     public <P> IDelegateInvoker<T> takeOut(SFunction<T, P> method, SConsumer<P> consumer) {
+        AssertUtil.notNull(method, "method can not be null");
+        AssertUtil.notNull(consumer, "consumer can not be null");
         tasks.add(new InvokeTask<>(method, consumer, index.addAndGet(1), false));
         return this;
     }

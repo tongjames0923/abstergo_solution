@@ -1,4 +1,8 @@
-package com.tbs.common.delegate;
+package com.tbs.common.delegate.provider;
+
+import com.tbs.common.delegate.IDelegateFlag;
+import com.tbs.common.delegate.IDelegateInvoker;
+import com.tbs.common.delegate.IDelegateTarget;
 
 /**
  * 代理标志提供者

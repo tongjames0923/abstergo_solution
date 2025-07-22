@@ -15,6 +15,13 @@ import java.util.Collection;
 public interface IDelegateInvoker<T> {
 
     /**
+     * 设置目标对象
+     *
+     * @param delegateTarget
+     */
+    void setTarget(IDelegateTarget<T> delegateTarget);
+
+    /**
      * 获取目标对象
      *
      * @return

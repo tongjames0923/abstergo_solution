@@ -2,12 +2,15 @@ package com.tbs.common.delegate.impl;
 
 import com.tbs.common.delegate.AbstractDelegateInvoker;
 import com.tbs.common.delegate.IDelegateFlag;
-import com.tbs.common.delegate.IDelegateFlagProvider;
+import com.tbs.common.delegate.provider.IDelegateFlagProvider;
 import com.tbs.common.delegate.IDelegateTarget;
 import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
 import com.tbs.common.function.SSupplier;
+import org.springframework.context.annotation.Scope;
+
+import javax.annotation.Resource;
 
 /**
  * 简单的delegate执行器
@@ -16,8 +19,12 @@ import com.tbs.common.function.SSupplier;
  */
 public class SimpleDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
 
-    public SimpleDelegateInvoker(IDelegateTarget<T> delegateTarget, IDelegateFlagProvider delegateFlagProvider) {
-        super(delegateTarget, delegateFlagProvider);
+    @Resource
+    private IDelegateFlagProvider delegateFlagProvider;
+
+    @Override
+    protected IDelegateFlagProvider getDelegateFlagProvider() {
+        return delegateFlagProvider;
     }
 
     @Override
