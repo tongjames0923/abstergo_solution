@@ -1,6 +1,6 @@
 package com.tbs.web.trace.impl;
 
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import com.tbs.web.trace.core.AbstractTraceInterceptor;
 

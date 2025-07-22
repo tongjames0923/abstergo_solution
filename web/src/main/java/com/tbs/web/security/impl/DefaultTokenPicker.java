@@ -3,7 +3,7 @@ package com.tbs.web.security.impl;
 import cn.hutool.core.date.DateField;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson2.JSON;
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.security.model.SimpleTokenModel;

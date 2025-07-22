@@ -1,7 +1,7 @@
 package com.tbs.web.security.impl;
 
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.web.security.ITokenModel;
 import com.tbs.web.security.IUserAuthService;
 import org.springframework.security.core.AuthenticationException;

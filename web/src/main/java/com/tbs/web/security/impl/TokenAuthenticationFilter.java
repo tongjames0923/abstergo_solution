@@ -1,6 +1,6 @@
 package com.tbs.web.security.impl;
 
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.exception.InvalidTokenException;

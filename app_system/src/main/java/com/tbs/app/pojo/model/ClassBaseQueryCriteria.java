@@ -1,7 +1,7 @@
 package com.tbs.app.pojo.model;
 
 import com.tbs.app.config.SystemSqlProperty;
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.sql.query.impl.AbstractResourceBaseQueryCriteria;
 

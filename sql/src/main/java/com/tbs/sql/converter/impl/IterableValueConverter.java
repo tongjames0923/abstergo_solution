@@ -1,6 +1,6 @@
 package com.tbs.sql.converter.impl;
 
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.sql.converter.IValueConverter;
 import org.springframework.stereotype.Component;

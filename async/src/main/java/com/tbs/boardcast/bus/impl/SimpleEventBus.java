@@ -4,7 +4,7 @@ import com.tbs.boardcast.bus.IEventBus;
 import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.lock.ILock;
 import com.tbs.lock.util.LockUtil;
 import org.slf4j.Logger;

@@ -7,7 +7,7 @@ import com.tbs.app.mapper.SystemUserMapper;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.app.service.business.ISystemUserService;
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.StrUtil;
 
 import javax.annotation.Resource;

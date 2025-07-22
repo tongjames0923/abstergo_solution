@@ -6,7 +6,7 @@ import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.boardcast.publisher.impl.DispatcherImportedPublisher;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 import com.tbs.cache.core.ICacheListenner;
-import com.tbs.common.IErrorThrowEvent;
+import com.tbs.common.error.IErrorThrowEvent;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import com.tbs.web.trace.core.IMethodInvokeTreeProvider;
 import com.tbs.web.trace.core.TraceObject;

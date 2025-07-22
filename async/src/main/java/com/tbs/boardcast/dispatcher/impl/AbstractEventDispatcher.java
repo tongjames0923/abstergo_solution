@@ -7,7 +7,7 @@ import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 import com.tbs.common.holder.context.IContext;
-import com.tbs.common.util.HolderUtil;
+import com.tbs.common.util.framework.HolderUtil;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;

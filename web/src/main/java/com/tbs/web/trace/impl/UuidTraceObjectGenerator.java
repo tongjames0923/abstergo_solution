@@ -1,6 +1,6 @@
 package com.tbs.web.trace.impl;
 
-import com.tbs.common.util.UuidUtil;
+import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.web.trace.core.ITraceIdObjectGenerator;
 import com.tbs.web.trace.core.TraceObject;
 

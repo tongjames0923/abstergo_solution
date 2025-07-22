@@ -3,7 +3,7 @@ package com.tbs.web.trace.core;
 import com.tbs.common.holder.context.AbstractNamedContext;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.UuidUtil;
+import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.web.trace.tool.ITraceContextListenner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

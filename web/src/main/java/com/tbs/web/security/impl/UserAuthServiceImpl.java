@@ -1,6 +1,6 @@
 package com.tbs.web.security.impl;
 
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.web.exception.SimpleAuthException;

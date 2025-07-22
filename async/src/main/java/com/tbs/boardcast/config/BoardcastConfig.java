@@ -10,7 +10,7 @@ import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.context.AbstractNamedContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

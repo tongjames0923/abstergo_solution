@@ -1,11 +1,6 @@
 package com.tbs.boardcast.event.impl;
 
-import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.event.IEvent;
-import com.tbs.common.util.AssertUtil;
-
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 默认事件实现
