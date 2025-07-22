@@ -1,13 +1,13 @@
 package com.tbs.common.config;
 
-import com.tbs.common.util.BeanUtil;
-import com.tbs.common.error.ExceptionUtil;
+import com.tbs.common.config.property.HolderProperty;
 import com.tbs.common.constant.HolderBeanNameConstant;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
-import com.tbs.common.config.property.HolderProperty;
-import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.BeanUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,7 +39,6 @@ public class HolderConfig {
     IContext defaultLocalStoredContext() {
         return new LocalStoredMapImplContext();
     }
-
 
     /**
      * 获取主上下文

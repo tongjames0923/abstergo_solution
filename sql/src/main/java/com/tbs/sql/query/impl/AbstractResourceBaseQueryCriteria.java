@@ -35,16 +35,16 @@ public abstract class AbstractResourceBaseQueryCriteria implements IQueryCriteri
         }
     }
 
-    protected void setResourcePath(String resourcePath) {
+    protected void PutResourcePath(String resourcePath) {
         this.resourcePath = resourcePath;
     }
 
-    protected String getResourcePath() {
+    protected String resourcePath() {
         return resourcePath;
     }
 
     @Override
     public SqlSelectInfoModel getSelectSQLInfo() {
-        return sqlSelectInfoModelMap.computeIfAbsent(resourcePath, this::loadSql);
+        return sqlSelectInfoModelMap.computeIfAbsent(resourcePath(), this::loadSql);
     }
 }

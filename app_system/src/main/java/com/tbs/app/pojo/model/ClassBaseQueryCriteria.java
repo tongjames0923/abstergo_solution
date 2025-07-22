@@ -43,6 +43,6 @@ public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria
 
     public ClassBaseQueryCriteria() {
         String file = initString(getType(this));
-        setResourcePath(file);
+        PutResourcePath(file);
     }
 }
