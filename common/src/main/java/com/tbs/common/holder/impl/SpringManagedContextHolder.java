@@ -1,9 +1,8 @@
 package com.tbs.common.holder.impl;
 
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.IContextHolder;
 import com.tbs.common.holder.context.IContext;
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;

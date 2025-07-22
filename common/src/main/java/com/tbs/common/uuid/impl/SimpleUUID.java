@@ -1,7 +1,7 @@
 package com.tbs.common.uuid.impl;
 
 import cn.hutool.core.lang.UUID;
-import com.tbs.common.util.EncryptUitl;
+import com.tbs.common.util.encrypt.EncryptUitl;
 import com.tbs.common.util.StrUtil;
 import com.tbs.common.uuid.IUuidGenerator;
 

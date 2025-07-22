@@ -1,7 +1,8 @@
-package com.tbs.common.util;
+package com.tbs.common.error;
 
-import com.tbs.common.IErrorThrowEvent;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.StrUtil;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;

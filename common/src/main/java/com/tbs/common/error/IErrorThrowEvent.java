@@ -1,4 +1,4 @@
-package com.tbs.common;
+package com.tbs.common.error;
 
 /**
  * 经过AssertUtil抛出的异常处理事件

@@ -1,6 +1,6 @@
 package com.tbs.common.uuid.impl;
 
-import com.tbs.common.util.AssertUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.uuid.IUuidGenerator;
 
 import java.nio.charset.StandardCharsets;

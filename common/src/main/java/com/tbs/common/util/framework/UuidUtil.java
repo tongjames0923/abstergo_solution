@@ -1,4 +1,4 @@
-package com.tbs.common.util;
+package com.tbs.common.util.framework;
 
 import com.tbs.common.config.property.UuidProperty;
 import com.tbs.common.uuid.IUuidGenerator;

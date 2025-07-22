@@ -1,6 +1,7 @@
-package com.tbs.common.util;
+package com.tbs.common.error;
 
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.StrUtil;
 
 /**
  * 异常工具类
