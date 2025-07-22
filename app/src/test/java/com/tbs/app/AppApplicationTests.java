@@ -4,9 +4,7 @@ import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.async.constant.AsyncBeanNameConstant;
-import com.tbs.common.delegate.IDelegateInvoker;
-import com.tbs.common.delegate.impl.CallerRunsDelegateTarget;
-import com.tbs.common.delegate.impl.CompletableFutureFlagProvider;
+import com.tbs.common.util.framework.DelegateUtil;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,31 +29,19 @@ class AppApplicationTests {
     @Test
     void contextLoads() throws ExecutionException, InterruptedException {
         PageVO vo = new PageVO<Integer>();
-        IDelegateInvoker<PageVO> invoker =
-            new AsyncDelegateInvoker<>(new CallerRunsDelegateTarget<>(vo), new CompletableFutureFlagProvider(),
-                executorService);
-        var all = invoker.takeIn(PageVO::setTotal, () -> {
-            logger.info("start 1");
-            try {
-                Thread.currentThread().join(1500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            logger.info("end 1");
-            return 100L;
-        }).takeIn(PageVO::setData, () -> {
-            logger.info("start 2");
-            try {
-                Thread.currentThread().join(1500);
-            } catch (InterruptedException e) {
-                throw new RuntimeException(e);
-            }
-            logger.info("end 2");
-            return Arrays.asList(1);
-        }).executeAll();
-        for (var flag : all) {
-            logger.info("flag {}", flag.getUnitlFinished().getTarget());
-        }
+        DelegateUtil.getInstance().delegateWithTarget(vo).build(AsyncDelegateInvoker.class)
+            .takeIn(PageVO::setData, () -> Arrays.asList(1, 2, 3)).takeIn(PageVO::setTotal, () -> {
+                try {
+                    Thread.currentThread().join(1000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                return 10L;
+            }).executeAll().forEach(flag -> {
+                flag.getUnitlFinished().read(PageVO::getData, data -> {
+                    logger.info("data {}", data);
+                });
+            });
     }
 
 }
