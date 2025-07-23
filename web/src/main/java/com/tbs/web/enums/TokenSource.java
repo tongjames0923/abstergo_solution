@@ -79,7 +79,7 @@ public enum TokenSource implements BaseEnum<String> {
      * @return 枚举值的整型代码
      */
     @Override
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 }

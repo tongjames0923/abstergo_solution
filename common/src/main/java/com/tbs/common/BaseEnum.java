@@ -19,7 +19,6 @@ public interface BaseEnum<T> {
      *
      * @return
      */
-    public int getCode();
-
+    public Integer getCode();
 
 }

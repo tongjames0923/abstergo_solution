@@ -21,7 +21,7 @@ public enum HandleMode implements BaseEnum<String> {
     }
 
     @Override
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 }

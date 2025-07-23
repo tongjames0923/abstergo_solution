@@ -96,7 +96,7 @@ public enum EventStatusEnum implements BaseEnum<String> {
     /**
      * 状态编码
      */
-    private int code;
+    private Integer code;
 
     /**
      * 获取状态描述文本
@@ -114,7 +114,7 @@ public enum EventStatusEnum implements BaseEnum<String> {
      * @return 状态编码数值
      */
     @Override
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 
