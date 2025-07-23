@@ -1,6 +1,6 @@
 package com.tbs.app.controller.publics;
 
-import com.tbs.app.pojo.CommonSystemUserQueryCriteria;
+import com.tbs.app.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.TestService;
 import com.tbs.app.service.business.ISystemUserService;
