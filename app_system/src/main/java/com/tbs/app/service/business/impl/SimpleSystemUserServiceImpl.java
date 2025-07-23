@@ -80,6 +80,14 @@ public class SimpleSystemUserServiceImpl
         return getQueryWrapper().query().where().equal(SystemUser::getUsername, username).pour().fetch();
     }
 
+    @Resource
+    SystemUserMapper mapper;
+
+    @Override
+    protected SystemUserMapper getMapper() {
+        return mapper;
+    }
+
     @Override
     protected SystemUser newEntity() {
         return new SystemUser();

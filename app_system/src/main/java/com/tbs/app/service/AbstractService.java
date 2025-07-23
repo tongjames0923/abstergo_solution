@@ -11,9 +11,13 @@ import javax.annotation.Resource;
  * @author abstergo
  */
 public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K>> {
-    @Getter
-    @Resource
-    protected Mapper mapper;
+
+    /**
+     * 获取Mapper对象
+     *
+     * @return
+     */
+    protected abstract Mapper getMapper();
 
     @Getter
     @Resource

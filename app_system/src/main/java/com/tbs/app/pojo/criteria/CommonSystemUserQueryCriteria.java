@@ -1,10 +1,13 @@
-package com.tbs.app.pojo;
+package com.tbs.app.pojo.criteria;
 
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
+import com.tbs.sql.annotation.QueryOrderField;
+import com.tbs.sql.constants.OrderConstant;
 import com.tbs.sql.enums.QueryContrastEnum;
+import com.tbs.sql.model.QueryOrderedModel;
 import lombok.Getter;
 
 import java.util.Date;
@@ -76,6 +79,22 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
 
     public CommonSystemUserQueryCriteria setUpdateTimeLessThan(Date updateTimeLessThan) {
         this.updateTimeLessThan = updateTimeLessThan;
+        return this;
+    }
+
+    @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
+    private QueryOrderedModel createTimeOrder;
+
+    @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
+    private QueryOrderedModel updateTimeOrder;
+
+    public CommonSystemUserQueryCriteria setCreateTimeOrder(QueryOrderedModel createTimeOrder) {
+        this.createTimeOrder = createTimeOrder;
+        return this;
+    }
+
+    public CommonSystemUserQueryCriteria setUpdateTimeOrder(QueryOrderedModel updateTimeOrder) {
+        this.updateTimeOrder = updateTimeOrder;
         return this;
     }
 }

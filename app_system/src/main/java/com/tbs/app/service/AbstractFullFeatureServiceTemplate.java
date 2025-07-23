@@ -1,10 +1,10 @@
 package com.tbs.app.service;
 
-import com.tbs.app.pojo.entity.IIdentifiable;
+import com.tbs.app.pojo.IIdentifiable;
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.util.PageUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;

@@ -1,4 +1,4 @@
-package com.tbs.app.pojo.entity;
+package com.tbs.app.pojo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 

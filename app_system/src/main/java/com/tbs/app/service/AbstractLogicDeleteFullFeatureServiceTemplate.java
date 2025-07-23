@@ -1,9 +1,7 @@
 package com.tbs.app.service;
 
-import com.tbs.app.pojo.entity.IBaseEntity;
-import com.tbs.app.pojo.entity.IFlagable;
-import com.tbs.app.pojo.entity.IIdentifiable;
-import com.tbs.app.pojo.entity.SystemRole;
+import com.tbs.app.pojo.IFlagable;
+import com.tbs.app.pojo.IIdentifiable;
 import com.tbs.common.util.CollUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import org.springframework.transaction.annotation.Transactional;

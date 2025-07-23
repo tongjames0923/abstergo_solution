@@ -1,19 +1,21 @@
 package com.tbs.app.pojo.entity;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import lombok.Data;
+import com.tbs.app.pojo.IBaseEntity;
+import lombok.Getter;
+import lombok.Setter;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.Date;
 
 /**
  * @author tongj
  */
-@Data
 @Entity
 @Table(name = "sys_role")
-public class SystemRole implements Serializable {
+@Getter
+@Setter
+public class SystemRole implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -21,6 +23,7 @@ public class SystemRole implements Serializable {
      */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Long id;
 
     /**

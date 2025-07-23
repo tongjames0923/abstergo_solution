@@ -1,9 +1,7 @@
 package com.tbs.app.service.business;
 
 import com.tbs.app.pojo.entity.SystemUser;
-import com.tbs.app.service.IDeleteableService;
-import com.tbs.app.service.ISaveableService;
-import com.tbs.app.service.ISearchableService;
+import com.tbs.app.service.IServiceTemplate;
 
 import java.util.List;
 
@@ -12,8 +10,7 @@ import java.util.List;
  *
  * @author abstergo
  */
-public interface ISystemUserService extends ISaveableService<SystemUser, Long>, IDeleteableService<SystemUser, Long>,
-    ISearchableService<SystemUser, Long> {
+public interface ISystemUserService extends IServiceTemplate<SystemUser, Long> {
     /**
      * 根据用户名密码查询用户
      *

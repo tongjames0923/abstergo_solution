@@ -1,11 +1,10 @@
 package com.tbs.app.pojo.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tbs.app.pojo.IBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 
 import javax.persistence.*;
-import java.io.Serializable;
 import java.util.Date;
 
 /**

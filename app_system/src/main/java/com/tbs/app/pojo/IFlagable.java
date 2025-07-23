@@ -1,4 +1,4 @@
-package com.tbs.app.pojo.entity;
+package com.tbs.app.pojo;
 
 /**
  * 状态标志接口
