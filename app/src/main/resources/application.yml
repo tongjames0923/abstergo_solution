@@ -13,9 +13,12 @@ tbs:
     enable-cors: true
   swagger:
     base-package: com.tbs.app.controller
+  system:
+    main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
 logging:
   level:
     com.tbs: trace
+    com.tbs.boardcast: info
 # Spring配置
 spring:
   # 资源信息

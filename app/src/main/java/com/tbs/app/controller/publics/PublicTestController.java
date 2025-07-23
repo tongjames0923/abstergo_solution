@@ -1,8 +1,10 @@
 package com.tbs.app.controller.publics;
 
 import com.tbs.app.pojo.criteria.CommonSystemUserQueryCriteria;
+import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.TestService;
+import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.sql.model.QueryPageModel;
@@ -23,7 +25,8 @@ public class PublicTestController extends BaseController {
 
     @Resource
     TestService service;
-    @Cacheable(key = "#value",value = "test")
+
+    @Cacheable(key = "#value", value = "test")
     @ExpireOn(value = 5)
     @GetMapping("/test")
     public AjaxResult test(String value) throws InterruptedException {
@@ -49,11 +52,19 @@ public class PublicTestController extends BaseController {
             .success("查询成功", userService.queryBy(criteria, QueryPageModel.of(pageNum, pageSize)));
     }
 
-//    @Resource
-//    private IUserAuthService userAuthService;
+    @Resource
+    private ISystemRoleService roleService;
 
-//    @GetMapping("/login")
-//    public AjaxResult login(Long userId, String password) {
-//        return AjaxUtil.getInstance().success(userAuthService.login(String.valueOf(userId), password));
-//    }
+    @PostMapping("saveRole")
+    public AjaxResult createRole(@RequestBody SystemRole role) {
+        return AjaxUtil.getInstance().success("保存成功", roleService.save(role));
+    }
+
+    //    @Resource
+    //    private IUserAuthService userAuthService;
+
+    //    @GetMapping("/login")
+    //    public AjaxResult login(Long userId, String password) {
+    //        return AjaxUtil.getInstance().success(userAuthService.login(String.valueOf(userId), password));
+    //    }
 }

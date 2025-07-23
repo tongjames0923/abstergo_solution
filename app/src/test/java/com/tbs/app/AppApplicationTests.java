@@ -38,7 +38,7 @@ class AppApplicationTests {
                 }
                 return 10L;
             }).executeAll().forEach(flag -> {
-                flag.getUnitlFinished().read(PageVO::getData, data -> {
+                flag.get().read(PageVO::getData, data -> {
                     logger.info("data {}", data);
                 });
             });
