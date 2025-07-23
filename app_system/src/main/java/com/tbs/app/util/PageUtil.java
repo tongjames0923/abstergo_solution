@@ -6,6 +6,7 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.function.SSupplier;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.common.util.framework.DelegateUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.List;
  *
  * @author tongj
  */
+@Slf4j
 public class PageUtil {
 
     /**
@@ -48,11 +50,13 @@ public class PageUtil {
      */
     public static <T> PageVO<T> build(Class<? extends IDelegateInvoker> type, SSupplier<List<T>> listS,
         SSupplier<Long> totalS) {
+        log.debug("构建分页结果");
         PageVO<T> vo = new PageVO<>();
         DelegateUtil.getInstance().delegateWithTarget(vo).build(type).takeIn(PageVO::setData, listS)
             .takeIn(PageVO::setTotal, totalS).executeAll().forEach(flag -> {
                 flag.getUnitlFinished();
             });
+        log.debug("构建分页结果完成");
         return vo;
     }
 }

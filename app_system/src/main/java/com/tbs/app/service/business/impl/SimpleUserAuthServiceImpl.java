@@ -2,6 +2,7 @@ package com.tbs.app.service.business.impl;
 
 import com.tbs.app.constant.SystemAppConstant;
 import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.holder.context.IContext;
@@ -31,6 +32,9 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Resource
     ISystemUserService systemUserService;
 
+    @Resource
+    private IPasswordEncrypt passwordEncrypt;
+
     /**
      * token上下文
      */
@@ -42,7 +46,6 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
         }
         return tokenModelContext;
     }
-
 
     @Override
     public UserDetails loadUserInfoByUniqueKey(String uniqueKey) {
@@ -63,13 +66,13 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Override
     public com.tbs.web.security.ITokenModel login(String username, String password) {
         UserDetails details = loadUserInfoByUniqueKey(username);
+        password = passwordEncrypt.encrypt(password);
         AssertUtil.isTrue(!Objects.equals(details.getPassword(), password), () -> {
             return new SimpleAuthException("用户名或密码错误");
         });
         com.tbs.web.security.ITokenModel model =
             SimpleTokenModel.create(UuidUtil.getInstance().getUuidString(), authProperty.getTokenSource(),
-            authProperty.getTokenFiledName(),
-            details.getUsername(), null);
+                authProperty.getTokenFiledName(), details.getUsername(), null);
         HolderUtil.operateDataSource(getTokenModelContext(), context -> {
             if (!context.putIfAbsent(model.getToken(), details)) {
                 AssertUtil.throwError(() -> new SimpleAuthException("Token已存在"));

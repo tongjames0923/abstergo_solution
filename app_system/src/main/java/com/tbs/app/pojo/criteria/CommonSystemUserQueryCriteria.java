@@ -1,5 +1,6 @@
 package com.tbs.app.pojo.criteria;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
@@ -24,22 +25,26 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private String userNameEquals;
     @QueryMapping(value = "nickname")
-    @QueryField(contrast = QueryContrastEnum.LIKE)
+    @QueryField(contrast = QueryContrastEnum.LLIKE)
     private String nickNameLike;
     @QueryMapping(value = "flag")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private Integer flagEquals;
     @QueryMapping(value = "create_time")
     @QueryField(contrast = QueryContrastEnum.GREATER)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTimeGreaterThan;
     @QueryMapping(value = "create_time")
     @QueryField(contrast = QueryContrastEnum.LESS)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTimeLessThan;
     @QueryMapping(value = "update_time")
     @QueryField(contrast = QueryContrastEnum.GREATER)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updateTimeGreaterThan;
     @QueryMapping(value = "update_time")
     @QueryField(contrast = QueryContrastEnum.LESS)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updateTimeLessThan;
 
     public CommonSystemUserQueryCriteria setIdEquals(String idEquals) {

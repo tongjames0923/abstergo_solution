@@ -6,6 +6,7 @@ import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.mapper.SystemUserMapper;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.StrUtil;
@@ -25,6 +26,9 @@ public class SimpleSystemUserServiceImpl
 
     private static SimpleSystemUserServiceImpl instance;
 
+    @Resource
+    private IPasswordEncrypt encrypt;
+
     public SimpleSystemUserServiceImpl() {
         instance = this;
     }
@@ -34,6 +38,7 @@ public class SimpleSystemUserServiceImpl
         AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUsername()), "用户名格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickname()), "昵称格式错误");
+        entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setCreateTime(new Date());
         getMapper().insert(entity);
         return entity;
@@ -41,6 +46,7 @@ public class SimpleSystemUserServiceImpl
 
     @Override
     protected List<SystemUser> updateBy(SystemUser entity) {
+        entity.setUpdateTime(new Date());
         getMapper().updateByPrimaryKey(entity);
         return List.of(entity);
     }
@@ -53,7 +59,7 @@ public class SimpleSystemUserServiceImpl
         }
         if (StrUtil.isNotEmpty(systemUser.getPassword())) {
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUser.getPassword()), "密码格式错误");
-            oldSystemUser.setPassword(systemUser.getPassword());
+            oldSystemUser.setPassword(encrypt.encrypt(systemUser.getPassword()));
         }
         if (StrUtil.isNotEmpty(systemUser.getNickname())) {
             AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUser.getNickname()), "昵称格式错误");
