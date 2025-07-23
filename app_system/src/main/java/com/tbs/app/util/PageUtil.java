@@ -4,11 +4,9 @@ import com.tbs.app.pojo.model.PageVO;
 
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.function.SSupplier;
-import com.tbs.common.util.SpringUtil;
 import com.tbs.common.util.framework.DelegateUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -54,7 +52,7 @@ public class PageUtil {
         PageVO<T> vo = new PageVO<>();
         DelegateUtil.getInstance().delegateWithTarget(vo).build(type).takeIn(PageVO::setData, listS)
             .takeIn(PageVO::setTotal, totalS).executeAll().forEach(flag -> {
-                flag.getUnitlFinished();
+                flag.waitUntilFinished().expceptionThenThrow().get();
             });
         log.debug("构建分页结果完成");
         return vo;

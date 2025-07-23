@@ -4,8 +4,10 @@ import com.tbs.app.constant.SystemAppConstant;
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.constraint.impl.SimpleUserValidator;
 import com.tbs.app.service.business.IPasswordEncrypt;
+import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.impl.NoEncryptPassword;
+import com.tbs.app.service.business.impl.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.context.IContext;
@@ -49,6 +51,12 @@ public class SystemAppConfig {
                 throw new FormattedRuntimeException("HolderProperty.tokenContextImpl  Error to build bean");
             }
         });
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ISystemRoleService.class)
+    public ISystemRoleService roleService() {
+        return new SimpleSystemRoleServiceImpl();
     }
 
     @Bean
