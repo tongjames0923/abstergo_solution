@@ -86,6 +86,15 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
      */
     protected abstract <P> void executeTakeOut(IDelegateFlag<T> flag, SFunction<T, P> method, SConsumer<P> consumer);
 
+    /**
+     * 错误处理
+     *
+     * @param e
+     */
+    protected void onErrorThrow(IDelegateFlag<T> flag, Throwable e) {
+        flag.setException(e, this);
+    }
+
     @Override
     public IDelegateFlag<T> executeOnce() {
         IDelegateFlagProvider provider = getDelegateFlagProvider();

@@ -20,6 +20,8 @@ public class CompletableFutureDelegateFlag<T> implements IDelegateFlag<T> {
     private IDelegateTarget<T> delegateTarget;
     private IDelegateInvoker<T> invoker;
 
+    private Throwable exception = null;
+
     public CompletableFutureDelegateFlag(IDelegateTarget<T> delegateTarget, IDelegateInvoker<T> invoker) {
         this.delegateTarget = delegateTarget;
         this.invoker = invoker;
@@ -27,17 +29,38 @@ public class CompletableFutureDelegateFlag<T> implements IDelegateFlag<T> {
     }
 
     @Override
-    public IDelegateTarget<T> getUnitlFinished() {
-        return future.join();
+    public IDelegateTarget<T> get() {
+        return delegateTarget;
     }
 
     @Override
-    public void setFinished(IDelegateInvoker<T> invoker) {
+    public IDelegateFlag<T> waitUntilFinished() {
+        future.join();
+        return this;
+    }
+
+    @Override
+    public boolean setFinished(IDelegateInvoker<T> invoker) {
         if (invoker == this.invoker) {
             future.complete(delegateTarget);
-        } else {
-            future.completeExceptionally(new FormattedRuntimeException("非相同调用器设置"));
+            return true;
         }
+        return false;
+    }
+
+    @Override
+    public boolean setException(Throwable e, IDelegateInvoker<T> invoker) {
+        if (invoker == this.invoker) {
+            future.completeExceptionally(e);
+            this.exception = e;
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public Throwable getException() {
+        return exception;
     }
 
     @Override
