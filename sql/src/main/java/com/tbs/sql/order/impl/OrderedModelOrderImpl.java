@@ -17,6 +17,9 @@ public class OrderedModelOrderImpl implements IQueryOrderBy {
             field.setAccessible(true);
             try {
                 IQueryOrderedModel orderedModel = (IQueryOrderedModel)field.get(target);
+                if (orderedModel == null) {
+                    return null;
+                }
                 result = orderedModel.getOrdered();
             } catch (Exception e) {
                 throw new RuntimeException(e);

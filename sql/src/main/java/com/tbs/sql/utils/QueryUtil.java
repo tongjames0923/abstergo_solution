@@ -18,6 +18,7 @@ import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
 import com.tbs.sql.query.ISqlAssembler;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.reflect.Field;
@@ -31,6 +32,7 @@ import java.util.stream.Collectors;
  *
  * @author tongj
  */
+@Slf4j
 public class QueryUtil {
 
     @Getter
@@ -219,13 +221,35 @@ public class QueryUtil {
         List<Field> fields = collectFields(queryObject);
         List<SqlOrderInfo> orderInfos = new ArrayList<>(fields.size());
         for (Field field : fields) {
+
             if (AnnotatedElementUtils.hasAnnotation(field, QueryOrderField.class)) {
+
+                field.setAccessible(true);
+                Object val = null;
+                try {
+                    val = field.get(queryObject);
+                } catch (IllegalAccessException e) {
+                    val = null;
+                    log.warn("Error accessing field: {}", field.getName(), e);
+                }
+                field.setAccessible(false);
+                if (val == null) {
+                    log.trace("Field: {} is null skip order field", field.getName());
+                    continue;
+                }
+
+
                 QueryOrderField queryOrderField = field.getDeclaredAnnotation(QueryOrderField.class);
                 SqlOrderInfo info = new SqlOrderInfo();
+                var order = SpringUtil.getBean(queryOrderField.order(), IQueryOrderBy.class)
+                    .orderBy(queryObject, field, queryOrderField.mappedName());
+                if (order == null) {
+                    log.trace("order value: {} is null skip order field ", field.getName());
+                    continue;
+                }
                 info.setFiledName(
                     StrUtil.isEmpty(queryOrderField.mappedName()) ? field.getName() : queryOrderField.mappedName());
-                info.setOrder(SpringUtil.getBean(queryOrderField.order(), IQueryOrderBy.class)
-                    .orderBy(queryObject, field, queryOrderField.mappedName()));
+                info.setOrder(order);
                 orderInfos.add(info);
             }
         }
