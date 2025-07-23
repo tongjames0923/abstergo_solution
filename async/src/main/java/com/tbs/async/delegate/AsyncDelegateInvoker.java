@@ -36,16 +36,24 @@ public class AsyncDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
     @Override
     protected <P> void executeTakeIn(IDelegateFlag<T> flag, SBiConsumer<T, P> method, SSupplier<P> p) {
         executorService.execute(() -> {
-            getTarget().write(method, p);
-            flag.setFinished(this);
+            try {
+                getTarget().write(method, p);
+                flag.setFinished(this);
+            } catch (Throwable e) {
+                onErrorThrow(flag, e);
+            }
         });
     }
 
     @Override
     protected <P> void executeTakeOut(IDelegateFlag<T> flag, SFunction<T, P> method, SConsumer<P> consumer) {
         executorService.execute(() -> {
-            getTarget().read(method, consumer);
-            flag.setFinished(this);
+            try {
+                getTarget().read(method, consumer);
+                flag.setFinished(this);
+            } catch (Throwable e) {
+                onErrorThrow(flag, e);
+            }
         });
     }
 }
