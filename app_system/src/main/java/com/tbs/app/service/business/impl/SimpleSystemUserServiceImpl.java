@@ -78,7 +78,7 @@ public class SimpleSystemUserServiceImpl
             oldSystemUser.setNickname(systemUser.getNickname());
         }
         if (systemUser.getFlag() != null) {
-            AssertUtil.isTrue(EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUser.getFlag()),
+            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUser.getFlag()),
                 "用户状态值异常，不存在{}值", systemUser.getFlag());
             oldSystemUser.setFlag(systemUser.getFlag());
         }
