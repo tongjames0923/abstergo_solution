@@ -2,8 +2,10 @@ package com.tbs.app.util;
 
 import com.tbs.app.pojo.model.PageVO;
 
+import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.function.SSupplier;
 import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.DelegateUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -35,5 +37,22 @@ public class PageUtil {
      */
     public static <T> PageVO<T> build(SSupplier<List<T>> listS, SSupplier<Long> totalS) {
         return build(listS.get(), totalS.get());
+    }
+
+    /**
+     * 构建分页结果
+     *
+     * @param listS  数据列表
+     * @param totalS 数据总数
+     * @return
+     */
+    public static <T> PageVO<T> build(Class<? extends IDelegateInvoker> type, SSupplier<List<T>> listS,
+        SSupplier<Long> totalS) {
+        PageVO<T> vo = new PageVO<>();
+        DelegateUtil.getInstance().delegateWithTarget(vo).build(type).takeIn(PageVO::setData, listS)
+            .takeIn(PageVO::setTotal, totalS).executeAll().forEach(flag -> {
+                flag.getUnitlFinished();
+            });
+        return vo;
     }
 }

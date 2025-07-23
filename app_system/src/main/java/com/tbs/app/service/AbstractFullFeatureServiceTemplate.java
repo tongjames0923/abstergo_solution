@@ -1,15 +1,19 @@
 package com.tbs.app.service;
 
+import com.tbs.app.config.SystemAppProperty;
 import com.tbs.app.pojo.IIdentifiable;
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.util.PageUtil;
+import com.tbs.common.delegate.IDelegateInvoker;
+import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.impl.AbstractResourceBaseQueryCriteria;
+import com.tbs.sql.query.IQueryCriteria;
 
+import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -31,6 +35,13 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
     public AbstractFullFeatureServiceTemplate() {
         this.instance = this;
+    }
+
+    @Resource
+    private SystemAppProperty systemAppProperty;
+
+    protected Class<? extends IDelegateInvoker> pageVoBuildType() {
+        return systemAppProperty.getMainDelegateInvokerImpl();
     }
 
     /**
@@ -99,8 +110,9 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     }
 
     @Override
-    public PageVO<T> queryBy(AbstractResourceBaseQueryCriteria qo, IPage page) {
-        return PageUtil.build(() -> getMapper().queryByQO(qo, page, getEntityClass()), () -> getMapper().countByQO(qo));
+    public PageVO<T> queryBy(IQueryCriteria qo, IPage page) {
+        return PageUtil.build(pageVoBuildType(), () -> getMapper().queryByQO(qo, page, getEntityClass()),
+            () -> getMapper().countByQO(qo));
     }
 
     @Override
