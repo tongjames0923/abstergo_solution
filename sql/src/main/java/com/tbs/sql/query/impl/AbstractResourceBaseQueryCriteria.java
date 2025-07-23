@@ -8,6 +8,7 @@ import com.tbs.sql.query.IQueryCriteria;
 import java.io.BufferedReader;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 抽象查询对象，查询SQL从Resource中获取
@@ -20,18 +21,20 @@ public abstract class AbstractResourceBaseQueryCriteria implements IQueryCriteri
 
     private String sql;
 
-    private Map<String, SqlSelectInfoModel> sqlSelectInfoModelMap = new HashMap<>(32);
+    private static Map<String, SqlSelectInfoModel> sqlSelectInfoModelMap = new ConcurrentHashMap<>(32);
 
     protected SqlSelectInfoModel loadSql(String resourcePath) {
-        try (BufferedReader reader = ResourceUtil.getUtf8Reader(resourcePath)) {
-            final StringBuilder sql = new StringBuilder();
-            reader.lines().forEach(line -> {
-                sql.append(line);
-            });
-            SqlSelectInfoModel selectSqlInfo = SqlSelectInfoModel.rawSql(sql.toString().trim());
-            return selectSqlInfo;
-        } catch (Exception e) {
-            throw new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath);
+        synchronized (this) {
+            try (BufferedReader reader = ResourceUtil.getUtf8Reader(resourcePath)) {
+                final StringBuilder sql = new StringBuilder();
+                reader.lines().forEach(line -> {
+                    sql.append(line);
+                });
+                SqlSelectInfoModel selectSqlInfo = SqlSelectInfoModel.rawSql(sql.toString().trim());
+                return selectSqlInfo;
+            } catch (Exception e) {
+                throw new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath);
+            }
         }
     }
 

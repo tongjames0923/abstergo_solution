@@ -238,7 +238,6 @@ public class QueryUtil {
                     continue;
                 }
 
-
                 QueryOrderField queryOrderField = field.getDeclaredAnnotation(QueryOrderField.class);
                 SqlOrderInfo info = new SqlOrderInfo();
                 var order = SpringUtil.getBean(queryOrderField.order(), IQueryOrderBy.class)
@@ -268,11 +267,17 @@ public class QueryUtil {
         if (queryObject == null) {
             throw new SqlExtractionException("Query object cannot be null", this);
         }
-        String selectSql = selectSqlDialect.getSelectSqlExtractor().extractSelectSql(queryObject.getSelectSQLInfo());
-        SqlWhereCompose compose = buildConditions(queryObject);
-        String whereSql = selectSqlDialect.getWhereSqlExtractor().extraWhereSql(compose, params);
-        String orderSql = selectSqlDialect.getOrderSqlExtractor().extraOrderSql(collectOrderInfos(queryObject));
+        String selectSql = "";
+        SqlWhereCompose compose = null;
+        String whereSql = "";
+        String orderSql = "";
         String pageSql = "";
+        synchronized (queryObject) {
+            compose = buildConditions(queryObject);
+            selectSql = selectSqlDialect.getSelectSqlExtractor().extractSelectSql(queryObject.getSelectSQLInfo());
+            orderSql = selectSqlDialect.getOrderSqlExtractor().extraOrderSql(collectOrderInfos(queryObject));
+        }
+        whereSql = selectSqlDialect.getWhereSqlExtractor().extraWhereSql(compose, params);
         if (page != null) {
             pageSql =
                 selectSqlDialect.getLimitSqlExtractor().extraLimitSql(new SqlLimitModel(page.from(), page.number()));
