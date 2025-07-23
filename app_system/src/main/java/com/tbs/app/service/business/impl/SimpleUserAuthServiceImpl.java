@@ -1,9 +1,11 @@
 package com.tbs.app.service.business.impl;
 
 import com.tbs.app.constant.SystemAppConstant;
+import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.util.*;
@@ -14,12 +16,14 @@ import com.tbs.web.exception.SimpleAuthException;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.model.SimpleTokenModel;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * @author abstergo
@@ -34,6 +38,9 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
 
     @Resource
     private IPasswordEncrypt passwordEncrypt;
+
+    @Resource
+    private IUserRoleRelationService relationService;
 
     /**
      * token上下文
@@ -52,9 +59,13 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
 
         List<SystemUser> users = systemUserService.queryByUserName(uniqueKey);
         AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException("用户不存在"));
-        //FIXME 用户权限类待实现
-        return User.builder().username(users.get(0).getUsername()).password(users.get(0).getPassword())
-            .authorities("USER").build();
+
+        SystemUser user = users.get(0);
+        List<SystemRole> roles = relationService.queryUserRoles(users.get(0).getId());
+        return User.builder().username(user.getUsername()).password(users.get(0).getPassword())
+            .authorities(roles.stream().map(role -> {
+                return new SimpleGrantedAuthority(role.getRole());
+            }).collect(Collectors.toList())).build();
     }
 
     @Override

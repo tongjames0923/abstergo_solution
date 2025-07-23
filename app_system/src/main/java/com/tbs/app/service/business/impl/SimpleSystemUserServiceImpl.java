@@ -1,6 +1,7 @@
 package com.tbs.app.service.business.impl;
 
 import com.tbs.app.annoation.UserNameValid;
+import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.mapper.SystemUserMapper;
@@ -8,8 +9,10 @@ import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.StrUtil;
+import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -33,6 +36,10 @@ public class SimpleSystemUserServiceImpl
         instance = this;
     }
 
+    @Resource
+    @Lazy
+    private IUserRoleRelationService relationService;
+
     @Override
     protected SystemUser insertNew(SystemUser entity) {
         AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUsername()), "用户名格式错误");
@@ -41,6 +48,7 @@ public class SimpleSystemUserServiceImpl
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setCreateTime(new Date());
         getMapper().insert(entity);
+        relationService.enableRole(entity.getId(), CommonConstant.NORMAL_USER_ROLE_NAME);
         return entity;
     }
 

@@ -6,4 +6,7 @@ package com.tbs.app.constant;
 public class CommonConstant {
     public static final Integer FLAG_ON = 1;
     public static final Integer FLAG_OFF = 0;
+
+    public static final String SUPER_ADMIN_ROLE_NAME = "SU";
+    public static final String NORMAL_USER_ROLE_NAME = "NORMAL";
 }

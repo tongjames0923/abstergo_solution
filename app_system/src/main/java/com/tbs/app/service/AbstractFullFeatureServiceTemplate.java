@@ -12,6 +12,7 @@ import com.tbs.common.util.CollUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
@@ -76,6 +77,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
      */
     protected abstract T compareAndUpdateValue(T newOne, T oldOne);
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public T deleteById(K id) {
         T obj = this.instance.queryById((K)id);
@@ -84,6 +86,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         return obj;
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public int deleteByIds(Collection<K> ids) {
         if (CollUtil.isEmpty(ids)) {
@@ -94,6 +97,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         return objs.size();
     }
 
+    @Transactional(rollbackFor = Exception.class)
     @Override
     public List<T> save(T entity) {
         AssertUtil.notNull(entity, "空对象无法被保存");

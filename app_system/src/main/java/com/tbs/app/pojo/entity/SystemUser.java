@@ -6,6 +6,7 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
 /**
  * 系统用户
@@ -93,5 +94,8 @@ public class SystemUser implements IBaseEntity<Long> {
         this.remark = remark;
         return this;
     }
+
+    @Transient
+    private List<SystemRole> roles;
 
 }

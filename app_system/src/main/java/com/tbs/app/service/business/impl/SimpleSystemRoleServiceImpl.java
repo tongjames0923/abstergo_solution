@@ -5,10 +5,15 @@ import com.tbs.app.mapper.SystemRoleMapper;
 import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.app.service.business.ISystemRoleService;
+import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.util.StrUtil;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author abstergo
@@ -43,6 +48,7 @@ public class SimpleSystemRoleServiceImpl
         return entity;
     }
 
+    @CacheEvict(cacheNames = "system_role", key = "#entity.role",condition = "#entity!=null&&#entity.role!=null&&#entity.role.length()>0")
     @Override
     protected List<SystemRole> updateBy(SystemRole entity) {
         entity.setUpdateTime(new java.util.Date());
@@ -64,5 +70,15 @@ public class SimpleSystemRoleServiceImpl
             oldOne.setRole(newOne.getRole());
         }
         return oldOne;
+    }
+
+    @Cacheable(cacheNames = "system_role", key = "#roleName")
+    @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public SystemRole getRoleByName(@NotNull String roleName) {
+        if (StrUtil.isEmpty(roleName)) {
+            return null;
+        }
+        return getQueryWrapper().query().where().equal(SystemRole::getRole, roleName).pour().fetchOne();
     }
 }

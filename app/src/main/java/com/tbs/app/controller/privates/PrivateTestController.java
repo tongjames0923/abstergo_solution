@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.constant.CommonConstant;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
@@ -11,13 +12,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("/private")
 public class PrivateTestController extends BaseController {
-    @PreAuthorize("hasAuthority('USER')")
+    @PreAuthorize("hasAuthority('" + CommonConstant.NORMAL_USER_ROLE_NAME + "')")
     @GetMapping("/test")
     public AjaxResult test() {
         return AjaxUtil.getInstance().success(null);
     }
 
-    @PreAuthorize("hasAuthority('ADMIN')")
+    @PreAuthorize("hasAuthority('" + CommonConstant.NORMAL_USER_ROLE_NAME + "')")
     @GetMapping("/testAuth")
     public AjaxResult testAuth() {
         return AjaxUtil.getInstance().success(null);

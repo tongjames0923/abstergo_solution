@@ -6,9 +6,11 @@ import com.tbs.app.constraint.impl.SimpleUserValidator;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.app.service.business.impl.NoEncryptPassword;
 import com.tbs.app.service.business.impl.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
+import com.tbs.app.service.business.impl.SimpleUserRoleRelationServiceImpl;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
@@ -63,5 +65,11 @@ public class SystemAppConfig {
     public IPasswordEncrypt passwordEncrypt() {
         return BeanUtil.buildBeanFromProperties(NoEncryptPassword::new, systemAppProperty.getPasswordEncryptImpl(),
             BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IUserRoleRelationService.class)
+    public IUserRoleRelationService userRoleRelationService() {
+        return new SimpleUserRoleRelationServiceImpl();
     }
 }
