@@ -1,6 +1,7 @@
 package com.tbs.app.service.business.impl;
 
 import com.tbs.app.constant.SystemAppConstant;
+import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.IPasswordEncrypt;
@@ -59,8 +60,11 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
 
         List<SystemUser> users = systemUserService.queryByUserName(uniqueKey);
         AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException("用户不存在"));
-
         SystemUser user = users.get(0);
+        AssertUtil.isTrue(SystemUserStatusEnum.DISABLED.getCode().equals(user.getFlag()),
+            () -> new SimpleAuthException("用户被禁用"));
+        AssertUtil.isTrue(SystemUserStatusEnum.CREATED.getCode().equals(user.getFlag()),
+            () -> new SimpleAuthException("用户未激活"));
         List<SystemRole> roles = relationService.queryUserRoles(users.get(0).getId());
         return User.builder().username(user.getUsername()).password(users.get(0).getPassword())
             .authorities(roles.stream().map(role -> {

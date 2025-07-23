@@ -11,12 +11,15 @@ import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.EnumUtil;
 import com.tbs.common.util.StrUtil;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 简单的系统用户服务实现
@@ -47,6 +50,7 @@ public class SimpleSystemUserServiceImpl
         AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickname()), "昵称格式错误");
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setCreateTime(new Date());
+        entity.setFlag(SystemUserStatusEnum.CREATED.getCode());
         getMapper().insert(entity);
         relationService.enableRole(entity.getId(), CommonConstant.NORMAL_USER_ROLE_NAME);
         return entity;
@@ -74,6 +78,8 @@ public class SimpleSystemUserServiceImpl
             oldSystemUser.setNickname(systemUser.getNickname());
         }
         if (systemUser.getFlag() != null) {
+            AssertUtil.isTrue(EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUser.getFlag()),
+                "用户状态值异常，不存在{}值", systemUser.getFlag());
             oldSystemUser.setFlag(systemUser.getFlag());
         }
         if (StrUtil.isNotEmpty(systemUser.getAvatar())) {

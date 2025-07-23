@@ -1,5 +1,6 @@
 package com.tbs.app.enums;
 
+import com.tbs.app.constant.CommonConstant;
 import com.tbs.common.BaseEnum;
 
 /**
@@ -12,7 +13,7 @@ public enum SystemUserStatusEnum implements BaseEnum<String> {
     /**
      * 激活的
      */
-    ACTIVITE("激活的", 1),
+    ACTIVITE("激活的", CommonConstant.FLAG_ON),
     /**
      * 创建的
      */
@@ -20,10 +21,10 @@ public enum SystemUserStatusEnum implements BaseEnum<String> {
     /**
      * 禁用的
      */
-    DISABLED("禁用的", 3);
+    DISABLED("禁用的", CommonConstant.FLAG_OFF);
 
     private String value;
-    private int code;
+    private Integer code;
 
     SystemUserStatusEnum(String value, int code) {
         this.value = value;
@@ -36,7 +37,7 @@ public enum SystemUserStatusEnum implements BaseEnum<String> {
     }
 
     @Override
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 }
