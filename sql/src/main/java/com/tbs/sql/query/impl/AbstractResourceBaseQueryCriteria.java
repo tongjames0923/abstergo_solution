@@ -7,7 +7,6 @@ import com.tbs.sql.model.SqlSelectInfoModel;
 import com.tbs.sql.query.IQueryCriteria;
 
 import java.io.BufferedReader;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -40,7 +39,7 @@ public abstract class AbstractResourceBaseQueryCriteria implements IQueryCriteri
         return null;
     }
 
-    protected void PutResourcePath(String resourcePath) {
+    protected void putResourcePath(String resourcePath) {
         this.resourcePath = resourcePath;
     }
 

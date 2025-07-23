@@ -61,7 +61,6 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         matcher = new AndRequestMatcher(matchers);
     }
 
-
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) throws ServletException {
         return !matcher.matches(request);
@@ -71,11 +70,11 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
 
-        SimpleTokenModel simpleTokenModel = null;
+        com.tbs.web.security.ITokenModel simpleTokenModel = null;
         UserDetails principal = null;
         try {
             HttpServletRequest serverRequest = request;
-            com.tbs.web.security.ITokenModel tokenModel = tokenPicker.pick(serverRequest);
+            simpleTokenModel = tokenPicker.pick(serverRequest);
             AssertUtil.notNull(simpleTokenModel, () -> new NotFoundTokenException("未找到令牌."));
             auth(manager.authenticate(TokenAuthentication.create(simpleTokenModel)));
 
