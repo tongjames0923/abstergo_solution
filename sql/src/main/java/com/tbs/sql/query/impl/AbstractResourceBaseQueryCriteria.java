@@ -1,6 +1,7 @@
 package com.tbs.sql.query.impl;
 
 import cn.hutool.core.io.resource.ResourceUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.sql.model.SqlSelectInfoModel;
 import com.tbs.sql.query.IQueryCriteria;
@@ -33,9 +34,10 @@ public abstract class AbstractResourceBaseQueryCriteria implements IQueryCriteri
                 SqlSelectInfoModel selectSqlInfo = SqlSelectInfoModel.rawSql(sql.toString().trim());
                 return selectSqlInfo;
             } catch (Exception e) {
-                throw new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath);
+                AssertUtil.throwError(() -> new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath));
             }
         }
+        return null;
     }
 
     protected void PutResourcePath(String resourcePath) {
