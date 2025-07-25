@@ -2,6 +2,7 @@ package com.tbs.cache.core.impl;
 
 import com.tbs.cache.core.IExpiredActuator;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.schedule.ISchedule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +14,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.scheduling.annotation.Async;
 
+import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.*;
 
@@ -29,7 +32,7 @@ public class LocalExpireActuator implements IExpiredActuator, InitializingBean, 
 
     @AllArgsConstructor
     @Data
-    private static class ExpireTask implements Delayed {
+    private static class ExpireTask implements Runnable {
         /**
          * 过期时间长度
          */
@@ -48,74 +51,40 @@ public class LocalExpireActuator implements IExpiredActuator, InitializingBean, 
         private Date createDate;
 
         @Override
-        public long getDelay(@NotNull TimeUnit unit) {
-            return unit.convert(expireTime + createDate.getTime() - System.currentTimeMillis(), TimeUnit.MILLISECONDS);
-        }
-
-        @Override
-        public int compareTo(@NotNull Delayed o) {
-            return (int)(this.getDelay(TimeUnit.MILLISECONDS) - o.getDelay(TimeUnit.MILLISECONDS));
-        }
-
-        @Override
-        public String toString() {
-            return "ExpireTask{" +
-                "expireTime=" +
-                expireTime +
-                ", cache=" +
-                cache +
-                ", key=" +
-                key +
-                ", createDate=" +
-                createDate +
-                '}';
+        public void run() {
+            logger.trace("开始执行过期任务... {}", this);
+            Cache cache = this.getCache();
+            if (cache == null) {
+                logger.warn("缓存不存在，请检查缓存配置是否正确！");
+                return;
+            }
+            if (this.getKey() == null) {
+                cache.invalidate();
+                logger.trace("执行缓存清除任务...{}", this);
+            } else {
+                cache.evict(this.getKey());
+                logger.trace("执行缓存清理任务...{}", this);
+            }
         }
     }
 
-    private DelayQueue<ExpireTask> delayQueue = new DelayQueue<>();
+    @Resource
+    private ISchedule schedule;
 
     CacheManager cacheManager;
-
-    @Override
-    @Async
-    public void init() {
-        while (isInit) {
-            try {
-                ExpireTask task = delayQueue.poll();
-                if (task != null) {
-                    logger.trace("开始执行过期任务... {}", task);
-                    Cache cache = task.getCache();
-                    if (cache == null) {
-                        logger.warn("缓存不存在，请检查缓存配置是否正确！");
-                        continue;
-                    }
-                    if (task.getKey() == null) {
-                        cache.invalidate();
-                        logger.trace("执行缓存清除任务...{}", task);
-                    } else {
-                        cache.evict(task.getKey());
-                        logger.trace("执行缓存清理任务...{}", task);
-                    }
-                }
-            } catch (Exception e) {
-                logger.error("ExpireTask error", e);
-            }
-
-        }
-    }
 
     @Override
     public boolean expire(Cache cache, Object key, long expireTime) {
         AssertUtil.notNull(cache, "cache can not be null");
         AssertUtil.notNull(key, "key can not be null");
-        delayQueue.offer(new ExpireTask(expireTime, cache, key, new Date()));
+        schedule.pin(new ExpireTask(expireTime, cache, key, new Date()), Duration.ofMillis(expireTime));
         return true;
     }
 
     @Override
     public boolean expireAll(Cache cache, long expireTime) {
         AssertUtil.notNull(cache, "cache can not be null");
-        delayQueue.offer(new ExpireTask(expireTime, cache, null, new Date()));
+        schedule.pin(new ExpireTask(expireTime, cache, null, new Date()), Duration.ofMillis(expireTime));
         return true;
     }
 
