@@ -116,7 +116,7 @@ public class LocalAsyncSchedule implements ISchedule, InitializingBean, Disposab
                 while (flag == 1) {
                     DelayedTaskWrapper scheduleTask = null;
                     try {
-                        scheduleTask = delayQueue.poll();
+                        scheduleTask = delayQueue.poll(5, TimeUnit.MINUTES);
                         if (scheduleTask == null) {
                             log.trace("存在空任务在队列中");
                             continue;
