@@ -1,0 +1,34 @@
+package com.tbs.schedule;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
+
+/**
+ * 定时任务接口
+ *
+ * @author tongj
+ */
+public interface ISchedule {
+    /**
+     * 定时执行任务
+     *
+     * @param runnable
+     * @param delay
+     * @return
+     */
+    IScheduleTask pin(Runnable runnable, Duration delay);
+
+    /**
+     * 取消定时任务
+     *
+     * @param task
+     */
+    void unPin(IScheduleTask task);
+
+    /**
+     * 获取定时任务执行错误处理
+     *
+     * @return
+     */
+    IScheduleExecuteErrorHandle getExecuteErrorHandle();
+}
