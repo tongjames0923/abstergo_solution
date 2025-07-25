@@ -26,11 +26,5 @@ public interface IExpiredActuator {
      * @return
      */
     boolean expireAll(Cache cache, long expireTime);
-
-    /**
-     * 初始化
-     */
-    default void init() {
-
-    }
+    
 }

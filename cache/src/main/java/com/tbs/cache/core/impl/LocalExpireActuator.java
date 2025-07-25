@@ -5,6 +5,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.schedule.ISchedule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.ToString;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,16 +23,13 @@ import java.util.concurrent.*;
 /**
  * @author tongj
  */
-public class LocalExpireActuator implements IExpiredActuator, InitializingBean, DisposableBean {
+public class LocalExpireActuator implements IExpiredActuator {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalExpireActuator.class);
 
-    ExecutorService executorService = Executors.newSingleThreadExecutor();
-
-    private boolean isInit = false;
-
     @AllArgsConstructor
     @Data
+    @ToString
     private static class ExpireTask implements Runnable {
         /**
          * 过期时间长度
@@ -71,8 +69,6 @@ public class LocalExpireActuator implements IExpiredActuator, InitializingBean, 
     @Resource
     private ISchedule schedule;
 
-    CacheManager cacheManager;
-
     @Override
     public boolean expire(Cache cache, Object key, long expireTime) {
         AssertUtil.notNull(cache, "cache can not be null");
@@ -88,18 +84,4 @@ public class LocalExpireActuator implements IExpiredActuator, InitializingBean, 
         return true;
     }
 
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        logger.info("start expire actuator");
-        isInit = true;
-        executorService.execute(() -> {
-            init();
-        });
-        logger.info("expire actuator init finished");
-    }
-
-    @Override
-    public void destroy() throws Exception {
-        isInit = false;
-    }
 }
