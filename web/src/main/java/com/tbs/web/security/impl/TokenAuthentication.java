@@ -1,6 +1,7 @@
 package com.tbs.web.security.impl;
 
 import com.tbs.common.util.StrUtil;
+import com.tbs.web.security.ITokenAuthentication;
 import com.tbs.web.security.ITokenModel;
 import lombok.Getter;
 import lombok.Setter;
@@ -16,10 +17,10 @@ import java.util.Collection;
  *
  * @author tongj
  */
-public class TokenAuthentication extends AbstractAuthenticationToken {
+public class TokenAuthentication extends AbstractAuthenticationToken implements ITokenAuthentication {
     @Getter
     @Setter
-    private UserDetails currentUserDetails;
+    private UserDetails userDetails;
     @Getter
     @Setter
     private ITokenModel tokenModel;
@@ -27,8 +28,6 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
     @Getter
     @Setter
     private String message;
-
-
 
     public TokenAuthentication(Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
@@ -56,7 +55,7 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
     public static TokenAuthentication createFinal(ITokenModel model, UserDetails userDetails) {
         TokenAuthentication authentication = new TokenAuthentication(userDetails.getAuthorities());
         authentication.setTokenModel(model);
-        authentication.setCurrentUserDetails(userDetails);
+        authentication.setUserDetails(userDetails);
         authentication.setAuthenticated(true);
         return authentication;
     }
@@ -81,15 +80,6 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
         return authentication;
     }
 
-    /**
-     * 是否有令牌
-     *
-     * @return
-     */
-    public boolean hasToken() {
-        return getTokenModel() != null;
-    }
-
     @Override
     public Object getCredentials() {
         return getTokenModel();
@@ -97,6 +87,6 @@ public class TokenAuthentication extends AbstractAuthenticationToken {
 
     @Override
     public Object getPrincipal() {
-        return getCurrentUserDetails();
+        return getUserDetails();
     }
 }

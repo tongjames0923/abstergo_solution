@@ -1,10 +1,16 @@
 package com.tbs.web;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.web.security.ITokenAuthentication;
+import com.tbs.web.security.ITokenModel;
+import com.tbs.web.security.impl.TokenAuthentication;
 import com.tbs.web.security.model.SimpleTokenModel;
 import com.tbs.web.trace.core.TraceObject;
 import com.tbs.web.uitl.AjaxUtil;
 import lombok.Getter;
+import lombok.val;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -34,8 +40,9 @@ public class BaseController {
      *
      * @return
      */
-    public SimpleTokenModel getCurrentTokenModel() {
-        return (SimpleTokenModel)getAuthentication().getCredentials();
+    public ITokenModel getCurrentTokenModel() {
+        AssertUtil.isTrue(!isUserLoggedIn(), () -> new NoLoginException("当前用户未登录"));
+        return (ITokenModel)getAuthentication().getCredentials();
     }
 
     /**
@@ -44,7 +51,7 @@ public class BaseController {
      * @return
      */
     public UserDetails getCurrentUser() {
-        return (UserDetails)getAuthentication().getPrincipal();
+        return getAuthentication().getUserDetails();
     }
 
     /**
@@ -53,10 +60,8 @@ public class BaseController {
      * @return
      */
     public boolean isUserLoggedIn() {
-        if (SecurityContextHolder.getContext().getAuthentication() == null) {
-            return false;
-        }
-        return SecurityContextHolder.getContext().getAuthentication().isAuthenticated();
+        ITokenAuthentication authentication = getAuthentication();
+        return authentication != null && authentication.hasToken() && authentication.isAuthenticated();
     }
 
     /**
@@ -64,8 +69,15 @@ public class BaseController {
      *
      * @return
      */
-    public Authentication getAuthentication() {
-        return SecurityContextHolder.getContext().getAuthentication();
+    public ITokenAuthentication getAuthentication() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null) {
+            return null;
+        }
+        if (!(authentication instanceof TokenAuthentication)) {
+            return null;
+        }
+        return (ITokenAuthentication)authentication;
     }
 
     /**
