@@ -3,6 +3,7 @@ package com.tbs.app.controller.publics;
 import com.tbs.app.form.LoginForm;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.web.security.ITokenModel;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.annotations.Api;
@@ -26,12 +27,12 @@ public class PublicUserController extends BaseController {
     IUserAuthService userAuthService;
 
     @PostMapping("/login")
-    public AjaxResult login(@RequestBody @Validated LoginForm loginForm) {
-        return AjaxUtil.getInstance().success(userAuthService.login(loginForm.getUsername(), loginForm.getPassword()));
+    public ITokenModel login(@RequestBody @Validated LoginForm loginForm) {
+        return userAuthService.login(loginForm.getUsername(), loginForm.getPassword());
     }
 
     @GetMapping("/logout")
-    public AjaxResult logout() {
-        return AjaxUtil.getInstance().success(userAuthService.logout(getCurrentTokenModel()));
+    public Boolean logout() {
+        return userAuthService.logout(getCurrentTokenModel());
     }
 }

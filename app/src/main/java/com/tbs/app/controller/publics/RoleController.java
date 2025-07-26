@@ -5,6 +5,8 @@ import com.tbs.app.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.service.IServiceTemplate;
 import com.tbs.app.service.business.ISystemRoleService;
+import com.tbs.web.result.AjaxResult;
+import com.tbs.web.result.annotation.NoWrapped;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -23,5 +25,10 @@ public class RoleController extends AbstractCrudController<SystemRole, Long, Com
     @Override
     public IServiceTemplate<SystemRole, Long> getService() {
         return roleService;
+    }
+    
+    @Override
+    public AjaxResult query(CommonSystemRoleQueryCriteria criteria, long pageNum, long pageSize) {
+        return super.query(criteria, pageNum, pageSize);
     }
 }
