@@ -31,8 +31,5 @@ public class PublicUserController extends BaseController {
         return userAuthService.login(loginForm.getUsername(), loginForm.getPassword());
     }
 
-    @GetMapping("/logout")
-    public Boolean logout() {
-        return userAuthService.logout(getCurrentTokenModel());
-    }
+
 }
