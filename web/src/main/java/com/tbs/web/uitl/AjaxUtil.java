@@ -3,6 +3,7 @@ package com.tbs.web.uitl;
 import com.alibaba.fastjson2.JSON;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxBuilderProvider;
+import com.tbs.web.result.IAjaxResultBuilder;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -74,8 +75,17 @@ public class AjaxUtil {
      * @return AjaxResult对象
      */
     public AjaxResult custom(int code, String msg, Object data) {
-        return ajaxBuilderProvider.getAjaxResultBuilder().create().appendField(AjaxResult.CODE_KEY, code)
-            .appendField(AjaxResult.MESSAGE_KEY, msg).appendField(AjaxResult.DATA_KEY, data).build();
+        return createCustom().appendField(AjaxResult.MESSAGE_KEY, msg).appendField(AjaxResult.CODE_KEY, code)
+            .appendField(AjaxResult.DATA_KEY, data).next().build();
+    }
+
+    /**
+     * 创建自定义的Ajax结果构建器
+     *
+     * @return IAjaxResultBuilder对象
+     */
+    public IAjaxResultBuilder.IAjaxResult1Step createCustom() {
+        return ajaxBuilderProvider.getAjaxResultBuilder().create();
     }
 
     /**

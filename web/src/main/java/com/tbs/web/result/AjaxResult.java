@@ -3,7 +3,6 @@ package com.tbs.web.result;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -67,5 +66,5 @@ public class AjaxResult implements Serializable {
      */
     public static final String DATA_KEY = "data";
 
-    private Map<String, Object> map = new HashMap<>();
+    private Map<String, Object> map;
 }
