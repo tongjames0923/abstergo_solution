@@ -11,6 +11,7 @@ import java.util.Map;
 
 /**
  * 默认的ajax结果构造器
+ *
  * @author tongj
  */
 public class SimpleAjaxResultBuilder implements IAjaxResultBuilder {

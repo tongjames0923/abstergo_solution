@@ -63,14 +63,5 @@ public class WebProperty {
      * 允许所有用户访问的路径
      */
     private List<String> permitAllPaths = List.of("/", "/login", "/public/**");
-
-    /**
-     * 返回结果构建器
-     */
-    private Class<? extends IAjaxBuilderProvider> resultBuilderProvier = SimpleBuilderProvider.class;
-
-    /**
-     * 错误结果构建器
-     */
-    private Class<? extends IOnErrorAjaxProvider> errorResultBuilderProvier = SimpleErrorAjaxProvider.class;
+    
 }

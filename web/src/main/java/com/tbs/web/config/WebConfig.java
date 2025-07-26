@@ -184,31 +184,5 @@ public class WebConfig {
 
     }
 
-    /**
-     * 创建 AJAX 结果构建器提供者
-     *
-     * 使用 BeanUtil 根据配置构建结果构建器
-     *
-     * @return AJAX 结果构建器提供者
-     */
-    @Bean
-    public IAjaxBuilderProvider ajaxBuilderProvider() {
-        return BeanUtil.buildBeanFromProperties(() -> {
-            return new SimpleBuilderProvider();
-        }, webProperty.getResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
-    }
 
-    /**
-     * 创建错误结果构建器提供者
-     *
-     * 使用 BeanUtil 根据配置构建错误结果构建器
-     *
-     * @return 错误结果构建器提供者
-     */
-    @Bean
-    public IOnErrorAjaxProvider errorResultBuilderProvider() {
-        return BeanUtil.buildBeanFromProperties(() -> {
-            return new SimpleErrorAjaxProvider();
-        }, webProperty.getErrorResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
-    }
 }
