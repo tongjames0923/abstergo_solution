@@ -4,14 +4,12 @@ import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.DelayQueue;
-import java.util.concurrent.Delayed;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -45,50 +43,6 @@ public class LocalAsyncSchedule implements ISchedule, InitializingBean, Disposab
         SimpleScheduleTask scheduleTask = new SimpleScheduleTask(shouldRunTime, runnable, this);
         delayQueue.put(new DelayedTaskWrapper(scheduleTask));
         return scheduleTask;
-    }
-
-    private static final class DelayedTaskWrapper implements IScheduleTask, Delayed {
-
-        private IScheduleTask scheduleTask;
-
-        @Override
-        public @NotNull Duration getRemain() {
-            return scheduleTask.getRemain();
-        }
-
-        @Override
-        public @NotNull Runnable getRunnable() {
-            return scheduleTask.getRunnable();
-        }
-
-        @Override
-        public @NotNull ISchedule getSchedule() {
-            return scheduleTask.getSchedule();
-        }
-
-        @Override
-        public boolean isPin() {
-            return scheduleTask.isPin();
-        }
-
-        @Override
-        public void unPin() {
-            scheduleTask.unPin();
-        }
-
-        public DelayedTaskWrapper(IScheduleTask scheduleTask) {
-            this.scheduleTask = scheduleTask;
-        }
-
-        @Override
-        public long getDelay(@NotNull TimeUnit unit) {
-            return unit.convert(getRemain());
-        }
-
-        @Override
-        public int compareTo(@NotNull Delayed o) {
-            return o.getDelay(TimeUnit.MILLISECONDS) >= getDelay(TimeUnit.MILLISECONDS) ? 1 : -1;
-        }
     }
 
     @Override

@@ -21,6 +21,9 @@ public class SimpleScheduleTask implements IScheduleTask {
 
     @Override
     public @NotNull Duration getRemain() {
+        if (shouldRunTime == null) {
+            return Duration.ZERO;
+        }
         long remain = shouldRunTime.getTime() - System.currentTimeMillis();
         return Duration.ofMillis(remain > 0 ? remain : 0);
     }

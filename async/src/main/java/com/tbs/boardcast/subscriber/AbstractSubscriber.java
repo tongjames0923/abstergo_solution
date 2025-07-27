@@ -30,10 +30,11 @@ public abstract class AbstractSubscriber {
     /**
      * 是否支持该事件
      *
+     * @param eventId
      * @param eventName
      * @return
      */
-    public abstract boolean supportEvent(String eventName);
+    public abstract boolean supportEvent(String eventId, String eventName);
 
     /**
      * 是否支持该发布者

@@ -79,13 +79,14 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, Initi
             while (started) {
                 IPublishResult<?> iPublishResult = null;
                 try {
-                    iPublishResult = getEventBus().nextUnhandledEvent(Duration.ofMinutes(1));
+                    iPublishResult = getEventBus().nextUnhandledEvent(Duration.ofMinutes(15));
                     if (iPublishResult == null) {
                         logger.trace("空事件超时");
                         continue;
                     }
                     for (AbstractSubscriber subscriber : HolderUtil.values(subscriberContext)) {
-                        if (subscriber.supportEvent(iPublishResult.getEvent().getEventName()) &&
+                        if (subscriber.supportEvent(iPublishResult.getEvent().getEventId(),
+                            iPublishResult.getEvent().getEventName()) &&
                             subscriber.supportPublisher(iPublishResult.getPublisher())) {
                             if (iPublishResult.getHandleMode() == HandleMode.SYNC) {
                                 subscriber.recive(iPublishResult, iPublishResult.getPublisher());
