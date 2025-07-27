@@ -7,6 +7,7 @@ import com.tbs.app.service.IServiceTemplate;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.annotation.NoWrapped;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -26,9 +27,10 @@ public class RoleController extends AbstractCrudController<SystemRole, Long, Com
     public IServiceTemplate<SystemRole, Long> getService() {
         return roleService;
     }
-    
+
+
     @Override
-    public AjaxResult query(CommonSystemRoleQueryCriteria criteria, long pageNum, long pageSize) {
+    public AjaxResult query(@RequestBody CommonSystemRoleQueryCriteria criteria, long pageNum, long pageSize) {
         return super.query(criteria, pageNum, pageSize);
     }
 }

@@ -3,7 +3,6 @@ package com.tbs.app.config;
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
 import com.tbs.boardcast.event.IEvent;
 import com.tbs.boardcast.publisher.IPublisher;
-import com.tbs.boardcast.publisher.impl.DispatcherImportedPublisher;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 import com.tbs.cache.core.ICacheListenner;
 import com.tbs.common.error.IErrorThrowEvent;
@@ -39,11 +38,6 @@ public class AppConfig {
 
             private Logger logger = LoggerFactory.getLogger(AppConfig.class);
         };
-    }
-
-    @Bean
-    IPublisher publisher(IEventDispatcher dispatcher) {
-        return new DispatcherImportedPublisher("publisher", dispatcher);
     }
 
     @Bean
@@ -83,30 +77,6 @@ public class AppConfig {
     }
 
     @Bean
-    ITraceContextListenner traceContextListenner() {
-        return new ITraceContextListenner() {
-
-            private final Logger logger = LoggerFactory.getLogger(AppConfig.class);
-
-            @Override
-            public void onTraceContextChanged(int changeType, AbstractTraceContext traceContext,
-                HttpServletRequest request, HttpServletResponse response) {
-                logger.info("trace context changed, change type: {}, trace context: {}", changeType, traceContext);
-            }
-
-            @Override
-            public void onMethodInvokeBegin(TraceObject traceObject, IMethodInvokeTreeProvider provider) {
-                logger.info("method invoke begin, trace object: {}", traceObject);
-            }
-
-            @Override
-            public void onMethodInvokeEnd(TraceObject traceObject, IMethodInvokeTreeProvider provider) {
-                logger.info("method invoke end, trace object: {}", traceObject);
-            }
-        };
-    }
-
-    @Bean
     AbstractSubscriber subscriber(ExecutorService executorService, IEventDispatcher dispatcher) {
         return new AbstractSubscriber(executorService) {
 
@@ -124,7 +94,7 @@ public class AppConfig {
             }
 
             @Override
-            public boolean supportEvent(String eventName) {
+            public boolean supportEvent(String eventId, String eventName) {
                 return true;
             }
 
