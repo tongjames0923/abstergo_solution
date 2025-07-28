@@ -19,4 +19,9 @@ public class AsyncBeanNameConstant {
      */
     public static final String MAIN_EXECUTOR_SERVICE_REJECTED_EXECUTION_HANDLER =
         "mainExecutorServiceRejectedExecutionHandler";
+
+    /**
+     * 长期线程池
+     */
+    public static final String LONG_TERM_EXECUTOR_SERVICE = "longTermExecutorService";
 }

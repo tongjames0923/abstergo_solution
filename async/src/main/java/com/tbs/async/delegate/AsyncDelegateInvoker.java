@@ -7,7 +7,11 @@ import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
 import com.tbs.common.function.SSupplier;
+import com.tbs.thread.IOnThreadError;
+import com.tbs.thread.IThreadPoolManager;
+import com.tbs.thread.impl.SimpleThreadRequest;
 
+import javax.annotation.Resource;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -16,15 +20,13 @@ import java.util.concurrent.ExecutorService;
  * @author tongj
  */
 public class AsyncDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
-    /**
-     * 线程池
-     */
-    private ExecutorService executorService;
 
     private IDelegateFlagProvider delegateFlagProvider;
 
-    public AsyncDelegateInvoker(IDelegateFlagProvider delegateFlagProvider, ExecutorService executorService) {
-        this.executorService = executorService;
+    @Resource
+    IThreadPoolManager threadPoolManager;
+
+    public AsyncDelegateInvoker(IDelegateFlagProvider delegateFlagProvider) {
         this.delegateFlagProvider = delegateFlagProvider;
     }
 
@@ -35,24 +37,28 @@ public class AsyncDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
 
     @Override
     protected <P> void executeTakeIn(IDelegateFlag<T> flag, SBiConsumer<T, P> method, SSupplier<P> p) {
-        executorService.execute(() -> {
-            try {
-                getTarget().write(method, p);
-                flag.setFinished(this);
-            } catch (Throwable e) {
-                onErrorThrow(flag, e);
+
+        threadPoolManager.submit(SimpleThreadRequest.Builder.create("asyncDelegateInvoker-task in", (r, m) -> {
+            getTarget().write(method, p);
+            flag.setFinished(this);
+        }).build(), new IOnThreadError() {
+            @Override
+            public void onThreadError(Throwable throwable, Thread at) {
+                onErrorThrow(flag, throwable);
             }
         });
+
     }
 
     @Override
     protected <P> void executeTakeOut(IDelegateFlag<T> flag, SFunction<T, P> method, SConsumer<P> consumer) {
-        executorService.execute(() -> {
-            try {
-                getTarget().read(method, consumer);
-                flag.setFinished(this);
-            } catch (Throwable e) {
-                onErrorThrow(flag, e);
+        threadPoolManager.submit(SimpleThreadRequest.Builder.create("asyncDelegateInvoker-task in", (r, m) -> {
+            getTarget().read(method, consumer);
+            flag.setFinished(this);
+        }).build(), new IOnThreadError() {
+            @Override
+            public void onThreadError(Throwable throwable, Thread at) {
+                onErrorThrow(flag, throwable);
             }
         });
     }

@@ -1,4 +1,4 @@
-package com.tbs.async;
+package com.tbs.thread;
 
 /**
  * 线程异常处理

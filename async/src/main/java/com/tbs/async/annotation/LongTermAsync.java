@@ -1,7 +1,7 @@
 package com.tbs.async.annotation;
 
-import com.tbs.async.IOnThreadError;
-import com.tbs.async.impl.DefaultOnThreadError;
+import com.tbs.thread.IOnThreadError;
+import com.tbs.thread.impl.DefaultOnThreadError;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

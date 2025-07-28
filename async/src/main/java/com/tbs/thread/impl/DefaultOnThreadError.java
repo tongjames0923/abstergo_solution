@@ -1,6 +1,6 @@
-package com.tbs.async.impl;
+package com.tbs.thread.impl;
 
-import com.tbs.async.IOnThreadError;
+import com.tbs.thread.IOnThreadError;
 import lombok.extern.slf4j.Slf4j;
 
 /**
