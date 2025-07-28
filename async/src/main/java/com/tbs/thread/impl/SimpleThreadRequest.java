@@ -37,6 +37,15 @@ public class SimpleThreadRequest implements IThreadRequest {
             return builder;
         }
 
+        public static final Builder create(@NotNull String name, @NotNull Runnable threadCall) {
+            AssertUtil.hasText(name, "name can not be null or empty");
+            AssertUtil.notNull(threadCall, "threadCall can not be null");
+            Builder builder = new Builder();
+            builder.name = name;
+            builder.threadCall = new DefaultThreadCall(threadCall);
+            return builder;
+        }
+
         public Builder withPriority(int priority) {
             this.priority = priority;
             return this;

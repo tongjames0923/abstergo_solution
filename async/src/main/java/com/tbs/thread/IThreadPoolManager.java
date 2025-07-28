@@ -8,5 +8,11 @@ import org.jetbrains.annotations.NotNull;
  * @author tboss
  */
 public interface IThreadPoolManager {
+    /**
+     * 提交任务
+     *
+     * @param request
+     * @param onThreadError
+     */
     void submit(@NotNull IThreadRequest request, IOnThreadError onThreadError);
 }

@@ -38,7 +38,7 @@ public class AsyncDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
     @Override
     protected <P> void executeTakeIn(IDelegateFlag<T> flag, SBiConsumer<T, P> method, SSupplier<P> p) {
 
-        threadPoolManager.submit(SimpleThreadRequest.Builder.create("asyncDelegateInvoker-task in", (r, m) -> {
+        threadPoolManager.submit(SimpleThreadRequest.Builder.create("asyncDelegateInvoker-task in", () -> {
             getTarget().write(method, p);
             flag.setFinished(this);
         }).build(), new IOnThreadError() {
@@ -52,7 +52,7 @@ public class AsyncDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
 
     @Override
     protected <P> void executeTakeOut(IDelegateFlag<T> flag, SFunction<T, P> method, SConsumer<P> consumer) {
-        threadPoolManager.submit(SimpleThreadRequest.Builder.create("asyncDelegateInvoker-task in", (r, m) -> {
+        threadPoolManager.submit(SimpleThreadRequest.Builder.create("asyncDelegateInvoker-task in", () -> {
             getTarget().read(method, consumer);
             flag.setFinished(this);
         }).build(), new IOnThreadError() {

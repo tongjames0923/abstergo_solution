@@ -6,7 +6,6 @@ import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.thread.IThreadPoolManager;
 import com.tbs.thread.IThreadRequest;
-import com.tbs.thread.IThreadRequestProvider;
 import com.tbs.thread.impl.SimpleThreadRequest;
 
 import javax.annotation.Resource;
@@ -78,9 +77,8 @@ public abstract class AbstractSubscriber {
      * @return
      */
     public void reciveAsync(IPublishResult<?> event, IPublisher publisher) {
-        threadPoolManager.submit(
-            SimpleThreadRequest.Builder.create("AbstractSubscriber-" + getSubscriberId(), (r, m) -> {
-                recive(event, publisher);
-            }).build(), null);
+        threadPoolManager.submit(SimpleThreadRequest.Builder.create("AbstractSubscriber-" + getSubscriberId(), () -> {
+            recive(event, publisher);
+        }).build(), null);
     }
 }
