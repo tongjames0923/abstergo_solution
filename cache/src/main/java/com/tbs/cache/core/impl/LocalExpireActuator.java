@@ -6,19 +6,13 @@ import com.tbs.schedule.ISchedule;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.ToString;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.cache.Cache;
-import org.springframework.cache.CacheManager;
-import org.springframework.scheduling.annotation.Async;
 
 import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.Date;
-import java.util.concurrent.*;
 
 /**
  * @author tongj

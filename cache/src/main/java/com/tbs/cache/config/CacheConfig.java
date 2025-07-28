@@ -5,16 +5,10 @@ import com.tbs.cache.core.AbstractTtlAwareAdaptCacheManager;
 import com.tbs.cache.core.IExpiredActuator;
 import com.tbs.cache.core.impl.ImportedTtlAwareAdaptCacheManager;
 import com.tbs.cache.core.impl.LocalExpireActuator;
-import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.BeanUtil;
-import com.tbs.common.util.CollUtil;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
-import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.LocalAsyncSchedule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.CacheManager;
@@ -23,11 +17,8 @@ import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 
 import javax.annotation.Resource;
-import java.util.Map;
-import java.util.concurrent.Executors;
 
 /**
  * 缓存配置
@@ -72,7 +63,6 @@ public class CacheConfig {
     @ConditionalOnMissingBean(ISchedule.class)
     public ISchedule expireSchedule(IScheduleExecuteErrorHandle scheduleExecuteErrorHandle) {
         return new LocalAsyncSchedule(
-            Executors.newSingleThreadExecutor(new CustomizableThreadFactory("expire-schedule-")),
             scheduleExecuteErrorHandle);
     }
 
