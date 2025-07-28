@@ -78,7 +78,7 @@ public class AppConfig {
 
     @Bean
     AbstractSubscriber subscriber(ExecutorService executorService, IEventDispatcher dispatcher) {
-        return new AbstractSubscriber(executorService) {
+        return new AbstractSubscriber() {
 
             private Logger logger = LoggerFactory.getLogger(AppConfig.class);
 

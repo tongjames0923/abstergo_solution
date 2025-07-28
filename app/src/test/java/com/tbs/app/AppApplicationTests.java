@@ -4,6 +4,9 @@ import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.async.constant.AsyncBeanNameConstant;
+import com.tbs.boardcast.enums.HandleMode;
+import com.tbs.boardcast.event.impl.SimpleEventImpl;
+import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.common.util.framework.DelegateUtil;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
@@ -23,13 +26,21 @@ class AppApplicationTests {
     @Resource
     private ISystemUserService systemUserService;
 
-    @Resource(name = AsyncBeanNameConstant.MAIN_EXECUTOR_SERVICE)
-    ExecutorService executorService;
+    @Resource
+    IPublisher publisher;
 
     @Test
-    void contextLoads() throws ExecutionException, InterruptedException {
+    void boardcastTest() throws ExecutionException, InterruptedException {
+        var h = publisher.publish(new SimpleEventImpl<>("test", "test"), HandleMode.ASYNC);
+        logger.info("publish finish");
+        h.untilEventComplete();
+        logger.info("handle finish");
+    }
+
+    @Test
+    void pageInitTest() {
         PageVO vo = new PageVO<Integer>();
-        DelegateUtil.getInstance().delegateWithTarget(vo).build(AsyncDelegateInvoker.class)
+        var all = DelegateUtil.getInstance().delegateWithTarget(vo).build(AsyncDelegateInvoker.class)
             .takeIn(PageVO::setData, () -> Arrays.asList(1, 2, 3)).takeIn(PageVO::setTotal, () -> {
                 try {
                     Thread.currentThread().join(1000);
@@ -37,11 +48,12 @@ class AppApplicationTests {
                     throw new RuntimeException(e);
                 }
                 return 10L;
-            }).executeAll().forEach(flag -> {
-                flag.get().read(PageVO::getData, data -> {
-                    logger.info("data {}", data);
-                });
-            });
+            }).executeAll();
+        logger.info("start page init");
+        all.forEach(flag -> {
+            flag.waitUntilFinished().expceptionThenThrow().get();
+        });
+        logger.info("page init finish");
     }
 
 }
