@@ -38,7 +38,7 @@ public class SystemUser implements IBaseEntity<Long> {
      * 昵称
      */
     @Column(name = "nickname", length = 32, nullable = false)
-    private String nickname;
+    private String nickName;
     /**
      * 头像
      */
@@ -80,8 +80,8 @@ public class SystemUser implements IBaseEntity<Long> {
         return this;
     }
 
-    public SystemUser setNickname(String nickname) {
-        this.nickname = nickname;
+    public SystemUser setNickName(String nickname) {
+        this.nickName = nickname;
         return this;
     }
 

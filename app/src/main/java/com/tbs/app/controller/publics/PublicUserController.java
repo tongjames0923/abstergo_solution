@@ -1,10 +1,12 @@
 package com.tbs.app.controller.publics;
 
 import com.tbs.app.form.LoginForm;
+import com.tbs.app.vo.UserInfoVO;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.ITokenModel;
 import com.tbs.web.security.IUserAuthService;
+import com.tbs.web.security.model.SimpleTokenModel;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.annotations.Api;
 import org.springframework.validation.annotation.Validated;
@@ -30,6 +32,5 @@ public class PublicUserController extends BaseController {
     public ITokenModel login(@RequestBody @Validated LoginForm loginForm) {
         return userAuthService.login(loginForm.getUsername(), loginForm.getPassword());
     }
-
-
+    
 }

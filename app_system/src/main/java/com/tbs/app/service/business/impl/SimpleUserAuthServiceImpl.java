@@ -8,6 +8,7 @@ import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.context.IContext;
 import com.tbs.common.util.*;
 import com.tbs.common.util.framework.HolderUtil;
@@ -83,14 +84,14 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
         UserDetails details = loadUserInfoByUniqueKey(username);
         password = passwordEncrypt.encrypt(password);
         AssertUtil.isTrue(!Objects.equals(details.getPassword(), password), () -> {
-            return new SimpleAuthException("用户名或密码错误");
+            return new FormattedRuntimeException("用户名或密码错误");
         });
         com.tbs.web.security.ITokenModel model =
             SimpleTokenModel.create(UuidUtil.getInstance().getUuidString(), authProperty.getTokenSource(),
                 authProperty.getTokenFiledName(), details.getUsername(), null);
         HolderUtil.operateDataSource(getTokenModelContext(), context -> {
             if (!context.putIfAbsent(model.getToken(), details)) {
-                AssertUtil.throwError(() -> new SimpleAuthException("Token已存在"));
+                AssertUtil.throwError(() -> new FormattedRuntimeException("Token已存在"));
             }
         });
         return model;

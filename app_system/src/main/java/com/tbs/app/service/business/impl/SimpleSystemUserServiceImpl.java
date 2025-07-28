@@ -16,10 +16,8 @@ import com.tbs.common.util.StrUtil;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 简单的系统用户服务实现
@@ -47,7 +45,7 @@ public class SimpleSystemUserServiceImpl
     protected SystemUser insertNew(SystemUser entity) {
         AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUsername()), "用户名格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
-        AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickname()), "昵称格式错误");
+        AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickName()), "昵称格式错误");
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setCreateTime(new Date());
         entity.setFlag(SystemUserStatusEnum.CREATED.getCode());
@@ -73,9 +71,9 @@ public class SimpleSystemUserServiceImpl
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUser.getPassword()), "密码格式错误");
             oldSystemUser.setPassword(encrypt.encrypt(systemUser.getPassword()));
         }
-        if (StrUtil.isNotEmpty(systemUser.getNickname())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUser.getNickname()), "昵称格式错误");
-            oldSystemUser.setNickname(systemUser.getNickname());
+        if (StrUtil.isNotEmpty(systemUser.getNickName())) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUser.getNickName()), "昵称格式错误");
+            oldSystemUser.setNickName(systemUser.getNickName());
         }
         if (systemUser.getFlag() != null) {
             AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUser.getFlag()),
