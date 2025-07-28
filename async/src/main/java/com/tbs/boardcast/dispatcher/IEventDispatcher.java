@@ -2,10 +2,7 @@ package com.tbs.boardcast.dispatcher;
 
 import com.tbs.boardcast.bus.IEventBus;
 import com.tbs.boardcast.publisher.IPublishResult;
-import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
-
-import java.util.concurrent.ExecutorService;
 
 /**
  * 事件分发器
@@ -27,13 +24,6 @@ public interface IEventDispatcher {
      * @param subscriber
      */
     void unregister(AbstractSubscriber subscriber);
-
-    /**
-     * 获取执行器
-     *
-     * @return
-     */
-    ExecutorService getExecutorService();
 
     /**
      * 获取事件总线

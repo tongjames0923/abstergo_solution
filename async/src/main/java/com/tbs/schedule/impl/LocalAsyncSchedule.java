@@ -1,16 +1,16 @@
 package com.tbs.schedule.impl;
 
+import com.tbs.async.annotation.LongTermAsync;
+import com.tbs.common.IStartup;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.beans.factory.InitializingBean;
 
 import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.DelayQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -19,12 +19,8 @@ import java.util.concurrent.TimeUnit;
  * @author tongj
  */
 @Slf4j
-public class LocalAsyncSchedule implements ISchedule, InitializingBean, DisposableBean {
+public class LocalAsyncSchedule implements ISchedule, IStartup, DisposableBean {
 
-    /**
-     * 执行器
-     */
-    private ExecutorService executorService;
 
     private DelayQueue<DelayedTaskWrapper> delayQueue = new DelayQueue<>();
 
@@ -32,9 +28,11 @@ public class LocalAsyncSchedule implements ISchedule, InitializingBean, Disposab
 
     private IScheduleExecuteErrorHandle executeErrorHandle;
 
-    public LocalAsyncSchedule(ExecutorService executorService, IScheduleExecuteErrorHandle executeErrorHandle) {
-        this.executorService = executorService;
+    private static LocalAsyncSchedule instance;
+
+    public LocalAsyncSchedule(IScheduleExecuteErrorHandle executeErrorHandle) {
         this.executeErrorHandle = executeErrorHandle;
+        instance = this;
     }
 
     @Override
@@ -58,38 +56,37 @@ public class LocalAsyncSchedule implements ISchedule, InitializingBean, Disposab
     @Override
     public void destroy() throws Exception {
         flag = 0;
-        executorService.shutdown();
+    }
+
+    protected void handle() {
+        while (flag == 1) {
+            DelayedTaskWrapper scheduleTask = null;
+            try {
+                scheduleTask = delayQueue.poll(5, TimeUnit.MINUTES);
+                if (scheduleTask == null) {
+                    log.trace("存在空任务在队列中");
+                    continue;
+                }
+                if (!scheduleTask.isPin()) {
+                    log.debug("任务被提前取消 {}", scheduleTask.getRunnable().toString());
+                    continue;
+                }
+                scheduleTask.getRunnable().run();
+                scheduleTask.unPin();
+            } catch (Exception e) {
+                if (getExecuteErrorHandle() == null) {
+                    log.warn("schedule task error", e);
+                    continue;
+                }
+                getExecuteErrorHandle().handle(scheduleTask, e, LocalAsyncSchedule.this);
+            }
+        }
     }
 
     @Override
-    public void afterPropertiesSet() throws Exception {
+    @LongTermAsync(value = "本地异步定时器")
+    public void startUp() throws RuntimeException {
         flag = 1;
-        executorService.submit(new Runnable() {
-            @Override
-            public void run() {
-                while (flag == 1) {
-                    DelayedTaskWrapper scheduleTask = null;
-                    try {
-                        scheduleTask = delayQueue.poll(5, TimeUnit.MINUTES);
-                        if (scheduleTask == null) {
-                            log.trace("存在空任务在队列中");
-                            continue;
-                        }
-                        if (!scheduleTask.isPin()) {
-                            log.debug("任务被提前取消 {}", scheduleTask.getRunnable().toString());
-                            continue;
-                        }
-                        scheduleTask.getRunnable().run();
-                        scheduleTask.unPin();
-                    } catch (Exception e) {
-                        if (getExecuteErrorHandle() == null) {
-                            log.warn("schedule task error", e);
-                            continue;
-                        }
-                        getExecuteErrorHandle().handle(scheduleTask, e, LocalAsyncSchedule.this);
-                    }
-                }
-            }
-        });
+        handle();
     }
 }

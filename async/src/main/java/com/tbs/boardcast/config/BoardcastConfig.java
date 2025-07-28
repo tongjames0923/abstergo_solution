@@ -9,10 +9,10 @@ import com.tbs.boardcast.dispatcher.impl.AbstractEventDispatcher;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.boardcast.publisher.impl.DispatcherImportedPublisher;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.holder.context.AbstractNamedContext;
 import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
-import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +23,6 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
 import java.util.HashMap;
-import java.util.concurrent.Executors;
 
 /**
  * @author abstergo
@@ -59,7 +58,7 @@ public class BoardcastConfig {
     @Bean
     @ConditionalOnMissingBean(IEventDispatcher.class)
     public IEventDispatcher dispatcher() {
-        return new AbstractEventDispatcher(Executors.newSingleThreadExecutor()) {
+        return new AbstractEventDispatcher() {
             private final Logger logger = LoggerFactory.getLogger(BoardcastConfig.class);
 
             @Override
