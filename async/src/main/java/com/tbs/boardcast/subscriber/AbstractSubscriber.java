@@ -4,7 +4,12 @@ import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.event.IEvent;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.publisher.IPublisher;
+import com.tbs.thread.IThreadPoolManager;
+import com.tbs.thread.IThreadRequest;
+import com.tbs.thread.IThreadRequestProvider;
+import com.tbs.thread.impl.SimpleThreadRequest;
 
+import javax.annotation.Resource;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -14,11 +19,8 @@ import java.util.concurrent.ExecutorService;
  */
 public abstract class AbstractSubscriber {
 
-    private ExecutorService executorService;
-
-    public AbstractSubscriber(ExecutorService executorService) {
-        this.executorService = executorService;
-    }
+    @Resource
+    IThreadPoolManager threadPoolManager;
 
     /**
      * 订阅者ID
@@ -76,8 +78,9 @@ public abstract class AbstractSubscriber {
      * @return
      */
     public void reciveAsync(IPublishResult<?> event, IPublisher publisher) {
-        executorService.execute(() -> {
-            recive(event, publisher);
-        });
+        threadPoolManager.submit(
+            SimpleThreadRequest.Builder.create("AbstractSubscriber-" + getSubscriberId(), (r, m) -> {
+                recive(event, publisher);
+            }).build(), null);
     }
 }
