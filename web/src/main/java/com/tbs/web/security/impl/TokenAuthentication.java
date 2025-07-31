@@ -59,19 +59,6 @@ public class TokenAuthentication extends AbstractAuthenticationToken implements 
         return authentication;
     }
 
-    /**
-     * 创建错误令牌
-     *
-     * @param msg
-     * @param p
-     * @return
-     */
-    public static <E extends AuthenticationException> TokenAuthentication badTokenCreate(E e) {
-        TokenAuthentication authentication = new TokenAuthentication(null);
-        authentication.setAuthException(e);
-        return authentication;
-    }
-
     @Override
     public Object getCredentials() {
         return getTokenModel();
