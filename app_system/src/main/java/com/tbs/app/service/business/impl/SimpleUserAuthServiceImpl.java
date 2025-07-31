@@ -14,6 +14,7 @@ import com.tbs.common.util.*;
 import com.tbs.common.util.framework.HolderUtil;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.web.config.property.WebAuthProperty;
+import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.SimpleAuthException;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.model.SimpleTokenModel;
@@ -58,7 +59,6 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
 
     @Override
     public UserDetails loadUserInfoByUniqueKey(String uniqueKey) {
-
         List<SystemUser> users = systemUserService.queryByUserName(uniqueKey);
         AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException("用户不存在"));
         SystemUser user = users.get(0);
@@ -75,7 +75,7 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
 
     @Override
     public UserDetails loadUserInfoByToken(com.tbs.web.security.ITokenModel token) {
-        AssertUtil.isTrue(token == null, () -> new SimpleAuthException("Token错误"));
+        AssertUtil.isTrue(token == null, () -> new InvalidTokenException("未接收到有效Token"));
         return HolderUtil.get(getTokenModelContext(), token.getToken());
     }
 
@@ -84,7 +84,7 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
         UserDetails details = loadUserInfoByUniqueKey(username);
         password = passwordEncrypt.encrypt(password);
         AssertUtil.isTrue(!Objects.equals(details.getPassword(), password), () -> {
-            return new FormattedRuntimeException("用户名或密码错误");
+            return new SimpleAuthException("用户名或密码错误");
         });
         com.tbs.web.security.ITokenModel model =
             SimpleTokenModel.create(UuidUtil.getInstance().getUuidString(), authProperty.getTokenSource(),
@@ -105,7 +105,7 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
                 return;
             }
         }
-        AssertUtil.throwError(() -> new SimpleAuthException("Token错误"));
+        AssertUtil.throwError(() -> new InvalidTokenException("Token不存在有效用户信息"));
     }
 
     @Override
