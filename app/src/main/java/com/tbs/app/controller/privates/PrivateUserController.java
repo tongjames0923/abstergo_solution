@@ -2,6 +2,7 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.web.uitl.AuthUtil;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
@@ -28,16 +29,17 @@ public class PrivateUserController extends BaseController {
 
     @GetMapping("/logout")
     public Boolean logout() {
-        return userAuthService.logout(getCurrentTokenModel());
+        return userAuthService.logout(AuthUtil.getInstance().getCurrentTokenModel());
     }
 
     @GetMapping("/info")
     public UserInfoVO info() {
         UserInfoVO userInfoVO = new UserInfoVO();
-        userInfoVO.setUserName(getCurrentUser().getUsername());
-        Optional<SystemUser> user = userService.queryByUserName(getCurrentUser().getUsername()).stream().findFirst();
-        AssertUtil.isTrue(!user.isPresent(),
-            () -> new FormattedRuntimeException("用户{} 不存在", getCurrentUser().getUsername()));
+        userInfoVO.setUserName(AuthUtil.getInstance().getCurrentUser().getUsername());
+        Optional<SystemUser> user =
+            userService.queryByUserName(AuthUtil.getInstance().getCurrentUser().getUsername()).stream().findFirst();
+        AssertUtil.isTrue(!user.isPresent(), () -> new FormattedRuntimeException("用户{} 不存在",
+            AuthUtil.getInstance().getCurrentUser().getUsername()));
         userInfoVO.setNickName(user.get().getNickName());
         userInfoVO.setAvatar(user.get().getAvatar());
         return userInfoVO;
