@@ -41,6 +41,17 @@ public class AjaxResult implements Serializable {
      * 默认未授权码
      */
     public static final int DEFAULT_UNAUTHORIZED_CODE = 401;
+
+    /**
+     * 默认重新登录码
+     */
+    public static final int RELOGIN_CODE = 405;
+
+    /**
+     * 默认重新登录信息
+     */
+    public static final String DEFAULT_RELOGIN_MESSAGE = "请重新登录";
+
     /**
      * 默认未授权信息
      */

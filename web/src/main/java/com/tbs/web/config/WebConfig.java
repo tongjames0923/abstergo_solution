@@ -1,23 +1,19 @@
 package com.tbs.web.config;
 
-import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
-import com.tbs.web.result.IAjaxBuilderProvider;
-import com.tbs.web.result.IOnErrorAjaxProvider;
-import com.tbs.web.result.impl.SimpleBuilderProvider;
-import com.tbs.web.result.impl.SimpleErrorAjaxProvider;
 import com.tbs.web.security.impl.AuthExceptionHandler;
-import com.tbs.web.security.impl.UserAuthServiceImpl;
 import com.tbs.web.security.impl.TokenAuthenticationFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -30,11 +26,7 @@ import javax.annotation.Resource;
 /**
  * Web 配置类
  *
- * 主要负责以下功能配置：
- * 1. Spring Security 安全配置
- * 2. CORS 跨域配置
- * 3. HTTP 安全特性配置（CSRF、HTTP Basic、表单登录等）
- * 4. 请求结果构建器配置
+ * 主要负责以下功能配置： 1. Spring Security 安全配置 2. CORS 跨域配置 3. HTTP 安全特性配置（CSRF、HTTP Basic、表单登录等） 4. 请求结果构建器配置
  *
  * @author tongj
  */
@@ -51,8 +43,7 @@ public class WebConfig {
     private WebProperty webProperty;
 
     /**
-     * 认证相关配置属性
-     * 用于获取认证启用状态、登录路径等认证相关参数
+     * 认证相关配置属性 用于获取认证启用状态、登录路径等认证相关参数
      */
     @Resource
     private WebAuthProperty webAuthProperty;
@@ -81,13 +72,12 @@ public class WebConfig {
     /**
      * 启用认证模式下的安全配置
      *
-     * 当配置项 tbs.web.auth.enable 为 true 时生效
-     * 配置令牌认证过滤器、异常处理、用户详情服务和认证提供者
+     * 当配置项 tbs.web.auth.enable 为 true 时生效 配置令牌认证过滤器、异常处理、用户详情服务和认证提供者
      *
-     * @param http Security HTTP 安全对象
+     * @param http                      Security HTTP 安全对象
      * @param tokenAuthenticationFilter 令牌认证过滤器
-     * @param authExceptionHandler 认证异常处理器
-     * @param provider 默认用户认证服务提供者
+     * @param authExceptionHandler      认证异常处理器
+     * @param provider                  默认用户认证服务提供者
      * @return 安全过滤器链
      * @throws Exception 配置异常
      */
@@ -95,12 +85,12 @@ public class WebConfig {
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     public SecurityFilterChain securityWebFilterChain(HttpSecurity http,
         TokenAuthenticationFilter tokenAuthenticationFilter, AuthExceptionHandler authExceptionHandler,
-        UserAuthServiceImpl provider) throws Exception {
+        AuthenticationProvider provider, UserDetailsService userDetailsService) throws Exception {
         setSecurity(http);
         http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         http.exceptionHandling().authenticationEntryPoint(authExceptionHandler)
             .accessDeniedHandler(authExceptionHandler);
-        http.userDetailsService(provider);
+        http.userDetailsService(userDetailsService);
         http.authenticationProvider(provider);
         return http.build();
     }
@@ -120,8 +110,7 @@ public class WebConfig {
     /**
      * 创建 CORS 配置源
      *
-     * 配置允许所有来源、所有头、所有方法的跨域请求
-     * 设置预检请求缓存时间为24小时
+     * 配置允许所有来源、所有头、所有方法的跨域请求 设置预检请求缓存时间为24小时
      *
      * @return CORS 配置源
      */
@@ -183,6 +172,5 @@ public class WebConfig {
         http.authorizeHttpRequests().antMatchers(securedPaths).authenticated();
 
     }
-
 
 }

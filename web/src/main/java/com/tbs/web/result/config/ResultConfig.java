@@ -6,7 +6,7 @@ import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.IResultCreator;
 import com.tbs.web.result.impl.DefaultResultCreateor;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
-import com.tbs.web.result.impl.SimpleErrorAjaxProvider;
+import com.tbs.web.result.impl.DefaultErrorAjaxProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -45,7 +45,7 @@ public class ResultConfig {
     @ConditionalOnMissingBean(IOnErrorAjaxProvider.class)
     public IOnErrorAjaxProvider errorResultBuilderProvider() {
         return BeanUtil.buildBeanFromProperties(() -> {
-            return new SimpleErrorAjaxProvider();
+            return new DefaultErrorAjaxProvider();
         }, resultProperty.getErrorResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
     }
 

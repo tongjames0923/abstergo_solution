@@ -5,6 +5,7 @@ import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.exception.NoLoginException;
+import com.tbs.web.exception.ReLoginRequestException;
 import com.tbs.web.result.*;
 import com.tbs.web.result.annotation.NoWrapped;
 import com.tbs.web.result.annotation.Wrapped;
@@ -21,6 +22,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
@@ -42,8 +44,14 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
     @Resource
     private IAjaxBuilderProvider provider;
 
+    @Resource
+    private HttpServletResponse response;
+
     @ExceptionHandler(Throwable.class)
     public AjaxResult handleException(Throwable e) {
+        if (response.isCommitted()) {
+            return null;
+        }
         return onErrorAjaxProvider.onError(e);
     }
 

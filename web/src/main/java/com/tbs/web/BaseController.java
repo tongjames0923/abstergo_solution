@@ -35,50 +35,6 @@ public class BaseController {
     @Resource
     private TraceObject traceObject;
 
-    /**
-     * 获取当前用户的TokenModel
-     *
-     * @return
-     */
-    public ITokenModel getCurrentTokenModel() {
-        AssertUtil.isTrue(!isUserLoggedIn(), () -> new NoLoginException("当前用户未登录"));
-        return (ITokenModel)getAuthentication().getCredentials();
-    }
-
-    /**
-     * 获取当前用户
-     *
-     * @return
-     */
-    public UserDetails getCurrentUser() {
-        return getAuthentication().getUserDetails();
-    }
-
-    /**
-     * 判断当前用户是否已认证（已登录）
-     *
-     * @return
-     */
-    public boolean isUserLoggedIn() {
-        ITokenAuthentication authentication = getAuthentication();
-        return authentication != null && authentication.hasToken() && authentication.isAuthenticated();
-    }
-
-    /**
-     * 获取当前用户的认证信息
-     *
-     * @return
-     */
-    public ITokenAuthentication getAuthentication() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null) {
-            return null;
-        }
-        if (!(authentication instanceof TokenAuthentication)) {
-            return null;
-        }
-        return (ITokenAuthentication)authentication;
-    }
 
     /**
      * 默认执行的操作成功返回值

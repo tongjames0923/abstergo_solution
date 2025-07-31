@@ -38,7 +38,6 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
             : getMethodInvokeTreeProvider().getTree().getRoot().getValue();
     }
 
-
     /**
      * 获取当前TraceObject
      *
@@ -104,7 +103,7 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
     @Override
     public IContext<TraceObject> rebuildContext() {
         if (isValid()) {
-            log.warn("链路跟踪对象尚未失效时被重建");
+            log.debug("链路跟踪对象尚未失效时被重建");
             if (CollUtil.isNotEmpty(getContextListenners())) {
                 for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
                     iTraceContextListenner.onTraceContextChanged(

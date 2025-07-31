@@ -7,13 +7,10 @@ import org.springframework.security.core.AuthenticationException;
  *
  * @author tongj
  */
-public class NotFoundTokenException extends AuthenticationException {
+public class NotFoundTokenException extends ReLoginRequestException {
 
     public NotFoundTokenException(String msg) {
         super(msg);
     }
-
-    public NotFoundTokenException(String msg, Throwable cause) {
-        super(msg, cause);
-    }
+    
 }

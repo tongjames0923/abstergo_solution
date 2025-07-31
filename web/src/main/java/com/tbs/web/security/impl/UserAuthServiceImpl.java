@@ -5,6 +5,7 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.exception.SimpleAuthException;
+import com.tbs.web.security.ITokenAuthentication;
 import com.tbs.web.security.IUserAuthService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -30,9 +31,12 @@ public class UserAuthServiceImpl implements UserDetailsService, AuthenticationPr
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        TokenAuthentication tokenAuthentication = (TokenAuthentication)authentication;
-        AssertUtil.isTrue(!tokenAuthentication.hasToken(), () -> new NotFoundTokenException(
-            StrUtil.isEmpty(tokenAuthentication.getMessage()) ? "未找到Token" : tokenAuthentication.getMessage()));
+        if (authentication != null && !(authentication instanceof ITokenAuthentication)) {
+            return authentication;
+        }
+        ITokenAuthentication tokenAuthentication = (ITokenAuthentication)authentication;
+        AssertUtil.isTrue(tokenAuthentication.getAuthException() != null, () -> tokenAuthentication.getAuthException());
+        AssertUtil.isTrue(!tokenAuthentication.hasToken(), () -> new NotFoundTokenException("未获取到有效的Token"));
         userAuthService.authToken(tokenAuthentication.getTokenModel());
         UserDetails principal = userAuthService.loadUserInfoByToken(tokenAuthentication.getTokenModel());
         return TokenAuthentication.createFinal(tokenAuthentication.getTokenModel(), principal);

@@ -38,7 +38,7 @@ public class AuthConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
-    public IUserAuthService notImplUserAuthService() {
+    public IUserAuthService defaultUserAuthService() {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new NotImplUserAuthService();
         }, webAuthProperty.getUserAuthServiceImpl(), BeanUtil::buildByEmptyArgs);

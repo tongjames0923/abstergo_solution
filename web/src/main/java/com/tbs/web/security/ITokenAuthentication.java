@@ -1,6 +1,7 @@
 package com.tbs.web.security;
 
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
@@ -38,4 +39,18 @@ public interface ITokenAuthentication extends Authentication {
      * @return
      */
     UserDetails getUserDetails();
+
+    /**
+     * 获取认证异常
+     *
+     * @return
+     */
+    AuthenticationException getAuthException();
+
+    /**
+     * 设置认证异常
+     *
+     * @param e
+     */
+    void setAuthException(AuthenticationException e);
 }

@@ -7,12 +7,8 @@ import org.springframework.security.core.AuthenticationException;
  *
  * @author tbs
  */
-public class InvalidTokenException extends AuthenticationException {
-
-    public InvalidTokenException(String msg, Throwable cause) {
-        super(msg, cause);
-    }
-
+public class InvalidTokenException extends ReLoginRequestException {
+    
     public InvalidTokenException(String msg) {
         super(msg);
     }

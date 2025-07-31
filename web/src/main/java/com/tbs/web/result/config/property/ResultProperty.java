@@ -5,7 +5,7 @@ import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.IResultCreator;
 import com.tbs.web.result.impl.DefaultResultCreateor;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
-import com.tbs.web.result.impl.SimpleErrorAjaxProvider;
+import com.tbs.web.result.impl.DefaultErrorAjaxProvider;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -30,5 +30,5 @@ public class ResultProperty {
     /**
      * 错误结果构建器
      */
-    private Class<? extends IOnErrorAjaxProvider> errorResultBuilderProvier = SimpleErrorAjaxProvider.class;
+    private Class<? extends IOnErrorAjaxProvider> errorResultBuilderProvier = DefaultErrorAjaxProvider.class;
 }

@@ -6,6 +6,7 @@ import com.tbs.web.security.ITokenModel;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -25,9 +26,7 @@ public class TokenAuthentication extends AbstractAuthenticationToken implements 
     @Setter
     private ITokenModel tokenModel;
 
-    @Getter
-    @Setter
-    private String message;
+    private AuthenticationException authenticationException;
 
     public TokenAuthentication(Collection<? extends GrantedAuthority> authorities) {
         super(authorities);
@@ -67,16 +66,9 @@ public class TokenAuthentication extends AbstractAuthenticationToken implements 
      * @param p
      * @return
      */
-    public static <E extends Throwable> TokenAuthentication badTokenCreate(E e, String msg, Object... p) {
+    public static <E extends AuthenticationException> TokenAuthentication badTokenCreate(E e) {
         TokenAuthentication authentication = new TokenAuthentication(null);
-        StringBuilder message = new StringBuilder();
-        if (e != null) {
-            message.append(StrUtil.format("异常类型:{},异常信息:{}", e.getClass().getName(), e.getMessage()));
-        }
-        if (StrUtil.isNotEmpty(msg)) {
-            message.append(StrUtil.format(" 更多信息:{}", StrUtil.format(msg, p)));
-        }
-        authentication.setMessage(message.toString());
+        authentication.setAuthException(e);
         return authentication;
     }
 
@@ -88,5 +80,15 @@ public class TokenAuthentication extends AbstractAuthenticationToken implements 
     @Override
     public Object getPrincipal() {
         return getUserDetails();
+    }
+
+    @Override
+    public AuthenticationException getAuthException() {
+        return authenticationException;
+    }
+
+    @Override
+    public void setAuthException(AuthenticationException e) {
+        this.authenticationException = e;
     }
 }

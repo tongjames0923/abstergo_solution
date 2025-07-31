@@ -34,6 +34,9 @@ public class AjaxUtil {
      */
     public static void writeInfoResp(HttpServletResponse response, AjaxResult ajaxResult) throws IOException {
         HttpServletResponse httpResponse = (HttpServletResponse)response;
+        if (httpResponse.isCommitted()) {
+            return;
+        }
         httpResponse.setCharacterEncoding("UTF-8");
         httpResponse.setContentType("application/json");
         String jsonResponse = JSON.toJSONString(ajaxResult.getMap());
@@ -41,8 +44,8 @@ public class AjaxUtil {
         writer = httpResponse.getWriter();
         writer.print(jsonResponse);
         writer.flush();
+        writer.close();
     }
-
 
     /**
      * AjaxUtil实例，用于单例模式
