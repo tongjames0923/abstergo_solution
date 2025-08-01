@@ -7,9 +7,11 @@ import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IOnErrorAjaxProvider;
+import com.tbs.web.security.ITokenAuthentication;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.model.SimpleTokenModel;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Lazy;
@@ -20,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -42,10 +45,6 @@ import java.util.List;
 @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
 public class TokenAuthenticationFilter extends OncePerRequestFilter {
 
-    @Lazy
-    @Resource
-    private ITokenPicker tokenPicker;
-
     @Resource
     private AuthenticationManager manager;
 
@@ -62,7 +61,7 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
         WebProperty property = SpringUtil.getBean(WebProperty.class);
         List<RequestMatcher> matchers = new ArrayList<>(property.getSecuredPaths().size());
         property.getSecuredPaths().stream().forEach(path -> matchers.add(new AntPathRequestMatcher(path)));
-        matcher = new AndRequestMatcher(matchers);
+        matcher = new OrRequestMatcher(matchers);
     }
 
     @Override
@@ -74,22 +73,16 @@ public class TokenAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
         throws ServletException, IOException {
 
-        com.tbs.web.security.ITokenModel simpleTokenModel = null;
-        UserDetails principal = null;
         try {
-            HttpServletRequest serverRequest = request;
-            simpleTokenModel = tokenPicker.pick(serverRequest);
-            AssertUtil.notNull(simpleTokenModel, () -> new NotFoundTokenException("未找到令牌."));
-            auth(manager.authenticate(TokenAuthentication.create(simpleTokenModel)));
-
-        } catch (Throwable t) {
-            AjaxUtil.writeInfoResp(response, onErrorAjaxProvider.onError(t));
+            ITokenAuthentication tokenAuthentication =
+                AuthUtil.getInstance().getAuthentication().orElseThrow(() -> new NotFoundTokenException("未发现令牌"));
+            SecurityContextHolder.getContext().setAuthentication(manager.authenticate(tokenAuthentication));
+        } catch (Throwable e) {
+            AjaxUtil.writeInfoResp(response, onErrorAjaxProvider.onError(e));
             return;
         }
+
         filterChain.doFilter(request, response);
     }
 
-    private void auth(Authentication a) {
-        SecurityContextHolder.getContext().setAuthentication(a);
-    }
 }

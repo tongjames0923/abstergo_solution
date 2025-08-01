@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.web.uitl.AuthUtil;
@@ -8,6 +9,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.web.BaseController;
 import com.tbs.web.security.IUserAuthService;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +22,7 @@ import java.util.Optional;
  */
 @RestController
 @RequestMapping("/private/user")
+@PreAuthorize("@authUtil.userLoggedIn")
 public class PrivateUserController extends BaseController {
     @Resource
     private IUserAuthService userAuthService;

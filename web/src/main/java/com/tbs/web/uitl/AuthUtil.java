@@ -89,4 +89,13 @@ public class AuthUtil {
         return Optional.of((ITokenAuthentication)authentication);
     }
 
+    /**
+     * 设置当前用户的认证信息
+     *
+     * @param authentication
+     */
+    public void setAuthentication(ITokenAuthentication authentication) {
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+    }
+
 }

@@ -3,6 +3,7 @@ package com.tbs.web.config;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.security.impl.TokenAuthenticationFilter;
+import com.tbs.web.security.impl.TokenPickFilter;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -49,11 +50,12 @@ public class WebConfig {
      */
     @Resource
     private WebAuthProperty webAuthProperty;
+
     /**
      * 安全配置
      *
-     * 当配置项 tbs.web.auth.enable 为 true 时，启用认证模式，配置令牌认证过滤器、异常处理、用户详情服务和认证提供者
-     * 当配置项 tbs.web.auth.enable 为 false 或未配置时，使用无认证模式，仅配置异常处理
+     * 当配置项 tbs.web.auth.enable 为 true 时，启用认证模式，配置令牌认证过滤器、异常处理、用户详情服务和认证提供者 当配置项 tbs.web.auth.enable 为 false
+     * 或未配置时，使用无认证模式，仅配置异常处理
      *
      * @param http                      Security HTTP 安全对象
      * @param tokenAuthenticationFilter 令牌认证过滤器
@@ -70,7 +72,7 @@ public class WebConfig {
         @Nullable TokenAuthenticationFilter tokenAuthenticationFilter,
         AuthenticationEntryPoint authenticationEntryPoint, AccessDeniedHandler accessDeniedHandler,
         @Nullable AuthenticationProvider provider, @Nullable UserDetailsService userDetailsService,
-        @Value("${tbs.web.auth.enable:false}") boolean authPropertyEnabled) throws Exception {
+        @Value("${tbs.web.auth.enable:false}") boolean authPropertyEnabled, TokenPickFilter filter) throws Exception {
         setSecurity(http);
 
         if (authPropertyEnabled &&
@@ -78,6 +80,7 @@ public class WebConfig {
             provider != null &&
             userDetailsService != null) {
             http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            http.addFilterBefore(filter, TokenAuthenticationFilter.class);
             http.userDetailsService(userDetailsService);
             http.authenticationProvider(provider);
         }
