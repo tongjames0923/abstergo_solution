@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateField
 import cn.hutool.core.date.DateUtil
 import com.alibaba.fastjson2.JSON
 import com.tbs.common.error.AssertUtil
+import com.tbs.common.util.StrUtil
 import com.tbs.web.config.property.WebAuthProperty
 import com.tbs.web.enums.TokenSource
 import com.tbs.web.exception.NotFoundTokenException
@@ -57,7 +58,9 @@ class DefaultTokenPicker : ITokenPicker {
         when (webAuthProperty.getTokenSource()) {
             TokenSource.BODY -> {
                 val body = getBody(request)
-                AssertUtil.hasText(body, "请求体空,未找到Token")
+                AssertUtil.isTrue(
+                    StrUtil.isEmpty(sourceValue),
+                    { return@isTrue NotFoundTokenException("未找到Token") })
                 val map = JSON.parseObject(body, Map::class.java)
                 token = map.get(webAuthProperty.getTokenFiledName()).toString()
                 sourceValue = body
@@ -65,19 +68,25 @@ class DefaultTokenPicker : ITokenPicker {
 
             TokenSource.COOKIE -> {
                 sourceValue = getFromCookie(request, webAuthProperty.getTokenFiledName())
-                AssertUtil.hasText(sourceValue, "未找到Token")
+                AssertUtil.isTrue(
+                    StrUtil.isEmpty(sourceValue),
+                    { return@isTrue NotFoundTokenException("未找到Token") })
                 token = sourceValue
             }
 
             TokenSource.HEADER -> {
                 sourceValue = request.getHeader(webAuthProperty.getTokenFiledName())
-                AssertUtil.hasText(sourceValue, "未找到Token")
+                AssertUtil.isTrue(
+                    StrUtil.isEmpty(sourceValue),
+                    { return@isTrue NotFoundTokenException("未找到Token") })
                 token = sourceValue
             }
 
             TokenSource.PARAM -> {
                 sourceValue = getFromParam(request, webAuthProperty.getTokenFiledName())
-                AssertUtil.hasText(sourceValue, "未找到Token")
+                AssertUtil.isTrue(
+                    StrUtil.isEmpty(sourceValue),
+                    { return@isTrue NotFoundTokenException("未找到Token") })
                 token = sourceValue
             }
 

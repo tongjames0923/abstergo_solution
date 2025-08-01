@@ -43,7 +43,7 @@ public class WebProperty {
     /**
      * 是否启用注销功能
      */
-    private boolean enableLogout = true;
+    private boolean enableLogout = false;
 
     /**
      * 是否启用方法级安全（如@PreAuthorize）
