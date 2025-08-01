@@ -2,9 +2,9 @@ package com.tbs.web.config;
 
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
-import com.tbs.web.security.impl.AuthExceptionHandler;
 import com.tbs.web.security.impl.TokenAuthenticationFilter;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.jetbrains.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -14,7 +14,9 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -47,51 +49,42 @@ public class WebConfig {
      */
     @Resource
     private WebAuthProperty webAuthProperty;
-
     /**
-     * 无认证模式下的安全配置
+     * 安全配置
      *
-     * 当配置项 tbs.web.auth.enable 为 false 或未配置时生效
-     * 配置异常处理（认证入口点和访问拒绝处理器）
-     *
-     * @param http Security HTTP 安全对象
-     * @param authExceptionHandler 认证异常处理器
-     * @return 安全过滤器链
-     * @throws Exception 配置异常
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "false", matchIfMissing = true)
-    public SecurityFilterChain noAuthsecurityWebFilterChain(HttpSecurity http,
-        AuthExceptionHandler authExceptionHandler) throws Exception {
-        setSecurity(http);
-        http.exceptionHandling().authenticationEntryPoint(authExceptionHandler)
-            .accessDeniedHandler(authExceptionHandler);
-        return http.build();
-    }
-
-    /**
-     * 启用认证模式下的安全配置
-     *
-     * 当配置项 tbs.web.auth.enable 为 true 时生效 配置令牌认证过滤器、异常处理、用户详情服务和认证提供者
+     * 当配置项 tbs.web.auth.enable 为 true 时，启用认证模式，配置令牌认证过滤器、异常处理、用户详情服务和认证提供者
+     * 当配置项 tbs.web.auth.enable 为 false 或未配置时，使用无认证模式，仅配置异常处理
      *
      * @param http                      Security HTTP 安全对象
      * @param tokenAuthenticationFilter 令牌认证过滤器
-     * @param authExceptionHandler      认证异常处理器
+     * @param authenticationEntryPoint  认证入口点
+     * @param accessDeniedHandler       访问拒绝处理器
      * @param provider                  默认用户认证服务提供者
+     * @param userDetailsService        用户详情服务
+     * @param authPropertyEnabled       认证是否启用
      * @return 安全过滤器链
      * @throws Exception 配置异常
      */
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     public SecurityFilterChain securityWebFilterChain(HttpSecurity http,
-        TokenAuthenticationFilter tokenAuthenticationFilter, AuthExceptionHandler authExceptionHandler,
-        AuthenticationProvider provider, UserDetailsService userDetailsService) throws Exception {
+        @Nullable TokenAuthenticationFilter tokenAuthenticationFilter,
+        AuthenticationEntryPoint authenticationEntryPoint, AccessDeniedHandler accessDeniedHandler,
+        @Nullable AuthenticationProvider provider, @Nullable UserDetailsService userDetailsService,
+        @Value("${tbs.web.auth.enable:false}") boolean authPropertyEnabled) throws Exception {
         setSecurity(http);
-        http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
-        http.exceptionHandling().authenticationEntryPoint(authExceptionHandler)
-            .accessDeniedHandler(authExceptionHandler);
-        http.userDetailsService(userDetailsService);
-        http.authenticationProvider(provider);
+
+        if (authPropertyEnabled &&
+            tokenAuthenticationFilter != null &&
+            provider != null &&
+            userDetailsService != null) {
+            http.addFilterBefore(tokenAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+            http.userDetailsService(userDetailsService);
+            http.authenticationProvider(provider);
+        }
+
+        http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
+            .accessDeniedHandler(accessDeniedHandler);
+
         return http.build();
     }
 

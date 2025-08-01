@@ -3,13 +3,17 @@ package com.tbs.web.config;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.security.IUserAuthService;
-import com.tbs.web.security.impl.AuthExceptionHandler;
-import com.tbs.web.security.impl.UserAuthServiceImpl;
+import com.tbs.web.security.impl.DefaultAuthAccessDeniedHandler;
+import com.tbs.web.security.impl.DefaultAuthEntryPoint;
 import com.tbs.web.security.impl.NotImplUserAuthService;
+import com.tbs.web.security.impl.UserAuthServiceImpl;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.access.AccessDeniedHandler;
 
 import javax.annotation.Resource;
 
@@ -26,8 +30,16 @@ public class AuthConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    public AuthExceptionHandler authExceptionHandler() {
-        return new AuthExceptionHandler();
+    @ConditionalOnMissingBean(AuthenticationEntryPoint.class)
+    public AuthenticationEntryPoint authenticationEntryPoint() {
+        return new DefaultAuthEntryPoint();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
+    @ConditionalOnMissingBean(AccessDeniedHandler.class)
+    public AccessDeniedHandler accessDeniedHandler() {
+        return new DefaultAuthAccessDeniedHandler();
     }
 
     @Bean

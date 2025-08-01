@@ -28,7 +28,6 @@ public class AuthUtil {
      *
      * @return
      */
-    @Getter
     private static AuthUtil instance;
 
     public AuthUtil() {
@@ -37,6 +36,10 @@ public class AuthUtil {
 
     @Resource
     private AuthenticationManager manager;
+
+    public static AuthUtil getInstance() {
+        return instance;
+    }
 
     /**
      * 获取当前用户的TokenModel
