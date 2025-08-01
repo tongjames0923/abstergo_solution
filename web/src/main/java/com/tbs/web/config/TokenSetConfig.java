@@ -45,18 +45,7 @@ public class TokenSetConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    public TokenAuthenticationFilter tokenAuthenticationFilter(WebProperty property, AuthenticationManager manager) {
-        List<RequestMatcher> matchers = new ArrayList<>(property.getSecuredPaths().size());
-        property.getSecuredPaths().stream().forEach(path -> matchers.add(new AntPathRequestMatcher(path)));
-        TokenAuthenticationFilter filter = new TokenAuthenticationFilter(new AndRequestMatcher(matchers));
-        filter.setAuthenticationManager(manager);
-        filter.setSessionAuthenticationStrategy(new SessionAuthenticationStrategy() {
-            @Override
-            public void onAuthentication(Authentication authentication, HttpServletRequest request,
-                HttpServletResponse response) throws SessionAuthenticationException {
-                
-            }
-        });
-        return filter;
+    public TokenAuthenticationFilter tokenAuthenticationFilter() {
+        return new TokenAuthenticationFilter();
     }
 }
