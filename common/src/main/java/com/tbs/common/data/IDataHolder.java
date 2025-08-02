@@ -15,8 +15,10 @@ public interface IDataHolder {
     /**
      * 存储数据
      *
-     * @param key
-     * @param value
+     * @param key   存储的key
+     * @param value 存储的数据
+     * @param force 强制存储
+     * @return 存储成功返回true，否则返回false
      */
     boolean set(String key, Object value, boolean force);
 
