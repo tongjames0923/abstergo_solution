@@ -61,9 +61,10 @@ public class SnowFlakeUUID implements IUuidGenerator {
      * @param datacenterId 数据中心ID (0~31) 此方法是判断传入的机房号和机器号是否超过了最大值，即31，或者小于0
      */
     public SnowFlakeUUID(long workerId, long datacenterId) {
-        AssertUtil.isTrue(workerId <= maxWorkerId && workerId >= 0, "worker Id can t be greater than %d or less than 0",
+        AssertUtil.isTrue(!(workerId <= maxWorkerId && workerId >= 0),
+            "worker Id can t be greater than %d or less than 0",
             maxWorkerId);
-        AssertUtil.isTrue(datacenterId <= maxDatacenterId && datacenterId >= 0,
+        AssertUtil.isTrue(!(datacenterId <= maxDatacenterId && datacenterId >= 0),
             "datacenter Id can t be greater than %d or less than 0", maxDatacenterId);
         this.workerId = workerId;
         this.datacenterId = datacenterId;
@@ -84,7 +85,7 @@ public class SnowFlakeUUID implements IUuidGenerator {
         long timestamp = timeGen();
 
         //如果当前时间小于上一次ID生成的时间戳，说明系统时钟回退过这个时候应当抛出异常
-        AssertUtil.isTrue(timestamp > lastTimestamp,
+        AssertUtil.isTrue(timestamp < lastTimestamp,
             "Clock moved backwards.  Refusing to generate id for {} milliseconds", timestamp - lastTimestamp);
 
         //如果是同一时间生成的，则进行毫秒内序列
@@ -145,10 +146,12 @@ public class SnowFlakeUUID implements IUuidGenerator {
 
     @Override
     public String getUuidString(int exceptLength) {
-        String uuid = String.valueOf(nextId());
-        while (uuid.length() < exceptLength) {
-            uuid += String.valueOf(nextId());
+        Long uuid = 0L;
+        StringBuilder uuidBuilder = new StringBuilder();
+        while (uuidBuilder.length() < exceptLength) {
+            uuid = nextId();
+            uuidBuilder.append(Long.toHexString(uuid));
         }
-        return uuid.substring(0, exceptLength);
+        return uuidBuilder.substring(0, exceptLength);
     }
 }

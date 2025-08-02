@@ -2,6 +2,7 @@ package com.tbs.common.context;
 
 /**
  * 环境接口
+ * @author abstergo
  */
 public interface IContext {
     /**
