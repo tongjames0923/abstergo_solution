@@ -3,7 +3,6 @@ package com.tbs.app;
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
-import com.tbs.async.constant.AsyncBeanNameConstant;
 import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.event.impl.SimpleEventImpl;
 import com.tbs.boardcast.publisher.IPublisher;
@@ -16,7 +15,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
 
 @SpringBootTest(classes = AppApplication.class)
 class AppApplicationTests {
