@@ -1,7 +1,6 @@
 package com.tbs.cache.config;
 
 import com.tbs.cache.core.IExpiredActuator;
-import com.tbs.cache.core.impl.ImportedTtlAwareAdaptCacheManager;
 import com.tbs.cache.core.impl.LocalExpireActuator;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -21,5 +20,8 @@ public class CacheProperty {
      */
     private Class<? extends IExpiredActuator> expiredActuator = LocalExpireActuator.class;
 
+    /**
+     * 缓存管理类实现
+     */
     private Class<? extends CacheManager> cacheManagerImplementation = ConcurrentMapCacheManager.class;
 }

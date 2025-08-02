@@ -1,15 +1,13 @@
 package com.tbs.cache.config;
 
-import com.tbs.cache.constant.CacheBeanNameConstant;
 import com.tbs.cache.core.AbstractTtlAwareAdaptCacheManager;
 import com.tbs.cache.core.IExpiredActuator;
-import com.tbs.cache.core.impl.ImportedTtlAwareAdaptCacheManager;
+import com.tbs.cache.core.impl.PropertyInitTtlAwareAdaptCacheManager;
 import com.tbs.cache.core.impl.LocalExpireActuator;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.impl.LocalAsyncSchedule;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
@@ -40,30 +38,25 @@ public class CacheConfig {
         }, cacheProperty.getExpiredActuator(), BeanUtil::buildByEmptyArgs);
     }
 
-    @Bean(CacheBeanNameConstant.CORE_CACHE_MANAGER)
-    @ConditionalOnMissingBean(value = CacheManager.class, name = CacheBeanNameConstant.CORE_CACHE_MANAGER)
-    CacheManager cacheManager() {
-        return BeanUtil.buildBeanFromProperties(() -> {
-            return new ConcurrentMapCacheManager();
-        }, cacheProperty.getCacheManagerImplementation(), BeanUtil::buildByEmptyArgs);
-    }
+//    @Bean
+//    @ConditionalOnMissingBean(value = CacheManager.class)
+//    CacheManager cacheManager() {
+//        return BeanUtil.buildBeanFromProperties(() -> {
+//            return new ConcurrentMapCacheManager();
+//        }, cacheProperty.getCacheManagerImplementation(), BeanUtil::buildByEmptyArgs);
+//    }
 
     @Bean
-    @ConditionalOnMissingBean(value = AbstractTtlAwareAdaptCacheManager.class,
-        name = CacheBeanNameConstant.TTL_AWARE_CACHE_MANAGER)
+    @ConditionalOnMissingBean(value = AbstractTtlAwareAdaptCacheManager.class)
     @Primary
-    public AbstractTtlAwareAdaptCacheManager ttlAwareAdaptCacheManager(
-        @Qualifier(CacheBeanNameConstant.CORE_CACHE_MANAGER) CacheManager cacheManager,
-        IExpiredActuator expiredActuator) {
-        return new ImportedTtlAwareAdaptCacheManager(cacheManager, expiredActuator);
+    public AbstractTtlAwareAdaptCacheManager ttlAwareAdaptCacheManager() {
+        return new PropertyInitTtlAwareAdaptCacheManager();
     }
-
 
     @Bean
     @ConditionalOnMissingBean(ISchedule.class)
     public ISchedule expireSchedule(IScheduleExecuteErrorHandle scheduleExecuteErrorHandle) {
-        return new LocalAsyncSchedule(
-            scheduleExecuteErrorHandle);
+        return new LocalAsyncSchedule(scheduleExecuteErrorHandle);
     }
 
 }
