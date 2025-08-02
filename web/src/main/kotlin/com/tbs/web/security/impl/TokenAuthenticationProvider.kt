@@ -13,7 +13,7 @@ import javax.annotation.Resource
 class TokenAuthenticationProvider : org.springframework.security.authentication.AuthenticationProvider {
     @Lazy
     @Resource
-    private val userAuthService: IUserAuthService? = null
+    private lateinit var userAuthService: IUserAuthService
 
     @Throws(AuthenticationException::class)
     public override fun authenticate(authentication: Authentication?): Authentication {
@@ -23,7 +23,7 @@ class TokenAuthenticationProvider : org.springframework.security.authentication.
             tokenAuthentication.getAuthException() != null,
             Supplier { tokenAuthentication.getAuthException() })
         AssertUtil.isTrue(!tokenAuthentication.hasToken(), Supplier { NotFoundTokenException("未获取到有效的Token") })
-        userAuthService!!.authToken(tokenAuthentication.getTokenModel())
+        userAuthService.authToken(tokenAuthentication.getTokenModel())
         val principal = userAuthService.loadUserInfoByToken(tokenAuthentication.getTokenModel())
         return TokenAuthentication.createFinal(tokenAuthentication.getTokenModel(), principal)
     }

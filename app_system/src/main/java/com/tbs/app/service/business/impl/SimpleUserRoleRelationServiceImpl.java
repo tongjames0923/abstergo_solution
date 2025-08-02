@@ -8,22 +8,21 @@ import com.tbs.app.pojo.entity.UserRoleRelation;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
+import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.StrUtil;
 import com.tbs.sql.ef.IEntityQueryWrapper;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -86,6 +85,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     }
 
     @Cacheable(cacheNames = "user_role", key = "#userId")
+    @ExpireOn(cacheNames = "user_role", value = 15, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemRole> queryUserRoles(@NotNull Long userId) {
         List<UserRoleRelation> relations = wrapper.query().where().equal(UserRoleRelation::getUserId, userId)
