@@ -4,15 +4,14 @@ import com.tbs.web.exception.NotFoundTokenException
 import com.tbs.web.security.ITokenPicker
 import com.tbs.web.uitl.AuthUtil
 import org.springframework.context.annotation.Lazy
-import org.springframework.stereotype.Component
+import org.springframework.security.web.util.matcher.RequestMatcher
 import org.springframework.web.filter.OncePerRequestFilter
 import javax.annotation.Resource
 import javax.servlet.FilterChain
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
 
-@Component
-class TokenPickFilter : OncePerRequestFilter() {
+class TokenPickFilter(val matcher: RequestMatcher?) : OncePerRequestFilter() {
 
 
     private companion object {
@@ -21,12 +20,18 @@ class TokenPickFilter : OncePerRequestFilter() {
 
     @Lazy
     @Resource
-    private val tokenPicker: ITokenPicker? = null
+    private lateinit var tokenPicker: ITokenPicker
+
+
+    override fun shouldNotFilter(request: HttpServletRequest): Boolean {
+        return matcher?.matches(request) == true
+    }
+
     override fun doFilterInternal(
         request: HttpServletRequest, response: HttpServletResponse, filterChain: FilterChain
     ) {
         try {
-            val tokenModel = tokenPicker?.pick(request)
+            val tokenModel = tokenPicker.pick(request)
             if (tokenModel != null) {
                 AuthUtil.getInstance().setAuthentication(TokenAuthentication.create(tokenModel));
             }

@@ -1,26 +1,21 @@
 package com.tbs.web.config;
 
 import com.tbs.common.util.BeanUtil;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.CollUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.impl.DefaultTokenPicker;
 import com.tbs.web.security.impl.TokenAuthenticationFilter;
+import com.tbs.web.security.impl.TokenPickFilter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.session.SessionAuthenticationException;
-import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
-import org.springframework.security.web.util.matcher.AndRequestMatcher;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.security.web.util.matcher.OrRequestMatcher;
 import org.springframework.security.web.util.matcher.RequestMatcher;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -45,7 +40,22 @@ public class TokenSetConfig {
 
     @Bean
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    public TokenAuthenticationFilter tokenAuthenticationFilter() {
-        return new TokenAuthenticationFilter();
+    public TokenAuthenticationFilter tokenAuthenticationFilter(WebProperty property) {
+        List<RequestMatcher> matchers = new ArrayList<>(property.getSecuredPaths().size());
+        property.getSecuredPaths().stream().forEach(path -> matchers.add(new AntPathRequestMatcher(path)));
+        RequestMatcher matcher = new OrRequestMatcher(matchers);
+        return new TokenAuthenticationFilter(matcher);
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
+    public TokenPickFilter tokenPickFilter() {
+        RequestMatcher matcher = null;
+        if (CollUtil.isNotEmpty(webAuthProperty.getTokenIgnoreUrls())) {
+            matcher = new OrRequestMatcher(webAuthProperty.getTokenIgnoreUrls().stream().map(AntPathRequestMatcher::new)
+                .toArray(AntPathRequestMatcher[]::new));
+
+        }
+        return new TokenPickFilter(matcher);
     }
 }

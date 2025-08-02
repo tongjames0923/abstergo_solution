@@ -9,6 +9,11 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
+/**
+ * @author abstergo
+ */
 @Data
 @Component
 @ConfigurationProperties(prefix = "tbs.web.auth")
@@ -43,4 +48,10 @@ public class WebAuthProperty {
      * 用户认证服务实现类
      */
     private Class<? extends IUserAuthService> userAuthServiceImpl = NotImplUserAuthService.class;
+
+    /**
+     * 忽略token验证的url
+     */
+    private List<String> tokenIgnoreUrls;
+
 }
