@@ -1,5 +1,6 @@
 package com.tbs.lock.impls.providers;
 
+import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;
 import com.tbs.lock.ILockProvider;
 import com.tbs.lock.impls.LockAdapter;
@@ -15,6 +16,11 @@ public class JdkLockProvider implements ILockProvider {
 
     @Override
     public ILock getLocker(Object target) {
+        return getConditionLocker(target);
+    }
+
+    @Override
+    public IConditionLock getConditionLocker(Object target) {
         return lockMap.computeIfAbsent(target, k -> new LockAdapter(new java.util.concurrent.locks.ReentrantLock()));
     }
 }

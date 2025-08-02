@@ -37,11 +37,4 @@ public interface ILock {
      */
     void unLock();
 
-    /**
-     * 创建条件变量
-     *
-     * @return
-     */
-    Condition newCondition();
-
 }

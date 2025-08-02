@@ -1,10 +1,10 @@
 package com.tbs.boardcast.bus;
 
-import com.tbs.boardcast.bus.impl.SimpleEventBus;
 import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;
 import com.tbs.lock.util.LockUtil;
 import org.slf4j.Logger;
@@ -12,9 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PostConstruct;
 import java.time.Duration;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -41,14 +38,14 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
 
     private static Logger logger = LoggerFactory.getLogger(AbstractEventBus.class);
 
-    ILock lock = null;
+    IConditionLock lock = null;
 
     Condition condition;
 
     @PostConstruct
     public void init() {
         logger.debug("初始化事件总线");
-        lock = LockUtil.getInstance().getLockerByClass(this.getClass());
+        lock = LockUtil.getInstance().getConditionLockByClass(this.getClass());
         condition = lock.newCondition();
     }
 

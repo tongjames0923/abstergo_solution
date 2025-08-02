@@ -13,4 +13,13 @@ public interface ILockProvider {
      * @return
      */
     ILock getLocker(Object target);
+
+    /**
+     * 获取条件锁
+     *
+     * @param target
+     * @return
+     */
+    IConditionLock getConditionLocker(Object target);
+
 }

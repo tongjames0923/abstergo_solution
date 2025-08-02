@@ -1,6 +1,6 @@
 package com.tbs.lock.impls;
 
-import com.tbs.lock.ILock;
+import com.tbs.lock.IConditionLock;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -10,7 +10,7 @@ import java.util.concurrent.locks.Lock;
 /**
  * @author Abstergo
  */
-public class LockAdapter implements ILock {
+public class LockAdapter implements IConditionLock {
 
     Lock lock;
 

@@ -1,6 +1,7 @@
 package com.tbs.lock.util;
 
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;
 import com.tbs.lock.ILockProvider;
 import lombok.Getter;
@@ -41,6 +42,10 @@ public class LockUtil {
         return lockProvider.getLocker(lockName);
     }
 
+    public IConditionLock getConditionLockByStr(String lockName) {
+        return lockProvider.getConditionLocker(lockName);
+    }
+
     /**
      * 获取锁
      *
@@ -57,11 +62,34 @@ public class LockUtil {
     /**
      * 获取锁
      *
+     * @param target
+     * @return
+     */
+    public IConditionLock getConditionLockByObj(Object target) {
+        if (target instanceof String) {
+            return getConditionLockByStr((String)target);
+        }
+        return lockProvider.getConditionLocker(target);
+    }
+
+    /**
+     * 获取锁
+     *
      * @param clazz
      * @return
      */
     public ILock getLockerByClass(Class<?> clazz) {
         return lockProvider.getLocker(clazz.getPackageName() + "." + clazz.getSimpleName());
+    }
+
+    /**
+     * 获取锁
+     *
+     * @param clazz
+     * @return
+     */
+    public IConditionLock getConditionLockByClass(Class<?> clazz) {
+        return lockProvider.getConditionLocker(clazz.getPackageName() + "." + clazz.getSimpleName());
     }
 
     /**
