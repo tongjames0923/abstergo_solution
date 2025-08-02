@@ -1,6 +1,7 @@
 package com.tbs.boardcast.bus.impl;
 
 import com.tbs.boardcast.bus.AbstractEventBus;
+import com.tbs.boardcast.bus.AbstractSemaphoreEventBus;
 import com.tbs.boardcast.bus.IEventBus;
 import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.publisher.IPublishResult;
@@ -16,6 +17,7 @@ import java.time.Duration;
 import java.util.Comparator;
 import java.util.PriorityQueue;
 import java.util.Queue;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
@@ -24,7 +26,7 @@ import java.util.concurrent.locks.Condition;
  *
  * @author abstergo
  */
-public class SimpleEventBus extends AbstractEventBus {
+public class SimpleEventBus extends AbstractSemaphoreEventBus<IPublishResult> {
 
     private static PriorityQueue<IPublishResult> queue = new PriorityQueue<>(new Comparator<IPublishResult>() {
         @Override

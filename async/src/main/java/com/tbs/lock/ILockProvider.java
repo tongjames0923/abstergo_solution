@@ -19,7 +19,8 @@ public interface ILockProvider {
      *
      * @param target
      * @return
+     * @throws UnsupportedOperationException
      */
-    IConditionLock getConditionLocker(Object target);
+    IConditionLock getConditionLocker(Object target) throws UnsupportedOperationException;
 
 }

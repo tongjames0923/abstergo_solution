@@ -38,16 +38,27 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
 
     private static Logger logger = LoggerFactory.getLogger(AbstractEventBus.class);
 
-    IConditionLock lock = null;
-
-    Condition condition;
+    ILock lock = null;
 
     @PostConstruct
     public void init() {
         logger.debug("初始化事件总线");
-        lock = LockUtil.getInstance().getConditionLockByClass(this.getClass());
-        condition = lock.newCondition();
+        lock = LockUtil.getInstance().getLockerByClass(this.getClass());
     }
+
+    /**
+     * 队列信号
+     */
+    protected abstract void signalInQueue();
+
+    /**
+     * 队列条件
+     *
+     * @param timeout
+     * @param unit
+     * @return
+     */
+    protected abstract boolean awaitQueue(long timeout, TimeUnit unit) throws InterruptedException;
 
     @Override
     public <T> void inqueueEvent(IPublishResult<T> publishResult) {
@@ -55,7 +66,7 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
         LockUtil.getInstance().lockThen(lock, () -> {
             logger.debug("添加事件到队列:{}", publishResult.getEvent().getEventName());
             getQueue().add(put(publishResult));
-            condition.signal();
+            signalInQueue();
         });
     }
 
@@ -78,14 +89,15 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
         LockUtil.getInstance().lockThen(lock, () -> {
 
             if (getQueue().isEmpty()) {
+                logger.debug("等待事件");
+                boolean r = false;
                 try {
-                    logger.debug("等待事件");
-                    boolean r = condition.await(duration.toMillis(), TimeUnit.MILLISECONDS);
-                    logger.debug("等待事件结束，是否超时：{}", !r);
+                    r = awaitQueue(duration.toMillis(), TimeUnit.MILLISECONDS);
                 } catch (InterruptedException e) {
                     logger.error("条件等待异常", e);
-                    Thread.currentThread().interrupt(); // 恢复中断状态
+                    Thread.currentThread().interrupt();
                 }
+                logger.debug("等待事件结束，是否超时：{}", !r);
             }
             if (!getQueue().isEmpty()) {
                 result[0] = getQueue().poll();
