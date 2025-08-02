@@ -1,30 +1,28 @@
 package com.tbs.common.util.framework;
 
-import com.tbs.common.delegate.IDelegateFlag;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.IDelegateTarget;
 import com.tbs.common.delegate.IDelegateTemplate;
-import com.tbs.common.delegate.impl.CallerRunsDelegateTarget;
-import com.tbs.common.function.SBiConsumer;
-import com.tbs.common.function.SSupplier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
+/**
+ * @author abstergo
+ */
 @Component
 public class DelegateUtil {
 
+    private static DelegateUtil INSTANCE;
     @Resource
     private IDelegateTemplate delegateTemplate;
 
-    private static DelegateUtil INSTANCE;
+    public DelegateUtil() {
+        INSTANCE = this;
+    }
 
     public static DelegateUtil getInstance() {
         return INSTANCE;
-    }
-
-    public DelegateUtil() {
-        INSTANCE = this;
     }
 
     /**

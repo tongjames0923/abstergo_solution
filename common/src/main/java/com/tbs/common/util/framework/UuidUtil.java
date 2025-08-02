@@ -12,14 +12,12 @@ import javax.annotation.Resource;
  */
 @Component
 public class UuidUtil {
-    @Resource
-    private IUuidGenerator uuidGenerator;
-
-    @Resource
-    private UuidProperty uuidProperty;
-
     @Getter
     private static UuidUtil instance;
+    @Resource
+    private IUuidGenerator uuidGenerator;
+    @Resource
+    private UuidProperty uuidProperty;
 
     public UuidUtil() {
         instance = this;
