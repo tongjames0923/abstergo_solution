@@ -1,7 +1,6 @@
 package com.tbs.web.trace.core;
 
-import com.tbs.common.holder.context.AbstractNamedContext;
-import com.tbs.common.holder.context.IContext;
+import com.tbs.common.context.IContext;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.web.trace.tool.ITraceContextListenner;
@@ -20,9 +19,8 @@ import java.util.Optional;
  *
  * @author abstergo
  */
-public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObject> {
+public abstract class AbstractTraceContext implements IContext {
 
-    public static final String CONTEXT_ID = "trace-context-id";
 
     private static final Logger log = LoggerFactory.getLogger(AbstractTraceContext.class);
 
@@ -46,15 +44,6 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
     protected abstract Collection<ITraceContextListenner> getContextListenners();
 
     /**
-     * 构造函数
-     *
-     * @param contextId 上下文ID
-     */
-    public AbstractTraceContext() {
-        super(CONTEXT_ID);
-    }
-
-    /**
      * 获取TraceIdObjectFounder
      *
      * @return
@@ -68,23 +57,22 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
      */
     protected abstract ITraceIdObjectGenerator getTraceIdObjectGenerator();
 
+    private boolean validate = false;
     @Override
     public boolean isValid() {
-        return super.isValid() && getRootObject() != null && getRootObject().isValid();
+        return validate && getRootObject() != null && getRootObject().isValid();
     }
 
-    @Override
     protected void invalidate() {
-        super.invalidate();
+        validate = false;
         if (getRootObject() != null) {
             getRootObject().setValid(false);
             getRootObject().setDisposeTime(new Date());
         }
     }
 
-    @Override
     protected void validate() {
-        super.validate();
+        validate = true;
         if (getRootObject() != null) {
             getRootObject().setValid(true);
             getRootObject().setAvaliableTime(new Date());
@@ -101,7 +89,12 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
     }
 
     @Override
-    public IContext<TraceObject> rebuildContext() {
+    public void destroy() {
+        invalidate();
+    }
+
+    @Override
+    public void rebuild() {
         if (isValid()) {
             log.debug("链路跟踪对象尚未失效时被重建");
             if (CollUtil.isNotEmpty(getContextListenners())) {
@@ -124,7 +117,7 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
         if (getRootObject() == null) {
             setRootObject(getTraceIdObjectGenerator().generateTraceObject());
         }
-        return super.rebuildContext();
+        validate();
     }
 
     /**
@@ -154,7 +147,7 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
      * @param response
      */
     public void makeContextAvaliable(HttpServletRequest request, HttpServletResponse response) {
-        rebuildContext();
+        rebuild();
         handleRequestStart(getRootTrace(), request, response);
         if (CollUtil.isNotEmpty(getContextListenners())) {
             for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
@@ -172,7 +165,7 @@ public abstract class AbstractTraceContext extends AbstractNamedContext<TraceObj
      */
     public void makeContextUnavaliable(HttpServletRequest request, HttpServletResponse response) {
         handleRequestEnd(getRootTrace(), request, response);
-        markInvalid();
+        destroy();
         if (CollUtil.isNotEmpty(getContextListenners())) {
             for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
                 iTraceContextListenner.onTraceContextChanged(

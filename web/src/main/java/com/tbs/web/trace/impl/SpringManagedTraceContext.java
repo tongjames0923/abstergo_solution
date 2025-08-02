@@ -1,6 +1,5 @@
 package com.tbs.web.trace.impl;
 
-import com.tbs.common.holder.context.IContext;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.trace.core.*;
 import com.tbs.web.trace.tool.ITraceContextListenner;
@@ -28,10 +27,6 @@ public class SpringManagedTraceContext extends AbstractTraceContext {
     @Resource
     private IMethodInvokeTreeProvider methodInvokeTreeProvider;
 
-    @Override
-    protected IContext<TraceObject> rebuild() {
-        return this;
-    }
 
     @Override
     protected IMethodInvokeTreeProvider getMethodInvokeTreeProvider() {
