@@ -13,4 +13,6 @@ public class BeanNameConstant {
      * 默认发布者ID
      */
     public static final String DEFAULT_PUBLISHER_ID = "default-publisher";
+
+    public static final String SUBSCRIBER_HOLDER_BEAN_NAME = "subscriberHolder";
 }

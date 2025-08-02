@@ -2,20 +2,21 @@ package com.tbs.boardcast.dispatcher.impl;
 
 import com.tbs.async.annotation.LongTermAsync;
 import com.tbs.boardcast.bus.IEventBus;
-import com.tbs.boardcast.constant.BeanNameConstant;
 import com.tbs.boardcast.dispatcher.IEventDispatcher;
 import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 import com.tbs.common.IStartup;
-import com.tbs.common.holder.context.IContext;
-import com.tbs.common.util.framework.HolderUtil;
+import com.tbs.common.data.IDataHolder;
+import com.tbs.common.error.AssertUtil;
+import lombok.Getter;
+import lombok.Setter;
 import org.slf4j.Logger;
 import org.springframework.beans.factory.DisposableBean;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.time.Duration;
+import java.util.stream.Collectors;
 
 /**
  * 默认事件分发器
@@ -31,21 +32,24 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
 
     private boolean started = false;
 
-    IContext<AbstractSubscriber> subscriberContext;
+    @Getter
+    @Setter
+    private IDataHolder subscribersHolder;
 
-    @PostConstruct
-    public void init() {
-        subscriberContext = HolderUtil.getContext(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID);
+    public AbstractEventDispatcher(IDataHolder subscribersHolder) {
+        this.subscribersHolder = subscribersHolder;
     }
 
     @Override
     public void register(AbstractSubscriber subscriber) {
-        HolderUtil.put(subscriberContext, subscriber.getSubscriberId(), subscriber);
+        AssertUtil.notNull(subscriber, "订阅者不能为空");
+        getSubscribersHolder().set(subscriber.getSubscriberId(), subscriber, true);
     }
 
     @Override
     public void unregister(AbstractSubscriber subscriber) {
-        HolderUtil.remove(subscriberContext, subscriber.getSubscriberId());
+        AssertUtil.notNull(subscriber, "订阅者不能为空");
+        getSubscribersHolder().remove(subscriber.getSubscriberId());
     }
 
     @Override
@@ -68,7 +72,9 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
                     logger.trace("空事件超时");
                     continue;
                 }
-                for (AbstractSubscriber subscriber : HolderUtil.values(subscriberContext)) {
+                for (AbstractSubscriber subscriber : getSubscribersHolder().values().stream().filter((v) -> {
+                    return v != null && v instanceof AbstractSubscriber;
+                }).map(v -> (AbstractSubscriber)v).collect(Collectors.toList())) {
                     if (subscriber.supportEvent(iPublishResult.getEvent().getEventId(),
                         iPublishResult.getEvent().getEventName()) &&
                         subscriber.supportPublisher(iPublishResult.getPublisher())) {

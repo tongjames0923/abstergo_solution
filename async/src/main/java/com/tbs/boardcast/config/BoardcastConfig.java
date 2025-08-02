@@ -9,20 +9,18 @@ import com.tbs.boardcast.dispatcher.impl.AbstractEventDispatcher;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.boardcast.publisher.impl.DispatcherImportedPublisher;
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.holder.context.AbstractNamedContext;
-import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
+import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.impl.MapDataHolder;
 import com.tbs.common.util.BeanUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 
 /**
  * @author abstergo
@@ -40,25 +38,18 @@ public class BoardcastConfig {
         }, boardcastProperty.getEventBusType(), BeanUtil::buildByEmptyArgs);
     }
 
-    @Bean
-    AbstractNamedContext subscriberContext() {
+    @Bean(BeanNameConstant.SUBSCRIBER_HOLDER_BEAN_NAME)
+    IDataHolder subscriberContext() {
         return BeanUtil.buildBeanFromProperties(() -> {
-            return new LocalStoredMapImplContext(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID, new HashMap(8));
-        }, boardcastProperty.getSubscriberContextType(), (c) -> {
-            try {
-                return c.getConstructor(String.class).newInstance(BeanNameConstant.DEFAULT_SUBSCRIBER_CONTEXT_ID);
-            } catch (Throwable e) {
-                AssertUtil.throwError(() -> new FormattedRuntimeException(e,
-                    "HolderProperty.subscriberContextType  Error to build bean"));
-                return null;
-            }
-        });
+            return new MapDataHolder();
+        }, boardcastProperty.getSubscriberHolderType(), BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
     @ConditionalOnMissingBean(IEventDispatcher.class)
-    public IEventDispatcher dispatcher() {
-        return new AbstractEventDispatcher() {
+    public IEventDispatcher dispatcher(
+        @Qualifier(BeanNameConstant.SUBSCRIBER_HOLDER_BEAN_NAME) IDataHolder subscriberContext) {
+        return new AbstractEventDispatcher(subscriberContext) {
             private final Logger logger = LoggerFactory.getLogger(BoardcastConfig.class);
 
             @Override
