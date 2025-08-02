@@ -5,19 +5,10 @@ import com.tbs.common.data.IMatchKeyFounder;
 import com.tbs.common.util.CollUtil;
 import com.tbs.redis.config.property.RedisProperty;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.script.DefaultRedisScript;
-import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.AbstractMap;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -37,12 +28,10 @@ public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
     @Override
     public boolean set(String key, Object value, boolean force) {
         if (force) {
-            redisTemplate.opsForValue()
-                .set(key, value, redisProperty.getCacheTimeout(), java.util.concurrent.TimeUnit.SECONDS);
+            redisTemplate.opsForValue().set(key, value);
             return true;
         } else {
-            return redisTemplate.opsForValue()
-                .setIfAbsent(key, value, redisProperty.getCacheTimeout(), java.util.concurrent.TimeUnit.SECONDS);
+            return redisTemplate.opsForValue().setIfAbsent(key, value);
         }
     }
 

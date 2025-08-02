@@ -1,8 +1,8 @@
 package com.tbs.redis.config;
 
 import com.tbs.common.util.BeanUtil;
-import com.tbs.redis.constants.RedisBeanNameConstants;
 import com.tbs.redis.config.property.RedisProperty;
+import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -116,12 +115,20 @@ public class BasicRedisConfig {
     }
 
     @Bean
+    @ConditionalOnMissingBean(RedisCacheWriter.class)
+    RedisCacheWriter writer(RedisConnectionFactory redisConnectionFactory) {
+        return RedisCacheWriter.lockingRedisCacheWriter(redisConnectionFactory);
+    }
+    @Bean
     @ConditionalOnMissingBean(RedisCacheManager.class)
-    public RedisCacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory,
-        RedisCacheConfiguration redisCacheConfiguration, RedisProperty property) {
-        RedisCacheWriter redisCacheWriter = RedisCacheWriter.lockingRedisCacheWriter(redisConnectionFactory);
-        RedisCacheManager redisCacheManager = new RedisCacheManager(redisCacheWriter, redisCacheConfiguration);
-        return redisCacheManager;
+    public RedisCacheManager redisCacheManager(RedisCacheWriter redisCacheWriter,
+        RedisCacheConfiguration redisCacheConfiguration) {
+
+        return RedisCacheManager.builder().cacheWriter(redisCacheWriter).cacheDefaults(redisCacheConfiguration).build();
+
+        //        RedisCacheWriter redisCacheWriter = RedisCacheWriter.lockingRedisCacheWriter(redisConnectionFactory);
+        //        RedisCacheManager redisCacheManager = new RedisCacheManager(redisCacheWriter, redisCacheConfiguration);
+        //        return redisCacheManager;
     }
 
 }
