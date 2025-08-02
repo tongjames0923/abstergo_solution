@@ -1,6 +1,5 @@
 package com.tbs.redis.config.property;
 
-import com.tbs.redis.constants.RedisBeanNameConstants;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
@@ -12,7 +11,7 @@ import org.springframework.stereotype.Component;
  * @author abstergo
  */
 @Data
-@ConfigurationProperties("tbs.framework.redis")
+@ConfigurationProperties("tbs.redis")
 @Component
 public class RedisProperty {
     /**
@@ -34,7 +33,7 @@ public class RedisProperty {
     /**
      * springboot默认redisCacheing功能的缓存时间
      */
-    private long cacheTimeout = 3000;
+    private long cacheTimeout = 3 * 60 * 1000;
 
     /**
      * springboot默认redisCacheing功能的是否接收空值

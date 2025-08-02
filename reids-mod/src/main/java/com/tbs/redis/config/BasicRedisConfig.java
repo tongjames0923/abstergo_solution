@@ -106,11 +106,11 @@ public class BasicRedisConfig {
     @Bean
     @ConditionalOnMissingBean(RedisCacheConfiguration.class)
     RedisCacheConfiguration redisConfiguration(RedisProperty property) {
-        RedisCacheConfiguration redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig();
-
-        property.setAllowNullValues(property.isAllowNullValues());
-
-        redisCacheConfiguration.entryTtl(Duration.ofMillis(property.getCacheTimeout()));
+        var redisCacheConfiguration =
+            RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMillis(property.getCacheTimeout()));
+        if (!property.isAllowNullValues()) {
+            return redisCacheConfiguration.disableCachingNullValues();
+        }
         return redisCacheConfiguration;
     }
 
