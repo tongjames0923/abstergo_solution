@@ -18,6 +18,7 @@ import java.util.Set;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.AbstractMap;
+import java.util.stream.Collectors;
 
 /**
  * Redis数据存储实现类
@@ -121,30 +122,14 @@ public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
 
     @Override
     public Collection<Map.Entry<String, Object>> findEntries(String reg) {
-        // 使用Lua脚本实现原子性操作，一次性获取所有匹配键的键值对
-        String script = "local keys = redis.call('keys', ARGV[1])\n" +
-            "local result = {}\n" +
-            "for i=1, #keys do\n" +
-            "    local value = redis.call('get', keys[i])\n" +
-            "    if value ~= false then\n" +
-            "        table.insert(result, keys[i])\n" +
-            "        table.insert(result, value)\n" +
-            "    end\n" +
-            "end\n" +
-            "return result";
-
-        RedisScript<List> redisScript = new DefaultRedisScript<>(script, List.class);
-        List<Object> result = redisTemplate.execute(redisScript, Collections.emptyList(), reg);
-        if (CollUtil.isEmpty(result)) {
-            return List.of();
+        Collection<String> keys = redisTemplate.keys(reg);
+        if (CollUtil.isEmpty(keys)) {
+            return Collections.emptyList();
         }
-        List<Map.Entry<String, Object>> entries = new ArrayList<>();
-        for (int i = 0; i < result.size(); i += 2) {
-            String key = (String)result.get(i);
-            Object value = result.get(i + 1);
-            entries.add(new AbstractMap.SimpleEntry<>(key, value));
-        }
-
+        List<Map.Entry<String, Object>> entries = keys.stream().map(key -> {
+            Object value = redisTemplate.opsForValue().get(key);
+            return new AbstractMap.SimpleEntry<>(key, value);
+        }).collect(Collectors.toList());
         return entries;
     }
 }
