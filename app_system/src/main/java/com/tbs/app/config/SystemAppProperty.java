@@ -6,10 +6,10 @@ import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.impl.NoEncryptPassword;
 import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
+import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.impl.MapDataHolder;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
-import com.tbs.common.holder.context.AbstractNamedContext;
-import com.tbs.common.holder.context.impl.LocalStoredMapImplContext;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -32,7 +32,7 @@ public class SystemAppProperty {
     /**
      * token上下文实现类
      */
-    private Class<? extends AbstractNamedContext> tokenContextImpl = LocalStoredMapImplContext.class;
+    private Class<? extends IDataHolder> tokenHolderImpl = MapDataHolder.class;
 
     /**
      * 主代理实现类

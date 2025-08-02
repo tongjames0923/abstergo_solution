@@ -1,17 +1,17 @@
 package com.tbs.app.service.business.impl;
 
-import com.tbs.app.constant.SystemAppConstant;
+import com.tbs.app.constant.SystemAppBeanNameConstant;
 import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
+import com.tbs.common.data.IDataHolder;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.holder.context.IContext;
-import com.tbs.common.util.*;
-import com.tbs.common.util.framework.HolderUtil;
+import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.StrUtil;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.exception.InvalidTokenException;
@@ -45,17 +45,8 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Resource
     private IUserRoleRelationService relationService;
 
-    /**
-     * token上下文
-     */
-    IContext<UserDetails> tokenModelContext;
-
-    protected IContext<UserDetails> getTokenModelContext() {
-        if (tokenModelContext == null) {
-            tokenModelContext = HolderUtil.getContext(SystemAppConstant.TOKEN_CONTEXT_ID);
-        }
-        return tokenModelContext;
-    }
+    @Resource(name = SystemAppBeanNameConstant.TOKEN_DATA_HOLDER)
+    private IDataHolder tokenDataHolder;
 
     @Override
     public UserDetails loadUserInfoByUniqueKey(String uniqueKey) {
@@ -76,7 +67,7 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Override
     public UserDetails loadUserInfoByToken(com.tbs.web.security.ITokenModel token) {
         AssertUtil.isTrue(token == null, () -> new InvalidTokenException("未接收到有效Token"));
-        return HolderUtil.get(getTokenModelContext(), token.getToken());
+        return (UserDetails)tokenDataHolder.get(token.getToken()).orElse(null);
     }
 
     @Override
@@ -89,11 +80,8 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
         com.tbs.web.security.ITokenModel model =
             SimpleTokenModel.create(UuidUtil.getInstance().getUuidString(), authProperty.getTokenSource(),
                 authProperty.getTokenFiledName(), details.getUsername(), null);
-        HolderUtil.operateDataSource(getTokenModelContext(), context -> {
-            if (!context.putIfAbsent(model.getToken(), details)) {
-                AssertUtil.throwError(() -> new FormattedRuntimeException("Token已存在"));
-            }
-        });
+        boolean set = tokenDataHolder.set(model.getToken(), details, false);
+        AssertUtil.isTrue(!set, () -> new FormattedRuntimeException("Token已存在"));
         return model;
 
     }
@@ -110,9 +98,8 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
 
     @Override
     public boolean logout(com.tbs.web.security.ITokenModel iTokenModel) {
-        HolderUtil.operateDataSource(tokenModelContext, context -> {
-            context.remove(iTokenModel.getToken());
-        });
+        AssertUtil.notNull(iTokenModel, () -> new InvalidTokenException("未接收到有效Token"));
+        tokenDataHolder.remove(iTokenModel.getToken());
         return true;
     }
 }
