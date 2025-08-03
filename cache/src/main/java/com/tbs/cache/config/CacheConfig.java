@@ -7,11 +7,9 @@ import com.tbs.cache.core.impl.LocalExpireActuator;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
-import com.tbs.schedule.impl.LocalAsyncSchedule;
+import com.tbs.schedule.impl.DelayQueueSchedule;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
-import org.springframework.cache.concurrent.ConcurrentMapCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -56,7 +54,7 @@ public class CacheConfig {
     @Bean
     @ConditionalOnMissingBean(ISchedule.class)
     public ISchedule expireSchedule(IScheduleExecuteErrorHandle scheduleExecuteErrorHandle) {
-        return new LocalAsyncSchedule(scheduleExecuteErrorHandle);
+        return new DelayQueueSchedule(scheduleExecuteErrorHandle);
     }
 
 }
