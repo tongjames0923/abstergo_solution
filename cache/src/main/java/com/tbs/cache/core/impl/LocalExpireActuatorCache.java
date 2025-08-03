@@ -1,6 +1,6 @@
 package com.tbs.cache.core.impl;
 
-import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.ICacheExpiredActuator;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.schedule.ISchedule;
 import lombok.AllArgsConstructor;
@@ -17,9 +17,9 @@ import java.util.Date;
 /**
  * @author tongj
  */
-public class LocalExpireActuator implements IExpiredActuator {
+public class LocalExpireActuatorCache implements ICacheExpiredActuator {
 
-    private static final Logger logger = LoggerFactory.getLogger(LocalExpireActuator.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalExpireActuatorCache.class);
 
     @AllArgsConstructor
     @Data

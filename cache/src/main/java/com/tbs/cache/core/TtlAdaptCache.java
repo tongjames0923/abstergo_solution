@@ -19,7 +19,7 @@ import java.util.function.Consumer;
 public class TtlAdaptCache implements Cache {
     private Cache cache;
     private List<ICacheListenner> cacheListennerList;
-    private IExpiredActuator expiredActuator;
+    private ICacheExpiredActuator expiredActuator;
 
     private static Map<Object, Date> expireKeyMap = new ConcurrentHashMap<>(64);
 
@@ -30,6 +30,7 @@ public class TtlAdaptCache implements Cache {
     public String makeExpireKey(Object key) {
         return String.format("%s::%s", this.getName(), key.toString());
     }
+
     private void listen(Consumer<ICacheListenner> cacheListennerConsumer) {
         if (CollUtil.isEmpty(cacheListennerList)) {
             return;
@@ -60,7 +61,7 @@ public class TtlAdaptCache implements Cache {
         return Optional.ofNullable(expireKeyMap.get(k));
     }
 
-    public TtlAdaptCache(Cache cache, IExpiredActuator actuator, List<ICacheListenner> cacheListennerList) {
+    public TtlAdaptCache(Cache cache, ICacheExpiredActuator actuator, List<ICacheListenner> cacheListennerList) {
         this.cache = cache;
         this.cacheListennerList = cacheListennerList;
         this.expiredActuator = actuator;

@@ -2,7 +2,7 @@ package com.tbs.cache.aop;
 
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.cache.core.AbstractTtlAwareAdaptCacheManager;
-import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.ICacheExpiredActuator;
 import com.tbs.cache.core.TtlAdaptCache;
 import com.tbs.common.util.CollUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
@@ -31,7 +31,7 @@ public class ExpireAop {
 
     @Resource
     @Lazy
-    private IExpiredActuator expiredActuator;
+    private ICacheExpiredActuator expiredActuator;
 
     @Resource
     CacheAspectSupport cacheAspectSupport;

@@ -9,7 +9,7 @@ import java.util.Date;
  *
  * @author tongj
  */
-public interface IExpiredActuator {
+public interface ICacheExpiredActuator {
     /**
      * 缓存过期处理
      *

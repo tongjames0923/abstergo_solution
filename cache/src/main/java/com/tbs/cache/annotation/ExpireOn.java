@@ -1,8 +1,5 @@
 package com.tbs.cache.annotation;
 
-import com.tbs.cache.core.IExpiredActuator;
-import org.springframework.stereotype.Component;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;

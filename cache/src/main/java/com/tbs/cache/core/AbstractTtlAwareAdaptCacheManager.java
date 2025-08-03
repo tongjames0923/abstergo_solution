@@ -55,7 +55,7 @@ public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager 
      *
      * @return
      */
-    protected abstract IExpiredActuator getExpiredActuator();
+    protected abstract ICacheExpiredActuator getExpiredActuator();
 
     @Override
     public Cache getCache(String name) {

@@ -1,9 +1,9 @@
 package com.tbs.cache.config;
 
 import com.tbs.cache.core.AbstractTtlAwareAdaptCacheManager;
-import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.ICacheExpiredActuator;
 import com.tbs.cache.core.impl.PropertyInitTtlAwareAdaptCacheManager;
-import com.tbs.cache.core.impl.LocalExpireActuator;
+import com.tbs.cache.core.impl.LocalExpireActuatorCache;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
@@ -29,10 +29,10 @@ public class CacheConfig {
     CacheProperty cacheProperty;
 
     @Bean
-    @ConditionalOnMissingBean(value = IExpiredActuator.class)
-    public IExpiredActuator expiredActuator() {
+    @ConditionalOnMissingBean(value = ICacheExpiredActuator.class)
+    public ICacheExpiredActuator expiredActuator() {
         return BeanUtil.buildBeanFromProperties(() -> {
-            return new LocalExpireActuator();
+            return new LocalExpireActuatorCache();
         }, cacheProperty.getExpiredActuator(), BeanUtil::buildByEmptyArgs);
     }
 
