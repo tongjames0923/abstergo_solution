@@ -17,6 +17,7 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -27,7 +28,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author tongj
  */
 @Slf4j
-public class RedisEventBus extends AbstractSemaphoreEventBus<IPublishResult> implements MessageListener {
+public abstract class AbstractRedisEventBus<RES extends IPublishResult<?>> extends AbstractSemaphoreEventBus<RES>
+    implements MessageListener {
 
     @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     private RedisTemplate<String, Object> redisTemplate;
@@ -41,29 +43,48 @@ public class RedisEventBus extends AbstractSemaphoreEventBus<IPublishResult> imp
     @Resource
     private RedisMessageListenerContainer redisMessageListenerContainer;
 
-    @Resource(name = RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
-    private RedisSerializer redisSerializer;
+    //    private static final String EVENT_CHANNEL = "tbs:boardcast:event_channel";
 
-    private static final String EVENT_CHANNEL = "tbs:boardcast:event_channel";
+    /**
+     * 获取频道名称
+     *
+     * @return
+     */
+    public abstract String getChannel();
 
-    private Queue<IPublishResult> localQueue = new ConcurrentLinkedQueue<>();
+    private Queue<RES> localQueue = new ConcurrentLinkedQueue<>();
     /**
      * -- GETTER -- 获取频道主题
      *
      * @return
      */
     @Getter
-    private ChannelTopic topic = new ChannelTopic(EVENT_CHANNEL);
+    private ChannelTopic topic;
 
     @Override
-    protected Queue<IPublishResult> getQueue() {
+    protected Queue<RES> getQueue() {
         return localQueue;
     }
 
-    @Override
-    protected <T> IPublishResult put(IPublishResult<T> r) {
-        return r;
+    public AbstractRedisEventBus() {
+        topic = new ChannelTopic(getChannel());
     }
+
+    /**
+     * 序列化
+     *
+     * @param res
+     * @return
+     */
+    protected abstract Serializable serialize(RES res);
+
+    /**
+     * 反序列化
+     *
+     * @param obj
+     * @return
+     */
+    protected abstract RES deserialize(byte[] obj);
 
     @PostConstruct
     public void initMessageListenerContainer() {
@@ -87,8 +108,9 @@ public class RedisEventBus extends AbstractSemaphoreEventBus<IPublishResult> imp
     public <T> void inqueueEvent(IPublishResult<T> publishResult) {
         preInqueueCheck(publishResult);
 
+        RES res = put(publishResult);
         // 直接通过Redis Pub/Sub发布事件
-        redisTemplate.convertAndSend(EVENT_CHANNEL, publishResult);
+        redisTemplate.convertAndSend(getChannel(), serialize(res));
     }
 
     /**
@@ -96,7 +118,7 @@ public class RedisEventBus extends AbstractSemaphoreEventBus<IPublishResult> imp
      *
      * @param publishResult
      */
-    public void addToLocalQueue(IPublishResult publishResult) {
+    protected void addToLocalQueue(IPublishResult publishResult) {
         super.inqueueEvent(publishResult);
     }
 
@@ -118,15 +140,7 @@ public class RedisEventBus extends AbstractSemaphoreEventBus<IPublishResult> imp
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {
-            // 反序列化消息
-            Object obj = redisSerializer.deserialize(message.getBody());
-            if (obj instanceof IPublishResult) {
-                IPublishResult publishResult = (IPublishResult)obj;
-                // 添加到本地队列供处理
-                addToLocalQueue((IPublishResult)obj);
-            } else {
-                log.warn("消息格式错误");
-            }
+            addToLocalQueue(deserialize(message.getBody()));
         } catch (Exception e) {
             log.error("消息处理错误", e);
         }
