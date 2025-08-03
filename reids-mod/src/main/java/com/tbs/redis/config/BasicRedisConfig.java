@@ -6,6 +6,8 @@ import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -15,13 +17,17 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
+import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
+import org.springframework.util.ErrorHandler;
 
 import javax.annotation.Resource;
+import java.util.Map;
 
 /**
  * @author abstergo
@@ -113,12 +119,31 @@ public class BasicRedisConfig {
     RedisCacheWriter writer(RedisConnectionFactory redisConnectionFactory) {
         return RedisCacheWriter.lockingRedisCacheWriter(redisConnectionFactory);
     }
+
     @Bean
     @ConditionalOnMissingBean(RedisCacheManager.class)
     public RedisCacheManager redisCacheManager(RedisCacheWriter redisCacheWriter,
         RedisCacheConfiguration redisCacheConfiguration) {
         return RedisCacheManager.builder().cacheWriter(redisCacheWriter).cacheDefaults(redisCacheConfiguration)
             .enableStatistics().build();
+    }
+
+    private static final Logger REDIS_MESSAGE_CENTER_LOGGER =
+        LoggerFactory.getLogger(RedisMessageListenerContainer.class);
+
+    @Bean
+    @ConditionalOnMissingBean(RedisMessageListenerContainer.class)
+    RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory factory) {
+        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
+        container.setConnectionFactory(factory);
+        container.setErrorHandler(new ErrorHandler() {
+
+            @Override
+            public void handleError(Throwable t) {
+                REDIS_MESSAGE_CENTER_LOGGER.error("redis message listener error", t);
+            }
+        });
+        return container;
     }
 
 }

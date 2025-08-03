@@ -1,6 +1,6 @@
 package com.tbs.redis.cache;
 
-import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.ICacheExpiredActuator;
 import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.springframework.cache.Cache;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -13,7 +13,7 @@ import java.util.Date;
  *
  * @author abstergo
  */
-public class RedisCacheExpireActuator implements IExpiredActuator {
+public class RedisCacheExpireActuatorCache implements ICacheExpiredActuator {
 
     @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     private RedisTemplate<String, Object> redisTemplate;
