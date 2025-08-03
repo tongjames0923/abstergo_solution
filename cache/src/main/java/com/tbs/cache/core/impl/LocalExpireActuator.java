@@ -26,10 +26,6 @@ public class LocalExpireActuator implements IExpiredActuator {
     @ToString
     private static class ExpireTask implements Runnable {
         /**
-         * 过期时间长度
-         */
-        private long expireTime;
-        /**
          * 缓存对象
          */
         private Cache cache;
@@ -37,10 +33,6 @@ public class LocalExpireActuator implements IExpiredActuator {
          * 缓存key
          */
         private Object key;
-        /**
-         * 创建时间
-         */
-        private Date createDate;
 
         @Override
         public void run() {
@@ -64,17 +56,27 @@ public class LocalExpireActuator implements IExpiredActuator {
     private ISchedule schedule;
 
     @Override
-    public boolean expire(Cache cache, Object key, long expireTime) {
+    public boolean expire(Cache cache, Object key, Date expireTime) {
         AssertUtil.notNull(cache, "cache can not be null");
         AssertUtil.notNull(key, "key can not be null");
-        schedule.pin(new ExpireTask(expireTime, cache, key, new Date()), Duration.ofMillis(expireTime));
+        AssertUtil.notNull(expireTime, "expireTime can not be null");
+        long time = expireTime.getTime() - System.currentTimeMillis();
+        if (time <= 0) {
+            time = 1;
+        }
+        schedule.pin(new ExpireTask(cache, key), Duration.ofMillis(time));
         return true;
     }
 
     @Override
-    public boolean expireAll(Cache cache, long expireTime) {
+    public boolean expireAll(Cache cache, Date expireTime) {
         AssertUtil.notNull(cache, "cache can not be null");
-        schedule.pin(new ExpireTask(expireTime, cache, null, new Date()), Duration.ofMillis(expireTime));
+        AssertUtil.notNull(expireTime, "expireTime can not be null");
+        long time = expireTime.getTime() - System.currentTimeMillis();
+        if (time <= 0) {
+            time = 1;
+        }
+        schedule.pin(new ExpireTask(cache, null), Duration.ofMillis(time));
         return true;
     }
 

@@ -1,9 +1,7 @@
 package com.tbs.cache.core;
 
-import com.tbs.common.error.AssertUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -61,29 +59,12 @@ public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager 
 
     @Override
     public Cache getCache(String name) {
-        return new TtlAdaptCache(getCacheManager().getCache(name), cacheListenners);
+        return new TtlAdaptCache(getCacheManager().getCache(name), getExpiredActuator(), cacheListenners);
     }
 
     @Override
     public Collection<String> getCacheNames() {
         return getCacheManager().getCacheNames();
-    }
-
-    /**
-     * 设置方法缓存过期时间
-     *
-     * @param methodKeyName 方法缓存key
-     * @param duration      缓存过期时间
-     */
-    public void setMethodExpireDate(@NotNull MethodExpireInfo info) {
-        AssertUtil.notNull(info.getKey(), "methodKeyName can not be null");
-        if (info.isExpireAll()) {
-            log.trace("set method expire all: {}", info.getKey());
-            getExpiredActuator().expireAll(getCache(info.getCacheName()), info.getExpireTimeMillis());
-        } else {
-            log.trace("set method expire: {}, {}", info.getKey(), info.getExpireTimeMillis());
-            getExpiredActuator().expire(getCache(info.getCacheName()), info.getKey(), info.getExpireTimeMillis());
-        }
     }
 
 }

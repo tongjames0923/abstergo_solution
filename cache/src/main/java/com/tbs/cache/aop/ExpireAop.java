@@ -3,6 +3,7 @@ package com.tbs.cache.aop;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.cache.core.AbstractTtlAwareAdaptCacheManager;
 import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.TtlAdaptCache;
 import com.tbs.common.util.CollUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -10,11 +11,10 @@ import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.Cache;
-import org.springframework.cache.interceptor.*;
+import org.springframework.cache.interceptor.CacheAspectSupport;
+import org.springframework.cache.interceptor.CacheOperation;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.core.PriorityOrdered;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -100,11 +100,17 @@ public class ExpireAop {
                     log.warn("Cache not found: {}", cacheName);
                     return;
                 }
-
-                AbstractTtlAwareAdaptCacheManager.MethodExpireInfo info =
-                    new AbstractTtlAwareAdaptCacheManager.MethodExpireInfo(cacheName, key, expireMillis, expireAll,
-                        methodName);
-                cacheManager.setMethodExpireDate(info);
+                if (!(cache instanceof TtlAdaptCache)) {
+                    log.warn("Cache is not a TtlAdaptCache: {}", cacheName);
+                    return;
+                }
+                Date expireTime = new Date(System.currentTimeMillis() + expireMillis);
+                TtlAdaptCache ttlCache = (TtlAdaptCache)cache;
+                if (expireAll) {
+                    ttlCache.expireAll(expireTime);
+                } else {
+                    ttlCache.setTTL(key, expireTime);
+                }
             } catch (Exception e) {
                 log.error("Failed to set expire for cache: {}, error: {}", cacheName, e.getMessage());
             }

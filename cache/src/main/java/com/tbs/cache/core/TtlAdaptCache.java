@@ -3,8 +3,12 @@ package com.tbs.cache.core;
 import com.tbs.common.util.CollUtil;
 import org.springframework.cache.Cache;
 
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
 
 /**
@@ -15,7 +19,17 @@ import java.util.function.Consumer;
 public class TtlAdaptCache implements Cache {
     private Cache cache;
     private List<ICacheListenner> cacheListennerList;
+    private IExpiredActuator expiredActuator;
 
+    private static Map<Object, Date> expireKeyMap = new ConcurrentHashMap<>(64);
+
+    public void expireAll(Date expireTime) {
+        expiredActuator.expireAll(cache, expireTime);
+    }
+
+    public String makeExpireKey(Object key) {
+        return String.format("%s::%s", this.getName(), key.toString());
+    }
     private void listen(Consumer<ICacheListenner> cacheListennerConsumer) {
         if (CollUtil.isEmpty(cacheListennerList)) {
             return;
@@ -23,9 +37,33 @@ public class TtlAdaptCache implements Cache {
         cacheListennerList.forEach(cacheListennerConsumer);
     }
 
-    public TtlAdaptCache(Cache cache, List<ICacheListenner> cacheListennerList) {
+    /**
+     * 设置缓存的过期时间
+     *
+     * @param key
+     * @param ttl
+     * @param unit
+     */
+    public void setTTL(Object key, Date d) {
+        String k = makeExpireKey(key);
+        expireKeyMap.put(k, d);
+    }
+
+    /**
+     * 获取缓存的过期时间
+     *
+     * @param key
+     * @return
+     */
+    public Optional<Date> getExpireTime(Object key) {
+        String k = makeExpireKey(key);
+        return Optional.ofNullable(expireKeyMap.get(k));
+    }
+
+    public TtlAdaptCache(Cache cache, IExpiredActuator actuator, List<ICacheListenner> cacheListennerList) {
         this.cache = cache;
         this.cacheListennerList = cacheListennerList;
+        this.expiredActuator = actuator;
     }
 
     @Override
@@ -64,6 +102,10 @@ public class TtlAdaptCache implements Cache {
     public void put(Object key, Object value) {
         listen(cacheListenner -> cacheListenner.onPut(getName(), key, value));
         cache.put(key, value);
+        getExpireTime(key).ifPresent(expireTime -> {
+            expiredActuator.expire(cache, key, expireTime);
+            expireKeyMap.remove(makeExpireKey(key));
+        });
     }
 
     @Override
