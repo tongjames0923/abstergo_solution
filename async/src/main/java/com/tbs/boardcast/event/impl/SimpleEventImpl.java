@@ -2,12 +2,15 @@ package com.tbs.boardcast.event.impl;
 
 import com.tbs.boardcast.event.IEvent;
 
+import java.io.Serializable;
+
 /**
  * 默认事件实现
  *
  * @author abstergo
  */
-public class SimpleEventImpl<T> implements IEvent<T> {
+public class SimpleEventImpl<T> implements IEvent<T>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     private String eventId;
     private String eventName;

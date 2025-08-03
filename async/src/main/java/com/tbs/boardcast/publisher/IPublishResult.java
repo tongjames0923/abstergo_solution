@@ -4,6 +4,7 @@ import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.event.IEvent;
 
+import java.io.Serializable;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -68,5 +69,5 @@ public interface IPublishResult<T> {
      * @return
      */
     EventStatusEnum getEventStatus();
-    
+
 }

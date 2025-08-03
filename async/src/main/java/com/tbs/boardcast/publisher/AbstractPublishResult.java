@@ -5,6 +5,7 @@ import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
 
+import java.io.Serializable;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -14,7 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author tongj
  */
-public abstract class AbstractPublishResult<T> implements IPublishResult<T> {
+public abstract class AbstractPublishResult<T> implements IPublishResult<T>, Serializable {
+    private static final long serialVersionUID = 1L;
 
     /**
      * 获取事件状态监听器
