@@ -33,7 +33,7 @@ public class RedisProperty {
     /**
      * springboot默认redisCacheing功能的缓存时间
      */
-    private long cacheTimeout = 3 * 60 * 1000;
+    private long cacheTimeout = -1L;
 
     /**
      * springboot默认redisCacheing功能的是否接收空值

@@ -22,7 +22,6 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
 import javax.annotation.Resource;
-import java.time.Duration;
 
 /**
  * @author abstergo
@@ -49,12 +48,6 @@ public class BasicRedisConfig {
         config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
         RedissonClient redissonClient = Redisson.create(config);
         return redissonClient;
-    }
-
-    @Bean
-    StringRedisSerializer stringRedisSerializer() {
-
-        return new StringRedisSerializer();
     }
 
     @Bean(RedisBeanNameConstants.REDIS_KEY_SERIALIZER)
@@ -87,7 +80,7 @@ public class BasicRedisConfig {
 
     @Bean(RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     @Primary
-    RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory connectionFactory,
+    RedisTemplate redisTemplate(RedisConnectionFactory connectionFactory,
         @Qualifier(RedisBeanNameConstants.REDIS_KEY_SERIALIZER) RedisSerializer keySerializer,
         @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer valueSerializer,
         @Qualifier(RedisBeanNameConstants.REDIS_HASH_KEY_SERIALIZER) RedisSerializer hashKeySerializer,
@@ -98,16 +91,17 @@ public class BasicRedisConfig {
         template.setValueSerializer(valueSerializer);
         template.setHashKeySerializer(hashKeySerializer);
         template.setHashValueSerializer(hashValueSerializer);
-
-        template.afterPropertiesSet();
         return template;
     }
 
     @Bean
     @ConditionalOnMissingBean(RedisCacheConfiguration.class)
     RedisCacheConfiguration redisConfiguration(RedisProperty property) {
-        var redisCacheConfiguration =
-            RedisCacheConfiguration.defaultCacheConfig().entryTtl(Duration.ofMillis(property.getCacheTimeout()));
+        var redisCacheConfiguration = RedisCacheConfiguration.defaultCacheConfig();
+        if (property.getCacheTimeout() > 0) {
+            redisCacheConfiguration =
+                redisCacheConfiguration.entryTtl(java.time.Duration.ofMillis(property.getCacheTimeout()));
+        }
         if (!property.isAllowNullValues()) {
             return redisCacheConfiguration.disableCachingNullValues();
         }
@@ -123,12 +117,8 @@ public class BasicRedisConfig {
     @ConditionalOnMissingBean(RedisCacheManager.class)
     public RedisCacheManager redisCacheManager(RedisCacheWriter redisCacheWriter,
         RedisCacheConfiguration redisCacheConfiguration) {
-
-        return RedisCacheManager.builder().cacheWriter(redisCacheWriter).cacheDefaults(redisCacheConfiguration).build();
-
-        //        RedisCacheWriter redisCacheWriter = RedisCacheWriter.lockingRedisCacheWriter(redisConnectionFactory);
-        //        RedisCacheManager redisCacheManager = new RedisCacheManager(redisCacheWriter, redisCacheConfiguration);
-        //        return redisCacheManager;
+        return RedisCacheManager.builder().cacheWriter(redisCacheWriter).cacheDefaults(redisCacheConfiguration)
+            .enableStatistics().build();
     }
 
 }

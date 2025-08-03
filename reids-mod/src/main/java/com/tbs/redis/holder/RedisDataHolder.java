@@ -4,6 +4,7 @@ import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.IMatchKeyFounder;
 import com.tbs.common.util.CollUtil;
 import com.tbs.redis.config.property.RedisProperty;
+import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 @Component
 public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
 
-    @Resource
+    @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     private RedisTemplate<String, Object> redisTemplate;
 
     @Resource
