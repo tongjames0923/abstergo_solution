@@ -13,6 +13,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.common.util.framework.UuidUtil;
+import com.tbs.schedule.ISchedule;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.SimpleAuthException;
@@ -24,6 +25,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -47,6 +49,9 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
 
     @Resource(name = SystemAppBeanNameConstant.TOKEN_DATA_HOLDER)
     private IDataHolder tokenDataHolder;
+
+    @Resource
+    ISchedule schedule;
 
     @Override
     public UserDetails loadUserInfoByUniqueKey(String uniqueKey) {
@@ -82,6 +87,9 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
                 authProperty.getTokenFiledName(), details.getUsername(), null);
         boolean set = tokenDataHolder.set(model.getToken(), details, false);
         AssertUtil.isTrue(!set, () -> new FormattedRuntimeException("Token已存在"));
+        schedule.pin(() -> {
+            tokenDataHolder.remove(model.getToken());
+        }, Duration.ofSeconds(authProperty.getTokenExpireTime()));
         return model;
 
     }
