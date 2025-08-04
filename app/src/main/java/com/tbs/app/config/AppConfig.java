@@ -111,6 +111,7 @@ public class AppConfig {
                     throw new RuntimeException(e);
                 }
                 logger.info("receive event {} {}", event.getEventName(), event.getEventId());
+                
             }
         };
     }

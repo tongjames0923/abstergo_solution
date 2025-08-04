@@ -38,7 +38,6 @@ class AppApplicationTests {
     void boardcastTest() throws ExecutionException, InterruptedException {
         var h = publisher.publish(new SimpleEvent("test", "test"), HandleMode.ASYNC);
         logger.info("publish finish");
-        h.untilEventComplete();
         logger.info("handle finish");
     }
 

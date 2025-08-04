@@ -16,6 +16,8 @@ tbs:
   cache:
     cache-manager-implementation: org.springframework.data.redis.cache.RedisCacheManager
     expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuatorCache
+  boardcast:
+    event-bus-type: com.tbs.redis.boradcast.SimpleRedisEventBus
 # Spring配置
 spring:
   # 资源信息
