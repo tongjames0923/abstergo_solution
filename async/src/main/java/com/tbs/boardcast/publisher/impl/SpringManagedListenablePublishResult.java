@@ -6,6 +6,7 @@ import com.tbs.boardcast.publisher.AbstractPublishResult;
 import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.common.util.SpringUtil;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -16,12 +17,20 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * @author tongj
  */
-public class SpringManagedListenablePublishResult extends AbstractPublishResult {
+public class SpringManagedListenablePublishResult extends AbstractPublishResult implements Serializable {
+    private static final long serialVersionUID = 1L;
 
+    /**
+     * 缓存发布者
+     */
     private static final Map<String, IPublisher> pubMap = new ConcurrentHashMap<>(8);
 
     public SpringManagedListenablePublishResult(IEvent event, String publisher, HandleMode handleMode) {
         super(event, publisher, handleMode);
+    }
+
+    public SpringManagedListenablePublishResult() {
+        super();
     }
 
     @Override

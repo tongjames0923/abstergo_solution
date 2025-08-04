@@ -4,6 +4,8 @@ import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.*;
@@ -32,9 +34,7 @@ public abstract class AbstractPublishResult implements IPublishResult {
      */
     protected abstract IPublisher getPublisherById(String publisherId);
 
-    private AtomicBoolean isEventComplete = new AtomicBoolean(false);
     private EventStatusEnum eventStatus = EventStatusEnum.IDLE;
-    private CompletableFuture<EventStatusEnum> eventFuture = new CompletableFuture<>();
 
     /**
      * 事件状态监听器
@@ -73,6 +73,9 @@ public abstract class AbstractPublishResult implements IPublishResult {
         this.event = event;
         this.publisherId = publisher;
         this.handleMode = handleMode;
+    }
+
+    public AbstractPublishResult() {
     }
 
     @Override
@@ -119,9 +122,6 @@ public abstract class AbstractPublishResult implements IPublishResult {
             getEventStatus().getValue());
         getStatusListeners().forEach(listenner -> listenner.onEventStatusChange(eventStatus, getEventStatus(), this));
         this.eventStatus = eventStatus;
-        if (isEventComplete()) {
-            eventFuture.complete(getEventStatus());
-        }
     }
 
     @Override
@@ -129,8 +129,4 @@ public abstract class AbstractPublishResult implements IPublishResult {
         return eventStatus;
     }
 
-    @Override
-    public EventStatusEnum untilEventComplete() {
-        return eventFuture.join();
-    }
 }

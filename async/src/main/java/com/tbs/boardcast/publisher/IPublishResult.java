@@ -13,7 +13,7 @@ import java.util.function.Consumer;
  *
  * @author abstergo
  */
-public interface IPublishResult  {
+public interface IPublishResult {
     /**
      * 获取事件
      *
@@ -48,13 +48,6 @@ public interface IPublishResult  {
      * @param throwable
      */
     void setThrowable(Throwable throwable);
-
-    /**
-     * 等待事件处理完成
-     *
-     * @return
-     */
-    EventStatusEnum untilEventComplete();
 
     /**
      * 设置事件状态

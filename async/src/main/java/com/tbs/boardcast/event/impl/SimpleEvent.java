@@ -2,6 +2,8 @@ package com.tbs.boardcast.event.impl;
 
 import com.tbs.boardcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.StrUtil;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.Optional;
@@ -11,11 +13,12 @@ import java.util.Optional;
  *
  * @author abstergo
  */
+@Slf4j
 public class SimpleEvent implements IEvent {
     private static final long serialVersionUID = 1L;
     private String eventName;
     private byte[] eventData;
-    private Class<?> eventDataClass;
+    private String eventDataClass;
     private int eventPriority = 0;
     private String eventId;
 
@@ -34,6 +37,11 @@ public class SimpleEvent implements IEvent {
         this.eventId = eventId;
     }
 
+    public SimpleEvent() {
+        this.eventName = "default";
+        this.eventId = "default";
+    }
+
     @Override
     public byte[] getEventData() {
         return eventData;
@@ -49,12 +57,20 @@ public class SimpleEvent implements IEvent {
         AssertUtil.notNull(eventData, "eventData can not be null");
         AssertUtil.notNull(clazz, "class can not be null");
         this.eventData = eventData;
-        this.eventDataClass = clazz;
+        this.eventDataClass = clazz.getName();
     }
 
     @Override
     public Optional<Class<?>> getEventDataClass() {
-        return Optional.ofNullable(eventDataClass);
+        if (StrUtil.isEmpty(eventDataClass)) {
+            return Optional.empty();
+        }
+        try {
+            return Optional.ofNullable(Class.forName(eventDataClass));
+        } catch (ClassNotFoundException e) {
+            log.error("class not found", e);
+            return Optional.empty();
+        }
     }
 
     @Override

@@ -37,9 +37,6 @@ public abstract class AbstractPublisher implements IPublisher {
     public IPublishResult publish(IEvent event, HandleMode handleMode) {
         IPublishResult publishResult = makePublishResult(event, handleMode);
         eventBus.inqueueEvent(publishResult);
-        if (handleMode == HandleMode.SYNC) {
-            publishResult.untilEventComplete();
-        }
         return publishResult;
     }
 
