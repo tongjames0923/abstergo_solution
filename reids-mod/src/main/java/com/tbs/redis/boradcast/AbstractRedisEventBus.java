@@ -14,10 +14,11 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.RedisSerializer;
+import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.io.Serializable;
+import java.io.*;
 import java.time.Duration;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -28,8 +29,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author tongj
  */
 @Slf4j
-public abstract class AbstractRedisEventBus<RES extends IPublishResult<?>> extends AbstractSemaphoreEventBus<RES>
-    implements MessageListener {
+public abstract class AbstractRedisEventBus<RES> extends AbstractSemaphoreEventBus<RES> implements MessageListener {
 
     @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     private RedisTemplate<String, Object> redisTemplate;
@@ -42,8 +42,6 @@ public abstract class AbstractRedisEventBus<RES extends IPublishResult<?>> exten
     @Getter
     @Resource
     private RedisMessageListenerContainer redisMessageListenerContainer;
-
-    //    private static final String EVENT_CHANNEL = "tbs:boardcast:event_channel";
 
     /**
      * 获取频道名称
@@ -70,28 +68,12 @@ public abstract class AbstractRedisEventBus<RES extends IPublishResult<?>> exten
         topic = new ChannelTopic(getChannel());
     }
 
-    /**
-     * 序列化
-     *
-     * @param res
-     * @return
-     */
-    protected abstract Serializable serialize(RES res);
-
-    /**
-     * 反序列化
-     *
-     * @param obj
-     * @return
-     */
-    protected abstract RES deserialize(byte[] obj);
-
     @PostConstruct
     public void initMessageListenerContainer() {
         redisMessageListenerContainer.addMessageListener(this, topic);
     }
 
-    public static <T> void preInqueueCheck(IPublishResult<T> publishResult) {
+    public static <T> void preInqueueCheck(IPublishResult publishResult) {
         AssertUtil.notNull(publishResult, "publishResult can not be null");
         AssertUtil.notNull(publishResult.getEvent(), "event can not be null");
         if (publishResult.getEventStatus() == null ||
@@ -105,12 +87,11 @@ public abstract class AbstractRedisEventBus<RES extends IPublishResult<?>> exten
     }
 
     @Override
-    public <T> void inqueueEvent(IPublishResult<T> publishResult) {
+    public void inqueueEvent(IPublishResult publishResult) {
         preInqueueCheck(publishResult);
-
         RES res = put(publishResult);
         // 直接通过Redis Pub/Sub发布事件
-        redisTemplate.convertAndSend(getChannel(), serialize(res));
+        redisTemplate.convertAndSend(getChannel(), res);
     }
 
     /**
@@ -126,7 +107,7 @@ public abstract class AbstractRedisEventBus<RES extends IPublishResult<?>> exten
      * 为Redis Pub/Sub模式，该方法不适用 Redis Pub/Sub是推送模式，不需要主动获取事件
      */
     @Override
-    public IPublishResult<?> nextUnhandledEvent(Duration duration) {
+    public IPublishResult nextUnhandledEvent(Duration duration) {
         // 在Pub/Sub模式下，事件是推送的，不是拉取的
         // 这里仅为了满足接口要求，提供本地队列支持
         return super.nextUnhandledEvent(duration);
@@ -140,7 +121,9 @@ public abstract class AbstractRedisEventBus<RES extends IPublishResult<?>> exten
     @Override
     public void onMessage(Message message, byte[] pattern) {
         try {
-            addToLocalQueue(deserialize(message.getBody()));
+
+            RES obj = (RES)redisTemplate.getValueSerializer().deserialize(message.getBody());
+            addToLocalQueue(transform((RES)obj));
         } catch (Exception e) {
             log.error("消息处理错误", e);
         }
