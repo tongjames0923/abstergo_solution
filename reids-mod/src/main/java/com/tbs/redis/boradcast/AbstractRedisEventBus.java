@@ -3,6 +3,7 @@ package com.tbs.redis.boradcast;
 import com.tbs.boardcast.bus.AbstractSemaphoreEventBus;
 import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.publisher.IPublishResult;
+import com.tbs.common.data.IDataBridge;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.redis.constants.RedisBeanNameConstants;
@@ -13,12 +14,9 @@ import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
-import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.io.*;
 import java.time.Duration;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -29,7 +27,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
  * @author tongj
  */
 @Slf4j
-public abstract class AbstractRedisEventBus<RES> extends AbstractSemaphoreEventBus<RES> implements MessageListener {
+public abstract class AbstractRedisEventBus<RES> extends AbstractSemaphoreEventBus implements MessageListener {
 
     @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     private RedisTemplate<String, Object> redisTemplate;
@@ -50,7 +48,7 @@ public abstract class AbstractRedisEventBus<RES> extends AbstractSemaphoreEventB
      */
     public abstract String getChannel();
 
-    private Queue<RES> localQueue = new ConcurrentLinkedQueue<>();
+    private Queue<IPublishResult> localQueue = new ConcurrentLinkedQueue<>();
     /**
      * -- GETTER -- 获取频道主题
      *
@@ -60,9 +58,16 @@ public abstract class AbstractRedisEventBus<RES> extends AbstractSemaphoreEventB
     private ChannelTopic topic;
 
     @Override
-    protected Queue<RES> getQueue() {
+    protected Queue<IPublishResult> getQueue() {
         return localQueue;
     }
+
+    /**
+     * -- GETTER -- 获取数据桥接器
+     *
+     * @return
+     */
+    protected abstract IDataBridge<RES, IPublishResult> getDataBridge();
 
     public AbstractRedisEventBus() {
         topic = new ChannelTopic(getChannel());
@@ -89,7 +94,7 @@ public abstract class AbstractRedisEventBus<RES> extends AbstractSemaphoreEventB
     @Override
     public void inqueueEvent(IPublishResult publishResult) {
         preInqueueCheck(publishResult);
-        RES res = put(publishResult);
+        RES res = getDataBridge().bridge(publishResult);
         // 直接通过Redis Pub/Sub发布事件
         redisTemplate.convertAndSend(getChannel(), res);
     }
@@ -123,7 +128,7 @@ public abstract class AbstractRedisEventBus<RES> extends AbstractSemaphoreEventB
         try {
 
             RES obj = (RES)redisTemplate.getValueSerializer().deserialize(message.getBody());
-            addToLocalQueue(transform((RES)obj));
+            addToLocalQueue(getDataBridge().unbridge((RES)obj));
         } catch (Exception e) {
             log.error("消息处理错误", e);
         }
