@@ -5,7 +5,7 @@ import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
 
-import java.util.*;
+import java.util.Collection;
 
 /**
  * 抽象发布结果

@@ -4,7 +4,6 @@ import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.publisher.IPublishResult;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;
 import com.tbs.lock.util.LockUtil;
 import org.slf4j.Logger;
@@ -14,35 +13,17 @@ import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
 
 /**
  * @author tongj
  */
-public abstract class AbstractEventBus<R> implements IEventBus {
+public abstract class AbstractEventBus implements IEventBus {
     /**
      * 获取队列
      *
      * @return
      */
-    protected abstract Queue<R> getQueue();
-
-    /**
-     * 将传入的事件转化为支持的事件
-     *
-     * @param r
-     * @param <T>
-     * @return
-     */
-    protected abstract R put(IPublishResult r);
-
-    /**
-     * 将支持的事件转化为传入的事件
-     *
-     * @param r
-     * @return
-     */
-    protected abstract IPublishResult transform(R r);
+    protected abstract Queue<IPublishResult> getQueue();
 
     private static Logger logger = LoggerFactory.getLogger(AbstractEventBus.class);
 
@@ -65,6 +46,7 @@ public abstract class AbstractEventBus<R> implements IEventBus {
      * @param timeout
      * @param unit
      * @return
+     * @throws InterruptedException
      */
     protected abstract boolean awaitQueue(long timeout, TimeUnit unit) throws InterruptedException;
 
@@ -73,7 +55,7 @@ public abstract class AbstractEventBus<R> implements IEventBus {
         preInqueueCheck(publishResult);
         LockUtil.getInstance().lockThen(lock, () -> {
             logger.debug("添加事件到队列:{}", publishResult.getEvent().getEventName());
-            getQueue().add(put(publishResult));
+            getQueue().add(publishResult);
             signalInQueue();
         });
     }
@@ -107,7 +89,7 @@ public abstract class AbstractEventBus<R> implements IEventBus {
         }
         if (!getQueue().isEmpty()) {
             LockUtil.getInstance().lockThen(lock, () -> {
-                result[0] = transform(getQueue().poll());
+                result[0] = getQueue().poll();
                 logger.debug("获取事件:{}", result[0].getEvent().getEventId());
             });
         }

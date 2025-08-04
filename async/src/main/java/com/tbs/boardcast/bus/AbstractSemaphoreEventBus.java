@@ -1,7 +1,5 @@
 package com.tbs.boardcast.bus;
 
-import com.tbs.boardcast.publisher.IPublishResult;
-
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
@@ -11,7 +9,7 @@ import java.util.concurrent.TimeUnit;
  * @param <R>
  * @author tongj
  */
-public abstract class AbstractSemaphoreEventBus<R> extends AbstractEventBus<R> {
+public abstract class AbstractSemaphoreEventBus extends AbstractEventBus {
 
     Semaphore semaphore = new Semaphore(0);
 
