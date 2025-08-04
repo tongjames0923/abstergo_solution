@@ -1,11 +1,13 @@
 package com.tbs.common;
 
+import java.io.Serializable;
+
 /**
  * 枚举基类
  *
  * @author tongj
  */
-public interface BaseEnum<T> {
+public interface BaseEnum<T> extends Serializable {
 
     /**
      * 获取枚举详情值

@@ -51,7 +51,7 @@ public abstract class AbstractSubscriber {
      * @param event
      * @param publisher
      */
-    protected abstract void onReceive(IEvent<?> event, IPublisher publisher);
+    protected abstract void onReceive(IEvent event, IPublisher publisher);
 
     /**
      * 接收事件
@@ -60,7 +60,7 @@ public abstract class AbstractSubscriber {
      * @param publisher
      * @return
      */
-    public void recive(IPublishResult<?> event, IPublisher publisher) {
+    public void recive(IPublishResult event, IPublisher publisher) {
         try {
             onReceive(event.getEvent(), publisher);
             event.setEventStatus(EventStatusEnum.DONE);
@@ -76,7 +76,7 @@ public abstract class AbstractSubscriber {
      * @param publisher
      * @return
      */
-    public void reciveAsync(IPublishResult<?> event, IPublisher publisher) {
+    public void reciveAsync(IPublishResult event, IPublisher publisher) {
         threadPoolManager.submit(SimpleThreadRequest.Builder.create("AbstractSubscriber-" + getSubscriberId(), () -> {
             recive(event, publisher);
         }).build(), null);

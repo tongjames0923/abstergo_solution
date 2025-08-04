@@ -8,20 +8,33 @@ import com.tbs.common.util.SpringUtil;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 由于Spring管理的监听器的发布结果实现
  *
  * @author tongj
  */
-public class SpringManagedListenablePublishResult<T> extends AbstractPublishResult<T> {
+public class SpringManagedListenablePublishResult extends AbstractPublishResult {
 
-    public SpringManagedListenablePublishResult(IEvent<T> event, IPublisher publisher, HandleMode handleMode) {
+    private static final Map<String, IPublisher> pubMap = new ConcurrentHashMap<>(8);
+
+    public SpringManagedListenablePublishResult(IEvent event, String publisher, HandleMode handleMode) {
         super(event, publisher, handleMode);
     }
 
     @Override
     protected Collection<IEventStatusListenner> getStatusListeners() {
         return SpringUtil.getBeansOfType(IEventStatusListenner.class).values();
+    }
+
+    @Override
+    protected IPublisher getPublisherById(String publisherId) {
+        return pubMap.computeIfAbsent(publisherId, (k) -> {
+            return SpringUtil.getBeansOfType(IPublisher.class).values().stream()
+                .filter(p -> p != null && publisherId.equals(p.getPushlisherId())).findFirst()
+                .orElseThrow(() -> new RuntimeException("未找到发布者:" + publisherId));
+        });
     }
 }

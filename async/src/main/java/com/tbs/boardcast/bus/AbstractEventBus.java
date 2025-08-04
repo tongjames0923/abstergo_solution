@@ -19,7 +19,7 @@ import java.util.concurrent.locks.Condition;
 /**
  * @author tongj
  */
-public abstract class AbstractEventBus<R extends IPublishResult> implements IEventBus {
+public abstract class AbstractEventBus<R> implements IEventBus {
     /**
      * 获取队列
      *
@@ -34,7 +34,15 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
      * @param <T>
      * @return
      */
-    protected abstract <T> R put(IPublishResult<T> r);
+    protected abstract R put(IPublishResult r);
+
+    /**
+     * 将支持的事件转化为传入的事件
+     *
+     * @param r
+     * @return
+     */
+    protected abstract IPublishResult transform(R r);
 
     private static Logger logger = LoggerFactory.getLogger(AbstractEventBus.class);
 
@@ -61,7 +69,7 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
     protected abstract boolean awaitQueue(long timeout, TimeUnit unit) throws InterruptedException;
 
     @Override
-    public <T> void inqueueEvent(IPublishResult<T> publishResult) {
+    public void inqueueEvent(IPublishResult publishResult) {
         preInqueueCheck(publishResult);
         LockUtil.getInstance().lockThen(lock, () -> {
             logger.debug("添加事件到队列:{}", publishResult.getEvent().getEventName());
@@ -70,7 +78,7 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
         });
     }
 
-    protected static <T> void preInqueueCheck(IPublishResult<T> publishResult) {
+    protected static <T> void preInqueueCheck(IPublishResult publishResult) {
         AssertUtil.notNull(publishResult, "publishResult can not be null");
         AssertUtil.notNull(publishResult.getEvent(), "event can not be null");
         if (publishResult.getEventStatus() == null ||
@@ -84,26 +92,25 @@ public abstract class AbstractEventBus<R extends IPublishResult> implements IEve
     }
 
     @Override
-    public IPublishResult<?> nextUnhandledEvent(Duration duration) {
-        IPublishResult<?>[] result = new IPublishResult[1];
-        LockUtil.getInstance().lockThen(lock, () -> {
-
-            if (getQueue().isEmpty()) {
-                logger.debug("等待事件");
-                boolean r = false;
-                try {
-                    r = awaitQueue(duration.toMillis(), TimeUnit.MILLISECONDS);
-                } catch (InterruptedException e) {
-                    logger.error("条件等待异常", e);
-                    Thread.currentThread().interrupt();
-                }
-                logger.debug("等待事件结束，是否超时：{}", !r);
+    public IPublishResult nextUnhandledEvent(Duration duration) {
+        IPublishResult[] result = new IPublishResult[1];
+        if (getQueue().isEmpty()) {
+            logger.debug("等待事件");
+            boolean r = false;
+            try {
+                r = awaitQueue(duration.toMillis(), TimeUnit.MILLISECONDS);
+            } catch (InterruptedException e) {
+                logger.error("条件等待异常", e);
+                Thread.currentThread().interrupt();
             }
-            if (!getQueue().isEmpty()) {
-                result[0] = getQueue().poll();
+            logger.debug("等待事件结束，是否超时：{}", !r);
+        }
+        if (!getQueue().isEmpty()) {
+            LockUtil.getInstance().lockThen(lock, () -> {
+                result[0] = transform(getQueue().poll());
                 logger.debug("获取事件:{}", result[0].getEvent().getEventId());
-            }
-        });
+            });
+        }
 
         if (result[0] != null) {
             result[0].setEventStatus(EventStatusEnum.IN_PROCESS);

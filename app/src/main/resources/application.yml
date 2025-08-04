@@ -15,7 +15,7 @@ tbs:
     token-holder-impl: com.tbs.redis.holder.RedisDataHolder
   cache:
     cache-manager-implementation: org.springframework.data.redis.cache.RedisCacheManager
-    expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuator
+    expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuatorCache
 # Spring配置
 spring:
   # 资源信息

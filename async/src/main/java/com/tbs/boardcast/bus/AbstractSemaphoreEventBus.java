@@ -8,10 +8,10 @@ import java.util.concurrent.TimeUnit;
 /**
  * 带信号量的抽象事件总线
  *
- * @author tongj
  * @param <R>
+ * @author tongj
  */
-public abstract class AbstractSemaphoreEventBus<R extends IPublishResult> extends AbstractEventBus<R> {
+public abstract class AbstractSemaphoreEventBus<R> extends AbstractEventBus<R> {
 
     Semaphore semaphore = new Semaphore(0);
 

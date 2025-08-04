@@ -29,7 +29,7 @@ public class DispatcherImportedPublisher extends AbstractPublisher {
     }
 
     @Override
-    protected <T> IPublishResult<T> makePublishResult(IEvent<T> event, HandleMode handleMode) {
-        return new SpringManagedListenablePublishResult<>(event, this, handleMode);
+    protected IPublishResult makePublishResult(IEvent event, HandleMode handleMode) {
+        return new SpringManagedListenablePublishResult(event, this.getPushlisherId(), handleMode);
     }
 }

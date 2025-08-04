@@ -4,7 +4,8 @@ import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.boardcast.enums.HandleMode;
-import com.tbs.boardcast.event.impl.SimpleEventImpl;
+import com.tbs.boardcast.event.impl.SimpleEvent;
+
 import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.redis.constants.RedisBeanNameConstants;
@@ -35,7 +36,7 @@ class AppApplicationTests {
 
     @Test
     void boardcastTest() throws ExecutionException, InterruptedException {
-        var h = publisher.publish(new SimpleEventImpl<>("test", "test"), HandleMode.ASYNC);
+        var h = publisher.publish(new SimpleEvent("test", "test"), HandleMode.ASYNC);
         logger.info("publish finish");
         h.untilEventComplete();
         logger.info("handle finish");

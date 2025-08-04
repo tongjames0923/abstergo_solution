@@ -15,8 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  *
  * @author tongj
  */
-public abstract class AbstractPublishResult<T> implements IPublishResult<T>, Serializable {
-    private static final long serialVersionUID = 1L;
+public abstract class AbstractPublishResult implements IPublishResult {
 
     /**
      * 获取事件状态监听器
@@ -24,6 +23,14 @@ public abstract class AbstractPublishResult<T> implements IPublishResult<T>, Ser
      * @return
      */
     protected abstract Collection<IEventStatusListenner> getStatusListeners();
+
+    /**
+     * 根据发布者id获取发布者
+     *
+     * @param publisherId
+     * @return
+     */
+    protected abstract IPublisher getPublisherById(String publisherId);
 
     private AtomicBoolean isEventComplete = new AtomicBoolean(false);
     private EventStatusEnum eventStatus = EventStatusEnum.IDLE;
@@ -43,7 +50,7 @@ public abstract class AbstractPublishResult<T> implements IPublishResult<T>, Ser
          * @param publishResult
          */
         void onEventStatusChange(EventStatusEnum eventStatus, EventStatusEnum oldEventStatus,
-            IPublishResult<T> publishResult);
+            IPublishResult publishResult);
 
         /**
          * 事件处理异常
@@ -51,31 +58,31 @@ public abstract class AbstractPublishResult<T> implements IPublishResult<T>, Ser
          * @param throwable
          * @param publishResult
          */
-        void onEventHandleError(Throwable throwable, IPublishResult<T> publishResult);
+        void onEventHandleError(Throwable throwable, IPublishResult publishResult);
     }
 
-    private IEvent<T> event;
-    private IPublisher publisher;
+    private IEvent event;
+    private String publisherId;
     private HandleMode handleMode;
     private Throwable throwable;
 
-    public AbstractPublishResult(IEvent<T> event, IPublisher publisher, HandleMode handleMode) {
+    public AbstractPublishResult(IEvent event, String publisher, HandleMode handleMode) {
         AssertUtil.notNull(event, "event can not be null");
-        AssertUtil.notNull(publisher, "publisher can not be null");
+        AssertUtil.hasText(publisher, "publisher can not be null");
         AssertUtil.notNull(handleMode, "handleMode can not be null");
         this.event = event;
-        this.publisher = publisher;
+        this.publisherId = publisher;
         this.handleMode = handleMode;
     }
 
     @Override
-    public IEvent<T> getEvent() {
+    public IEvent getEvent() {
         return event;
     }
 
     @Override
     public IPublisher getPublisher() {
-        return publisher;
+        return getPublisherById(publisherId);
     }
 
     @Override

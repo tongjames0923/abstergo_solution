@@ -44,4 +44,10 @@ public class SimpleEventBus extends AbstractSemaphoreEventBus<IPublishResult> {
     protected IPublishResult put(IPublishResult r) {
         return r;
     }
+
+    @Override
+    protected IPublishResult transform(IPublishResult iPublishResult) {
+        return iPublishResult;
+    }
+
 }

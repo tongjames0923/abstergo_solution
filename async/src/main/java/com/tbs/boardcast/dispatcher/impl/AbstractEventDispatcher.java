@@ -65,7 +65,7 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
         started = true;
         logger.trace("开始处理事件");
         while (started) {
-            IPublishResult<?> iPublishResult = null;
+            IPublishResult iPublishResult = null;
             try {
                 iPublishResult = getEventBus().nextUnhandledEvent(Duration.ofMinutes(15));
                 if (iPublishResult == null) {

@@ -31,11 +31,11 @@ public abstract class AbstractPublisher implements IPublisher {
      * @param <T>
      * @return
      */
-    protected abstract <T> IPublishResult<T> makePublishResult(IEvent<T> event, HandleMode handleMode);
+    protected abstract IPublishResult makePublishResult(IEvent event, HandleMode handleMode);
 
     @Override
-    public <T> IPublishResult<T> publish(IEvent<T> event, HandleMode handleMode) {
-        IPublishResult<T> publishResult = makePublishResult(event, handleMode);
+    public IPublishResult publish(IEvent event, HandleMode handleMode) {
+        IPublishResult publishResult = makePublishResult(event, handleMode);
         eventBus.inqueueEvent(publishResult);
         if (handleMode == HandleMode.SYNC) {
             publishResult.untilEventComplete();

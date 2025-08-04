@@ -38,7 +38,7 @@ public interface IEventDispatcher {
      * @param throwable
      * @param publishResult
      */
-    <T> void handleError(Throwable throwable, IPublishResult<T> publishResult);
+    <T> void handleError(Throwable throwable, IPublishResult publishResult);
 
     /**
      * 处理事件

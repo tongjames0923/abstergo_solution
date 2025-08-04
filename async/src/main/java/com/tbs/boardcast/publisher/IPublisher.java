@@ -23,7 +23,7 @@ public interface IPublisher {
      * @param handleMode
      * @return
      */
-    <T> IPublishResult<T> publish(IEvent<T> event, HandleMode handleMode);
+    IPublishResult publish(IEvent event, HandleMode handleMode);
 
     /**
      * 同步发布
@@ -31,8 +31,8 @@ public interface IPublisher {
      * @param event
      * @return
      */
-    default IPublishResult pushlishSync(IEvent<?> event) {
-        return publish(event, HandleMode.SYNC);
+    default IPublishResult pushlishSync(IEvent event) {
+        return publish(event, com.tbs.boardcast.enums.HandleMode.SYNC);
     }
 
     /**
@@ -41,9 +41,8 @@ public interface IPublisher {
      * @param event
      * @return
      */
-    default IPublishResult pushlishAsync(IEvent<?> event) {
+    default IPublishResult pushlishAsync(IEvent event) {
         return publish(event, HandleMode.ASYNC);
     }
-
 
 }

@@ -53,7 +53,7 @@ public class BoardcastConfig {
             private final Logger logger = LoggerFactory.getLogger(BoardcastConfig.class);
 
             @Override
-            public <T> void handleError(Throwable throwable, IPublishResult<T> publishResult) {
+            public <T> void handleError(Throwable throwable, IPublishResult publishResult) {
                 logger.error("处理消息时产生错误！！！", throwable);
             }
         };

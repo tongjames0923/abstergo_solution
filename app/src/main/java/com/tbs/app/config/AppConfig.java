@@ -104,7 +104,7 @@ public class AppConfig {
             }
 
             @Override
-            protected void onReceive(IEvent<?> event, IPublisher publisher) {
+            protected void onReceive(IEvent event, IPublisher publisher) {
                 try {
                     Thread.currentThread().join(500);
                 } catch (InterruptedException e) {

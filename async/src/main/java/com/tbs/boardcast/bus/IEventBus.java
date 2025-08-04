@@ -16,7 +16,7 @@ public interface IEventBus {
      *
      * @param publishResult
      */
-    <T> void inqueueEvent(IPublishResult<T> publishResult);
+    void inqueueEvent(IPublishResult publishResult);
 
     /**
      * 获取下一个未处理的事件
@@ -24,7 +24,7 @@ public interface IEventBus {
      * @param timeOut 超时时间
      * @return
      */
-    IPublishResult<?> nextUnhandledEvent(Duration timeOut);
+    IPublishResult nextUnhandledEvent(Duration timeOut);
 
     /**
      * 获取事件队列大小

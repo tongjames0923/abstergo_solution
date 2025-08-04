@@ -2,12 +2,15 @@ package com.tbs.boardcast.event;
 
 import com.tbs.boardcast.enums.EventStatusEnum;
 
+import java.io.Serializable;
+import java.util.Optional;
+
 /**
  * 广播机制事件接口
  *
  * @author abstergo
  */
-public interface IEvent<T> {
+public interface IEvent extends Serializable {
 
     /**
      * 获取事件ID
@@ -28,14 +31,23 @@ public interface IEvent<T> {
      *
      * @return
      */
-    T getEventData();
+    byte[] getEventData();
 
     /**
-     * 设置事件数据
+     * 获取事件数据
      *
-     * @param eventData
+     * @param clazz
+     * @return
      */
-    void setEventData(T eventData);
+    void setEventData(byte[] eventData, Class<?> clazz);
+
+    /**
+     * 获取事件数据
+     *
+     * @param clazz
+     * @return
+     */
+    Optional<Class<?>> getEventDataClass();
 
     /**
      * 获取事件优先级

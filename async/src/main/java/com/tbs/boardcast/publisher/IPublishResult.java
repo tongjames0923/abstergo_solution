@@ -13,13 +13,13 @@ import java.util.function.Consumer;
  *
  * @author abstergo
  */
-public interface IPublishResult<T> {
+public interface IPublishResult  {
     /**
      * 获取事件
      *
      * @return
      */
-    IEvent<T> getEvent();
+    IEvent getEvent();
 
     /**
      * 获取发布者
