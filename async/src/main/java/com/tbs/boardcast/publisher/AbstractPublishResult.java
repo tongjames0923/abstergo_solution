@@ -4,13 +4,8 @@ import com.tbs.boardcast.enums.EventStatusEnum;
 import com.tbs.boardcast.enums.HandleMode;
 import com.tbs.boardcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
-import lombok.Getter;
-import lombok.Setter;
 
-import java.io.Serializable;
 import java.util.*;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * 抽象发布结果
@@ -35,31 +30,6 @@ public abstract class AbstractPublishResult implements IPublishResult {
     protected abstract IPublisher getPublisherById(String publisherId);
 
     private EventStatusEnum eventStatus = EventStatusEnum.IDLE;
-
-    /**
-     * 事件状态监听器
-     *
-     * @param <T>
-     */
-    public static interface IEventStatusListenner<T> {
-        /**
-         * 事件状态改变
-         *
-         * @param oldEventStatus
-         * @param eventStatus
-         * @param publishResult
-         */
-        void onEventStatusChange(EventStatusEnum eventStatus, EventStatusEnum oldEventStatus,
-            IPublishResult publishResult);
-
-        /**
-         * 事件处理异常
-         *
-         * @param throwable
-         * @param publishResult
-         */
-        void onEventHandleError(Throwable throwable, IPublishResult publishResult);
-    }
 
     private IEvent event;
     private String publisherId;
