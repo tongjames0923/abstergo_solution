@@ -36,6 +36,17 @@ public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
         }
     }
 
+    /**
+     * 设置缓存有效期
+     *
+     * @param key
+     * @param expireTime
+     * @return
+     */
+    public boolean expire(String key, Date expireTime) {
+        return redisTemplate.expireAt(key, expireTime);
+    }
+
     @Override
     public <T> Optional<T> get(String key) {
         Object value = redisTemplate.opsForValue().get(key);
