@@ -5,11 +5,11 @@ import com.tbs.boardcast.event.IEvent;
 import com.tbs.boardcast.publisher.IPublisher;
 import com.tbs.boardcast.subscriber.AbstractSubscriber;
 import com.tbs.cache.core.ICacheListenner;
+import com.tbs.cache.core.manager.holder.DataHolderCacheManager;
+import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.impl.MapDataHolder;
 import com.tbs.common.error.IErrorThrowEvent;
 import com.tbs.web.trace.core.AbstractTraceContext;
-import com.tbs.web.trace.core.IMethodInvokeTreeProvider;
-import com.tbs.web.trace.core.TraceObject;
-import com.tbs.web.trace.tool.ITraceContextListenner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
@@ -18,9 +18,6 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.concurrent.ExecutorService;
 
 /**
  * @author tongj
@@ -111,8 +108,18 @@ public class AppConfig {
                     throw new RuntimeException(e);
                 }
                 logger.info("receive event {} {}", event.getEventName(), event.getEventId());
-                
+
             }
         };
+    }
+
+    @Bean
+    IDataHolder cacheDataHolder() {
+        return new MapDataHolder();
+    }
+
+    @Bean
+    DataHolderCacheManager dataHolderCacheManager() {
+        return new DataHolderCacheManager(cacheDataHolder(), null);
     }
 }
