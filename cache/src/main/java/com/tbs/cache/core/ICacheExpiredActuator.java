@@ -9,16 +9,7 @@ import java.util.Date;
  *
  * @author tongj
  */
-public interface ICacheExpiredActuator {
-    /**
-     * 缓存过期处理
-     *
-     * @param cache
-     * @param key
-     * @param expireTime
-     * @return
-     */
-    boolean expire(Cache cache, Object key, Date expireTime);
+public interface ICacheExpiredActuator extends IExpiredActuator<Cache> {
 
     /**
      * 缓存全部过期处理

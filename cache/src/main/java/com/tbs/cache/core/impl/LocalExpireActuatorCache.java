@@ -1,5 +1,7 @@
 package com.tbs.cache.core.impl;
 
+import com.tbs.cache.core.AbstractScheduleExpiredActuator;
+import com.tbs.cache.core.AbstractSpringScheduleExpiredActuator;
 import com.tbs.cache.core.ICacheExpiredActuator;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.schedule.ISchedule;
@@ -17,67 +19,32 @@ import java.util.Date;
 /**
  * @author tongj
  */
-public class LocalExpireActuatorCache implements ICacheExpiredActuator {
+public class LocalExpireActuatorCache extends AbstractSpringScheduleExpiredActuator<Cache>
+    implements ICacheExpiredActuator {
 
     private static final Logger logger = LoggerFactory.getLogger(LocalExpireActuatorCache.class);
 
-    @AllArgsConstructor
-    @Data
-    @ToString
-    private static class ExpireTask implements Runnable {
-        /**
-         * 缓存对象
-         */
-        private Cache cache;
-        /**
-         * 缓存key
-         */
-        private Object key;
-
+    private static class CacheRemover implements IExpireRemove<Cache> {
         @Override
-        public void run() {
-            logger.trace("开始执行过期任务... {}", this);
-            Cache cache = this.getCache();
-            if (cache == null) {
-                logger.warn("缓存不存在，请检查缓存配置是否正确！");
-                return;
-            }
-            if (this.getKey() == null) {
+        public void remove(Cache cache, Object key) {
+            if (key == null) {
                 cache.invalidate();
-                logger.trace("执行缓存清除任务...{}", this);
             } else {
-                cache.evict(this.getKey());
-                logger.trace("执行缓存清理任务...{}", this);
+                cache.evict(key);
             }
         }
     }
 
-    @Resource
-    private ISchedule schedule;
+    private CacheRemover remover = new CacheRemover();
 
     @Override
-    public boolean expire(Cache cache, Object key, Date expireTime) {
-        AssertUtil.notNull(cache, "cache can not be null");
-        AssertUtil.notNull(key, "key can not be null");
-        AssertUtil.notNull(expireTime, "expireTime can not be null");
-        long time = expireTime.getTime() - System.currentTimeMillis();
-        if (time <= 0) {
-            time = 1;
-        }
-        schedule.pin(new ExpireTask(cache, key), Duration.ofMillis(time));
-        return true;
+    protected IExpireRemove<Cache> getRemoveFunction() {
+        return remover;
     }
 
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
-        AssertUtil.notNull(cache, "cache can not be null");
-        AssertUtil.notNull(expireTime, "expireTime can not be null");
-        long time = expireTime.getTime() - System.currentTimeMillis();
-        if (time <= 0) {
-            time = 1;
-        }
-        schedule.pin(new ExpireTask(cache, null), Duration.ofMillis(time));
-        return true;
+        return expire(cache, null, expireTime);
     }
 
 }
