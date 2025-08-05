@@ -15,7 +15,7 @@
 
 ### 模块划分
 ```
-com.tbs.boardcast
+com.tbs.broadcast
 ├── bus # 事件队列核心实现
 ├── dispatcher # 事件分发机制
 ├── event # 事件模型定义
