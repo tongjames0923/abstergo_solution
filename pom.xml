@@ -19,7 +19,7 @@
         <module>cache</module>
         <module>sql</module>
         <module>app_system</module>
-        <module>reids-mod</module>
+        <module>redis-mod</module>
     </modules>
     <groupId>com.tbs</groupId>
     <artifactId>solution</artifactId>

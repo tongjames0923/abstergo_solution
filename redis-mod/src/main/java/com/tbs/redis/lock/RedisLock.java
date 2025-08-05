@@ -4,10 +4,8 @@ import com.tbs.lock.ILock;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
-import javax.annotation.Resource;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.locks.Condition;
 
 /**
  * Redis锁

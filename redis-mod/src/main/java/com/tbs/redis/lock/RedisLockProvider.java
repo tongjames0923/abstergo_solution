@@ -4,11 +4,9 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;
 import com.tbs.lock.ILockProvider;
-import com.tbs.lock.impls.LockAdapter;
 import org.redisson.api.RedissonClient;
 
 import javax.annotation.Resource;
-import java.util.concurrent.locks.Lock;
 
 /**
  * redis锁提供者

@@ -1,7 +1,7 @@
 package com.tbs.redis.boradcast;
 
-import com.tbs.boardcast.publisher.IPublishResult;
-import com.tbs.boardcast.publisher.impl.SpringManagedListenablePublishResult;
+import com.tbs.broadcast.publisher.IPublishResult;
+import com.tbs.broadcast.publisher.impl.SpringManagedListenablePublishResult;
 import com.tbs.common.data.IDataBridge;
 import org.jetbrains.annotations.NotNull;
 

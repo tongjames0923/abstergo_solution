@@ -1,7 +1,7 @@
 package com.tbs.redis.boradcast;
 
-import com.tbs.boardcast.enums.HandleMode;
-import com.tbs.boardcast.event.IEvent;
+import com.tbs.broadcast.enums.HandleMode;
+import com.tbs.broadcast.event.IEvent;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
