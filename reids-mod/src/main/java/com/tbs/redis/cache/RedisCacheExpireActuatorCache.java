@@ -1,6 +1,6 @@
 package com.tbs.redis.cache;
 
-import com.tbs.cache.core.ICacheExpiredActuator;
+import com.tbs.cache.core.expire.ICacheExpiredActuator;
 import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.springframework.cache.Cache;
 import org.springframework.data.redis.core.RedisTemplate;

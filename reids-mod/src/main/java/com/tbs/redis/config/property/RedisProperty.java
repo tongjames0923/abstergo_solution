@@ -14,6 +14,11 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties("tbs.redis")
 @Component
 public class RedisProperty {
+
+    /**
+     * 是否启用redis
+     */
+    private boolean enable = false;
     /**
      * redis键的序列化器
      */

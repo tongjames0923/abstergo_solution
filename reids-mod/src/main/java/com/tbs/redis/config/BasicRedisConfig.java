@@ -3,6 +3,7 @@ package com.tbs.redis.config;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
+import com.tbs.redis.lock.RedisLockProvider;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -10,14 +11,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
-import org.springframework.data.redis.connection.MessageListener;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
@@ -27,12 +29,12 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.util.ErrorHandler;
 
 import javax.annotation.Resource;
-import java.util.Map;
 
 /**
  * @author abstergo
  */
 @Configuration
+@ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
 public class BasicRedisConfig {
 
     @Value("${spring.redis.host:localhost}")
@@ -49,6 +51,7 @@ public class BasicRedisConfig {
 
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(RedissonClient.class)
+    @ConditionalOnBean(RedisLockProvider.class)
     public RedissonClient redissonClient() {
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
