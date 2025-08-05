@@ -5,10 +5,6 @@ package com.tbs.broadcast.constant;
  * @author abstergo
  */
 public class BroadcastBeanNameConstant {
-    /**
-     * 默认订阅者上下文ID
-     */
-    public static final String DEFAULT_SUBSCRIBER_CONTEXT_ID = "default-subscriber-context";
 
     /**
      * 默认发布者ID
