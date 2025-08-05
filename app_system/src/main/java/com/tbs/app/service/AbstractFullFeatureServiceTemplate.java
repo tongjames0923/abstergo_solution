@@ -5,7 +5,6 @@ import com.tbs.app.pojo.IIdentifiable;
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.util.PageUtil;
 import com.tbs.common.delegate.IDelegateInvoker;
-import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;
@@ -33,13 +32,12 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     implements ISearchableService<T, K>, ISaveableService<T, K>, IDeleteableService<T, K> {
 
     protected AbstractFullFeatureServiceTemplate<T, K, M> instance;
+    @Resource
+    private SystemAppProperty systemAppProperty;
 
     public AbstractFullFeatureServiceTemplate() {
         this.instance = this;
     }
-
-    @Resource
-    private SystemAppProperty systemAppProperty;
 
     protected Class<? extends IDelegateInvoker> pageVoBuildType() {
         return systemAppProperty.getMainDelegateInvokerImpl();

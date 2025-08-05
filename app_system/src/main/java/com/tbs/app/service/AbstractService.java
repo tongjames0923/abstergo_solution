@@ -12,18 +12,17 @@ import javax.annotation.Resource;
  */
 public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K>> {
 
+    @Getter
+    @Resource
+    protected IEntityQueryWrapper<E> queryWrapper;
+    private E entity;
+
     /**
      * 获取Mapper对象
      *
      * @return
      */
     protected abstract Mapper getMapper();
-
-    @Getter
-    @Resource
-    protected IEntityQueryWrapper<E> queryWrapper;
-
-    private E entity;
 
     /**
      * 创建一个新的实体对象

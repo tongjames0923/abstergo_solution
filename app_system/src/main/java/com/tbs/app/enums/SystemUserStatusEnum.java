@@ -15,9 +15,9 @@ public enum SystemUserStatusEnum implements BaseEnum<String> {
      */
     ACTIVITE("激活的", CommonConstant.FLAG_ON),
     /**
-     * 创建的
+     * 被锁定的，锁定账户可登录但是无法使用需激活功能
      */
-    CREATED("创建的", 2),
+    LOCKED("被锁定的", 2),
     /**
      * 禁用的
      */

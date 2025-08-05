@@ -3,7 +3,6 @@ package com.tbs.app.config;
 import com.tbs.app.constant.SystemAppBeanNameConstant;
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.constraint.impl.SimpleUserValidator;
-import com.tbs.app.expire.LocalDataHolderExpireActuator;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
@@ -14,6 +13,7 @@ import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.business.impl.SimpleUserRoleRelationServiceImpl;
 import com.tbs.cache.core.IExpiredActuator;
 import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.data.impl.MapDataHolder;
 import com.tbs.common.util.BeanUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -63,7 +63,7 @@ public class SystemAppConfig {
     @Bean(name = SystemAppBeanNameConstant.TOKEN_EXPIRE_ACTUATOR)
     public IExpiredActuator<IDataHolder> tokenExpireImpl() {
         return BeanUtil.buildBeanFromProperties(() -> {
-            return new LocalDataHolderExpireActuator();
+            return new LocalDataExpireActuator();
         }, systemAppProperty.getTokenExpireImpl(), BeanUtil::buildByEmptyArgs);
     }
 

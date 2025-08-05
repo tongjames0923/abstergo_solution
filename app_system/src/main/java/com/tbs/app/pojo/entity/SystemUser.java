@@ -69,6 +69,8 @@ public class SystemUser implements IBaseEntity<Long> {
     @Column(name = "flag")
     @Setter
     private Integer flag;
+    @Transient
+    private List<SystemRole> roles;
 
     public SystemUser setUsername(String username) {
         this.username = username;
@@ -94,8 +96,5 @@ public class SystemUser implements IBaseEntity<Long> {
         this.remark = remark;
         return this;
     }
-
-    @Transient
-    private List<SystemRole> roles;
 
 }

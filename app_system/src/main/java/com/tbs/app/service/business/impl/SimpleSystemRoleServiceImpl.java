@@ -48,7 +48,8 @@ public class SimpleSystemRoleServiceImpl
         return entity;
     }
 
-    @CacheEvict(cacheNames = "system_role", key = "#entity.role",condition = "#entity!=null&&#entity.role!=null&&#entity.role.length()>0")
+    @CacheEvict(cacheNames = "system_role", key = "#entity.role",
+        condition = "#entity!=null&&#entity.role!=null&&#entity.role.length()>0")
     @Override
     protected List<SystemRole> updateBy(SystemRole entity) {
         entity.setUpdateTime(new java.util.Date());

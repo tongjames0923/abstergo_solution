@@ -1,7 +1,6 @@
 package com.tbs.app.util;
 
 import com.tbs.app.pojo.model.PageVO;
-
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.function.SSupplier;
 import com.tbs.common.util.framework.DelegateUtil;

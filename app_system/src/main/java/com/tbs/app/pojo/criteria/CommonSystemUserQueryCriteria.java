@@ -46,6 +46,10 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
     @QueryField(contrast = QueryContrastEnum.LESS)
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updateTimeLessThan;
+    @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
+    private QueryOrderedModel createTimeOrder;
+    @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
+    private QueryOrderedModel updateTimeOrder;
 
     public CommonSystemUserQueryCriteria setIdEquals(String idEquals) {
         this.idEquals = idEquals;
@@ -86,12 +90,6 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
         this.updateTimeLessThan = updateTimeLessThan;
         return this;
     }
-
-    @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
-    private QueryOrderedModel createTimeOrder;
-
-    @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
-    private QueryOrderedModel updateTimeOrder;
 
     public CommonSystemUserQueryCriteria setCreateTimeOrder(QueryOrderedModel createTimeOrder) {
         this.createTimeOrder = createTimeOrder;

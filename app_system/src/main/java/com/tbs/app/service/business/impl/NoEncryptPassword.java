@@ -4,6 +4,7 @@ import com.tbs.app.service.business.IPasswordEncrypt;
 
 /**
  * 密码不加密
+ *
  * @author tongj
  */
 public class NoEncryptPassword implements IPasswordEncrypt {

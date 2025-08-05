@@ -29,17 +29,19 @@ public class SimpleSystemUserServiceImpl
     implements ISystemUserService {
 
     private static SimpleSystemUserServiceImpl instance;
-
+    @Resource
+    IUserNamePasswordValidator userNamePasswordValidator;
+    @Resource
+    SystemUserMapper mapper;
     @Resource
     private IPasswordEncrypt encrypt;
+    @Resource
+    @Lazy
+    private IUserRoleRelationService relationService;
 
     public SimpleSystemUserServiceImpl() {
         instance = this;
     }
-
-    @Resource
-    @Lazy
-    private IUserRoleRelationService relationService;
 
     @Override
     protected SystemUser insertNew(SystemUser entity) {
@@ -48,7 +50,7 @@ public class SimpleSystemUserServiceImpl
         AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickName()), "昵称格式错误");
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setCreateTime(new Date());
-        entity.setFlag(SystemUserStatusEnum.CREATED.getCode());
+        entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
         getMapper().insert(entity);
         relationService.enableRole(entity.getId(), CommonConstant.NORMAL_USER_ROLE_NAME);
         return entity;
@@ -90,16 +92,10 @@ public class SimpleSystemUserServiceImpl
         return oldSystemUser;
     }
 
-    @Resource
-    IUserNamePasswordValidator userNamePasswordValidator;
-
     @Override
     public List<SystemUser> queryByUserName(@UserNameValid String username) {
         return getQueryWrapper().query().where().equal(SystemUser::getUsername, username).pour().fetch();
     }
-
-    @Resource
-    SystemUserMapper mapper;
 
     @Override
     protected SystemUserMapper getMapper() {

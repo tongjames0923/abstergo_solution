@@ -16,6 +16,11 @@ import java.lang.reflect.Type;
 public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria {
     private static SystemSqlProperty sqlProperty;
 
+    public ClassBaseQueryCriteria() {
+        String file = initString(getType(this));
+        putResourcePath(file);
+    }
+
     static String initString(Class<?> type) {
         AssertUtil.notNull(type, "type can not be null");
         if (sqlProperty == null) {
@@ -39,10 +44,5 @@ public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria
             throw new IllegalArgumentException("未指定泛型参数");
         }
         return type;
-    }
-
-    public ClassBaseQueryCriteria() {
-        String file = initString(getType(this));
-        putResourcePath(file);
     }
 }
