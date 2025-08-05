@@ -1,5 +1,8 @@
-package com.tbs.cache.core;
+package com.tbs.cache.core.manager;
 
+import com.tbs.cache.core.ICacheListenner;
+import com.tbs.cache.core.expire.ICacheExpiredActuator;
+import com.tbs.common.IStartup;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.slf4j.Logger;
@@ -7,7 +10,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.List;
@@ -19,7 +21,7 @@ import java.util.stream.Collectors;
  *
  * @author tongj
  */
-public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager {
+public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager, IStartup {
 
     private static final Logger log = LoggerFactory.getLogger(AbstractTtlAwareAdaptCacheManager.class);
 
@@ -38,9 +40,14 @@ public abstract class AbstractTtlAwareAdaptCacheManager implements CacheManager 
 
     private List<ICacheListenner> cacheListenners;
 
-    @PostConstruct
-    void init() {
+    @Override
+    public void startUp() throws RuntimeException {
         cacheListenners = cacheListennerMap.values().stream().collect(Collectors.toList());
+        log.info("cache manager use {};",getCacheManager());
+        log.info("cache expired actuator use {};",getExpiredActuator());
+        cacheListenners.forEach((listenner) -> {
+            log.info("cache listenner use {}", listenner);
+        });
     }
 
     /**

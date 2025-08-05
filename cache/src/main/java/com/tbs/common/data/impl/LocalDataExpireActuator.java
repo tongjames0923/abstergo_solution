@@ -1,7 +1,6 @@
 package com.tbs.common.data.impl;
 
-import com.tbs.cache.core.AbstractScheduleExpiredActuator;
-import com.tbs.cache.core.AbstractSpringScheduleExpiredActuator;
+import com.tbs.cache.core.expire.AbstractSpringScheduleExpiredActuator;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.IDataHolderExpireActuator;
 

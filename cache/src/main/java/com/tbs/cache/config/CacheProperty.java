@@ -1,6 +1,6 @@
 package com.tbs.cache.config;
 
-import com.tbs.cache.core.ICacheExpiredActuator;
+import com.tbs.cache.core.expire.ICacheExpiredActuator;
 import com.tbs.cache.core.impl.LocalExpireActuatorCache;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -24,4 +24,9 @@ public class CacheProperty {
      * 缓存管理类实现
      */
     private Class<? extends CacheManager> cacheManagerImplementation = ConcurrentMapCacheManager.class;
+
+    /**
+     * 缓存允许为null值
+     */
+    private boolean allowNullValues = false;
 }
