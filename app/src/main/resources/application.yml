@@ -13,6 +13,7 @@ tbs:
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
     token-holder-impl: com.tbs.redis.holder.RedisDataHolder
+    token-expire-impl: com.tbs.redis.cache.RedisDataHolderExpireActuator
   cache:
     cache-manager-implementation: org.springframework.data.redis.cache.RedisCacheManager
     expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuatorCache
