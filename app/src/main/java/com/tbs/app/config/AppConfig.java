@@ -1,9 +1,9 @@
 package com.tbs.app.config;
 
-import com.tbs.boardcast.dispatcher.IEventDispatcher;
-import com.tbs.boardcast.event.IEvent;
-import com.tbs.boardcast.publisher.IPublisher;
-import com.tbs.boardcast.subscriber.AbstractSubscriber;
+import com.tbs.broadcast.dispatcher.IEventDispatcher;
+import com.tbs.broadcast.event.IEvent;
+import com.tbs.broadcast.publisher.IPublisher;
+import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.cache.core.ICacheListenner;
 import com.tbs.cache.core.manager.holder.DataHolderCacheManager;
 import com.tbs.common.data.IDataHolder;

@@ -18,7 +18,7 @@ tbs:
     cache-manager-implementation: com.tbs.cache.core.manager.holder.DataHolderCacheManager
     expired-actuator: com.tbs.cache.core.impl.LocalExpireActuatorCache
   boardcast:
-    event-bus-type: com.tbs.boardcast.bus.impl.SimpleEventBus
+    event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
   lock:
     lock-provider-type: com.tbs.lock.impls.providers.JdkLockProvider
 # Spring配置
