@@ -11,7 +11,7 @@ import com.tbs.app.service.business.impl.NoEncryptPassword;
 import com.tbs.app.service.business.impl.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.business.impl.SimpleUserRoleRelationServiceImpl;
-import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.expire.IExpiredActuator;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.data.impl.MapDataHolder;

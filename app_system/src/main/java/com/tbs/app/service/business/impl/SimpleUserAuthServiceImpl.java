@@ -7,7 +7,7 @@ import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
-import com.tbs.cache.core.IExpiredActuator;
+import com.tbs.cache.core.expire.IExpiredActuator;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
