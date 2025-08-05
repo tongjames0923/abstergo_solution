@@ -2,8 +2,9 @@ package com.tbs.broadcast.constant;
 
 /**
  * Bean名称常量
+ * @author abstergo
  */
-public class BeanNameConstant {
+public class BroadcastBeanNameConstant {
     /**
      * 默认订阅者上下文ID
      */

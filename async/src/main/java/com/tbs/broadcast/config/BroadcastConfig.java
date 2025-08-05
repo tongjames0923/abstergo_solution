@@ -3,7 +3,7 @@ package com.tbs.broadcast.config;
 import com.tbs.broadcast.bus.IEventBus;
 import com.tbs.broadcast.bus.impl.SimpleEventBus;
 import com.tbs.broadcast.config.property.BroadcastProperty;
-import com.tbs.broadcast.constant.BeanNameConstant;
+import com.tbs.broadcast.constant.BroadcastBeanNameConstant;
 import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.dispatcher.impl.AbstractEventDispatcher;
 import com.tbs.broadcast.publisher.IPublishResult;
@@ -52,7 +52,7 @@ public class BroadcastConfig {
     @ConditionalOnMissingBean(IPublisher.class)
     @ConditionalOnBean(IEventDispatcher.class)
     IPublisher defaultPublisher(IEventDispatcher eventDispatcher) {
-        return new DispatcherImportedPublisher(BeanNameConstant.DEFAULT_PUBLISHER_ID, eventDispatcher);
+        return new DispatcherImportedPublisher(BroadcastBeanNameConstant.DEFAULT_PUBLISHER_ID, eventDispatcher);
     }
 
 }
