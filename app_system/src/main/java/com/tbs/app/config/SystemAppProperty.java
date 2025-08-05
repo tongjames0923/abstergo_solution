@@ -2,16 +2,19 @@ package com.tbs.app.config;
 
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.constraint.impl.SimpleUserValidator;
+import com.tbs.app.expire.LocalDataHolderExpireActuator;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.impl.NoEncryptPassword;
 import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
+import com.tbs.cache.core.IExpiredActuator;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.impl.MapDataHolder;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * @author abstergo
@@ -33,6 +36,11 @@ public class SystemAppProperty {
      * token上下文实现类
      */
     private Class<? extends IDataHolder> tokenHolderImpl = MapDataHolder.class;
+
+    /**
+     *
+     */
+    private Class<? extends IExpiredActuator<IDataHolder>> tokenExpireImpl = LocalDataHolderExpireActuator.class;
 
     /**
      * 主代理实现类

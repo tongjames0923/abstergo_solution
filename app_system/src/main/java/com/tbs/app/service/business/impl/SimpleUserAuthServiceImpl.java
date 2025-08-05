@@ -7,6 +7,7 @@ import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
+import com.tbs.cache.core.IExpiredActuator;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
@@ -17,6 +18,7 @@ import com.tbs.schedule.ISchedule;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.SimpleAuthException;
+import com.tbs.web.security.ITokenModel;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.security.model.SimpleTokenModel;
 import org.springframework.security.core.AuthenticationException;
@@ -25,6 +27,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
+import java.sql.Time;
 import java.time.Duration;
 import java.util.List;
 import java.util.Objects;
@@ -50,8 +53,8 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Resource(name = SystemAppBeanNameConstant.TOKEN_DATA_HOLDER)
     private IDataHolder tokenDataHolder;
 
-    @Resource
-    ISchedule schedule;
+    @Resource(name = SystemAppBeanNameConstant.TOKEN_EXPIRE_ACTUATOR)
+    private IExpiredActuator<IDataHolder> tokenModelExpire;
 
     @Override
     public UserDetails loadUserInfoByUniqueKey(String uniqueKey) {
@@ -87,9 +90,9 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
                 authProperty.getTokenFiledName(), details.getUsername(), null);
         boolean set = tokenDataHolder.set(model.getToken(), details, false);
         AssertUtil.isTrue(!set, () -> new FormattedRuntimeException("Token已存在"));
-        schedule.pin(() -> {
-            tokenDataHolder.remove(model.getToken());
-        }, Duration.ofSeconds(authProperty.getTokenExpireTime()));
+
+        tokenModelExpire.expire(tokenDataHolder, model.getToken(),
+            new Time(System.currentTimeMillis() + Duration.ofSeconds(authProperty.getTokenExpireTime()).toMillis()));
         return model;
 
     }

@@ -1,5 +1,6 @@
 package com.tbs.web.config.property;
 
+import com.tbs.common.data.IDataHolder;
 import com.tbs.web.enums.TokenSource;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.IUserAuthService;
