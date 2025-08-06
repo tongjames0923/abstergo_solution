@@ -28,9 +28,4 @@ public class RoleController extends AbstractCrudController<SystemRole, Long, Com
         return roleService;
     }
 
-
-    @Override
-    public AjaxResult query(@RequestBody CommonSystemRoleQueryCriteria criteria, long pageNum, long pageSize) {
-        return super.query(criteria, pageNum, pageSize);
-    }
 }

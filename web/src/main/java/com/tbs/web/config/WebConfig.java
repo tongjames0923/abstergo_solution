@@ -36,7 +36,7 @@ import javax.annotation.Resource;
 @Configuration
 @EnableWebMvc
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)
+@EnableMethodSecurity(prePostEnabled = true, proxyTargetClass = true)
 public class WebConfig {
 
     /**
