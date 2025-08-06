@@ -1,20 +1,19 @@
 package com.tbs.common.data.impl;
 
 import com.tbs.common.data.IDataHolder;
-import com.tbs.common.data.IMatchKeyFounder;
 import com.tbs.common.error.AssertUtil;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * Map数据存储实现
  *
  * @author abstergo
  */
-public class MapDataHolder implements IDataHolder, IMatchKeyFounder {
+public class MapDataHolder extends AbstractAntStyleMatchKeyFounder implements IDataHolder {
 
     private Map<String, Object> map;
 
@@ -90,11 +89,7 @@ public class MapDataHolder implements IDataHolder, IMatchKeyFounder {
     }
 
     @Override
-    public Collection<Map.Entry<String, Object>> findEntries(String key) {
-        Pattern pattern = Pattern.compile(key);
-        return entries().stream().filter(entry -> {
-            Matcher matcher = pattern.matcher(entry.getKey());
-            return matcher.matches();
-        }).collect(Collectors.toList());
+    protected Collection<Map.Entry<String, Object>> getEntries() {
+        return map.entrySet();
     }
 }
