@@ -13,6 +13,8 @@ import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.EnumUtil;
 import com.tbs.common.util.StrUtil;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
@@ -56,6 +58,7 @@ public class SimpleSystemUserServiceImpl
         return entity;
     }
 
+    @CacheEvict(value = "system_user", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
     @Override
     protected List<SystemUser> updateBy(SystemUser entity) {
         entity.setUpdateTime(new Date());
@@ -95,6 +98,12 @@ public class SimpleSystemUserServiceImpl
     @Override
     public List<SystemUser> queryByUserName(@UserNameValid String username) {
         return getQueryWrapper().query().where().equal(SystemUser::getUsername, username).pour().fetch();
+    }
+
+    @Cacheable(value = "system_user", key = "#id")
+    @Override
+    public SystemUser queryById(Long id) {
+        return super.queryById(id);
     }
 
     @Override

@@ -3,7 +3,6 @@ package com.tbs.cache.core.impl;
 import com.tbs.cache.config.CacheProperty;
 import com.tbs.cache.core.expire.ICacheExpiredActuator;
 import com.tbs.cache.core.manager.AbstractTtlAwareAdaptCacheManager;
-import com.tbs.common.IStartup;
 import com.tbs.common.util.SpringUtil;
 import org.springframework.cache.CacheManager;
 
@@ -14,7 +13,7 @@ import javax.annotation.Resource;
  *
  * @author tongj
  */
-public class PropertyInitTtlAwareAdaptCacheManager extends AbstractTtlAwareAdaptCacheManager implements IStartup {
+public class PropertyInitTtlAwareAdaptCacheManager extends AbstractTtlAwareAdaptCacheManager {
 
     /**
      * 缓存属性
