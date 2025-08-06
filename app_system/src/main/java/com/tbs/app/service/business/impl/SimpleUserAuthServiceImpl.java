@@ -1,14 +1,15 @@
 package com.tbs.app.service.business.impl;
 
-import com.tbs.app.constant.SystemAppBeanNameConstant;
 import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
-import com.tbs.cache.core.expire.IExpiredActuator;
+import com.tbs.common.IStartup;
 import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.IDataHolderExpireActuator;
+import com.tbs.common.data.IDataHolderManager;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;
@@ -34,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * @author abstergo
  */
-public class SimpleUserAuthServiceImpl implements IUserAuthService {
+public class SimpleUserAuthServiceImpl implements IUserAuthService, IStartup {
 
     @Resource
     WebAuthProperty authProperty;
@@ -48,11 +49,21 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Resource
     private IUserRoleRelationService relationService;
 
-    @Resource(name = SystemAppBeanNameConstant.TOKEN_DATA_HOLDER)
-    private IDataHolder tokenDataHolder;
+    @Resource
+    private IDataHolderManager dataHolderManager;
 
-    @Resource(name = SystemAppBeanNameConstant.TOKEN_EXPIRE_ACTUATOR)
-    private IExpiredActuator<IDataHolder> tokenModelExpire;
+    @Resource
+    private IDataHolderExpireActuator tokenModelExpire;
+
+    /**
+     * 获取Token数据源
+     *
+     * @return
+     */
+    private IDataHolder getDataHolder() {
+        return dataHolderManager.getDataHolder(authProperty.getTokenDataSourceName())
+            .orElseThrow(() -> new FormattedRuntimeException("未找到Token数据源"));
+    }
 
     @Override
     public UserDetails loadUserInfoByUniqueKey(String uniqueKey) {
@@ -70,7 +81,7 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Override
     public UserDetails loadUserInfoByToken(com.tbs.web.security.ITokenModel token) {
         AssertUtil.notNull(token == null, () -> new InvalidTokenException("未接收到有效Token"));
-        return (UserDetails)tokenDataHolder.get(token.getToken()).orElse(null);
+        return (UserDetails)getDataHolder().get(token.getToken()).orElse(null);
     }
 
     @Override
@@ -86,10 +97,10 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
         com.tbs.web.security.ITokenModel model =
             SimpleTokenModel.create(UuidUtil.getInstance().getUuidString(), authProperty.getTokenSource(),
                 authProperty.getTokenFiledName(), details.getUsername(), exp);
-        boolean set = tokenDataHolder.set(model.getToken(), details, false);
+        boolean set = getDataHolder().set(model.getToken(), details, false);
         AssertUtil.isTrue(!set, () -> new FormattedRuntimeException("Token已存在"));
 
-        tokenModelExpire.expire(tokenDataHolder, model.getToken(), exp);
+        tokenModelExpire.expire(getDataHolder(), model.getToken(), exp);
         return model;
     }
 
@@ -114,7 +125,17 @@ public class SimpleUserAuthServiceImpl implements IUserAuthService {
     @Override
     public boolean logout(com.tbs.web.security.ITokenModel iTokenModel) {
         AssertUtil.notNull(iTokenModel, () -> new InvalidTokenException("未接收到有效Token"));
-        tokenDataHolder.remove(iTokenModel.getToken());
+        getDataHolder().remove(iTokenModel.getToken());
         return true;
+    }
+
+    @Override
+    public void startUp() throws RuntimeException {
+        try {
+            IDataHolder dataHolder = getDataHolder();
+        } catch (Exception e) {
+            throw new FormattedRuntimeException("未找到Token数据源，请为数据源管理器提供名为{}的数据源",
+                authProperty.getTokenDataSourceName());
+        }
     }
 }
