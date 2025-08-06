@@ -1,6 +1,5 @@
 package com.tbs.web.config.property;
 
-import com.tbs.common.data.IDataHolder;
 import com.tbs.web.enums.TokenSource;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.IUserAuthService;
@@ -54,5 +53,10 @@ public class WebAuthProperty {
      * 忽略token验证的url
      */
     private List<String> tokenIgnoreUrls;
+
+    /**
+     * token数据源名称
+     */
+    private String tokenDataSourceName = "TOKEN";
 
 }
