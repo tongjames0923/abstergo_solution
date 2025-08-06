@@ -3,7 +3,6 @@ package com.tbs.redis.holder;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.IMatchKeyFounder;
 import com.tbs.common.util.CollUtil;
-import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.springframework.data.redis.core.RedisTemplate;
 
@@ -20,9 +19,6 @@ public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
 
     @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     private RedisTemplate<String, Object> redisTemplate;
-
-    @Resource
-    private RedisProperty redisProperty;
 
     @Override
     public boolean set(String key, Object value, boolean force) {

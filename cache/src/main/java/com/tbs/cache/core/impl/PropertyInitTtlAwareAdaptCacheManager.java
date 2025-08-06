@@ -1,8 +1,8 @@
 package com.tbs.cache.core.impl;
 
 import com.tbs.cache.config.CacheProperty;
-import com.tbs.cache.core.manager.AbstractTtlAwareAdaptCacheManager;
 import com.tbs.cache.core.expire.ICacheExpiredActuator;
+import com.tbs.cache.core.manager.AbstractTtlAwareAdaptCacheManager;
 import com.tbs.common.IStartup;
 import com.tbs.common.util.SpringUtil;
 import org.springframework.cache.CacheManager;
@@ -26,11 +26,6 @@ public class PropertyInitTtlAwareAdaptCacheManager extends AbstractTtlAwareAdapt
     private ICacheExpiredActuator expiredActuator;
 
     @Override
-    protected CacheManager getCacheManager() {
-        return cacheManager;
-    }
-
-    @Override
     protected ICacheExpiredActuator getExpiredActuator() {
         return expiredActuator;
     }
@@ -40,5 +35,15 @@ public class PropertyInitTtlAwareAdaptCacheManager extends AbstractTtlAwareAdapt
         cacheManager = SpringUtil.getBean(cacheProperty.getCacheManagerImplementation());
         expiredActuator = SpringUtil.getBean(cacheProperty.getExpiredActuator());
         super.startUp();
+    }
+
+    @Override
+    public CacheManager getOrginal() {
+        return cacheManager;
+    }
+
+    @Override
+    public void setOrginal(CacheManager orginal) {
+        this.cacheManager = orginal;
     }
 }

@@ -2,13 +2,14 @@ package com.tbs.cache.core.manager.holder;
 
 import com.tbs.cache.config.CacheProperty;
 import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.IDataHolderManager;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
 import javax.annotation.Resource;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 缓存管理器
@@ -20,25 +21,23 @@ public class DataHolderCacheManager implements CacheManager {
     @Resource
     CacheProperty property;
 
-    IDataHolder dataHolder;
-    private volatile Set<String> cacheNames;
+    @Resource
+    private IDataHolderManager dataHolderManager;
 
-    /**
-     * @param dataHolder
-     * @param cacheNames
-     */
-    public DataHolderCacheManager(IDataHolder dataHolder, Set<String> cacheNames) {
-        this.dataHolder = dataHolder;
-        this.cacheNames = cacheNames == null ? Collections.emptySet() : cacheNames;
-    }
+    private Map<String, Cache> cacheMap = new HashMap<>(8);
+
 
     @Override
     public Cache getCache(String name) {
-        return new DataHolderCache(property.isAllowNullValues(), dataHolder, name);
+        return cacheMap.computeIfAbsent(name, (k) -> {
+            IDataHolder dataHolder =
+                dataHolderManager.getDataHolder(name).orElseThrow(() -> new RuntimeException("未找到缓存"));
+            return new DataHolderCache(property.isAllowNullValues(), dataHolder, name);
+        });
     }
 
     @Override
     public Collection<String> getCacheNames() {
-        return cacheNames;
+        return cacheMap.keySet();
     }
 }

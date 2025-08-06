@@ -13,19 +13,22 @@ import java.util.Date;
  *
  * @author abstergo
  */
-public class RedisCacheExpireActuatorCache implements ICacheExpiredActuator {
+public class RedisCacheExpireActuator implements ICacheExpiredActuator {
 
     @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
     private RedisTemplate<String, Object> redisTemplate;
 
+    private static final String KEY_VALUE_CONNECTOR = "::";
+
+
     @Override
     public boolean expire(Cache cache, Object key, Date expireTime) {
-        boolean ok = redisTemplate.expireAt(cache.getName() + "::" + key, expireTime);
+        boolean ok = redisTemplate.expireAt(cache.getName() + KEY_VALUE_CONNECTOR + key, expireTime);
         return ok;
     }
 
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
-        return redisTemplate.expireAt(cache.getName() + "::*", expireTime);
+        return redisTemplate.expireAt(cache.getName() + KEY_VALUE_CONNECTOR + "*", expireTime);
     }
 }

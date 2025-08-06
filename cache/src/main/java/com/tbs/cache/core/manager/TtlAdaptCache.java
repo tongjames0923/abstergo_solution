@@ -2,6 +2,7 @@ package com.tbs.cache.core.manager;
 
 import com.tbs.cache.core.ICacheListenner;
 import com.tbs.cache.core.expire.ICacheExpiredActuator;
+import com.tbs.common.data.IFeatureWrapper;
 import com.tbs.common.util.CollUtil;
 import org.springframework.cache.Cache;
 
@@ -18,7 +19,7 @@ import java.util.function.Consumer;
  *
  * @author tongj
  */
-public class TtlAdaptCache implements Cache {
+public class TtlAdaptCache implements Cache, IFeatureWrapper<Cache> {
     private Cache cache;
     private List<ICacheListenner> cacheListennerList;
     private ICacheExpiredActuator expiredActuator;
@@ -121,5 +122,15 @@ public class TtlAdaptCache implements Cache {
     public void clear() {
         listen(cacheListenner -> cacheListenner.onClear(getName()));
         cache.clear();
+    }
+
+    @Override
+    public Cache getOrginal() {
+        return cache;
+    }
+
+    @Override
+    public void setOrginal(Cache orginal) {
+        this.cache = orginal;
     }
 }
