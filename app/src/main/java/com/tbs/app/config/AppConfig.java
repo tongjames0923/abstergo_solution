@@ -6,8 +6,6 @@ import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.cache.core.ICacheListenner;
 import com.tbs.cache.core.manager.holder.DataHolderCacheManager;
-import com.tbs.common.data.IDataHolder;
-import com.tbs.common.data.impl.MapDataHolder;
 import com.tbs.common.error.IErrorThrowEvent;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;
@@ -114,12 +112,7 @@ public class AppConfig {
     }
 
     @Bean
-    IDataHolder cacheDataHolder() {
-        return new MapDataHolder();
-    }
-
-    @Bean
     DataHolderCacheManager dataHolderCacheManager() {
-        return new DataHolderCacheManager(cacheDataHolder(), null);
+        return new DataHolderCacheManager();
     }
 }
