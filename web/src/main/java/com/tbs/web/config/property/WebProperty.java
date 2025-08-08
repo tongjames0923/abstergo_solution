@@ -46,11 +46,6 @@ public class WebProperty {
     private boolean enableLogout = false;
 
     /**
-     * 是否启用方法级安全（如@PreAuthorize）
-     */
-    private boolean enableMethodSecurity = true;
-
-    /**
      * 需要认证才能访问的路径
      */
     private List<String> securedPaths = List.of("/api/**");
@@ -59,5 +54,5 @@ public class WebProperty {
      * 允许所有用户访问的路径
      */
     private List<String> permitAllPaths = List.of("/", "/login", "/public/**");
-    
+
 }

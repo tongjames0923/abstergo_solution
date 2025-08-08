@@ -3,6 +3,7 @@ package com.tbs.web.security.impl
 import com.tbs.common.error.AssertUtil
 import com.tbs.web.exception.NotFoundTokenException
 import com.tbs.web.security.ITokenAuthentication
+import com.tbs.web.security.ITokenManager
 import com.tbs.web.security.IUserAuthService
 import org.springframework.context.annotation.Lazy
 import org.springframework.security.core.Authentication
@@ -15,6 +16,10 @@ class TokenAuthenticationProvider : org.springframework.security.authentication.
     @Resource
     private lateinit var userAuthService: IUserAuthService
 
+    @Lazy
+    @Resource
+    private lateinit var tokenManager: ITokenManager
+
     @Throws(AuthenticationException::class)
     public override fun authenticate(authentication: Authentication?): Authentication {
         AssertUtil.notNull(authentication, "未获取到有效的Authentication");
@@ -24,7 +29,7 @@ class TokenAuthenticationProvider : org.springframework.security.authentication.
             Supplier { tokenAuthentication.getAuthException() })
         AssertUtil.isTrue(!tokenAuthentication.hasToken(), Supplier { NotFoundTokenException("未获取到有效的Token") })
         userAuthService.authToken(tokenAuthentication.getTokenModel())
-        val principal = userAuthService.loadUserInfoByToken(tokenAuthentication.getTokenModel())
+        val principal = tokenManager.loadUserInfoByToken(tokenAuthentication.getTokenModel())
         return TokenAuthentication.createFinal(tokenAuthentication.getTokenModel(), principal)
     }
 

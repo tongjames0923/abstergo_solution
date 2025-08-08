@@ -45,11 +45,6 @@ public class WebConfig {
     @Resource
     private WebProperty webProperty;
 
-    /**
-     * 认证相关配置属性 用于获取认证启用状态、登录路径等认证相关参数
-     */
-    @Resource
-    private WebAuthProperty webAuthProperty;
 
     /**
      * 安全配置

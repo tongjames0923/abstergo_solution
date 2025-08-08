@@ -9,21 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
  * @author abstergo
  */
 public interface IUserAuthService {
-    /**
-     * 通过唯一标识获取用户信息
-     *
-     * @param uniqueKey
-     * @return
-     */
-    UserDetails loadUserInfoByUniqueKey(String uniqueKey);
-
-    /**
-     * 通过token获取用户信息
-     *
-     * @param token
-     * @return
-     */
-    UserDetails loadUserInfoByToken(ITokenModel token);
 
     /**
      * 用户登陆
