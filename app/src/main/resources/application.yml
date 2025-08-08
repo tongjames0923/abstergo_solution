@@ -7,6 +7,7 @@ tbs:
     auth:
       enable: true
       user-auth-service-impl: com.tbs.app.service.business.impl.SimpleUserAuthServiceImpl
+      token-expire-time: 900
     enable-cors: true
   swagger:
     base-package: com.tbs.app.controller
@@ -33,6 +34,9 @@ spring:
     basename: i18n/messages
   profiles:
     active: druid
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
   redis:
     password: '123456'
     host: localhost

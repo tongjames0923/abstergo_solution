@@ -1,8 +1,8 @@
 # 数据源配置
 spring:
-    jpa:
-      hibernate:
-        ddl-auto: update
+#    jpa:
+#      hibernate:
+#        ddl-auto: update
     datasource:
         type: com.alibaba.druid.pool.DruidDataSource
         password: '!Ty1997923'
@@ -35,9 +35,6 @@ spring:
             enabled: true
             url-pattern: /*
             exclusions: "*.js,*.gif,*.jpg,*.css,/druid/*"
-    jackson:
-        date-format: yyyy-MM-dd HH:mm:ss
-        time-zone: GMT+8
 
 mybatis:
     configuration:

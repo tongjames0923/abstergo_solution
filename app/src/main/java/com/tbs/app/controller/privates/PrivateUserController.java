@@ -1,7 +1,10 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.constant.CommonConstant;
+import com.tbs.app.pojo.entity.SystemRole;
 import com.tbs.app.pojo.entity.SystemUser;
 import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
@@ -15,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @author tongj
@@ -25,6 +29,9 @@ import java.util.Optional;
 public class PrivateUserController extends BaseController {
     @Resource
     private IUserAuthService userAuthService;
+
+    @Resource
+    private IUserRoleRelationService relationService;
 
     @Resource
     private ISystemUserService userService;
@@ -44,6 +51,9 @@ public class PrivateUserController extends BaseController {
             AuthUtil.getInstance().getCurrentUser().getUsername()));
         userInfoVO.setNickName(user.get().getNickName());
         userInfoVO.setAvatar(user.get().getAvatar());
+        userInfoVO.setAvaliableRoles(relationService.queryUserRoles(user.get().getId()).stream()
+            .filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag())).map(SystemRole::getRole)
+            .collect(Collectors.toList()));
         return userInfoVO;
     }
 }
