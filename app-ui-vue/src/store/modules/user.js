@@ -81,12 +81,10 @@ const actions = {
   },
 
   // remove token
-  resetToken({commit}) {
-    return new Promise(resolve => {
-      removeToken() // must remove  token  first
-      commit('RESET_STATE')
-      resolve()
-    })
+  async resetToken({commit}) {
+    removeToken() // must remove  token  first
+    commit('RESET_STATE')
+    resolve()
   }
 }
 

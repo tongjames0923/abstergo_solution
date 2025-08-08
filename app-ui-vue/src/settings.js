@@ -31,5 +31,10 @@ module.exports = {
    * @type {number}
    * 成功的code
    */
-  successCode: 200
+  successCode: 200,
+  /**
+   * @type {string}
+   * token存在cookie中的 key
+   */
+  tokenCookieKey: 'SYSTEM_TOKEN'
 }
