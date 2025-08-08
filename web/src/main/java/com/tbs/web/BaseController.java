@@ -1,20 +1,10 @@
 package com.tbs.web;
 
-import com.tbs.common.error.AssertUtil;
-import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.web.security.ITokenAuthentication;
-import com.tbs.web.security.ITokenModel;
-import com.tbs.web.security.impl.TokenAuthentication;
-import com.tbs.web.security.model.SimpleTokenModel;
 import com.tbs.web.trace.core.TraceObject;
 import com.tbs.web.uitl.AjaxUtil;
 import lombok.Getter;
-import lombok.val;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 

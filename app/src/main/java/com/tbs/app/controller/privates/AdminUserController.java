@@ -12,6 +12,11 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
+/**
+ * 管理员用户管理
+ *
+ * @author abstergo
+ */
 @RestController
 @RequestMapping("/private/admin/user")
 @PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_NAME + "')")
@@ -26,29 +31,25 @@ public class AdminUserController extends AbstractCrudController<SystemUser, Long
 
     @Override
     @GetMapping("get/{id}")
-    @ResponseBody
     public AjaxResult get(@PathVariable Long id) {
         return super.get(id);
     }
 
     @Override
     @PostMapping("save")
-    @ResponseBody
     public AjaxResult save(@RequestBody SystemUser entity) {
         return super.save(entity);
     }
 
     @Override
     @PostMapping("delete/{id}")
-    @ResponseBody
     public AjaxResult delete(@PathVariable Long id) {
         return super.delete(id);
     }
 
     @Override
     @PostMapping("query")
-    @ResponseBody
-    public AjaxResult query(@RequestBody CommonSystemUserQueryCriteria criteria, long pageNum, long pageSize) {
+    public AjaxResult query(@RequestBody CommonSystemUserQueryCriteria criteria, Long pageNum, Long pageSize) {
         return super.query(criteria, pageNum, pageSize);
     }
 }

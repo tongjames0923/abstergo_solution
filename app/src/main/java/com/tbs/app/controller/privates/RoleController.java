@@ -30,29 +30,25 @@ public class RoleController extends AbstractCrudController<SystemRole, Long, Com
 
     @Override
     @GetMapping("get/{id}")
-    @ResponseBody
     public AjaxResult get(@PathVariable Long id) {
         return super.get(id);
     }
 
     @Override
     @PostMapping("save")
-    @ResponseBody
     public AjaxResult save(@RequestBody SystemRole entity) {
         return super.save(entity);
     }
 
     @Override
     @PostMapping("delete/{id}")
-    @ResponseBody
     public AjaxResult delete(@PathVariable Long id) {
         return super.delete(id);
     }
 
     @Override
     @PostMapping("query")
-    @ResponseBody
-    public AjaxResult query(@RequestBody CommonSystemRoleQueryCriteria criteria, long pageNum, long pageSize) {
+    public AjaxResult query(@RequestBody CommonSystemRoleQueryCriteria criteria, Long pageNum, Long pageSize) {
         return super.query(criteria, pageNum, pageSize);
     }
 
