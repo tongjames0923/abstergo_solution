@@ -26,7 +26,7 @@ module.exports = {
    * @type {array}
    * 未登录的错误码
    */
-  noLoginCode: [401],
+  noLoginCode: [405],
   /**
    * @type {number}
    * 成功的code
