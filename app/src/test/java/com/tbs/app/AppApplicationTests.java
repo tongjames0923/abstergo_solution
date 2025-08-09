@@ -7,13 +7,16 @@ import com.tbs.broadcast.enums.HandleMode;
 import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.framework.DelegateUtil;
+import com.tbs.schedule.impl.TimingWheelSchedule;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import javax.annotation.Resource;
+import java.time.Duration;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 
 @SpringBootTest(classes = AppApplication.class)
@@ -62,4 +65,19 @@ class AppApplicationTests {
         logger.info("page init finish");
     }
 
+    @Resource
+    private TimingWheelSchedule timingWheelSchedule;
+
+    @Test
+    void timingWheelTest() throws InterruptedException {
+        CountDownLatch latch = new CountDownLatch(1);
+
+        timingWheelSchedule.pin(() -> {
+            logger.info("task run");
+            latch.countDown();
+        }, Duration.ofMillis(2400));
+        logger.info("start timing wheel test");
+        latch.await();
+        logger.info("timing wheel test finish");
+    }
 }

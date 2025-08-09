@@ -9,6 +9,10 @@ import com.tbs.broadcast.subscriber.impl.SimpleUseSubscriber;
 import com.tbs.cache.core.ICacheListenner;
 import com.tbs.cache.core.manager.holder.DataHolderCacheManager;
 import com.tbs.common.error.IErrorThrowEvent;
+import com.tbs.schedule.ISchedule;
+import com.tbs.schedule.IScheduleExecuteErrorHandle;
+import com.tbs.schedule.IScheduleTask;
+import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +22,7 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author tongj
@@ -111,5 +116,17 @@ public class AppConfig {
     @Bean
     DataHolderCacheManager dataHolderCacheManager() {
         return new DataHolderCacheManager();
+    }
+
+    private static final Logger timingWheelScheduleLogger = LoggerFactory.getLogger(TimingWheelSchedule.class);
+
+    @Bean
+    TimingWheelSchedule timingWheelSchedule() {
+        return new TimingWheelSchedule(new IScheduleExecuteErrorHandle() {
+            @Override
+            public void handle(IScheduleTask task, Throwable throwable, ISchedule schedule) {
+                timingWheelScheduleLogger.error("处理任务时产生错误", throwable);
+            }
+        }, 500L, TimeUnit.MILLISECONDS, 100L, 10, TimeUnit.MILLISECONDS);
     }
 }
