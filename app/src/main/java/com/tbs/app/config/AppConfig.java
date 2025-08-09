@@ -127,6 +127,6 @@ public class AppConfig {
             public void handle(IScheduleTask task, Throwable throwable, ISchedule schedule) {
                 timingWheelScheduleLogger.error("处理任务时产生错误", throwable);
             }
-        }, 500L, TimeUnit.MILLISECONDS, 100L, 10, TimeUnit.MILLISECONDS);
+        }, 5L, TimeUnit.SECONDS, 1L, 60 * 5, TimeUnit.SECONDS);
     }
 }

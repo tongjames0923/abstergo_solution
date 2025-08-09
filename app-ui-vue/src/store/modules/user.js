@@ -84,7 +84,6 @@ const actions = {
   async resetToken({commit}) {
     removeToken() // must remove  token  first
     commit('RESET_STATE')
-    resolve()
   }
 }
 

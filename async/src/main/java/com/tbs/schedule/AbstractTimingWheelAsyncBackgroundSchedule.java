@@ -92,13 +92,13 @@ public abstract class AbstractTimingWheelAsyncBackgroundSchedule<TASK extends IS
     protected Collection<TASK> pollTask(long t, TimeUnit unit) {
         Collection<TASK> result = new LinkedList<>();
         boolean acq = false;
-        log.debug("poll task Begin Wait");
+        log.trace("poll task Begin Wait");
         try {
             acq = semaphore.tryAcquire(t, unit);
         } catch (InterruptedException e) {
             log.warn("poll task error", e);
         }
-        log.debug("poll task End Wait {}", acq);
+        log.trace("poll task End Wait {}", acq);
         LockUtil.getInstance().lockThen(this, () -> {
             //处理时间轮
             long currentTime = System.currentTimeMillis();

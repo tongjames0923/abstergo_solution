@@ -10,6 +10,7 @@ import java.util.concurrent.TimeUnit;
 
 /**
  * 时间轮定时器
+ * @author tongj
  */
 public class TimingWheelSchedule extends AbstractTimingWheelAsyncBackgroundSchedule {
     /**

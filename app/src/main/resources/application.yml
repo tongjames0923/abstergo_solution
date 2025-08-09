@@ -13,7 +13,7 @@ tbs:
     base-package: com.tbs.app.controller
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
-    expire-actuator-class: com.tbs.redis.cache.RedisDataHolderExpireActuator
+    expire-actuator-class: com.tbs.common.data.impl.LocalDataExpireActuator
   cache:
     cache-manager-implementation: com.tbs.cache.core.manager.holder.DataHolderCacheManager
     expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuator
@@ -44,4 +44,4 @@ spring:
     timeout: 3000
 logging:
   level:
-    com.tbs.schedule: trace
+    com.tbs.schedule: debug
