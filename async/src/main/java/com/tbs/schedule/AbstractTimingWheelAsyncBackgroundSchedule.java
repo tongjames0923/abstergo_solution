@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
@@ -76,6 +77,7 @@ public abstract class AbstractTimingWheelAsyncBackgroundSchedule<TASK extends IS
             TimingWheelTask<TASK> wheelTask = new TimingWheelTask<>(task, round);
             long tick = (currentTick + (delayMs / tickDuration)) % wheelSize;
             this.wheel[Math.toIntExact(tick)].add(wheelTask);
+            log.debug("任务添加成功。槽位{} ,轮数:{} ,基准时间 {}", tick, round, new Date(beginTime));
         });
     }
 
