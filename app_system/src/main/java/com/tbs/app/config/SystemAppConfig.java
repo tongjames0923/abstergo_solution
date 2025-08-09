@@ -1,5 +1,6 @@
 package com.tbs.app.config;
 
+import com.tbs.app.aop.SystemOperAop;
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.constraint.impl.SimpleUserValidator;
 import com.tbs.app.service.business.IPasswordEncrypt;
@@ -13,6 +14,7 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.web.security.ITokenManager;
 import com.tbs.web.security.IUserInfoService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 
 import javax.annotation.Resource;
@@ -72,5 +74,12 @@ public class SystemAppConfig {
     @ConditionalOnMissingBean(IUserRoleRelationService.class)
     public IUserRoleRelationService userRoleRelationService() {
         return new SimpleUserRoleRelationServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.system", name = "enable-operate-log", havingValue = "true",
+        matchIfMissing = true)
+    SystemOperAop systemOperAop() {
+        return new SystemOperAop();
     }
 }

@@ -42,4 +42,14 @@ public class SystemAppProperty {
      * 密码加密实现类
      */
     private Class<? extends IPasswordEncrypt> passwordEncryptImpl = NoEncryptPassword.class;
+
+    /**
+     * 是否启用操作日志
+     */
+    private boolean enableOperateLog = false;
+
+    /**
+     * 是否异步保存操作日志
+     */
+    private boolean isLogAsync = true;
 }
