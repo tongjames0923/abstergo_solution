@@ -14,7 +14,7 @@ import javax.annotation.Resource;
  * @author tongj
  */
 @Getter
-public class BaseController {
+public abstract class BaseController {
 
     /**
      * -- GETTER -- 获取当前用户的TraceObject
@@ -25,6 +25,12 @@ public class BaseController {
     @Resource
     private TraceObject traceObject;
 
+    /**
+     * 获取当前控制器的业务名称
+     *
+     * @return
+     */
+    public abstract String getBusinessName();
 
     /**
      * 默认执行的操作成功返回值
