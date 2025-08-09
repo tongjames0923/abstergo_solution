@@ -20,7 +20,7 @@ import java.util.Date;
         @Index(name = "idx_time", columnList = "create_time,update_time")})
 @Entity
 @Data
-public class UserRoleRelation implements IBaseEntity<Long> {
+public class UserRoleRelationEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
     @javax.persistence.Id
     @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)

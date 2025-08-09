@@ -18,7 +18,7 @@ import java.util.List;
     @Index(name = "idx_time", columnList = "create_time,update_time")})
 @Entity
 @Getter
-public class SystemUser implements IBaseEntity<Long> {
+public class SystemUserEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
     @Setter
     @Id
@@ -70,29 +70,29 @@ public class SystemUser implements IBaseEntity<Long> {
     @Setter
     private Integer flag;
     @Transient
-    private List<SystemRole> roles;
+    private List<SystemRoleEntity> roles;
 
-    public SystemUser setUsername(String username) {
+    public SystemUserEntity setUsername(String username) {
         this.username = username;
         return this;
     }
 
-    public SystemUser setPassword(String password) {
+    public SystemUserEntity setPassword(String password) {
         this.password = password;
         return this;
     }
 
-    public SystemUser setNickName(String nickname) {
+    public SystemUserEntity setNickName(String nickname) {
         this.nickName = nickname;
         return this;
     }
 
-    public SystemUser setAvatar(String avatar) {
+    public SystemUserEntity setAvatar(String avatar) {
         this.avatar = avatar;
         return this;
     }
 
-    public SystemUser setRemark(String remark) {
+    public SystemUserEntity setRemark(String remark) {
         this.remark = remark;
         return this;
     }

@@ -2,7 +2,7 @@ package com.tbs.app.service.business.impl;
 
 import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.mapper.SystemRoleMapper;
-import com.tbs.app.pojo.entity.SystemRole;
+import com.tbs.app.pojo.entity.SystemRoleEntity;
 import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.cache.annotation.ExpireOn;
@@ -19,7 +19,7 @@ import java.util.concurrent.TimeUnit;
  * @author abstergo
  */
 public class SimpleSystemRoleServiceImpl
-    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRole, Long, SystemRoleMapper>
+    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRoleEntity, Long, SystemRoleMapper>
     implements ISystemRoleService {
 
     @Resource
@@ -31,8 +31,8 @@ public class SimpleSystemRoleServiceImpl
     }
 
     @Override
-    protected SystemRole newEntity() {
-        return new SystemRole();
+    protected SystemRoleEntity newEntity() {
+        return new SystemRoleEntity();
     }
 
     @Override
@@ -41,7 +41,7 @@ public class SimpleSystemRoleServiceImpl
     }
 
     @Override
-    protected SystemRole insertNew(SystemRole entity) {
+    protected SystemRoleEntity insertNew(SystemRoleEntity entity) {
         entity.setFlag(CommonConstant.FLAG_ON);
         entity.setCreateTime(new java.util.Date());
         getMapper().insert(entity);
@@ -51,14 +51,14 @@ public class SimpleSystemRoleServiceImpl
     @CacheEvict(cacheNames = "system_role", key = "#entity.role",
         condition = "#entity!=null&&#entity.role!=null&&#entity.role.length()>0")
     @Override
-    protected List<SystemRole> updateBy(SystemRole entity) {
+    protected List<SystemRoleEntity> updateBy(SystemRoleEntity entity) {
         entity.setUpdateTime(new java.util.Date());
         getMapper().updateByPrimaryKey(entity);
         return List.of(entity);
     }
 
     @Override
-    protected SystemRole compareAndUpdateValue(SystemRole newOne, SystemRole oldOne) {
+    protected SystemRoleEntity compareAndUpdateValue(SystemRoleEntity newOne, SystemRoleEntity oldOne) {
         if (newOne.getFlag() != null) {
             if (newOne.getFlag().equals(CommonConstant.FLAG_OFF) || newOne.getFlag().equals(CommonConstant.FLAG_ON)) {
                 oldOne.setFlag(newOne.getFlag());
@@ -76,10 +76,10 @@ public class SimpleSystemRoleServiceImpl
     @Cacheable(cacheNames = "system_role", key = "#roleName")
     @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
     @Override
-    public SystemRole getRoleByName(@NotNull String roleName) {
+    public SystemRoleEntity getRoleByName(@NotNull String roleName) {
         if (StrUtil.isEmpty(roleName)) {
             return null;
         }
-        return getQueryWrapper().query().where().equal(SystemRole::getRole, roleName).pour().fetchOne();
+        return getQueryWrapper().query().where().equal(SystemRoleEntity::getRole, roleName).pour().fetchOne();
     }
 }

@@ -1,8 +1,8 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.constant.CommonConstant;
-import com.tbs.app.pojo.entity.SystemRole;
-import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.pojo.entity.SystemRoleEntity;
+import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.app.vo.UserInfoVO;
@@ -45,14 +45,14 @@ public class PrivateUserController extends BaseController {
     public UserInfoVO info() {
         UserInfoVO userInfoVO = new UserInfoVO();
         userInfoVO.setUserName(AuthUtil.getInstance().getCurrentUser().getUsername());
-        Optional<SystemUser> user =
+        Optional<SystemUserEntity> user =
             userService.queryByUserName(AuthUtil.getInstance().getCurrentUser().getUsername()).stream().findFirst();
         AssertUtil.isTrue(!user.isPresent(), () -> new FormattedRuntimeException("用户{} 不存在",
             AuthUtil.getInstance().getCurrentUser().getUsername()));
         userInfoVO.setNickName(user.get().getNickName());
         userInfoVO.setAvatar(user.get().getAvatar());
         userInfoVO.setAvaliableRoles(relationService.queryUserRoles(user.get().getId()).stream()
-            .filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag())).map(SystemRole::getRole)
+            .filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag())).map(SystemRoleEntity::getRole)
             .collect(Collectors.toList()));
         return userInfoVO;
     }

@@ -1,8 +1,8 @@
 package com.tbs.app.controller.publics;
 
 import com.tbs.app.pojo.criteria.CommonSystemUserQueryCriteria;
-import com.tbs.app.pojo.entity.SystemRole;
-import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.pojo.entity.SystemRoleEntity;
+import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.service.TestService;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
@@ -42,8 +42,8 @@ public class PublicTestController extends BaseController {
     private ISystemUserService userService;
 
     @PostMapping("saveUser")
-    public AjaxResult createUser(@RequestBody SystemUser systemUser) {
-        return AjaxUtil.getInstance().success("保存成功", userService.save(systemUser));
+    public AjaxResult createUser(@RequestBody SystemUserEntity systemUserEntity) {
+        return AjaxUtil.getInstance().success("保存成功", userService.save(systemUserEntity));
     }
 
     @PostMapping("queryUser")
@@ -56,7 +56,7 @@ public class PublicTestController extends BaseController {
     private ISystemRoleService roleService;
 
     @PostMapping("saveRole")
-    public AjaxResult createRole(@RequestBody SystemRole role) {
+    public AjaxResult createRole(@RequestBody SystemRoleEntity role) {
         return AjaxUtil.getInstance().success("保存成功", roleService.save(role));
     }
 

@@ -1,6 +1,6 @@
 package com.tbs.app.pojo.criteria;
 
-import com.tbs.app.pojo.entity.SystemRole;
+import com.tbs.app.pojo.entity.SystemRoleEntity;
 import com.tbs.app.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
@@ -16,7 +16,7 @@ import lombok.Data;
  * @author abstergo
  */
 @Data
-public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<SystemRole> {
+public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<SystemRoleEntity> {
     @QueryMapping(value = "id")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private Long idEquals;

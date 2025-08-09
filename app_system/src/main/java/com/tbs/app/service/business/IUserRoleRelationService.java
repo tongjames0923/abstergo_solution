@@ -1,6 +1,6 @@
 package com.tbs.app.service.business;
 
-import com.tbs.app.pojo.entity.SystemRole;
+import com.tbs.app.pojo.entity.SystemRoleEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -34,5 +34,5 @@ public interface IUserRoleRelationService {
      * @param userId
      * @return
      */
-    List<SystemRole> queryUserRoles(@NotNull Long userId);
+    List<SystemRoleEntity> queryUserRoles(@NotNull Long userId);
 }

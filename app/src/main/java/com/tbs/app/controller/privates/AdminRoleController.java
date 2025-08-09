@@ -2,7 +2,7 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.enums.SystemUserStatusEnum;
-import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
@@ -44,7 +44,7 @@ public class AdminRoleController extends BaseController {
     @PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_NAME + "')")
     @GetMapping("/account/activite/{userId}")
     public AjaxResult activiteAccount(@PathVariable Long userId) {
-        SystemUser user = userService.queryById(userId);
+        SystemUserEntity user = userService.queryById(userId);
         AssertUtil.notNull(user, "用户不存在");
         user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
         userService.save(user);
@@ -54,7 +54,7 @@ public class AdminRoleController extends BaseController {
     @PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_NAME + "')")
     @GetMapping("/account/disable/{userId}")
     public AjaxResult disableAccount(@PathVariable Long userId) {
-        SystemUser user = userService.queryById(userId);
+        SystemUserEntity user = userService.queryById(userId);
         AssertUtil.notNull(user, "用户不存在");
         user.setFlag(SystemUserStatusEnum.DISABLED.getCode());
         userService.save(user);

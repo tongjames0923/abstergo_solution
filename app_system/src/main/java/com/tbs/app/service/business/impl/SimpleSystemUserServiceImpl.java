@@ -5,7 +5,7 @@ import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.mapper.SystemUserMapper;
-import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
@@ -27,7 +27,7 @@ import java.util.List;
  * @author abstergo
  */
 public class SimpleSystemUserServiceImpl
-    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUser, Long, SystemUserMapper>
+    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUserEntity, Long, SystemUserMapper>
     implements ISystemUserService {
 
     private static SimpleSystemUserServiceImpl instance;
@@ -46,7 +46,7 @@ public class SimpleSystemUserServiceImpl
     }
 
     @Override
-    protected SystemUser insertNew(SystemUser entity) {
+    protected SystemUserEntity insertNew(SystemUserEntity entity) {
         AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUsername()), "用户名格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickName()), "昵称格式错误");
@@ -60,49 +60,50 @@ public class SimpleSystemUserServiceImpl
 
     @CacheEvict(value = "system_user", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
     @Override
-    protected List<SystemUser> updateBy(SystemUser entity) {
+    protected List<SystemUserEntity> updateBy(SystemUserEntity entity) {
         entity.setUpdateTime(new Date());
         getMapper().updateByPrimaryKey(entity);
         return List.of(entity);
     }
 
     @Override
-    protected SystemUser compareAndUpdateValue(SystemUser systemUser, SystemUser oldSystemUser) {
-        if (StrUtil.isNotEmpty(systemUser.getUsername())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUser.getUsername()), "用户名格式错误");
-            oldSystemUser.setUsername(systemUser.getUsername());
+    protected SystemUserEntity compareAndUpdateValue(
+        SystemUserEntity systemUserEntity, SystemUserEntity oldSystemUserEntity) {
+        if (StrUtil.isNotEmpty(systemUserEntity.getUsername())) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUsername()), "用户名格式错误");
+            oldSystemUserEntity.setUsername(systemUserEntity.getUsername());
         }
-        if (StrUtil.isNotEmpty(systemUser.getPassword())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUser.getPassword()), "密码格式错误");
-            oldSystemUser.setPassword(encrypt.encrypt(systemUser.getPassword()));
+        if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()), "密码格式错误");
+            oldSystemUserEntity.setPassword(encrypt.encrypt(systemUserEntity.getPassword()));
         }
-        if (StrUtil.isNotEmpty(systemUser.getNickName())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUser.getNickName()), "昵称格式错误");
-            oldSystemUser.setNickName(systemUser.getNickName());
+        if (StrUtil.isNotEmpty(systemUserEntity.getNickName())) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUserEntity.getNickName()), "昵称格式错误");
+            oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
         }
-        if (systemUser.getFlag() != null) {
-            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUser.getFlag()),
-                "用户状态值异常，不存在{}值", systemUser.getFlag());
-            oldSystemUser.setFlag(systemUser.getFlag());
+        if (systemUserEntity.getFlag() != null) {
+            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()),
+                "用户状态值异常，不存在{}值", systemUserEntity.getFlag());
+            oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
         }
-        if (StrUtil.isNotEmpty(systemUser.getAvatar())) {
-            oldSystemUser.setAvatar(systemUser.getAvatar());
+        if (StrUtil.isNotEmpty(systemUserEntity.getAvatar())) {
+            oldSystemUserEntity.setAvatar(systemUserEntity.getAvatar());
         }
-        if (StrUtil.isNotEmpty(systemUser.getRemark())) {
-            oldSystemUser.setRemark(systemUser.getRemark());
+        if (StrUtil.isNotEmpty(systemUserEntity.getRemark())) {
+            oldSystemUserEntity.setRemark(systemUserEntity.getRemark());
         }
-        oldSystemUser.setUpdateTime(new Date());
-        return oldSystemUser;
+        oldSystemUserEntity.setUpdateTime(new Date());
+        return oldSystemUserEntity;
     }
 
     @Override
-    public List<SystemUser> queryByUserName(@UserNameValid String username) {
-        return getQueryWrapper().query().where().equal(SystemUser::getUsername, username).pour().fetch();
+    public List<SystemUserEntity> queryByUserName(@UserNameValid String username) {
+        return getQueryWrapper().query().where().equal(SystemUserEntity::getUsername, username).pour().fetch();
     }
 
     @Cacheable(value = "system_user", key = "#id")
     @Override
-    public SystemUser queryById(Long id) {
+    public SystemUserEntity queryById(Long id) {
         return super.queryById(id);
     }
 
@@ -112,8 +113,8 @@ public class SimpleSystemUserServiceImpl
     }
 
     @Override
-    protected SystemUser newEntity() {
-        return new SystemUser();
+    protected SystemUserEntity newEntity() {
+        return new SystemUserEntity();
     }
 
     @Override

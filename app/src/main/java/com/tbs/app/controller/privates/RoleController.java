@@ -3,7 +3,7 @@ package com.tbs.app.controller.privates;
 import com.tbs.app.AbstractCrudController;
 import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.pojo.criteria.CommonSystemRoleQueryCriteria;
-import com.tbs.app.pojo.entity.SystemRole;
+import com.tbs.app.pojo.entity.SystemRoleEntity;
 import com.tbs.app.service.IServiceTemplate;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.web.result.AjaxResult;
@@ -18,13 +18,13 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("private/admin/role")
 @PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_NAME + "')")
-public class RoleController extends AbstractCrudController<SystemRole, Long, CommonSystemRoleQueryCriteria> {
+public class RoleController extends AbstractCrudController<SystemRoleEntity, Long, CommonSystemRoleQueryCriteria> {
 
     @Resource
     private ISystemRoleService roleService;
 
     @Override
-    public IServiceTemplate<SystemRole, Long> getService() {
+    public IServiceTemplate<SystemRoleEntity, Long> getService() {
         return roleService;
     }
 
@@ -36,7 +36,7 @@ public class RoleController extends AbstractCrudController<SystemRole, Long, Com
 
     @Override
     @PostMapping("save")
-    public AjaxResult save(@RequestBody SystemRole entity) {
+    public AjaxResult save(@RequestBody SystemRoleEntity entity) {
         return super.save(entity);
     }
 

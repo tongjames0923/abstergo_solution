@@ -2,9 +2,9 @@ package com.tbs.app.service.business.impl;
 
 import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.mapper.UserRoleRelationMapper;
-import com.tbs.app.pojo.entity.SystemRole;
-import com.tbs.app.pojo.entity.SystemUser;
-import com.tbs.app.pojo.entity.UserRoleRelation;
+import com.tbs.app.pojo.entity.SystemRoleEntity;
+import com.tbs.app.pojo.entity.SystemUserEntity;
+import com.tbs.app.pojo.entity.UserRoleRelationEntity;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
@@ -39,14 +39,14 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     private ISystemRoleService systemRoleService;
 
     @Resource
-    private IEntityQueryWrapper<UserRoleRelation> wrapper;
+    private IEntityQueryWrapper<UserRoleRelationEntity> wrapper;
 
     @Resource
     private UserRoleRelationMapper userRoleRelationMapper;
 
     @PostConstruct
     void init() {
-        wrapper.makeQueryable(new UserRoleRelation());
+        wrapper.makeQueryable(new UserRoleRelationEntity());
     }
 
     @Override
@@ -57,15 +57,15 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 
     private void setRole(@NotNull Long userId, @NotNull String role, @NotNull Integer flag) {
         AssertUtil.hasText(role, "角色不能为空");
-        SystemUser user = systemUserService.queryById(userId);
+        SystemUserEntity user = systemUserService.queryById(userId);
         AssertUtil.notNull(user, "用户不存在");
-        SystemRole roleEntity = systemRoleService.getRoleByName(role);
+        SystemRoleEntity roleEntity = systemRoleService.getRoleByName(role);
         AssertUtil.notNull(roleEntity, "角色不存在");
         AssertUtil.isTrue(!CommonConstant.FLAG_ON.equals(roleEntity.getFlag()), "角色 {} 已失效", role);
-        UserRoleRelation relation = wrapper.query().where().equal(UserRoleRelation::getUserId, userId)
-            .equal(UserRoleRelation::getRoleId, roleEntity.getId()).pour().fetchOne();
+        UserRoleRelationEntity relation = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
+            .equal(UserRoleRelationEntity::getRoleId, roleEntity.getId()).pour().fetchOne();
         if (relation == null) {
-            relation = new UserRoleRelation();
+            relation = new UserRoleRelationEntity();
             relation.setUserId(userId);
             relation.setRoleId(roleEntity.getId());
             relation.setFlag(flag);
@@ -87,9 +87,9 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     @Cacheable(cacheNames = "user_role", key = "#userId")
     @ExpireOn(cacheNames = "user_role", value = 15, timeUnit = TimeUnit.MINUTES)
     @Override
-    public List<SystemRole> queryUserRoles(@NotNull Long userId) {
-        List<UserRoleRelation> relations = wrapper.query().where().equal(UserRoleRelation::getUserId, userId)
-            .equal(UserRoleRelation::getFlag, CommonConstant.FLAG_ON).pour().fetch();
+    public List<SystemRoleEntity> queryUserRoles(@NotNull Long userId) {
+        List<UserRoleRelationEntity> relations = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
+            .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetch();
         if (CollUtil.isEmpty(relations)) {
             return Arrays.asList();
         }

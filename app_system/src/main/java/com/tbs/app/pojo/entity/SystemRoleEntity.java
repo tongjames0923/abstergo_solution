@@ -17,7 +17,7 @@ import java.util.Date;
         @Index(name = "idx_time", columnList = "create_time,update_time")})
 @Getter
 @Setter
-public class SystemRole implements IBaseEntity<Long> {
+public class SystemRoleEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
 
     /**

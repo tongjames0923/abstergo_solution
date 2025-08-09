@@ -1,7 +1,7 @@
 package com.tbs.app.pojo.criteria;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tbs.app.pojo.entity.SystemUser;
+import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
@@ -17,7 +17,7 @@ import java.util.Date;
  * @author abstergo
  */
 @Getter
-public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<SystemUser> {
+public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<SystemUserEntity> {
     @QueryMapping(value = "id")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private String idEquals;
