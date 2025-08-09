@@ -6,6 +6,7 @@ import com.tbs.common.data.IDataHolderExpireActuator
 import com.tbs.common.data.IDataHolderManager
 import com.tbs.common.exception.FormattedRuntimeException
 import com.tbs.web.config.property.WebAuthProperty
+import com.tbs.web.exception.NotFoundTokenException
 import com.tbs.web.security.ITokenManager
 import com.tbs.web.security.ITokenModel
 import com.tbs.web.security.IUserInfoService
@@ -53,7 +54,7 @@ class DefaultTokenManager : ITokenManager, IStartup {
 
     override fun loadUserInfoByToken(token: ITokenModel): UserDetails {
         return dataHolder().get<UserDetails>(token.token)
-            .orElseThrow { return@orElseThrow FormattedRuntimeException("令牌不存在") };
+            .orElseThrow { return@orElseThrow NotFoundTokenException("令牌不存在") };
     }
 
     override fun startUp() {

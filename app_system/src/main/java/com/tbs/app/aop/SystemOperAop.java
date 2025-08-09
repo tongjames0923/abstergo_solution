@@ -2,14 +2,10 @@ package com.tbs.app.aop;
 
 import com.alibaba.fastjson2.JSON;
 import com.tbs.app.config.SystemAppProperty;
-import com.tbs.app.constant.SystemOperateLogConstant;
 import com.tbs.app.pojo.entity.SystemOperateRecordEntity;
+import com.tbs.app.service.log.ISystemOperateLog;
 import com.tbs.app.util.NetUtil;
-import com.tbs.broadcast.enums.HandleMode;
-import com.tbs.broadcast.event.IEvent;
-import com.tbs.broadcast.event.impl.SimpleEvent;
-import com.tbs.broadcast.publisher.IPublisher;
-import com.tbs.common.delegate.IDelegateTemplate;
+import com.tbs.common.util.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -32,13 +28,7 @@ import java.util.Date;
 public class SystemOperAop {
 
     @Resource
-    private IPublisher publisher;
-
-    @Resource
     private SystemAppProperty appProperty;
-
-    @Resource
-    private IDelegateTemplate delegateTemplate;
 
     @Pointcut(
         "within(com.tbs.web.BaseController+) && (@annotation(org.springframework.web.bind.annotation.RequestMapping)" +
@@ -64,9 +54,8 @@ public class SystemOperAop {
             return result;
         }
         try {
-            IEvent event = createRecordItem(joinPoint, (BaseController)target, begin, end, result);
-            HandleMode handleMode = appProperty.isLogAsync() ? HandleMode.SYNC : HandleMode.ASYNC;
-            publisher.publish(event, handleMode);
+            SpringUtil.getBeanSafe(ISystemOperateLog.class, throwable -> log.error("记录操作日志错误", throwable))
+                .log(createRecordItem(joinPoint, (BaseController)target, begin, end, result));
         } catch (Throwable e) {
             log.error("record log error", e);
         }
@@ -74,10 +63,9 @@ public class SystemOperAop {
         return result;
     }
 
-    private IEvent createRecordItem(ProceedingJoinPoint joinPoint, BaseController target, Date begin, Date end,
-        Object result) {
+    private SystemOperateRecordEntity createRecordItem(ProceedingJoinPoint joinPoint, BaseController target, Date begin,
+        Date end, Object result) {
         BaseController baseController = target;
-        SimpleEvent event = new SimpleEvent(SystemOperateLogConstant.SYSTEM_OPERATE_LOG_EVENT_ID, "");
         SystemOperateRecordEntity record = new SystemOperateRecordEntity();
         record.setOperateType(
             joinPoint.getSignature().getDeclaringTypeName() + "." + joinPoint.getSignature().getName());
@@ -92,8 +80,7 @@ public class SystemOperAop {
         }
         record.setOperateParamJson(JSON.toJSONString(joinPoint.getArgs()));
         record.setOperateResultJson(JSON.toJSONString(result));
-        event.setDataForSerialization(record);
-        return event;
+        return record;
     }
 
 }
