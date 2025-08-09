@@ -4,6 +4,7 @@ import com.tbs.app.constant.SystemOperateLogConstant;
 import com.tbs.app.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.event.IEvent;
+import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.cache.core.ICacheListenner;
@@ -15,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.SerializationUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -146,8 +146,9 @@ public class AppConfig {
                     return;
                 }
                 var systemOperateRecordEntity = event.getEventDataClass().map(clazz -> {
-                    if (clazz.equals(SystemOperateRecordEntity.class)) {
-                        return (SystemOperateRecordEntity)SerializationUtils.deserialize(event.getEventData());
+                    if (clazz.equals(SystemOperateRecordEntity.class) && event instanceof SimpleEvent) {
+                        SimpleEvent event1 = (SimpleEvent)event;
+                        return event1.getDeserializedData();
                     }
                     return null;
                 });

@@ -4,6 +4,8 @@ import com.tbs.broadcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.util.SerializationUtils;
 
 import java.util.Optional;
 
@@ -57,6 +59,19 @@ public class SimpleEvent implements IEvent {
         AssertUtil.notNull(clazz, "class can not be null");
         this.eventData = eventData;
         this.eventDataClass = clazz.getName();
+    }
+
+    public <T> void setDataForSerialization(@NotNull T data) {
+        setEventData(SerializationUtils.serialize(data), data.getClass());
+    }
+
+    /**
+     * 获取事件数据
+     *
+     * @return
+     */
+    public Object getDeserializedData() {
+        return SerializationUtils.deserialize(eventData);
     }
 
     @Override

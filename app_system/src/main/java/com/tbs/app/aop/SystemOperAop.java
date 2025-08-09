@@ -17,7 +17,6 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
-import org.springframework.util.SerializationUtils;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -93,7 +92,7 @@ public class SystemOperAop {
         }
         record.setOperateParamJson(JSON.toJSONString(joinPoint.getArgs()));
         record.setOperateResultJson(JSON.toJSONString(result));
-        event.setEventData(SerializationUtils.serialize(record), SystemOperateRecordEntity.class);
+        event.setDataForSerialization(record);
         return event;
     }
 
