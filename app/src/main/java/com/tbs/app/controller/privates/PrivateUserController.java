@@ -52,8 +52,13 @@ public class PrivateUserController extends BaseController {
         userInfoVO.setNickName(user.get().getNickName());
         userInfoVO.setAvatar(user.get().getAvatar());
         userInfoVO.setAvaliableRoles(relationService.queryUserRoles(user.get().getId()).stream()
-            .filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag())).map(SystemRoleEntity::getRole)
-            .collect(Collectors.toList()));
+            .filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag()))
+            .map(SystemRoleEntity::getRole).collect(Collectors.toList()));
         return userInfoVO;
+    }
+
+    @Override
+    public String getBusinessName() {
+        return "登录后基础用户业务";
     }
 }

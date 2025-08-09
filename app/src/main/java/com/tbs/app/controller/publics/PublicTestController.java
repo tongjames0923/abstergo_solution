@@ -60,6 +60,11 @@ public class PublicTestController extends BaseController {
         return AjaxUtil.getInstance().success("保存成功", roleService.save(role));
     }
 
+    @Override
+    public String getBusinessName() {
+        return "测试";
+    }
+
     //    @Resource
     //    private IUserAuthService userAuthService;
 

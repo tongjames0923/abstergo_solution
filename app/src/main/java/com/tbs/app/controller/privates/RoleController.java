@@ -52,4 +52,8 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
         return super.query(criteria, pageNum, pageSize);
     }
 
+    @Override
+    public String getBusinessName() {
+        return "角色管理";
+    }
 }

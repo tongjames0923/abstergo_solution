@@ -52,4 +52,9 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     public AjaxResult query(@RequestBody CommonSystemUserQueryCriteria criteria, Long pageNum, Long pageSize) {
         return super.query(criteria, pageNum, pageSize);
     }
+
+    @Override
+    public String getBusinessName() {
+        return "管理员用户管理";
+    }
 }

@@ -60,4 +60,9 @@ public class AdminRoleController extends BaseController {
         userService.save(user);
         return AjaxUtil.getInstance().success("禁用成功", null);
     }
+
+    @Override
+    public String getBusinessName() {
+        return "管理员角色管理";
+    }
 }

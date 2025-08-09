@@ -1,19 +1,17 @@
 package com.tbs.app.controller.publics;
 
 import com.tbs.app.form.LoginForm;
-import com.tbs.app.vo.UserInfoVO;
 import com.tbs.web.BaseController;
-import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.ITokenModel;
 import com.tbs.web.security.IUserAuthService;
-import com.tbs.web.security.model.SimpleTokenModel;
-import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.annotations.Api;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import javax.validation.Valid;
 
 /**
  * 公开的用户控制器
@@ -32,5 +30,9 @@ public class PublicUserController extends BaseController {
     public ITokenModel login(@RequestBody @Validated LoginForm loginForm) {
         return userAuthService.login(loginForm.getUsername(), loginForm.getPassword());
     }
-    
+
+    @Override
+    public String getBusinessName() {
+        return "公开用户控制器";
+    }
 }

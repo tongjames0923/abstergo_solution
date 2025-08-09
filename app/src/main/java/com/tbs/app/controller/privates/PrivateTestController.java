@@ -23,4 +23,9 @@ public class PrivateTestController extends BaseController {
     public AjaxResult testAuth() {
         return AjaxUtil.getInstance().success(null);
     }
+
+    @Override
+    public String getBusinessName() {
+        return "测试登录后功能控制器";
+    }
 }
