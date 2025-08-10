@@ -13,7 +13,7 @@ tbs:
     base-package: com.tbs.app.controller
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
-    expire-actuator-class: com.tbs.common.data.impl.LocalDataExpireActuator
+    expire-actuator-class: com.tbs.redis.cache.RedisDataHolderExpireActuator
   cache:
     cache-manager-implementation: com.tbs.cache.core.manager.holder.DataHolderCacheManager
     expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuator
@@ -26,6 +26,9 @@ tbs:
     data-holder: com.tbs.redis.holder.RedisDataHolder
   redis:
     enable: true
+  sql:
+    enable-log-interceptor: true
+    sql-logger-type: tbs.framework.sql.interfaces.impls.SimpleSqlLogger
 # Spring配置
 spring:
   # 资源信息

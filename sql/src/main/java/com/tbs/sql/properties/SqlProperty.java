@@ -12,7 +12,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author abstergo
  */
 @Data
-@ConfigurationProperties("tbs.framework.sql")
+@ConfigurationProperties("tbs.sql")
 public class SqlProperty {
     /**
      * 是否启用SQL日志拦截器的标志，默认不启用

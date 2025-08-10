@@ -1,8 +1,12 @@
 package com.tbs.app.pojo.criteria;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.tbs.app.config.QueryOrderedModelSerializer;
 import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.pojo.model.ClassBaseQueryCriteria;
+import com.tbs.app.serialize.QueryOrderedModelDeserializer;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
 import com.tbs.sql.annotation.QueryOrderField;
@@ -21,10 +25,10 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
     @QueryMapping(value = "id")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private String idEquals;
-    @QueryMapping(value = "username")
+    @QueryMapping(value = "user_name")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private String userNameEquals;
-    @QueryMapping(value = "nickname")
+    @QueryMapping(value = "nick_name")
     @QueryField(contrast = QueryContrastEnum.LLIKE)
     private String nickNameLike;
     @QueryMapping(value = "flag")
@@ -47,8 +51,12 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date updateTimeLessThan;
     @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
+    @JsonSerialize(using = QueryOrderedModelSerializer.class)
+    @JsonDeserialize(using = QueryOrderedModelDeserializer.class)
     private QueryOrderedModel createTimeOrder;
     @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
+    @JsonSerialize(using = QueryOrderedModelSerializer.class)
+    @JsonDeserialize(using = QueryOrderedModelDeserializer.class)
     private QueryOrderedModel updateTimeOrder;
 
     public CommonSystemUserQueryCriteria setIdEquals(String idEquals) {

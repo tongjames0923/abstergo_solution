@@ -65,13 +65,13 @@ public class SqlConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "tbs.framework.sql.enable-log-interceptor", havingValue = "true")
+    @ConditionalOnProperty(name = "tbs.sql.enable-log-interceptor", havingValue = "true")
     SqlLoggingInterceptor sqlLoggingInterceptor() {
         return new SqlLoggingInterceptor();
     }
 
     @Bean
-    @ConditionalOnProperty(name = "tbs.framework.sql.enable-auto-fill-value-interceptor", havingValue = "true")
+    @ConditionalOnProperty(name = "tbs.sql.enable-auto-fill-value-interceptor", havingValue = "true")
     SqlAutoFillIntercepter autoFillIntercepter() {
         return new SqlAutoFillIntercepter();
     }
@@ -82,7 +82,7 @@ public class SqlConfig {
     public ISqlLogger defaultSqlLogger() throws Throwable {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new NoSqlLogger();
-        }, sqlProperty.getSqlLoggerType(), null);
+        }, sqlProperty.getSqlLoggerType(), BeanUtil::buildByEmptyArgs);
     }
 
     @Bean(OrderConstant.ASC)

@@ -30,7 +30,7 @@ class DefaultUserInfoService : IUserInfoService {
         AssertUtil.isTrue(CollUtil.isEmpty(users), Supplier { SimpleAuthException("用户不存在") })
         val user = users.get(0)
         val roles: MutableList<SystemRoleEntity?> = relationService.queryUserRoles(users.get(0).getId())
-        return User.builder().username(user.getUsername()).password(user.getPassword())
+        return User.builder().username(user.getUserName()).password(user.getPassword())
             .authorities(
                 roles.stream()
                     .map<SimpleGrantedAuthority?> { role: SystemRoleEntity? -> SimpleGrantedAuthority(role!!.getRole()) }

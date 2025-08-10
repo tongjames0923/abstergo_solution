@@ -13,12 +13,14 @@ import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.TimingWheelSchedule;
+import com.tbs.sql.logger.ISqlLogger;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import tbs.framework.sql.interfaces.impls.SimpleSqlLogger;
 
 import javax.annotation.Resource;
 import java.util.Arrays;

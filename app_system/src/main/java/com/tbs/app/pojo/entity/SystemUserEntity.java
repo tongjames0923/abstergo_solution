@@ -13,11 +13,12 @@ import java.util.List;
  *
  * @author abstergo
  */
-@Table(name = "sys_user", indexes = {@Index(name = "idx_username_password", columnList = "username,password"),
-    @Index(name = "idx_nickname", columnList = "nickname"), @Index(name = "idx_flag", columnList = "flag"),
+@Table(name = "sys_user", indexes = {@Index(name = "idx_username_password", columnList = "user_name,password"),
+    @Index(name = "idx_nickname", columnList = "nick_name"), @Index(name = "idx_flag", columnList = "flag"),
     @Index(name = "idx_time", columnList = "create_time,update_time")})
 @Entity
 @Getter
+@Setter
 public class SystemUserEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
     @Setter
@@ -27,8 +28,8 @@ public class SystemUserEntity implements IBaseEntity<Long> {
     /**
      * 用户名
      */
-    @Column(name = "username", length = 72, unique = true, nullable = false)
-    private String username;
+    @Column(name = "user_name", length = 72, unique = true, nullable = false)
+    private String userName;
     /**
      * 密码
      */
@@ -37,7 +38,7 @@ public class SystemUserEntity implements IBaseEntity<Long> {
     /**
      * 昵称
      */
-    @Column(name = "nickname", length = 32, nullable = false)
+    @Column(name = "nick_name", length = 32, nullable = false)
     private String nickName;
     /**
      * 头像
@@ -55,46 +56,21 @@ public class SystemUserEntity implements IBaseEntity<Long> {
      * 创建时间
      */
     @Column(name = "create_time")
-    @Setter
     private Date createTime;
     /**
      * 修改时间
      */
     @Column(name = "update_time")
-    @Setter
     private Date updateTime;
     /**
      * 状态
      */
     @Column(name = "flag")
-    @Setter
     private Integer flag;
+    /**
+     * 角色
+     */
     @Transient
     private List<SystemRoleEntity> roles;
-
-    public SystemUserEntity setUsername(String username) {
-        this.username = username;
-        return this;
-    }
-
-    public SystemUserEntity setPassword(String password) {
-        this.password = password;
-        return this;
-    }
-
-    public SystemUserEntity setNickName(String nickname) {
-        this.nickName = nickname;
-        return this;
-    }
-
-    public SystemUserEntity setAvatar(String avatar) {
-        this.avatar = avatar;
-        return this;
-    }
-
-    public SystemUserEntity setRemark(String remark) {
-        this.remark = remark;
-        return this;
-    }
 
 }

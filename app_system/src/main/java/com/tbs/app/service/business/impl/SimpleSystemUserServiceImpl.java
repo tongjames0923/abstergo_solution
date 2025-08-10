@@ -47,7 +47,7 @@ public class SimpleSystemUserServiceImpl
 
     @Override
     protected SystemUserEntity insertNew(SystemUserEntity entity) {
-        AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUsername()), "用户名格式错误");
+        AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUserName()), "用户名格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickName()), "昵称格式错误");
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
@@ -69,9 +69,9 @@ public class SimpleSystemUserServiceImpl
     @Override
     protected SystemUserEntity compareAndUpdateValue(
         SystemUserEntity systemUserEntity, SystemUserEntity oldSystemUserEntity) {
-        if (StrUtil.isNotEmpty(systemUserEntity.getUsername())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUsername()), "用户名格式错误");
-            oldSystemUserEntity.setUsername(systemUserEntity.getUsername());
+        if (StrUtil.isNotEmpty(systemUserEntity.getUserName())) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUserName()), "用户名格式错误");
+            oldSystemUserEntity.setUserName(systemUserEntity.getUserName());
         }
         if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()), "密码格式错误");
@@ -98,7 +98,7 @@ public class SimpleSystemUserServiceImpl
 
     @Override
     public List<SystemUserEntity> queryByUserName(@UserNameValid String username) {
-        return getQueryWrapper().query().where().equal(SystemUserEntity::getUsername, username).pour().fetch();
+        return getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username).pour().fetch();
     }
 
     @Cacheable(value = "system_user", key = "#id")
