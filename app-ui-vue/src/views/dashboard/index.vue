@@ -32,7 +32,9 @@
           <el-row :gutter="20">
             <el-col :span="8">
               <el-form-item label="用户状态">
-                <DynamicOptions api-url="/private/user/statusOptions" :value="searchForm.flagEquals"></DynamicOptions>
+                <DynamicOptions api-url="/private/user/statusOptions" :value="searchForm.flagEquals"
+                                @change="(val)=>this.searchForm.flagEquals=val"
+                ></DynamicOptions>
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -134,6 +136,12 @@
             <el-tag v-else type="warning">锁定</el-tag>
           </template>
 
+          <template #avatar="{row}">
+            <el-avatar :src="row.avatar || '/default-avatar.png'" fit="cover">
+              <i v-if="!row.avatar || row.avatar === ''" class="el-icon-user-solid"></i>
+            </el-avatar>
+          </template>
+
           <template #actions="{ row, $index }">
             <el-button size="mini" @click="handleEdit(row)">编辑</el-button>
             <el-button
@@ -180,8 +188,10 @@ export default {
       },
       columns: [
         {prop: 'id', label: 'ID', width: 80},
+        {prop: 'avatar', label: '头像', width: 80, slot: 'avatar'},
         {prop: 'userName', label: '用户名', width: 150},
         {prop: 'nickName', label: '昵称', width: 150},
+        {prop: 'remark', label: '备注', width: 150},
         {prop: 'flag', label: '状态', width: 100, slot: 'status'},
         {prop: 'createTime', label: '创建时间', width: 180},
         {prop: 'updateTime', label: '更新时间', width: 180}
@@ -210,15 +220,11 @@ export default {
 
         // 处理排序字段
         if (this.searchForm.createTimeOrder) {
-          criteria.createTimeOrder = {
-            order: this.searchForm.createTimeOrder
-          }
+          criteria.createTimeOrder = this.searchForm.createTimeOrder
         }
 
         if (this.searchForm.updateTimeOrder) {
-          criteria.updateTimeOrder = {
-            order: this.searchForm.updateTimeOrder
-          }
+          criteria.updateTimeOrder = this.searchForm.updateTimeOrder
         }
 
         // 移除值为undefined的属性
