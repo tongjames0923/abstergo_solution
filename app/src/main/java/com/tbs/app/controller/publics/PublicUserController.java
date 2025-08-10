@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 公开的用户控制器
@@ -35,4 +36,5 @@ public class PublicUserController extends BaseController {
     public String getBusinessName() {
         return "公开用户控制器";
     }
+
 }

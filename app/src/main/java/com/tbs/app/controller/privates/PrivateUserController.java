@@ -1,6 +1,7 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.constant.CommonConstant;
+import com.tbs.app.enums.SystemUserStatusEnum;
 import com.tbs.app.pojo.entity.SystemRoleEntity;
 import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.service.business.ISystemUserService;
@@ -8,15 +9,19 @@ import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.view.vo.OptionValue;
 import com.tbs.web.BaseController;
 import com.tbs.web.security.IUserAuthService;
 import com.tbs.web.uitl.AuthUtil;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -55,6 +60,19 @@ public class PrivateUserController extends BaseController {
             .filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag()))
             .map(SystemRoleEntity::getRole).collect(Collectors.toList()));
         return userInfoVO;
+    }
+
+    /**
+     * 获取用户状态选项
+     *
+     * @return
+     */
+    @GetMapping("/statusOptions")
+    @Cacheable(cacheNames = "DEAD_CACHE", key = "'userStatusOptions'")
+    public Collection<OptionValue<Integer>> getUserStatusOptions() {
+        return Arrays.stream(SystemUserStatusEnum.values()).map(m -> {
+            return new OptionValue<>(m.getCode(), m.getValue());
+        }).collect(Collectors.toSet());
     }
 
     @Override

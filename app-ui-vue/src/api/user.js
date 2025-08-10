@@ -46,3 +46,11 @@ export function adminQueryUser(data) {
     data
   })
 }
+
+export function userStatusEnums()
+{
+  return request({
+    url: '/private/user/statusOptions',
+    method: 'get'
+  })
+}

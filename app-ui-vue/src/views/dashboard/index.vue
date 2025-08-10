@@ -31,11 +31,8 @@
 
           <el-row :gutter="20">
             <el-col :span="8">
-              <el-form-item label="状态">
-                <el-select v-model="searchForm.flagEquals" placeholder="请选择状态" clearable>
-                  <el-option label="启用" :value="1"></el-option>
-                  <el-option label="禁用" :value="0"></el-option>
-                </el-select>
+              <el-form-item label="用户状态">
+                <DynamicOptions api-url="/private/user/statusOptions" :value="searchForm.flagEquals"></DynamicOptions>
               </el-form-item>
             </el-col>
             <el-col :span="8">
@@ -132,9 +129,9 @@
           </template>
 
           <template #status="{ row }">
-            <el-tag :type="row.flag === 1 ? 'success' : 'danger'">
-              {{ row.flag === 1 ? '启用' : '禁用' }}
-            </el-tag>
+            <el-tag v-if="row.flag === 0" type="danger">禁用</el-tag>
+            <el-tag v-else-if="row.flag===1" type="success">正常</el-tag>
+            <el-tag v-else type="warning">锁定</el-tag>
           </template>
 
           <template #actions="{ row, $index }">
@@ -156,11 +153,12 @@
 <script>
 import {mapGetters} from 'vuex'
 import DynamicTable from "@/components/DynamicTable/index.vue"
-import {adminQueryUser} from '@/api/user'
+import {adminQueryUser, userStatusEnums} from '@/api/user'
+import DynamicOptions from "@/components/DynamicOptions/index.vue";
 
 export default {
   name: 'Dashboard',
-  components: {DynamicTable},
+  components: {DynamicOptions, DynamicTable},
   computed: {
     ...mapGetters([
       'name'
@@ -192,6 +190,7 @@ export default {
     }
   },
   methods: {
+    userStatusEnums,
     /**
      * 获取用户数据
      */
