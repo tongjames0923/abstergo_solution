@@ -31,6 +31,8 @@ tbs:
     sql-logger-type: tbs.framework.sql.interfaces.impls.SimpleSqlLogger
 # Spring配置
 spring:
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
   # 资源信息
   messages:
     # 国际化资源文件路径
@@ -48,3 +50,6 @@ spring:
 logging:
   level:
     com.tbs.schedule: debug
+server:
+  shutdown: graceful
+
