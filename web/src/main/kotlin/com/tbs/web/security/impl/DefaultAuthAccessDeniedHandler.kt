@@ -33,10 +33,7 @@ class DefaultAuthAccessDeniedHandler : AccessDeniedHandler {
             }).orElse(
                 AjaxUtil.getInstance().custom(
                     AjaxResult.DEFAULT_FORBIDDEN_CODE,
-                    if (StrUtil.isEmpty(accessDeniedException.getLocalizedMessage()))
-                        "无权限访问"
-                    else
-                        accessDeniedException.getLocalizedMessage(), null
+                    "无权限访问", null
                 )
             )
         AjaxUtil.writeInfoResp(response, res)
