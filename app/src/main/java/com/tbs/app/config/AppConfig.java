@@ -13,14 +13,12 @@ import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.TimingWheelSchedule;
-import com.tbs.sql.logger.ISqlLogger;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import tbs.framework.sql.interfaces.impls.SimpleSqlLogger;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
@@ -86,6 +84,7 @@ public class AppConfig {
     AbstractSubscriber subscriber() {
         return SimpleUseSubscriber.Builder.newBuilder("simple log", (e, p) -> {
             sub_test_logger.info("event id {},event name :{}", e.getEventId(), e.getEventName());
+            return AbstractSubscriber.RECEIVE_SUCCESS;
         }).build();
     }
 
@@ -95,7 +94,8 @@ public class AppConfig {
     AbstractSubscriber systemLogSub() {
         return SimpleUseSubscriber.Builder.newBuilder("system_oper_log", (event, publisher) -> {
             if (event == null) {
-                return;
+                system_oper_log.warn("event null for receive");
+                return AbstractSubscriber.RECEIVE_FAILED;
             }
             var systemOperateRecordEntity = event.getEventDataClass().map(clazz -> {
                 if (clazz.equals(SystemOperateRecordEntity.class) && event instanceof SimpleEvent) {
@@ -107,6 +107,7 @@ public class AppConfig {
             systemOperateRecordEntity.ifPresent(record -> {
                 system_oper_log.info("system operate log {}", record);
             });
+            return AbstractSubscriber.RECEIVE_SUCCESS;
         }).supportEventIds(Arrays.asList(EventSystemOpLog.DEFAULT_EVENT_ID)).build();
     }
 
