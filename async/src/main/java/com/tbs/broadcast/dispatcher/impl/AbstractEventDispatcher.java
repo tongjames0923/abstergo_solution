@@ -72,7 +72,7 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
                         if (subscriber.supportEvent(res.getEvent().getEventId(), res.getEvent().getEventName()) &&
                             subscriber.supportPublisher(res.getPublisher())) {
                             if (res.getHandleMode() == HandleMode.SYNC) {
-                                subscriber.recive(res, res.getPublisher());
+                                subscriber.recive(res);
                             } else {
                                 subscriber.reciveAsync(res, res.getPublisher());
                             }

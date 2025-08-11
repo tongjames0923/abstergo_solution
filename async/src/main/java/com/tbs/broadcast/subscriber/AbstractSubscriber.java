@@ -19,6 +19,10 @@ public abstract class AbstractSubscriber {
     @Resource
     IThreadPoolManager threadPoolManager;
 
+    public static final int RECEIVE_SUCCESS = 1;
+    public static final int RECEIVE_FAILED = 0;
+    public static final int RECEIVE_RETRY = -1;
+
     /**
      * 订阅者ID
      *
@@ -48,22 +52,36 @@ public abstract class AbstractSubscriber {
      *
      * @param event
      * @param publisher
+     * @return
      */
-    protected abstract void onReceive(IEvent event, IPublisher publisher);
+    protected abstract int onReceive(IEvent event, IPublisher publisher);
 
     /**
      * 接收事件
      *
      * @param event
-     * @param publisher
      * @return
      */
-    public void recive(IPublishResult event, IPublisher publisher) {
+    public void recive(IPublishResult event) {
         try {
-            onReceive(event.getEvent(), publisher);
-            event.setEventStatus(EventStatusEnum.DONE);
+            int result = onReceive(event.getEvent(), event.getPublisher());
+            switch (result) {
+                case RECEIVE_FAILED:
+                    event.setEventStatus(EventStatusEnum.FAILED);
+                    break;
+                case RECEIVE_RETRY:
+                    event.setEventStatus(EventStatusEnum.REQUIRE_RETRY);
+                    break;
+                case RECEIVE_SUCCESS:
+                    event.setEventStatus(EventStatusEnum.DONE);
+                    break;
+                default:
+                    event.setEventStatus(EventStatusEnum.DONE);
+                    break;
+            }
         } catch (Throwable e) {
             event.setThrowable(e);
+            event.setEventStatus(EventStatusEnum.FAILED);
         }
     }
 
@@ -76,7 +94,7 @@ public abstract class AbstractSubscriber {
      */
     public void reciveAsync(IPublishResult event, IPublisher publisher) {
         threadPoolManager.submit(SimpleThreadRequest.Builder.create("AbstractSubscriber-" + getSubscriberId(), () -> {
-            recive(event, publisher);
+            recive(event);
         }).build(), null);
     }
 }

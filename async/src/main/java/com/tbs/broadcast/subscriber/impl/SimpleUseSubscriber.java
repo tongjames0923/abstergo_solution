@@ -4,6 +4,7 @@ import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.event.IEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
+import com.tbs.broadcast.subscriber.IReceiveHandler;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
@@ -14,7 +15,6 @@ import javax.annotation.Resource;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +29,7 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
     private Set<String> supportEventIds;
     private Set<String> supportEventNames;
 
-    private BiConsumer<IEvent, IPublisher> eventHandler;
+    private IReceiveHandler eventHandler;
 
     public static class Builder {
         private String subscriberId;
@@ -37,7 +37,7 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
         private boolean supportAnyEventName = true;
         private Set<String> supportEventIds;
         private Set<String> supportEventNames;
-        private BiConsumer<IEvent, IPublisher> eventHandler;
+        private IReceiveHandler eventHandler;
 
         /**
          * 创建一个自动订阅者
@@ -46,7 +46,7 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
          * @param eventHandler 事件处理函数
          * @return 订阅者
          */
-        public static Builder newBuilder(String subscriberId, @NotNull BiConsumer<IEvent, IPublisher> eventHandler) {
+        public static Builder newBuilder(String subscriberId, @NotNull IReceiveHandler eventHandler) {
             AssertUtil.notNull(eventHandler, "eventHandler can not be null");
             AssertUtil.isTrue(StrUtil.isEmpty(subscriberId), "subscriberId can not be empty");
             Builder builder = new Builder();
@@ -92,7 +92,7 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
         }
     }
 
-    protected SimpleUseSubscriber(@NotNull BiConsumer<IEvent, IPublisher> eventHandler, Set<String> supportEventNames,
+    protected SimpleUseSubscriber(@NotNull IReceiveHandler eventHandler, Set<String> supportEventNames,
         Set<String> supportEventIds, boolean supportAnyEventName, boolean supportAnyEventId,
         @NotNull String subscriberId) {
         this.eventHandler = eventHandler;
@@ -125,8 +125,8 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
     }
 
     @Override
-    protected void onReceive(IEvent event, IPublisher publisher) {
-        eventHandler.accept(event, publisher);
+    protected int onReceive(IEvent event, IPublisher publisher) {
+        return eventHandler.recive(event, publisher);
     }
 
     @Override
