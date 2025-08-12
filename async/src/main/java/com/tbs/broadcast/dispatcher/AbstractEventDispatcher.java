@@ -1,6 +1,7 @@
-package com.tbs.broadcast.dispatcher.impl;
+package com.tbs.broadcast.dispatcher;
 
 import java.time.Duration;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,8 +13,6 @@ import org.springframework.beans.factory.DisposableBean;
 
 import com.tbs.async.annotation.LongTermAsync;
 import com.tbs.broadcast.bus.IEventBus;
-import com.tbs.broadcast.dispatcher.IEventDispatcher;
-import com.tbs.broadcast.enums.HandleMode;
 import com.tbs.broadcast.publisher.IPublishResult;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.common.IStartup;
@@ -93,56 +92,53 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
 	}
 
 	/**
+	 * 获取所有订阅者
+	 * <p>
+	 * 返回当前分发器注册的订阅者列表
+	 *
+	 * @return 订阅者列表
+	 */
+	public Collection<AbstractSubscriber> getSubscribers() {
+		return subscribersHolder.values();
+	}
+
+	/**
 	 * 处理事件
 	 * <p>
-	 * 启动事件处理主循环，持续从事件总线中获取未处理的事件并分发给匹配的订阅者进行处理。 处理过程会根据事件的处理模式（同步或异步）选择相应的处理方式。
-	 * 该方法会一直运行直到调用stopHandle()方法停止处理。
+	 * 根据事件分发规则，将事件分发给相应的订阅者进行处理
+	 *
+	 * @param result 要处理的事件结果，不能为null
+	 * @throws IllegalArgumentException 当result为null时抛出
 	 */
-	@Override
-	public void handleEvent() {
+	public void pollEventHandle() {
 		if (started) {
 			return;
 		}
 		started = true;
-		logger.trace("开始处理事件");
+		logger.info("开始处理事件");
 		while (started) {
 			ValueWrapper<IPublishResult> iPublishResult = new ValueWrapper<>();
 			try {
 				iPublishResult.set(getEventBus().nextUnhandledEvent(Duration.ofMinutes(15)));
-				if (iPublishResult == null) {
+				iPublishResult.get().ifPresentOrElse((v) -> {
+					handleEvent(v);
+				}, () -> {
 					logger.trace("空事件超时");
-					continue;
-				}
-				iPublishResult.get().ifPresent(res -> {
-					subscribersHolder.values().stream().filter((v) -> {
-						return v != null && v instanceof AbstractSubscriber;
-					}).map(v -> (AbstractSubscriber) v).forEach(subscriber -> {
-						if (subscriber.supportEvent(res.getEvent().getEventId(), res.getEvent().getEventName())
-								&& subscriber.supportPublisher(res.getPublisher())) {
-							if (res.getHandleMode() == HandleMode.SYNC) {
-								subscriber.recive(res);
-							} else {
-								subscriber.reciveAsync(res, res.getPublisher());
-							}
-						}
-					});
 				});
 
 			} catch (Throwable e) {
 				handleError(e, iPublishResult.get().orElse(null));
 			}
 		}
-		logger.trace("停止处理事件");
-
+		logger.info("停止处理事件");
 	}
 
 	/**
 	 * 停止处理事件
 	 * <p>
-	 * 设置处理状态标志为false，使事件处理主循环在下一次迭代时退出， 从而停止事件处理流程。
+	 * 停止事件处理流程，并释放相关资源。
 	 */
-	@Override
-	public void stopHandle() {
+	public void stopPolling() {
 		started = false;
 	}
 
@@ -156,7 +152,7 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
 	@Override
 	@LongTermAsync
 	public void startUp() throws RuntimeException {
-		handleEvent();
+		pollEventHandle();
 	}
 
 	/**
@@ -168,6 +164,6 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
 	 */
 	@Override
 	public void destroy() throws Exception {
-		stopHandle();
+		stopPolling();
 	}
 }

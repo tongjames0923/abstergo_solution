@@ -1,6 +1,7 @@
 package com.tbs.broadcast.bus;
 
 import java.time.Duration;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
@@ -26,7 +27,7 @@ import com.tbs.lock.util.LockUtil;
  * @see IEventBus 事件总线接口
  * @see IPublishResult 事件发布结果接口
  */
-public abstract class AbstractEventBus implements IEventBus {
+public abstract class AbstractEventBus<T> implements IEventBus {
 	/**
 	 * 获取事件队列
 	 * <p>
@@ -102,10 +103,20 @@ public abstract class AbstractEventBus implements IEventBus {
 	public void inqueueEvent(IPublishResult publishResult) {
 		preInqueueCheck(publishResult);
 		LockUtil.getInstance().lockThen(lock, () -> {
-			logger.debug("添加事件到队列:{}", publishResult.getEvent().getEventName());
-			getQueue().add(publishResult);
-			signalInQueue();
+			getDistributedBusSupport().ifPresentOrElse(distributedBusSupport -> {
+				distributedBusSupport.broadcastEvent(distributedBusSupport.getDataBridge().bridge(publishResult));
+			}, () -> {
+				logger.debug("添加事件到队列:{}", publishResult.getEvent().getEventName());
+				getQueue().add(publishResult);
+				signalInQueue();
+			});
+
 		});
+	}
+
+	@Override
+	public Optional<IDistributedBusSupport> getDistributedBusSupport() {
+		return Optional.empty();
 	}
 
 	/**
@@ -152,7 +163,7 @@ public abstract class AbstractEventBus implements IEventBus {
 			logger.debug("等待事件");
 			boolean r = false;
 			try {
-				r = awaitQueue(duration.toMillis(), TimeUnit.MILLISECONDS);
+				r = awaitQueue(duration.toMillis(), java.util.concurrent.TimeUnit.MILLISECONDS);
 			} catch (InterruptedException e) {
 				logger.error("条件等待异常", e);
 				Thread.currentThread().interrupt();

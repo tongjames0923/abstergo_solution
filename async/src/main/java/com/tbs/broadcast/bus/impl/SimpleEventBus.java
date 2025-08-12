@@ -1,11 +1,15 @@
 package com.tbs.broadcast.bus.impl;
 
 import java.util.Comparator;
+import java.util.Optional;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
+import javax.annotation.Resource;
+
 import com.tbs.broadcast.bus.AbstractEventBus;
 import com.tbs.broadcast.bus.AbstractSemaphoreEventBus;
+import com.tbs.broadcast.bus.IDistributedBusSupport;
 import com.tbs.broadcast.publisher.IPublishResult;
 
 /**
@@ -21,6 +25,9 @@ import com.tbs.broadcast.publisher.IPublishResult;
  * @see PriorityQueue 优先级队列实现
  */
 public class SimpleEventBus extends AbstractSemaphoreEventBus {
+
+	@Resource
+	private IDistributedBusSupport distributedBusSupport;
 
 	/**
 	 * 事件优先级队列
@@ -54,4 +61,8 @@ public class SimpleEventBus extends AbstractSemaphoreEventBus {
 		return queue;
 	}
 
+	@Override
+	public Optional<IDistributedBusSupport> getDistributedBusSupport() {
+		return Optional.ofNullable(distributedBusSupport);
+	}
 }

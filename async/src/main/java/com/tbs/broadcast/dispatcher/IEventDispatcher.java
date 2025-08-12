@@ -1,9 +1,12 @@
 package com.tbs.broadcast.dispatcher;
 
+import java.util.Optional;
+
+import org.jetbrains.annotations.NotNull;
+
 import com.tbs.broadcast.bus.IEventBus;
 import com.tbs.broadcast.publisher.IPublishResult;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
-import org.jetbrains.annotations.NotNull;
 
 /**
  * 事件分发器接口
@@ -56,15 +59,19 @@ public interface IEventDispatcher {
 	/**
 	 * 处理事件
 	 * <p>
-	 * 启动事件处理流程，从事件总线中获取待处理的事件并分发给相应的订阅者进行处理。 该方法通常在独立线程中运行，持续处理队列中的事件。
+	 * 根据事件处理结果，将事件分发给相应的订阅者进行处理。
+	 *
+	 * @param result 事件处理结果对象，包含事件和订阅者信息
 	 */
-	void handleEvent();
+	void handleEvent(IPublishResult result);
 
 	/**
-	 * 停止处理事件
+	 * 获取分布式事件支持
 	 * <p>
-	 * 停止事件处理流程，中断正在运行的事件处理循环， 通常在系统关闭或需要停止事件处理时调用。
+	 * 返回该分发器所支持的分布式事件处理支持实例，用于处理分布式事件。
+	 *
+	 * @return 分布式事件处理支持实例
 	 */
-	void stopHandle();
+	Optional<IDistributedDispatcherSupport> getDistributedDispatcherSupport();
 
 }

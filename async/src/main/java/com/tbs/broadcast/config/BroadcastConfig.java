@@ -1,23 +1,21 @@
 package com.tbs.broadcast.config;
 
-import com.tbs.broadcast.bus.IEventBus;
-import com.tbs.broadcast.bus.impl.SimpleEventBus;
-import com.tbs.broadcast.config.property.BroadcastProperty;
-import com.tbs.broadcast.constant.BroadcastBeanNameConstant;
-import com.tbs.broadcast.dispatcher.IEventDispatcher;
-import com.tbs.broadcast.dispatcher.impl.AbstractEventDispatcher;
-import com.tbs.broadcast.publisher.IPublishResult;
-import com.tbs.broadcast.publisher.IPublisher;
-import com.tbs.broadcast.publisher.impl.DispatcherImportedPublisher;
-import com.tbs.common.util.BeanUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.annotation.Resource;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.Resource;
+import com.tbs.broadcast.bus.IEventBus;
+import com.tbs.broadcast.bus.impl.SimpleEventBus;
+import com.tbs.broadcast.config.property.BroadcastProperty;
+import com.tbs.broadcast.constant.BroadcastBeanNameConstant;
+import com.tbs.broadcast.dispatcher.IEventDispatcher;
+import com.tbs.broadcast.dispatcher.impl.SimpleEventDispatcher;
+import com.tbs.broadcast.publisher.IPublisher;
+import com.tbs.broadcast.publisher.impl.DispatcherImportedPublisher;
+import com.tbs.common.util.BeanUtil;
 
 /**
  * 广播模块配置类
@@ -60,14 +58,8 @@ public class BroadcastConfig {
 	@Bean
 	@ConditionalOnMissingBean(IEventDispatcher.class)
 	public IEventDispatcher dispatcher() {
-		return new AbstractEventDispatcher() {
-			private final Logger logger = LoggerFactory.getLogger(BroadcastConfig.class);
-
-			@Override
-			public <T> void handleError(Throwable throwable, IPublishResult publishResult) {
-				logger.error("处理消息时产生错误！！！", throwable);
-			}
-		};
+		return BeanUtil.buildBeanFromProperties(SimpleEventDispatcher::new, broadcastProperty.getEventDispatcherType(),
+				BeanUtil::buildByEmptyArgs);
 	}
 
 	/**

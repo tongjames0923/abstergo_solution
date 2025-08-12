@@ -1,6 +1,7 @@
 package com.tbs.broadcast.bus;
 
 import java.time.Duration;
+import java.util.Optional;
 
 import com.tbs.broadcast.publisher.IPublishResult;
 
@@ -35,6 +36,15 @@ public interface IEventBus {
 	 * @see IPublishResult 事件发布结果接口
 	 */
 	IPublishResult nextUnhandledEvent(Duration timeOut);
+
+	/**
+	 * 获取分布式事件总线支持对象
+	 * <p>
+	 * 返回当前事件总线的分布式支持对象，用于实现分布式事件处理。
+	 *
+	 * @return 分布式事件总线支持对象，如果当前事件总线不支持分布式处理，则返回null
+	 */
+	Optional<IDistributedBusSupport> getDistributedBusSupport();
 
 	/**
 	 * 获取事件队列大小

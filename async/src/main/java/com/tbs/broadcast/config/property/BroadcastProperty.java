@@ -5,6 +5,7 @@ import org.springframework.stereotype.Component;
 
 import com.tbs.broadcast.bus.IEventBus;
 import com.tbs.broadcast.dispatcher.IEventDispatcher;
+import com.tbs.broadcast.dispatcher.impl.SimpleEventDispatcher;
 
 import lombok.Data;
 
@@ -36,6 +37,6 @@ public class BroadcastProperty {
 	 * 指定广播模块使用的事件分发器实现类，默认值为null。
 	 * 可以通过配置文件中的"tbs.boardcast.event-dispatcher-type"属性进行自定义配置。
 	 */
-	private Class<? extends IEventDispatcher> eventDispatcherType;
+	private Class<? extends IEventDispatcher> eventDispatcherType = SimpleEventDispatcher.class;
 
 }
