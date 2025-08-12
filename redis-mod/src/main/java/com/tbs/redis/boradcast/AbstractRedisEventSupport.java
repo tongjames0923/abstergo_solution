@@ -9,17 +9,13 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.ChannelTopic;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
-import com.tbs.broadcast.bus.IDistributedBusSupport;
 import com.tbs.broadcast.bus.IEventBus;
-import com.tbs.broadcast.dispatcher.IDistributedDispatcherSupport;
-import com.tbs.broadcast.publisher.IPublishResult;
-import com.tbs.common.data.IDataBridge;
+import com.tbs.broadcast.support.AbstractDistributedSupport;
 import com.tbs.redis.constants.RedisBeanNameConstants;
 
 import lombok.Getter;
 
-public abstract class AbstractRedisEventSupport<T> implements IDistributedBusSupport<T>, IDistributedDispatcherSupport,
-		MessageListener, IDataBridge<T, IPublishResult> {
+public abstract class AbstractRedisEventSupport<T> extends AbstractDistributedSupport<T> implements MessageListener {
 
 	@Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
 	private RedisTemplate<String, Object> redisTemplate;
@@ -57,16 +53,6 @@ public abstract class AbstractRedisEventSupport<T> implements IDistributedBusSup
 		}, () -> {
 			getEventBus().inqueueEvent(unbridge(obj));
 		});
-	}
-
-	@Override
-	public IDataBridge<T, IPublishResult> getDataBridge() {
-		return this;
-	}
-
-	@Override
-	public void receiveEvent(T data) {
-		handleEvent(data, this);
 	}
 
 	@Override

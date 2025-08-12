@@ -9,6 +9,7 @@ import com.tbs.broadcast.bus.IDistributedBusSupport;
 import com.tbs.broadcast.bus.IEventBus;
 import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.publisher.IPublishResult;
+import com.tbs.broadcast.publisher.impl.SimpleDistributedAcceptedPublishResult;
 import com.tbs.broadcast.publisher.impl.SpringManagedListenablePublishResult;
 import com.tbs.common.data.IDataBridge;
 
@@ -17,7 +18,7 @@ import com.tbs.common.data.IDataBridge;
  *
  * @author tongj
  */
-public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleRedisAcceptedPublishResult> {
+public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleDistributedAcceptedPublishResult> {
 
 	@Resource
 	@Lazy
@@ -39,12 +40,12 @@ public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleRed
 	}
 
 	@Override
-	public SimpleRedisAcceptedPublishResult bridge(@NotNull IPublishResult obj) {
+	public SimpleDistributedAcceptedPublishResult bridge(@NotNull IPublishResult obj) {
 		return simpleDataBridge.bridge(obj);
 	}
 
 	@Override
-	public IPublishResult unbridge(@NotNull SimpleRedisAcceptedPublishResult obj) {
+	public IPublishResult unbridge(@NotNull SimpleDistributedAcceptedPublishResult obj) {
 		return simpleDataBridge.unbridge(obj);
 	}
 
@@ -53,16 +54,17 @@ public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleRed
 		return "tbs.event.channel";
 	}
 
-	private static class SimpleDataBridge implements IDataBridge<SimpleRedisAcceptedPublishResult, IPublishResult> {
+	private static class SimpleDataBridge
+			implements IDataBridge<SimpleDistributedAcceptedPublishResult, IPublishResult> {
 
 		@Override
-		public SimpleRedisAcceptedPublishResult bridge(@NotNull IPublishResult obj) {
-			return new SimpleRedisAcceptedPublishResult(obj.getEvent(), obj.getPublisher().getPushlisherId(),
+		public SimpleDistributedAcceptedPublishResult bridge(@NotNull IPublishResult obj) {
+			return new SimpleDistributedAcceptedPublishResult(obj.getEvent(), obj.getPublisher().getPushlisherId(),
 					obj.getHandleMode());
 		}
 
 		@Override
-		public IPublishResult unbridge(@NotNull SimpleRedisAcceptedPublishResult obj) {
+		public IPublishResult unbridge(@NotNull SimpleDistributedAcceptedPublishResult obj) {
 			return new SpringManagedListenablePublishResult(obj.getEvent(), obj.getPublisher(), obj.getHandleMode());
 		}
 	}
