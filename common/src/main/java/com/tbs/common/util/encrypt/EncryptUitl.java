@@ -1,6 +1,5 @@
 package com.tbs.common.util.encrypt;
 
-import cn.hutool.core.lang.UUID;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.util.StrUtil;
@@ -45,11 +44,11 @@ public class EncryptUitl {
      * @param data 待加密的数据
      * @return SHA-256 加密后的十六进制字符串结果，若输入为空则返回 null
      */
-    public static final String hash256Encrypt(String data) {
+    public static final String hash256Encrypt(String data, String salt) {
         if (StrUtil.isEmpty(data)) {
             return null;
         }
-        byte[] bytes = md5(data, UUID.fastUUID().toString(true), SHA256);
+        byte[] bytes = md5(data, salt, SHA256);
         return StrUtil.bytesToHex(bytes);
     }
 
@@ -59,11 +58,11 @@ public class EncryptUitl {
      * @param data 待加密的数据
      * @return SHA-1 加密后的十六进制字符串结果，若输入为空则返回 null
      */
-    public static final String hash128Encrypt(String data) {
+    public static final String hash128Encrypt(String data, String salt) {
         if (StrUtil.isEmpty(data)) {
             return null;
         }
-        byte[] bytes = md5(data, UUID.fastUUID().toString(true), SHA128);
+        byte[] bytes = md5(data, salt, SHA128);
         return StrUtil.bytesToHex(bytes);
     }
 
@@ -73,11 +72,11 @@ public class EncryptUitl {
      * @param data 待加密的数据
      * @return SHA-512 加密后的十六进制字符串结果，若输入为空则返回 null
      */
-    public static final String hash512Encrypt(String data) {
+    public static final String hash512Encrypt(String data, String salt) {
         if (StrUtil.isEmpty(data)) {
             return null;
         }
-        byte[] bytes = md5(data, UUID.fastUUID().toString(true), SHA512); // 已更正为 SHA512
+        byte[] bytes = md5(data, salt, SHA512); // 已更正为 SHA512
         return StrUtil.bytesToHex(bytes);
     }
 
