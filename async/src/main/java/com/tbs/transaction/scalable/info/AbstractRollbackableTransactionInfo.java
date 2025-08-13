@@ -104,7 +104,7 @@ public abstract class AbstractRollbackableTransactionInfo implements ITransactio
 	 * @see #pollData(String) 抽取可回滚数据方法
 	 * @see #createRollbackableData(String) 创建可回滚数据方法
 	 */
-	public void setData(String key, Object data) {
+	public void setData(String key, Serializable data) {
 		AssertUtil.hasText(key, "key不能为空");
 		AssertUtil.notNull(data, "rollbackableData不能为空");
 		pollData(key).ifPresentOrElse((r) -> {
