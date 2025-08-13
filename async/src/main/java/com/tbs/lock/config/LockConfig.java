@@ -2,7 +2,6 @@ package com.tbs.lock.config;
 
 import com.tbs.common.util.BeanUtil;
 import com.tbs.lock.ILockProvider;
-import com.tbs.lock.LockProperty;
 import com.tbs.lock.impls.providers.JdkLockProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

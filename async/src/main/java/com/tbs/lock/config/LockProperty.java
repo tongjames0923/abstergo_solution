@@ -1,5 +1,6 @@
-package com.tbs.lock;
+package com.tbs.lock.config;
 
+import com.tbs.lock.ILockProvider;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
