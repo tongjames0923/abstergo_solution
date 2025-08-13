@@ -1,5 +1,6 @@
 package com.tbs.lock.impls;
 
+import com.tbs.common.data.IFeatureWrapper;
 import com.tbs.lock.IConditionLock;
 
 import java.time.Duration;
@@ -10,9 +11,9 @@ import java.util.concurrent.locks.Lock;
 /**
  * @author Abstergo
  */
-public class LockAdapter implements IConditionLock {
+public class LockAdapter implements IConditionLock, IFeatureWrapper<Lock> {
 
-    Lock lock;
+    private Lock lock;
 
     ThreadLocal<Boolean> flag = new InheritableThreadLocal<Boolean>();
     AtomicBoolean isLock = new AtomicBoolean(false);
@@ -57,5 +58,15 @@ public class LockAdapter implements IConditionLock {
     @Override
     public Condition newCondition() {
         return lock.newCondition();
+    }
+
+    @Override
+    public Lock getOrginal() {
+        return lock;
+    }
+
+    @Override
+    public void setOrginal(Lock orginal) {
+        this.lock = orginal;
     }
 }
