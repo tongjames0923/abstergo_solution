@@ -5,8 +5,8 @@ import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.DisposableBean;
 
 import java.time.Duration;
 import java.util.Collection;
@@ -17,8 +17,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 @Slf4j
-public abstract class AbstractAsyncBackgroundSchedule<TASK extends IScheduleTask>
-    implements ISchedule, IStartup, DisposableBean {
+public abstract class AbstractAsyncBackgroundSchedule<TASK extends IScheduleTask> implements ISchedule, IStartup {
 
     private int flag = 0;
 
@@ -27,6 +26,10 @@ public abstract class AbstractAsyncBackgroundSchedule<TASK extends IScheduleTask
     private long pollTime;
     @Getter
     private TimeUnit pollTimeUnit;
+
+    @Getter
+    @Setter
+    private boolean isExecuteAllOnDestroy = false;
 
     public AbstractAsyncBackgroundSchedule(IScheduleExecuteErrorHandle executeErrorHandle, Long pollTime,
         TimeUnit pollTimeUnit) {
@@ -65,6 +68,13 @@ public abstract class AbstractAsyncBackgroundSchedule<TASK extends IScheduleTask
      */
     protected abstract Collection<TASK> pollTask(long t, TimeUnit unit);
 
+    /**
+     * 丢弃所有任务
+     *
+     * @return
+     */
+    protected abstract Collection<TASK> dropAllTaskForClean();
+
     @Override
     public IScheduleTask pin(Runnable runnable, Duration delay) {
         TASK task = createTask(runnable, delay);
@@ -86,6 +96,25 @@ public abstract class AbstractAsyncBackgroundSchedule<TASK extends IScheduleTask
     @Override
     public void destroy() throws Exception {
         flag = 0;
+        if (isExecuteAllOnDestroy()) {
+            log.warn("销毁计划器中...... 所有任务都将提前执行...");
+            handleTaskList(dropAllTaskForClean());
+        }
+    }
+
+    private void handleTaskList(Collection<TASK> t) {
+        for (TASK task : t) {
+            try {
+                task.getRunnable().run();
+                task.unPin();
+            } catch (Exception e) {
+                if (getExecuteErrorHandle() == null) {
+                    log.warn("schedule task error", e);
+                    continue;
+                }
+                getExecuteErrorHandle().handle(task, e, this);
+            }
+        }
     }
 
     protected void handle() {
@@ -96,22 +125,7 @@ public abstract class AbstractAsyncBackgroundSchedule<TASK extends IScheduleTask
                 log.trace("存在空任务在队列中");
                 continue;
             }
-            for (TASK scheduleTask : tasks) {
-                try {
-                    if (!scheduleTask.isPin()) {
-                        log.debug("任务被提前取消 {}", scheduleTask.getRunnable().toString());
-                        continue;
-                    }
-                    scheduleTask.getRunnable().run();
-                    scheduleTask.unPin();
-                } catch (Exception e) {
-                    if (getExecuteErrorHandle() == null) {
-                        log.warn("schedule task error", e);
-                        continue;
-                    }
-                    getExecuteErrorHandle().handle(scheduleTask, e, this);
-                }
-            }
+            handleTaskList(tasks);
         }
     }
 

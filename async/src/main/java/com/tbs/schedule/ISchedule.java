@@ -1,5 +1,7 @@
 package com.tbs.schedule;
 
+import org.springframework.beans.factory.DisposableBean;
+
 import java.time.Duration;
 
 /**
@@ -7,7 +9,7 @@ import java.time.Duration;
  *
  * @author tongj
  */
-public interface ISchedule {
+public interface ISchedule extends DisposableBean {
     /**
      * 定时执行任务
      *

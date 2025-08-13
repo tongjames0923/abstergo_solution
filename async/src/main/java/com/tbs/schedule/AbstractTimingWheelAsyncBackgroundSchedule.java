@@ -16,6 +16,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 基于时间轮算法的异步后台调度器
@@ -129,6 +130,16 @@ public abstract class AbstractTimingWheelAsyncBackgroundSchedule<TASK extends IS
 
         });
         return result;
+    }
+
+    @Override
+    protected Collection<TASK> dropAllTaskForClean() {
+        List<TASK> tasks = new LinkedList<>();
+        for (int i = 0; i < wheelSize; i++) {
+            tasks.addAll(wheel[i].stream().map(TimingWheelTask::getOrginal).collect(Collectors.toList()));
+            wheel[i].clear();
+        }
+        return tasks;
     }
 
     /**

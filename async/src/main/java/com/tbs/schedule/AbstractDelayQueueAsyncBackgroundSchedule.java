@@ -2,8 +2,10 @@ package com.tbs.schedule;
 
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
@@ -24,6 +26,13 @@ public abstract class AbstractDelayQueueAsyncBackgroundSchedule<TASK extends Del
     @Override
     protected void submitTask(TASK task) {
         delayQueue.put(task);
+    }
+
+    @Override
+    protected Collection<TASK> dropAllTaskForClean() {
+        List<TASK> tasks = new ArrayList<>(delayQueue.size());
+        delayQueue.drainTo(tasks);
+        return tasks;
     }
 
     @Override
