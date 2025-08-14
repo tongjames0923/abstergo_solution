@@ -2,6 +2,9 @@ package com.tbs.transaction.scalable.info;
 
 import java.io.Serializable;
 
+import com.tbs.common.data.ValueWrapper;
+import com.tbs.common.function.SConsumer;
+
 /**
  * 可回滚数据接口
  * <p>
@@ -28,11 +31,11 @@ public interface IRollbackableData extends Serializable {
 	 * 该方法用于确认对数据的更改，使数据更改永久生效。
 	 * </p>
 	 *
-	 * @param data 需要提交的数据对象
+	 * @param dataSetter 需要提交的数据对象
 	 * @see com.tbs.transaction.ITransaction#commit(com.tbs.transaction.ITransactionInfo)
 	 * @see com.tbs.transaction.TransactionStatus#COMMIT
 	 */
-	void commit(Serializable data);
+	void commit(SConsumer<ValueWrapper<Serializable>> dataSetter, boolean deepCopyFlag);
 
 	/**
 	 * 获取数据

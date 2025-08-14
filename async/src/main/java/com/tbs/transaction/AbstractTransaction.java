@@ -7,7 +7,6 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.lock.ILock;
 import com.tbs.lock.util.LockUtil;
-import com.tbs.transaction.impl.DefaultTransactionInfo;
 
 import lombok.extern.slf4j.Slf4j;
 

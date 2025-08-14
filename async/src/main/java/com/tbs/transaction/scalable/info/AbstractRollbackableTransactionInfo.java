@@ -7,6 +7,8 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.transaction.ITransactionInfo;
 import com.tbs.transaction.TransactionStatus;
 
+import lombok.Setter;
+
 /**
  * 抽象事务信息类
  * <p>
@@ -20,8 +22,24 @@ import com.tbs.transaction.TransactionStatus;
  */
 public abstract class AbstractRollbackableTransactionInfo implements ITransactionInfo, Serializable {
 	private static final long serialVersionUID = 1L;
+	@Setter
 	private String transactionId;
 	private TransactionStatus transactionStatus = TransactionStatus.BEGIN;
+
+	/**
+	 * 构造函数
+	 * <p>
+	 * 该构造函数接收事务ID作为参数，并初始化事务ID和事务状态。
+	 * </p>
+	 *
+	 * @param transactionId 事务ID
+	 */
+	public AbstractRollbackableTransactionInfo(String transactionId) {
+		this.transactionId = transactionId;
+	}
+
+	public AbstractRollbackableTransactionInfo() {
+	}
 
 	/**
 	 * 获取事务ID
@@ -108,10 +126,10 @@ public abstract class AbstractRollbackableTransactionInfo implements ITransactio
 		AssertUtil.hasText(key, "key不能为空");
 		AssertUtil.notNull(data, "rollbackableData不能为空");
 		pollData(key).ifPresentOrElse((r) -> {
-			r.commit(data);
+			r.commit((vw) -> vw.set(data), false);
 		}, () -> {
 			IRollbackableData rollbackableData = createRollbackableData(key);
-			rollbackableData.commit(data);
+			rollbackableData.commit((vw) -> vw.set(data), false);
 		});
 	}
 
