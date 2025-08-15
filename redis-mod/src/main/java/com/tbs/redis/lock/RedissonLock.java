@@ -12,13 +12,13 @@ import java.util.concurrent.TimeUnit;
  *
  * @author tongj
  */
-public class RedisLock implements ILock {
+public class RedissonLock implements ILock {
 
     private RedissonClient client;
 
     private RLock rLock;
 
-    public RedisLock(String lockKey, RedissonClient client) {
+    public RedissonLock(String lockKey, RedissonClient client) {
         this.rLock = client.getLock(lockKey);
         this.client = client;
     }

@@ -3,7 +3,7 @@ package com.tbs.redis.config;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
-import com.tbs.redis.lock.RedisLockProvider;
+import com.tbs.redis.lock.RedissonLockProvider;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
@@ -51,7 +51,7 @@ public class BasicRedisConfig {
 
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(RedissonClient.class)
-    @ConditionalOnBean(RedisLockProvider.class)
+    @ConditionalOnBean(RedissonLockProvider.class)
     public RedissonClient redissonClient() {
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
