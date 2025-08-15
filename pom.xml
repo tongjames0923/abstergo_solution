@@ -20,6 +20,7 @@
         <module>sql</module>
         <module>app_system</module>
         <module>redis-mod</module>
+        <module>rabbitmq-mod</module>
     </modules>
     <groupId>com.tbs</groupId>
     <artifactId>solution</artifactId>

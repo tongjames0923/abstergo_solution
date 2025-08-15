@@ -16,12 +16,12 @@ import com.tbs.app.service.log.ISystemOperateLog;
 import com.tbs.app.service.log.impl.DbSystemOpLog;
 import com.tbs.app.service.log.impl.EventSystemOpLog;
 import com.tbs.broadcast.event.impl.SimpleEvent;
+import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.broadcast.subscriber.impl.SimpleUseSubscriber;
 import com.tbs.cache.core.ICacheListenner;
 import com.tbs.cache.core.manager.holder.DataHolderCacheManager;
 import com.tbs.common.error.IErrorThrowEvent;
-import com.tbs.redis.boradcast.SimpleRedisEventSupport;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
@@ -128,8 +128,8 @@ public class AppConfig {
 	}
 
 	@Bean
-	SimpleRedisEventSupport simpleRedisEventSupport() {
-		return new SimpleRedisEventSupport();
+	SimpleRabbitMqSupport rabbitMqSupport() {
+		return new SimpleRabbitMqSupport();
 	}
 
 	private static final Logger timingWheelScheduleLogger = LoggerFactory.getLogger(TimingWheelSchedule.class);
