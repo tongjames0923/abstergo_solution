@@ -29,13 +29,15 @@ public class RedissonLockProvider implements ILockProvider {
 	private RedissonClient redissonClient;
 
 	@Slf4j
-	public class RedissonLockCondition implements Condition {
+	public static class RedissonLockCondition implements Condition {
 		private final String lockKey;
 		private final String conditionKey;
+		private final RedissonClient redissonClient;
 
-		public RedissonLockCondition(String lockKey) {
+		public RedissonLockCondition(String lockKey, RedissonClient redissonClient) {
 			this.lockKey = lockKey;
 			this.conditionKey = lockKey + ":condition";
+			this.redissonClient = redissonClient;
 		}
 
 		@Override
@@ -111,7 +113,7 @@ public class RedissonLockProvider implements ILockProvider {
 		AssertUtil.notNull(target, "lock target can not be null");
 		String lockKey = target.toString();
 		RedissonLock lock = new RedissonLock(lockKey, redissonClient);
-		RedissonLockCondition condition = new RedissonLockCondition(lockKey);
+		RedissonLockCondition condition = new RedissonLockCondition(lockKey, redissonClient);
 
 		return new IConditionLock() {
 			@Override
