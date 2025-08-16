@@ -1,27 +1,58 @@
 <template>
   <div class="user-management">
-    <h2>用户管理</h2>
+    <div class="header-section">
+      <h2>用户管理</h2>
+      <div class="header-actions">
+        <el-button type="primary" icon="el-icon-plus" @click="handleAdd">新增用户</el-button>
+      </div>
+    </div>
 
     <!-- 查询条件 -->
-    <el-card class="search-card">
-      <div slot="header" class="clearfix">
-        <span>查询条件</span>
+    <el-card class="search-card" shadow="never">
+      <div slot="header" class="clearfix card-header">
+        <span class="card-title">查询条件</span>
+        <el-button style="float: right; padding: 3px 0" type="text" @click="toggleSearchForm">
+          {{ isSearchFormExpanded ? '收起' : '展开' }}
+          <i :class="isSearchFormExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
+        </el-button>
       </div>
-      <el-form :model="searchForm" ref="searchForm" label-width="120px" class="search-form">
+
+      <el-form
+        :model="searchForm"
+        ref="searchForm"
+        label-width="100px"
+        class="search-form"
+        v-show="isSearchFormExpanded"
+      >
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="用户ID">
-              <el-input v-model="searchForm.idEquals" placeholder="请输入用户ID"></el-input>
+              <el-input
+                v-model="searchForm.idEquals"
+                placeholder="请输入用户ID"
+                clearable
+                prefix-icon="el-icon-search"
+              ></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="用户名">
-              <el-input v-model="searchForm.userNameEquals" placeholder="请输入用户名"></el-input>
+              <el-input
+                v-model="searchForm.userNameEquals"
+                placeholder="请输入用户名"
+                clearable
+                prefix-icon="el-icon-user"
+              ></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="8">
             <el-form-item label="昵称">
-              <el-input v-model="searchForm.nickNameLike" placeholder="请输入昵称"></el-input>
+              <el-input
+                v-model="searchForm.nickNameLike"
+                placeholder="请输入昵称"
+                clearable
+                prefix-icon="el-icon-star-off"
+              ></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -29,125 +60,176 @@
         <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="用户状态">
-              <DynamicOptions api-url="/private/user/statusOptions" :value="searchForm.flagEquals"
-                              @change="(val)=>this.searchForm.flagEquals=val"
+              <DynamicOptions
+                api-url="/private/user/statusOptions"
+                :value="searchForm.flagEquals"
+                @change="(val)=>this.searchForm.flagEquals=val"
+                placeholder="请选择用户状态"
               ></DynamicOptions>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="创建时间(起)">
+            <el-form-item label="创建时间">
               <el-date-picker
-                v-model="searchForm.createTimeGreaterThan"
-                type="datetime"
-                placeholder="选择开始时间"
+                v-model="searchForm.createTimeRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
                 value-format="yyyy-MM-dd HH:mm:ss"
-                format="yyyy-MM-dd HH:mm:ss">
+                format="yyyy-MM-dd"
+                class="date-range-picker"
+              >
               </el-date-picker>
             </el-form-item>
           </el-col>
           <el-col :span="8">
-            <el-form-item label="创建时间(止)">
+            <el-form-item label="更新时间">
               <el-date-picker
-                v-model="searchForm.createTimeLessThan"
-                type="datetime"
-                placeholder="选择结束时间"
+                v-model="searchForm.updateTimeRange"
+                type="daterange"
+                range-separator="至"
+                start-placeholder="开始日期"
+                end-placeholder="结束日期"
                 value-format="yyyy-MM-dd HH:mm:ss"
-                format="yyyy-MM-dd HH:mm:ss">
+                format="yyyy-MM-dd"
+                class="date-range-picker"
+              >
               </el-date-picker>
             </el-form-item>
           </el-col>
         </el-row>
 
+        <div class="search-actions">
+          <el-button type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
+          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+        </div>
+      </el-form>
+    </el-card>
+
+    <!-- 排序条件 -->
+    <el-card class="sort-card" shadow="never">
+      <div slot="header" class="clearfix card-header">
+        <span class="card-title">排序条件</span>
+        <el-button style="float: right; padding: 3px 0" type="text" @click="toggleSortForm">
+          {{ isSortFormExpanded ? '收起' : '展开' }}
+          <i :class="isSortFormExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
+        </el-button>
+      </div>
+
+      <el-form
+        :model="searchForm"
+        label-width="120px"
+        class="sort-form"
+        v-show="isSortFormExpanded"
+      >
         <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="更新时间(起)">
-              <el-date-picker
-                v-model="searchForm.updateTimeGreaterThan"
-                type="datetime"
-                placeholder="选择开始时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                format="yyyy-MM-dd HH:mm:ss">
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="更新时间(止)">
-              <el-date-picker
-                v-model="searchForm.updateTimeLessThan"
-                type="datetime"
-                placeholder="选择结束时间"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                format="yyyy-MM-dd HH:mm:ss">
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
           <el-col :span="8">
             <el-form-item label="创建时间排序">
-              <el-select v-model="searchForm.createTimeOrder" placeholder="请选择排序方式" clearable>
+              <el-select
+                v-model="searchForm.createTimeOrder"
+                placeholder="请选择排序方式"
+                clearable
+                class="sort-select"
+              >
                 <el-option label="升序" value="asc"></el-option>
                 <el-option label="降序" value="desc"></el-option>
               </el-select>
             </el-form-item>
           </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
           <el-col :span="8">
             <el-form-item label="更新时间排序">
-              <el-select v-model="searchForm.updateTimeOrder" placeholder="请选择排序方式" clearable>
+              <el-select
+                v-model="searchForm.updateTimeOrder"
+                placeholder="请选择排序方式"
+                clearable
+                class="sort-select"
+              >
                 <el-option label="升序" value="asc"></el-option>
                 <el-option label="降序" value="desc"></el-option>
               </el-select>
             </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row>
-          <el-col :span="24" style="text-align: right">
-            <el-button type="primary" @click="handleSearch">查询</el-button>
-            <el-button @click="handleReset">重置</el-button>
           </el-col>
         </el-row>
       </el-form>
     </el-card>
 
     <!-- 用户列表 -->
-    <el-card class="table-card">
-      <div slot="header" class="clearfix">
-        <span>用户列表</span>
+    <el-card class="table-card" shadow="never">
+      <div slot="header" class="clearfix card-header">
+        <span class="card-title">用户列表</span>
+        <div class="table-header-actions">
+          <el-button
+            icon="el-icon-refresh"
+            circle
+            size="mini"
+            @click="handleSearch"
+            title="刷新数据"
+          ></el-button>
+        </div>
       </div>
+
       <DynamicTable
         ref="userTable"
         :data-fetcher="fetchUserData"
         :columns="columns"
         :actions="actions"
         :auto-load="true"
+        actions-fixed="right"
+        actions-width="380px"
+        border
+        stripe
+        class="user-table"
       >
-        <template #toolbar>
-          <el-button type="primary" icon="el-icon-plus" @click="handleAdd">新增用户</el-button>
-        </template>
 
         <template #status="{ row }">
-          <el-tag v-if="row.flag === 0" type="danger">禁用</el-tag>
-          <el-tag v-else-if="row.flag===1" type="success">正常</el-tag>
-          <el-tag v-else type="warning">锁定</el-tag>
+          <el-tag v-if="row.flag === 0" type="danger" effect="dark">禁用</el-tag>
+          <el-tag v-else-if="row.flag===1" type="success" effect="dark">正常</el-tag>
+          <el-tag v-else type="warning" effect="dark">锁定</el-tag>
         </template>
 
         <template #avatar="{row}">
-          <el-avatar :src="row.avatar || '/default-avatar.png'" fit="cover">
+          <el-avatar
+            :src="row.avatar || '/default-avatar.png'"
+            fit="cover"
+            shape="circle"
+            size="small"
+            class="user-avatar"
+          >
             <i v-if="!row.avatar || row.avatar === ''" class="el-icon-user-solid"></i>
           </el-avatar>
         </template>
 
         <template #actions="{ row, $index }">
-          <el-button size="mini" @click="handleEdit(row)">编辑</el-button>
-          <el-button
-            size="mini"
-            :type="row.flag === 1 ? 'danger' : 'success'"
-            @click="handleToggleStatus(row)"
-          >
-            {{ row.flag === 1 ? '禁用' : '启用' }}
-          </el-button>
+          <div class="action-buttons">
+            <el-button
+              size="mini"
+              type="primary"
+              plain
+              icon="el-icon-edit"
+              @click="handleEdit(row)"
+            >编辑
+            </el-button>
+
+            <el-button
+              size="mini"
+              :type="row.flag === 1 ? 'danger' : 'success'"
+              plain
+              :icon="row.flag === 1 ? 'el-icon-lock' : 'el-icon-unlock'"
+              @click="handleToggleStatus(row)"
+            >
+              {{ row.flag === 1 ? '禁用' : '启用' }}
+            </el-button>
+
+            <el-button
+              size="mini"
+              type="warning"
+              plain
+              icon="el-icon-refresh-left"
+              @click="handleResetPassword(row)"
+            >重置密码
+            </el-button>
+          </div>
         </template>
       </DynamicTable>
     </el-card>
@@ -156,8 +238,10 @@
     <el-dialog
       :title="dialogTitle"
       :visible.sync="userDialogVisible"
-      width="85%"
+      width="600px"
       @close="handleUserDialogClose"
+      :modal-append-to-body="false"
+      class="user-dialog"
     >
       <UserAddView
         v-if="dialogMode === 'add'"
@@ -173,12 +257,54 @@
         @cancel="handleUserOperationCancel"
       />
     </el-dialog>
+
+    <!-- 重置密码弹窗 -->
+    <el-dialog
+      title="重置密码"
+      :visible.sync="resetPasswordDialogVisible"
+      width="450px"
+      @close="handleResetPasswordDialogClose"
+      :modal-append-to-body="false"
+      class="password-dialog"
+    >
+      <el-form :model="passwordForm" :rules="passwordRules" ref="passwordForm" label-width="80px">
+        <el-form-item label="用户名" prop="userName">
+          <el-input
+            v-model="passwordForm.userName"
+            disabled
+            prefix-icon="el-icon-user"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="新密码" prop="password">
+          <el-input
+            v-model="passwordForm.password"
+            type="password"
+            show-password
+            prefix-icon="el-icon-lock"
+            placeholder="请输入新密码"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="确认密码" prop="confirmPassword">
+          <el-input
+            v-model="passwordForm.confirmPassword"
+            type="password"
+            show-password
+            prefix-icon="el-icon-lock"
+            placeholder="请再次输入密码"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="resetPasswordDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="handlePasswordSubmit">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import DynamicTable from "@/components/DynamicTable/index.vue"
-import {activateUser, adminQueryUser, disableUser} from '@/api/user'
+import {activateUser, adminQueryUser, disableUser, saveUser} from '@/api/user'
 import DynamicOptions from "@/components/DynamicOptions/index.vue";
 import UserAddView from "@/components/UserAdminView/UserAddView.vue";
 import UserEditView from "@/components/UserAdminView/UserEditView.vue";
@@ -187,15 +313,46 @@ export default {
   name: 'UserAdminView',
   components: {DynamicOptions, DynamicTable, UserAddView, UserEditView},
   data() {
+    // 确认密码验证规则
+    const validateConfirmPassword = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请再次输入密码'))
+      } else if (value !== this.passwordForm.password) {
+        callback(new Error('两次输入密码不一致!'))
+      } else {
+        callback()
+      }
+    }
+
     return {
+      isSearchFormExpanded: true,
+      isSortFormExpanded: true,
       userDialogVisible: false,
+      resetPasswordDialogVisible: false,
       dialogMode: 'add', // 'add' 或 'edit'
       currentUser: {},
+      passwordForm: {
+        id: undefined,
+        userName: '',
+        password: '',
+        confirmPassword: ''
+      },
+      passwordRules: {
+        password: [
+          {required: true, message: '请输入新密码', trigger: 'blur'},
+          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
+        ],
+        confirmPassword: [
+          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
+        ]
+      },
       searchForm: {
         idEquals: '',
         userNameEquals: '',
         nickNameLike: '',
         flagEquals: undefined,
+        createTimeRange: [],
+        updateTimeRange: [],
         createTimeGreaterThan: '',
         createTimeLessThan: '',
         updateTimeGreaterThan: '',
@@ -223,6 +380,20 @@ export default {
   },
   methods: {
     /**
+     * 切换搜索表单展开/收起状态
+     */
+    toggleSearchForm() {
+      this.isSearchFormExpanded = !this.isSearchFormExpanded;
+    },
+
+    /**
+     * 切换排序表单展开/收起状态
+     */
+    toggleSortForm() {
+      this.isSortFormExpanded = !this.isSortFormExpanded;
+    },
+
+    /**
      * 获取用户数据
      */
     async fetchUserData(params) {
@@ -233,10 +404,10 @@ export default {
           userNameEquals: this.searchForm.userNameEquals || undefined,
           nickNameLike: this.searchForm.nickNameLike || undefined,
           flagEquals: this.searchForm.flagEquals,
-          createTimeGreaterThan: this.searchForm.createTimeGreaterThan || undefined,
-          createTimeLessThan: this.searchForm.createTimeLessThan || undefined,
-          updateTimeGreaterThan: this.searchForm.updateTimeGreaterThan || undefined,
-          updateTimeLessThan: this.searchForm.updateTimeLessThan || undefined
+          createTimeGreaterThan: this.searchForm.createTimeRange && this.searchForm.createTimeRange[0] || this.searchForm.createTimeGreaterThan || undefined,
+          createTimeLessThan: this.searchForm.createTimeRange && this.searchForm.createTimeRange[1] || this.searchForm.createTimeLessThan || undefined,
+          updateTimeGreaterThan: this.searchForm.updateTimeRange && this.searchForm.updateTimeRange[0] || this.searchForm.updateTimeGreaterThan || undefined,
+          updateTimeLessThan: this.searchForm.updateTimeRange && this.searchForm.updateTimeRange[1] || this.searchForm.updateTimeLessThan || undefined
         }
 
         // 处理排序字段
@@ -293,6 +464,8 @@ export default {
         userNameEquals: '',
         nickNameLike: '',
         flagEquals: undefined,
+        createTimeRange: [],
+        updateTimeRange: [],
         createTimeGreaterThan: '',
         createTimeLessThan: '',
         updateTimeGreaterThan: '',
@@ -319,7 +492,6 @@ export default {
       this.currentUser = {...row};
       this.userDialogVisible = true;
     },
-
 
     /**
      * 切换用户状态
@@ -395,11 +567,202 @@ export default {
       }
       // 编辑模式不需要特别处理，因为下次打开时会传入新的数据
     },
+
+    /**
+     * 重置密码按钮点击事件
+     */
+    handleResetPassword(row) {
+      this.passwordForm = {
+        id: row.id,
+        userName: row.userName,
+        password: '',
+        confirmPassword: ''
+      };
+      this.resetPasswordDialogVisible = true;
+    },
+
+    /**
+     * 处理密码重置提交事件
+     */
+    handlePasswordSubmit() {
+      this.$refs.passwordForm.validate(async (valid) => {
+        if (valid) {
+          try {
+            // 构造用户数据，只更新密码
+            const userData = {
+              id: this.passwordForm.id,
+              userName: this.passwordForm.userName,
+              password: this.passwordForm.password
+            };
+
+            // 调用后端保存接口
+            const response = await saveUser(userData);
+
+            if (response.code === 200) {
+              this.$message.success('密码重置成功');
+              this.resetPasswordDialogVisible = false;
+              this.$refs.userTable.refresh();
+            } else {
+              this.$message.error(response.message || '密码重置失败');
+            }
+          } catch (error) {
+            console.error('密码重置失败:', error);
+            this.$message.error('密码重置失败');
+          }
+        } else {
+          console.log('表单验证失败');
+          this.$message.warning('请填写正确的表单信息');
+          return false;
+        }
+      });
+    },
+
+    /**
+     * 处理重置密码弹窗关闭事件
+     */
+    handleResetPasswordDialogClose() {
+      this.$refs.passwordForm.resetFields();
+      this.passwordForm = {
+        id: undefined,
+        userName: '',
+        password: '',
+        confirmPassword: ''
+      };
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
+.user-management {
+  margin: 20px;
+  padding: 0;
+
+  .header-section {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+
+    h2 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+      color: #303133;
+    }
+
+    .header-actions {
+      display: flex;
+      gap: 10px;
+    }
+  }
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+    }
+  }
+
+  .search-card,
+  .sort-card,
+  .table-card {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
+
+    ::v-deep .el-card__header {
+      padding: 15px 20px;
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ebeef5;
+      border-radius: 8px 8px 0 0 !important;
+    }
+  }
+
+  .search-form {
+    padding: 10px 0;
+
+    .el-form-item {
+      margin-bottom: 18px;
+    }
+
+    .date-range-picker,
+    .sort-select {
+      width: 100%;
+    }
+
+    .search-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding-top: 10px;
+      border-top: 1px solid #f0f0f0;
+      margin-top: 10px;
+    }
+  }
+
+  .sort-form {
+    padding: 10px 0;
+
+    .el-form-item {
+      margin-bottom: 18px;
+    }
+
+    .sort-select {
+      width: 100%;
+    }
+  }
+
+  .table-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .user-table {
+    ::v-deep .el-table th {
+      background-color: #f5f7fa;
+    }
+  }
+
+  .user-avatar {
+    background-color: #e1f3d8;
+  }
+
+  .action-buttons {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .user-dialog,
+  .password-dialog {
+    ::v-deep .el-dialog__header {
+      background-color: #f8f9fa;
+      border-bottom: 1px solid #ebeef5;
+      padding: 15px 20px;
+      border-radius: 8px 8px 0 0 !important;
+    }
+
+    ::v-deep .el-dialog__title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #303133;
+    }
+  }
+
+  ::v-deep .el-dialog__footer {
+    border-top: 1px solid #ebeef5;
+    padding: 15px 20px;
+  }
+}
+
 .dashboard {
   &-container {
     margin: 30px;
@@ -410,30 +773,4 @@ export default {
     line-height: 46px;
   }
 }
-
-.user-management {
-  margin-top: 30px;
-
-  h2 {
-    margin-bottom: 20px;
-  }
-
-  .search-card,
-  .table-card {
-    margin-bottom: 20px;
-  }
-
-  .search-form {
-    .el-form-item {
-      margin-bottom: 15px;
-    }
-  }
-
-  ::v-deep .el-card__header {
-    padding: 10px 20px;
-    background-color: #f5f7fa;
-    border-bottom: 1px solid #ebeef5;
-  }
-}
 </style>
-

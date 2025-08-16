@@ -100,21 +100,23 @@
         :align="actionsAlign || 'center'"
       >
         <template slot-scope="scope">
-          <slot name="actions" :row="scope.row" :$index="scope.$index"></slot>
-          <template v-if="actions && Array.isArray(actions)">
-            <el-button
-              v-for="(action, index) in actions"
-              :key="index"
-              :type="action.type || 'text'"
-              :size="action.size || 'mini'"
-              :icon="action.icon"
-              :disabled="checkDisabled(action, scope.row, scope.$index)"
-              :loading="checkLoading(action, scope.row, scope.$index)"
-              @click.stop="handleAction(action, scope.row, scope.$index)"
-            >
-              {{ action.label }}
-            </el-button>
-          </template>
+          <div class="action-buttons-container">
+            <slot name="actions" :row="scope.row" :$index="scope.$index"></slot>
+            <template v-if="actions && Array.isArray(actions)">
+              <el-button
+                v-for="(action, index) in actions"
+                :key="index"
+                :type="action.type || 'text'"
+                :size="action.size || 'mini'"
+                :icon="action.icon"
+                :disabled="checkDisabled(action, scope.row, scope.$index)"
+                :loading="checkLoading(action, scope.row, scope.$index)"
+                @click.stop="handleAction(action, scope.row, scope.$index)"
+              >
+                {{ action.label }}
+              </el-button>
+            </template>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -273,7 +275,7 @@ export default {
     // 操作列宽度
     actionsWidth: {
       type: [String, Number],
-      default: 150
+      default: 180
     },
     // 操作列固定位置
     actionsFixed: {
@@ -590,5 +592,13 @@ export default {
     margin-top: 20px;
     text-align: right;
   }
+}
+
+.action-buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 5px;
+  align-items: center;
 }
 </style>
