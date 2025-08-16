@@ -1,119 +1,54 @@
 <template>
   <div class="user-add-view">
-    <el-form
-      :model="userForm"
-      :rules="userRules"
-      ref="userForm"
-      label-width="80px"
-      class="user-form"
+    <DynamicForm
+      ref="dynamicForm"
+      :config="formConfig"
+      :value="userForm"
+      :custom-components="{ urlImage: UrlImage }"
+      @input="handleFormChange"
+      @submit="handleSubmit"
     >
-      <div class="form-section">
-        <div class="section-header">
-          <i class="el-icon-user"></i>
-          <span class="section-title">基本信息</span>
+      <template #form-item-confirmPassword="{ field, value, setValue }">
+        <el-form-item :label="field.label" :prop="field.prop">
+          <el-input
+            :value="value"
+            type="password"
+            :placeholder="field.placeholder"
+            show-password
+            size="medium"
+            prefix-icon="el-icon-lock"
+            @input="setValue"
+          ></el-input>
+        </el-form-item>
+      </template>
+
+      <template #form-item-avatar="{ field, value, setValue }">
+        <el-form-item :label="field.label" :prop="field.prop">
+          <url-image :value="value" @input="setValue"></url-image>
+        </el-form-item>
+      </template>
+
+      <template #actions="{ submit, reset }">
+        <div class="form-actions">
+          <el-button @click="handleCancel" size="medium">取消</el-button>
+          <el-button type="primary" @click="submit" size="medium" icon="el-icon-check">保存用户</el-button>
         </div>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="用户名" prop="userName">
-              <el-input
-                v-model="userForm.userName"
-                placeholder="请输入用户名"
-                size="medium"
-                prefix-icon="el-icon-user"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="昵称" prop="nickName">
-              <el-input
-                v-model="userForm.nickName"
-                placeholder="请输入昵称"
-                size="medium"
-                prefix-icon="el-icon-star-off"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="密码" prop="password">
-              <el-input
-                v-model="userForm.password"
-                type="password"
-                placeholder="请输入密码"
-                show-password
-                size="medium"
-                prefix-icon="el-icon-lock"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="确认密码" prop="confirmPassword">
-              <el-input
-                v-model="userForm.confirmPassword"
-                type="password"
-                placeholder="请再次输入密码"
-                show-password
-                size="medium"
-                prefix-icon="el-icon-lock"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </div>
-
-      <div class="form-section">
-        <div class="section-header">
-          <i class="el-icon-picture-outline"></i>
-          <span class="section-title">附加信息</span>
-        </div>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="备注" prop="remark">
-              <el-input
-                v-model="userForm.remark"
-                placeholder="请输入备注信息"
-                type="textarea"
-                :rows="2"
-                size="medium"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <el-form-item label="头像">
-              <url-image v-model="userForm.avatar"></url-image>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </div>
-
-      <div class="form-actions">
-        <el-button @click="handleCancel" size="medium">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" size="medium" icon="el-icon-check">保存用户</el-button>
-      </div>
-    </el-form>
+      </template>
+    </DynamicForm>
   </div>
 </template>
 
 <script>
-import UrlImage from "@/components/UrlImage/index.vue";
+import DynamicForm from "@/components/DynamicForm";
+import UrlImage from "@/components/UrlImage";
 import {saveUser} from '@/api/user'
 
 export default {
   name: 'UserAddView',
-  components: {UrlImage},
+  components: {
+    DynamicForm,
+    UrlImage
+  },
   data() {
     // 确认密码验证规则
     const validateConfirmPassword = (rule, value, callback) => {
@@ -135,7 +70,84 @@ export default {
         remark: '',
         avatar: ''
       },
-      userRules: {
+      formConfig: {
+        expandable: false,
+        fields: [
+          {
+            prop: 'userName',
+            label: '用户名',
+            type: 'input',
+            placeholder: '请输入用户名',
+            props: {
+              size: 'medium',
+              prefixIcon: 'el-icon-user'
+            }
+          },
+          {
+            prop: 'nickName',
+            label: '昵称',
+            type: 'input',
+            placeholder: '请输入昵称',
+            props: {
+              size: 'medium',
+              prefixIcon: 'el-icon-star-off'
+            }
+          },
+          {
+            prop: 'password',
+            label: '密码',
+            type: 'input',
+            placeholder: '请输入密码',
+            props: {
+              type: 'password',
+              showPassword: true,
+              size: 'medium',
+              prefixIcon: 'el-icon-lock'
+            }
+          },
+          {
+            prop: 'confirmPassword',
+            label: '确认密码',
+            type: 'custom',
+            placeholder: '请再次输入密码'
+          },
+          {
+            prop: 'remark',
+            label: '备注',
+            type: 'input',
+            placeholder: '请输入备注信息',
+            props: {
+              type: 'textarea',
+              rows: 2,
+              size: 'medium'
+            }
+          },
+          {
+            prop: 'avatar',
+            label: '头像',
+            type: 'urlImage'
+          }
+        ],
+        span: 24,
+        labelWidth: '80px'
+      }
+    }
+  },
+  computed: {
+    // 表单验证规则
+    userRules() {
+      // 确认密码验证规则
+      const validateConfirmPassword = (rule, value, callback) => {
+        if (value === '') {
+          callback(new Error('请再次输入密码'))
+        } else if (value !== this.userForm.password) {
+          callback(new Error('两次输入密码不一致!'))
+        } else {
+          callback()
+        }
+      }
+
+      return {
         userName: [
           {required: true, message: '请输入用户名', trigger: 'blur'},
           {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'}
@@ -156,40 +168,59 @@ export default {
   },
   methods: {
     /**
-     * 处理头像URL变化
+     * 处理表单变更
      */
-    handleAvatarChange(value) {
-      // 通过v-model自动更新userForm.avatar，这里可以添加额外的处理逻辑
-      console.log('头像URL已更新:', value)
-      this.userForm.avatar = value
+    handleFormChange(value) {
+      this.userForm = {...value};
     },
 
     /**
      * 提交表单
      */
-    handleSubmit() {
-      this.$refs.userForm.validate(async (valid) => {
-        if (valid) {
-          try {
-            // 构造用户数据
-            const userData = {
-              userName: this.userForm.userName,
-              password: this.userForm.password,
-              nickName: this.userForm.nickName,
-              remark: this.userForm.remark,
-              avatar: this.userForm.avatar
-            }
-            const res = await saveUser(userData)
-            this.$emit('success', res)
-          } catch (error) {
-            this.$emit('error', error)
-          }
-        } else {
-          console.log('表单验证失败')
-          this.$message.warning('请填写正确的表单信息')
-          return false
+    async handleSubmit(formData) {
+      try {
+        // 手动验证表单
+        const isValid = await this.validateForm();
+        if (!isValid) {
+          this.$message.warning('请填写正确的表单信息');
+          return;
         }
-      })
+
+        // 构造用户数据
+        const userData = {
+          userName: formData.userName,
+          password: formData.password,
+          nickName: formData.nickName,
+          remark: formData.remark,
+          avatar: formData.avatar
+        }
+
+        const res = await saveUser(userData)
+        this.$emit('success', res)
+      } catch (error) {
+        this.$emit('error', error)
+      }
+    },
+
+    /**
+     * 验证表单
+     */
+    validateForm() {
+      return new Promise((resolve) => {
+        this.$nextTick(() => {
+          // 创建临时表单引用以进行验证
+          const tempForm = this.$refs.dynamicForm.$refs.form;
+          if (tempForm) {
+            // 设置验证规则
+            tempForm.rules = this.userRules;
+            tempForm.validate((valid) => {
+              resolve(valid);
+            });
+          } else {
+            resolve(false);
+          }
+        });
+      });
     },
 
     /**
@@ -205,6 +236,24 @@ export default {
 <style lang="scss" scoped>
 .user-add-view {
   padding: 10px 20px;
+
+  .form-section-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+
+    i {
+      font-size: 16px;
+      color: #409EFF;
+      margin-right: 8px;
+    }
+
+    .section-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #606266;
+    }
+  }
 
   .form-section {
     margin-bottom: 20px;
@@ -234,12 +283,10 @@ export default {
     }
   }
 
-  .user-form {
-    .form-actions {
-      text-align: right;
-      padding-top: 15px;
-      border-top: 1px solid #ebeef5;
-    }
+  .form-actions {
+    text-align: right;
+    padding-top: 15px;
+    border-top: 1px solid #ebeef5;
   }
 
   .avatar-uploader {
@@ -283,4 +330,3 @@ export default {
   }
 }
 </style>
-

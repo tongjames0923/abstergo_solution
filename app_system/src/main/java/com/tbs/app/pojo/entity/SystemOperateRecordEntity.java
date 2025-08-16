@@ -37,7 +37,7 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
 	/**
 	 * 操作类型
 	 */
-	@javax.persistence.Column(name = "operate_type", length = 64)
+	@javax.persistence.Column(name = "operate_type", length = 128)
 	private String operateType;
 
 	/**
@@ -66,7 +66,7 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
 	/**
 	 * 操作方法 GET,PUT等操作方法类型
 	 */
-	@javax.persistence.Column(name = "method_type", length = 32)
+	@javax.persistence.Column(name = "method_type", length = 64)
 	private String method;
 
 	/**

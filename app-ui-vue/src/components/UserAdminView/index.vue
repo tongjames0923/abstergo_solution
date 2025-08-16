@@ -53,15 +53,16 @@
         </template>
 
         <template #avatar="{row}">
-          <el-avatar
-            :src="row.avatar || '/default-avatar.png'"
-            fit="cover"
-            shape="circle"
-            size="small"
-            class="user-avatar"
+          <i v-if="!row.avatar || row.avatar === ''" class="el-icon-user-solid">未设置图片</i>
+          <el-avatar v-else
+                     :src="row.avatar || '/default-avatar.png'"
+                     fit="fill"
+                     shape="circle"
+                     size="large"
+                     class="user-avatar"
           >
-            <i v-if="!row.avatar || row.avatar === ''" class="el-icon-user-solid"></i>
           </el-avatar>
+
         </template>
 
         <template #actions="{ row, $index }">
@@ -280,7 +281,7 @@ export default {
       },
       columns: [
         {prop: 'id', label: 'ID', width: 80},
-        {prop: 'avatar', label: '头像', width: 120},
+        {prop: 'avatar', label: '头像', width: 120, slot: 'avatar'},
         {prop: 'userName', label: '用户名', width: 180},
         {prop: 'nickName', label: '昵称', width: 180},
         {prop: 'remark', label: '备注', width: 250},
@@ -315,7 +316,6 @@ export default {
           updateTimeGreaterThan: this.searchForm.updateTimeRange && this.searchForm.updateTimeRange[0] || this.searchForm.updateTimeGreaterThan || undefined,
           updateTimeLessThan: this.searchForm.updateTimeRange && this.searchForm.updateTimeRange[1] || this.searchForm.updateTimeLessThan || undefined
         }
-
         // 添加排序参数
         if (this.sortParams.field && this.sortParams.order) {
           // 将Element UI的排序格式转换为后端需要的格式
@@ -385,16 +385,7 @@ export default {
      * 处理表格排序变化
      */
     handleTableSortChange(sortInfo) {
-      const {prop, order} = sortInfo;
-      if (prop && order) {
-        this.sortParams = {
-          field: prop,
-          order: order
-        };
-      } else {
-        this.sortParams = {};
-      }
-      // 表格会自动调用 loadData 方法，无需手动刷新
+      this.sortParams = sortInfo;
     },
 
     /**

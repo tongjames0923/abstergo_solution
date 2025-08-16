@@ -433,8 +433,8 @@ export default {
       } else {
         this.sortParams = {}
       }
+      this.$emit('sort-change', this.sortParams)
       this.loadData()
-      this.$emit('sort-change', sortInfo)
     },
 
     /**
