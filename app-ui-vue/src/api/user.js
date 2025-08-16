@@ -54,7 +54,7 @@ export function userStatusEnums()
     method: 'get'
   })
 }
-
+// ... existing code ...
 /**
  * 激活用户账户
  * @param {number} userId - 用户ID
@@ -78,3 +78,23 @@ export function disableUser(userId) {
     method: 'get'
   })
 }
+
+/**
+ * 保存用户信息（新增或更新）
+ * @param {Object} data - 用户信息
+ * @param {number} [data.id] - 用户ID，有ID为更新，无ID为新增
+ * @param {string} data.userName - 用户名
+ * @param {string} [data.password] - 密码
+ * @param {string} data.nickName - 昵称
+ * @param {string} data.remark - 备注
+ * @param {string} data.avatar - 头像URL
+ * @returns {Promise} 保存结果
+ */
+export function saveUser(data) {
+  return request({
+    url: '/private/admin/user/save',
+    method: 'post',
+    data
+  })
+}
+

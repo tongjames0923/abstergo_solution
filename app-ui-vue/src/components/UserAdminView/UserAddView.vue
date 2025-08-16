@@ -108,8 +108,8 @@
 </template>
 
 <script>
-import request from '@/utils/request'
 import UrlImage from "@/components/UrlImage/index.vue";
+import {saveUser} from '@/api/user'
 
 export default {
   name: 'UserAddView',
@@ -179,23 +179,10 @@ export default {
               remark: this.userForm.remark,
               avatar: this.userForm.avatar
             }
-
-            // 调用后端保存接口
-            const response = await request({
-              url: '/private/admin/user/save',
-              method: 'post',
-              data: userData
-            })
-
-            if (response.code === 200) {
-              this.$message.success('用户创建成功')
-              this.$emit('success')
-            } else {
-              this.$message.error(response.message || '用户创建失败')
-            }
+            const res = await saveUser(userData)
+            this.$emit('success', res)
           } catch (error) {
-            console.error('创建用户失败:', error)
-            this.$message.error('创建用户失败')
+            this.$emit('error', error)
           }
         } else {
           console.log('表单验证失败')
@@ -296,3 +283,4 @@ export default {
   }
 }
 </style>
+

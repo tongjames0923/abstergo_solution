@@ -154,15 +154,23 @@
 
     <!-- 新增用户弹窗 -->
     <el-dialog
-      title="新增用户"
-      :visible.sync="addUserDialogVisible"
+      :title="dialogTitle"
+      :visible.sync="userDialogVisible"
       width="85%"
-      @close="handleAddUserDialogClose"
+      @close="handleUserDialogClose"
     >
       <UserAddView
+        v-if="dialogMode === 'add'"
         ref="userAddView"
-        @success="handleAddUserSuccess"
-        @cancel="handleAddUserCancel"
+        @success="handleUserOperationSuccess"
+        @cancel="handleUserOperationCancel"
+      />
+      <UserEditView
+        v-else-if="dialogMode === 'edit'"
+        ref="userEditView"
+        :user-data="currentUser"
+        @success="handleUserOperationSuccess"
+        @cancel="handleUserOperationCancel"
       />
     </el-dialog>
   </div>
@@ -173,13 +181,16 @@ import DynamicTable from "@/components/DynamicTable/index.vue"
 import {activateUser, adminQueryUser, disableUser} from '@/api/user'
 import DynamicOptions from "@/components/DynamicOptions/index.vue";
 import UserAddView from "@/components/UserAdminView/UserAddView.vue";
+import UserEditView from "@/components/UserAdminView/UserEditView.vue";
 
 export default {
   name: 'UserAdminView',
-  components: {DynamicOptions, DynamicTable, UserAddView},
+  components: {DynamicOptions, DynamicTable, UserAddView, UserEditView},
   data() {
     return {
-      addUserDialogVisible: false,
+      userDialogVisible: false,
+      dialogMode: 'add', // 'add' 或 'edit'
+      currentUser: {},
       searchForm: {
         idEquals: '',
         userNameEquals: '',
@@ -203,6 +214,11 @@ export default {
         {prop: 'updateTime', label: '更新时间', width: 180}
       ],
       actions: true
+    }
+  },
+  computed: {
+    dialogTitle() {
+      return this.dialogMode === 'add' ? '新增用户' : '编辑用户';
     }
   },
   methods: {
@@ -291,14 +307,17 @@ export default {
      * 新增用户
      */
     handleAdd() {
-      this.addUserDialogVisible = true;
+      this.dialogMode = 'add';
+      this.userDialogVisible = true;
     },
 
     /**
      * 编辑用户
      */
     handleEdit(row) {
-      this.$message.info(`编辑用户 ${row.username} 功能待实现`)
+      this.dialogMode = 'edit';
+      this.currentUser = {...row};
+      this.userDialogVisible = true;
     },
 
 
@@ -342,35 +361,39 @@ export default {
     },
 
     /**
-     * 处理新增用户成功事件
+     * 处理用户操作成功事件
      */
-    handleAddUserSuccess() {
-      this.addUserDialogVisible = false;
+    handleUserOperationSuccess() {
+      this.$message.success(this.dialogMode === 'add' ? '用户创建成功' : '用户更新成功');
+      this.userDialogVisible = false;
       this.$refs.userTable.refresh();
     },
 
     /**
-     * 处理新增用户取消事件
+     * 处理用户操作取消事件
      */
-    handleAddUserCancel() {
-      this.addUserDialogVisible = false;
+    handleUserOperationCancel() {
+      this.userDialogVisible = false;
     },
 
     /**
-     * 处理新增用户弹窗关闭事件
+     * 处理用户弹窗关闭事件
      */
-    handleAddUserDialogClose() {
-      // 重置表单
-      this.$refs.userAddView.$refs.userForm.resetFields();
-      // 重置表单数据
-      this.$refs.userAddView.userForm = {
-        userName: '',
-        password: '',
-        confirmPassword: '',
-        nickName: '',
-        remark: '',
-        avatar: ''
-      };
+    handleUserDialogClose() {
+      if (this.dialogMode === 'add' && this.$refs.userAddView) {
+        // 重置表单
+        this.$refs.userAddView.$refs.userForm.resetFields();
+        // 重置表单数据
+        this.$refs.userAddView.userForm = {
+          userName: '',
+          password: '',
+          confirmPassword: '',
+          nickName: '',
+          remark: '',
+          avatar: ''
+        };
+      }
+      // 编辑模式不需要特别处理，因为下次打开时会传入新的数据
     },
   }
 }
@@ -413,3 +436,4 @@ export default {
   }
 }
 </style>
+
