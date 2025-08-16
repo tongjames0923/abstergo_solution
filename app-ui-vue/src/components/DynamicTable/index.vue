@@ -59,7 +59,7 @@
           :header-align="column.headerAlign"
           :class-name="column.className"
           :label-class-name="column.labelClassName"
-          :sortable="column.sortable"
+          :sortable="column.sortable || false"
           :sort-method="column.sortMethod"
           :sort-by="column.sortBy"
           :sort-orders="column.sortOrders"
@@ -602,3 +602,4 @@ export default {
   align-items: center;
 }
 </style>
+

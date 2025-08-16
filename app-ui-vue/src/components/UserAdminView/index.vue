@@ -17,16 +17,6 @@
       @submit="handleSearch"
     />
 
-    <!-- 排序条件 -->
-    <DynamicForm
-      ref="sortForm"
-      v-model="sortForm"
-      :config="sortConfig"
-      title="排序条件"
-      @reset="handleReset"
-      @submit="handleSearch"
-    />
-
     <!-- 用户列表 -->
     <el-card class="table-card" shadow="never">
       <div slot="header" class="clearfix card-header">
@@ -53,6 +43,7 @@
         border
         stripe
         class="user-table"
+        @sort-change="handleTableSortChange"
       >
 
         <template #status="{ row }">
@@ -232,10 +223,6 @@ export default {
         createTimeOrder: '',
         updateTimeOrder: ''
       },
-      sortForm: {
-        createTimeOrder: '',
-        updateTimeOrder: ''
-      },
       // 查询表单配置
       searchConfig: {
         expandable: true,
@@ -291,46 +278,19 @@ export default {
           }
         ]
       },
-      // 排序表单配置
-      sortConfig: {
-        expandable: true,
-        expanded: true,
-        gutter: 20,
-        labelWidth: '120px',
-        fields: [
-          {
-            prop: 'createTimeOrder',
-            label: '创建时间排序',
-            type: 'select',
-            placeholder: '请选择排序方式',
-            options: [
-              {label: '升序', value: 'asc'},
-              {label: '降序', value: 'desc'}
-            ]
-          },
-          {
-            prop: 'updateTimeOrder',
-            label: '更新时间排序',
-            type: 'select',
-            placeholder: '请选择排序方式',
-            options: [
-              {label: '升序', value: 'asc'},
-              {label: '降序', value: 'desc'}
-            ]
-          }
-        ]
-      },
       columns: [
         {prop: 'id', label: 'ID', width: 80},
-        {prop: 'avatar', label: '头像', width: 80, slot: 'avatar'},
-        {prop: 'userName', label: '用户名', width: 150},
-        {prop: 'nickName', label: '昵称', width: 150},
-        {prop: 'remark', label: '备注', width: 150},
-        {prop: 'flag', label: '状态', width: 100, slot: 'status'},
-        {prop: 'createTime', label: '创建时间', width: 180},
-        {prop: 'updateTime', label: '更新时间', width: 180}
+        {prop: 'avatar', label: '头像', width: 120},
+        {prop: 'userName', label: '用户名', width: 180},
+        {prop: 'nickName', label: '昵称', width: 180},
+        {prop: 'remark', label: '备注', width: 250},
+        {prop: 'flag', label: '状态', width: 150, slot: 'status',},
+        {prop: 'createTime', label: '创建时间', width: 180, sortable: 'custom'},
+        {prop: 'updateTime', label: '更新时间', width: 180, sortable: 'custom'}
       ],
-      actions: true
+      actions: true,
+      // 当前排序参数
+      sortParams: {}
     }
   },
   computed: {
@@ -356,13 +316,11 @@ export default {
           updateTimeLessThan: this.searchForm.updateTimeRange && this.searchForm.updateTimeRange[1] || this.searchForm.updateTimeLessThan || undefined
         }
 
-        // 处理排序字段
-        if (this.sortForm.createTimeOrder) {
-          criteria.createTimeOrder = this.sortForm.createTimeOrder
-        }
-
-        if (this.sortForm.updateTimeOrder) {
-          criteria.updateTimeOrder = this.sortForm.updateTimeOrder
+        // 添加排序参数
+        if (this.sortParams.field && this.sortParams.order) {
+          // 将Element UI的排序格式转换为后端需要的格式
+          const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc';
+          criteria[`${this.sortParams.field}Order`] = order;
         }
 
         // 移除值为undefined的属性
@@ -398,11 +356,6 @@ export default {
      * 查询按钮点击事件
      */
     handleSearch() {
-      // 更新查询条件
-      this.searchForm = {
-        ...this.searchForm,
-        ...this.sortForm
-      }
       this.$refs.userTable.refresh()
     },
 
@@ -424,11 +377,24 @@ export default {
         createTimeOrder: '',
         updateTimeOrder: ''
       }
-      this.sortForm = {
-        createTimeOrder: '',
-        updateTimeOrder: ''
-      }
+      this.sortParams = {}
       this.$refs.userTable.refresh()
+    },
+
+    /**
+     * 处理表格排序变化
+     */
+    handleTableSortChange(sortInfo) {
+      const {prop, order} = sortInfo;
+      if (prop && order) {
+        this.sortParams = {
+          field: prop,
+          order: order
+        };
+      } else {
+        this.sortParams = {};
+      }
+      // 表格会自动调用 loadData 方法，无需手动刷新
     },
 
     /**
@@ -625,7 +591,6 @@ export default {
   }
 
   .search-card,
-  .sort-card,
   .table-card {
     margin-bottom: 20px;
     border-radius: 8px;
@@ -658,18 +623,6 @@ export default {
       padding-top: 10px;
       border-top: 1px solid #f0f0f0;
       margin-top: 10px;
-    }
-  }
-
-  .sort-form {
-    padding: 10px 0;
-
-    .el-form-item {
-      margin-bottom: 18px;
-    }
-
-    .sort-select {
-      width: 100%;
     }
   }
 
@@ -729,3 +682,4 @@ export default {
   }
 }
 </style>
+
