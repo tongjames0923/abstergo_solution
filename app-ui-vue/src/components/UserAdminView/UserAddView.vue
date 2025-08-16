@@ -4,116 +4,109 @@
       :model="userForm"
       :rules="userRules"
       ref="userForm"
-      label-width="100px"
+      label-width="80px"
       class="user-form"
     >
-      <el-row :gutter="30">
-        <el-col :span="24">
-          <div class="form-section">
-            <div class="section-title">基本信息</div>
-            <el-row :gutter="30">
-              <el-col :span="12">
-                <el-form-item label="用户名" prop="userName">
-                  <el-input
-                    v-model="userForm.userName"
-                    placeholder="请输入用户名"
-                    size="medium"
-                  ></el-input>
-                </el-form-item>
-              </el-col>
+      <div class="form-section">
+        <div class="section-header">
+          <i class="el-icon-user"></i>
+          <span class="section-title">基本信息</span>
+        </div>
 
-              <el-col :span="12">
-                <el-form-item label="昵称" prop="nickName">
-                  <el-input
-                    v-model="userForm.nickName"
-                    placeholder="请输入昵称"
-                    size="medium"
-                  ></el-input>
-                </el-form-item>
-              </el-col>
-            </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="用户名" prop="userName">
+              <el-input
+                v-model="userForm.userName"
+                placeholder="请输入用户名"
+                size="medium"
+                prefix-icon="el-icon-user"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-            <el-row :gutter="30">
-              <el-col :span="12">
-                <el-form-item label="密码" prop="password">
-                  <el-input
-                    v-model="userForm.password"
-                    type="password"
-                    placeholder="请输入密码"
-                    show-password
-                    size="medium"
-                  ></el-input>
-                </el-form-item>
-              </el-col>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="昵称" prop="nickName">
+              <el-input
+                v-model="userForm.nickName"
+                placeholder="请输入昵称"
+                size="medium"
+                prefix-icon="el-icon-star-off"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-              <el-col :span="12">
-                <el-form-item label="确认密码" prop="confirmPassword">
-                  <el-input
-                    v-model="userForm.confirmPassword"
-                    type="password"
-                    placeholder="请再次输入密码"
-                    show-password
-                    size="medium"
-                  ></el-input>
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </div>
-        </el-col>
-      </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="密码" prop="password">
+              <el-input
+                v-model="userForm.password"
+                type="password"
+                placeholder="请输入密码"
+                show-password
+                size="medium"
+                prefix-icon="el-icon-lock"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-      <el-row :gutter="30">
-        <el-col :span="24">
-          <div class="form-section">
-            <div class="section-title">其他信息</div>
-            <el-row :gutter="30">
-              <el-col :span="12">
-                <el-form-item label="状态" prop="flag">
-                  <el-select
-                    v-model="userForm.flag"
-                    placeholder="请选择用户状态"
-                    style="width: 100%"
-                    size="medium"
-                  >
-                    <el-option label="正常" :value="1"></el-option>
-                    <el-option label="禁用" :value="0"></el-option>
-                    <el-option label="锁定" :value="2"></el-option>
-                  </el-select>
-                </el-form-item>
-              </el-col>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="确认密码" prop="confirmPassword">
+              <el-input
+                v-model="userForm.confirmPassword"
+                type="password"
+                placeholder="请再次输入密码"
+                show-password
+                size="medium"
+                prefix-icon="el-icon-lock"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
 
-              <el-col :span="12">
-                <el-form-item label="备注" prop="remark">
-                  <el-input
-                    v-model="userForm.remark"
-                    placeholder="请输入备注信息"
-                    size="medium"
-                  ></el-input>
-                </el-form-item>
-              </el-col>
-            </el-row>
+      <div class="form-section">
+        <div class="section-header">
+          <i class="el-icon-picture-outline"></i>
+          <span class="section-title">附加信息</span>
+        </div>
 
-            <el-row :gutter="30">
-              <el-col :span="12">
-                <el-form-item label="头像">
-                  <url-image v-model="userForm.avatar"></url-image>
-                  
-                </el-form-item>
-              </el-col>
-            </el-row>
-          </div>
-        </el-col>
-      </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="备注" prop="remark">
+              <el-input
+                v-model="userForm.remark"
+                placeholder="请输入备注信息"
+                type="textarea"
+                :rows="2"
+                size="medium"
+              ></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
 
-      <el-row>
-        <el-col :span="24" class="form-actions">
-          <el-button @click="handleCancel" size="medium">取消</el-button>
-          <el-button type="primary" @click="handleSubmit" size="medium">保存</el-button>
-        </el-col>
-      </el-row>
+        <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="头像">
+              <url-image v-model="userForm.avatar"></url-image>
+            </el-form-item>
+          </el-col>
+        </el-row>
+      </div>
+
+      <div class="form-actions">
+        <el-button @click="handleCancel" size="medium">取消</el-button>
+        <el-button type="primary" @click="handleSubmit" size="medium" icon="el-icon-check">保存用户</el-button>
+      </div>
     </el-form>
   </div>
 </template>
+
 <script>
 import request from '@/utils/request'
 import UrlImage from "@/components/UrlImage/index.vue";
@@ -140,7 +133,6 @@ export default {
         confirmPassword: '',
         nickName: '',
         remark: '',
-        flag: 1, // 默认正常状态
         avatar: ''
       },
       userRules: {
@@ -158,9 +150,6 @@ export default {
         nickName: [
           {required: true, message: '请输入昵称', trigger: 'blur'},
           {min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur'}
-        ],
-        flag: [
-          {required: true, message: '请选择用户状态', trigger: 'change'}
         ]
       }
     }
@@ -188,7 +177,6 @@ export default {
               password: this.userForm.password,
               nickName: this.userForm.nickName,
               remark: this.userForm.remark,
-              flag: this.userForm.flag,
               avatar: this.userForm.avatar
             }
 
@@ -229,26 +217,41 @@ export default {
 
 <style lang="scss" scoped>
 .user-add-view {
-  padding: 20px 30px;
+  padding: 10px 20px;
 
   .form-section {
-    margin-bottom: 30px;
+    margin-bottom: 20px;
 
-    .section-title {
-      font-size: 16px;
-      font-weight: bold;
-      color: #303133;
-      margin-bottom: 20px;
-      padding-left: 10px;
-      border-left: 4px solid #409EFF;
+    &:last-child {
+      margin-bottom: 10px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 15px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ebeef5;
+
+      i {
+        font-size: 16px;
+        color: #409EFF;
+        margin-right: 8px;
+      }
+
+      .section-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #606266;
+      }
     }
   }
 
   .user-form {
     .form-actions {
       text-align: right;
-      margin-top: 20px;
-      padding-right: 10px;
+      padding-top: 15px;
+      border-top: 1px solid #ebeef5;
     }
   }
 
@@ -282,6 +285,14 @@ export default {
       height: 120px;
       display: block;
     }
+  }
+
+  ::v-deep .el-form-item__label {
+    font-weight: 500;
+  }
+
+  ::v-deep .el-form-item {
+    margin-bottom: 18px;
   }
 }
 </style>

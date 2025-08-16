@@ -156,7 +156,7 @@
     <el-dialog
       title="新增用户"
       :visible.sync="addUserDialogVisible"
-      width="600px"
+      width="85%"
       @close="handleAddUserDialogClose"
     >
       <UserAddView
