@@ -8,151 +8,24 @@
     </div>
 
     <!-- 查询条件 -->
-    <el-card class="search-card" shadow="never">
-      <div slot="header" class="clearfix card-header">
-        <span class="card-title">查询条件</span>
-        <el-button style="float: right; padding: 3px 0" type="text" @click="toggleSearchForm">
-          {{ isSearchFormExpanded ? '收起' : '展开' }}
-          <i :class="isSearchFormExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
-        </el-button>
-      </div>
-
-      <el-form
-        :model="searchForm"
-        ref="searchForm"
-        label-width="100px"
-        class="search-form"
-        v-show="isSearchFormExpanded"
-      >
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="用户ID">
-              <el-input
-                v-model="searchForm.idEquals"
-                placeholder="请输入用户ID"
-                clearable
-                prefix-icon="el-icon-search"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="用户名">
-              <el-input
-                v-model="searchForm.userNameEquals"
-                placeholder="请输入用户名"
-                clearable
-                prefix-icon="el-icon-user"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="昵称">
-              <el-input
-                v-model="searchForm.nickNameLike"
-                placeholder="请输入昵称"
-                clearable
-                prefix-icon="el-icon-star-off"
-              ></el-input>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="用户状态">
-              <DynamicOptions
-                api-url="/private/user/statusOptions"
-                :value="searchForm.flagEquals"
-                @change="(val)=>this.searchForm.flagEquals=val"
-                placeholder="请选择用户状态"
-              ></DynamicOptions>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="创建时间">
-              <el-date-picker
-                v-model="searchForm.createTimeRange"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                format="yyyy-MM-dd"
-                class="date-range-picker"
-              >
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="更新时间">
-              <el-date-picker
-                v-model="searchForm.updateTimeRange"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                value-format="yyyy-MM-dd HH:mm:ss"
-                format="yyyy-MM-dd"
-                class="date-range-picker"
-              >
-              </el-date-picker>
-            </el-form-item>
-          </el-col>
-        </el-row>
-
-        <div class="search-actions">
-          <el-button type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
-          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
-        </div>
-      </el-form>
-    </el-card>
+    <DynamicForm
+      ref="searchForm"
+      v-model="searchForm"
+      :config="searchConfig"
+      title="查询条件"
+      @reset="handleReset"
+      @submit="handleSearch"
+    />
 
     <!-- 排序条件 -->
-    <el-card class="sort-card" shadow="never">
-      <div slot="header" class="clearfix card-header">
-        <span class="card-title">排序条件</span>
-        <el-button style="float: right; padding: 3px 0" type="text" @click="toggleSortForm">
-          {{ isSortFormExpanded ? '收起' : '展开' }}
-          <i :class="isSortFormExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
-        </el-button>
-      </div>
-
-      <el-form
-        :model="searchForm"
-        label-width="120px"
-        class="sort-form"
-        v-show="isSortFormExpanded"
-      >
-        <el-row :gutter="20">
-          <el-col :span="8">
-            <el-form-item label="创建时间排序">
-              <el-select
-                v-model="searchForm.createTimeOrder"
-                placeholder="请选择排序方式"
-                clearable
-                class="sort-select"
-              >
-                <el-option label="升序" value="asc"></el-option>
-                <el-option label="降序" value="desc"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="更新时间排序">
-              <el-select
-                v-model="searchForm.updateTimeOrder"
-                placeholder="请选择排序方式"
-                clearable
-                class="sort-select"
-              >
-                <el-option label="升序" value="asc"></el-option>
-                <el-option label="降序" value="desc"></el-option>
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-      </el-form>
-    </el-card>
+    <DynamicForm
+      ref="sortForm"
+      v-model="sortForm"
+      :config="sortConfig"
+      title="排序条件"
+      @reset="handleReset"
+      @submit="handleSearch"
+    />
 
     <!-- 用户列表 -->
     <el-card class="table-card" shadow="never">
@@ -308,10 +181,11 @@ import {activateUser, adminQueryUser, disableUser, saveUser} from '@/api/user'
 import DynamicOptions from "@/components/DynamicOptions/index.vue";
 import UserAddView from "@/components/UserAdminView/UserAddView.vue";
 import UserEditView from "@/components/UserAdminView/UserEditView.vue";
+import DynamicForm from "@/components/DynamicForm/index.vue";
 
 export default {
   name: 'UserAdminView',
-  components: {DynamicOptions, DynamicTable, UserAddView, UserEditView},
+  components: {DynamicOptions, DynamicTable, UserAddView, UserEditView, DynamicForm},
   data() {
     // 确认密码验证规则
     const validateConfirmPassword = (rule, value, callback) => {
@@ -325,8 +199,6 @@ export default {
     }
 
     return {
-      isSearchFormExpanded: true,
-      isSortFormExpanded: true,
       userDialogVisible: false,
       resetPasswordDialogVisible: false,
       dialogMode: 'add', // 'add' 或 'edit'
@@ -351,14 +223,102 @@ export default {
         userNameEquals: '',
         nickNameLike: '',
         flagEquals: undefined,
-        createTimeRange: [],
-        updateTimeRange: [],
+        createTimeRange: [], // 确保这是数组
+        updateTimeRange: [], // 确保这是数组
         createTimeGreaterThan: '',
         createTimeLessThan: '',
         updateTimeGreaterThan: '',
         updateTimeLessThan: '',
         createTimeOrder: '',
         updateTimeOrder: ''
+      },
+      sortForm: {
+        createTimeOrder: '',
+        updateTimeOrder: ''
+      },
+      // 查询表单配置
+      searchConfig: {
+        expandable: true,
+        expanded: true,
+        gutter: 20,
+        labelWidth: '100px',
+        fields: [
+          {
+            prop: 'idEquals',
+            label: '用户ID',
+            type: 'input',
+            placeholder: '请输入用户ID',
+            prefixIcon: 'el-icon-search'
+          },
+          {
+            prop: 'userNameEquals',
+            label: '用户名',
+            type: 'input',
+            placeholder: '请输入用户名',
+            prefixIcon: 'el-icon-user'
+          },
+          {
+            prop: 'nickNameLike',
+            label: '昵称',
+            type: 'input',
+            placeholder: '请输入昵称',
+            prefixIcon: 'el-icon-star-off'
+          },
+          {
+            prop: 'flagEquals',
+            label: '用户状态',
+            type: 'dynamic-options',
+            apiUrl: '/private/user/statusOptions',
+            placeholder: '请选择用户状态'
+          },
+          {
+            prop: 'createTimeRange',
+            label: '创建时间',
+            type: 'date-range',
+            valueFormat: 'yyyy-MM-dd HH:mm:ss',
+            format: 'yyyy-MM-dd',
+            startPlaceholder: '开始日期',
+            endPlaceholder: '结束日期'
+          },
+          {
+            prop: 'updateTimeRange',
+            label: '更新时间',
+            type: 'date-range',
+            valueFormat: 'yyyy-MM-dd HH:mm:ss',
+            format: 'yyyy-MM-dd',
+            startPlaceholder: '开始日期',
+            endPlaceholder: '结束日期'
+          }
+        ]
+      },
+      // 排序表单配置
+      sortConfig: {
+        expandable: true,
+        expanded: true,
+        gutter: 20,
+        labelWidth: '120px',
+        fields: [
+          {
+            prop: 'createTimeOrder',
+            label: '创建时间排序',
+            type: 'select',
+            placeholder: '请选择排序方式',
+            options: [
+              {label: '升序', value: 'asc'},
+              {label: '降序', value: 'desc'}
+            ]
+          },
+          {
+            prop: 'updateTimeOrder',
+            label: '更新时间排序',
+            type: 'select',
+            placeholder: '请选择排序方式',
+            options: [
+              {label: '升序', value: 'asc'},
+              {label: '降序', value: 'desc'}
+            ]
+          }
+        ]
       },
       columns: [
         {prop: 'id', label: 'ID', width: 80},
@@ -380,20 +340,6 @@ export default {
   },
   methods: {
     /**
-     * 切换搜索表单展开/收起状态
-     */
-    toggleSearchForm() {
-      this.isSearchFormExpanded = !this.isSearchFormExpanded;
-    },
-
-    /**
-     * 切换排序表单展开/收起状态
-     */
-    toggleSortForm() {
-      this.isSortFormExpanded = !this.isSortFormExpanded;
-    },
-
-    /**
      * 获取用户数据
      */
     async fetchUserData(params) {
@@ -411,12 +357,12 @@ export default {
         }
 
         // 处理排序字段
-        if (this.searchForm.createTimeOrder) {
-          criteria.createTimeOrder = this.searchForm.createTimeOrder
+        if (this.sortForm.createTimeOrder) {
+          criteria.createTimeOrder = this.sortForm.createTimeOrder
         }
 
-        if (this.searchForm.updateTimeOrder) {
-          criteria.updateTimeOrder = this.searchForm.updateTimeOrder
+        if (this.sortForm.updateTimeOrder) {
+          criteria.updateTimeOrder = this.sortForm.updateTimeOrder
         }
 
         // 移除值为undefined的属性
@@ -452,6 +398,11 @@ export default {
      * 查询按钮点击事件
      */
     handleSearch() {
+      // 更新查询条件
+      this.searchForm = {
+        ...this.searchForm,
+        ...this.sortForm
+      }
       this.$refs.userTable.refresh()
     },
 
@@ -470,6 +421,10 @@ export default {
         createTimeLessThan: '',
         updateTimeGreaterThan: '',
         updateTimeLessThan: '',
+        createTimeOrder: '',
+        updateTimeOrder: ''
+      }
+      this.sortForm = {
         createTimeOrder: '',
         updateTimeOrder: ''
       }
