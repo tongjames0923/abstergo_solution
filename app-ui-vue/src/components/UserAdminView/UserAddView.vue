@@ -40,8 +40,8 @@
 
 <script>
 import DynamicForm from "@/components/DynamicForm";
-import UrlImage from "@/components/UrlImage";
 import {saveUser} from '@/api/user'
+import UrlImage from "@/components/UrlImage/index.vue";
 
 export default {
   name: 'UserAddView',
@@ -50,17 +50,6 @@ export default {
     UrlImage
   },
   data() {
-    // 确认密码验证规则
-    const validateConfirmPassword = (rule, value, callback) => {
-      if (value === '') {
-        callback(new Error('请再次输入密码'))
-      } else if (value !== this.userForm.password) {
-        callback(new Error('两次输入密码不一致!'))
-      } else {
-        callback()
-      }
-    }
-
     return {
       userForm: {
         userName: '',
@@ -69,71 +58,18 @@ export default {
         nickName: '',
         remark: '',
         avatar: ''
-      },
-      formConfig: {
-        expandable: false,
-        fields: [
-          {
-            prop: 'userName',
-            label: '用户名',
-            type: 'input',
-            placeholder: '请输入用户名',
-            props: {
-              size: 'medium',
-              prefixIcon: 'el-icon-user'
-            }
-          },
-          {
-            prop: 'nickName',
-            label: '昵称',
-            type: 'input',
-            placeholder: '请输入昵称',
-            props: {
-              size: 'medium',
-              prefixIcon: 'el-icon-star-off'
-            }
-          },
-          {
-            prop: 'password',
-            label: '密码',
-            type: 'input',
-            placeholder: '请输入密码',
-            props: {
-              type: 'password',
-              showPassword: true,
-              size: 'medium',
-              prefixIcon: 'el-icon-lock'
-            }
-          },
-          {
-            prop: 'confirmPassword',
-            label: '确认密码',
-            type: 'custom',
-            placeholder: '请再次输入密码'
-          },
-          {
-            prop: 'remark',
-            label: '备注',
-            type: 'input',
-            placeholder: '请输入备注信息',
-            props: {
-              type: 'textarea',
-              rows: 2,
-              size: 'medium'
-            }
-          },
-          {
-            prop: 'avatar',
-            label: '头像',
-            type: 'urlImage'
-          }
-        ],
-        span: 24,
-        labelWidth: '80px'
       }
     }
   },
   computed: {
+    UrlImage() {
+      return UrlImage
+    },
+    // 从store中获取表单配置
+    formConfig() {
+      return this.$store.getters['formConfigs/formConfig']('userAddForm')
+    },
+
     // 表单验证规则
     userRules() {
       // 确认密码验证规则
