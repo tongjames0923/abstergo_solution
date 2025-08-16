@@ -224,61 +224,6 @@ export default {
         createTimeOrder: '',
         updateTimeOrder: ''
       },
-      // 查询表单配置
-      searchConfig: {
-        expandable: true,
-        expanded: true,
-        gutter: 20,
-        labelWidth: '100px',
-        fields: [
-          {
-            prop: 'idEquals',
-            label: '用户ID',
-            type: 'input',
-            placeholder: '请输入用户ID',
-            prefixIcon: 'el-icon-search'
-          },
-          {
-            prop: 'userNameEquals',
-            label: '用户名',
-            type: 'input',
-            placeholder: '请输入用户名',
-            prefixIcon: 'el-icon-user'
-          },
-          {
-            prop: 'nickNameLike',
-            label: '昵称',
-            type: 'input',
-            placeholder: '请输入昵称',
-            prefixIcon: 'el-icon-star-off'
-          },
-          {
-            prop: 'flagEquals',
-            label: '用户状态',
-            type: 'dynamic-options',
-            apiUrl: '/private/user/statusOptions',
-            placeholder: '请选择用户状态'
-          },
-          {
-            prop: 'createTimeRange',
-            label: '创建时间',
-            type: 'date-range',
-            valueFormat: 'yyyy-MM-dd HH:mm:ss',
-            format: 'yyyy-MM-dd',
-            startPlaceholder: '开始日期',
-            endPlaceholder: '结束日期'
-          },
-          {
-            prop: 'updateTimeRange',
-            label: '更新时间',
-            type: 'date-range',
-            valueFormat: 'yyyy-MM-dd HH:mm:ss',
-            format: 'yyyy-MM-dd',
-            startPlaceholder: '开始日期',
-            endPlaceholder: '结束日期'
-          }
-        ]
-      },
       columns: [
         {prop: 'id', label: 'ID', width: 80},
         {prop: 'avatar', label: '头像', width: 120, slot: 'avatar'},
@@ -297,6 +242,10 @@ export default {
   computed: {
     dialogTitle() {
       return this.dialogMode === 'add' ? '新增用户' : '编辑用户';
+    },
+    // 从store中获取查询表单配置
+    searchConfig() {
+      return this.$store.getters['formConfigs/formConfig']('userSearchForm')
     }
   },
   methods: {
@@ -673,4 +622,3 @@ export default {
   }
 }
 </style>
-
