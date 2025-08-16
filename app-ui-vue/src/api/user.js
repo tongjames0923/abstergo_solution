@@ -54,3 +54,27 @@ export function userStatusEnums()
     method: 'get'
   })
 }
+
+/**
+ * 激活用户账户
+ * @param {number} userId - 用户ID
+ * @returns {Promise} 操作结果
+ */
+export function activateUser(userId) {
+  return request({
+    url: `/private/admin/account/activite/${userId}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 禁用用户账户
+ * @param {number} userId - 用户ID
+ * @returns {Promise} 操作结果
+ */
+export function disableUser(userId) {
+  return request({
+    url: `/private/admin/account/disable/${userId}`,
+    method: 'get'
+  })
+}

@@ -170,7 +170,7 @@
 
 <script>
 import DynamicTable from "@/components/DynamicTable/index.vue"
-import {adminQueryUser, userStatusEnums} from '@/api/user'
+import {activateUser, adminQueryUser, disableUser} from '@/api/user'
 import DynamicOptions from "@/components/DynamicOptions/index.vue";
 import UserAddView from "@/components/UserAdminView/UserAddView.vue";
 
@@ -206,7 +206,6 @@ export default {
     }
   },
   methods: {
-    userStatusEnums,
     /**
      * 获取用户数据
      */
@@ -306,9 +305,40 @@ export default {
     /**
      * 切换用户状态
      */
-    handleToggleStatus(row) {
-      const action = row.flag === 1 ? '禁用' : '启用'
-      this.$message.info(`切换用户 ${row.username} 状态为 ${action} 功能待实现`)
+    async handleToggleStatus(row) {
+      try {
+        let response;
+        if (row.flag === 1) {
+          // 当前是正常状态，点击后应该禁用
+          await this.$confirm('确认要禁用该用户吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          });
+          response = await disableUser(row.id);
+        } else {
+          // 当前是禁用或锁定状态，点击后应该激活
+          await this.$confirm('确认要激活该用户吗？', '提示', {
+            confirmButtonText: '确定',
+            cancelButtonText: '取消',
+            type: 'warning'
+          });
+          response = await activateUser(row.id);
+        }
+
+        if (response.code === 200) {
+          this.$message.success(response.message || '操作成功');
+          // 刷新表格数据
+          this.$refs.userTable.refresh();
+        } else {
+          this.$message.error(response.message || '操作失败');
+        }
+      } catch (error) {
+        if (error !== 'cancel') {
+          console.error('操作失败:', error);
+          this.$message.error('操作失败');
+        }
+      }
     },
 
     /**
@@ -339,7 +369,6 @@ export default {
         confirmPassword: '',
         nickName: '',
         remark: '',
-        flag: 1,
         avatar: ''
       };
     },
