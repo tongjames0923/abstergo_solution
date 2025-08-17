@@ -40,8 +40,8 @@
 
 <script>
 import DynamicForm from "@/components/DynamicForm";
-import {saveUser} from '@/api/user'
 import UrlImage from "@/components/UrlImage/index.vue";
+import {saveUser} from "@/api/admin_user";
 
 export default {
   name: 'UserAddView',

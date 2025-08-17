@@ -39,7 +39,7 @@
         :actions="actions"
         :auto-load="true"
         actions-fixed="right"
-        actions-width="380px"
+        actions-width="450px"
         border
         stripe
         class="user-table"
@@ -93,6 +93,15 @@
               icon="el-icon-refresh-left"
               @click="handleResetPassword(row)"
             >重置密码
+            </el-button>
+
+            <el-button
+              size="mini"
+              type="info"
+              plain
+              icon="el-icon-setting"
+              @click="handleManageRoles(row)"
+            >权限管理
             </el-button>
           </div>
         </template>
@@ -164,20 +173,36 @@
         <el-button type="primary" @click="handlePasswordSubmit">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!-- 权限管理弹窗 -->
+    <el-dialog
+      title="权限管理"
+      :visible.sync="roleManagementDialogVisible"
+      width="800px"
+      @close="handleRoleManagementDialogClose"
+      :modal-append-to-body="false"
+      class="role-dialog"
+    >
+      <UserRoleAdminView
+        v-if="roleManagementDialogVisible"
+        :user-id="currentUserId"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import DynamicTable from "@/components/DynamicTable/index.vue"
-import {activateUser, adminQueryUser, disableUser, saveUser} from '@/api/user'
 import DynamicOptions from "@/components/DynamicOptions/index.vue";
 import UserAddView from "@/components/UserAdminView/UserAddView.vue";
 import UserEditView from "@/components/UserAdminView/UserEditView.vue";
 import DynamicForm from "@/components/DynamicForm/index.vue";
+import UserRoleAdminView from "@/components/UserAdminView/UserRoleAdminView.vue";
+import {activateUser, adminQueryUser, disableUser, saveUser} from "@/api/admin_user";
 
 export default {
   name: 'UserAdminView',
-  components: {DynamicOptions, DynamicTable, UserAddView, UserEditView, DynamicForm},
+  components: {DynamicOptions, DynamicTable, UserAddView, UserEditView, DynamicForm, UserRoleAdminView},
   data() {
     // 确认密码验证规则
     const validateConfirmPassword = (rule, value, callback) => {
@@ -193,8 +218,9 @@ export default {
     return {
       userDialogVisible: false,
       resetPasswordDialogVisible: false,
+      roleManagementDialogVisible: false,
       dialogMode: 'add', // 'add' 或 'edit'
-      currentUser: {},
+      currentUserId: null,
       passwordForm: {
         id: undefined,
         userName: '',
@@ -489,6 +515,21 @@ export default {
         password: '',
         confirmPassword: ''
       };
+    },
+
+    /**
+     * 处理权限管理按钮点击事件
+     */
+    handleManageRoles(row) {
+      this.currentUserId = row.id;
+      this.roleManagementDialogVisible = true;
+    },
+
+    /**
+     * 处理权限管理弹窗关闭事件
+     */
+    handleRoleManagementDialogClose() {
+      this.currentUserId = undefined
     }
   }
 }
@@ -590,7 +631,8 @@ export default {
   }
 
   .user-dialog,
-  .password-dialog {
+  .password-dialog,
+  .role-dialog {
     ::v-deep .el-dialog__header {
       background-color: #f8f9fa;
       border-bottom: 1px solid #ebeef5;
