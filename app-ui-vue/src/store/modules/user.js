@@ -35,10 +35,11 @@ const actions = {
   // user login
   async login({commit}, userInfo) {
     try {
-      const {username, password} = userInfo
+      const {username, password, rememberMe} = userInfo
       const {data} = await login({username: username.trim(), password: password})
       commit('SET_TOKEN', data.token)
-      setToken(data.token)
+      // 根据rememberMe选项设置Token存储方式
+      setToken(data.token, rememberMe)
       return data;
     } catch (error) {
       throw error;
@@ -93,4 +94,3 @@ export default {
   mutations,
   actions
 }
-
