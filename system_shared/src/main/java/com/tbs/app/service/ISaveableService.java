@@ -15,4 +15,5 @@ public interface ISaveableService<E, K> {
      * @return
      */
     List<E> save(E entity);
+
 }

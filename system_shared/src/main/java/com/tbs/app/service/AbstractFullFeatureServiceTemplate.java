@@ -1,6 +1,5 @@
 package com.tbs.app.service;
 
-import com.tbs.app.config.SystemAppProperty;
 import com.tbs.app.pojo.IIdentifiable;
 import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.util.PageUtil;
@@ -13,7 +12,6 @@ import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -32,17 +30,17 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     implements ISearchableService<T, K>, ISaveableService<T, K>, IDeleteableService<T, K> {
 
     protected AbstractFullFeatureServiceTemplate<T, K, M> instance;
-    @Resource
-    private SystemAppProperty systemAppProperty;
 
     public AbstractFullFeatureServiceTemplate() {
         this.instance = this;
     }
 
-    protected Class<? extends IDelegateInvoker> pageVoBuildType() {
-        return systemAppProperty.getMainDelegateInvokerImpl();
-    }
-
+    /**
+     * 获取PageVO构建类
+     *
+     * @return
+     */
+    protected abstract Class<? extends IDelegateInvoker> pageVoBuildType();
     /**
      * 删除逻辑处理
      *

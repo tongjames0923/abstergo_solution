@@ -1,4 +1,4 @@
-package com.tbs.app.service.log;
+package com.tbs.app.log;
 
 import com.tbs.app.pojo.entity.SystemOperateRecordEntity;
 

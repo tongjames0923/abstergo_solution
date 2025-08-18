@@ -1,10 +1,5 @@
 package com.tbs.app.controller.privates;
 
-import javax.annotation.Resource;
-
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
 import com.tbs.app.AbstractCrudController;
 import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.pojo.criteria.CommonSystemRoleQueryCriteria;
@@ -12,10 +7,13 @@ import com.tbs.app.pojo.entity.SystemRoleEntity;
 import com.tbs.app.service.IServiceTemplate;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.web.result.AjaxResult;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * 角色管理控制器

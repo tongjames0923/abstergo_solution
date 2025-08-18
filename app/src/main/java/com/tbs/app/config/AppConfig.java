@@ -1,18 +1,7 @@
 package com.tbs.app.config;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Resource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
+import com.tbs.app.log.ISystemOperateLog;
 import com.tbs.app.pojo.entity.SystemOperateRecordEntity;
-import com.tbs.app.service.log.ISystemOperateLog;
 import com.tbs.app.service.log.impl.DbSystemOpLog;
 import com.tbs.app.service.log.impl.EventSystemOpLog;
 import com.tbs.broadcast.event.impl.SimpleEvent;
@@ -27,6 +16,15 @@ import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.web.trace.core.AbstractTraceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author tongj
@@ -42,7 +40,7 @@ public class AppConfig {
 				return false;
 			}
 
-			private Logger logger = LoggerFactory.getLogger(AppConfig.class);
+			private Logger logger = LoggerFactory.getLogger(DefaultAppConfig.class);
 		};
 	}
 
@@ -52,7 +50,7 @@ public class AppConfig {
 
 			@Resource
 			AbstractTraceContext traceContext;
-			private Logger logger = LoggerFactory.getLogger(AppConfig.class);
+			private Logger logger = LoggerFactory.getLogger(DefaultAppConfig.class);
 
 			@Override
 			public boolean support(Cache cache) {

@@ -1,13 +1,8 @@
 package com.tbs.app.intercept;
 
-import java.util.Date;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-
 import com.alibaba.fastjson2.JSON;
+import com.tbs.app.log.ISystemOperateLog;
 import com.tbs.app.pojo.entity.SystemOperateRecordEntity;
-import com.tbs.app.service.log.ISystemOperateLog;
 import com.tbs.app.util.NetUtil;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.util.BeanUtil;
@@ -15,9 +10,12 @@ import com.tbs.common.util.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.intercept.IApiInvokeInterceptor;
 import com.tbs.web.uitl.AuthUtil;
-
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 
 /**
  * 系统操作拦截器实现类

@@ -1,7 +1,7 @@
 package com.tbs.app.service.log.impl;
 
+import com.tbs.app.log.ISystemOperateLog;
 import com.tbs.app.pojo.entity.SystemOperateRecordEntity;
-import com.tbs.app.service.log.ISystemOperateLog;
 import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.StrUtil;

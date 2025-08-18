@@ -12,13 +12,16 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * @author abstergo
  */
 @ConfigurationProperties(prefix = "tbs.system")
 @Data
-public class SystemAppProperty {
+@Component
+public class AppSettingProperty {
+
     /**
      * 登录用户名密码校验器
      */
@@ -42,6 +45,11 @@ public class SystemAppProperty {
      * 密码加密实现类
      */
     private Class<? extends IPasswordEncrypt> passwordEncryptImpl = NoEncryptPassword.class;
+
+    /**
+     * 是否启用内置的系统实现
+     */
+    private boolean enable = true;
 
     /**
      * 是否启用操作日志

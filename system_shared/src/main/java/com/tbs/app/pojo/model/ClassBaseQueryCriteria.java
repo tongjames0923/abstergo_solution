@@ -1,9 +1,8 @@
 package com.tbs.app.pojo.model;
 
-import com.tbs.app.config.SystemSqlProperty;
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.SpringUtil;
 import com.tbs.sql.query.impl.AbstractResourceBaseQueryCriteria;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -14,19 +13,31 @@ import java.lang.reflect.Type;
  * @author abstergo
  */
 public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria {
-    private static SystemSqlProperty sqlProperty;
 
-    public ClassBaseQueryCriteria() {
+    @Getter
+    @Setter
+    private String sqlPrefix;
+
+    @Getter
+    @Setter
+    private String sqlSuffix;
+
+    public ClassBaseQueryCriteria(String sqlPrefix, String sqlSuffix) {
+        this.sqlPrefix = sqlPrefix;
+        this.sqlSuffix = sqlSuffix;
         String file = initString(getType(this));
         putResourcePath(file);
     }
 
-    static String initString(Class<?> type) {
-        AssertUtil.notNull(type, "type can not be null");
-        if (sqlProperty == null) {
-            sqlProperty = SpringUtil.getBean(SystemSqlProperty.class);
-        }
-        return String.format("%s%s%s", sqlProperty.getSqlPrefix(), type.getSimpleName(), sqlProperty.getSqlSuffix());
+    public ClassBaseQueryCriteria() {
+        this.sqlPrefix = "sql/";
+        this.sqlSuffix = ".sql";
+        String file = initString(getType(this));
+        putResourcePath(file);
+    }
+
+    String initString(Class<?> type) {
+        return String.format("%s%s%s", getSqlPrefix(), type.getSimpleName(), getSqlSuffix());
     }
 
     public final <T> Class<T> getType(ClassBaseQueryCriteria<T> target) {

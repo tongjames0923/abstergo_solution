@@ -1,11 +1,13 @@
 package com.tbs.app.service.business.impl;
 
+import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.mapper.SystemRoleMapper;
 import com.tbs.app.pojo.entity.SystemRoleEntity;
 import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,6 +26,14 @@ public class SimpleSystemRoleServiceImpl
 
     @Resource
     SystemRoleMapper systemRoleMapper;
+
+    @Resource
+    private AppSettingProperty property;
+
+    @Override
+    protected Class<? extends IDelegateInvoker> pageVoBuildType() {
+        return property.getMainDelegateInvokerImpl();
+    }
 
     @Override
     protected SystemRoleMapper getMapper() {

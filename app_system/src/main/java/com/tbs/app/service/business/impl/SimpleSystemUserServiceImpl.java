@@ -1,6 +1,7 @@
 package com.tbs.app.service.business.impl;
 
 import com.tbs.app.annoation.UserNameValid;
+import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.constant.CommonConstant;
 import com.tbs.app.constraint.IUserNamePasswordValidator;
 import com.tbs.app.enums.SystemUserStatusEnum;
@@ -10,6 +11,7 @@ import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
+import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.EnumUtil;
 import com.tbs.common.util.StrUtil;
@@ -30,6 +32,7 @@ public class SimpleSystemUserServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUserEntity, Long, SystemUserMapper>
     implements ISystemUserService {
 
+
     private static SimpleSystemUserServiceImpl instance;
     @Resource
     IUserNamePasswordValidator userNamePasswordValidator;
@@ -43,6 +46,14 @@ public class SimpleSystemUserServiceImpl
 
     public SimpleSystemUserServiceImpl() {
         instance = this;
+    }
+
+    @Resource
+    private AppSettingProperty property;
+
+    @Override
+    protected Class<? extends IDelegateInvoker> pageVoBuildType() {
+        return property.getMainDelegateInvokerImpl();
     }
 
     @Override

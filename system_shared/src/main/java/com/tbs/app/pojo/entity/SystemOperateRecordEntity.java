@@ -1,18 +1,16 @@
 package com.tbs.app.pojo.entity;
 
-import java.io.Serializable;
-import java.util.Date;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tbs.app.pojo.IIdentifiable;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.Entity;
 import javax.persistence.Index;
 import javax.persistence.Table;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tbs.app.pojo.IIdentifiable;
-
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import java.io.Serializable;
+import java.util.Date;
 
 /**
  * @author tongj
