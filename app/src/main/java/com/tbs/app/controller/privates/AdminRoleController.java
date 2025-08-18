@@ -6,8 +6,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.service.business.role.ISystemRoleService;
-import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
+import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemUserStatusEnum;
@@ -118,6 +118,7 @@ public class AdminRoleController extends BaseController {
 		AssertUtil.notNull(user, "用户不存在");
 		user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
 		userService.save(user);
+		relationService.enableRole(userId, CommonConstant.NORMAL_USER_ROLE_NAME);
 		return AjaxUtil.getInstance().success("激活成功", null);
 	}
 

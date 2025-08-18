@@ -13,12 +13,11 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
+import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
@@ -80,7 +79,6 @@ public class PrivateUserController extends BaseController {
 		userInfoVO.setNickName(user.get().getNickName());
 		userInfoVO.setAvatar(user.get().getAvatar());
 		userInfoVO.setAvaliableRoles(relationService.queryUserRoles(user.get().getId()).stream()
-				.filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag()))
 				.map(SystemRoleEntity::getRole).collect(Collectors.toList()));
 		return userInfoVO;
 	}
