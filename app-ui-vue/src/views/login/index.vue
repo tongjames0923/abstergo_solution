@@ -1,6 +1,6 @@
 <template>
   <div class="login-container">
-    <div class="login-box">
+    <div class="login-box" :class="{ 'fade-in': isLoaded }">
       <div class="login-form-container">
         <div class="login-header">
           <h2 class="login-title">{{ systemTitle }}</h2>
@@ -22,6 +22,8 @@
               prefix-icon="el-icon-user"
               size="medium"
               class="login-input"
+              @focus="handleInputFocus"
+              @blur="handleInputBlur"
             />
           </el-form-item>
 
@@ -39,6 +41,8 @@
               size="medium"
               class="login-input"
               @keyup.enter.native="handleLogin"
+              @focus="handleInputFocus"
+              @blur="handleInputBlur"
             />
             <span class="show-pwd" @click="showPwd">
               <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'"></i>
@@ -47,7 +51,7 @@
 
           <div class="login-options">
             <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
-<!--            <a href="javascript:void(0)" class="forgot-password">忘记密码？</a>-->
+            <!--            <a href="javascript:void(0)" class="forgot-password">忘记密码？</a>-->
           </div>
 
           <el-button :loading="loading" type="primary" class="login-button" @click.native.prevent="handleLogin">
@@ -63,7 +67,7 @@
       <div class="login-decoration">
         <div class="decoration-content">
           <div class="decoration-icon">
-            <i class="el-icon-office-building"></i>
+            <i class="el-icon-office-building float-animation"></i>
           </div>
           <!--          <h3>高效企业管理</h3>-->
           <!--          <p>一站式解决方案，提升企业运营效率</p>-->
@@ -96,6 +100,7 @@ export default {
       }
     }
     return {
+      isLoaded: false,
       loginForm: {
         username: '',
         password: '',
@@ -125,11 +130,23 @@ export default {
   },
   mounted() {
     this.loginForm.rememberMe = getRememberMe()
+    // 添加淡入动画
+    this.$nextTick(() => {
+      setTimeout(() => {
+        this.isLoaded = true
+      }, 100)
+    })
   },
   methods: {
+    handleInputFocus(event) {
+      event.target.closest('.el-form-item').classList.add('input-focused')
+    },
+    handleInputBlur(event) {
+      event.target.closest('.el-form-item').classList.remove('input-focused')
+    },
     showPwd() {
       if (this.passwordType === 'password') {
-        this.passwordType = ''
+        this.passwordType = 'text'
       } else {
         this.passwordType = 'password'
       }
@@ -180,6 +197,14 @@ export default {
   border-radius: 12px;
   box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
   overflow: hidden;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: all 0.5s ease-out;
+
+  &.fade-in {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .login-form-container {
@@ -192,18 +217,20 @@ export default {
 .login-header {
   margin-bottom: 40px;
   text-align: center;
-}
 
-.login-title {
-  font-size: 28px;
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 10px;
-}
+  .login-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 10px;
+    animation: title-pop-in 0.8s ease-out;
+  }
 
-.login-subtitle {
-  font-size: 14px;
-  color: #666;
+  .login-subtitle {
+    font-size: 14px;
+    color: #666;
+    animation: subtitle-fade-in 1s ease-out;
+  }
 }
 
 .login-form {
@@ -214,6 +241,11 @@ export default {
 
 ::v-deep .el-form-item {
   margin-bottom: 24px;
+  transition: transform 0.3s ease;
+
+  &.input-focused {
+    transform: translateX(5px);
+  }
 }
 
 .login-input {
@@ -223,7 +255,7 @@ export default {
     padding-left: 40px;
     border-radius: 6px;
     border: 1px solid #dcdfe6;
-    transition: border-color 0.3s;
+    transition: all 0.3s ease;
 
     &:focus {
       border-color: #409eff;
@@ -245,9 +277,11 @@ export default {
   cursor: pointer;
   color: #909399;
   font-size: 16px;
+  transition: all 0.3s ease;
 
   &:hover {
     color: #409eff;
+    transform: translateY(-50%) scale(1.1);
   }
 }
 
@@ -282,10 +316,36 @@ export default {
   border: none;
   letter-spacing: 1px;
   margin-bottom: 30px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
 
   &:hover {
     opacity: 0.9;
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: translateY(1px);
+  }
+
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+  }
+
+  &:focus:not(:active)::after {
+    animation: ripple 0.6s ease-out;
   }
 }
 
@@ -332,6 +392,11 @@ export default {
   opacity: 0.9;
 }
 
+.float-animation {
+  animation: float 3s ease-in-out infinite;
+  display: inline-block;
+}
+
 @media (max-width: 768px) {
   .login-box {
     flex-direction: column;
@@ -346,6 +411,49 @@ export default {
 
   .login-form-container {
     padding: 30px 20px;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes title-pop-in {
+  0% {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtitle-fade-in {
+  0% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+@keyframes ripple {
+  0% {
+    transform: scale(0, 0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(50, 50);
+    opacity: 0;
   }
 }
 </style>

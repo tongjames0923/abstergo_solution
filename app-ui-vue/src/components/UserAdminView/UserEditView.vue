@@ -167,7 +167,7 @@ export default {
   computed: {
     // 是否为编辑模式
     isEditMode() {
-      return !!this.userForm.id
+      return this.userForm.id !== undefined
     }
   },
   watch: {
