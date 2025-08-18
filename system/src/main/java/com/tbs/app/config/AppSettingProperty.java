@@ -3,10 +3,10 @@ package com.tbs.app.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-import com.tbs.app.service.business.IPasswordEncrypt;
-import com.tbs.app.service.business.ISystemUserService;
-import com.tbs.app.service.business.impl.NoEncryptPassword;
-import com.tbs.app.service.business.impl.SimpleSystemUserServiceImpl;
+import com.tbs.app.service.business.user.IPasswordEncrypt;
+import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.business.user.impl.NoEncryptPassword;
+import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
 import com.tbs.common.data.IDataHolderExpireActuator;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.delegate.IDelegateInvoker;

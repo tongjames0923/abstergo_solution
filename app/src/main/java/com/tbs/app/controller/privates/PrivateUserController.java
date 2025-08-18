@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.tbs.app.service.business.ISystemUserService;
-import com.tbs.app.service.business.IUserRoleRelationService;
+import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;

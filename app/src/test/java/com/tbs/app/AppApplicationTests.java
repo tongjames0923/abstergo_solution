@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import com.tbs.app.pojo.model.PageVO;
-import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.broadcast.enums.HandleMode;
 import com.tbs.broadcast.event.impl.SimpleEvent;

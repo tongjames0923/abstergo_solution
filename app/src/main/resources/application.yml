@@ -6,7 +6,7 @@ tbs:
       - /private/**
     auth:
       enable: true
-      user-auth-service-impl: com.tbs.app.service.business.impl.SimpleUserAuthServiceImpl
+      user-auth-service-impl: com.tbs.app.service.business.auth.impl.SimpleUserAuthServiceImpl
       token-expire-time: 900
     enable-cors: true
   swagger:

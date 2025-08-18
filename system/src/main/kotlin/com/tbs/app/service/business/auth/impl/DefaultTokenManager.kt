@@ -1,4 +1,4 @@
-package com.tbs.app.service.business.impl
+package com.tbs.app.service.business.auth.impl
 
 import com.tbs.common.IStartup
 import com.tbs.common.data.IDataHolder

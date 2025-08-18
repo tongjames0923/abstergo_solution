@@ -1,6 +1,6 @@
-package com.tbs.app.service.business.impl;
+package com.tbs.app.service.business.user.impl;
 
-import com.tbs.app.service.business.IPasswordEncrypt;
+import com.tbs.app.service.business.user.IPasswordEncrypt;
 
 /**
  * 密码不加密

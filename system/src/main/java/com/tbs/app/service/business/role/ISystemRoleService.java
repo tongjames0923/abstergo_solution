@@ -1,4 +1,4 @@
-package com.tbs.app.service.business;
+package com.tbs.app.service.business.role;
 
 import org.jetbrains.annotations.NotNull;
 

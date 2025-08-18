@@ -5,7 +5,7 @@ import javax.annotation.Resource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.interfaces.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;

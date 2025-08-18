@@ -1,8 +1,8 @@
-package com.tbs.app.service.business.impl
+package com.tbs.app.service.business.auth.impl
 
 
-import com.tbs.app.service.business.ISystemUserService
-import com.tbs.app.service.business.IUserRoleRelationService
+import com.tbs.app.service.business.role.IUserRoleRelationService
+import com.tbs.app.service.business.user.ISystemUserService
 import com.tbs.common.error.AssertUtil
 import com.tbs.common.util.CollUtil
 import com.tbs.shared.enums.SystemUserStatusEnum

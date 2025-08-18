@@ -6,8 +6,8 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.service.TestService;
-import com.tbs.app.service.business.ISystemRoleService;
-import com.tbs.app.service.business.ISystemUserService;
+import com.tbs.app.service.business.role.ISystemRoleService;
+import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;

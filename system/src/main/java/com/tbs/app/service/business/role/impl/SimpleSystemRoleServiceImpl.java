@@ -1,4 +1,4 @@
-package com.tbs.app.service.business.impl;
+package com.tbs.app.service.business.role.impl;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -10,7 +10,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
 import com.tbs.app.config.AppSettingProperty;
-import com.tbs.app.service.business.ISystemRoleService;
+import com.tbs.app.service.business.role.ISystemRoleService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.util.StrUtil;

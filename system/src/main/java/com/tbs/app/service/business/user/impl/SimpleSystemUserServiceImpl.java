@@ -1,4 +1,4 @@
-package com.tbs.app.service.business.impl;
+package com.tbs.app.service.business.user.impl;
 
 import java.util.Date;
 import java.util.List;
@@ -10,9 +10,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 
 import com.tbs.app.config.AppSettingProperty;
-import com.tbs.app.service.business.IPasswordEncrypt;
-import com.tbs.app.service.business.ISystemUserService;
-import com.tbs.app.service.business.IUserRoleRelationService;
+import com.tbs.app.service.business.role.IUserRoleRelationService;
+import com.tbs.app.service.business.user.IPasswordEncrypt;
+import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.EnumUtil;
@@ -21,8 +21,8 @@ import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.annoation.UserNameValid;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
-import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 
 /**
@@ -44,13 +44,12 @@ public class SimpleSystemUserServiceImpl
 	@Resource
 	@Lazy
 	private IUserRoleRelationService relationService;
+	@Resource
+	private AppSettingProperty property;
 
 	public SimpleSystemUserServiceImpl() {
 		instance = this;
 	}
-
-	@Resource
-	private AppSettingProperty property;
 
 	@Override
 	protected Class<? extends IDelegateInvoker> pageVoBuildType() {

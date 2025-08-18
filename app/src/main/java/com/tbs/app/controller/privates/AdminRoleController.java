@@ -5,9 +5,9 @@ import javax.annotation.Resource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.tbs.app.service.business.ISystemRoleService;
-import com.tbs.app.service.business.ISystemUserService;
-import com.tbs.app.service.business.IUserRoleRelationService;
+import com.tbs.app.service.business.role.ISystemRoleService;
+import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemUserStatusEnum;

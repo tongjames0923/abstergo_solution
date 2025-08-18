@@ -2,16 +2,21 @@ package com.tbs.app.config;
 
 import javax.annotation.Resource;
 
+import com.tbs.app.service.business.auth.impl.DefaultTokenManager;
+import com.tbs.app.service.business.auth.impl.DefaultUserInfoService;
+import com.tbs.app.service.business.role.impl.SimpleSystemRoleServiceImpl;
+import com.tbs.app.service.business.role.impl.SimpleUserRoleRelationServiceImpl;
+import com.tbs.app.service.business.user.impl.NoEncryptPassword;
+import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.tbs.app.service.business.IPasswordEncrypt;
-import com.tbs.app.service.business.ISystemRoleService;
-import com.tbs.app.service.business.ISystemUserService;
-import com.tbs.app.service.business.IUserRoleRelationService;
-import com.tbs.app.service.business.impl.*;
+import com.tbs.app.service.business.user.IPasswordEncrypt;
+import com.tbs.app.service.business.role.ISystemRoleService;
+import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.common.data.IDataHolderExpireActuator;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.util.BeanUtil;
