@@ -15,12 +15,13 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 
 import com.tbs.app.service.business.role.ISystemRoleService;
-import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
+import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.shared.constant.CommonConstant;
+import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.mapper.UserRoleRelationMapper;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
@@ -54,7 +55,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 	@Override
 	@CacheEvict(cacheNames = "user_role", key = "#userId")
 	public void enableRole(@NotNull Long userId, @NotNull String role) {
-		setRole(userId, role, CommonConstant.FLAG_ON);
+		setRole(userId, role, SystemRoleFlagEnum.ACTIVE.getCode());
 	}
 
 	private void setRole(@NotNull Long userId, @NotNull String role, @NotNull Integer flag) {
@@ -83,8 +84,10 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 	@Override
 	@CacheEvict(cacheNames = "user_role", key = "#userId")
 	public void disableRole(@NotNull Long userId, @NotNull String roleId) {
-		setRole(userId, roleId, CommonConstant.FLAG_OFF);
+		setRole(userId, roleId, SystemRoleFlagEnum.DISABLE.getCode());
 	}
+
+
 
 	@Cacheable(cacheNames = "user_role", key = "#userId")
 	@ExpireOn(cacheNames = "user_role", value = 15, timeUnit = TimeUnit.MINUTES)
@@ -97,7 +100,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 			return Arrays.asList();
 		}
 		return relations.stream().map(relation -> systemRoleService.queryById(relation.getRoleId()))
-				.filter(role -> role != null && CommonConstant.FLAG_ON.equals(role.getFlag())).distinct()
+				.filter(role -> role != null && !SystemRoleFlagEnum.DISABLE.getCode().equals(role.getFlag())).distinct()
 				.collect(Collectors.toList());
 	}
 }

@@ -19,7 +19,7 @@ public interface IUserRoleRelationService {
      * @param userId
      * @param roleId
      */
-    void enableRole(@NotNull Long userId, @NotNull String roleId);
+    void enableRole(@NotNull Long userId, @NotNull String roleName);
 
     /**
      * 禁用角色
@@ -27,7 +27,7 @@ public interface IUserRoleRelationService {
      * @param userId
      * @param roleId
      */
-    void disableRole(@NotNull Long userId, @NotNull String roleId);
+    void disableRole(@NotNull Long userId, @NotNull String roleName);
 
     /**
      * 查询用户角色

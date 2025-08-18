@@ -13,85 +13,89 @@ import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.role.ISystemRoleService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.shared.constant.CommonConstant;
-import com.tbs.shared.mapper.SystemRoleMapper;
+import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.mapper.SystemRoleMapper;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 
 /**
  * @author abstergo
  */
 public class SimpleSystemRoleServiceImpl
-    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRoleEntity, Long, SystemRoleMapper>
-    implements ISystemRoleService {
+		extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRoleEntity, Long, SystemRoleMapper>
+		implements ISystemRoleService {
 
-    @Resource
-    SystemRoleMapper systemRoleMapper;
+	@Resource
+	SystemRoleMapper systemRoleMapper;
 
-    @Resource
-    private AppSettingProperty property;
+	@Resource
+	private AppSettingProperty property;
 
-    @Override
-    protected Class<? extends IDelegateInvoker> pageVoBuildType() {
-        return property.getMainDelegateInvokerImpl();
-    }
+	@Override
+	protected Class<? extends IDelegateInvoker> pageVoBuildType() {
+		return property.getMainDelegateInvokerImpl();
+	}
 
-    @Override
-    protected SystemRoleMapper getMapper() {
-        return systemRoleMapper;
-    }
+	@Override
+	protected SystemRoleMapper getMapper() {
+		return systemRoleMapper;
+	}
 
-    @Override
-    protected SystemRoleEntity newEntity() {
-        return new SystemRoleEntity();
-    }
+	@Override
+	protected SystemRoleEntity newEntity() {
+		return new SystemRoleEntity();
+	}
 
-    @Override
-    protected Integer getFlagDisable() {
-        return CommonConstant.FLAG_OFF;
-    }
+	@Override
+	protected Integer getFlagDisable() {
+		return CommonConstant.FLAG_OFF;
+	}
 
-    @Override
-    protected SystemRoleEntity insertNew(SystemRoleEntity entity) {
-        entity.setFlag(CommonConstant.FLAG_ON);
-        entity.setCreateTime(new java.util.Date());
-        getMapper().insert(entity);
-        return entity;
-    }
+	@Override
+	protected SystemRoleEntity insertNew(SystemRoleEntity entity) {
+		entity.setFlag(SystemRoleFlagEnum.ACTIVE.getCode());
+		entity.setCreateTime(new java.util.Date());
+		getMapper().insert(entity);
+		return entity;
+	}
 
-    @CacheEvict(cacheNames = "system_role", key = "#entity.role",
-        condition = "#entity!=null&&#entity.role!=null&&#entity.role.length()>0")
-    @Override
-    protected List<SystemRoleEntity> updateBy(SystemRoleEntity entity) {
-        entity.setUpdateTime(new java.util.Date());
-        getMapper().updateByPrimaryKey(entity);
-        return List.of(entity);
-    }
+	@CacheEvict(cacheNames = "system_role", key = "#entity.role", condition = "#entity!=null&&#entity.role!=null&&#entity.role.length()>0")
+	@Override
+	protected List<SystemRoleEntity> updateBy(SystemRoleEntity entity) {
+		entity.setUpdateTime(new java.util.Date());
+		getMapper().updateByPrimaryKey(entity);
+		return List.of(entity);
+	}
 
-    @Override
-    protected SystemRoleEntity compareAndUpdateValue(SystemRoleEntity newOne, SystemRoleEntity oldOne) {
-        if (newOne.getFlag() != null) {
-            if (newOne.getFlag().equals(CommonConstant.FLAG_OFF) || newOne.getFlag().equals(CommonConstant.FLAG_ON)) {
-                oldOne.setFlag(newOne.getFlag());
-            }
-        }
-        if (StrUtil.isNotEmpty(newOne.getDescription())) {
-            oldOne.setDescription(newOne.getDescription());
-        }
-        if (StrUtil.isNotEmpty(newOne.getRole())) {
-            oldOne.setRole(newOne.getRole());
-        }
-        return oldOne;
-    }
+	@Override
+	protected SystemRoleEntity compareAndUpdateValue(SystemRoleEntity newOne, SystemRoleEntity oldOne) {
+		AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag()), "系统角色不允许修改");
+		if (newOne.getFlag() != null) {
+			AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode()), "不允许接口设置角色属性到系统角色");
+			if (newOne.getFlag().equals(SystemRoleFlagEnum.ACTIVE.getCode())
+					|| newOne.getFlag().equals(SystemRoleFlagEnum.DISABLE.getCode())) {
+				oldOne.setFlag(newOne.getFlag());
+			}
+		}
+		if (StrUtil.isNotEmpty(newOne.getDescription())) {
+			oldOne.setDescription(newOne.getDescription());
+		}
+		if (StrUtil.isNotEmpty(newOne.getRole())) {
+			oldOne.setRole(newOne.getRole());
+		}
+		return oldOne;
+	}
 
-    @Cacheable(cacheNames = "system_role", key = "#roleName")
-    @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
-    @Override
-    public SystemRoleEntity getRoleByName(@NotNull String roleName) {
-        if (StrUtil.isEmpty(roleName)) {
-            return null;
-        }
-        return getQueryWrapper().query().where().equal(SystemRoleEntity::getRole, roleName).pour().fetchOne();
-    }
+	@Cacheable(cacheNames = "system_role", key = "#roleName")
+	@ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+	@Override
+	public SystemRoleEntity getRoleByName(@NotNull String roleName) {
+		if (StrUtil.isEmpty(roleName)) {
+			return null;
+		}
+		return getQueryWrapper().query().where().equal(SystemRoleEntity::getRole, roleName).pour().fetchOne();
+	}
 }
