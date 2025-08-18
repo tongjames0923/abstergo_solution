@@ -18,10 +18,10 @@
         <module>common</module>
         <module>cache</module>
         <module>sql</module>
-        <module>app_system</module>
+        <module>system</module>
         <module>redis-mod</module>
         <module>rabbitmq-mod</module>
-        <module>system_shared</module>
+        <module>shared</module>
     </modules>
     <groupId>com.tbs</groupId>
     <artifactId>solution</artifactId>
