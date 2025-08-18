@@ -1,21 +1,24 @@
 package com.tbs.app.service.log.impl;
 
-import com.tbs.app.log.ISystemOperateLog;
-import com.tbs.app.mapper.SystemOperateMapper;
-import com.tbs.app.pojo.entity.SystemOperateRecordEntity;
-import com.tbs.common.data.IDataHolderManager;
-import com.tbs.common.util.CollUtil;
-import com.tbs.lock.util.LockUtil;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+import javax.annotation.Resource;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.DisposableBean;
 
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
+import com.tbs.common.data.IDataHolderManager;
+import com.tbs.common.util.CollUtil;
+import com.tbs.lock.util.LockUtil;
+import com.tbs.shared.interfaces.log.ISystemOperateLog;
+import com.tbs.shared.mapper.SystemOperateMapper;
+import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
+
+import lombok.Getter;
+import lombok.Setter;
 
 public class DbSystemOpLog implements ISystemOperateLog, DisposableBean {
 	@Resource

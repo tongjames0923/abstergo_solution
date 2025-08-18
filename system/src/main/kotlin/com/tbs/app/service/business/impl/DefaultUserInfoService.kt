@@ -1,12 +1,13 @@
 package com.tbs.app.service.business.impl
 
-import com.tbs.app.enums.SystemUserStatusEnum
-import com.tbs.app.pojo.entity.SystemRoleEntity
-import com.tbs.app.pojo.entity.SystemUserEntity
+
 import com.tbs.app.service.business.ISystemUserService
 import com.tbs.app.service.business.IUserRoleRelationService
 import com.tbs.common.error.AssertUtil
 import com.tbs.common.util.CollUtil
+import com.tbs.shared.enums.SystemUserStatusEnum
+import com.tbs.shared.pojo.entity.SystemRoleEntity
+import com.tbs.shared.pojo.entity.SystemUserEntity
 import com.tbs.web.exception.SimpleAuthException
 import com.tbs.web.security.IUserInfoService
 import org.springframework.security.core.authority.SimpleGrantedAuthority

@@ -1,10 +1,11 @@
 package com.tbs.app.form;
 
-import com.tbs.app.annoation.PasswordValid;
-import com.tbs.app.annoation.UserNameValid;
-import lombok.Data;
-
 import java.io.Serializable;
+
+import com.tbs.shared.interfaces.annoation.PasswordValid;
+import com.tbs.shared.interfaces.annoation.UserNameValid;
+
+import lombok.Data;
 
 
 @Data

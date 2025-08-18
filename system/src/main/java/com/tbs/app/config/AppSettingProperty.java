@@ -1,7 +1,8 @@
 package com.tbs.app.config;
 
-import com.tbs.app.constraint.IUserNamePasswordValidator;
-import com.tbs.app.constraint.impl.SimpleUserValidator;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
+
 import com.tbs.app.service.business.IPasswordEncrypt;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.impl.NoEncryptPassword;
@@ -10,9 +11,10 @@ import com.tbs.common.data.IDataHolderExpireActuator;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
+import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
+import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
+
 import lombok.Data;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * @author abstergo

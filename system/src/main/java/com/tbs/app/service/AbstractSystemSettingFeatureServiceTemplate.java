@@ -1,11 +1,13 @@
 package com.tbs.app.service;
 
-import com.tbs.app.config.AppSettingProperty;
-import com.tbs.app.pojo.IIdentifiable;
-import com.tbs.sql.mapper.IFrameworkMapper;
-import lombok.Getter;
-
 import javax.annotation.Resource;
+
+import com.tbs.app.config.AppSettingProperty;
+import com.tbs.shared.interfaces.service.AbstractFullFeatureServiceTemplate;
+import com.tbs.shared.pojo.IIdentifiable;
+import com.tbs.sql.mapper.IFrameworkMapper;
+
+import lombok.Getter;
 
 /**
  * 包含系统设置的功能服务模版

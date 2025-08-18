@@ -1,8 +1,9 @@
 package com.tbs.app.service.business;
 
-import com.tbs.app.pojo.entity.SystemRoleEntity;
-import com.tbs.app.service.IServiceTemplate;
 import org.jetbrains.annotations.NotNull;
+
+import com.tbs.shared.interfaces.service.IServiceTemplate;
+import com.tbs.shared.pojo.entity.SystemRoleEntity;
 
 /**
  * 角色服务

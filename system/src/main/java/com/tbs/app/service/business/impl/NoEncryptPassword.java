@@ -8,8 +8,8 @@ import com.tbs.app.service.business.IPasswordEncrypt;
  * @author tongj
  */
 public class NoEncryptPassword implements IPasswordEncrypt {
-    @Override
-    public String encrypt(String password) {
-        return password;
-    }
+	@Override
+	public String encrypt(String password) {
+		return password;
+	}
 }

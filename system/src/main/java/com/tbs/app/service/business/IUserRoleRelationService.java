@@ -1,9 +1,10 @@
 package com.tbs.app.service.business;
 
-import com.tbs.app.pojo.entity.SystemRoleEntity;
+import java.util.List;
+
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
+import com.tbs.shared.pojo.entity.SystemRoleEntity;
 
 /**
  * 用户角色关系服务接口

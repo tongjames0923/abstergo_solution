@@ -5,14 +5,14 @@ import javax.annotation.Resource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import com.tbs.app.constant.CommonConstant;
-import com.tbs.app.enums.SystemUserStatusEnum;
-import com.tbs.app.pojo.criteria.CommonSystemRoleQueryCriteria;
-import com.tbs.app.pojo.entity.SystemUserEntity;
 import com.tbs.app.service.business.ISystemRoleService;
 import com.tbs.app.service.business.ISystemUserService;
 import com.tbs.app.service.business.IUserRoleRelationService;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.shared.constant.CommonConstant;
+import com.tbs.shared.enums.SystemUserStatusEnum;
+import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
+import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.sql.model.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;

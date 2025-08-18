@@ -1,21 +1,23 @@
 package com.tbs.app.service.business.impl;
 
-import com.tbs.app.config.AppSettingProperty;
-import com.tbs.app.constant.CommonConstant;
-import com.tbs.app.mapper.SystemRoleMapper;
-import com.tbs.app.pojo.entity.SystemRoleEntity;
-import com.tbs.app.service.AbstractLogicDeleteFullFeatureServiceTemplate;
-import com.tbs.app.service.business.ISystemRoleService;
-import com.tbs.cache.annotation.ExpireOn;
-import com.tbs.common.delegate.IDelegateInvoker;
-import com.tbs.common.util.StrUtil;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
+import com.tbs.app.config.AppSettingProperty;
+import com.tbs.app.service.business.ISystemRoleService;
+import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.common.delegate.IDelegateInvoker;
+import com.tbs.common.util.StrUtil;
+import com.tbs.shared.constant.CommonConstant;
+import com.tbs.shared.mapper.SystemRoleMapper;
+import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.pojo.entity.SystemRoleEntity;
 
 /**
  * @author abstergo

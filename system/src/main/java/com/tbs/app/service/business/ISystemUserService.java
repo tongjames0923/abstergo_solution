@@ -1,9 +1,9 @@
 package com.tbs.app.service.business;
 
-import com.tbs.app.pojo.entity.SystemUserEntity;
-import com.tbs.app.service.IServiceTemplate;
-
 import java.util.List;
+
+import com.tbs.shared.interfaces.service.IServiceTemplate;
+import com.tbs.shared.pojo.entity.SystemUserEntity;
 
 /**
  * 用户服务
