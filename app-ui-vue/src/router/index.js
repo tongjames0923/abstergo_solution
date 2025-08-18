@@ -50,7 +50,7 @@ export const constantRoutes = [
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: {title: 'Dashboard', icon: 'dashboard', roles: ['NORMAL']}
+      meta: {title: 'Dashboard', icon: 'dashboard', roles: ['常规用户']}
     }]
   },
 
@@ -58,13 +58,19 @@ export const constantRoutes = [
     path: '/admin',
     component: Layout,
     name: 'admin',
-    meta: {title: '管理员操作', icon: 'el-icon-s-help', roles: ['SU']},
+    meta: {title: '管理员操作', icon: 'el-icon-s-help', roles: ['超级管理员']},
     children: [
       {
         path: 'user',
         name: '用户管理',
         component: () => import('@/views/admin/user/index.vue'),
-        meta: {title: '用户管理', icon: 'table', roles: ['SU']}
+        meta: {title: '用户管理', icon: 'table', roles: ['超级管理员']}
+      },
+      {
+        path: 'role',
+        name: '角色管理',
+        component: () => import('@/views/admin/role/index.vue'),
+        meta: {title: '角色管理', icon: 'eye', roles: ['超级管理员']}
       }
     ]
   },
