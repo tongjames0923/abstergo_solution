@@ -12,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import com.tbs.app.pojo.model.PageVO;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.broadcast.enums.HandleMode;
@@ -20,6 +19,7 @@ import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.schedule.impl.TimingWheelSchedule;
+import com.tbs.shared.pojo.model.PageVO;
 
 @SpringBootTest(classes = AppApplication.class)
 class AppApplicationTests {
