@@ -3,12 +3,12 @@
     v-model="selectedValue"
     :placeholder="placeholder"
     :clearable="clearable"
-    :disabled="disabled"
-    :loading="loading"
+    :disabled="disabled || dictLoading"
+    :loading=" dictLoading"
     :multiple="multiple"
     @change="handleChange">
     <el-option
-      v-for="item in options"
+      v-for="item in finalOptions"
       :key="item.value"
       :label="item.label"
       :value="item.value">
@@ -17,15 +17,16 @@
 </template>
 
 <script>
-import request from '@/utils/request'
+import {mapActions, mapGetters} from 'vuex'
+import request from "@/utils/request";
 
 export default {
   name: 'DynamicOptions',
   props: {
-    // API地址，例如: '/api/options?name=用户状态' 或者一个返回Promise的函数
+    // API地址，例如: '/api/options?name=用户状态'
     apiUrl: {
-      type: [String, Function],
-      required: true
+      type: String,
+      default: ''
     },
     // v-model绑定值
     value: {
@@ -56,52 +57,131 @@ export default {
     transform: {
       type: Function,
       default: null
+    },
+    // 字典键名，如果提供则使用字典功能
+    dictKey: {
+      type: String,
+      default: null
+    },
+    // 是否懒加载字典
+    lazy: {
+      type: Boolean,
+      default: true
+    },
+    // 外部传入选项数据（不使用API）
+    options: {
+      type: Array,
+      default: () => []
     }
   },
   data() {
     return {
-      options: [],
-      loading: false,
-      selectedValue: this.value
+      selectedValue: this.value,
+      localOptions: []
+    }
+  },
+  computed: {
+    ...mapGetters('dictionaries', [
+      'dictionaryItems',
+      'dictionaryLoading',
+      'dictionaryLoaded',
+      'dictionaryError'
+    ]),
+
+    // 判断使用哪种选项数据源
+    finalOptions() {
+      // 如果传入了options属性，则使用它
+      if (this.options && this.options.length > 0) {
+        return this.options
+      }
+
+      // 如果提供了dictKey且字典已加载，则使用字典数据
+      if (this.dictKey && this.dictionaryLoaded(this.dictKey)) {
+        return this.dictionaryItems(this.dictKey)
+      }
+
+      // 否则使用本地加载的选项
+      return this.localOptions
+    },
+
+    // 字典加载状态
+    dictLoading() {
+      return this.dictKey ? this.dictionaryLoading(this.dictKey) : false
+    },
+
+    // 组件整体加载状态
+    loading() {
+      return this.dictLoading || (this.localOptions.length === 0 && !this.dictKey && this.apiUrl)
     }
   },
   watch: {
     value(newVal) {
       this.selectedValue = newVal
+    },
+
+    // 监听dictKey变化，重新初始化字典
+    dictKey: {
+      handler(newVal) {
+        if (newVal) {
+          this.initDict()
+        }
+      },
+      immediate: true
     }
   },
   created() {
-    this.loadOptions()
+    // 如果没有提供dictKey但提供了apiUrl，则直接加载选项
+    if (!this.dictKey && this.apiUrl) {
+      this.loadOptions()
+    }
   },
   methods: {
+    ...mapActions('dictionaries', [
+      'createDictionary',
+      'loadDictionary',
+      'ensureDictionaryLoaded'
+    ]),
+
+    // 初始化字典
+    async initDict() {
+      if (!this.dictKey) return
+
+      try {
+        // 创建字典实例
+        await this.createDictionary({
+          key: this.dictKey,
+          apiUrl: this.apiUrl,
+          transform: this.transform,
+          lazy: this.lazy
+        })
+      } catch (error) {
+        console.error('初始化字典失败:', error)
+        // 初始化失败时回退到直接加载选项
+        this.loadOptions()
+      }
+    },
+
     // 从API加载选项数据
     async loadOptions() {
-      this.loading = true
+      if (!this.apiUrl) return
+
       try {
-        let response
-        // 如果 apiUrl 是函数，则调用它获取数据
-        if (typeof this.apiUrl === 'function') {
-          response = await this.apiUrl()
-        } else {
-          // 否则使用原有的请求方式
-          response = await request({
-            url: this.apiUrl,
-            method: 'get'
-          })
-        }
+        // 发起请求获取数据
+        const response = await request({
+          url: this.apiUrl,
+          method: 'get'
+        })
 
         // 如果提供了转换函数，则使用它来处理数据
         if (this.transform && typeof this.transform === 'function') {
-          this.options = this.transform(response)
+          this.localOptions = this.transform(response)
         } else {
           // 默认处理格式 {data: [{label: '', value: ''}]}
-          this.options = response.data || []
+          this.localOptions = response.data || []
         }
       } catch (error) {
         console.error('Failed to load options:', error)
-        this.options = []
-      } finally {
-        this.loading = false
+        this.localOptions = []
       }
     },
 
@@ -112,8 +192,16 @@ export default {
     },
 
     // 手动重新加载选项
-    reload() {
-      this.loadOptions()
+    async reload() {
+      if (this.dictKey) {
+        try {
+          await this.loadDictionary(this.dictKey)
+        } catch (error) {
+          console.error('重新加载字典失败:', error)
+        }
+      } else {
+        await this.loadOptions()
+      }
     }
   }
 }

@@ -221,6 +221,7 @@ export default {
       roleManagementDialogVisible: false,
       dialogMode: 'add', // 'add' 或 'edit'
       currentUserId: null,
+      currentUser: undefined,
       passwordForm: {
         id: undefined,
         userName: '',
