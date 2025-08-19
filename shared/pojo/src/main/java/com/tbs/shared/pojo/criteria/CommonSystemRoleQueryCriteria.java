@@ -1,5 +1,7 @@
 package com.tbs.shared.pojo.criteria;
 
+import java.util.List;
+
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
@@ -27,8 +29,8 @@ public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<System
 	private String roleEquals;
 
 	@QueryMapping(value = "flag")
-	@QueryField(contrast = QueryContrastEnum.EQUAL)
-	private Integer flagEquals;
+	@QueryField(contrast = QueryContrastEnum.IN)
+	private List<Integer> flagEquals;
 
 	@QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
 	private QueryOrderedModel createTimeOrder;
