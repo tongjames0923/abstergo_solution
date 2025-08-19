@@ -66,20 +66,33 @@ export function createDicMeta(apiUrl, transform, labelField, valueField) {
   const req = () => {
     // 如果 apiUrl 是函数，则调用它获取数据
     if (typeof apiUrl === 'function') {
-      return apiUrl()
+      // 将函数返回的结果包装成 axios promise
+      return new Promise((resolve, reject) => {
+        try {
+          const result = apiUrl();
+          // 如果函数返回的是 promise，则直接返回
+          if (result instanceof Promise) {
+            result.then(resolve).catch(reject);
+          } else {
+            // 如果是普通值，则包装成 resolved promise
+            resolve({data: result});
+          }
+        } catch (error) {
+          reject(error);
+        }
+      });
     } else {
       // 否则使用常规请求方式
-      return request({
+      return () => request({
         url: apiUrl,
         method: 'get'
-      })
+      });
     }
-  }
-
+  };
   return new DicMeta({
     request: req,
     transform: transform || null,
     labelField: labelField || 'label',
     valueField: valueField || 'value'
-  })
+  });
 }

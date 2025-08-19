@@ -100,6 +100,60 @@ const mutations = {
   }
 }
 
+// 私有辅助函数：处理字典数据加载
+const loadDictionaryData = async (dictionary, config, useCache = true, state, commit, key) => {
+  // 检查缓存中是否已有数据
+  if (useCache && state.dataCache[key] && state.dataCache[key].length > 0) {
+    // 如果有缓存数据，直接使用缓存
+    try {
+      // 更新字典数据
+      dictionary._data.items = state.dataCache[key]
+      dictionary._data.loaded = true
+      return state.dataCache[key]
+    } catch (error) {
+      console.error(`使用缓存数据时出错:`, error)
+    }
+  }
+
+  try {
+    const caller = dictionary.meta.request()
+    // 从API获取原始数据
+    let response = await caller();
+
+    // 提取response中的data字段作为原始数据
+    let rawData = response
+    if (response && response.data !== undefined) {
+      rawData = response.data
+    }
+
+    // 处理数据
+    let processedData = rawData
+    if (config && typeof config.transform === 'function') {
+      processedData = config.transform(rawData, {
+        labelField: config.labelField || 'label',
+        valueField: config.valueField || 'value'
+      })
+    }
+
+    // 确保数据是数组格式
+    if (!Array.isArray(processedData)) {
+      processedData = [processedData]
+    }
+
+    // 缓存处理后的数据
+    commit('SET_CACHE_DATA', {key, data: processedData})
+
+    // 更新字典数据
+    dictionary._data.items = processedData
+    dictionary._data.loaded = true
+
+    return processedData
+  } catch (error) {
+    // 记录错误信息
+    throw error
+  }
+}
+
 // actions
 const actions = {
   // 创建并注册字典
@@ -137,58 +191,14 @@ const actions = {
       throw new Error(`Dictionary with key '${key}' not found`)
     }
 
-    // 检查缓存中是否已有数据
-    const cachedData = state.dataCache[key]
-    if (cachedData && cachedData.length > 0) {
-      // 如果有缓存数据，直接使用缓存
-      try {
-        // 更新字典数据
-        dictionary._data.items = cachedData
-        dictionary._data.loaded = true
-        return cachedData
-      } catch (error) {
-        console.error(`使用缓存数据时出错:`, error)
-        // 继续执行API请求
-      }
-    }
-
     // 设置加载状态
     commit('SET_LOADING_STATE', {key, loading: true})
     commit('SET_ERROR_STATE', {key, error: null})
 
     try {
-      // 从API获取原始数据
-      let response = await dictionary.meta.request()
-
-      // 提取response中的data字段作为原始数据
-      let rawData = response
-      if (response && response.data !== undefined) {
-        rawData = response.data
-      }
-
-      // 处理数据
-      let processedData = rawData
       const config = state.dictionaryConfigs[key]
-      if (config && typeof config.transform === 'function') {
-        processedData = config.transform(rawData, {
-          labelField: config.labelField || 'label',
-          valueField: config.valueField || 'value'
-        })
-      }
-
-      // 确保数据是数组格式
-      if (!Array.isArray(processedData)) {
-        processedData = [processedData]
-      }
-
-      // 缓存处理后的数据
-      commit('SET_CACHE_DATA', {key, data: processedData})
-
-      // 更新字典数据
-      dictionary._data.items = processedData
-      dictionary._data.loaded = true
-
-      return processedData
+      const result = await loadDictionaryData(dictionary, config, true, state, commit, key)
+      return result
     } catch (error) {
       // 记录错误信息
       commit('SET_ERROR_STATE', {key, error: error.message || '加载失败'})
@@ -211,38 +221,9 @@ const actions = {
     commit('SET_ERROR_STATE', {key, error: null})
 
     try {
-      // 从API获取原始数据
-      let response = await dictionary.meta.request()
-
-      // 提取response中的data字段作为原始数据
-      let rawData = response
-      if (response && response.data !== undefined) {
-        rawData = response.data
-      }
-
-      // 处理数据
-      let processedData = rawData
       const config = state.dictionaryConfigs[key]
-      if (config && typeof config.transform === 'function') {
-        processedData = config.transform(rawData, {
-          labelField: config.labelField || 'label',
-          valueField: config.valueField || 'value'
-        })
-      }
-
-      // 确保数据是数组格式
-      if (!Array.isArray(processedData)) {
-        processedData = [processedData]
-      }
-
-      // 缓存处理后的数据
-      commit('SET_CACHE_DATA', {key, data: processedData})
-
-      // 更新字典数据
-      dictionary._data.items = processedData
-      dictionary._data.loaded = true
-
-      return processedData
+      const result = await loadDictionaryData(dictionary, config, false, state, commit, key)
+      return result
     } catch (error) {
       // 记录错误信息
       commit('SET_ERROR_STATE', {key, error: error.message || '重新加载失败'})
@@ -259,7 +240,6 @@ const actions = {
     if (!dictionary) {
       throw new Error(`Dictionary with key '${key}' not found`)
     }
-
     if (!dictionary.loaded && !state.loadingStates[key]) {
       return await dispatch('loadDictionary', key)
     }
