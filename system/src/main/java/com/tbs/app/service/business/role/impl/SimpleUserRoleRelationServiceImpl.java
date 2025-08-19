@@ -64,7 +64,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 		AssertUtil.notNull(user, "用户不存在");
 		SystemRoleEntity roleEntity = systemRoleService.getRoleByName(role);
 		AssertUtil.notNull(roleEntity, "角色不存在");
-		AssertUtil.isTrue(!CommonConstant.FLAG_ON.equals(roleEntity.getFlag()), "角色 {} 已失效", role);
+		AssertUtil.isTrue(SystemRoleFlagEnum.DISABLE.getCode().equals(roleEntity.getFlag()), "角色 {} 已失效", role);
 		UserRoleRelationEntity relation = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
 				.equal(UserRoleRelationEntity::getRoleId, roleEntity.getId()).pour().fetchOne();
 		if (relation == null) {
@@ -86,8 +86,6 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 	public void disableRole(@NotNull Long userId, @NotNull String roleId) {
 		setRole(userId, roleId, SystemRoleFlagEnum.DISABLE.getCode());
 	}
-
-
 
 	@Cacheable(cacheNames = "user_role", key = "#userId")
 	@ExpireOn(cacheNames = "user_role", value = 15, timeUnit = TimeUnit.MINUTES)
