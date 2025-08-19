@@ -4,6 +4,7 @@ export default {
   computed: {
     ...mapGetters('dictionaries', [
       'dictionaryItems',
+      'dictionaryRawData',
       'dictionaryLoading',
       'dictionaryLoaded',
       'dictionaryError',
@@ -17,7 +18,8 @@ export default {
       'createDictionary',
       'loadDictionary',
       'ensureDictionaryLoaded',
-      'reloadDictionary'
+      'reloadDictionary',
+      'clearCache'
     ]),
 
     /**
@@ -37,8 +39,16 @@ export default {
       }
 
       try {
+        // 先检查字典是否已存在
+        const existingDict = this.dictionary(dictKey)
+        if (existingDict) {
+          // 字典已存在，无需重新创建
+          console.log(`字典 ${dictKey} 已存在，跳过创建`)
+          return existingDict
+        }
+
         // 创建字典实例
-        await this.createDictionary({
+        const dictionary = await this.createDictionary({
           key: dictKey,
           apiUrl: options.apiUrl,
           transform: options.transform,
@@ -51,6 +61,8 @@ export default {
         if (options.lazy === false) {
           await this.loadDictionary(dictKey)
         }
+
+        return dictionary
       } catch (error) {
         console.error(`初始化字典 ${dictKey} 失败:`, error)
       }
@@ -74,7 +86,7 @@ export default {
     },
 
     /**
-     * 重新加载字典
+     * 重新加载字典（强制刷新缓存）
      * @param {String} dictKey 字典键名
      */
     async reloadDict(dictKey) {
@@ -91,12 +103,33 @@ export default {
     },
 
     /**
+     * 清除字典缓存
+     * @param {String} dictKey 字典键名，如果不提供则清除所有缓存
+     */
+    async clearDictCache(dictKey) {
+      try {
+        await this.clearCache(dictKey)
+      } catch (error) {
+        console.error(`清除字典缓存失败:`, error)
+      }
+    },
+
+    /**
      * 获取字典选项列表
      * @param {String} dictKey 字典键名
      * @returns {Array} 字典选项列表
      */
     getDictItems(dictKey) {
       return this.dictionaryItems(dictKey) || []
+    },
+
+    /**
+     * 获取字典原始数据列表
+     * @param {String} dictKey 字典键名
+     * @returns {Array} 字典原始数据列表
+     */
+    getDictRawData(dictKey) {
+      return this.dictionaryRawData(dictKey) || []
     },
 
     /**

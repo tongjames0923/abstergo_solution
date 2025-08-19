@@ -172,7 +172,7 @@ export default {
       try {
         const response = await queryRoles({
           roleEquals: this.searchKeyword || undefined,
-          flagEquals: 1 // 只获取启用的角色
+          flagEquals: [1, 2] // 只获取启用的角色
         })
         this.availableRoles = response.data?.data || []
         this.totalRoles = response.data?.total || 0

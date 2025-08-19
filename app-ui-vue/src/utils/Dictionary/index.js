@@ -81,7 +81,7 @@ export class Dictionary {
 
     try {
       let data = await this.meta.request()
-
+      data = data.data
       // 如果配置了转换函数，则使用转换函数处理数据
       if (typeof this.meta.transform === 'function') {
         data = this.meta.transform(data, this.meta)
@@ -91,7 +91,6 @@ export class Dictionary {
       if (!Array.isArray(data)) {
         data = [data]
       }
-
       this._data.items = data
       this._data.loaded = true
       return data

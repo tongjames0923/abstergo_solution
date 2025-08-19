@@ -47,9 +47,7 @@
       >
 
         <template #status="{ row }">
-          <el-tag v-if="row.flag === 0" type="danger" effect="dark">禁用</el-tag>
-          <el-tag v-else-if="row.flag===1" type="success" effect="dark">正常</el-tag>
-          <el-tag v-else type="warning" effect="dark">锁定</el-tag>
+          <UserStatusOptions :value="row.flag" readonly></UserStatusOptions>
         </template>
 
         <template #avatar="{row}">
@@ -199,10 +197,14 @@ import UserEditView from "@/components/UserAdminView/UserEditView.vue";
 import DynamicForm from "@/components/DynamicForm/index.vue";
 import UserRoleAdminView from "@/components/UserAdminView/UserRoleAdminView.vue";
 import {activateUser, adminQueryUser, disableUser, saveUser} from "@/api/admin_user";
+import UserStatusOptions from "@/components/UserStatusOptions/index.vue";
 
 export default {
   name: 'UserAdminView',
-  components: {DynamicOptions, DynamicTable, UserAddView, UserEditView, DynamicForm, UserRoleAdminView},
+  components: {
+    DynamicOptions, DynamicTable, UserAddView, UserEditView, DynamicForm,
+    UserStatusOptions, UserRoleAdminView
+  },
   data() {
     // 确认密码验证规则
     const validateConfirmPassword = (rule, value, callback) => {

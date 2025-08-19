@@ -61,24 +61,25 @@ export class DicMeta {
   }
 }
 
-export function createDicMeta(apiUrl, transform, label, value) {
-  let req = null
-  // 如果 apiUrl 是函数，则调用它获取数据
-  if (typeof this.apiUrl === 'function') {
-    req = apiUrl
-  } else {
-    // 否则使用原有的请求方式
-    req = request({
-      url: this.apiUrl,
-      method: 'get'
-    })
-  }
-  return new DicMeta(
-    {
-      request: req,
-      transform: transform || null,
-      labelField: label || 'label',
-      valueField: value || 'value'
+export function createDicMeta(apiUrl, transform, labelField, valueField) {
+  // 创建请求函数
+  const req = () => {
+    // 如果 apiUrl 是函数，则调用它获取数据
+    if (typeof apiUrl === 'function') {
+      return apiUrl()
+    } else {
+      // 否则使用常规请求方式
+      return request({
+        url: apiUrl,
+        method: 'get'
+      })
     }
-  )
+  }
+
+  return new DicMeta({
+    request: req,
+    transform: transform || null,
+    labelField: labelField || 'label',
+    valueField: valueField || 'value'
+  })
 }
