@@ -7,7 +7,7 @@ tbs:
     auth:
       enable: true
       user-auth-service-impl: com.tbs.app.service.business.auth.impl.SimpleUserAuthServiceImpl
-      token-expire-time: 900
+      token-expire-time: 3600
     enable-cors: true
   swagger:
     base-package: com.tbs.app.controller

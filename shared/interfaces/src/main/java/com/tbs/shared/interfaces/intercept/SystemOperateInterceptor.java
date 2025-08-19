@@ -9,9 +9,9 @@ import com.alibaba.fastjson2.JSON;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.SpringUtil;
-import com.tbs.shared.util.NetUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
+import com.tbs.shared.util.NetUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.intercept.IApiInvokeInterceptor;
 import com.tbs.web.uitl.AuthUtil;
@@ -164,7 +164,8 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 			SystemOperContext operateContext = (SystemOperContext) context;
 			operateContext.getOperateRecord().setCostTime(
 					System.currentTimeMillis() - operateContext.getOperateRecord().getOperateTime().getTime());
-			operateContext.getOperateRecord().setOperateError(JSON.toJSONString(e));
+			operateContext.getOperateRecord()
+					.setOperateError(String.format("%s:%s", e.getClass().getName(), e.getLocalizedMessage()));
 			try {
 				SpringUtil.getBeanSafe(ISystemOperateLog.class, throwable -> log.error("记录操作日志错误", throwable))
 						.log(operateContext.getOperateRecord());
