@@ -118,7 +118,7 @@ public class AppConfig {
 	@Bean
 	ISystemOperateLog systemOperateLog() {
 		var i = new DbSystemOpLog();
-		i.setBatchSize(5);
+		i.setBatchSize(100);
 		return i;
 	}
 

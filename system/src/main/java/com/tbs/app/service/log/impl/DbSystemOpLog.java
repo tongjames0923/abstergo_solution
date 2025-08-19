@@ -19,6 +19,7 @@ import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.springframework.scheduling.annotation.Async;
 
 public class DbSystemOpLog implements ISystemOperateLog, DisposableBean {
 	@Resource
@@ -38,6 +39,7 @@ public class DbSystemOpLog implements ISystemOperateLog, DisposableBean {
 	private String dataHolderName = "DB_SYS_OPER_RECORD_BUFFER";
 
 	@Override
+	@Async
 	public void log(SystemOperateRecordEntity operateRecord) {
 		opDataSource((ls) -> {
 			ls.add(operateRecord);
