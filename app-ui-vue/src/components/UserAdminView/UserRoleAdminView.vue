@@ -45,58 +45,59 @@
                 </div>
               </div>
 
-              <div class="available-roles">
-                <el-row :gutter="10">
-                  <el-col
-                    v-for="role in filteredRoles"
-                    :key="role.id"
-                    :span="12"
-                    class="role-item"
+              <!-- 使用CardList组件展示角色 -->
+              <CardList
+                :columns="2"
+                :current-page="currentPage"
+                :data="filteredRoles"
+                :gap="10"
+                :loading="loading"
+                :loading-count="loadingCount"
+                :page-size="pageSize"
+                :pagination="true"
+                :selectable="false"
+                :total="totalRoles"
+                @current-change="handlePageChange"
+              >
+                <!-- 自定义卡片内容 -->
+                <template #card="{ item: role }">
+                  <el-card
+                    :class="{ 'role-card-selected': hasRole(role.role) }"
+                    class="role-card-item"
+                    shadow="hover"
                   >
-                    <el-card
-                      :class="{ 'role-card-selected': hasRole(role.role) }"
-                      shadow="hover">
-                      <div class="role-content">
-                        <div class="role-info">
-                          <div class="role-name">{{ role.role }}</div>
-                          <div class="role-description">{{ role.description || '暂无描述' }}</div>
-                        </div>
-                        <div class="role-action">
-                          <el-button
-                            v-if="!hasRole(role.role)"
-                            size="small"
-                            type="primary"
-                            @click="enableRole(role.role)"
-                          >
-                            分配
-                          </el-button>
-                          <el-button
-                            v-else
-                            size="small"
-                            type="danger"
-                            @click="disableRole(role.role)"
-                          >
-                            取消
-                          </el-button>
-                        </div>
+                    <div class="role-content">
+                      <div class="role-info">
+                        <div class="role-name">{{ role.role }}</div>
+                        <div class="role-description">{{ role.description || '暂无描述' }}</div>
                       </div>
-                    </el-card>
-                  </el-col>
-                </el-row>
+                      <div class="role-action">
+                        <el-button
+                          v-if="!hasRole(role.role)"
+                          size="small"
+                          type="primary"
+                          @click.stop="enableRole(role.role)"
+                        >
+                          分配
+                        </el-button>
+                        <el-button
+                          v-else
+                          size="small"
+                          type="danger"
+                          @click.stop="disableRole(role.role)"
+                        >
+                          取消
+                        </el-button>
+                      </div>
+                    </div>
+                  </el-card>
+                </template>
 
-                <!-- 分页 -->
-                <div class="pagination-container" v-if="totalRoles > pageSize">
-                  <el-pagination
-                    @current-change="handlePageChange"
-                    :current-page="currentPage"
-                    :page-size="pageSize"
-                    :total="totalRoles"
-                    layout="prev, pager, next"
-                    background
-                  >
-                  </el-pagination>
-                </div>
-              </div>
+                <!-- 自定义空状态 -->
+                <template #empty>
+                  <el-empty description="暂无角色数据"></el-empty>
+                </template>
+              </CardList>
             </div>
           </el-col>
         </el-row>
@@ -106,10 +107,14 @@
 </template>
 
 <script>
+import CardList from '@/components/CardList'
 import {disableRoleForUser, enableRoleForUser, getRolesByUserIdAdmin, queryRoles} from '@/api/admin_user'
 
 export default {
   name: 'UserRoleAdminView',
+  components: {
+    CardList
+  },
   props: {
     userId: {
       type: [Number, String],
@@ -123,7 +128,7 @@ export default {
       loading: false,
       searchKeyword: '',
       currentPage: 1,
-      pageSize: 10,
+      pageSize: 6,
       totalRoles: 0
     }
   },
@@ -139,6 +144,9 @@ export default {
       const start = (this.currentPage - 1) * this.pageSize
       const end = start + this.pageSize
       return this.availableRoles.slice(start, end)
+    },
+    loadingCount() {
+      return Math.min(this.pageSize, this.totalRoles)
     }
   },
   watch: {
@@ -169,16 +177,21 @@ export default {
 
     // 获取所有可用角色
     async fetchAllRoles() {
+      this.loading = true
       try {
         const response = await queryRoles({
           roleEquals: this.searchKeyword || undefined,
-          flagEquals: [1, 2] // 只获取启用的角色
+          flagEquals: [1, 2], // 只获取启用的角色
+          pageNum: this.currentPage,
+          pageSize: this.pageSize
         })
         this.availableRoles = response.data?.data || []
         this.totalRoles = response.data?.total || 0
       } catch (error) {
         console.error('获取角色列表失败:', error)
         this.$message.error('获取角色列表失败')
+      } finally {
+        this.loading = false
       }
     },
 
@@ -207,6 +220,8 @@ export default {
           this.userRoles.push(role)
         }
         this.$message.success('角色分配成功')
+        // 重新获取用户角色以确保数据同步
+        this.fetchUserRoles()
       } catch (error) {
         console.error('启用角色失败:', error)
         this.$message.error('角色分配失败')
@@ -220,6 +235,8 @@ export default {
         // 更新本地数据
         this.userRoles = this.userRoles.filter(role => role.role !== roleName)
         this.$message.success('角色取消成功')
+        // 重新获取用户角色以确保数据同步
+        this.fetchUserRoles()
       } catch (error) {
         console.error('禁用角色失败:', error)
         this.$message.error('角色取消失败')
@@ -275,43 +292,44 @@ export default {
     font-style: italic;
   }
 
-  .available-roles {
-    .role-item {
-      margin-bottom: 15px;
+  .role-card-item {
+    border: 1px solid #ebeef5;
+    transition: all 0.3s;
+    height: 100%;
 
-      .el-card {
-        border: 1px solid #ebeef5;
-        transition: all 0.3s;
+    &.role-card-selected {
+      border-color: #409eff;
+      box-shadow: 0 2px 12px 0 rgba(64, 158, 255, 0.2);
+    }
 
-        &.role-card-selected {
-          border-color: #409eff;
-          box-shadow: 0 2px 12px 0 rgba(64, 158, 255, 0.2);
+    .role-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .role-info {
+        .role-name {
+          font-weight: bold;
+          margin-bottom: 5px;
         }
 
-        .role-content {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-
-          .role-info {
-            .role-name {
-              font-weight: bold;
-              margin-bottom: 5px;
-            }
-
-            .role-description {
-              font-size: 12px;
-              color: #999;
-            }
-          }
+        .role-description {
+          font-size: 12px;
+          color: #999;
         }
       }
     }
+  }
+
+  ::v-deep .card-list-container {
+    .card-list {
+      padding: 0;
+    }
 
     .pagination-container {
-      display: flex;
-      justify-content: center;
       margin-top: 20px;
+      padding: 0;
+      border-top: none;
     }
   }
 }
