@@ -24,75 +24,93 @@
 
     <!-- 卡片列表容器 -->
     <div
-      :style="{
-        gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
-        gap: `${gap}px`,
-        padding: `${padding}px`
+      ref="scrollContainer"
+      :class="{
+        'scrollbar-visible': scrollbarVisible,
+        'scrollbar-hover': scrollbarHover
       }"
-      class="card-list"
+      :style="{
+        maxHeight: maxHeight ? maxHeight + 'px' : 'none',
+        maxWidth: maxWidth ? maxWidth + 'px' : 'none',
+        overflowX: scrollX ? 'auto' : 'hidden',
+        overflowY: scrollY ? 'auto' : 'hidden'
+      }"
+      class="card-list-scroll-container"
+      @mouseenter="scrollbarHover = true"
+      @mouseleave="scrollbarHover = false"
     >
       <div
-        v-for="(item, index) in data"
-        :key="item[idField] || index"
-        :class="[cardClass, {
-          'card-item-selected': isItemSelected(item),
-          'card-item-selectable': selectable
-        }]"
-        :style="cardStyle"
-        class="card-item"
-        @click="handleCardClick(item, $event)"
+        :style="{
+          gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))`,
+          gap: `${gap}px`,
+          padding: `${padding}px`,
+          minWidth: fitContent ? 'fit-content' : '100%'
+        }"
+        class="card-list"
       >
-        <!-- 选择控件 -->
-        <div v-if="selectable" class="card-selection-control">
-          <el-checkbox
-            v-if="selectMode === 'multiple'"
-            :value="isItemSelected(item)"
-            @change="val => handleSelectChange(item, val)"
-            @click.native.stop
-          />
-          <el-radio
-            v-else-if="selectMode === 'single'"
-            :label="true"
-            :value="isItemSelected(item)"
-            @change="val => handleSelectChange(item, val)"
-            @click.native.stop
-          />
+        <div
+          v-for="(item, index) in data"
+          :key="item[idField] || index"
+          :class="[cardClass, {
+            'card-item-selected': isItemSelected(item),
+            'card-item-selectable': selectable
+          }]"
+          :style="cardStyle"
+          class="card-item"
+          @click="handleCardClick(item, $event)"
+        >
+          <!-- 选择控件 -->
+          <div v-if="selectable" class="card-selection-control">
+            <el-checkbox
+              v-if="selectMode === 'multiple'"
+              :value="isItemSelected(item)"
+              @change="val => handleSelectChange(item, val)"
+              @click.native.stop
+            />
+            <el-radio
+              v-else-if="selectMode === 'single'"
+              :label="true"
+              :value="isItemSelected(item)"
+              @change="val => handleSelectChange(item, val)"
+              @click.native.stop
+            />
+          </div>
+
+          <!-- 使用作用域插槽，允许父组件自定义卡片内容 -->
+          <slot
+            :index="index"
+            :item="item"
+            :loading="loading"
+            :selected="isItemSelected(item)"
+            name="card"
+          >
+            <!-- 默认卡片内容 -->
+            <el-card class="default-card">
+              <div class="default-card-content">
+                <div class="default-card-title">{{ item.title || 'Card Title' }}</div>
+                <div class="default-card-description">{{ item.description || 'Card description' }}</div>
+              </div>
+            </el-card>
+          </slot>
         </div>
 
-        <!-- 使用作用域插槽，允许父组件自定义卡片内容 -->
-        <slot
-          :index="index"
-          :item="item"
-          :loading="loading"
-          :selected="isItemSelected(item)"
-          name="card"
+        <!-- 加载更多占位符 -->
+        <div
+          v-for="i in loadingCount"
+          :key="`loading-${i}`"
+          :style="cardStyle"
+          class="card-item loading-card"
         >
-          <!-- 默认卡片内容 -->
-          <el-card class="default-card">
-            <div class="default-card-content">
-              <div class="default-card-title">{{ item.title || 'Card Title' }}</div>
-              <div class="default-card-description">{{ item.description || 'Card description' }}</div>
-            </div>
-          </el-card>
-        </slot>
-      </div>
-
-      <!-- 加载更多占位符 -->
-      <div
-        v-for="i in loadingCount"
-        :key="`loading-${i}`"
-        :style="cardStyle"
-        class="card-item loading-card"
-      >
-        <slot name="loading">
-          <el-card class="loading-placeholder">
-            <div class="loading-content">
-              <div class="loading-line"></div>
-              <div class="loading-line short"></div>
-              <div class="loading-line"></div>
-            </div>
-          </el-card>
-        </slot>
+          <slot name="loading">
+            <el-card class="loading-placeholder">
+              <div class="loading-content">
+                <div class="loading-line"></div>
+                <div class="loading-line short"></div>
+                <div class="loading-line"></div>
+              </div>
+            </el-card>
+          </slot>
+        </div>
       </div>
     </div>
 
@@ -221,12 +239,43 @@ export default {
     value: {
       type: [Array, Object],
       default: () => null
+    },
+    // 最大高度
+    maxHeight: {
+      type: Number,
+      default: 0 // 0表示不限制
+    },
+    // 最大宽度
+    maxWidth: {
+      type: Number,
+      default: 0 // 0表示不限制
+    },
+    // 是否允许横向滚动
+    scrollX: {
+      type: Boolean,
+      default: false
+    },
+    // 是否允许纵向滚动
+    scrollY: {
+      type: Boolean,
+      default: false
+    },
+    // 是否根据内容调整宽度（适用于横向滚动）
+    fitContent: {
+      type: Boolean,
+      default: false
+    },
+    // 滚动条可见性控制
+    scrollbarVisible: {
+      type: Boolean,
+      default: true
     }
   },
   data() {
     return {
       // 内部选中项状态
-      selectedItems: this.value || (this.selectMode === 'multiple' ? [] : null)
+      selectedItems: this.value || (this.selectMode === 'multiple' ? [] : null),
+      scrollbarHover: false
     }
   },
   watch: {
@@ -326,6 +375,24 @@ export default {
       this.selectedItems = this.selectMode === 'multiple' ? [] : null;
       this.$emit('input', this.selectedItems);
       this.$emit('selection-change', this.selectedItems);
+    },
+    // 滚动到指定位置
+    scrollTo(options) {
+      if (this.$refs.scrollContainer) {
+        this.$refs.scrollContainer.scrollTo(options);
+      }
+    },
+    // 滚动到顶部
+    scrollToTop() {
+      if (this.$refs.scrollContainer) {
+        this.$refs.scrollContainer.scrollTop = 0;
+      }
+    },
+    // 滚动到底部
+    scrollToBottom() {
+      if (this.$refs.scrollContainer) {
+        this.$refs.scrollContainer.scrollTop = this.$refs.scrollContainer.scrollHeight;
+      }
     }
   }
 }
@@ -334,6 +401,9 @@ export default {
 <style lang="scss" scoped>
 .card-list-container {
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
 
   .card-list-header {
     padding: 15px 20px;
@@ -382,6 +452,59 @@ export default {
     }
   }
 
+  .card-list-scroll-container {
+    flex: 1;
+    overflow: auto;
+    position: relative;
+
+    // 美化滚动条样式
+    &::-webkit-scrollbar {
+      width: 12px;
+      height: 12px;
+    }
+
+    &::-webkit-scrollbar-thumb {
+      background-color: rgba(144, 147, 153, 0.3);
+      border-radius: 6px;
+      transition: background-color 0.3s;
+      border: 3px solid transparent;
+      background-clip: content-box;
+
+      &:hover {
+        background-color: rgba(144, 147, 153, 0.5);
+      }
+    }
+
+    &::-webkit-scrollbar-track {
+      background-color: transparent;
+      border-radius: 6px;
+    }
+
+    &::-webkit-scrollbar-corner {
+      background-color: transparent;
+    }
+
+    // 滚动条悬停效果
+    &.scrollbar-hover {
+      &::-webkit-scrollbar-thumb {
+        background-color: rgba(144, 147, 153, 0.5);
+      }
+    }
+
+    // 滚动条始终可见控制
+    &:not(.scrollbar-visible) {
+      &::-webkit-scrollbar-thumb {
+        background-color: transparent;
+      }
+
+      &.scrollbar-hover {
+        &::-webkit-scrollbar-thumb {
+          background-color: rgba(144, 147, 153, 0.5);
+        }
+      }
+    }
+  }
+
   .card-list {
     display: grid;
     grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -389,13 +512,14 @@ export default {
     padding: 20px;
 
     .card-item {
-      transition: all 0.3s ease;
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
       position: relative;
       cursor: pointer;
 
       &:hover {
         transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        z-index: 1;
       }
 
       &.card-item-selectable {
@@ -405,6 +529,7 @@ export default {
       &.card-item-selected {
         border: 2px solid #409eff;
         transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(64, 158, 255, 0.3);
       }
 
       .card-selection-control {
@@ -415,6 +540,13 @@ export default {
         background: rgba(255, 255, 255, 0.9);
         border-radius: 50%;
         padding: 2px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s;
+
+        &:hover {
+          box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+          transform: scale(1.1);
+        }
       }
     }
 
@@ -426,6 +558,10 @@ export default {
   .empty-state {
     padding: 40px 0;
     text-align: center;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
 
   .card-list-footer {

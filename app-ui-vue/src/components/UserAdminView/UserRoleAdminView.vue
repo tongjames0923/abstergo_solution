@@ -1,108 +1,120 @@
 <template>
   <div class="user-role-admin">
-    <el-card class="role-card">
-      <div slot="header" class="clearfix">
-        <span>用户角色管理</span>
+    <div class="role-content">
+      <div class="assigned-roles-section">
+        <div class="section-title">
+          <h4>已分配角色</h4>
+          <span class="role-count">({{ userRoles.length }})</span>
+        </div>
+        <div class="role-tags">
+          <el-tag
+            v-for="role in userRoles"
+            :key="role.id"
+            :type="getRoleType(role.role)"
+            class="role-tag"
+            closable
+            @close="disableRole(role.role)"
+          >
+            {{ role.role }}
+          </el-tag>
+          <div v-if="userRoles.length === 0" class="no-roles">
+            <i class="el-icon-info"></i>
+            该用户暂无角色
+          </div>
+        </div>
       </div>
 
-      <el-skeleton :loading="loading" animated>
-        <el-row :gutter="20">
-          <el-col :span="24">
-            <div class="role-section">
-              <h4>已分配角色</h4>
-              <div class="role-tags">
-                <el-tag
-                  v-for="role in userRoles"
-                  :key="role.id"
-                  closable
-                  type="success"
-                  @close="disableRole(role.role)"
-                  class="role-tag"
+      <div class="available-roles-section">
+        <div class="section-header">
+          <div class="section-title">
+            <h4>可分配角色</h4>
+            <span class="role-count">({{ totalRoles }})</span>
+          </div>
+          <div class="search-box">
+            <el-input
+              v-model="searchKeyword"
+              clearable
+              placeholder="搜索角色名称"
+              prefix-icon="el-icon-search"
+              @clear="handleSearch"
+              @keyup.enter.native="handleSearch"
+            >
+            </el-input>
+          </div>
+        </div>
+
+        <!-- 使用CardList组件展示角色 -->
+        <CardList
+          :columns="2"
+          :current-page="currentPage"
+          :data="filteredRoles"
+          :gap="15"
+          :loading="loading"
+          :loading-count="loadingCount"
+          :max-height="300"
+          :page-size="pageSize"
+          :pagination="true"
+          :scroll-y="true"
+          :scrollbar-visible="false"
+          :selectable="false"
+          :total="totalRoles"
+          class="role-card-list"
+          @current-change="handlePageChange"
+        >
+          <!-- 自定义卡片内容 -->
+          <template #card="{ item: role }">
+            <el-card
+              :class="{ 'role-card-selected': hasRole(role.role) }"
+              class="role-card-item"
+              shadow="hover"
+            >
+              <div class="role-content">
+                <div class="role-info">
+                  <div class="role-name">{{ role.role }}</div>
+                  <div class="role-description">{{ role.description || '暂无描述' }}</div>
+                </div>
+                <div class="role-action">
+                  <el-button
+                    v-if="!hasRole(role.role)"
+                    icon="el-icon-circle-plus"
+                    size="small"
+                    type="primary"
+                    @click.stop="enableRole(role.role)"
+                  >
+                    分配
+                  </el-button>
+                  <el-button
+                    v-else
+                    icon="el-icon-remove"
+                    size="small"
+                    type="danger"
+                    @click.stop="disableRole(role.role)"
+                  >
+                    取消
+                  </el-button>
+                </div>
+              </div>
+            </el-card>
+          </template>
+
+          <!-- 自定义空状态 -->
+          <template #empty>
+            <div class="empty-role-state">
+              <el-empty :image-size="80" description="暂无角色数据">
+                <el-button
+                  v-if="!searchKeyword"
+                  icon="el-icon-refresh"
+                  type="primary"
+                  @click="fetchAllRoles"
                 >
-                  {{ role.role }}
-                </el-tag>
-                <div v-if="userRoles.length === 0" class="no-roles">
-                  该用户暂无角色
-                </div>
-              </div>
+                  重新加载
+                </el-button>
+              </el-empty>
             </div>
-          </el-col>
-
-          <el-col :span="24">
-            <div class="role-section">
-              <div class="section-header">
-                <h4>可分配角色</h4>
-                <div class="search-box">
-                  <el-input
-                    v-model="searchKeyword"
-                    placeholder="搜索角色名称"
-                    clearable
-                    @clear="handleSearch"
-                    @keyup.enter.native="handleSearch"
-                  >
-                    <el-button slot="append" icon="el-icon-search" @click="handleSearch"></el-button>
-                  </el-input>
-                </div>
-              </div>
-
-              <!-- 使用CardList组件展示角色 -->
-              <CardList
-                :columns="2"
-                :current-page="currentPage"
-                :data="filteredRoles"
-                :gap="10"
-                :loading="loading"
-                :loading-count="loadingCount"
-                :page-size="pageSize"
-                :pagination="true"
-                :selectable="false"
-                :total="totalRoles"
-                @current-change="handlePageChange"
-              >
-                <!-- 自定义卡片内容 -->
-                <template #card="{ item: role }">
-                  <el-card
-                    :class="{ 'role-card-selected': hasRole(role.role) }"
-                    class="role-card-item"
-                    shadow="hover"
-                  >
-                    <div class="role-content">
-                      <div class="role-info">
-                        <div class="role-name">{{ role.role }}</div>
-                        <div class="role-description">{{ role.description || '暂无描述' }}</div>
-                      </div>
-                      <div class="role-action">
-                        <el-button
-                          v-if="!hasRole(role.role)"
-                          size="small"
-                          type="primary"
-                          @click.stop="enableRole(role.role)"
-                        >
-                          分配
-                        </el-button>
-                        <el-button
-                          v-else
-                          size="small"
-                          type="danger"
-                          @click.stop="disableRole(role.role)"
-                        >
-                          取消
-                        </el-button>
-                      </div>
-                    </div>
-                  </el-card>
-                </template>
-
-                <!-- 自定义空状态 -->
-                <template #empty>
-                  <el-empty description="暂无角色数据"></el-empty>
-                </template>
-              </CardList>
-            </div>
-          </el-col>
-        </el-row>
-      </el-skeleton>
-    </el-card>
+          </template>
+        </CardList>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -146,7 +158,8 @@ export default {
       return this.availableRoles.slice(start, end)
     },
     loadingCount() {
-      return 0;
+      // 根据当前页数据量来确定加载占位符数量
+      return Math.min(this.filteredRoles.length || this.pageSize, this.pageSize);
     }
   },
   watch: {
@@ -246,6 +259,17 @@ export default {
     // 判断角色是否已分配给用户
     hasRole(roleName) {
       return this.userRoles.some(role => role.role === roleName)
+    },
+
+    // 获取角色标签类型
+    getRoleType(roleName) {
+      const typeMap = {
+        '管理员': 'danger',
+        '超级管理员': 'danger',
+        '管理员操作': 'warning',
+        '常规用户': 'success'
+      }
+      return typeMap[roleName] || 'info'
     }
   }
 }
@@ -253,83 +277,199 @@ export default {
 
 <style scoped lang="scss">
 .user-role-admin {
-  .role-card {
-    min-height: 300px;
-  }
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
-  .role-section {
-    margin-bottom: 20px;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-
-      h4 {
-        margin: 0;
-        color: #333;
-      }
-
-      .search-box {
-        width: 300px;
-      }
-    }
-  }
-
-  .role-tags {
+  .role-header {
     display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-  }
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #ebeef5;
 
-  .role-tag {
-    margin-bottom: 5px;
-  }
-
-  .no-roles {
-    color: #999;
-    font-style: italic;
-  }
-
-  .role-card-item {
-    border: 1px solid #ebeef5;
-    transition: all 0.3s;
-    height: 100%;
-
-    &.role-card-selected {
-      border-color: #409eff;
-      box-shadow: 0 2px 12px 0 rgba(64, 158, 255, 0.2);
+    h3 {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 600;
+      color: #303133;
     }
 
-    .role-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+    .close-btn {
+      font-size: 20px;
+      color: #909399;
 
-      .role-info {
-        .role-name {
-          font-weight: bold;
-          margin-bottom: 5px;
+      &:hover {
+        color: #409eff;
+      }
+    }
+  }
+
+  .role-content {
+    flex: 1;
+    padding: 20px;
+    overflow: auto;
+
+    .assigned-roles-section {
+      margin-bottom: 25px;
+
+      .section-title {
+        display: flex;
+        align-items: center;
+        margin-bottom: 15px;
+
+        h4 {
+          margin: 0;
+          font-size: 16px;
+          font-weight: 600;
+          color: #333;
         }
 
-        .role-description {
-          font-size: 12px;
+        .role-count {
+          margin-left: 8px;
+          font-size: 14px;
           color: #999;
         }
       }
-    }
-  }
 
-  ::v-deep .card-list-container {
-    .card-list {
-      padding: 0;
+      .role-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+
+        .role-tag {
+          margin: 0;
+          font-size: 13px;
+          padding: 5px 10px;
+        }
+
+        .no-roles {
+          color: #999;
+          font-style: italic;
+          display: flex;
+          align-items: center;
+          gap: 5px;
+        }
+      }
     }
 
-    .pagination-container {
-      margin-top: 20px;
-      padding: 0;
-      border-top: none;
+    .available-roles-section {
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+
+        .section-title {
+          display: flex;
+          align-items: center;
+
+          h4 {
+            margin: 0;
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+          }
+
+          .role-count {
+            margin-left: 8px;
+            font-size: 14px;
+            color: #999;
+          }
+        }
+
+        .search-box {
+          width: 250px;
+        }
+      }
+
+      .role-card-list {
+        border: 1px solid #ebeef5;
+        border-radius: 6px;
+        overflow: hidden;
+
+        ::v-deep .card-list-scroll-container {
+          &::-webkit-scrollbar {
+            width: 8px;
+          }
+
+          &::-webkit-scrollbar-thumb {
+            background-color: rgba(144, 147, 153, 0.3);
+            border-radius: 4px;
+
+            &:hover {
+              background-color: rgba(144, 147, 153, 0.5);
+            }
+          }
+        }
+
+        ::v-deep .card-list {
+          padding: 15px;
+        }
+
+        ::v-deep .pagination-container {
+          margin: 0;
+          padding: 15px;
+          border-top: 1px solid #ebeef5;
+        }
+      }
+
+      .role-card-item {
+        border: 1px solid #ebeef5;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        height: 100%;
+
+        &:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        &.role-card-selected {
+          border-color: #409eff;
+          box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+        }
+
+        .role-content {
+          display: flex;
+          flex-direction: column;
+          height: 100%;
+
+          .role-info {
+            flex: 1;
+
+            .role-name {
+              font-weight: bold;
+              margin-bottom: 8px;
+              font-size: 15px;
+              color: #333;
+            }
+
+            .role-description {
+              font-size: 13px;
+              color: #999;
+              line-height: 1.4;
+              display: -webkit-box;
+              -webkit-line-clamp: 2;
+              -webkit-box-orient: vertical;
+              overflow: hidden;
+            }
+          }
+
+          .role-action {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+
+            ::v-deep .el-button {
+              width: 100%;
+            }
+          }
+        }
+      }
+
+      .empty-role-state {
+        padding: 30px 0;
+      }
     }
   }
 }
