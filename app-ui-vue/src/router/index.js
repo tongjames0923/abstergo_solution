@@ -51,7 +51,14 @@ export const constantRoutes = [
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
       meta: {title: 'Dashboard', icon: 'dashboard', roles: ['常规用户']}
-    }]
+    },
+      {
+        path: 'table',
+        name: 'Table',
+        component: () => import('@/views/table/index'),
+        meta: {title: 'Table', icon: 'table', roles: ['常规用户']}
+      }
+    ]
   },
 
   {
