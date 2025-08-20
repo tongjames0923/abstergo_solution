@@ -146,7 +146,7 @@ export default {
       return this.availableRoles.slice(start, end)
     },
     loadingCount() {
-      return Math.min(this.pageSize, this.totalRoles)
+      return 0;
     }
   },
   watch: {
