@@ -47,7 +47,9 @@
       >
 
         <template #status="{ row }">
-          <UserStatusOptions :value="row.flag" readonly></UserStatusOptions>
+          <el-tag v-if="row.flag===1" type="success">正常</el-tag>
+          <el-tag v-else-if="row.flag===2" type="danger">锁定</el-tag>
+          <el-tag v-else type="warning">禁用</el-tag>
         </template>
 
         <template #avatar="{row}">
@@ -197,13 +199,11 @@ import UserEditView from "@/components/UserAdminView/UserEditView.vue";
 import DynamicForm from "@/components/DynamicForm/index.vue";
 import UserRoleAdminView from "@/components/UserAdminView/UserRoleAdminView.vue";
 import {activateUser, adminQueryUser, disableUser, saveUser} from "@/api/admin_user";
-import UserStatusOptions from "@/components/UserStatusOptions/index.vue";
 
 export default {
   name: 'UserAdminView',
   components: {
-    DynamicOptions, DynamicTable, UserAddView, UserEditView, DynamicForm,
-    UserStatusOptions, UserRoleAdminView
+    DynamicOptions, DynamicTable, UserAddView, UserEditView, DynamicForm, UserRoleAdminView
   },
   data() {
     // 确认密码验证规则
