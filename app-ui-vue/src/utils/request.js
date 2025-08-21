@@ -49,16 +49,16 @@ service.interceptors.response.use(
     // if the custom code is not 0, it is judged as an error.
     if (res.code !== settings.successCode) {
       Message({
-        message: res.message || 'Error',
+        message: res.message || '错误',
         type: 'error',
         duration: 5 * 1000
       })
 
       if (settings.noLoginCode.includes(res.code)) {
         // to re-login
-        MessageBox.confirm('You have been logged out, you can cancel to stay on this page, or log in again', 'Confirm logout', {
-          confirmButtonText: 'Re-Login',
-          cancelButtonText: 'Cancel',
+        MessageBox.confirm('您已登出，请重新登录', '提示', {
+          confirmButtonText: '重新登录',
+          cancelButtonText: '取消',
           type: 'warning'
         }).then(() => {
           store.dispatch('user/resetToken').then(() => {
@@ -66,13 +66,12 @@ service.interceptors.response.use(
           })
         })
       }
-      return Promise.reject(new Error(res.message || 'Error'))
+      return Promise.reject(new Error(res.message || '错误'))
     } else {
       return res
     }
   },
   error => {
-    console.log('err' + error) // for debug
     Message({
       message: error.message,
       type: 'error',
