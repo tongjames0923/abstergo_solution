@@ -5,17 +5,29 @@ import java.util.Date;
 import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.pojo.IBaseEntity;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
-@Table(name = "system_department", indexes = { @Index(name = "idx_parent_id", columnList = "parent_id"),
-		@Index(name = "idx_path", columnList = "tree_path"), @Index(name = "idx_create_time", columnList = "create_time"),
-		@Index(name = "idx_flag", columnList = "flag") })
+@Table(name = "sys_department", indexes = { @Index(name = "idx_parent_id", columnList = "parent_id"),
+		@Index(name = "idx_create_time", columnList = "create_time"), @Index(name = "idx_flag", columnList = "flag") })
 @Entity
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	private static final long serialVersionUID = 1L;
+
+	public static final Long NULL_PARENT_ID = 0L;
+
+	/**
+	 * 根部门
+	 */
+	public static SystemDepartmentEntity ROOT = new SystemDepartmentEntity(1L, "系统", NULL_PARENT_ID, "系统根部门", null,
+			null, null, CommonConstant.FLAG_ON);
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -32,13 +44,6 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	 */
 	@Column(name = "parent_id")
 	private Long parentId;
-
-	/**
-	 * 物化路径，存储从根节点到当前节点的完整路径 格式：/root_id/child_id/grandchild_id/ 例如：/1/5/12/
-	 * 表示根部门ID为1，子部门ID为5，孙部门ID为12
-	 */
-	@Column(name = "tree_path", length = 512)
-	private String treePath;
 
 	/**
 	 * 部门描述
