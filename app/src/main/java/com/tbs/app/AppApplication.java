@@ -2,6 +2,7 @@ package com.tbs.app;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import com.tbs.sql.annotation.EnableTbsSqlUtils;
@@ -18,6 +19,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 @EnableTbsSqlUtils
 @MYSQL
 @MapperScan(basePackages = "com.tbs.shared.mapper")
+@EntityScan("com.tbs.shared.pojo.entity")
 @EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 public class AppApplication {
 

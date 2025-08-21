@@ -19,6 +19,8 @@ import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.schedule.impl.TimingWheelSchedule;
+import com.tbs.shared.mapper.SystemDepartmentMapper;
+import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.model.PageVO;
 
 @SpringBootTest(classes = AppApplication.class)
@@ -85,4 +87,15 @@ class AppApplicationTests {
 		latch.await();
 		logger.info("timing wheel test finish");
 	}
+
+	@Resource
+	SystemDepartmentMapper departmentMapper;
+
+	@Test
+	void test() throws Exception {
+		for (SystemDepartmentEntity department : departmentMapper.selectAll()) {
+			logger.info(department.toString());
+		}
+	}
+
 }
