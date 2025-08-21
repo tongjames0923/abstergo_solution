@@ -1,7 +1,9 @@
-package com.tbs.web.security;
+package com.tbs.web.security.authorization;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.tbs.web.security.token.ITokenModel;
+import com.tbs.web.security.token.ITokenPicker;
 import org.springframework.core.Ordered;
 
 public interface ISecurityManager extends Ordered {

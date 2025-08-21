@@ -2,9 +2,10 @@ package com.tbs.web.security.impl
 
 import com.tbs.common.error.AssertUtil
 import com.tbs.web.exception.NotFoundTokenException
-import com.tbs.web.security.ITokenAuthentication
-import com.tbs.web.security.ITokenManager
-import com.tbs.web.security.IUserAuthService
+import com.tbs.web.security.authentication.ITokenAuthentication
+import com.tbs.web.security.token.ITokenManager
+import com.tbs.web.security.user.IUserAuthService
+import com.tbs.web.security.authentication.TokenAuthentication
 import org.springframework.context.annotation.Lazy
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException

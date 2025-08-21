@@ -1,4 +1,4 @@
-package com.tbs.web.security;
+package com.tbs.web.security.authorization;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,6 +6,9 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import com.tbs.web.security.token.ITokenModel;
+import com.tbs.web.security.token.ITokenPicker;
+import com.tbs.web.security.authentication.ITokenAuthentication;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
@@ -14,7 +17,7 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.exception.NotFoundTokenException;
-import com.tbs.web.security.impl.TokenAuthentication;
+import com.tbs.web.security.authentication.TokenAuthentication;
 import com.tbs.web.uitl.AuthUtil;
 
 /**

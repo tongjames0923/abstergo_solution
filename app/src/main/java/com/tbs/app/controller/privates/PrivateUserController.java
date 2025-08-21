@@ -23,7 +23,7 @@ import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.view.vo.OptionValue;
 import com.tbs.web.BaseController;
-import com.tbs.web.security.IUserAuthService;
+import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.uitl.AuthUtil;
 
 import io.swagger.annotations.Api;

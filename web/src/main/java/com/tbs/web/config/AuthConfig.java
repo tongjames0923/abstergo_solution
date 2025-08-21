@@ -2,8 +2,10 @@ package com.tbs.web.config;
 
 import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
-import com.tbs.web.security.IUserAuthService;
+import com.tbs.web.security.user.IUserAuthService;
+import com.tbs.web.security.user.impl.DefaultUserDetailsService;
 import com.tbs.web.security.impl.*;
+import com.tbs.web.security.user.impl.NotImplUserAuthService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;

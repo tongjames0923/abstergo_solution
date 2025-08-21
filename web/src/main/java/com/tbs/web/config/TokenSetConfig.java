@@ -10,7 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
-import com.tbs.web.security.ITokenPicker;
+import com.tbs.web.security.token.ITokenPicker;
 import com.tbs.web.security.impl.TokenHandleFilter;
 
 /**

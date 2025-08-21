@@ -1,4 +1,4 @@
-package com.tbs.web.security;
+package com.tbs.web.security.token;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;

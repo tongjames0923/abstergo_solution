@@ -1,6 +1,6 @@
-package com.tbs.web.security.impl;
+package com.tbs.web.security.user.impl;
 
-import com.tbs.web.security.IUserInfoService;
+import com.tbs.web.security.user.IUserInfoService;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

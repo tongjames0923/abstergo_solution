@@ -25,8 +25,8 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
-import com.tbs.web.security.ITokenPicker;
-import com.tbs.web.security.LoginSecurityManager;
+import com.tbs.web.security.token.ITokenPicker;
+import com.tbs.web.security.authorization.LoginSecurityManager;
 import com.tbs.web.security.impl.TokenHandleFilter;
 
 /**

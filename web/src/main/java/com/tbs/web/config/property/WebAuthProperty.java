@@ -4,10 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import com.tbs.web.enums.TokenSource;
-import com.tbs.web.security.ITokenPicker;
-import com.tbs.web.security.IUserAuthService;
+import com.tbs.web.security.token.ITokenPicker;
+import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
-import com.tbs.web.security.impl.NotImplUserAuthService;
+import com.tbs.web.security.user.impl.NotImplUserAuthService;
 
 import lombok.Data;
 

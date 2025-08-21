@@ -7,11 +7,11 @@ import com.tbs.common.util.framework.UuidUtil
 import com.tbs.web.config.property.WebAuthProperty
 import com.tbs.web.exception.InvalidTokenException
 import com.tbs.web.exception.SimpleAuthException
-import com.tbs.web.security.ITokenManager
-import com.tbs.web.security.ITokenModel
-import com.tbs.web.security.IUserAuthService
-import com.tbs.web.security.IUserInfoService
-import com.tbs.web.security.model.SimpleTokenModel
+import com.tbs.web.security.token.ITokenManager
+import com.tbs.web.security.token.ITokenModel
+import com.tbs.web.security.user.IUserAuthService
+import com.tbs.web.security.user.IUserInfoService
+import com.tbs.web.security.token.model.SimpleTokenModel
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.userdetails.UserDetails
 import java.time.Duration

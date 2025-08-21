@@ -2,8 +2,8 @@ package com.tbs.app.controller.publics;
 
 import com.tbs.app.form.LoginForm;
 import com.tbs.web.BaseController;
-import com.tbs.web.security.ITokenModel;
-import com.tbs.web.security.IUserAuthService;
+import com.tbs.web.security.token.ITokenModel;
+import com.tbs.web.security.user.IUserAuthService;
 import io.swagger.annotations.Api;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.List;
 
 /**
  * 公开的用户控制器

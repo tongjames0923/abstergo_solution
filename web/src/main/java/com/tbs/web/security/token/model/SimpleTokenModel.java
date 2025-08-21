@@ -1,7 +1,8 @@
-package com.tbs.web.security.model;
+package com.tbs.web.security.token.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.web.enums.TokenSource;
+import com.tbs.web.security.token.ITokenModel;
 import lombok.Data;
 
 import java.util.Date;
@@ -12,7 +13,7 @@ import java.util.Date;
  * @author tongj
  */
 @Data
-public class SimpleTokenModel implements com.tbs.web.security.ITokenModel {
+public class SimpleTokenModel implements ITokenModel {
     private static final long serialVersionUID = 1L;
     /**
      * token

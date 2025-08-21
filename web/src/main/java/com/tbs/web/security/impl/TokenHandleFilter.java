@@ -18,8 +18,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IOnErrorAjaxProvider;
-import com.tbs.web.security.ISecurityManager;
-import com.tbs.web.security.ITokenModel;
+import com.tbs.web.security.authorization.ISecurityManager;
+import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AjaxUtil;
 
 import lombok.extern.slf4j.Slf4j;

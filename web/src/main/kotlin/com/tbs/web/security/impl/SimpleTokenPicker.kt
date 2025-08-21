@@ -6,9 +6,9 @@ import com.alibaba.fastjson2.JSON
 import com.tbs.common.util.StrUtil
 import com.tbs.web.enums.TokenSource
 import com.tbs.web.exception.NotFoundTokenException
-import com.tbs.web.security.ITokenModel
-import com.tbs.web.security.ITokenPicker
-import com.tbs.web.security.model.SimpleTokenModel
+import com.tbs.web.security.token.ITokenModel
+import com.tbs.web.security.token.ITokenPicker
+import com.tbs.web.security.token.model.SimpleTokenModel
 import java.util.*
 import javax.servlet.http.HttpServletRequest
 

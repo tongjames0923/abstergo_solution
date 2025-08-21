@@ -1,4 +1,4 @@
-package com.tbs.web.security;
+package com.tbs.web.security.authorization;
 
 import javax.servlet.http.HttpServletRequest;
 

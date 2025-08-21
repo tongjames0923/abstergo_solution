@@ -1,4 +1,4 @@
-package com.tbs.web.security;
+package com.tbs.web.security.token;
 
 import com.tbs.web.enums.TokenSource;
 

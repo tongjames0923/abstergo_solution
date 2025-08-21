@@ -1,7 +1,7 @@
-package com.tbs.web.security;
+package com.tbs.web.security.user;
 
+import com.tbs.web.security.token.ITokenModel;
 import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * 用户登陆注销接口

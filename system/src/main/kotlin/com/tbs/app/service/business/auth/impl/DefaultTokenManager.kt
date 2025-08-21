@@ -7,9 +7,9 @@ import com.tbs.common.data.IDataHolderManager
 import com.tbs.common.exception.FormattedRuntimeException
 import com.tbs.web.config.property.WebAuthProperty
 import com.tbs.web.exception.NotFoundTokenException
-import com.tbs.web.security.ITokenManager
-import com.tbs.web.security.ITokenModel
-import com.tbs.web.security.IUserInfoService
+import com.tbs.web.security.token.ITokenManager
+import com.tbs.web.security.token.ITokenModel
+import com.tbs.web.security.user.IUserInfoService
 import org.springframework.context.annotation.Lazy
 import org.springframework.security.core.userdetails.UserDetails
 import javax.annotation.Resource

@@ -23,8 +23,8 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.interfaces.intercept.SystemOperateInterceptor;
-import com.tbs.web.security.ITokenManager;
-import com.tbs.web.security.IUserInfoService;
+import com.tbs.web.security.token.ITokenManager;
+import com.tbs.web.security.user.IUserInfoService;
 
 import lombok.extern.slf4j.Slf4j;
 

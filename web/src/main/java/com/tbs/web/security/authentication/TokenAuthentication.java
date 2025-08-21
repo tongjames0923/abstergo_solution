@@ -1,8 +1,6 @@
-package com.tbs.web.security.impl;
+package com.tbs.web.security.authentication;
 
-import com.tbs.common.util.StrUtil;
-import com.tbs.web.security.ITokenAuthentication;
-import com.tbs.web.security.ITokenModel;
+import com.tbs.web.security.token.ITokenModel;
 import lombok.Getter;
 import lombok.Setter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;

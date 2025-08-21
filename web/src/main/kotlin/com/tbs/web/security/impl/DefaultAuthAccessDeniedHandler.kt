@@ -1,7 +1,7 @@
 package com.tbs.web.security.impl
 
 import com.tbs.web.result.AjaxResult
-import com.tbs.web.security.ITokenAuthentication
+import com.tbs.web.security.authentication.ITokenAuthentication
 import com.tbs.web.uitl.AjaxUtil
 import com.tbs.web.uitl.AuthUtil
 import org.springframework.security.access.AccessDeniedException
