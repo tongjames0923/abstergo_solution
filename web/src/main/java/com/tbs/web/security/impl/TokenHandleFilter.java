@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -35,6 +36,9 @@ public class TokenHandleFilter extends OncePerRequestFilter {
 	void init() {
 		try {
 			this.securityManagers.addAll(SpringUtil.getBeansOfType(ISecurityManager.class).values());
+			this.securityManagers = this.securityManagers.stream()
+					.sorted((o1, o2) -> o1.getOrder() - o2.getOrder())
+					.collect(Collectors.toList());
 		} catch (Exception e) {
 			log.error("init security manager error", e);
 		}
