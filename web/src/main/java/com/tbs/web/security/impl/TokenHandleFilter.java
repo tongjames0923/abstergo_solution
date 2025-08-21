@@ -1,0 +1,73 @@
+package com.tbs.web.security.impl;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Optional;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import javax.servlet.FilterChain;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.web.filter.OncePerRequestFilter;
+
+import com.tbs.common.util.SpringUtil;
+import com.tbs.web.result.AjaxResult;
+import com.tbs.web.result.IOnErrorAjaxProvider;
+import com.tbs.web.security.ISecurityManager;
+import com.tbs.web.security.ITokenModel;
+import com.tbs.web.uitl.AjaxUtil;
+
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
+public class TokenHandleFilter extends OncePerRequestFilter {
+
+	@Resource
+	private IOnErrorAjaxProvider onErrorAjaxProvider;
+
+	private Collection<ISecurityManager> securityManagers = new LinkedList<>();
+
+	@PostConstruct
+	void init() {
+		try {
+			this.securityManagers.addAll(SpringUtil.getBeansOfType(ISecurityManager.class).values());
+		} catch (Exception e) {
+			log.error("init security manager error", e);
+		}
+		log.info("security manager size: {}", this.securityManagers.size());
+	}
+
+	@Override
+	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+			throws ServletException, IOException {
+		for (ISecurityManager manager : securityManagers) {
+			if (!manager.support(request)) {
+				continue;
+			}
+			try {
+				Optional<ITokenModel> tokenModel = manager.getTokenPicker().pick(request);
+				tokenModel.ifPresentOrElse((token) -> {
+					manager.handleToken(token);
+				}, () -> {
+					manager.onNoneToken();
+				});
+			} catch (Throwable e) {
+				boolean willBroken = manager.onErrorWillBroken(e);
+				if (willBroken) {
+					AjaxResult result = onErrorAjaxProvider.onError(e);
+					AjaxUtil.writeInfoResp(response, result);
+					return;
+				} else {
+					log.warn("安全管理器处理非紧急异常。详情：{}", e.getLocalizedMessage());
+				}
+			}
+
+		}
+
+		filterChain.doFilter(request, response);
+	}
+}

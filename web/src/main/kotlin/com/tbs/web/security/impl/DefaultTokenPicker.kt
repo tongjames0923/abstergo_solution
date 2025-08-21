@@ -8,8 +8,8 @@ import com.tbs.common.util.StrUtil
 import com.tbs.web.config.property.WebAuthProperty
 import com.tbs.web.enums.TokenSource
 import com.tbs.web.exception.NotFoundTokenException
-import com.tbs.web.security.ITokenPicker
 import com.tbs.web.security.ITokenModel
+import com.tbs.web.security.ITokenPicker
 import com.tbs.web.security.model.SimpleTokenModel
 import java.util.*
 import java.util.function.Supplier
@@ -50,7 +50,7 @@ class DefaultTokenPicker : ITokenPicker {
     }
 
     @Throws(NotFoundTokenException::class)
-    override fun pick(request: HttpServletRequest): ITokenModel? {
+    override fun pick(request: HttpServletRequest): Optional<ITokenModel> {
         var token: String? = ""
         val sourceField: String?
         var sourceValue: String? = ""
@@ -93,9 +93,11 @@ class DefaultTokenPicker : ITokenPicker {
             else -> AssertUtil.throwError<NotFoundTokenException?>(Supplier { NotFoundTokenException("未找到Token") })
         }
         val createDate = Date()
-        return SimpleTokenModel.create(
-            token, webAuthProperty.getTokenSource(), sourceField, sourceValue,
-            DateUtil.offset(createDate, DateField.SECOND, webAuthProperty.getTokenExpireTime())
+        return Optional.of(
+            SimpleTokenModel.create(
+                token, webAuthProperty.getTokenSource(), sourceField, sourceValue,
+                DateUtil.offset(createDate, DateField.SECOND, webAuthProperty.getTokenExpireTime())
+            )
         )
     }
 

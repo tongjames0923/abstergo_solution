@@ -5,6 +5,7 @@ import com.tbs.web.exception.NotFoundTokenException;
 import org.jetbrains.annotations.NotNull;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Optional;
 
 /**
  * 获取用户登录Token 的接口
@@ -20,5 +21,5 @@ public interface ITokenPicker {
      * @throws NotFoundTokenException 找不到Token
      * @throws InvalidTokenException  过期Token
      */
-    ITokenModel pick(@NotNull HttpServletRequest request) throws NotFoundTokenException;
+    Optional<ITokenModel> pick(@NotNull HttpServletRequest request) throws NotFoundTokenException;
 }
