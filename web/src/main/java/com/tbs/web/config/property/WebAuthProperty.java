@@ -6,7 +6,7 @@ import org.springframework.stereotype.Component;
 import com.tbs.web.enums.TokenSource;
 import com.tbs.web.security.ITokenPicker;
 import com.tbs.web.security.IUserAuthService;
-import com.tbs.web.security.impl.DefaultTokenPicker;
+import com.tbs.web.security.impl.DefaultLoginTokenPicker;
 import com.tbs.web.security.impl.NotImplUserAuthService;
 
 import lombok.Data;
@@ -42,7 +42,7 @@ public class WebAuthProperty {
 	/**
 	 * token获取器实现类
 	 */
-	private Class<? extends ITokenPicker> tokenPickerImpl = DefaultTokenPicker.class;
+	private Class<? extends ITokenPicker> tokenPickerImpl = DefaultLoginTokenPicker.class;
 
 	/**
 	 * 用户认证服务实现类

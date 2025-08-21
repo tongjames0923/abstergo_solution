@@ -3,22 +3,21 @@ package com.tbs.web.security.impl
 import cn.hutool.core.date.DateField
 import cn.hutool.core.date.DateUtil
 import com.alibaba.fastjson2.JSON
-import com.tbs.common.error.AssertUtil
 import com.tbs.common.util.StrUtil
-import com.tbs.web.config.property.WebAuthProperty
 import com.tbs.web.enums.TokenSource
 import com.tbs.web.exception.NotFoundTokenException
 import com.tbs.web.security.ITokenModel
 import com.tbs.web.security.ITokenPicker
 import com.tbs.web.security.model.SimpleTokenModel
 import java.util.*
-import java.util.function.Supplier
-import javax.annotation.Resource
 import javax.servlet.http.HttpServletRequest
 
-class DefaultTokenPicker : ITokenPicker {
-    @Resource
-    private lateinit var webAuthProperty: WebAuthProperty
+open class SimpleTokenPicker : ITokenPicker {
+
+    var fieldName: String = "";
+    var tokenSource: TokenSource = TokenSource.HEADER
+
+    var expireTime: Int = 0
 
     private fun getBody(request: HttpServletRequest): String? {
         val sb = StringBuilder()
@@ -54,51 +53,49 @@ class DefaultTokenPicker : ITokenPicker {
         var token: String? = ""
         val sourceField: String?
         var sourceValue: String? = ""
-        sourceField = webAuthProperty.getTokenFiledName()
-        when (webAuthProperty.getTokenSource()) {
+        sourceField = fieldName
+        when (tokenSource) {
             TokenSource.BODY -> {
                 val body = getBody(request)
-                AssertUtil.isTrue(
-                    StrUtil.isEmpty(sourceValue),
-                    { return@isTrue NotFoundTokenException("未找到Token") })
+                if (StrUtil.isEmpty(sourceValue)) {
+                    return Optional.empty()
+                }
                 val map = JSON.parseObject(body, Map::class.java)
-                token = map.get(webAuthProperty.getTokenFiledName()).toString()
+                token = map.get(fieldName).toString()
                 sourceValue = body
             }
 
             TokenSource.COOKIE -> {
-                sourceValue = getFromCookie(request, webAuthProperty.getTokenFiledName())
-                AssertUtil.isTrue(
-                    StrUtil.isEmpty(sourceValue),
-                    { return@isTrue NotFoundTokenException("未找到Token") })
+                sourceValue = getFromCookie(request, fieldName)
+                if (StrUtil.isEmpty(sourceValue)) {
+                    return Optional.empty()
+                }
                 token = sourceValue
             }
 
             TokenSource.HEADER -> {
-                sourceValue = request.getHeader(webAuthProperty.getTokenFiledName())
-                AssertUtil.isTrue(
-                    StrUtil.isEmpty(sourceValue),
-                    { return@isTrue NotFoundTokenException("未找到Token") })
+                sourceValue = request.getHeader(fieldName)
+                if (StrUtil.isEmpty(sourceValue)) {
+                    return Optional.empty()
+                }
                 token = sourceValue
             }
 
             TokenSource.PARAM -> {
-                sourceValue = getFromParam(request, webAuthProperty.getTokenFiledName())
-                AssertUtil.isTrue(
-                    StrUtil.isEmpty(sourceValue),
-                    { return@isTrue NotFoundTokenException("未找到Token") })
+                sourceValue = getFromParam(request, fieldName)
+                if (StrUtil.isEmpty(sourceValue)) {
+                    return Optional.empty()
+                }
                 token = sourceValue
             }
 
-            else -> AssertUtil.throwError<NotFoundTokenException?>(Supplier { NotFoundTokenException("未找到Token") })
         }
         val createDate = Date()
         return Optional.of(
             SimpleTokenModel.create(
-                token, webAuthProperty.getTokenSource(), sourceField, sourceValue,
-                DateUtil.offset(createDate, DateField.SECOND, webAuthProperty.getTokenExpireTime())
+                token, tokenSource, sourceField, sourceValue,
+                DateUtil.offset(createDate, DateField.SECOND, expireTime)
             )
         )
     }
-
 }

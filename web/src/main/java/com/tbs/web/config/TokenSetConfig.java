@@ -2,6 +2,7 @@ package com.tbs.web.config;
 
 import javax.annotation.Resource;
 
+import com.tbs.web.security.impl.DefaultLoginTokenPicker;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -10,7 +11,6 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
 import com.tbs.web.security.ITokenPicker;
-import com.tbs.web.security.impl.DefaultTokenPicker;
 import com.tbs.web.security.impl.TokenHandleFilter;
 
 /**
@@ -28,7 +28,7 @@ public class TokenSetConfig {
 	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
 	public ITokenPicker tokenPicker() {
 		return BeanUtil.buildBeanFromProperties(() -> {
-			return new DefaultTokenPicker();
+			return new DefaultLoginTokenPicker();
 		}, webAuthProperty.getTokenPickerImpl(), BeanUtil::buildByEmptyArgs);
 	}
 
