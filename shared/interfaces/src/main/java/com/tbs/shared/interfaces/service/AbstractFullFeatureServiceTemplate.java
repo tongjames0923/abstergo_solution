@@ -1,15 +1,7 @@
 package com.tbs.shared.interfaces.service;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.transaction.annotation.Transactional;
-
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.model.PageVO;
@@ -17,6 +9,11 @@ import com.tbs.shared.util.PageUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 全功能服务模板类 实现了基础的CRUD操作模板，提供可扩展的业务逻辑钩子方法
@@ -46,9 +43,9 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 	/**
 	 * 删除逻辑处理
 	 *
-	 * @param entity
+	 * @param id
 	 */
-	protected abstract void handleDelete(List<T> entity);
+	protected abstract T handleDelete(K id);
 
 	/**
 	 * 新增逻辑处理
@@ -78,10 +75,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	public T deleteById(K id) {
-		T obj = this.instance.queryById((K) id);
-		AssertUtil.notNull(obj, () -> new FormattedRuntimeException("待删除的ID{} 不存在", id));
-		handleDelete(Arrays.asList(obj));
-		return obj;
+		return instance.handleDelete(id);
 	}
 
 	@Transactional(rollbackFor = Exception.class)
@@ -90,9 +84,13 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 		if (CollUtil.isEmpty(ids)) {
 			return 0;
 		}
-		List<T> objs = ids.stream().map(this::queryById).filter(obj -> obj != null).collect(Collectors.toList());
-		handleDelete(objs);
-		return objs.size();
+		AtomicInteger atomicInteger = new AtomicInteger();
+		ids.stream().forEach(id -> {
+			instance.handleDelete(id);
+			atomicInteger.incrementAndGet();
+		});
+
+		return atomicInteger.get();
 	}
 
 	@Transactional(rollbackFor = Exception.class)

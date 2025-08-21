@@ -1,17 +1,6 @@
 package com.tbs.app;
 
-import java.time.Duration;
-import java.util.Arrays;
-import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutionException;
-
-import javax.annotation.Resource;
-
-import org.junit.jupiter.api.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.test.context.SpringBootTest;
-
+import com.tbs.app.service.business.department.IDepartmentService;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.broadcast.enums.HandleMode;
@@ -19,9 +8,18 @@ import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.schedule.impl.TimingWheelSchedule;
-import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.model.PageVO;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.test.context.SpringBootTest;
+
+import javax.annotation.Resource;
+import java.time.Duration;
+import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 
 @SpringBootTest(classes = AppApplication.class)
 class AppApplicationTests {
@@ -89,12 +87,26 @@ class AppApplicationTests {
 	}
 
 	@Resource
-	SystemDepartmentMapper departmentMapper;
+	IDepartmentService departmentService;
 
 	@Test
 	void test() throws Exception {
-		for (SystemDepartmentEntity department : departmentMapper.selectAll()) {
-			logger.info(department.toString());
+		for (int i = 0; i < 5; i++) {
+			SystemDepartmentEntity department = new SystemDepartmentEntity();
+			department.setDepartmentName("测试公司" + (char)('A' + i));
+			department.setDescription("用于测试的公司");
+			departmentService.save(department);
+		}
+	}
+
+	@Test
+	void test1() {
+		for (int i = 0; i < 3; i++) {
+			SystemDepartmentEntity department = new SystemDepartmentEntity();
+			department.setDepartmentName("测试部门" + (char)('A' + i));
+			department.setDescription("用于测试的公司");
+			department.setParentId(39L);
+			departmentService.save(department);
 		}
 	}
 

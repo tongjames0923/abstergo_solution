@@ -1,13 +1,10 @@
 package com.tbs.shared.interfaces.service;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
-import org.springframework.transaction.annotation.Transactional;
-
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.mapper.IFrameworkMapper;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * 物理删除全功能服务模板
@@ -28,16 +25,10 @@ public abstract class AbstractPhysicDeleteFullFeatureServiceTemplate<T extends I
 
 	@Transactional(rollbackFor = Exception.class)
 	@Override
-	protected void handleDelete(List<T> entitys) {
-		List<K> disableEntitys = entitys.stream().map(entity -> {
-			return entity.getId();
-		}).collect(Collectors.toList());
-		if (disableEntitys.size() <= BATCH_UPDATE_SIZE) {
-			getMapper().deleteByIdList(disableEntitys);
-		} else {
-			for (List<K> batch : CollUtil.partition(disableEntitys, BATCH_UPDATE_SIZE)) {
-				getMapper().deleteByIdList(batch);
-			}
-		}
+	protected T handleDelete(K entitys) {
+		T deleteEntity = instance.queryById(entitys);
+		AssertUtil.notNull(deleteEntity, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
+		getMapper().deleteByPrimaryKey(entitys);
+		return deleteEntity;
 	}
 }

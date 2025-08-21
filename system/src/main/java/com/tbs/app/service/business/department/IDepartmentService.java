@@ -6,6 +6,11 @@ import com.tbs.shared.pojo.entity.SystemDepartmentTreePathEntity;
 
 import java.util.Optional;
 
+/**
+ * 部门服务
+ *
+ * @author wangyang
+ */
 public interface IDepartmentService extends IServiceTemplate<SystemDepartmentEntity, Long> {
 	/**
 	 * 获取部门树路径

@@ -1,13 +1,15 @@
 package com.tbs.shared.pojo.entity;
 
-import java.io.Serializable;
-
-import javax.persistence.*;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import javax.persistence.*;
+import java.io.Serializable;
+
+/**
+ * @author abstergo
+ */
 @Data
 @Entity
 @Table(name = "department_tree_path")
@@ -19,7 +21,7 @@ public class SystemDepartmentTreePathEntity implements Serializable {
 	/**
 	 * 根节点
 	 */
-	public static final SystemDepartmentTreePathEntity ROOT_PATH = new SystemDepartmentTreePathEntity(1L, 0L, "/1");
+	public static final SystemDepartmentTreePathEntity ROOT_PATH = new SystemDepartmentTreePathEntity(1L, 0L, "/");
 
 	/**
 	 * 主键

@@ -1,17 +1,12 @@
 package com.tbs.app.service.business.department.impl;
 
-import java.util.List;
-import java.util.Optional;
-
-import javax.annotation.Resource;
-
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.department.IDepartmentService;
+import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.IStartup;
+import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.delegate.IDelegateInvoker;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
@@ -19,8 +14,15 @@ import com.tbs.shared.mapper.DepartmentTreePathMapper;
 import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.entity.SystemDepartmentTreePathEntity;
-
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -61,10 +63,11 @@ public class DefaultDepartmentService
 		entity.setFlag(CommonConstant.FLAG_ON);
 		entity.setCreateTime(new java.util.Date());
 		if (entity.getParentId() == null) {
-			entity.setParentId(SystemDepartmentEntity.ROOT.getParentId());
+			entity.setParentId(SystemDepartmentEntity.ROOT.getId());
 		}
-
+		var ins = (DefaultDepartmentService)instance;
 		getMapper().insert(entity);
+		ins.buildTreePath(entity.getParentId());
 		return entity;
 	}
 
@@ -94,23 +97,61 @@ public class DefaultDepartmentService
 		return department;
 	}
 
+	@Cacheable(cacheNames = "department", key = "#id")
+	@ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
 	@Override
+	public SystemDepartmentEntity queryById(Long id) {
+		return super.queryById(id);
+	}
+
+	@Override
+	@Cacheable(cacheNames = "departmentTreePath", key = "#parentId")
+	@ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
 	public Optional<SystemDepartmentTreePathEntity> getTreePath(Long parentId) {
 		return Optional.ofNullable(CollUtil.first(treePathMapper.queryByParentId(parentId)));
 	}
 
 	@Override
-	@Transactional(rollbackFor = Exception.class)
+	@CacheEvict(cacheNames = "departmentTreePath", key = "#parentId")
 	public SystemDepartmentTreePathEntity buildTreePath(Long parentId) {
-//		if (parentId == null) {
-//			parentId = SystemDepartmentEntity.NULL_PARENT_ID;
-//		}
-//		var treePaths = getTreePath(parentId);
-//		if (treePaths.isPresent()) {
-//			treePathMapper.deleteByPrimaryKey(treePaths.get().getId());
-//		}
+		if (parentId == null) {
+			parentId = SystemDepartmentEntity.NULL_PARENT_ID;
+		}
+		var ins = (DefaultDepartmentService)instance;
+		ValueWrapper<SystemDepartmentTreePathEntity> grandParent = new ValueWrapper<>();
+		if (parentId.equals(SystemDepartmentEntity.NULL_PARENT_ID)) {
+			return SystemDepartmentTreePathEntity.ROOT_PATH;
+		} else {
+			SystemDepartmentEntity parent = ins.queryById(parentId);
+			AssertUtil.notNull(parent, "父级部门ID{} 不存在", parentId);
+			//获取父级部门路径
+			var treePath = ins.getTreePath(parent.getParentId());
 
-		// FIXME 临时处理
-		return null;
+			treePath.ifPresentOrElse((p1) -> {
+				//父级部门路径存在时
+				grandParent.set(p1);
+			}, () -> {
+				//父级部门路径不存在时
+				SystemDepartmentTreePathEntity p = ins.buildTreePath(parent.getParentId());
+				grandParent.set(p);
+			});
+		}
+		SystemDepartmentTreePathEntity p = grandParent.getOrThrow();
+
+		SystemDepartmentTreePathEntity path = new SystemDepartmentTreePathEntity();
+		path.setParentId(parentId);
+		SystemDepartmentTreePathEntity oldOne = ins.getTreePath(parentId).orElse(null);
+		String pathRaw = p.getTreePath() + p.getParentId() + "/";
+		if (oldOne == null) {
+			path.setTreePath(pathRaw);
+			treePathMapper.insert(path);
+		} else {
+			if (!oldOne.getTreePath().equals(pathRaw)) {
+				oldOne.setTreePath(pathRaw);
+				treePathMapper.updateByPrimaryKey(oldOne);
+			}
+			path = oldOne;
+		}
+		return path;
 	}
 }
