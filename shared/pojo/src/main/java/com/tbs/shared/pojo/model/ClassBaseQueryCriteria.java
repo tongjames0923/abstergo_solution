@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.model;
 
+import com.tbs.sql.model.SqlSelectInfoModel;
 import com.tbs.sql.query.impl.AbstractResourceBaseQueryCriteria;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,8 @@ public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria
     @Setter
     private String sqlSuffix;
 
+    private Class<T> type;
+
     public ClassBaseQueryCriteria(String sqlPrefix, String sqlSuffix) {
         this.sqlPrefix = sqlPrefix;
         this.sqlSuffix = sqlSuffix;
@@ -40,7 +43,14 @@ public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria
         return String.format("%s%s%s", getSqlPrefix(), type.getSimpleName(), getSqlSuffix());
     }
 
-    public final <T> Class<T> getType(ClassBaseQueryCriteria<T> target) {
+    @Override
+    public SqlSelectInfoModel getSelectSQLInfo() {
+        SqlSelectInfoModel selectInfoModel = super.getSelectSQLInfo();
+        selectInfoModel.setEntityClass(type);
+        return selectInfoModel;
+    }
+
+    public final Class<T> getType(ClassBaseQueryCriteria<T> target) {
         Type superClass = target.getClass().getGenericSuperclass();
         Class<T> type = null;
         if (superClass instanceof ParameterizedType) {
@@ -54,6 +64,7 @@ public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria
         } else {
             throw new IllegalArgumentException("未指定泛型参数");
         }
+        this.type = type;
         return type;
     }
 }

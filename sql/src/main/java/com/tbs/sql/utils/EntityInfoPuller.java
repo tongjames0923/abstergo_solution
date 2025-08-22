@@ -5,7 +5,6 @@ import com.tbs.sql.annotation.SelectSQL;
 import com.tbs.sql.model.SqlSelectInfoModel;
 import com.tbs.sql.model.SqlSelectItemModel;
 
-
 import javax.persistence.Table;
 import java.lang.reflect.Field;
 import java.util.LinkedList;
@@ -52,6 +51,7 @@ public class EntityInfoPuller {
                     new SqlSelectItemModel(SqlUtils.getFiledNameWithMapping(field), field.getName());
                 items.add(item);
             }
+            sqlSelectInfoModel.setEntityClass(entityClass);
             sqlSelectInfoModel.setFieldList(items);
             return sqlSelectInfoModel;
         });

@@ -3,8 +3,10 @@ package com.tbs.sql.utils;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.extra.spring.SpringUtil;
+import com.tbs.common.IStartup;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.StrUtil;
+import com.tbs.sql.ISqlInfoComposeIntercepter;
 import com.tbs.sql.annotation.*;
 import com.tbs.sql.ef.IEntityQueryWrapper;
 import com.tbs.sql.enums.QueryConnectorEnum;
@@ -33,10 +35,18 @@ import java.util.stream.Collectors;
  * @author tongj
  */
 @Slf4j
-public class QueryUtil {
+public class QueryUtil implements IStartup {
 
     @Getter
     private static QueryUtil instance;
+
+    private List<ISqlInfoComposeIntercepter> interceptors;
+
+    private SqlWhereCompose intercept(SqlWhereCompose compose, Class<?> entityClass) {
+        interceptors.forEach(intercepter -> intercepter.intercept(compose, entityClass));
+        return compose;
+    }
+
 
     /**
      * SQL 查询方言
@@ -164,6 +174,18 @@ public class QueryUtil {
         return metadataList;
     }
 
+    @Override
+    public void startUp() throws RuntimeException {
+        try {
+            this.interceptors =
+                com.tbs.common.util.SpringUtil.getBeansOfType(ISqlInfoComposeIntercepter.class).values().stream()
+                    .sorted(Comparator.comparingInt(ISqlInfoComposeIntercepter::getOrder)).collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("获取SQL拦截器失败", e);
+            this.interceptors = new ArrayList<>(1);
+        }
+    }
+
     /**
      * 表字段元数据类，用于封装字段的元数据信息
      */
@@ -272,12 +294,14 @@ public class QueryUtil {
         String whereSql = "";
         String orderSql = "";
         String pageSql = "";
+        SqlSelectInfoModel model = queryObject.getSelectSQLInfo();
         synchronized (queryObject) {
             compose = buildConditions(queryObject);
-            selectSql = selectSqlDialect.getSelectSqlExtractor().extractSelectSql(queryObject.getSelectSQLInfo());
+            selectSql = selectSqlDialect.getSelectSqlExtractor().extractSelectSql(model);
             orderSql = selectSqlDialect.getOrderSqlExtractor().extraOrderSql(collectOrderInfos(queryObject));
         }
-        whereSql = selectSqlDialect.getWhereSqlExtractor().extraWhereSql(compose, params);
+        whereSql =
+            selectSqlDialect.getWhereSqlExtractor().extraWhereSql(intercept(compose, model.getEntityClass()), params);
         if (page != null) {
             pageSql =
                 selectSqlDialect.getLimitSqlExtractor().extraLimitSql(new SqlLimitModel(page.from(), page.number()));
@@ -297,15 +321,17 @@ public class QueryUtil {
             throw new SqlExtractionException("Entity cannot be null", this);
         }
         String baseSelect = "";
+        SqlSelectInfoModel selectInfoModel = null;
         if (BeanUtil.isBaseFrom(fetchObject.getEntity().getClass(), IQueryCriteria.class)) {
-            baseSelect = selectSqlDialect.getSelectSqlExtractor()
-                .extractSelectSql(((IQueryCriteria)fetchObject.getEntity()).getSelectSQLInfo());
+            selectInfoModel = ((IQueryCriteria)fetchObject.getEntity()).getSelectSQLInfo();
         } else {
-            baseSelect = selectSqlDialect.getSelectSqlExtractor()
-                .extractSelectSql(EntityInfoPuller.pullFromClass(fetchObject.getEntity().getClass()));
+            selectInfoModel = EntityInfoPuller.pullFromClass(fetchObject.getEntity().getClass());
         }
-
-        String whereSql = selectSqlDialect.getWhereSqlExtractor().extraWhereSql(fetchObject.getWhereCompose(), params);
+        selectInfoModel.setEntityClass(fetchObject.getEntity().getClass());
+        baseSelect = selectSqlDialect.getSelectSqlExtractor().extractSelectSql(selectInfoModel);
+        var compose = fetchObject.getWhereCompose();
+        String whereSql = selectSqlDialect.getWhereSqlExtractor()
+            .extraWhereSql(intercept(compose, selectInfoModel.getEntityClass()), params);
         String orderSql = selectSqlDialect.getOrderSqlExtractor().extraOrderSql(fetchObject.getOrderInfos());
         String pageSql = "";
         SqlLimitModel page = fetchObject.getLimitModel();

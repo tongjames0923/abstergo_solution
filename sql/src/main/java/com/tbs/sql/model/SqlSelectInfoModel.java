@@ -28,15 +28,17 @@ public class SqlSelectInfoModel implements Serializable {
      */
     List<SqlSelectItemModel> fieldList;
 
+    private Class<?> entityClass;
+
     public static SqlSelectInfoModel rawSql(String sql) {
-        return new SqlSelectInfoModel(sql, null, null);
+        return new SqlSelectInfoModel(sql, null, null, null);
     }
 
     public static SqlSelectInfoModel tableName(String tableName) {
-        return new SqlSelectInfoModel(null, tableName, null);
+        return new SqlSelectInfoModel(null, tableName, null, null);
     }
 
     public static SqlSelectInfoModel custom(String tableName, List<SqlSelectItemModel> fieldList) {
-        return new SqlSelectInfoModel(null, tableName, fieldList);
+        return new SqlSelectInfoModel(null, tableName, fieldList, null);
     }
 }
