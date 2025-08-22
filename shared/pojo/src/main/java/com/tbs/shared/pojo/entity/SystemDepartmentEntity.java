@@ -1,14 +1,16 @@
 package com.tbs.shared.pojo.entity;
 
+import java.util.Date;
+
+import javax.persistence.*;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.pojo.IBaseEntity;
+
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import javax.persistence.*;
-import java.util.Date;
 
 /**
  * @author abstergo
@@ -28,7 +30,7 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	 * 根部门
 	 */
 	public static SystemDepartmentEntity ROOT = new SystemDepartmentEntity(1L, "系统", NULL_PARENT_ID, "系统根部门", null,
-			null, null, CommonConstant.FLAG_ON);
+			null, null, CommonConstant.FLAG_ON, null);
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -77,5 +79,11 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	 */
 	@Column(name = "flag")
 	private Integer flag = 1;
+
+	/**
+	 * 子部门数量
+	 */
+	@Transient
+	private Integer childrenCount;
 
 }

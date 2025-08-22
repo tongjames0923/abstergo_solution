@@ -1,5 +1,16 @@
 package com.tbs.app.service.business.department.impl;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+
+import javax.annotation.Resource;
+
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.stereotype.Service;
+
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.department.IDepartmentService;
 import com.tbs.cache.annotation.ExpireOn;
@@ -8,21 +19,15 @@ import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.StrUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.mapper.DepartmentTreePathMapper;
 import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.entity.SystemDepartmentTreePathEntity;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
-import java.util.List;
-import java.util.Optional;
-import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
 @Slf4j
@@ -65,21 +70,52 @@ public class DefaultDepartmentService
 		if (entity.getParentId() == null) {
 			entity.setParentId(SystemDepartmentEntity.ROOT.getId());
 		}
-		var ins = (DefaultDepartmentService)instance;
+		var ins = (DefaultDepartmentService) instance;
 		getMapper().insert(entity);
 		ins.buildTreePath(entity.getParentId());
 		return entity;
 	}
 
 	@Override
+	@Caching(evict = { @CacheEvict(value = "department", key = "#entity.id"),
+			@CacheEvict(value = "departmentTreePath", key = "#entity.parentId") })
 	protected List<SystemDepartmentEntity> updateBy(SystemDepartmentEntity entity) {
-		return List.of();
+		entity.setUpdateTime(new java.util.Date());
+
+		getMapper().updateByPrimaryKey(entity);
+		return List.of(entity);
 	}
 
 	@Override
 	protected SystemDepartmentEntity compareAndUpdateValue(SystemDepartmentEntity newOne,
 			SystemDepartmentEntity oldOne) {
-		return null;
+		if (StrUtil.isNotEmpty(newOne.getDepartmentName())) {
+			oldOne.setDepartmentName(newOne.getDepartmentName());
+		}
+		if (StrUtil.isNotEmpty(newOne.getDescription())) {
+			oldOne.setDescription(newOne.getDescription());
+		}
+		if (newOne.getSortOrder() != null) {
+			oldOne.setSortOrder(newOne.getSortOrder());
+		}
+		if (newOne.getFlag() != null) {
+			oldOne.setFlag(newOne.getFlag());
+		}
+		if (newOne.getParentId() != null) {
+			if (!newOne.getParentId().equals(oldOne.getParentId())) {
+				oldOne.setParentId(newOne.getParentId());
+				((DefaultDepartmentService) instance).buildTreePath(oldOne.getParentId());
+			}
+		}
+		return oldOne;
+	}
+
+	@Override
+	protected SystemDepartmentEntity handleDelete(Long entitys) {
+		SystemDepartmentEntity department1 = getQueryWrapper().query().where()
+				.equal(SystemDepartmentEntity::getParentId, entitys).pour().fetchOne();
+		AssertUtil.isTrue(department1 != null, "请先删除子部门");
+		return super.handleDelete(entitys);
 	}
 
 	@Resource
@@ -117,21 +153,21 @@ public class DefaultDepartmentService
 		if (parentId == null) {
 			parentId = SystemDepartmentEntity.NULL_PARENT_ID;
 		}
-		var ins = (DefaultDepartmentService)instance;
+		var ins = (DefaultDepartmentService) instance;
 		ValueWrapper<SystemDepartmentTreePathEntity> grandParent = new ValueWrapper<>();
 		if (parentId.equals(SystemDepartmentEntity.NULL_PARENT_ID)) {
 			return SystemDepartmentTreePathEntity.ROOT_PATH;
 		} else {
 			SystemDepartmentEntity parent = ins.queryById(parentId);
 			AssertUtil.notNull(parent, "父级部门ID{} 不存在", parentId);
-			//获取父级部门路径
+			// 获取父级部门路径
 			var treePath = ins.getTreePath(parent.getParentId());
 
 			treePath.ifPresentOrElse((p1) -> {
-				//父级部门路径存在时
+				// 父级部门路径存在时
 				grandParent.set(p1);
 			}, () -> {
-				//父级部门路径不存在时
+				// 父级部门路径不存在时
 				SystemDepartmentTreePathEntity p = ins.buildTreePath(parent.getParentId());
 				grandParent.set(p);
 			});
@@ -154,4 +190,5 @@ public class DefaultDepartmentService
 		}
 		return path;
 	}
+
 }

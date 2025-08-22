@@ -31,4 +31,11 @@ public class CommonSystemDepartmentQueryCriteria extends ClassBaseQueryCriteria<
 	@QueryField(contrast = QueryContrastEnum.LLIKE)
 	private String departmentNameLike;
 
+	/**
+	 * 状态标记：1-正常，0-删除
+	 */
+	@QueryMapping(value = "flag")
+	@QueryField(contrast = QueryContrastEnum.EQUAL)
+	private Integer flagEquals;
+
 }
