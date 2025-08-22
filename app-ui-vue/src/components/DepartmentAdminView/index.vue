@@ -25,7 +25,7 @@
             icon="el-icon-refresh"
             circle
             size="mini"
-            @click="loadDepartments"
+            @click="loadRootDepartments"
             title="刷新数据"
           ></el-button>
         </div>
@@ -37,13 +37,20 @@
         :props="treeProps"
         :filter-node-method="filterNode"
         :expand-on-click-node="false"
-        :default-expand-all="true"
+        :default-expand-all="false"
         node-key="id"
         highlight-current
+        :load="loadNode"
+        lazy
         @node-click="handleNodeClick"
       >
         <span class="custom-tree-node" slot-scope="{ node, data }">
-          <span>{{ node.label }}</span>
+          <span>
+            {{ node.label }}
+            <el-tag size="mini" v-if="data.childrenCount !== undefined && data.childrenCount >= 0">
+              {{ data.childrenCount }}
+            </el-tag>
+          </span>
           <span>
             <el-button
               type="text"
@@ -89,6 +96,7 @@
           }}
         </el-descriptions-item>
         <el-descriptions-item label="排序">{{ currentDepartment.sortOrder || '无' }}</el-descriptions-item>
+        <el-descriptions-item label="子部门数量">{{ currentDepartment.childrenCount || 0 }}</el-descriptions-item>
         <el-descriptions-item label="创建时间">{{ formatDate(currentDepartment.createTime) }}</el-descriptions-item>
         <el-descriptions-item label="更新时间">{{
             formatDate(currentDepartment.updateTime) || '无'
@@ -164,9 +172,8 @@
     </el-dialog>
   </div>
 </template>
-
 <script>
-import {fetchDepartmentList} from '@/api/department'
+import {deleteDepartment, fetchDepartmentList, saveDepartment} from '@/api/department'
 import {formatDate} from '@/utils'
 
 export default {
@@ -177,13 +184,15 @@ export default {
       departmentTreeData: [],
       treeProps: {
         children: 'children',
-        label: 'departmentName'
+        label: 'departmentName',
+        isLeaf: 'isLeaf'
       },
       currentDepartment: null,
       dialogVisible: false,
       dialogTitle: '',
       isEdit: false,
       departmentForm: {
+        id: undefined,
         departmentName: '',
         parentId: 1,
         sortOrder: 0,
@@ -208,22 +217,23 @@ export default {
     }
   },
   created() {
-    this.loadDepartments()
+    this.loadRootDepartments()
   },
   methods: {
     formatDate(date) {
       return formatDate(date)
     },
 
-    // 加载部门数据
-    async loadDepartments() {
+    // 加载根部门数据
+    async loadRootDepartments() {
       this.loading = true
       try {
-        const response = await fetchDepartmentList({})
+        const response = await fetchDepartmentList({
+          parentIdEquals: 0,
+          flagEquals: 1
+        })
         if (response.code === 200) {
           // 根据后端返回的数据结构处理数据
-          // 后端返回的是AjaxResult对象，其中data字段包含PageVO对象
-          // PageVO对象包含total和data字段
           let departments = []
           if (response.data && response.data.data) {
             // 如果是分页数据结构 PageVO
@@ -233,10 +243,19 @@ export default {
             departments = response.data
           }
 
-          // 构建树形结构
-          this.departmentTreeData = this.buildTree(departments)
+          // 只显示有效的部门（flag=1）
+          departments = departments.filter(dept => dept.flag === 1)
+
+          // 设置根节点数据
+          this.departmentTreeData = departments.map(dept => {
+            return {
+              ...dept,
+              isLeaf: dept.childrenCount === 0 // 没有子部门就是叶子节点
+            }
+          })
+
           // 设置下拉选项
-          this.departmentOptions = departments
+          this.departmentOptions = [{id: 0, departmentName: '根节点'}, ...departments]
           // 默认选中根部门
           if (this.departmentTreeData.length > 0) {
             this.currentDepartment = this.departmentTreeData[0]
@@ -251,31 +270,45 @@ export default {
       }
     },
 
-    // 构建部门树
-    buildTree(departments) {
-      // 创建映射表
-      const map = {}
-      const roots = []
+    // 懒加载子节点
+    async loadNode(node, resolve) {
+      if (node.level === 0) {
+        return resolve(this.departmentTreeData)
+      }
 
-      // 初始化所有节点
-      departments.forEach(dept => {
-        map[dept.id] = {...dept, children: []}
-      })
+      try {
+        const response = await fetchDepartmentList({
+          parentIdEquals: node.data.id,
+          flagEquals: 1
+        })
 
-      // 构建树结构
-      departments.forEach(dept => {
-        const node = map[dept.id]
-        if (dept.parentId === 0 || dept.parentId === null) {
-          roots.push(node)
-        } else {
-          const parent = map[dept.parentId]
-          if (parent) {
-            parent.children.push(node)
+        if (response.code === 200) {
+          let departments = []
+          if (response.data && response.data.data) {
+            departments = response.data.data
+          } else if (response.data) {
+            departments = response.data
           }
-        }
-      })
 
-      return roots
+          // 只显示有效的部门（flag=1）
+          departments = departments.filter(dept => dept.flag === 1)
+
+          const nodes = departments.map(dept => {
+            return {
+              ...dept,
+              isLeaf: dept.childrenCount === 0 // 根据childrenCount判断是否为叶子节点
+            }
+          })
+
+          resolve(nodes)
+        } else {
+          this.$message.error(response.msg || '获取子部门数据失败')
+          resolve([])
+        }
+      } catch (error) {
+        this.$message.error('获取子部门数据失败: ' + error.message)
+        resolve([])
+      }
     },
 
     // 过滤节点
@@ -291,7 +324,7 @@ export default {
 
     // 获取父级部门名称
     getParentDepartmentName(parentId) {
-      if (parentId === 0 || parentId === null) return '根节点'
+      if (!parentId || parentId === 0) return '根节点'
       const parent = this.departmentOptions.find(dept => dept.id === parentId)
       return parent ? parent.departmentName : '未知'
     },
@@ -301,6 +334,7 @@ export default {
       this.isEdit = false
       this.dialogTitle = '新增部门'
       this.departmentForm = {
+        id: undefined,
         departmentName: '',
         parentId: 1,
         sortOrder: 0,
@@ -315,6 +349,7 @@ export default {
       this.isEdit = false
       this.dialogTitle = '新增子部门'
       this.departmentForm = {
+        id: undefined,
         departmentName: '',
         parentId: data.id,
         sortOrder: 0,
@@ -334,15 +369,23 @@ export default {
 
     // 删除部门
     handleDelete(data) {
-      this.$confirm(`确定要删除部门 "${data.departmentName}" 吗？`, '提示', {
+      this.$confirm(`确定要删除部门 "${data.departmentName}" 吗？删除后不可恢复。`, '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(() => {
-        // 这里应该调用删除接口
-        this.$message.success('删除成功')
-        // 重新加载数据
-        this.loadDepartments()
+      }).then(async () => {
+        try {
+          const response = await deleteDepartment(data.id)
+          if (response.code === 200) {
+            this.$message.success('删除成功')
+            // 重新加载数据
+            this.loadRootDepartments()
+          } else {
+            this.$message.error(response.msg || '删除失败')
+          }
+        } catch (error) {
+          this.$message.error('删除失败: ' + error.message)
+        }
       }).catch(() => {
         this.$message.info('已取消删除')
       })
@@ -353,11 +396,15 @@ export default {
       this.$refs.departmentForm.validate(async (valid) => {
         if (valid) {
           try {
-            // 这里应该调用保存接口
-            this.$message.success(this.isEdit ? '修改成功' : '新增成功')
-            this.dialogVisible = false
-            // 重新加载数据
-            this.loadDepartments()
+            const response = await saveDepartment(this.departmentForm)
+            if (response.code === 200) {
+              this.$message.success(this.isEdit ? '修改成功' : '新增成功')
+              this.dialogVisible = false
+              // 重新加载数据
+              this.loadRootDepartments()
+            } else {
+              this.$message.error(response.msg || (this.isEdit ? '修改失败' : '新增失败'))
+            }
           } catch (error) {
             this.$message.error((this.isEdit ? '修改' : '新增') + '失败: ' + error.message)
           }
