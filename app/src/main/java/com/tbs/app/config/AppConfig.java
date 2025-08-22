@@ -1,16 +1,5 @@
 package com.tbs.app.config;
 
-import java.util.Arrays;
-import java.util.concurrent.TimeUnit;
-
-import javax.annotation.Resource;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.cache.Cache;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import com.tbs.app.service.log.impl.DbSystemOpLog;
 import com.tbs.app.service.log.impl.EventSystemOpLog;
 import com.tbs.broadcast.event.impl.SimpleEvent;
@@ -26,13 +15,29 @@ import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
+import com.tbs.shared.util.SqlLogicDeleteIntercepter;
 import com.tbs.web.trace.core.AbstractTraceContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author tongj
  */
 @Configuration
 public class AppConfig {
+
+	@Bean
+	public SqlLogicDeleteIntercepter sqlLogicDeleteIntercepter() {
+		return new SqlLogicDeleteIntercepter();
+	}
+
 	@Bean
 	IErrorThrowEvent errorThrowEvent() {
 		return new IErrorThrowEvent() {

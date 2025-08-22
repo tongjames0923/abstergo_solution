@@ -229,8 +229,7 @@ export default {
       this.loading = true
       try {
         const response = await fetchDepartmentList({
-          parentIdEquals: 0,
-          flagEquals: 1
+          parentIdEquals: 0
         })
         if (response.code === 200) {
           // 根据后端返回的数据结构处理数据

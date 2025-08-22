@@ -1,16 +1,15 @@
 package com.tbs.shared.pojo.entity;
 
-import java.util.Date;
-
-import javax.persistence.*;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.pojo.IBaseEntity;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import javax.persistence.*;
+import java.util.Date;
 
 /**
  * @author abstergo
@@ -21,6 +20,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@LogicDeleteEntity(deleteFlagValue = 0, filedName = "flag")
 public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	private static final long serialVersionUID = 1L;
 

@@ -1,0 +1,60 @@
+package com.tbs.shared.util;
+
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ExceptionUtil;
+import com.tbs.common.util.StrUtil;
+import com.tbs.shared.annotations.LogicDeleteEntity;
+import com.tbs.shared.pojo.IFlagable;
+import com.tbs.sql.ISqlInfoComposeIntercepter;
+import com.tbs.sql.enums.QueryConnectorEnum;
+import com.tbs.sql.enums.QueryContrastEnum;
+import com.tbs.sql.model.SqlWhereCompose;
+import com.tbs.sql.model.SqlWhereInfo;
+import com.tbs.sql.model.SqlWhereNode;
+import com.tbs.sql.utils.SqlUtils;
+
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * @author abstergo
+ */
+public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
+
+    private Map<Class<?>, SqlWhereInfo> flagSqlWhereInfoMap = new HashMap<>(8);
+
+    @Override
+    public void intercept(SqlWhereCompose compose, Class<?> entityClass) {
+        //确认entityClass是否是逻辑删除实体,是否被LogicDeleteEntity注解
+        if (!entityClass.isAnnotationPresent(LogicDeleteEntity.class)) {
+            return;
+        }
+        if (!IFlagable.class.isAssignableFrom(entityClass)) {
+            return;
+        }
+        LogicDeleteEntity logicDeleteEntity = entityClass.getDeclaredAnnotation(LogicDeleteEntity.class);
+        //生成whereInfo，flag不等于disable值，若disableFlagMap中存在disableFlag，则使用disableFlagMap中的值，否则使用默认值0
+        Integer disableFlag = logicDeleteEntity.deleteFlagValue();
+        SqlWhereInfo sqlWhereInfo = flagSqlWhereInfoMap.computeIfAbsent(entityClass, k -> {
+            SqlWhereInfo info = new SqlWhereInfo();
+            info.setContrast(QueryContrastEnum.NOT_EQUAL);
+            info.setFieldValueStr(disableFlag.toString());
+            String flagFieldName = logicDeleteEntity.filedName();
+            if (StrUtil.isEmpty(flagFieldName)) {
+                flagFieldName = "flag";
+                //设置字段名，读取反射信息中的flag字段名
+                try {
+                    flagFieldName = SqlUtils.getFiledNameWithMapping(entityClass.getField("flag"));
+                } catch (Exception e) {
+                    AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
+                }
+            }
+
+            info.setFieldName(flagFieldName);
+            info.setTableName(SqlUtils.getTableName(entityClass));
+            info.setValueType(Integer.class);
+            return info;
+        });
+        compose.getChildren().add(SqlWhereNode.createInfoNode(QueryConnectorEnum.AND, sqlWhereInfo));
+    }
+}

@@ -5,7 +5,6 @@ import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
 import com.tbs.sql.enums.QueryContrastEnum;
-
 import lombok.Data;
 
 @Data
@@ -30,12 +29,5 @@ public class CommonSystemDepartmentQueryCriteria extends ClassBaseQueryCriteria<
 	@QueryMapping(value = "department_name")
 	@QueryField(contrast = QueryContrastEnum.LLIKE)
 	private String departmentNameLike;
-
-	/**
-	 * 状态标记：1-正常，0-删除
-	 */
-	@QueryMapping(value = "flag")
-	@QueryField(contrast = QueryContrastEnum.EQUAL)
-	private Integer flagEquals;
 
 }
