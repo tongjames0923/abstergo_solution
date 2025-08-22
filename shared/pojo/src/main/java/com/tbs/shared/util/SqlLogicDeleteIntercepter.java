@@ -13,29 +13,30 @@ import com.tbs.sql.model.SqlWhereInfo;
 import com.tbs.sql.model.SqlWhereNode;
 import com.tbs.sql.utils.SqlUtils;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * @author abstergo
  */
 public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
 
-    private Map<Class<?>, SqlWhereInfo> flagSqlWhereInfoMap = new HashMap<>(8);
+    private Map<Class<?>, Optional<SqlWhereInfo>> flagSqlWhereInfoMap = new ConcurrentHashMap<>(8);
 
     @Override
     public void intercept(SqlWhereCompose compose, Class<?> entityClass) {
-        //确认entityClass是否是逻辑删除实体,是否被LogicDeleteEntity注解
-        if (!entityClass.isAnnotationPresent(LogicDeleteEntity.class)) {
-            return;
-        }
-        if (!IFlagable.class.isAssignableFrom(entityClass)) {
-            return;
-        }
-        LogicDeleteEntity logicDeleteEntity = entityClass.getDeclaredAnnotation(LogicDeleteEntity.class);
-        //生成whereInfo，flag不等于disable值，若disableFlagMap中存在disableFlag，则使用disableFlagMap中的值，否则使用默认值0
-        Integer disableFlag = logicDeleteEntity.deleteFlagValue();
-        SqlWhereInfo sqlWhereInfo = flagSqlWhereInfoMap.computeIfAbsent(entityClass, k -> {
+        var sqlWhereInfo = flagSqlWhereInfoMap.computeIfAbsent(entityClass, (k) -> {
+            //确认entityClass是否是逻辑删除实体,是否被LogicDeleteEntity注解
+            if (!entityClass.isAnnotationPresent(LogicDeleteEntity.class)) {
+                return Optional.empty();
+            }
+            if (!IFlagable.class.isAssignableFrom(entityClass)) {
+                return Optional.empty();
+            }
+            LogicDeleteEntity logicDeleteEntity = entityClass.getDeclaredAnnotation(LogicDeleteEntity.class);
+            //生成whereInfo，flag不等于disable值，若disableFlagMap中存在disableFlag，则使用disableFlagMap中的值，否则使用默认值0
+            Integer disableFlag = logicDeleteEntity.deleteFlagValue();
             SqlWhereInfo info = new SqlWhereInfo();
             info.setContrast(QueryContrastEnum.NOT_EQUAL);
             info.setFieldValueStr(disableFlag.toString());
@@ -53,8 +54,9 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
             info.setFieldName(flagFieldName);
             info.setTableName(SqlUtils.getTableName(entityClass));
             info.setValueType(Integer.class);
-            return info;
+            return Optional.of(info);
         });
-        compose.getChildren().add(SqlWhereNode.createInfoNode(QueryConnectorEnum.AND, sqlWhereInfo));
+        sqlWhereInfo.ifPresent(
+            info -> compose.getChildren().add(SqlWhereNode.createInfoNode(QueryConnectorEnum.AND, info)));
     }
 }
