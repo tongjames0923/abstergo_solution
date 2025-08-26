@@ -6,7 +6,7 @@ import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.tbs.sql.enums.QueryOrderEnum;
-import com.tbs.sql.model.QueryOrderedModel;
+import com.tbs.sql.order.impl.QueryOrderedModel;
 
 /**
  * QueryOrderedModel 反序列化器

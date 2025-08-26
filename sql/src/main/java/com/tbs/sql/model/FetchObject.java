@@ -1,5 +1,9 @@
 package com.tbs.sql.model;
 
+import com.tbs.sql.framework.model.SqlGroupModel;
+import com.tbs.sql.framework.model.SqlLimitModel;
+import com.tbs.sql.framework.model.SqlOrderInfo;
+import com.tbs.sql.framework.model.SqlWhereCompose;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

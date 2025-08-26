@@ -3,7 +3,7 @@ package com.tbs.shared.serialize;
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
-import com.tbs.sql.model.QueryOrderedModel;
+import com.tbs.sql.order.impl.QueryOrderedModel;
 
 import java.io.IOException;
 

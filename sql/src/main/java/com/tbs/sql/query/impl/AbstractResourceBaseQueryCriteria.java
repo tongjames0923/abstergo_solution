@@ -3,7 +3,7 @@ package com.tbs.sql.query.impl;
 import cn.hutool.core.io.resource.ResourceUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.sql.model.SqlSelectInfoModel;
+import com.tbs.sql.framework.model.SqlSelectInfoModel;
 import com.tbs.sql.query.IQueryCriteria;
 
 import java.io.BufferedReader;

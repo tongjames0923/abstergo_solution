@@ -1,6 +1,6 @@
 package com.tbs.sql.query;
 
-import com.tbs.sql.model.SqlSelectInfoModel;
+import com.tbs.sql.framework.model.SqlSelectInfoModel;
 
 import java.io.Serializable;
 

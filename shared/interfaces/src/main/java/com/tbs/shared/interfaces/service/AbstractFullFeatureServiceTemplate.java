@@ -1,5 +1,11 @@
 package com.tbs.shared.interfaces.service;
 
+import java.util.Collection;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import org.springframework.transaction.annotation.Transactional;
+
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
@@ -9,11 +15,6 @@ import com.tbs.shared.util.PageUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.util.Collection;
-import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * 全功能服务模板类 实现了基础的CRUD操作模板，提供可扩展的业务逻辑钩子方法
@@ -111,7 +112,8 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
 	@Override
 	public PageVO<T> queryBy(IQueryCriteria qo, IPage page) {
-		return PageUtil.build(pageVoBuildType(), () -> getMapper().queryByQO(qo, page, getEntityClass()),
+		return PageUtil.build(pageVoBuildType(),
+				() -> getMapper().queryByQO(qo, page, (Class<T>) getEntity().getClass()),
 				() -> getMapper().countByQO(qo));
 	}
 

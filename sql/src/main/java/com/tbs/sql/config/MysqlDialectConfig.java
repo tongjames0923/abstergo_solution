@@ -1,8 +1,8 @@
 package com.tbs.sql.config;
 
-import com.tbs.sql.extractor.*;
-import com.tbs.sql.extractor.impls.dialect.ImportedDialect;
-import com.tbs.sql.extractor.impls.mysql.*;
+import com.tbs.sql.framework.extractor.*;
+import com.tbs.sql.framework.extractor.impls.dialect.ImportedDialect;
+import com.tbs.sql.framework.extractor.impls.mysql.*;
 import org.springframework.context.annotation.Bean;
 
 

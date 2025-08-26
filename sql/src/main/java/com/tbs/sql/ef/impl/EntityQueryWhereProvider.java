@@ -7,9 +7,9 @@ import com.tbs.sql.ef.IQueryQueryBuilder;
 import com.tbs.sql.ef.IQueryWhereProvider;
 import com.tbs.sql.enums.QueryConnectorEnum;
 import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.model.SqlWhereCompose;
-import com.tbs.sql.model.SqlWhereInfo;
-import com.tbs.sql.model.SqlWhereNode;
+import com.tbs.sql.framework.model.SqlWhereCompose;
+import com.tbs.sql.framework.model.SqlWhereInfo;
+import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.utils.SqlUtils;
 
 import java.lang.reflect.Field;

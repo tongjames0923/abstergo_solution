@@ -2,7 +2,7 @@ package com.tbs.sql.ef.impl;
 
 import com.tbs.sql.ef.IQueryPageProvider;
 import com.tbs.sql.ef.IQueryQueryBuilder;
-import com.tbs.sql.model.SqlLimitModel;
+import com.tbs.sql.framework.model.SqlLimitModel;
 
 /**
  * 分页提供者

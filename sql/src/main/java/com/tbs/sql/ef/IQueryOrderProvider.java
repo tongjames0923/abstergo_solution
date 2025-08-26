@@ -3,7 +3,7 @@ package com.tbs.sql.ef;
 
 import com.tbs.common.function.SFunction;
 import com.tbs.sql.enums.QueryOrderEnum;
-import com.tbs.sql.model.SqlOrderInfo;
+import com.tbs.sql.framework.model.SqlOrderInfo;
 
 import java.util.List;
 

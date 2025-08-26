@@ -1,6 +1,5 @@
 package com.tbs.sql.logger;
 
-import com.tbs.sql.model.SqlRuntimeStatus;
 import org.jetbrains.annotations.NotNull;
 
 

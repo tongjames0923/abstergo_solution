@@ -10,20 +10,20 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import com.tbs.common.util.BeanUtil;
-import com.tbs.sql.aop.FrameworkMapperAOP;
 import com.tbs.sql.constants.OrderConstant;
 import com.tbs.sql.ef.IEntityQueryWrapper;
 import com.tbs.sql.ef.impl.SimpleEntityQueryWrapper;
-import com.tbs.sql.extractor.ISelectSqlDialect;
+import com.tbs.sql.framework.ISqlAssembler;
+import com.tbs.sql.framework.extractor.ISelectSqlDialect;
+import com.tbs.sql.framework.intercepter.SqlAutoFillIntercepter;
+import com.tbs.sql.framework.intercepter.SqlLoggingInterceptor;
 import com.tbs.sql.logger.ISqlLogger;
 import com.tbs.sql.logger.impl.NoSqlLogger;
-import com.tbs.sql.mapper.impl.EntitySelectFetchMapper;
 import com.tbs.sql.mapper.impl.FetchMapper;
 import com.tbs.sql.order.impl.AscStaticOrder;
 import com.tbs.sql.order.impl.DescStaticOrder;
 import com.tbs.sql.order.impl.OrderedModelOrderImpl;
 import com.tbs.sql.properties.SqlProperty;
-import com.tbs.sql.query.ISqlAssembler;
 import com.tbs.sql.query.impl.DefaultSqlAssembler;
 import com.tbs.sql.utils.QueryUtil;
 import com.tbs.sql.utils.TransactionUtil;
@@ -33,16 +33,11 @@ import tk.mybatis.spring.annotation.MapperScan;
 /**
  * @author abstergo
  */
-@MapperScan(basePackageClasses = EntitySelectFetchMapper.class)
+@MapperScan(basePackages = "com.tbs.sql.mapper")
 public class SqlConfig {
 
 	@Resource
 	SqlProperty sqlProperty;
-
-	@Bean
-	FrameworkMapperAOP frameworkMapperAOP() {
-		return new FrameworkMapperAOP();
-	}
 
 	@Bean
 	FetchMapper fetchMapper() {

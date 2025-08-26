@@ -9,7 +9,7 @@ import com.tbs.sql.annotation.QueryMapping;
 import com.tbs.sql.annotation.QueryOrderField;
 import com.tbs.sql.constants.OrderConstant;
 import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.model.QueryOrderedModel;
+import com.tbs.sql.order.impl.QueryOrderedModel;
 
 import lombok.Data;
 

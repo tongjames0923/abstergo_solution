@@ -1,7 +1,7 @@
 package com.tbs.sql.logger.impl;
 
 import com.tbs.sql.logger.ISqlLogger;
-import com.tbs.sql.model.SqlRuntimeStatus;
+import com.tbs.sql.logger.SqlRuntimeStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

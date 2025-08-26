@@ -5,7 +5,7 @@ import com.tbs.common.util.LambdaUtil;
 import com.tbs.sql.ef.IQueryOrderProvider;
 import com.tbs.sql.ef.IQueryQueryBuilder;
 import com.tbs.sql.enums.QueryOrderEnum;
-import com.tbs.sql.model.SqlOrderInfo;
+import com.tbs.sql.framework.model.SqlOrderInfo;
 import com.tbs.sql.utils.SqlUtils;
 
 import java.util.LinkedList;

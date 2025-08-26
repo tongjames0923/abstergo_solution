@@ -5,12 +5,12 @@ import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IFlagable;
-import com.tbs.sql.ISqlInfoComposeIntercepter;
+import com.tbs.sql.framework.intercepter.ISqlInfoComposeIntercepter;
 import com.tbs.sql.enums.QueryConnectorEnum;
 import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.model.SqlWhereCompose;
-import com.tbs.sql.model.SqlWhereInfo;
-import com.tbs.sql.model.SqlWhereNode;
+import com.tbs.sql.framework.model.SqlWhereCompose;
+import com.tbs.sql.framework.model.SqlWhereInfo;
+import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.utils.SqlUtils;
 
 import java.util.Map;

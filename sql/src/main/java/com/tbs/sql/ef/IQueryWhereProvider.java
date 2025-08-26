@@ -2,7 +2,7 @@ package com.tbs.sql.ef;
 
 import com.tbs.common.function.SFunction;
 import com.tbs.sql.enums.QueryConnectorEnum;
-import com.tbs.sql.model.SqlWhereCompose;
+import com.tbs.sql.framework.model.SqlWhereCompose;
 
 import java.util.function.Consumer;
 

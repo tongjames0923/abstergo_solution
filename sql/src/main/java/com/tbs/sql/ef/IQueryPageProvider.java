@@ -1,6 +1,6 @@
 package com.tbs.sql.ef;
 
-import com.tbs.sql.model.SqlLimitModel;
+import com.tbs.sql.framework.model.SqlLimitModel;
 
 /**
  * 分页查询提供者

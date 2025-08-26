@@ -33,15 +33,6 @@ public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K
 	protected abstract E newEntity();
 
 	/**
-	 * 获取实体对象类型
-	 *
-	 * @return
-	 */
-	protected Class<E> getEntityClass() {
-		return (Class<E>) entity.getClass();
-	}
-
-	/**
 	 * 获取实体对象模板类
 	 *
 	 * @return

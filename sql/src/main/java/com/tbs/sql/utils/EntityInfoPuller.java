@@ -2,8 +2,8 @@ package com.tbs.sql.utils;
 
 import com.tbs.common.util.StrUtil;
 import com.tbs.sql.annotation.SelectSQL;
-import com.tbs.sql.model.SqlSelectInfoModel;
-import com.tbs.sql.model.SqlSelectItemModel;
+import com.tbs.sql.framework.model.SqlSelectInfoModel;
+import com.tbs.sql.framework.model.SqlSelectItemModel;
 
 import javax.persistence.Table;
 import java.lang.reflect.Field;
