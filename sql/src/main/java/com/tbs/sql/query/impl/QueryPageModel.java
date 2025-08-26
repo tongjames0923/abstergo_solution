@@ -1,4 +1,4 @@
-package com.tbs.sql.model;
+package com.tbs.sql.query.impl;
 
 import com.tbs.sql.query.IPage;
 

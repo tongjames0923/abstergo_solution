@@ -13,7 +13,7 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.sql.constants.OrderConstant;
 import com.tbs.sql.ef.IEntityQueryWrapper;
 import com.tbs.sql.ef.impl.SimpleEntityQueryWrapper;
-import com.tbs.sql.framework.ISqlAssembler;
+import com.tbs.sql.framework.assembler.ISqlAssembler;
 import com.tbs.sql.framework.extractor.ISelectSqlDialect;
 import com.tbs.sql.framework.intercepter.SqlAutoFillIntercepter;
 import com.tbs.sql.framework.intercepter.SqlLoggingInterceptor;
@@ -24,7 +24,7 @@ import com.tbs.sql.order.impl.AscStaticOrder;
 import com.tbs.sql.order.impl.DescStaticOrder;
 import com.tbs.sql.order.impl.OrderedModelOrderImpl;
 import com.tbs.sql.properties.SqlProperty;
-import com.tbs.sql.query.impl.DefaultSqlAssembler;
+import com.tbs.sql.framework.assembler.impl.DefaultSqlAssembler;
 import com.tbs.sql.utils.QueryUtil;
 import com.tbs.sql.utils.TransactionUtil;
 

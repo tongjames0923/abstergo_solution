@@ -1,4 +1,4 @@
-package com.tbs.sql.framework;
+package com.tbs.sql.framework.assembler;
 
 /**
  * SQL组装接口

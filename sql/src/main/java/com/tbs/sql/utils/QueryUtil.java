@@ -18,7 +18,7 @@ import com.tbs.sql.annotation.QueryFields;
 import com.tbs.sql.annotation.QueryIndex;
 import com.tbs.sql.annotation.QueryOrderField;
 import com.tbs.sql.ef.IEntityQueryWrapper;
-import com.tbs.sql.framework.ISqlAssembler;
+import com.tbs.sql.framework.assembler.ISqlAssembler;
 import com.tbs.sql.framework.driver.IQueryDriver;
 import com.tbs.sql.framework.driver.ISqlContext;
 import com.tbs.sql.framework.extractor.ISelectSqlDialect;

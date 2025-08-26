@@ -1,6 +1,6 @@
-package com.tbs.sql.query.impl;
+package com.tbs.sql.framework.assembler.impl;
 
-import com.tbs.sql.framework.ISqlAssembler;
+import com.tbs.sql.framework.assembler.ISqlAssembler;
 
 /**
  * 默认的SQL组装器

@@ -4,15 +4,9 @@ import java.lang.reflect.Field;
 
 import javax.persistence.Column;
 
-import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.ReflectUtil;
-import com.tbs.common.util.SpringUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.sql.annotation.QueryMapping;
-import com.tbs.sql.framework.ISqlAssembler;
-import com.tbs.sql.framework.driver.IQueryDriver;
-import com.tbs.sql.framework.driver.ISqlContext;
-import com.tbs.sql.framework.extractor.ISelectSqlDialect;
 
 /**
  * @author tongj

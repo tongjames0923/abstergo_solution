@@ -2,8 +2,8 @@ package com.tbs.sql.properties;
 
 import com.tbs.sql.logger.ISqlLogger;
 import com.tbs.sql.logger.impl.NoSqlLogger;
-import com.tbs.sql.framework.ISqlAssembler;
-import com.tbs.sql.query.impl.DefaultSqlAssembler;
+import com.tbs.sql.framework.assembler.ISqlAssembler;
+import com.tbs.sql.framework.assembler.impl.DefaultSqlAssembler;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 

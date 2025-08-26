@@ -12,7 +12,7 @@ import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.sql.model.QueryPageModel;
+import com.tbs.sql.query.impl.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
