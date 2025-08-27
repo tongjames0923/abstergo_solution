@@ -3,6 +3,7 @@ package com.tbs.shared.pojo.entity;
 import com.tbs.shared.pojo.IBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -19,6 +20,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
+@ToString
 public class SystemUserEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
     @Setter

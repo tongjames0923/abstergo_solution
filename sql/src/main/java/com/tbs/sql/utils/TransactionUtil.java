@@ -5,6 +5,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.transaction.*;
 import org.springframework.transaction.support.DefaultTransactionDefinition;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
+
 /**
  * 事务工具类
  *
@@ -12,80 +15,100 @@ import org.springframework.transaction.support.DefaultTransactionDefinition;
  */
 public class TransactionUtil {
 
-    private final PlatformTransactionManager transactionManager;
+	private final PlatformTransactionManager transactionManager;
 
-    private static final Logger logger = LoggerFactory.getLogger(TransactionUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(TransactionUtil.class);
 
-    private static TransactionUtil INSTANCE;
+	private static volatile TransactionUtil INSTANCE;
 
-    public static TransactionUtil getInstance() {
-        return INSTANCE;
-    }
+	public static TransactionUtil getInstance() {
+		return INSTANCE;
+	}
 
-    /**
-     * 通过构造器注入事务管理器
-     */
-    public TransactionUtil(PlatformTransactionManager transactionManager) {
-        this.transactionManager = transactionManager;
-        INSTANCE = this;
-    }
+	/**
+	 * 通过构造器注入事务管理器
+	 */
+	public TransactionUtil(PlatformTransactionManager transactionManager) {
+		this.transactionManager = transactionManager;
+		INSTANCE = this;
+	}
 
-    /**
-     * 执行事务的方法，允许用户传入自定义的事务参数
-     *
-     * @param businessLogic         业务逻辑
-     * @param transactionAttributes 事务参数
-     */
-    public void executeInTransaction(TransactionDefinition transactionAttributes, Runnable businessLogic) {
-        TransactionStatus status = null;
-        try {
-            // 创建事务定义对象，这里使用用户提供的参数
-            DefaultTransactionDefinition def = new DefaultTransactionDefinition(transactionAttributes);
+	/**
+	 * 执行事务的方法，允许用户传入自定义的事务参数
+	 *
+	 * @param transactionAttributes 事务参数
+	 * @param businessLogic         业务逻辑
+	 */
+	public void executeInTransaction(TransactionDefinition transactionAttributes, Runnable businessLogic) {
+		if (transactionAttributes == null || businessLogic == null) {
+			throw new IllegalArgumentException("Transaction attributes and business logic must not be null");
+		}
 
-            // 开启事务
-            status = transactionManager.getTransaction(def);
-            // 执行业务逻辑
-            businessLogic.run();
+		TransactionStatus status = null;
+		try {
+			// 创建事务定义对象，这里使用用户提供的参数
+			DefaultTransactionDefinition def = new DefaultTransactionDefinition(transactionAttributes);
 
-            // 如果业务逻辑执行成功，提交事务
-            transactionManager.commit(status);
-        } catch (TransactionSystemException tse) { // 捕获事务系统异常
-            logger.error("TransactionSystemException occurred: {}", tse.getMessage(), tse);
-            if (status != null) {
-                transactionManager.rollback(status);
-            }
-            throw tse;
-        } catch (TransactionException te) { // 捕获事务异常
-            logger.error("TransactionException occurred: {}", te.getMessage(), te);
-            if (status != null) {
-                transactionManager.rollback(status);
-            }
-            throw te;
-        } catch (Exception e) { // 捕获其他异常
-            logger.error("General exception occurred: {}", e.getMessage(), e);
-            if (status != null) {
-                transactionManager.rollback(status);
-            }
-            throw e;
-        }
-    }
+			// 开启事务
+			status = transactionManager.getTransaction(def);
+			// 执行业务逻辑
+			businessLogic.run();
 
-    /**
-     * 执行事务的方法，允许用户传入Propagation的事务参数 propagationBehavior见{@link  TransactionDefinition#PROPAGATION_REQUIRED}等
-     *
-     * @param propagationBehavior
-     * @param businessLogic
-     */
-    public void executeTransaction(int propagationBehavior, Runnable businessLogic) {
-        executeInTransaction(new DefaultTransactionDefinition(propagationBehavior), businessLogic);
-    }
+			// 如果业务逻辑执行成功，提交事务
+			transactionManager.commit(status);
+		} catch (TransactionSystemException tse) { // 捕获事务系统异常
+			logger.error("TransactionSystemException occurred: {}", tse.getMessage(), tse);
+			rollbackTransaction(status);
+			AssertUtil.throwError(() -> tse);
+		} catch (TransactionException te) { // 捕获事务异常
+			logger.error("TransactionException occurred: {}", te.getMessage(), te);
+			rollbackTransaction(status);
+			AssertUtil.throwError(() -> te);
+		} catch (Exception e) { // 捕获其他异常
+			logger.error("General exception occurred: {}", e.getMessage(), e);
+			rollbackTransaction(status);
+			AssertUtil.throwError(() -> new FormattedRuntimeException(e, e.getMessage()));
+		}
+	}
 
-    /**
-     * 执行事务的方法，默认使用PROPAGATION_REQUIRED
-     *
-     * @param businessLogic
-     */
-    public void executeTransaction(Runnable businessLogic) {
-        executeTransaction(TransactionDefinition.PROPAGATION_REQUIRED, businessLogic);
-    }
+	/**
+	 * 执行事务的方法，允许用户传入Propagation的事务参数
+	 * propagationBehavior见{@link TransactionDefinition#PROPAGATION_REQUIRED}等
+	 *
+	 * @param propagationBehavior 传播行为
+	 * @param businessLogic       业务逻辑
+	 */
+	public void executeTransaction(int propagationBehavior, Runnable businessLogic) {
+		if (businessLogic == null) {
+			throw new IllegalArgumentException("Business logic must not be null");
+		}
+		executeInTransaction(new DefaultTransactionDefinition(propagationBehavior), businessLogic);
+	}
+
+	/**
+	 * 执行事务的方法，默认使用PROPAGATION_REQUIRED
+	 *
+	 * @param businessLogic 业务逻辑
+	 */
+	public void executeTransaction(Runnable businessLogic) {
+		if (businessLogic == null) {
+			throw new IllegalArgumentException("Business logic must not be null");
+		}
+		executeTransaction(TransactionDefinition.PROPAGATION_REQUIRED, businessLogic);
+	}
+
+	/**
+	 * 回滚事务
+	 *
+	 * @param status 事务状态
+	 */
+	private void rollbackTransaction(TransactionStatus status) {
+		if (status != null) {
+			try {
+				transactionManager.rollback(status);
+			} catch (Exception rollbackException) {
+				logger.error("Failed to rollback transaction: {}", rollbackException.getMessage(), rollbackException);
+			}
+		}
+	}
 }

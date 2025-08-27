@@ -26,7 +26,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import lombok.Getter;
 
 public class FrameworkSelectProvider<T> {
-	private static final Map<Class<?>, Object> sqlEntitySupplierMap = new HashMap<>();
+	private static final Map<Class<?>, Object> sqlEntitySupplierMap = new ConcurrentHashMap<>();
 
 	/**
 	 * 表字段元数据类，用于封装字段的元数据信息
@@ -173,7 +173,8 @@ public class FrameworkSelectProvider<T> {
 				}
 				field.setAccessible(accessible);
 			} catch (IllegalAccessException e) {
-				throw new RuntimeException("Error accessing field: " + field.getName(), e);
+				AssertUtil.throwError(
+						() -> new FormattedRuntimeException(e, "Error accessing field: " + field.getName()));
 			}
 		}
 

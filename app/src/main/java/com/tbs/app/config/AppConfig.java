@@ -43,7 +43,7 @@ public class AppConfig {
 		return new IErrorThrowEvent() {
 			@Override
 			public boolean onAssertUtilThrow(Throwable throwable) {
-				logger.debug("will throw error {}", throwable.getMessage());
+				logger.error("AssertUtil error", throwable);
 				return false;
 			}
 

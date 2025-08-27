@@ -7,6 +7,7 @@ import com.tbs.shared.pojo.IBaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -20,6 +21,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 @LogicDeleteEntity(deleteFlagValue = 0, filedName = "flag")
 public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	private static final long serialVersionUID = 1L;

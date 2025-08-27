@@ -3,6 +3,7 @@ package com.tbs.shared.pojo.entity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -15,6 +16,7 @@ import java.io.Serializable;
 @Table(name = "department_tree_path")
 @AllArgsConstructor
 @NoArgsConstructor
+@ToString
 public class SystemDepartmentTreePathEntity implements Serializable {
 	private static final long serialVersionUID = 1L;
 

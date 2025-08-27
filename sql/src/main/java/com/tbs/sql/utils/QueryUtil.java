@@ -18,6 +18,7 @@ import com.tbs.sql.annotation.QueryFields;
 import com.tbs.sql.annotation.QueryIndex;
 import com.tbs.sql.annotation.QueryOrderField;
 import com.tbs.sql.ef.IEntityQueryWrapper;
+import com.tbs.sql.enums.QueryOrderEnum;
 import com.tbs.sql.framework.assembler.ISqlAssembler;
 import com.tbs.sql.framework.driver.IQueryDriver;
 import com.tbs.sql.framework.driver.ISqlContext;
@@ -43,8 +44,11 @@ public class QueryUtil implements IStartup {
 
 	// ==================== 单例相关 ====================
 
+	/**
+	 * QueryUtil单例实例
+	 */
 	@Getter
-	private static QueryUtil instance;
+	private static volatile QueryUtil instance;
 
 	// 指定初始容量以减少扩容
 	private static final Map<Class<?>, IEntityQueryWrapper> entityWrapperCache = new ConcurrentHashMap<>(64);
@@ -63,8 +67,18 @@ public class QueryUtil implements IStartup {
 	// 指定初始容量以减少扩容
 	private final Map<Class<?>, List<Field>> fieldCache = new ConcurrentHashMap<>(128);
 
+	/**
+	 * SQL信息组合拦截器列表
+	 */
 	private List<ISqlInfoComposeIntercepter> interceptors;
 
+	/**
+	 * 构造一个新的QueryUtil实例
+	 *
+	 * @param dialect      SQL方言
+	 * @param sqlProperty  SQL属性配置
+	 * @param sqlAssembler SQL组装器
+	 */
 	public QueryUtil(ISelectSqlDialect dialect, SqlProperty sqlProperty, ISqlAssembler sqlAssembler) {
 		this.selectSqlDialect = dialect;
 		this.sqlProperty = sqlProperty;
@@ -84,8 +98,13 @@ public class QueryUtil implements IStartup {
 	 */
 	public static final <T> IEntityQueryWrapper<T> getEntityQueryWrapper(Class<T> clazz, Supplier<T> entity) {
 		return entityWrapperCache.computeIfAbsent(clazz, clazz1 -> {
-			IEntityQueryWrapper<T> entityWrapper = SpringUtil.getBean(IEntityQueryWrapper.class);
-			return entityWrapper.makeQueryable(entity.get());
+			try {
+				IEntityQueryWrapper<T> entityWrapper = SpringUtil.getBean(IEntityQueryWrapper.class);
+				return entityWrapper.makeQueryable(entity.get());
+			} catch (Exception e) {
+				log.error("Failed to create entity wrapper for class: {}", clazz1.getName(), e);
+				throw new RuntimeException(e);
+			}
 		});
 	}
 
@@ -104,6 +123,7 @@ public class QueryUtil implements IStartup {
 				try {
 					return BeanUtil.buildByEmptyArgs(clazz);
 				} catch (Exception e) {
+					log.error("Failed to instantiate class: {}", clazz.getName(), e);
 					return null;
 				}
 			});
@@ -123,6 +143,11 @@ public class QueryUtil implements IStartup {
 		return getEntityQueryWrapper((Class<T>) entity.getClass(), () -> entity);
 	}
 
+	/**
+	 * 启动方法，初始化拦截器列表
+	 *
+	 * @throws RuntimeException 当初始化失败时抛出
+	 */
 	@Override
 	public void startUp() throws RuntimeException {
 		try {
@@ -138,12 +163,28 @@ public class QueryUtil implements IStartup {
 		}
 	}
 
+	/**
+	 * 驱动SQL生成
+	 *
+	 * @param context SQL上下文
+	 * @param driver  查询驱动器
+	 * @return 生成的SQL语句
+	 */
 	public static String driveSql(ISqlContext context, IQueryDriver driver) {
 		ISelectSqlDialect dialect = com.tbs.common.util.SpringUtil.getBean(ISelectSqlDialect.class);
 		ISqlAssembler assembler = com.tbs.common.util.SpringUtil.getBean(ISqlAssembler.class);
 		return driveSql(dialect, assembler, context, driver);
 	}
 
+	/**
+	 * 驱动SQL生成
+	 *
+	 * @param dialect     SQL方言
+	 * @param assembler   SQL组装器
+	 * @param context     SQL上下文
+	 * @param queryDriver 查询驱动器
+	 * @return 生成的SQL语句
+	 */
 	public static String driveSql(ISelectSqlDialect dialect, ISqlAssembler assembler, ISqlContext context,
 			IQueryDriver queryDriver) {
 
@@ -161,6 +202,13 @@ public class QueryUtil implements IStartup {
 
 	// ==================== 内部工具方法 ====================
 
+	/**
+	 * 对SQL WHERE条件应用拦截器
+	 *
+	 * @param compose     SQL WHERE条件组合
+	 * @param entityClass 实体类
+	 * @return 处理后的SQL WHERE条件组合
+	 */
 	private SqlWhereCompose intercept(SqlWhereCompose compose, Class<?> entityClass) {
 		// 使用增强for循环替代forEach以提高性能
 		for (ISqlInfoComposeIntercepter interceptor : interceptors) {
@@ -169,6 +217,12 @@ public class QueryUtil implements IStartup {
 		return compose;
 	}
 
+	/**
+	 * 收集查询对象的字段信息
+	 *
+	 * @param queryObject 查询对象
+	 * @return 带有查询相关注解的字段列表
+	 */
 	private List<Field> collectFields(IQueryCriteria queryObject) {
 		// 使用显式缓存检查替代computeIfAbsent以提高性能
 		Class<?> clazz = queryObject.getClass();
@@ -188,11 +242,23 @@ public class QueryUtil implements IStartup {
 		return fields;
 	}
 
+	/**
+	 * 获取字段索引值
+	 *
+	 * @param field 字段
+	 * @return 字段索引值，如果未指定则返回默认值1000
+	 */
 	private int getFieldIndex(Field field) {
 		final QueryIndex annotation = field.getDeclaredAnnotation(QueryIndex.class);
 		return (annotation != null) ? annotation.index() : 1000;
 	}
 
+	/**
+	 * 收集查询对象的排序信息
+	 *
+	 * @param queryObject 查询对象
+	 * @return SQL排序信息列表
+	 */
 	public static List<SqlOrderInfo> collectOrderInfos(IQueryCriteria queryObject) {
 		List<Field> fields = instance.collectFields(queryObject);
 		// 预先分配容量
@@ -200,7 +266,12 @@ public class QueryUtil implements IStartup {
 		for (Field field : fields) {
 
 			if (AnnotatedElementUtils.hasAnnotation(field, QueryOrderField.class)) {
+				QueryOrderField queryOrderField = field.getDeclaredAnnotation(QueryOrderField.class);
+				if (queryOrderField == null) {
+					continue;
+				}
 
+				boolean originalAccessible = field.isAccessible();
 				field.setAccessible(true);
 				Object val = null;
 				try {
@@ -208,24 +279,42 @@ public class QueryUtil implements IStartup {
 				} catch (IllegalAccessException e) {
 					val = null;
 					log.warn("Error accessing field: {}", field.getName(), e);
+				} finally {
+					field.setAccessible(originalAccessible);
 				}
-				field.setAccessible(false);
 				if (val == null) {
 					log.trace("Field: {} is null skip order field", field.getName());
 					continue;
 				}
 
-				QueryOrderField queryOrderField = field.getDeclaredAnnotation(QueryOrderField.class);
 				SqlOrderInfo info = new SqlOrderInfo();
-				var order = SpringUtil.getBean(queryOrderField.order(), IQueryOrderBy.class).orderBy(queryObject, field,
-						queryOrderField.mappedName());
+				IQueryOrderBy order = null;
+				try {
+					order = SpringUtil.getBean(queryOrderField.order(), IQueryOrderBy.class);
+				} catch (Exception e) {
+					log.warn("Error getting order for field: {}", field.getName(), e);
+					continue;
+				}
 				if (order == null) {
 					log.trace("order value: {} is null skip order field ", field.getName());
 					continue;
 				}
+
+				QueryOrderEnum orderEnum = null;
+				try {
+					orderEnum = order.orderBy(queryObject, field, queryOrderField.mappedName());
+				} catch (Exception e) {
+					log.warn("Error getting order enum for field: {}", field.getName(), e);
+					continue;
+				}
+				if (orderEnum == null) {
+					log.trace("order enum value: {} is null skip order field ", field.getName());
+					continue;
+				}
+
 				info.setFiledName(
 						StrUtil.isEmpty(queryOrderField.mappedName()) ? field.getName() : queryOrderField.mappedName());
-				info.setOrder(order);
+				info.setOrder(orderEnum);
 				orderInfos.add(info);
 			}
 		}

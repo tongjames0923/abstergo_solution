@@ -1,6 +1,8 @@
 package com.tbs.sql.utils;
 
 import java.lang.reflect.Field;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Column;
 
@@ -9,16 +11,27 @@ import com.tbs.common.util.StrUtil;
 import com.tbs.sql.annotation.QueryMapping;
 
 /**
+ * SQL工具类，提供数据库相关操作的工具方法
+ *
  * @author tongj
  */
 public class SqlUtils {
 	/**
-	 * 获取字段名
+	 * 表名缓存，避免重复反射操作
+	 */
+	private static final Map<Class<?>, String> tableNames = new ConcurrentHashMap<>();
+
+	/**
+	 * 获取字段名，支持从@Column和@QueryMapping注解中获取映射名称
 	 *
-	 * @param field
-	 * @return
+	 * @param field 字段对象
+	 * @return 映射的字段名或字段本身名称
 	 */
 	public static String getFiledNameWithMapping(Field field) {
+		if (field == null) {
+			return null;
+		}
+
 		Column column = field.getDeclaredAnnotation(Column.class);
 		if (column != null && StrUtil.isNotEmpty(column.name())) {
 			return column.name();
@@ -31,29 +44,36 @@ public class SqlUtils {
 	}
 
 	/**
-	 * 是否跳过字段
+	 * 判断是否应该跳过该字段，静态、final或@Transient注解的字段会被跳过
 	 *
-	 * @param field
-	 * @return
+	 * @param field 字段对象
+	 * @return 是否应该跳过该字段
 	 */
 	public static boolean isSkipField(Field field) {
-		return ReflectUtil.isStaticOrFinal(field) || field.isAnnotationPresent(javax.persistence.Transient.class);
+		return field == null || ReflectUtil.isStaticOrFinal(field)
+				|| field.isAnnotationPresent(javax.persistence.Transient.class);
 	}
 
 	/**
-	 * 获取表名
+	 * 获取类对应的表名，从@Table注解获取，如果没有则使用类名
 	 *
-	 * @param clazz
-	 * @return
+	 * @param clazz 类对象
+	 * @return 表名
 	 */
-
 	public static String getTableName(Class<?> clazz) {
-		if (clazz.isAnnotationPresent(javax.persistence.Table.class)) {
-			javax.persistence.Table table = clazz.getAnnotation(javax.persistence.Table.class);
-			return table.name();
+		if (clazz == null) {
+			return null;
 		}
-		return clazz.getSimpleName();
-	}
 
+		return tableNames.computeIfAbsent(clazz, c -> {
+			if (c.isAnnotationPresent(javax.persistence.Table.class)) {
+				javax.persistence.Table table = c.getAnnotation(javax.persistence.Table.class);
+				if (StrUtil.isNotEmpty(table.name())) {
+					return table.name();
+				}
+			}
+			return c.getSimpleName();
+		});
+	}
 
 }

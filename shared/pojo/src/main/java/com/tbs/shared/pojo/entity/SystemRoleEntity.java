@@ -9,6 +9,7 @@ import com.tbs.shared.pojo.IBaseEntity;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 /**
  * @author tongj
@@ -19,6 +20,7 @@ import lombok.Setter;
         @Index(name = "idx_time", columnList = "create_time,update_time")})
 @Getter
 @Setter
+@ToString
 public class SystemRoleEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
 

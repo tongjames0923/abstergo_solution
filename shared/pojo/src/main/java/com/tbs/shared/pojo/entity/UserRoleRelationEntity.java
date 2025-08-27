@@ -11,6 +11,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.shared.pojo.IBaseEntity;
 
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * 用户角色关系
@@ -22,6 +23,7 @@ import lombok.Data;
 				@Index(name = "idx_time", columnList = "create_time,update_time") })
 @Entity
 @Data
+@ToString
 public class UserRoleRelationEntity implements IBaseEntity<Long> {
 	private static final long serialVersionUID = 1L;
 	@javax.persistence.Id
