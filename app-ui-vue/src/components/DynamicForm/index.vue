@@ -5,7 +5,7 @@
       <slot name="header">
         <span class="card-title">{{ title }}</span>
         <el-button
-          v-if="config.expandable !== false"
+          v-if="config && config.expandable !== false"
           style="float: right; padding: 3px 0"
           type="text"
           @click="toggleExpand"
@@ -20,7 +20,7 @@
     <el-form
       v-show="isExpanded"
       ref="form"
-      :label-width="config.labelWidth || '100px'"
+      :label-width="(config && config.labelWidth) || '100px'"
       :model="formData"
       class="dynamic-form"
       v-bind="formProps"
@@ -29,86 +29,88 @@
       <slot name="before-form"></slot>
 
       <!-- 默认布局：根据配置自动生成 -->
-      <template v-if="!$slots.default && config.fields">
+      <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
         <el-row :gutter="config.gutter || 20">
           <el-col
             v-for="field in config.fields"
-            :key="field.prop"
-            :span="field.span || config.span || 8"
+            :key="field.prop || field.label || field.type"
+            :span="(field && field.span) || (config && config.span) || 8"
           >
             <slot
               :field="field"
-              :name="`form-item-${field.prop}`"
-              :set-value="val => setFieldValue(field.prop, val)"
-              :value="formData[field.prop]"
+              :name="`form-item-${field && field.prop}`"
+              :set-value="val => setFieldValue((field && field.prop) || '', val)"
+              :value="formData[(field && field.prop) || '']"
             >
-              <el-form-item :label="field.label" :prop="field.prop">
+              <el-form-item
+                :label="(field && field.label) || ''"
+                :prop="(field && field.prop) || ''"
+              >
                 <!-- 输入框 -->
                 <el-input
-                  v-if="field.type === 'input'"
+                  v-if="field && field.type === 'input'"
                   :clearable="field.clearable !== false"
-                  :placeholder="field.placeholder"
-                  :value="formData[field.prop]"
+                  :placeholder="(field && field.placeholder) || ''"
+                  :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
-                  @input="val => setFieldValue(field.prop, val)"
+                  @input="val => setFieldValue((field && field.prop) || '', val)"
                 >
-                  <template v-if="field.prefixIcon" #prefix>
+                  <template v-if="field && field.prefixIcon" #prefix>
                     <i :class="field.prefixIcon"></i>
                   </template>
                 </el-input>
 
                 <!-- 选择器 -->
                 <el-select
-                  v-else-if="field.type === 'select'"
+                  v-else-if="field && field.type === 'select'"
                   :clearable="field.clearable !== false"
-                  :placeholder="field.placeholder"
-                  :value="formData[field.prop]"
+                  :placeholder="(field && field.placeholder) || ''"
+                  :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
-                  @change="val => setFieldValue(field.prop, val)"
+                  @change="val => setFieldValue((field && field.prop) || '', val)"
                 >
                   <el-option
-                    v-for="option in (field.options || [])"
-                    :key="option.value"
-                    :label="option.label"
-                    :value="option.value"
+                    v-for="option in ((field && field.options) || [])"
+                    :key="(option && option.value) || ''"
+                    :label="(option && option.label) || ''"
+                    :value="(option && option.value)"
                   />
                 </el-select>
 
                 <!-- 日期范围 -->
                 <el-date-picker
-                  v-else-if="field.type === 'date-range'"
-                  :end-placeholder="field.endPlaceholder || '结束日期'"
-                  :format="field.format || 'yyyy-MM-dd'"
-                  :range-separator="field.rangeSeparator || '至'"
-                  :start-placeholder="field.startPlaceholder || '开始日期'"
-                  :value="formData[field.prop]"
-                  :value-format="field.valueFormat || 'yyyy-MM-dd'"
+                  v-else-if="field && field.type === 'date-range'"
+                  :end-placeholder="(field && field.endPlaceholder) || '结束日期'"
+                  :format="(field && field.format) || 'yyyy-MM-dd'"
+                  :range-separator="(field && field.rangeSeparator) || '至'"
+                  :start-placeholder="(field && field.startPlaceholder) || '开始日期'"
+                  :value="formData[(field && field.prop) || '']"
+                  :value-format="(field && field.valueFormat) || 'yyyy-MM-dd'"
                   class="date-range-picker"
                   type="daterange"
                   v-bind="field.props"
-                  @change="val => handleDateRangeChange(field.prop, val)"
-                  @input="val => handleDateRangeChange(field.prop, val)"
+                  @change="val => handleDateRangeChange((field && field.prop) || '', val)"
+                  @input="val => handleDateRangeChange((field && field.prop) || '', val)"
                 />
-
 
                 <!-- 动态选项 -->
                 <DynamicOptions
-                  v-else-if="field.type === 'dynamic-options'"
-                  :api-url="field.apiUrl"
-                  :placeholder="field.placeholder"
-                  :value="formData[field.prop]"
+                  v-else-if="field && field.type === 'dynamic-options'"
+                  :api-url="(field && field.apiUrl) || ''"
+                  :placeholder="(field && field.placeholder) || ''"
+                  :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
-                  @change="val => setFieldValue(field.prop, val)"
+                  @change="val => setFieldValue((field && field.prop) || '', val)"
                 />
 
                 <!-- 其他自定义组件 -->
                 <component
-                  :is="customComponents[field.type]"
-                  v-else-if="field.type && customComponents[field.type]"
-                  :value="formData[field.prop]"
+                  :is="customComponents[(field && field.type) || '']"
+                  v-else-if="field && field.type && customComponents[(field && field.type) || '']"
+                  :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
-                  @change="val => setFieldValue(field.prop, val)"
-                  @input="val => setFieldValue(field.prop, val)"
+                  @change="val => setFieldValue((field && field.prop) || '', val)"
+                  @input="val => setFieldValue((field && field.prop) || '', val)"
                 />
               </el-form-item>
             </slot>
@@ -129,7 +131,13 @@
 
       <!-- 操作按钮 -->
       <div class="form-actions">
-        <slot :form="form" :form-data="formData" :reset="resetForm" :submit="submitForm" name="actions">
+        <slot
+          :form="form"
+          :form-data="formData"
+          :reset="resetForm"
+          :submit="submitForm"
+          name="actions"
+        >
           <el-button icon="el-icon-search" type="primary" @click="submitForm">查询</el-button>
           <el-button icon="el-icon-refresh" @click="resetForm">重置</el-button>
         </slot>
@@ -175,7 +183,7 @@ export default {
   },
   data() {
     return {
-      isExpanded: this.config.expanded !== false,
+      isExpanded: (this.config && this.config.expanded) !== false,
       formData: this.initializeFormData(this.value || {})
     }
   },
@@ -190,6 +198,14 @@ export default {
         this.formData = this.initializeFormData(newVal || {})
       },
       deep: true
+    },
+    config: {
+      handler(newVal) {
+        // 当配置发生变化时，确保表单数据仍然有效
+        this.isExpanded = (newVal && newVal.expanded) !== false
+        this.formData = this.initializeFormData(this.formData)
+      },
+      deep: true
     }
   },
   methods: {
@@ -199,19 +215,23 @@ export default {
       const initialized = {}
 
       // 复制传入数据的所有属性
-      Object.keys(data || {}).forEach(key => {
-        initialized[key] = data[key]
-      })
+      if (data && typeof data === 'object') {
+        Object.keys(data).forEach(key => {
+          initialized[key] = data[key]
+        })
+      }
 
-      // 确保所有日期范围字段都是有效的数组
-      if (this.config.fields) {
+      // 确保所有字段都有默认值
+      if (this.config && this.config.fields && Array.isArray(this.config.fields)) {
         this.config.fields.forEach(field => {
-          // if (field.type === 'date-range') {
-          //   if (!initialized[field.prop] || !Array.isArray(initialized[field.prop])) {
-          //     // 使用Vue.set确保响应性
-          //     this.$set(initialized, field.prop, [])
-          //   }
-          // }
+          if (field && field.prop && !(field.prop in initialized)) {
+            // 为不同类型的字段设置合适的默认值
+            if (field.type === 'date-range') {
+              initialized[field.prop] = []
+            } else {
+              initialized[field.prop] = undefined
+            }
+          }
         })
       }
 
@@ -220,14 +240,15 @@ export default {
 
     // 处理日期范围变更
     handleDateRangeChange(prop, val) {
-      console.log('handleDateRangeChange', prop, val)
       // 当用户清空选择器时，将null值转换为空数组
       this.setFieldValue(prop, val || [])
 
       // 如果有自定义的变更处理函数，则调用它
-      const field = this.config.fields?.find(f => f.prop === prop)
-      if (field?.onChange) {
-        field.onChange(val, this.formData)
+      if (this.config && this.config.fields && Array.isArray(this.config.fields)) {
+        const field = this.config.fields.find(f => f && f.prop === prop)
+        if (field && field.onChange) {
+          field.onChange(val, this.formData)
+        }
       }
     },
 
@@ -236,40 +257,9 @@ export default {
     },
 
     setFieldValue(prop, value) {
-      console.log('setFieldValue', prop, value)
       this.$set(this.formData, prop, value)
       // 立即触发input事件，通知父组件数据变化
       this.$emit('input', this.formData)
-    },
-
-    getComponentByType(type) {
-      const componentMap = {
-        input: 'el-input',
-        select: 'el-select',
-        'date-range': 'el-date-picker'
-      }
-      return componentMap[type] || 'el-input'
-    },
-
-    getFieldProps(field) {
-      const defaultProps = {
-        clearable: field.clearable !== false,
-        placeholder: field.placeholder
-      }
-
-      if (field.type === 'date-range') {
-        return {
-          ...defaultProps,
-          ...field.props,
-          rangeSeparator: field.rangeSeparator || '至',
-          startPlaceholder: field.startPlaceholder || '开始日期',
-          endPlaceholder: field.endPlaceholder || '结束日期',
-          valueFormat: field.valueFormat || 'yyyy-MM-dd',
-          format: field.format || 'yyyy-MM-dd'
-        }
-      }
-
-      return {...defaultProps, ...field.props}
     },
 
     resetForm() {

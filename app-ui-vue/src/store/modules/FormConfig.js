@@ -1,3 +1,5 @@
+import {getSearchFormConfig} from "@/api/view";
+
 // 表单配置状态管理模块
 const state = {
   // 所有表单配置
@@ -64,60 +66,6 @@ const state = {
       labelWidth: '80px'
     },
 
-    userSearchForm: {
-      expandable: true,
-      expanded: true,
-      gutter: 20,
-      labelWidth: '100px',
-      fields: [
-        {
-          prop: 'idEquals',
-          label: '用户ID',
-          type: 'input',
-          placeholder: '请输入用户ID',
-          prefixIcon: 'el-icon-search'
-        },
-        {
-          prop: 'userNameEquals',
-          label: '用户名',
-          type: 'input',
-          placeholder: '请输入用户名',
-          prefixIcon: 'el-icon-user'
-        },
-        {
-          prop: 'nickNameLike',
-          label: '昵称',
-          type: 'input',
-          placeholder: '请输入昵称',
-          prefixIcon: 'el-icon-star-off'
-        },
-        {
-          prop: 'flagEquals',
-          label: '用户状态',
-          type: 'dynamic-options',
-          apiUrl: '/private/user/statusOptions',
-          placeholder: '请选择用户状态'
-        },
-        {
-          prop: 'createTimeRange',
-          label: '创建时间',
-          type: 'date-range',
-          valueFormat: 'yyyy-MM-dd HH:mm:ss',
-          format: 'yyyy-MM-dd',
-          startPlaceholder: '开始日期',
-          endPlaceholder: '结束日期'
-        },
-        {
-          prop: 'updateTimeRange',
-          label: '更新时间',
-          type: 'date-range',
-          valueFormat: 'yyyy-MM-dd HH:mm:ss',
-          format: 'yyyy-MM-dd',
-          startPlaceholder: '开始日期',
-          endPlaceholder: '结束日期'
-        }
-      ]
-    }
   }
 }
 
@@ -147,6 +95,26 @@ const actions = {
   // 更新表单配置
   updateFormConfig({commit}, {configName, config}) {
     commit('UPDATE_FORM_CONFIG', {configName, config})
+  },
+
+  // 从后端获取表单配置
+  async fetchFormConfig({state, commit}, configName) {
+    // 如果store中已存在该配置，直接返回
+    if (state.formConfigs[configName]) {
+      return state.formConfigs[configName]
+    }
+
+    // 如果store中不存在，则调用后端接口获取
+    try {
+      const response = await getSearchFormConfig(configName)
+      var obj = response.data
+      // 将获取到的配置存入store
+      commit('SET_FORM_CONFIG', {configName, config: obj})
+      return obj
+    } catch (error) {
+      console.error('获取表单配置失败:', error)
+      throw error
+    }
   }
 }
 

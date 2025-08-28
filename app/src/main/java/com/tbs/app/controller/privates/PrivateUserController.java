@@ -21,7 +21,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.view.vo.OptionValue;
+import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
 import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.uitl.AuthUtil;

@@ -11,7 +11,7 @@
     <DynamicForm
       ref="searchForm"
       v-model="searchForm"
-      :config="searchConfig"
+      :config.sync="searchConfig"
       title="查询条件"
       @reset="handleReset"
       @submit="handleSearch"
@@ -344,6 +344,7 @@ export default {
       viewMode: 'card', // 'card' 或 'table'
       loading: false,
       userList: [],
+      searchConfig: null,
       total: 0,
       currentPage: 1,
       pageSize: 10,
@@ -402,10 +403,7 @@ export default {
     dialogTitle() {
       return this.dialogMode === 'add' ? '新增用户' : '编辑用户';
     },
-    // 从store中获取查询表单配置
-    searchConfig() {
-      return this.$store.getters['formConfigs/formConfig']('userSearchForm')
-    },
+
     loadingCount() {
       // 根据当前页数据量来确定加载占位符数量，避免创建多余元素
       // 如果当前页数据量小于每页大小，使用实际数据量；否则使用每页大小
@@ -413,6 +411,10 @@ export default {
     }
 
 
+  },
+  async created() {
+    // 页面创建时加载表单配置
+    await this.loadFormConfig();
   },
   mounted() {
     this.fetchUserData()
@@ -428,6 +430,15 @@ export default {
           this.$refs.userTable.refresh();
         }
       });
+    },
+
+    async loadFormConfig() {
+      try {
+        console.log("fetch form config...")
+        this.searchConfig = await this.$store.dispatch('formConfigs/fetchFormConfig', 'userSearchForm')
+      } catch (error) {
+        console.error('加载表单配置失败:', error)
+      }
     },
 
     /**

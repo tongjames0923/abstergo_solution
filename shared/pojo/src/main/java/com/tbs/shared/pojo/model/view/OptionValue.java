@@ -1,10 +1,10 @@
-package com.tbs.view.vo;
+package com.tbs.shared.pojo.model.view;
+
+import java.io.Serializable;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.io.Serializable;
 
 /**
  * 下拉框选项值
@@ -15,12 +15,13 @@ import java.io.Serializable;
 @AllArgsConstructor
 @NoArgsConstructor
 public class OptionValue<V> implements Serializable {
-    /**
-     * 值
-     */
-    private V value;
-    /**
-     * 标签
-     */
-    private String label;
+	private static final long serialVersionUID = 1L;
+	/**
+	 * 值
+	 */
+	private V value;
+	/**
+	 * 标签
+	 */
+	private String label;
 }
