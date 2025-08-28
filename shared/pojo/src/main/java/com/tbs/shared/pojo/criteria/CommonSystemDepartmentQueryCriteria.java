@@ -5,8 +5,12 @@ import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
 import com.tbs.sql.enums.QueryContrastEnum;
+
 import lombok.Data;
 
+/**
+ * 通用系统部门查询条件 用于构建系统部门表(SystemDepartmentEntity)的查询条件
+ */
 @Data
 public class CommonSystemDepartmentQueryCriteria extends ClassBaseQueryCriteria<SystemDepartmentEntity> {
 

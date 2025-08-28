@@ -1,7 +1,7 @@
 package com.tbs.shared.pojo.model;
 
 import com.tbs.sql.framework.model.SqlSelectInfoModel;
-import com.tbs.sql.query.impl.AbstractResourceBaseQueryCriteria;
+import com.tbs.sql.query.AbstractResourceBaseQueryCriteria;
 import lombok.Getter;
 import lombok.Setter;
 
