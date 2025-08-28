@@ -1,14 +1,16 @@
 package com.tbs.sql.framework.driver.impl;
 
-import org.jetbrains.annotations.NotNull;
-
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.function.SSupplier;
 import com.tbs.sql.framework.driver.AbstractSqlContext;
-
 import lombok.Getter;
 import lombok.Setter;
+import org.jetbrains.annotations.NotNull;
 
+/**
+ *
+ * @author abstergo
+ */
 public class ImportedSqlContext extends AbstractSqlContext {
 	@Getter
 	@Setter

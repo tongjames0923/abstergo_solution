@@ -1,5 +1,6 @@
 package com.tbs.sql.ef.impl;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.sql.ef.IEntityQueryWrapper;
 import com.tbs.sql.ef.IQueryQueryBuilder;
 
@@ -11,18 +12,14 @@ public class SimpleEntityQueryWrapper<T> implements IEntityQueryWrapper<T> {
 
     @Override
     public IEntityQueryWrapper<T> makeQueryable(T e) {
-        if (e == null) {
-            throw new RuntimeException("可查询化失败，请传入对象");
-        }
+        AssertUtil.notNull(e, "可查询化失败，请传入对象");
         object = e;
         return this;
     }
 
     @Override
     public IQueryQueryBuilder<T> query() {
-        if (object == null) {
-            throw new RuntimeException("请先调用makeQueryable方法");
-        }
+        AssertUtil.notNull(object, "请先调用makeQueryable方法");
         return new EntityQueryBuilder<T>(object);
     }
 }

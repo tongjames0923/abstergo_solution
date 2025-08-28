@@ -1,12 +1,6 @@
 package com.tbs.sql.mapper.impl;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import javax.annotation.Resource;
-
+import cn.hutool.core.bean.copier.CopyOptions;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.sql.framework.driver.IQueryDriver;
@@ -14,7 +8,10 @@ import com.tbs.sql.framework.driver.ISqlContext;
 import com.tbs.sql.mapper.IRawSqlSelectMapper;
 import com.tbs.sql.utils.QueryUtil;
 
-import cn.hutool.core.bean.copier.CopyOptions;
+import javax.annotation.Resource;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * @author abstergo
@@ -35,9 +32,10 @@ public class FetchMapper {
 	 * @return *
 	 */
 	public <T> List<T> fetch(ISqlContext context, IQueryDriver driver, Class<T> tClass) {
-		List<Map<String, Object>> val = mapper.fetch(QueryUtil.driveSql(context, driver), context.getSqlParams());
+        List<Map<String, Object>> val =
+            mapper.fetch(QueryUtil.getInstance().driveSql(context, driver), context.getSqlParams());
 		if (CollUtil.isNotEmpty(val)) {
-			List<T> list = new LinkedList<>();
+            List<T> list = new ArrayList<>(val.size());
 			for (Map<String, Object> map : val) {
 				list.add(BeanUtil.<T>mapToBean(map, tClass, true, CopyOptions.create()));
 			}
@@ -57,7 +55,7 @@ public class FetchMapper {
 	 */
 
 	public <T> Long count(ISqlContext context, IQueryDriver driver) {
-		return mapper.count(QueryUtil.driveSql(context, driver), context.getSqlParams());
+        return mapper.count(QueryUtil.getInstance().driveSql(context, driver), context.getSqlParams());
 	}
 
 }

@@ -1,5 +1,6 @@
 package com.tbs.sql.ef.impl;
 
+import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
 import com.tbs.common.util.LambdaUtil;
 import com.tbs.sql.annotation.SecretField;
@@ -13,7 +14,6 @@ import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.utils.SqlUtils;
 
 import java.lang.reflect.Field;
-import java.util.function.Consumer;
 
 /**
  * @author tongj
@@ -48,7 +48,8 @@ public class EntityQueryWhereProvider<T> implements IQueryWhereProvider<T> {
     }
 
     @Override
-    public IQueryWhereProvider<T> include(Consumer<IQueryWhereProvider<T>> newCondition, QueryConnectorEnum connector) {
+    public IQueryWhereProvider<T> include(SConsumer<IQueryWhereProvider<T>> newCondition,
+        QueryConnectorEnum connector) {
         EntityQueryWhereProvider<T> newConditionProvider = new EntityQueryWhereProvider<>(queryBuilder);
         newCondition.accept(newConditionProvider);
         SqlWhereNode<SqlWhereCompose> nextNode = new SqlWhereNode<>(connector, newConditionProvider.getCompose());

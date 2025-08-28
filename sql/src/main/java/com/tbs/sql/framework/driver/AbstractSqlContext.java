@@ -14,12 +14,11 @@ public abstract class AbstractSqlContext implements ISqlContext {
 
 	private Object sqlEntity;
 
+    private Class<?> sqlEntityClass;
+
 	@Override
 	public Class<?> getSqlEntityClass() {
-		if (sqlEntity != null) {
-			return sqlEntity.getClass();
-		}
-		return null;
+        return sqlEntityClass;
 	}
 
 	/**
@@ -34,6 +33,7 @@ public abstract class AbstractSqlContext implements ISqlContext {
 	 */
 	protected void clearEntity() {
 		sqlEntity = null;
+        sqlEntityClass = null;
 	}
 
 	@Override
@@ -50,6 +50,7 @@ public abstract class AbstractSqlContext implements ISqlContext {
 	public void destroy() {
 		sqlParams.clear();
 		sqlEntity = null;
+        sqlEntityClass = null;
 		valid = false;
 	}
 
@@ -58,6 +59,7 @@ public abstract class AbstractSqlContext implements ISqlContext {
 		valid = true;
 		sqlParams.clear();
 		sqlEntity = provideSqlEntity();
+        sqlEntityClass = sqlEntity.getClass();
 	}
 
 	@Override
