@@ -23,6 +23,7 @@
         <module>rabbitmq-mod</module>
         <module>shared</module>
         <module>shared/interfaces</module>
+        <module>api-route</module>
     </modules>
     <groupId>com.tbs</groupId>
     <artifactId>solution</artifactId>
