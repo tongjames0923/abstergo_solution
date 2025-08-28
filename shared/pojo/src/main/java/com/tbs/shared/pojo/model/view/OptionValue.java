@@ -7,7 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 下拉框选项值
+ * 下拉框选项值 用于表示下拉选择框中的选项，包含值和标签两个属性
  *
  * @author tongj
  */
@@ -17,11 +17,11 @@ import lombok.NoArgsConstructor;
 public class OptionValue<V> implements Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
-	 * 值
+	 * 选项的值
 	 */
 	private V value;
 	/**
-	 * 标签
+	 * 选项的标签（显示文本）
 	 */
 	private String label;
 }
