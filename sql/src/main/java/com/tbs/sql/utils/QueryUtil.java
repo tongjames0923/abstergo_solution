@@ -1,7 +1,14 @@
 // package tbs.framework.sql.utils;
 package com.tbs.sql.utils;
 
-import cn.hutool.extra.spring.SpringUtil;
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import org.springframework.core.annotation.AnnotatedElementUtils;
+
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.BeanUtil;
@@ -22,15 +29,10 @@ import com.tbs.sql.framework.model.SqlWhereCompose;
 import com.tbs.sql.order.IQueryOrderBy;
 import com.tbs.sql.properties.SqlProperty;
 import com.tbs.sql.query.IQueryCriteria;
+
+import cn.hutool.extra.spring.SpringUtil;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * 查询工具类
@@ -49,7 +51,7 @@ public class QueryUtil implements IStartup {
 	private static volatile QueryUtil instance;
 
 	// 指定初始容量以减少扩容
-    private static final Map<Class<?>, IEntityQueryWrapper> entityWrapperCache = new ConcurrentHashMap<>(32);
+	private static final Map<Class<?>, IEntityQueryWrapper> entityWrapperCache = new ConcurrentHashMap<>(32);
 
 	// ==================== 核心组件 ====================
 
@@ -63,7 +65,7 @@ public class QueryUtil implements IStartup {
 	private final SqlProperty sqlProperty;
 	private ISqlAssembler sqlAssembler;
 	// 指定初始容量以减少扩容
-    private final Map<Class<?>, List<Field>> fieldCache = new ConcurrentHashMap<>(32);
+	private final Map<Class<?>, List<Field>> fieldCache = new ConcurrentHashMap<>(32);
 
 	/**
 	 * SQL信息组合拦截器列表
@@ -161,17 +163,17 @@ public class QueryUtil implements IStartup {
 		}
 	}
 
-    /**
-     * 驱动SQL生成
-     *
-     * @param context SQL上下文
-     * @param driver  查询驱动器
-     * @return 生成的SQL语句
-     */
-    public String driveSql(ISqlContext context, IQueryDriver driver) {
-        AssertUtil.notNull(driver, "查询驱动器不可为空");
-        ISelectSqlDialect dialect = instance.selectSqlDialect;
-        ISqlAssembler assembler = instance.sqlAssembler;
+	/**
+	 * 驱动SQL生成
+	 *
+	 * @param context SQL上下文
+	 * @param driver  查询驱动器
+	 * @return 生成的SQL语句
+	 */
+	public String driveSql(ISqlContext context, IQueryDriver driver) {
+		AssertUtil.notNull(driver, "查询驱动器不可为空");
+		ISelectSqlDialect dialect = instance.selectSqlDialect;
+		ISqlAssembler assembler = instance.sqlAssembler;
 		return driveSql(dialect, assembler, context, driver);
 	}
 
@@ -184,7 +186,7 @@ public class QueryUtil implements IStartup {
 	 * @param queryDriver 查询驱动器
 	 * @return 生成的SQL语句
 	 */
-    public String driveSql(ISelectSqlDialect dialect, ISqlAssembler assembler, ISqlContext context,
+	public String driveSql(ISelectSqlDialect dialect, ISqlAssembler assembler, ISqlContext context,
 			IQueryDriver queryDriver) {
 
 		AssertUtil.notNull(queryDriver, "查询驱动器不可为空");
@@ -199,7 +201,7 @@ public class QueryUtil implements IStartup {
 		return assembler.assembleSelectSql(selectSql, whereSql, orderSql, groupSql, limitSql);
 	}
 
-    // ==================== 内部工具方法 ====================
+	// ==================== 内部工具方法 ====================
 
 	/**
 	 * 对SQL WHERE条件应用拦截器
