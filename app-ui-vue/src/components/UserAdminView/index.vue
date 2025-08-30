@@ -8,10 +8,10 @@
     </div>
 
     <!-- 查询条件 -->
-    <DynamicForm
+    <DynamicFormWithApi
       ref="searchForm"
       v-model="searchForm"
-      :config.sync="searchConfig"
+      config-name="userSearchForm"
       title="查询条件"
       @reset="handleReset"
       @submit="handleSearch"
@@ -313,7 +313,7 @@ import DynamicTable from "@/components/DynamicTable/index.vue"
 import DynamicOptions from "@/components/DynamicOptions/index.vue";
 import UserAddView from "@/components/UserAdminView/UserAddView.vue";
 import UserEditView from "@/components/UserAdminView/UserEditView.vue";
-import DynamicForm from "@/components/DynamicForm/index.vue";
+import DynamicFormWithApi from "@/components/DynamicForm/DynamicFormWithApi.vue";
 import UserRoleAdminView from "@/components/UserAdminView/UserRoleAdminView.vue";
 import {activateUser, adminQueryUser, disableUser, saveUser} from "@/api/admin_user";
 
@@ -325,7 +325,7 @@ export default {
     DynamicOptions,
     UserAddView,
     UserEditView,
-    DynamicForm,
+    DynamicFormWithApi,
     UserRoleAdminView
   },
   data() {
@@ -412,10 +412,6 @@ export default {
 
 
   },
-  async created() {
-    // 页面创建时加载表单配置
-    await this.loadFormConfig();
-  },
   mounted() {
     this.fetchUserData()
   },
@@ -430,15 +426,6 @@ export default {
           this.$refs.userTable.refresh();
         }
       });
-    },
-
-    async loadFormConfig() {
-      try {
-        console.log("fetch form config...")
-        this.searchConfig = await this.$store.dispatch('formConfigs/fetchFormConfig', 'userSearchForm')
-      } catch (error) {
-        console.error('加载表单配置失败:', error)
-      }
     },
 
     /**
