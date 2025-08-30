@@ -22,6 +22,12 @@
       <div slot="header" class="clearfix card-header">
         <span class="card-title">用户列表</span>
         <div class="table-header-actions">
+          <el-dropdown @command="handleColumnConfig">
+            <el-button icon="el-icon-setting" circle size="mini" title="列设置"></el-button>
+            <el-dropdown-menu slot="dropdown">
+              <el-dropdown-item command="columnConfig">自定义列</el-dropdown-item>
+            </el-dropdown-menu>
+          </el-dropdown>
           <el-button
             :icon="viewMode === 'card' ? 'el-icon-tickets' : 'el-icon-menu'"
             :title="viewMode === 'card' ? '切换到表格视图' : '切换到卡片视图'"
@@ -152,7 +158,7 @@
       <DynamicTable
         v-else
         ref="userTable"
-        :columns="tableColumns"
+        :columns="displayTableColumns"
         :data-fetcher="fetchUserDataForTable"
         :actions="actions"
         :auto-load="true"
@@ -304,6 +310,58 @@
         :user-id="currentUserId"
       />
     </el-dialog>
+
+    <!-- 列配置弹窗 -->
+    <el-dialog
+      title="列配置"
+      :visible.sync="columnConfigDialogVisible"
+      width="600px"
+      @close="handleColumnConfigDialogClose"
+      class="column-config-dialog"
+    >
+      <el-alert
+        title="通过上下按钮调整顺序，勾选控制显示/隐藏"
+        type="info"
+        show-icon
+        :closable="false"
+        style="margin-bottom: 15px"
+      ></el-alert>
+
+      <el-table
+        :data="columnConfig"
+        class="column-config-table"
+        row-key="prop"
+      >
+        <el-table-column label="列名称" prop="label" width="150"></el-table-column>
+        <el-table-column label="显示/隐藏" width="100">
+          <template slot-scope="scope">
+            <el-checkbox v-model="scope.row.visible"></el-checkbox>
+          </template>
+        </el-table-column>
+        <el-table-column label="排序" width="120">
+          <template slot-scope="scope">
+            <el-button
+              icon="el-icon-arrow-up"
+              size="mini"
+              @click="moveUp(scope.$index)"
+              :disabled="scope.$index === 0">
+            </el-button>
+            <el-button
+              icon="el-icon-arrow-down"
+              size="mini"
+              @click="moveDown(scope.$index)"
+              :disabled="scope.$index === columnConfig.length - 1">
+            </el-button>
+          </template>
+        </el-table-column>
+      </el-table>
+
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="resetColumnConfig">重置默认</el-button>
+        <el-button @click="columnConfigDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="saveColumnConfig">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -339,6 +397,18 @@ export default {
         callback()
       }
     }
+
+    // 默认的表格列配置
+    const defaultTableColumns = [
+      {prop: 'id', label: 'ID', width: 80, visible: true},
+      {prop: 'avatar', label: '头像', width: 120, slot: 'avatar', visible: true},
+      {prop: 'userName', label: '用户名', width: 180, visible: true},
+      {prop: 'nickName', label: '昵称', width: 180, visible: true},
+      {prop: 'remark', label: '备注', width: 250, visible: true},
+      {prop: 'flag', label: '状态', width: 150, slot: 'status', visible: true},
+      {prop: 'createTime', label: '创建时间', width: 180, sortable: 'custom', visible: true},
+      {prop: 'updateTime', label: '更新时间', width: 180, sortable: 'custom', visible: true}
+    ];
 
     return {
       viewMode: 'card', // 'card' 或 'table'
@@ -384,16 +454,12 @@ export default {
         updateTimeOrder: ''
       },
       columns: 4,
-      tableColumns: [
-        {prop: 'id', label: 'ID', width: 80},
-        {prop: 'avatar', label: '头像', width: 120, slot: 'avatar'},
-        {prop: 'userName', label: '用户名', width: 180},
-        {prop: 'nickName', label: '昵称', width: 180},
-        {prop: 'remark', label: '备注', width: 250},
-        {prop: 'flag', label: '状态', width: 150, slot: 'status',},
-        {prop: 'createTime', label: '创建时间', width: 180, sortable: 'custom'},
-        {prop: 'updateTime', label: '更新时间', width: 180, sortable: 'custom'}
-      ],
+      // 默认表格列配置
+      defaultTableColumns,
+      // 当前用户自定义的列配置
+      columnConfig: this.loadColumnConfig() || [...defaultTableColumns],
+      columnConfigDialogVisible: false,
+      tableColumns: defaultTableColumns,
       actions: true,
       // 当前排序参数
       sortParams: {}
@@ -408,9 +474,12 @@ export default {
       // 根据当前页数据量来确定加载占位符数量，避免创建多余元素
       // 如果当前页数据量小于每页大小，使用实际数据量；否则使用每页大小
       return 0
+    },
+
+    // 计算显示的表格列（仅包含可见列）
+    displayTableColumns() {
+      return this.columnConfig.filter(column => column.visible !== false);
     }
-
-
   },
   mounted() {
     this.fetchUserData()
@@ -426,6 +495,92 @@ export default {
           this.$refs.userTable.refresh();
         }
       });
+    },
+
+    /**
+     * 处理列配置命令
+     */
+    handleColumnConfig(command) {
+      if (command === 'columnConfig') {
+        this.columnConfigDialogVisible = true;
+      }
+    },
+
+    /**
+     * 向上移动列
+     */
+    moveUp(index) {
+      if (index > 0) {
+        const temp = this.columnConfig[index];
+        this.$set(this.columnConfig, index, this.columnConfig[index - 1]);
+        this.$set(this.columnConfig, index - 1, temp);
+      }
+    },
+
+    /**
+     * 向下移动列
+     */
+    moveDown(index) {
+      if (index < this.columnConfig.length - 1) {
+        const temp = this.columnConfig[index];
+        this.$set(this.columnConfig, index, this.columnConfig[index + 1]);
+        this.$set(this.columnConfig, index + 1, temp);
+      }
+    },
+
+    /**
+     * 保存列配置
+     */
+    saveColumnConfig() {
+      // 保存到localStorage
+      localStorage.setItem('userTableColumnsConfig', JSON.stringify(this.columnConfig));
+      this.columnConfigDialogVisible = false;
+      // 如果当前是表格视图，刷新表格
+      if (this.viewMode === 'table' && this.$refs.userTable) {
+        this.$refs.userTable.refresh();
+      }
+    },
+
+    /**
+     * 重置列配置为默认
+     */
+    resetColumnConfig() {
+      this.columnConfig = [...this.defaultTableColumns];
+    },
+
+    /**
+     * 加载列配置
+     */
+    loadColumnConfig() {
+      const savedConfig = localStorage.getItem('userTableColumnsConfig');
+      if (savedConfig) {
+        try {
+          const config = JSON.parse(savedConfig);
+          // 确保所有默认列都在配置中（处理新增列的情况）
+          const mergedConfig = [...this.defaultTableColumns];
+          config.forEach(savedColumn => {
+            const index = mergedConfig.findIndex(c => c.prop === savedColumn.prop);
+            if (index !== -1) {
+              mergedConfig[index] = {...mergedConfig[index], ...savedColumn};
+            } else {
+              mergedConfig.push(savedColumn);
+            }
+          });
+          return mergedConfig;
+        } catch (e) {
+          console.error('解析列配置失败', e);
+          return null;
+        }
+      }
+      return null;
+    },
+
+    /**
+     * 处理列配置弹窗关闭
+     */
+    handleColumnConfigDialogClose() {
+      // 如果用户取消操作，恢复到保存的配置
+      this.columnConfig = this.loadColumnConfig() || [...this.defaultTableColumns];
     },
 
     /**
@@ -990,7 +1145,8 @@ export default {
 
   .user-dialog,
   .password-dialog,
-  .role-dialog {
+  .role-dialog,
+  .column-config-dialog {
     ::v-deep .el-dialog__header {
       background-color: #f8f9fa;
       border-bottom: 1px solid #ebeef5;
@@ -1018,6 +1174,12 @@ export default {
     .pagination-container {
       padding: 20px;
       border-top: 1px solid #ebeef5;
+    }
+  }
+
+  .column-config-table {
+    ::v-deep .el-table__row {
+      cursor: move;
     }
   }
 }
