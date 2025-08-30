@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.tbs.app.service.business.department.IDepartmentService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.vo.UserInfoVO;
@@ -50,6 +51,9 @@ public class PrivateUserController extends BaseController {
 	@Resource
 	private ISystemUserService userService;
 
+	@Resource
+	private IDepartmentService departmentService;
+
 	/**
 	 * 用户登出
 	 *
@@ -77,7 +81,9 @@ public class PrivateUserController extends BaseController {
 				() -> new FormattedRuntimeException("用户{} 不存在", AuthUtil.getInstance().getCurrentUser().getUsername()));
 		userInfoVO.setNickName(user.get().getNickName());
 		userInfoVO.setAvatar(user.get().getAvatar());
+		userInfoVO.setDepartment(departmentService.queryById(user.get().getDepartmentId()));
 		userInfoVO.setAvaliableRoles(relationService.queryRoles(user.get().getId()));
+		userInfoVO.setDepartments(departmentService.getAllParents(user.get().getDepartmentId()));
 		return userInfoVO;
 	}
 

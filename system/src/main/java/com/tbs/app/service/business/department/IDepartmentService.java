@@ -1,5 +1,6 @@
 package com.tbs.app.service.business.department;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.tbs.shared.interfaces.service.IServiceTemplate;
@@ -9,7 +10,6 @@ import com.tbs.shared.pojo.entity.SystemDepartmentTreePathEntity;
 /**
  * 部门服务
  *
- * @author wangyang
  */
 public interface IDepartmentService extends IServiceTemplate<SystemDepartmentEntity, Long> {
 	/**
@@ -19,6 +19,14 @@ public interface IDepartmentService extends IServiceTemplate<SystemDepartmentEnt
 	 * @return
 	 */
 	Optional<SystemDepartmentTreePathEntity> getTreePath(Long parentId);
+
+	/**
+	 * 获取部门所有父级部门
+	 *
+	 * @param id
+	 * @return
+	 */
+	List<SystemDepartmentEntity> getAllParents(Long id);
 
 	/**
 	 * 构建部门树路径

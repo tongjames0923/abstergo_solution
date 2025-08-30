@@ -1,5 +1,6 @@
 package com.tbs.app.service.business.department.impl;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
@@ -145,6 +146,81 @@ public class DefaultDepartmentService
 	@ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
 	public Optional<SystemDepartmentTreePathEntity> getTreePath(Long parentId) {
 		return Optional.ofNullable(CollUtil.first(treePathMapper.queryByParentId(parentId)));
+	}
+
+	@Override
+	public List<SystemDepartmentEntity> getAllParents(Long id) {
+		// 如果id为null或为根部门ID，则返回空列表
+		if (id == null || id.equals(SystemDepartmentEntity.ROOT.getId())
+				|| id.equals(SystemDepartmentEntity.NULL_PARENT_ID)) {
+			return List.of();
+		}
+
+		// 查询当前部门
+		SystemDepartmentEntity department = instance.queryById(id);
+		if (department == null || department.getParentId() == null
+				|| department.getParentId().equals(SystemDepartmentEntity.NULL_PARENT_ID)) {
+			return List.of();
+		}
+
+		// 获取当前部门的树路径
+		Optional<SystemDepartmentTreePathEntity> treePathOpt = ((IDepartmentService) instance)
+				.getTreePath(department.getParentId());
+		if (treePathOpt.isEmpty()) {
+			// 如果没有树路径，手动递归查询父级部门
+			List<SystemDepartmentEntity> parents = new ArrayList<>();
+			Long parentId = department.getParentId();
+
+			while (parentId != null && !parentId.equals(SystemDepartmentEntity.NULL_PARENT_ID)) {
+				SystemDepartmentEntity parent = instance.queryById(parentId);
+				if (parent == null) {
+					break;
+				}
+				parents.add(parent);
+				parentId = parent.getParentId();
+			}
+
+			return parents;
+		}
+
+		// 从树路径中提取所有父级部门ID
+		SystemDepartmentTreePathEntity treePath = treePathOpt.get();
+		String path = treePath.getTreePath();
+
+		// 路径格式为 "/1/2/3/"，需要解析出各级父部门ID
+		String[] parts = path.split("/");
+		List<Long> parentIds = new ArrayList<>();
+
+		for (String part : parts) {
+			if (!part.isEmpty()) {
+				try {
+					parentIds.add(Long.parseLong(part));
+				} catch (NumberFormatException ignored) {
+					// 忽略无效的ID
+				}
+			}
+		}
+
+		// 添加直接父级部门ID
+		parentIds.add(treePath.getParentId());
+
+		// 根据ID列表查询所有父级部门
+		if (parentIds.isEmpty()) {
+			return List.of();
+		}
+
+		// 使用BaseMapper的selectByIds方法查询所有父级部门
+		List<SystemDepartmentEntity> parents = new ArrayList<>();
+		for (Long parentId : parentIds) {
+			if (!parentId.equals(SystemDepartmentEntity.NULL_PARENT_ID)) {
+				SystemDepartmentEntity parent = instance.queryById(parentId);
+				if (parent != null) {
+					parents.add(parent);
+				}
+			}
+		}
+
+		return parents;
 	}
 
 	@Override
