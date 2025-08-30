@@ -13,13 +13,13 @@ import com.tbs.web.uitl.AjaxUtil;
 @RestController
 @RequestMapping("/private")
 public class PrivateTestController extends BaseController {
-	@PreAuthorize("hasAuthority('" + CommonConstant.NORMAL_USER_ROLE_NAME + "')")
+	@PreAuthorize("hasAuthority('" + CommonConstant.NORMAL_USER_ROLE_ID + "')")
 	@GetMapping("/test")
 	public AjaxResult test() {
 		return AjaxUtil.getInstance().success(null);
 	}
 
-	@PreAuthorize("hasAuthority('" + CommonConstant.NORMAL_USER_ROLE_NAME + "')")
+	@PreAuthorize("hasAuthority('" + CommonConstant.NORMAL_USER_ROLE_ID + "')")
 	@GetMapping("/testAuth")
 	public AjaxResult testAuth() {
 		return AjaxUtil.getInstance().success(null);

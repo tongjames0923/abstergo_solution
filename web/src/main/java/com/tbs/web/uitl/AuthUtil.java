@@ -6,6 +6,7 @@ import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.authentication.ITokenAuthentication;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.authentication.TokenAuthentication;
+import lombok.Getter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,6 +28,7 @@ public class AuthUtil {
      *
      * @return
      */
+    @Getter
     private static AuthUtil instance;
 
     public AuthUtil() {
@@ -35,10 +37,6 @@ public class AuthUtil {
 
     @Resource
     private AuthenticationManager manager;
-
-    public static AuthUtil getInstance() {
-        return instance;
-    }
 
     /**
      * 获取当前用户的TokenModel

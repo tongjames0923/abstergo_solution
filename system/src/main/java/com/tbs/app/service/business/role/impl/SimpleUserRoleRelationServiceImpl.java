@@ -54,15 +54,15 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 
 	@Override
 	@CacheEvict(cacheNames = "user_role", key = "#userId")
-	public void enableRole(@NotNull Long userId, @NotNull String role) {
+	public void enableRole(@NotNull Long userId, @NotNull Long role) {
 		setRole(userId, role, SystemRoleFlagEnum.ACTIVE.getCode());
 	}
 
-	private void setRole(@NotNull Long userId, @NotNull String role, @NotNull Integer flag) {
-		AssertUtil.hasText(role, "角色不能为空");
+	private void setRole(@NotNull Long userId, @NotNull Long role, @NotNull Integer flag) {
+		AssertUtil.notNull(role, "角色不能为空");
 		SystemUserEntity user = systemUserService.queryById(userId);
 		AssertUtil.notNull(user, "用户不存在");
-		SystemRoleEntity roleEntity = systemRoleService.getRoleByName(role);
+		SystemRoleEntity roleEntity = systemRoleService.queryById(role);
 		AssertUtil.notNull(roleEntity, "角色不存在");
 		AssertUtil.isTrue(SystemRoleFlagEnum.DISABLE.getCode().equals(roleEntity.getFlag()), "角色 {} 已失效", role);
 		UserRoleRelationEntity relation = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
@@ -83,12 +83,10 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 
 	@Override
 	@CacheEvict(cacheNames = "user_role", key = "#userId")
-	public void disableRole(@NotNull Long userId, @NotNull String roleId) {
+	public void disableRole(@NotNull Long userId, @NotNull Long roleId) {
 		setRole(userId, roleId, SystemRoleFlagEnum.DISABLE.getCode());
 	}
 
-	@Cacheable(cacheNames = "user_role", key = "#userId")
-	@ExpireOn(cacheNames = "user_role", value = 15, timeUnit = TimeUnit.MINUTES)
 	@Override
 	public List<SystemRoleEntity> queryUserRoles(@NotNull Long userId) {
 		List<UserRoleRelationEntity> relations = wrapper.query().where()
@@ -100,5 +98,17 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 		return relations.stream().map(relation -> systemRoleService.queryById(relation.getRoleId()))
 				.filter(role -> role != null && !SystemRoleFlagEnum.DISABLE.getCode().equals(role.getFlag())).distinct()
 				.collect(Collectors.toList());
+	}
+
+	@Cacheable(cacheNames = "user_role", key = "#userId")
+	@ExpireOn(cacheNames = "user_role", value = 15, timeUnit = TimeUnit.MINUTES)
+	@Override
+	public List<String> queryRoles(@NotNull Long userId) {
+		return wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
+				.equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetch().stream()
+				.map(relation -> systemRoleService.queryById(relation.getRoleId()))
+				.filter(role -> role != null && role.getId() != null
+						&& !SystemRoleFlagEnum.DISABLE.getCode().equals(role.getFlag()))
+				.map(role -> role.getId()).map(roleId -> roleId.toString()).collect(Collectors.toList());
 	}
 }

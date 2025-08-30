@@ -65,7 +65,7 @@ public class SimpleSystemUserServiceImpl
 		entity.setCreateTime(new Date());
 		entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
 		getMapper().insert(entity);
-		relationService.enableRole(entity.getId(), CommonConstant.NORMAL_USER_ROLE_NAME);
+		relationService.enableRole(entity.getId(), CommonConstant.NORMAL_USER_ROLE_ID);
 		return entity;
 	}
 

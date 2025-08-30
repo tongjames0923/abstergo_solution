@@ -1,17 +1,14 @@
 package com.tbs.app.service.business.role.impl;
 
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 import javax.annotation.Resource;
 
-import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.role.ISystemRoleService;
-import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.StrUtil;
@@ -62,7 +59,7 @@ public class SimpleSystemRoleServiceImpl
 		return entity;
 	}
 
-	@CacheEvict(cacheNames = "system_role", key = "#entity.role", condition = "#entity!=null&&#entity.role!=null&&#entity.role.length()>0")
+	@CacheEvict(cacheNames = "system_role", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
 	@Override
 	protected List<SystemRoleEntity> updateBy(SystemRoleEntity entity) {
 		entity.setUpdateTime(new java.util.Date());
@@ -89,13 +86,15 @@ public class SimpleSystemRoleServiceImpl
 		return oldOne;
 	}
 
-	@Cacheable(cacheNames = "system_role", key = "#roleName")
-	@ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+	@CacheEvict(cacheNames = "system_role", key = "#id")
 	@Override
-	public SystemRoleEntity getRoleByName(@NotNull String roleName) {
-		if (StrUtil.isEmpty(roleName)) {
-			return null;
-		}
-		return getQueryWrapper().query().where().equal(SystemRoleEntity::getRole, roleName).pour().fetchOne();
+	public SystemRoleEntity deleteById(Long id) {
+		return super.deleteById(id);
+	}
+
+	@Cacheable(cacheNames = "system_role", key = "#id", unless = "#result==null")
+	@Override
+	public SystemRoleEntity queryById(Long id) {
+		return super.queryById(id);
 	}
 }

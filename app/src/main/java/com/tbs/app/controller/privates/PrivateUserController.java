@@ -19,7 +19,6 @@ import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.shared.enums.SystemUserStatusEnum;
-import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
@@ -78,8 +77,7 @@ public class PrivateUserController extends BaseController {
 				() -> new FormattedRuntimeException("用户{} 不存在", AuthUtil.getInstance().getCurrentUser().getUsername()));
 		userInfoVO.setNickName(user.get().getNickName());
 		userInfoVO.setAvatar(user.get().getAvatar());
-		userInfoVO.setAvaliableRoles(relationService.queryUserRoles(user.get().getId()).stream()
-				.map(SystemRoleEntity::getRole).collect(Collectors.toList()));
+		userInfoVO.setAvaliableRoles(relationService.queryRoles(user.get().getId()));
 		return userInfoVO;
 	}
 

@@ -16,7 +16,7 @@ import com.tbs.web.result.AjaxResult;
 
 @RestController
 @RequestMapping("private/admin/department")
-@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_NAME + "')")
+@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_ID + "')")
 public class PrivateDepartmentController
 		extends AbstractCrudController<SystemDepartmentEntity, Long, CommonSystemDepartmentQueryCriteria> {
 

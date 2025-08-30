@@ -6,7 +6,6 @@ import com.tbs.app.service.business.user.ISystemUserService
 import com.tbs.common.error.AssertUtil
 import com.tbs.common.util.CollUtil
 import com.tbs.shared.enums.SystemUserStatusEnum
-import com.tbs.shared.pojo.entity.SystemRoleEntity
 import com.tbs.shared.pojo.entity.SystemUserEntity
 import com.tbs.web.exception.SimpleAuthException
 import com.tbs.web.security.user.IUserInfoService
@@ -30,11 +29,11 @@ class DefaultUserInfoService : IUserInfoService {
         val users: MutableList<SystemUserEntity> = systemUserService.queryByUserName(uniqueKey)
         AssertUtil.isTrue(CollUtil.isEmpty(users), Supplier { SimpleAuthException("用户不存在") })
         val user = users.get(0)
-        val roles: MutableList<SystemRoleEntity?> = relationService.queryUserRoles(users.get(0).getId())
+        val roles: MutableList<String> = relationService.queryRoles(users.get(0).getId())
         return User.builder().username(user.getUserName()).password(user.getPassword())
             .authorities(
                 roles.stream()
-                    .map<SimpleGrantedAuthority?> { role: SystemRoleEntity? -> SimpleGrantedAuthority(role!!.getRole()) }
+                    .map<SimpleGrantedAuthority?> { role: String? -> SimpleGrantedAuthority(role) }
                     .collect(Collectors.toList()))
             .accountLocked(SystemUserStatusEnum.LOCKED.getCode() == user.getFlag())
             .disabled(SystemUserStatusEnum.DISABLED.getCode() == user.getFlag()).build()

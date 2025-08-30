@@ -27,7 +27,7 @@ import io.swagger.annotations.ApiParam;
  */
 @RestController
 @RequestMapping("/private/admin/user")
-@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_NAME + "')")
+@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_ID + "')")
 @Api(value = "管理员用户管理", tags = "管理员用户管理接口")
 public class AdminUserController extends AbstractCrudController<SystemUserEntity, Long, CommonSystemUserQueryCriteria> {
 	@Resource

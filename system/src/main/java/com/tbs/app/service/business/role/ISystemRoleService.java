@@ -11,11 +11,5 @@ import com.tbs.shared.pojo.entity.SystemRoleEntity;
  * @author tongj
  */
 public interface ISystemRoleService extends IServiceTemplate<SystemRoleEntity, Long> {
-    /**
-     * 获取角色
-     *
-     * @param roleName
-     * @return
-     */
-    SystemRoleEntity getRoleByName(@NotNull String roleName);
+
 }

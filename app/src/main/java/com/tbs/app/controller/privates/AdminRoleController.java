@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiParam;
  */
 @RequestMapping("/private/admin")
 @RestController
-@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_NAME + "')")
+@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_ID + "')")
 @Api(value = "管理员角色管理", tags = "管理员角色管理接口")
 public class AdminRoleController extends BaseController {
 
@@ -64,7 +64,7 @@ public class AdminRoleController extends BaseController {
 	@GetMapping("/role/enable/{userId}")
 	@ApiOperation(value = "启用用户角色", notes = "为指定用户启用指定角色")
 	public AjaxResult enable(@ApiParam(name = "userId", value = "用户ID", required = true) @PathVariable Long userId,
-			@ApiParam(name = "role", value = "角色名称", required = true) @RequestParam String role) {
+			@ApiParam(name = "role", value = "角色名称", required = true) @RequestParam Long role) {
 		relationService.enableRole(userId, role);
 		return AjaxUtil.getInstance().success("授权成功", null);
 	}
@@ -96,7 +96,7 @@ public class AdminRoleController extends BaseController {
 	@GetMapping("/role/disable/{userId}")
 	@ApiOperation(value = "禁用用户角色", notes = "为指定用户禁用指定角色")
 	public AjaxResult disable(@ApiParam(name = "userId", value = "用户ID", required = true) @PathVariable Long userId,
-			@ApiParam(name = "role", value = "角色名称", required = true) @RequestParam String role) {
+			@ApiParam(name = "role", value = "角色名称", required = true) @RequestParam Long role) {
 		relationService.disableRole(userId, role);
 		return AjaxUtil.getInstance().success("取消授权成功", null);
 	}
@@ -118,7 +118,7 @@ public class AdminRoleController extends BaseController {
 		AssertUtil.notNull(user, "用户不存在");
 		user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
 		userService.save(user);
-		relationService.enableRole(userId, CommonConstant.NORMAL_USER_ROLE_NAME);
+		relationService.enableRole(userId, CommonConstant.NORMAL_USER_ROLE_ID);
 		return AjaxUtil.getInstance().success("激活成功", null);
 	}
 
