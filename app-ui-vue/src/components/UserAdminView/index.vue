@@ -29,13 +29,6 @@
             </el-dropdown-menu>
           </el-dropdown>
           <el-button
-            :icon="viewMode === 'card' ? 'el-icon-tickets' : 'el-icon-menu'"
-            :title="viewMode === 'card' ? '切换到表格视图' : '切换到卡片视图'"
-            circle
-            size="mini"
-            @click="toggleViewMode"
-          ></el-button>
-          <el-button
             icon="el-icon-refresh"
             circle
             size="mini"
@@ -45,122 +38,11 @@
         </div>
       </div>
 
-      <!-- 卡片视图 -->
-      <CardList
-        v-if="viewMode === 'card'"
-        ref="userCardList"
-        :columns="columns"
-        :current-page="currentPage"
-        :data="userList"
-        :gap="20"
-        :loading="loading"
-        :loading-count="loadingCount"
-        :padding="20"
-        :page-size="pageSize"
-        :pagination="true"
-        :total="total"
-        @current-change="handlePageChange"
-        @size-change="handleSizeChange"
-      >
-        <!-- 工具栏插槽 -->
-        <template #toolbar>
-          <div class="card-list-toolbar-content">
-            <div class="toolbar-info">
-              共 {{ total }} 个用户
-            </div>
-          </div>
-        </template>
-
-        <!-- 自定义卡片内容 -->
-        <template #card="{ item: user }">
-          <el-card class="user-card" shadow="hover">
-            <div class="user-card-header">
-              <el-avatar
-                :src="user.avatar || '/default-avatar.png'"
-                class="user-avatar"
-                fit="cover"
-                size="large"
-              >
-                <i v-if="!user.avatar || user.avatar === ''" class="el-icon-user-solid"></i>
-              </el-avatar>
-              <div class="user-basic-info">
-                <div class="user-name">{{ user.userName }}</div>
-                <div class="user-nickname">{{ user.nickName }}</div>
-              </div>
-              <el-tag
-                :type="getUserStatusType(user.flag)"
-                class="user-status-tag"
-                size="mini"
-              >
-                {{ getUserStatusText(user.flag) }}
-              </el-tag>
-            </div>
-
-            <div class="user-card-body">
-              <el-descriptions :column="1" border size="mini">
-                <el-descriptions-item label="ID">{{ user.id }}</el-descriptions-item>
-                <el-descriptions-item label="备注">{{ user.remark || '无' }}</el-descriptions-item>
-                <el-descriptions-item label="创建时间">{{ formatDate(user.createTime) }}</el-descriptions-item>
-                <el-descriptions-item label="更新时间">{{ formatDate(user.updateTime) }}</el-descriptions-item>
-              </el-descriptions>
-            </div>
-
-            <div class="user-card-footer">
-              <el-button
-                icon="el-icon-edit"
-                plain
-                size="mini"
-                type="primary"
-                @click.stop="handleEdit(user)"
-              >编辑
-              </el-button>
-
-              <el-button
-                :icon="user.flag === 1 ? 'el-icon-lock' : 'el-icon-unlock'"
-                :type="user.flag === 1 ? 'danger' : 'success'"
-                plain
-                size="mini"
-                @click.stop="handleToggleStatus(user)"
-              >
-                {{ user.flag === 1 ? '禁用' : '启用' }}
-              </el-button>
-
-              <el-button
-                icon="el-icon-refresh-left"
-                plain
-                size="mini"
-                type="warning"
-                @click.stop="handleResetPassword(user)"
-              >重置密码
-              </el-button>
-
-              <el-button
-                icon="el-icon-setting"
-                plain
-                size="mini"
-                type="info"
-                @click.stop="handleManageRoles(user)"
-              >权限管理
-              </el-button>
-            </div>
-          </el-card>
-        </template>
-
-        <!-- 自定义空状态 -->
-        <template #empty>
-          <el-empty description="暂无用户数据">
-            <el-button icon="el-icon-plus" type="primary" @click="handleAdd">新增用户</el-button>
-          </el-empty>
-        </template>
-      </CardList>
-
       <!-- 表格视图 -->
       <DynamicTable
-        v-else
         ref="userTable"
         :columns="displayTableColumns"
         :data-fetcher="fetchUserDataForTable"
-        :actions="actions"
         :auto-load="true"
         actions-fixed="right"
         actions-width="450px"
@@ -366,7 +248,6 @@
 </template>
 
 <script>
-import CardList from "@/components/CardList"
 import DynamicTable from "@/components/DynamicTable/index.vue"
 import DynamicOptions from "@/components/DynamicOptions/index.vue";
 import UserAddView from "@/components/UserAdminView/UserAddView.vue";
@@ -378,7 +259,6 @@ import {activateUser, adminQueryUser, disableUser, saveUser} from "@/api/admin_u
 export default {
   name: 'UserAdminView',
   components: {
-    CardList,
     DynamicTable,
     DynamicOptions,
     UserAddView,
@@ -411,7 +291,6 @@ export default {
     ];
 
     return {
-      viewMode: 'card', // 'card' 或 'table'
       loading: false,
       userList: [],
       searchConfig: null,
@@ -457,10 +336,9 @@ export default {
       // 默认表格列配置
       defaultTableColumns,
       // 当前用户自定义的列配置
-      columnConfig: this.loadColumnConfig() || [...defaultTableColumns],
+      columnConfig: [...defaultTableColumns],
       columnConfigDialogVisible: false,
       tableColumns: defaultTableColumns,
-      actions: true,
       // 当前排序参数
       sortParams: {}
     }
@@ -482,21 +360,9 @@ export default {
     }
   },
   mounted() {
-    this.fetchUserData()
+    // 删除了卡片视图相关的代码
   },
   methods: {
-    /**
-     * 切换视图模式
-     */
-    toggleViewMode() {
-      this.viewMode = this.viewMode === 'card' ? 'table' : 'card';
-      this.$nextTick(() => {
-        if (this.viewMode === 'table' && this.$refs.userTable) {
-          this.$refs.userTable.refresh();
-        }
-      });
-    },
-
     /**
      * 处理列配置命令
      */
@@ -532,11 +398,10 @@ export default {
      * 保存列配置
      */
     saveColumnConfig() {
-      // 保存到localStorage
-      localStorage.setItem('userTableColumnsConfig', JSON.stringify(this.columnConfig));
+      // 不再保存到localStorage，只在本地使用
       this.columnConfigDialogVisible = false;
-      // 如果当前是表格视图，刷新表格
-      if (this.viewMode === 'table' && this.$refs.userTable) {
+      // 刷新表格
+      if (this.$refs.userTable) {
         this.$refs.userTable.refresh();
       }
     },
@@ -552,26 +417,7 @@ export default {
      * 加载列配置
      */
     loadColumnConfig() {
-      const savedConfig = localStorage.getItem('userTableColumnsConfig');
-      if (savedConfig) {
-        try {
-          const config = JSON.parse(savedConfig);
-          // 确保所有默认列都在配置中（处理新增列的情况）
-          const mergedConfig = [...this.defaultTableColumns];
-          config.forEach(savedColumn => {
-            const index = mergedConfig.findIndex(c => c.prop === savedColumn.prop);
-            if (index !== -1) {
-              mergedConfig[index] = {...mergedConfig[index], ...savedColumn};
-            } else {
-              mergedConfig.push(savedColumn);
-            }
-          });
-          return mergedConfig;
-        } catch (e) {
-          console.error('解析列配置失败', e);
-          return null;
-        }
-      }
+      // 不再从localStorage加载配置，始终使用默认配置
       return null;
     },
 
@@ -579,59 +425,8 @@ export default {
      * 处理列配置弹窗关闭
      */
     handleColumnConfigDialogClose() {
-      // 如果用户取消操作，恢复到保存的配置
-      this.columnConfig = this.loadColumnConfig() || [...this.defaultTableColumns];
-    },
-
-    /**
-     * 获取用户数据（卡片视图）
-     */
-    async fetchUserData() {
-      this.loading = true
-      try {
-        // 构造查询条件
-        const criteria = {
-          idEquals: this.searchForm.idEquals || undefined,
-          userNameEquals: this.searchForm.userNameEquals || undefined,
-          nickNameLike: this.searchForm.nickNameLike || undefined,
-          flagEquals: this.searchForm.flagEquals,
-          createTimeGreaterThan: this.searchForm.createTimeRange && this.searchForm.createTimeRange[0] || this.searchForm.createTimeGreaterThan || undefined,
-          createTimeLessThan: this.searchForm.createTimeRange && this.searchForm.createTimeRange[1] || this.searchForm.createTimeLessThan || undefined,
-          updateTimeGreaterThan: this.searchForm.updateTimeRange && this.searchForm.updateTimeRange[0] || this.searchForm.updateTimeGreaterThan || undefined,
-          updateTimeLessThan: this.searchForm.updateTimeRange && this.searchForm.updateTimeRange[1] || this.searchForm.updateTimeLessThan || undefined
-        }
-        // 添加排序参数
-        if (this.sortParams.field && this.sortParams.order) {
-          // 将Element UI的排序格式转换为后端需要的格式
-          const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc';
-          criteria[`${this.sortParams.field}Order`] = order;
-        }
-
-        // 移除值为undefined的属性
-        Object.keys(criteria).forEach(key => {
-          if (criteria[key] === undefined) {
-            delete criteria[key]
-          }
-        })
-
-        // 调用后端接口
-        const response = await adminQueryUser({
-          ...criteria,
-          pageNum: this.currentPage,
-          pageSize: this.pageSize
-        })
-
-        // 返回数据给CardList组件
-        this.userList = response.data.data || []
-        this.total = response.data.total || 0
-      } catch (error) {
-        console.error('获取用户数据失败:', error)
-        this.$message.error('获取用户数据失败')
-        this.userList = []
-        this.total = 0
-      } finally {
-        this.loading = false
-      }
+      // 如果用户取消操作，恢复到默认配置
+      this.columnConfig = [...this.defaultTableColumns];
     },
 
     /**
@@ -691,12 +486,7 @@ export default {
      * 查询按钮点击事件
      */
     handleSearch() {
-      if (this.viewMode === 'card') {
-        this.currentPage = 1
-        this.fetchUserData()
-      } else {
-        this.$refs.userTable.refresh()
-      }
+      this.$refs.userTable.refresh()
     },
 
     /**
@@ -718,30 +508,7 @@ export default {
         updateTimeOrder: ''
       }
       this.sortParams = {}
-
-      if (this.viewMode === 'card') {
-        this.currentPage = 1
-        this.fetchUserData()
-      } else {
-        this.$refs.userTable.refresh()
-      }
-    },
-
-    /**
-     * 处理分页变化（卡片视图）
-     */
-    handlePageChange(page) {
-      this.currentPage = page
-      this.fetchUserData()
-    },
-
-    /**
-     * 处理页面大小变化（卡片视图）
-     */
-    handleSizeChange(size) {
-      this.pageSize = size
-      this.currentPage = 1
-      this.fetchUserData()
+      this.$refs.userTable.refresh()
     },
 
     /**
@@ -795,11 +562,7 @@ export default {
         if (response.code === 200) {
           this.$message.success(response.message || '操作成功');
           // 刷新数据
-          if (this.viewMode === 'card') {
-            this.fetchUserData();
-          } else {
-            this.$refs.userTable.refresh();
-          }
+          this.$refs.userTable.refresh();
         } else {
           this.$message.error(response.message || '操作失败');
         }
@@ -819,11 +582,7 @@ export default {
       this.userDialogVisible = false;
 
       // 刷新数据
-      if (this.viewMode === 'card') {
-        this.fetchUserData();
-      } else {
-        this.$refs.userTable.refresh();
-      }
+      this.$refs.userTable.refresh();
     },
 
     /**
@@ -888,11 +647,7 @@ export default {
               this.resetPasswordDialogVisible = false;
 
               // 刷新数据
-              if (this.viewMode === 'card') {
-                this.fetchUserData();
-              } else {
-                this.$refs.userTable.refresh();
-              }
+              this.$refs.userTable.refresh();
             } else {
               this.$message.error(response.message || '密码重置失败');
             }

@@ -50,13 +50,13 @@ export const constantRoutes = [
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: {title: 'Dashboard', icon: 'dashboard', roles: ['常规用户']}
+      meta: {title: 'Dashboard', icon: 'dashboard', roles: ['2']}
     },
       {
         path: 'table',
         name: 'Table',
         component: () => import('@/views/table/index'),
-        meta: {title: 'Table', icon: 'table', roles: ['常规用户']}
+        meta: {title: 'Table', icon: 'table', roles: ['2']}
       }
     ]
   },
@@ -65,25 +65,25 @@ export const constantRoutes = [
     path: '/admin',
     component: Layout,
     name: 'admin',
-    meta: {title: '管理员操作', icon: 'el-icon-s-help', roles: ['超级管理员']},
+    meta: {title: '管理员操作', icon: 'el-icon-s-help', roles: ['1']},
     children: [
       {
         path: 'user',
         name: '用户管理',
         component: () => import('@/views/admin/user/index.vue'),
-        meta: {title: '用户管理', icon: 'table', roles: ['超级管理员']}
+        meta: {title: '用户管理', icon: 'table', roles: ['1']}
       },
       {
         path: 'role',
         name: '角色管理',
         component: () => import('@/views/admin/role/index.vue'),
-        meta: {title: '角色管理', icon: 'eye', roles: ['超级管理员']}
+        meta: {title: '角色管理', icon: 'eye', roles: ['1']}
       },
       {
         path: 'department',
         name: '部门管理',
         component: () => import('@/views/admin/department/index.vue'),
-        meta: {title: '部门管理', icon: 'el-icon-s-custom', roles: ['超级管理员']}
+        meta: {title: '部门管理', icon: 'el-icon-s-custom', roles: ['1']}
       }
     ]
   },

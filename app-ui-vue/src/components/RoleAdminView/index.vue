@@ -8,14 +8,57 @@
     </div>
 
     <!-- 查询条件 -->
-    <DynamicForm
-      ref="searchForm"
-      v-model="searchForm"
-      :config="searchConfig"
-      title="查询条件"
-      @reset="handleReset"
-      @submit="handleSearch"
-    />
+    <el-card class="search-card" shadow="never">
+      <div slot="header" class="clearfix">
+        <span>查询条件</span>
+      </div>
+      <el-form
+        :model="searchForm"
+        ref="searchForm"
+        label-width="80px"
+        class="search-form"
+      >
+        <el-row :gutter="20">
+          <el-col :span="8">
+            <el-form-item label="角色ID">
+              <el-input
+                v-model="searchForm.idEquals"
+                placeholder="请输入角色ID"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="角色名称">
+              <el-input
+                v-model="searchForm.roleEquals"
+                placeholder="请输入角色名称"
+                clearable
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="8">
+            <el-form-item label="状态">
+              <el-select
+                v-model="searchForm.flagEquals"
+                placeholder="请选择状态"
+                clearable
+                style="width: 100%"
+              >
+                <el-option label="失效" :value="0"></el-option>
+                <el-option label="激活" :value="1"></el-option>
+                <el-option label="系统" :value="2"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <div class="search-actions">
+          <el-button type="primary" icon="el-icon-search" @click="handleSearch">查询</el-button>
+          <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+        </div>
+      </el-form>
+    </el-card>
 
     <!-- 角色列表 -->
     <el-card class="table-card" shadow="never">
@@ -32,70 +75,84 @@
         </div>
       </div>
 
-      <DynamicTable
-        ref="roleTable"
-        :data-fetcher="fetchRoleData"
+      <CardList
+        ref="roleCardList"
+        :data="roleData"
+        :loading="loading"
+        :pagination="true"
+        :total="total"
+        :current-page="currentPage"
+        :page-size="pageSize"
         :columns="columns"
-        :actions="actions"
-        :auto-load="true"
-        actions-fixed="right"
-        actions-width="350px"
-        border
-        stripe
-        class="role-table"
-        @sort-change="handleTableSortChange"
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
       >
-        <template #flag="{ row }">
-          <el-tag v-if="row.flag === 0" type="danger" effect="dark">失效</el-tag>
-          <el-tag v-else-if="row.flag===1" type="success" effect="dark">激活</el-tag>
-          <el-tag v-else-if="row.flag===2" type="warning" effect="dark">系统</el-tag>
+        <template #card="{ item: row }">
+          <el-card class="role-card" shadow="hover">
+            <div class="role-card-header">
+              <div class="role-name">{{ row.role }}</div>
+              <div class="role-flag">
+                <el-tag v-if="row.flag === 0" type="danger" effect="dark">失效</el-tag>
+                <el-tag v-else-if="row.flag===1" type="success" effect="dark">激活</el-tag>
+                <el-tag v-else-if="row.flag===2" type="warning" effect="dark">系统</el-tag>
+              </div>
+            </div>
+            <div class="role-card-body">
+              <div class="role-description">{{ row.description }}</div>
+              <div class="role-meta">
+                <div class="role-id">ID: {{ row.id }}</div>
+                <div class="role-time">
+                  <div>创建: {{ row.createTime }}</div>
+                  <div>更新: {{ row.updateTime }}</div>
+                </div>
+              </div>
+            </div>
+            <div class="role-card-footer">
+              <div class="action-buttons">
+                <el-button
+                  size="mini"
+                  type="primary"
+                  plain
+                  icon="el-icon-edit"
+                  @click.stop="handleEdit(row)"
+                  :disabled="row.flag === 2"
+                >编辑
+                </el-button>
+
+                <el-button
+                  v-if="row.flag !== 2"
+                  size="mini"
+                  :type="row.flag === 1 ? 'danger' : 'success'"
+                  plain
+                  :icon="row.flag === 1 ? 'el-icon-lock' : 'el-icon-unlock'"
+                  @click.stop="handleToggleStatus(row)"
+                >
+                  {{ row.flag === 1 ? '禁用' : '启用' }}
+                </el-button>
+
+                <el-button
+                  v-if="row.flag === 2"
+                  size="mini"
+                  type="info"
+                  plain
+                  disabled
+                >系统角色
+                </el-button>
+
+                <el-button
+                  size="mini"
+                  type="danger"
+                  plain
+                  icon="el-icon-delete"
+                  @click.stop="handleDelete(row)"
+                  :disabled="row.flag === 2"
+                >删除
+                </el-button>
+              </div>
+            </div>
+          </el-card>
         </template>
-
-        <template #actions="{ row }">
-          <div class="action-buttons">
-            <el-button
-              size="mini"
-              type="primary"
-              plain
-              icon="el-icon-edit"
-              @click="handleEdit(row)"
-              :disabled="row.flag === 2"
-            >编辑
-            </el-button>
-
-            <el-button
-              v-if="row.flag !== 2"
-              size="mini"
-              :type="row.flag === 1 ? 'danger' : 'success'"
-              plain
-              :icon="row.flag === 1 ? 'el-icon-lock' : 'el-icon-unlock'"
-              @click="handleToggleStatus(row)"
-            >
-              {{ row.flag === 1 ? '禁用' : '启用' }}
-            </el-button>
-
-            <el-button
-              v-if="row.flag === 2"
-              size="mini"
-              type="info"
-              plain
-              disabled
-            >系统角色
-            </el-button>
-
-            <el-button
-              size="mini"
-              type="danger"
-              plain
-              icon="el-icon-delete"
-              @click="handleDelete(row)"
-              :disabled="row.flag === 2"
-            >删除
-            </el-button>
-          </div>
-        </template>
-
-      </DynamicTable>
+      </CardList>
     </el-card>
 
     <!-- 新增/编辑角色弹窗 -->
@@ -155,13 +212,12 @@
 </template>
 
 <script>
-import DynamicTable from "@/components/DynamicTable/index.vue"
-import DynamicForm from "@/components/DynamicForm/index.vue"
+import CardList from "@/components/CardList/index.vue"
 import {activateRole, deleteRole, disableRole, queryRoles, saveRole} from "@/api/role"
 
 export default {
   name: 'RoleAdminView',
-  components: {DynamicTable, DynamicForm},
+  components: {CardList},
   data() {
     return {
       roleDialogVisible: false,
@@ -184,21 +240,14 @@ export default {
       searchForm: {
         idEquals: '',
         roleEquals: '',
-        flagEquals: undefined,
-        createTimeOrder: '',
-        updateTimeOrder: ''
+        flagEquals: undefined
       },
-      columns: [
-        {prop: 'id', label: 'ID', width: 80},
-        {prop: 'role', label: '角色名称', width: 200},
-        {prop: 'description', label: '角色描述', width: 300},
-        {prop: 'flag', label: '状态', width: 100, slot: 'flag'},
-        {prop: 'createTime', label: '创建时间', width: 180, sortable: 'custom'},
-        {prop: 'updateTime', label: '更新时间', width: 180, sortable: 'custom'}
-      ],
-      actions: true,
-      // 当前排序参数
-      sortParams: {}
+      roleData: [],
+      loading: false,
+      total: 0,
+      currentPage: 1,
+      pageSize: 10,
+      columns: 3
     }
   },
   computed: {
@@ -208,24 +257,24 @@ export default {
     // 是否为编辑模式
     isEditMode() {
       return this.roleForm.id !== undefined
-    },
-    // 从store中获取查询表单配置
-    searchConfig() {
-      return this.$store.getters['formConfigs/formConfig']('roleSearchForm')
     }
+  },
+  mounted() {
+    this.fetchRoleData()
   },
   methods: {
     /**
      * 获取角色数据
      */
-    async fetchRoleData(params) {
+    async fetchRoleData() {
       try {
+        this.loading = true
+
         // 构造查询条件
         const criteria = {
           idEquals: this.searchForm.idEquals || undefined,
           roleEquals: this.searchForm.roleEquals || undefined,
-          flagEquals: this.searchForm.flagEquals !== '' ? this.searchForm.flagEquals : undefined,
-          ...this.sortParams
+          flagEquals: this.searchForm.flagEquals !== '' ? this.searchForm.flagEquals : undefined
         }
 
         // 移除值为undefined的属性
@@ -236,24 +285,18 @@ export default {
         })
 
         // 调用后端接口
-        const response = await queryRoles({
-          ...criteria,
-          pageNum: params.pagination.page,
-          pageSize: params.pagination.size
-        })
+        const response = await queryRoles(criteria, this.currentPage, this.pageSize)
 
-        // 返回数据给DynamicTable组件
-        return {
-          data: response.data.data || [],
-          total: response.data.total || 0
-        }
+        // 设置数据
+        this.roleData = response.data.data || []
+        this.total = response.data.total || 0
       } catch (error) {
         console.error('获取角色数据失败:', error)
         this.$message.error('获取角色数据失败')
-        return {
-          data: [],
-          total: 0
-        }
+        this.roleData = []
+        this.total = 0
+      } finally {
+        this.loading = false
       }
     },
 
@@ -261,8 +304,8 @@ export default {
      * 查询按钮点击事件
      */
     handleSearch() {
-      this.sortParams = {}
-      this.$refs.roleTable.refresh()
+      this.currentPage = 1
+      this.fetchRoleData()
     },
 
     /**
@@ -272,20 +315,27 @@ export default {
       this.searchForm = {
         idEquals: '',
         roleEquals: '',
-        flagEquals: undefined,
-        createTimeOrder: '',
-        updateTimeOrder: ''
+        flagEquals: undefined
       }
-      this.sortParams = {}
-      this.$refs.roleTable.refresh()
+      this.currentPage = 1
+      this.fetchRoleData()
     },
 
+    /**
+     * 处理分页大小变化
+     */
+    handleSizeChange(val) {
+      this.pageSize = val
+      this.currentPage = 1
+      this.fetchRoleData()
+    },
 
     /**
-     * 处理表格排序变化
+     * 处理当前页变化
      */
-    handleTableSortChange(sortInfo) {
-      this.sortParams = sortInfo
+    handleCurrentChange(val) {
+      this.currentPage = val
+      this.fetchRoleData()
     },
 
     /**
@@ -310,6 +360,7 @@ export default {
       this.roleForm = {...row}
       this.roleDialogVisible = true
     },
+
     /**
      * 切换角色状态
      */
@@ -329,6 +380,7 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           })
+
           response = await disableRole(row.id)
         } else if (row.flag === 0) {
           // 当前是失效状态，点击后应该激活
@@ -337,13 +389,14 @@ export default {
             cancelButtonText: '取消',
             type: 'warning'
           })
+
           response = await activateRole(row.id)
         }
 
         if (response.code === 200) {
           this.$message.success(response.message || '操作成功')
-          // 刷新表格数据
-          this.$refs.roleTable.refresh()
+          // 刷新数据
+          this.fetchRoleData()
         } else {
           this.$message.error(response.message || '操作失败')
         }
@@ -375,7 +428,7 @@ export default {
         const response = await deleteRole(row.id)
         if (response.code === 200) {
           this.$message.success('删除成功')
-          this.$refs.roleTable.refresh()
+          this.fetchRoleData()
         } else {
           this.$message.error(response.message || '删除失败')
         }
@@ -386,8 +439,6 @@ export default {
         }
       }
     },
-// ... existing code ...
-
 
     /**
      * 提交角色表单
@@ -408,7 +459,7 @@ export default {
             if (response.code === 200) {
               this.$message.success(this.dialogMode === 'add' ? '角色创建成功' : '角色更新成功')
               this.roleDialogVisible = false
-              this.$refs.roleTable.refresh()
+              this.fetchRoleData()
             } else {
               this.$message.error(response.message || '操作失败')
             }
@@ -491,11 +542,6 @@ export default {
       margin-bottom: 18px;
     }
 
-    .date-range-picker,
-    .sort-select {
-      width: 100%;
-    }
-
     .search-actions {
       display: flex;
       justify-content: flex-end;
@@ -512,17 +558,66 @@ export default {
     gap: 10px;
   }
 
-  .role-table {
-    ::v-deep .el-table th {
-      background-color: #f5f7fa;
-    }
-  }
-
-  .action-buttons {
+  .role-card {
+    height: 100%;
     display: flex;
-    gap: 8px;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+
+    .role-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #eee;
+
+      .role-name {
+        font-size: 18px;
+        font-weight: bold;
+        color: #333;
+      }
+    }
+
+    .role-card-body {
+      flex: 1;
+      margin-bottom: 15px;
+
+      .role-description {
+        margin-bottom: 15px;
+        color: #666;
+        line-height: 1.5;
+      }
+
+      .role-meta {
+        font-size: 12px;
+        color: #999;
+
+        .role-id {
+          margin-bottom: 5px;
+        }
+
+        .role-time {
+          display: flex;
+          justify-content: space-between;
+        }
+      }
+    }
+
+    .role-card-footer {
+      border-top: 1px solid #eee;
+      padding-top: 10px;
+
+      .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+        justify-content: flex-end;
+
+        ::v-deep .el-button {
+          margin-left: 0;
+        }
+      }
+    }
   }
 
   .role-dialog {

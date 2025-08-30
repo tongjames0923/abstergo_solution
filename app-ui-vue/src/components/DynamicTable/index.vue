@@ -93,7 +93,6 @@
 
       <!-- 操作列 -->
       <el-table-column
-        v-if="$slots.actions || actions"
         :label="actionsLabel"
         :width="actionsWidth"
         :fixed="actionsFixed"
@@ -161,7 +160,12 @@ export default {
     // 数据获取函数，必须返回Promise
     dataFetcher: {
       type: Function,
-      required: true
+      default: null
+    },
+    // 表格数据，与父组件双向绑定
+    data: {
+      type: Array,
+      default: () => []
     },
     // 列配置
     columns: {
@@ -207,7 +211,7 @@ export default {
       type: Boolean,
       default: false
     },
-    // 是否显示多选框
+    // 是否显示选择列
     selection: {
       type: Boolean,
       default: false
@@ -222,6 +226,8 @@ export default {
       type: Boolean,
       default: false
     },
+    // 选择列的 selectable 函数
+    selectable: Function,
     // 是否显示序号列
     index: {
       type: Boolean,
@@ -237,7 +243,7 @@ export default {
       type: [String, Number],
       default: 55
     },
-    // 分页配置
+    // 是否显示分页
     pagination: {
       type: Boolean,
       default: true
@@ -247,12 +253,12 @@ export default {
       type: String,
       default: 'total, sizes, prev, pager, next, jumper'
     },
-    // 分页大小选项
+    // 分页页码数组
     pageSizes: {
       type: Array,
       default: () => [10, 20, 50, 100]
     },
-    // 页码按钮数量
+    // 分页按钮数量
     pagerCount: {
       type: Number,
       default: 7
@@ -264,8 +270,8 @@ export default {
     },
     // 操作列配置
     actions: {
-      type: [Array, Boolean],
-      default: false
+      type: Array,
+      default: null
     },
     // 操作列标签
     actionsLabel: {
@@ -275,7 +281,7 @@ export default {
     // 操作列宽度
     actionsWidth: {
       type: [String, Number],
-      default: 180
+      default: 150
     },
     // 操作列固定位置
     actionsFixed: {
@@ -294,7 +300,7 @@ export default {
       tableData: [],
       // 加载状态
       loading: false,
-      // 总数据量
+      // 数据总条数
       total: 0,
       // 分页参数
       pageParams: {
@@ -315,6 +321,20 @@ export default {
     // 如果设置了自动加载，则初始化时加载数据
     if (this.autoLoad) {
       this.loadData()
+    } else if (this.data && this.data.length > 0) {
+      // 如果提供了静态数据，则使用静态数据
+      this.tableData = [...this.data]
+    }
+  },
+  watch: {
+    // 监听外部数据变化
+    data: {
+      handler(newData) {
+        if (newData && Array.isArray(newData)) {
+          this.tableData = [...newData]
+        }
+      },
+      immediate: true
     }
   },
   methods: {
@@ -323,6 +343,14 @@ export default {
      * @param {Object} params - 额外的查询参数
      */
     async loadData(params = {}) {
+      // 如果没有提供dataFetcher，直接使用传入的data
+      if (!this.dataFetcher) {
+        if (this.data && this.data.length > 0) {
+          this.tableData = [...this.data]
+        }
+        return
+      }
+
       // 设置加载状态
       this.loading = true
 
@@ -342,6 +370,9 @@ export default {
         if (result && typeof result === 'object') {
           this.tableData = Array.isArray(result.data) ? result.data : []
           this.total = result.total || 0
+
+          // 更新父组件的数据
+          this.$emit('update:data', this.tableData)
         } else {
           this.tableData = []
           this.total = 0
@@ -403,7 +434,7 @@ export default {
 
     /**
      * 处理当前页变化
-     * @param {Number} page - 新的页码
+     * @param {Number} page - 新的当前页
      */
     handleCurrentPageChange(page) {
       this.pageParams.page = page
@@ -411,46 +442,29 @@ export default {
     },
 
     /**
-     * 处理多选变化
-     * @param {Array} selection - 选中的行数据
-     */
-    handleSelectionChange(selection) {
-      this.selectionData = selection
-      this.$emit('selection-change', selection)
-    },
-
-    /**
      * 处理排序变化
      * @param {Object} sortInfo - 排序信息
      */
     handleSortChange(sortInfo) {
-      const {column, prop, order} = sortInfo
-      if (prop) {
-        this.sortParams = {
-          field: prop,
-          order: order // 'ascending' | 'descending' | null
-        }
-      } else {
-        this.sortParams = {}
-      }
-      this.$emit('sort-change', this.sortParams)
+      this.sortParams = sortInfo
+      this.$emit('sort-change', sortInfo)
       this.loadData()
     },
 
     /**
      * 处理过滤变化
-     * @param {Object} filters - 过滤条件
+     * @param {Object} filters - 过滤信息
      */
     handleFilterChange(filters) {
-      this.filterParams = {...filters}
-      this.loadData()
+      this.filterParams = filters
       this.$emit('filter-change', filters)
+      this.loadData()
     },
 
     /**
      * 处理当前行变化
-     * @param {Object} currentRow - 当前行数据
-     * @param {Object} oldCurrentRow - 旧行数据
+     * @param {Object} currentRow - 当前行
+     * @param {Object} oldCurrentRow - 旧行
      */
     handleCurrentChange(currentRow, oldCurrentRow) {
       this.$emit('current-change', currentRow, oldCurrentRow)
@@ -458,8 +472,8 @@ export default {
 
     /**
      * 处理行点击
-     * @param {Object} row - 行数据
-     * @param {Object} column - 列信息
+     * @param {Object} row - 点击的行
+     * @param {Object} column - 点击的列
      * @param {Event} event - 事件对象
      */
     handleRowClick(row, column, event) {
@@ -468,8 +482,8 @@ export default {
 
     /**
      * 处理行双击
-     * @param {Object} row - 行数据
-     * @param {Object} column - 列信息
+     * @param {Object} row - 双击的行
+     * @param {Object} column - 双击的列
      * @param {Event} event - 事件对象
      */
     handleRowDblclick(row, column, event) {
@@ -478,9 +492,9 @@ export default {
 
     /**
      * 处理单元格点击
-     * @param {Object} row - 行数据
-     * @param {Object} column - 列信息
-     * @param {Object} cell - 单元格
+     * @param {Object} row - 点击的行
+     * @param {Object} column - 点击的列
+     * @param {Object} cell - 点击的单元格
      * @param {Event} event - 事件对象
      */
     handleCellClick(row, column, cell, event) {
@@ -489,9 +503,9 @@ export default {
 
     /**
      * 处理单元格双击
-     * @param {Object} row - 行数据
-     * @param {Object} column - 列信息
-     * @param {Object} cell - 单元格
+     * @param {Object} row - 双击的行
+     * @param {Object} column - 双击的列
+     * @param {Object} cell - 双击的单元格
      * @param {Event} event - 事件对象
      */
     handleCellDblclick(row, column, cell, event) {
@@ -499,40 +513,57 @@ export default {
     },
 
     /**
-     * 检查操作按钮是否禁用
-     * @param {Object} action - 操作配置
-     * @param {Object} row - 行数据
-     * @param {Number} index - 行索引
+     * 处理选择变化
+     * @param {Array} selection - 选中的行数组
      */
-    checkDisabled(action, row, index) {
-      if (typeof action.disabled === 'function') {
-        return action.disabled(row, index)
-      }
-      return Boolean(action.disabled)
+    handleSelectionChange(selection) {
+      this.selectionData = selection
+      this.$emit('selection-change', selection)
     },
 
     /**
-     * 检查操作按钮是否加载中
-     * @param {Object} action - 操作配置
+     * 检查按钮是否禁用
+     * @param {Object} action - 操作按钮配置
      * @param {Object} row - 行数据
      * @param {Number} index - 行索引
+     * @returns {Boolean} 是否禁用
+     */
+    checkDisabled(action, row, index) {
+      if (action.disabled === true) {
+        return true
+      }
+      if (typeof action.disabled === 'function') {
+        return action.disabled(row, index)
+      }
+      return false
+    },
+
+    /**
+     * 检查按钮是否加载中
+     * @param {Object} action - 操作按钮配置
+     * @param {Object} row - 行数据
+     * @param {Number} index - 行索引
+     * @returns {Boolean} 是否加载中
      */
     checkLoading(action, row, index) {
+      if (action.loading === true) {
+        return true
+      }
       if (typeof action.loading === 'function') {
         return action.loading(row, index)
       }
-      return Boolean(action.loading)
+      return false
     },
 
     /**
      * 处理操作按钮点击
-     * @param {Object} action - 操作配置
+     * @param {Object} action - 操作按钮配置
      * @param {Object} row - 行数据
      * @param {Number} index - 行索引
      */
     handleAction(action, row, index) {
-      if (action.action && typeof action.action === 'function') {
-        action.action(row, index)
+      if (action.handler && typeof action.handler === 'function') {
+        action.handler(row, index)
       }
     },
 
@@ -544,35 +575,22 @@ export default {
     },
 
     /**
-     * 切换某一行的选中状态
-     * @param {Object} row - 行数据
-     * @param {Boolean} selected - 选中状态
+     * 获取选中行
+     * @returns {Array} 选中行数组
      */
-    toggleRowSelection(row, selected) {
-      this.$refs.table.toggleRowSelection(row, selected)
+    getSelection() {
+      return this.selectionData
     },
 
     /**
-     * 设置某些行的选中状态
-     * @param {Array} rows - 行数据数组
-     * @param {Boolean} selected - 选中状态
+     * 设置选中行
+     * @param {Array} rows - 要选中的行数组
      */
-    setSelection(rows, selected) {
-      rows.forEach(row => {
-        this.$refs.table.toggleRowSelection(row, selected)
-      })
-    },
-
-    /**
-     * 设置查询参数
-     * @param {Object} params - 查询参数
-     * @param {Boolean} reload - 是否重新加载数据
-     */
-    setQueryParams(params, reload = true) {
-      this.queryParams = {...params}
-      if (reload) {
-        this.pageParams.page = 1 // 重置到第一页
-        this.loadData()
+    setSelection(rows) {
+      if (Array.isArray(rows)) {
+        rows.forEach(row => {
+          this.$refs.table.toggleRowSelection(row, true)
+        })
       }
     }
   }
@@ -584,7 +602,6 @@ export default {
   width: 100%;
 
   &__toolbar {
-    padding: 10px 0;
     margin-bottom: 10px;
   }
 
@@ -592,14 +609,12 @@ export default {
     margin-top: 20px;
     text-align: right;
   }
-}
 
-.action-buttons-container {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 5px;
-  align-items: center;
+  .action-buttons-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
 }
 </style>
-

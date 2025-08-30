@@ -162,7 +162,7 @@ export default {
     // 加载时显示的卡片数量
     loadingCount: {
       type: Number,
-      default: 4
+      default: 0
     },
     // 列数
     columns: {
