@@ -36,4 +36,12 @@ public interface IDepartmentService extends IServiceTemplate<SystemDepartmentEnt
 	 */
 	SystemDepartmentTreePathEntity buildTreePath(Long parentId);
 
+	/**
+	 * 获取部门所有子部门
+	 *
+	 * @param id
+	 * @return
+	 */
+	List<SystemDepartmentEntity> getAllChildren(Long id);
+
 }

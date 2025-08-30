@@ -64,6 +64,8 @@ public class DefaultDepartmentService
 		return property.getMainDelegateInvokerImpl();
 	}
 
+	@Caching(evict = { @CacheEvict(cacheNames = "departmentTreePath", allEntries = true),
+			@CacheEvict(cacheNames = "department_children", allEntries = true) })
 	@Override
 	protected SystemDepartmentEntity insertNew(SystemDepartmentEntity entity) {
 		entity.setFlag(CommonConstant.FLAG_ON);
@@ -78,8 +80,9 @@ public class DefaultDepartmentService
 	}
 
 	@Override
-	@Caching(evict = { @CacheEvict(value = "department", key = "#entity.id"),
-			@CacheEvict(value = "departmentTreePath", key = "#entity.parentId") })
+	@Caching(evict = { @CacheEvict(cacheNames = "department", key = "#entity.id"),
+			@CacheEvict(cacheNames = "departmentTreePath", allEntries = true),
+			@CacheEvict(cacheNames = "department_children", allEntries = true) })
 	protected List<SystemDepartmentEntity> updateBy(SystemDepartmentEntity entity) {
 		entity.setUpdateTime(new java.util.Date());
 
@@ -111,12 +114,15 @@ public class DefaultDepartmentService
 		return oldOne;
 	}
 
+	@Caching(evict = { @CacheEvict(cacheNames = "department", key = "#id"),
+			@CacheEvict(cacheNames = "departmentTreePath", allEntries = true),
+			@CacheEvict(cacheNames = "department_children", allEntries = true) })
 	@Override
-	protected SystemDepartmentEntity handleDelete(Long entitys) {
+	protected SystemDepartmentEntity handleDelete(Long id) {
 		SystemDepartmentEntity department1 = getQueryWrapper().query().where()
-				.equal(SystemDepartmentEntity::getParentId, entitys).pour().fetchOne();
+				.equal(SystemDepartmentEntity::getParentId, id).pour().fetchOne();
 		AssertUtil.isTrue(department1 != null, "请先删除子部门");
-		return super.handleDelete(entitys);
+		return super.handleDelete(id);
 	}
 
 	@Resource
@@ -265,6 +271,13 @@ public class DefaultDepartmentService
 			path = oldOne;
 		}
 		return path;
+	}
+
+	@Cacheable(cacheNames = "department_children", key = "#id")
+	@ExpireOn(300)
+	@Override
+	public List<SystemDepartmentEntity> getAllChildren(Long id) {
+		return queryWrapper.query().where().equal(SystemDepartmentEntity::getParentId, id).pour().fetch();
 	}
 
 }

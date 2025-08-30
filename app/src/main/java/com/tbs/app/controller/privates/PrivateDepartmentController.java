@@ -1,12 +1,16 @@
 package com.tbs.app.controller.privates;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import javax.annotation.Resource;
 
-import com.tbs.shared.constant.RoleConstants;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.service.business.department.IDepartmentService;
+import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.interfaces.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
@@ -50,6 +54,21 @@ public class PrivateDepartmentController
 	@PostMapping("query")
 	public AjaxResult query(@RequestBody CommonSystemDepartmentQueryCriteria criteria, Long page, Long perNum) {
 		return successResult(departmentService.queryBy(criteria, QueryPageModel.of(page, perNum)));
+	}
+
+	/**
+	 * 获取所有子部门
+	 *
+	 * @param id
+	 * @return
+	 */
+	@PostMapping("children")
+	public AjaxResult getChildren(@RequestBody List<Long> ids) {
+		Map<Long, List<SystemDepartmentEntity>> res = new HashMap<>(ids.size());
+		for (Long id : ids) {
+			res.put(id, departmentService.getAllChildren(id));
+		}
+		return successResult(res);
 	}
 
 	@Override

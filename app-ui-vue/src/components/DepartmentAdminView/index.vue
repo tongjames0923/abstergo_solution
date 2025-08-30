@@ -103,11 +103,13 @@
           }}
         </el-descriptions-item>
         <el-descriptions-item label="状态">
-          <el-tag :type="currentDepartment.flag === 1 ? 'success' : 'danger'">
+          <el-tag :type="currentDepartment.flag === 1 ? 'success' : 'danger'>
             {{ currentDepartment.flag === 1 ? '启用' : '禁用' }}
           </el-tag>
         </el-descriptions-item>
-        <el-descriptions-item label="部门描述">{{ currentDepartment.description || '无' }}</el-descriptions-item>
+        <el-descriptions-item label=" 部门描述
+          ">{{ currentDepartment.description || '无' }}
+        </el-descriptions-item>
       </el-descriptions>
     </el-card>
 
@@ -173,7 +175,7 @@
   </div>
 </template>
 <script>
-import {deleteDepartment, fetchDepartmentList, saveDepartment} from '@/api/department'
+import {deleteDepartment, fetchBatchDepartmentChildren, saveDepartment} from '@/api/department'
 import {formatDate} from '@/utils'
 
 export default {
@@ -208,7 +210,11 @@ export default {
         ]
       },
       departmentOptions: [],
-      loading: false
+      loading: false,
+      // 缓存已经加载过的部门数据，避免重复请求
+      departmentCache: new Map(),
+      // 缓存已经获取过子部门数量的部门ID
+      childrenCountCache: new Map()
     }
   },
   watch: {
@@ -228,39 +234,60 @@ export default {
     async loadRootDepartments() {
       this.loading = true
       try {
-        const response = await fetchDepartmentList({
-          parentIdEquals: 0
-        })
-        if (response.code === 200) {
-          // 根据后端返回的数据结构处理数据
-          let departments = []
-          if (response.data && response.data.data) {
-            // 如果是分页数据结构 PageVO
-            departments = response.data.data
-          } else if (response.data) {
-            // 如果是普通列表数据
-            departments = response.data
-          }
+        // 直接获取根部门（parentId为0的部门）的子部门
+        let rootDepartments
+        const cacheKey = '0'
 
-          // 只显示有效的部门（flag=1）
-          departments = departments.filter(dept => dept.flag === 1)
+        // 检查缓存中是否有根部门数据
+        if (this.departmentCache.has(cacheKey)) {
+          rootDepartments = this.departmentCache.get(cacheKey)
+        } else {
+          const response = await fetchBatchDepartmentChildren([0])
+          if (response.code === 200 && response.data) {
+            rootDepartments = response.data['0'] || []
+            // 缓存根部门数据
+            this.departmentCache.set(cacheKey, rootDepartments)
+          } else {
+            rootDepartments = []
+          }
+        }
+
+        // 获取所有根部门的子部门数量
+        if (rootDepartments.length > 0) {
+          // 过滤出尚未获取子部门数量的部门
+          const needFetchCountIds = rootDepartments
+            .filter(dept => !this.childrenCountCache.has(dept.id))
+            .map(dept => dept.id)
+
+          // 批量获取子部门数量
+          if (needFetchCountIds.length > 0) {
+            const childrenResponse = await fetchBatchDepartmentChildren(needFetchCountIds)
+            if (childrenResponse.code === 200 && childrenResponse.data) {
+              Object.keys(childrenResponse.data).forEach(id => {
+                const count = childrenResponse.data[id].length
+                this.childrenCountCache.set(parseInt(id), count)
+              })
+            }
+          }
 
           // 设置根节点数据
-          this.departmentTreeData = departments.map(dept => {
+          this.departmentTreeData = rootDepartments.map(dept => {
+            const childrenCount = this.childrenCountCache.get(dept.id) || 0
             return {
               ...dept,
-              isLeaf: dept.childrenCount === 0 // 没有子部门就是叶子节点
+              childrenCount,
+              isLeaf: childrenCount === 0 // 没有子部门就是叶子节点
             }
           })
-
-          // 设置下拉选项
-          this.departmentOptions = [{id: 0, departmentName: '根节点'}, ...departments]
-          // 默认选中根部门
-          if (this.departmentTreeData.length > 0) {
-            this.currentDepartment = this.departmentTreeData[0]
-          }
         } else {
-          this.$message.error(response.msg || '获取部门数据失败')
+          this.departmentTreeData = []
+        }
+
+        // 设置下拉选项
+        this.departmentOptions = [{id: 0, departmentName: '根节点'}, ...rootDepartments]
+        // 默认选中第一个根部门
+        if (this.departmentTreeData.length > 0) {
+          this.currentDepartment = this.departmentTreeData[0]
         }
       } catch (error) {
         this.$message.error('获取部门数据失败: ' + error.message)
@@ -276,32 +303,55 @@ export default {
       }
 
       try {
-        const response = await fetchDepartmentList({
-          parentIdEquals: node.data.id,
-          flagEquals: 1
-        })
+        const parentId = node.data.id
+        let childrenDepartments
+        const cacheKey = parentId.toString()
 
-        if (response.code === 200) {
-          let departments = []
-          if (response.data && response.data.data) {
-            departments = response.data.data
-          } else if (response.data) {
-            departments = response.data
+        // 检查缓存中是否已有该节点的子部门数据
+        if (this.departmentCache.has(cacheKey)) {
+          childrenDepartments = this.departmentCache.get(cacheKey)
+        } else {
+          // 获取当前节点的子部门
+          const response = await fetchBatchDepartmentChildren([parentId])
+          if (response.code === 200 && response.data) {
+            childrenDepartments = response.data[cacheKey] || []
+            // 缓存子部门数据
+            this.departmentCache.set(cacheKey, childrenDepartments)
+          } else {
+            childrenDepartments = []
+          }
+        }
+
+        // 获取所有子部门的子部门数量
+        if (childrenDepartments.length > 0) {
+          // 过滤出尚未获取子部门数量的部门
+          const needFetchCountIds = childrenDepartments
+            .filter(dept => !this.childrenCountCache.has(dept.id))
+            .map(dept => dept.id)
+
+          // 批量获取子部门数量
+          if (needFetchCountIds.length > 0) {
+            const childrenResponse = await fetchBatchDepartmentChildren(needFetchCountIds)
+            if (childrenResponse.code === 200 && childrenResponse.data) {
+              Object.keys(childrenResponse.data).forEach(id => {
+                const count = childrenResponse.data[id].length
+                this.childrenCountCache.set(parseInt(id), count)
+              })
+            }
           }
 
-          // 只显示有效的部门（flag=1）
-          departments = departments.filter(dept => dept.flag === 1)
-
-          const nodes = departments.map(dept => {
+          // 设置节点数据
+          const nodes = childrenDepartments.map(dept => {
+            const childrenCount = this.childrenCountCache.get(dept.id) || 0
             return {
               ...dept,
-              isLeaf: dept.childrenCount === 0 // 根据childrenCount判断是否为叶子节点
+              childrenCount,
+              isLeaf: childrenCount === 0 // 根据实际子部门数量判断是否为叶子节点
             }
           })
 
           resolve(nodes)
         } else {
-          this.$message.error(response.msg || '获取子部门数据失败')
           resolve([])
         }
       } catch (error) {
@@ -377,6 +427,9 @@ export default {
           const response = await deleteDepartment(data.id)
           if (response.code === 200) {
             this.$message.success('删除成功')
+            // 清除相关缓存
+            this.departmentCache.clear()
+            this.childrenCountCache.clear()
             // 重新加载数据
             this.loadRootDepartments()
           } else {
@@ -399,6 +452,9 @@ export default {
             if (response.code === 200) {
               this.$message.success(this.isEdit ? '修改成功' : '新增成功')
               this.dialogVisible = false
+              // 清除相关缓存
+              this.departmentCache.clear()
+              this.childrenCountCache.clear()
               // 重新加载数据
               this.loadRootDepartments()
             } else {

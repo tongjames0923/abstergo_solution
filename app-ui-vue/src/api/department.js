@@ -38,3 +38,16 @@ export function deleteDepartment(id) {
     , method: 'get'
   })
 }
+
+/**
+ * 批量获取部门的子部门列表
+ * @param ids 门ID数组
+ * @returns {*}
+ */
+export function fetchBatchDepartmentChildren(ids) {
+  return request({
+    url: 'private/admin/department/children'
+    , method: 'post'
+    , data: ids
+  })
+}
