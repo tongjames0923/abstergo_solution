@@ -5,6 +5,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.tbs.shared.constant.RoleConstants;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
@@ -17,7 +18,6 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.EnumUtil;
 import com.tbs.common.util.StrUtil;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.annoation.UserNameValid;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
@@ -65,7 +65,7 @@ public class SimpleSystemUserServiceImpl
 		entity.setCreateTime(new Date());
 		entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
 		getMapper().insert(entity);
-		relationService.enableRole(entity.getId(), CommonConstant.NORMAL_USER_ROLE_ID);
+		relationService.enableRole(entity.getId(), RoleConstants.NORMAL_USER_ROLE_ID);
 		return entity;
 	}
 

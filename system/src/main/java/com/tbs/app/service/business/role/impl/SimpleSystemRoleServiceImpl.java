@@ -9,21 +9,27 @@ import org.springframework.cache.annotation.Cacheable;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.role.ISystemRoleService;
+import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.shared.constant.CommonConstant;
+import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.mapper.SystemRoleMapper;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 
+import lombok.extern.slf4j.Slf4j;
+
 /**
  * @author abstergo
  */
+
+@Slf4j
 public class SimpleSystemRoleServiceImpl
 		extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRoleEntity, Long, SystemRoleMapper>
-		implements ISystemRoleService {
+		implements ISystemRoleService, IStartup {
 
 	@Resource
 	SystemRoleMapper systemRoleMapper;
@@ -96,5 +102,25 @@ public class SimpleSystemRoleServiceImpl
 	@Override
 	public SystemRoleEntity queryById(Long id) {
 		return super.queryById(id);
+	}
+
+	@Override
+	public void startUp() throws RuntimeException {
+		SystemRoleEntity commonUser = getMapper().selectByPrimaryKey(RoleConstants.NORMAL_USER_ROLE_ID);
+		if (commonUser == null) {
+			log.info("系统角色不存在，默认插入...");
+			getMapper().insert(RoleConstants.NORMAL_USER_ROLE);
+		} else {
+			log.info("系统角色已存在...");
+			getMapper().updateByPrimaryKey(RoleConstants.NORMAL_USER_ROLE);
+		}
+		SystemRoleEntity admin = getMapper().selectByPrimaryKey(RoleConstants.SUPER_ADMIN_ROLE_ID);
+		if (admin == null) {
+			log.info("系统角色不存在，默认插入...");
+			getMapper().insert(RoleConstants.SUPER_ADMIN_ROLE);
+		} else {
+			log.info("系统角色已存在...");
+			getMapper().updateByPrimaryKey(RoleConstants.SUPER_ADMIN_ROLE);
+		}
 	}
 }

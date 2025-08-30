@@ -2,11 +2,11 @@ package com.tbs.app.controller.privates;
 
 import javax.annotation.Resource;
 
+import com.tbs.shared.constant.RoleConstants;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.service.business.user.ISystemUserService;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.interfaces.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
@@ -27,7 +27,7 @@ import io.swagger.annotations.ApiParam;
  */
 @RestController
 @RequestMapping("/private/admin/user")
-@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_ID + "')")
+@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
 @Api(value = "管理员用户管理", tags = "管理员用户管理接口")
 public class AdminUserController extends AbstractCrudController<SystemUserEntity, Long, CommonSystemUserQueryCriteria> {
 	@Resource

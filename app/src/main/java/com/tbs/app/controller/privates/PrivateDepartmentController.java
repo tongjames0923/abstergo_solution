@@ -2,11 +2,11 @@ package com.tbs.app.controller.privates;
 
 import javax.annotation.Resource;
 
+import com.tbs.shared.constant.RoleConstants;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.service.business.department.IDepartmentService;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.interfaces.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
@@ -16,7 +16,7 @@ import com.tbs.web.result.AjaxResult;
 
 @RestController
 @RequestMapping("private/admin/department")
-@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_ID + "')")
+@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
 public class PrivateDepartmentController
 		extends AbstractCrudController<SystemDepartmentEntity, Long, CommonSystemDepartmentQueryCriteria> {
 

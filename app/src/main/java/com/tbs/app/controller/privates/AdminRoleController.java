@@ -2,6 +2,7 @@ package com.tbs.app.controller.privates;
 
 import javax.annotation.Resource;
 
+import com.tbs.shared.constant.RoleConstants;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -9,7 +10,6 @@ import com.tbs.app.service.business.role.ISystemRoleService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiParam;
  */
 @RequestMapping("/private/admin")
 @RestController
-@PreAuthorize("hasAuthority('" + CommonConstant.SUPER_ADMIN_ROLE_ID + "')")
+@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
 @Api(value = "管理员角色管理", tags = "管理员角色管理接口")
 public class AdminRoleController extends BaseController {
 
@@ -118,7 +118,7 @@ public class AdminRoleController extends BaseController {
 		AssertUtil.notNull(user, "用户不存在");
 		user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
 		userService.save(user);
-		relationService.enableRole(userId, CommonConstant.NORMAL_USER_ROLE_ID);
+		relationService.enableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
 		return AjaxUtil.getInstance().success("激活成功", null);
 	}
 
