@@ -8,7 +8,6 @@ import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.schedule.impl.TimingWheelSchedule;
-import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.model.PageVO;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;

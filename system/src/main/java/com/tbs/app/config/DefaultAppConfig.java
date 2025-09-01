@@ -2,21 +2,23 @@ package com.tbs.app.config;
 
 import javax.annotation.Resource;
 
-import com.tbs.app.service.business.auth.impl.DefaultTokenManager;
-import com.tbs.app.service.business.auth.impl.DefaultUserInfoService;
-import com.tbs.app.service.business.role.impl.SimpleSystemRoleServiceImpl;
-import com.tbs.app.service.business.role.impl.SimpleUserRoleRelationServiceImpl;
-import com.tbs.app.service.business.user.impl.NoEncryptPassword;
-import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.tbs.app.service.business.user.IPasswordEncrypt;
+import com.tbs.app.service.business.auth.impl.DefaultTokenManager;
+import com.tbs.app.service.business.auth.impl.DefaultUserInfoService;
+import com.tbs.app.service.business.company.ISystemCompanyService;
+import com.tbs.app.service.business.company.impl.SimpleCompanyService;
 import com.tbs.app.service.business.role.ISystemRoleService;
-import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
+import com.tbs.app.service.business.role.impl.SimpleSystemRoleServiceImpl;
+import com.tbs.app.service.business.role.impl.SimpleUserRoleRelationServiceImpl;
+import com.tbs.app.service.business.user.IPasswordEncrypt;
+import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.business.user.impl.NoEncryptPassword;
+import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
 import com.tbs.common.data.IDataHolderExpireActuator;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.util.BeanUtil;
@@ -60,6 +62,12 @@ public class DefaultAppConfig {
 	public ISystemUserService systemUserService() {
 		return BeanUtil.buildBeanFromProperties(SimpleSystemUserServiceImpl::new,
 				systemAppProperty.getSystemUserServiceImpl(), BeanUtil::buildByEmptyArgs);
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(ISystemCompanyService.class)
+	public ISystemCompanyService companyService() {
+		return new SimpleCompanyService();
 	}
 
 	@Bean

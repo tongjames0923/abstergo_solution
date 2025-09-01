@@ -2,9 +2,6 @@ package com.tbs.app.vo;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.List;
-
-import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 
 import lombok.Data;
 
@@ -32,16 +29,6 @@ public class UserInfoVO implements Serializable {
 	 * 用户头像URL
 	 */
 	private String avatar;
-
-	/**
-	 * 部门信息
-	 */
-	private SystemDepartmentEntity department;
-
-	/**
-	 * 部门列表
-	 */
-	private List<SystemDepartmentEntity> departments;
 
 	/**
 	 * 用户可用角色列表

@@ -18,7 +18,6 @@ import lombok.ToString;
  */
 @Table(name = "sys_user", indexes = { @Index(name = "idx_username_password", columnList = "user_name,password"),
 		@Index(name = "idx_nickname", columnList = "nick_name"), @Index(name = "idx_flag", columnList = "flag"),
-		@Index(name = "idx_department_id", columnList = "department_id"),
 		@Index(name = "idx_time", columnList = "create_time,update_time") })
 @Entity
 @Getter
@@ -73,11 +72,6 @@ public class SystemUserEntity implements IBaseEntity<Long> {
 	@Column(name = "flag")
 	private Integer flag;
 
-	/**
-	 * 部门id
-	 */
-	@Column(name = "department_id")
-	private Long departmentId;
 	/**
 	 * 角色
 	 */

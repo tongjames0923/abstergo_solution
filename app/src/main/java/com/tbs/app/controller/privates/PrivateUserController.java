@@ -1,6 +1,18 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.service.business.department.IDepartmentService;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import javax.annotation.Resource;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.vo.UserInfoVO;
@@ -12,19 +24,9 @@ import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
 import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.uitl.AuthUtil;
+
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 登录后用户相关控制器
@@ -47,9 +49,6 @@ public class PrivateUserController extends BaseController {
 
 	@Resource
 	private ISystemUserService userService;
-
-	@Resource
-	private IDepartmentService departmentService;
 
 	/**
 	 * 用户登出
@@ -78,7 +77,6 @@ public class PrivateUserController extends BaseController {
 				() -> new FormattedRuntimeException("用户{} 不存在", AuthUtil.getInstance().getCurrentUser().getUsername()));
 		userInfoVO.setNickName(user.get().getNickName());
 		userInfoVO.setAvatar(user.get().getAvatar());
-		userInfoVO.setDepartment(departmentService.queryById(user.get().getDepartmentId()));
 		userInfoVO.setAvaliableRoles(relationService.queryRoles(user.get().getId()));
 		return userInfoVO;
 	}

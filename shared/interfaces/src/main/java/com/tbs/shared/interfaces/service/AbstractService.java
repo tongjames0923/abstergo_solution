@@ -6,17 +6,23 @@ import javax.annotation.Resource;
 import com.tbs.sql.ef.IEntityQueryWrapper;
 import com.tbs.sql.mapper.IFrameworkMapper;
 
-import lombok.Getter;
-
 /**
  * @author abstergo
  */
 public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K>> {
 
-	@Getter
 	@Resource
-	protected IEntityQueryWrapper<E> queryWrapper;
+	private IEntityQueryWrapper<E> queryWrapper;
 	private E entity;
+
+	/**
+	 * 获取查询对象
+	 *
+	 * @return
+	 */
+	protected IEntityQueryWrapper<E> getQueryWrapper() {
+		return queryWrapper;
+	}
 
 	/**
 	 * 获取Mapper对象
