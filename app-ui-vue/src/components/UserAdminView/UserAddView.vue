@@ -16,20 +16,20 @@
             size="medium"
             prefix-icon="el-icon-lock"
             @input="setValue"
-          ></el-input>
+          />
         </el-form-item>
       </template>
 
       <template #form-item-avatar="{ field, value, setValue }">
         <el-form-item :label="field.label" :prop="field.prop">
-          <url-image :value="value" @input="setValue"></url-image>
+          <url-image :value="value" @input="setValue" />
         </el-form-item>
       </template>
 
       <template #actions="{ submit, reset }">
         <div class="form-actions">
-          <el-button @click="handleCancel" size="medium">取消</el-button>
-          <el-button type="primary" @click="submit" size="medium" icon="el-icon-check">保存用户</el-button>
+          <el-button size="medium" @click="handleCancel">取消</el-button>
+          <el-button type="primary" size="medium" icon="el-icon-check" @click="submit">保存用户</el-button>
         </div>
       </template>
     </DynamicFormWithApi>
@@ -37,9 +37,9 @@
 </template>
 
 <script>
-import DynamicFormWithApi from "@/components/DynamicForm/DynamicFormWithApi.vue";
-import UrlImage from "@/components/UrlImage/index.vue";
-import {saveUser} from "@/api/admin_user";
+import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi.vue'
+import UrlImage from '@/components/UrlImage/index.vue'
+import { saveUser } from '@/api/admin_user'
 
 export default {
   name: 'UserAddView',

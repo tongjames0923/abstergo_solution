@@ -6,19 +6,20 @@
     :disabled="disabled || dictLoading"
     :loading=" dictLoading"
     :multiple="multiple"
-    @change="handleChange">
+    @change="handleChange"
+  >
     <el-option
       v-for="item in finalOptions"
       :key="item.value"
       :label="item.label"
-      :value="item.value">
-    </el-option>
+      :value="item.value"
+    />
   </el-select>
 </template>
 
 <script>
-import {mapActions, mapGetters} from 'vuex'
-import request from "@/utils/request";
+import { mapActions, mapGetters } from 'vuex'
+import request from '@/utils/request'
 
 export default {
   name: 'DynamicOptions',

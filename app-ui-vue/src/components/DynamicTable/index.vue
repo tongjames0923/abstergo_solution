@@ -2,14 +2,14 @@
   <div class="dynamic-table">
     <!-- 表格工具栏插槽 -->
     <div v-if="$slots.toolbar" class="dynamic-table__toolbar">
-      <slot name="toolbar"></slot>
+      <slot name="toolbar" />
     </div>
 
     <!-- 数据表格 -->
     <el-table
       ref="table"
-      :data="tableData"
       v-loading="loading"
+      :data="tableData"
       :element-loading-text="loadingText"
       :border="border"
       :stripe="stripe"
@@ -35,7 +35,7 @@
         :reserve-selection="reserveSelection"
         :selectable="selectable"
         fixed="left"
-      ></el-table-column>
+      />
 
       <!-- 序号列 -->
       <el-table-column
@@ -44,7 +44,7 @@
         :label="indexLabel"
         :width="indexWidth"
         fixed="left"
-      ></el-table-column>
+      />
 
       <!-- 动态列 -->
       <template v-for="column in columns">
@@ -77,11 +77,11 @@
           <template slot-scope="scope">
             <!-- 使用render函数渲染 -->
             <template v-if="column.render">
-              <render :render="column.render" :params="scope"></render>
+              <render :render="column.render" :params="scope" />
             </template>
             <!-- 使用slot渲染 -->
             <template v-else-if="column.slot">
-              <slot :name="column.slot" :row="scope.row" :$index="scope.$index" :column="column"></slot>
+              <slot :name="column.slot" :row="scope.row" :$index="scope.$index" :column="column" />
             </template>
             <!-- 默认文本渲染 -->
             <template v-else>
@@ -100,7 +100,7 @@
       >
         <template slot-scope="scope">
           <div class="action-buttons-container">
-            <slot name="actions" :row="scope.row" :$index="scope.$index"></slot>
+            <slot name="actions" :row="scope.row" :$index="scope.$index" />
             <template v-if="actions && Array.isArray(actions)">
               <el-button
                 v-for="(action, index) in actions"
@@ -133,7 +133,7 @@
       :background="paginationBackground"
       @size-change="handleSizeChange"
       @current-change="handleCurrentPageChange"
-    ></el-pagination>
+    />
   </div>
 </template>
 
@@ -317,15 +317,6 @@ export default {
       selectionData: []
     }
   },
-  created() {
-    // 如果设置了自动加载，则初始化时加载数据
-    if (this.autoLoad) {
-      this.loadData()
-    } else if (this.data && this.data.length > 0) {
-      // 如果提供了静态数据，则使用静态数据
-      this.tableData = [...this.data]
-    }
-  },
   watch: {
     // 监听外部数据变化
     data: {
@@ -335,6 +326,15 @@ export default {
         }
       },
       immediate: true
+    }
+  },
+  created() {
+    // 如果设置了自动加载，则初始化时加载数据
+    if (this.autoLoad) {
+      this.loadData()
+    } else if (this.data && this.data.length > 0) {
+      // 如果提供了静态数据，则使用静态数据
+      this.tableData = [...this.data]
     }
   },
   methods: {
@@ -357,10 +357,10 @@ export default {
       try {
         // 合并所有参数
         const fetchParams = {
-          pagination: {...this.pageParams},
-          sort: {...this.sortParams},
-          filter: {...this.filterParams},
-          query: {...this.queryParams, ...params}
+          pagination: { ...this.pageParams },
+          sort: { ...this.sortParams },
+          filter: { ...this.filterParams },
+          query: { ...this.queryParams, ...params }
         }
 
         // 调用数据获取函数
@@ -410,7 +410,7 @@ export default {
      * @param {Object} column - 列配置
      */
     formatValue(row, column) {
-      const {prop, formatter} = column
+      const { prop, formatter } = column
       const value = prop ? row[prop] : ''
 
       // 如果有自定义格式化函数，则使用

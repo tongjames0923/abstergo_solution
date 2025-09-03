@@ -1,13 +1,13 @@
 <template>
   <div class="app-container">
-    <user-admin-view></user-admin-view>
+    <user-admin-view />
   </div>
 </template>
 <script lang="ts">
-import Vue from "vue";
-import UserAdminView from "@/components/UserAdminView/index.vue";
+import Vue from 'vue'
+import UserAdminView from '@/components/UserAdminView/index.vue'
 
 export default Vue.extend({
-  components: {UserAdminView}
+  components: { UserAdminView }
 })
 </script>

@@ -21,7 +21,7 @@ export function setToken(token, rememberMe = false) {
     // "记住我"时保存到localStorage，长期有效
     localStorage.setItem(TokenKey, token)
     // 同时也保存到Cookie，保持兼容性
-    Cookies.set(TokenKey, token, {expires: 7}) // 7天过期
+    Cookies.set(TokenKey, token, { expires: 7 }) // 7天过期
   } else {
     // 不记住我时只保存到Cookie，浏览器关闭后失效
     Cookies.set(TokenKey, token)

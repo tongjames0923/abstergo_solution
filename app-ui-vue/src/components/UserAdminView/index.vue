@@ -23,7 +23,7 @@
         <span class="card-title">用户列表</span>
         <div class="table-header-actions">
           <el-dropdown @command="handleColumnConfig">
-            <el-button icon="el-icon-setting" circle size="mini" title="列设置"></el-button>
+            <el-button icon="el-icon-setting" circle size="mini" title="列设置"/>
             <el-dropdown-menu slot="dropdown">
               <el-dropdown-item command="columnConfig">自定义列</el-dropdown-item>
             </el-dropdown-menu>
@@ -32,9 +32,9 @@
             icon="el-icon-refresh"
             circle
             size="mini"
-            @click="handleSearch"
             title="刷新数据"
-          ></el-button>
+            @click="handleSearch"
+          />
         </div>
       </div>
 
@@ -59,14 +59,14 @@
 
         <template #avatar="{row}">
           <i v-if="!row.avatar || row.avatar === ''" class="el-icon-user-solid">未设置图片</i>
-          <el-avatar v-else
-                     :src="row.avatar || '/default-avatar.png'"
-                     fit="fill"
-                     shape="circle"
-                     size="large"
-                     class="user-avatar"
-          >
-          </el-avatar>
+          <el-avatar
+            v-else
+            :src="row.avatar || '/default-avatar.png'"
+            fit="fill"
+            shape="circle"
+            size="large"
+            class="user-avatar"
+          />
         </template>
 
         <template #actions="{ row, $index }">
@@ -117,9 +117,9 @@
       :title="dialogTitle"
       :visible.sync="userDialogVisible"
       width="600px"
-      @close="handleUserDialogClose"
       :modal-append-to-body="false"
       class="user-dialog"
+      @close="handleUserDialogClose"
     >
       <UserAddView
         v-if="dialogMode === 'add'"
@@ -141,17 +141,17 @@
       title="重置密码"
       :visible.sync="resetPasswordDialogVisible"
       width="450px"
-      @close="handleResetPasswordDialogClose"
       :modal-append-to-body="false"
       class="password-dialog"
+      @close="handleResetPasswordDialogClose"
     >
-      <el-form :model="passwordForm" :rules="passwordRules" ref="passwordForm" label-width="80px">
+      <el-form ref="passwordForm" :model="passwordForm" :rules="passwordRules" label-width="80px">
         <el-form-item label="用户名" prop="userName">
           <el-input
             v-model="passwordForm.userName"
             disabled
             prefix-icon="el-icon-user"
-          ></el-input>
+          />
         </el-form-item>
         <el-form-item label="新密码" prop="password">
           <el-input
@@ -160,7 +160,7 @@
             show-password
             prefix-icon="el-icon-lock"
             placeholder="请输入新密码"
-          ></el-input>
+          />
         </el-form-item>
         <el-form-item label="确认密码" prop="confirmPassword">
           <el-input
@@ -169,7 +169,7 @@
             show-password
             prefix-icon="el-icon-lock"
             placeholder="请再次输入密码"
-          ></el-input>
+          />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -183,9 +183,9 @@
       title="权限管理"
       :visible.sync="roleManagementDialogVisible"
       width="800px"
-      @close="handleRoleManagementDialogClose"
       :modal-append-to-body="false"
       class="role-dialog"
+      @close="handleRoleManagementDialogClose"
     >
       <UserRoleAdminView
         v-if="roleManagementDialogVisible"
@@ -198,8 +198,8 @@
       title="列配置"
       :visible.sync="columnConfigDialogVisible"
       width="600px"
-      @close="handleColumnConfigDialogClose"
       class="column-config-dialog"
+      @close="handleColumnConfigDialogClose"
     >
       <el-alert
         title="通过上下按钮调整顺序，勾选控制显示/隐藏"
@@ -207,17 +207,17 @@
         show-icon
         :closable="false"
         style="margin-bottom: 15px"
-      ></el-alert>
+      />
 
       <el-table
         :data="columnConfig"
         class="column-config-table"
         row-key="prop"
       >
-        <el-table-column label="列名称" prop="label" width="150"></el-table-column>
+        <el-table-column label="列名称" prop="label" width="150"/>
         <el-table-column label="显示/隐藏" width="100">
           <template slot-scope="scope">
-            <el-checkbox v-model="scope.row.visible"></el-checkbox>
+            <el-checkbox v-model="scope.row.visible"/>
           </template>
         </el-table-column>
         <el-table-column label="排序" width="120">
@@ -225,15 +225,15 @@
             <el-button
               icon="el-icon-arrow-up"
               size="mini"
+              :disabled="scope.$index === 0"
               @click="moveUp(scope.$index)"
-              :disabled="scope.$index === 0">
-            </el-button>
+            />
             <el-button
               icon="el-icon-arrow-down"
               size="mini"
+              :disabled="scope.$index === columnConfig.length - 1"
               @click="moveDown(scope.$index)"
-              :disabled="scope.$index === columnConfig.length - 1">
-            </el-button>
+            />
           </template>
         </el-table-column>
       </el-table>
@@ -248,13 +248,13 @@
 </template>
 
 <script>
-import DynamicTable from "@/components/DynamicTable/index.vue"
-import DynamicOptions from "@/components/DynamicOptions/index.vue";
-import UserAddView from "@/components/UserAdminView/UserAddView.vue";
-import UserEditView from "@/components/UserAdminView/UserEditView.vue";
-import DynamicFormWithApi from "@/components/DynamicForm/DynamicFormWithApi.vue";
-import UserRoleAdminView from "@/components/UserAdminView/UserRoleAdminView.vue";
-import {activateUser, adminQueryUser, disableUser, saveUser} from "@/api/admin_user";
+import DynamicTable from '@/components/DynamicTable/index.vue'
+import DynamicOptions from '@/components/DynamicOptions/index.vue'
+import UserAddView from '@/components/UserAdminView/UserAddView.vue'
+import UserEditView from '@/components/UserAdminView/UserEditView.vue'
+import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi.vue'
+import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
+import {activateUser, adminQueryUser, disableUser, saveUser} from '@/api/admin_user'
 
 export default {
   name: 'UserAdminView',
@@ -288,7 +288,7 @@ export default {
       {prop: 'flag', label: '状态', width: 150, slot: 'status', visible: true},
       {prop: 'createTime', label: '创建时间', width: 180, sortable: 'custom', visible: true},
       {prop: 'updateTime', label: '更新时间', width: 180, sortable: 'custom', visible: true}
-    ];
+    ]
 
     return {
       loading: false,
@@ -345,7 +345,7 @@ export default {
   },
   computed: {
     dialogTitle() {
-      return this.dialogMode === 'add' ? '新增用户' : '编辑用户';
+      return this.dialogMode === 'add' ? '新增用户' : '编辑用户'
     },
 
     loadingCount() {
@@ -356,7 +356,7 @@ export default {
 
     // 计算显示的表格列（仅包含可见列）
     displayTableColumns() {
-      return this.columnConfig.filter(column => column.visible !== false);
+      return this.columnConfig.filter(column => column.visible !== false)
     }
   },
   mounted() {
@@ -368,7 +368,7 @@ export default {
      */
     handleColumnConfig(command) {
       if (command === 'columnConfig') {
-        this.columnConfigDialogVisible = true;
+        this.columnConfigDialogVisible = true
       }
     },
 
@@ -377,9 +377,9 @@ export default {
      */
     moveUp(index) {
       if (index > 0) {
-        const temp = this.columnConfig[index];
-        this.$set(this.columnConfig, index, this.columnConfig[index - 1]);
-        this.$set(this.columnConfig, index - 1, temp);
+        const temp = this.columnConfig[index]
+        this.$set(this.columnConfig, index, this.columnConfig[index - 1])
+        this.$set(this.columnConfig, index - 1, temp)
       }
     },
 
@@ -388,9 +388,9 @@ export default {
      */
     moveDown(index) {
       if (index < this.columnConfig.length - 1) {
-        const temp = this.columnConfig[index];
-        this.$set(this.columnConfig, index, this.columnConfig[index + 1]);
-        this.$set(this.columnConfig, index + 1, temp);
+        const temp = this.columnConfig[index]
+        this.$set(this.columnConfig, index, this.columnConfig[index + 1])
+        this.$set(this.columnConfig, index + 1, temp)
       }
     },
 
@@ -399,10 +399,10 @@ export default {
      */
     saveColumnConfig() {
       // 不再保存到localStorage，只在本地使用
-      this.columnConfigDialogVisible = false;
+      this.columnConfigDialogVisible = false
       // 刷新表格
       if (this.$refs.userTable) {
-        this.$refs.userTable.refresh();
+        this.$refs.userTable.refresh()
       }
     },
 
@@ -410,7 +410,7 @@ export default {
      * 重置列配置为默认
      */
     resetColumnConfig() {
-      this.columnConfig = [...this.defaultTableColumns];
+      this.columnConfig = [...this.defaultTableColumns]
     },
 
     /**
@@ -418,7 +418,7 @@ export default {
      */
     loadColumnConfig() {
       // 不再从localStorage加载配置，始终使用默认配置
-      return null;
+      return null
     },
 
     /**
@@ -426,7 +426,7 @@ export default {
      */
     handleColumnConfigDialogClose() {
       // 如果用户取消操作，恢复到默认配置
-      this.columnConfig = [...this.defaultTableColumns];
+      this.columnConfig = [...this.defaultTableColumns]
     },
 
     /**
@@ -449,8 +449,8 @@ export default {
         // 添加排序参数
         if (this.sortParams.prop && this.sortParams.order) {
           // 将Element UI的排序格式转换为后端需要的格式
-          const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc';
-          criteria[`${this.sortParams.prop}Order`] = order;
+          const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc'
+          criteria[`${this.sortParams.prop}Order`] = order
         }
 
         // 移除值为undefined的属性
@@ -486,7 +486,7 @@ export default {
      * 查询按钮点击事件
      */
     handleSearch(data) {
-      this.searchForm = data;
+      this.searchForm = data
       this.$refs.userTable.refresh()
     },
 
@@ -516,24 +516,24 @@ export default {
      * 处理表格排序变化
      */
     handleTableSortChange(sortInfo) {
-      this.sortParams = sortInfo;
+      this.sortParams = sortInfo
     },
 
     /**
      * 新增用户
      */
     handleAdd() {
-      this.dialogMode = 'add';
-      this.userDialogVisible = true;
+      this.dialogMode = 'add'
+      this.userDialogVisible = true
     },
 
     /**
      * 编辑用户
      */
     handleEdit(row) {
-      this.dialogMode = 'edit';
-      this.currentUser = {...row};
-      this.userDialogVisible = true;
+      this.dialogMode = 'edit'
+      this.currentUser = {...row}
+      this.userDialogVisible = true
     },
 
     /**
@@ -541,36 +541,36 @@ export default {
      */
     async handleToggleStatus(row) {
       try {
-        let response;
+        let response
         if (row.flag === 1) {
           // 当前是正常状态，点击后应该禁用
           await this.$confirm('确认要禁用该用户吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
-          });
-          response = await disableUser(row.id);
+          })
+          response = await disableUser(row.id)
         } else {
           // 当前是禁用或锁定状态，点击后应该激活
           await this.$confirm('确认要激活该用户吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
-          });
-          response = await activateUser(row.id);
+          })
+          response = await activateUser(row.id)
         }
 
         if (response.code === 200) {
-          this.$message.success(response.message || '操作成功');
+          this.$message.success(response.message || '操作成功')
           // 刷新数据
-          this.$refs.userTable.refresh();
+          this.$refs.userTable.refresh()
         } else {
-          this.$message.error(response.message || '操作失败');
+          this.$message.error(response.message || '操作失败')
         }
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('操作失败:', error);
-          this.$message.error('操作失败');
+          console.error('操作失败:', error)
+          this.$message.error('操作失败')
         }
       }
     },
@@ -579,18 +579,18 @@ export default {
      * 处理用户操作成功事件
      */
     handleUserOperationSuccess() {
-      this.$message.success(this.dialogMode === 'add' ? '用户创建成功' : '用户更新成功');
-      this.userDialogVisible = false;
+      this.$message.success(this.dialogMode === 'add' ? '用户创建成功' : '用户更新成功')
+      this.userDialogVisible = false
 
       // 刷新数据
-      this.$refs.userTable.refresh();
+      this.$refs.userTable.refresh()
     },
 
     /**
      * 处理用户操作取消事件
      */
     handleUserOperationCancel() {
-      this.userDialogVisible = false;
+      this.userDialogVisible = false
     },
 
     /**
@@ -599,7 +599,7 @@ export default {
     handleUserDialogClose() {
       if (this.dialogMode === 'add' && this.$refs.userAddView) {
         // 重置表单
-        this.$refs.userAddView.resetForm();
+        this.$refs.userAddView.resetForm()
         // 重置表单数据
         this.$refs.userAddView.userForm = {
           userName: '',
@@ -608,7 +608,7 @@ export default {
           nickName: '',
           remark: '',
           avatar: ''
-        };
+        }
       }
       // 编辑模式不需要特别处理，因为下次打开时会传入新的数据
     },
@@ -622,8 +622,8 @@ export default {
         userName: row.userName,
         password: '',
         confirmPassword: ''
-      };
-      this.resetPasswordDialogVisible = true;
+      }
+      this.resetPasswordDialogVisible = true
     },
 
     /**
@@ -638,51 +638,51 @@ export default {
               id: this.passwordForm.id,
               userName: this.passwordForm.userName,
               password: this.passwordForm.password
-            };
+            }
 
             // 调用后端保存接口
-            const response = await saveUser(userData);
+            const response = await saveUser(userData)
 
             if (response.code === 200) {
-              this.$message.success('密码重置成功');
-              this.resetPasswordDialogVisible = false;
+              this.$message.success('密码重置成功')
+              this.resetPasswordDialogVisible = false
 
               // 刷新数据
-              this.$refs.userTable.refresh();
+              this.$refs.userTable.refresh()
             } else {
-              this.$message.error(response.message || '密码重置失败');
+              this.$message.error(response.message || '密码重置失败')
             }
           } catch (error) {
-            console.error('密码重置失败:', error);
-            this.$message.error('密码重置失败');
+            console.error('密码重置失败:', error)
+            this.$message.error('密码重置失败')
           }
         } else {
-          console.log('表单验证失败');
-          this.$message.warning('请填写正确的表单信息');
-          return false;
+          console.log('表单验证失败')
+          this.$message.warning('请填写正确的表单信息')
+          return false
         }
-      });
+      })
     },
 
     /**
      * 处理重置密码弹窗关闭事件
      */
     handleResetPasswordDialogClose() {
-      this.$refs.passwordForm.resetFields();
+      this.$refs.passwordForm.resetFields()
       this.passwordForm = {
         id: undefined,
         userName: '',
         password: '',
         confirmPassword: ''
-      };
+      }
     },
 
     /**
      * 处理权限管理按钮点击事件
      */
     handleManageRoles(row) {
-      this.currentUserId = row.id;
-      this.roleManagementDialogVisible = true;
+      this.currentUserId = row.id
+      this.roleManagementDialogVisible = true
     },
 
     /**

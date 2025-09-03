@@ -1,15 +1,15 @@
 <template>
   <div class="user-edit-view">
     <el-form
+      ref="userForm"
       :model="userForm"
       :rules="userRules"
-      ref="userForm"
       label-width="80px"
       class="user-form"
     >
       <div class="form-section">
         <div class="section-header">
-          <i class="el-icon-user"></i>
+          <i class="el-icon-user" />
           <span class="section-title">基本信息</span>
         </div>
 
@@ -22,7 +22,7 @@
                 size="medium"
                 prefix-icon="el-icon-user"
                 :disabled="isEditMode"
-              ></el-input>
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -35,7 +35,7 @@
                 placeholder="请输入昵称"
                 size="medium"
                 prefix-icon="el-icon-star-off"
-              ></el-input>
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -50,7 +50,7 @@
                 show-password
                 size="medium"
                 prefix-icon="el-icon-lock"
-              ></el-input>
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -65,7 +65,7 @@
                 show-password
                 size="medium"
                 prefix-icon="el-icon-lock"
-              ></el-input>
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -73,7 +73,7 @@
 
       <div class="form-section">
         <div class="section-header">
-          <i class="el-icon-picture-outline"></i>
+          <i class="el-icon-picture-outline" />
           <span class="section-title">附加信息</span>
         </div>
 
@@ -86,7 +86,7 @@
                 type="textarea"
                 :rows="2"
                 size="medium"
-              ></el-input>
+              />
             </el-form-item>
           </el-col>
         </el-row>
@@ -94,28 +94,28 @@
         <el-row :gutter="20">
           <el-col :span="24">
             <el-form-item label="头像">
-              <url-image v-model="userForm.avatar"></url-image>
+              <url-image v-model="userForm.avatar" />
             </el-form-item>
           </el-col>
         </el-row>
       </div>
 
       <div class="form-actions">
-        <el-button @click="handleCancel" size="medium">取消</el-button>
-        <el-button type="primary" @click="handleSubmit" size="medium" icon="el-icon-check">保存用户</el-button>
+        <el-button size="medium" @click="handleCancel">取消</el-button>
+        <el-button type="primary" size="medium" icon="el-icon-check" @click="handleSubmit">保存用户</el-button>
       </div>
     </el-form>
   </div>
 </template>
 
 <script>
-import UrlImage from "@/components/UrlImage/index.vue";
+import UrlImage from '@/components/UrlImage/index.vue'
 
-import {saveUser} from "@/api/admin_user";
+import { saveUser } from '@/api/admin_user'
 
 export default {
   name: 'UserEditView',
-  components: {UrlImage},
+  components: { UrlImage },
   props: {
     // 编辑模式下的用户数据
     userData: {
@@ -144,22 +144,22 @@ export default {
     }
 
     return {
-      userForm: {...this.userData},
+      userForm: { ...this.userData },
       userRules: {
         userName: [
-          {required: true, message: '请输入用户名', trigger: 'blur'},
-          {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'}
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
         ],
         password: [
-          {required: !this.isEditMode, message: '请输入密码', trigger: 'blur'},
-          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
+          { required: !this.isEditMode, message: '请输入密码', trigger: 'blur' },
+          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
         ],
         confirmPassword: [
-          {required: !this.isEditMode, validator: validateConfirmPassword, trigger: 'blur'}
+          { required: !this.isEditMode, validator: validateConfirmPassword, trigger: 'blur' }
         ],
         nickName: [
-          {required: true, message: '请输入昵称', trigger: 'blur'},
-          {min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur'}
+          { required: true, message: '请输入昵称', trigger: 'blur' },
+          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
         ]
       }
     }
@@ -173,7 +173,7 @@ export default {
   watch: {
     userData: {
       handler(newVal) {
-        this.userForm = {...newVal}
+        this.userForm = { ...newVal }
       },
       deep: true
     }
@@ -183,7 +183,7 @@ export default {
      * 提交表单
      */
     handleSubmit() {
-      this.$refs.userForm.validate(async (valid) => {
+      this.$refs.userForm.validate(async(valid) => {
         if (valid) {
           try {
             // 构造用户数据

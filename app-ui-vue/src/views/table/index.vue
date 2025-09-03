@@ -33,8 +33,8 @@
               <el-switch
                 v-model="configForm.selectable"
                 active-text="可选择"
-                inactive-text="不可选择">
-              </el-switch>
+                inactive-text="不可选择"
+              />
             </el-form-item>
             <el-form-item v-if="configForm.selectable" label="选择类型">
               <el-radio-group v-model="configForm.selectMode" size="mini">
@@ -54,16 +54,16 @@
             </el-form-item>
             <el-form-item>
               <el-select v-model="searchForm.category" clearable placeholder="分类筛选">
-                <el-option label="全部分类" value=""></el-option>
-                <el-option label="技术类" value="tech"></el-option>
-                <el-option label="设计类" value="design"></el-option>
-                <el-option label="市场类" value="market"></el-option>
+                <el-option label="全部分类" value="" />
+                <el-option label="技术类" value="tech" />
+                <el-option label="设计类" value="design" />
+                <el-option label="市场类" value="market" />
               </el-select>
             </el-form-item>
             <el-form-item>
               <el-button icon="el-icon-search" type="primary" @click="refreshData">搜索</el-button>
             </el-form-item>
-            <el-form-item class="toolbar-spacer"></el-form-item>
+            <el-form-item class="toolbar-spacer" />
             <el-form-item>
               <el-button icon="el-icon-plus" type="primary" @click="handleCreate">新增项目</el-button>
             </el-form-item>
@@ -83,7 +83,7 @@
         <el-card class="custom-card" shadow="hover">
           <div class="card-header">
             <div class="card-avatar">
-              <el-avatar :src="item.avatar"/>
+              <el-avatar :src="item.avatar" />
             </div>
             <div class="card-title">{{ item.title }}</div>
             <el-tag :type="getTagType(item.category)" size="mini">{{ item.categoryName }}</el-tag>
@@ -92,13 +92,13 @@
             <div class="card-description">{{ item.description }}</div>
             <div class="card-meta">
               <span class="meta-item">
-                <i class="el-icon-view"></i> {{ item.views }}
+                <i class="el-icon-view" /> {{ item.views }}
               </span>
               <span class="meta-item">
-                <i class="el-icon-star-off"></i> {{ item.stars }}
+                <i class="el-icon-star-off" /> {{ item.stars }}
               </span>
               <span class="meta-item">
-                <i class="el-icon-time"></i> {{ item.createTime }}
+                <i class="el-icon-time" /> {{ item.createTime }}
               </span>
             </div>
           </div>
@@ -136,19 +136,19 @@
     <el-dialog :visible.sync="detailDialogVisible" title="项目详情" width="40%">
       <el-form :model="currentItem" label-width="80px">
         <el-form-item label="项目名称">
-          <el-input v-model="currentItem.title" readonly/>
+          <el-input v-model="currentItem.title" readonly />
         </el-form-item>
         <el-form-item label="分类">
-          <el-input v-model="currentItem.categoryName" readonly/>
+          <el-input v-model="currentItem.categoryName" readonly />
         </el-form-item>
         <el-form-item label="描述">
-          <el-input v-model="currentItem.description" readonly type="textarea"/>
+          <el-input v-model="currentItem.description" readonly type="textarea" />
         </el-form-item>
         <el-form-item label="浏览量">
-          <el-input v-model="currentItem.views" readonly/>
+          <el-input v-model="currentItem.views" readonly />
         </el-form-item>
         <el-form-item label="收藏数">
-          <el-input v-model="currentItem.stars" readonly/>
+          <el-input v-model="currentItem.stars" readonly />
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -205,7 +205,7 @@ export default {
           'tech': '技术类',
           'design': '设计类',
           'market': '市场类'
-        };
+        }
 
         const data = []
         const count = this.configForm.pageSize
@@ -248,7 +248,7 @@ export default {
     },
 
     handleView(item) {
-      this.currentItem = {...item}
+      this.currentItem = { ...item }
       this.detailDialogVisible = true
     },
 

@@ -1,6 +1,6 @@
-import {getInfo, login, logout} from '@/api/user'
-import {getToken, removeToken, setToken} from '@/utils/auth'
-import {resetRouter} from '@/router'
+import { getInfo, login, logout } from '@/api/user'
+import { getToken, removeToken, setToken } from '@/utils/auth'
+import { resetRouter } from '@/router'
 
 const getDefaultState = () => {
   return {
@@ -33,56 +33,54 @@ const mutations = {
 
 const actions = {
   // user login
-  async login({commit}, userInfo) {
+  async login({ commit }, userInfo) {
     try {
-      const {username, password, rememberMe} = userInfo
-      const {data} = await login({username: username.trim(), password: password})
+      const { username, password, rememberMe } = userInfo
+      const { data } = await login({ username: username.trim(), password: password })
       commit('SET_TOKEN', data.token)
       // 根据rememberMe选项设置Token存储方式
       setToken(data.token, rememberMe)
-      return data;
+      return data
     } catch (error) {
-      throw error;
+      throw error
     }
-
   },
 
   // get user info
-  async getInfo({commit, state}) {
+  async getInfo({ commit, state }) {
     try {
-      const response = await getInfo();
-      const {data} = response;
+      const response = await getInfo()
+      const { data } = response
 
       if (!data) {
-        throw new Error('Verification failed, please Login again.');
+        throw new Error('Verification failed, please Login again.')
       }
 
-      const {nickName, avatar, avaliableRoles} = data;
+      const { nickName, avatar, avaliableRoles } = data
 
-      commit('SET_NAME', nickName);
-      commit('SET_AVATAR', avatar);
-      commit('SET_ROLES', avaliableRoles);
-      return data;
+      commit('SET_NAME', nickName)
+      commit('SET_AVATAR', avatar)
+      commit('SET_ROLES', avaliableRoles)
+      return data
     } catch (error) {
-      throw error;
+      throw error
     }
   },
 
-
   // user logout
-  async logout({commit, state}) {
+  async logout({ commit, state }) {
     try {
-      await logout(state.token);
+      await logout(state.token)
       removeToken() // must remove  token  first
       resetRouter()
       commit('RESET_STATE')
     } catch (error) {
-      throw error;
+      throw error
     }
   },
 
   // remove token
-  async resetToken({commit}) {
+  async resetToken({ commit }) {
     removeToken() // must remove  token  first
     commit('RESET_STATE')
   }

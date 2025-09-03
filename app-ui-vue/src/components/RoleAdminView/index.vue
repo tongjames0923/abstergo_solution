@@ -13,8 +13,8 @@
         <span>查询条件</span>
       </div>
       <el-form
-        :model="searchForm"
         ref="searchForm"
+        :model="searchForm"
         label-width="80px"
         class="search-form"
       >
@@ -45,9 +45,9 @@
                 clearable
                 style="width: 100%"
               >
-                <el-option label="失效" :value="0"></el-option>
-                <el-option label="激活" :value="1"></el-option>
-                <el-option label="系统" :value="2"></el-option>
+                <el-option label="失效" :value="0" />
+                <el-option label="激活" :value="1" />
+                <el-option label="系统" :value="2" />
               </el-select>
             </el-form-item>
           </el-col>
@@ -69,9 +69,9 @@
             icon="el-icon-refresh"
             circle
             size="mini"
-            @click="handleSearch"
             title="刷新数据"
-          ></el-button>
+            @click="handleSearch"
+          />
         </div>
       </div>
 
@@ -114,8 +114,8 @@
                   type="primary"
                   plain
                   icon="el-icon-edit"
-                  @click.stop="handleEdit(row)"
                   :disabled="row.flag === 2"
+                  @click.stop="handleEdit(row)"
                 >编辑
                 </el-button>
 
@@ -144,8 +144,8 @@
                   type="danger"
                   plain
                   icon="el-icon-delete"
-                  @click.stop="handleDelete(row)"
                   :disabled="row.flag === 2"
+                  @click.stop="handleDelete(row)"
                 >删除
                 </el-button>
               </div>
@@ -160,14 +160,14 @@
       :title="dialogTitle"
       :visible.sync="roleDialogVisible"
       width="600px"
-      @close="handleRoleDialogClose"
       :modal-append-to-body="false"
       class="role-dialog"
+      @close="handleRoleDialogClose"
     >
       <el-form
+        ref="roleForm"
         :model="roleForm"
         :rules="roleRules"
-        ref="roleForm"
         label-width="80px"
         class="role-form"
       >
@@ -178,7 +178,7 @@
             size="medium"
             prefix-icon="el-icon-user"
             :disabled="isEditMode"
-          ></el-input>
+          />
         </el-form-item>
 
         <el-form-item label="角色描述" prop="description">
@@ -188,7 +188,7 @@
             type="textarea"
             :rows="3"
             size="medium"
-          ></el-input>
+          />
         </el-form-item>
 
         <el-form-item label="状态" prop="flag">
@@ -198,8 +198,7 @@
             :inactive-value="0"
             active-text="启用"
             inactive-text="禁用"
-          >
-          </el-switch>
+          />
         </el-form-item>
       </el-form>
 
@@ -212,12 +211,12 @@
 </template>
 
 <script>
-import CardList from "@/components/CardList/index.vue"
-import {activateRole, deleteRole, disableRole, queryRoles, saveRole} from "@/api/role"
+import CardList from '@/components/CardList/index.vue'
+import { activateRole, deleteRole, disableRole, queryRoles, saveRole } from '@/api/role'
 
 export default {
   name: 'RoleAdminView',
-  components: {CardList},
+  components: { CardList },
   data() {
     return {
       roleDialogVisible: false,
@@ -230,11 +229,11 @@ export default {
       },
       roleRules: {
         role: [
-          {required: true, message: '请输入角色名称', trigger: 'blur'},
-          {min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur'}
+          { required: true, message: '请输入角色名称', trigger: 'blur' },
+          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
         ],
         description: [
-          {required: true, message: '请输入角色描述', trigger: 'blur'}
+          { required: true, message: '请输入角色描述', trigger: 'blur' }
         ]
       },
       searchForm: {
@@ -357,7 +356,7 @@ export default {
      */
     handleEdit(row) {
       this.dialogMode = 'edit'
-      this.roleForm = {...row}
+      this.roleForm = { ...row }
       this.roleDialogVisible = true
     },
 
@@ -444,7 +443,7 @@ export default {
      * 提交角色表单
      */
     handleRoleSubmit() {
-      this.$refs.roleForm.validate(async (valid) => {
+      this.$refs.roleForm.validate(async(valid) => {
         if (valid) {
           try {
             const roleData = {

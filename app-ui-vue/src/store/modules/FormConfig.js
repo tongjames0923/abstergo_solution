@@ -1,4 +1,4 @@
-import {getFormConfig} from "@/api/view";
+import { getFormConfig } from '@/api/view'
 
 // 表单配置状态管理模块
 const state = {
@@ -64,19 +64,19 @@ const state = {
       ],
       span: 24,
       labelWidth: '80px'
-    },
+    }
 
   }
 }
 
 const mutations = {
   // 设置表单配置
-  SET_FORM_CONFIG(state, {configName, config}) {
+  SET_FORM_CONFIG(state, { configName, config }) {
     state.formConfigs[configName] = config
   },
 
   // 更新表单配置
-  UPDATE_FORM_CONFIG(state, {configName, config}) {
+  UPDATE_FORM_CONFIG(state, { configName, config }) {
     if (state.formConfigs[configName]) {
       state.formConfigs[configName] = {
         ...state.formConfigs[configName],
@@ -88,17 +88,17 @@ const mutations = {
 
 const actions = {
   // 设置表单配置
-  setFormConfig({commit}, {configName, config}) {
-    commit('SET_FORM_CONFIG', {configName, config})
+  setFormConfig({ commit }, { configName, config }) {
+    commit('SET_FORM_CONFIG', { configName, config })
   },
 
   // 更新表单配置
-  updateFormConfig({commit}, {configName, config}) {
-    commit('UPDATE_FORM_CONFIG', {configName, config})
+  updateFormConfig({ commit }, { configName, config }) {
+    commit('UPDATE_FORM_CONFIG', { configName, config })
   },
 
   // 从后端获取表单配置
-  async fetchFormConfig({state, commit}, configName) {
+  async fetchFormConfig({ state, commit }, configName) {
     // 如果store中已存在该配置，直接返回
     if (state.formConfigs[configName]) {
       return state.formConfigs[configName]
@@ -109,7 +109,7 @@ const actions = {
       const response = await getFormConfig(configName)
       var obj = response.data
       // 将获取到的配置存入store
-      commit('SET_FORM_CONFIG', {configName, config: obj})
+      commit('SET_FORM_CONFIG', { configName, config: obj })
       return obj
     } catch (error) {
       console.error('获取表单配置失败:', error)

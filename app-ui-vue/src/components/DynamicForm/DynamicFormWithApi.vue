@@ -12,20 +12,20 @@
       @submit="handleSubmit"
     >
       <template v-for="(_, slotName) in $scopedSlots" #[slotName]="slotData">
-        <slot :name="slotName" v-bind="slotData"></slot>
+        <slot :name="slotName" v-bind="slotData" />
       </template>
     </DynamicForm>
 
     <el-card v-else-if="loading" shadow="never">
       <div class="loading-placeholder">
-        <i class="el-icon-loading"></i>
+        <i class="el-icon-loading" />
         <span>加载配置中...</span>
       </div>
     </el-card>
 
     <el-card v-else-if="error" shadow="never">
       <div class="error-placeholder">
-        <i class="el-icon-warning"></i>
+        <i class="el-icon-warning" />
         <span>加载配置失败: {{ error }}</span>
         <el-button size="mini" @click="loadConfig">重新加载</el-button>
       </div>
@@ -35,7 +35,7 @@
 
 <script>
 import DynamicForm from './index.vue'
-import request from "@/utils/request";
+import request from '@/utils/request'
 
 export default {
   name: 'DynamicFormWithApi',
@@ -153,7 +153,7 @@ export default {
         const response = await request({
           url: this.apiUrl,
           method: 'get',
-          params: {key: this.configName}
+          params: { key: this.configName }
         })
 
         this.localConfig = response.data

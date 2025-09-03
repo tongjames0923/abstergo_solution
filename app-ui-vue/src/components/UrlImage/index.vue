@@ -6,17 +6,17 @@
         v-model="imageUrl"
         :placeholder="placeholder"
         :disabled="disabled"
-        @input="handleInput"
-        @blur="handleBlur"
         class="url-input"
         type="text"
+        @input="handleInput"
+        @blur="handleBlur"
       >
         <el-button
           v-if="showClearButton"
           slot="append"
-          @click="clearUrl"
           :disabled="disabled || !imageUrl"
           size="small"
+          @click="clearUrl"
         >
           {{ clearButtonText }}
         </el-button>
@@ -28,24 +28,24 @@
       <!-- 加载状态和错误状态由 el-image 处理 -->
       <el-image
         v-if="imageUrl"
+        ref="previewImage"
         :src="imageUrl"
         :alt="altText"
         :style="imageStyle"
         class="preview-image"
-        ref="previewImage"
         fit="contain"
         :lazy="false"
         @load="handleImageLoad"
         @error="handleImageError"
       >
         <div slot="placeholder" class="loading-placeholder">
-          <div class="spinner"></div>
+          <div class="spinner" />
           <p>{{ loadingText }}</p>
         </div>
         <div slot="error" class="error-placeholder">
           <div class="error-icon">⚠️</div>
           <p>{{ errorText }}</p>
-          <el-button v-if="showRetryButton" @click="retryLoad" class="retry-button" size="small">
+          <el-button v-if="showRetryButton" class="retry-button" size="small" @click="retryLoad">
             {{ retryButtonText }}
           </el-button>
         </div>

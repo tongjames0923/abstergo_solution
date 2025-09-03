@@ -11,7 +11,7 @@
           @click="toggleExpand"
         >
           {{ isExpanded ? '收起' : '展开' }}
-          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"></i>
+          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
         </el-button>
       </slot>
     </div>
@@ -26,7 +26,7 @@
       v-bind="formProps"
     >
       <!-- 表单前内容 -->
-      <slot name="before-form"></slot>
+      <slot name="before-form" />
 
       <!-- 默认布局：根据配置自动生成 -->
       <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
@@ -56,7 +56,7 @@
                   @input="val => setFieldValue((field && field.prop) || '', val)"
                 >
                   <template v-if="field && field.prefixIcon" #prefix>
-                    <i :class="field.prefixIcon"></i>
+                    <i :class="field.prefixIcon" />
                   </template>
                 </el-input>
 
@@ -127,7 +127,7 @@
       />
 
       <!-- 表单后内容 -->
-      <slot name="after-form"></slot>
+      <slot name="after-form" />
 
       <!-- 操作按钮 -->
       <div class="form-actions">

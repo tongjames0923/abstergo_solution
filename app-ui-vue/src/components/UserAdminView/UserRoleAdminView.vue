@@ -18,7 +18,7 @@
             {{ role.role }}
           </el-tag>
           <div v-if="userRoles.length === 0" class="no-roles">
-            <i class="el-icon-info"></i>
+            <i class="el-icon-info" />
             该用户暂无角色
           </div>
         </div>
@@ -38,8 +38,7 @@
               prefix-icon="el-icon-search"
               @clear="handleSearch"
               @keyup.enter.native="handleSearch"
-            >
-            </el-input>
+            />
           </div>
         </div>
 
@@ -120,7 +119,7 @@
 
 <script>
 import CardList from '@/components/CardList'
-import {disableRoleForUser, enableRoleForUser, getRolesByUserIdAdmin, queryRoles} from '@/api/admin_user'
+import { disableRoleForUser, enableRoleForUser, getRolesByUserIdAdmin, queryRoles } from '@/api/admin_user'
 
 export default {
   name: 'UserRoleAdminView',
@@ -162,7 +161,7 @@ export default {
     },
     loadingCount() {
       // 根据当前页数据量来确定加载占位符数量
-      return Math.min(this.paginatedRoles.length || this.pageSize, this.pageSize);
+      return Math.min(this.paginatedRoles.length || this.pageSize, this.pageSize)
     }
   },
   watch: {
@@ -197,7 +196,7 @@ export default {
       try {
         const response = await queryRoles({
           roleLike: this.searchKeyword || undefined,
-          flagEquals: [1,2], // 只获取启用的角色
+          flagEquals: [1, 2], // 只获取启用的角色
           pageNum: this.currentPage,
           pageSize: this.pageSize
         })
@@ -230,7 +229,7 @@ export default {
         // 更新本地数据
         const role = this.availableRoles.find(r => r.id === roleId)
         if (role) {
-          this.userRoles.push({...role})
+          this.userRoles.push({ ...role })
         }
         this.$message.success('角色分配成功')
       } catch (error) {

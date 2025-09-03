@@ -7,8 +7,14 @@
           <p class="login-subtitle">欢迎使用{{ systemTitle }}</p>
         </div>
 
-        <el-form ref="loginForm" :model="loginForm" :rules="loginRules" class="login-form" auto-complete="on"
-                 label-position="left">
+        <el-form
+          ref="loginForm"
+          :model="loginForm"
+          :rules="loginRules"
+          class="login-form"
+          auto-complete="on"
+          label-position="left"
+        >
 
           <el-form-item prop="username">
             <el-input
@@ -45,7 +51,7 @@
               @blur="handleInputBlur"
             />
             <span class="show-pwd" @click="showPwd">
-              <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'"></i>
+              <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'" />
             </span>
           </el-form-item>
 
@@ -67,7 +73,7 @@
       <div class="login-decoration">
         <div class="decoration-content">
           <div class="decoration-icon">
-            <i class="el-icon-office-building float-animation"></i>
+            <i class="el-icon-office-building float-animation" />
           </div>
           <!--          <h3>高效企业管理</h3>-->
           <!--          <p>一站式解决方案，提升企业运营效率</p>-->
@@ -78,8 +84,8 @@
 </template>
 
 <script>
-import {validUsername} from '@/utils/validate'
-import {getRememberMe, setRememberMe} from '@/utils/auth'
+import { validUsername } from '@/utils/validate'
+import { getRememberMe, setRememberMe } from '@/utils/auth'
 import settings from '@/settings'
 
 export default {
@@ -107,8 +113,8 @@ export default {
         rememberMe: false
       },
       loginRules: {
-        username: [{required: true, trigger: 'blur', validator: validateUsername}],
-        password: [{required: true, trigger: 'blur', validator: validatePassword}]
+        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       loading: false,
       passwordType: 'password',
@@ -122,7 +128,7 @@ export default {
   },
   watch: {
     $route: {
-      handler: function (route) {
+      handler: function(route) {
         this.redirect = route.query && route.query.redirect
       },
       immediate: true
@@ -162,7 +168,7 @@ export default {
           setRememberMe(this.loginForm.rememberMe)
 
           this.$store.dispatch('user/login', this.loginForm).then(() => {
-            this.$router.push({path: this.redirect || '/'})
+            this.$router.push({ path: this.redirect || '/' })
             this.loading = false
           }).catch(() => {
             this.loading = false

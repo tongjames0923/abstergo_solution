@@ -2,12 +2,12 @@
   <div class="card-list-container">
     <!-- 头部区域 -->
     <div v-if="$slots.header" class="card-list-header">
-      <slot name="header"></slot>
+      <slot name="header" />
     </div>
 
     <!-- 工具栏区域 -->
     <div v-if="$slots.toolbar" class="card-list-toolbar">
-      <slot name="toolbar"></slot>
+      <slot name="toolbar" />
     </div>
 
     <!-- 选择操作栏 -->
@@ -104,9 +104,9 @@
           <slot name="loading">
             <el-card class="loading-placeholder">
               <div class="loading-content">
-                <div class="loading-line"></div>
-                <div class="loading-line short"></div>
-                <div class="loading-line"></div>
+                <div class="loading-line" />
+                <div class="loading-line short" />
+                <div class="loading-line" />
               </div>
             </el-card>
           </slot>
@@ -117,13 +117,13 @@
     <!-- 空状态 -->
     <div v-if="!loading && data.length === 0" class="empty-state">
       <slot name="empty">
-        <el-empty description="暂无数据"></el-empty>
+        <el-empty description="暂无数据" />
       </slot>
     </div>
 
     <!-- 底部区域 -->
     <div v-if="$slots.footer" class="card-list-footer">
-      <slot name="footer"></slot>
+      <slot name="footer" />
     </div>
 
     <!-- 分页 -->
@@ -138,8 +138,7 @@
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
           @current-change="handleCurrentChange"
-        >
-        </el-pagination>
+        />
       </slot>
     </div>
   </div>
@@ -280,118 +279,118 @@ export default {
   },
   watch: {
     value(newVal) {
-      this.selectedItems = newVal;
+      this.selectedItems = newVal
     }
   },
   methods: {
     handleSizeChange(val) {
-      this.$emit('size-change', val);
+      this.$emit('size-change', val)
     },
     handleCurrentChange(val) {
-      this.$emit('current-change', val);
+      this.$emit('current-change', val)
     },
     // 处理卡片点击事件
     handleCardClick(item, event) {
       // 如果不可选择，直接触发card-click事件
       if (!this.selectable) {
-        this.$emit('card-click', item, event);
-        return;
+        this.$emit('card-click', item, event)
+        return
       }
 
       // 可选择时，根据模式处理选择
       if (this.selectMode === 'multiple') {
-        this.toggleSelection(item);
+        this.toggleSelection(item)
       } else if (this.selectMode === 'single') {
-        this.selectItem(item);
+        this.selectItem(item)
       }
 
       // 触发card-click事件
-      this.$emit('card-click', item, event);
+      this.$emit('card-click', item, event)
     },
     // 判断项目是否被选中
     isItemSelected(item) {
       if (this.selectMode === 'multiple') {
-        return this.selectedItems.some(selected => selected[this.idField] === item[this.idField]);
+        return this.selectedItems.some(selected => selected[this.idField] === item[this.idField])
       } else {
-        return this.selectedItems && this.selectedItems[this.idField] === item[this.idField];
+        return this.selectedItems && this.selectedItems[this.idField] === item[this.idField]
       }
     },
     // 切换选择状态（多选模式）
     toggleSelection(item) {
-      if (!this.selectable || this.selectMode !== 'multiple') return;
+      if (!this.selectable || this.selectMode !== 'multiple') return
 
-      const itemIndex = this.selectedItems.findIndex(selected => selected[this.idField] === item[this.idField]);
+      const itemIndex = this.selectedItems.findIndex(selected => selected[this.idField] === item[this.idField])
 
       if (itemIndex > -1) {
         // 已选中，移除
-        const newSelected = [...this.selectedItems];
-        newSelected.splice(itemIndex, 1);
-        this.selectedItems = newSelected;
+        const newSelected = [...this.selectedItems]
+        newSelected.splice(itemIndex, 1)
+        this.selectedItems = newSelected
       } else {
         // 未选中，添加
-        this.selectedItems = [...this.selectedItems, item];
+        this.selectedItems = [...this.selectedItems, item]
       }
 
-      this.$emit('input', this.selectedItems);
-      this.$emit('selection-change', this.selectedItems);
+      this.$emit('input', this.selectedItems)
+      this.$emit('selection-change', this.selectedItems)
     },
     // 选择项目（单选模式）
     selectItem(item) {
-      if (!this.selectable || this.selectMode !== 'single') return;
+      if (!this.selectable || this.selectMode !== 'single') return
 
       if (this.selectedItems && this.selectedItems[this.idField] === item[this.idField]) {
         // 已选中，取消选择
-        this.selectedItems = null;
+        this.selectedItems = null
       } else {
         // 未选中，选择该项目
-        this.selectedItems = item;
+        this.selectedItems = item
       }
 
-      this.$emit('input', this.selectedItems);
-      this.$emit('selection-change', this.selectedItems);
+      this.$emit('input', this.selectedItems)
+      this.$emit('selection-change', this.selectedItems)
     },
     // 处理选择控件变化
     handleSelectChange(item, checked) {
       if (this.selectMode === 'multiple') {
         if (checked) {
-          this.selectedItems = [...this.selectedItems, item];
+          this.selectedItems = [...this.selectedItems, item]
         } else {
-          const itemIndex = this.selectedItems.findIndex(selected => selected[this.idField] === item[this.idField]);
+          const itemIndex = this.selectedItems.findIndex(selected => selected[this.idField] === item[this.idField])
           if (itemIndex > -1) {
-            const newSelected = [...this.selectedItems];
-            newSelected.splice(itemIndex, 1);
-            this.selectedItems = newSelected;
+            const newSelected = [...this.selectedItems]
+            newSelected.splice(itemIndex, 1)
+            this.selectedItems = newSelected
           }
         }
       } else {
-        this.selectedItems = checked ? item : null;
+        this.selectedItems = checked ? item : null
       }
 
-      this.$emit('input', this.selectedItems);
-      this.$emit('selection-change', this.selectedItems);
+      this.$emit('input', this.selectedItems)
+      this.$emit('selection-change', this.selectedItems)
     },
     // 清空选择
     clearSelection() {
-      this.selectedItems = this.selectMode === 'multiple' ? [] : null;
-      this.$emit('input', this.selectedItems);
-      this.$emit('selection-change', this.selectedItems);
+      this.selectedItems = this.selectMode === 'multiple' ? [] : null
+      this.$emit('input', this.selectedItems)
+      this.$emit('selection-change', this.selectedItems)
     },
     // 滚动到指定位置
     scrollTo(options) {
       if (this.$refs.scrollContainer) {
-        this.$refs.scrollContainer.scrollTo(options);
+        this.$refs.scrollContainer.scrollTo(options)
       }
     },
     // 滚动到顶部
     scrollToTop() {
       if (this.$refs.scrollContainer) {
-        this.$refs.scrollContainer.scrollTop = 0;
+        this.$refs.scrollContainer.scrollTop = 0
       }
     },
     // 滚动到底部
     scrollToBottom() {
       if (this.$refs.scrollContainer) {
-        this.$refs.scrollContainer.scrollTop = this.$refs.scrollContainer.scrollHeight;
+        this.$refs.scrollContainer.scrollTop = this.$refs.scrollContainer.scrollHeight
       }
     }
   }

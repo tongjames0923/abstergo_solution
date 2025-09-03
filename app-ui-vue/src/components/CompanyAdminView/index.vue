@@ -25,9 +25,9 @@
             icon="el-icon-refresh"
             circle
             size="mini"
-            @click="handleSearch"
             title="刷新数据"
-          ></el-button>
+            @click="handleSearch"
+          />
         </div>
       </div>
 
@@ -59,8 +59,8 @@
               type="primary"
               plain
               icon="el-icon-edit"
-              @click="handleEdit(row)"
               :disabled="row.flag === 0 || row.flag === 5"
+              @click="handleEdit(row)"
             >编辑
             </el-button>
           </div>
@@ -73,34 +73,34 @@
       :title="dialogTitle"
       :visible.sync="companyDialogVisible"
       width="600px"
-      @close="handleCompanyDialogClose"
       :modal-append-to-body="false"
       class="company-dialog"
+      @close="handleCompanyDialogClose"
     >
-      <el-form :model="companyForm" :rules="companyRules" ref="companyForm" label-width="100px">
+      <el-form ref="companyForm" :model="companyForm" :rules="companyRules" label-width="100px">
         <el-form-item label="公司名称" prop="companyName">
           <el-input
             v-model="companyForm.companyName"
             placeholder="请输入公司名称"
-          ></el-input>
+          />
         </el-form-item>
         <el-form-item label="公司税号" prop="taxNumber">
           <el-input
             v-model="companyForm.taxNumber"
             placeholder="请输入公司税号"
-          ></el-input>
+          />
         </el-form-item>
         <el-form-item label="备注" prop="description">
           <el-input
             v-model="companyForm.description"
             type="textarea"
             placeholder="请输入备注"
-          ></el-input>
+          />
         </el-form-item>
         <el-form-item label="状态" prop="flag">
           <el-select v-model="companyForm.flag" placeholder="请选择状态">
-            <el-option label="已激活" :value="1"></el-option>
-            <el-option label="禁用" :value="2"></el-option>
+            <el-option label="已激活" :value="1" />
+            <el-option label="禁用" :value="2" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -113,9 +113,9 @@
 </template>
 
 <script>
-import DynamicTable from "@/components/DynamicTable/index.vue"
-import DynamicFormWithApi from "@/components/DynamicForm/DynamicFormWithApi.vue"
-import {activateCompany, adminQueryCompany, disableCompany, saveCompany} from "@/api/company"
+import DynamicTable from '@/components/DynamicTable/index.vue'
+import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi.vue'
+import { activateCompany, adminQueryCompany, disableCompany, saveCompany } from '@/api/company'
 
 export default {
   name: 'CompanyAdminView',
@@ -136,13 +136,13 @@ export default {
       },
       companyRules: {
         companyName: [
-          {required: true, message: '请输入公司名称', trigger: 'blur'}
+          { required: true, message: '请输入公司名称', trigger: 'blur' }
         ],
         taxNumber: [
-          {required: true, message: '请输入公司税号', trigger: 'blur'}
+          { required: true, message: '请输入公司税号', trigger: 'blur' }
         ],
         flag: [
-          {required: true, message: '请选择状态', trigger: 'change'}
+          { required: true, message: '请选择状态', trigger: 'change' }
         ]
       },
       searchForm: {
@@ -154,13 +154,13 @@ export default {
         updateTimeRange: []
       },
       columns: [
-        {prop: 'id', label: 'ID', width: 80},
-        {prop: 'companyName', label: '公司名称', width: 200},
-        {prop: 'taxNumber', label: '公司税号', width: 150},
-        {prop: 'description', label: '备注', width: 250},
-        {prop: 'flag', label: '状态', width: 100, slot: 'flag'},
-        {prop: 'createTime', label: '创建时间', width: 180, sortable: 'custom'},
-        {prop: 'updateTime', label: '更新时间', width: 180, sortable: 'custom'}
+        { prop: 'id', label: 'ID', width: 80 },
+        { prop: 'companyName', label: '公司名称', width: 200 },
+        { prop: 'taxNumber', label: '公司税号', width: 150 },
+        { prop: 'description', label: '备注', width: 250 },
+        { prop: 'flag', label: '状态', width: 100, slot: 'flag' },
+        { prop: 'createTime', label: '创建时间', width: 180, sortable: 'custom' },
+        { prop: 'updateTime', label: '更新时间', width: 180, sortable: 'custom' }
       ],
       // 当前排序参数
       sortParams: {}
@@ -168,7 +168,7 @@ export default {
   },
   computed: {
     dialogTitle() {
-      return this.dialogMode === 'add' ? '新增公司' : '编辑公司';
+      return this.dialogMode === 'add' ? '新增公司' : '编辑公司'
     }
   },
   methods: {
@@ -187,25 +187,25 @@ export default {
 
         // 处理创建时间范围
         if (this.searchForm.createTimeRange && this.searchForm.createTimeRange.length === 2) {
-          criteria.createTimeStart = this.searchForm.createTimeRange[0];
-          criteria.createTimeEnd = this.searchForm.createTimeRange[1];
+          criteria.createTimeStart = this.searchForm.createTimeRange[0]
+          criteria.createTimeEnd = this.searchForm.createTimeRange[1]
         }
 
         // 处理更新时间范围
         if (this.searchForm.updateTimeRange && this.searchForm.updateTimeRange.length === 2) {
-          criteria.updateTimeStart = this.searchForm.updateTimeRange[0];
-          criteria.updateTimeEnd = this.searchForm.updateTimeRange[1];
+          criteria.updateTimeStart = this.searchForm.updateTimeRange[0]
+          criteria.updateTimeEnd = this.searchForm.updateTimeRange[1]
         }
 
         // 处理排序参数
         if (this.sortParams.prop && this.sortParams.order) {
           // 将Element UI的排序格式转换为后端需要的格式
-          const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc';
+          const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc'
           // 根据排序字段映射到后端对应的排序字段
           if (this.sortParams.prop === 'createTime') {
-            criteria.createTimeOrder = order;
+            criteria.createTimeOrder = order
           } else if (this.sortParams.prop === 'updateTime') {
-            criteria.updateTimeOrder = order;
+            criteria.updateTimeOrder = order
           }
         }
 
@@ -243,7 +243,7 @@ export default {
      */
     handleSearch(data) {
       this.sortParams = {}
-      this.searchForm = data;
+      this.searchForm = data
       console.log('公司查询条件:', data)
       this.$refs.companyTable.refresh()
     },
@@ -268,31 +268,31 @@ export default {
      */
     handleTableSortChange(sortInfo) {
       console.log('sortInfo:', sortInfo)
-      this.sortParams = sortInfo;
+      this.sortParams = sortInfo
     },
 
     /**
      * 新增公司
      */
     handleAdd() {
-      this.dialogMode = 'add';
+      this.dialogMode = 'add'
       this.companyForm = {
         id: undefined,
         companyName: '',
         taxNumber: '',
         description: '',
         flag: 1
-      };
-      this.companyDialogVisible = true;
+      }
+      this.companyDialogVisible = true
     },
 
     /**
      * 编辑公司
      */
     handleEdit(row) {
-      this.dialogMode = 'edit';
-      this.companyForm = {...row};
-      this.companyDialogVisible = true;
+      this.dialogMode = 'edit'
+      this.companyForm = { ...row }
+      this.companyDialogVisible = true
     },
 
     /**
@@ -301,41 +301,41 @@ export default {
     async handleToggleStatus(row) {
       // 系统公司和已删除公司不能操作
       if (row.flag === 0 || row.flag === 5) {
-        this.$message.warning('该状态下的公司不能进行此操作');
-        return;
+        this.$message.warning('该状态下的公司不能进行此操作')
+        return
       }
 
       try {
-        let response;
+        let response
         if (row.flag === 1) {
           // 当前是已激活状态，点击后应该禁用
           await this.$confirm('确认要禁用该公司吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
-          });
-          response = await disableCompany(row.id);
+          })
+          response = await disableCompany(row.id)
         } else if (row.flag === 2) {
           // 当前是禁用状态，点击后应该激活
           await this.$confirm('确认要激活该公司吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
-          });
-          response = await activateCompany(row.id);
+          })
+          response = await activateCompany(row.id)
         }
 
         if (response.code === 200) {
-          this.$message.success(response.message || '操作成功');
+          this.$message.success(response.message || '操作成功')
           // 刷新数据
-          this.$refs.companyTable.refresh();
+          this.$refs.companyTable.refresh()
         } else {
-          this.$message.error(response.message || '操作失败');
+          this.$message.error(response.message || '操作失败')
         }
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('操作失败:', error);
-          this.$message.error('操作失败');
+          console.error('操作失败:', error)
+          this.$message.error('操作失败')
         }
       }
     },
@@ -344,36 +344,36 @@ export default {
      * 处理公司弹窗关闭事件
      */
     handleCompanyDialogClose() {
-      this.$refs.companyForm.resetFields();
+      this.$refs.companyForm.resetFields()
     },
 
     /**
      * 处理公司提交事件
      */
     handleCompanySubmit() {
-      this.$refs.companyForm.validate(async (valid) => {
+      this.$refs.companyForm.validate(async(valid) => {
         if (valid) {
           try {
-            const response = await saveCompany(this.companyForm);
+            const response = await saveCompany(this.companyForm)
 
             if (response.code === 200) {
-              this.$message.success(this.dialogMode === 'add' ? '公司创建成功' : '公司更新成功');
-              this.companyDialogVisible = false;
+              this.$message.success(this.dialogMode === 'add' ? '公司创建成功' : '公司更新成功')
+              this.companyDialogVisible = false
               // 刷新数据
-              this.$refs.companyTable.refresh();
+              this.$refs.companyTable.refresh()
             } else {
-              this.$message.error(response.message || (this.dialogMode === 'add' ? '公司创建失败' : '公司更新失败'));
+              this.$message.error(response.message || (this.dialogMode === 'add' ? '公司创建失败' : '公司更新失败'))
             }
           } catch (error) {
-            console.error('保存公司失败:', error);
-            this.$message.error('保存公司失败');
+            console.error('保存公司失败:', error)
+            this.$message.error('保存公司失败')
           }
         } else {
-          console.log('表单验证失败');
-          this.$message.warning('请填写正确的表单信息');
-          return false;
+          console.log('表单验证失败')
+          this.$message.warning('请填写正确的表单信息')
+          return false
         }
-      });
+      })
     }
   }
 }
