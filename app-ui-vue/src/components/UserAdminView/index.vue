@@ -598,7 +598,7 @@ export default {
     handleUserDialogClose() {
       if (this.dialogMode === 'add' && this.$refs.userAddView) {
         // 重置表单
-        this.$refs.userAddView.$refs.userForm.resetFields();
+        this.$refs.userAddView.resetForm();
         // 重置表单数据
         this.$refs.userAddView.userForm = {
           userName: '',

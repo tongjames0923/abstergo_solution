@@ -19,6 +19,8 @@ import com.tbs.app.service.business.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.service.business.user.impl.NoEncryptPassword;
 import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
+import com.tbs.app.service.business.view.IViewService;
+import com.tbs.app.service.business.view.impl.ViewServiceImpl;
 import com.tbs.common.data.IDataHolderExpireActuator;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.util.BeanUtil;
@@ -68,6 +70,12 @@ public class DefaultAppConfig {
 	@ConditionalOnMissingBean(ISystemCompanyService.class)
 	public ISystemCompanyService companyService() {
 		return new SimpleCompanyService();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(IViewService.class)
+	public IViewService viewService() {
+		return new ViewServiceImpl();
 	}
 
 	@Bean

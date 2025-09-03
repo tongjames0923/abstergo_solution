@@ -1,4 +1,4 @@
-import {getSearchFormConfig} from "@/api/view";
+import {getFormConfig} from "@/api/view";
 
 // 表单配置状态管理模块
 const state = {
@@ -106,7 +106,7 @@ const actions = {
 
     // 如果store中不存在，则调用后端接口获取
     try {
-      const response = await getSearchFormConfig(configName)
+      const response = await getFormConfig(configName)
       var obj = response.data
       // 将获取到的配置存入store
       commit('SET_FORM_CONFIG', {configName, config: obj})

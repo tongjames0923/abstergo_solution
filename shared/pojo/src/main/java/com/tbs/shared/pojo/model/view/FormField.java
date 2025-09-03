@@ -1,6 +1,7 @@
 package com.tbs.shared.pojo.model.view;
 
 import java.io.Serializable;
+import java.util.Map;
 
 import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
@@ -86,5 +87,17 @@ public class FormField implements Serializable {
 	 *
 	 */
 	private String prefixIcon;
+
+	/**
+	 * 组件属性 -- GETTER -- 获取组件属性
+	 *
+	 *
+	 * -- SETTER -- 获取组件属性
+	 *
+	 * @return 组件属性
+	 * @param props 组件属性
+	 *
+	 */
+	private Map<String, Object> props;
 
 }

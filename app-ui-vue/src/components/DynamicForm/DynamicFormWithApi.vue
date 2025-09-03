@@ -189,6 +189,29 @@ export default {
     // 验证字段
     validateField(props, callback) {
       return this.$refs.dynamicForm?.validateField(props, callback)
+    },
+
+    // 重置表单
+    resetForm() {
+      this.$refs.dynamicForm?.resetForm()
+      this.formData = this.initializeFormData()
+    },
+
+    // 初始化表单数据
+    initializeFormData() {
+      const data = {}
+      if (this.localConfig && this.localConfig.fields && Array.isArray(this.localConfig.fields)) {
+        this.localConfig.fields.forEach(field => {
+          if (field && field.prop) {
+            if (field.type === 'date-range') {
+              data[field.prop] = []
+            } else {
+              data[field.prop] = undefined
+            }
+          }
+        })
+      }
+      return data
     }
   }
 }

@@ -1,8 +1,8 @@
 <template>
   <div class="user-add-view">
-    <DynamicForm
+    <DynamicFormWithApi
       ref="dynamicForm"
-      :config="formConfig"
+      config-name="userAddForm"
       :custom-components="{ urlImage: UrlImage }"
       @submit="handleSubmit"
     >
@@ -32,62 +32,24 @@
           <el-button type="primary" @click="submit" size="medium" icon="el-icon-check">保存用户</el-button>
         </div>
       </template>
-    </DynamicForm>
+    </DynamicFormWithApi>
   </div>
 </template>
 
 <script>
-import DynamicForm from "@/components/DynamicForm";
+import DynamicFormWithApi from "@/components/DynamicForm/DynamicFormWithApi.vue";
 import UrlImage from "@/components/UrlImage/index.vue";
 import {saveUser} from "@/api/admin_user";
 
 export default {
   name: 'UserAddView',
   components: {
-    DynamicForm,
+    DynamicFormWithApi,
     UrlImage
   },
   computed: {
     UrlImage() {
       return UrlImage
-    },
-    // 从store中获取表单配置
-    formConfig() {
-      return this.$store.getters['formConfigs/formConfig']('userAddForm')
-    },
-
-    // 表单验证规则
-    userRules() {
-      // 确认密码验证规则
-      const validateConfirmPassword = (rule, value, callback) => {
-        // 获取当前表单数据用于密码确认比较
-        const formData = this.$refs.dynamicForm.getFormData();
-        if (value === '') {
-          callback(new Error('请再次输入密码'))
-        } else if (value !== formData.password) {
-          callback(new Error('两次输入密码不一致!'))
-        } else {
-          callback()
-        }
-      }
-
-      return {
-        userName: [
-          {required: true, message: '请输入用户名', trigger: 'blur'},
-          {min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur'}
-        ],
-        password: [
-          {required: true, message: '请输入密码', trigger: 'blur'},
-          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
-        ],
-        confirmPassword: [
-          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
-        ],
-        nickName: [
-          {required: true, message: '请输入昵称', trigger: 'blur'},
-          {min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur'}
-        ]
-      }
     }
   },
   methods: {
@@ -96,14 +58,7 @@ export default {
      */
     async handleSubmit(formData) {
       try {
-        // 手动验证表单
-        const isValid = await this.validateForm();
-        if (!isValid) {
-          this.$message.warning('请填写正确的表单信息');
-          return;
-        }
-
-        // 构造用户数据
+        // 构造用户数据（排除confirmPassword字段）
         const userData = {
           userName: formData.userName,
           password: formData.password,
@@ -120,24 +75,10 @@ export default {
     },
 
     /**
-     * 验证表单
+     * 重置表单
      */
-    validateForm() {
-      return new Promise((resolve) => {
-        this.$nextTick(() => {
-          // 创建临时表单引用以进行验证
-          const tempForm = this.$refs.dynamicForm.$refs.form;
-          if (tempForm) {
-            // 设置验证规则
-            tempForm.rules = this.userRules;
-            tempForm.validate((valid) => {
-              resolve(valid);
-            });
-          } else {
-            resolve(false);
-          }
-        });
-      });
+    resetForm() {
+      this.$refs.dynamicForm.resetForm()
     },
 
     /**
@@ -154,88 +95,10 @@ export default {
 .user-add-view {
   padding: 10px 20px;
 
-  .form-section-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 15px;
-
-    i {
-      font-size: 16px;
-      color: #409EFF;
-      margin-right: 8px;
-    }
-
-    .section-title {
-      font-size: 16px;
-      font-weight: 600;
-      color: #606266;
-    }
-  }
-
-  .form-section {
-    margin-bottom: 20px;
-
-    &:last-child {
-      margin-bottom: 10px;
-    }
-
-    .section-header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 15px;
-      padding-bottom: 8px;
-      border-bottom: 1px solid #ebeef5;
-
-      i {
-        font-size: 16px;
-        color: #409EFF;
-        margin-right: 8px;
-      }
-
-      .section-title {
-        font-size: 15px;
-        font-weight: 600;
-        color: #606266;
-      }
-    }
-  }
-
   .form-actions {
     text-align: right;
     padding-top: 15px;
     border-top: 1px solid #ebeef5;
-  }
-
-  .avatar-uploader {
-    ::v-deep .el-upload {
-      border: 1px dashed #d9d9d9;
-      border-radius: 6px;
-      cursor: pointer;
-      position: relative;
-      overflow: hidden;
-      transition: border-color 0.2s ease;
-      width: 120px;
-      height: 120px;
-
-      &:hover {
-        border-color: #409EFF;
-      }
-    }
-
-    .avatar-uploader-icon {
-      font-size: 28px;
-      color: #8c939d;
-      width: 120px;
-      height: 120px;
-      line-height: 120px;
-      text-align: center;
-    }
-
-    .avatar {
-      width: 120px;
-      height: 120px;
-      display: block;
-    }
   }
 
   ::v-deep .el-form-item__label {
