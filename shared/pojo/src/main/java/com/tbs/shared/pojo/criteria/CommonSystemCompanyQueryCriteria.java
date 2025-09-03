@@ -3,6 +3,7 @@ package com.tbs.shared.pojo.criteria;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
@@ -53,6 +54,7 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
 	 * 按创建时间范围查询（起始时间 >=）
 	 */
 	@QueryMapping("create_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	@QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
 	private Date createTimeStart;
 
@@ -61,6 +63,7 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
 	 */
 	@QueryMapping("create_time")
 	@QueryField(contrast = QueryContrastEnum.LESS_EQUAL)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date createTimeEnd;
 
 	/**
@@ -68,6 +71,7 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
 	 */
 	@QueryMapping("update_time")
 	@QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date updateTimeStart;
 
 	/**
@@ -75,6 +79,7 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
 	 */
 	@QueryMapping("update_time")
 	@QueryField(contrast = QueryContrastEnum.LESS_EQUAL)
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date updateTimeEnd;
 
 	/**

@@ -485,7 +485,8 @@ export default {
     /**
      * 查询按钮点击事件
      */
-    handleSearch() {
+    handleSearch(data) {
+      this.searchForm = data;
       this.$refs.userTable.refresh()
     },
 

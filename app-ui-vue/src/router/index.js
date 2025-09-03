@@ -78,6 +78,12 @@ export const constantRoutes = [
         name: '角色管理',
         component: () => import('@/views/admin/role/index.vue'),
         meta: {title: '角色管理', icon: 'eye', roles: ['1']}
+      },
+      {
+        path: 'company',
+        name: '公司管理',
+        component: () => import('@/views/admin/company/index.vue'),
+        meta: {title: '公司管理', icon: 'el-icon-s-custom', roles: ['1']}
       }
     ]
   },

@@ -19,6 +19,8 @@ public class ViewServiceImpl implements IViewService {
 			return buildUserEditFormConfig();
 		} else if ("userAddForm".equals(key)) {
 			return buildUserAddFormConfig();
+		} else if ("companySearchForm".equals(key)) {
+			return buildCompanySearchFormConfig();
 		}
 		// 可以根据需要添加其他表单配置
 		return null;
@@ -190,28 +192,6 @@ public class ViewServiceImpl implements IViewService {
 		nickNameField.setProps(Map.of("size", "medium"));
 		fields.add(nickNameField);
 
-		// // 密码字段
-		// FormField passwordField = new FormField();
-		// passwordField.setProp("password");
-		// passwordField.setLabel("密码");
-		// passwordField.setType("input");
-		// passwordField.setPlaceholder("请输入密码");
-		// passwordField.setPrefixIcon("el-icon-lock");
-		// passwordField.setProps(Map.of("type", "password", "showPassword", true,
-		// "size", "medium"));
-		// fields.add(passwordField);
-
-		// // 确认密码字段
-		// FormField confirmPasswordField = new FormField();
-		// confirmPasswordField.setProp("confirmPassword");
-		// confirmPasswordField.setLabel("确认密码");
-		// confirmPasswordField.setType("input");
-		// confirmPasswordField.setPlaceholder("请再次输入密码");
-		// confirmPasswordField.setPrefixIcon("el-icon-lock");
-		// confirmPasswordField.setProps(Map.of("type", "password", "showPassword",
-		// true, "size", "medium"));
-		// fields.add(confirmPasswordField);
-
 		// 备注字段
 		FormField remarkField = new FormField();
 		remarkField.setProp("remark");
@@ -227,6 +207,87 @@ public class ViewServiceImpl implements IViewService {
 		avatarField.setLabel("头像");
 		avatarField.setType("urlImage");
 		fields.add(avatarField);
+
+		formConfig.setFields(fields);
+		return formConfig;
+	}
+
+	/**
+	 * 构建公司搜索表单配置
+	 *
+	 * @return 公司搜索表单配置
+	 */
+	private FormConfig buildCompanySearchFormConfig() {
+		FormConfig formConfig = new FormConfig();
+		formConfig.setExpandable(true);
+		formConfig.setExpanded(true);
+		formConfig.setGutter(20);
+		formConfig.setLabelWidth("100px");
+
+		List<FormField> fields = new ArrayList<>();
+
+		// 公司ID字段
+		FormField idField = new FormField();
+		idField.setProp("equalsId");
+		idField.setLabel("公司ID");
+		idField.setType("input");
+		idField.setPlaceholder("请输入公司ID");
+		idField.setPrefixIcon("el-icon-search");
+		fields.add(idField);
+
+		// 公司名称字段
+		FormField nameField = new FormField();
+		nameField.setProp("likeName");
+		nameField.setLabel("公司名称");
+		nameField.setType("input");
+		nameField.setPlaceholder("请输入公司名称");
+		nameField.setPrefixIcon("el-icon-office-building");
+		fields.add(nameField);
+
+		// 税号字段
+		FormField taxNumberField = new FormField();
+		taxNumberField.setProp("equalsTaxNumber");
+		taxNumberField.setLabel("税号");
+		taxNumberField.setType("input");
+		taxNumberField.setPlaceholder("请输入税号");
+		taxNumberField.setPrefixIcon("el-icon-document");
+		fields.add(taxNumberField);
+
+//		// 公司状态字段 - 使用写死的选项而不是动态获取
+//		FormField flagField = new FormField();
+//		flagField.setProp("flagEquals");
+//		flagField.setLabel("公司状态");
+//		flagField.setType("select");
+//		flagField.setPlaceholder("请选择公司状态");
+//		// 根据CompanyFlagEnum设置选项
+//		Map<String, Object> flagProps = Map.of(
+//			"options", List.of(
+//				Map.of("value", 0, "label", "禁用"),
+//				Map.of("value", 1, "label", "正常")
+//			)
+//		);
+//		flagField.setProps(flagProps);
+//		fields.add(flagField);
+
+		// 创建时间范围字段
+		DateRangeFormField createTimeField = new DateRangeFormField();
+		createTimeField.setProp("createTimeRange");
+		createTimeField.setLabel("创建时间");
+		createTimeField.setValueFormat("yyyy-MM-dd HH:mm:ss");
+		createTimeField.setFormat("yyyy-MM-dd");
+		createTimeField.setStartPlaceholder("开始日期");
+		createTimeField.setEndPlaceholder("结束日期");
+		fields.add(createTimeField);
+
+		// 更新时间范围字段
+		DateRangeFormField updateTimeField = new DateRangeFormField();
+		updateTimeField.setProp("updateTimeRange");
+		updateTimeField.setLabel("更新时间");
+		updateTimeField.setValueFormat("yyyy-MM-dd HH:mm:ss");
+		updateTimeField.setFormat("yyyy-MM-dd");
+		updateTimeField.setStartPlaceholder("开始日期");
+		updateTimeField.setEndPlaceholder("结束日期");
+		fields.add(updateTimeField);
 
 		formConfig.setFields(fields);
 		return formConfig;
