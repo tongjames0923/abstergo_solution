@@ -1,14 +1,14 @@
 package com.tbs.app.service.business.view.impl;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.tbs.app.service.business.view.IViewService;
-import com.tbs.shared.pojo.model.view.DateRangeFormField;
-import com.tbs.shared.pojo.model.view.DynamicOptionsFormField;
-import com.tbs.shared.pojo.model.view.FormConfig;
-import com.tbs.shared.pojo.model.view.FormField;
+import com.tbs.shared.enums.SystemCompanyFlagEnum;
+import com.tbs.shared.pojo.model.view.*;
 
 public class ViewServiceImpl implements IViewService {
 	@Override
@@ -253,21 +253,20 @@ public class ViewServiceImpl implements IViewService {
 		taxNumberField.setPrefixIcon("el-icon-document");
 		fields.add(taxNumberField);
 
-//		// 公司状态字段 - 使用写死的选项而不是动态获取
-//		FormField flagField = new FormField();
-//		flagField.setProp("flagEquals");
-//		flagField.setLabel("公司状态");
-//		flagField.setType("select");
-//		flagField.setPlaceholder("请选择公司状态");
-//		// 根据CompanyFlagEnum设置选项
-//		Map<String, Object> flagProps = Map.of(
-//			"options", List.of(
-//				Map.of("value", 0, "label", "禁用"),
-//				Map.of("value", 1, "label", "正常")
-//			)
-//		);
-//		flagField.setProps(flagProps);
-//		fields.add(flagField);
+		SelectFormField flagField = new SelectFormField();
+		flagField.setProp("flagEquals");
+		flagField.setLabel("公司状态");
+		flagField.setOptions(
+				List.of(SystemCompanyFlagEnum.ACTIVITED, SystemCompanyFlagEnum.SYSTEMED, SystemCompanyFlagEnum.DISABLED)
+						.stream().map(flag -> {
+							return new OptionValue<>(flag.getCode().toString(), flag.getValue());
+						}).collect(Collectors.toList()));
+		Map<String, Object> flagProps = new HashMap<>(3);
+		flagProps.put("size", "medium");
+		flagProps.put("multiple", true);
+		flagField.setProps(flagProps);
+
+		fields.add(flagField);
 
 		// 创建时间范围字段
 		DateRangeFormField createTimeField = new DateRangeFormField();
