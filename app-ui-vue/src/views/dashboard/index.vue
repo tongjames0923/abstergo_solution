@@ -6,6 +6,8 @@
       :search-handler="searchHandler"
       :columns="columns"
       :actions="actions"
+      add-form-config-name="companyAddForm"
+      :add-handler="(formData) => saveCompany(formData) "
     >
     </quick-use-management-view>
   </div>
@@ -14,7 +16,7 @@
 <script>
 import {mapGetters} from 'vuex'
 import QuickUseManagementView from "@/components/QuickUseManagementView/index.vue"
-import {adminQueryCompany, deleteCompany} from "@/api/company"
+import {adminQueryCompany, deleteCompany, saveCompany} from "@/api/company"
 
 export default {
   name: 'Dashboard',
@@ -90,6 +92,7 @@ export default {
     }
   },
   methods: {
+    saveCompany,
     // 简化后的搜索处理函数，适配AbstractCrudController的数据格式
     async searchHandler(bodyParams, requestParams) {
 

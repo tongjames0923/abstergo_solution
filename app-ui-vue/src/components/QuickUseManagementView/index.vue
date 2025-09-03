@@ -1,5 +1,11 @@
 <template>
   <div>
+    <div class="header-section">
+      <h2>{{ mainTitle }}</h2>
+      <div class="header-actions">
+        <el-button type="primary" icon="el-icon-plus" @click="showAddDialog">{{ addButtonText }}</el-button>
+      </div>
+    </div>
     <DynamicFormWithApi
       :title="searchFormTitle"
       :config-name="configName"
@@ -20,6 +26,25 @@
       </template>
 
     </DynamicTable>
+
+    <!-- 新增弹窗 -->
+    <el-dialog
+      :title="addFormTitle"
+      :visible.sync="addDialogVisible"
+      width="600px"
+      @close="handleAddDialogClose"
+    >
+      <DynamicFormWithApi
+        v-if="addDialogVisible"
+        ref="addForm"
+        :config-name="addFormConfigName"
+      >
+        <template #actions="{formData ,submit,cancel}">
+          <el-button type="primary" @click="handleAddSubmit(formData)">保存</el-button>
+          <el-button @click="handleAddDialogClose">取消</el-button>
+        </template>
+      </DynamicFormWithApi>
+    </el-dialog>
   </div>
 </template>
 
@@ -34,6 +59,14 @@ export default {
     DynamicTable
   },
   props: {
+    mainTitle: {
+      type: String,
+      default: '管理'
+    },
+    addButtonText: {
+      type: String,
+      default: '新增'
+    },
     searchFormTitle: {
       type: String,
       default: '查询'
@@ -47,6 +80,7 @@ export default {
       type: Array,
       default: () => []
     },
+
     // 操作按钮配置
     actions: {
       type: Array,
@@ -61,6 +95,21 @@ export default {
     searchHandler: {
       type: Function,
       required: true
+    },
+    // 新增表单配置名称
+    addFormConfigName: {
+      type: String,
+      default: ''
+    },
+    // 新增表单标题
+    addFormTitle: {
+      type: String,
+      default: '新增'
+    },
+    // 新增处理器
+    addHandler: {
+      type: Function,
+      default: null
     },
     // 查询参数转换器，可选
     queryTransformer: {
@@ -80,7 +129,9 @@ export default {
   },
   data() {
     return {
-      searchForm: {}
+      searchForm: {},
+      // 新增弹窗可见性
+      addDialogVisible: false
     }
   },
   methods: {
@@ -197,6 +248,41 @@ export default {
     // 清空选中状态
     clearSelection() {
       this.$refs.dynamicTable.clearSelection()
+    },
+
+    // 显示新增弹窗
+    showAddDialog() {
+      this.addDialogVisible = true
+    },
+
+    // 处理新增表单提交
+    async handleAddSubmit(formData) {
+      try {
+
+        // 如果提供了新增处理器，则调用它
+        if (this.addHandler && typeof this.addHandler === 'function') {
+          await this.addHandler(formData)
+          this.addDialogVisible = false
+          this.$emit('add-success', formData)
+          // 刷新表格数据
+          this.refresh()
+        } else {
+          console.warn('未提供 addHandler 方法')
+          this.$message.warning('未配置新增处理器')
+        }
+      } catch (error) {
+        console.error('新增失败:', error)
+        this.$emit('add-error', error)
+      } finally {
+        this.addDialogVisible = false
+      }
+    },
+
+    // 处理新增弹窗关闭
+    handleAddDialogClose() {
+      this.$refs.addForm.resetForm()
+      this.$emit('add-cancel')
+      this.addDialogVisible = false
     }
   }
 }

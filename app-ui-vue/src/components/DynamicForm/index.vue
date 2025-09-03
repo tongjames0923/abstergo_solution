@@ -133,7 +133,7 @@
       <div class="form-actions">
         <slot
           :form="form"
-          :form-data="formData"
+          :formData="formData"
           :reset="resetForm"
           :submit="submitForm"
           name="actions"
