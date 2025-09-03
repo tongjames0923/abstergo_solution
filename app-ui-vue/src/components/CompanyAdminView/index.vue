@@ -198,13 +198,13 @@ export default {
         }
 
         // 处理排序参数
-        if (this.sortParams.field && this.sortParams.order) {
+        if (this.sortParams.prop && this.sortParams.order) {
           // 将Element UI的排序格式转换为后端需要的格式
           const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc';
           // 根据排序字段映射到后端对应的排序字段
-          if (this.sortParams.field === 'createTime') {
+          if (this.sortParams.prop === 'createTime') {
             criteria.createTimeOrder = order;
-          } else if (this.sortParams.field === 'updateTime') {
+          } else if (this.sortParams.prop === 'updateTime') {
             criteria.updateTimeOrder = order;
           }
         }
@@ -267,6 +267,7 @@ export default {
      * 处理表格排序变化
      */
     handleTableSortChange(sortInfo) {
+      console.log('sortInfo:', sortInfo)
       this.sortParams = sortInfo;
     },
 
