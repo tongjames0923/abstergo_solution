@@ -35,7 +35,7 @@ public class SimpleCompanyService
 
 	@Override
 	protected Integer getFlagDisable() {
-		return SystemCompanyFlagEnum.DISABLED.getCode();
+		return SystemCompanyFlagEnum.DELETED.getCode();
 	}
 
 	@Override

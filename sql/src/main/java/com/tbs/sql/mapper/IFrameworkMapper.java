@@ -29,7 +29,7 @@ public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<
 		BatchUpdateSelectiveMapper<T>, IdListMapper<T, K> {
 
 	default List<T> queryByQO(IQueryCriteria qo, IPage page, Class<T> entityClass) {
-		ImportedSqlContext sqlContext = getImportedSqlContext(qo.getClass());
+		ImportedSqlContext sqlContext = getImportedSqlContext(entityClass);
 		EntityQuerySqlDriver driver = new EntityQuerySqlDriver();
 		driver.setWhereInfo(FrameworkSelectProvider.buildConditions(qo));
 		if (page != null) {
@@ -40,8 +40,8 @@ public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<
 		return SpringUtil.getBean(FetchMapper.class).<T>fetch(sqlContext, driver, entityClass);
 	}
 
-	default Long countByQO(IQueryCriteria qo) {
-		ImportedSqlContext sqlContext = getImportedSqlContext(qo.getClass());
+	default Long countByQO(IQueryCriteria qo,Class<?> entityClass) {
+		ImportedSqlContext sqlContext = getImportedSqlContext(entityClass);
 		EntityQuerySqlDriver driver = new EntityQuerySqlDriver();
 		driver.setWhereInfo(FrameworkSelectProvider.buildConditions(qo));
 		return SpringUtil.getBean(FetchMapper.class).count(sqlContext, driver);

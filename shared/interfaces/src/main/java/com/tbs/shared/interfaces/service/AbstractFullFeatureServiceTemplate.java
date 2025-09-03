@@ -112,9 +112,9 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
 	@Override
 	public PageVO<T> queryBy(IQueryCriteria qo, IPage page) {
-		return PageUtil.build(pageVoBuildType(),
-				() -> getMapper().queryByQO(qo, page, (Class<T>) getEntity().getClass()),
-				() -> getMapper().countByQO(qo));
+		Class<T> entityClass = (Class<T>) getEntity().getClass();
+		return PageUtil.build(pageVoBuildType(), () -> getMapper().queryByQO(qo, page, entityClass),
+				() -> getMapper().countByQO(qo, entityClass));
 	}
 
 	@Override
