@@ -447,10 +447,10 @@ export default {
         }
 
         // 添加排序参数
-        if (this.sortParams.field && this.sortParams.order) {
+        if (this.sortParams.prop && this.sortParams.order) {
           // 将Element UI的排序格式转换为后端需要的格式
           const order = this.sortParams.order === 'ascending' ? 'asc' : 'desc';
-          criteria[`${this.sortParams.field}Order`] = order;
+          criteria[`${this.sortParams.prop}Order`] = order;
         }
 
         // 移除值为undefined的属性
