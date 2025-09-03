@@ -3,9 +3,7 @@
     <DynamicForm
       ref="dynamicForm"
       :config="formConfig"
-      :value="userForm"
       :custom-components="{ urlImage: UrlImage }"
-      @input="handleFormChange"
       @submit="handleSubmit"
     >
       <template #form-item-confirmPassword="{ field, value, setValue }">
@@ -49,18 +47,6 @@ export default {
     DynamicForm,
     UrlImage
   },
-  data() {
-    return {
-      userForm: {
-        userName: '',
-        password: '',
-        confirmPassword: '',
-        nickName: '',
-        remark: '',
-        avatar: ''
-      }
-    }
-  },
   computed: {
     UrlImage() {
       return UrlImage
@@ -74,9 +60,11 @@ export default {
     userRules() {
       // 确认密码验证规则
       const validateConfirmPassword = (rule, value, callback) => {
+        // 获取当前表单数据用于密码确认比较
+        const formData = this.$refs.dynamicForm.getFormData();
         if (value === '') {
           callback(new Error('请再次输入密码'))
-        } else if (value !== this.userForm.password) {
+        } else if (value !== formData.password) {
           callback(new Error('两次输入密码不一致!'))
         } else {
           callback()
@@ -103,13 +91,6 @@ export default {
     }
   },
   methods: {
-    /**
-     * 处理表单变更
-     */
-    handleFormChange(value) {
-      this.userForm = {...value};
-    },
-
     /**
      * 提交表单
      */

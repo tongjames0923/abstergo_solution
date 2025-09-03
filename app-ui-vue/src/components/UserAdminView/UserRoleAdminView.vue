@@ -13,7 +13,7 @@
             :type="getRoleType(role.role)"
             class="role-tag"
             closable
-            @close="disableRole(role.role)"
+            @close="disableRole(role.id)"
           >
             {{ role.role }}
           </el-tag>
@@ -47,7 +47,7 @@
         <CardList
           :columns="2"
           :current-page="currentPage"
-          :data="filteredRoles"
+          :data="paginatedRoles"
           :gap="15"
           :loading="loading"
           :loading-count="loadingCount"
@@ -64,7 +64,7 @@
           <!-- 自定义卡片内容 -->
           <template #card="{ item: role }">
             <el-card
-              :class="{ 'role-card-selected': hasRole(role.role) }"
+              :class="{ 'role-card-selected': hasRole(role.id) }"
               class="role-card-item"
               shadow="hover"
             >
@@ -75,11 +75,11 @@
                 </div>
                 <div class="role-action">
                   <el-button
-                    v-if="!hasRole(role.role)"
+                    v-if="!hasRole(role.id)"
                     icon="el-icon-circle-plus"
                     size="small"
                     type="primary"
-                    @click.stop="enableRole(role.role)"
+                    @click.stop="enableRole(role.id)"
                   >
                     分配
                   </el-button>
@@ -88,7 +88,7 @@
                     icon="el-icon-remove"
                     size="small"
                     type="danger"
-                    @click.stop="disableRole(role.role)"
+                    @click.stop="disableRole(role.id)"
                   >
                     取消
                   </el-button>
@@ -152,14 +152,17 @@ export default {
           role.role.toLowerCase().includes(this.searchKeyword.toLowerCase())
         )
       }
-      // 否则返回当前页的角色
+      return this.availableRoles
+    },
+    paginatedRoles() {
+      // 实现分页逻辑
       const start = (this.currentPage - 1) * this.pageSize
       const end = start + this.pageSize
-      return this.availableRoles.slice(start, end)
+      return this.filteredRoles.slice(start, end)
     },
     loadingCount() {
       // 根据当前页数据量来确定加载占位符数量
-      return Math.min(this.filteredRoles.length || this.pageSize, this.pageSize);
+      return Math.min(this.paginatedRoles.length || this.pageSize, this.pageSize);
     }
   },
   watch: {
@@ -193,8 +196,8 @@ export default {
       this.loading = true
       try {
         const response = await queryRoles({
-          roleEquals: this.searchKeyword || undefined,
-          flagEquals: [1, 2], // 只获取启用的角色
+          roleLike: this.searchKeyword || undefined,
+          flagEquals: [1,2], // 只获取启用的角色
           pageNum: this.currentPage,
           pageSize: this.pageSize
         })
@@ -217,24 +220,19 @@ export default {
     // 处理分页变化
     handlePageChange(page) {
       this.currentPage = page
-      // 如果没有搜索关键词，我们需要重新获取数据以支持分页
-      if (!this.searchKeyword) {
-        this.fetchAllRoles()
-      }
+      this.fetchAllRoles()
     },
 
     // 启用角色
-    async enableRole(roleName) {
+    async enableRole(roleId) {
       try {
-        await enableRoleForUser(this.userId, roleName)
+        await enableRoleForUser(this.userId, roleId)
         // 更新本地数据
-        const role = this.availableRoles.find(r => r.role === roleName)
+        const role = this.availableRoles.find(r => r.id === roleId)
         if (role) {
-          this.userRoles.push(role)
+          this.userRoles.push({...role})
         }
         this.$message.success('角色分配成功')
-        // 重新获取用户角色以确保数据同步
-        this.fetchUserRoles()
       } catch (error) {
         console.error('启用角色失败:', error)
         this.$message.error('角色分配失败')
@@ -242,14 +240,12 @@ export default {
     },
 
     // 禁用角色
-    async disableRole(roleName) {
+    async disableRole(roleId) {
       try {
-        await disableRoleForUser(this.userId, roleName)
+        await disableRoleForUser(this.userId, roleId)
         // 更新本地数据
-        this.userRoles = this.userRoles.filter(role => role.role !== roleName)
+        this.userRoles = this.userRoles.filter(role => role.id !== roleId)
         this.$message.success('角色取消成功')
-        // 重新获取用户角色以确保数据同步
-        this.fetchUserRoles()
       } catch (error) {
         console.error('禁用角色失败:', error)
         this.$message.error('角色取消失败')
@@ -257,8 +253,8 @@ export default {
     },
 
     // 判断角色是否已分配给用户
-    hasRole(roleName) {
-      return this.userRoles.some(role => role.role === roleName)
+    hasRole(roleId) {
+      return this.userRoles.some(role => role.id === roleId)
     },
 
     // 获取角色标签类型

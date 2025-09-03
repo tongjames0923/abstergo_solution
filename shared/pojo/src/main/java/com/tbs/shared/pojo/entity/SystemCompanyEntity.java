@@ -1,3 +1,4 @@
+
 package com.tbs.shared.pojo.entity;
 
 import java.util.Date;
@@ -22,6 +23,9 @@ import lombok.ToString;
 @LogicDeleteEntity(deleteFlagValue = 0, filedName = "flag")
 @AllArgsConstructor
 @NoArgsConstructor
+/**
+ * 系统公司实体类 用于表示系统中的公司信息，包含公司基本信息、状态及创建更新时间等字段
+ */
 public class SystemCompanyEntity implements IBaseEntity<Long> {
 
 	/**
@@ -30,6 +34,7 @@ public class SystemCompanyEntity implements IBaseEntity<Long> {
 	@javax.persistence.Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+
 	/**
 	 * 公司名称
 	 */
@@ -60,6 +65,7 @@ public class SystemCompanyEntity implements IBaseEntity<Long> {
 	@Column(name = "create_time")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date createTime;
+
 	/**
 	 * 公司更新时间
 	 */

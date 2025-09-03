@@ -214,22 +214,25 @@ export default {
       // 创建一个新的对象，避免直接修改传入的数据
       const initialized = {}
 
-      // 复制传入数据的所有属性
-      if (data && typeof data === 'object') {
-        Object.keys(data).forEach(key => {
-          initialized[key] = data[key]
-        })
-      }
-
-      // 确保所有字段都有默认值
+      // 确保所有字段都有默认值，根据config配置生成
       if (this.config && this.config.fields && Array.isArray(this.config.fields)) {
         this.config.fields.forEach(field => {
-          if (field && field.prop && !(field.prop in initialized)) {
-            // 为不同类型的字段设置合适的默认值
-            if (field.type === 'date-range') {
-              initialized[field.prop] = []
+          if (field && field.prop) {
+            // 如果传入了data且包含该字段，则使用传入的值
+            if (data && typeof data === 'object' && field.prop in data) {
+              initialized[field.prop] = data[field.prop]
+            }
+            // 否则根据字段类型设置默认值
+            else if (field.defaultValue !== undefined) {
+              // 使用配置的默认值
+              initialized[field.prop] = field.defaultValue
             } else {
-              initialized[field.prop] = undefined
+              // 根据字段类型设置合适的默认值
+              if (field.type === 'date-range') {
+                initialized[field.prop] = []
+              } else {
+                initialized[field.prop] = undefined
+              }
             }
           }
         })
@@ -291,6 +294,11 @@ export default {
       if (this.form) {
         return this.form.clearValidate(props)
       }
+    },
+
+    // 获取完整的表单数据
+    getFormData() {
+      return this.formData
     }
   }
 }
