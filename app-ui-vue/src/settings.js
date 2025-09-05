@@ -22,11 +22,20 @@ module.exports = {
    * token header
    */
   tokenHeader: 'Authorization',
+  
+
   /**
    * @type {array}
    * 未登录的错误码
    */
   noLoginCode: [405],
+
+  /**
+   * @type {array}
+   * 刷新token的错误码
+   */
+  refreshTokenCode: [468],
+
   /**
    * @type {number}
    * 成功的code
