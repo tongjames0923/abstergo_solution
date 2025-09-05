@@ -1,17 +1,19 @@
 package com.tbs.app.controller.publics;
 
 import javax.annotation.Resource;
-import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.context.annotation.Lazy;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.form.LoginForm;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.web.BaseController;
+import com.tbs.web.exception.InvalidTokenException;
+import com.tbs.web.security.impl.AbstractRefreshableTokenCreator;
+import com.tbs.web.security.token.ITokenCreator;
 import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.security.token.model.SimpleTokenModel;
 import com.tbs.web.security.user.IUserAuthService;
 
 import io.swagger.annotations.Api;
@@ -26,29 +28,28 @@ import io.swagger.annotations.Api;
 @Api(value = "公开用户控制器")
 public class PublicUserController extends BaseController {
 
+	@Lazy
 	@Resource
 	IUserAuthService userAuthService;
 
-	@Resource
-	HttpServletResponse response;
-
 	@PostMapping("/login")
 	public ITokenModel login(@RequestBody @Validated LoginForm loginForm) {
-
-		Cookie refreshTokenCookie = new Cookie("refreshToken", "yes");
-		refreshTokenCookie.setMaxAge(60 * 60 * 24 * 7);
-		refreshTokenCookie.setHttpOnly(true);
-		response.addCookie(refreshTokenCookie);
-		return userAuthService.login(loginForm.getUsername(), loginForm.getPassword());
+		ITokenModel tokenModel = userAuthService.login(loginForm.getUsername(), loginForm.getPassword());
+		return tokenModel;
 	}
 
 	@Resource
 	private HttpServletRequest request;
 
+	@Resource
+	AbstractRefreshableTokenCreator tokenCreator;
+
 	@GetMapping("refresh")
 	public ITokenModel refresh() {
-		var map = request.getCookies();
-		return SimpleTokenModel.create("yes", null, null, null, null);
+
+		ITokenModel tokenModel = tokenCreator.refreshToken();
+		AssertUtil.isTrue(tokenModel == null, () -> new InvalidTokenException("Token失效且刷新Token失败"));
+		return tokenModel;
 	}
 
 	@Override

@@ -20,7 +20,6 @@ import tk.mybatis.spring.annotation.MapperScan;
 @MYSQL
 @MapperScan(basePackages = "com.tbs.shared.mapper")
 @EntityScan("com.tbs.shared.pojo.entity")
-@EnableAspectJAutoProxy(proxyTargetClass = true, exposeProxy = true)
 public class AppApplication {
 
 	public static void main(String[] args) {

@@ -4,7 +4,9 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserAuthService;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * 未实现用户登陆验证服务
@@ -24,6 +26,11 @@ public class NotImplUserAuthService implements IUserAuthService {
 
     @Override
     public void authToken(ITokenModel simpleTokenModel) throws AuthenticationException {
+
+    }
+
+    @Override
+    public void submitToken(@NotNull ITokenModel simpleTokenModel, @NotNull UserDetails details) {
 
     }
 

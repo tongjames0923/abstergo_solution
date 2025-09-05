@@ -14,7 +14,7 @@ import java.security.NoSuchAlgorithmException;
  */
 public class EncryptUitl {
 
-    private static final String SHA128 = "SHA-128";
+    private static final String SHA128 = "SHA-1";
     private static final String SHA256 = "SHA-256";
     private static final String SHA512 = "SHA-512";
 
