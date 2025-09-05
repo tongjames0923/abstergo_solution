@@ -2,10 +2,12 @@ package com.tbs.app.service.business.auth.impl
 
 import com.tbs.app.service.business.user.IPasswordEncrypt
 import com.tbs.common.error.AssertUtil
+import com.tbs.common.util.SpringUtil
 import com.tbs.common.util.StrUtil
 import com.tbs.web.exception.InvalidTokenException
 import com.tbs.web.exception.SimpleAuthException
 import com.tbs.web.security.impl.AbstractRefreshableTokenCreator
+import com.tbs.web.security.token.ITokenCreator
 import com.tbs.web.security.token.ITokenManager
 import com.tbs.web.security.token.ITokenModel
 import com.tbs.web.security.user.IUserAuthService
@@ -36,7 +38,15 @@ class SimpleUserAuthServiceImpl : IUserAuthService {
 
     @Resource
     @Lazy
-    private lateinit var tokenCreator: AbstractRefreshableTokenCreator
+    private lateinit var tokenCreator: ITokenCreator
+
+    private fun getRefreshableTokenCreator(): AbstractRefreshableTokenCreator? {
+        try {
+            return SpringUtil.getBean(AbstractRefreshableTokenCreator::class.java)
+        } catch (e: Exception) {
+            return null;
+        }
+    }
 
     override fun login(username: String, password: String): ITokenModel {
         var password = password
@@ -46,8 +56,7 @@ class SimpleUserAuthServiceImpl : IUserAuthService {
         checkUserDetails(details)
         val model: ITokenModel = tokenCreator.createToken(details)
         submitToken(model, details)
-        var creator = tokenCreator;
-        creator.submitRefreshToken(
+        getRefreshableTokenCreator()?.submitRefreshToken(
             model,
             details
         )
@@ -82,13 +91,12 @@ class SimpleUserAuthServiceImpl : IUserAuthService {
     override fun logout(iTokenModel: ITokenModel): Boolean {
         AssertUtil.notNull(iTokenModel, Supplier { InvalidTokenException("未接收到有效Token") })
         tokenManager!!.removeToken(iTokenModel)
-        var creator = tokenCreator;
-
-        val refreshToken = creator.refreshToken
+        var creator = getRefreshableTokenCreator();
+        val refreshToken = creator?.refreshToken
         if (StrUtil.isEmpty(refreshToken)) {
             return true
         }
-        creator.removeRefreshToken(refreshToken)
+        creator?.removeRefreshToken(refreshToken)
         return true
     }
 }
