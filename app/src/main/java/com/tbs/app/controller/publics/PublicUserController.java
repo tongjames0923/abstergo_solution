@@ -8,13 +8,12 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.form.LoginForm;
-import com.tbs.common.error.AssertUtil;
 import com.tbs.web.BaseController;
-import com.tbs.web.exception.InvalidTokenException;
+import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.impl.AbstractRefreshableTokenCreator;
-import com.tbs.web.security.token.ITokenCreator;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserAuthService;
+import com.tbs.web.uitl.AjaxUtil;
 
 import io.swagger.annotations.Api;
 
@@ -45,11 +44,13 @@ public class PublicUserController extends BaseController {
 	AbstractRefreshableTokenCreator tokenCreator;
 
 	@GetMapping("refresh")
-	public ITokenModel refresh() {
+	public AjaxResult refresh() {
 
 		ITokenModel tokenModel = tokenCreator.refreshToken();
-		AssertUtil.isTrue(tokenModel == null, () -> new InvalidTokenException("Token失效且刷新Token失败"));
-		return tokenModel;
+		if (tokenModel == null) {
+			return AjaxUtil.getInstance().custom(468, "Token失效且刷新Token失败", null);
+		}
+		return AjaxUtil.getInstance().success(tokenModel);
 	}
 
 	@Override

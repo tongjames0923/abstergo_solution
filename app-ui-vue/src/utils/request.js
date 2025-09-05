@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {Message} from 'element-ui'
+import {Message, MessageBox} from 'element-ui'
 import store from '@/store'
 import {getToken} from '@/utils/auth'
 import settings from '@/settings'
@@ -95,6 +95,17 @@ const refreshTokenHandler = async (response) => {
   }
 }
 
+async function noLoginFunction(res) {
+  // 刷新token失败，要求重新登录
+  await MessageBox.confirm('登录已过期，请重新登录', '提示', {
+    confirmButtonText: '重新登录',
+    showCancelButton: false
+  })
+  await store.dispatch('user/resetToken')
+  location.reload()
+  return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
+}
+
 // response interceptor
 service.interceptors.response.use(
   /**
@@ -113,34 +124,13 @@ service.interceptors.response.use(
       return res;
     } else {
       if (settings.refreshTokenCode.includes(res.code)) {
-        // 处理token过期的情况 (code 468)
-        try {
-          return await refreshTokenHandler(response)
-        } catch (err) {
-          // 刷新token失败，要求重新登录
-          Message({
-            message: '登录已过期，请重新登录',
-            type: 'error',
-            duration: 3 * 1000
-          })
-          await store.dispatch('user/resetToken')
-          location.reload()
-          return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
-        }
+        noLoginFunction(res);
       } else if (settings.noLoginCode.includes(res.code)) {
         // 当遇到未登录错误时，先尝试刷新token
         try {
           return await refreshTokenHandler(response)
         } catch (err) {
-          // 刷新token失败，要求重新登录
-          Message({
-            message: '登录已过期，请重新登录',
-            type: 'error',
-            duration: 3 * 1000
-          })
-          await store.dispatch('user/resetToken')
-          location.reload()
-          return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
+          return await noLoginFunction(res);
         }
       } else {
         Message({
