@@ -86,7 +86,7 @@ export function enableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/enable/${userId}`,
     method: 'get',
-    params: { role }
+    params: {role}
   })
 }
 
@@ -94,7 +94,7 @@ export function disableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/disable/${userId}`,
     method: 'get',
-    params: { role }
+    params: {role}
   })
 }
 
@@ -108,5 +108,18 @@ export function queryRoles(data) {
     url: '/private/admin/roles/query',
     method: 'post',
     data
+  })
+}
+
+
+/**
+ * 删除用户
+ * @param userId
+ * @returns {AxiosPromise}
+ */
+export function deleteUser(userId) {
+  return request({
+    url: `/private/admin/user/delete/${userId}`,
+    method: 'get'
   })
 }

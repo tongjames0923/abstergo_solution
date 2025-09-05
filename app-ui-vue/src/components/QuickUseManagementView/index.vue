@@ -55,8 +55,6 @@
         <!-- 自定义操作按钮插槽 -->
         <template #actions="{ row, $index }">
           <div class="table-actions">
-            <slot name="actions" :row="row" :index="$index">
-            </slot>
             <el-button
               v-if="editFormConfigName && editHandler"
               @click="handleEdit(row, $index)"
@@ -76,6 +74,21 @@
             >
               {{ deleteActionButtonText }}
             </el-button>
+            <!-- 兼容旧版actions插槽 -->
+            <slot name="actions" :row="row" :index="$index"></slot>
+            <!-- 更多功能按钮 -->
+            <template v-if="$scopedSlots['actions-dropdown']">
+              <el-dropdown @command="handleActionCommand($event, row, $index)">
+                <el-button size="mini" type="primary" plain>
+                  更多功能<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu>
+                  <slot name="actions-dropdown" :row="row" :index="$index"></slot>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </template>
+
+
           </div>
         </template>
       </DynamicTable>
@@ -164,6 +177,10 @@ export default {
       type: String,
       default: '删除'
     },
+    editActionButtonText: {
+      type: String,
+      default: '编辑'
+    },
     // 操作按钮配置
     actions: {
       type: Array,
@@ -197,10 +214,6 @@ export default {
     editFormConfigName: {
       type: String,
       default: ''
-    },
-    editActionButtonText: {
-      type: String,
-      default: '编辑'
     },
     // 编辑表单标题
     editFormTitle: {
@@ -252,7 +265,6 @@ export default {
     }
   },
   methods: {
-
     handleSubmit(data) {
       this.searchForm = data
       this.$refs.dynamicTable.refresh()
@@ -450,6 +462,12 @@ export default {
         // 用户取消删除
         this.$emit('delete-cancel')
       })
+    },
+
+    // 处理操作命令
+    handleActionCommand(command, row, index) {
+      // 这里可以处理下拉菜单中的命令
+      this.$emit('action-command', {command, row, index})
     },
 
     // 处理新增弹窗关闭
