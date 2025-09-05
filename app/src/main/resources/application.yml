@@ -30,6 +30,7 @@ tbs:
   sql:
     enable-log-interceptor: true
     sql-logger-type: tbs.framework.sql.interfaces.impls.SimpleSqlLogger
+
 # Spring配置
 spring:
   lifecycle:
@@ -61,4 +62,8 @@ logging:
     com.tbs.schedule: debug
 server:
   shutdown: graceful
+  servlet:
+    session:
+      cookie:
+        http-only: true
 

@@ -1,7 +1,5 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.shared.constant.RoleConstants;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -13,13 +11,11 @@ import com.tbs.web.uitl.AjaxUtil;
 @RestController
 @RequestMapping("/private")
 public class PrivateTestController extends BaseController {
-	@PreAuthorize("hasAuthority('" + RoleConstants.NORMAL_USER_ROLE_ID + "')")
 	@GetMapping("/test")
-	public AjaxResult test() {
-		return AjaxUtil.getInstance().success(null);
+	public AjaxResult test(int value) {
+		return AjaxUtil.getInstance().custom(468, "测试权限", value);
 	}
 
-	@PreAuthorize("hasAuthority('" + RoleConstants.NORMAL_USER_ROLE_ID + "')")
 	@GetMapping("/testAuth")
 	public AjaxResult testAuth() {
 		return AjaxUtil.getInstance().success(null);
