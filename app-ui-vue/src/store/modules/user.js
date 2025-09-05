@@ -1,5 +1,5 @@
 import {getInfo, login, logout} from '@/api/user'
-import {getToken, removeToken, setRefreshToken, setToken} from '@/utils/auth'
+import {getRememberMe, getToken, removeToken, setToken} from '@/utils/auth'
 import {resetRouter} from '@/router'
 import request from "@/utils/request";
 import settings from "@/store/modules/settings";
@@ -96,11 +96,9 @@ const actions = {
   async refreshToken({commit}) {
     try {
       const {code, data} = await request("public/user/refresh")
-      if (code != settings.successCode) {
-        throw new Error("刷新Token失败")
-      }
       setToken(data.token)
       commit('SET_TOKEN', data.token)
+      setToken(data.token,getRememberMe())
       return data
     } catch (error) {
       throw error

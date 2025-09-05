@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {Message} from 'element-ui'
+import {Message, MessageBox} from 'element-ui'
 import store from '@/store'
 import {getToken} from '@/utils/auth'
 import settings from '@/settings'
@@ -56,6 +56,13 @@ const refreshTokenHandler = async (response) => {
       failedQueue.push({resolve, reject})
     }).then(token => {
       config.headers[settings.tokenHeader] = token
+      // 修复：确保不会重复添加baseURL
+      if (config.baseURL && config.url.startsWith(config.baseURL)) {
+        // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
+        const newConfig = {...config}
+        newConfig.url = config.url.substring(config.baseURL.length)
+        return service(newConfig)
+      }
       return service(config)
     }).catch(err => {
       return Promise.reject(err)
@@ -71,6 +78,13 @@ const refreshTokenHandler = async (response) => {
     // 处理队列中的请求
     processQueue(null, getToken())
     // 重新发送当前请求并返回结果
+    // 修复：确保不会重复添加baseURL
+    if (config.baseURL && config.url.startsWith(config.baseURL)) {
+      // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
+      const newConfig = {...config}
+      newConfig.url = config.url.substring(config.baseURL.length)
+      return await service(newConfig)
+    }
     return await service(config)
   } catch (err) {
     // 处理刷新token失败的情况
@@ -140,4 +154,3 @@ service.interceptors.response.use(
 )
 
 export default service
-
