@@ -43,7 +43,7 @@
 
       <DynamicTable
         :data-fetcher="fetchData"
-        :columns="columns"
+        :columns.sync="internalColumns"
         :actions="actions"
         :auto-load="autoLoad"
         ref="dynamicTable"
@@ -261,10 +261,27 @@ export default {
       // 编辑弹窗可见性
       editDialogVisible: false,
       // 编辑表单数据
-      editFormData: {}
+      editFormData: {},
+      // 内部使用的列配置
+      internalColumns: []
+    }
+  },
+  watch: {
+    // 监听 columns 变化并更新 internalColumns
+    columns: {
+      handler(newColumns) {
+        this.internalColumns = [...newColumns];
+      },
+      immediate: true
     }
   },
   methods: {
+    // 更新列配置的方法
+    updateColumns(newColumns) {
+      this.internalColumns = [...newColumns];
+      this.$emit('update:columns', newColumns);
+    },
+
     handleSubmit(data) {
       this.searchForm = data
       this.$refs.dynamicTable.refresh()

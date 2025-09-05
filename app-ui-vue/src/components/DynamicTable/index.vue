@@ -2,7 +2,7 @@
   <div class="dynamic-table">
     <!-- 表格工具栏插槽 -->
     <div v-if="$slots.toolbar" class="dynamic-table__toolbar">
-      <slot name="toolbar" />
+      <slot name="toolbar"/>
     </div>
 
     <!-- 数据表格 -->
@@ -47,7 +47,7 @@
       />
 
       <!-- 动态列 -->
-      <template v-for="column in columns">
+      <template v-for="column in internalColumns">
         <el-table-column
           :key="column.prop || column.label"
           :prop="column.prop"
@@ -77,11 +77,11 @@
           <template slot-scope="scope">
             <!-- 使用render函数渲染 -->
             <template v-if="column.render">
-              <render :render="column.render" :params="scope" />
+              <render :render="column.render" :params="scope"/>
             </template>
             <!-- 使用slot渲染 -->
             <template v-else-if="column.slot">
-              <slot :name="column.slot" :row="scope.row" :$index="scope.$index" :column="column" />
+              <slot :name="column.slot" :row="scope.row" :$index="scope.$index" :column="column"/>
             </template>
             <!-- 默认文本渲染 -->
             <template v-else>
@@ -100,7 +100,7 @@
       >
         <template slot-scope="scope">
           <div class="action-buttons-container">
-            <slot name="actions" :row="scope.row" :$index="scope.$index" />
+            <slot name="actions" :row="scope.row" :$index="scope.$index"/>
             <template v-if="actions && Array.isArray(actions)">
               <el-button
                 v-for="(action, index) in actions"
@@ -314,7 +314,9 @@ export default {
       // 查询参数
       queryParams: {},
       // 选中行数据
-      selectionData: []
+      selectionData: [],
+      // 内部使用的列配置
+      internalColumns: []
     }
   },
   watch: {
@@ -324,6 +326,13 @@ export default {
         if (newData && Array.isArray(newData)) {
           this.tableData = [...newData]
         }
+      },
+      immediate: true
+    },
+    // 监听 columns 变化并更新 internalColumns
+    columns: {
+      handler(newColumns) {
+        this.internalColumns = [...newColumns];
       },
       immediate: true
     }
@@ -338,6 +347,15 @@ export default {
     }
   },
   methods: {
+    /**
+     * 更新列配置
+     * @param {Array} newColumns - 新的列配置
+     */
+    updateColumns(newColumns) {
+      this.internalColumns = [...newColumns];
+      this.$emit('update:columns', newColumns);
+    },
+
     /**
      * 加载表格数据
      * @param {Object} params - 额外的查询参数
@@ -357,10 +375,10 @@ export default {
       try {
         // 合并所有参数
         const fetchParams = {
-          pagination: { ...this.pageParams },
-          sort: { ...this.sortParams },
-          filter: { ...this.filterParams },
-          query: { ...this.queryParams, ...params }
+          pagination: {...this.pageParams},
+          sort: {...this.sortParams},
+          filter: {...this.filterParams},
+          query: {...this.queryParams, ...params}
         }
 
         // 调用数据获取函数
@@ -410,7 +428,7 @@ export default {
      * @param {Object} column - 列配置
      */
     formatValue(row, column) {
-      const { prop, formatter } = column
+      const {prop, formatter} = column
       const value = prop ? row[prop] : ''
 
       // 如果有自定义格式化函数，则使用
