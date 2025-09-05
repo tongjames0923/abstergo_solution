@@ -1,40 +1,85 @@
 <template>
-  <div>
+  <div class="quick-use-management-view">
     <div class="header-section">
-      <h2>{{ mainTitle }}</h2>
-      <div class="header-actions">
-        <el-button type="primary" icon="el-icon-plus" @click="showAddDialog">{{ addButtonText }}</el-button>
+      <div class="header-content">
+        <h2 class="main-title">{{ mainTitle }}</h2>
+        <div class="header-actions">
+          <el-button
+            v-if="addFormConfigName"
+            type="primary"
+            icon="el-icon-plus"
+            @click="showAddDialog"
+            class="add-button"
+          >
+            {{ addButtonText }}
+          </el-button>
+        </div>
       </div>
     </div>
-    <DynamicFormWithApi
-      :title="searchFormTitle"
-      :config-name="configName"
-      @submit="handleSubmit"
-      @reset="handleReset"
-      ref="dynamicForm"
-    />
-    <DynamicTable
-      :data-fetcher="fetchData"
-      :columns="columns"
-      :actions="actions"
-      :auto-load="autoLoad"
-      ref="dynamicTable"
-    >
-      <!-- 自定义操作按钮插槽 -->
-      <template #actions="{ row, $index }">
-        <slot name="actions" :row="row" :index="$index">
-        </slot>
-        <el-button v-if="editFormConfigName!==null&&editFormConfigName!==''&&editHandler!==null"
-                   @click="handleEdit(row, $index)">
-          {{ editActionButtonText }}
-        </el-button>
 
-        <el-button v-if="deleteHandler!==null" @click="handleDelete(row, $index)">
-          {{ deleteActionButtonText }}
-        </el-button>
-      </template>
+    <el-card class="search-card" shadow="never">
+      <DynamicFormWithApi
+        :title="searchFormTitle"
+        :config-name="configName"
+        @submit="handleSubmit"
+        @reset="handleReset"
+        ref="dynamicForm"
+      />
+    </el-card>
 
-    </DynamicTable>
+    <el-card class="table-card" shadow="never">
+      <div slot="header" class="table-header">
+        <span class="table-header-title">数据列表</span>
+        <div class="table-header-actions">
+          <el-button
+            icon="el-icon-refresh"
+            circle
+            size="mini"
+            @click="refresh"
+            title="刷新数据"
+          />
+        </div>
+      </div>
+
+      <DynamicTable
+        :data-fetcher="fetchData"
+        :columns="columns"
+        :actions="actions"
+        :auto-load="autoLoad"
+        ref="dynamicTable"
+        actions-fixed="right"
+        actions-width="160px"
+        border
+        stripe
+      >
+        <!-- 自定义操作按钮插槽 -->
+        <template #actions="{ row, $index }">
+          <div class="table-actions">
+            <slot name="actions" :row="row" :index="$index">
+            </slot>
+            <el-button
+              v-if="editFormConfigName && editHandler"
+              @click="handleEdit(row, $index)"
+              size="mini"
+              type="primary"
+              plain
+            >
+              {{ editActionButtonText }}
+            </el-button>
+
+            <el-button
+              v-if="deleteHandler"
+              @click="handleDelete(row, $index)"
+              size="mini"
+              type="danger"
+              plain
+            >
+              {{ deleteActionButtonText }}
+            </el-button>
+          </div>
+        </template>
+      </DynamicTable>
+    </el-card>
 
     <!-- 新增弹窗 -->
     <el-dialog
@@ -42,6 +87,7 @@
       :visible.sync="addDialogVisible"
       width="600px"
       @close="handleAddDialogClose"
+      class="form-dialog"
     >
       <DynamicFormWithApi
         v-if="addDialogVisible"
@@ -49,8 +95,10 @@
         :config-name="addFormConfigName"
       >
         <template #actions="{formData ,submit,cancel}">
-          <el-button type="primary" @click="handleAddSubmit(formData)">保存</el-button>
-          <el-button @click="handleAddDialogClose">取消</el-button>
+          <div class="dialog-actions">
+            <el-button @click="handleAddDialogClose">取消</el-button>
+            <el-button type="primary" @click="handleAddSubmit(formData)">保存</el-button>
+          </div>
         </template>
       </DynamicFormWithApi>
     </el-dialog>
@@ -61,6 +109,7 @@
       :visible.sync="editDialogVisible"
       width="600px"
       @close="handleEditDialogClose"
+      class="form-dialog"
     >
       <DynamicFormWithApi
         v-if="editDialogVisible"
@@ -69,13 +118,16 @@
         :value="editFormData"
       >
         <template #actions="{formData ,submit,cancel}">
-          <el-button type="primary" @click="handleEditSubmit(formData)">保存</el-button>
-          <el-button @click="handleEditDialogClose">取消</el-button>
+          <div class="dialog-actions">
+            <el-button @click="handleEditDialogClose">取消</el-button>
+            <el-button type="primary" @click="handleEditSubmit(formData)">保存</el-button>
+          </div>
         </template>
       </DynamicFormWithApi>
     </el-dialog>
   </div>
 </template>
+
 <script>
 import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi'
 import DynamicTable from '@/components/DynamicTable'
@@ -402,17 +454,102 @@ export default {
 
     // 处理新增弹窗关闭
     handleAddDialogClose() {
-      this.$refs.addForm.resetForm()
+      this.$refs.addForm && this.$refs.addForm.resetForm()
       this.$emit('add-cancel')
       this.addDialogVisible = false
     },
 
     // 处理编辑弹窗关闭
     handleEditDialogClose() {
-      this.$refs.editForm.resetForm()
+      this.$refs.editForm && this.$refs.editForm.resetForm()
       this.$emit('edit-cancel')
       this.editDialogVisible = false
     }
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.quick-use-management-view {
+  padding: 20px;
+
+  .header-section {
+    margin-bottom: 20px;
+
+    .header-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+
+      .main-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+        color: #303133;
+      }
+
+      .header-actions {
+        .add-button {
+          height: 36px;
+        }
+      }
+    }
+  }
+
+  .search-card {
+    margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
+
+    ::v-deep .el-card__body {
+      padding: 20px;
+    }
+  }
+
+  .table-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
+
+    ::v-deep .el-card__body {
+      padding: 20px 10px;
+    }
+
+    .table-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+
+      .table-header-title {
+        font-weight: 600;
+        color: #303133;
+      }
+
+      .table-header-actions {
+        display: flex;
+        gap: 8px;
+      }
+    }
+  }
+
+  .table-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .dialog-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 0 20px 20px;
+  }
+
+  .form-dialog {
+    ::v-deep .el-dialog__body {
+      padding: 20px 30px;
+    }
+  }
+}
+</style>
