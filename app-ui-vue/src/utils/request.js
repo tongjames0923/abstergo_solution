@@ -1,5 +1,5 @@
 import axios from 'axios'
-import {Message, MessageBox} from 'element-ui'
+import {Message} from 'element-ui'
 import store from '@/store'
 import {getToken} from '@/utils/auth'
 import settings from '@/settings'
@@ -117,17 +117,31 @@ service.interceptors.response.use(
         try {
           return await refreshTokenHandler(response)
         } catch (err) {
-          return Promise.reject(err)
+          // 刷新token失败，要求重新登录
+          Message({
+            message: '登录已过期，请重新登录',
+            type: 'error',
+            duration: 3 * 1000
+          })
+          await store.dispatch('user/resetToken')
+          location.reload()
+          return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
         }
       } else if (settings.noLoginCode.includes(res.code)) {
-        Message({
-          message: '登录已过期，请重新登录',
-          type: 'error',
-          duration: 3 * 1000
-        })
-        await store.dispatch('user/resetToken')
-        location.reload()
-        return Promise.reject(new Error(res.message | '登录已过期，请重新登录'))
+        // 当遇到未登录错误时，先尝试刷新token
+        try {
+          return await refreshTokenHandler(response)
+        } catch (err) {
+          // 刷新token失败，要求重新登录
+          Message({
+            message: '登录已过期，请重新登录',
+            type: 'error',
+            duration: 3 * 1000
+          })
+          await store.dispatch('user/resetToken')
+          location.reload()
+          return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
+        }
       } else {
         Message({
           message: res.message || '错误',
@@ -138,10 +152,6 @@ service.interceptors.response.use(
         return Promise.reject(new Error(res.message || '错误'))
       }
     }
-
-    // 处理其他错误
-
-
   },
   error => {
     Message({
