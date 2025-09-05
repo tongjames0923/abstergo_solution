@@ -5,9 +5,11 @@
       config-name="companySearchForm"
       :search-handler="searchHandler"
       :columns="columns"
-      :actions="actions"
       add-form-config-name="companyAddForm"
       :add-handler="(formData) => saveCompany(formData) "
+      edit-form-config-name="companyEditForm"
+      :edit-handler="(formData) => saveCompany(formData)"
+      :delete-handler="(row, index) => deleteCompany(row.id)"
     >
     </quick-use-management-view>
   </div>
@@ -55,9 +57,9 @@ export default {
           width: 100,
           formatter: (row) => {
             const statusMap = {
-              0: '禁用',
+              5: '系统',
               1: '激活',
-              2: '系统'
+              2: '禁用'
             }
             return statusMap[row.flag] || '未知'
           }
@@ -74,24 +76,11 @@ export default {
           width: 180,
           sortable: true
         }
-      ],
-      actions: [
-        {
-          label: '编辑',
-          type: 'primary',
-          size: 'mini',
-          handler: this.handleEdit
-        },
-        {
-          label: '删除',
-          type: 'danger',
-          size: 'mini',
-          handler: this.handleDelete
-        }
       ]
     }
   },
   methods: {
+    deleteCompany,
     saveCompany,
     // 简化后的搜索处理函数，适配AbstractCrudController的数据格式
     async searchHandler(bodyParams, requestParams) {
@@ -104,31 +93,6 @@ export default {
         requestParams.pageSize
       )
     },
-
-    // 编辑公司
-    handleEdit(row) {
-      this.$message.info(`编辑公司: ${row.companyName}`)
-    },
-
-    // 删除公司
-    handleDelete(row) {
-      this.$confirm(`确定要删除公司 "${row.companyName}" 吗？`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
-      }).then(async () => {
-        try {
-          await deleteCompany(row.id)
-          this.$message.success('删除成功')
-          // 刷新表格数据
-          this.$refs.companyManagement.refresh()
-        } catch (error) {
-          this.$message.error('删除失败: ' + (error.message || '未知错误'))
-        }
-      }).catch(() => {
-        // 用户取消删除
-      })
-    }
   }
 }
 </script>

@@ -22,7 +22,16 @@
     >
       <!-- 自定义操作按钮插槽 -->
       <template #actions="{ row, $index }">
-        <slot name="actions" :row="row" :index="$index"/>
+        <slot name="actions" :row="row" :index="$index">
+        </slot>
+        <el-button v-if="editFormConfigName!==null&&editFormConfigName!==''&&editHandler!==null"
+                   @click="handleEdit(row, $index)">
+          {{ editActionButtonText }}
+        </el-button>
+
+        <el-button v-if="deleteHandler!==null" @click="handleDelete(row, $index)">
+          {{ deleteActionButtonText }}
+        </el-button>
       </template>
 
     </DynamicTable>
@@ -45,9 +54,28 @@
         </template>
       </DynamicFormWithApi>
     </el-dialog>
+
+    <!-- 编辑弹窗 -->
+    <el-dialog
+      :title="editFormTitle"
+      :visible.sync="editDialogVisible"
+      width="600px"
+      @close="handleEditDialogClose"
+    >
+      <DynamicFormWithApi
+        v-if="editDialogVisible"
+        ref="editForm"
+        :config-name="editFormConfigName"
+        :value="editFormData"
+      >
+        <template #actions="{formData ,submit,cancel}">
+          <el-button type="primary" @click="handleEditSubmit(formData)">保存</el-button>
+          <el-button @click="handleEditDialogClose">取消</el-button>
+        </template>
+      </DynamicFormWithApi>
+    </el-dialog>
   </div>
 </template>
-
 <script>
 import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi'
 import DynamicTable from '@/components/DynamicTable'
@@ -80,7 +108,10 @@ export default {
       type: Array,
       default: () => []
     },
-
+    deleteActionButtonText: {
+      type: String,
+      default: '删除'
+    },
     // 操作按钮配置
     actions: {
       type: Array,
@@ -111,6 +142,36 @@ export default {
       type: Function,
       default: null
     },
+    editFormConfigName: {
+      type: String,
+      default: ''
+    },
+    editActionButtonText: {
+      type: String,
+      default: '编辑'
+    },
+    // 编辑表单标题
+    editFormTitle: {
+      type: String,
+      default: '编辑'
+    },
+    // 编辑处理器
+    editHandler: {
+      type: Function,
+      default: null
+    },
+    // 删除处理器
+    deleteHandler: {
+      type: Function,
+      default: null
+    },
+    deleteConfirmText: {
+      type: Function,
+      default: (row, index) => {
+        // 输出确定要删除第index项吗？
+        return `确定要删除第${index + 1}项吗？`
+      }
+    },
     // 查询参数转换器，可选
     queryTransformer: {
       type: Function,
@@ -131,10 +192,15 @@ export default {
     return {
       searchForm: {},
       // 新增弹窗可见性
-      addDialogVisible: false
+      addDialogVisible: false,
+      // 编辑弹窗可见性
+      editDialogVisible: false,
+      // 编辑表单数据
+      editFormData: {}
     }
   },
   methods: {
+
     handleSubmit(data) {
       this.searchForm = data
       this.$refs.dynamicTable.refresh()
@@ -278,11 +344,74 @@ export default {
       }
     },
 
+    // 显示编辑弹窗
+    showEditDialog(rowData) {
+      this.editFormData = {...rowData}
+      this.editDialogVisible = true
+    },
+
+    // 处理编辑
+    handleEdit(row, index) {
+      this.showEditDialog(row)
+    },
+
+    // 处理编辑表单提交
+    async handleEditSubmit(formData) {
+      try {
+        // 如果提供了编辑处理器，则调用它
+        if (this.editHandler && typeof this.editHandler === 'function') {
+          await this.editHandler(formData)
+          this.editDialogVisible = false
+          this.$emit('edit-success', formData)
+          // 刷新表格数据
+          this.refresh()
+        } else {
+          console.warn('未提供 editHandler 方法')
+          this.$message.warning('未配置编辑处理器')
+        }
+      } catch (error) {
+        console.error('编辑失败:', error)
+        this.$emit('edit-error', error)
+      } finally {
+        this.editDialogVisible = false
+      }
+    },
+
+    handleDelete(row, index) {
+      this.$confirm(this.deleteConfirmText(row, index), '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      }).then(async () => {
+        // 如果提供了删除处理器，则调用它
+        if (this.deleteHandler && typeof this.deleteHandler === 'function') {
+          await this.deleteHandler(row)
+          this.$emit('delete-success', row)
+          // 刷新表格数据
+          this.refresh()
+        } else {
+          console.warn('未提供 deleteHandler 方法')
+          this.$message.warning('未配置删除处理器')
+        }
+
+      }).catch(() => {
+        // 用户取消删除
+        this.$emit('delete-cancel')
+      })
+    },
+
     // 处理新增弹窗关闭
     handleAddDialogClose() {
       this.$refs.addForm.resetForm()
       this.$emit('add-cancel')
       this.addDialogVisible = false
+    },
+
+    // 处理编辑弹窗关闭
+    handleEditDialogClose() {
+      this.$refs.editForm.resetForm()
+      this.$emit('edit-cancel')
+      this.editDialogVisible = false
     }
   }
 }

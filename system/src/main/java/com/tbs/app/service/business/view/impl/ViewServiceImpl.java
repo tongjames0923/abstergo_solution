@@ -26,9 +26,64 @@ public class ViewServiceImpl implements IViewService {
         {
             return buildCompanyAddFormConfig();
         }
+        else if("companyEditForm".equals(key))
+        {
+            return buildCompanyEditFormConfig();
+        }
 		// 可以根据需要添加其他表单配置
 		return null;
 	}
+
+    private FormConfig buildCompanyEditFormConfig() {
+        FormConfig formConfig = new FormConfig();
+        formConfig.setExpandable(false);
+        formConfig.setGutter(20);
+        formConfig.setLabelWidth("80px");
+        formConfig.setSpan(24);
+
+        List<FormField> fields = new ArrayList<>();
+
+        // 公司名称字段
+        FormField companyNameField = new FormField();
+        companyNameField.setProp("companyName");
+        companyNameField.setLabel("公司名称");
+        companyNameField.setType("input");
+        companyNameField.setPlaceholder("请输入公司名称");
+        companyNameField.setPrefixIcon("el-icon-office-building");
+        companyNameField.setProps(Map.of("size", "medium"));
+        fields.add(companyNameField);
+
+        // 税号字段
+        FormField taxNumberField = new FormField();
+        taxNumberField.setProp("taxNumber");
+        taxNumberField.setLabel("税号");
+        taxNumberField.setType("input");
+        taxNumberField.setPlaceholder("请输入税号");
+        taxNumberField.setPrefixIcon("el-icon-document");
+        taxNumberField.setProps(Map.of("size", "medium"));
+        fields.add(taxNumberField);
+
+        // 公司logo字段
+        FormField logoImageField = new FormField();
+        logoImageField.setProp("logoImage");
+        logoImageField.setLabel("公司Logo");
+        logoImageField.setType("url-image");
+        logoImageField.setPlaceholder("请输入Logo图片URL");
+        logoImageField.setProps(Map.of("size", "medium"));
+        fields.add(logoImageField);
+
+        // 描述字段
+        FormField descriptionField = new FormField();
+        descriptionField.setProp("description");
+        descriptionField.setLabel("描述");
+        descriptionField.setType("input");
+        descriptionField.setPlaceholder("请输入公司描述");
+        descriptionField.setProps(Map.of("type", "textarea", "rows", 3, "size", "medium"));
+        fields.add(descriptionField);
+
+        formConfig.setFields(fields);
+        return formConfig;
+    }
 
     private FormConfig buildCompanyAddFormConfig() {
         FormConfig formConfig = new FormConfig();

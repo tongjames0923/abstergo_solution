@@ -102,7 +102,11 @@
                   v-bind="field.props"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
                 />
-
+                <url-image v-else-if="field && field.type === 'url-image'"
+                           :value="formData[(field && field.prop) || '']"
+                           v-bind="field.props"
+                           @change="val => setFieldValue((field && field.prop) || '', val)"
+                ></url-image>
                 <!-- 其他自定义组件 -->
                 <component
                   :is="customComponents[(field && field.type) || '']"
@@ -148,11 +152,13 @@
 
 <script>
 import DynamicOptions from '@/components/DynamicOptions'
+import UrlImage from "@/components/UrlImage/index.vue";
 
 export default {
   name: 'DynamicForm',
   components: {
-    DynamicOptions
+    DynamicOptions,
+    UrlImage
   },
   props: {
     // 表单标题
