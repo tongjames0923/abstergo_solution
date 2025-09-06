@@ -1,11 +1,13 @@
 package com.tbs.web.security.token.model;
 
+import java.util.Date;
+
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.tbs.web.enums.AccessTokenCreateTypeEnum;
 import com.tbs.web.enums.TokenSource;
 import com.tbs.web.security.token.ITokenModel;
-import lombok.Data;
 
-import java.util.Date;
+import lombok.Data;
 
 /**
  * token实体模型
@@ -14,61 +16,79 @@ import java.util.Date;
  */
 @Data
 public class SimpleTokenModel implements ITokenModel {
-    private static final long serialVersionUID = 1L;
-    /**
-     * token
-     */
-    private String token;
+	private static final long serialVersionUID = 1L;
+	/**
+	 * token
+	 */
+	private String token;
 
-    /**
-     * token来源
-     */
-    private TokenSource source;
+	/**
+	 * token来源
+	 */
+	private TokenSource source;
 
-    /**
-     * token来源字段
-     */
-    private String sourceField;
+	/**
+	 * token来源字段
+	 */
+	private String sourceField;
 
-    /**
-     * token来源字段值
-     */
-    private String sourceValue;
+	/**
+	 * token来源字段值
+	 */
+	private String sourceValue;
 
-    /**
-     * 过期时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date expireTime;
+	/**
+	 * 过期时间
+	 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	private Date expireTime;
 
-    /**
-     * 创建时间
-     */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
-    private Date createTime;
+	/**
+	 * 创建时间
+	 */
+	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	private Date createTime;
 
-    protected SimpleTokenModel() {
-    }
+	private AccessTokenCreateTypeEnum createType;
 
-    /**
-     * 创建TokenModel
-     *
-     * @param token
-     * @param source
-     * @param sourceField
-     * @param sourceValue
-     * @param expireTime
-     * @return
-     */
-    public static SimpleTokenModel create(String token, TokenSource source, String sourceField, String sourceValue,
-        Date expireTime) {
-        SimpleTokenModel model = new SimpleTokenModel();
-        model.token = token;
-        model.source = source;
-        model.sourceField = sourceField;
-        model.sourceValue = sourceValue;
-        model.expireTime = expireTime;
-        model.createTime = new Date();
-        return model;
-    }
+	protected SimpleTokenModel() {
+	}
+
+	/**
+	 * 创建TokenModel
+	 *
+	 * @param token
+	 * @param source
+	 * @param sourceField
+	 * @param sourceValue
+	 * @param expireTime
+	 * @return
+	 */
+	public static SimpleTokenModel create(String token, TokenSource source, String sourceField, String sourceValue,
+			Date expireTime) {
+		return create(token, source, sourceField, sourceValue, expireTime, AccessTokenCreateTypeEnum.LOGIN);
+	}
+
+	public static SimpleTokenModel createByRefresh(String token, TokenSource source, String sourceField,
+			String sourceValue, Date expireTime) {
+		return create(token, source, sourceField, sourceValue, expireTime, AccessTokenCreateTypeEnum.REFRESH);
+	}
+
+	public static SimpleTokenModel create(String token, TokenSource source, String sourceField, String sourceValue,
+			Date expireTime, AccessTokenCreateTypeEnum createType) {
+		SimpleTokenModel model = new SimpleTokenModel();
+		model.token = token;
+		model.source = source;
+		model.sourceField = sourceField;
+		model.sourceValue = sourceValue;
+		model.expireTime = expireTime;
+		model.createTime = new Date();
+		model.createType = createType;
+		return model;
+	}
+
+	@Override
+	public AccessTokenCreateTypeEnum getCreateType() {
+		return createType;
+	}
 }
