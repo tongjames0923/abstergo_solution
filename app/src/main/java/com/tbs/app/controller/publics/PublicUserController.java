@@ -1,7 +1,6 @@
 package com.tbs.app.controller.publics;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.context.annotation.Lazy;
 import org.springframework.validation.annotation.Validated;
@@ -12,7 +11,6 @@ import com.tbs.common.util.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.impl.AbstractRefreshableTokenCreator;
-import com.tbs.web.security.token.ITokenCreator;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.uitl.AjaxUtil;
@@ -41,18 +39,13 @@ public class PublicUserController extends BaseController {
 		return tokenModel;
 	}
 
-	@Resource
-	private HttpServletRequest request;
-
-	@Resource
-	ITokenCreator tokenCreator;
-
 	@GetMapping("refresh")
 	public AjaxResult refresh() {
 		try {
 			ITokenModel tokenModel = SpringUtil.getBean(AbstractRefreshableTokenCreator.class).refreshToken();
 			if (tokenModel == null) {
-				return AjaxUtil.getInstance().custom(468, "Token失效且刷新Token失败", null);
+				return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, AjaxResult.REFRESH_FAIL_CODE_MESSAGE,
+						null);
 			}
 			return AjaxUtil.getInstance().success(tokenModel);
 		} catch (Exception e) {

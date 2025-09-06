@@ -15,6 +15,7 @@ import com.tbs.web.security.user.IUserInfoService
 import org.springframework.context.annotation.Lazy
 import org.springframework.security.core.AuthenticationException
 import org.springframework.security.core.userdetails.UserDetails
+import java.util.*
 import java.util.function.Supplier
 import javax.annotation.Resource
 
@@ -26,33 +27,32 @@ class SimpleUserAuthServiceImpl : IUserAuthService {
 
     @Resource
     @Lazy
-    private val passwordEncrypt: IPasswordEncrypt? = null
+    private lateinit var passwordEncrypt: IPasswordEncrypt
 
     @Resource
     @Lazy
-    private val userInfoService: IUserInfoService? = null
+    private lateinit var userInfoService: IUserInfoService
 
     @Resource
     @Lazy
-    private val tokenManager: ITokenManager? = null
+    private lateinit var tokenManager: ITokenManager
 
     @Resource
     @Lazy
     private lateinit var tokenCreator: ITokenCreator
 
     private fun getRefreshableTokenCreator(): AbstractRefreshableTokenCreator? {
-        try {
-            return SpringUtil.getBean(AbstractRefreshableTokenCreator::class.java)
-        } catch (e: Exception) {
-            return null;
-        }
+        return SpringUtil.getBeanOptional<AbstractRefreshableTokenCreator>(AbstractRefreshableTokenCreator::class.java)
+            .orElse(null)
     }
 
     override fun login(username: String, password: String): ITokenModel {
         var password = password
-        val details = userInfoService!!.loadUserInfoByUniqueKey(username)
-        password = passwordEncrypt!!.encrypt(password)
-        AssertUtil.isTrue(details.getPassword() != password, Supplier { SimpleAuthException("用户名或密码错误") })
+        val details = userInfoService.loadUserInfoByUniqueKey(username)
+        password = passwordEncrypt.encrypt(password)
+        AssertUtil.isTrue(
+            !Objects.equals(details.getPassword(), password),
+            Supplier { SimpleAuthException("用户名或密码错误") })
         checkUserDetails(details)
         val model: ITokenModel = tokenCreator.createToken(details)
         submitToken(model, details)
@@ -76,7 +76,7 @@ class SimpleUserAuthServiceImpl : IUserAuthService {
             iTokenModel.getExpireTime() != null
                     && iTokenModel.getExpireTime().getTime() < System.currentTimeMillis(),
             Supplier { InvalidTokenException("Token已过期") })
-        val details = tokenManager!!.loadUserInfoByToken(iTokenModel)
+        val details = tokenManager.loadUserInfoByToken(iTokenModel)
         AssertUtil.isTrue(details == null, Supplier { InvalidTokenException("Token已失效") })
         checkUserDetails(details)
     }
@@ -85,12 +85,12 @@ class SimpleUserAuthServiceImpl : IUserAuthService {
         simpleTokenModel: ITokenModel,
         details: UserDetails
     ) {
-        tokenManager!!.submitToken(simpleTokenModel, details)
+        tokenManager.submitToken(simpleTokenModel, details)
     }
 
     override fun logout(iTokenModel: ITokenModel): Boolean {
         AssertUtil.notNull(iTokenModel, Supplier { InvalidTokenException("未接收到有效Token") })
-        tokenManager!!.removeToken(iTokenModel)
+        tokenManager.removeToken(iTokenModel)
         var creator = getRefreshableTokenCreator();
         val refreshToken = creator?.refreshToken
         if (StrUtil.isEmpty(refreshToken)) {
