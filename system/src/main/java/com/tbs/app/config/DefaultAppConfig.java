@@ -14,6 +14,8 @@ import com.tbs.app.service.business.role.ISystemRoleService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.app.service.business.role.impl.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.business.role.impl.SimpleUserRoleRelationServiceImpl;
+import com.tbs.app.service.business.token.IRefreshTokenService;
+import com.tbs.app.service.business.token.impl.CookieRefreshTokenService;
 import com.tbs.app.service.business.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.service.business.user.impl.NoEncryptPassword;
@@ -92,6 +94,12 @@ public class DefaultAppConfig {
 	@ConditionalOnMissingBean(IUserInfoService.class)
 	public IUserInfoService userInfoService() {
 		return new DefaultUserInfoService();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(IRefreshTokenService.class)
+	public IRefreshTokenService refreshTokenService() {
+		return new CookieRefreshTokenService();
 	}
 
 	@Bean
