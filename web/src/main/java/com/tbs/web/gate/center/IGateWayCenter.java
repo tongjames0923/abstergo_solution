@@ -1,12 +1,16 @@
-package com.tbs.web.security.authorization;
+package com.tbs.web.gate.center;
 
 import javax.servlet.http.HttpServletRequest;
 
+import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.security.token.ITokenPicker;
 import org.springframework.core.Ordered;
 
-public interface ISecurityManager extends Ordered {
+/**
+ *
+ * @author abstergo
+ */
+public interface IGateWayCenter extends Ordered {
 	/**
 	 * 获取Token解析器
 	 *

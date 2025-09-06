@@ -1,15 +1,9 @@
 package com.tbs.web.security.impl
 
-import cn.hutool.core.date.DateField
-import cn.hutool.core.date.DateUtil
 import com.alibaba.fastjson2.JSON
-import com.tbs.common.util.StrUtil
 import com.tbs.web.enums.TokenSource
 import com.tbs.web.exception.NotFoundTokenException
-import com.tbs.web.security.token.ITokenModel
-import com.tbs.web.security.token.ITokenPicker
-import com.tbs.web.security.token.model.SimpleTokenModel
-import java.util.*
+import com.tbs.web.gate.ITokenPicker
 import javax.servlet.http.HttpServletRequest
 
 open class SimpleTokenPicker : ITokenPicker {
@@ -49,53 +43,35 @@ open class SimpleTokenPicker : ITokenPicker {
     }
 
     @Throws(NotFoundTokenException::class)
-    override fun pick(request: HttpServletRequest): Optional<ITokenModel> {
+    override fun pick(request: HttpServletRequest): String? {
         var token: String? = ""
-        val sourceField: String?
-        var sourceValue: String? = ""
-        sourceField = fieldName
+
+
         when (tokenSource) {
             TokenSource.BODY -> {
                 val body = getBody(request)
-                if (StrUtil.isEmpty(sourceValue)) {
-                    return Optional.empty()
-                }
+
                 val map = JSON.parseObject(body, Map::class.java)
-                token = map.get(fieldName).toString()
-                sourceValue = body
+                return map.get(fieldName).toString()
+
             }
 
             TokenSource.COOKIE -> {
-                sourceValue = getFromCookie(request, fieldName)
-                if (StrUtil.isEmpty(sourceValue)) {
-                    return Optional.empty()
-                }
-                token = sourceValue
+                return getFromCookie(request, fieldName)
+
             }
 
             TokenSource.HEADER -> {
-                sourceValue = request.getHeader(fieldName)
-                if (StrUtil.isEmpty(sourceValue)) {
-                    return Optional.empty()
-                }
-                token = sourceValue
+                return request.getHeader(fieldName)
+
             }
 
             TokenSource.PARAM -> {
-                sourceValue = getFromParam(request, fieldName)
-                if (StrUtil.isEmpty(sourceValue)) {
-                    return Optional.empty()
-                }
-                token = sourceValue
+                return getFromParam(request, fieldName)
+
             }
 
         }
-        val createDate = Date()
-        return Optional.of(
-            SimpleTokenModel.create(
-                token, tokenSource, sourceField, sourceValue,
-                DateUtil.offset(createDate, DateField.SECOND, expireTime)
-            )
-        )
+       
     }
 }

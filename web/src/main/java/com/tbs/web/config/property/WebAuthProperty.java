@@ -4,12 +4,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 import com.tbs.web.enums.TokenSource;
+import com.tbs.web.gate.ITokenPicker;
+import com.tbs.web.security.authentication.center.IAuthenticationCenter;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
-import com.tbs.web.security.impl.SimpleTokenCreator;
-import com.tbs.web.security.token.ITokenCreator;
-import com.tbs.web.security.token.ITokenPicker;
-import com.tbs.web.security.user.IUserAuthService;
-import com.tbs.web.security.user.impl.NotImplUserAuthService;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 
 import lombok.Data;
 
@@ -47,14 +45,14 @@ public class WebAuthProperty {
 	private Class<? extends ITokenPicker> tokenPickerImpl = DefaultLoginTokenPicker.class;
 
 	/**
-	 * token生成器实现类
+	 * 认证中心实现类
 	 */
-	private Class<? extends ITokenCreator> tokenCreatorImpl = SimpleTokenCreator.class;
+	private Class<? extends IAuthenticationCenter> authenticationCenterImpl;
 
 	/**
-	 * 用户认证服务实现类
+	 * token颁发中心实现类
 	 */
-	private Class<? extends IUserAuthService> userAuthServiceImpl = NotImplUserAuthService.class;
+	private Class<? extends ITokenIssuanceCenter> tokenIssuanceCenterImpl;
 
 	/**
 	 * token数据源名称

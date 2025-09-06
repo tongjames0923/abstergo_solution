@@ -22,7 +22,8 @@ import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
-import com.tbs.web.security.user.IUserAuthService;
+import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.uitl.AuthUtil;
 
 import io.swagger.annotations.Api;
@@ -41,8 +42,9 @@ import io.swagger.annotations.ApiOperation;
 @PreAuthorize("@authUtil.userLoggedIn")
 @Api(value = "登录后用户接口", tags = "登录后用户接口")
 public class PrivateUserController extends BaseController {
+
 	@Resource
-	private IUserAuthService userAuthService;
+	ITokenIssuanceCenter tokenIssuanceCenter;
 
 	@Resource
 	private IUserRoleRelationService relationService;
@@ -58,7 +60,10 @@ public class PrivateUserController extends BaseController {
 	@GetMapping("/logout")
 	@ApiOperation(value = "用户登出", notes = "退出当前登录状态")
 	public Boolean logout() {
-		return userAuthService.logout(AuthUtil.getInstance().getCurrentTokenModel());
+		var token = AuthUtil.getInstance().getCurrentTokenModel();
+		AssertUtil.isTrue(token == null, () -> new FormattedRuntimeException("用户令牌为空，获取失败"));
+		tokenIssuanceCenter.setTokenStatus(token.getToken(), TokenStatusEnum.INACTIVE);
+		return true;
 	}
 
 	/**

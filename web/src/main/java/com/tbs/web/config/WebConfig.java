@@ -25,9 +25,9 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
-import com.tbs.web.security.token.ITokenPicker;
-import com.tbs.web.security.authorization.LoginSecurityManager;
-import com.tbs.web.security.impl.TokenHandleFilter;
+import com.tbs.web.gate.ITokenPicker;
+import com.tbs.web.gate.center.LoginGateWayCenter;
+import com.tbs.web.gate.TokenHandleFilter;
 
 /**
  * Web 配置类
@@ -86,8 +86,8 @@ public class WebConfig {
 	}
 
 	@Bean
-	LoginSecurityManager loginSecurityManager(@Qualifier(WebBeanNameConstant.LOGIN_TOKEN_PICKER) ITokenPicker picker) {
-		return new LoginSecurityManager(picker);
+    LoginGateWayCenter loginSecurityManager(@Qualifier(WebBeanNameConstant.LOGIN_TOKEN_PICKER) ITokenPicker picker) {
+		return new LoginGateWayCenter(picker);
 	}
 
 	/**

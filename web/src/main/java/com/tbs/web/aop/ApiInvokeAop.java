@@ -15,7 +15,7 @@ import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.BaseController;
-import com.tbs.web.intercept.IApiInvokeInterceptor;
+import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
 
 import lombok.extern.slf4j.Slf4j;
 

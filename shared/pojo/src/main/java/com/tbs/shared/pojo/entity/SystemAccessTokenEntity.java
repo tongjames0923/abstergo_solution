@@ -7,7 +7,8 @@ import javax.persistence.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.shared.pojo.IBaseEntity;
 
-import com.tbs.web.enums.AccessTokenCreateTypeEnum;
+import com.tbs.web.enums.TokenCreateTypeEnum;
+import com.tbs.web.enums.TokenStatusEnum;
 import lombok.Data;
 import lombok.ToString;
 
@@ -49,7 +50,7 @@ public class SystemAccessTokenEntity implements IBaseEntity<Long> {
 	/**
 	 * 标记
 	 *
-	 * @see com.tbs.shared.enums.AccessTokenFlagEnum
+	 * @see TokenStatusEnum
 	 */
 	private Integer flag;
 	/**
@@ -74,7 +75,7 @@ public class SystemAccessTokenEntity implements IBaseEntity<Long> {
 	/**
 	 * 创建方式
 	 *
-	 * @see AccessTokenCreateTypeEnum
+	 * @see TokenCreateTypeEnum
 	 */
 	@Column(name = "create_type")
 	private Integer createType;

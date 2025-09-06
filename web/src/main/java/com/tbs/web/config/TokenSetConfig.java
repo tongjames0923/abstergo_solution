@@ -2,6 +2,7 @@ package com.tbs.web.config;
 
 import javax.annotation.Resource;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -9,11 +10,11 @@ import org.springframework.context.annotation.Configuration;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
+import com.tbs.web.gate.ITokenPicker;
+import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
-import com.tbs.web.security.impl.SimpleTokenCreator;
-import com.tbs.web.security.impl.TokenHandleFilter;
-import com.tbs.web.security.token.ITokenCreator;
-import com.tbs.web.security.token.ITokenPicker;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.impl.NoImplTokenIssuanceCenter;
 
 /**
  * token设置
@@ -36,10 +37,11 @@ public class TokenSetConfig {
 
 	@Bean
 	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-	public ITokenCreator tokenCreator() {
+	@ConditionalOnMissingBean(ITokenIssuanceCenter.class)
+	ITokenIssuanceCenter tokenIssuanceCenter() {
 		return BeanUtil.buildBeanFromProperties(() -> {
-			return new SimpleTokenCreator();
-		}, webAuthProperty.getTokenCreatorImpl(), BeanUtil::buildByEmptyArgs);
+			return new NoImplTokenIssuanceCenter();
+		}, webAuthProperty.getTokenIssuanceCenterImpl(), BeanUtil::buildByEmptyArgs);
 	}
 
 	@Bean

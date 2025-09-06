@@ -1,11 +1,7 @@
 package com.tbs.web.config;
 
-import com.tbs.common.util.BeanUtil;
-import com.tbs.web.config.property.WebAuthProperty;
-import com.tbs.web.security.user.IUserAuthService;
-import com.tbs.web.security.user.impl.DefaultUserDetailsService;
-import com.tbs.web.security.impl.*;
-import com.tbs.web.security.user.impl.NotImplUserAuthService;
+import javax.annotation.Resource;
+
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -15,7 +11,14 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-import javax.annotation.Resource;
+import com.tbs.common.util.BeanUtil;
+import com.tbs.web.config.property.WebAuthProperty;
+import com.tbs.web.security.authentication.center.IAuthenticationCenter;
+import com.tbs.web.security.authentication.center.impl.NoImplAuthCenter;
+import com.tbs.web.security.impl.DefaultAuthAccessDeniedHandler;
+import com.tbs.web.security.impl.DefaultAuthEntryPoint;
+import com.tbs.web.security.impl.TokenAuthenticationProvider;
+import com.tbs.web.security.user.impl.DefaultUserDetailsService;
 
 /**
  * 认证配置
@@ -57,10 +60,11 @@ public class AuthConfig {
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
-    public IUserAuthService defaultUserAuthService() {
-        return BeanUtil.buildBeanFromProperties(() -> {
-            return new NotImplUserAuthService();
-        }, webAuthProperty.getUserAuthServiceImpl(), BeanUtil::buildByEmptyArgs);
+	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
+	public IAuthenticationCenter authenticationCenter() {
+		return BeanUtil.buildBeanFromProperties(() -> {
+			return new NoImplAuthCenter();
+		}, webAuthProperty.getAuthenticationCenterImpl(), BeanUtil::buildByEmptyArgs);
     }
+
 }

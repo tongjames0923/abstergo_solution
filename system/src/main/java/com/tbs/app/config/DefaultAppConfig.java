@@ -7,7 +7,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.tbs.app.service.business.auth.impl.DefaultTokenManager;
 import com.tbs.app.service.business.auth.impl.DefaultUserInfoService;
 import com.tbs.app.service.business.company.ISystemCompanyService;
 import com.tbs.app.service.business.company.impl.SimpleCompanyService;
@@ -27,7 +26,6 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.interfaces.intercept.SystemOperateInterceptor;
-import com.tbs.web.security.token.ITokenManager;
 import com.tbs.web.security.user.IUserInfoService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -94,12 +92,6 @@ public class DefaultAppConfig {
 	@ConditionalOnMissingBean(IUserInfoService.class)
 	public IUserInfoService userInfoService() {
 		return new DefaultUserInfoService();
-	}
-
-	@Bean
-	@ConditionalOnMissingBean(ITokenManager.class)
-	public ITokenManager tokenManager() {
-		return new DefaultTokenManager();
 	}
 
 	@Bean

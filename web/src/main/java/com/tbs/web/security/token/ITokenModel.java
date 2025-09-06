@@ -3,8 +3,9 @@ package com.tbs.web.security.token;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.tbs.web.enums.AccessTokenCreateTypeEnum;
-import com.tbs.web.enums.TokenSource;
+import com.tbs.web.enums.TokenCreateTypeEnum;
+import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.enums.TokenTypeEnum;
 
 /**
  * 令牌模型
@@ -19,26 +20,6 @@ public interface ITokenModel extends Serializable {
 	 */
 	String getToken();
 
-	/**
-	 * 获取令牌来源
-	 *
-	 * @return
-	 */
-	TokenSource getSource();
-
-	/**
-	 * 获取令牌来源字段
-	 *
-	 * @return
-	 */
-	String getSourceField();
-
-	/**
-	 * 获取令牌来源字段值
-	 *
-	 * @return
-	 */
-	String getSourceValue();
 
 	/**
 	 * 获取令牌过期时间
@@ -55,10 +36,38 @@ public interface ITokenModel extends Serializable {
 	Date getCreateTime();
 
 	/**
+	 * 获取用户名
+	 *
+	 * @return
+	 */
+	String getUserName();
+
+	/**
 	 * 获取令牌类型
 	 *
 	 * @return
 	 */
-	AccessTokenCreateTypeEnum getCreateType();
+	TokenCreateTypeEnum getCreateType();
+
+	/**
+	 * 获取令牌状态
+	 *
+	 * @return
+	 */
+	TokenStatusEnum getStatus();
+
+	/**
+	 * 设置令牌状态
+	 *
+	 * @return
+	 */
+	void setStatus(TokenStatusEnum status);
+
+	/**
+	 * 获取令牌类型
+	 *
+	 * @return
+	 */
+	TokenTypeEnum getTokenType();
 
 }

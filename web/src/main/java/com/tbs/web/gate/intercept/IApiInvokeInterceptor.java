@@ -1,4 +1,4 @@
-package com.tbs.web.intercept;
+package com.tbs.web.gate.intercept;
 
 import java.lang.reflect.Method;
 

@@ -1,4 +1,4 @@
-package com.tbs.web.security.authorization;
+package com.tbs.web.gate.center;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,9 +6,7 @@ import java.util.List;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
-import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.security.token.ITokenPicker;
-import com.tbs.web.security.authentication.ITokenAuthentication;
+import com.tbs.web.gate.ITokenPicker;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;
@@ -17,16 +15,23 @@ import org.springframework.security.web.util.matcher.RequestMatcher;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.exception.NotFoundTokenException;
-import com.tbs.web.security.authentication.TokenAuthentication;
+import com.tbs.web.security.authentication.center.IAuthenticationCenter;
+import com.tbs.web.security.authentication.model.ITokenAuthentication;
+import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AuthUtil;
 
 /**
  * 抽象登录安全管理器
  *
- **/
-public class LoginSecurityManager extends AbstractAntPathSupportSecurityManager {
+ *
+ * @author abstergo
+ */
+public class LoginGateWayCenter extends AbstractAntPathSupportGateWayCenter {
 
 	private ITokenPicker loginTokenPicker;
+
+	@Resource
+	IAuthenticationCenter authenticationCenter;
 
 	@Resource
 	private AuthenticationManager manager;
@@ -34,7 +39,7 @@ public class LoginSecurityManager extends AbstractAntPathSupportSecurityManager 
 	@Resource
 	WebProperty webProperty;
 
-	public LoginSecurityManager(ITokenPicker loginTokenPicker) {
+	public LoginGateWayCenter(ITokenPicker loginTokenPicker) {
 		super(null);
 		this.loginTokenPicker = loginTokenPicker;
 	}
@@ -59,7 +64,7 @@ public class LoginSecurityManager extends AbstractAntPathSupportSecurityManager 
 
 	@Override
 	public void handleToken(ITokenModel tokenModel) {
-		ITokenAuthentication tokenAuthentication = TokenAuthentication.create(tokenModel);
+		ITokenAuthentication tokenAuthentication = authenticationCenter.createAuthenticationByTokenModel(tokenModel);
 		AuthUtil.getInstance().setAuthentication((ITokenAuthentication) manager.authenticate(tokenAuthentication));
 	}
 

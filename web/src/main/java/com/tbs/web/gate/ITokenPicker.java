@@ -1,7 +1,8 @@
-package com.tbs.web.security.token;
+package com.tbs.web.gate;
 
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.exception.NotFoundTokenException;
+import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 
 import javax.servlet.http.HttpServletRequest;
@@ -21,5 +22,5 @@ public interface ITokenPicker {
      * @throws NotFoundTokenException 找不到Token
      * @throws InvalidTokenException  过期Token
      */
-    Optional<ITokenModel> pick(@NotNull HttpServletRequest request) throws NotFoundTokenException;
+    String pick(@NotNull HttpServletRequest request) throws NotFoundTokenException;
 }

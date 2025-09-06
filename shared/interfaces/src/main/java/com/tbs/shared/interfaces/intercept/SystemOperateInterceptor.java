@@ -13,7 +13,7 @@ import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.NetUtil;
 import com.tbs.web.BaseController;
-import com.tbs.web.intercept.IApiInvokeInterceptor;
+import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
 import com.tbs.web.uitl.AuthUtil;
 
 import lombok.Data;

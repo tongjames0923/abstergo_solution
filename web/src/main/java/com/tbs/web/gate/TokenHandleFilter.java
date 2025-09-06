@@ -1,9 +1,8 @@
-package com.tbs.web.security.impl;
+package com.tbs.web.gate;
 
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -16,26 +15,36 @@ import javax.servlet.http.HttpServletResponse;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import com.tbs.common.util.SpringUtil;
+import com.tbs.web.gate.center.IGateWayCenter;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IOnErrorAjaxProvider;
-import com.tbs.web.security.authorization.ISecurityManager;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AjaxUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 令牌处理过滤器
+ *
+ * @author jiangnan
+ *
+ */
 @Slf4j
 public class TokenHandleFilter extends OncePerRequestFilter {
 
 	@Resource
 	private IOnErrorAjaxProvider onErrorAjaxProvider;
 
-	private Collection<ISecurityManager> securityManagers = new LinkedList<>();
+	private Collection<IGateWayCenter> securityManagers = new LinkedList<>();
+
+	@Resource
+	ITokenIssuanceCenter tokenIssuanceCenter;
 
 	@PostConstruct
 	void init() {
 		try {
-			this.securityManagers.addAll(SpringUtil.getBeansOfType(ISecurityManager.class).values());
+			this.securityManagers.addAll(SpringUtil.getBeansOfType(IGateWayCenter.class).values());
 			this.securityManagers = this.securityManagers.stream()
 					.sorted((o1, o2) -> o1.getOrder() - o2.getOrder())
 					.collect(Collectors.toList());
@@ -48,17 +57,14 @@ public class TokenHandleFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-		for (ISecurityManager manager : securityManagers) {
+		for (IGateWayCenter manager : securityManagers) {
 			if (!manager.support(request)) {
 				continue;
 			}
 			try {
-				Optional<ITokenModel> tokenModel = manager.getTokenPicker().pick(request);
-				tokenModel.ifPresentOrElse((token) -> {
-					manager.handleToken(token);
-				}, () -> {
-					manager.onNoneToken();
-				});
+				String token = manager.getTokenPicker().pick(request);
+				ITokenModel model = tokenIssuanceCenter.getTokenByToken(token);
+				manager.handleToken(model);
 			} catch (Throwable e) {
 				boolean willBroken = manager.onErrorWillBroken(e);
 				if (willBroken) {

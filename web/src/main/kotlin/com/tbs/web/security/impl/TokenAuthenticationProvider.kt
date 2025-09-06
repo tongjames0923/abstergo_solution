@@ -1,25 +1,18 @@
 package com.tbs.web.security.impl
 
 import com.tbs.common.error.AssertUtil
-import com.tbs.web.exception.NotFoundTokenException
-import com.tbs.web.security.authentication.ITokenAuthentication
-import com.tbs.web.security.token.ITokenManager
-import com.tbs.web.security.user.IUserAuthService
-import com.tbs.web.security.authentication.TokenAuthentication
-import org.springframework.context.annotation.Lazy
+import com.tbs.web.security.authentication.center.IAuthenticationCenter
+import com.tbs.web.security.authentication.model.ITokenAuthentication
+import com.tbs.web.security.authentication.model.TokenAuthentication
 import org.springframework.security.core.Authentication
 import org.springframework.security.core.AuthenticationException
 import java.util.function.Supplier
 import javax.annotation.Resource
 
 class TokenAuthenticationProvider : org.springframework.security.authentication.AuthenticationProvider {
-    @Lazy
-    @Resource
-    private lateinit var userAuthService: IUserAuthService
 
-    @Lazy
     @Resource
-    private lateinit var tokenManager: ITokenManager
+    lateinit var authCenter: IAuthenticationCenter
 
     @Throws(AuthenticationException::class)
     public override fun authenticate(authentication: Authentication?): Authentication {
@@ -28,10 +21,8 @@ class TokenAuthenticationProvider : org.springframework.security.authentication.
         AssertUtil.isTrue(
             tokenAuthentication.getAuthException() != null,
             Supplier { tokenAuthentication.getAuthException() })
-        AssertUtil.isTrue(!tokenAuthentication.hasToken(), Supplier { NotFoundTokenException("未获取到有效的Token") })
-        userAuthService.authToken(tokenAuthentication.getTokenModel())
-        val principal = tokenManager.loadUserInfoByToken(tokenAuthentication.getTokenModel())
-        return TokenAuthentication.createFinal(tokenAuthentication.getTokenModel(), principal)
+        
+        return authCenter.authenticate(authentication);
     }
 
     override fun supports(authentication: Class<*>?): Boolean {

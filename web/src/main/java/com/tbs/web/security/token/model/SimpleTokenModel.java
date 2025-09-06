@@ -3,8 +3,9 @@ package com.tbs.web.security.token.model;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tbs.web.enums.AccessTokenCreateTypeEnum;
-import com.tbs.web.enums.TokenSource;
+import com.tbs.web.enums.TokenCreateTypeEnum;
+import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.token.ITokenModel;
 
 import lombok.Data;
@@ -23,19 +24,16 @@ public class SimpleTokenModel implements ITokenModel {
 	private String token;
 
 	/**
-	 * token来源
+	 * 用户名
 	 */
-	private TokenSource source;
+	private String userName;
 
 	/**
-	 * token来源字段
+	 * token状态
 	 */
-	private String sourceField;
+	private TokenStatusEnum statusEnum;
 
-	/**
-	 * token来源字段值
-	 */
-	private String sourceValue;
+	private TokenTypeEnum typeEnum;
 
 	/**
 	 * 过期时间
@@ -49,7 +47,7 @@ public class SimpleTokenModel implements ITokenModel {
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date createTime;
 
-	private AccessTokenCreateTypeEnum createType;
+	private TokenCreateTypeEnum createType;
 
 	protected SimpleTokenModel() {
 	}
@@ -64,23 +62,18 @@ public class SimpleTokenModel implements ITokenModel {
 	 * @param expireTime
 	 * @return
 	 */
-	public static SimpleTokenModel create(String token, TokenSource source, String sourceField, String sourceValue,
+	public static SimpleTokenModel create(String token,
 			Date expireTime) {
-		return create(token, source, sourceField, sourceValue, expireTime, AccessTokenCreateTypeEnum.LOGIN);
+		return create(token, expireTime, TokenCreateTypeEnum.LOGIN);
 	}
 
-	public static SimpleTokenModel createByRefresh(String token, TokenSource source, String sourceField,
-			String sourceValue, Date expireTime) {
-		return create(token, source, sourceField, sourceValue, expireTime, AccessTokenCreateTypeEnum.REFRESH);
+	public static SimpleTokenModel createByRefresh(String token, Date expireTime) {
+		return create(token, expireTime, TokenCreateTypeEnum.REFRESH);
 	}
 
-	public static SimpleTokenModel create(String token, TokenSource source, String sourceField, String sourceValue,
-			Date expireTime, AccessTokenCreateTypeEnum createType) {
+	public static SimpleTokenModel create(String token, Date expireTime, TokenCreateTypeEnum createType) {
 		SimpleTokenModel model = new SimpleTokenModel();
 		model.token = token;
-		model.source = source;
-		model.sourceField = sourceField;
-		model.sourceValue = sourceValue;
 		model.expireTime = expireTime;
 		model.createTime = new Date();
 		model.createType = createType;
@@ -88,7 +81,27 @@ public class SimpleTokenModel implements ITokenModel {
 	}
 
 	@Override
-	public AccessTokenCreateTypeEnum getCreateType() {
+	public String getUserName() {
+		return userName;
+	}
+
+	@Override
+	public TokenCreateTypeEnum getCreateType() {
 		return createType;
+	}
+
+	@Override
+	public TokenStatusEnum getStatus() {
+		return statusEnum;
+	}
+
+	@Override
+	public void setStatus(TokenStatusEnum status) {
+		this.statusEnum = status;
+	}
+
+	@Override
+	public TokenTypeEnum getTokenType() {
+		return typeEnum;
 	}
 }

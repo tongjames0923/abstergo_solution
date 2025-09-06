@@ -1,4 +1,4 @@
-package com.tbs.web.security.authorization;
+package com.tbs.web.gate.center;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -8,17 +8,18 @@ import lombok.Getter;
 
 /**
  * 抽象的基于路径匹配的权限管理器
+ * @author abstergo
  */
 @Getter
-public abstract class AbstractAntPathSupportSecurityManager implements ISecurityManager {
+public abstract class AbstractAntPathSupportGateWayCenter implements IGateWayCenter {
 	RequestMatcher matcher;
 
-	public AbstractAntPathSupportSecurityManager setMatcher(RequestMatcher matcher) {
+	public AbstractAntPathSupportGateWayCenter setMatcher(RequestMatcher matcher) {
 		this.matcher = matcher;
 		return this;
 	}
 
-	public AbstractAntPathSupportSecurityManager(RequestMatcher matcher) {
+	public AbstractAntPathSupportGateWayCenter(RequestMatcher matcher) {
 		this.matcher = matcher;
 	}
 

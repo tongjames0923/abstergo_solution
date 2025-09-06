@@ -1,19 +1,21 @@
 package com.tbs.web.uitl;
 
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.web.exception.NoLoginException;
-import com.tbs.web.security.authentication.ITokenAuthentication;
-import com.tbs.web.security.authentication.TokenAuthentication;
-import com.tbs.web.security.token.ITokenModel;
+import java.util.Optional;
+
+import javax.annotation.Resource;
+
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import java.util.Optional;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.web.exception.NoLoginException;
+import com.tbs.web.security.authentication.model.ITokenAuthentication;
+import com.tbs.web.security.authentication.model.TokenAuthentication;
+import com.tbs.web.security.token.ITokenModel;
 
 /**
  * 认证工具类

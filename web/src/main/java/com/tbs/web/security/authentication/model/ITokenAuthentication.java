@@ -1,4 +1,4 @@
-package com.tbs.web.security.authentication;
+package com.tbs.web.security.authentication.model;
 
 import com.tbs.web.security.token.ITokenModel;
 import org.springframework.security.core.Authentication;
