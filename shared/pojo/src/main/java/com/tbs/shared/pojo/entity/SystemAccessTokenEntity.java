@@ -6,15 +6,19 @@ import javax.persistence.*;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.shared.pojo.IBaseEntity;
-
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
+
 import lombok.Data;
 import lombok.ToString;
 
+/**
+ * @author abstergo
+ */
 @Table(name = "sys_access_token", indexes = { @Index(name = "ix_user", columnList = "user_name"),
 		@Index(name = "ix_time", columnList = "create_time,update_time"), @Index(name = "ix_flag", columnList = "flag"),
-		@Index(name = "ix_expire", columnList = "expire_time") }, uniqueConstraints = {
+		@Index(name = "ix_expire", columnList = "expire_time"),
+		@Index(name = "ix_token_type", columnList = "token_type")}, uniqueConstraints = {
 				@UniqueConstraint(name = "uk_token", columnNames = { "token" }) })
 @Entity
 @ToString
@@ -40,12 +44,14 @@ public class SystemAccessTokenEntity implements IBaseEntity<Long> {
 	/**
 	 * 创建时间
 	 */
+	@Column(nullable = false, name = "create_time")
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
 	private Date createTime;
 	/**
 	 * 更新时间
 	 */
 	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	@Column(nullable = false, name = "update_time")
 	private Date updateTime;
 	/**
 	 * 标记
@@ -79,4 +85,7 @@ public class SystemAccessTokenEntity implements IBaseEntity<Long> {
 	 */
 	@Column(name = "create_type")
 	private Integer createType;
+
+	@Column(name = "token_type")
+	private Integer tokenType;
 }

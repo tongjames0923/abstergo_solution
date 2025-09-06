@@ -49,36 +49,20 @@ public class SimpleTokenModel implements ITokenModel {
 
 	private TokenCreateTypeEnum createType;
 
-	protected SimpleTokenModel() {
+	public SimpleTokenModel() {
 	}
 
-	/**
-	 * 创建TokenModel
-	 *
-	 * @param token
-	 * @param source
-	 * @param sourceField
-	 * @param sourceValue
-	 * @param expireTime
-	 * @return
-	 */
-	public static SimpleTokenModel create(String token,
-			Date expireTime) {
-		return create(token, expireTime, TokenCreateTypeEnum.LOGIN);
+	public SimpleTokenModel(String token, String userName, TokenStatusEnum status, TokenTypeEnum type, Date expireTime,
+			Date createTime, TokenCreateTypeEnum createType) {
+		this.token = token;
+		this.userName = userName;
+		this.statusEnum = status;
+		this.typeEnum = type;
+		this.expireTime = expireTime;
+		this.createTime = createTime;
+		this.createType = createType;
 	}
 
-	public static SimpleTokenModel createByRefresh(String token, Date expireTime) {
-		return create(token, expireTime, TokenCreateTypeEnum.REFRESH);
-	}
-
-	public static SimpleTokenModel create(String token, Date expireTime, TokenCreateTypeEnum createType) {
-		SimpleTokenModel model = new SimpleTokenModel();
-		model.token = token;
-		model.expireTime = expireTime;
-		model.createTime = new Date();
-		model.createType = createType;
-		return model;
-	}
 
 	@Override
 	public String getUserName() {

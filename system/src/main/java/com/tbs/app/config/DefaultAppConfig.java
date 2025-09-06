@@ -14,10 +14,9 @@ import com.tbs.app.service.business.role.ISystemRoleService;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.app.service.business.role.impl.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.business.role.impl.SimpleUserRoleRelationServiceImpl;
-import com.tbs.web.security.token.IRefreshTokenService;
-import com.tbs.web.security.token.CookieRefreshTokenService;
 import com.tbs.app.service.business.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.business.user.impl.DefaultUserAuthService;
 import com.tbs.app.service.business.user.impl.NoEncryptPassword;
 import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.business.view.IViewService;
@@ -28,6 +27,9 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.interfaces.intercept.SystemOperateInterceptor;
+import com.tbs.web.security.token.CookieRefreshTokenService;
+import com.tbs.web.security.token.IRefreshTokenService;
+import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.security.user.IUserInfoService;
 
 import lombok.extern.slf4j.Slf4j;
@@ -106,6 +108,12 @@ public class DefaultAppConfig {
 	@ConditionalOnMissingBean(IUserRoleRelationService.class)
 	public IUserRoleRelationService userRoleRelationService() {
 		return new SimpleUserRoleRelationServiceImpl();
+	}
+
+	@Bean
+	@ConditionalOnMissingBean(IUserAuthService.class)
+	public IUserAuthService userAuthService() {
+		return new DefaultUserAuthService();
 	}
 
 	@Bean
