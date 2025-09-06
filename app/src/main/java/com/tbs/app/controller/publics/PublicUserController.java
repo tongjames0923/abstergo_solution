@@ -1,6 +1,5 @@
 package com.tbs.app.controller.publics;
 
-import java.util.List;
 import java.util.Objects;
 
 import javax.annotation.Resource;
@@ -11,7 +10,7 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import com.tbs.app.form.LoginForm;
-import com.tbs.app.service.business.token.IRefreshTokenService;
+import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.common.util.StrUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.enums.TokenCreateTypeEnum;
@@ -23,6 +22,7 @@ import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.web.uitl.AuthUtil;
 
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -75,17 +75,10 @@ public class PublicUserController extends BaseController {
 			return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, "刷新令牌已失效", null);
 		}
 		UserDetails details = userInfoService.loadUserInfoByUniqueKey(tokenModel.getUserName());
-		if (details == null) {
-			return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, "用户不存在", null);
-		}
-		if (!details.isEnabled()) {
-			return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, "用户已禁用", null);
-		}
-		if (!details.isAccountNonExpired()) {
-			return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, "用户已过期", null);
-		}
-		if (!details.isAccountNonLocked()) {
-			return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, "用户已锁定", null);
+		try {
+			AuthUtil.checkUserDetails(details);
+		} catch (Exception e) {
+			return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, e.getLocalizedMessage(), null);
 		}
 		var newModel = tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
 				TokenCreateTypeEnum.REFRESH.getCode());

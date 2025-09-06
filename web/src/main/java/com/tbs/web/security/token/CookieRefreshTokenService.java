@@ -1,16 +1,16 @@
-package com.tbs.app.service.business.token.impl;
+package com.tbs.web.security.token;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.tbs.app.service.business.token.IRefreshTokenService;
 import com.tbs.common.util.CollUtil;
-import com.tbs.web.security.token.ITokenModel;
 
 /**
+ * 默认的Cookie刷新令牌服务实现
  *
+ * @author abstergo
  */
 public class CookieRefreshTokenService implements IRefreshTokenService {
 

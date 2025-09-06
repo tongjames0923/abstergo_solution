@@ -26,7 +26,7 @@ import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
 import com.tbs.web.gate.ITokenPicker;
-import com.tbs.web.gate.center.LoginGateWayCenter;
+import com.tbs.web.gate.center.impl.LoginGateWayCenter;
 import com.tbs.web.gate.TokenHandleFilter;
 
 /**

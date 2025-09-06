@@ -6,8 +6,10 @@ import org.springframework.stereotype.Component;
 import com.tbs.web.enums.TokenSource;
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.security.authentication.center.IAuthenticationCenter;
+import com.tbs.web.security.authentication.center.impl.SimpleAuthenticationCenter;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.impl.SimpleDataHolderTokenIssuanceCenter;
 
 import lombok.Data;
 
@@ -47,12 +49,12 @@ public class WebAuthProperty {
 	/**
 	 * 认证中心实现类
 	 */
-	private Class<? extends IAuthenticationCenter> authenticationCenterImpl;
+	private Class<? extends IAuthenticationCenter> authenticationCenterImpl = SimpleAuthenticationCenter.class;
 
 	/**
 	 * token颁发中心实现类
 	 */
-	private Class<? extends ITokenIssuanceCenter> tokenIssuanceCenterImpl;
+	private Class<? extends ITokenIssuanceCenter> tokenIssuanceCenterImpl = SimpleDataHolderTokenIssuanceCenter.class;
 
 	/**
 	 * token数据源名称

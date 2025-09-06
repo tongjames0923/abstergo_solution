@@ -76,6 +76,26 @@ public class AuthUtil {
             .orElse(false);
     }
 
+	/**
+	 * 检查用户详情
+	 *
+	 * @param details
+	 */
+	public static void checkUserDetails(UserDetails details) throws FormattedRuntimeException {
+		if (details == null) {
+			throw new FormattedRuntimeException("用户详情不存在");
+		}
+		if (!details.isEnabled()) {
+			throw new FormattedRuntimeException("用户已禁用");
+		}
+		if (!details.isAccountNonExpired()) {
+			throw new FormattedRuntimeException("用户已过期");
+		}
+		if (!details.isAccountNonLocked()) {
+			throw new FormattedRuntimeException("用户已锁定");
+		}
+	}
+
     /**
      * 获取当前用户的认证信息
      *

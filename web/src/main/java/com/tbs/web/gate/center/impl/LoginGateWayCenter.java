@@ -1,4 +1,4 @@
-package com.tbs.web.gate.center;
+package com.tbs.web.gate.center.impl;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -7,6 +7,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 import com.tbs.web.gate.ITokenPicker;
+import com.tbs.web.gate.center.AbstractAntPathSupportGateWayCenter;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 import org.springframework.security.web.util.matcher.OrRequestMatcher;

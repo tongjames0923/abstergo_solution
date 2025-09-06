@@ -1,8 +1,6 @@
-package com.tbs.app.service.business.token;
+package com.tbs.web.security.token;
 
 import javax.servlet.http.HttpServletResponse;
-
-import com.tbs.web.security.token.ITokenModel;
 
 /**
  * 刷新令牌服务

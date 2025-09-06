@@ -23,7 +23,7 @@ import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
 import com.tbs.web.enums.TokenStatusEnum;
-import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.uitl.AuthUtil;
 
 import io.swagger.annotations.Api;
@@ -44,13 +44,13 @@ import io.swagger.annotations.ApiOperation;
 public class PrivateUserController extends BaseController {
 
 	@Resource
-	ITokenIssuanceCenter tokenIssuanceCenter;
-
-	@Resource
 	private IUserRoleRelationService relationService;
 
 	@Resource
 	private ISystemUserService userService;
+
+	@Resource
+	IUserAuthService userAuthService;
 
 	/**
 	 * 用户登出
@@ -62,7 +62,11 @@ public class PrivateUserController extends BaseController {
 	public Boolean logout() {
 		var token = AuthUtil.getInstance().getCurrentTokenModel();
 		AssertUtil.isTrue(token == null, () -> new FormattedRuntimeException("用户令牌为空，获取失败"));
-		tokenIssuanceCenter.setTokenStatus(token.getToken(), TokenStatusEnum.INACTIVE);
+		userAuthService.getTokensByUserName(token.getUserName()).stream().filter((m) -> {
+			return TokenStatusEnum.ACTIVE.equals(m.getStatus());
+		}).forEach(m -> {
+			userAuthService.inActiveToken(m.getToken());
+		});
 		return true;
 	}
 

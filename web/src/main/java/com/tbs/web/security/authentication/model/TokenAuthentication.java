@@ -1,15 +1,17 @@
 package com.tbs.web.security.authentication.model;
 
-import com.tbs.web.security.token.ITokenModel;
-import lombok.Getter;
-import lombok.Setter;
+import java.util.Arrays;
+import java.util.Collection;
+
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.ArrayList;
-import java.util.Collection;
+import com.tbs.web.security.token.ITokenModel;
+
+import lombok.Getter;
+import lombok.Setter;
 
 /**
  * 令牌认证
@@ -30,31 +32,8 @@ public class TokenAuthentication extends AbstractAuthenticationToken implements 
         super(authorities);
     }
 
-    /**
-     * 创建令牌
-     *
-     * @param model
-     * @return
-     */
-    public static TokenAuthentication create(ITokenModel model) {
-        TokenAuthentication authentication = new TokenAuthentication(new ArrayList<>(8));
-        authentication.setTokenModel(model);
-        return authentication;
-    }
-
-    /**
-     * 创建最终令牌
-     *
-     * @param model
-     * @param userDetails
-     * @return
-     */
-    public static TokenAuthentication createFinal(ITokenModel model, UserDetails userDetails) {
-        TokenAuthentication authentication = new TokenAuthentication(userDetails.getAuthorities());
-        authentication.setTokenModel(model);
-        authentication.setUserDetails(userDetails);
-        authentication.setAuthenticated(true);
-        return authentication;
+	public TokenAuthentication() {
+		super(Arrays.asList());
     }
 
     @Override
