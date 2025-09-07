@@ -8,14 +8,11 @@ import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.token.ITokenModel;
 
-import lombok.Data;
 
 /**
- * token实体模型
- *
- * @author tongj
+ * 默认的token模型
+ * @author abstergo
  */
-@Data
 public class SimpleTokenModel implements ITokenModel {
 	private static final long serialVersionUID = 1L;
 	/**
@@ -63,6 +60,20 @@ public class SimpleTokenModel implements ITokenModel {
 		this.createType = createType;
 	}
 
+	@Override
+	public String getToken() {
+		return token;
+	}
+
+	@Override
+	public Date getExpireTime() {
+		return expireTime;
+	}
+
+	@Override
+	public Date getCreateTime() {
+		return createTime;
+	}
 
 	@Override
 	public String getUserName() {

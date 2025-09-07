@@ -49,10 +49,7 @@ public abstract class AbstractUserAuthService implements IUserAuthService {
 		AuthUtil.checkUserDetails(details);
 		var token = tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
 				TokenCreateTypeEnum.LOGIN.getCode());
-
-		var longTermToken = tokenIssuanceCenter.issueToken(details, TokenTypeEnum.REFRESH_TOKEN.getCode(),
-				TokenCreateTypeEnum.LOGIN.getCode());
-		refreshTokenService.pushRefreshToken(longTermToken, response);
+		refreshTokenService.pushRefreshToken(details, response, TokenCreateTypeEnum.LOGIN);
 		return token;
 	}
 

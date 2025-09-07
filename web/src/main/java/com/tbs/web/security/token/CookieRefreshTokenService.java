@@ -1,11 +1,22 @@
 package com.tbs.web.security.token;
 
+import java.util.Objects;
+
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
+import com.tbs.web.enums.TokenCreateTypeEnum;
+import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.enums.TokenTypeEnum;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.user.IUserInfoService;
+import com.tbs.web.uitl.AuthUtil;
 
 /**
  * 默认的Cookie刷新令牌服务实现
@@ -16,22 +27,33 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
 
 	@Resource
 	HttpServletRequest request;
+
+	@Resource
+	ITokenIssuanceCenter tokenIssuanceCenter;
+
+	@Resource
+	IUserInfoService userInfoService;
+
 	@Override
-	public void pushRefreshToken(ITokenModel tokenModel, HttpServletResponse response) {
-		Cookie cookie = new Cookie("REFRESH_TOKEN", tokenModel.getToken());
-		cookie.setMaxAge(7 * 24 * 60 * 60);
+	public void pushRefreshToken(UserDetails userDetails, HttpServletResponse response,
+			TokenCreateTypeEnum createTypeEnum) {
+		ITokenModel token = tokenIssuanceCenter.issueToken(userDetails, TokenTypeEnum.REFRESH_TOKEN.getCode(),
+				createTypeEnum.getCode());
+		Cookie cookie = new Cookie("REFRESH_TOKEN", token.getToken());
 		cookie.setHttpOnly(true);
 		response.addCookie(cookie);
 	}
 
 	@Override
-	public void removeRefreshToken(String refreshToken) {
+	public void removeRefreshToken() {
 		Cookie[] cookies = request.getCookies();
 		if (CollUtil.isEmpty(cookies)) {
 			return;
 		}
 		for (Cookie cookie : cookies) {
 			if ("REFRESH_TOKEN".equals(cookie.getName())) {
+				tokenIssuanceCenter.setTokenStatus(cookie.getValue(), TokenStatusEnum.REVOKE);
+				cookie.setValue(null);
 				cookie.setMaxAge(0);
 				cookie.setHttpOnly(true);
 				return;
@@ -40,16 +62,28 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
 	}
 
 	@Override
-	public String getRefreshToken() {
+	public ITokenModel getRefreshToken() {
 		Cookie[] cookies = request.getCookies();
 		if (CollUtil.isEmpty(cookies)) {
 			return null;
 		}
 		for (Cookie cookie : cookies) {
 			if ("REFRESH_TOKEN".equals(cookie.getName())) {
-				return cookie.getValue();
+				return tokenIssuanceCenter.getTokenByToken(cookie.getValue());
 			}
 		}
 		return null;
+	}
+
+	@Override
+	public ITokenModel refreshAccessToken() {
+		ITokenModel tokenModel = getRefreshToken();
+		AssertUtil.notNull(tokenModel, "未查询到有效的刷新令牌数据");
+		AssertUtil.isTrue(!Objects.equals(TokenTypeEnum.REFRESH_TOKEN, tokenModel.getTokenType()), "令牌类型异常");
+		AssertUtil.isTrue(!Objects.equals(tokenModel.getStatus(), TokenStatusEnum.ACTIVE), "刷新令牌已失效");
+		UserDetails details = userInfoService.loadUserInfoByUniqueKey(tokenModel.getUserName());
+		AuthUtil.checkUserDetails(details);
+		return tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
+				TokenCreateTypeEnum.REFRESH.getCode());
 	}
 }

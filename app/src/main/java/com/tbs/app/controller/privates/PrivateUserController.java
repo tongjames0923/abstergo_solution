@@ -22,7 +22,7 @@ import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
-import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.uitl.AuthUtil;
 
@@ -52,6 +52,9 @@ public class PrivateUserController extends BaseController {
 	@Resource
 	IUserAuthService userAuthService;
 
+	@Resource
+	IRefreshTokenService refreshTokenService;
+
 	/**
 	 * 用户登出
 	 *
@@ -62,11 +65,8 @@ public class PrivateUserController extends BaseController {
 	public Boolean logout() {
 		var token = AuthUtil.getInstance().getCurrentTokenModel();
 		AssertUtil.isTrue(token == null, () -> new FormattedRuntimeException("用户令牌为空，获取失败"));
-		userAuthService.getTokensByUserName(token.getUserName()).stream().filter((m) -> {
-			return TokenStatusEnum.ACTIVE.equals(m.getStatus());
-		}).forEach(m -> {
-			userAuthService.inActiveToken(m.getToken());
-		});
+		userAuthService.inActiveToken(token.getToken());
+        refreshTokenService.removeRefreshToken();
 		return true;
 	}
 

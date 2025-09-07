@@ -15,7 +15,7 @@ import lombok.ToString;
 /**
  * @author abstergo
  */
-@Table(name = "sys_access_token", indexes = { @Index(name = "ix_user", columnList = "user_name"),
+@Table(name = "sys_token", indexes = {@Index(name = "ix_user", columnList = "user_name"),
 		@Index(name = "ix_time", columnList = "create_time,update_time"), @Index(name = "ix_flag", columnList = "flag"),
 		@Index(name = "ix_expire", columnList = "expire_time"),
 		@Index(name = "ix_token_type", columnList = "token_type")}, uniqueConstraints = {

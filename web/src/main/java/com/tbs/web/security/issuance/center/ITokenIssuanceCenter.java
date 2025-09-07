@@ -1,5 +1,7 @@
 package com.tbs.web.security.issuance.center;
 
+import java.util.Collection;
+
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -37,5 +39,14 @@ public interface ITokenIssuanceCenter {
 	 * @param status
 	 */
 	void setTokenStatus(@NotNull String token, @NotNull TokenStatusEnum status);
+
+	/**
+	 * 获取用户令牌
+	 *
+	 * @param userName
+	 * @param tokenType
+	 * @return
+	 */
+	Collection<ITokenModel> getTokensByUserNameAndTokenType(String userName, int tokenType);
 
 }

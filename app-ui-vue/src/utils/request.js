@@ -1,13 +1,13 @@
 import axios from 'axios'
-import {Message, MessageBox} from 'element-ui'
+import { Message, MessageBox } from 'element-ui'
 import store from '@/store'
-import {getToken} from '@/utils/auth'
+import { getToken } from '@/utils/auth'
 import settings from '@/settings'
 
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-  withCredentials: true, // send cookies when cross-domain requests
+  withCredentials: true // send cookies when cross-domain requests
   // timeout: 3000 // request timeout
 })
 
@@ -47,19 +47,19 @@ service.interceptors.request.use(
 )
 
 // 响应拦截器中处理token刷新的逻辑
-const refreshTokenHandler = async (response) => {
+const refreshTokenHandler = async(response) => {
   const config = response.config
 
   // 如果正在刷新token，则将请求加入队列等待
   if (isRefreshing) {
     return new Promise((resolve, reject) => {
-      failedQueue.push({resolve, reject})
+      failedQueue.push({ resolve, reject })
     }).then(token => {
       config.headers[settings.tokenHeader] = token
       // 修复：确保不会重复添加baseURL
       if (config.baseURL && config.url.startsWith(config.baseURL)) {
         // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
-        const newConfig = {...config}
+        const newConfig = { ...config }
         newConfig.url = config.url.substring(config.baseURL.length)
         return service(newConfig)
       }
@@ -81,7 +81,7 @@ const refreshTokenHandler = async (response) => {
     // 修复：确保不会重复添加baseURL
     if (config.baseURL && config.url.startsWith(config.baseURL)) {
       // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
-      const newConfig = {...config}
+      const newConfig = { ...config }
       newConfig.url = config.url.substring(config.baseURL.length)
       return await service(newConfig)
     }
@@ -97,7 +97,7 @@ const refreshTokenHandler = async (response) => {
 
 async function noLoginFunction(res) {
   // 刷新token失败，要求重新登录
-  await MessageBox.confirm('登录已过期，请重新登录', '提示', {
+  await MessageBox.confirm('登录已过期，请重新登录。详情：' + res.message, '提示', {
     confirmButtonText: '重新登录',
     showCancelButton: false
   })
@@ -121,16 +121,16 @@ service.interceptors.response.use(
   async response => {
     const res = response.data
     if (res.code === settings.successCode) {
-      return res;
+      return res
     } else {
       if (settings.refreshTokenCode.includes(res.code)) {
-        noLoginFunction(res);
+        noLoginFunction(res)
       } else if (settings.noLoginCode.includes(res.code)) {
         // 当遇到未登录错误时，先尝试刷新token
         try {
           return await refreshTokenHandler(response)
         } catch (err) {
-          return await noLoginFunction(res);
+          return await noLoginFunction(res)
         }
       } else {
         Message({
