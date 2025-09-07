@@ -50,7 +50,7 @@ public class PublicTestController extends BaseController {
 	@PostMapping("queryUser")
 	public AjaxResult queryUser(@RequestBody CommonSystemUserQueryCriteria criteria, long pageNum, long pageSize) {
 		return AjaxUtil.getInstance().success("查询成功",
-				userService.queryBy(criteria, QueryPageModel.of(pageNum, pageSize)));
+				userService.queryAndPage(criteria, QueryPageModel.of(pageNum, pageSize)));
 	}
 
 	@Resource

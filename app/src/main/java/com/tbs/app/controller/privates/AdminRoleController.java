@@ -83,7 +83,7 @@ public class AdminRoleController extends BaseController {
 			@ApiParam(name = "criteria", value = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,
 			@ApiParam(name = "page", value = "页码") @RequestParam(required = false) Long page,
 			@ApiParam(name = "num", value = "每页数量") @RequestParam(required = false) Long num) {
-		return successResult(roleService.queryBy(criteria, QueryPageModel.of(page, num)));
+		return successResult(roleService.queryAndPage(criteria, QueryPageModel.of(page, num)));
 	}
 
 	/**

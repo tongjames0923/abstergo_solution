@@ -65,7 +65,7 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
 	 * @return 包含分页查询结果的AjaxResult
 	 */
 	public AjaxResult query(Q criteria, Long pageNum, Long pageSize) {
-		return AjaxUtil.getInstance().success(getService().queryBy(criteria, QueryPageModel.of(pageNum, pageSize)));
+		return AjaxUtil.getInstance().success(getService().queryAndPage(criteria, QueryPageModel.of(pageNum, pageSize)));
 	}
 
 }
