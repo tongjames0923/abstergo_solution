@@ -2,6 +2,7 @@ package com.tbs.app.service.business.token.impl;
 
 import com.tbs.app.service.business.token.ISystemTokenService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
+import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.EnumUtil;
@@ -17,6 +18,7 @@ import org.springframework.cache.annotation.Cacheable;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 public class DefaultSystemTokenService
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemTokenEntity, Long, SystemTokenMapper>
@@ -46,7 +48,7 @@ public class DefaultSystemTokenService
         return entity;
     }
 
-    @CacheEvict(cacheNames = "token_entity", key = "#entity.token")
+    @CacheEvict(cacheNames = "token_entity", key = "#entity.token", condition = "#entity!=null&&#entity.token!=null")
     @Override
     public List<SystemTokenEntity> save(SystemTokenEntity entity) {
         return super.save(entity);
@@ -91,6 +93,7 @@ public class DefaultSystemTokenService
     }
 
     @Cacheable(cacheNames = "token_entity", key = "#token")
+    @ExpireOn(value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemTokenEntity> queryByToken(String token) {
         return instance.query(new CommonTokenQueryCriteria().setTokenEquals(token), null);
