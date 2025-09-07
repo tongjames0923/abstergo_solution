@@ -119,6 +119,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
             if (TokenStatusEnum.ACTIVE.getCode().equals(model.getStatus().getCode())) {
                 center.setTokenStatus(token, TokenStatusEnum.EXPIRED);
             }
+            model.setStatus(TokenStatusEnum.EXPIRED);
         }
         return model;
     }

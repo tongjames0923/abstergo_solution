@@ -48,6 +48,11 @@ public class DefaultSystemTokenService
 
     @CacheEvict(cacheNames = "token_entity", key = "#entity.token")
     @Override
+    public List<SystemTokenEntity> save(SystemTokenEntity entity) {
+        return super.save(entity);
+    }
+
+    @Override
     protected List<SystemTokenEntity> updateBy(SystemTokenEntity entity) {
         entity.setUpdateTime(new Date());
         getMapper().updateByPrimaryKey(entity);

@@ -69,7 +69,6 @@ public class SimpleSystemUserServiceImpl
 		return entity;
 	}
 
-	@CacheEvict(value = "system_user", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
 	@Override
 	protected List<SystemUserEntity> updateBy(SystemUserEntity entity) {
 		entity.setUpdateTime(new Date());
@@ -77,7 +76,13 @@ public class SimpleSystemUserServiceImpl
 		return List.of(entity);
 	}
 
-	@Override
+    @CacheEvict(value = "system_user", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
+    @Override
+    public List<SystemUserEntity> save(SystemUserEntity entity) {
+        return super.save(entity);
+    }
+
+    @Override
 	protected SystemUserEntity compareAndUpdateValue(SystemUserEntity systemUserEntity,
 			SystemUserEntity oldSystemUserEntity) {
 		if (StrUtil.isNotEmpty(systemUserEntity.getUserName())) {

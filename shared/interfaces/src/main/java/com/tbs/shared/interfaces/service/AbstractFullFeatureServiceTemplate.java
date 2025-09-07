@@ -119,7 +119,8 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Override
     public List<T> query(IQueryCriteria qo, IPage page) {
         Class<T> entityClass = (Class<T>)getEntity().getClass();
-        return getMapper().queryByQO(qo, page, entityClass);
+        var r = getMapper().queryByQO(qo, page, entityClass);
+        return r;
     }
 
     @Override
