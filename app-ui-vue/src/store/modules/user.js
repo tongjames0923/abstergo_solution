@@ -73,7 +73,7 @@ const actions = {
   // user logout
   async logout({commit, state}) {
     try {
-      await logout(state.token)
+      await logout()
       removeToken() // must remove  token  first
       resetRouter()
       commit('RESET_STATE')

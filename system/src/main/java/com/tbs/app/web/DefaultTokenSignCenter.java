@@ -106,11 +106,11 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
      * @return
      */
     @Override
-    protected Collection<String> getUserNameAndTokenType(@NotNull String userName, int tokenType) {
+    protected Collection<ITokenModel> getUserNameAndTokenType(@NotNull String userName, int tokenType) {
         return tokenService.query(
                 new CommonTokenQueryCriteria().setUserNameEquals(userName).setTokenTypeEquals(tokenType)
-                    .setCreateTimeAfter(new Date(System.currentTimeMillis() + TimeUnit.DAYS.toMillis(28))), null).stream()
-            .map(SystemTokenEntity::getToken).collect(Collectors.toList());
+                    .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28))), null).stream()
+            .map(this::toModel).collect(Collectors.toList());
     }
 
     @Resource

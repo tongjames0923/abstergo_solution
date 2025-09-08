@@ -10,6 +10,7 @@ import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -22,6 +23,8 @@ import javax.servlet.http.HttpServletResponse;
 
 @Slf4j
 public abstract class AbstractUserAuthService implements IUserAuthService {
+
+    public static final String USER_DETAILS_CACHE = "user_details";
 
     @Resource
     ITokenIssuanceCenter tokenIssuanceCenter;
@@ -84,20 +87,22 @@ public abstract class AbstractUserAuthService implements IUserAuthService {
 
     @Async
     @Override
+    @CacheEvict(cacheNames = USER_DETAILS_CACHE, key = "#userName")
     public void notifyUserAuthStatusChanged(String userName) {
         log.info("用户权限发生变更，用户名:{}", userName);
-        tokenIssuanceCenter.getTokensByUserNameAndTokenType(userName, TokenTypeEnum.ACCESS_TOKEN.getCode()).stream()
-            .filter((t) -> {
-                return TokenStatusEnum.ACTIVE.getCode().equals(t.getStatus().getCode());
-            }).forEach(tokenModel -> {
+
+        for (ITokenModel tokenModel : tokenIssuanceCenter.getTokensByUserNameAndTokenType(userName,
+            TokenTypeEnum.ACCESS_TOKEN.getCode())) {
+            if (TokenStatusEnum.ACTIVE.getCode().equals(tokenModel.getStatus().getCode())) {
                 tokenIssuanceCenter.setTokenStatus(tokenModel.getToken(), TokenStatusEnum.REVOKE);
-            });
-        tokenIssuanceCenter.getTokensByUserNameAndTokenType(userName, TokenTypeEnum.REFRESH_TOKEN.getCode()).stream()
-            .filter((t) -> {
-                return TokenStatusEnum.ACTIVE.getCode().equals(t.getStatus().getCode());
-            }).forEach(tokenModel -> {
+            }
+        }
+        for (ITokenModel tokenModel : tokenIssuanceCenter.getTokensByUserNameAndTokenType(userName,
+            TokenTypeEnum.REFRESH_TOKEN.getCode())) {
+            if (TokenStatusEnum.ACTIVE.getCode().equals(tokenModel.getStatus().getCode())) {
                 tokenIssuanceCenter.setTokenStatus(tokenModel.getToken(), TokenStatusEnum.REVOKE);
-            });
+            }
+        }
         log.info("用户{}权限变更完成", userName);
     }
 }

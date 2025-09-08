@@ -6,7 +6,7 @@ import com.tbs.web.security.authentication.center.IAuthenticationCenter;
 import com.tbs.web.security.authentication.center.impl.SimpleAuthenticationCenter;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
-import com.tbs.web.security.issuance.center.impl.SimpleDataHolderTokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.impl.NoImplTokenIssuanceCenter;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -57,7 +57,7 @@ public class WebAuthProperty {
     /**
      * token颁发中心实现类
      */
-    private Class<? extends ITokenIssuanceCenter> tokenIssuanceCenterImpl = SimpleDataHolderTokenIssuanceCenter.class;
+    private Class<? extends ITokenIssuanceCenter> tokenIssuanceCenterImpl = NoImplTokenIssuanceCenter.class;
 
     /**
      * token数据源名称

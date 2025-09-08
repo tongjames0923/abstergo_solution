@@ -1,10 +1,10 @@
 package com.tbs.web.security.token;
 
-import javax.servlet.http.HttpServletResponse;
-
+import com.tbs.web.enums.TokenCreateTypeEnum;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import com.tbs.web.enums.TokenCreateTypeEnum;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
 /**
  * 刷新令牌服务
@@ -13,32 +13,29 @@ import com.tbs.web.enums.TokenCreateTypeEnum;
  * @date 2020/01/07
  */
 public interface IRefreshTokenService {
-	/**
-	 * 推送刷新令牌
-	 *
-	 * @param userDetails
-	 * @param response
-	 * @param createTypeEnum
-	 */
-	void pushRefreshToken(UserDetails userDetails, HttpServletResponse response, TokenCreateTypeEnum createTypeEnum);
+    /**
+     * 推送刷新令牌
+     *
+     * @param userDetails
+     * @param response
+     * @param createTypeEnum
+     */
+    void pushRefreshToken(UserDetails userDetails, HttpServletResponse response, TokenCreateTypeEnum createTypeEnum);
 
-	/**
-	 * 移除刷新令牌
-	 */
-	void removeRefreshToken();
+    void removeRefreshToken(HttpServletRequest request, HttpServletResponse response);
 
-	/**
-	 * 获取刷新令牌
-	 *
-	 * @return
-	 */
-	ITokenModel getRefreshToken();
+    /**
+     * 获取刷新令牌
+     *
+     * @return
+     */
+    ITokenModel getRefreshToken(HttpServletRequest request);
 
-	/**
-	 * 刷新AccessToken令牌
-	 *
-	 * @return
-	 */
-	ITokenModel refreshAccessToken();
+    /**
+     * 刷新AccessToken令牌
+     *
+     * @return
+     */
+    ITokenModel refreshAccessToken(HttpServletRequest request);
 
 }

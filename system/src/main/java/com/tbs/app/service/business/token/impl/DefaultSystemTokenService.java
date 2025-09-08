@@ -48,7 +48,7 @@ public class DefaultSystemTokenService
         return entity;
     }
 
-    @CacheEvict(cacheNames = "token_entity", key = "#entity.token", condition = "#entity!=null&&#entity.token!=null")
+    @CacheEvict(cacheNames = "token_entity", key = "#entity.token")
     @Override
     public List<SystemTokenEntity> save(SystemTokenEntity entity) {
         return super.save(entity);

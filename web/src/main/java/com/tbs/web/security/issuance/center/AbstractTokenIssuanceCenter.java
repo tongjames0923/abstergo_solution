@@ -11,8 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -84,7 +84,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @param tokenType
      * @return 令牌管理信息
      */
-    protected abstract Collection<String> getUserNameAndTokenType(@NotNull String userName, int tokenType);
+    protected abstract Collection<ITokenModel> getUserNameAndTokenType(@NotNull String userName, int tokenType);
 
     /**
      * 创建令牌
@@ -115,9 +115,14 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
         if (model == null) {
             return model;
         }
+
+        return setExpireStatus(model);
+    }
+
+    private ITokenModel setExpireStatus(ITokenModel model) {
         if (model.getExpireTime() != null && model.getExpireTime().getTime() < System.currentTimeMillis()) {
             if (TokenStatusEnum.ACTIVE.getCode().equals(model.getStatus().getCode())) {
-                center.setTokenStatus(token, TokenStatusEnum.EXPIRED);
+                center.setTokenStatus(model.getToken(), TokenStatusEnum.EXPIRED);
             }
             model.setStatus(TokenStatusEnum.EXPIRED);
         }
@@ -134,13 +139,14 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
 
     @Override
     public Collection<ITokenModel> getTokensByUserNameAndTokenType(String userName, int tokenType) {
-        Set<ITokenModel> tokens = new HashSet<>();
-        for (String token : center.getUserNameAndTokenType(userName, tokenType)) {
-            ITokenModel model = center.getModel(token);
-            if (model != null) {
-                tokens.add(model);
+        Map<String, ITokenModel> tokens = new HashMap<>(8);
+        for (ITokenModel model : center.getUserNameAndTokenType(userName, tokenType)) {
+            if (model == null) {
+                continue;
             }
+            model = setExpireStatus(model);
+            tokens.putIfAbsent(model.getToken(), model);
         }
-        return tokens;
+        return tokens.values();
     }
 }

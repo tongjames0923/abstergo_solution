@@ -2,6 +2,7 @@
   <div class="dashboard-container">
     <el-input type="number" v-model="val"></el-input>
     <el-button @click="click()">test</el-button>
+    <el-button @click="simpleTest()">自我测试</el-button>
   </div>
 </template>
 
@@ -9,6 +10,7 @@
 import {mapGetters} from 'vuex'
 import QuickUseManagementView from "@/components/QuickUseManagementView/index.vue"
 import request from "@/utils/request";
+import {getInfo} from "@/api/user";
 
 export default {
   name: 'Dashboard',
@@ -24,6 +26,12 @@ export default {
     }
   },
   methods: {
+    simpleTest() {
+      getInfo().then(res => {
+        this.$message.success(res.data)
+      })
+
+    },
     click() {
       request("private/test", {
         method: "get",

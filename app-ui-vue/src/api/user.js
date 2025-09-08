@@ -16,10 +16,7 @@ export function getInfo() {
 }
 
 export function logout() {
-  return request({
-    url: '/private/user/logout',
-    method: 'get'
-  })
+  return request('/private/user/logout')
 }
 
 export function userStatusEnums() {
