@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import com.tbs.web.uitl.AuthUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -79,6 +80,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 			relation.setUpdateTime(new Date());
 			userRoleRelationMapper.updateByPrimaryKey(relation);
 		}
+        AuthUtil.getInstance().notifyUserAuthStatusChanged(user.getUserName());
 	}
 
 	@Override
