@@ -1,5 +1,6 @@
 package com.tbs.web.security.user;
 
+import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.token.ITokenModel;
 
 import java.util.List;
@@ -23,9 +24,10 @@ public interface IUserAuthService {
      * 获取用户所有令牌
      *
      * @param username
+     * @param type
      * @return
      */
-    List<ITokenModel> getTokensByUserName(String username);
+    List<ITokenModel> getTokensByUserNameAndTokenType(String username, TokenTypeEnum type);
 
     /**
      * 撤销令牌

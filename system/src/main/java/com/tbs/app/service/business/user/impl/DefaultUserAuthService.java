@@ -1,10 +1,5 @@
 package com.tbs.app.service.business.user.impl;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.annotation.Resource;
-
 import com.tbs.app.service.business.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.util.CollUtil;
@@ -13,6 +8,10 @@ import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserAuthService;
+
+import javax.annotation.Resource;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author abstergo
@@ -43,12 +42,8 @@ public class DefaultUserAuthService extends AbstractUserAuthService {
 	}
 
 	@Override
-	public List<ITokenModel> getTokensByUserName(String username) {
-		List<ITokenModel> tokens = new ArrayList<>(16);
-		tokens.addAll(
-				tokenIssuanceCenter.getTokensByUserNameAndTokenType(username, TokenTypeEnum.REFRESH_TOKEN.getCode()));
-		tokens.addAll(
-				tokenIssuanceCenter.getTokensByUserNameAndTokenType(username, TokenTypeEnum.ACCESS_TOKEN.getCode()));
-		return tokens;
+    public List<ITokenModel> getTokensByUserNameAndTokenType(String username, TokenTypeEnum type) {
+        return tokenIssuanceCenter.getTokensByUserNameAndTokenType(username, type.getCode()).stream()
+            .collect(Collectors.toList());
 	}
 }

@@ -7,6 +7,8 @@ import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.shared.pojo.criteria.CommonTokenQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
 import com.tbs.shared.util.NetUtil;
+import com.tbs.sql.enums.QueryOrderEnum;
+import com.tbs.sql.order.impl.QueryOrderedModel;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
@@ -25,19 +27,59 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+/**
+ * 默认令牌签发中心实现
+ * <p>
+ * 继承自AbstractTokenIssuanceCenter，提供了基于数据库的令牌管理实现。 该类负责令牌的创建、保存、查询等操作，并与SystemTokenEntity实体进行转换。
+ * </p>
+ *
+ * @author abstergo
+ */
 public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
 
+    /**
+     * 系统令牌服务，用于与数据库交互进行令牌的增删改查操作
+     */
     @Resource
     ISystemTokenService tokenService;
 
+    /**
+     * Web认证配置属性，用于获取令牌过期时间等配置信息
+     */
     @Resource
     WebAuthProperty webAuthProperty;
 
+    /**
+     * 适配器令牌模型，扩展了SimpleTokenModel，增加了MAC地址和IP地址字段
+     * <p>
+     * 用于存储与网络相关的信息，如客户端的MAC地址和IP地址。
+     * </p>
+     */
     @Data
     private class AdapterTokenModel extends SimpleTokenModel {
+        /**
+         * 客户端MAC地址
+         */
         private String macAddr;
+
+        /**
+         * 客户端IP地址
+         */
         private String ipAddr;
 
+        /**
+         * 构造函数，初始化适配器令牌模型
+         *
+         * @param token      令牌字符串
+         * @param userName   用户名
+         * @param status     令牌状态
+         * @param type       令牌类型
+         * @param expireTime 过期时间
+         * @param createTime 创建时间
+         * @param createType 创建类型
+         * @param macAddr    MAC地址
+         * @param ipAddr     IP地址
+         */
         public AdapterTokenModel(String token, String userName, TokenStatusEnum status, TokenTypeEnum type,
             Date expireTime, Date createTime, TokenCreateTypeEnum createType, String macAddr, String ipAddr) {
             super(token, userName, status, type, expireTime, createTime, createType);
@@ -46,6 +88,12 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
         }
     }
 
+    /**
+     * 将系统令牌实体转换为令牌模型
+     *
+     * @param entity 系统令牌实体
+     * @return 对应的令牌模型
+     */
     private ITokenModel toModel(SystemTokenEntity entity) {
         return new AdapterTokenModel(entity.getToken(), entity.getUserName(),
             EnumUtil.valueOf(TokenStatusEnum.class, entity.getFlag()),
@@ -54,6 +102,12 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
             entity.getMacAddress(), entity.getIpAddress());
     }
 
+    /**
+     * 将令牌模型转换为系统令牌实体
+     *
+     * @param model 令牌模型
+     * @return 对应的系统令牌实体
+     */
     private SystemTokenEntity toEntity(ITokenModel model) {
         var entity = new SystemTokenEntity();
         entity.setToken(model.getToken());
@@ -71,6 +125,15 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
         return entity;
     }
 
+    /**
+     * 根据令牌字符串获取令牌模型
+     * <p>
+     * 通过系统令牌服务查询数据库获取令牌信息，并转换为令牌模型。
+     * </p>
+     *
+     * @param token 令牌字符串，不能为空
+     * @return 对应的令牌模型，如果不存在则返回null
+     */
     @Override
     protected ITokenModel getModel(@NotNull String token) {
         var vals = tokenService.queryByToken(token);
@@ -81,6 +144,14 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
         return toModel(val);
     }
 
+    /**
+     * 保存令牌模型
+     * <p>
+     * 将令牌模型转换为系统令牌实体并保存到数据库中。 如果令牌已存在则更新，否则新增。
+     * </p>
+     *
+     * @param model 令牌模型
+     */
     @Override
     protected void saveToken(ITokenModel model) {
         var ls = tokenService.queryByToken(model.getToken());
@@ -93,6 +164,16 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
         }
     }
 
+    /**
+     * 保存令牌管理信息
+     * <p>
+     * 在此实现中为空操作，因为所有信息都保存在SystemTokenEntity中。
+     * </p>
+     *
+     * @param userName 用户名
+     * @param tokenType 令牌类型
+     * @param token 令牌字符串
+     */
     @Override
     protected void saveManageInfo(String userName, int tokenType, String token) {
 
@@ -100,22 +181,41 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
 
     /**
      * 获取用户名、token类型对应的token列表,仅28天内有效
+     * <p>
+     * 查询指定用户和令牌类型的所有令牌，限定创建时间在28天内，并按创建时间和过期时间降序排列。
+     * </p>
      *
-     * @param userName
-     * @param tokenType
-     * @return
+     * @param userName 用户名，不能为空
+     * @param tokenType 令牌类型
+     * @return 用户名和令牌类型对应的令牌模型集合
      */
     @Override
     protected Collection<ITokenModel> getUserNameAndTokenType(@NotNull String userName, int tokenType) {
         return tokenService.query(
                 new CommonTokenQueryCriteria().setUserNameEquals(userName).setTokenTypeEquals(tokenType)
-                    .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28))), null).stream()
-            .map(this::toModel).collect(Collectors.toList());
+                    .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
+                    .setCreateTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC))
+                    .setExpireTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC)), null).stream().map(this::toModel).collect(Collectors.toList());
     }
 
+    /**
+     * HTTP请求对象，用于获取客户端网络信息
+     */
     @Resource
     HttpServletRequest request;
 
+    /**
+     * 创建令牌模型
+     * <p>
+     * 根据用户详细信息、令牌类型和令牌创建类型创建新的适配器令牌模型，
+     * 包含UUID生成的令牌字符串、客户端MAC地址和IP地址等信息。
+     * </p>
+     *
+     * @param userDetails 用户详细信息，不能为空
+     * @param tokenType 令牌类型
+     * @param tokenCreateType 令牌创建类型
+     * @return 新创建的令牌模型
+     */
     @Override
     protected ITokenModel createModel(@NotNull UserDetails userDetails, int tokenType, int tokenCreateType) {
         Date now = new Date();
