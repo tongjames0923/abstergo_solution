@@ -22,7 +22,6 @@ module.exports = {
    * token header
    */
   tokenHeader: 'Authorization',
-  
 
   /**
    * @type {array}

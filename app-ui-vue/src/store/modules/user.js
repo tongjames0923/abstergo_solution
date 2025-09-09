@@ -1,8 +1,8 @@
-import {getInfo, login, logout} from '@/api/user'
-import {getRememberMe, getToken, removeToken, setToken} from '@/utils/auth'
-import {resetRouter} from '@/router'
-import request from "@/utils/request";
-import settings from "@/store/modules/settings";
+import { getInfo, login, logout } from '@/api/user'
+import { getRememberMe, getToken, removeToken, setToken } from '@/utils/auth'
+import { resetRouter } from '@/router'
+import request from '@/utils/request'
+import settings from '@/store/modules/settings'
 
 const getDefaultState = () => {
   return {
@@ -36,10 +36,10 @@ const mutations = {
 
 const actions = {
   // user login
-  async login({commit}, userInfo) {
+  async login({ commit }, userInfo) {
     try {
-      const {username, password, rememberMe} = userInfo
-      const {data} = await login({username: username.trim(), password: password})
+      const { username, password, rememberMe } = userInfo
+      const { data } = await login({ username: username.trim(), password: password })
       commit('SET_TOKEN', data.token)
       // 根据rememberMe选项设置Token存储方式
       setToken(data.token, rememberMe)
@@ -50,16 +50,16 @@ const actions = {
   },
 
   // get user info
-  async getInfo({commit, state}) {
+  async getInfo({ commit, state }) {
     try {
       const response = await getInfo()
-      const {data} = response
+      const { data } = response
 
       if (!data) {
         throw new Error('Verification failed, please Login again.')
       }
 
-      const {nickName, avatar, avaliableRoles} = data
+      const { nickName, avatar, avaliableRoles } = data
 
       commit('SET_NAME', nickName)
       commit('SET_AVATAR', avatar)
@@ -71,7 +71,7 @@ const actions = {
   },
 
   // user logout
-  async logout({commit, state}) {
+  async logout({ commit, state }) {
     try {
       await logout()
       removeToken() // must remove  token  first
@@ -83,7 +83,7 @@ const actions = {
   },
 
   // remove token
-  async resetToken({commit}) {
+  async resetToken({ commit }) {
     removeToken() // must remove  token  first
     commit('RESET_STATE')
   },
@@ -93,17 +93,17 @@ const actions = {
    * @param commit
    * @returns {Promise<any>}
    */
-  async refreshToken({commit}) {
+  async refreshToken({ commit }) {
     try {
-      const {code, data} = await request("public/user/refresh")
+      const { code, data } = await request('public/user/refresh')
       setToken(data.token)
       commit('SET_TOKEN', data.token)
-      setToken(data.token,getRememberMe())
+      setToken(data.token, getRememberMe())
       return data
     } catch (error) {
       throw error
     }
-  },
+  }
 }
 
 export default {

@@ -1,20 +1,20 @@
 <template>
   <div class="dashboard-container">
-    <el-input type="number" v-model="val"></el-input>
+    <el-input v-model="val" type="number" />
     <el-button @click="click()">test</el-button>
     <el-button @click="simpleTest()">自我测试</el-button>
   </div>
 </template>
 
 <script>
-import {mapGetters} from 'vuex'
-import QuickUseManagementView from "@/components/QuickUseManagementView/index.vue"
-import request from "@/utils/request";
-import {getInfo} from "@/api/user";
+import { mapGetters } from 'vuex'
+import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
+import request from '@/utils/request'
+import { getInfo } from '@/api/user'
 
 export default {
   name: 'Dashboard',
-  components: {QuickUseManagementView},
+  components: { QuickUseManagementView },
   computed: {
     ...mapGetters([
       'name'
@@ -30,11 +30,10 @@ export default {
       getInfo().then(res => {
         this.$message.success(res.data)
       })
-
     },
     click() {
-      request("private/test", {
-        method: "get",
+      request('private/test', {
+        method: 'get',
         params: {
           value: this.val
         }
@@ -45,7 +44,7 @@ export default {
         console.error(err)
         this.$message.error(err.message)
       })
-    },
+    }
   }
 }
 </script>

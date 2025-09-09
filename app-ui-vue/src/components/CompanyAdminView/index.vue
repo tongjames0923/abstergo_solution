@@ -12,14 +12,13 @@
       :edit-handler="(formData) => saveCompany(formData)"
       :delete-handler="(row, index) => deleteCompany(row.id)"
       :delete-confirm-text="(row) => `确定要删除公司 ${row.companyName} 吗？`"
-    >
-    </quick-use-management-view>
+    />
   </div>
 </template>
 
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
-import {adminQueryCompany, deleteCompany, saveCompany} from '@/api/company'
+import { adminQueryCompany, deleteCompany, saveCompany } from '@/api/company'
 
 export default {
   name: 'CompanyAdminView',
@@ -84,11 +83,11 @@ export default {
     async searchHandler(bodyParams, requestParams) {
       // 返回符合组件要求的数据格式
       return await adminQueryCompany(
-        bodyParams,  // 查询条件和排序作为body
-        requestParams.pageNum,   // 分页参数作为查询参数
+        bodyParams, // 查询条件和排序作为body
+        requestParams.pageNum, // 分页参数作为查询参数
         requestParams.pageSize
       )
-    },
+    }
   }
 }
 </script>
