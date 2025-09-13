@@ -3,22 +3,29 @@
     <quick-use-management-view
       ref="companyManagement"
       main-title="公司管理"
-      config-name="companySearchForm"
+      :config-name="companySearchFormKey()"
       :search-handler="searchHandler"
       :columns="columns"
-      add-form-config-name="companyAddForm"
+      :add-form-config-name="companyAddFormKey()"
       :add-handler="(formData) => saveCompany(formData)"
-      edit-form-config-name="companyEditForm"
+      :edit-form-config-name="companyEditFormKey()"
       :edit-handler="(formData) => saveCompany(formData)"
       :delete-handler="(row, index) => deleteCompany(row.id)"
       :delete-confirm-text="(row) => `确定要删除公司 ${row.companyName} 吗？`"
+      :query-transformer="rangeQueryTransform"
+      :editable="(row,index)=>{return row.id!==1}"
+      :deleteable="(row,index)=>{return row.id!==1}"
+      @add-succes="(data)=>$message.success('添加公司成功')"
+      @edit-succes="(data)=>$message.success('修改公司成功')"
     />
   </div>
 </template>
 
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
-import { adminQueryCompany, deleteCompany, saveCompany } from '@/api/company'
+import {adminQueryCompany, deleteCompany, saveCompany} from '@/api/company'
+import {companyAddFormKey, companyEditFormKey, companySearchFormKey} from "@/settings";
+import {rangeQueryTransform} from "@/utils/query-help";
 
 export default {
   name: 'CompanyAdminView',
@@ -77,6 +84,16 @@ export default {
     }
   },
   methods: {
+    rangeQueryTransform,
+    companyEditFormKey() {
+      return companyEditFormKey
+    },
+    companyAddFormKey() {
+      return companyAddFormKey
+    },
+    companySearchFormKey() {
+      return companySearchFormKey
+    },
     saveCompany,
     deleteCompany,
     // 简化后的搜索处理函数，适配AbstractCrudController的数据格式

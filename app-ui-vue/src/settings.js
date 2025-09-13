@@ -3,6 +3,10 @@ module.exports = {
 
   userAddFormKey: '2',
   userSearchFormKey: '1',
+  userEditFormKey: '3',
+  companySearchFormKey: '4',
+  companyAddFormKey: '5',
+  companyEditFormKey: '5',
 
   /**
    * @type {boolean} true | false

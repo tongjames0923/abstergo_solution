@@ -9,8 +9,9 @@
       :add-form-config-name="userAddFormKey()"
       :add-handler="(formData) => saveUser(formData)"
       @add-success="(data)=>$message.success(' 新增用户成功！ ')"
-      edit-form-config-name="userEditForm"
+      :edit-form-config-name="userEditFormKey()"
       :edit-handler="(formData) => saveUser(formData)"
+      @edit-success="(data)=>$message.success(' 修改用户成功！ ')"
       :query-transformer="rangeQueryTransform"
     >
       <template #actions-dropdown="{ row, index }">
@@ -90,7 +91,7 @@ import QuickUseManagementView from '@/components/QuickUseManagementView/index.vu
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
 import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
 import {rangeQueryTransform} from "@/utils/query-help";
-import {userAddFormKey, userSearchFormKey} from "@/settings";
+import {userAddFormKey, userEditFormKey, userSearchFormKey} from "@/settings";
 
 export default {
   name: 'UserAdminView',
@@ -163,6 +164,9 @@ export default {
     }
   },
   methods: {
+    userEditFormKey() {
+      return userEditFormKey
+    },
     userAddFormKey() {
       return userAddFormKey
     },
