@@ -3,13 +3,14 @@
     <quick-use-management-view
       ref="userManagement"
       main-title="用户管理"
-      config-name="userSearchForm"
+      config-name="1"
       :search-handler="searchHandler"
       :columns="columns"
       add-form-config-name="userAddForm"
       :add-handler="(formData) => saveUser(formData)"
       edit-form-config-name="userEditForm"
       :edit-handler="(formData) => saveUser(formData)"
+      :query-transformer="changeRange"
     >
       <template #actions-dropdown="{ row, index }">
         <el-dropdown-item command="toggleStatus" @click.native="handleToggleStatus(row)">
@@ -86,7 +87,7 @@
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
-import { activateUser, adminQueryUser, deleteUser, disableUser, saveUser } from '@/api/admin_user'
+import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
 
 export default {
   name: 'UserAdminView',
@@ -118,15 +119,15 @@ export default {
       },
       passwordRules: {
         password: [
-          { required: true, message: '请输入新密码', trigger: 'blur' },
-          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+          {required: true, message: '请输入新密码', trigger: 'blur'},
+          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
         ],
         confirmPassword: [
-          { required: true, validator: validateConfirmPassword, trigger: 'blur' }
+          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
         ]
       },
       columns: [
-        { prop: 'id', label: 'ID', width: 80 },
+        {prop: 'id', label: 'ID', width: 80},
         {
           prop: 'avatar',
           label: '头像',
@@ -135,9 +136,9 @@ export default {
             return <el-avatar src={scope.row.avatar}></el-avatar>
           }
         },
-        { prop: 'userName', label: '用户名', width: 180 },
-        { prop: 'nickName', label: '昵称', width: 180 },
-        { prop: 'remark', label: '备注', minWidth: 200 },
+        {prop: 'userName', label: '用户名', width: 180},
+        {prop: 'nickName', label: '昵称', width: 180},
+        {prop: 'remark', label: '备注', minWidth: 200},
         {
           prop: 'flag',
           label: '状态',
@@ -146,8 +147,8 @@ export default {
             return <el-tag type={scope.row.flag === 1 ? '' : 'danger'}>{scope.row.flag === 1 ? '正常' : '禁用'}</el-tag>
           }
         },
-        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
-        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
+        {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
+        {prop: 'updateTime', label: '更新时间', width: 180, sortable: true}
       ]
     }
   },
@@ -164,6 +165,29 @@ export default {
         requestParams.pageNum, // 分页参数作为查询参数
         requestParams.pageSize
       )
+    },
+
+    changeRange(params) {
+      //若params中含有xxxxRange参数且是一个数组的情况下，则加入xxxGreaterThan与xxxLessThan两个参数，分别对应第一个和第二个的数据
+      const newParams = {...params};
+
+      // 遍历所有参数
+      for (const key in params) {
+        // 检查参数名是否以Range结尾且值为数组
+        if (key.endsWith('Range') && Array.isArray(params[key]) && params[key].length === 2) {
+          // 提取基础字段名（去掉Range后缀）
+          const baseKey = key.substring(0, key.length - 5);
+
+          // 添加大于等于和小于等于的参数
+          newParams[baseKey + 'GreaterThan'] = params[key][0];
+          newParams[baseKey + 'LessThan'] = params[key][1];
+
+          // 删除原来的Range参数
+          delete newParams[key];
+        }
+      }
+
+      return newParams;
     },
 
     /**
@@ -222,7 +246,7 @@ export default {
      * 处理密码重置提交事件
      */
     handlePasswordSubmit() {
-      this.$refs.passwordForm.validate(async(valid) => {
+      this.$refs.passwordForm.validate(async (valid) => {
         if (valid) {
           try {
             // 构造用户数据，只更新密码

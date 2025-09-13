@@ -2,9 +2,8 @@ import request from '@/utils/request'
 
 export function getFormConfig(configName) {
   return request({
-    url: '/private/view/form',
+    url: '/private/view/form/'+configName,
     method: 'get',
-    params: { key: configName }
   })
 }
 
