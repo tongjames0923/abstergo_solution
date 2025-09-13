@@ -101,6 +101,7 @@
 <script>
 import FormConfigEditor from '@/components/FormEditor/FormConfigEditor.vue'
 import DynamicForm from '@/components/DynamicForm/index.vue'
+import {saveFormConfig} from '@/api/view'
 
 export default {
   name: 'FormCreator',
@@ -144,11 +145,17 @@ export default {
     },
 
     saveForm() {
-      // 保存表单配置到本地存储
+      // 保存表单配置到服务器
       try {
         const data = this.$refs.formConfigEditor.getData()
-        localStorage.setItem('formCreatorConfig', JSON.stringify(data))
-        this.$message.success('表单配置已保存')
+        console.log('表单配置数据:', data)
+        saveFormConfig(data).then(response => {
+          this.$message.success('表单配置已保存到服务器')
+          // 同时也保存到本地存储作为备份
+          localStorage.setItem('formCreatorConfig', JSON.stringify(data))
+        }).catch(error => {
+          this.$message.error('保存表单配置失败: ' + error.message)
+        })
       } catch (e) {
         this.$message.error('保存表单配置失败: ' + e.message)
       }

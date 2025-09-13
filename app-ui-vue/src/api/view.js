@@ -7,3 +7,12 @@ export function getFormConfig(configName) {
     params: { key: configName }
   })
 }
+
+
+export function saveFormConfig(config) {
+  return request({
+    url: 'private/view/saveForm',
+    method: 'post',
+    data: config
+  })
+}
