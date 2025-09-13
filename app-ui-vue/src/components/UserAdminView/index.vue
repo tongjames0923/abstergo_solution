@@ -3,14 +3,15 @@
     <quick-use-management-view
       ref="userManagement"
       main-title="用户管理"
-      config-name="1"
+      :config-name="userSearchFormKey()"
       :search-handler="searchHandler"
       :columns="columns"
-      add-form-config-name="userAddForm"
+      :add-form-config-name="userAddFormKey()"
       :add-handler="(formData) => saveUser(formData)"
+      @add-success="(data)=>$message.success(' 新增用户成功！ ')"
       edit-form-config-name="userEditForm"
       :edit-handler="(formData) => saveUser(formData)"
-      :query-transformer="changeRange"
+      :query-transformer="rangeQueryTransform"
     >
       <template #actions-dropdown="{ row, index }">
         <el-dropdown-item command="toggleStatus" @click.native="handleToggleStatus(row)">
@@ -88,6 +89,8 @@
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
 import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
+import {rangeQueryTransform} from "@/utils/query-help";
+import {userAddFormKey, userSearchFormKey} from "@/settings";
 
 export default {
   name: 'UserAdminView',
@@ -144,7 +147,14 @@ export default {
           label: '状态',
           width: 100,
           render: (h, scope) => {
-            return <el-tag type={scope.row.flag === 1 ? '' : 'danger'}>{scope.row.flag === 1 ? '正常' : '禁用'}</el-tag>
+            if (scope.row.flag === 1)
+              return <el-tag type="success">正常</el-tag>
+            else if (scope.row.flag === 0)
+              return <el-tag type="danger">禁用</el-tag>
+            else if (scope.row.flag === 2)
+              return <el-tag type="warning">锁定</el-tag>
+            else
+              return <el-tag>未知</el-tag>
           }
         },
         {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
@@ -153,10 +163,17 @@ export default {
     }
   },
   methods: {
+    userAddFormKey() {
+      return userAddFormKey
+    },
+    userSearchFormKey() {
+      return userSearchFormKey
+    },
     saveUser,
     deleteUser,
     activateUser,
     disableUser,
+    rangeQueryTransform,
     // 简化后的搜索处理函数，适配AbstractCrudController的数据格式
     async searchHandler(bodyParams, requestParams) {
       // 返回符合组件要求的数据格式
@@ -166,30 +183,6 @@ export default {
         requestParams.pageSize
       )
     },
-
-    changeRange(params) {
-      //若params中含有xxxxRange参数且是一个数组的情况下，则加入xxxGreaterThan与xxxLessThan两个参数，分别对应第一个和第二个的数据
-      const newParams = {...params};
-
-      // 遍历所有参数
-      for (const key in params) {
-        // 检查参数名是否以Range结尾且值为数组
-        if (key.endsWith('Range') && Array.isArray(params[key]) && params[key].length === 2) {
-          // 提取基础字段名（去掉Range后缀）
-          const baseKey = key.substring(0, key.length - 5);
-
-          // 添加大于等于和小于等于的参数
-          newParams[baseKey + 'GreaterThan'] = params[key][0];
-          newParams[baseKey + 'LessThan'] = params[key][1];
-
-          // 删除原来的Range参数
-          delete newParams[key];
-        }
-      }
-
-      return newParams;
-    },
-
     /**
      * 切换用户状态
      */
