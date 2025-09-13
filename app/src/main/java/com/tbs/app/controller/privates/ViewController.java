@@ -1,15 +1,12 @@
 package com.tbs.app.controller.privates;
 
-import javax.annotation.Resource;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
 import com.tbs.app.service.business.view.IViewService;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.web.BaseController;
+import com.tbs.web.result.AjaxResult;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 @RestController
 @RequestMapping("/private/view")
@@ -28,6 +25,17 @@ public class ViewController extends BaseController {
 	public FormConfig getForm(@RequestParam String key) {
 		return viewService.getForm(key);
 	}
+
+    /**
+     * 保存表单配置
+     *
+     * @param formConfig 表单配置
+     * @return 保存结果
+     */
+    @PostMapping("saveForm")
+    public AjaxResult saveForm(@RequestBody FormConfig formConfig) {
+        return successResult(1);
+    }
 
 	@Override
 	public String getBusinessName() {

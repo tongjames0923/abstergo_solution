@@ -14,11 +14,6 @@ import lombok.Setter;
  */
 @Setter
 @Getter
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, property = "type")
-@JsonSubTypes({ @JsonSubTypes.Type(value = FormField.class, name = "input"),
-		@JsonSubTypes.Type(value = SelectFormField.class, name = "select"),
-		@JsonSubTypes.Type(value = DateRangeFormField.class, name = "date-range"),
-		@JsonSubTypes.Type(value = DynamicOptionsFormField.class, name = "dynamic-options") })
 public class FormField implements Serializable {
 	private static final long serialVersionUID = 1L;
 	/**

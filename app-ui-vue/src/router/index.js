@@ -84,6 +84,12 @@ export const constantRoutes = [
         name: '公司管理',
         component: () => import('@/views/admin/company/index.vue'),
         meta: { title: '公司管理', icon: 'el-icon-s-custom', roles: ['1'] }
+      },
+      {
+        path: 'form',
+        name: '表单',
+        component: () => import('@/views/form/FormCreator.vue'),
+        meta: { title: '表单', icon: 'el-icon-s-custom', roles: ['1'] }
       }
     ]
   },
