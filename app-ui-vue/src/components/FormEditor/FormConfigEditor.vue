@@ -103,7 +103,10 @@
                 <template v-if="field.type === 'select'">
                   <el-col :span="24">
                     <el-form-item label="选项配置">
-                      <SelectOptionsEditor v-model="field.options" @input="onConfigChange" />
+                      <SelectOptionsEditor
+                        :value="field.props && field.props.options"
+                        @input="val => updateFieldOptions(field, val)"
+                      />
                     </el-form-item>
                   </el-col>
                 </template>
@@ -123,99 +126,31 @@
                 <template v-if="field.type === 'dynamic-options'">
                   <el-col :span="24">
                     <el-form-item label="API地址">
-                      <el-input v-model="field.apiUrl" placeholder="/api/options" @input="onConfigChange" />
+                      <el-input
+                        :value="field.props && field.props.apiUrl"
+                        placeholder="/api/options"
+                        @input="val => updateFieldApiUrl(field, val)"
+                      />
                     </el-form-item>
                   </el-col>
                 </template>
 
                 <!-- 通用属性配置 -->
                 <el-col :span="24">
-                  <el-form-item label="通用属性">
-                    <el-button size="mini" @click="togglePropsEditor(field)">
-                      {{ field.showPropsEditor ? '隐藏属性编辑器' : '显示属性编辑器' }}
-                    </el-button>
-                  </el-form-item>
-                </el-col>
-
-                <template v-if="field.showPropsEditor">
-                  <el-col :span="24" class="props-editor-container">
-                    <div class="props-editor">
-                      <div class="props-editor-header">
-                        <h4>属性编辑器</h4>
-                        <el-button size="mini" type="primary" @click="addFieldProp(field)">添加属性</el-button>
-                      </div>
-
-                      <el-table
-                        :data="getPropsArray(field)"
-                        style="width: 100%"
-                        size="mini"
-                        empty-text="暂无属性配置，点击上方按钮添加"
-                      >
-                        <el-table-column prop="key" label="属性名" width="180">
-                          <template slot-scope="scope">
-                            <el-input
-                              v-model="scope.row.key"
-                              size="mini"
-                              placeholder="属性名"
-                              @blur="updateFieldPropKey(field, scope.row)"
-                            />
-                          </template>
-                        </el-table-column>
-                        <el-table-column prop="value" label="属性值">
-                          <template slot-scope="scope">
-                            <el-input
-                              v-if="isSimpleValue(scope.row.value)"
-                              v-model="scope.row.value"
-                              size="mini"
-                              placeholder="属性值"
-                              @blur="updateFieldPropValue(field, scope.row)"
-                            />
-                            <el-switch
-                              v-else-if="typeof scope.row.value === 'boolean'"
-                              v-model="scope.row.value"
-                              active-text="是"
-                              inactive-text="否"
-                              @change="val => updateFieldPropValue(field, {...scope.row, value: val})"
-                            />
-                            <el-input
-                              v-else
-                              :value="JSON.stringify(scope.row.value)"
-                              size="mini"
-                              placeholder="复杂类型值"
-                              disabled
-                            >
-                              <el-button
-                                slot="append"
-                                icon="el-icon-edit"
-                                @click="editComplexProp(field, scope.row)"
-                              />
-                            </el-input>
-                          </template>
-                        </el-table-column>
-                        <el-table-column label="操作" width="80">
-                          <template slot-scope="scope">
-                            <el-button
-                              size="mini"
-                              type="text"
-                              icon="el-icon-delete"
-                              @click="removeFieldProp(field, scope.row)"
-                            />
-                          </template>
-                        </el-table-column>
-                      </el-table>
-                    </div>
-                  </el-col>
-                </template>
-
-                <el-col :span="24">
-                  <el-form-item label="属性预览">
+                  <el-form-item label="其他属性(props)">
                     <el-input
-                      :value="formatProps(field.props)"
+                      :value="field.propsInput"
                       type="textarea"
                       :rows="3"
-                      readonly
-                      placeholder="当前属性配置将显示在这里"
+                      placeholder='JSON格式，例如: {"size": "medium", "clearable": true}'
+                      @input="val => updatePropsInput(field, val)"
                     />
+                    <div v-if="field.propsError" class="props-error">
+                      {{ field.propsError }}
+                    </div>
+                    <div class="props-hint">
+                      <p>提示：这里可以配置该字段的其他属性，如 placeholder、clearable 等</p>
+                    </div>
                   </el-form-item>
                 </el-col>
               </el-row>
@@ -224,25 +159,6 @@
         </li>
       </ul>
     </el-card>
-
-    <!-- 编辑复杂属性值的对话框 -->
-    <el-dialog
-      :visible.sync="complexPropDialog.visible"
-      title="编辑复杂属性值"
-      width="500px"
-    >
-      <el-input
-        v-model="complexPropDialog.value"
-        type="textarea"
-        :rows="6"
-        placeholder="请输入有效的JSON格式"
-      />
-      <span v-if="complexPropDialog.error" class="error-text">{{ complexPropDialog.error }}</span>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="complexPropDialog.visible = false">取 消</el-button>
-        <el-button type="primary" @click="saveComplexProp">确 定</el-button>
-      </span>
-    </el-dialog>
   </div>
 </template>
 
@@ -269,14 +185,7 @@ export default {
   },
   data() {
     return {
-      localConfig: this.initializeConfig(this.value),
-      complexPropDialog: {
-        visible: false,
-        field: null,
-        prop: null,
-        value: '',
-        error: ''
-      }
+      localConfig: this.initializeConfig(this.value)
     }
   },
   watch: {
@@ -306,10 +215,7 @@ export default {
           prop: field.prop || '',
           label: field.label || '',
           type: field.type || 'input',
-          options: field.options,
-          apiUrl: field.apiUrl,
           props: field.props || {},
-          showPropsEditor: field.showPropsEditor || false,
           propsInput: this.formatProps(field.props),
           propsError: '',
         }))
@@ -329,103 +235,48 @@ export default {
       }
     },
 
-    onFieldTypeChange(field) {
-      this.$set(field, 'props', field.props || {})
+    updatePropsInput(field, value) {
+      // 更新输入框的值
+      this.$set(field, 'propsInput', value)
+
+      if (!value || value.trim() === '') {
+        field.props = {}
+        field.propsError = ''
+      } else {
+        try {
+          const parsedProps = JSON.parse(value)
+          field.props = parsedProps
+          field.propsError = ''
+        } catch (e) {
+          // 保留输入但显示错误
+          field.propsError = 'JSON格式错误: ' + e.message
+        }
+      }
       this.onConfigChange()
     },
 
-    togglePropsEditor(field) {
-      this.$set(field, 'showPropsEditor', !field.showPropsEditor)
+    updateFieldOptions(field, options) {
       if (!field.props) {
         this.$set(field, 'props', {})
       }
+      this.$set(field.props, 'options', options)
+      // 更新显示的JSON字符串
+      this.$set(field, 'propsInput', this.formatProps(field.props))
+      this.onConfigChange()
     },
 
-    getPropsArray(field) {
-      if (!field.props) return []
-      return Object.keys(field.props).map(key => ({
-        key,
-        value: field.props[key]
-      }))
-    },
-
-    addFieldProp(field) {
+    updateFieldApiUrl(field, apiUrl) {
       if (!field.props) {
         this.$set(field, 'props', {})
       }
-
-      // 查找一个未使用的属性名
-      let newKey = 'prop'
-      let counter = 1
-      while (field.props.hasOwnProperty(newKey + counter)) {
-        counter++
-      }
-      newKey = newKey + counter
-
-      // 添加新属性
-      this.$set(field.props, newKey, '')
+      this.$set(field.props, 'apiUrl', apiUrl)
+      // 更新显示的JSON字符串
+      this.$set(field, 'propsInput', this.formatProps(field.props))
       this.onConfigChange()
     },
 
-    updateFieldPropKey(field, propRow) {
-      // 只有当键发生变化时才更新
-      if (propRow.originalKey !== undefined && propRow.originalKey !== propRow.key) {
-        const value = field.props[propRow.originalKey];
-        this.$delete(field.props, propRow.originalKey);
-        this.$set(field.props, propRow.key, value);
-        this.onConfigChange();
-      } else if (propRow.originalKey === undefined) {
-        // 新增属性的情况
-        propRow.originalKey = propRow.key;
-      }
-    },
-
-    updateFieldPropValue(field, propRow) {
-      this.$set(field.props, propRow.key, propRow.value)
+    onFieldTypeChange() {
       this.onConfigChange()
-    },
-
-    removeFieldProp(field, propRow) {
-      this.$delete(field.props, propRow.key)
-      this.onConfigChange()
-    },
-
-    isSimpleValue(value) {
-      return typeof value === 'string' || typeof value === 'number'
-    },
-
-    editComplexProp(field, propRow) {
-      this.complexPropDialog.field = field
-      this.complexPropDialog.prop = propRow
-      try {
-        this.complexPropDialog.value = JSON.stringify(propRow.value, null, 2)
-        this.complexPropDialog.error = ''
-      } catch (e) {
-        this.complexPropDialog.value = String(propRow.value)
-        this.complexPropDialog.error = '无法格式化值: ' + e.message
-      }
-      this.complexPropDialog.visible = true
-    },
-
-    saveComplexProp() {
-      try {
-        const value = JSON.parse(this.complexPropDialog.value)
-        this.$set(
-          this.complexPropDialog.prop,
-          'value',
-          value
-        )
-        this.$set(
-          this.complexPropDialog.field.props,
-          this.complexPropDialog.prop.key,
-          value
-        )
-        this.complexPropDialog.visible = false
-        this.complexPropDialog.error = ''
-        this.onConfigChange()
-      } catch (e) {
-        this.complexPropDialog.error = 'JSON格式错误: ' + e.message
-      }
     },
 
     addFormField() {
@@ -434,7 +285,6 @@ export default {
         label: '',
         type: 'input',
         props: {},
-        showPropsEditor: false,
         propsInput: '',
         propsError: ''
       })
@@ -496,7 +346,6 @@ export default {
       cleanConfig.fields.forEach(field => {
         delete field.propsInput
         delete field.propsError
-        delete field.showPropsEditor
       })
       return cleanConfig
     }
@@ -557,37 +406,5 @@ export default {
 
 .props-hint p {
   margin: 0;
-}
-
-.props-editor-container {
-  margin-bottom: 15px;
-}
-
-.props-editor {
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  padding: 15px;
-}
-
-.props-editor-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 15px;
-}
-
-.props-editor-header h4 {
-  margin: 0;
-}
-
-.error-text {
-  color: #f56c6c;
-  font-size: 12px;
-  display: block;
-  margin-top: 5px;
-}
-
-.dialog-footer {
-  text-align: right;
 }
 </style>
