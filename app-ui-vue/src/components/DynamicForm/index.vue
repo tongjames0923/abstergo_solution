@@ -49,28 +49,20 @@
                 <!-- 输入框 -->
                 <el-input
                   v-if="field && field.type === 'input'"
-                  :clearable="field.clearable !== false"
-                  :placeholder="(field && field.placeholder) || ''"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
                   @input="val => setFieldValue((field && field.prop) || '', val)"
-                >
-                  <template v-if="field && field.prefixIcon" #prefix>
-                    <i :class="field.prefixIcon" />
-                  </template>
-                </el-input>
+                />
 
                 <!-- 选择器 -->
                 <el-select
                   v-else-if="field && field.type === 'select'"
-                  :clearable="field.clearable !== false"
-                  :placeholder="(field && field.placeholder) || ''"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
                 >
                   <el-option
-                    v-for="option in ((field && field.options) || [])"
+                    v-for="option in (field.props && field.props.options || [])"
                     :key="(option && option.value) || ''"
                     :label="(option && option.label) || ''"
                     :value="(option && option.value)"
@@ -80,13 +72,7 @@
                 <!-- 日期范围 -->
                 <el-date-picker
                   v-else-if="field && field.type === 'date-range'"
-                  :end-placeholder="(field && field.endPlaceholder) || '结束日期'"
-                  :format="(field && field.format) || 'yyyy-MM-dd'"
-                  :range-separator="(field && field.rangeSeparator) || '至'"
-                  :start-placeholder="(field && field.startPlaceholder) || '开始日期'"
                   :value="formData[(field && field.prop) || '']"
-                  :value-format="(field && field.valueFormat) || 'yyyy-MM-dd'"
-                  class="date-range-picker"
                   type="daterange"
                   v-bind="field.props"
                   @change="val => handleDateRangeChange((field && field.prop) || '', val)"
@@ -96,8 +82,6 @@
                 <!-- 动态选项 -->
                 <DynamicOptions
                   v-else-if="field && field.type === 'dynamic-options'"
-                  :api-url="(field && field.apiUrl) || ''"
-                  :placeholder="(field && field.placeholder) || ''"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
