@@ -12,19 +12,19 @@ import javax.annotation.Resource;
 @RequestMapping("/private/view")
 public class ViewController extends BaseController {
 
-	@Resource
-	private IViewService viewService;
+    @Resource
+    private IViewService viewService;
 
-	/**
-	 * 根据key获取表单配置
-	 *
-	 * @param key 配置名称
-	 * @return 表单配置
-	 */
-	@GetMapping("/form")
-	public FormConfig getForm(@RequestParam String key) {
-		return viewService.getForm(key);
-	}
+    /**
+     * 根据key获取表单配置
+     *
+     * @param key 配置名称
+     * @return 表单配置
+     */
+    @GetMapping("/form/{id}")
+    public FormConfig getForm(@PathVariable Long id) {
+        return viewService.getForm(id);
+    }
 
     /**
      * 保存表单配置
@@ -34,11 +34,11 @@ public class ViewController extends BaseController {
      */
     @PostMapping("saveForm")
     public AjaxResult saveForm(@RequestBody FormConfig formConfig) {
-        return successResult(1);
+        return successResult(viewService.saveForm(formConfig));
     }
 
-	@Override
-	public String getBusinessName() {
-		return "视图控制器";
-	}
+    @Override
+    public String getBusinessName() {
+        return "视图控制器";
+    }
 }

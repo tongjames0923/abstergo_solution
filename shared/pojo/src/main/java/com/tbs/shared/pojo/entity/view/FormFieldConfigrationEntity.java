@@ -38,20 +38,5 @@ public class FormFieldConfigrationEntity implements Serializable, IIdentifiable<
      */
     @Column(name = "label", length = 64)
     private String label;
-    /**
-     * 表单域占位符
-     */
-    @Column(name = "placeholder", length = 128)
-    private String placeholder;
-    /**
-     * 表单域是否可清空
-     */
-    @Column(name = "clearable")
-    private Integer clearable;
-    /**
-     * 表单域前缀图标
-     */
-    @Column(name = "prefix_icon", length = 64)
-    private String prefixIcon;
 
 }

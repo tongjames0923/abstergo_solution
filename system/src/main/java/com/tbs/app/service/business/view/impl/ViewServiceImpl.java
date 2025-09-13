@@ -1,405 +1,200 @@
 package com.tbs.app.service.business.view.impl;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import com.tbs.app.service.business.view.IViewService;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.SpringUtil;
+import com.tbs.shared.constant.CommonConstant;
+import com.tbs.shared.constant.ViewConstants;
+import com.tbs.shared.interfaces.view.IPropertyValueTransformer;
+import com.tbs.shared.mapper.view.*;
+import com.tbs.shared.pojo.entity.view.*;
+import com.tbs.shared.pojo.model.view.FormConfig;
+import com.tbs.shared.pojo.model.view.FormField;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.cache.annotation.Cacheable;
+
+import javax.annotation.Resource;
+import javax.transaction.Transactional;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.tbs.app.service.business.view.IViewService;
-import com.tbs.shared.enums.SystemCompanyFlagEnum;
-import com.tbs.shared.pojo.model.view.*;
-
 public class ViewServiceImpl implements IViewService {
-	@Override
-	public FormConfig getForm(String key) {
-		if ("userSearchForm".equals(key)) {
-			return buildUserSearchFormConfig();
-		} else if ("userEditForm".equals(key)) {
-			return buildUserEditFormConfig();
-		} else if ("userAddForm".equals(key)) {
-			return buildUserAddFormConfig();
-		} else if ("companySearchForm".equals(key)) {
-			return buildCompanySearchFormConfig();
-		}
-        else if("companyAddForm".equals(key))
-        {
-            return buildCompanyAddFormConfig();
-        }
-        else if("companyEditForm".equals(key))
-        {
-            return buildCompanyEditFormConfig();
-        }
-		// 可以根据需要添加其他表单配置
-		return null;
-	}
 
-    private FormConfig buildCompanyEditFormConfig() {
+    @Resource
+    private FormConfigMapper formConfigMapper;
+
+    @Resource
+    private FieldConfigMapper fieldConfigMapper;
+
+    @Resource
+    private PropertyValueMapper propertyValueMapper;
+
+    @Resource
+    private PropertyRelationMapper propertyRelationMapper;
+
+    @Resource
+    private FormFieldRelationMapper formFieldRelationMapper;
+
+    @Cacheable(cacheNames = "view_form_cache", key = "#id")
+    @Override
+    public FormConfig getForm(Long id) {
+        AssertUtil.notNull(id, "表单ID不能为空");
+        DynamicFormConfigrationEntity dynamicFormConfigrationEntity = formConfigMapper.selectByPrimaryKey(id);
+        AssertUtil.notNull(dynamicFormConfigrationEntity, "表单配置不存在");
         FormConfig formConfig = new FormConfig();
-        formConfig.setExpandable(false);
-        formConfig.setGutter(20);
-        formConfig.setLabelWidth("80px");
-        formConfig.setSpan(24);
+        IPropertyValueTransformer transformer = SpringUtil.getBean(IPropertyValueTransformer.class);
+        formConfig.setSpan(dynamicFormConfigrationEntity.getSpan());
+        formConfig.setExpandable(CommonConstant.FLAG_ON.equals(dynamicFormConfigrationEntity.getExpandable()));
+        formConfig.setExpanded(CommonConstant.FLAG_ON.equals(dynamicFormConfigrationEntity.getExpanded()));
+        formConfig.setGutter(dynamicFormConfigrationEntity.getGutter());
+        formConfig.setLabelWidth(dynamicFormConfigrationEntity.getLabelWidth());
+        PropertyRelationEntity formSelection = new PropertyRelationEntity();
+        formSelection.setRelationType(ViewConstants.PROPERTY_FORM_TYPE_RELATION);
+        formSelection.setRelationId(dynamicFormConfigrationEntity.getId());
+        var formPropsRelations = propertyRelationMapper.select(formSelection);
+        if (CollUtil.isNotEmpty(formPropsRelations)) {
+            var propertyValueEntities = propertyValueMapper.selectByIdList(
+                formPropsRelations.stream().map(PropertyRelationEntity::getPropertyId).collect(Collectors.toList()));
+            formConfig.setProps(
+                propertyValueEntities.stream().collect(Collectors.toMap(PropertyValueEntity::getName, (v) -> {
+                    try {
+                        return transformer.reverseTransform(v.getValue(), Class.forName(v.getValueClass()));
+                    } catch (ClassNotFoundException e) {
+                        AssertUtil.throwError(() -> new FormattedRuntimeException("属性值转换失败: {}", v.getValue()));
+                    }
+                    return null;
+                })));
+        }
 
-        List<FormField> fields = new ArrayList<>();
+        FormFieldRelationEntity formFieldSelection = new FormFieldRelationEntity();
+        formFieldSelection.setFormId(dynamicFormConfigrationEntity.getId());
+        var fieldRelations = formFieldRelationMapper.select(formFieldSelection);
+        if (CollUtil.isNotEmpty(fieldRelations)) {
+            var fieldConfigrationEntities = fieldConfigMapper.selectByIdList(
+                fieldRelations.stream().map(FormFieldRelationEntity::getFieldId).collect(Collectors.toList()));
 
-        // 公司名称字段
-        FormField companyNameField = new FormField();
-        companyNameField.setProp("companyName");
-        companyNameField.setLabel("公司名称");
-        companyNameField.setType("input");
-        companyNameField.setPlaceholder("请输入公司名称");
-        companyNameField.setPrefixIcon("el-icon-office-building");
-        companyNameField.setProps(Map.of("size", "medium"));
-        fields.add(companyNameField);
-
-        // 税号字段
-        FormField taxNumberField = new FormField();
-        taxNumberField.setProp("taxNumber");
-        taxNumberField.setLabel("税号");
-        taxNumberField.setType("input");
-        taxNumberField.setPlaceholder("请输入税号");
-        taxNumberField.setPrefixIcon("el-icon-document");
-        taxNumberField.setProps(Map.of("size", "medium"));
-        fields.add(taxNumberField);
-
-        // 公司logo字段
-        FormField logoImageField = new FormField();
-        logoImageField.setProp("logoImage");
-        logoImageField.setLabel("公司Logo");
-        logoImageField.setType("url-image");
-        logoImageField.setPlaceholder("请输入Logo图片URL");
-        logoImageField.setProps(Map.of("size", "medium"));
-        fields.add(logoImageField);
-
-        // 描述字段
-        FormField descriptionField = new FormField();
-        descriptionField.setProp("description");
-        descriptionField.setLabel("描述");
-        descriptionField.setType("input");
-        descriptionField.setPlaceholder("请输入公司描述");
-        descriptionField.setProps(Map.of("type", "textarea", "rows", 3, "size", "medium"));
-        fields.add(descriptionField);
-
-        formConfig.setFields(fields);
+            if (CollUtil.isNotEmpty(fieldConfigrationEntities)) {
+                formConfig.setFields(fieldConfigrationEntities.stream().map((v) -> {
+                    FormField formField = new FormField();
+                    formField.setLabel(v.getLabel());
+                    formField.setType(v.getType());
+                    formField.setProp(v.getProp());
+                    PropertyRelationEntity fieldSelection = new PropertyRelationEntity();
+                    fieldSelection.setRelationType(ViewConstants.PROPERTY_FIELD_TYPE_RELATION);
+                    fieldSelection.setRelationId(v.getId());
+                    var fieldPropsRelations = propertyRelationMapper.select(fieldSelection);
+                    if (CollUtil.isNotEmpty(fieldPropsRelations)) {
+                        var propertyValueEntities = propertyValueMapper.selectByIdList(
+                            fieldPropsRelations.stream().map(PropertyRelationEntity::getPropertyId)
+                                .collect(Collectors.toList()));
+                        formField.setProps(propertyValueEntities.stream()
+                            .collect(Collectors.toMap(PropertyValueEntity::getName, (v1) -> {
+                                try {
+                                    return transformer.reverseTransform(v1.getValue(),
+                                        Class.forName(v1.getValueClass()));
+                                } catch (ClassNotFoundException e) {
+                                    AssertUtil.throwError(
+                                        () -> new FormattedRuntimeException("属性值转换失败: {}", v1.getValue()));
+                                }
+                                return null;
+                            })));
+                    }
+                    return formField;
+                }).collect(Collectors.toList()));
+            }
+        }
         return formConfig;
     }
 
-    private FormConfig buildCompanyAddFormConfig() {
-        FormConfig formConfig = new FormConfig();
-        formConfig.setExpandable(false);
-        formConfig.setGutter(20);
-        formConfig.setLabelWidth("80px");
-        formConfig.setSpan(24);
+    @Transactional(rollbackOn = RuntimeException.class)
+    @Override
+    public DynamicFormConfigrationEntity saveForm(@NotNull FormConfig formConfig) {
+        AssertUtil.notNull(formConfig, "表单配置不能为空");
+        DynamicFormConfigrationEntity dynamicFormConfigrationEntity = createDynamicFormEntity(formConfig);
+        formConfigMapper.insert(dynamicFormConfigrationEntity);
+        IPropertyValueTransformer transformer = SpringUtil.getBean(IPropertyValueTransformer.class);
+        List<PropertyRelationEntity> relationEntities = new LinkedList<>();
+        if (CollUtil.isNotEmpty(formConfig.getProps())) {
+            List<PropertyValueEntity> propertyValueEntities = formConfig.getProps().entrySet().stream().map(entry -> {
+                PropertyValueEntity propertyValueEntity = new PropertyValueEntity();
+                propertyValueEntity.setName(entry.getKey());
+                propertyValueEntity.setValue(transformer.transform(entry.getValue()));
+                propertyValueEntity.setValueClass(entry.getValue().getClass().getName());
+                propertyValueEntity.setTransformerType(transformer.getClass().getName());
+                return propertyValueEntity;
+            }).collect(Collectors.toList());
+            propertyValueMapper.insertList(propertyValueEntities);
+            relationEntities.addAll(propertyValueEntities.stream().map(entity -> {
+                PropertyRelationEntity relationEntity = new PropertyRelationEntity();
+                relationEntity.setPropertyId(entity.getId());
+                relationEntity.setRelationType(ViewConstants.PROPERTY_FORM_TYPE_RELATION);
+                relationEntity.setRelationId(dynamicFormConfigrationEntity.getId());
+                return relationEntity;
+            }).collect(Collectors.toList()));
+        }
+        if (CollUtil.isNotEmpty(formConfig.getFields())) {
+            List<FormFieldConfigrationEntity> fieldConfigrationEntities = formConfig.getFields().stream().map(field -> {
+                FormFieldConfigrationEntity fieldConfigrationEntity = new FormFieldConfigrationEntity();
+                fieldConfigrationEntity.setType(field.getType());
+                fieldConfigrationEntity.setProp(field.getProp());
+                fieldConfigrationEntity.setLabel(field.getLabel());
+                return fieldConfigrationEntity;
+            }).collect(Collectors.toList());
+            fieldConfigMapper.insertList(fieldConfigrationEntities);
+            List<FormFieldRelationEntity> formFieldRelations = fieldConfigrationEntities.stream().map(entity -> {
+                FormFieldRelationEntity relationEntity = new FormFieldRelationEntity();
+                relationEntity.setFormId(dynamicFormConfigrationEntity.getId());
+                relationEntity.setFieldId(entity.getId());
+                return relationEntity;
+            }).collect(Collectors.toList());
+            formFieldRelationMapper.insertList(formFieldRelations);
 
-        List<FormField> fields = new ArrayList<>();
+            // 修复字段属性关联问题
+            Map<Long, FormField> fieldMap = formConfig.getFields().stream()
+                .collect(Collectors.toMap(field -> (long)formConfig.getFields().indexOf(field), field -> field));
 
-        // 公司名称字段
-        FormField companyNameField = new FormField();
-        companyNameField.setProp("companyName");
-        companyNameField.setLabel("公司名称");
-        companyNameField.setType("input");
-        companyNameField.setPlaceholder("请输入公司名称");
-        companyNameField.setPrefixIcon("el-icon-office-building");
-        companyNameField.setProps(Map.of("size", "medium"));
-        fields.add(companyNameField);
+            for (int i = 0; i < fieldConfigrationEntities.size(); i++) {
+                FormField field = fieldMap.get((long)i);
+                FormFieldConfigrationEntity fieldConfigrationEntity = fieldConfigrationEntities.get(i);
 
-        // 税号字段
-        FormField taxNumberField = new FormField();
-        taxNumberField.setProp("taxNumber");
-        taxNumberField.setLabel("税号");
-        taxNumberField.setType("input");
-        taxNumberField.setPlaceholder("请输入税号");
-        taxNumberField.setPrefixIcon("el-icon-document");
-        taxNumberField.setProps(Map.of("size", "medium"));
-        fields.add(taxNumberField);
-
-        // 公司logo字段
-        FormField logoImageField = new FormField();
-        logoImageField.setProp("logoImage");
-        logoImageField.setLabel("公司Logo");
-        logoImageField.setType("input");
-        logoImageField.setPlaceholder("请输入Logo图片URL");
-        logoImageField.setPrefixIcon("el-icon-picture-outline");
-        logoImageField.setProps(Map.of("size", "medium"));
-        fields.add(logoImageField);
-
-        // 描述字段
-        FormField descriptionField = new FormField();
-        descriptionField.setProp("description");
-        descriptionField.setLabel("描述");
-        descriptionField.setType("input");
-        descriptionField.setPlaceholder("请输入公司描述");
-        descriptionField.setProps(Map.of("type", "textarea", "rows", 3, "size", "medium"));
-        fields.add(descriptionField);
-
-        formConfig.setFields(fields);
-        return formConfig;
+                if (CollUtil.isEmpty(field.getProps())) {
+                    continue;
+                }
+                var props = field.getProps().entrySet().stream().map(prop -> {
+                    PropertyValueEntity propertyValueEntity = new PropertyValueEntity();
+                    propertyValueEntity.setName(prop.getKey());
+                    propertyValueEntity.setValue(transformer.transform(prop.getValue()));
+                    propertyValueEntity.setValueClass(prop.getValue().getClass().getName());
+                    propertyValueEntity.setTransformerType(transformer.getClass().getName());
+                    return propertyValueEntity;
+                }).collect(Collectors.toList());
+                propertyValueMapper.insertList(props);
+                relationEntities.addAll(props.stream().map(entity -> {
+                    PropertyRelationEntity relationEntity = new PropertyRelationEntity();
+                    relationEntity.setPropertyId(entity.getId());
+                    relationEntity.setRelationType(ViewConstants.PROPERTY_FIELD_TYPE_RELATION);
+                    relationEntity.setRelationId(fieldConfigrationEntity.getId());
+                    return relationEntity;
+                }).collect(Collectors.toList()));
+            }
+        }
+        propertyRelationMapper.insertList(relationEntities);
+        return dynamicFormConfigrationEntity;
     }
 
-	private FormConfig buildUserAddFormConfig() {
-		FormConfig formConfig = new FormConfig();
-		formConfig.setExpandable(false);
-		formConfig.setGutter(20);
-		formConfig.setLabelWidth("80px");
-		formConfig.setSpan(24);
-
-		List<FormField> fields = new ArrayList<>();
-
-		// 用户名字段
-		FormField userNameField = new FormField();
-		userNameField.setProp("userName");
-		userNameField.setLabel("用户名");
-		userNameField.setType("input");
-		userNameField.setPlaceholder("请输入用户名");
-		userNameField.setPrefixIcon("el-icon-user");
-		userNameField.setProps(Map.of("size", "medium"));
-		fields.add(userNameField);
-
-		// 昵称字段
-		FormField nickNameField = new FormField();
-		nickNameField.setProp("nickName");
-		nickNameField.setLabel("昵称");
-		nickNameField.setType("input");
-		nickNameField.setPlaceholder("请输入昵称");
-		nickNameField.setPrefixIcon("el-icon-star-off");
-		nickNameField.setProps(Map.of("size", "medium"));
-		fields.add(nickNameField);
-
-		// 密码字段
-		FormField passwordField = new FormField();
-		passwordField.setProp("password");
-		passwordField.setLabel("密码");
-		passwordField.setType("input");
-		passwordField.setPlaceholder("请输入密码");
-		passwordField.setPrefixIcon("el-icon-lock");
-		passwordField.setProps(Map.of("type", "password", "showPassword", true, "size", "medium"));
-		fields.add(passwordField);
-
-		// 备注字段
-		FormField remarkField = new FormField();
-		remarkField.setProp("remark");
-		remarkField.setLabel("备注");
-		remarkField.setType("input");
-		remarkField.setPlaceholder("请输入备注信息");
-		remarkField.setProps(Map.of("type", "textarea", "rows", 2, "size", "medium"));
-		fields.add(remarkField);
-
-		// 头像字段 (自定义类型)
-		FormField avatarField = new FormField();
-		avatarField.setProp("avatar");
-		avatarField.setLabel("头像");
-		avatarField.setType("urlImage");
-		fields.add(avatarField);
-
-		formConfig.setFields(fields);
-		return formConfig;
-	}
-
-	/**
-	 * 构建用户搜索表单配置
-	 *
-	 * @return 用户搜索表单配置
-	 */
-	private FormConfig buildUserSearchFormConfig() {
-		FormConfig formConfig = new FormConfig();
-		formConfig.setExpandable(true);
-		formConfig.setExpanded(true);
-		formConfig.setGutter(20);
-		formConfig.setLabelWidth("100px");
-
-		List<FormField> fields = new ArrayList<>();
-
-		// 用户ID字段
-		FormField idField = new FormField();
-		idField.setProp("idEquals");
-		idField.setLabel("用户ID");
-		idField.setType("input");
-		idField.setPlaceholder("请输入用户ID");
-		idField.setPrefixIcon("el-icon-search");
-		fields.add(idField);
-
-		// 用户名字段
-		FormField userNameField = new FormField();
-		userNameField.setProp("userNameEquals");
-		userNameField.setLabel("用户名");
-		userNameField.setType("input");
-		userNameField.setPlaceholder("请输入用户名");
-		userNameField.setPrefixIcon("el-icon-user");
-		fields.add(userNameField);
-
-		// 昵称字段
-		FormField nickNameField = new FormField();
-		nickNameField.setProp("nickNameLike");
-		nickNameField.setLabel("昵称");
-		nickNameField.setType("input");
-		nickNameField.setPlaceholder("请输入昵称");
-		nickNameField.setPrefixIcon("el-icon-star-off");
-		fields.add(nickNameField);
-
-		// 用户状态字段
-		DynamicOptionsFormField flagField = new DynamicOptionsFormField();
-		flagField.setProp("flagEquals");
-		flagField.setLabel("用户状态");
-		flagField.setApiUrl("/private/user/statusOptions");
-		flagField.setPlaceholder("请选择用户状态");
-		fields.add(flagField);
-
-		// 创建时间范围字段
-		DateRangeFormField createTimeField = new DateRangeFormField();
-		createTimeField.setProp("createTimeRange");
-		createTimeField.setLabel("创建时间");
-		createTimeField.setValueFormat("yyyy-MM-dd HH:mm:ss");
-		createTimeField.setFormat("yyyy-MM-dd");
-		createTimeField.setStartPlaceholder("开始日期");
-		createTimeField.setEndPlaceholder("结束日期");
-		fields.add(createTimeField);
-
-		// 更新时间范围字段
-		DateRangeFormField updateTimeField = new DateRangeFormField();
-		updateTimeField.setProp("updateTimeRange");
-		updateTimeField.setLabel("更新时间");
-		updateTimeField.setValueFormat("yyyy-MM-dd HH:mm:ss");
-		updateTimeField.setFormat("yyyy-MM-dd");
-		updateTimeField.setStartPlaceholder("开始日期");
-		updateTimeField.setEndPlaceholder("结束日期");
-		fields.add(updateTimeField);
-
-		formConfig.setFields(fields);
-		return formConfig;
-	}
-
-	/**
-	 * 构建用户编辑表单配置
-	 *
-	 * @return 用户编辑表单配置
-	 */
-	private FormConfig buildUserEditFormConfig() {
-		FormConfig formConfig = new FormConfig();
-		formConfig.setExpandable(false);
-		formConfig.setGutter(20);
-		formConfig.setLabelWidth("80px");
-		formConfig.setSpan(24);
-
-		List<FormField> fields = new ArrayList<>();
-
-		// 用户名字段
-		FormField userNameField = new FormField();
-		userNameField.setProp("userName");
-		userNameField.setLabel("用户名");
-		userNameField.setType("input");
-		userNameField.setPlaceholder("请输入用户名");
-		userNameField.setPrefixIcon("el-icon-user");
-		userNameField.setProps(Map.of("size", "medium"));
-		fields.add(userNameField);
-
-		// 昵称字段
-		FormField nickNameField = new FormField();
-		nickNameField.setProp("nickName");
-		nickNameField.setLabel("昵称");
-		nickNameField.setType("input");
-		nickNameField.setPlaceholder("请输入昵称");
-		nickNameField.setPrefixIcon("el-icon-star-off");
-		nickNameField.setProps(Map.of("size", "medium"));
-		fields.add(nickNameField);
-
-		// 备注字段
-		FormField remarkField = new FormField();
-		remarkField.setProp("remark");
-		remarkField.setLabel("备注");
-		remarkField.setType("input");
-		remarkField.setPlaceholder("请输入备注信息");
-		remarkField.setProps(Map.of("type", "textarea", "rows", 2, "size", "medium"));
-		fields.add(remarkField);
-
-		// 头像字段 (自定义类型)
-		FormField avatarField = new FormField();
-		avatarField.setProp("avatar");
-		avatarField.setLabel("头像");
-		avatarField.setType("urlImage");
-		fields.add(avatarField);
-
-		formConfig.setFields(fields);
-		return formConfig;
-	}
-
-	/**
-	 * 构建公司搜索表单配置
-	 *
-	 * @return 公司搜索表单配置
-	 */
-	private FormConfig buildCompanySearchFormConfig() {
-		FormConfig formConfig = new FormConfig();
-		formConfig.setExpandable(true);
-		formConfig.setExpanded(true);
-		formConfig.setGutter(20);
-		formConfig.setLabelWidth("100px");
-
-		List<FormField> fields = new ArrayList<>();
-
-		// 公司ID字段
-		FormField idField = new FormField();
-		idField.setProp("equalsId");
-		idField.setLabel("公司ID");
-		idField.setType("input");
-		idField.setPlaceholder("请输入公司ID");
-		idField.setPrefixIcon("el-icon-search");
-		fields.add(idField);
-
-		// 公司名称字段
-		FormField nameField = new FormField();
-		nameField.setProp("likeName");
-		nameField.setLabel("公司名称");
-		nameField.setType("input");
-		nameField.setPlaceholder("请输入公司名称");
-		nameField.setPrefixIcon("el-icon-office-building");
-		fields.add(nameField);
-
-		// 税号字段
-		FormField taxNumberField = new FormField();
-		taxNumberField.setProp("equalsTaxNumber");
-		taxNumberField.setLabel("税号");
-		taxNumberField.setType("input");
-		taxNumberField.setPlaceholder("请输入税号");
-		taxNumberField.setPrefixIcon("el-icon-document");
-		fields.add(taxNumberField);
-
-		SelectFormField flagField = new SelectFormField();
-		flagField.setProp("flagEquals");
-		flagField.setLabel("公司状态");
-		flagField.setOptions(
-				List.of(SystemCompanyFlagEnum.ACTIVITED, SystemCompanyFlagEnum.SYSTEMED, SystemCompanyFlagEnum.DISABLED)
-						.stream().map(flag -> {
-							return new OptionValue<>(flag.getCode().toString(), flag.getValue());
-						}).collect(Collectors.toList()));
-		Map<String, Object> flagProps = new HashMap<>(3);
-		flagProps.put("size", "medium");
-		flagProps.put("multiple", true);
-		flagField.setProps(flagProps);
-
-		fields.add(flagField);
-
-		// 创建时间范围字段
-		DateRangeFormField createTimeField = new DateRangeFormField();
-		createTimeField.setProp("createTimeRange");
-		createTimeField.setLabel("创建时间");
-		createTimeField.setValueFormat("yyyy-MM-dd HH:mm:ss");
-		createTimeField.setFormat("yyyy-MM-dd");
-		createTimeField.setStartPlaceholder("开始日期");
-		createTimeField.setEndPlaceholder("结束日期");
-		fields.add(createTimeField);
-
-		// 更新时间范围字段
-		DateRangeFormField updateTimeField = new DateRangeFormField();
-		updateTimeField.setProp("updateTimeRange");
-		updateTimeField.setLabel("更新时间");
-		updateTimeField.setValueFormat("yyyy-MM-dd HH:mm:ss");
-		updateTimeField.setFormat("yyyy-MM-dd");
-		updateTimeField.setStartPlaceholder("开始日期");
-		updateTimeField.setEndPlaceholder("结束日期");
-		fields.add(updateTimeField);
-
-		formConfig.setFields(fields);
-		return formConfig;
-	}
+    private static @NotNull DynamicFormConfigrationEntity createDynamicFormEntity(@NotNull FormConfig formConfig) {
+        DynamicFormConfigrationEntity dynamicFormConfigrationEntity = new DynamicFormConfigrationEntity();
+        dynamicFormConfigrationEntity.setExpanded(
+            formConfig.getExpanded() ? CommonConstant.FLAG_ON : CommonConstant.FLAG_OFF);
+        dynamicFormConfigrationEntity.setExpandable(
+            formConfig.getExpandable() ? CommonConstant.FLAG_ON : CommonConstant.FLAG_OFF);
+        dynamicFormConfigrationEntity.setGutter(formConfig.getGutter());
+        dynamicFormConfigrationEntity.setLabelWidth(formConfig.getLabelWidth());
+        dynamicFormConfigrationEntity.setSpan(formConfig.getSpan());
+        return dynamicFormConfigrationEntity;
+    }
 }

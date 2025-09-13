@@ -3,6 +3,7 @@ package com.tbs.shared.pojo.entity.view;
 import com.tbs.shared.pojo.IIdentifiable;
 import lombok.Data;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.io.Serializable;
@@ -20,19 +21,22 @@ public class PropertyRelationEntity implements IIdentifiable<Long>, Serializable
     @javax.persistence.Id
     @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "property_id")
     /**
      * 属性id
-     */
-    private Long propertyId;
+     */ private Long propertyId;
     /**
      * 关联类型， 1-字段， 2-表单
      *
      * @see com.tbs.shared.constant.ViewConstants
      */
+    @Column(name = "relation_type")
     private Integer relationType;
 
     /**
      * 关联id
      */
+    @Column(name = "relation_id")
     private Long relationId;
 }

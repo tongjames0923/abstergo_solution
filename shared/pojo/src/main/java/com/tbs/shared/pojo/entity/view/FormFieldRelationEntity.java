@@ -3,6 +3,7 @@ package com.tbs.shared.pojo.entity.view;
 import com.tbs.shared.pojo.IIdentifiable;
 import lombok.Data;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.io.Serializable;
@@ -20,14 +21,14 @@ public class FormFieldRelationEntity implements IIdentifiable<Long>, Serializabl
     @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "form_id")
     /**
      * 表单ID
-     */
-    private Long formId;
+     */ private Long formId;
 
+    @Column(name = "field_id")
     /**
      * 表单域Id
-     */
-    private Long fieldId;
+     */ private Long fieldId;
 
 }
