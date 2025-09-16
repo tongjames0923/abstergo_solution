@@ -1,7 +1,7 @@
 package com.tbs.app.config;
 
-import com.tbs.app.service.business.auth.impl.DefaultUserInfoService;
 import com.tbs.app.service.business.user.impl.DefaultUserAuthService;
+import com.tbs.app.service.business.user.impl.DefaultUserInfoService;
 import com.tbs.common.data.IDataHolderExpireActuator;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.util.BeanUtil;

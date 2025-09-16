@@ -22,6 +22,12 @@ public interface IRefreshTokenService {
      */
     void pushRefreshToken(UserDetails userDetails, HttpServletResponse response, TokenCreateTypeEnum createTypeEnum);
 
+    /**
+     * 移除刷新令牌
+     *
+     * @param request
+     * @param response
+     */
     void removeRefreshToken(HttpServletRequest request, HttpServletResponse response);
 
     /**

@@ -5,11 +5,13 @@ import com.tbs.common.util.CollUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
-import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserInfoService;
+import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.uitl.AuthUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
@@ -23,6 +25,7 @@ import java.util.Objects;
  *
  * @author abstergo
  */
+@Slf4j
 public class CookieRefreshTokenService implements IRefreshTokenService {
 
     @Resource
@@ -30,6 +33,9 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
 
     @Resource
     IUserInfoService userInfoService;
+
+    @Resource
+    IUserLoginInfoService loginInfoService;
 
     @Override
     public void pushRefreshToken(UserDetails userDetails, HttpServletResponse response,
@@ -81,7 +87,13 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
         AssertUtil.notNull(tokenModel, "未查询到有效的刷新令牌数据");
         AssertUtil.isTrue(!Objects.equals(TokenTypeEnum.REFRESH_TOKEN, tokenModel.getTokenType()), "令牌类型异常");
         AssertUtil.isTrue(!Objects.equals(tokenModel.getStatus(), TokenStatusEnum.ACTIVE), "刷新令牌已失效");
-        UserDetails details = userInfoService.loadUserInfoByUniqueKey(tokenModel.getUserName());
+        UserDetails details = null;
+        try {
+            details = loginInfoService.getUserDetails(AuthUtil.getInstance().getCurrentTokenModel().getToken());
+        } catch (Exception e) {
+            log.warn("用户信息获取失败，将重建登录时用户信息");
+            details = userInfoService.loadUserInfoByUniqueKey(tokenModel.getUserName());
+        }
         AuthUtil.checkUserDetails(details);
         return tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
             TokenCreateTypeEnum.REFRESH.getCode());

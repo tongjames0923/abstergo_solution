@@ -5,6 +5,7 @@ import com.tbs.common.util.SpringUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;

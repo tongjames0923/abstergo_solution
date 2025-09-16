@@ -68,10 +68,7 @@ public class PrivateUserController extends BaseController {
     @GetMapping("/logout")
     @ApiOperation(value = "用户登出", notes = "退出当前登录状态")
     public Boolean logout() {
-        var token = AuthUtil.getInstance().getCurrentTokenModel();
-        AssertUtil.isTrue(token == null, () -> new FormattedRuntimeException("用户令牌为空，获取失败"));
-        userAuthService.inActiveToken(token.getToken());
-        refreshTokenService.removeRefreshToken(request, response);
+        userAuthService.logout(AuthUtil.getInstance().getCurrentTokenModel());
         return true;
     }
 

@@ -52,12 +52,12 @@ public class AuthConfig {
         return new TokenAuthenticationProvider();
     }
 
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    @ConditionalOnMissingBean(UserDetailsService.class)
-    public UserDetailsService userDetailsService() {
-        return new DefaultUserDetailsService();
-    }
+//    @Bean
+//    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
+//    @ConditionalOnMissingBean(UserDetailsService.class)
+//    public UserDetailsService userDetailsService() {
+//        return new DefaultUserDetailsService();
+//    }
 
     @Bean
 	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")

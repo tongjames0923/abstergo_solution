@@ -5,7 +5,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
-import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AuthUtil;
@@ -15,6 +15,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 /**
@@ -47,6 +48,18 @@ public abstract class AbstractUserAuthService implements IUserAuthService {
     @Resource
     HttpServletResponse response;
 
+    @Resource
+    HttpServletRequest request;
+
+    @Resource
+    IUserLoginInfoService userLoginInfoService;
+
+    private static AbstractUserAuthService instance;
+
+    public AbstractUserAuthService() {
+        instance = this;
+    }
+
     @Override
     public ITokenModel login(String username, String password) {
         boolean validate = validate(username, password);
@@ -55,6 +68,7 @@ public abstract class AbstractUserAuthService implements IUserAuthService {
         AuthUtil.checkUserDetails(details);
         var token = tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
             TokenCreateTypeEnum.LOGIN.getCode());
+        userLoginInfoService.insertUserLoginInfo(details, token);
         refreshTokenService.pushRefreshToken(details, response, TokenCreateTypeEnum.LOGIN);
         return token;
     }
@@ -83,6 +97,14 @@ public abstract class AbstractUserAuthService implements IUserAuthService {
             tokenModel.setStatus(TokenStatusEnum.INACTIVE);
         }
         return tokenModel;
+    }
+
+    @Override
+    public void logout(ITokenModel token) {
+        AssertUtil.isTrue(token == null, () -> new FormattedRuntimeException("用户令牌为空，获取失败"));
+        instance.inActiveToken(token.getToken());
+        refreshTokenService.removeRefreshToken(request, response);
+        userLoginInfoService.removeUserLoginInfo(token.getToken());
     }
 
     @Async

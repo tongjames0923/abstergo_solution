@@ -21,6 +21,13 @@ public interface IUserAuthService {
     ITokenModel login(String username, String password);
 
     /**
+     * 登出
+     *
+     * @param token
+     */
+    void logout(ITokenModel model);
+
+    /**
      * 获取用户所有令牌
      *
      * @param username

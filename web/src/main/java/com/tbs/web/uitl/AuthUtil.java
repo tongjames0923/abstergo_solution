@@ -4,7 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;
-import com.tbs.web.security.authentication.model.TokenAuthentication;
+import com.tbs.web.security.authentication.model.DefaultTokenAuthentication;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserAuthService;
 import org.springframework.security.core.Authentication;
@@ -46,7 +46,7 @@ public class AuthUtil {
     public AuthUtil() {
         instance = this;
     }
-    
+
     /**
      * 获取当前用户的TokenModel
      * <p>
@@ -132,6 +132,10 @@ public class AuthUtil {
         if (!details.isAccountNonLocked()) {
             throw new FormattedRuntimeException("用户已锁定");
         }
+        if (!details.isCredentialsNonExpired()) {
+            throw new FormattedRuntimeException("用户凭证已过期");
+        }
+        AssertUtil.hasText(details.getUsername(), "用户信息中用户名不能为空");
     }
 
     /**
@@ -147,7 +151,7 @@ public class AuthUtil {
         if (authentication == null) {
             return Optional.empty();
         }
-        if (!(authentication instanceof TokenAuthentication)) {
+        if (!(authentication instanceof DefaultTokenAuthentication)) {
             return Optional.empty();
         }
         return Optional.of((ITokenAuthentication)authentication);

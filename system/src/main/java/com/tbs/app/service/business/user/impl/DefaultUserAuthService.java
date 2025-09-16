@@ -5,7 +5,7 @@ import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.util.CollUtil;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.enums.TokenTypeEnum;
-import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserAuthService;
 
@@ -25,7 +25,7 @@ public class DefaultUserAuthService extends AbstractUserAuthService {
 	IPasswordEncrypt passwordEncrypt;
 
 	@Resource
-	ITokenIssuanceCenter tokenIssuanceCenter;
+    ITokenIssuanceCenter tokenIssuanceCenter;
 
 	@Override
 	protected boolean validate(String username, String password) {

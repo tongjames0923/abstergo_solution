@@ -1,20 +1,20 @@
 package com.tbs.web.config;
 
-import javax.annotation.Resource;
-
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-
 import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
-import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
-import com.tbs.web.security.issuance.center.impl.NoImplTokenIssuanceCenter;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.impl.NoImplTokenIssuanceCenter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+import javax.annotation.Resource;
+
 
 /**
  * token设置

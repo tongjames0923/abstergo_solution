@@ -1,9 +1,14 @@
 package com.tbs.web.gate;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.stream.Collectors;
+import com.tbs.common.util.SpringUtil;
+import com.tbs.web.gate.center.IGateWayCenter;
+import com.tbs.web.result.AjaxResult;
+import com.tbs.web.result.IOnErrorAjaxProvider;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.token.ITokenModel;
+import com.tbs.web.uitl.AjaxUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.filter.OncePerRequestFilter;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
@@ -11,18 +16,10 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import org.springframework.web.filter.OncePerRequestFilter;
-
-import com.tbs.common.util.SpringUtil;
-import com.tbs.web.gate.center.IGateWayCenter;
-import com.tbs.web.result.AjaxResult;
-import com.tbs.web.result.IOnErrorAjaxProvider;
-import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
-import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.uitl.AjaxUtil;
-
-import lombok.extern.slf4j.Slf4j;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 /**
  * 令牌处理过滤器
@@ -39,7 +36,7 @@ public class TokenHandleFilter extends OncePerRequestFilter {
 	private Collection<IGateWayCenter> securityManagers = new LinkedList<>();
 
 	@Resource
-	ITokenIssuanceCenter tokenIssuanceCenter;
+    ITokenIssuanceCenter tokenIssuanceCenter;
 
 	@PostConstruct
 	void init() {

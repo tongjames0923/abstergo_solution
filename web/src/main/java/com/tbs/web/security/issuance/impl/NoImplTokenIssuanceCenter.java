@@ -1,12 +1,11 @@
-package com.tbs.web.security.issuance.center.impl;
-
-import com.tbs.web.enums.TokenStatusEnum;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.security.core.userdetails.UserDetails;
+package com.tbs.web.security.issuance.impl;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.List;
@@ -26,7 +25,7 @@ public class NoImplTokenIssuanceCenter implements ITokenIssuanceCenter {
 		return null;
 	}
 
-	@Override
+    @Override
 	public ITokenModel getTokenByToken(@NotNull String token) {
 		return null;
 	}
