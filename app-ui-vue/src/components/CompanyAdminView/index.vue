@@ -23,9 +23,9 @@
 
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
-import {adminQueryCompany, deleteCompany, saveCompany} from '@/api/company'
-import {companyAddFormKey, companyEditFormKey, companySearchFormKey} from "@/settings";
-import {rangeQueryTransform} from "@/utils/query-help";
+import { adminQueryCompany, deleteCompany, saveCompany } from '@/api/company'
+import { companyAddFormKey, companyEditFormKey, companySearchFormKey } from '@/settings'
+import { rangeQueryTransform } from '@/utils/query-help'
 
 export default {
   name: 'CompanyAdminView',

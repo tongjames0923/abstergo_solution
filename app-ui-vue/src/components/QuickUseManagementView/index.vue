@@ -77,15 +77,15 @@
               {{ deleteActionButtonText }}
             </el-button>
             <!-- 兼容旧版actions插槽 -->
-            <slot name="actions" :row="row" :index="$index"/>
+            <slot name="actions" :row="row" :index="$index" />
             <!-- 更多功能按钮 -->
             <template v-if="$scopedSlots['actions-dropdown']">
               <el-dropdown @command="handleActionCommand($event, row, $index)">
                 <el-button size="mini" type="primary" plain>
-                  更多功能<i class="el-icon-arrow-down el-icon--right"/>
+                  更多功能<i class="el-icon-arrow-down el-icon--right" />
                 </el-button>
                 <el-dropdown-menu>
-                  <slot name="actions-dropdown" :row="row" :index="$index"/>
+                  <slot name="actions-dropdown" :row="row" :index="$index" />
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -435,7 +435,7 @@ export default {
 
     // 显示编辑弹窗
     showEditDialog(rowData) {
-      this.editFormData = {...rowData}
+      this.editFormData = { ...rowData }
       this.editDialogVisible = true
     },
 
@@ -471,7 +471,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async () => {
+      }).then(async() => {
         // 如果提供了删除处理器，则调用它
         if (this.deleteHandler && typeof this.deleteHandler === 'function') {
           await this.deleteHandler(row)
@@ -491,7 +491,7 @@ export default {
     // 处理操作命令
     handleActionCommand(command, row, index) {
       // 这里可以处理下拉菜单中的命令
-      this.$emit('action-command', {command, row, index})
+      this.$emit('action-command', { command, row, index })
     },
 
     // 处理新增弹窗关闭

@@ -100,6 +100,17 @@
                 </el-col>
 
                 <!-- 特定类型字段的额外配置 -->
+                <template v-if="field.type === 'input'">
+                  <el-col :span="24">
+                    <el-form-item label="输入框配置">
+                      <InputConfig
+                        :value="field.props"
+                        @input="val => updateFieldProps(field, val)"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </template>
+
                 <template v-if="field.type === 'select'">
                   <el-col :span="24">
                     <el-form-item label="选项配置">
@@ -113,23 +124,32 @@
 
                 <template v-if="field.type === 'date-range'">
                   <el-col :span="24">
-                    <el-alert
-                      title="提示"
-                      description="日期范围选择器的所有属性都应该在'其他属性(props)'中配置，如placeholder、format等"
-                      type="info"
-                      show-icon
-                      style="margin-bottom: 15px;"
-                    />
+                    <el-form-item label="日期范围配置">
+                      <DateRangeConfig
+                        :value="field.props"
+                        @input="val => updateFieldProps(field, val)"
+                      />
+                    </el-form-item>
                   </el-col>
                 </template>
 
                 <template v-if="field.type === 'dynamic-options'">
                   <el-col :span="24">
-                    <el-form-item label="API地址">
-                      <el-input
-                        :value="field.props && field.props.apiUrl"
-                        placeholder="/api/options"
-                        @input="val => updateFieldApiUrl(field, val)"
+                    <el-form-item label="动态选项配置">
+                      <DynamicOptionsConfig
+                        :value="field.props"
+                        @input="val => updateFieldProps(field, val)"
+                      />
+                    </el-form-item>
+                  </el-col>
+                </template>
+
+                <template v-if="field.type === 'url-image'">
+                  <el-col :span="24">
+                    <el-form-item label="图片配置">
+                      <UrlImageConfig
+                        :value="field.props"
+                        @input="val => updateFieldProps(field, val)"
                       />
                     </el-form-item>
                   </el-col>
@@ -142,7 +162,7 @@
                       :value="field.propsInput"
                       type="textarea"
                       :rows="3"
-                      placeholder='JSON格式，例如: {"size": "medium", "clearable": true}'
+                      placeholder="JSON格式，例如: {&quot;size&quot;: &quot;medium&quot;, &quot;clearable&quot;: true}"
                       @input="val => updatePropsInput(field, val)"
                     />
                     <div v-if="field.propsError" class="props-error">
@@ -163,12 +183,20 @@
 </template>
 
 <script>
-import SelectOptionsEditor from './SelectOptionsEditor.vue'
+import SelectOptionsEditor from './ConfigComponents/SelectOptionsEditor.vue'
+import DateRangeConfig from './ConfigComponents/DateRangeConfig.vue'
+import DynamicOptionsConfig from './ConfigComponents/DynamicOptionsConfig.vue'
+import UrlImageConfig from './ConfigComponents/UrlImageConfig.vue'
+import InputConfig from './ConfigComponents/InputConfig.vue'
 
 export default {
   name: 'FormConfigEditor',
   components: {
-    SelectOptionsEditor
+    SelectOptionsEditor,
+    DateRangeConfig,
+    DynamicOptionsConfig,
+    UrlImageConfig,
+    InputConfig
   },
   props: {
     value: {
@@ -217,7 +245,7 @@ export default {
           type: field.type || 'input',
           props: field.props || {},
           propsInput: this.formatProps(field.props),
-          propsError: '',
+          propsError: ''
         }))
       } else {
         initialized.fields = []
@@ -260,6 +288,13 @@ export default {
         this.$set(field, 'props', {})
       }
       this.$set(field.props, 'options', options)
+      // 更新显示的JSON字符串
+      this.$set(field, 'propsInput', this.formatProps(field.props))
+      this.onConfigChange()
+    },
+
+    updateFieldProps(field, props) {
+      this.$set(field, 'props', props)
       // 更新显示的JSON字符串
       this.$set(field, 'propsInput', this.formatProps(field.props))
       this.onConfigChange()

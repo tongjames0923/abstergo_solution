@@ -31,13 +31,13 @@
 import { mapGetters } from 'vuex'
 import request from '@/utils/request'
 import { getInfo } from '@/api/user'
-import FormConfigEditor from '@/components/FormEditor/FormConfigEditor.vue'
+import Index from '@/components/FormEditor/index.vue'
 import DynamicForm from '@/components/DynamicForm/index.vue'
 
 export default {
   name: 'Dashboard',
   components: {
-    FormConfigEditor,
+    FormConfigEditor: Index,
     DynamicForm
   },
   computed: {
