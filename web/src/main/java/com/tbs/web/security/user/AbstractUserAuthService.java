@@ -117,6 +117,11 @@ public abstract class AbstractUserAuthService implements IUserAuthService {
             TokenTypeEnum.ACCESS_TOKEN.getCode())) {
             if (TokenStatusEnum.ACTIVE.getCode().equals(tokenModel.getStatus().getCode())) {
                 tokenIssuanceCenter.setTokenStatus(tokenModel.getToken(), TokenStatusEnum.REVOKE);
+                try {
+                    userLoginInfoService.removeUserLoginInfo(tokenModel.getToken());
+                } catch (Exception e) {
+                    log.warn("remove user login info error", e);
+                }
             }
         }
         for (ITokenModel tokenModel : tokenIssuanceCenter.getTokensByUserNameAndTokenType(userName,

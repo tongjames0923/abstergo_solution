@@ -25,6 +25,7 @@ public class SimpleCompanyUserRelationService implements ICompanyUserRelationSer
     @Resource
     private ISystemCompanyService companyService;
 
+    @Resource
     private ISystemUserService userService;
 
     @Cacheable(cacheNames = "user_companies", key = "#userId")

@@ -39,8 +39,8 @@ public class DefaultUserInfoService implements IUserInfoService {
         var user = CollUtil.first(users);
 
         var builder = DefaultSystemUserDetails.builder().userName(user.getUserName()).password(user.getPassword())
-            .accountNonLocked(!SystemUserStatusEnum.LOCKED.getCode().equals(user.getFlag()))
-            .enabled(SystemUserStatusEnum.ACTIVITE.getCode().equals(user.getFlag()));
+            .accountNonLocked(!SystemUserStatusEnum.LOCKED.getCode().equals(user.getFlag())).accountNonExpired(true)
+            .credentialsNonExpired(true).enabled(SystemUserStatusEnum.ACTIVITE.getCode().equals(user.getFlag()));
         var roles = userRoleRelationService.queryUserRoles(user.getId());
         if (CollUtil.isNotEmpty(roles)) {
             builder.authorities(roles.stream().map(role -> {
