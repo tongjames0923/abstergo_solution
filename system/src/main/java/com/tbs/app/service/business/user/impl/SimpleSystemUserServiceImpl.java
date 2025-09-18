@@ -2,7 +2,7 @@ package com.tbs.app.service.business.user.impl;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
-import com.tbs.app.service.business.user.IPasswordEncrypt;
+import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;

@@ -2,8 +2,12 @@ package com.tbs.web.security.user;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.security.token.ITokenModel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.Objects;
+
+@Slf4j
 public abstract class AbstractUserLoginInfoService implements IUserLoginInfoService {
 
     /**
@@ -50,13 +54,19 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
     public void removeUserLoginInfo(String token) {
         AssertUtil.hasText(token, "删除登录用户信息令牌不能为空");
         UserDetails details = instance.getUserDetails(token);
-        AssertUtil.notNull(details, "令牌{}，登录用户信息不存在", token);
+        if (details == null) {
+            log.info("令牌{}，登录用户信息不存在", token);
+            return;
+        }
         removeUserDetails(token);
     }
 
     @Override
     public void replaceUserDetails(UserDetails userDetails, String token) {
-
+        UserDetails details = readUserDetails(token);
+        AssertUtil.notNull(details, "令牌{}，登录用户信息不存在", token);
+        AssertUtil.isTrue(!Objects.equals(details.getUsername(), userDetails.getUsername()),
+            "令牌{}，非法的用户信息置换，仅能针对同一用户进行用户信息置换。", token);
         writeUserDetails(token, userDetails);
     }
 

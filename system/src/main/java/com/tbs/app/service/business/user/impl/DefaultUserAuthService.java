@@ -1,6 +1,6 @@
 package com.tbs.app.service.business.user.impl;
 
-import com.tbs.app.service.business.user.IPasswordEncrypt;
+import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.util.CollUtil;
 import com.tbs.shared.pojo.entity.SystemUserEntity;

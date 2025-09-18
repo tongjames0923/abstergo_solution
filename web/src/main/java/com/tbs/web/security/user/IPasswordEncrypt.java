@@ -1,4 +1,4 @@
-package com.tbs.app.service.business.user;
+package com.tbs.web.security.user;
 
 /**
  * 密码加密接口
