@@ -1,7 +1,9 @@
 package com.tbs.web.security.token.impl;
 
+import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.SpringUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
@@ -10,6 +12,7 @@ import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.security.user.IUserLoginInfoService;
+import com.tbs.web.security.user.IUserValidator;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -18,7 +21,9 @@ import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * 默认的Cookie刷新令牌服务实现
@@ -26,7 +31,7 @@ import java.util.Objects;
  * @author abstergo
  */
 @Slf4j
-public class CookieRefreshTokenService implements IRefreshTokenService {
+public class CookieRefreshTokenService implements IRefreshTokenService, IStartup {
 
     @Resource
     ITokenIssuanceCenter tokenIssuanceCenter;
@@ -47,6 +52,8 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
         cookie.setPath("/");
         response.addCookie(cookie);
     }
+
+    List<IUserValidator> userValidators;
 
     @Override
     public void removeRefreshToken(HttpServletRequest request, HttpServletResponse response) {
@@ -98,9 +105,23 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
         }
         AuthUtil.checkUserDetails(details);
         AssertUtil.isTrue(!Objects.equals(details.getUsername(), tokenModel.getUserName()), "用户信息不一致");
+        for (IUserValidator validator : userValidators) {
+            validator.validate(details);
+        }
         ITokenModel accessToken = tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
             TokenCreateTypeEnum.REFRESH.getCode());
         loginInfoService.insertUserLoginInfo(details, accessToken);
         return accessToken;
+    }
+
+    @Override
+    public void startUp() throws RuntimeException {
+        try {
+            userValidators = SpringUtil.getBeansOfType(IUserValidator.class).values().stream()
+                .sorted((o1, o2) -> o1.getOrder() - o2.getOrder()).collect(Collectors.toList());
+        } catch (Exception e) {
+            userValidators = new java.util.ArrayList<>();
+        }
+
     }
 }
