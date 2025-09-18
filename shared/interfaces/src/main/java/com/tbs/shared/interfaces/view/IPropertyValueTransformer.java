@@ -1,27 +1,36 @@
 package com.tbs.shared.interfaces.view;
 
+import com.tbs.common.data.ITransformer;
+
+import java.nio.charset.StandardCharsets;
+
 /**
  * 属性值转换器
  *
  * @author jiangnan
  * @date 2020/05/07
  */
-public interface IPropertyValueTransformer {
+public interface IPropertyValueTransformer extends ITransformer<Object> {
 
     /**
-     * 转换
+     * 转换为字符串
      *
      * @param value
      * @return
      */
-    String transform(Object value);
+    default String transformStr(Object value) {
+        return new String(transform(value), StandardCharsets.UTF_8);
+    }
 
     /**
-     * 反向转换
+     * 反转字符串
      *
      * @param value
+     * @param clazz
      * @return
      */
-    <T> T reverseTransform(String value, Class<T> clazz);
+    default <T> T reverseTransformStr(String value, Class<T> clazz) {
+        return reverseTransform(value.getBytes(StandardCharsets.UTF_8), clazz);
+    }
 
 }

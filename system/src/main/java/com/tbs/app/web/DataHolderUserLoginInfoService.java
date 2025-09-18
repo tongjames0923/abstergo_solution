@@ -11,6 +11,11 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.annotation.Resource;
 import java.util.Date;
 
+/**
+ * 默认用户登录信息服务实现
+ *
+ * @author abstergo
+ */
 public class DataHolderUserLoginInfoService extends AbstractUserLoginInfoService implements IStartup {
     private IDataHolder dataHolder;
 

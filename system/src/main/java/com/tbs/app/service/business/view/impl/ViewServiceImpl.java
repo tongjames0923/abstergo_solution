@@ -62,7 +62,7 @@ public class ViewServiceImpl implements IViewService {
             formConfig.setProps(
                 propertyValueEntities.stream().collect(Collectors.toMap(PropertyValueEntity::getName, (v) -> {
                     try {
-                        return transformer.reverseTransform(v.getValue(), Class.forName(v.getValueClass()));
+                        return transformer.reverseTransformStr(v.getValue(), Class.forName(v.getValueClass()));
                     } catch (ClassNotFoundException e) {
                         AssertUtil.throwError(() -> new FormattedRuntimeException("属性值转换失败: {}", v.getValue()));
                     }
@@ -94,7 +94,7 @@ public class ViewServiceImpl implements IViewService {
                         formField.setProps(propertyValueEntities.stream()
                             .collect(Collectors.toMap(PropertyValueEntity::getName, (v1) -> {
                                 try {
-                                    return transformer.reverseTransform(v1.getValue(),
+                                    return transformer.reverseTransformStr(v1.getValue(),
                                         Class.forName(v1.getValueClass()));
                                 } catch (ClassNotFoundException e) {
                                     AssertUtil.throwError(
@@ -122,7 +122,7 @@ public class ViewServiceImpl implements IViewService {
             List<PropertyValueEntity> propertyValueEntities = formConfig.getProps().entrySet().stream().map(entry -> {
                 PropertyValueEntity propertyValueEntity = new PropertyValueEntity();
                 propertyValueEntity.setName(entry.getKey());
-                propertyValueEntity.setValue(transformer.transform(entry.getValue()));
+                propertyValueEntity.setValue(transformer.transformStr(entry.getValue()));
                 propertyValueEntity.setValueClass(entry.getValue().getClass().getName());
                 propertyValueEntity.setTransformerType(transformer.getClass().getName());
                 return propertyValueEntity;
@@ -167,7 +167,7 @@ public class ViewServiceImpl implements IViewService {
                 var props = field.getProps().entrySet().stream().map(prop -> {
                     PropertyValueEntity propertyValueEntity = new PropertyValueEntity();
                     propertyValueEntity.setName(prop.getKey());
-                    propertyValueEntity.setValue(transformer.transform(prop.getValue()));
+                    propertyValueEntity.setValue(transformer.transformStr(prop.getValue()));
                     propertyValueEntity.setValueClass(prop.getValue().getClass().getName());
                     propertyValueEntity.setTransformerType(transformer.getClass().getName());
                     return propertyValueEntity;
