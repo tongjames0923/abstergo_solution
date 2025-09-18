@@ -2,6 +2,7 @@ package com.tbs.app.config;
 
 import com.tbs.app.service.log.impl.DbSystemOpLog;
 import com.tbs.app.service.log.impl.EventSystemOpLog;
+import com.tbs.app.web.login.DefaultUserLoginInfoService;
 import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
@@ -16,6 +17,7 @@ import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
+import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,6 +140,11 @@ public class AppConfig {
 	}
 
 	private static final Logger timingWheelScheduleLogger = LoggerFactory.getLogger(TimingWheelSchedule.class);
+
+    @Bean
+    public IUserLoginInfoService userLoginInfoService() {
+        return new DefaultUserLoginInfoService();
+    }
 
 	@Bean
 	TimingWheelSchedule timingWheelSchedule() {

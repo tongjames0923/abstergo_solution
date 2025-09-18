@@ -1,5 +1,6 @@
 package com.tbs.app.web.login;
 
+import cn.hutool.core.date.DateUtil;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.cache.annotation.ExpireOn;
@@ -38,21 +39,23 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @Resource
     private ISystemUserService systemUserService;
 
+    SystemLoginInfoEntity getEntityByToken(String token) {
+        Date availableTime = DateUtil.offsetDay(new Date(), -28);
+        return QueryUtil.getEntityQueryWrapper(SystemLoginInfoEntity.class).query().where()
+            .equal(SystemLoginInfoEntity::getToken, token)
+            .greaterThanOrEqual(SystemLoginInfoEntity::getCreateTime, availableTime).pour().fetchOne();
+    }
+
+
     @Override
     protected UserDetails readUserDetails(String token) {
-        SystemLoginInfoEntity loginInfoEntity =
-            QueryUtil.getEntityQueryWrapper(SystemLoginInfoEntity.class).query().where()
-                .equal(SystemLoginInfoEntity::getToken).greaterThanOrEqual(SystemLoginInfoEntity::getCreateTime,
-                    new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24 * 28)).pour().fetchOne();
+        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
         return loginInfoEntity == null ? null : loginInfoEntity.getUserDetailsObject();
     }
 
     @Override
     protected void writeUserDetails(String token, UserDetails userDetails) {
-        SystemLoginInfoEntity loginInfoEntity =
-            QueryUtil.getEntityQueryWrapper(SystemLoginInfoEntity.class).query().where()
-                .equal(SystemLoginInfoEntity::getToken).greaterThanOrEqual(SystemLoginInfoEntity::getCreateTime,
-                    new Date(System.currentTimeMillis() - 1000 * 60 * 60 * 24 * 28)).pour().fetchOne();
+        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
         if (loginInfoEntity != null) {
             loginInfoEntity.setUserDetailsObject(userDetails,
                 SpringUtil.getBean(appSettingProperty.getUserDetailsTransformerClass()));

@@ -11,7 +11,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface LogicDeleteEntity {
-    int deleteFlagValue() default CommonConstant.FLAG_OFF;
+    int deleteFlagValue() default 0;
 
     String filedName() default "flag";
 }

@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.entity;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
@@ -87,6 +88,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 创建时间
      */
     @javax.persistence.Column(name = "create_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @Getter
     @Setter
     private Date createTime;
@@ -95,6 +97,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 更新时间
      */
     @javax.persistence.Column(name = "update_time")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @Getter
     @Setter
     private Date updateTime;
@@ -115,7 +118,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
         if (userDetailsObject == null) {
             try {
                 IUserDetailsTransformer transformer =
-                    SpringUtil.getBean(getUserDetailsTransformerImpl(), IUserDetailsTransformer.class);
+                    (IUserDetailsTransformer)SpringUtil.getBean(Class.forName(getUserDetailsTransformerImpl()));
                 userDetailsObject = transformer.reverseTransform(getUserDetails(),
                     (Class<? extends UserDetails>)Class.forName(getUserDetailsTargetClass()));
             } catch (Exception e) {
@@ -127,25 +130,25 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
 
     @Transient
     public void setUserDetailsObject(UserDetails userDetailsObject, IUserDetailsTransformer transformer) {
-        if (userDetailsObject == null) {
+        if (userDetailsObject == null || transformer == null) {
+            log.warn("用户详情转换失败: userDetailsObject or transformer is null");
             setUserDetails(null);
             setUserDetailsTargetClass(null);
             return;
         }
-
         this.userDetailsObject = userDetailsObject;
-        if (StrUtil.isEmpty(getUserDetailsTransformerImpl())) {
-            log.warn("用户详情转换失败: userDetailsTransformerImpl is null");
-        }
         byte[] oldUserDetails = getUserDetails();
         String oldTargetClass = getUserDetailsTargetClass();
+        String oldTransformer = getUserDetailsTransformerImpl();
         try {
-            setUserDetails(transformer.transform(getUserDetailsObject()));
-            setUserDetailsTargetClass(getUserDetailsObject().getClass().getName());
+            setUserDetails(transformer.transform(userDetailsObject));
+            setUserDetailsTargetClass(userDetailsObject.getClass().getName());
+            setUserDetailsTransformerImpl(transformer.getClass().getName());
         } catch (Exception e) {
             log.warn("用户详情转换失败: {}", e.getMessage());
             setUserDetails(oldUserDetails);
             setUserDetailsTargetClass(oldTargetClass);
+            setUserDetailsTransformerImpl(oldTransformer);
         }
     }
 
