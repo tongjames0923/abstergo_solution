@@ -136,11 +136,6 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         return super.getUserDetails(token);
     }
 
-    @Override
-    public List<String> getUserAvaliableTokens(String username) {
-        return List.of();
-    }
-
     @CacheEvict(cacheNames = "user_login_info_cache", key = "#token")
     @Override
     public void removeUserLoginInfo(String token) {

@@ -18,6 +18,9 @@
         <el-dropdown-item command="toggleStatus" @click.native="handleToggleStatus(row)">
           {{ row.flag === 1 ? '禁用' : '启用' }}
         </el-dropdown-item>
+        <el-dropdown-item command="showLoginInfo" @click.native="handleShowLoginInfo(row)">
+          登录信息
+        </el-dropdown-item>
         <el-dropdown-item command="resetPassword" @click.native="handleResetPassword(row)">
           重置密码
         </el-dropdown-item>
@@ -69,6 +72,65 @@
       </div>
     </el-dialog>
 
+    <!-- 替换原有的登录信息弹窗 -->
+    <!-- 登录信息弹窗 -->
+    <el-dialog
+      title="用户登录信息"
+      :visible.sync="loginInfoDialogVisible"
+      width="55%"
+      :modal-append-to-body="false"
+      class="login-info-dialog"
+      @close="handleLoginInfoDialogClose"
+    >
+      <el-table :data="loginTokens" border style="width: 100%">
+        <el-table-column prop="token" label="Token" min-width="180">
+          <template slot-scope="scope">
+            <el-tooltip :content="scope.row.token" placement="top">
+              <span>{{ formatToken(scope.row.token) }}</span>
+            </el-tooltip>
+          </template>
+
+        </el-table-column>
+        <el-table-column prop="userName" label="用户名" width="120"></el-table-column>
+        <el-table-column prop="tokenType" label="Token类型" width="120">
+          <template slot-scope="scope">
+            <el-tag size="mini" :type="scope.row.tokenType === 'ACCESS_TOKEN' ? 'success' : 'warning'">
+              {{ scope.row.tokenType === 'ACCESS_TOKEN' ? '访问令牌' : scope.row.tokenType }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="status" label="状态" width="100">
+          <template slot-scope="scope">
+            <el-tag size="mini" :type="scope.row.status === 'ACTIVE' ? 'success' : 'danger'">
+              {{ scope.row.status === 'ACTIVE' ? '活跃' : scope.row.status }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column prop="createTime" label="创建时间" width="160">
+          <template slot-scope="scope">
+            {{ scope.row.createTime ? scope.row.createTime.replace(' ', '\n') : '' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="expireTime" label="过期时间" width="160">
+          <template slot-scope="scope">
+            {{ scope.row.expireTime ? scope.row.expireTime.replace(' ', '\n') : '' }}
+          </template>
+        </el-table-column>
+        <el-table-column prop="ipAddr" label="IP地址" width="120"></el-table-column>
+        <el-table-column prop="createType" label="创建类型" width="100">
+          <template slot-scope="scope">
+            <el-tag size="mini" type="primary">
+              {{ scope.row.createType === 'LOGIN' ? '登录' : scope.row.createType }}
+            </el-tag>
+          </template>
+        </el-table-column>
+      </el-table>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="loginInfoDialogVisible = false">关 闭</el-button>
+      </div>
+    </el-dialog>
+
+
     <!-- 权限管理弹窗 -->
     <el-dialog
       title="权限管理"
@@ -89,9 +151,9 @@
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
-import { activateUser, adminQueryUser, deleteUser, disableUser, saveUser } from '@/api/admin_user'
-import { rangeQueryTransform } from '@/utils/query-help'
-import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
+import {activateUser, adminQueryUser, deleteUser, disableUser, getLoginedTokens, saveUser} from '@/api/admin_user'
+import {rangeQueryTransform} from '@/utils/query-help'
+import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
 
 export default {
   name: 'UserAdminView',
@@ -121,17 +183,19 @@ export default {
         password: '',
         confirmPassword: ''
       },
+      loginInfoDialogVisible: false,
+      loginTokens: [],
       passwordRules: {
         password: [
-          { required: true, message: '请输入新密码', trigger: 'blur' },
-          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+          {required: true, message: '请输入新密码', trigger: 'blur'},
+          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
         ],
         confirmPassword: [
-          { required: true, validator: validateConfirmPassword, trigger: 'blur' }
+          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
         ]
       },
       columns: [
-        { prop: 'id', label: 'ID', width: 80 },
+        {prop: 'id', label: 'ID', width: 80},
         {
           prop: 'avatar',
           label: '头像',
@@ -140,23 +204,50 @@ export default {
             return <el-avatar src={scope.row.avatar}></el-avatar>
           }
         },
-        { prop: 'userName', label: '用户名', width: 180 },
-        { prop: 'nickName', label: '昵称', width: 180 },
-        { prop: 'remark', label: '备注', minWidth: 200 },
+        {prop: 'userName', label: '用户名', width: 180},
+        {prop: 'nickName', label: '昵称', width: 180},
+        {prop: 'remark', label: '备注', minWidth: 200},
         {
           prop: 'flag',
           label: '状态',
           width: 100,
           render: (h, scope) => {
-            if (scope.row.flag === 1) { return <el-tag type='success'>正常</el-tag> } else if (scope.row.flag === 0) { return <el-tag type='danger'>禁用</el-tag> } else if (scope.row.flag === 2) { return <el-tag type='warning'>锁定</el-tag> } else { return <el-tag>未知</el-tag> }
+            if (scope.row.flag === 1) {
+              return <el-tag type='success'>正常</el-tag>
+            } else if (scope.row.flag === 0) {
+              return <el-tag type='danger'>禁用</el-tag>
+            } else if (scope.row.flag === 2) {
+              return <el-tag type='warning'>锁定</el-tag>
+            } else {
+              return <el-tag>未知</el-tag>
+            }
           }
         },
-        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
-        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
+        {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
+        {prop: 'updateTime', label: '更新时间', width: 180, sortable: true}
       ]
     }
   },
   methods: {
+    /**
+     * 格式化Token显示，前3后4，中间用*代替
+     * @param token 完整的Token字符串
+     * @returns 格式化后的Token显示字符串
+     */
+    formatToken(token) {
+      if (!token) return '';
+
+      // 如果Token长度小于等于7，则直接显示，不进行隐藏处理
+      if (token.length <= 7) {
+        return token;
+      }
+
+      // 取前3位和后4位，中间用****代替
+      const prefix = token.substring(0, 3);
+      const suffix = token.substring(token.length - 4);
+      return `${prefix}****${suffix}`;
+    },
+
     userEditFormKey() {
       return userEditFormKey
     },
@@ -165,6 +256,21 @@ export default {
     },
     userSearchFormKey() {
       return userSearchFormKey
+    },
+    async handleShowLoginInfo(row) {
+      try {
+        let {data} = await getLoginedTokens(row.id)
+        this.loginTokens = data || []
+        this.loginInfoDialogVisible = true
+      } catch (error) {
+        console.error('获取登录信息失败:', error)
+        this.$message.error('获取登录信息失败')
+      }
+    },
+
+    handleLoginInfoDialogClose() {
+      this.loginTokens = []
+      this.loginInfoDialogVisible = false
     },
     saveUser,
     deleteUser,
@@ -236,7 +342,7 @@ export default {
      * 处理密码重置提交事件
      */
     handlePasswordSubmit() {
-      this.$refs.passwordForm.validate(async(valid) => {
+      this.$refs.passwordForm.validate(async (valid) => {
         if (valid) {
           try {
             // 构造用户数据，只更新密码
@@ -302,6 +408,28 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+
+.login-info-dialog {
+  ::v-deep .el-dialog__header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #ebeef5;
+    padding: 15px 20px;
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  ::v-deep .el-dialog__title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #303133;
+  }
+
+  ::v-deep .el-table-column--selection .cell {
+    padding-left: 14px;
+    padding-right: 14px;
+  }
+}
+
+
 .user-management {
   padding: 20px;
   background-color: #f5f7fa;
