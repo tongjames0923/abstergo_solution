@@ -5,6 +5,7 @@ import com.tbs.web.security.token.ITokenModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -24,7 +25,7 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
      * @param token       登录令牌
      * @param userDetails 用户信息
      */
-    protected abstract void writeUserDetails(String token, UserDetails userDetails);
+    protected abstract void writeUserDetails(ITokenModel token, UserDetails userDetails);
 
     /**
      * 删除用户信息
@@ -32,6 +33,14 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
      * @param token 登录令牌
      */
     protected abstract void removeUserDetails(String token);
+
+    /**
+     * 获取用户可用的令牌列表
+     *
+     * @param username 用户名
+     * @return 令牌列表
+     */
+    protected abstract List<String> getUserAvaliableTokensByUserName(String username);
 
     protected static AbstractUserLoginInfoService instance;
 
@@ -47,7 +56,7 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
         AssertUtil.hasText(userDetails.getUsername(), "登录用户名不能为空");
         UserDetails details = instance.getUserDetails(tokenModel.getToken());
         AssertUtil.isTrue(details != null, "令牌{}，登录用户信息已存在", tokenModel.getToken());
-        writeUserDetails(tokenModel.getToken(), userDetails);
+        writeUserDetails(tokenModel, userDetails);
     }
 
     @Override
@@ -62,8 +71,8 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
     }
 
     @Override
-    public void replaceUserDetails(UserDetails userDetails, String token) {
-        UserDetails details = readUserDetails(token);
+    public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {
+        UserDetails details = readUserDetails(token.getToken());
         AssertUtil.notNull(details, "令牌{}，登录用户信息不存在", token);
         AssertUtil.isTrue(!Objects.equals(details.getUsername(), userDetails.getUsername()),
             "令牌{}，非法的用户信息置换，仅能针对同一用户进行用户信息置换。", token);
@@ -74,5 +83,10 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
     public UserDetails getUserDetails(String token) {
         AssertUtil.hasText(token, "查询登录时用户数据令牌不能为空");
         return readUserDetails(token);
+    }
+
+    @Override
+    public List<String> getUserAvaliableTokens(String username) {
+        return getUserAvaliableTokensByUserName(username);
     }
 }

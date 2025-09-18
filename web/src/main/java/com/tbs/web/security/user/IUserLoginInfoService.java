@@ -3,6 +3,8 @@ package com.tbs.web.security.user;
 import com.tbs.web.security.token.ITokenModel;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.util.List;
+
 /**
  * 用户登录信息处理服务
  *
@@ -29,7 +31,7 @@ public interface IUserLoginInfoService {
      * @param userDetails
      * @param token
      */
-    void replaceUserDetails(UserDetails userDetails, String token);
+    void replaceUserDetails(UserDetails userDetails, ITokenModel token);
 
     /**
      * 根据Token获取获取用户数据
@@ -38,4 +40,12 @@ public interface IUserLoginInfoService {
      * @return
      */
     UserDetails getUserDetails(String token);
+
+    /**
+     * 获取用户可用的Token
+     *
+     * @param username
+     * @return
+     */
+    List<String> getUserAvaliableTokens(String username);
 }

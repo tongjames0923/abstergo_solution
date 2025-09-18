@@ -89,13 +89,18 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
         AssertUtil.isTrue(!Objects.equals(tokenModel.getStatus(), TokenStatusEnum.ACTIVE), "刷新令牌已失效");
         UserDetails details = null;
         try {
-            details = loginInfoService.getUserDetails(AuthUtil.getInstance().getCurrentTokenModel().getToken());
+            String oldToken = AuthUtil.getInstance().getCurrentTokenModel().getToken();
+            details = loginInfoService.getUserDetails(oldToken);
+            loginInfoService.removeUserLoginInfo(oldToken);
         } catch (Exception e) {
             log.warn("用户信息获取失败，将重建登录时用户信息");
             details = userInfoService.loadUserInfoByUniqueKey(tokenModel.getUserName());
         }
         AuthUtil.checkUserDetails(details);
-        return tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
+        AssertUtil.isTrue(!Objects.equals(details.getUsername(), tokenModel.getUserName()), "用户信息不一致");
+        ITokenModel accessToken = tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
             TokenCreateTypeEnum.REFRESH.getCode());
+        loginInfoService.insertUserLoginInfo(details, accessToken);
+        return accessToken;
     }
 }
