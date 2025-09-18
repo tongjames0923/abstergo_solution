@@ -1,5 +1,7 @@
 package com.tbs.shared.annotations;
 
+import com.tbs.shared.constant.CommonConstant;
+
 import java.lang.annotation.*;
 
 /**
@@ -9,7 +11,7 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 public @interface LogicDeleteEntity {
-    int deleteFlagValue() default 0;
+    int deleteFlagValue() default CommonConstant.FLAG_OFF;
 
-    String filedName();
+    String filedName() default "flag";
 }

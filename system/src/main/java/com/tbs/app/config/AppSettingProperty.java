@@ -1,8 +1,5 @@
 package com.tbs.app.config;
 
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
-
 import com.tbs.app.service.business.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.service.business.user.impl.NoEncryptPassword;
@@ -13,8 +10,11 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
-
+import com.tbs.shared.util.IUserDetailsTransformer;
+import com.tbs.shared.util.impl.SimpleUserDetailsTransformer;
 import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * @author abstergo
@@ -42,6 +42,11 @@ public class AppSettingProperty {
      * 主代理实现类
      */
     private Class<? extends IDelegateInvoker> mainDelegateInvokerImpl = SimpleDelegateInvoker.class;
+
+    /**
+     * 登录信息实现类
+     */
+    private Class<? extends IUserDetailsTransformer> userDetailsTransformerClass = SimpleUserDetailsTransformer.class;
 
     /**
      * 密码加密实现类

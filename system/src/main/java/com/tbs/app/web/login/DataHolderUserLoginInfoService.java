@@ -1,4 +1,4 @@
-package com.tbs.app.web;
+package com.tbs.app.web.login;
 
 import com.tbs.common.IStartup;
 import com.tbs.common.data.IDataHolder;

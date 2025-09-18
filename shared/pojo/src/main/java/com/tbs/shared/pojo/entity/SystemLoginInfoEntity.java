@@ -2,8 +2,9 @@ package com.tbs.shared.pojo.entity;
 
 import com.tbs.common.util.SpringUtil;
 import com.tbs.common.util.StrUtil;
-import com.tbs.shared.IUserDetailsTransformer;
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.util.IUserDetailsTransformer;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +26,7 @@ import java.util.Date;
     @Index(name = "idx_time", columnList = "create_time,update_time"),
     @Index(name = "idx_user_id", columnList = "user_id"), @Index(name = "idx_token", columnList = "token")})
 @Slf4j
+@LogicDeleteEntity
 public class SystemLoginInfoEntity implements IBaseEntity<Long> {
 
     /**
@@ -112,7 +114,8 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
         }
         if (userDetailsObject == null) {
             try {
-                IUserDetailsTransformer transformer = SpringUtil.getBean(getUserDetailsTransformerImpl());
+                IUserDetailsTransformer transformer =
+                    SpringUtil.getBean(getUserDetailsTransformerImpl(), IUserDetailsTransformer.class);
                 userDetailsObject = transformer.reverseTransform(getUserDetails(),
                     (Class<? extends UserDetails>)Class.forName(getUserDetailsTargetClass()));
             } catch (Exception e) {
@@ -123,24 +126,26 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
     }
 
     @Transient
-    public void setUserDetailsObject(UserDetails userDetailsObject) {
+    public void setUserDetailsObject(UserDetails userDetailsObject, IUserDetailsTransformer transformer) {
         if (userDetailsObject == null) {
             setUserDetails(null);
             setUserDetailsTargetClass(null);
             return;
         }
+
         this.userDetailsObject = userDetailsObject;
         if (StrUtil.isEmpty(getUserDetailsTransformerImpl())) {
             log.warn("用户详情转换失败: userDetailsTransformerImpl is null");
         }
+        byte[] oldUserDetails = getUserDetails();
+        String oldTargetClass = getUserDetailsTargetClass();
         try {
-            IUserDetailsTransformer transformer = SpringUtil.getBean(getUserDetailsTransformerImpl());
             setUserDetails(transformer.transform(getUserDetailsObject()));
             setUserDetailsTargetClass(getUserDetailsObject().getClass().getName());
         } catch (Exception e) {
             log.warn("用户详情转换失败: {}", e.getMessage());
-            setUserDetails(null);
-            setUserDetailsTargetClass(null);
+            setUserDetails(oldUserDetails);
+            setUserDetailsTargetClass(oldTargetClass);
         }
     }
 

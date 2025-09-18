@@ -29,7 +29,7 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
      */
     protected abstract void removeUserDetails(String token);
 
-    private static AbstractUserLoginInfoService instance;
+    protected static AbstractUserLoginInfoService instance;
 
     public AbstractUserLoginInfoService() {
         instance = this;

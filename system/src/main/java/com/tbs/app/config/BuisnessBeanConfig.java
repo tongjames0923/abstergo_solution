@@ -16,7 +16,7 @@ import com.tbs.app.service.business.user.impl.NoEncryptPassword;
 import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.business.view.IViewService;
 import com.tbs.app.service.business.view.impl.ViewServiceImpl;
-import com.tbs.app.web.DataHolderUserLoginInfoService;
+import com.tbs.app.web.login.DataHolderUserLoginInfoService;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;

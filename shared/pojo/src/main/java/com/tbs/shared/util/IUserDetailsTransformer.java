@@ -1,4 +1,4 @@
-package com.tbs.shared;
+package com.tbs.shared.util;
 
 import com.tbs.common.data.ITransformer;
 import org.springframework.security.core.userdetails.UserDetails;
