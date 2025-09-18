@@ -16,6 +16,7 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
@@ -154,6 +155,8 @@ public class WebConfig {
         } else {
             http.logout().disable();
         }
+
+        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
 
         var letgo = webProperty.getPermitAllPaths().toArray(new String[0]);
         http.authorizeHttpRequests().antMatchers(letgo).permitAll();

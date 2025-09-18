@@ -38,11 +38,12 @@ public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
         AssertUtil.isTrue(authentication.getUserDetails() == null, () -> new SimpleAuthException("用户信息为空"));
         try {
             AuthUtil.checkUserDetails(authentication.getUserDetails());
+            authentication.setAuthenticated(true);
         } catch (Exception e) {
+            authentication.setAuthenticated(false);
             AssertUtil.throwError(
                 () -> new SimpleAuthException(StrUtil.format("用户信息验证失败。详情:{}", e.getLocalizedMessage())));
         }
-        authentication.setAuthenticated(true);
         return authentication;
     }
 }
