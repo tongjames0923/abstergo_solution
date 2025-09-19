@@ -72,7 +72,6 @@
       </div>
     </el-dialog>
 
-    <!-- 替换原有的登录信息弹窗 -->
     <!-- 登录信息弹窗 -->
     <el-dialog
       title="用户登录信息"
@@ -82,54 +81,80 @@
       class="login-info-dialog"
       @close="handleLoginInfoDialogClose"
     >
-      <el-table :data="loginTokens" border style="width: 100%">
-        <el-table-column prop="token" label="Token" min-width="180">
-          <template slot-scope="scope">
-            <el-tooltip :content="scope.row.token" placement="top">
-              <span>{{ formatToken(scope.row.token) }}</span>
-            </el-tooltip>
-          </template>
+      <!-- 第一层：会话列表 -->
+      <div v-if="!showTokens">
+        <el-table :data="loginSessions" border style="width: 100%">
+          <el-table-column prop="sessionId" label="会话ID" min-width="180">
+            <template slot-scope="scope">
+              <el-tooltip :content="scope.row.sessionId" placement="top">
+                <span>{{ formatToken(scope.row.sessionId) }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column prop="userName" label="用户名" width="120" />
+          <el-table-column label="操作" width="100">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="showSessionTokens(scope.row.sessionId)">
+                查看Token
+              </el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
 
-        </el-table-column>
-        <el-table-column prop="userName" label="用户名" width="120"></el-table-column>
-        <el-table-column prop="tokenType" label="Token类型" width="120">
-          <template slot-scope="scope">
-            <el-tag size="mini" :type="scope.row.tokenType === 'ACCESS_TOKEN' ? 'success' : 'warning'">
-              {{ scope.row.tokenType === 'ACCESS_TOKEN' ? '访问令牌' : scope.row.tokenType }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="status" label="状态" width="100">
-          <template slot-scope="scope">
-            <el-tag size="mini" :type="scope.row.status === 'ACTIVE' ? 'success' : 'danger'">
-              {{ scope.row.status === 'ACTIVE' ? '活跃' : scope.row.status }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="160">
-          <template slot-scope="scope">
-            {{ scope.row.createTime ? scope.row.createTime.replace(' ', '\n') : '' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="expireTime" label="过期时间" width="160">
-          <template slot-scope="scope">
-            {{ scope.row.expireTime ? scope.row.expireTime.replace(' ', '\n') : '' }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="ipAddr" label="IP地址" width="120"></el-table-column>
-        <el-table-column prop="createType" label="创建类型" width="100">
-          <template slot-scope="scope">
-            <el-tag size="mini" type="primary">
-              {{ scope.row.createType === 'LOGIN' ? '登录' : scope.row.createType }}
-            </el-tag>
-          </template>
-        </el-table-column>
-      </el-table>
+      <!-- 第二层：Token列表 -->
+      <div v-else>
+        <div style="margin-bottom: 10px;">
+          <el-button size="mini" @click="backToSessions">返回会话列表</el-button>
+          <span style="margin-left: 10px;">会话ID: {{ formatToken(currentSessionId) }}</span>
+        </div>
+        <el-table :data="sessionTokens" border style="width: 100%">
+          <el-table-column prop="token" label="Token" min-width="180">
+            <template slot-scope="scope">
+              <el-tooltip :content="scope.row.token" placement="top">
+                <span>{{ formatToken(scope.row.token) }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column prop="userName" label="用户名" width="120" />
+          <el-table-column prop="tokenType" label="Token类型" width="120">
+            <template slot-scope="scope">
+              <el-tag size="mini" :type="scope.row.tokenType === 'ACCESS_TOKEN' ? 'success' : 'warning'">
+                {{ scope.row.tokenType === 'ACCESS_TOKEN' ? '访问令牌' : scope.row.tokenType }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="status" label="状态" width="100">
+            <template slot-scope="scope">
+              <el-tag size="mini" :type="scope.row.status === 'ACTIVE' ? 'success' : 'danger'">
+                {{ scope.row.status === 'ACTIVE' ? '活跃' : scope.row.status }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" width="160">
+            <template slot-scope="scope">
+              {{ scope.row.createTime ? scope.row.createTime.replace(' ', '\n') : '' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="expireTime" label="过期时间" width="160">
+            <template slot-scope="scope">
+              {{ scope.row.expireTime ? scope.row.expireTime.replace(' ', '\n') : '' }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="ipAddr" label="IP地址" width="120" />
+          <el-table-column prop="createType" label="创建类型" width="100">
+            <template slot-scope="scope">
+              <el-tag size="mini" type="primary">
+                {{ scope.row.createType === 'LOGIN' ? '登录' : scope.row.createType }}
+              </el-tag>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
       <div slot="footer" class="dialog-footer">
         <el-button @click="loginInfoDialogVisible = false">关 闭</el-button>
       </div>
     </el-dialog>
-
 
     <!-- 权限管理弹窗 -->
     <el-dialog
@@ -151,9 +176,17 @@
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
-import {activateUser, adminQueryUser, deleteUser, disableUser, getLoginedTokens, saveUser} from '@/api/admin_user'
-import {rangeQueryTransform} from '@/utils/query-help'
-import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
+import {
+  activateUser,
+  adminQueryUser,
+  deleteUser,
+  disableUser,
+  getTokensBySessionId,
+  getUserSessions,
+  saveUser
+} from '@/api/admin_user'
+import { rangeQueryTransform } from '@/utils/query-help'
+import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
 
 export default {
   name: 'UserAdminView',
@@ -184,18 +217,21 @@ export default {
         confirmPassword: ''
       },
       loginInfoDialogVisible: false,
-      loginTokens: [],
+      loginSessions: [], // 会话列表
+      sessionTokens: [], // Token列表
+      showTokens: false, // 是否显示Token列表
+      currentSessionId: '', // 当前查看的会话ID
       passwordRules: {
         password: [
-          {required: true, message: '请输入新密码', trigger: 'blur'},
-          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
         ],
         confirmPassword: [
-          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
+          { required: true, validator: validateConfirmPassword, trigger: 'blur' }
         ]
       },
       columns: [
-        {prop: 'id', label: 'ID', width: 80},
+        { prop: 'id', label: 'ID', width: 80 },
         {
           prop: 'avatar',
           label: '头像',
@@ -204,9 +240,9 @@ export default {
             return <el-avatar src={scope.row.avatar}></el-avatar>
           }
         },
-        {prop: 'userName', label: '用户名', width: 180},
-        {prop: 'nickName', label: '昵称', width: 180},
-        {prop: 'remark', label: '备注', minWidth: 200},
+        { prop: 'userName', label: '用户名', width: 180 },
+        { prop: 'nickName', label: '昵称', width: 180 },
+        { prop: 'remark', label: '备注', minWidth: 200 },
         {
           prop: 'flag',
           label: '状态',
@@ -223,8 +259,8 @@ export default {
             }
           }
         },
-        {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
-        {prop: 'updateTime', label: '更新时间', width: 180, sortable: true}
+        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
+        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
       ]
     }
   },
@@ -235,17 +271,17 @@ export default {
      * @returns 格式化后的Token显示字符串
      */
     formatToken(token) {
-      if (!token) return '';
+      if (!token) return ''
 
       // 如果Token长度小于等于7，则直接显示，不进行隐藏处理
       if (token.length <= 7) {
-        return token;
+        return token
       }
 
       // 取前3位和后4位，中间用****代替
-      const prefix = token.substring(0, 3);
-      const suffix = token.substring(token.length - 4);
-      return `${prefix}****${suffix}`;
+      const prefix = token.substring(0, 3)
+      const suffix = token.substring(token.length - 4)
+      return `${prefix}****${suffix}`
     },
 
     userEditFormKey() {
@@ -257,10 +293,16 @@ export default {
     userSearchFormKey() {
       return userSearchFormKey
     },
+
     async handleShowLoginInfo(row) {
       try {
-        let {data} = await getLoginedTokens(row.id)
-        this.loginTokens = data || []
+        const { data } = await getUserSessions(row.id)
+        // 构造会话数据结构
+        this.loginSessions = (data || []).map(sessionId => ({
+          sessionId: sessionId,
+          userName: row.userName
+        }))
+        this.showTokens = false
         this.loginInfoDialogVisible = true
       } catch (error) {
         console.error('获取登录信息失败:', error)
@@ -269,9 +311,34 @@ export default {
     },
 
     handleLoginInfoDialogClose() {
-      this.loginTokens = []
+      this.loginSessions = []
+      this.sessionTokens = []
+      this.showTokens = false
+      this.currentSessionId = ''
       this.loginInfoDialogVisible = false
     },
+
+    // 显示会话下的Token列表
+    async showSessionTokens(sessionId) {
+      try {
+        this.$message.info('正在加载Token信息...')
+        const { data } = await getTokensBySessionId(sessionId)
+        this.sessionTokens = data || []
+        this.currentSessionId = sessionId
+        this.showTokens = true
+      } catch (error) {
+        console.error('获取Token信息失败:', error)
+        this.$message.error('获取Token信息失败')
+      }
+    },
+
+    // 返回会话列表
+    backToSessions() {
+      this.showTokens = false
+      this.sessionTokens = []
+      this.currentSessionId = ''
+    },
+
     saveUser,
     deleteUser,
     activateUser,
@@ -342,7 +409,7 @@ export default {
      * 处理密码重置提交事件
      */
     handlePasswordSubmit() {
-      this.$refs.passwordForm.validate(async (valid) => {
+      this.$refs.passwordForm.validate(async(valid) => {
         if (valid) {
           try {
             // 构造用户数据，只更新密码
@@ -408,7 +475,6 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-
 .login-info-dialog {
   ::v-deep .el-dialog__header {
     background-color: #f8f9fa;
@@ -428,7 +494,6 @@ export default {
     padding-right: 14px;
   }
 }
-
 
 .user-management {
   padding: 20px;

@@ -1,5 +1,5 @@
 import defaultSettings from '@/settings'
-import {getRefreshToken} from "@/api/user";
+import { getRefreshToken } from '@/api/user'
 
 const TokenKey = defaultSettings.tokenCookieKey
 
@@ -15,7 +15,7 @@ export function setToken(token, rememberMe = false) {
   localStorage.setItem(TokenKey, token)
   if (rememberMe) {
     getRefreshToken().then((res) => {
-      console.log("无感刷新Token设置成功")
+      console.log('无感刷新Token设置成功')
     })
   }
 }

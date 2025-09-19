@@ -84,8 +84,8 @@
 </template>
 
 <script>
-import {validUsername} from '@/utils/validate'
-import {getRememberMe} from '@/utils/auth'
+import { validUsername } from '@/utils/validate'
+import { getRememberMe } from '@/utils/auth'
 import settings from '@/settings'
 
 export default {

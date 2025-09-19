@@ -86,7 +86,7 @@ export function enableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/enable/${userId}`,
     method: 'get',
-    params: {role}
+    params: { role }
   })
 }
 
@@ -94,7 +94,7 @@ export function disableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/disable/${userId}`,
     method: 'get',
-    params: {role}
+    params: { role }
   })
 }
 
@@ -123,15 +123,26 @@ export function deleteUser(userId) {
   })
 }
 
-
 /**
  * 获取用户登录的token
  * @param userId
  * @returns {*}
  */
-export function getLoginedTokens(userId) {
+export function getUserSessions(userId) {
   return request({
-    url: "private/admin/user/userLoginedTokens/" + userId,
+    url: 'private/admin/user/sessions/' + userId,
+    method: 'get'
+  })
+}
+
+/**
+ * 获取用户登录的token
+ * @param sessionId
+ * @returns {*}
+ */
+export function getTokensBySessionId(sessionId) {
+  return request({
+    url: 'private/admin/user/tokens/' + sessionId,
     method: 'get'
   })
 }
