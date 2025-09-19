@@ -2,17 +2,22 @@ package com.tbs.web.uitl;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.authentication.model.DefaultTokenAuthentication;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;
+import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.security.user.IUserAuthService;
+import com.tbs.web.security.token.ITokenRemover;
+import com.tbs.web.security.user.IUserLoginInfoService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -24,6 +29,7 @@ import java.util.Optional;
  * @author tongj
  */
 @Component
+@Slf4j
 public class AuthUtil {
 
     /**
@@ -92,11 +98,14 @@ public class AuthUtil {
             .orElse(false);
     }
 
-    /**
-     * 用户认证服务，用于处理用户认证状态变更通知
-     */
     @Resource
-    IUserAuthService authService;
+    private ITokenIssuanceCenter tokenIssuanceCenter;
+
+    @Resource
+    private IUserLoginInfoService loginInfoService;
+
+    @Resource
+    ITokenRemover remover;
 
     /**
      * 通知用户认证状态变更
@@ -107,7 +116,21 @@ public class AuthUtil {
      * @param userName 用户名
      */
     public void notifyUserAuthStatusChanged(String userName) {
-        authService.notifyUserAuthStatusChanged(userName);
+        log.info("用户权限发生变更，用户名:{}", userName);
+        for (var type : TokenTypeEnum.values()) {
+            for (ITokenModel tokenModel : tokenIssuanceCenter.getTokensByUserNameAndTokenType(userName,
+                type.getCode())) {
+                remover.revokeToken(tokenModel);
+                if (Objects.equals(type, TokenTypeEnum.ACCESS_TOKEN)) {
+                    try {
+                        loginInfoService.removeUserLoginInfo(tokenModel.getToken());
+                    } catch (Exception e) {
+                        log.warn("remove user login info error", e);
+                    }
+                }
+            }
+        }
+        log.info("用户{}权限变更完成", userName);
     }
 
     /**

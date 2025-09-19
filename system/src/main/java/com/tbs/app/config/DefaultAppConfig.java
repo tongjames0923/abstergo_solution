@@ -1,6 +1,5 @@
 package com.tbs.app.config;
 
-import com.tbs.app.service.business.user.impl.DefaultUserAuthService;
 import com.tbs.app.service.business.user.impl.DefaultUserInfoService;
 import com.tbs.common.data.IDataHolderExpireActuator;
 import com.tbs.common.data.impl.LocalDataExpireActuator;
@@ -8,10 +7,13 @@ import com.tbs.common.util.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.interfaces.intercept.SystemOperateInterceptor;
+import com.tbs.web.security.token.DefaultTokenRemover;
 import com.tbs.web.security.token.IRefreshTokenService;
+import com.tbs.web.security.token.ITokenRemover;
+import com.tbs.web.security.token.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.security.token.impl.CookieRefreshTokenService;
-import com.tbs.web.security.user.IUserAuthService;
 import com.tbs.web.security.user.IUserInfoService;
+import com.tbs.web.security.user.impl.DefaultUserPasswordAccessTokenProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -53,16 +55,22 @@ public class DefaultAppConfig {
         return new DefaultUserInfoService();
     }
 
+//    @Bean
+//    @ConditionalOnMissingBean(IRefreshTokenService.class)
+//    public IRefreshTokenService refreshTokenService() {
+//        return new CookieRefreshTokenService();
+//    }
+
     @Bean
-    @ConditionalOnMissingBean(IRefreshTokenService.class)
-    public IRefreshTokenService refreshTokenService() {
-        return new CookieRefreshTokenService();
+    @ConditionalOnMissingBean(IUsernamePasswordAccessTokenProvider.class)
+    IUsernamePasswordAccessTokenProvider usernamePasswordAccessTokenProvider() {
+        return new DefaultUserPasswordAccessTokenProvider();
     }
 
     @Bean
-    @ConditionalOnMissingBean(IUserAuthService.class)
-    public IUserAuthService userAuthService() {
-        return new DefaultUserAuthService();
+    @ConditionalOnMissingBean(ITokenRemover.class)
+    public ITokenRemover tokenRemover() {
+        return new DefaultTokenRemover();
     }
 
     @Bean

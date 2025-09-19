@@ -1,11 +1,12 @@
 package com.tbs.app.controller.publics;
 
 import com.tbs.app.form.LoginForm;
+import com.tbs.common.util.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.security.user.IUserAuthService;
+import com.tbs.web.security.token.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -27,23 +28,25 @@ import javax.servlet.http.HttpServletRequest;
 public class PublicUserController extends BaseController {
 
     @Resource
-    IUserAuthService authService;
-
-    @Resource
-    IRefreshTokenService refreshTokenService;
+    IUsernamePasswordAccessTokenProvider loginProvider;
 
     @Resource
     HttpServletRequest request;
 
     @PostMapping("/login")
     public ITokenModel login(@RequestBody @Validated LoginForm loginForm) {
-        return authService.login(loginForm.getUsername(), loginForm.getPassword());
+        ITokenModel tokenModel = loginProvider.requestToken(loginForm);
+        return tokenModel;
     }
-
     @GetMapping("refresh")
     public AjaxResult refresh() {
+        var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
+        if (refreshTokenService.isEmpty()) {
+            return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, "不支持无感刷新", null);
+        }
+        var service = refreshTokenService.get();
         try {
-            ITokenModel newModel = refreshTokenService.refreshAccessToken(request);
+            ITokenModel newModel = service.refreshAccessToken(request);
             return successResult(newModel);
         } catch (Exception e) {
             return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, e.getLocalizedMessage(), null);

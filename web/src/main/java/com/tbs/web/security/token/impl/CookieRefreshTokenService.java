@@ -41,6 +41,7 @@ public class CookieRefreshTokenService implements IRefreshTokenService, IStartup
 
     @Resource
     IUserLoginInfoService loginInfoService;
+    List<IUserValidator> userValidators;
 
     @Override
     public void pushRefreshToken(UserDetails userDetails, HttpServletResponse response,
@@ -52,8 +53,6 @@ public class CookieRefreshTokenService implements IRefreshTokenService, IStartup
         cookie.setPath("/");
         response.addCookie(cookie);
     }
-
-    List<IUserValidator> userValidators;
 
     @Override
     public void removeRefreshToken(HttpServletRequest request, HttpServletResponse response) {

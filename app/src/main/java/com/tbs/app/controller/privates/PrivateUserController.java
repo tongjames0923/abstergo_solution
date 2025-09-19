@@ -5,12 +5,15 @@ import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.SpringUtil;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
 import com.tbs.web.security.token.IRefreshTokenService;
-import com.tbs.web.security.user.IUserAuthService;
+import com.tbs.web.security.token.ITokenModel;
+import com.tbs.web.security.token.ITokenRemover;
+import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.uitl.AuthUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -49,16 +52,17 @@ public class PrivateUserController extends BaseController {
     private ISystemUserService userService;
 
     @Resource
-    IUserAuthService userAuthService;
+    ITokenRemover tokenRemover;
 
     @Resource
-    IRefreshTokenService refreshTokenService;
+    IUserLoginInfoService userLoginInfoService;
+
 
     @Resource
     HttpServletRequest request;
 
     @Resource
-    HttpServletResponse response;
+    HttpServletResponse res;
 
     /**
      * 用户登出
@@ -68,7 +72,13 @@ public class PrivateUserController extends BaseController {
     @GetMapping("/logout")
     @ApiOperation(value = "用户登出", notes = "退出当前登录状态")
     public Boolean logout() {
-        userAuthService.logout(AuthUtil.getInstance().getCurrentTokenModel());
+        ITokenModel tokenModel = AuthUtil.getInstance().getCurrentTokenModel();
+        tokenRemover.inactiveToken(tokenModel);
+        userLoginInfoService.removeUserLoginInfo(tokenModel.getToken());
+
+        var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
+        refreshTokenService.ifPresent(service -> service.removeRefreshToken(request, res));
+
         return true;
     }
 

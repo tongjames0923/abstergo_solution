@@ -19,8 +19,9 @@ import javax.annotation.Resource;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.tbs.web.security.user.AbstractUserAuthService.USER_DETAILS_CACHE;
-
+/**
+ * 默认用户信息服务
+ */
 public class DefaultUserInfoService implements IUserInfoService {
 
     @Resource
