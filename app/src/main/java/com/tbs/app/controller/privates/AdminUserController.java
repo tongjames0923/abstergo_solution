@@ -107,18 +107,27 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     }
 
     /**
-     * 获取用户已登录的token列表
+     * 获取用户登录会话列表
      *
      * @param id 用户ID
-     * @return 用户已登录的token列表
+     * @return 用户登录会话列表
      */
-    @GetMapping("userLoginedTokens/{id}")
-    public List<ITokenModel> userLoginedTokens(@PathVariable Long id) {
+    @GetMapping("sessions/{id}")
+    public List<String> getUserSessions(@PathVariable Long id) {
         var user = getService().queryById(id);
         AssertUtil.notNull(user, "用户不存在");
-        return loginInfoService.getUserAvaliableTokens(user.getUserName()).stream().map((t) -> {
-            return center.getTokenByToken(t);
-        }).collect(Collectors.toList());
+        return loginInfoService.getUserAvaliableSessionId(user.getUserName());
+    }
+
+    /**
+     * 获取用户登录会话列表的Token数据
+     *
+     * @param sessionId 用户登录会话ID
+     * @return 用户登录会话列表
+     */
+    @GetMapping("tokens/{sessionId}")
+    public List<ITokenModel> listTokensBySessionId(@PathVariable String sessionId) {
+        return center.getTokensBySessionId(sessionId).stream().collect(Collectors.toList());
     }
 
     @Override

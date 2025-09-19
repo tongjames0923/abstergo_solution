@@ -10,15 +10,15 @@ import com.tbs.app.service.business.role.impl.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.business.role.impl.SimpleUserRoleRelationServiceImpl;
 import com.tbs.app.service.business.token.ISystemTokenService;
 import com.tbs.app.service.business.token.impl.DefaultSystemTokenService;
-import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
-import com.tbs.web.security.user.impl.NoEncryptPassword;
 import com.tbs.app.service.business.user.impl.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.business.view.IViewService;
 import com.tbs.app.service.business.view.impl.ViewServiceImpl;
-import com.tbs.app.web.login.DataHolderUserLoginInfoService;
+import com.tbs.app.web.login.DefaultUserLoginInfoService;
 import com.tbs.common.util.BeanUtil;
+import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserLoginInfoService;
+import com.tbs.web.security.user.impl.NoEncryptPassword;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -79,7 +79,7 @@ public class BuisnessBeanConfig {
     @Bean
     @ConditionalOnMissingBean(IUserLoginInfoService.class)
     public IUserLoginInfoService userLoginInfoService() {
-        return new DataHolderUserLoginInfoService();
+        return new DefaultUserLoginInfoService();
     }
 
     @Bean

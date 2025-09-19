@@ -40,7 +40,7 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
      * @param username 用户名
      * @return 令牌列表
      */
-    protected abstract List<String> getUserAvaliableTokensByUserName(String username);
+    protected abstract List<String> getUserAvaliableSessionIdsByUserName(String username);
 
     protected static AbstractUserLoginInfoService instance;
 
@@ -86,7 +86,8 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
     }
 
     @Override
-    public List<String> getUserAvaliableTokens(String username) {
-        return getUserAvaliableTokensByUserName(username);
+    public List<String> getUserAvaliableSessionId(String username) {
+        return getUserAvaliableSessionIdsByUserName(username);
     }
+
 }

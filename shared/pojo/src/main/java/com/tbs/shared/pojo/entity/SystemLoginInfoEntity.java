@@ -108,6 +108,14 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
     @Setter
     private Date tokenExpireTime;
 
+    /**
+     * sessionId
+     */
+    @Column(name = "session_id", length = 128)
+    @Getter
+    @Setter
+    private String sessionId;
+
     @Transient
     private UserDetails userDetailsObject;
 

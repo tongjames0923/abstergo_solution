@@ -12,5 +12,4 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface LoginInfoMapper extends IFrameworkMapper<SystemLoginInfoEntity, Long> {
 
-
 }

@@ -99,6 +99,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
                     .map(SystemUserEntity::getId).orElseThrow(() -> {
                         return new FormattedRuntimeException("用户{}不存在无法生成用户登陆信息", userDetails.getUsername());
                     }));
+            loginInfoEntity.setSessionId(token.getSessionId());
             loginInfoEntity.setFlag(CommonConstant.FLAG_ON);
             loginInfoEntity.setCreateTime(new Date());
             mapper.insert(loginInfoEntity);
@@ -117,7 +118,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     }
 
     @Override
-    protected List<String> getUserAvaliableTokensByUserName(String username) {
+    protected List<String> getUserAvaliableSessionIdsByUserName(String username) {
         SystemUserEntity user = CollUtil.first(systemUserService.queryByUserName(username));
         AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
@@ -126,7 +127,9 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
             order.orderByDesc(SystemLoginInfoEntity::getCreateTime);
             order.orderByDesc(SystemLoginInfoEntity::getUpdateTime);
         });
-        return query.fetch().stream().map(SystemLoginInfoEntity::getToken).collect(Collectors.toList());
+        query.groupBy(SystemLoginInfoEntity::getSessionId);
+        return query.fetch().stream().map(SystemLoginInfoEntity::getSessionId).collect(Collectors.toSet()).stream()
+            .collect(Collectors.toList());
     }
 
     @Cacheable(cacheNames = "user_login_info_cache", key = "#token")

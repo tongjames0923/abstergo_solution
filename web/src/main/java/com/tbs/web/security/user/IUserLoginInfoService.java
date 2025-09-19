@@ -47,5 +47,6 @@ public interface IUserLoginInfoService {
      * @param username
      * @return
      */
-    List<String> getUserAvaliableTokens(String username);
+    List<String> getUserAvaliableSessionId(String username);
+
 }
