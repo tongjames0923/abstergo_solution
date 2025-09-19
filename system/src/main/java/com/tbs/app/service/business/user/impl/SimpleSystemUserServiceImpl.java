@@ -2,7 +2,6 @@ package com.tbs.app.service.business.user.impl;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
-import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.app.service.business.user.ISystemUserService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
@@ -15,9 +14,12 @@ import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
+import com.tbs.web.security.user.IPasswordEncrypt;
+import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.uitl.AuthUtil;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
@@ -75,7 +77,9 @@ public class SimpleSystemUserServiceImpl
         return List.of(entity);
     }
 
-    @CacheEvict(value = "system_user", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
+    @Caching(evict = {@CacheEvict(cacheNames = IUserInfoService.USER_DETAILS_CACHE, key = "#entity.userName",
+        condition = "#entity!=null"), @CacheEvict(value = "system_user", key = "#entity.userName",
+        condition = "#entity!=null&&#entity.userName!=null")})
     @Override
     public List<SystemUserEntity> save(SystemUserEntity entity) {
         return super.save(entity);

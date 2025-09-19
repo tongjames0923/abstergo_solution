@@ -13,6 +13,8 @@ import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +22,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Optional;
+
+import static com.tbs.web.security.user.IUserInfoService.USER_DETAILS_CACHE;
 
 /**
  * 认证工具类
@@ -116,6 +120,9 @@ public class AuthUtil {
      *
      * @param userName 用户名
      */
+
+    @Async
+    @CacheEvict(cacheNames = USER_DETAILS_CACHE, key = "#userName")
     public void notifyUserAuthStatusChanged(String userName) {
         log.info("用户权限发生变更，用户名:{}", userName);
         var sessionIds = loginInfoService.getUserAvaliableSessionId(userName);
@@ -129,10 +136,15 @@ public class AuthUtil {
                     continue;
                 }
                 for (var token : tokens) {
-                    remover.revokeToken(token);
-                    if (TokenTypeEnum.ACCESS_TOKEN.getCode().equals(token.getTokenType().getCode())) {
-                        loginInfoService.removeUserLoginInfo(token.getToken());
+                    try {
+                        remover.revokeToken(token);
+                        if (TokenTypeEnum.ACCESS_TOKEN.getCode().equals(token.getTokenType().getCode())) {
+                            loginInfoService.removeUserLoginInfo(token.getToken());
+                        }
+                    } catch (Exception e) {
+                        log.warn("用户{}权限变更失败", userName, e);
                     }
+
                 }
             }
         }
