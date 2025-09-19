@@ -1,12 +1,11 @@
-package com.tbs.web.security.token;
+package com.tbs.web.security.user.access;
 
-import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.SpringUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
-import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.IUserValidator;
 import com.tbs.web.uitl.AuthUtil;
@@ -17,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import javax.annotation.Resource;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Objects;
 
 /**
  * 抽象令牌提供者

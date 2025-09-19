@@ -26,3 +26,8 @@ export function userStatusEnums() {
   })
 }
 
+export function getRefreshToken() {
+  return request({
+    url: '/private/user/getRefreshToken', method: 'get'
+  })
+}

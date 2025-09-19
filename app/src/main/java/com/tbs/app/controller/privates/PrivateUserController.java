@@ -6,30 +6,24 @@ import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.SpringUtil;
-import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.shared.pojo.model.view.OptionValue;
 import com.tbs.web.BaseController;
+import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
+import com.tbs.web.uitl.AjaxUtil;
 import com.tbs.web.uitl.AuthUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 登录后用户相关控制器
@@ -57,13 +51,6 @@ public class PrivateUserController extends BaseController {
     @Resource
     IUserLoginInfoService userLoginInfoService;
 
-
-    @Resource
-    HttpServletRequest request;
-
-    @Resource
-    HttpServletResponse res;
-
     /**
      * 用户登出
      *
@@ -77,7 +64,7 @@ public class PrivateUserController extends BaseController {
         userLoginInfoService.removeUserLoginInfo(tokenModel.getToken());
 
         var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
-        refreshTokenService.ifPresent(service -> service.removeRefreshToken(request, res));
+        refreshTokenService.ifPresent(service -> service.inactiveRefreshToken());
 
         return true;
     }
@@ -103,18 +90,33 @@ public class PrivateUserController extends BaseController {
     }
 
     /**
-     * 获取用户状态选项
+     * 获取刷新令牌
      *
-     * @return 用户状态选项集合
+     * @return 刷新令牌
      */
-    @GetMapping("/statusOptions")
-    @Cacheable(cacheNames = "DEAD_CACHE", key = "'userStatusOptions'")
-    @ApiOperation(value = "获取用户状态选项", notes = "获取用户状态的下拉选项列表，结果会被缓存")
-    public Collection<OptionValue<Integer>> getUserStatusOptions() {
-        return Arrays.stream(SystemUserStatusEnum.values()).map(m -> {
-            return new OptionValue<>(m.getCode(), m.getValue());
-        }).collect(Collectors.toSet());
+    @GetMapping("getRefreshToken")
+    public AjaxResult getRefreshToken() {
+        var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
+        if (refreshTokenService.isEmpty()) {
+            return AjaxUtil.getInstance().success("不支持无感刷新", null);
+        }
+        refreshTokenService.get().createRefreshToken();
+        return successResult(null);
     }
+
+    //    /**
+    //     * 获取用户状态选项
+    //     *
+    //     * @return 用户状态选项集合
+    //     */
+    //    @GetMapping("/statusOptions")
+    //    @Cacheable(cacheNames = "DEAD_CACHE", key = "'userStatusOptions'")
+    //    @ApiOperation(value = "获取用户状态选项", notes = "获取用户状态的下拉选项列表，结果会被缓存")
+    //    public Collection<OptionValue<Integer>> getUserStatusOptions() {
+    //        return Arrays.stream(SystemUserStatusEnum.values()).map(m -> {
+    //            return new OptionValue<>(m.getCode(), m.getValue());
+    //        }).collect(Collectors.toSet());
+    //    }
 
     @Override
     public String getBusinessName() {

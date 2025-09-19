@@ -84,8 +84,8 @@
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
-import { getRememberMe, setRememberMe } from '@/utils/auth'
+import {validUsername} from '@/utils/validate'
+import {getRememberMe} from '@/utils/auth'
 import settings from '@/settings'
 
 export default {
@@ -164,8 +164,6 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          // 保存记住我状态
-          setRememberMe(this.loginForm.rememberMe)
 
           this.$store.dispatch('user/login', this.loginForm).then(() => {
             this.$router.push({ path: this.redirect || '/' })

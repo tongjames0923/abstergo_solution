@@ -1,4 +1,4 @@
-package com.tbs.web.security.token;
+package com.tbs.web.security.user.access;
 
 import com.tbs.web.security.user.form.IUsernameAndPasswordForm;
 

@@ -120,7 +120,11 @@ public class AuthUtil {
         for (var type : TokenTypeEnum.values()) {
             for (ITokenModel tokenModel : tokenIssuanceCenter.getTokensByUserNameAndTokenType(userName,
                 type.getCode())) {
-                remover.revokeToken(tokenModel);
+                try {
+                    remover.revokeToken(tokenModel);
+                } catch (Exception e) {
+                    log.warn("revoke token error", e);
+                }
                 if (Objects.equals(type, TokenTypeEnum.ACCESS_TOKEN)) {
                     try {
                         loginInfoService.removeUserLoginInfo(tokenModel.getToken());

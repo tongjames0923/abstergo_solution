@@ -1,10 +1,10 @@
-package com.tbs.web.security.user.impl;
+package com.tbs.web.security.user.access.impl;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.web.security.token.AbstractAccessTokenProvider;
+import com.tbs.web.security.user.access.AbstractAccessTokenProvider;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserInfoService;
-import com.tbs.web.security.token.IUsernamePasswordAccessTokenProvider;
+import com.tbs.web.security.user.access.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.security.user.form.IUsernameAndPasswordForm;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;

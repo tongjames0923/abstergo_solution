@@ -1,8 +1,7 @@
-import { getInfo, login, logout } from '@/api/user'
-import { getRememberMe, getToken, removeToken, setToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
+import {getInfo, login, logout} from '@/api/user'
+import {getRememberMe, getToken, removeToken, setRememberMe, setToken} from '@/utils/auth'
+import {resetRouter} from '@/router'
 import request from '@/utils/request'
-import settings from '@/store/modules/settings'
 
 const getDefaultState = () => {
   return {
@@ -41,6 +40,7 @@ const actions = {
       const { username, password, rememberMe } = userInfo
       const { data } = await login({ username: username.trim(), password: password })
       commit('SET_TOKEN', data.token)
+      setRememberMe(rememberMe)
       // 根据rememberMe选项设置Token存储方式
       setToken(data.token, rememberMe)
       return data

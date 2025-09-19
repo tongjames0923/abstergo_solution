@@ -17,6 +17,8 @@ import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
+import com.tbs.web.security.token.IRefreshTokenService;
+import com.tbs.web.security.token.impl.CookieRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;
@@ -144,6 +146,11 @@ public class AppConfig {
     @Bean
     public IUserLoginInfoService userLoginInfoService() {
         return new DefaultUserLoginInfoService();
+    }
+
+    @Bean
+    IRefreshTokenService refreshTokenService() {
+        return new CookieRefreshTokenService();
     }
 
 	@Bean

@@ -1,29 +1,22 @@
 package com.tbs.web.security.token.impl;
 
-import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.SpringUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
-import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.security.user.IUserInfoService;
-import com.tbs.web.security.user.IUserLoginInfoService;
-import com.tbs.web.security.user.IUserValidator;
+import com.tbs.web.security.token.ITokenRemover;
+import com.tbs.web.security.user.access.IRefreshAccessTokenProvider;
+import com.tbs.web.security.user.form.IRefreshTokenForm;
 import com.tbs.web.uitl.AuthUtil;
+import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 默认的Cookie刷新令牌服务实现
@@ -31,96 +24,75 @@ import java.util.stream.Collectors;
  * @author abstergo
  */
 @Slf4j
-public class CookieRefreshTokenService implements IRefreshTokenService, IStartup {
+public class CookieRefreshTokenService implements IRefreshTokenService {
 
     @Resource
-    ITokenIssuanceCenter tokenIssuanceCenter;
+    private IRefreshAccessTokenProvider refreshAccessTokenProvider;
 
     @Resource
-    IUserInfoService userInfoService;
+    private ITokenIssuanceCenter center;
 
     @Resource
-    IUserLoginInfoService loginInfoService;
-    List<IUserValidator> userValidators;
+    private HttpServletResponse response;
 
-    @Override
-    public void pushRefreshToken(UserDetails userDetails, HttpServletResponse response,
-        TokenCreateTypeEnum createTypeEnum) {
-        ITokenModel token = tokenIssuanceCenter.issueToken(userDetails, TokenTypeEnum.REFRESH_TOKEN.getCode(),
-            createTypeEnum.getCode());
-        Cookie cookie = new Cookie("REFRESH_TOKEN", token.getToken());
+    @Resource
+    private HttpServletRequest request;
+
+    @Resource
+    private ITokenRemover remover;
+
+    private void pushRefreshToken(ITokenModel refreshToken) {
+        Cookie cookie = new Cookie("REFRESH_TOKEN", refreshToken.getToken());
+        cookie.setMaxAge(7 * 24 * 60 * 60);
         cookie.setHttpOnly(true);
         cookie.setPath("/");
         response.addCookie(cookie);
     }
 
-    @Override
-    public void removeRefreshToken(HttpServletRequest request, HttpServletResponse response) {
+    private String getRefreshToken() {
         Cookie[] cookies = request.getCookies();
-        if (CollUtil.isEmpty(cookies)) {
-            return;
-        }
-        for (Cookie cookie : cookies) {
-            if ("REFRESH_TOKEN".equals(cookie.getName())) {
-                tokenIssuanceCenter.setTokenStatus(cookie.getValue(), TokenStatusEnum.REVOKE);
-                cookie.setValue(null);
-                cookie.setMaxAge(0);
-                cookie.setHttpOnly(true);
-                cookie.setPath("/");
-                response.addCookie(cookie);
-                return;
-            }
-        }
-    }
-
-    @Override
-    public ITokenModel getRefreshToken(HttpServletRequest request) {
-        Cookie[] cookies = request.getCookies();
-        if (CollUtil.isEmpty(cookies)) {
-            return null;
-        }
-        for (Cookie cookie : cookies) {
-            if ("REFRESH_TOKEN".equals(cookie.getName())) {
-                return tokenIssuanceCenter.getTokenByToken(cookie.getValue());
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("REFRESH_TOKEN".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
             }
         }
         return null;
     }
 
-    @Override
-    public ITokenModel refreshAccessToken(HttpServletRequest request) {
-        ITokenModel tokenModel = getRefreshToken(request);
-        AssertUtil.notNull(tokenModel, "未查询到有效的刷新令牌数据");
-        AssertUtil.isTrue(!Objects.equals(TokenTypeEnum.REFRESH_TOKEN, tokenModel.getTokenType()), "令牌类型异常");
-        AssertUtil.isTrue(!Objects.equals(tokenModel.getStatus(), TokenStatusEnum.ACTIVE), "刷新令牌已失效");
-        UserDetails details = null;
-        try {
-            String oldToken = AuthUtil.getInstance().getCurrentTokenModel().getToken();
-            details = loginInfoService.getUserDetails(oldToken);
-            loginInfoService.removeUserLoginInfo(oldToken);
-        } catch (Exception e) {
-            log.warn("用户信息获取失败，将重建登录时用户信息");
-            details = userInfoService.loadUserInfoByUniqueKey(tokenModel.getUserName());
-        }
-        AuthUtil.checkUserDetails(details);
-        AssertUtil.isTrue(!Objects.equals(details.getUsername(), tokenModel.getUserName()), "用户信息不一致");
-        for (IUserValidator validator : userValidators) {
-            validator.validate(details);
-        }
-        ITokenModel accessToken = tokenIssuanceCenter.issueToken(details, TokenTypeEnum.ACCESS_TOKEN.getCode(),
-            TokenCreateTypeEnum.REFRESH.getCode());
-        loginInfoService.insertUserLoginInfo(details, accessToken);
-        return accessToken;
+    @Data
+    private static class SimpleRefreshTokenForm implements IRefreshTokenForm {
+        private ITokenModel refreshToken;
     }
 
     @Override
-    public void startUp() throws RuntimeException {
-        try {
-            userValidators = SpringUtil.getBeansOfType(IUserValidator.class).values().stream()
-                .sorted((o1, o2) -> o1.getOrder() - o2.getOrder()).collect(Collectors.toList());
-        } catch (Exception e) {
-            userValidators = new java.util.ArrayList<>();
-        }
+    public void inactiveRefreshToken() {
+        String refreshToken = getRefreshToken();
+        AssertUtil.hasText(refreshToken, "不存在刷新令牌");
+        ITokenModel refreshTokenModel = center.getTokenByToken(refreshToken);
+        AssertUtil.notNull(refreshTokenModel, "刷新令牌不存在");
+        remover.inactiveToken(refreshTokenModel);
+    }
 
+    @Override
+    public ITokenModel createRefreshToken() {
+        ITokenModel refreshToken =
+            center.issueToken(AuthUtil.getInstance().getCurrentUser(), TokenTypeEnum.REFRESH_TOKEN.getCode(),
+                TokenCreateTypeEnum.LOGIN.getCode());
+        pushRefreshToken(refreshToken);
+        return refreshToken;
+    }
+
+    @Override
+    public ITokenModel useRefreshToken() {
+        String refreshToken = getRefreshToken();
+        AssertUtil.hasText(refreshToken, "不存在刷新令牌");
+        ITokenModel refreshTokenModel = center.getTokenByToken(refreshToken);
+        AssertUtil.notNull(refreshTokenModel, "刷新令牌不存在");
+        SimpleRefreshTokenForm form = new SimpleRefreshTokenForm();
+        form.setRefreshToken(refreshTokenModel);
+        ITokenModel model = refreshAccessTokenProvider.requestToken(form);
+        return model;
     }
 }

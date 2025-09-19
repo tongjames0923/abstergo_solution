@@ -1,5 +1,5 @@
 import defaultSettings from '@/settings'
-import store from '@/store'
+import {getRefreshToken} from "@/api/user";
 
 const TokenKey = defaultSettings.tokenCookieKey
 
@@ -13,6 +13,11 @@ export function getToken() {
 // 设置Token - 根据是否记住我决定存储方式
 export function setToken(token, rememberMe = false) {
   localStorage.setItem(TokenKey, token)
+  if (rememberMe) {
+    getRefreshToken().then((res) => {
+      console.log("无感刷新Token设置成功")
+    })
+  }
 }
 
 // 移除Token - 同时清理localStorage和Cookie

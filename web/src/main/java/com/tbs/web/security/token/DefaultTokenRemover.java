@@ -2,7 +2,6 @@ package com.tbs.web.security.token;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.enums.TokenStatusEnum;
-import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.ITokenIssuanceCenter;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import org.jetbrains.annotations.NotNull;
@@ -32,11 +31,7 @@ public class DefaultTokenRemover implements ITokenRemover {
         AssertUtil.notNull(token, "令牌不能为空");
         AssertUtil.hasText(token.getUserName(), "用户名不能为空");
         AssertUtil.hasText(token.getToken(), "令牌内容不能为空");
-        ITokenModel orginToken = tokenIssuanceCenter.getTokenByToken(token.getToken());
-        AssertUtil.notNull(orginToken, "令牌不存在");
-        AssertUtil.isTrue(!Objects.equals(orginToken.getUserName(), token.getUserName()), "令牌用户不一致");
-        AssertUtil.isTrue(!Objects.equals(orginToken.getTokenType(), TokenTypeEnum.ACCESS_TOKEN), "令牌类型错误");
-        AssertUtil.isTrue(!Objects.equals(orginToken.getStatus(), TokenStatusEnum.ACTIVE), "令牌已失效");
+        AssertUtil.isTrue(!Objects.equals(token.getStatus(), TokenStatusEnum.ACTIVE), "令牌已失效");
     }
 
     @Override

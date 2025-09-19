@@ -10,11 +10,13 @@ import com.tbs.shared.interfaces.intercept.SystemOperateInterceptor;
 import com.tbs.web.security.token.DefaultTokenRemover;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenRemover;
-import com.tbs.web.security.token.IUsernamePasswordAccessTokenProvider;
-import com.tbs.web.security.token.impl.CookieRefreshTokenService;
 import com.tbs.web.security.user.IUserInfoService;
-import com.tbs.web.security.user.impl.DefaultUserPasswordAccessTokenProvider;
+import com.tbs.web.security.user.access.IRefreshAccessTokenProvider;
+import com.tbs.web.security.user.access.IUsernamePasswordAccessTokenProvider;
+import com.tbs.web.security.user.access.impl.DefaultRefreshAccessTokenProvider;
+import com.tbs.web.security.user.access.impl.DefaultUserPasswordAccessTokenProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
@@ -55,11 +57,7 @@ public class DefaultAppConfig {
         return new DefaultUserInfoService();
     }
 
-//    @Bean
-//    @ConditionalOnMissingBean(IRefreshTokenService.class)
-//    public IRefreshTokenService refreshTokenService() {
-//        return new CookieRefreshTokenService();
-//    }
+
 
     @Bean
     @ConditionalOnMissingBean(IUsernamePasswordAccessTokenProvider.class)
@@ -71,6 +69,13 @@ public class DefaultAppConfig {
     @ConditionalOnMissingBean(ITokenRemover.class)
     public ITokenRemover tokenRemover() {
         return new DefaultTokenRemover();
+    }
+
+    @Bean
+    @ConditionalOnBean(IRefreshTokenService.class)
+    @ConditionalOnMissingBean(IRefreshAccessTokenProvider.class)
+    public IRefreshAccessTokenProvider refreshAccessTokenProvider() {
+        return new DefaultRefreshAccessTokenProvider();
     }
 
     @Bean

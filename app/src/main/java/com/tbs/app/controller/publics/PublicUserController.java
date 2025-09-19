@@ -6,7 +6,7 @@ import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
-import com.tbs.web.security.token.IUsernamePasswordAccessTokenProvider;
+import com.tbs.web.security.user.access.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -46,7 +46,7 @@ public class PublicUserController extends BaseController {
         }
         var service = refreshTokenService.get();
         try {
-            ITokenModel newModel = service.refreshAccessToken(request);
+            ITokenModel newModel = service.useRefreshToken();
             return successResult(newModel);
         } catch (Exception e) {
             return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, e.getLocalizedMessage(), null);

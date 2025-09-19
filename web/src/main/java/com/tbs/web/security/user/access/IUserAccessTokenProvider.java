@@ -1,5 +1,6 @@
-package com.tbs.web.security.token;
+package com.tbs.web.security.user.access;
 
+import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
