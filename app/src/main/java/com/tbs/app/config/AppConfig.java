@@ -18,7 +18,7 @@ import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
 import com.tbs.web.security.token.IRefreshTokenService;
-import com.tbs.web.security.token.impl.CookieRefreshTokenService;
+import com.tbs.app.service.business.token.impl.CookieRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.trace.core.AbstractTraceContext;
 import org.slf4j.Logger;

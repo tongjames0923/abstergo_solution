@@ -38,32 +38,35 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
     private String tokenEquals;
 
     /**
-     * 等值匹配的用户名字段
-     * 对应数据库中的user_name字段，使用EQUAL比较条件
+     * 等值匹配的用户名字段 对应数据库中的user_name字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "user_name")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private String userNameEquals;
 
     /**
-     * 等值匹配的标识字段
-     * 对应数据库中的flag字段，使用EQUAL比较条件
+     * 等值匹配的标识字段 对应数据库中的flag字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "flag")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private Integer flagEquals;
 
     /**
-     * 等值匹配的令牌类型字段
-     * 对应数据库中的token_type字段，使用EQUAL比较条件
+     * 等值匹配的令牌类型字段 对应数据库中的token_type字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "token_type")
     @QueryField(contrast = QueryContrastEnum.EQUAL)
     private Integer tokenTypeEquals;
 
     /**
-     * 创建时间范围查询的起始时间字段
-     * 对应数据库中的create_time字段，使用GREATER_EQUAL比较条件
+     * 等值匹配的会话ID字段 对应数据库中的session_id字段，使用EQUAL比较条件
+     */
+    @QueryMapping(value = "session_id")
+    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    private String sessionIdEquals;
+
+    /**
+     * 创建时间范围查询的起始时间字段 对应数据库中的create_time字段，使用GREATER_EQUAL比较条件
      */
     @QueryMapping("create_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -71,8 +74,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
     private Date createTimeAfter;
 
     /**
-     * 过期时间范围查询的起始时间字段
-     * 对应数据库中的expire_time字段，使用GREATER_EQUAL比较条件
+     * 过期时间范围查询的起始时间字段 对应数据库中的expire_time字段，使用GREATER_EQUAL比较条件
      */
     @QueryMapping("expire_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -80,8 +82,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
     private Date expireTimeAfter;
 
     /**
-     * 过期时间范围查询的结束时间字段
-     * 对应数据库中的expire_time字段，使用LESS_EQUAL比较条件
+     * 过期时间范围查询的结束时间字段 对应数据库中的expire_time字段，使用LESS_EQUAL比较条件
      */
     @QueryMapping("expire_time")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -210,5 +211,10 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      */
     public CommonTokenQueryCriteria() {
         super(SystemTokenEntity.class);
+    }
+
+    public CommonTokenQueryCriteria setSessionIdEquals(String sessionIdEquals) {
+        this.sessionIdEquals = sessionIdEquals;
+        return this;
     }
 }

@@ -18,7 +18,8 @@ import java.util.Date;
  */
 @Table(name = "sys_token", indexes = {@Index(name = "ix_user", columnList = "user_name"),
     @Index(name = "ix_time", columnList = "create_time,update_time"), @Index(name = "ix_flag", columnList = "flag"),
-    @Index(name = "ix_expire", columnList = "expire_time"), @Index(name = "ix_token_type", columnList = "token_type")},
+    @Index(name = "ix_expire", columnList = "expire_time"), @Index(name = "ix_token_type", columnList = "token_type"),
+    @Index(name = "ix_session", columnList = "session_id")},
     uniqueConstraints = {@UniqueConstraint(name = "uk_token", columnNames = {"token"})})
 @Entity
 @ToString
@@ -87,6 +88,18 @@ public class SystemTokenEntity implements IBaseEntity<Long> {
     @Column(name = "create_type")
     private Integer createType;
 
+    /**
+     * 令牌类型
+     *
+     * @see com.tbs.web.enums.TokenTypeEnum
+     */
     @Column(name = "token_type", nullable = false)
     private Integer tokenType;
+
+    /**
+     * 会话id
+     *
+     */
+    @Column(name = "session_id", length = 128)
+    private String sessionId;
 }

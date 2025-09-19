@@ -14,11 +14,11 @@ import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.AbstractTokenIssuanceCenter;
+import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.model.SimpleTokenModel;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -81,8 +81,9 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
          * @param ipAddr     IP地址
          */
         public AdapterTokenModel(String token, String userName, TokenStatusEnum status, TokenTypeEnum type,
-            Date expireTime, Date createTime, TokenCreateTypeEnum createType, String macAddr, String ipAddr) {
-            super(token, userName, status, type, expireTime, createTime, createType);
+            Date expireTime, Date createTime, TokenCreateTypeEnum createType, String macAddr, String ipAddr,
+            String sessionId) {
+            super(token, userName, status, type, expireTime, createTime, createType, sessionId);
             this.macAddr = macAddr;
             this.ipAddr = ipAddr;
         }
@@ -99,7 +100,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
             EnumUtil.valueOf(TokenStatusEnum.class, entity.getFlag()),
             EnumUtil.valueOf(TokenTypeEnum.class, entity.getTokenType()), entity.getExpireTime(),
             entity.getCreateTime(), EnumUtil.valueOf(TokenCreateTypeEnum.class, entity.getCreateType()),
-            entity.getMacAddress(), entity.getIpAddress());
+            entity.getMacAddress(), entity.getIpAddress(), entity.getSessionId());
     }
 
     /**
@@ -122,6 +123,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
             entity.setMacAddress(m.getMacAddr());
             entity.setIpAddress(m.getIpAddr());
         }
+        entity.setSessionId(model.getSessionId());
         return entity;
     }
 
@@ -170,9 +172,9 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
      * 在此实现中为空操作，因为所有信息都保存在SystemTokenEntity中。
      * </p>
      *
-     * @param userName 用户名
+     * @param userName  用户名
      * @param tokenType 令牌类型
-     * @param token 令牌字符串
+     * @param token     令牌字符串
      */
     @Override
     protected void saveManageInfo(String userName, int tokenType, String token) {
@@ -185,7 +187,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
      * 查询指定用户和令牌类型的所有令牌，限定创建时间在28天内，并按创建时间和过期时间降序排列。
      * </p>
      *
-     * @param userName 用户名，不能为空
+     * @param userName  用户名，不能为空
      * @param tokenType 令牌类型
      * @return 用户名和令牌类型对应的令牌模型集合
      */
@@ -195,7 +197,27 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
                 new CommonTokenQueryCriteria().setUserNameEquals(userName).setTokenTypeEquals(tokenType)
                     .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
                     .setCreateTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC))
-                    .setExpireTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC)), null).stream().map(this::toModel).collect(Collectors.toList());
+                    .setExpireTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC)), null).stream().map(this::toModel)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    protected Collection<ITokenModel> getTokensWithSessionId(String sessionId) {
+        return tokenService.query(new CommonTokenQueryCriteria().setSessionIdEquals(sessionId)
+                .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
+                .setCreateTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC))
+                .setExpireTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC)), null).stream().map(this::toModel)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    protected ITokenModel createModel(@NotNull TokenRequestForm form) {
+        Date now = new Date();
+        return new AdapterTokenModel(UuidUtil.getInstance().getUuidString(), form.getUserDetails().getUsername(),
+            TokenStatusEnum.ACTIVE, EnumUtil.valueOf(TokenTypeEnum.class, form.getTokenType()),
+            recommendExpireTime(now, form.getTokenType()), now,
+            EnumUtil.valueOf(TokenCreateTypeEnum.class, form.getTokenCreateType()), NetUtil.getMac(request),
+            NetUtil.getIp(request), form.getSessionId());
     }
 
     /**
@@ -204,24 +226,4 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     @Resource
     HttpServletRequest request;
 
-    /**
-     * 创建令牌模型
-     * <p>
-     * 根据用户详细信息、令牌类型和令牌创建类型创建新的适配器令牌模型，
-     * 包含UUID生成的令牌字符串、客户端MAC地址和IP地址等信息。
-     * </p>
-     *
-     * @param userDetails 用户详细信息，不能为空
-     * @param tokenType 令牌类型
-     * @param tokenCreateType 令牌创建类型
-     * @return 新创建的令牌模型
-     */
-    @Override
-    protected ITokenModel createModel(@NotNull UserDetails userDetails, int tokenType, int tokenCreateType) {
-        Date now = new Date();
-        return new AdapterTokenModel(UuidUtil.getInstance().getUuidString(), userDetails.getUsername(),
-            TokenStatusEnum.ACTIVE, EnumUtil.valueOf(TokenTypeEnum.class, tokenType),
-            recommendExpireTime(now, tokenType), now, EnumUtil.valueOf(TokenCreateTypeEnum.class, tokenCreateType),
-            NetUtil.getMac(request), NetUtil.getIp(request));
-    }
 }

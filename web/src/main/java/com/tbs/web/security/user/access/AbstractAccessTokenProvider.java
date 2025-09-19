@@ -2,9 +2,8 @@ package com.tbs.web.security.user.access;
 
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.SpringUtil;
-import com.tbs.web.enums.TokenCreateTypeEnum;
-import com.tbs.web.enums.TokenTypeEnum;
-import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.IUserValidator;
@@ -54,10 +53,6 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
      */
     protected abstract UserDetails pullUserDetails(@NotNull FORM form);
 
-    protected int getTokenCreateType() {
-        return TokenCreateTypeEnum.LOGIN.getCode();
-    }
-
     /**
      * 用户验证器
      *
@@ -73,15 +68,12 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
     }
 
     /**
-     * 创建令牌
+     * 创建令牌请求表单
      *
-     * @param tokenIssuanceCenter 令牌发放中心
-     * @param userDetails         用户信息
-     * @return 令牌
+     * @param form 表单
+     * @return 令牌请求表单
      */
-    protected ITokenModel createToken(ITokenIssuanceCenter tokenIssuanceCenter, @NotNull UserDetails userDetails) {
-        return tokenIssuanceCenter.issueToken(userDetails, TokenTypeEnum.ACCESS_TOKEN.getCode(), getTokenCreateType());
-    }
+    protected abstract TokenRequestForm createTokenRequestForm(@NotNull FORM form, UserDetails details);
 
     @Resource
     private IUserLoginInfoService userLoginInfoService;
@@ -98,10 +90,9 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
         validateForm(form);
         UserDetails userDetails = pullUserDetails(form);
         validateUser(userDetails);
-        ITokenModel model = createToken(tokenIssuanceCenter, userDetails);
+        ITokenModel model = tokenIssuanceCenter.issueToken(createTokenRequestForm(form, userDetails));
         afterCreateToken(model, userDetails);
         return model;
     }
-
 
 }

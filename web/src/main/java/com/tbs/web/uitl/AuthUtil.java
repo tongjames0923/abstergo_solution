@@ -6,7 +6,7 @@ import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.authentication.model.DefaultTokenAuthentication;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;
-import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;

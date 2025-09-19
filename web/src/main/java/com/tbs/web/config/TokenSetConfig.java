@@ -6,7 +6,7 @@ import com.tbs.web.constants.WebBeanNameConstant;
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
-import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.impl.NoImplTokenIssuanceCenter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

@@ -8,7 +8,7 @@ import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import io.swagger.annotations.Api;

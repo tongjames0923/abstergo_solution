@@ -2,7 +2,7 @@ package com.tbs.web.security.token;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.enums.TokenStatusEnum;
-import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import org.jetbrains.annotations.NotNull;
 

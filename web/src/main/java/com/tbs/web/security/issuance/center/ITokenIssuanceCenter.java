@@ -1,9 +1,9 @@
-package com.tbs.web.security.issuance;
+package com.tbs.web.security.issuance.center;
 
 import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 
@@ -22,12 +22,9 @@ public interface ITokenIssuanceCenter {
      * 根据用户详细信息、令牌类型和令牌创建类型生成并返回一个新的令牌模型。 此方法通常在用户成功认证后调用，用于生成后续请求中使用的安全令牌。
      * </p>
      *
-     * @param userDetails     用户详细信息，包含用户的身份和权限信息，不能为空
-     * @param tokenType       令牌类型，用于区分不同用途的令牌（如访问令牌、刷新令牌等）
-     * @param tokenCreateType 令牌创建类型，用于区分令牌的生成方式或策略
-     * @return 生成的令牌模型，包含令牌的详细信息
+     * @param form@return 生成的令牌模型，包含令牌的详细信息
      */
-    ITokenModel issueToken(@NotNull UserDetails userDetails, int tokenType, int tokenCreateType);
+    ITokenModel issueToken(@NotNull TokenRequestForm form);
 
     /**
      * 根据令牌字符串获取令牌模型
@@ -62,5 +59,16 @@ public interface ITokenIssuanceCenter {
      * @return 用户拥有的指定类型的令牌集合
      */
     Collection<ITokenModel> getTokensByUserNameAndTokenType(String userName, int tokenType);
+
+    /**
+     * 根据SessionId获取用户令牌集合
+     * <p>
+     * 获取指定SessionId的所有令牌，用于SessionId对应的令牌管理。
+     * </p>
+     *
+     * @param sessionId SessionId
+     * @return SessionId对应的令牌集合
+     */
+    Collection<ITokenModel> getTokensBySessionId(String sessionId);
 
 }

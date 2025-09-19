@@ -1,8 +1,10 @@
 package com.tbs.web.security.user.access.impl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
+import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.security.user.IUserLoginInfoService;
@@ -55,5 +57,12 @@ public class DefaultRefreshAccessTokenProvider extends AbstractAccessTokenProvid
             details = userInfoService.loadUserInfoByUniqueKey(refreshToken.getUserName());
         }
         return details;
+    }
+
+    @Override
+    protected TokenRequestForm createTokenRequestForm(@NotNull IRefreshTokenForm iRefreshTokenForm,
+        UserDetails details) {
+        return new TokenRequestForm(iRefreshTokenForm.getRefreshToken().getSessionId(), details,
+            TokenTypeEnum.ACCESS_TOKEN.getCode(), TokenCreateTypeEnum.REFRESH.getCode());
     }
 }

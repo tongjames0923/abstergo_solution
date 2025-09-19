@@ -1,9 +1,13 @@
 package com.tbs.web.security.user.access.impl;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.web.security.user.access.AbstractAccessTokenProvider;
+import com.tbs.common.util.framework.UuidUtil;
+import com.tbs.web.enums.TokenCreateTypeEnum;
+import com.tbs.web.enums.TokenTypeEnum;
+import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserInfoService;
+import com.tbs.web.security.user.access.AbstractAccessTokenProvider;
 import com.tbs.web.security.user.access.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.security.user.form.IUsernameAndPasswordForm;
 import org.jetbrains.annotations.NotNull;
@@ -40,6 +44,13 @@ public class DefaultUserPasswordAccessTokenProvider extends AbstractAccessTokenP
             !Objects.equals(encrypt.encrypt(iUsernameAndPasswordForm.getPassword()), details.getPassword()),
             "用户 {} 密码错误");
         return details;
+    }
+
+    @Override
+    protected TokenRequestForm createTokenRequestForm(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm,
+        UserDetails details) {
+        return new TokenRequestForm(UuidUtil.getInstance().getUuidString(), details,
+            TokenTypeEnum.ACCESS_TOKEN.getCode(), TokenCreateTypeEnum.LOGIN.getCode());
     }
 
 }

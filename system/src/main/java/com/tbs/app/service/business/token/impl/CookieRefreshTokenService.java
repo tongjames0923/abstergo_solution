@@ -1,9 +1,10 @@
-package com.tbs.web.security.token.impl;
+package com.tbs.app.service.business.token.impl;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenTypeEnum;
-import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.ITokenRemover;
@@ -77,9 +78,10 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
 
     @Override
     public ITokenModel createRefreshToken() {
-        ITokenModel refreshToken =
-            center.issueToken(AuthUtil.getInstance().getCurrentUser(), TokenTypeEnum.REFRESH_TOKEN.getCode(),
-                TokenCreateTypeEnum.LOGIN.getCode());
+        ITokenModel currentTokenModel = AuthUtil.getInstance().getCurrentTokenModel();
+        ITokenModel refreshToken = center.issueToken(
+            new TokenRequestForm(currentTokenModel.getSessionId(), AuthUtil.getInstance().getCurrentUser(),
+                TokenTypeEnum.REFRESH_TOKEN.getCode(), TokenCreateTypeEnum.REFRESH.getCode()));
         pushRefreshToken(refreshToken);
         return refreshToken;
     }
@@ -93,6 +95,7 @@ public class CookieRefreshTokenService implements IRefreshTokenService {
         SimpleRefreshTokenForm form = new SimpleRefreshTokenForm();
         form.setRefreshToken(refreshTokenModel);
         ITokenModel model = refreshAccessTokenProvider.requestToken(form);
+        remover.inactiveToken(refreshTokenModel);
         return model;
     }
 }

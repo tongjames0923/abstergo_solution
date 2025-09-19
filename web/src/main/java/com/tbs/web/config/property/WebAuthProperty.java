@@ -5,7 +5,7 @@ import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.security.authentication.center.IAuthenticationCenter;
 import com.tbs.web.security.authentication.center.impl.SimpleAuthenticationCenter;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
-import com.tbs.web.security.issuance.ITokenIssuanceCenter;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.impl.NoImplTokenIssuanceCenter;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
