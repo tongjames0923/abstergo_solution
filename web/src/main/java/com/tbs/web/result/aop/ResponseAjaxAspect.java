@@ -1,5 +1,6 @@
 package com.tbs.web.result.aop;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.BeanUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.SpringUtil;
@@ -53,7 +54,7 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
 			return null;
 		}
 		if (e instanceof AccessDeniedException) {
-			throw e;
+            AssertUtil.throwError(() -> (AccessDeniedException)e);
 		}
 		return onErrorAjaxProvider.onError(e);
 	}
