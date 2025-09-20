@@ -39,10 +39,10 @@ public class DefaultUserPasswordAccessTokenProvider extends AbstractAccessTokenP
     @Override
     protected UserDetails pullUserDetails(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm) {
         UserDetails details = userInfoService.loadUserInfoByUniqueKey(iUsernameAndPasswordForm.getUsername());
-        AssertUtil.notNull(details, "用户 {} 不存在");
+        AssertUtil.notNull(details, "用户 {} 不存在", iUsernameAndPasswordForm.getUsername());
         AssertUtil.isTrue(
             !Objects.equals(encrypt.encrypt(iUsernameAndPasswordForm.getPassword()), details.getPassword()),
-            "用户 {} 密码错误");
+            "用户 {} 密码错误", iUsernameAndPasswordForm.getUsername());
         return details;
     }
 

@@ -8,7 +8,6 @@ import com.tbs.web.trace.impl.SpringManagedTraceContext;
 import com.tbs.web.trace.impl.UuidTraceObjectGenerator;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
 
 /**
  * 链路追踪属性
@@ -16,7 +15,6 @@ import org.springframework.stereotype.Component;
  * @author abstergo
  */
 @Data
-@Component
 @ConfigurationProperties(prefix = "tbs.trace")
 public class TraceProperty {
     /**

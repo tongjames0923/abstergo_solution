@@ -1,8 +1,9 @@
 package com.tbs.web.trace.config;
 
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.BeanUtil;
+import com.tbs.web.trace.aop.MethodTraceAop;
 import com.tbs.web.trace.core.*;
 import com.tbs.web.trace.impl.ImportedTraceInterceptor;
 import com.tbs.web.trace.impl.SimpleMethodInvokeTreeProvider;
@@ -11,7 +12,6 @@ import com.tbs.web.trace.impl.UuidTraceObjectGenerator;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -19,12 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
 
-/**
- * TraceId配置类
- *
- * @author abstergo
- */
-@Configuration
+
 public class TraceConfig implements WebMvcConfigurer {
 
     @Resource
@@ -71,6 +66,11 @@ public class TraceConfig implements WebMvcConfigurer {
             }
             return null;
         });
+    }
+
+    @Bean
+    MethodTraceAop aop() {
+        return new MethodTraceAop();
     }
 
     @Resource

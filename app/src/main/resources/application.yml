@@ -59,7 +59,6 @@ spring:
       max-lifetime: 1800000
       # 连接测试查询
       connection-test-query: SELECT 1
-
   lifecycle:
     timeout-per-shutdown-phase: 30s
   # 资源信息

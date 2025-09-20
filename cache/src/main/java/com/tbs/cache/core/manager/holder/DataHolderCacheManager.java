@@ -26,13 +26,15 @@ public class DataHolderCacheManager implements CacheManager {
 
     private Map<String, Cache> cacheMap = new HashMap<>(8);
 
-
+    private String prefix = "cache:";
     @Override
     public Cache getCache(String name) {
+        name = prefix + name;
+        String finalName = name;
         return cacheMap.computeIfAbsent(name, (k) -> {
             IDataHolder dataHolder =
-                dataHolderManager.getDataHolder(name).orElseThrow(() -> new RuntimeException("未找到缓存"));
-            return new DataHolderCache(property.isAllowNullValues(), dataHolder, name);
+                dataHolderManager.getDataHolder(finalName).orElseThrow(() -> new RuntimeException("未找到缓存"));
+            return new DataHolderCache(property.isAllowNullValues(), dataHolder, finalName);
         });
     }
 
