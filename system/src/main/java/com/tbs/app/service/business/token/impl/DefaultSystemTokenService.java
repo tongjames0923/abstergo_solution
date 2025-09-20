@@ -96,6 +96,6 @@ public class DefaultSystemTokenService
     @ExpireOn(value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemTokenEntity> queryByToken(String token) {
-        return instance.query(new CommonTokenQueryCriteria().setTokenEquals(token), null);
+        return getInstance().query(new CommonTokenQueryCriteria().setTokenEquals(token), null);
     }
 }

@@ -5,6 +5,7 @@ import com.tbs.sql.annotation.dialect.MYSQL;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import tk.mybatis.spring.annotation.MapperScan;
 
 /**
@@ -17,6 +18,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 @MYSQL
 @MapperScan(basePackages = "com.tbs.shared.mapper")
 @EntityScan({"com.tbs.shared.pojo.entity", "com.tbs.shared.pojo.entity.view"})
+@EnableAspectJAutoProxy(exposeProxy = true)
 //@EnableTrace
 public class AppApplication {
 

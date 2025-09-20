@@ -9,6 +9,7 @@ import com.tbs.shared.util.PageUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
+import org.springframework.aop.framework.AopContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
@@ -26,12 +27,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable<K>, K, M extends IFrameworkMapper<T, K>>
     extends AbstractService<T, K, M>
     implements ISearchableService<T, K>, ISaveableService<T, K>, IDeleteableService<T, K> {
-
-    protected AbstractFullFeatureServiceTemplate<T, K, M> instance;
-
-    public AbstractFullFeatureServiceTemplate() {
-        this.instance = this;
-    }
 
     /**
      * 获取PageVO构建类
@@ -75,7 +70,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public T deleteById(K id) {
-        return instance.handleDelete(id);
+        return getInstance().handleDelete(id);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -86,7 +81,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         }
         AtomicInteger atomicInteger = new AtomicInteger();
         ids.stream().forEach(id -> {
-            instance.handleDelete(id);
+            getInstance().handleDelete(id);
             atomicInteger.incrementAndGet();
         });
 
@@ -98,13 +93,13 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     public List<T> save(T entity) {
         AssertUtil.notNull(entity, "空对象无法被保存");
         if (entity.getId() == null) {
-            T r = instance.insertNew(entity);
+            T r = getInstance().insertNew(entity);
             return List.of(r);
         } else {
-            T oldEntity = instance.queryById(entity.getId());
+            T oldEntity = getInstance().queryById(entity.getId());
             AssertUtil.notNull(oldEntity, "实体数据不存在，无法更新");
-            T newEntity = instance.compareAndUpdateValue(entity, oldEntity);
-            List<T> r = instance.updateBy(newEntity);
+            T newEntity = getInstance().compareAndUpdateValue(entity, oldEntity);
+            List<T> r = getInstance().updateBy(newEntity);
             return r;
         }
     }
@@ -126,5 +121,15 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Override
     public T queryById(K id) {
         return getMapper().selectByPrimaryKey(id);
+    }
+
+    /**
+     * 获取代理对象
+     *
+     * @return
+     */
+    protected AbstractFullFeatureServiceTemplate<T, K, M> getInstance() {
+        var r = (AbstractFullFeatureServiceTemplate<T, K, M>)AopContext.currentProxy();
+        return r;
     }
 }

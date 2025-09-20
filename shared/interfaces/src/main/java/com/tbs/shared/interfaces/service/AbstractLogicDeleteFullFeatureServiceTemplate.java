@@ -27,10 +27,10 @@ public abstract class AbstractLogicDeleteFullFeatureServiceTemplate<T extends II
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	protected T handleDelete(K entitys) {
-		T disableEntitys = instance.queryById(entitys);
+        T disableEntitys = getInstance().queryById(entitys);
 		AssertUtil.notNull(disableEntitys, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
 		disableEntitys.setFlag(getFlagDisable());
-		instance.updateBy(disableEntitys);
+        getInstance().updateBy(disableEntitys);
 		return disableEntitys;
 	}
 }

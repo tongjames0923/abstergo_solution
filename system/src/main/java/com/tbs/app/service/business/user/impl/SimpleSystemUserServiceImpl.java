@@ -3,13 +3,14 @@ package com.tbs.app.service.business.user.impl;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.business.role.IUserRoleRelationService;
 import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.EnumUtil;
 import com.tbs.common.util.StrUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
-import com.tbs.shared.interfaces.annoation.UserNameValid;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.mapper.SystemUserMapper;
@@ -23,8 +24,11 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 简单的系统用户服务实现
@@ -35,7 +39,6 @@ public class SimpleSystemUserServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUserEntity, Long, SystemUserMapper>
     implements ISystemUserService {
 
-    private static SimpleSystemUserServiceImpl instance;
     @Resource
     IUserNamePasswordValidator userNamePasswordValidator;
     @Resource
@@ -47,10 +50,6 @@ public class SimpleSystemUserServiceImpl
     private IUserRoleRelationService relationService;
     @Resource
     private AppSettingProperty property;
-
-    public SimpleSystemUserServiceImpl() {
-        instance = this;
-    }
 
     @Override
     protected Class<? extends IDelegateInvoker> pageVoBuildType() {
@@ -123,12 +122,8 @@ public class SimpleSystemUserServiceImpl
         return oldSystemUserEntity;
     }
 
-    @Override
-    public List<SystemUserEntity> queryByUserName(@UserNameValid String username) {
-        return getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username).pour().fetch();
-    }
-
     @Cacheable(value = "system_user", key = "#id")
+    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
     public SystemUserEntity queryById(Long id) {
         return super.queryById(id);
@@ -147,5 +142,22 @@ public class SimpleSystemUserServiceImpl
     @Override
     protected Integer getFlagDisable() {
         return SystemUserStatusEnum.DISABLED.getCode();
+    }
+
+    @Override
+    public List<SystemUserEntity> queryByUserName(String username) {
+        return ((ISystemUserService)getInstance()).queryUserIdsByUserName(username).stream().map(this::queryById)
+            .collect(Collectors.toList());
+    }
+
+    @Cacheable(cacheNames = "user_name_id_map", key = "#username")
+    @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public List<Long> queryUserIdsByUserName(String username) {
+        var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username).pour().fetch();
+        if (CollUtil.isEmpty(users)) {
+            return new ArrayList<>();
+        }
+        return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
     }
 }

@@ -26,7 +26,7 @@ public abstract class AbstractPhysicDeleteFullFeatureServiceTemplate<T extends I
 	@Transactional(rollbackFor = Exception.class)
 	@Override
 	protected T handleDelete(K entitys) {
-		T deleteEntity = instance.queryById(entitys);
+		T deleteEntity = getInstance().queryById(entitys);
 		AssertUtil.notNull(deleteEntity, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
 		getMapper().deleteByPrimaryKey(entitys);
 		return deleteEntity;
