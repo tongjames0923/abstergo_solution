@@ -133,6 +133,10 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      */
     private AbstractTokenIssuanceCenter center;
 
+    protected AbstractTokenIssuanceCenter getInstance() {
+        return center;
+    }
+
     /**
      * 构造函数，初始化center引用
      */
@@ -176,7 +180,6 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
         if (model == null) {
             return model;
         }
-
         return setExpireStatus(model);
     }
 

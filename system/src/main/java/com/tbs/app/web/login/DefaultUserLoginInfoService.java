@@ -44,17 +44,12 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @Resource
     private ISystemUserService systemUserService;
 
-    /**
-     * 获取可用的token查询条件 创建28天内的且Token过期时间未到的
-     *
-     * @return
-     */
+
     IQueryQueryBuilder<SystemLoginInfoEntity> getAvailableTokensQuery() {
         Date now = new Date();
         Date availableTime = DateUtil.offsetDay(now, -28);
         return QueryUtil.getEntityQueryWrapper(SystemLoginInfoEntity.class).query().where()
-            .greaterThanOrEqual(SystemLoginInfoEntity::getCreateTime, availableTime)
-            .greaterThanOrEqual(SystemLoginInfoEntity::getTokenExpireTime, now).pour();
+            .greaterThanOrEqual(SystemLoginInfoEntity::getCreateTime, availableTime).pour();
     }
 
     /**
