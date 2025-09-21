@@ -70,7 +70,8 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
     /**
      * 创建令牌请求表单
      *
-     * @param form 表单
+     * @param form    表单
+     * @param details 用户信息
      * @return 令牌请求表单
      */
     protected abstract TokenRequestForm createTokenRequestForm(@NotNull FORM form, UserDetails details);
