@@ -195,7 +195,7 @@ export default {
   width: 100%;
   transition: none !important;
   margin-left: 0 !important;
-  padding-left: calc(#{$sideBarCollapseWidth} + 12px); // 进一步减少左侧内边距
+  padding-left: calc(#{$sideBarCollapseWidth} + 30px); // 增加左侧内边距，为面包屑组件预留更多空间
   box-sizing: border-box;
 }
 
@@ -220,13 +220,13 @@ export default {
 
 .left-breadcrumb-container {
   position: fixed;
-  top: 6px; // 调整顶部位置以适应更小的Navbar
-  left: 10px; // 调整左侧位置
+  top: 6px;
+  left: 6px;
   z-index: 1000;
   transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
   // 设置最大宽度，避免过度侵占主内容区域
-  max-width: 320px; // 进一步减小最大宽度
+  max-width: 320px;
 
   // 当宽度不够时，隐藏超出部分
   .navbar {

@@ -71,6 +71,7 @@ export const constantRoutes = [
     path: '/admin',
     component: Layout,
     name: 'admin',
+    redirect: '/admin/user',
     meta: { title: '管理员操作', icon: 'el-icon-s-help', roles: ['1'] },
     children: [
       {

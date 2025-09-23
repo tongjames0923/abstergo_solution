@@ -1,5 +1,10 @@
 <template>
   <div class="capsule-breadcrumb">
+    <!-- 首页按钮 -->
+    <div class="home-button" @click="goToHome" title="回到首页">
+      <i class="el-icon-house"></i>
+    </div>
+    
     <transition-group name="breadcrumb" tag="div" class="capsule-container">
       <div
         v-for="(item, index) in displayedLevels"
@@ -7,20 +12,45 @@
         class="capsule-item"
         :class="{ 'is-active': index === displayedLevels.length - 1 }"
       >
-        <span
-          v-if="item.redirect === 'noRedirect' || index === displayedLevels.length - 1"
-          class="capsule-link no-redirect"
+        <el-tooltip
+          v-if="shouldShowTooltip(item.meta.title)"
+          :content="item.meta.title"
+          placement="top"
         >
-          {{ item.meta.title }}
-        </span>
-        <a v-else class="capsule-link" @click.prevent="handleLink(item)">
-          {{ item.meta.title }}
-        </a>
-        
+          <a
+            v-if="item.redirect !== 'noRedirect' && index !== displayedLevels.length - 1"
+            class="capsule-link"
+            @click.prevent="handleLink(item)"
+          >
+            {{ formatTitle(item.meta.title) }}
+          </a>
+          <span
+            v-else
+            class="capsule-link no-redirect"
+          >
+            {{ formatTitle(item.meta.title) }}
+          </span>
+        </el-tooltip>
+        <template v-else>
+          <a
+            v-if="item.redirect !== 'noRedirect' && index !== displayedLevels.length - 1"
+            class="capsule-link"
+            @click.prevent="handleLink(item)"
+          >
+            {{ formatTitle(item.meta.title) }}
+          </a>
+          <span
+            v-else
+            class="capsule-link no-redirect"
+          >
+            {{ formatTitle(item.meta.title) }}
+          </span>
+        </template>
+
         <i v-if="index < displayedLevels.length - 1" class="capsule-separator el-icon-arrow-right"></i>
       </div>
     </transition-group>
-    
+
     <!-- 关闭按钮 -->
     <div class="close-button" @click="toggleBreadcrumb">
       <i class="el-icon-close"></i>
@@ -60,29 +90,18 @@ export default {
     getBreadcrumb() {
       // only show routes with meta.title
       let matched = this.$route.matched.filter(item => item.meta && item.meta.title)
-      const first = matched[0]
 
-      if (!this.isDashboard(first)) {
-        matched = [{ path: '/dashboard', meta: { title: 'Dashboard' }}].concat(matched)
-      }
-
+      // 过滤掉不需要在面包屑中显示的路由
       this.levelList = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
-    },
-    isDashboard(route) {
-      const name = route && route.name
-      if (!name) {
-        return false
-      }
-      return name.trim().toLocaleLowerCase() === 'Dashboard'.toLocaleLowerCase()
     },
     pathCompile(path) {
       // To solve this problem https://github.com/PanJiaChen/vue-element-admin/issues/561
-      const { params } = this.$route
+      const {params} = this.$route
       var toPath = pathToRegexp.compile(path)
       return toPath(params)
     },
     handleLink(item) {
-      const { redirect, path } = item
+      const {redirect, path} = item
       if (redirect) {
         this.$router.push(redirect)
         return
@@ -91,6 +110,20 @@ export default {
     },
     toggleBreadcrumb() {
       this.isCollapsed = !this.isCollapsed
+    },
+    goToHome() {
+      this.$router.push('/')
+    },
+    formatTitle(title) {
+      // 如果文本过长则截断
+      if (title && title.length > 6) {
+        return title.substring(0, 6) + '...'
+      }
+      return title
+    },
+    shouldShowTooltip(title) {
+      // 判断是否需要显示tooltip
+      return title && title.length > 6
     }
   }
 }
@@ -106,39 +139,67 @@ export default {
   max-width: 100%;
   overflow: hidden;
   position: relative;
-  
+
+  .home-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    margin-right: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    transform: scale(1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+    &:hover {
+      background: rgba(64, 158, 255, 0.4);
+      transform: scale(1.1);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .el-icon-house {
+      font-size: 14px;
+      color: $menuText;
+    }
+  }
+
   .capsule-container {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
-    
+
     /* 面包屑项出现/消失的动画 */
     .breadcrumb-enter-active {
-      transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       transition-delay: 0.1s;
     }
-    
+
     .breadcrumb-leave-active {
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: absolute;
     }
-    
+
     .breadcrumb-enter {
       opacity: 0;
-      transform: translateX(20px) scale(0.9);
-      filter: blur(2px);
+      transform: translateX(30px) scale(0.8);
+      filter: blur(3px);
     }
-    
+
     .breadcrumb-leave-to {
       opacity: 0;
-      transform: translateX(-20px) scale(0.9);
-      filter: blur(2px);
+      transform: translateX(-30px) scale(0.8);
+      filter: blur(3px);
     }
-    
+
     .breadcrumb-move {
-      transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
-    
+
     .capsule-item {
       display: flex;
       align-items: center;
@@ -148,83 +209,90 @@ export default {
       -webkit-backdrop-filter: blur(6px);
       border: 1px solid rgba(255, 255, 255, 0.25);
       border-radius: 14px;
-      padding: 0 8px; // 进一步减小内边距
-      margin-right: 4px; // 进一步减小右边距
-      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      padding: 0 12px;
+      margin-right: 8px;
+      transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
       position: relative;
       white-space: nowrap;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      max-width: 150px;
-      
+      max-width: 160px;
+      transform: scale(1);
+      transform-origin: center;
+
       &:last-child {
         margin-right: 0;
       }
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.35);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        transform: translateY(-1px);
+        transform: translateY(-1px) scale(1.03);
       }
-      
+
       &.is-active {
         background: linear-gradient(120deg, rgba(64, 158, 255, 0.3), rgba(64, 158, 255, 0.2)) !important;
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         box-shadow: 0 1px 4px rgba(64, 158, 255, 0.2);
-        
+        transform: scale(1.05);
+
         .capsule-link {
           color: #205cd8;
           font-weight: 500;
         }
       }
-      
+
       .capsule-link {
         color: $menuText;
         text-decoration: none;
-        font-size: 12px;
+        font-size: 13px;
         cursor: pointer;
         transition: all 0.2s ease-in-out;
         overflow: hidden;
         text-overflow: ellipsis;
-        
+        white-space: nowrap;
+        max-width: 120px;
+        display: inline-block;
+
         &.no-redirect {
           cursor: default;
           color: $subMenuActiveText;
         }
       }
-      
+
       .capsule-separator {
-        margin-left: 5px;
+        margin-left: 8px;
         margin-right: 0px;
         color: $subMenuActiveText;
-        font-size: 10px;
+        font-size: 12px;
       }
     }
   }
-  
+
   .close-button {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    margin-left: 6px;
+    margin-left: 8px;
     cursor: pointer;
     transition: all 0.3s ease;
-    
+    transform: scale(1);
+
     &:hover {
       background: rgba(255, 255, 255, 0.5);
       transform: scale(1.1);
     }
-    
+
     .el-icon-close {
-      font-size: 12px;
+      font-size: 14px;
       color: $menuText;
     }
   }
