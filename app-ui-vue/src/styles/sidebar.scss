@@ -165,16 +165,30 @@
     .submenu-title-noDropdown {
       padding: 0 !important;
       position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 46px; // 添加固定高度以确保垂直居中
 
       .el-tooltip {
         padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
 
         .svg-icon {
-          margin-left: 20px;
+          margin-left: 0;
+          margin-right: 0;
+          width: 1rem;
+          height: 1rem;
         }
 
         .sub-el-icon {
-          margin-left: 19px;
+          margin-left: 0;
+          margin-right: 0;
+          width: 1rem;
+          height: 1rem;
         }
       }
     }
@@ -184,13 +198,23 @@
 
       &>.el-submenu__title {
         padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 46px; // 添加固定高度以确保垂直居中
 
         .svg-icon {
-          margin-left: 20px;
+          margin-left: 0;
+          margin-right: 0;
+          width: 1rem;
+          height: 1rem;
         }
 
         .sub-el-icon {
-          margin-left: 19px;
+          margin-left: 0;
+          margin-right: 0;
+          width: 1rem;
+          height: 1rem;
         }
 
         .el-submenu__icon-arrow {

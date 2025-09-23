@@ -38,4 +38,12 @@ export default {
   width: 1em;
   height: 1em;
 }
+
+.hideSidebar {
+  .sub-el-icon,
+  .svg-icon {
+    width: 1rem;
+    height: 1rem;
+  }
+}
 </style>

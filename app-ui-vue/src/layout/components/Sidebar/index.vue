@@ -86,23 +86,23 @@ export default {
   display: flex;
   flex-direction: column;
   height: 100%;
-  border-radius: 15px;
+  border-radius: 10px; // 根据规范调整为10px
 }
 
 .sidebar-menu-wrapper {
   flex: 1;
   display: flex;
   flex-direction: column;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 10px; // 根据规范调整为10px
+  border-bottom-right-radius: 10px; // 根据规范调整为10px
   overflow: hidden;
   min-height: 200px; // 确保即使在项目很少时也有最小高度
 }
 
 .sidebar-scrollbar {
   flex: 1;
-  border-bottom-left-radius: 15px;
-  border-bottom-right-radius: 15px;
+  border-bottom-left-radius: 10px; // 根据规范调整为10px
+  border-bottom-right-radius: 10px; // 根据规范调整为10px
 
   // 当内容较少时，滚动条区域自适应内容高度
   // 当内容较多时，保持滚动功能
@@ -141,6 +141,15 @@ export default {
     .el-menu-item:first-child,
     .el-submenu:first-child .el-submenu__title {
       margin-top: 0;
+    }
+    
+    // 侧边栏收缩状态下的菜单项样式
+    .hideSidebar & {
+      .el-menu-item,
+      .el-submenu__title {
+        height: 46px;
+        line-height: 46px;
+      }
     }
   }
 }
