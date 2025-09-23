@@ -6,6 +6,7 @@ import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
+import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.security.user.access.IRefreshAccessTokenProvider;
 import com.tbs.web.security.user.form.IRefreshTokenForm;
 import com.tbs.web.uitl.AuthUtil;
@@ -25,6 +26,9 @@ public abstract class AbstractRefreshTokenService implements IRefreshTokenServic
 
     @Resource
     private IRefreshAccessTokenProvider refreshAccessTokenProvider;
+
+    @Resource
+    private IUserInfoService userInfoService;
 
     /**
      * 获取refreshToken
@@ -103,11 +107,11 @@ public abstract class AbstractRefreshTokenService implements IRefreshTokenServic
         String refreshToken = getRefreshToken().orElse(null);
         AssertUtil.hasText(refreshToken, "不存在刷新令牌");
         ITokenModel refreshTokenModel = center.getTokenByToken(refreshToken);
-        UserDetails userDetails = AuthUtil.getInstance().getCurrentUser();
-        ITokenModel currentAccessToken = AuthUtil.getInstance().getCurrentTokenModel();
         AssertUtil.notNull(refreshTokenModel, "刷新令牌不存在");
+        UserDetails userDetails = userInfoService.loadUserInfoByUniqueKey(refreshTokenModel.getUserName());
+        AssertUtil.notNull(userDetails, "用户不存在");
         IRefreshTokenForm form = createRefreshTokenForm(refreshTokenModel);
-        getRefreshTokenValidators().forEach(v -> v.validateUse(form, userDetails, currentAccessToken));
+        getRefreshTokenValidators().forEach(v -> v.validateUse(form, userDetails));
         ITokenModel model = refreshAccessTokenProvider.requestToken(form);
         remover.inactiveToken(refreshTokenModel);
         return model;

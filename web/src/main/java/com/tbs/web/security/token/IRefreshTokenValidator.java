@@ -29,6 +29,6 @@ public interface IRefreshTokenValidator extends Ordered {
      * @param accessToken
      * @throws FormattedRuntimeException
      */
-    void validateUse(IRefreshTokenForm form, UserDetails userDetails, ITokenModel accessToken);
+    void validateUse(IRefreshTokenForm form, UserDetails userDetails);
 
 }
