@@ -1,0 +1,101 @@
+.sidebar-container {
+
+  .el-menu {
+
+    .el-menu-item:hover,
+    .el-submenu__title:hover {
+      background-color: transparent !important; // 修改为透明背景
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .el-menu-item.is-active {
+      background-color: rgba(64, 158, 255, 0.1) !important;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 6px 16px rgba(64, 158, 255, 0.1);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+  }
+}
+
+// 增强子菜单项的毛玻璃效果
+.sidebar-submenu-popper {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+
+  .el-menu {
+    background: rgba(255, 255, 255, 0.15) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.3);
+
+    .el-menu-item {
+      background-color: transparent !important;
+      backdrop-filter: blur(5px);
+      -webkit-backdrop-filter: blur(5px);
+      border-radius: 6px;
+      margin: 0 8px 4px 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      overflow: hidden;
+
+      &:hover {
+        background-color: transparent !important; // 修改为透明背景
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+
+      &.is-active {
+        background-color: rgba(64, 158, 255, 0.1) !important;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 6px 16px rgba(64, 158, 255, 0.1);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+    }
+  }
+}
+
+// 适配毛玻璃效果的菜单项样式
+.el-menu-item,
+.el-submenu__title {
+  margin: 0 8px 4px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: transparent !important;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  overflow: hidden;
+}
+
+.el-menu-item:hover,
+.el-submenu__title:hover {
+  background-color: transparent !important; // 修改为透明背景
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.el-menu-item.is-active {
+  background-color: rgba(64, 158, 255, 0.1) !important;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 16px rgba(64, 158, 255, 0.1);
+  border-radius: 6px;
+  overflow: hidden;
+}

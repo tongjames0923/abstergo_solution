@@ -1,7 +1,7 @@
 <template>
   <div :class="classObj" class="app-wrapper">
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
-    <div 
+    <div
       class="sidebar-container-wrapper"
       ref="sidebarContainerWrapper"
       @click="handleSidebarClick"
@@ -13,14 +13,22 @@
         <sidebar />
       </div>
     </div>
-    <div 
-      class="main-container" 
+
+    <!-- 左侧面包屑组件 -->
+    <div
+      v-show="!sidebar.opened"
+      class="left-breadcrumb-container"
+      :class="{ 'sidebar-hidden': !sidebar.opened }"
+    >
+      <navbar />
+    </div>
+
+    <div
+      class="main-container"
       ref="mainContainer"
       @click="handleMainContainerClick"
     >
-      <div class="navbar-container">
-        <navbar />
-      </div>
+      <!-- 原来的 navbar-container 已移除 -->
       <app-main />
     </div>
   </div>
@@ -95,14 +103,14 @@ export default {
     position: fixed;
     top: 0;
   }
-  
+
   // 添加侧边栏动画增强
   &.hideSidebar {
     .sidebar-container-wrapper {
       transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53) !important;
     }
   }
-  
+
   .navbar-container {
     position: absolute;
     top: 0;
@@ -110,7 +118,7 @@ export default {
     z-index: 1000;
     transition: left 0.3s ease;
   }
-  
+
   .hideSidebar .navbar-container {
     left: calc(#{$sideBarCollapseWidth} + 20px);
   }
@@ -145,7 +153,7 @@ export default {
   background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  
+
   &.hideSidebar {
     width: $sideBarCollapseWidth !important;
     height: $sideBarMinHeight !important;
@@ -154,11 +162,11 @@ export default {
     transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53);
     box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
-  
+
   &.openSidebar {
     transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
-  
+
   .user-avatar-outside {
     display: flex;
     justify-content: center;
@@ -168,7 +176,7 @@ export default {
     transform: translateZ(0);
     backface-visibility: hidden;
   }
-  
+
   .sidebar-container {
     flex: 1;
     height: calc(100% - 60px);
@@ -181,11 +189,11 @@ export default {
 }
 
 .main-container {
-  height: 100%;
-  width: 100%;
-  transition: none !important;
-  margin-left: 0 !important;
-  padding-left: calc(#{$sideBarCollapseWidth} + 5px); // 只保留比侧边栏收起时稍多一点的空间
-  box-sizing: border-box;
+    height: 100%;
+    width: 100%;
+    transition: none !important;
+    margin-left: 0 !important;
+    padding-left: calc(#{$sideBarCollapseWidth} + 50px); // 增加左侧内边距，避免面包屑组件侵占主页面
+    box-sizing: border-box;
 }
 </style>
