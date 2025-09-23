@@ -33,7 +33,11 @@ export default {
 
 <style lang="scss" scoped>
 .sidebarLogoFade-enter-active {
-  transition: opacity 1.5s;
+  transition: opacity 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.sidebarLogoFade-leave-active {
+  transition: opacity 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .sidebarLogoFade-enter,
@@ -60,6 +64,7 @@ export default {
       height: 32px;
       vertical-align: middle;
       margin-right: 12px;
+      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
     & .sidebar-title {
@@ -71,6 +76,7 @@ export default {
       font-size: 14px;
       font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
       vertical-align: middle;
+      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
   }
 

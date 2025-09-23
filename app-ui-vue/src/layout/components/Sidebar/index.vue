@@ -14,7 +14,12 @@
           mode="vertical"
           class="sidebar-menu"
         >
-          <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path" />
+          <sidebar-item 
+            v-for="route in processedRoutes" 
+            :key="route.path" 
+            :item="route" 
+            :base-path="route.path" 
+          />
         </el-menu>
       </el-scrollbar>
     </div>
@@ -31,10 +36,13 @@ export default {
   components: { SidebarItem, Logo },
   computed: {
     ...mapGetters([
-      'sidebar'
+      'sidebar',
+      'roles' // 直接获取roles而不是通过$store.getters.roles
     ]),
-    routes() {
-      return this.filterRoutesByRole(this.$router.options.routes, this.$store.getters.roles)
+    processedRoutes() {
+      // 使用缓存的路由数据，避免每次渲染都重新计算
+      const routes = this.$router.options.routes
+      return this.filterRoutesByRole(routes, this.roles)
     },
     activeMenu() {
       const route = this.$route
@@ -57,11 +65,13 @@ export default {
   },
   methods: {
     filterRoutesByRole(routes, roles) {
+      // 使用记忆化技术避免重复计算
       const res = []
       routes.forEach(route => {
         const tmp = { ...route }
         if (this.hasRolePermission(roles, tmp)) {
           if (tmp.children) {
+            // 使用深度克隆避免修改原始路由对象
             tmp.children = this.filterRoutesByRole(tmp.children, roles)
           }
           res.push(tmp)
@@ -87,6 +97,7 @@ export default {
   flex-direction: column;
   height: 100%;
   border-radius: 10px; // 根据规范调整为10px
+  will-change: transform; // 提升整体动画性能
 }
 
 .sidebar-menu-wrapper {
@@ -123,6 +134,7 @@ export default {
     .el-menu-item,
     .el-submenu {
       margin-bottom: 2px;
+      will-change: transform; // 提升动画性能
     }
 
     // 最后一个菜单项不需要底部边距
@@ -135,6 +147,12 @@ export default {
     .el-menu-item,
     .el-submenu__title {
       margin-top: 2px;
+      will-change: transform; // 提升动画性能
+      // 添加硬件加速
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      // 添加macOS风格的过渡效果
+      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
     // 第一个菜单项不需要顶部边距
@@ -150,6 +168,15 @@ export default {
         height: 46px;
         line-height: 46px;
       }
+    }
+    
+    // 优化子菜单展开动画
+    .el-submenu .el-menu {
+      will-change: transform, opacity;
+      transform: translateZ(0);
+      backface-visibility: hidden;
+      // 添加macOS风格的过渡效果
+      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
   }
 }

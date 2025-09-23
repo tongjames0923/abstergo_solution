@@ -8,7 +8,13 @@
       </app-link>
     </template>
 
-    <el-submenu v-else ref="subMenu" :index="resolvePath(item.path)" popper-append-to-body>
+    <el-submenu 
+      v-else 
+      ref="subMenu" 
+      :index="resolvePath(item.path)" 
+      popper-append-to-body
+      :popper-class="'sidebar-submenu-popper'"
+    >
       <template slot="title">
         <item v-if="item.meta" :icon="item.meta && item.meta.icon" :title="item.meta.title" />
       </template>
@@ -93,3 +99,20 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+/* 为子菜单添加动画优化 */
+.nest-menu ::v-deep .el-submenu .el-menu {
+  transform-origin: 0 0;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  /* 添加macOS风格的过渡效果 */
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+
+.nest-menu ::v-deep .el-submenu .el-menu--vertical {
+  will-change: transform, opacity;
+  /* 添加macOS风格的过渡效果 */
+  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+}
+</style>
