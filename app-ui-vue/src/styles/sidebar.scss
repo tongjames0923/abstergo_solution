@@ -14,13 +14,12 @@
 
     // Enhanced glassmorphism effect
     background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 
-      0 8px 32px 0 rgba(31, 38, 135, 0.2),
-      inset 0 2px 2px rgba(255, 255, 255, 0.5),
-      inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2),
+    inset 0 2px 2px rgba(255, 255, 255, 0.5),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.05);
     border-radius: 18px;
 
     .sidebar-container {
@@ -38,13 +37,12 @@
 
     // Enhanced glassmorphism effect
     background: rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(12px);
+    backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(12px);
     border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 
-      0 8px 32px 0 rgba(31, 38, 135, 0.2),
-      inset 0 2px 2px rgba(255, 255, 255, 0.5),
-      inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.2),
+    inset 0 2px 2px rgba(255, 255, 255, 0.5),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.05);
     border-radius: 18px;
 
     // reset element-ui css
@@ -56,31 +54,31 @@
       overflow-x: hidden !important;
       border-bottom-left-radius: 18px;
       border-bottom-right-radius: 18px;
-      
+
       // 当内容较少时居中显示菜单项
       display: flex;
       flex-direction: column;
-      
+
       ::v-deep .el-scrollbar__wrap {
         display: flex;
         flex-direction: column;
-        
+
         .el-menu {
           flex: 1;
           display: flex;
           flex-direction: column;
-          
+
           // 内容较少时居中显示
           &.el-menu--vertical {
             justify-content: flex-start;
           }
-          
+
           // 调整菜单项间距，减少底部留白
           .el-menu-item,
           .el-submenu {
             margin-bottom: 3px;
           }
-          
+
           // 最后一个菜单项不需要底部边距
           .el-menu-item:last-child,
           .el-submenu:last-child {
@@ -126,7 +124,7 @@
       min-height: 100%;
       width: 100% !important;
       background-color: transparent;
-      
+
       // 优化菜单展开动画，使用更优雅的缓动函数
       .el-submenu__title,
       .el-menu-item {
@@ -137,7 +135,7 @@
         margin: 4px 10px;
         background: transparent;
         position: relative;
-        
+
         &::before {
           content: '';
           position: absolute;
@@ -152,14 +150,14 @@
           -webkit-backdrop-filter: blur(6px);
         }
       }
-      
+
       .el-menu-item {
         &.is-active {
           background: linear-gradient(120deg, rgba(64, 158, 255, 0.15), rgba(64, 158, 255, 0.1)) !important;
           color: $subMenuActiveText !important;
           backdrop-filter: blur(12px);
           -webkit-backdrop-filter: blur(12px);
-          
+
           &::before {
             background: linear-gradient(120deg, rgba(64, 158, 255, 0.15), rgba(64, 158, 255, 0.1));
           }
@@ -176,7 +174,7 @@
       position: relative;
       overflow: hidden;
       background: transparent;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -184,34 +182,32 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: linear-gradient(120deg, rgba(255,255,255,0.3), rgba(255,255,255,0.15));
+        background: linear-gradient(120deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.15));
         z-index: -1;
         border-radius: 14px;
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
       }
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.2) !important;
-        backdrop-filter: blur(12px);
+        backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(12px);
-        box-shadow: 
-          0 6px 20px rgba(0, 0, 0, 0.08),
-          inset 0 2px 2px rgba(255, 255, 255, 0.4);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08),
+        inset 0 2px 2px rgba(255, 255, 255, 0.4);
         transform: translateY(-2px);
       }
     }
 
-    .is-active>.el-submenu__title {
+    .is-active > .el-submenu__title {
       background: linear-gradient(120deg, rgba(64, 158, 255, 0.15), rgba(64, 158, 255, 0.1)) !important;
       color: $subMenuActiveText !important;
       border-radius: 14px;
       margin: 4px 10px;
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      box-shadow: 
-        0 6px 20px rgba(0, 0, 0, 0.08),
-        inset 0 2px 2px rgba(255, 255, 255, 0.4);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08),
+      inset 0 2px 2px rgba(255, 255, 255, 0.4);
 
       &::before {
         content: '';
@@ -226,7 +222,7 @@
       }
     }
 
-    & .nest-menu .el-submenu>.el-submenu__title,
+    & .nest-menu .el-submenu > .el-submenu__title,
     & .el-submenu .el-menu-item {
       min-width: $sideBarWidth !important;
       background: transparent !important;
@@ -236,11 +232,10 @@
 
       &:hover {
         background: rgba(255, 255, 255, 0.2) !important;
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        box-shadow: 
-          0 6px 20px rgba(0, 0, 0, 0.08),
-          inset 0 2px 2px rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08),
+        inset 0 2px 2px rgba(255, 255, 255, 0.4);
         transform: translateY(-2px);
       }
     }
@@ -290,7 +285,7 @@
     }
 
     .el-submenu {
-      &>.el-submenu__title {
+      & > .el-submenu__title {
         padding: 0 !important;
         text-align: center;
 
@@ -320,8 +315,8 @@
 
     .el-menu--collapse {
       .el-submenu {
-        &>.el-submenu__title {
-          &>span {
+        & > .el-submenu__title {
+          & > span {
             height: 0;
             width: 0;
             overflow: hidden;
@@ -368,17 +363,18 @@
 
 // when menu collapsed
 .el-menu--vertical {
-  &>.el-menu {
+  & > .el-menu {
     .svg-icon {
       margin-right: 16px;
     }
+
     .sub-el-icon {
       margin-right: 12px;
       margin-left: -2px;
     }
   }
 
-  .nest-menu .el-submenu>.el-submenu__title,
+  .nest-menu .el-submenu > .el-submenu__title,
   .el-menu-item {
     &:hover {
       // you can use $subMenuHover
@@ -387,14 +383,14 @@
   }
 
   // the scroll bar appears when the subMenu is too long
-  >.el-menu--popup {
+  > .el-menu--popup {
     max-height: 100vh;
     overflow-y: auto;
     border-radius: 14px;
     border: none;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    backdrop-filter: blur(15px);
-    -webkit-backdrop-filter: blur(15px);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     background: rgba(255, 255, 255, 0.15);
 
     &::-webkit-scrollbar-track-piece {
@@ -410,11 +406,11 @@
       background: rgba(153, 169, 191, 0.5);
       border-radius: 3px;
     }
-    
+
     .el-menu-item {
       background: transparent;
       position: relative;
-      
+
       &::before {
         content: '';
         position: absolute;
@@ -426,15 +422,15 @@
         z-index: -1;
         border-radius: 14px;
       }
-      
+
       &:hover {
         background: rgba(255, 255, 255, 0.2) !important;
       }
-      
+
       &.is-active {
         background: linear-gradient(120deg, rgba(64, 158, 255, 0.15), rgba(64, 158, 255, 0.1)) !important;
         color: $subMenuActiveText !important;
-        
+
         &::before {
           background: linear-gradient(120deg, rgba(64, 158, 255, 0.15), rgba(64, 158, 255, 0.1));
         }
