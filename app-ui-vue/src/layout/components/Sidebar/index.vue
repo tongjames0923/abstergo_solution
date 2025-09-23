@@ -99,6 +99,9 @@ export default {
   border-radius: 10px; // 根据规范调整为10px
   will-change: transform; // 提升整体动画性能
   position: relative;
+  transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .sidebar-menu-wrapper {
@@ -109,6 +112,10 @@ export default {
   border-bottom-right-radius: 10px; // 根据规范调整为10px
   overflow: hidden;
   min-height: 200px; // 确保即使在项目很少时也有最小高度
+  transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .sidebar-scrollbar {
@@ -123,12 +130,21 @@ export default {
   ::v-deep .el-scrollbar__wrap {
     overflow-x: hidden;
   }
+  
+  transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .sidebar-menu {
   min-height: 100%;
   display: flex;
   flex-direction: column;
+  transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 
   // 调整菜单项间距，减少底部留白
   ::v-deep {
@@ -168,6 +184,7 @@ export default {
       .el-submenu__title {
         height: 46px;
         line-height: 46px;
+        transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53);
       }
     }
     

@@ -91,6 +91,19 @@ export default {
     position: fixed;
     top: 0;
   }
+  
+  // 添加侧边栏动画增强
+  &.hideSidebar {
+    .sidebar-container-wrapper {
+      transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53) !important;
+    }
+  }
+  
+  &.openSidebar {
+    .sidebar-container-wrapper {
+      transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+    }
+  }
 }
 
 .drawer-bg {
@@ -114,12 +127,20 @@ export default {
   transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   display: flex;
   flex-direction: column;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   
   &.hideSidebar {
     width: $sideBarCollapseWidth !important;
     height: $sideBarMinHeight !important;
     top: 50%;
     transform: translateY(-50%);
+    transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53);
+  }
+  
+  &.openSidebar {
+    transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
   }
   
   .user-avatar-outside {
@@ -127,12 +148,18 @@ export default {
     justify-content: center;
     margin-bottom: 12px;
     flex-shrink: 0;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
   
   .sidebar-container {
     flex: 1;
     height: calc(100% - 60px);
     width: 100%;
+    will-change: transform;
+    transform: translateZ(0);
+    backface-visibility: hidden;
   }
 }
 </style>
