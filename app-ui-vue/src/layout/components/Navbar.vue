@@ -1,16 +1,16 @@
 <template>
   <div class="navbar">
-    <breadcrumb class="breadcrumb-container" />
+    <capsule-breadcrumb class="breadcrumb-container" />
   </div>
 </template>
 
 <script>
 import {mapGetters} from 'vuex'
-import Breadcrumb from '@/components/Breadcrumb'
+import CapsuleBreadcrumb from '@/components/Breadcrumb/CapsuleBreadcrumb'
 
 export default {
   components: {
-    Breadcrumb
+    CapsuleBreadcrumb
   },
   computed: {
     ...mapGetters([
@@ -25,13 +25,24 @@ export default {
 
 .navbar {
   height: 50px;
-  overflow: hidden;
+  overflow: visible;
   position: relative;
-  box-shadow: 0 1px 4px rgba(0,21,41,.08);
+  background: rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 18px;
+  margin: 10px 0;
+  z-index: 1000;
+  display: inline-flex;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
   .breadcrumb-container {
-    background-color: #f7f7f7;
-    float: left;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
   }
 }
 </style>

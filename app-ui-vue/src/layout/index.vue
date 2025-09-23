@@ -18,13 +18,16 @@
       ref="mainContainer"
       @click="handleMainContainerClick"
     >
+      <div class="navbar-container">
+        <navbar />
+      </div>
       <app-main />
     </div>
   </div>
 </template>
 
 <script>
-import {AppMain, Sidebar} from './components'
+import {AppMain, Sidebar, Navbar} from './components'
 import UserAvatar from '@/components/UserAvatar'
 import ResizeMixin from './mixin/ResizeHandler'
 
@@ -33,7 +36,8 @@ export default {
   components: {
     Sidebar,
     AppMain,
-    UserAvatar
+    UserAvatar,
+    Navbar
   },
   mixins: [ResizeMixin],
   computed: {
@@ -99,10 +103,16 @@ export default {
     }
   }
   
-  &.openSidebar {
-    .sidebar-container-wrapper {
-      transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-    }
+  .navbar-container {
+    position: absolute;
+    top: 0;
+    left: calc(#{$sideBarWidth} + 20px);
+    z-index: 1000;
+    transition: left 0.3s ease;
+  }
+  
+  .hideSidebar .navbar-container {
+    left: calc(#{$sideBarCollapseWidth} + 20px);
   }
 }
 
