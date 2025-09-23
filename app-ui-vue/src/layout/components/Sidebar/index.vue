@@ -142,7 +142,7 @@ export default {
     .el-submenu:first-child .el-submenu__title {
       margin-top: 0;
     }
-    
+
     // 侧边栏收缩状态下的菜单项样式
     .hideSidebar & {
       .el-menu-item,
