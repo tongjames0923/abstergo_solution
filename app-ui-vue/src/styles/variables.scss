@@ -10,6 +10,10 @@ $subMenuBg:#f5f5f5;
 $subMenuHover:#e6e6e6;
 
 $sideBarWidth: 210px;
+// 定义侧边栏收起时的宽度，足够容纳图标和少量文本
+$sideBarCollapseWidth: 70px;
+// 定义侧边栏最小高度，足够容纳7个图标
+$sideBarMinHeight: 350px;
 
 // the :export directive is the magic sauce for webpack
 // https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
@@ -22,4 +26,5 @@ $sideBarWidth: 210px;
   subMenuBg: $subMenuBg;
   subMenuHover: $subMenuHover;
   sideBarWidth: $sideBarWidth;
+  sideBarCollapseWidth: $sideBarCollapseWidth;
 }

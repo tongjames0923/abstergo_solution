@@ -106,13 +106,13 @@ export default {
   transform-origin: 0 0;
   transform: translateZ(0);
   backface-visibility: hidden;
-  /* 添加macOS风格的过渡效果 */
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+  /* 添加更优雅的过渡效果 */
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
 }
 
 .nest-menu ::v-deep .el-submenu .el-menu--vertical {
   will-change: transform, opacity;
-  /* 添加macOS风格的过渡效果 */
-  transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
+  /* 添加更优雅的过渡效果 */
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
 }
 </style>

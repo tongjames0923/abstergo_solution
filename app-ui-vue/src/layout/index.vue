@@ -97,6 +97,7 @@ export default {
   height: 100%;
   position: absolute;
   z-index: 999;
+  transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .sidebar-container {
@@ -104,6 +105,7 @@ export default {
   margin: 10px;
   height: calc(100% - 20px);
   cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
 .fixed-header {
@@ -112,12 +114,12 @@ export default {
   right: 0;
   z-index: 9;
   width: calc(100% - #{$sideBarWidth});
-  transition: width 0.28s;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
   border-top-left-radius: 15px;
 }
 
 .hideSidebar .fixed-header {
-  width: calc(100% - 54px)
+  width: calc(100% - #{$sideBarCollapseWidth})
 }
 
 .mobile .fixed-header {
@@ -127,5 +129,6 @@ export default {
 .main-container {
   cursor: pointer;
   height: 100%;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 </style>

@@ -151,8 +151,8 @@ export default {
       // 添加硬件加速
       transform: translateZ(0);
       backface-visibility: hidden;
-      // 添加macOS风格的过渡效果
-      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+      // 添加更优雅的过渡效果
+      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
 
     // 第一个菜单项不需要顶部边距
@@ -175,8 +175,8 @@ export default {
       will-change: transform, opacity;
       transform: translateZ(0);
       backface-visibility: hidden;
-      // 添加macOS风格的过渡效果
-      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+      // 添加更优雅的过渡效果
+      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
     }
   }
 }
