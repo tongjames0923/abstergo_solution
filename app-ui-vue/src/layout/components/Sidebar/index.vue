@@ -1,20 +1,23 @@
 <template>
   <div :class="{'has-logo':showLogo}" class="glass-sidebar">
     <logo v-if="showLogo" :collapse="isCollapse" />
-    <el-scrollbar wrap-class="scrollbar-wrapper">
-      <el-menu
-        :default-active="activeMenu"
-        :collapse="isCollapse"
-        :background-color="variables.menuBg"
-        :text-color="variables.menuText"
-        :unique-opened="false"
-        :active-text-color="variables.menuActiveText"
-        :collapse-transition="false"
-        mode="vertical"
-      >
-        <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path" />
-      </el-menu>
-    </el-scrollbar>
+    <div class="sidebar-menu-wrapper">
+      <el-scrollbar wrap-class="scrollbar-wrapper" class="sidebar-scrollbar">
+        <el-menu
+          :default-active="activeMenu"
+          :collapse="isCollapse"
+          :background-color="variables.menuBg"
+          :text-color="variables.menuText"
+          :unique-opened="false"
+          :active-text-color="variables.menuActiveText"
+          :collapse-transition="false"
+          mode="vertical"
+          class="sidebar-menu"
+        >
+          <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path" />
+        </el-menu>
+      </el-scrollbar>
+    </div>
   </div>
 </template>
 
@@ -77,3 +80,68 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+.glass-sidebar {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border-radius: 15px;
+}
+
+.sidebar-menu-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  overflow: hidden;
+  min-height: 200px; // 确保即使在项目很少时也有最小高度
+}
+
+.sidebar-scrollbar {
+  flex: 1;
+  border-bottom-left-radius: 15px;
+  border-bottom-right-radius: 15px;
+  
+  // 当内容较少时，滚动条区域自适应内容高度
+  // 当内容较多时，保持滚动功能
+  max-height: calc(100vh - 100px); // 为顶部logo和边距留出空间
+  
+  ::v-deep .el-scrollbar__wrap {
+    overflow-x: hidden;
+  }
+}
+
+.sidebar-menu {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+  
+  // 调整菜单项间距，减少底部留白
+  ::v-deep {
+    .el-menu-item,
+    .el-submenu {
+      margin-bottom: 2px;
+    }
+    
+    // 最后一个菜单项不需要底部边距
+    .el-menu-item:last-child,
+    .el-submenu:last-child {
+      margin-bottom: 0;
+    }
+    
+    // 在菜单项较少时，适当添加一些顶部和底部内边距
+    .el-menu-item,
+    .el-submenu__title {
+      margin-top: 2px;
+    }
+    
+    // 第一个菜单项不需要顶部边距
+    .el-menu-item:first-child,
+    .el-submenu:first-child .el-submenu__title {
+      margin-top: 0;
+    }
+  }
+}
+</style>

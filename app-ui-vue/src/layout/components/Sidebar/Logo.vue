@@ -46,7 +46,7 @@ export default {
   width: 100%;
   height: 50px;
   line-height: 50px;
-  background-color: rgba(43, 47, 58, 0.6);
+  background-color: rgba(255, 255, 255, 0.7);
   text-align: center;
   overflow: hidden;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -65,7 +65,7 @@ export default {
     & .sidebar-title {
       display: inline-block;
       margin: 0;
-      color: #fff;
+      color: #303133;
       font-weight: 600;
       line-height: 50px;
       font-size: 14px;

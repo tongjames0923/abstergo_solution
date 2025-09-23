@@ -22,11 +22,12 @@
     overflow: hidden;
 
     // glassmorphism effect
-    background: rgba(48, 65, 86, 0.6);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border-right: 1px solid rgba(255, 255, 255, 0.1);
     box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+    border-radius: 15px;
 
     // reset element-ui css
     .horizontal-collapse-transition {
@@ -35,14 +36,46 @@
 
     .scrollbar-wrapper {
       overflow-x: hidden !important;
-    }
-
-    .el-scrollbar__bar.is-vertical {
-      right: 0px;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
+      
+      // 当内容较少时居中显示菜单项
+      display: flex;
+      flex-direction: column;
+      
+      ::v-deep .el-scrollbar__wrap {
+        display: flex;
+        flex-direction: column;
+        
+        .el-menu {
+          flex: 1;
+          display: flex;
+          flex-direction: column;
+          
+          // 内容较少时居中显示
+          &.el-menu--vertical {
+            justify-content: flex-start;
+          }
+          
+          // 调整菜单项间距，减少底部留白
+          .el-menu-item,
+          .el-submenu {
+            margin-bottom: 2px;
+          }
+          
+          // 最后一个菜单项不需要底部边距
+          .el-menu-item:last-child,
+          .el-submenu:last-child {
+            margin-bottom: 0;
+          }
+        }
+      }
     }
 
     .el-scrollbar {
       height: 100%;
+      border-bottom-left-radius: 15px;
+      border-bottom-right-radius: 15px;
     }
 
     &.has-logo {
@@ -72,7 +105,7 @@
 
     .el-menu {
       border: none;
-      height: 100%;
+      min-height: 100%;
       width: 100% !important;
       background-color: transparent;
     }
@@ -81,22 +114,22 @@
     .submenu-title-noDropdown,
     .el-submenu__title {
       &:hover {
-        background-color: rgba($menuHover, 0.8) !important;
+        background-color: rgba(230, 230, 230, 0.8) !important;
       }
     }
 
     .is-active>.el-submenu__title {
       color: $subMenuActiveText !important;
-      background-color: rgba($menuHover, 0.5) !important;
+      background-color: rgba(230, 230, 230, 0.5) !important;
     }
 
     & .nest-menu .el-submenu>.el-submenu__title,
     & .el-submenu .el-menu-item {
       min-width: $sideBarWidth !important;
-      background-color: rgba($subMenuBg, 0.6) !important;
+      background-color: rgba(245, 245, 245, 0.6) !important;
 
       &:hover {
-        background-color: rgba($subMenuHover, 0.8) !important;
+        background-color: rgba(230, 230, 230, 0.8) !important;
       }
     }
   }
