@@ -7,26 +7,45 @@
     position: relative;
   }
 
-  .sidebar-container {
+  .sidebar-container-wrapper {
     transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-    width: $sideBarWidth !important;
-    background-color: $menuBg;
-    height: 98%;
-    position: fixed;
-    font-size: 0px;
-    top: 0;
-    bottom: 0;
-    left: 0;
     z-index: 1001;
     overflow: hidden;
 
-    // glassmorphism effect
-    background: rgba(255, 255, 255, 0.7);
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border-right: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    border-radius: 15px;
+    // Enhanced glassmorphism effect
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 
+      0 8px 32px 0 rgba(31, 38, 135, 0.2),
+      inset 0 2px 2px rgba(255, 255, 255, 0.5),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    border-radius: 18px;
+
+    .sidebar-container {
+      height: 100%;
+      width: 100%;
+    }
+  }
+
+  .sidebar-container {
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+    width: 100% !important;
+    height: 100%;
+    font-size: 0px;
+    overflow: hidden;
+
+    // Enhanced glassmorphism effect
+    background: rgba(255, 255, 255, 0.75);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: 
+      0 8px 32px 0 rgba(31, 38, 135, 0.2),
+      inset 0 2px 2px rgba(255, 255, 255, 0.5),
+      inset 0 -1px 1px rgba(0, 0, 0, 0.05);
+    border-radius: 18px;
 
     // reset element-ui css
     .horizontal-collapse-transition {
@@ -35,8 +54,8 @@
 
     .scrollbar-wrapper {
       overflow-x: hidden !important;
-      border-bottom-left-radius: 15px;
-      border-bottom-right-radius: 15px;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
       
       // 当内容较少时居中显示菜单项
       display: flex;
@@ -59,7 +78,7 @@
           // 调整菜单项间距，减少底部留白
           .el-menu-item,
           .el-submenu {
-            margin-bottom: 2px;
+            margin-bottom: 3px;
           }
           
           // 最后一个菜单项不需要底部边距
@@ -73,8 +92,8 @@
 
     .el-scrollbar {
       height: 100%;
-      border-bottom-left-radius: 15px;
-      border-bottom-right-radius: 15px;
+      border-bottom-left-radius: 18px;
+      border-bottom-right-radius: 18px;
     }
 
     &.has-logo {
@@ -120,49 +139,69 @@
     // menu hover
     .submenu-title-noDropdown,
     .el-submenu__title {
-      border-radius: 15px;
-      margin: 3px 8px;
+      border-radius: 14px;
+      margin: 4px 10px;
       transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      position: relative;
+      overflow: hidden;
+      
+      &::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(120deg, rgba(255,255,255,0.4), rgba(255,255,255,0.1));
+        z-index: -1;
+        border-radius: 14px;
+      }
       
       &:hover {
-        background: rgba(255, 255, 255, 0.8) !important;
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 
+          0 6px 20px rgba(0, 0, 0, 0.08),
+          inset 0 2px 2px rgba(255, 255, 255, 0.6);
         transform: translateY(-2px);
       }
     }
 
     .is-active>.el-submenu__title {
-      background: rgba(64, 158, 255, 0.1) !important;
+      background: linear-gradient(120deg, rgba(64, 158, 255, 0.2), rgba(64, 158, 255, 0.1)) !important;
       color: $subMenuActiveText !important;
-      border-radius: 15px;
-      margin: 3px 8px;
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      border-radius: 14px;
+      margin: 4px 10px;
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      box-shadow: 
+        0 6px 20px rgba(0, 0, 0, 0.08),
+        inset 0 2px 2px rgba(255, 255, 255, 0.6);
     }
 
     & .nest-menu .el-submenu>.el-submenu__title,
     & .el-submenu .el-menu-item {
       min-width: $sideBarWidth !important;
       background: transparent !important;
-      border-radius: 15px;
-      margin: 3px 8px;
+      border-radius: 14px;
+      margin: 4px 10px;
       transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 
       &:hover {
-        background: rgba(255, 255, 255, 0.8) !important;
-        backdrop-filter: blur(15px);
-        -webkit-backdrop-filter: blur(15px);
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+        background: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        box-shadow: 
+          0 6px 20px rgba(0, 0, 0, 0.08),
+          inset 0 2px 2px rgba(255, 255, 255, 0.6);
         transform: translateY(-2px);
       }
     }
   }
 
   .hideSidebar {
-    .sidebar-container {
+    .sidebar-container-wrapper {
       width: $sideBarCollapseWidth !important;
       height: $sideBarMinHeight !important;
       top: 50%;
@@ -179,7 +218,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 46px; // 添加固定高度以确保垂直居中
+      height: 50px; // 添加固定高度以确保垂直居中
 
       .el-tooltip {
         padding: 0 !important;
@@ -191,45 +230,44 @@
         .svg-icon {
           margin-left: 0;
           margin-right: 0;
-          width: 1rem;
-          height: 1rem;
+          width: 1.2rem;
+          height: 1.2rem;
         }
 
         .sub-el-icon {
           margin-left: 0;
           margin-right: 0;
-          width: 1rem;
-          height: 1rem;
+          width: 1.2rem;
+          height: 1.2rem;
         }
       }
     }
 
     .el-submenu {
-      overflow: hidden;
-
       &>.el-submenu__title {
         padding: 0 !important;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 46px; // 添加固定高度以确保垂直居中
+        text-align: center;
 
         .svg-icon {
           margin-left: 0;
           margin-right: 0;
-          width: 1rem;
-          height: 1rem;
+          width: 1.2rem;
+          height: 1.2rem;
         }
 
         .sub-el-icon {
           margin-left: 0;
           margin-right: 0;
-          width: 1rem;
-          height: 1rem;
+          width: 1.2rem;
+          height: 1.2rem;
         }
 
-        .el-submenu__icon-arrow {
-          display: none;
+        span {
+          height: 0;
+          width: 0;
+          overflow: hidden;
+          visibility: hidden;
+          transition: 0s width ease-in-out, 0s padding-left ease-in-out, 0s padding-right ease-in-out;
         }
       }
     }
@@ -250,7 +288,7 @@
   }
 
   .el-menu--collapse .el-menu .el-submenu {
-    min-width: $sideBarWidth !important;
+    min-width: $sideBarCollapseWidth !important;
   }
 
   // mobile responsive
@@ -260,7 +298,7 @@
     }
 
     .sidebar-container {
-      transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      transition: transform .28s;
       width: $sideBarWidth !important;
     }
 
@@ -306,9 +344,16 @@
   >.el-menu--popup {
     max-height: 100vh;
     overflow-y: auto;
+    border-radius: 14px;
+    border: none;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    background: rgba(255, 255, 255, 0.9);
 
     &::-webkit-scrollbar-track-piece {
-      background: #d3dce6;
+      background: rgba(211, 220, 230, 0.3);
+      border-radius: 8px;
     }
 
     &::-webkit-scrollbar {
@@ -316,27 +361,8 @@
     }
 
     &::-webkit-scrollbar-thumb {
-      background: #99a9bf;
-      border-radius: 20px;
+      background: rgba(153, 169, 191, 0.6);
+      border-radius: 3px;
     }
-  }
-  
-  // 优化垂直菜单展开动画，使用更优雅的缓动函数
-  .el-submenu .el-menu {
-    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-    transform: translateZ(0);
-    backface-visibility: hidden;
-  }
-}
-
-// 优化侧边栏弹出菜单的性能，使用更优雅的缓动函数
-.sidebar-submenu-popper {
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  
-  .el-menu {
-    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1) !important;
-    transform: translateZ(0);
-    backface-visibility: hidden;
   }
 }

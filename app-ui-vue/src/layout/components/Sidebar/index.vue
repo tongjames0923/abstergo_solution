@@ -98,6 +98,7 @@ export default {
   height: 100%;
   border-radius: 10px; // 根据规范调整为10px
   will-change: transform; // 提升整体动画性能
+  position: relative;
 }
 
 .sidebar-menu-wrapper {

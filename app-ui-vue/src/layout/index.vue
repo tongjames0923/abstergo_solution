@@ -2,35 +2,38 @@
   <div :class="classObj" class="app-wrapper">
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
     <div 
-      class="sidebar-container" 
-      ref="sidebarContainer"
+      class="sidebar-container-wrapper"
+      ref="sidebarContainerWrapper"
       @click="handleSidebarClick"
     >
-      <sidebar />
+      <div class="user-avatar-outside">
+        <user-avatar />
+      </div>
+      <div class="sidebar-container">
+        <sidebar />
+      </div>
     </div>
     <div 
       class="main-container" 
       ref="mainContainer"
       @click="handleMainContainerClick"
     >
-      <div :class="{'fixed-header':fixedHeader}">
-        <navbar />
-      </div>
       <app-main />
     </div>
   </div>
 </template>
 
 <script>
-import {AppMain, Navbar, Sidebar} from './components'
+import {AppMain, Sidebar} from './components'
+import UserAvatar from '@/components/UserAvatar'
 import ResizeMixin from './mixin/ResizeHandler'
 
 export default {
   name: 'Layout',
   components: {
-    Navbar,
     Sidebar,
-    AppMain
+    AppMain,
+    UserAvatar
   },
   mixins: [ResizeMixin],
   computed: {
@@ -81,7 +84,8 @@ export default {
   position: relative;
   height: 100%;
   width: 100%;
-  background-color: #f7f7f7;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+  overflow-x: hidden;
 
   &.mobile.openSidebar {
     position: fixed;
@@ -100,35 +104,35 @@ export default {
   transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
 }
 
-.sidebar-container {
-  border-radius: 15px;
-  margin: 10px;
-  height: calc(100% - 20px);
-  cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-}
-
-.fixed-header {
+.sidebar-container-wrapper {
   position: fixed;
-  top: 0;
-  right: 0;
-  z-index: 9;
-  width: calc(100% - #{$sideBarWidth});
+  width: $sideBarWidth !important;
+  height: calc(100% - 20px);
+  top: 10px;
+  left: 10px;
+  z-index: 1001;
   transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-  border-top-left-radius: 15px;
-}
-
-.hideSidebar .fixed-header {
-  width: calc(100% - #{$sideBarCollapseWidth})
-}
-
-.mobile .fixed-header {
-  width: 100%;
-}
-
-.main-container {
-  cursor: pointer;
-  height: 100%;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  display: flex;
+  flex-direction: column;
+  
+  &.hideSidebar {
+    width: $sideBarCollapseWidth !important;
+    height: $sideBarMinHeight !important;
+    top: 50%;
+    transform: translateY(-50%);
+  }
+  
+  .user-avatar-outside {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 12px;
+    flex-shrink: 0;
+  }
+  
+  .sidebar-container {
+    flex: 1;
+    height: calc(100% - 60px);
+    width: 100%;
+  }
 }
 </style>
