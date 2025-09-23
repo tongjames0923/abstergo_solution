@@ -51,17 +51,18 @@ export const constantRoutes = [
     path: '/',
     component: Layout,
     redirect: '/dashboard',
+    meta: { title: '首页', icon: 'el-icon-s-home'},
     children: [{
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard', roles: ['2'] }
+      meta: { title: 'Dashboard', icon: 'el-icon-star-on', roles: ['2'] }
     },
     {
       path: 'table',
       name: 'Table',
       component: () => import('@/views/table/index'),
-      meta: { title: 'Table', icon: 'table', roles: ['2'] }
+      meta: { title: 'Table', icon: 'el-icon-star-on', roles: ['2'] }
     }
     ]
   },

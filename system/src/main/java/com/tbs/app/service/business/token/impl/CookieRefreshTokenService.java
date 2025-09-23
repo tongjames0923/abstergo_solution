@@ -10,7 +10,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import javax.servlet.http.Cookie;
@@ -54,11 +53,6 @@ public class CookieRefreshTokenService extends AbstractRefreshTokenService imple
     @Override
     protected Collection<IRefreshTokenValidator> getRefreshTokenValidators() {
         return refreshTokenValidators;
-    }
-
-    @Override
-    protected void refreshValidate(UserDetails userDetails, ITokenModel accessToken, ITokenModel refreshToken) {
-
     }
 
     @Override

@@ -1,7 +1,8 @@
+
 #app {
 
   .main-container {
-    min-height: 100%;
+    min-height: 80%;
     transition: margin-left .28s;
     margin-left: $sideBarWidth;
     position: relative;
@@ -11,7 +12,7 @@
     transition: width 0.28s;
     width: $sideBarWidth !important;
     background-color: $menuBg;
-    height: 100%;
+    height: 98%;
     position: fixed;
     font-size: 0px;
     top: 0;
@@ -19,6 +20,13 @@
     left: 0;
     z-index: 1001;
     overflow: hidden;
+
+    // glassmorphism effect
+    background: rgba(48, 65, 86, 0.6);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-right: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
 
     // reset element-ui css
     .horizontal-collapse-transition {
@@ -66,27 +74,29 @@
       border: none;
       height: 100%;
       width: 100% !important;
+      background-color: transparent;
     }
 
     // menu hover
     .submenu-title-noDropdown,
     .el-submenu__title {
       &:hover {
-        background-color: $menuHover !important;
+        background-color: rgba($menuHover, 0.8) !important;
       }
     }
 
     .is-active>.el-submenu__title {
       color: $subMenuActiveText !important;
+      background-color: rgba($menuHover, 0.5) !important;
     }
 
     & .nest-menu .el-submenu>.el-submenu__title,
     & .el-submenu .el-menu-item {
       min-width: $sideBarWidth !important;
-      background-color: $subMenuBg !important;
+      background-color: rgba($subMenuBg, 0.6) !important;
 
       &:hover {
-        background-color: $subMenuHover !important;
+        background-color: rgba($subMenuHover, 0.8) !important;
       }
     }
   }
@@ -185,42 +195,3 @@
   }
 }
 
-// when menu collapsed
-.el-menu--vertical {
-  &>.el-menu {
-    .svg-icon {
-      margin-right: 16px;
-    }
-    .sub-el-icon {
-      margin-right: 12px;
-      margin-left: -2px;
-    }
-  }
-
-  .nest-menu .el-submenu>.el-submenu__title,
-  .el-menu-item {
-    &:hover {
-      // you can use $subMenuHover
-      background-color: $menuHover !important;
-    }
-  }
-
-  // the scroll bar appears when the subMenu is too long
-  >.el-menu--popup {
-    max-height: 100vh;
-    overflow-y: auto;
-
-    &::-webkit-scrollbar-track-piece {
-      background: #d3dce6;
-    }
-
-    &::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    &::-webkit-scrollbar-thumb {
-      background: #99a9bf;
-      border-radius: 20px;
-    }
-  }
-}
