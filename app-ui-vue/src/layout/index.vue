@@ -130,6 +130,11 @@ export default {
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   
   &.hideSidebar {
     width: $sideBarCollapseWidth !important;
@@ -137,6 +142,7 @@ export default {
     top: 50%;
     transform: translateY(-50%);
     transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
   
   &.openSidebar {
@@ -160,6 +166,16 @@ export default {
     will-change: transform;
     transform: translateZ(0);
     backface-visibility: hidden;
+    overflow: hidden;
   }
+}
+
+.main-container {
+  height: 100%;
+  width: 100%;
+  transition: none !important;
+  margin-left: 0 !important;
+  padding-left: calc(#{$sideBarCollapseWidth} + 5px); // 只保留比侧边栏收起时稍多一点的空间
+  box-sizing: border-box;
 }
 </style>
