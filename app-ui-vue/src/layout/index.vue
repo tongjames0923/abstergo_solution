@@ -1,27 +1,29 @@
 <template>
   <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
+    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
     <div
       class="sidebar-container-wrapper"
       ref="sidebarContainerWrapper"
       @click="handleSidebarClick"
     >
       <div class="user-avatar-outside">
-        <user-avatar />
+        <user-avatar/>
       </div>
       <div class="sidebar-container">
-        <sidebar />
+        <sidebar/>
       </div>
     </div>
 
     <!-- 左侧面包屑组件 -->
-    <div
-      v-show="!sidebar.opened"
-      class="left-breadcrumb-container"
-      :class="{ 'sidebar-hidden': !sidebar.opened }"
-    >
-      <navbar />
-    </div>
+    <transition name="breadcrumb-slide">
+      <div
+        v-show="!sidebar.opened"
+        class="left-breadcrumb-container"
+        :class="{ 'sidebar-hidden': !sidebar.opened }"
+      >
+        <navbar/>
+      </div>
+    </transition>
 
     <div
       class="main-container"
@@ -29,13 +31,13 @@
       @click="handleMainContainerClick"
     >
       <!-- 原来的 navbar-container 已移除 -->
-      <app-main />
+      <app-main/>
     </div>
   </div>
 </template>
 
 <script>
-import {AppMain, Sidebar, Navbar} from './components'
+import {AppMain, Navbar, Sidebar} from './components'
 import UserAvatar from '@/components/UserAvatar'
 import ResizeMixin from './mixin/ResizeHandler'
 
@@ -69,7 +71,7 @@ export default {
   },
   methods: {
     handleClickOutside() {
-      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+      this.$store.dispatch('app/closeSideBar', {withoutAnimation: false})
     },
     handleSidebarClick(event) {
       // 只有在侧边栏收起时，点击侧边栏区域才展开
@@ -80,7 +82,7 @@ export default {
     handleMainContainerClick(event) {
       // 只有在侧边栏展开且不是移动端时，点击主容器才收起侧边栏
       if (this.sidebar.opened && this.device !== 'mobile') {
-        this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+        this.$store.dispatch('app/closeSideBar', {withoutAnimation: false})
       }
     }
   }
@@ -189,11 +191,47 @@ export default {
 }
 
 .main-container {
-    height: 100%;
-    width: 100%;
-    transition: none !important;
-    margin-left: 0 !important;
-    padding-left: calc(#{$sideBarCollapseWidth} + 50px); // 增加左侧内边距，避免面包屑组件侵占主页面
-    box-sizing: border-box;
+  height: 100%;
+  width: 100%;
+  transition: none !important;
+  margin-left: 0 !important;
+  padding-left: calc(#{$sideBarCollapseWidth} + 12px); // 进一步减少左侧内边距
+  box-sizing: border-box;
+}
+
+// 面包屑滑动动画
+.breadcrumb-slide-enter-active {
+  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.breadcrumb-slide-leave-active {
+  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.breadcrumb-slide-enter {
+  opacity: 0;
+  transform: translateX(-20px) scale(0.9);
+}
+
+.breadcrumb-slide-leave-to {
+  opacity: 0;
+  transform: translateX(-20px) scale(0.9);
+}
+
+.left-breadcrumb-container {
+  position: fixed;
+  top: 6px; // 调整顶部位置以适应更小的Navbar
+  left: 10px; // 调整左侧位置
+  z-index: 1000;
+  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+
+  // 设置最大宽度，避免过度侵占主内容区域
+  max-width: 320px; // 进一步减小最大宽度
+
+  // 当宽度不够时，隐藏超出部分
+  .navbar {
+    max-width: 100%;
+    overflow: hidden;
+  }
 }
 </style>
