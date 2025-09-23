@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import {mapGetters} from 'vuex'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
@@ -103,11 +103,11 @@ export default {
   flex: 1;
   border-bottom-left-radius: 15px;
   border-bottom-right-radius: 15px;
-  
+
   // 当内容较少时，滚动条区域自适应内容高度
   // 当内容较多时，保持滚动功能
   max-height: calc(100vh - 100px); // 为顶部logo和边距留出空间
-  
+
   ::v-deep .el-scrollbar__wrap {
     overflow-x: hidden;
   }
@@ -117,26 +117,26 @@ export default {
   min-height: 100%;
   display: flex;
   flex-direction: column;
-  
+
   // 调整菜单项间距，减少底部留白
   ::v-deep {
     .el-menu-item,
     .el-submenu {
       margin-bottom: 2px;
     }
-    
+
     // 最后一个菜单项不需要底部边距
     .el-menu-item:last-child,
     .el-submenu:last-child {
       margin-bottom: 0;
     }
-    
+
     // 在菜单项较少时，适当添加一些顶部和底部内边距
     .el-menu-item,
     .el-submenu__title {
       margin-top: 2px;
     }
-    
+
     // 第一个菜单项不需要顶部边距
     .el-menu-item:first-child,
     .el-submenu:first-child .el-submenu__title {
