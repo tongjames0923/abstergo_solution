@@ -1,8 +1,18 @@
 <template>
   <div :class="classObj" class="app-wrapper">
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
-    <sidebar class="sidebar-container" />
-    <div class="main-container">
+    <div 
+      class="sidebar-container" 
+      ref="sidebarContainer"
+      @click="handleSidebarClick"
+    >
+      <sidebar />
+    </div>
+    <div 
+      class="main-container" 
+      ref="mainContainer"
+      @click="handleMainContainerClick"
+    >
       <div :class="{'fixed-header':fixedHeader}">
         <navbar />
       </div>
@@ -45,6 +55,18 @@ export default {
   methods: {
     handleClickOutside() {
       this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+    },
+    handleSidebarClick(event) {
+      // 只有在侧边栏收起时，点击侧边栏区域才展开
+      if (!this.sidebar.opened) {
+        this.$store.dispatch('app/toggleSideBar')
+      }
+    },
+    handleMainContainerClick(event) {
+      // 只有在侧边栏展开且不是移动端时，点击主容器才收起侧边栏
+      if (this.sidebar.opened && this.device !== 'mobile') {
+        this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
+      }
     }
   }
 }
@@ -81,6 +103,7 @@ export default {
   border-radius: 15px;
   margin: 10px;
   height: calc(100% - 20px);
+  cursor: pointer;
 }
 
 .fixed-header {
@@ -99,5 +122,10 @@ export default {
 
 .mobile .fixed-header {
   width: 100%;
+}
+
+.main-container {
+  cursor: pointer;
+  height: 100%;
 }
 </style>

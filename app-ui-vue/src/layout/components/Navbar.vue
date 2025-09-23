@@ -1,7 +1,5 @@
 <template>
   <div class="navbar">
-    <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
-
     <breadcrumb class="breadcrumb-container" />
 
     <div class="right-menu">
@@ -23,23 +21,17 @@
 <script>
 import {mapGetters} from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
-import Hamburger from '@/components/Hamburger'
 
 export default {
   components: {
-    Breadcrumb,
-    Hamburger
+    Breadcrumb
   },
   computed: {
     ...mapGetters([
-      'sidebar',
       'avatar'
     ])
   },
   methods: {
-    toggleSideBar() {
-      this.$store.dispatch('app/toggleSideBar')
-    },
     async logout() {
       await this.$store.dispatch('user/logout')
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
