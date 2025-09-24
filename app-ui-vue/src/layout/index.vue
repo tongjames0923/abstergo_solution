@@ -9,36 +9,38 @@
       <div class="user-avatar-outside">
         <user-avatar/>
       </div>
+      <!-- 侧边栏收起时显示主页按钮和当前页面名称 -->
+      <div v-if="!sidebar.opened" class="collapsed-nav">
+        <div class="home-button" @click="goToHome" title="回到首页">
+          <i class="el-icon-house"></i>
+        </div>
+        <div class="current-page-name">
+          {{ currentPageName }}
+        </div>
+      </div>
+      <!-- 侧边栏展开时显示完整的面包屑 -->
+      <div v-else class="expanded-breadcrumb">
+        <capsule-breadcrumb/>
+      </div>
       <div class="sidebar-container">
         <sidebar/>
       </div>
     </div>
-
-    <!-- 左侧面包屑组件 -->
-    <transition name="breadcrumb-slide">
-      <div
-        v-show="!sidebar.opened"
-        class="left-breadcrumb-container"
-        :class="{ 'sidebar-hidden': !sidebar.opened }"
-      >
-        <navbar/>
-      </div>
-    </transition>
 
     <div
       class="main-container"
       ref="mainContainer"
       @click="handleMainContainerClick"
     >
-      <!-- 原来的 navbar-container 已移除 -->
       <app-main/>
     </div>
   </div>
 </template>
 
 <script>
-import {AppMain, Navbar, Sidebar} from './components'
+import {AppMain, Sidebar} from './components'
 import UserAvatar from '@/components/UserAvatar'
+import CapsuleBreadcrumb from '@/components/Breadcrumb/CapsuleBreadcrumb'
 import ResizeMixin from './mixin/ResizeHandler'
 
 export default {
@@ -47,7 +49,7 @@ export default {
     Sidebar,
     AppMain,
     UserAvatar,
-    Navbar
+    CapsuleBreadcrumb
   },
   mixins: [ResizeMixin],
   computed: {
@@ -67,6 +69,11 @@ export default {
         withoutAnimation: this.sidebar.withoutAnimation,
         mobile: this.device === 'mobile'
       }
+    },
+    currentPageName() {
+      const matched = this.$route.matched.filter(item => item.meta && item.meta.title)
+      const lastItem = matched[matched.length - 1]
+      return lastItem ? lastItem.meta.title : ''
     }
   },
   methods: {
@@ -84,6 +91,9 @@ export default {
       if (this.sidebar.opened && this.device !== 'mobile') {
         this.$store.dispatch('app/closeSideBar', {withoutAnimation: false})
       }
+    },
+    goToHome() {
+      this.$router.push('/')
     }
   }
 }
@@ -96,10 +106,10 @@ export default {
 .app-wrapper {
   @include clearfix;
   position: relative;
-  height: 100%;
+  height: 100vh;
   width: 100%;
   background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
-  overflow-x: hidden;
+  overflow: hidden; // 禁止整个页面滚动
 
   &.mobile.openSidebar {
     position: fixed;
@@ -179,6 +189,62 @@ export default {
     backface-visibility: hidden;
   }
 
+  .collapsed-nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-bottom: 12px;
+    transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+
+    .home-button {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      cursor: pointer;
+      transition: all 0.3s ease;
+      transform: scale(1);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+      margin-bottom: 8px;
+
+      &:hover {
+        background: rgba(64, 158, 255, 0.4);
+        transform: scale(1.1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .el-icon-house {
+        font-size: 16px;
+        color: $menuText;
+      }
+    }
+
+    .current-page-name {
+      font-size: 12px;
+      color: $menuText;
+      text-align: center;
+      padding: 3px 6px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.2);
+      backdrop-filter: blur(6px);
+      max-width: 70px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+
+  .expanded-breadcrumb {
+    margin: 0 10px 12px;
+    border-radius: 16px;
+    overflow: hidden;
+  }
+
   .sidebar-container {
     flex: 1;
     height: calc(100% - 60px);
@@ -197,41 +263,32 @@ export default {
   margin-left: 0 !important;
   padding-left: calc(#{$sideBarCollapseWidth} + 30px); // 增加左侧内边距，为面包屑组件预留更多空间
   box-sizing: border-box;
-}
+  overflow-y: overlay; // 允许主内容区域垂直滚动
+  overflow-x: hidden; // 隐藏水平滚动条
 
-// 面包屑滑动动画
-.breadcrumb-slide-enter-active {
-  transition: all 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
 
-.breadcrumb-slide-leave-active {
-  transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
-}
+  // 自定义滚动条样式
+  &::-webkit-scrollbar {
+    width: 8px;
+  }
 
-.breadcrumb-slide-enter {
-  opacity: 0;
-  transform: translateX(-20px) scale(0.9);
-}
+  &::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, rgba(64, 158, 255, 0.4), rgba(64, 158, 255, 0.2));
+    border-radius: 4px;
+    transition: all 0.3s ease;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
 
-.breadcrumb-slide-leave-to {
-  opacity: 0;
-  transform: translateX(-20px) scale(0.9);
-}
+  &::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, rgba(64, 158, 255, 0.6), rgba(64, 158, 255, 0.3));
+    border: 1px solid transparent;
+    background-clip: content-box;
+  }
 
-.left-breadcrumb-container {
-  position: fixed;
-  top: 6px;
-  left: 6px;
-  z-index: 1000;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-
-  // 设置最大宽度，避免过度侵占主内容区域
-  max-width: 320px;
-
-  // 当宽度不够时，隐藏超出部分
-  .navbar {
-    max-width: 100%;
-    overflow: hidden;
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border-radius: 4px;
   }
 }
 </style>

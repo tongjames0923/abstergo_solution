@@ -51,10 +51,7 @@
       </div>
     </transition-group>
 
-    <!-- 关闭按钮 -->
-    <div class="close-button" @click="toggleBreadcrumb">
-      <i class="el-icon-close"></i>
-    </div>
+    <!-- 移除了关闭按钮 -->
   </div>
 </template>
 
@@ -116,14 +113,14 @@ export default {
     },
     formatTitle(title) {
       // 如果文本过长则截断
-      if (title && title.length > 6) {
-        return title.substring(0, 6) + '...'
+      if (title && title.length > 8) {
+        return title.substring(0, 8) + '...'
       }
       return title
     },
     shouldShowTooltip(title) {
       // 判断是否需要显示tooltip
-      return title && title.length > 6
+      return title && title.length > 8
     }
   }
 }
@@ -133,9 +130,9 @@ export default {
 @import "~@/styles/variables.scss";
 
 .capsule-breadcrumb {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  height: 100%;
+  width: 100%;
   max-width: 100%;
   overflow: hidden;
   position: relative;
@@ -144,17 +141,18 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 26px;
-    height: 26px;
+    width: 30px;
+    height: 30px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.3);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    margin-right: 8px;
+    margin-right: 10px;
     cursor: pointer;
     transition: all 0.3s ease;
     transform: scale(1);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
 
     &:hover {
       background: rgba(64, 158, 255, 0.4);
@@ -163,7 +161,7 @@ export default {
     }
 
     .el-icon-house {
-      font-size: 14px;
+      font-size: 16px;
       color: $menuText;
     }
   }
@@ -172,50 +170,51 @@ export default {
     display: flex;
     align-items: center;
     flex-wrap: nowrap;
+    width: calc(100% - 40px);
 
     /* 面包屑项出现/消失的动画 */
     .breadcrumb-enter-active {
-      transition: all 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       transition-delay: 0.1s;
     }
 
     .breadcrumb-leave-active {
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
       position: absolute;
     }
 
     .breadcrumb-enter {
       opacity: 0;
-      transform: translateX(30px) scale(0.8);
-      filter: blur(3px);
+      transform: translateX(20px) scale(0.9);
+      filter: blur(2px);
     }
 
     .breadcrumb-leave-to {
       opacity: 0;
-      transform: translateX(-30px) scale(0.8);
-      filter: blur(3px);
+      transform: translateX(-20px) scale(0.9);
+      filter: blur(2px);
     }
 
     .breadcrumb-move {
-      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
 
     .capsule-item {
       display: flex;
       align-items: center;
-      height: 28px;
+      height: 32px;
       background: rgba(255, 255, 255, 0.25);
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
       border: 1px solid rgba(255, 255, 255, 0.25);
-      border-radius: 14px;
-      padding: 0 12px;
-      margin-right: 8px;
-      transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+      border-radius: 16px;
+      padding: 0 14px;
+      margin-right: 10px;
+      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
       position: relative;
       white-space: nowrap;
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-      max-width: 160px;
+      max-width: 180px;
       transform: scale(1);
       transform-origin: center;
 
@@ -228,7 +227,7 @@ export default {
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
         box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-        transform: translateY(-1px) scale(1.03);
+        transform: translateY(-1px) scale(1.02);
       }
 
       &.is-active {
@@ -236,7 +235,7 @@ export default {
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
         box-shadow: 0 1px 4px rgba(64, 158, 255, 0.2);
-        transform: scale(1.05);
+        transform: scale(1.03);
 
         .capsule-link {
           color: #205cd8;
@@ -247,13 +246,13 @@ export default {
       .capsule-link {
         color: $menuText;
         text-decoration: none;
-        font-size: 13px;
+        font-size: 14px;
         cursor: pointer;
         transition: all 0.2s ease-in-out;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        max-width: 120px;
+        max-width: 140px;
         display: inline-block;
 
         &.no-redirect {
@@ -263,37 +262,11 @@ export default {
       }
 
       .capsule-separator {
-        margin-left: 8px;
+        margin-left: 10px;
         margin-right: 0px;
         color: $subMenuActiveText;
         font-size: 12px;
       }
-    }
-  }
-
-  .close-button {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
-    backdrop-filter: blur(6px);
-    -webkit-backdrop-filter: blur(6px);
-    margin-left: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    transform: scale(1);
-
-    &:hover {
-      background: rgba(255, 255, 255, 0.5);
-      transform: scale(1.1);
-    }
-
-    .el-icon-close {
-      font-size: 14px;
-      color: $menuText;
     }
   }
 }
