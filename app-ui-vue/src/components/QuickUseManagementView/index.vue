@@ -100,6 +100,7 @@
       :title="addFormTitle"
       :visible.sync="addDialogVisible"
       width="600px"
+      :modal="false"
       class="form-dialog"
       @close="handleAddDialogClose"
     >
@@ -122,6 +123,7 @@
       :title="editFormTitle"
       :visible.sync="editDialogVisible"
       width="600px"
+      :modal="false"
       class="form-dialog"
       @close="handleEditDialogClose"
     >
