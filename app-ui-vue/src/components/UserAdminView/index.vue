@@ -185,8 +185,8 @@ import {
   getUserSessions,
   saveUser
 } from '@/api/admin_user'
-import { rangeQueryTransform } from '@/utils/query-help'
-import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
+import {rangeQueryTransform} from '@/utils/query-help'
+import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
 
 export default {
   name: 'UserAdminView',

@@ -200,7 +200,7 @@ export default {
       float: left;
       width: 110px;
       height: 36px;
-      background: #1482f0;
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
       border-radius: 100px;
       text-align: center;
       color: #ffffff;
@@ -212,6 +212,15 @@ export default {
       animation-duration: 0.5s;
       animation-delay: 0.3s;
       animation-fill-mode: forwards;
+      border: none;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);
+        background: linear-gradient(135deg, rgba(102, 126, 234, 1), rgba(118, 75, 162, 1));
+      }
     }
     @keyframes slideUp {
       0% {

@@ -20,7 +20,7 @@
       </div>
       <!-- 侧边栏展开时显示完整的面包屑 -->
       <div v-else class="expanded-breadcrumb">
-        <capsule-breadcrumb/>
+        <capsule-breadcrumb />
       </div>
       <div class="sidebar-container">
         <sidebar/>
@@ -160,9 +160,8 @@ export default {
   will-change: transform;
   transform: translateZ(0);
   backface-visibility: hidden;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
 
@@ -172,7 +171,6 @@ export default {
     top: 50%;
     transform: translateY(-50%);
     transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
   }
 
   &.openSidebar {
@@ -209,13 +207,11 @@ export default {
       cursor: pointer;
       transition: all 0.3s ease;
       transform: scale(1);
-      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
       margin-bottom: 8px;
 
       &:hover {
         background: rgba(64, 158, 255, 0.4);
         transform: scale(1.1);
-        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
       }
 
       .el-icon-house {
@@ -261,34 +257,10 @@ export default {
   width: 100%;
   transition: none !important;
   margin-left: 0 !important;
-  padding-left: calc(#{$sideBarCollapseWidth} + 30px); // 增加左侧内边距，为面包屑组件预留更多空间
+  padding-left: calc(#{$sideBarCollapseWidth} + 20px); // 减少左侧内边距
+  padding-right: 20px; // 添加右侧内边距
   box-sizing: border-box;
-  overflow-y: overlay; // 允许主内容区域垂直滚动
-  overflow-x: hidden; // 隐藏水平滚动条
-
-
-  // 自定义滚动条样式
-  &::-webkit-scrollbar {
-    width: 8px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, rgba(64, 158, 255, 0.4), rgba(64, 158, 255, 0.2));
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    border: 2px solid transparent;
-    background-clip: content-box;
-  }
-
-  &::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, rgba(64, 158, 255, 0.6), rgba(64, 158, 255, 0.3));
-    border: 1px solid transparent;
-    background-clip: content-box;
-  }
-
-  &::-webkit-scrollbar-track {
-    background: transparent;
-    border-radius: 4px;
-  }
+  overflow: hidden; // 禁止主容器滚动，让滚动发生在app-main内部
+  background: transparent;
 }
 </style>
