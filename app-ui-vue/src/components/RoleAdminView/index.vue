@@ -161,6 +161,7 @@
       :visible.sync="roleDialogVisible"
       width="600px"
       :modal-append-to-body="false"
+      :close-on-click-modal="false"
       class="role-dialog"
       @close="handleRoleDialogClose"
     >

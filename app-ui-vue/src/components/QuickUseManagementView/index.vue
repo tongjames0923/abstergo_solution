@@ -101,6 +101,7 @@
       :visible.sync="addDialogVisible"
       width="600px"
       :modal="false"
+      :close-on-click-modal="false"
       class="form-dialog"
       @close="handleAddDialogClose"
     >
@@ -124,6 +125,7 @@
       :visible.sync="editDialogVisible"
       width="600px"
       :modal="false"
+      :close-on-click-modal="false"
       class="form-dialog"
       @close="handleEditDialogClose"
     >

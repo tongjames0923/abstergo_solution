@@ -133,7 +133,7 @@
     </CardList>
 
     <!-- 查看详情对话框 -->
-    <el-dialog :visible.sync="detailDialogVisible" title="项目详情" width="40%">
+    <el-dialog :visible.sync="detailDialogVisible" title="项目详情" width="40%" :close-on-click-modal="false">
       <el-form :model="currentItem" label-width="80px">
         <el-form-item label="项目名称">
           <el-input v-model="currentItem.title" readonly />

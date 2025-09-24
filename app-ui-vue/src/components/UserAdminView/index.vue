@@ -36,6 +36,7 @@
       :visible.sync="resetPasswordDialogVisible"
       width="450px"
       :modal-append-to-body="false"
+      :close-on-click-modal="false"
       class="password-dialog"
       @close="handleResetPasswordDialogClose"
     >
@@ -78,6 +79,7 @@
       :visible.sync="loginInfoDialogVisible"
       width="55%"
       :modal-append-to-body="false"
+      :close-on-click-modal="false"
       class="login-info-dialog"
       @close="handleLoginInfoDialogClose"
     >
@@ -162,6 +164,7 @@
       :visible.sync="roleManagementDialogVisible"
       width="800px"
       :modal-append-to-body="false"
+      :close-on-click-modal="false"
       class="role-dialog"
       @close="handleRoleManagementDialogClose"
     >
