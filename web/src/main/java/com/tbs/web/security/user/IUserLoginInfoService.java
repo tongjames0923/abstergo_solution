@@ -49,4 +49,11 @@ public interface IUserLoginInfoService {
      */
     List<String> getUserAvaliableSessionId(String username);
 
+    /**
+     * 获取用户的登录会话列表
+     *
+     * @param username
+     * @return
+     */
+    List<LoginSessionVO> listUserSessions(String username);
 }

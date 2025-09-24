@@ -5,7 +5,6 @@ import com.tbs.web.security.token.ITokenModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.util.List;
 import java.util.Objects;
 
 @Slf4j
@@ -33,14 +32,6 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
      * @param token 登录令牌
      */
     protected abstract void removeUserDetails(String token);
-
-    /**
-     * 获取用户可用的令牌列表
-     *
-     * @param username 用户名
-     * @return 令牌列表
-     */
-    protected abstract List<String> getUserAvaliableSessionIdsByUserName(String username);
 
     protected static AbstractUserLoginInfoService instance;
 
@@ -83,11 +74,6 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
     public UserDetails getUserDetails(String token) {
         AssertUtil.hasText(token, "查询登录时用户数据令牌不能为空");
         return readUserDetails(token);
-    }
-
-    @Override
-    public List<String> getUserAvaliableSessionId(String username) {
-        return getUserAvaliableSessionIdsByUserName(username);
     }
 
 }

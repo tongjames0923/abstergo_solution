@@ -116,8 +116,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         mapper.updateByPrimaryKey(loginInfoEntity);
     }
 
-    @Override
-    protected List<String> getUserAvaliableSessionIdsByUserName(String username) {
+    private List<String> getUserAvaliableSessionIdsByUserName(String username) {
         SystemUserEntity user = CollUtil.first(systemUserService.queryByUserName(username));
         AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
@@ -138,23 +137,17 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         return super.getUserDetails(token);
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token")
     @Override
-    public void removeUserLoginInfo(String token) {
-        super.removeUserLoginInfo(token);
+    public List<String> getUserAvaliableSessionId(String username) {
+        return getUserAvaliableSessionIdsByUserName(username);
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token")
     @Override
-    public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {
-        super.replaceUserDetails(userDetails, token);
-    }
-
-    public List<LoginSessionVO> getUserLoginSessions(Long userId) {
-        SystemUserEntity user = systemUserService.queryById(userId);
-        AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", userId));
+    public List<LoginSessionVO> listUserSessions(String username) {
+        SystemUserEntity user = CollUtil.first(systemUserService.queryByUserName(username));
+        AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
-        query.where().equal(SystemLoginInfoEntity::getUserId, userId);
+        query.where().equal(SystemLoginInfoEntity::getUserId, user.getId());
         query.getOrderSupport().ifPresent((order) -> {
             order.orderByDesc(SystemLoginInfoEntity::getCreateTime);
             order.orderByDesc(SystemLoginInfoEntity::getUpdateTime);
@@ -205,5 +198,19 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
                 return vo;
             }).collect(Collectors.toList());
+
     }
+
+    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token")
+    @Override
+    public void removeUserLoginInfo(String token) {
+        super.removeUserLoginInfo(token);
+    }
+
+    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token")
+    @Override
+    public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {
+        super.replaceUserDetails(userDetails, token);
+    }
+
 }

@@ -117,11 +117,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     public List<LoginSessionVO> getUserSessions(@PathVariable Long id) {
         var user = getService().queryById(id);
         AssertUtil.notNull(user, "用户不存在");
-        // 使用具体的实现类来获取登录会话信息
-        if (loginInfoService instanceof com.tbs.app.web.login.DefaultUserLoginInfoService) {
-            return ((com.tbs.app.web.login.DefaultUserLoginInfoService) loginInfoService).getUserLoginSessions(id);
-        }
-        return null;
+        return loginInfoService.listUserSessions(user.getUserName());
     }
 
     /**
