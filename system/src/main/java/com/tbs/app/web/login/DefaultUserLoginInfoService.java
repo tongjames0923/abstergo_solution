@@ -14,17 +14,19 @@ import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.sql.ef.IQueryQueryBuilder;
 import com.tbs.sql.utils.QueryUtil;
+import com.tbs.web.enums.TokenStatusEnum;
+import com.tbs.web.enums.TokenTypeEnum;
+import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserLoginInfoService;
+import com.tbs.web.security.user.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -44,6 +46,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @Resource
     private ISystemUserService systemUserService;
 
+    @Resource
+    private ITokenIssuanceCenter tokenIssuanceCenter;
 
     IQueryQueryBuilder<SystemLoginInfoEntity> getAvailableTokensQuery() {
         Date now = new Date();
@@ -144,5 +148,62 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @Override
     public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {
         super.replaceUserDetails(userDetails, token);
+    }
+
+    public List<LoginSessionVO> getUserLoginSessions(Long userId) {
+        SystemUserEntity user = systemUserService.queryById(userId);
+        AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", userId));
+        var query = getAvailableTokensQuery();
+        query.where().equal(SystemLoginInfoEntity::getUserId, userId);
+        query.getOrderSupport().ifPresent((order) -> {
+            order.orderByDesc(SystemLoginInfoEntity::getCreateTime);
+            order.orderByDesc(SystemLoginInfoEntity::getUpdateTime);
+        });
+        var loginInfo = query.fetch();
+        if (CollUtil.isEmpty(loginInfo)) {
+            return Collections.emptyList();
+        }
+
+        // 按sessionId分组
+        return loginInfo.stream().collect(Collectors.groupingBy(SystemLoginInfoEntity::getSessionId)).entrySet()
+            .stream().map(entry -> {
+                String sessionId = entry.getKey();
+                List<SystemLoginInfoEntity> sessionTokens = entry.getValue();
+
+                LoginSessionVO vo = new LoginSessionVO();
+                vo.setSessionId(sessionId);
+                // 获取最早创建时间作为会话创建时间
+                Date createTime =
+                    sessionTokens.stream().filter(Objects::nonNull).map(SystemLoginInfoEntity::getCreateTime)
+                        .filter(Objects::nonNull).min(Date::compareTo).orElse(null);
+                vo.setCreateTime(createTime);
+
+                // 获取该会话的所有令牌
+                List<ITokenModel> tokens =
+                    sessionTokens.stream().filter(Objects::nonNull).map(SystemLoginInfoEntity::getToken)
+                        .filter(Objects::nonNull).map(tokenIssuanceCenter::getTokenByToken).filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                vo.setAccessTokens(tokens);
+
+                // 设置额外信息
+                vo.setTokenCount(tokens.size());
+
+                // 计算有效的刷新令牌数量
+                long activeRefreshTokens = tokenIssuanceCenter.getTokensBySessionId(sessionId).stream()
+                    .filter(token -> token.getTokenType() == TokenTypeEnum.REFRESH_TOKEN)
+                    .filter(token -> token.getStatus() == TokenStatusEnum.ACTIVE).count();
+                vo.setActiveRefreshTokenCount((int)activeRefreshTokens);
+
+                // 判断是否在线（至少有一个有效的刷新令牌）
+                vo.setOnline(activeRefreshTokens > 0);
+
+                // 获取最后更新时间
+                Date lastActiveTime =
+                    sessionTokens.stream().filter(Objects::nonNull).map(SystemLoginInfoEntity::getUpdateTime)
+                        .filter(Objects::nonNull).max(Date::compareTo).orElse(null);
+                vo.setLastActiveTime(lastActiveTime);
+
+                return vo;
+            }).collect(Collectors.toList());
     }
 }

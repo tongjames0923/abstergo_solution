@@ -11,6 +11,7 @@ import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
+import com.tbs.web.security.user.LoginSessionVO;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -113,10 +114,14 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      * @return 用户登录会话列表
      */
     @GetMapping("sessions/{id}")
-    public List<String> getUserSessions(@PathVariable Long id) {
+    public List<LoginSessionVO> getUserSessions(@PathVariable Long id) {
         var user = getService().queryById(id);
         AssertUtil.notNull(user, "用户不存在");
-        return loginInfoService.getUserAvaliableSessionId(user.getUserName());
+        // 使用具体的实现类来获取登录会话信息
+        if (loginInfoService instanceof com.tbs.app.web.login.DefaultUserLoginInfoService) {
+            return ((com.tbs.app.web.login.DefaultUserLoginInfoService) loginInfoService).getUserLoginSessions(id);
+        }
+        return null;
     }
 
     /**

@@ -77,7 +77,7 @@
     <el-dialog
       title="用户登录信息"
       :visible.sync="loginInfoDialogVisible"
-      width="55%"
+      width="80%"
       :modal-append-to-body="false"
       :close-on-click-modal="false"
       class="login-info-dialog"
@@ -93,7 +93,17 @@
               </el-tooltip>
             </template>
           </el-table-column>
-          <el-table-column prop="userName" label="用户名" width="120" />
+          <el-table-column prop="createTime" label="登录时间" width="160" />
+          <el-table-column prop="tokenCount" label="令牌数" width="80" />
+          <el-table-column prop="activeRefreshTokenCount" label="有效刷新令牌" width="120" />
+          <el-table-column prop="online" label="状态" width="100">
+            <template slot-scope="scope">
+              <el-tag :type="scope.row.online ? 'success' : 'info'">
+                {{ scope.row.online ? '在线' : '离线' }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="lastActiveTime" label="最后活动时间" width="160" />
           <el-table-column label="操作" width="100">
             <template slot-scope="scope">
               <el-button size="mini" type="primary" @click="showSessionTokens(scope.row.sessionId)">
@@ -300,11 +310,8 @@ export default {
     async handleShowLoginInfo(row) {
       try {
         const { data } = await getUserSessions(row.id)
-        // 构造会话数据结构
-        this.loginSessions = (data || []).map(sessionId => ({
-          sessionId: sessionId,
-          userName: row.userName
-        }))
+        // 使用新的会话数据结构
+        this.loginSessions = data || []
         this.showTokens = false
         this.loginInfoDialogVisible = true
       } catch (error) {
@@ -411,26 +418,14 @@ export default {
     /**
      * 处理密码重置提交事件
      */
-    handlePasswordSubmit() {
+    async handlePasswordSubmit() {
       this.$refs.passwordForm.validate(async(valid) => {
         if (valid) {
           try {
-            // 构造用户数据，只更新密码
-            const userData = {
-              id: this.passwordForm.id,
-              userName: this.passwordForm.userName,
-              password: this.passwordForm.password
-            }
-
-            // 调用后端保存接口
-            const response = await saveUser(userData)
-
+            const response = await saveUser(this.passwordForm)
             if (response.code === 200) {
               this.$message.success('密码重置成功')
               this.resetPasswordDialogVisible = false
-
-              // 刷新数据
-              this.$refs.userManagement.refresh()
             } else {
               this.$message.error(response.message || '密码重置失败')
             }
@@ -438,10 +433,6 @@ export default {
             console.error('密码重置失败:', error)
             this.$message.error('密码重置失败')
           }
-        } else {
-          console.log('表单验证失败')
-          this.$message.warning('请填写正确的表单信息')
-          return false
         }
       })
     },
@@ -451,12 +442,6 @@ export default {
      */
     handleResetPasswordDialogClose() {
       this.$refs.passwordForm.resetFields()
-      this.passwordForm = {
-        id: undefined,
-        userName: '',
-        password: '',
-        confirmPassword: ''
-      }
     },
 
     /**
@@ -471,7 +456,8 @@ export default {
      * 处理权限管理弹窗关闭事件
      */
     handleRoleManagementDialogClose() {
-      this.currentUserId = undefined
+      this.currentUserId = null
+      this.roleManagementDialogVisible = false
     }
   }
 }
