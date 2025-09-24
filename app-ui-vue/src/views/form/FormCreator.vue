@@ -101,7 +101,7 @@
 <script>
 import Index from '@/components/FormEditor/index.vue'
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import { saveFormConfig } from '@/api/view'
+import {saveFormConfig} from '@/api/view'
 
 export default {
   name: 'FormCreator',
@@ -222,7 +222,6 @@ export default {
 <style scoped>
 .form-creator-container {
   padding: 20px;
-  background-color: #f5f7fa;
   min-height: calc(100vh - 84px);
 }
 
@@ -277,7 +276,6 @@ export default {
 }
 
 .data-card pre {
-  background-color: #f5f5f5;
   padding: 15px;
   border-radius: 4px;
   white-space: pre-wrap;
@@ -290,7 +288,6 @@ export default {
 .instructions-content h3 {
   margin-top: 20px;
   margin-bottom: 10px;
-  color: #303133;
 }
 
 .instructions-content ol,
