@@ -68,8 +68,8 @@ div:focus {
 }
 
 // 主要动画缓动函数
-$ease-in-out-quint: cubic-bezier(0.25, 0.1, 0.25, 1);
-$ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
+$ease-in-out-quint: cubic-bezier(0.23, 1, 0.32, 1);
+$ease-out-back: cubic-bezier(0.23, 1, 0.32, 1);
 
 // 通用动画类
 .fade-enter-active,
@@ -149,4 +149,5 @@ $ease-out-back: cubic-bezier(0.34, 1.56, 0.64, 1);
   will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
+  transition: all 0.3s $ease-in-out-quint !important;
 }

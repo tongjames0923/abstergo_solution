@@ -119,7 +119,7 @@ export default {
   // 添加侧边栏动画增强
   &.hideSidebar {
     .sidebar-container-wrapper {
-      transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53) !important;
+      transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1) !important;
     }
   }
 
@@ -154,7 +154,7 @@ export default {
   top: 10px;
   left: 10px;
   z-index: 1001;
-  transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   display: flex;
   flex-direction: column;
   will-change: transform;
@@ -170,11 +170,11 @@ export default {
     height: $sideBarMinHeight !important;
     top: 50%;
     transform: translateY(-50%);
-    transition: all 0.4s cubic-bezier(0.64, 0.57, 0.67, 1.53);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   &.openSidebar {
-    transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
+    transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   }
 
   .user-avatar-outside {
