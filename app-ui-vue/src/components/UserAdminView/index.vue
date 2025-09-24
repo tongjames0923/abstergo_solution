@@ -85,83 +85,72 @@
     >
       <!-- 第一层：会话列表 -->
       <div v-if="!showTokens">
-        <el-table :data="loginSessions" border style="width: 100%">
-          <el-table-column prop="sessionId" label="会话ID" min-width="180">
-            <template slot-scope="scope">
-              <el-tooltip :content="scope.row.sessionId" placement="top">
-                <span>{{ formatToken(scope.row.sessionId) }}</span>
-              </el-tooltip>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createTime" label="登录时间" width="160" />
-          <el-table-column prop="tokenCount" label="令牌数" width="80" />
-          <el-table-column prop="activeRefreshTokenCount" label="有效刷新令牌" width="120" />
-          <el-table-column prop="online" label="状态" width="100">
-            <template slot-scope="scope">
-              <el-tag :type="scope.row.online ? 'success' : 'info'">
-                {{ scope.row.online ? '在线' : '离线' }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="lastActiveTime" label="最后活动时间" width="160" />
-          <el-table-column label="操作" width="100">
-            <template slot-scope="scope">
-              <el-button size="mini" type="primary" @click="showSessionTokens(scope.row.sessionId)">
-                查看Token
-              </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
+        <div style="margin-bottom: 10px;">
+          <el-button size="mini" @click="backToSessions" v-if="showTokens">返回会话列表</el-button>
+        </div>
+        <DynamicTable
+          :data="loginSessions"
+          :columns="sessionColumns"
+          :pagination="false"
+          :border="true"
+          :stripe="true"
+          @row-click="handleSessionRowClick"
+        >
+          <template #actions="{ row }">
+            <el-button size="mini" type="primary" @click.stop="showSessionTokens(row.sessionId)">
+              查看Token
+            </el-button>
+          </template>
+        </DynamicTable>
       </div>
 
       <!-- 第二层：Token列表 -->
       <div v-else>
         <div style="margin-bottom: 10px;">
           <el-button size="mini" @click="backToSessions">返回会话列表</el-button>
-          <span style="margin-left: 10px;">会话ID: {{ formatToken(currentSessionId) }}</span>
+          <span style="margin-left: 10px;">会话ID:
+            <el-tooltip :content="currentSessionId" placement="top">
+              <span>{{ formatToken(currentSessionId) }}</span>
+            </el-tooltip>
+          </span>
         </div>
-        <el-table :data="sessionTokens" border style="width: 100%">
-          <el-table-column prop="token" label="Token" min-width="180">
-            <template slot-scope="scope">
-              <el-tooltip :content="scope.row.token" placement="top">
-                <span>{{ formatToken(scope.row.token) }}</span>
-              </el-tooltip>
-            </template>
-          </el-table-column>
-          <el-table-column prop="userName" label="用户名" width="120" />
-          <el-table-column prop="tokenType" label="Token类型" width="120">
-            <template slot-scope="scope">
-              <el-tag size="mini" :type="scope.row.tokenType === 'ACCESS_TOKEN' ? 'success' : 'warning'">
-                {{ scope.row.tokenType === 'ACCESS_TOKEN' ? '访问令牌' : scope.row.tokenType }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="status" label="状态" width="100">
-            <template slot-scope="scope">
-              <el-tag size="mini" :type="scope.row.status === 'ACTIVE' ? 'success' : 'danger'">
-                {{ scope.row.status === 'ACTIVE' ? '活跃' : scope.row.status }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createTime" label="创建时间" width="160">
-            <template slot-scope="scope">
-              {{ scope.row.createTime ? scope.row.createTime.replace(' ', '\n') : '' }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="expireTime" label="过期时间" width="160">
-            <template slot-scope="scope">
-              {{ scope.row.expireTime ? scope.row.expireTime.replace(' ', '\n') : '' }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="ipAddr" label="IP地址" width="120" />
-          <el-table-column prop="createType" label="创建类型" width="100">
-            <template slot-scope="scope">
-              <el-tag size="mini" type="primary">
-                {{ scope.row.createType === 'LOGIN' ? '登录' : scope.row.createType }}
-              </el-tag>
-            </template>
-          </el-table-column>
-        </el-table>
+        <DynamicTable
+          :data="sessionTokens"
+          :columns="tokenColumns"
+          :pagination="false"
+          :border="true"
+          :stripe="true"
+        >
+          <template #tokenType="{ row }">
+            <el-tag
+              size="mini"
+              :type="row.tokenType === 'ACCESS_TOKEN' ? 'success' : row.tokenType === 'REFRESH_TOKEN' ? 'warning' : 'info'">
+              {{
+                row.tokenType === 'ACCESS_TOKEN' ? '访问令牌' : row.tokenType === 'REFRESH_TOKEN' ? '刷新令牌' : row.tokenType || '未知类型'
+              }}
+            </el-tag>
+          </template>
+
+          <template #status="{ row }">
+            <el-tag
+              size="mini"
+              :type="row.status === 'ACTIVE' ? 'success' : row.status === 'INACTIVE' ? 'info' : row.status === 'REVOKE' ? 'danger' : row.status === 'EXPIRED' ? 'warning' : 'info'">
+              {{
+                row.status === 'ACTIVE' ? '活跃' : row.status === 'INACTIVE' ? '无效' : row.status === 'REVOKE' ? '已撤销' : row.status === 'EXPIRED' ? '已过期' : row.status || '未知状态'
+              }}
+            </el-tag>
+          </template>
+
+          <template #createType="{ row }">
+            <el-tag
+              size="mini"
+              :type="row.createType === 'LOGIN' ? 'primary' : row.createType === 'REFRESH' ? 'success' : 'info'">
+              {{
+                row.createType === 'LOGIN' ? '登录' : row.createType === 'REFRESH' ? '刷新' : row.createType || '未知'
+              }}
+            </el-tag>
+          </template>
+        </DynamicTable>
       </div>
       <div slot="footer" class="dialog-footer">
         <el-button @click="loginInfoDialogVisible = false">关 闭</el-button>
@@ -189,6 +178,7 @@
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
+import DynamicTable from '@/components/DynamicTable/index.vue'
 import {
   activateUser,
   adminQueryUser,
@@ -205,7 +195,8 @@ export default {
   name: 'UserAdminView',
   components: {
     QuickUseManagementView,
-    UserRoleAdminView
+    UserRoleAdminView,
+    DynamicTable
   },
   data() {
     // 确认密码验证规则
@@ -236,15 +227,102 @@ export default {
       currentSessionId: '', // 当前查看的会话ID
       passwordRules: {
         password: [
-          { required: true, message: '请输入新密码', trigger: 'blur' },
-          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
+          {required: true, message: '请输入新密码', trigger: 'blur'},
+          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
         ],
         confirmPassword: [
-          { required: true, validator: validateConfirmPassword, trigger: 'blur' }
+          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
         ]
       },
+      // 会话列表列配置
+      sessionColumns: [
+        {
+          prop: 'sessionId',
+          label: '会话ID',
+          minWidth: 180,
+          showOverflowTooltip: true,
+          formatter: (row) => this.formatToken(row.sessionId)
+        },
+        {
+          prop: 'createTime',
+          label: '登录时间',
+          width: 160
+        },
+        {
+          prop: 'tokenCount',
+          label: '令牌数',
+          width: 80
+        },
+        {
+          prop: 'activeRefreshTokenCount',
+          label: '有效刷新令牌',
+          width: 120
+        },
+        {
+          prop: 'online',
+          label: '状态',
+          width: 100,
+          formatter: (row) => row.online ? '在线' : '离线'
+        },
+        {
+          prop: 'lastActiveTime',
+          label: '最后活动时间',
+          width: 160
+        }
+      ],
+      // Token列表列配置
+      tokenColumns: [
+        {
+          prop: 'token',
+          label: 'Token',
+          minWidth: 180,
+          showOverflowTooltip: true,
+          formatter: (row) => this.formatToken(row.token)
+        },
+        {
+          prop: 'userName',
+          label: '用户名',
+          width: 120
+        },
+        {
+          prop: 'tokenType',
+          label: 'Token类型',
+          width: 120,
+          slot: 'tokenType'
+        },
+        {
+          prop: 'status',
+          label: '状态',
+          width: 100,
+          slot: 'status'
+        },
+        {
+          prop: 'createTime',
+          label: '创建时间',
+          width: 160,
+          formatter: (row) => row.createTime ? row.createTime.replace(' ', '\n') : ''
+        },
+        {
+          prop: 'expireTime',
+          label: '过期时间',
+          width: 160,
+          formatter: (row) => row.expireTime ? row.expireTime.replace(' ', '\n') : ''
+        },
+        {
+          prop: 'ipAddr',
+          label: 'IP地址',
+          width: 140,
+          formatter: (row) => row.ipAddr || '无'
+        },
+        {
+          prop: 'createType',
+          label: '创建类型',
+          width: 100,
+          slot: 'createType'
+        }
+      ],
       columns: [
-        { prop: 'id', label: 'ID', width: 80 },
+        {prop: 'id', label: 'ID', width: 80},
         {
           prop: 'avatar',
           label: '头像',
@@ -253,9 +331,9 @@ export default {
             return <el-avatar src={scope.row.avatar}></el-avatar>
           }
         },
-        { prop: 'userName', label: '用户名', width: 180 },
-        { prop: 'nickName', label: '昵称', width: 180 },
-        { prop: 'remark', label: '备注', minWidth: 200 },
+        {prop: 'userName', label: '用户名', width: 180},
+        {prop: 'nickName', label: '昵称', width: 180},
+        {prop: 'remark', label: '备注', minWidth: 200},
         {
           prop: 'flag',
           label: '状态',
@@ -272,12 +350,20 @@ export default {
             }
           }
         },
-        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
-        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
+        {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
+        {prop: 'updateTime', label: '更新时间', width: 180, sortable: true}
       ]
     }
   },
   methods: {
+    /**
+     * 处理会话行点击事件
+     */
+    handleSessionRowClick(row) {
+      // 可以在这里添加行点击事件的处理逻辑
+      console.log('点击了会话行:', row)
+    },
+
     /**
      * 格式化Token显示，前3后4，中间用*代替
      * @param token 完整的Token字符串
@@ -309,7 +395,7 @@ export default {
 
     async handleShowLoginInfo(row) {
       try {
-        const { data } = await getUserSessions(row.id)
+        const {data} = await getUserSessions(row.id)
         // 使用新的会话数据结构
         this.loginSessions = data || []
         this.showTokens = false
@@ -331,8 +417,7 @@ export default {
     // 显示会话下的Token列表
     async showSessionTokens(sessionId) {
       try {
-        this.$message.info('正在加载Token信息...')
-        const { data } = await getTokensBySessionId(sessionId)
+        const {data} = await getTokensBySessionId(sessionId)
         this.sessionTokens = data || []
         this.currentSessionId = sessionId
         this.showTokens = true
@@ -419,7 +504,7 @@ export default {
      * 处理密码重置提交事件
      */
     async handlePasswordSubmit() {
-      this.$refs.passwordForm.validate(async(valid) => {
+      this.$refs.passwordForm.validate(async (valid) => {
         if (valid) {
           try {
             const response = await saveUser(this.passwordForm)
