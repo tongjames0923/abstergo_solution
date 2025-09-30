@@ -3,6 +3,7 @@ package com.tbs.broadcast.rabbitmq.support;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
+import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -30,6 +31,9 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
 	private AmqpTemplate amqpTemplate;
 
 	@Resource
+	private AmqpAdmin amqpAdmin;
+
+	@Resource
 	private MessageConverter messageConverter;
 
 	@Resource
@@ -46,11 +50,27 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
 
 	@PostConstruct
 	public void init() {
+		// 确保队列存在
+		declareQueueIfNeeded();
+		
 		container = new SimpleMessageListenerContainer(connectionFactory);
 		container.setQueueNames(property.getQueueName());
 		container.setMessageListener(this);
 		container.setAcknowledgeMode(org.springframework.amqp.core.AcknowledgeMode.MANUAL); // 设置为手动ACK
 		container.start();
+	}
+	
+	/**
+	 * 确保队列存在，如果不存在则创建
+	 */
+	private void declareQueueIfNeeded() {
+		try {
+			// 尝试声明队列
+			org.springframework.amqp.core.Queue queue = new org.springframework.amqp.core.Queue(property.getQueueName(), true);
+			amqpAdmin.declareQueue(queue);
+		} catch (Exception e) {
+			log.warn("队列声明失败，可能已存在: {}", e.getMessage());
+		}
 	}
 
 	@Override

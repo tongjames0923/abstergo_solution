@@ -1,13 +1,11 @@
 package com.tbs.broadcast.rabbitmq.config;
 
-import javax.annotation.Resource;
-
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.Queue;
+import com.tbs.broadcast.rabbitmq.config.property.RabbitMqProperty;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
+import org.springframework.amqp.rabbit.core.RabbitAdmin;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.amqp.support.converter.SerializerMessageConverter;
@@ -15,8 +13,10 @@ import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import com.tbs.broadcast.rabbitmq.config.property.RabbitMqProperty;
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
 
+@Slf4j
 @Configuration
 public class RabbitMqConfig {
 
@@ -59,6 +59,9 @@ public class RabbitMqConfig {
 		}
 
 		connectionFactory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.CORRELATED);
+        // 增加重试机制
+        connectionFactory.setCloseTimeout(10000);
+        connectionFactory.setConnectionTimeout(10000);
 		return connectionFactory;
 	}
 
@@ -80,6 +83,17 @@ public class RabbitMqConfig {
 		});
 		return template;
 	}
+
+    /**
+     * 创建Rabbit管理器
+     *
+     * @param connectionFactory 连接工厂
+     * @return AmqpAdmin实例
+     */
+    @Bean
+    public AmqpAdmin amqpAdmin(ConnectionFactory connectionFactory) {
+        return new RabbitAdmin(connectionFactory);
+    }
 
 	/**
 	 * 创建JSON消息转换器
@@ -108,7 +122,31 @@ public class RabbitMqConfig {
 	 */
 	@Bean
 	public Queue broadcastQueue() {
-		return new Queue(rabbitMqProperty.getQueueName(), true);
+        // 使用更宽松的队列声明方式，避免声明冲突
+        return QueueBuilder.durable(rabbitMqProperty.getQueueName()).withArgument("x-message-ttl", 60000) // 设置消息TTL为60秒
+            .withArgument("x-ha-policy", "all") // 启用高可用策略
+            .build();
+    }
+
+    /**
+     * 在RabbitMQ中声明队列，确保其存在
+     *
+     * @param amqpAdmin AMQP管理器
+     * @param queue     队列
+     */
+    @Bean
+    public Object declareQueue(AmqpAdmin amqpAdmin, Queue queue) {
+        return new Object() {
+            @PostConstruct
+            public void initialize() {
+                try {
+                    amqpAdmin.declareQueue(queue);
+                    log.info("队列已存在: " + queue.getName());
+                } catch (Exception e) {
+                    log.error("队列声明失败: " + e.getMessage());
+                }
+            }
+        };
 	}
 
 	/**

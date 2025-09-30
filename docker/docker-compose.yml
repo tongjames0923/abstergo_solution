@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  redis:
+    image: docker.m.daocloud.io/library/redis:latest
+    container_name: abstergo_redis
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass 123456
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  rabbitmq:
+    image: docker.m.daocloud.io/library/rabbitmq:3-management
+    container_name: abstergo_rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: admin
+      RABBITMQ_DEFAULT_PASS: admin123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    restart: always
+
+  zookeeper:
+    image: docker.m.daocloud.io/library/zookeeper:latest
+    container_name: abstergo_zookeeper
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    environment:
+      ZOO_MY_ID: 1
+      ZOO_SERVERS: server.1=zoo1:2888:3888
+    volumes:
+      - zookeeper_data:/data
+      - zookeeper_datalog:/datalog
+    restart: always
+
+volumes:
+  redis_data:
+  rabbitmq_data:
+  zookeeper_data:
+  zookeeper_datalog:

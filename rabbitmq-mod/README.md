@@ -2,15 +2,23 @@
 
 RabbitMQ 模块提供了基于 RabbitMQ 的消息广播和分布式事件处理功能，实现了应用间的异步通信。
 
+## 功能特点
+
+1. **自动创建组件**：通过Spring Bean自动创建交换机、队列和绑定关系
+2. **代码创建组件**：提供通过代码动态创建RabbitMQ组件的能力
+3. **高可用性**：支持队列的高可用策略和消息TTL设置
+4. **灵活配置**：支持通过配置文件或代码方式配置RabbitMQ组件
+
 ## 目录结构
 
 ```
 com.tbs.broadcast.rabbitmq
-├── config                    # RabbitMQ 配置类
-│   ├── RabbitMqConfig.java  # RabbitMQ 核心配置
-│   └── property             # 配置属性类
+├── config                          # RabbitMQ 配置类
+│   ├── RabbitMqConfig.java        # RabbitMQ 核心配置
+│   ├── RabbitMqInitializer.java   # RabbitMQ组件初始化器
+│   └── property                   # 配置属性类
 │       └── RabbitMqProperty.java
-└── support                  # RabbitMQ 支持类
+└── support                         # RabbitMQ 支持类
     ├── AbstractRabbaitMqSupport.java
     └── SimpleRabbitMqSupport.java
 ```
@@ -19,18 +27,30 @@ com.tbs.broadcast.rabbitmq
 
 ### 1. RabbitMQ 配置类 (RabbitMqConfig.java)
 
-[RabbitMqConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqConfig.java#L13-L124) 是 RabbitMQ 的核心配置类，负责创建连接工厂、RabbitTemplate、消息转换器以及定义交换机、队列和绑定关系。
+[RabbitMqConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqConfig.java#L13-L132) 是 RabbitMQ 的核心配置类，负责创建连接工厂、RabbitTemplate、消息转换器以及定义交换机、队列和绑定关系。
 
 #### 主要 Bean 说明
 
 1. `connectionFactory()`: 创建 RabbitMQ 连接工厂
 2. `rabbitTemplate()`: 创建用于发送消息的 RabbitTemplate
-3. `jsonMessageConverter()`: 创建 JSON 消息转换器
-4. `broadcastExchange()`: 创建广播交换机
-5. `broadcastQueue()`: 创建广播队列
-6. `broadcastBinding()`: 绑定队列到交换机
+3. `amqpAdmin()`: 创建 RabbitMQ 管理器
+4. `jsonMessageConverter()`: 创建 JSON 消息转换器
+5. `broadcastExchange()`: 创建广播交换机
+6. `broadcastQueue()`: 创建广播队列
+7. `broadcastBinding()`: 绑定队列到交换机
 
-### 2. RabbitMQ 属性配置类 (RabbitMqProperty.java)
+### 2. RabbitMQ 初始化器 (RabbitMqInitializer.java)
+
+[RabbitMqInitializer](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqInitializer.java#L15-L90) 类负责在应用程序启动时通过代码直接创建交换机、队列和绑定关系。
+
+#### 主要功能
+
+1. `initialize()`: 应用程序启动时初始化RabbitMQ组件
+2. `createExchange()`: 动态创建交换机
+3. `createQueue()`: 动态创建队列
+4. `createBinding()`: 动态创建绑定关系
+
+### 3. RabbitMQ 属性配置类 (RabbitMqProperty.java)
 
 [RabbitMqProperty](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/property/RabbitMqProperty.java#L10-L35) 类定义了 RabbitMQ 的配置属性，可通过 `application.yml` 进行配置。
 
@@ -90,7 +110,38 @@ tbs:
     publisher-confirm: true
 ```
 
-### 2. 使用 RabbitMQ 广播功能
+### 2. 通过代码创建RabbitMQ组件
+
+除了通过配置自动创建RabbitMQ组件外，还可以通过代码动态创建：
+
+```java
+@Component
+public class CustomRabbitMqInitializer {
+    
+    @Autowired
+    private AmqpAdmin amqpAdmin;
+    
+    public void createCustomQueue() {
+        // 创建队列
+        Queue queue = QueueBuilder.durable("custom.queue")
+            .withArgument("x-message-ttl", 30000)
+            .build();
+        amqpAdmin.declareQueue(queue);
+        
+        // 创建交换机
+        DirectExchange exchange = new DirectExchange("custom.exchange");
+        amqpAdmin.declareExchange(exchange);
+        
+        // 创建绑定
+        Binding binding = BindingBuilder.bind(queue)
+            .to(exchange)
+            .with("custom.routing.key");
+        amqpAdmin.declareBinding(binding);
+    }
+}
+```
+
+### 3. 使用 RabbitMQ 广播功能
 
 要使用 RabbitMQ 的广播功能，需要：
 
@@ -125,7 +176,7 @@ public void sendMessage(String message) {
 }
 ```
 
-### 3. 监听消息
+### 4. 监听消息
 
 通过继承 [AbstractRabbaitMqSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/support/AbstractRabbaitMqSupport.java#L19-L85) 类并实现相关方法来监听消息：
 
