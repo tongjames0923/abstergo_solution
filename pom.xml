@@ -24,6 +24,7 @@
         <module>rabbitmq-mod</module>
         <module>shared</module>
         <module>shared/interfaces</module>
+        <module>eureka-server</module>
     </modules>
 
     <groupId>com.tbs</groupId>
