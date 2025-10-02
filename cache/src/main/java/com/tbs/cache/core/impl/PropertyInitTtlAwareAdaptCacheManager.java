@@ -26,18 +26,23 @@ public class PropertyInitTtlAwareAdaptCacheManager extends AbstractTtlAwareAdapt
 
     @Override
     protected ICacheExpiredActuator getExpiredActuator() {
+        if (expiredActuator == null) {
+            expiredActuator = SpringUtil.getBean(cacheProperty.getExpiredActuator());
+        }
         return expiredActuator;
     }
 
     @Override
     public void startUp() throws RuntimeException {
-        cacheManager = SpringUtil.getBean(cacheProperty.getCacheManagerImplementation());
-        expiredActuator = SpringUtil.getBean(cacheProperty.getExpiredActuator());
+
         super.startUp();
     }
 
     @Override
     public CacheManager getOrginal() {
+        if (cacheManager == null) {
+            cacheManager = SpringUtil.getBean(cacheProperty.getCacheManagerImplementation());
+        }
         return cacheManager;
     }
 

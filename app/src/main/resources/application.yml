@@ -33,6 +33,11 @@ tbs:
 
 # Spring配置
 spring:
+  application:
+    name: app-service
+  mvc:
+    pathmatch:
+      matching-strategy: ant_path_matcher
   jpa:
     hibernate:
       ddl-auto: update
@@ -90,3 +95,11 @@ server:
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
+  instance:
+    prefer-ip-address: true
+    ip-address: 127.0.0.1  # 明确指定IP地址
