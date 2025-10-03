@@ -8,7 +8,7 @@ services:
       - "6379:6379"
     command: redis-server --requirepass 123456
     volumes:
-      - redis_data:/data
+      - ~/docker/abstergo/redis:/data
     restart: always
 
   rabbitmq:
@@ -21,11 +21,11 @@ services:
       RABBITMQ_DEFAULT_USER: admin
       RABBITMQ_DEFAULT_PASS: admin123
     volumes:
-      - rabbitmq_data:/var/lib/rabbitmq
+      - ~/docker/abstergo/rabbitmq:/var/lib/rabbitmq
     restart: always
 
   zookeeper:
-    image: zookeeper:latest
+    image: docker.m.daocloud.io/library/zookeeper:latest
     container_name: abstergo_zookeeper
     ports:
       - "2181:2181"
@@ -33,12 +33,6 @@ services:
       - "3888:3888"
       - "8989:8080"
     volumes:
-      - zookeeper_data:/data
-      - zookeeper_datalog:/datalog
+      - ~/docker/abstergo/zookeeper/data:/data
+      - ~/docker/abstergo/zookeeper/datalog:/datalog
     restart: always
-
-volumes:
-  redis_data:
-  rabbitmq_data:
-  zookeeper_data:
-  zookeeper_datalog:
