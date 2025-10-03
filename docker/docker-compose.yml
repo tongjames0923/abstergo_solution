@@ -25,15 +25,13 @@ services:
     restart: always
 
   zookeeper:
-    image: docker.m.daocloud.io/library/zookeeper:latest
+    image: zookeeper:latest
     container_name: abstergo_zookeeper
     ports:
       - "2181:2181"
       - "2888:2888"
       - "3888:3888"
-    environment:
-      ZOO_MY_ID: 1
-      ZOO_SERVERS: server.1=zoo1:2888:3888
+      - "8989:8080"
     volumes:
       - zookeeper_data:/data
       - zookeeper_datalog:/datalog
