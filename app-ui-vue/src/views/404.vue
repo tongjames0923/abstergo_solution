@@ -215,7 +215,7 @@ export default {
       border: none;
       backdrop-filter: blur(10px);
       transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-      
+
       &:hover {
         transform: translateY(-2px);
         box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3);

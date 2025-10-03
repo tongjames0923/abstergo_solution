@@ -5,27 +5,27 @@
         <el-tab-pane label="表单配置" name="config">
           <div class="tab-content">
             <el-input v-model="val" type="number" class="dashboard-input" />
-            <el-button @click="click()" class="dashboard-button">test</el-button>
-            <el-button @click="simpleTest()" class="dashboard-button">自我测试</el-button>
+            <el-button class="dashboard-button" @click="click()">test</el-button>
+            <el-button class="dashboard-button" @click="simpleTest()">自我测试</el-button>
             <span class="divider">分割线</span>
             <FormConfigEditor ref="formConfigEditor" :value.sync="config" class="form-config-editor" />
-            <el-button @click="previewForm()" class="dashboard-button primary">预览表单</el-button>
+            <el-button class="dashboard-button primary" @click="previewForm()">预览表单</el-button>
           </div>
         </el-tab-pane>
 
         <el-tab-pane label="表单预览" name="preview">
           <div class="tab-content">
-            <el-button @click="activeTab = 'config'" class="dashboard-button">返回配置</el-button>
+            <el-button class="dashboard-button" @click="activeTab = 'config'">返回配置</el-button>
             <DynamicForm
               v-if="previewConfig"
               ref="dynamicForm"
               :config="previewConfig"
               :value="formData"
+              class="dynamic-form"
               @submit="handleFormSubmit"
               @reset="handleFormReset"
-              class="dynamic-form"
             />
-            <el-button v-if="previewConfig" @click="collectFormData" class="dashboard-button primary">获取表单数据</el-button>
+            <el-button v-if="previewConfig" class="dashboard-button primary" @click="collectFormData">获取表单数据</el-button>
             <pre v-if="collectedData" class="data-preview">{{ collectedData }}</pre>
           </div>
         </el-tab-pane>
@@ -155,19 +155,19 @@ export default {
   background: rgba(255, 255, 255, 0.5);
   backdrop-filter: blur(5px);
   transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-  
+
   &:hover {
     background: rgba(64, 158, 255, 0.1);
     border-color: #409eff;
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   }
-  
+
   &.primary {
     background: linear-gradient(135deg, rgba(64, 158, 255, 0.8), rgba(64, 158, 255, 0.6));
     border: none;
     color: white;
-    
+
     &:hover {
       background: linear-gradient(135deg, rgba(64, 158, 255, 1), rgba(64, 158, 255, 0.8));
       box-shadow: 0 6px 16px rgba(64, 158, 255, 0.3);

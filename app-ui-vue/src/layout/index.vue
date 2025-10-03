@@ -1,18 +1,18 @@
 <template>
   <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
+    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
     <div
-      class="sidebar-container-wrapper"
       ref="sidebarContainerWrapper"
+      class="sidebar-container-wrapper"
       @click="handleSidebarClick"
     >
       <div class="user-avatar-outside">
-        <user-avatar/>
+        <user-avatar />
       </div>
       <!-- 侧边栏收起时显示主页按钮和当前页面名称 -->
       <div v-if="!sidebar.opened" class="collapsed-nav">
-        <div class="home-button" @click="goToHome" title="回到首页">
-          <i class="el-icon-house"></i>
+        <div class="home-button" title="回到首页" @click="goToHome">
+          <i class="el-icon-house" />
         </div>
         <div class="current-page-name">
           {{ currentPageName }}
@@ -23,22 +23,22 @@
         <capsule-breadcrumb />
       </div>
       <div class="sidebar-container">
-        <sidebar/>
+        <sidebar />
       </div>
     </div>
 
     <div
-      class="main-container"
       ref="mainContainer"
+      class="main-container"
       @click="handleMainContainerClick"
     >
-      <app-main/>
+      <app-main />
     </div>
   </div>
 </template>
 
 <script>
-import {AppMain, Sidebar} from './components'
+import { AppMain, Sidebar } from './components'
 import UserAvatar from '@/components/UserAvatar'
 import CapsuleBreadcrumb from '@/components/Breadcrumb/CapsuleBreadcrumb'
 import ResizeMixin from './mixin/ResizeHandler'
@@ -78,7 +78,7 @@ export default {
   },
   methods: {
     handleClickOutside() {
-      this.$store.dispatch('app/closeSideBar', {withoutAnimation: false})
+      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
     },
     handleSidebarClick(event) {
       // 只有在侧边栏收起时，点击侧边栏区域才展开
@@ -89,7 +89,7 @@ export default {
     handleMainContainerClick(event) {
       // 只有在侧边栏展开且不是移动端时，点击主容器才收起侧边栏
       if (this.sidebar.opened && this.device !== 'mobile') {
-        this.$store.dispatch('app/closeSideBar', {withoutAnimation: false})
+        this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
       }
     },
     goToHome() {

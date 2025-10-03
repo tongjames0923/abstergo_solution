@@ -8,10 +8,10 @@
       </app-link>
     </template>
 
-    <el-submenu 
-      v-else 
-      ref="subMenu" 
-      :index="resolvePath(item.path)" 
+    <el-submenu
+      v-else
+      ref="subMenu"
+      :index="resolvePath(item.path)"
       popper-append-to-body
       :popper-class="'sidebar-submenu-popper'"
     >

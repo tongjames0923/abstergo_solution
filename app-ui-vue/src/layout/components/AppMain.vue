@@ -1,5 +1,5 @@
 <template>
-  <section class="app-main" ref="appMain">
+  <section ref="appMain" class="app-main">
     <transition name="fade-transform" mode="out-in">
       <router-view :key="key" />
     </transition>
@@ -15,42 +15,42 @@ export default {
     }
   },
   mounted() {
-    const appMain = this.$refs.appMain;
+    const appMain = this.$refs.appMain
     if (appMain) {
       // 监听滚动事件，添加视觉效果
-      appMain.addEventListener('scroll', this.handleScroll);
+      appMain.addEventListener('scroll', this.handleScroll)
 
       // 初始化时检查滚动位置
-      this.handleScroll.call({$el: appMain});
+      this.handleScroll.call({ $el: appMain })
+    }
+  },
+  beforeDestroy() {
+    const appMain = this.$refs.appMain
+    if (appMain) {
+      appMain.removeEventListener('scroll', this.handleScroll)
     }
   },
   methods: {
     handleScroll(event) {
-      const element = event ? event.target : this.$el;
-      const scrollTop = element.scrollTop;
-      const scrollHeight = element.scrollHeight;
-      const clientHeight = element.clientHeight;
+      const element = event ? event.target : this.$el
+      const scrollTop = element.scrollTop
+      const scrollHeight = element.scrollHeight
+      const clientHeight = element.clientHeight
 
       // 移除所有滚动相关的类
-      element.classList.remove('scroll-shadow-top', 'scroll-shadow-bottom', 'scroll-shadow-both');
+      element.classList.remove('scroll-shadow-top', 'scroll-shadow-bottom', 'scroll-shadow-both')
 
       // 根据滚动位置添加相应的类
       if (scrollTop > 0 && scrollTop + clientHeight < scrollHeight) {
         // 既不是顶部也不是底部
-        element.classList.add('scroll-shadow-both');
+        element.classList.add('scroll-shadow-both')
       } else if (scrollTop > 0) {
         // 不在顶部
-        element.classList.add('scroll-shadow-top');
+        element.classList.add('scroll-shadow-top')
       } else if (scrollTop + clientHeight < scrollHeight) {
         // 不在底部
-        element.classList.add('scroll-shadow-bottom');
+        element.classList.add('scroll-shadow-bottom')
       }
-    }
-  },
-  beforeDestroy() {
-    const appMain = this.$refs.appMain;
-    if (appMain) {
-      appMain.removeEventListener('scroll', this.handleScroll);
     }
   }
 }

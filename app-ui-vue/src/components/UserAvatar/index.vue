@@ -1,18 +1,18 @@
 <template>
   <div class="user-avatar-container" @click.stop>
-    <el-dropdown trigger="click" @command="handleCommand" placement="bottom-start">
+    <el-dropdown trigger="click" placement="bottom-start" @command="handleCommand">
       <div class="avatar-wrapper">
         <div class="avatar-inner">
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
         </div>
-        <div class="avatar-ring"></div>
+        <div class="avatar-ring" />
         <div class="avatar-ping">
-          <div class="ping-dot"></div>
+          <div class="ping-dot" />
         </div>
       </div>
       <el-dropdown-menu slot="dropdown" class="user-dropdown-menu">
         <el-dropdown-item command="logout">
-          <i class="el-icon-switch-button"></i>
+          <i class="el-icon-switch-button" />
           <span>退出登录</span>
         </el-dropdown-item>
       </el-dropdown-menu>
@@ -61,7 +61,7 @@ export default {
     display: flex;
     align-items: center;
     justify-content: center;
-    
+
     .avatar-inner {
       width: 42px;
       height: 42px;
@@ -72,7 +72,7 @@ export default {
       transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
       transform: translateZ(0);
       backface-visibility: hidden;
-      
+
       .user-avatar {
         width: 100%;
         height: 100%;
@@ -80,7 +80,7 @@ export default {
         transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
       }
     }
-    
+
     .avatar-ring {
       position: absolute;
       width: 46px;
@@ -93,7 +93,7 @@ export default {
       transform: translateZ(0);
       backface-visibility: hidden;
     }
-    
+
     .avatar-ping {
       position: absolute;
       top: 0;
@@ -104,7 +104,7 @@ export default {
       display: flex;
       align-items: center;
       justify-content: center;
-      
+
       .ping-dot {
         width: 8px;
         height: 8px;
@@ -114,18 +114,18 @@ export default {
         animation: pulse 1.5s infinite ease-in-out;
       }
     }
-    
+
     &:hover {
       .avatar-inner {
         transform: scale(1.05);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
       }
-      
+
       .avatar-ring {
         transform: scale(1.1) rotate(90deg);
       }
     }
-    
+
     &:active {
       .avatar-inner {
         transform: scale(0.95);
@@ -143,15 +143,15 @@ export default {
   -webkit-backdrop-filter: blur(15px);
   background: rgba(255, 255, 255, 0.9);
   animation: dropdownFadeIn 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
-  
+
   ::v-deep .el-dropdown-menu__item {
     padding: 12px 16px;
     transition: all 0.2s ease;
-    
+
     &:hover {
       background: rgba(245, 108, 108, 0.1);
     }
-    
+
     i {
       margin-right: 8px;
       font-size: 16px;

@@ -101,7 +101,7 @@
 <script>
 import Index from '@/components/FormEditor/index.vue'
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import {saveFormConfig} from '@/api/view'
+import { saveFormConfig } from '@/api/view'
 
 export default {
   name: 'FormCreator',

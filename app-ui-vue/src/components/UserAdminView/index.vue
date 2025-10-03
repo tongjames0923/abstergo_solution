@@ -86,7 +86,7 @@
       <!-- 第一层：会话列表 -->
       <div v-if="!showTokens">
         <div style="margin-bottom: 10px;">
-          <el-button size="mini" @click="backToSessions" v-if="showTokens">返回会话列表</el-button>
+          <el-button v-if="showTokens" size="mini" @click="backToSessions">返回会话列表</el-button>
         </div>
         <DynamicTable
           :data="loginSessions"
@@ -124,7 +124,8 @@
           <template #tokenType="{ row }">
             <el-tag
               size="mini"
-              :type="row.tokenType === 'ACCESS_TOKEN' ? 'success' : row.tokenType === 'REFRESH_TOKEN' ? 'warning' : 'info'">
+              :type="row.tokenType === 'ACCESS_TOKEN' ? 'success' : row.tokenType === 'REFRESH_TOKEN' ? 'warning' : 'info'"
+            >
               {{
                 row.tokenType === 'ACCESS_TOKEN' ? '访问令牌' : row.tokenType === 'REFRESH_TOKEN' ? '刷新令牌' : row.tokenType || '未知类型'
               }}
@@ -134,7 +135,8 @@
           <template #status="{ row }">
             <el-tag
               size="mini"
-              :type="row.status === 'ACTIVE' ? 'success' : row.status === 'INACTIVE' ? 'info' : row.status === 'REVOKE' ? 'danger' : row.status === 'EXPIRED' ? 'warning' : 'info'">
+              :type="row.status === 'ACTIVE' ? 'success' : row.status === 'INACTIVE' ? 'info' : row.status === 'REVOKE' ? 'danger' : row.status === 'EXPIRED' ? 'warning' : 'info'"
+            >
               {{
                 row.status === 'ACTIVE' ? '活跃' : row.status === 'INACTIVE' ? '无效' : row.status === 'REVOKE' ? '已撤销' : row.status === 'EXPIRED' ? '已过期' : row.status || '未知状态'
               }}
@@ -144,7 +146,8 @@
           <template #createType="{ row }">
             <el-tag
               size="mini"
-              :type="row.createType === 'LOGIN' ? 'primary' : row.createType === 'REFRESH' ? 'success' : 'info'">
+              :type="row.createType === 'LOGIN' ? 'primary' : row.createType === 'REFRESH' ? 'success' : 'info'"
+            >
               {{
                 row.createType === 'LOGIN' ? '登录' : row.createType === 'REFRESH' ? '刷新' : row.createType || '未知'
               }}
@@ -188,8 +191,8 @@ import {
   getUserSessions,
   saveUser
 } from '@/api/admin_user'
-import {rangeQueryTransform} from '@/utils/query-help'
-import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
+import { rangeQueryTransform } from '@/utils/query-help'
+import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
 
 export default {
   name: 'UserAdminView',
@@ -227,11 +230,11 @@ export default {
       currentSessionId: '', // 当前查看的会话ID
       passwordRules: {
         password: [
-          {required: true, message: '请输入新密码', trigger: 'blur'},
-          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
         ],
         confirmPassword: [
-          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
+          { required: true, validator: validateConfirmPassword, trigger: 'blur' }
         ]
       },
       // 会话列表列配置
@@ -322,7 +325,7 @@ export default {
         }
       ],
       columns: [
-        {prop: 'id', label: 'ID', width: 80},
+        { prop: 'id', label: 'ID', width: 80 },
         {
           prop: 'avatar',
           label: '头像',
@@ -331,9 +334,9 @@ export default {
             return <el-avatar src={scope.row.avatar}></el-avatar>
           }
         },
-        {prop: 'userName', label: '用户名', width: 180},
-        {prop: 'nickName', label: '昵称', width: 180},
-        {prop: 'remark', label: '备注', minWidth: 200},
+        { prop: 'userName', label: '用户名', width: 180 },
+        { prop: 'nickName', label: '昵称', width: 180 },
+        { prop: 'remark', label: '备注', minWidth: 200 },
         {
           prop: 'flag',
           label: '状态',
@@ -350,8 +353,8 @@ export default {
             }
           }
         },
-        {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
-        {prop: 'updateTime', label: '更新时间', width: 180, sortable: true}
+        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
+        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
       ]
     }
   },
@@ -395,7 +398,7 @@ export default {
 
     async handleShowLoginInfo(row) {
       try {
-        const {data} = await getUserSessions(row.id)
+        const { data } = await getUserSessions(row.id)
         // 使用新的会话数据结构
         this.loginSessions = data || []
         this.showTokens = false
@@ -417,7 +420,7 @@ export default {
     // 显示会话下的Token列表
     async showSessionTokens(sessionId) {
       try {
-        const {data} = await getTokensBySessionId(sessionId)
+        const { data } = await getTokensBySessionId(sessionId)
         this.sessionTokens = data || []
         this.currentSessionId = sessionId
         this.showTokens = true
@@ -504,7 +507,7 @@ export default {
      * 处理密码重置提交事件
      */
     async handlePasswordSubmit() {
-      this.$refs.passwordForm.validate(async (valid) => {
+      this.$refs.passwordForm.validate(async(valid) => {
         if (valid) {
           try {
             const response = await saveUser(this.passwordForm)

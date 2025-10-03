@@ -1,10 +1,10 @@
 <template>
   <div class="capsule-breadcrumb">
     <!-- 首页按钮 -->
-    <div class="home-button" @click="goToHome" title="回到首页">
-      <i class="el-icon-house"></i>
+    <div class="home-button" title="回到首页" @click="goToHome">
+      <i class="el-icon-house" />
     </div>
-    
+
     <transition-group name="breadcrumb" tag="div" class="capsule-container">
       <div
         v-for="(item, index) in displayedLevels"
@@ -47,7 +47,7 @@
           </span>
         </template>
 
-        <i v-if="index < displayedLevels.length - 1" class="capsule-separator el-icon-arrow-right"></i>
+        <i v-if="index < displayedLevels.length - 1" class="capsule-separator el-icon-arrow-right" />
       </div>
     </transition-group>
 
@@ -86,19 +86,19 @@ export default {
   methods: {
     getBreadcrumb() {
       // only show routes with meta.title
-      let matched = this.$route.matched.filter(item => item.meta && item.meta.title)
+      const matched = this.$route.matched.filter(item => item.meta && item.meta.title)
 
       // 过滤掉不需要在面包屑中显示的路由
       this.levelList = matched.filter(item => item.meta && item.meta.title && item.meta.breadcrumb !== false)
     },
     pathCompile(path) {
       // To solve this problem https://github.com/PanJiaChen/vue-element-admin/issues/561
-      const {params} = this.$route
+      const { params } = this.$route
       var toPath = pathToRegexp.compile(path)
       return toPath(params)
     },
     handleLink(item) {
-      const {redirect, path} = item
+      const { redirect, path } = item
       if (redirect) {
         this.$router.push(redirect)
         return

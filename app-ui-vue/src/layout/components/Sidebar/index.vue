@@ -14,11 +14,11 @@
           mode="vertical"
           class="sidebar-menu"
         >
-          <sidebar-item 
-            v-for="route in processedRoutes" 
-            :key="route.path" 
-            :item="route" 
-            :base-path="route.path" 
+          <sidebar-item
+            v-for="route in processedRoutes"
+            :key="route.path"
+            :item="route"
+            :base-path="route.path"
           />
         </el-menu>
       </el-scrollbar>
@@ -27,7 +27,7 @@
 </template>
 
 <script>
-import {mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
@@ -130,7 +130,7 @@ export default {
   ::v-deep .el-scrollbar__wrap {
     overflow-x: hidden;
   }
-  
+
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
   will-change: transform;
   transform: translateZ(0);
@@ -187,7 +187,7 @@ export default {
         transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
       }
     }
-    
+
     // 优化子菜单展开动画
     .el-submenu .el-menu {
       will-change: transform, opacity;
