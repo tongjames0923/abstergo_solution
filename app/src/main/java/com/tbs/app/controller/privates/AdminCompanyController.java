@@ -7,9 +7,12 @@ import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import com.tbs.web.result.AjaxResult;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +29,7 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/private/admin/company")
 @PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
-@Api(value = "管理员公司管理", tags = "管理员公司管理接口")
+@Tag(name = "管理员公司管理接口", description = "管理员公司管理接口")
 public class AdminCompanyController
 		extends AbstractCrudController<SystemCompanyEntity, Long, CommonSystemCompanyQueryCriteria> {
 
@@ -46,8 +49,10 @@ public class AdminCompanyController
 	 */
 	@Override
 	@GetMapping("get/{id}")
-	@ApiOperation(value = "获取公司信息", notes = "根据公司ID获取公司详细信息")
-	public AjaxResult get(@ApiParam(name = "id", value = "公司ID", required = true) @PathVariable Long id) {
+    @Operation(summary = "获取公司信息", description = "根据公司ID获取公司详细信息")
+    @ApiResponse(responseCode = "200", description = "成功获取公司信息",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult get(@Parameter(name = "id", description = "公司ID", required = true) @PathVariable Long id) {
 		return super.get(id);
 	}
 
@@ -59,9 +64,11 @@ public class AdminCompanyController
 	 */
 	@Override
 	@PostMapping("save")
-	@ApiOperation(value = "保存公司信息", notes = "创建或更新公司信息")
-	public AjaxResult save(
-			@ApiParam(name = "entity", value = "公司信息", required = true) @RequestBody SystemCompanyEntity entity) {
+    @Operation(summary = "保存公司信息", description = "创建或更新公司信息")
+    @ApiResponse(responseCode = "200", description = "成功保存公司信息",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+	public AjaxResult save(@Parameter(name = "entity", description = "公司信息",
+        required = true) @RequestBody SystemCompanyEntity entity) {
 		return super.save(entity);
 	}
 
@@ -73,8 +80,10 @@ public class AdminCompanyController
 	 */
 	@Override
 	@PostMapping("delete/{id}")
-	@ApiOperation(value = "删除公司信息", notes = "根据公司ID删除公司信息")
-	public AjaxResult delete(@ApiParam(name = "id", value = "公司ID", required = true) @PathVariable Long id) {
+    @Operation(summary = "删除公司信息", description = "根据公司ID删除公司信息")
+    @ApiResponse(responseCode = "200", description = "成功删除公司信息",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult delete(@Parameter(name = "id", description = "公司ID", required = true) @PathVariable Long id) {
 		return super.delete(id);
 	}
 
@@ -88,11 +97,13 @@ public class AdminCompanyController
 	 */
 	@Override
 	@PostMapping("query")
-	@ApiOperation(value = "查询公司列表", notes = "根据条件查询公司列表，支持分页")
+    @Operation(summary = "查询公司列表", description = "根据条件查询公司列表，支持分页")
+    @ApiResponse(responseCode = "200", description = "成功查询公司列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult query(
-			@ApiParam(name = "criteria", value = "查询条件") @RequestBody CommonSystemCompanyQueryCriteria criteria,
-			@ApiParam(name = "pageNum", value = "页码") @RequestParam(required = false) Long pageNum,
-			@ApiParam(name = "pageSize", value = "每页大小") @RequestParam(required = false) Long pageSize) {
+        @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemCompanyQueryCriteria criteria,
+        @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
+        @Parameter(name = "pageSize", description = "每页大小") @RequestParam(required = false) Long pageSize) {
 		return super.query(criteria, pageNum, pageSize);
 	}
 

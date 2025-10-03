@@ -12,9 +12,12 @@ import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.LoginSessionVO;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,7 +36,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/private/admin/user")
 @PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
-@Api(value = "管理员用户管理", tags = "管理员用户管理接口")
+@Tag(name = "管理员用户管理接口", description = "管理员用户管理接口")
 public class AdminUserController extends AbstractCrudController<SystemUserEntity, Long, CommonSystemUserQueryCriteria> {
     @Resource
     private ISystemUserService service;
@@ -57,8 +60,11 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @GetMapping("get/{id}")
-    @ApiOperation(value = "获取管理员用户", notes = "根据用户ID获取管理员用户详细信息")
-    public AjaxResult get(@ApiParam(name = "id", value = "用户ID", required = true) @PathVariable Long id) {
+    @Operation(summary = "获取管理员用户", description = "根据用户ID获取管理员用户详细信息")
+    @ApiResponse(responseCode = "200", description = "成功获取管理员用户", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult get(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
 
@@ -70,9 +76,12 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @PostMapping("save")
-    @ApiOperation(value = "保存管理员用户", notes = "创建或更新管理员用户信息")
+    @Operation(summary = "保存管理员用户", description = "创建或更新管理员用户信息")
+    @ApiResponse(responseCode = "200", description = "成功保存管理员用户", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult save(
-        @ApiParam(name = "entity", value = "用户信息", required = true) @RequestBody SystemUserEntity entity) {
+        @Parameter(name = "entity", description = "用户信息", required = true) @RequestBody SystemUserEntity entity) {
         return super.save(entity);
     }
 
@@ -84,8 +93,11 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @PostMapping("delete/{id}")
-    @ApiOperation(value = "删除管理员用户", notes = "根据用户ID删除管理员用户")
-    public AjaxResult delete(@ApiParam(name = "id", value = "用户ID", required = true) @PathVariable Long id) {
+    @Operation(summary = "删除管理员用户", description = "根据用户ID删除管理员用户")
+    @ApiResponse(responseCode = "200", description = "成功删除管理员用户", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult delete(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.delete(id);
     }
 
@@ -99,11 +111,14 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @PostMapping("query")
-    @ApiOperation(value = "查询管理员用户", notes = "根据条件查询管理员用户列表，支持分页")
+    @Operation(summary = "查询管理员用户", description = "根据条件查询管理员用户列表，支持分页")
+    @ApiResponse(responseCode = "200", description = "成功查询管理员用户列表", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult query(
-        @ApiParam(name = "criteria", value = "查询条件") @RequestBody CommonSystemUserQueryCriteria criteria,
-        @ApiParam(name = "pageNum", value = "页码") @RequestParam(required = false) Long pageNum,
-        @ApiParam(name = "pageSize", value = "每页大小") @RequestParam(required = false) Long pageSize) {
+        @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemUserQueryCriteria criteria,
+        @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
+        @Parameter(name = "pageSize", description = "每页大小") @RequestParam(required = false) Long pageSize) {
         return super.query(criteria, pageNum, pageSize);
     }
 
@@ -114,7 +129,11 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      * @return 用户登录会话列表
      */
     @GetMapping("sessions/{id}")
-    public List<LoginSessionVO> getUserSessions(@PathVariable Long id) {
+    @Operation(summary = "获取用户登录会话列表", description = "根据用户ID获取用户登录会话列表")
+    @ApiResponse(responseCode = "200", description = "成功获取用户登录会话列表", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = LoginSessionVO.class)))
+    public List<LoginSessionVO> getUserSessions(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         var user = getService().queryById(id);
         AssertUtil.notNull(user, "用户不存在");
         return loginInfoService.listUserSessions(user.getUserName());
@@ -127,7 +146,11 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      * @return 用户登录会话列表
      */
     @GetMapping("tokens/{sessionId}")
-    public List<ITokenModel> listTokensBySessionId(@PathVariable String sessionId) {
+    @Operation(summary = "获取用户登录会话的Token数据", description = "根据会话ID获取用户登录会话的Token数据")
+    @ApiResponse(responseCode = "200", description = "成功获取用户登录会话的Token数据", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = ITokenModel.class)))
+    public List<ITokenModel> listTokensBySessionId(@Parameter(name = "sessionId", description = "用户登录会话ID", required = true) @PathVariable String sessionId) {
         return center.getTokensBySessionId(sessionId).stream().collect(Collectors.toList());
     }
 

@@ -15,8 +15,11 @@ import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.uitl.AjaxUtil;
 import com.tbs.web.uitl.AuthUtil;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,7 +39,7 @@ import java.util.Optional;
 @RestController
 @RequestMapping("/private/user")
 @PreAuthorize("@authUtil.userLoggedIn")
-@Api(value = "登录后用户接口", tags = "登录后用户接口")
+@Tag(name = "登录后用户接口", description = "登录后用户接口")
 public class PrivateUserController extends BaseController {
 
     @Resource
@@ -57,7 +60,10 @@ public class PrivateUserController extends BaseController {
      * @return 登出结果，true表示登出成功
      */
     @GetMapping("/logout")
-    @ApiOperation(value = "用户登出", notes = "退出当前登录状态")
+    @Operation(summary = "用户登出", description = "退出当前登录状态")
+    @ApiResponse(responseCode = "200", description = "成功登出", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = Boolean.class)))
     public Boolean logout() {
         ITokenModel tokenModel = AuthUtil.getInstance().getCurrentTokenModel();
         tokenRemover.inactiveToken(tokenModel);
@@ -75,7 +81,10 @@ public class PrivateUserController extends BaseController {
      * @return 用户信息VO对象，包含用户名、昵称、头像和可用角色列表
      */
     @GetMapping("/info")
-    @ApiOperation(value = "获取用户信息", notes = "获取当前登录用户的详细信息，包括用户名、昵称、头像和可用角色列表")
+    @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细信息，包括用户名、昵称、头像和可用角色列表")
+    @ApiResponse(responseCode = "200", description = "成功获取用户信息", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = UserInfoVO.class)))
     public UserInfoVO info() {
         UserInfoVO userInfoVO = new UserInfoVO();
         userInfoVO.setUserName(AuthUtil.getInstance().getCurrentUser().getUsername());
@@ -95,6 +104,10 @@ public class PrivateUserController extends BaseController {
      * @return 刷新令牌
      */
     @GetMapping("getRefreshToken")
+    @Operation(summary = "获取刷新令牌", description = "获取用于无感刷新的令牌")
+    @ApiResponse(responseCode = "200", description = "成功获取刷新令牌", 
+        content = @Content(mediaType = "application/json", 
+            schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult getRefreshToken() {
         var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
         if (refreshTokenService.isEmpty()) {
@@ -111,7 +124,10 @@ public class PrivateUserController extends BaseController {
     //     */
     //    @GetMapping("/statusOptions")
     //    @Cacheable(cacheNames = "DEAD_CACHE", key = "'userStatusOptions'")
-    //    @ApiOperation(value = "获取用户状态选项", notes = "获取用户状态的下拉选项列表，结果会被缓存")
+    //    @Operation(summary = "获取用户状态选项", description = "获取用户状态的下拉选项列表，结果会被缓存")
+    //    @ApiResponse(responseCode = "200", description = "成功获取用户状态选项", 
+    //        content = @Content(mediaType = "application/json", 
+    //            schema = @Schema(implementation = Collection.class)))
     //    public Collection<OptionValue<Integer>> getUserStatusOptions() {
     //        return Arrays.stream(SystemUserStatusEnum.values()).map(m -> {
     //            return new OptionValue<>(m.getCode(), m.getValue());
