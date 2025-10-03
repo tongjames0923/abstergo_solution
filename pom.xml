@@ -25,6 +25,8 @@
         <module>shared</module>
         <module>shared/interfaces</module>
         <module>eureka-server</module>
+        <module>system/system-api</module>
+        <module>system/default-system-impl</module>
     </modules>
 
     <groupId>com.tbs</groupId>

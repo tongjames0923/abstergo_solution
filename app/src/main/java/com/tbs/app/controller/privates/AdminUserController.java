@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.interfaces.AbstractCrudController;

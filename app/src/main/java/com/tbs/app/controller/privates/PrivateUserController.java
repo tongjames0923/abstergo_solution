@@ -1,7 +1,7 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.service.business.role.IUserRoleRelationService;
-import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.role.IUserRoleRelationService;
+import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;

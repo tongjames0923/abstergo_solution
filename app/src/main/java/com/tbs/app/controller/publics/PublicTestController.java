@@ -1,13 +1,8 @@
 package com.tbs.app.controller.publics;
 
-import javax.annotation.Resource;
-
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.web.bind.annotation.*;
-
 import com.tbs.app.service.TestService;
-import com.tbs.app.service.business.role.ISystemRoleService;
-import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.role.ISystemRoleService;
+import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
@@ -16,6 +11,10 @@ import com.tbs.sql.query.impl.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * @author abstergo

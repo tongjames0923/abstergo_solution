@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.service.business.company.ICompanyUserRelationService;
+import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;

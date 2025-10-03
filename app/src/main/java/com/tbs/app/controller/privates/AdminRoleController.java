@@ -1,15 +1,10 @@
 package com.tbs.app.controller.privates;
 
-import javax.annotation.Resource;
-
-import com.tbs.shared.constant.RoleConstants;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import com.tbs.app.service.business.role.ISystemRoleService;
-import com.tbs.app.service.business.role.IUserRoleRelationService;
-import com.tbs.app.service.business.user.ISystemUserService;
+import com.tbs.app.service.role.ISystemRoleService;
+import com.tbs.app.service.role.IUserRoleRelationService;
+import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
@@ -17,10 +12,13 @@ import com.tbs.sql.query.impl.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
-
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * 管理员角色管理控制器

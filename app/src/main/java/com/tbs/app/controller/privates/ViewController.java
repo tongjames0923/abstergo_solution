@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.service.business.view.IViewService;
+import com.tbs.app.service.view.IViewService;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
