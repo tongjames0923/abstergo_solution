@@ -89,6 +89,8 @@ spring:
 logging:
   level:
     com.tbs.schedule: debug
+    com.alibaba.dubbo: warn
+    org.apache.zookeeper: warn
 server:
   shutdown: graceful
 
@@ -124,6 +126,5 @@ dubbo:
   application:
     name: dubbo-app-system-service
     logger: slf4j
-    metadata-service-port:
   registry:
     address: zookeeper://127.0.0.1:2181
