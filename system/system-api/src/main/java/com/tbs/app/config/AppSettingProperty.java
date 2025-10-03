@@ -8,6 +8,8 @@ import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.util.IUserDetailsTransformer;
 import com.tbs.shared.util.impl.SimpleUserDetailsTransformer;
+import com.tbs.web.security.authentication.IAuthManager;
+import com.tbs.web.security.authentication.impl.SpringSecurityContextHolderAuthManager;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.impl.NoEncryptPassword;
 import lombok.Data;

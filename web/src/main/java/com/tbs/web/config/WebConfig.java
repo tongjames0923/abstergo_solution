@@ -7,7 +7,7 @@ import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.gate.center.impl.LoginGateWayCenter;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -64,13 +64,14 @@ public class WebConfig {
      * @throws Exception 配置异常
      */
     @Bean
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     public SecurityFilterChain securityWebFilterChain(HttpSecurity http,
         AuthenticationEntryPoint authenticationEntryPoint, AccessDeniedHandler accessDeniedHandler,
-        @Nullable AuthenticationProvider provider, @Value("${tbs.web.auth.enable:false}") boolean authPropertyEnabled,
+        @Nullable AuthenticationProvider provider,
         TokenHandleFilter filter) throws Exception {
         setSecurity(http);
 
-        if (authPropertyEnabled && filter != null && provider != null) {
+        if (filter != null && provider != null) {
             http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
             http.authenticationProvider(provider);
         }
@@ -82,6 +83,14 @@ public class WebConfig {
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "false")
+    public SecurityFilterChain securityWebFilterChain(HttpSecurity http) throws Exception {
+        setSecurity(http);
+        return http.build();
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
     LoginGateWayCenter loginSecurityManager(@Qualifier(WebBeanNameConstant.LOGIN_TOKEN_PICKER) ITokenPicker picker) {
         return new LoginGateWayCenter(picker);
     }

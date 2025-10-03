@@ -22,21 +22,21 @@ import javax.annotation.Resource;
  * @author abstergo
  */
 @Configuration
+@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
 public class TokenSetConfig {
 
 	@Resource
 	WebAuthProperty webAuthProperty;
 
 	@Bean(name = WebBeanNameConstant.LOGIN_TOKEN_PICKER)
-	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-	public ITokenPicker tokenPicker() {
+
+    public ITokenPicker tokenPicker() {
 		return BeanUtil.buildBeanFromProperties(() -> {
 			return new DefaultLoginTokenPicker();
 		}, webAuthProperty.getTokenPickerImpl(), BeanUtil::buildByEmptyArgs);
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
 	@ConditionalOnMissingBean(ITokenIssuanceCenter.class)
 	ITokenIssuanceCenter tokenIssuanceCenter() {
 		return BeanUtil.buildBeanFromProperties(() -> {
@@ -45,8 +45,7 @@ public class TokenSetConfig {
 	}
 
 	@Bean
-	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-	public TokenHandleFilter tokenPickFilter() {
+    public TokenHandleFilter tokenPickFilter() {
 		return new TokenHandleFilter();
 	}
 }

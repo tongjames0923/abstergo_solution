@@ -2,8 +2,10 @@ package com.tbs.web.config;
 
 import com.tbs.common.util.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
+import com.tbs.web.security.authentication.IAuthManager;
 import com.tbs.web.security.authentication.center.IAuthenticationCenter;
 import com.tbs.web.security.authentication.center.impl.NoImplAuthCenter;
+import com.tbs.web.security.authentication.impl.SpringSecurityContextHolderAuthManager;
 import com.tbs.web.security.impl.DefaultAuthAccessDeniedHandler;
 import com.tbs.web.security.impl.DefaultAuthEntryPoint;
 import com.tbs.web.security.impl.TokenAuthenticationProvider;
@@ -23,27 +25,28 @@ import javax.annotation.Resource;
  * @author abstergo
  */
 @Configuration
+@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
 public class AuthConfig {
 
     @Resource
     WebAuthProperty webAuthProperty;
 
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
+
     @ConditionalOnMissingBean(AuthenticationEntryPoint.class)
     public AuthenticationEntryPoint authenticationEntryPoint() {
         return new DefaultAuthEntryPoint();
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
+
     @ConditionalOnMissingBean(AccessDeniedHandler.class)
     public AccessDeniedHandler accessDeniedHandler() {
         return new DefaultAuthAccessDeniedHandler();
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
+
     @ConditionalOnMissingBean(AuthenticationProvider.class)
     AuthenticationProvider authenticationProvider() {
         return new TokenAuthenticationProvider();
@@ -51,11 +54,18 @@ public class AuthConfig {
 
 
     @Bean
-	@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-	public IAuthenticationCenter authenticationCenter() {
+
+    public IAuthenticationCenter authenticationCenter() {
 		return BeanUtil.buildBeanFromProperties(() -> {
 			return new NoImplAuthCenter();
 		}, webAuthProperty.getAuthenticationCenterImpl(), BeanUtil::buildByEmptyArgs);
     }
 
+    @Bean
+    @ConditionalOnMissingBean(IAuthManager.class)
+
+    public IAuthManager authManager() {
+        return BeanUtil.buildBeanFromProperties(SpringSecurityContextHolderAuthManager::new,
+            webAuthProperty.getAuthManagerImpl(), BeanUtil::buildByEmptyArgs);
+    }
 }

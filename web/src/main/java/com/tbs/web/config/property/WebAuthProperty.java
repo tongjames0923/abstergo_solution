@@ -2,8 +2,10 @@ package com.tbs.web.config.property;
 
 import com.tbs.web.enums.TokenSource;
 import com.tbs.web.gate.ITokenPicker;
+import com.tbs.web.security.authentication.IAuthManager;
 import com.tbs.web.security.authentication.center.IAuthenticationCenter;
 import com.tbs.web.security.authentication.center.impl.SimpleAuthenticationCenter;
+import com.tbs.web.security.authentication.impl.SpringSecurityContextHolderAuthManager;
 import com.tbs.web.security.impl.DefaultLoginTokenPicker;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.impl.NoImplTokenIssuanceCenter;
@@ -63,5 +65,10 @@ public class WebAuthProperty {
      * token数据源名称
      */
     private String tokenDataSourceName = "TOKEN";
+
+    /**
+     * 认证实现类
+     */
+    private Class<? extends IAuthManager> authManagerImpl = SpringSecurityContextHolderAuthManager.class;
 
 }
