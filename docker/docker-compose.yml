@@ -36,3 +36,17 @@ services:
       - ~/docker/abstergo/zookeeper/data:/data
       - ~/docker/abstergo/zookeeper/datalog:/datalog
     restart: always
+
+  dubbo-admin:
+    image: apache/dubbo-admin:latest
+    container_name: abstergo_dubbo_admin
+    ports:
+      - "9600:38080"
+    environment:
+      - admin.registry.address=zookeeper://zookeeper:2181
+      - admin.config-center=zookeeper://zookeeper:2181
+      - admin.metadata-report.address=zookeeper://zookeeper:2181
+      - server.port= 38080
+    depends_on:
+      - zookeeper
+    restart: always

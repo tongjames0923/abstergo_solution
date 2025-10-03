@@ -9,8 +9,6 @@ tbs:
       token-expire-time: 600
       token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
     enable-cors: true
-  swagger:
-    base-package: com.tbs.app.controller
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
     expire-actuator-class: com.tbs.redis.cache.RedisDataHolderExpireActuator
@@ -27,17 +25,10 @@ tbs:
     data-holder: com.tbs.redis.holder.RedisDataHolder
   redis:
     enable: true
-#  sql:
-#    enable-log-interceptor: false
-#    sql-logger-type: tbs.framework.sql.interfaces.impls.SimpleSqlLogger
-
 # Spring配置
 spring:
   application:
     name: app-service
-  mvc:
-    pathmatch:
-      matching-strategy: ant_path_matcher
   jpa:
     hibernate:
       ddl-auto: update
@@ -86,42 +77,10 @@ spring:
     listener:
       direct:
         acknowledge-mode: manual
-logging:
-  level:
-    com.tbs.schedule: debug
-    com.alibaba.dubbo: warn
-    org.apache.zookeeper: warn
-server:
-  shutdown: graceful
 
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
-
-eureka:
-  client:
-    service-url:
-      defaultZone: http://localhost:8761/eureka/
-  instance:
-    prefer-ip-address: true
-    ip-address: 127.0.0.1  # 明确指定IP地址
-# springdoc-openapi项目配置
-springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    tags-sorter: alpha
-    operations-sorter: alpha
-  api-docs:
-    path: /v3/api-docs
-  group-configs:
-    - group: 'default'
-      paths-to-match: '/**'
-      packages-to-scan: com.tbs.app.controller
-# knife4j的增强配置，不需要增强可以不配
-knife4j:
-  enable: true
-  setting:
-    language: zh_cn
 dubbo:
   application:
     name: dubbo-app-system-service
