@@ -23,7 +23,6 @@
         <module>rabbitmq-mod</module>
         <module>shared</module>
         <module>shared/interfaces</module>
-        <module>eureka-server</module>
         <module>system/system-api</module>
         <module>system/default-system-impl</module>
     </modules>
@@ -70,7 +69,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.dubbo</groupId>
+            <artifactId>dubbo-zookeeper-spring-boot-starter</artifactId>
+        </dependency>
         <!-- SpringBoot Web容器 -->
         <dependency>
             <groupId>org.jetbrains</groupId>
@@ -79,11 +85,11 @@
             <scope>compile</scope>
         </dependency>
 
-        <!-- 添加Eureka客户端依赖 -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
+<!--        &lt;!&ndash; 添加Eureka客户端依赖 &ndash;&gt;-->
+<!--        <dependency>-->
+<!--            <groupId>org.springframework.cloud</groupId>-->
+<!--            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>-->
+<!--        </dependency>-->
 
         <dependency>
             <groupId>org.projectlombok</groupId>

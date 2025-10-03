@@ -125,4 +125,4 @@ dubbo:
     name: dubbo-app-system-service
     logger: slf4j
   registry:
-    address: eureka://127.0.0.1:8761
+    address: zookeeper://127.0.0.1:2181
