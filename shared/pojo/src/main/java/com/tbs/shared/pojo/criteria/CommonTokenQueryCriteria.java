@@ -93,16 +93,16 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      * 创建时间排序
      */
     @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
-    @JsonSerialize(using = QueryOrderedModelSerializer.class)
-    @JsonDeserialize(using = QueryOrderedModelDeserializer.class)
+
+
     private QueryOrderedModel createTimeOrdered;
 
     /**
      * 过期时间排序
      */
     @QueryOrderField(mappedName = "expire_time", order = OrderConstant.ORDERED_MODEL)
-    @JsonSerialize(using = QueryOrderedModelSerializer.class)
-    @JsonDeserialize(using = QueryOrderedModelDeserializer.class)
+
+
     private QueryOrderedModel expireTimeOrdered;
 
     /**
