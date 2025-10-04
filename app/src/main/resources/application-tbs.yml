@@ -1,0 +1,27 @@
+tbs:
+  web:
+    permit-all-paths:
+      - /public/**
+    secured-paths:
+      - /private/**
+    auth:
+      enable: true
+      token-expire-time: 600
+      token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
+    enable-cors: true
+  system:
+    main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
+    expire-actuator-class: com.tbs.redis.cache.RedisDataHolderExpireActuator
+    enable: true
+  cache:
+    cache-manager-implementation: com.tbs.cache.core.manager.holder.DataHolderCacheManager
+    expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuator
+  boardcast:
+    event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
+  lock:
+    lock-provider-type: com.tbs.lock.impls.providers.JdkLockProvider
+  data:
+    data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHodlerManager
+    data-holder: com.tbs.redis.holder.RedisDataHolder
+  redis:
+    enable: true
