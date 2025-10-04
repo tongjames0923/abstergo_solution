@@ -17,6 +17,10 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+logging:
+  level:
+    com.alibaba: warn
+    org.apache: warn
 
 dubbo:
   application:
@@ -24,3 +28,7 @@ dubbo:
     logger: slf4j
   registry:
     address: zookeeper://127.0.0.1:2181
+  protocol:
+    port: 20888
+  shutdown:
+    await-duration: 10000
