@@ -69,7 +69,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      * 创建时间范围查询的起始时间字段 对应数据库中的create_time字段，使用GREATER_EQUAL比较条件
      */
     @QueryMapping("create_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
     private Date createTimeAfter;
 
@@ -77,7 +77,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      * 过期时间范围查询的起始时间字段 对应数据库中的expire_time字段，使用GREATER_EQUAL比较条件
      */
     @QueryMapping("expire_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
     private Date expireTimeAfter;
 
@@ -85,7 +85,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      * 过期时间范围查询的结束时间字段 对应数据库中的expire_time字段，使用LESS_EQUAL比较条件
      */
     @QueryMapping("expire_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     @QueryField(contrast = QueryContrastEnum.LESS_EQUAL)
     private Date expireTimeBefore;
 

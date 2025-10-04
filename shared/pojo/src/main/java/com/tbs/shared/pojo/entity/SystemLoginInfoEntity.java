@@ -85,7 +85,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 创建时间
      */
     @javax.persistence.Column(name = "create_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     @Getter
     @Setter
     private Date createTime;
@@ -94,7 +94,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 更新时间
      */
     @javax.persistence.Column(name = "update_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     @Getter
     @Setter
     private Date updateTime;
@@ -103,7 +103,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 令牌过期时间
      */
     @Column(name = "token_expire_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     @Getter
     @Setter
     private Date tokenExpireTime;

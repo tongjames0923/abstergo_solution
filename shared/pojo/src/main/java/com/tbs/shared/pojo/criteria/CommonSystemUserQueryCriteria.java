@@ -60,7 +60,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
 	 */
 	@QueryMapping(value = "create_time")
 	@QueryField(contrast = QueryContrastEnum.GREATER)
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Date createTimeGreaterThan;
 
 	/**
@@ -68,7 +68,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
 	 */
 	@QueryMapping(value = "create_time")
 	@QueryField(contrast = QueryContrastEnum.LESS)
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Date createTimeLessThan;
 
 	/**
@@ -76,7 +76,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
 	 */
 	@QueryMapping(value = "update_time")
 	@QueryField(contrast = QueryContrastEnum.GREATER)
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Date updateTimeGreaterThan;
 
 	/**
@@ -84,7 +84,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
 	 */
 	@QueryMapping(value = "update_time")
 	@QueryField(contrast = QueryContrastEnum.LESS)
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Date updateTimeLessThan;
 
 	/**

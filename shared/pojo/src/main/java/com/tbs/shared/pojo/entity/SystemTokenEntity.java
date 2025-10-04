@@ -47,12 +47,12 @@ public class SystemTokenEntity implements IBaseEntity<Long> {
      * 创建时间
      */
     @Column(name = "create_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     private Date createTime;
     /**
      * 更新时间
      */
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     @Column(name = "update_time")
     private Date updateTime;
     /**
@@ -65,7 +65,7 @@ public class SystemTokenEntity implements IBaseEntity<Long> {
      * 过期时间
      */
     @Column(name = "expire_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    
     private Date expireTime;
 
     /**

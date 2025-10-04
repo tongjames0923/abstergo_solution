@@ -22,34 +22,36 @@ public class LoginSessionVO implements Serializable {
      * 会话ID
      */
     private String sessionId;
-    
+
     /**
      * 登录时间
      */
+
     private Date createTime;
 
     /**
      * 登录令牌列表
      */
     private List<ITokenModel> accessTokens;
-    
+
     /**
      * 是否在线（至少有一个有效的刷新令牌）
      */
     private boolean online;
-    
+
     /**
      * 会话中的令牌数量
      */
     private int tokenCount;
-    
+
     /**
      * 有效的刷新令牌数量
      */
     private int activeRefreshTokenCount;
-    
+
     /**
      * 最后更新时间
      */
+    //
     private Date lastActiveTime;
 }

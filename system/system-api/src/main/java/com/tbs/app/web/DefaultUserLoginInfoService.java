@@ -190,9 +190,9 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
                 // 判断是否在线（至少有一个有效的刷新令牌）
                 vo.setOnline(activeRefreshTokens > 0);
 
-                // 获取最后更新时间
+                // 获取最后活跃时间（使用最新的令牌创建时间）
                 Date lastActiveTime =
-                    sessionTokens.stream().filter(Objects::nonNull).map(SystemLoginInfoEntity::getUpdateTime)
+                    tokens.stream().filter(Objects::nonNull).map(ITokenModel::getCreateTime)
                         .filter(Objects::nonNull).max(Date::compareTo).orElse(null);
                 vo.setLastActiveTime(lastActiveTime);
 

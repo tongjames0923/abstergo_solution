@@ -34,10 +34,10 @@ public class UserRoleRelationEntity implements IBaseEntity<Long> {
 	@javax.persistence.Column(name = "role_id", nullable = false)
 	private Long roleId;
 	@javax.persistence.Column(name = "create_time")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Date createTime;
 	@javax.persistence.Column(name = "update_time")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Date updateTime;
 	@javax.persistence.Column(name = "flag")
 	private Integer flag;

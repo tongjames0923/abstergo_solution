@@ -49,7 +49,7 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
 	 * 操作时间
 	 */
 	@javax.persistence.Column(name = "operate_time")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Date operateTime;
 
 	/**
@@ -90,7 +90,7 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
 	 * 操作耗时
 	 */
 	@javax.persistence.Column(name = "cost_time")
-	@JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+	
 	private Long costTime;
 
 	/**
