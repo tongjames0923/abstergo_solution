@@ -14,6 +14,18 @@ import java.util.Map;
 @Getter
 public class FormConfig implements Serializable {
     private static final long serialVersionUID = 1L;
+    
+    /**
+     * 表单标题 -- GETTER -- 获取表单标题
+     *
+     *
+     * -- SETTER -- 设置表单标题
+     *
+     * @return 表单标题
+     * @param title 表单标题
+     *
+     */
+    private String title;
     /**
      * 是否可展开 -- GETTER -- 获取是否可展开
      *

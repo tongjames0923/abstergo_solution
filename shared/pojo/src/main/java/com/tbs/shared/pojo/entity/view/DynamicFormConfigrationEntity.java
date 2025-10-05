@@ -44,4 +44,8 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
      */
     @Column(name = "span")
     private Integer span;
+
+    @Column(name = "title", length = 128)
+    private String title;
+
 }

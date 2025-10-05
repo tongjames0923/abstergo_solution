@@ -48,6 +48,7 @@ public class ViewServiceImpl implements IViewService {
         FormConfig formConfig = new FormConfig();
         IPropertyValueTransformer transformer = SpringUtil.getBean(IPropertyValueTransformer.class);
         formConfig.setSpan(dynamicFormConfigrationEntity.getSpan());
+        formConfig.setTitle(dynamicFormConfigrationEntity.getTitle());
         formConfig.setExpandable(CommonConstant.FLAG_ON.equals(dynamicFormConfigrationEntity.getExpandable()));
         formConfig.setExpanded(CommonConstant.FLAG_ON.equals(dynamicFormConfigrationEntity.getExpanded()));
         formConfig.setGutter(dynamicFormConfigrationEntity.getGutter());
@@ -188,6 +189,7 @@ public class ViewServiceImpl implements IViewService {
 
     private static @NotNull DynamicFormConfigrationEntity createDynamicFormEntity(@NotNull FormConfig formConfig) {
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity = new DynamicFormConfigrationEntity();
+        dynamicFormConfigrationEntity.setTitle(formConfig.getTitle());
         dynamicFormConfigrationEntity.setExpanded(
             formConfig.getExpanded() ? CommonConstant.FLAG_ON : CommonConstant.FLAG_OFF);
         dynamicFormConfigrationEntity.setExpandable(

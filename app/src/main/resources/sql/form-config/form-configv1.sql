@@ -1,8 +1,13 @@
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`) VALUES (1, 1, 1, 20, '100px', 8);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`) VALUES (2, 0, 1, 24, '80px', 20);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`) VALUES (3, 0, 1, 24, '80px', 20);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`) VALUES (4, 1, 1, 20, '100px', 8);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`) VALUES (5, 0, 1, 24, '80px', 20);
+INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`)
+VALUES (1, 1, 1, 20, '100px', 8, '用户查询表单');
+INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`)
+VALUES (2, 0, 1, 24, '80px', 20, '用户新增表单');
+INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`)
+VALUES (3, 0, 1, 24, '80px', 20, '用户编辑表单');
+INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`)
+VALUES (4, 1, 1, 20, '100px', 8, '公司查询表单');
+INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`)
+VALUES (5, 0, 1, 24, '80px', 20, '公司新增/编辑表单');
 INSERT INTO `form_field_configration` (`id`, `label`, `prop`, `type`) VALUES (1, '用户ID', 'idEquals', 'input');
 INSERT INTO `form_field_configration` (`id`, `label`, `prop`, `type`) VALUES (2, '用户名', 'userNameEquals', 'input');
 INSERT INTO `form_field_configration` (`id`, `label`, `prop`, `type`) VALUES (3, '昵称', 'nickNameLike', 'input');

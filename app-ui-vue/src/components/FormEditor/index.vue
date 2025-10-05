@@ -11,6 +11,11 @@
 
       <el-form label-width="120px" label-position="left">
         <el-row :gutter="20">
+          <el-col :span="24">
+            <el-form-item label="表单标题">
+              <el-input v-model="localConfig.title" placeholder="请输入表单标题" @input="onConfigChange" />
+            </el-form-item>
+          </el-col>
           <el-col :span="12">
             <el-form-item label="是否可展开">
               <el-switch v-model="localConfig.expandable" @change="onConfigChange" />
@@ -202,6 +207,7 @@ export default {
     value: {
       type: Object,
       default: () => ({
+        title: '',
         expandable: true,
         expanded: true,
         labelWidth: '100px',
@@ -228,6 +234,7 @@ export default {
     initializeConfig(config) {
       // 确保配置对象具有所有必要的属性
       const initialized = {
+        title: '',
         expandable: true,
         expanded: true,
         labelWidth: '100px',
