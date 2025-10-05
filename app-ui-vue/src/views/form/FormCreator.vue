@@ -1,8 +1,8 @@
 <template>
   <div class="form-creator-container">
     <div class="header-section">
-      <h2>表单创建器</h2>
-      <p>创建和配置动态表单</p>
+      <h2>{{ $route.query.id ? '表单编辑器' : '表单创建器' }}</h2>
+      <p>{{ $route.query.id ? '编辑现有动态表单' : '创建和配置动态表单' }}</p>
     </div>
 
     <el-tabs v-model="activeTab" type="border-card" class="main-tabs">
@@ -101,7 +101,7 @@
 <script>
 import Index from '@/components/FormEditor/index.vue'
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import { saveFormConfig } from '@/api/view'
+import { saveFormConfig, updateFormConfig, getFormById } from '@/api/view'
 
 export default {
   name: 'FormCreator',
@@ -126,17 +126,39 @@ export default {
     }
   },
   created() {
-    // 从本地存储加载保存的配置（如果存在）
-    const savedConfig = localStorage.getItem('formCreatorConfig')
-    if (savedConfig) {
-      try {
-        this.formConfig = JSON.parse(savedConfig)
-      } catch (e) {
-        console.warn('Failed to parse saved form config:', e)
+    // 检查是否有表单ID参数，如果有则加载现有表单
+    const formId = this.$route.query.id
+    if (formId) {
+      this.loadExistingForm(formId)
+    } else {
+      // 从本地存储加载保存的配置（如果存在）
+      const savedConfig = localStorage.getItem('formCreatorConfig')
+      if (savedConfig) {
+        try {
+          this.formConfig = JSON.parse(savedConfig)
+        } catch (e) {
+          console.warn('Failed to parse saved form config:', e)
+        }
       }
     }
   },
   methods: {
+    // 加载现有表单
+    async loadExistingForm(formId) {
+      try {
+        this.loading = true
+        const response = await getFormById(formId)
+        this.formConfig = response.data
+        // 清除本地存储的配置，避免冲突
+        localStorage.removeItem('formCreatorConfig')
+        this.$message.success('表单加载成功')
+      } catch (error) {
+        this.$message.error('加载表单失败: ' + error.message)
+      } finally {
+        this.loading = false
+      }
+    },
+
     previewForm() {
       // 通过 ref 调用子组件的 getData 方法获取数据
       const data = this.$refs.formConfigEditor.getData()
@@ -149,15 +171,27 @@ export default {
       try {
         const data = this.$refs.formConfigEditor.getData()
         console.log('表单配置数据:', data)
-        saveFormConfig(data).then(response => {
-          this.$message.success('表单配置已保存到服务器')
-          // 同时也保存到本地存储作为备份
-          localStorage.setItem('formCreatorConfig', JSON.stringify(data))
-        }).catch(error => {
-          this.$message.error('保存表单配置失败: ' + error.message)
-        })
+        
+        // 检查是否是更新现有表单
+        if (this.$route.query.id) {
+          // 更新现有表单
+          updateFormConfig(this.$route.query.id, data).then(response => {
+            this.$message.success('表单配置已更新')
+          }).catch(error => {
+            this.$message.error('更新表单配置失败: ' + error.message)
+          })
+        } else {
+          // 创建新表单
+          saveFormConfig(data).then(response => {
+            this.$message.success('表单配置已保存到服务器')
+            // 同时也保存到本地存储作为备份
+            localStorage.setItem('formCreatorConfig', JSON.stringify(data))
+          }).catch(error => {
+            this.$message.error('保存表单配置失败: ' + error.message)
+          })
+        }
       } catch (e) {
-        this.$message.error('保存表单配置失败: ' + e.message)
+        this.$message.error((this.$route.query.id ? '更新' : '保存') + '表单配置失败: ' + e.message)
       }
     },
 

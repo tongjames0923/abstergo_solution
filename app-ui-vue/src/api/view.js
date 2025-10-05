@@ -14,3 +14,33 @@ export function saveFormConfig(config) {
     data: config
   })
 }
+
+export function updateFormConfig(id, config) {
+  return request({
+    url: `private/view/updateForm/${id}`,
+    method: 'put',
+    data: config
+  })
+}
+
+export function deleteFormConfig(id) {
+  return request({
+    url: `private/view/form/${id}`,
+    method: 'delete'
+  })
+}
+
+export function listForms(pageNum, pageSize) {
+  return request({
+    url: '/private/view/listForms',
+    method: 'get',
+    params: { pageNum, pageSize }
+  })
+}
+
+export function getFormById(id) {
+  return request({
+    url: `/private/view/form/${id}`,
+    method: 'get'
+  })
+}

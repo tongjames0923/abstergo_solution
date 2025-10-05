@@ -94,9 +94,15 @@ export const constantRoutes = [
       },
       {
         path: 'form',
-        name: '表单',
+        name: '表单创建',
         component: () => import('@/views/form/FormCreator.vue'),
-        meta: { title: '表单', icon: 'el-icon-s-custom', roles: ['1'] }
+        meta: { title: '表单创建', icon: 'el-icon-s-custom', roles: ['1'] }
+      },
+      {
+        path: 'form-manager',
+        name: '表单管理',
+        component: () => import('@/views/form/FormManager.vue'),
+        meta: { title: '表单管理', icon: 'el-icon-s-order', roles: ['1'] }
       }
     ]
   },

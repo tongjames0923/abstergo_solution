@@ -16,6 +16,18 @@ public class FormConfig implements Serializable {
     private static final long serialVersionUID = 1L;
     
     /**
+     * 表单ID -- GETTER -- 获取表单ID
+     *
+     *
+     * -- SETTER -- 设置表单ID
+     *
+     * @return 表单ID
+     * @param id 表单ID
+     *
+     */
+    private Long id;
+    
+    /**
      * 表单标题 -- GETTER -- 获取表单标题
      *
      *
