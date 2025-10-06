@@ -3,31 +3,20 @@ package com.tbs.redis.boradcast;
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
-import org.springframework.data.redis.connection.Message;
-import org.springframework.data.redis.connection.MessageListener;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.redisson.api.RTopic;
+import org.redisson.api.RedissonClient;
+import org.redisson.api.listener.MessageListener;
 import org.springframework.data.redis.listener.ChannelTopic;
-import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 
 import com.tbs.broadcast.bus.IEventBus;
 import com.tbs.broadcast.support.AbstractDistributedSupport;
-import com.tbs.redis.constants.RedisBeanNameConstants;
 
 import lombok.Getter;
 
-public abstract class AbstractRedisEventSupport<T> extends AbstractDistributedSupport<T> implements MessageListener {
+public abstract class AbstractRedisEventSupport<T> extends AbstractDistributedSupport<T> {
 
-	@Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
-	private RedisTemplate<String, Object> redisTemplate;
-
-	/**
-	 * -- GETTER -- 获取消息监听容器
-	 *
-	 * @return
-	 */
-	@Getter
 	@Resource
-	private RedisMessageListenerContainer redisMessageListenerContainer;
+	private RedissonClient redissonClient;
 
 	/**
 	 * -- GETTER -- 获取事件总线
@@ -42,22 +31,24 @@ public abstract class AbstractRedisEventSupport<T> extends AbstractDistributedSu
 
 	@PostConstruct
 	public void initMessageListenerContainer() {
-		redisMessageListenerContainer.addMessageListener(this, topic);
-	}
-
-	@Override
-	public void onMessage(Message message, byte[] pattern) {
-		T obj = (T) redisTemplate.getValueSerializer().deserialize(message.getBody());
-		getEventBus().getDistributedBusSupport().ifPresentOrElse(support -> {
-			support.receiveEvent(obj);
-		}, () -> {
-			getEventBus().inqueueEvent(unbridge(obj));
+		RTopic topic = redissonClient.getTopic(getChannel());
+		topic.addListener(Object.class, new MessageListener<Object>() {
+			@Override
+			public void onMessage(CharSequence channel, Object msg) {
+				T obj = (T) msg;
+				getEventBus().getDistributedBusSupport().ifPresentOrElse(support -> {
+					support.receiveEvent(obj);
+				}, () -> {
+					getEventBus().inqueueEvent(unbridge(obj));
+				});
+			}
 		});
 	}
 
 	@Override
 	public void broadcastEvent(T result) {
-		redisTemplate.convertAndSend(getChannel(), result);
+		RTopic topic = redissonClient.getTopic(getChannel());
+		topic.publish(result);
 	}
 
 	/**

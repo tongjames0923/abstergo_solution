@@ -4,11 +4,13 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;
 import com.tbs.lock.ILockProvider;
+import com.tbs.lock.config.LockProperty;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.time.Duration;
 
 /**
  * @author abstergo
@@ -26,6 +28,9 @@ public class LockUtil {
 
     @Resource
     private ILockProvider lockProvider;
+
+    @Resource
+    private LockProperty lockProperty;
 
     @PostConstruct
     public void init() {
@@ -123,7 +128,7 @@ public class LockUtil {
      * @param runnable
      */
     public void lockThen(ILock lock, Runnable runnable) {
-        if (lock.tryLock(null)) {
+        if (lock.tryLock(Duration.ofMillis(lockProperty.getAccquireTimeout()))) {
             try {
                 runnable.run();
             } finally {

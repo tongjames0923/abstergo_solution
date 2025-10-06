@@ -1,6 +1,6 @@
 # Redis 模块
 
-Redis 模块提供了基于 Redis 的缓存、分布式锁、数据存储和消息广播功能，是构建高性能分布式应用的重要组件。
+Redis 模块提供了基于 Redisson 的缓存、分布式锁、数据存储和消息广播功能，是构建高性能分布式应用的重要组件。与传统的Redis客户端不同，Redisson提供了更多分布式特性。
 
 ## 目录结构
 
@@ -29,17 +29,15 @@ com.tbs.redis
 
 ### 1. Redis 配置类 (BasicRedisConfig.java)
 
-[BasicRedisConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/BasicRedisConfig.java#L23-L152) 是 Redis 的核心配置类，负责创建 Redis 连接、RedisTemplate、序列化器以及缓存管理器等。
+[BasicRedisConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/BasicRedisConfig.java#L23-L152) 是 Redis 的核心配置类，负责创建 Redisson 客户端、序列化器以及缓存管理器等。
 
 #### 主要 Bean 说明
 
-1. `redissonClient()`: 创建 Redisson 客户端，用于分布式锁等功能
+1. `redissonClient()`: 创建 Redisson 客户端，用于分布式锁、缓存等功能
 2. `keySerializer()`: 创建 Redis 键的序列化器
 3. `valueSerializer()`: 创建 Redis 值的序列化器
-4. `redisTemplate()`: 创建 Redis 操作模板
-5. `redisConfiguration()`: Redis 缓存配置
-6. `redisCacheManager()`: Redis 缓存管理器
-7. `redisMessageListenerContainer()`: Redis 消息监听容器
+4. `cacheManager()`: Redisson 缓存管理器，替代了传统的 RedisCacheManager
+5. `redisMessageListenerContainer()`: Redis 消息监听容器（已移除，Redisson使用自己的消息机制）
 
 ### 2. Redis 属性配置类 (RedisProperty.java)
 
@@ -63,7 +61,7 @@ com.tbs.redis
 
 ### 4. Redis 数据持有者 (RedisDataHolder.java)
 
-[RedisDataHolder](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/holder/RedisDataHolder.java#L15-L130) 实现了 [IDataHolder](file:///Users/abstergo/IdeaProjects/abstergo_solution/common/src/main/java/com/tbs/common/data/IDataHolder.java#L18-L161) 接口，提供了基于 Redis 的数据存储功能。
+[RedisDataHolder](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/holder/RedisDataHolder.java#L15-L130) 实现了 [IDataHolder](file:///Users/abstergo/IdeaProjects/abstergo_solution/common/src/main/java/com/tbs/common/data/IDataHolder.java#L18-L161) 接口，提供了基于 Redisson 的数据存储功能。
 
 主要功能：
 - 数据的增删改查操作
@@ -83,7 +81,7 @@ com.tbs.redis
 
 #### AbstractRedisEventSupport.java
 
-[AbstractRedisEventSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/boradcast/AbstractRedisEventSupport.java#L18-L76) 是 Redis 消息广播的抽象基类，实现了消息监听和广播功能。
+[AbstractRedisEventSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/boradcast/AbstractRedisEventSupport.java#L18-L76) 是 Redis 消息广播的抽象基类，实现了消息监听和广播功能，基于Redisson的消息机制。
 
 #### SimpleRedisEventSupport.java
 
@@ -93,11 +91,11 @@ com.tbs.redis
 
 #### RedisCacheExpireActuator.java
 
-[RedisCacheExpireActuator](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedisCacheExpireActuator.java#L15-L32) 实现了缓存过期处理功能。
+[RedisCacheExpireActuator](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedisCacheExpireActuator.java#L15-L32) 实现了缓存过期处理功能，基于Redisson实现。
 
 #### RedisDataHolderExpireActuator.java
 
-[RedisDataHolderExpireActuator](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedisDataHolderExpireActuator.java#L15-L33) 实现了 Redis 数据持有者的过期处理功能。
+[RedisDataHolderExpireActuator](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedisDataHolderExpireActuator.java#L15-L33) 实现了 Redis 数据持有者的过期处理功能，基于Redisson实现。
 
 ## 自定义使用说明
 
@@ -226,8 +224,7 @@ public class CustomRedisEventSupport extends AbstractRedisEventSupport<YourEvent
    - JDK 序列化器性能较好但不易读
 
 2. **连接池配置**：
-   - 合理配置 Redis 连接池参数
-   - 根据应用并发量调整最大连接数
+   - Redisson内部已经优化了连接管理，一般无需额外配置
 
 3. **缓存策略**：
    - 合理设置缓存过期时间
@@ -247,7 +244,7 @@ public class CustomRedisEventSupport extends AbstractRedisEventSupport<YourEvent
 ## 注意事项
 
 1. **依赖管理**：
-   - 确保项目中包含了 Redis 和 Redisson 相关依赖
+   - 确保项目中包含了 Redisson 相关依赖
    - 注意版本兼容性问题
 
 2. **配置正确性**：

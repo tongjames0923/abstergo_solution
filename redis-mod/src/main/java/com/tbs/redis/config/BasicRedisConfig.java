@@ -1,34 +1,32 @@
 package com.tbs.redis.config;
 
 import com.tbs.common.util.BeanUtil;
+import com.tbs.redis.codec.DefaultSystemCodec;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
-import com.tbs.redis.lock.RedissonLockProvider;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
+import org.redisson.spring.cache.CacheConfig;
+import org.redisson.spring.cache.RedissonSpringCacheManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
-import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.cache.RedisCacheWriter;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.listener.RedisMessageListenerContainer;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.data.redis.serializer.StringRedisSerializer;
-import org.springframework.util.ErrorHandler;
 
 import javax.annotation.Resource;
+import java.util.HashMap;
 
 /**
  * @author abstergo
@@ -51,19 +49,13 @@ public class BasicRedisConfig {
 
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(RedissonClient.class)
-    @ConditionalOnBean(RedissonLockProvider.class)
-    public RedissonClient redissonClient() {
+    public RedissonClient redissonClient(
+        @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer serializer) {
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
+        config.setCodec(new DefaultSystemCodec(serializer));
         RedissonClient redissonClient = Redisson.create(config);
         return redissonClient;
-    }
-
-    @Bean(RedisBeanNameConstants.REDIS_KEY_SERIALIZER)
-    @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_KEY_SERIALIZER)
-    RedisSerializer keySerializer() throws Throwable {
-        return BeanUtil.buildBeanFromProperties(StringRedisSerializer::new, property.getKeySerializer(),
-            BeanUtil::buildByEmptyArgs);
     }
 
     @Bean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
@@ -73,35 +65,21 @@ public class BasicRedisConfig {
             BeanUtil::buildByEmptyArgs);
     }
 
-    @Bean(RedisBeanNameConstants.REDIS_HASH_KEY_SERIALIZER)
-    @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_HASH_KEY_SERIALIZER)
-    RedisSerializer hashKeySerializer() throws Throwable {
-        return BeanUtil.buildBeanFromProperties(StringRedisSerializer::new, property.getHashKeySerializer(),
-            BeanUtil::buildByEmptyArgs);
-    }
-
-    @Bean(RedisBeanNameConstants.REDIS_HASH_VALUE_SERIALIZER)
-    @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_HASH_VALUE_SERIALIZER)
-    RedisSerializer hashValueSerializer() throws Throwable {
-        return BeanUtil.buildBeanFromProperties(GenericJackson2JsonRedisSerializer::new,
-            property.getHashValueSerializer(), BeanUtil::buildByEmptyArgs);
-    }
-
-    @Bean(RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
-    @Primary
-    RedisTemplate redisTemplate(RedisConnectionFactory connectionFactory,
-        @Qualifier(RedisBeanNameConstants.REDIS_KEY_SERIALIZER) RedisSerializer keySerializer,
-        @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer valueSerializer,
-        @Qualifier(RedisBeanNameConstants.REDIS_HASH_KEY_SERIALIZER) RedisSerializer hashKeySerializer,
-        @Qualifier(RedisBeanNameConstants.REDIS_HASH_VALUE_SERIALIZER) RedisSerializer hashValueSerializer) {
-        RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
-        template.setConnectionFactory(connectionFactory);
-        template.setKeySerializer(keySerializer);
-        template.setValueSerializer(valueSerializer);
-        template.setHashKeySerializer(hashKeySerializer);
-        template.setHashValueSerializer(hashValueSerializer);
-        return template;
-    }
+    //    @Bean(RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
+    //    @Primary
+    //    RedisTemplate redisTemplate(RedisConnectionFactory connectionFactory,
+    //        @Qualifier(RedisBeanNameConstants.REDIS_KEY_SERIALIZER) RedisSerializer keySerializer,
+    //        @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer valueSerializer,
+    //        @Qualifier(RedisBeanNameConstants.REDIS_HASH_KEY_SERIALIZER) RedisSerializer hashKeySerializer,
+    //        @Qualifier(RedisBeanNameConstants.REDIS_HASH_VALUE_SERIALIZER) RedisSerializer hashValueSerializer) {
+    //        RedisTemplate<String, Object> template = new RedisTemplate<String, Object>();
+    //        template.setConnectionFactory(connectionFactory);
+    //        template.setKeySerializer(keySerializer);
+    //        template.setValueSerializer(valueSerializer);
+    //        template.setHashKeySerializer(hashKeySerializer);
+    //        template.setHashValueSerializer(hashValueSerializer);
+    //        return template;
+    //    }
 
     @Bean
     @ConditionalOnMissingBean(RedisCacheConfiguration.class)
@@ -124,29 +102,14 @@ public class BasicRedisConfig {
     }
 
     @Bean
-    @ConditionalOnMissingBean(RedisCacheManager.class)
-    public RedisCacheManager redisCacheManager(RedisCacheWriter redisCacheWriter,
-        RedisCacheConfiguration redisCacheConfiguration) {
-        return RedisCacheManager.builder().cacheWriter(redisCacheWriter).cacheDefaults(redisCacheConfiguration)
-            .enableStatistics().build();
+    public CacheManager redisCacheManager(RedissonClient redissonClient) {
+        var hashMap = new HashMap<String, CacheConfig>();
+        hashMap.put("*", new CacheConfig(property.getCacheTimeout(), 600L));
+        return new RedissonSpringCacheManager(redissonClient, hashMap);
     }
 
     private static final Logger REDIS_MESSAGE_CENTER_LOGGER =
         LoggerFactory.getLogger(RedisMessageListenerContainer.class);
 
-    @Bean
-    @ConditionalOnMissingBean(RedisMessageListenerContainer.class)
-    RedisMessageListenerContainer redisMessageListenerContainer(RedisConnectionFactory factory) {
-        RedisMessageListenerContainer container = new RedisMessageListenerContainer();
-        container.setConnectionFactory(factory);
-        container.setErrorHandler(new ErrorHandler() {
-
-            @Override
-            public void handleError(Throwable t) {
-                REDIS_MESSAGE_CENTER_LOGGER.error("redis message listener error", t);
-            }
-        });
-        return container;
-    }
-
+    // 移除RedisMessageListenerContainer的配置，因为Redisson有自己的消息监听机制
 }

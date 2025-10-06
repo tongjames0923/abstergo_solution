@@ -2,6 +2,7 @@ package com.tbs.app.service.impl.role;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.role.ISystemRoleService;
+import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
@@ -102,6 +103,7 @@ public class SimpleSystemRoleServiceImpl
     }
 
     @Cacheable(cacheNames = "system_role", key = "#id", unless = "#result==null")
+    @ExpireOn(cacheNames = "system_role", value = 10, timeUnit = java.util.concurrent.TimeUnit.MINUTES)
     @Override
     public SystemRoleEntity queryById(Long id) {
         return super.queryById(id);

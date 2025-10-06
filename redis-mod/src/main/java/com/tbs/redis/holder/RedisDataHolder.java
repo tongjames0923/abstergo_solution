@@ -1,92 +1,84 @@
 package com.tbs.redis.holder;
 
 import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.IDataHolderExpireSupport;
 import com.tbs.common.data.IMatchKeyFounder;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
-import com.tbs.redis.constants.RedisBeanNameConstants;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.redisson.api.RBucket;
+import org.redisson.api.RKeys;
+import org.redisson.api.RedissonClient;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- * Redis数据存储实现类
+ * Redis数据存储实现类，基于Redisson实现
  *
  * @author tongj
  */
-public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
+public class RedisDataHolder implements IDataHolder, IDataHolderExpireSupport, IMatchKeyFounder {
 
-    @Resource(name = RedisBeanNameConstants.DEFAULT_REDIS_TEMPLATE)
-    private RedisTemplate<String, Object> redisTemplate;
+    @Resource
+    private RedissonClient redissonClient;
 
     @Override
     public boolean set(String key, Object value, boolean force) {
+        RBucket<Object> bucket = redissonClient.getBucket(key);
         if (force) {
-            redisTemplate.opsForValue().set(key, value);
+            bucket.set(value);
             return true;
         } else {
-            return redisTemplate.opsForValue().setIfAbsent(key, value);
+            return bucket.trySet(value);
         }
-    }
-
-    /**
-     * 设置缓存有效期
-     *
-     * @param key
-     * @param expireTime
-     * @return
-     */
-    public boolean expire(String key, Date expireTime) {
-        return redisTemplate.expireAt(key, expireTime);
     }
 
     @Override
     public <T> Optional<T> get(String key) {
-        Object value = redisTemplate.opsForValue().get(key);
-        return Optional.ofNullable((T)value);
+        RBucket<T> bucket = redissonClient.getBucket(key);
+        T value = bucket.get();
+        return Optional.ofNullable(value);
     }
 
     @Override
     public void remove(String key) {
-        redisTemplate.delete(key);
+        redissonClient.getBucket(key).delete();
     }
 
     @Override
     public void clear() {
-        Set<String> keys = redisTemplate.keys("*");
-        if (keys != null && !keys.isEmpty()) {
-            redisTemplate.delete(keys);
-        }
+        RKeys keys = redissonClient.getKeys();
+        keys.flushall();
     }
 
     @Override
     public boolean isEmpty() {
-        Set<String> keys = redisTemplate.keys("*");
-        return keys == null || keys.isEmpty();
+        RKeys keys = redissonClient.getKeys();
+        return keys.count() == 0;
     }
 
     @Override
     public int size() {
-        Set<String> keys = redisTemplate.keys("*");
-        return keys == null ? 0 : keys.size();
+        RKeys keys = redissonClient.getKeys();
+        return (int)keys.count();
     }
 
     @Override
     public boolean containsKey(String key) {
-        return Boolean.TRUE.equals(redisTemplate.hasKey(key));
+        RBucket<Object> bucket = redissonClient.getBucket(key);
+        return bucket.isExists();
     }
 
     @Override
     public Collection<Map.Entry<String, Object>> entries() {
-        Set<String> keys = redisTemplate.keys("*");
-        if (keys == null || keys.isEmpty()) {
-            return List.of();
-        }
-
+        RKeys keys = redissonClient.getKeys();
+        Iterable<String> keyIterable = keys.getKeys();
         List<Map.Entry<String, Object>> entries = new ArrayList<>();
-        for (String key : keys) {
-            Object value = redisTemplate.opsForValue().get(key);
+
+        for (String key : keyIterable) {
+            RBucket<Object> bucket = redissonClient.getBucket(key);
+            Object value = bucket.get();
             if (value != null) {
                 entries.add(new AbstractMap.SimpleEntry<>(key, value));
             }
@@ -96,35 +88,59 @@ public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
 
     @Override
     public Collection<String> keys() {
-        Set<String> keys = redisTemplate.keys("*");
-        return keys == null ? List.of() : keys;
+        RKeys keys = redissonClient.getKeys();
+        List<String> keyList = new ArrayList<>();
+        keys.getKeys().forEach(keyList::add);
+        return keyList;
     }
 
     @Override
     public Collection<Object> values() {
-        Set<String> keys = redisTemplate.keys("*");
-        if (keys == null || keys.isEmpty()) {
-            return List.of();
+        RKeys keys = redissonClient.getKeys();
+        Iterable<String> keyIterable = keys.getKeys();
+        List<Object> values = new ArrayList<>();
+
+        for (String key : keyIterable) {
+            RBucket<Object> bucket = redissonClient.getBucket(key);
+            Object value = bucket.get();
+            if (value != null) {
+                values.add(value);
+            }
         }
-        List<Object> values = redisTemplate.opsForValue().multiGet(keys);
-        return values == null ? List.of() : values;
+        return values;
     }
 
     @Override
     public Collection<String> find(String key) {
-        return redisTemplate.keys(key);
+        RKeys keys = redissonClient.getKeys();
+        Iterable<String> matchedKeys = keys.getKeysByPattern(key);
+        List<String> keyList = new ArrayList<>();
+        matchedKeys.forEach(keyList::add);
+        return keyList;
     }
 
     @Override
     public Collection<Map.Entry<String, Object>> findEntries(String reg) {
-        Collection<String> keys = redisTemplate.keys(reg);
+        Collection<String> keys = find(reg);
         if (CollUtil.isEmpty(keys)) {
             return Collections.emptyList();
         }
         List<Map.Entry<String, Object>> entries = keys.stream().map(key -> {
-            Object value = redisTemplate.opsForValue().get(key);
+            RBucket<Object> bucket = redissonClient.getBucket(key);
+            Object value = bucket.get();
             return new AbstractMap.SimpleEntry<>(key, value);
         }).collect(Collectors.toList());
         return entries;
+    }
+
+    @Override
+    public boolean expire(Object key, Date expireTime) {
+        return redissonClient.getBucket(key.toString()).expireAt(expireTime);
+    }
+
+    @Override
+    public boolean expireAll(Date expireTime) {
+        AssertUtil.isTrue(false, "Not support");
+        return false;
     }
 }

@@ -19,4 +19,9 @@ public class LockProperty {
      * 锁提供者类型,默认jdk锁
      */
     private Class<? extends ILockProvider> lockProviderType = com.tbs.lock.impls.providers.JdkLockProvider.class;
+
+    /**
+     * 获取锁超时时间，默认1秒,单位毫秒
+     */
+    private int accquireTimeout = 1000;
 }

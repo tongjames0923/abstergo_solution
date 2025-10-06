@@ -15,7 +15,7 @@ import java.util.Date;
  * </p>
  */
 @Data
-class AdapterTokenModel extends SimpleTokenModel {
+public class AdapterTokenModel extends SimpleTokenModel {
     /**
      * 客户端MAC地址
      */
@@ -44,5 +44,9 @@ class AdapterTokenModel extends SimpleTokenModel {
         super(token, userName, status, type, expireTime, createTime, createType, sessionId);
         this.macAddr = macAddr;
         this.ipAddr = ipAddr;
+    }
+
+    public AdapterTokenModel() {
+        super();
     }
 }

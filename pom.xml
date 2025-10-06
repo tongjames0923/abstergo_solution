@@ -50,7 +50,7 @@
         <mybatis.version>4.2.3</mybatis.version>
         <mysql.version>8.0.32</mysql.version>
         <p6spy.version>3.8.2</p6spy.version>
-        <redisson.version>3.16.8</redisson.version>
+        <redisson.version>3.52.0</redisson.version>
         <tk.mybatis.version>4.2.3</tk.mybatis.version>
     </properties>
 

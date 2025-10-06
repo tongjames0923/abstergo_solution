@@ -3,6 +3,7 @@ package com.tbs.app.service.impl.user;
 import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.service.user.model.impl.DefaultSystemUserDetails;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
@@ -12,7 +13,6 @@ import com.tbs.web.exception.SimpleAuthException;
 import com.tbs.web.security.user.IUserInfoService;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
@@ -45,7 +45,7 @@ public class DefaultUserInfoService implements IUserInfoService {
         var roles = userRoleRelationService.queryUserRoles(user.getId());
         if (CollUtil.isNotEmpty(roles)) {
             builder.authorities(roles.stream().map(role -> {
-                return new SimpleGrantedAuthority(role.getId().toString());
+                return new DefaultGrantedAuthority(role.getId().toString());
             }).collect(Collectors.toList()));
         }
         var companies = companyUserRelationService.queryUserCompanies(user.getId());

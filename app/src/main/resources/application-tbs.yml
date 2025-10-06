@@ -15,11 +15,11 @@ tbs:
     enable: true
   cache:
     cache-manager-implementation: com.tbs.cache.core.manager.holder.DataHolderCacheManager
-    expired-actuator: com.tbs.redis.cache.RedisCacheExpireActuator
+    expired-actuator: com.tbs.redis.cache.RedisDataHolderCacheExpireActuator
   boardcast:
     event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
   lock:
-    lock-provider-type: com.tbs.lock.impls.providers.JdkLockProvider
+    lock-provider-type: com.tbs.redis.lock.RedissonLockProvider
   data:
     data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHodlerManager
     data-holder: com.tbs.redis.holder.RedisDataHolder

@@ -2,11 +2,13 @@ package com.tbs.app.service.user.model.impl;
 
 import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
 import java.util.List;
 
+@Data
 public class DefaultSystemUserDetails implements ISystemUserDetails {
     private List<SystemCompanyEntity> companies;
     private SystemCompanyEntity currentCompany;
@@ -16,11 +18,11 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
     private boolean accountNonLocked = true;
     private boolean credentialsNonExpired = true;
     private boolean enabled = true;
-    private Collection<? extends GrantedAuthority> authorities;
+    private List<? extends GrantedAuthority> authorities;
 
     public DefaultSystemUserDetails(List<SystemCompanyEntity> companies, SystemCompanyEntity currentCompany,
         String username, String password, boolean accountNonExpired, boolean accountNonLocked,
-        boolean credentialsNonExpired, boolean enabled, Collection<? extends GrantedAuthority> authorities) {
+        boolean credentialsNonExpired, boolean enabled, List<? extends GrantedAuthority> authorities) {
         this.companies = companies;
         this.currentCompany = currentCompany;
         this.username = username;
@@ -30,6 +32,9 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
         this.credentialsNonExpired = credentialsNonExpired;
         this.enabled = enabled;
         this.authorities = authorities;
+    }
+
+    public DefaultSystemUserDetails() {
     }
 
     @Override
@@ -91,7 +96,7 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
         private boolean accountNonLocked;
         private boolean credentialsNonExpired;
         private boolean enabled;
-        private Collection<? extends GrantedAuthority> authorities;
+        private List<? extends GrantedAuthority> authorities;
 
         public Builder() {
         }
@@ -106,7 +111,7 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
             return this;
         }
 
-        public Builder authorities(Collection<? extends GrantedAuthority> authorities) {
+        public Builder authorities(List<? extends GrantedAuthority> authorities) {
             this.authorities = authorities;
             return this;
         }
