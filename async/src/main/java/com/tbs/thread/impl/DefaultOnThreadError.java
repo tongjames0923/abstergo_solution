@@ -2,6 +2,7 @@ package com.tbs.thread.impl;
 
 import com.tbs.thread.IOnThreadError;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Component;
 
 /**
  * 默认的线程错误处理
@@ -9,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
  * @author abstergo
  */
 @Slf4j
+@Component
 public class DefaultOnThreadError implements IOnThreadError {
     @Override
     public void onThreadError(Throwable throwable, Thread at) {
