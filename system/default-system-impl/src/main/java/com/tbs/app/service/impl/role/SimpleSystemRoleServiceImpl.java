@@ -108,6 +108,11 @@ public class SimpleSystemRoleServiceImpl
     }
 
     @Override
+    public boolean isOptional() {
+        return true;
+    }
+
+    @Override
     public void startUp() throws RuntimeException {
         SystemRoleEntity commonUser = getMapper().selectByPrimaryKey(RoleConstants.NORMAL_USER_ROLE_ID);
         if (commonUser == null) {
