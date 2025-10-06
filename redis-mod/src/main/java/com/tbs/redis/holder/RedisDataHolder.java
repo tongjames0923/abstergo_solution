@@ -1,9 +1,7 @@
 package com.tbs.redis.holder;
 
 import com.tbs.common.data.IDataHolder;
-import com.tbs.common.data.IDataHolderExpireSupport;
 import com.tbs.common.data.IMatchKeyFounder;
-import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
@@ -18,7 +16,7 @@ import java.util.stream.Collectors;
  *
  * @author tongj
  */
-public class RedisDataHolder implements IDataHolder, IDataHolderExpireSupport, IMatchKeyFounder {
+public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
 
     @Resource
     private RedissonClient redissonClient;
@@ -133,14 +131,4 @@ public class RedisDataHolder implements IDataHolder, IDataHolderExpireSupport, I
         return entries;
     }
 
-    @Override
-    public boolean expire(Object key, Date expireTime) {
-        return redissonClient.getBucket(key.toString()).expireAt(expireTime);
-    }
-
-    @Override
-    public boolean expireAll(Date expireTime) {
-        AssertUtil.isTrue(false, "Not support");
-        return false;
-    }
 }

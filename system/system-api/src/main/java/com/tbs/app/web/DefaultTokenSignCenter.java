@@ -1,6 +1,7 @@
 package com.tbs.app.web;
 
 import com.tbs.app.service.token.ISystemTokenService;
+import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.EnumUtil;
 import com.tbs.common.util.framework.UuidUtil;
@@ -164,8 +165,8 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     @Override
     protected Collection<ITokenModel> getTokensWithSessionId(String sessionId) {
         return tokenService.query(new CommonTokenQueryCriteria().setSessionIdEquals(sessionId)
-                .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
-                .setCreateTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC))
+            .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
+            .setCreateTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC))
             .setExpireTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC)), null).stream().map((v) -> {
             return getInstance().getTokenByToken(v.getToken());
         }).collect(Collectors.toList());
@@ -188,6 +189,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     HttpServletRequest request;
 
     @Cacheable(cacheNames = "tokenCache", key = "#token")
+    @ExpireOn(cacheNames = "tokenCache", value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
     public ITokenModel getTokenByToken(@NotNull String token) {
         return super.getTokenByToken(token);
