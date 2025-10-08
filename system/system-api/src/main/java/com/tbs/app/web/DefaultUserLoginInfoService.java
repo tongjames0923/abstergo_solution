@@ -3,11 +3,14 @@ package com.tbs.app.web;
 import cn.hutool.core.date.DateUtil;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.cache.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
@@ -172,10 +175,26 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
                 vo.setCreateTime(createTime);
 
                 // 获取该会话的所有令牌
-                List<ITokenModel> tokens =
+                List<String> tokensStr =
                     sessionTokens.stream().filter(Objects::nonNull).map(SystemLoginInfoEntity::getToken)
-                        .filter(Objects::nonNull).map(tokenIssuanceCenter::getTokenByToken).filter(Objects::nonNull)
-                        .collect(Collectors.toList());
+                        .filter(StrUtil::isNotEmpty).collect(Collectors.toList());
+
+                ITokenModel[] tokenModels = new ITokenModel[tokensStr.size()];
+                var invoker =
+                    DelegateUtil.getInstance().delegateWithTarget(tokenModels).build(AsyncDelegateInvoker.class);
+                for (int i = 0; i < tokensStr.size(); i++) {
+                    var finalI = i;
+                    invoker.takeIn((obj, token) -> {
+                        obj[finalI] = token;
+                    }, () -> {
+                        return tokenIssuanceCenter.getTokenByToken(tokensStr.get(finalI));
+                    });
+                }
+                invoker.executeAll().forEach(iDelegateFlag -> {
+                    iDelegateFlag.waitUntilFinished();
+                });
+
+                var tokens = Arrays.stream(tokenModels).filter(Objects::nonNull).collect(Collectors.toList());
                 vo.setAccessTokens(tokens);
 
                 // 设置额外信息
