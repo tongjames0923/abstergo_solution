@@ -10,7 +10,7 @@ package com.tbs.common.data;
  * @see IFeatureWrapper 功能包装接口
  * @see IDataHolder 数据持有者接口
  */
-public interface IDataHolderFeatureWrapper extends IFeatureWrapper<IDataHolder>, IDataHolder {
+public interface IPartitionableDataHolder extends IFeatureWrapper<IDataHolder>, IDataHolder {
 
 	/**
 	 * 重新生成键名

@@ -1,9 +1,9 @@
 package com.tbs.common.data.impl;
 
 import com.tbs.common.data.IDataHolder;
-import com.tbs.common.data.IDataHolderFeatureWrapper;
 import com.tbs.common.data.IFeatureWrapper;
 import com.tbs.common.data.IMatchKeyFounder;
+import com.tbs.common.data.IPartitionableDataHolder;
 import com.tbs.common.error.AssertUtil;
 import lombok.Getter;
 import lombok.Setter;
@@ -47,12 +47,11 @@ public class DefaultAutoGenDataHodlerManager extends AbstractAutoGenDataHolderMa
      * 该类实现了IDataHolderFeatureWrapper接口，既是数据持有者又具备包装器功能， 通过键名前缀的方式实现数据分区隔离。每个分区数据持有者都关联一个分区名称，
      * 在存储和读取数据时会自动为键名添加分区前缀，格式为"分区名::原始键名"。
      *
-     * @see IDataHolderFeatureWrapper 数据持有者功能包装器接口
+     * @see IPartitionableDataHolder 数据持有者功能包装器接口
      * @see IDataHolder 数据持有者接口
      * @see IMatchKeyFounder 键匹配器接口
      */
-    //TODO PartitionDataHolder的实现会导致多级FeatureWrapper，从而使得某些功能失效，重构分区IDataManager的分区逻辑。
-    public static class PartitionDataHolder implements IDataHolderFeatureWrapper {
+    public static class PartitionDataHolder implements IPartitionableDataHolder {
 
         /**
          * 分区名称
@@ -92,9 +91,10 @@ public class DefaultAutoGenDataHodlerManager extends AbstractAutoGenDataHolderMa
          * @see AssertUtil 断言工具类
          */
         private IMatchKeyFounder getMatch() {
-            AssertUtil.isTrue(!(getOrginal() instanceof IMatchKeyFounder),
+            var matcher = getFeatureIfExsit(IMatchKeyFounder.class);
+            AssertUtil.isTrue(matcher.isEmpty(),
                 () -> new RuntimeException("数据缓存不支持匹配键"));
-            return (IMatchKeyFounder)dataHolder;
+            return matcher.get();
         }
 
         /**
@@ -291,7 +291,7 @@ public class DefaultAutoGenDataHodlerManager extends AbstractAutoGenDataHolderMa
          *
          * @param k 原始键名，不能为null
          * @return 添加了分区前缀的新键名
-         * @see IDataHolderFeatureWrapper#reKey(String) 数据持有者功能包装器键名重写方法
+         * @see IPartitionableDataHolder#reKey(String) 数据持有者功能包装器键名重写方法
          */
         @Override
         public String reKey(String k) {

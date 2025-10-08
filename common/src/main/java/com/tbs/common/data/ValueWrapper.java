@@ -29,6 +29,18 @@ public class ValueWrapper<T> {
 		return wrapper;
 	}
 
+    /**
+     * 创建一个空的值包装类实例
+     * <p>
+     * 创建一个空的值包装类实例，用于表示一个没有值的情况。
+     *
+     * @param <T> 被包装的值的类型
+     * @return 空的ValueWrapper实例
+     */
+    public static ValueWrapper empty() {
+        return of(null);
+    }
+
 	/**
 	 * 获取包装的值
 	 * <p>

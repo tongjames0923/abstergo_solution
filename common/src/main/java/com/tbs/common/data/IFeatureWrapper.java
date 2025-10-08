@@ -1,5 +1,10 @@
 package com.tbs.common.data;
 
+import com.tbs.common.util.FeatureWrapperHelper;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
+
 /**
  * 功能包装接口
  * <p>
@@ -26,4 +31,17 @@ public interface IFeatureWrapper<T> {
 	 * @param orginal 要设置的原始对象，可以为null
 	 */
 	void setOrginal(T orginal);
+
+    /**
+     * 获取包装的指定功能对象
+     * <p>
+     * 返回当前包装器中存储的指定功能对象实例。
+     *
+     * @param featureClass 功能对象类型
+     * @return 指定功能对象，可能为null
+     */
+    default <F> Optional<F> getFeatureIfExsit(@NotNull Class<F> featureClass) {
+        return FeatureWrapperHelper.unwrap(this, featureClass);
+    }
+
 }

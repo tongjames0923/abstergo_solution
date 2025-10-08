@@ -16,6 +16,7 @@ import java.util.Date;
  */
 @Data
 public class AdapterTokenModel extends SimpleTokenModel {
+    private static final long serialVersionUID = 1L;
     /**
      * 客户端MAC地址
      */
