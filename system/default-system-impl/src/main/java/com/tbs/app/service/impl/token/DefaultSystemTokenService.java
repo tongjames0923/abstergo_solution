@@ -2,7 +2,7 @@ package com.tbs.app.service.impl.token;
 
 import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
-import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.EnumUtil;

@@ -3,7 +3,7 @@ package com.tbs.app.controller.publics;
 import com.tbs.app.service.TestService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.user.ISystemUserService;
-import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;

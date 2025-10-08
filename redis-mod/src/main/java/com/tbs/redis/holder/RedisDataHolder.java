@@ -1,17 +1,14 @@
 package com.tbs.redis.holder;
 
-import com.tbs.common.data.*;
-import com.tbs.common.error.AssertUtil;
+import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.IMatchKeyFounder;
 import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.FeatureWrapperHelper;
-import org.jetbrains.annotations.NotNull;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -19,7 +16,7 @@ import java.util.stream.Collectors;
  *
  * @author tongj
  */
-public class RedisDataHolder implements IDataHolder, IMatchKeyFounder, IDataHolderExpireActuator {
+public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
 
     @Resource
     private RedissonClient redissonClient;
@@ -134,26 +131,4 @@ public class RedisDataHolder implements IDataHolder, IMatchKeyFounder, IDataHold
         return entries;
     }
 
-    @Override
-    public boolean expire(@NotNull IDataHolder cache, Object key, @NotNull Date expireTime) {
-        ValueWrapper<String> keyWrapper = ValueWrapper.empty();
-        Object finalKey = key;
-        FeatureWrapperHelper.unwrap(cache, IPartitionableDataHolder.class).ifPresent((partitionable) -> {
-            keyWrapper.set(partitionable.reKey(finalKey.toString()));
-        });
-        String strKey = keyWrapper.getOrThrow().toString();
-        ValueWrapper<Boolean> result = ValueWrapper.of(false);
-        FeatureWrapperHelper.unwrap(cache, RedisDataHolder.class).ifPresentOrElse(redisDataHolder -> {
-            RBucket<Object> bucket = redissonClient.getBucket(strKey.toString());
-            long ttl = expireTime.getTime() - System.currentTimeMillis();
-            if (ttl > 0) {
-                bucket.expire(ttl, TimeUnit.MILLISECONDS);
-                result.set(true);
-                return;
-            }
-        }, () -> {
-            AssertUtil.throwError(() -> new UnsupportedOperationException("cache is not RedisDataHolder"));
-        });
-        return result.getOrThrow();
-    }
 }

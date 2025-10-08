@@ -3,7 +3,7 @@ package com.tbs.app.service.impl.role;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
-import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.shared.constant.CommonConstant;

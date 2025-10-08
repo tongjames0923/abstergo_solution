@@ -5,6 +5,7 @@ import com.tbs.redis.codec.DefaultSystemCodec;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.redisson.Redisson;
+import org.redisson.api.EvictionMode;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
 import org.redisson.spring.cache.CacheConfig;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.cache.CacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
@@ -26,7 +26,6 @@ import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSeriali
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
 
 /**
  * @author abstergo
@@ -102,10 +101,19 @@ public class BasicRedisConfig {
     }
 
     @Bean
-    public CacheManager redisCacheManager(RedissonClient redissonClient) {
-        var hashMap = new HashMap<String, CacheConfig>();
-        hashMap.put("*", new CacheConfig(property.getCacheTimeout(), 600L));
-        return new RedissonSpringCacheManager(redissonClient, hashMap);
+    public RedissonSpringCacheManager redisCacheManager(RedissonClient redissonClient) {
+        var cacheManager = new RedissonSpringCacheManager(redissonClient) {
+            @Override
+            protected CacheConfig createDefaultConfig() {
+                var cacheConfig = new CacheConfig();
+                cacheConfig.setEvictionMode(EvictionMode.LFU);
+                cacheConfig.setMaxSize(1024);
+                return cacheConfig;
+            }
+        };
+        cacheManager.setAllowNullValues(property.isAllowNullValues());
+        cacheManager.setTransactionAware(true);
+        return cacheManager;
     }
 
     private static final Logger REDIS_MESSAGE_CENTER_LOGGER =

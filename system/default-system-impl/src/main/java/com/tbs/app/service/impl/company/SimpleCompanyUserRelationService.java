@@ -3,7 +3,7 @@ package com.tbs.app.service.impl.company;
 import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.user.ISystemUserService;
-import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.CollUtil;
 import com.tbs.shared.mapper.SystemUserCompanyRelationMapper;

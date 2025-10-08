@@ -1,15 +1,11 @@
 package com.tbs.app.config;
 
-import com.tbs.common.data.IDataHolderExpireActuator;
-import com.tbs.common.data.impl.LocalDataExpireActuator;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.util.IUserDetailsTransformer;
 import com.tbs.shared.util.impl.SimpleUserDetailsTransformer;
-import com.tbs.web.security.authentication.IAuthManager;
-import com.tbs.web.security.authentication.impl.SpringSecurityContextHolderAuthManager;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.impl.NoEncryptPassword;
 import lombok.Data;
@@ -28,11 +24,6 @@ public class AppSettingProperty {
      * 登录用户名密码校验器
      */
     private Class<? extends IUserNamePasswordValidator> systemUserNamePasswordValidatorImpl = SimpleUserValidator.class;
-
-    /**
-     * 登录token过期实现类
-     */
-    private Class<? extends IDataHolderExpireActuator> expireActuatorClass = LocalDataExpireActuator.class;
 
     /**
      * 主代理实现类

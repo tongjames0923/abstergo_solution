@@ -8,7 +8,6 @@ import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.broadcast.subscriber.impl.SimpleUseSubscriber;
-import com.tbs.cache.core.manager.holder.DataHolderCacheManager;
 import com.tbs.common.error.IErrorThrowEvent;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
@@ -127,10 +126,6 @@ public class AppConfig {
 		return i;
 	}
 
-	@Bean
-	DataHolderCacheManager dataHolderCacheManager() {
-		return new DataHolderCacheManager();
-	}
 
 	@Bean
 	SimpleRabbitMqSupport rabbitMqSupport() {

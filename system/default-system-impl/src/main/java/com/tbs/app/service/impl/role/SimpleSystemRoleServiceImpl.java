@@ -2,7 +2,8 @@ package com.tbs.app.service.impl.role;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.role.ISystemRoleService;
-import com.tbs.cache.annotation.ExpireOn;
+
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;

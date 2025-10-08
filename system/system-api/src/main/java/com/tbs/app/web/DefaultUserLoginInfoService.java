@@ -4,7 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
-import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.CollUtil;

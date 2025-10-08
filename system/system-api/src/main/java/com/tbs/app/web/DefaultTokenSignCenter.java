@@ -1,7 +1,7 @@
 package com.tbs.app.web;
 
 import com.tbs.app.service.token.ISystemTokenService;
-import com.tbs.cache.annotation.ExpireOn;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.util.CollUtil;
 import com.tbs.common.util.EnumUtil;
 import com.tbs.common.util.framework.UuidUtil;
