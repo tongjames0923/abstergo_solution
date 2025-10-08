@@ -11,11 +11,11 @@ tbs:
     enable-cors: true
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
-    expire-actuator-class: com.tbs.redis.cache.RedisDataHolderExpireActuator
+    expire-actuator-class: com.tbs.redis.holder.RedisDataHolder
     enable: true
   cache:
     cache-manager-implementation: com.tbs.cache.core.manager.holder.DataHolderCacheManager
-    expired-actuator: com.tbs.redis.cache.RedisDataHolderCacheExpireActuator
+    expired-actuator: com.tbs.cache.core.impl.DataHolderCacheExpiredActuator
   boardcast:
     event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
   lock:

@@ -1,6 +1,7 @@
 package com.tbs.cache.core.manager.holder;
 
 import com.tbs.common.data.IDataHolder;
+import com.tbs.common.data.IFeatureWrapper;
 import org.springframework.cache.support.AbstractValueAdaptingCache;
 
 import java.util.concurrent.Callable;
@@ -10,7 +11,7 @@ import java.util.concurrent.Callable;
  *
  * @author tongj
  */
-public class DataHolderCache extends AbstractValueAdaptingCache {
+public class DataHolderCache extends AbstractValueAdaptingCache implements IFeatureWrapper<IDataHolder> {
     private IDataHolder dataHolder;
 
     private String name;
@@ -54,5 +55,15 @@ public class DataHolderCache extends AbstractValueAdaptingCache {
     @Override
     public void clear() {
         dataHolder.clear();
+    }
+
+    @Override
+    public IDataHolder getOrginal() {
+        return dataHolder;
+    }
+
+    @Override
+    public void setOrginal(IDataHolder orginal) {
+        this.dataHolder = orginal;
     }
 }
