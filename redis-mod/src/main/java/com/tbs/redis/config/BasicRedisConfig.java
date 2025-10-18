@@ -5,11 +5,8 @@ import com.tbs.redis.codec.DefaultSystemCodec;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.redisson.Redisson;
-import org.redisson.api.EvictionMode;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
-import org.redisson.spring.cache.CacheConfig;
-import org.redisson.spring.cache.RedissonSpringCacheManager;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -56,23 +53,6 @@ public class BasicRedisConfig {
     RedisSerializer valueSerializer() throws Throwable {
         return BeanUtil.buildBeanFromProperties(GenericJackson2JsonRedisSerializer::new, property.getValueSerializer(),
             BeanUtil::buildByEmptyArgs);
-    }
-
-    @Bean
-    public RedissonSpringCacheManager redisCacheManager(RedissonClient redissonClient) {
-        var cacheManager = new RedissonSpringCacheManager(redissonClient) {
-            @Override
-            protected CacheConfig createDefaultConfig() {
-                var cacheConfig = new CacheConfig();
-                cacheConfig.setEvictionMode(EvictionMode.LFU);
-                cacheConfig.setMaxSize(1024);
-
-                return cacheConfig;
-            }
-        };
-        cacheManager.setAllowNullValues(property.isAllowNullValues());
-        cacheManager.setTransactionAware(true);
-        return cacheManager;
     }
 
 }
