@@ -6,11 +6,15 @@ import org.redisson.spring.cache.RedissonSpringCacheManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 
+import javax.annotation.Resource;
+
 public class RedissonCacheConfig {
+    @Resource
+    private RedissonCacheProperty property;
 
     @Bean
     @ConditionalOnMissingBean(RedissonSpringCacheManager.class)
-    public RedissonSpringCacheManager redisCacheManager(RedissonClient redissonClient, RedissonCacheProperty property) {
+    public RedissonSpringCacheManager redisCacheManager(RedissonClient redissonClient) {
         var cacheManager = new RedissonSpringCacheManager(redissonClient);
         cacheManager.setAllowNullValues(property.isAllowNullValues());
         cacheManager.setTransactionAware(property.isTransaction());

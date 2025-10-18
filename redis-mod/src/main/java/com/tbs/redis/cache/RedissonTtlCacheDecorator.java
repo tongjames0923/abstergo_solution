@@ -9,6 +9,7 @@ import org.redisson.spring.cache.RedissonCache;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
+import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.time.Duration;
@@ -19,7 +20,7 @@ import java.time.Duration;
 public class RedissonTtlCacheDecorator implements ITtlCacheDecorator {
 
     @Resource
-    private RedissonCacheProperty redisProperty;
+    private RedissonCacheProperty redissonCacheProperty;
 
     @Override
     public AbstractTtlCache decorateCache(Cache cache, CacheManager manager) {
@@ -29,7 +30,7 @@ public class RedissonTtlCacheDecorator implements ITtlCacheDecorator {
         var redissonCache = FeatureWrapperHelper.unwrap(cache, RedissonCache.class);
 
         if (redissonCache.isPresent()) {
-            return new RedissonAdaptTtlCache(redissonCache.get(), Duration.ofSeconds(redisProperty.getCacheTimeout()));
+            return new RedissonAdaptTtlCache(redissonCache.get(), Duration.ofSeconds(redissonCacheProperty.getCacheTimeout()));
         } else {
             AssertUtil.throwError(() -> new IllegalArgumentException("cache is not redisson cache"));
             return null;
