@@ -1,6 +1,7 @@
 package com.tbs.redis.config.property;
 
 import lombok.Data;
+import org.redisson.api.EvictionMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 @Data
@@ -23,7 +24,20 @@ public class RedissonCacheProperty {
     private boolean transaction = false;
 
     /**
-     * redisson配置文件路径
+     * redis缓存的key最大空闲时间，超过这个时间就删除，默认30分钟
      */
-    private String redsictionConfigPath = "";
+    private long maxIdleTime = 1800L;
+
+    /**
+     * redis缓存的key最大数量，超过这个数量就删除，默认2048
+     */
+    private int maxSize = 2048;
+
+    /**
+     * 缓存的key的清除模式，默认LRU
+     */
+    private EvictionMode evictionMode = EvictionMode.LRU;
+
+
+
 }

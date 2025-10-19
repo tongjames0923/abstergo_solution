@@ -24,5 +24,10 @@ tbs:
     data-holder: com.tbs.redis.holder.RedisDataHolder
   redis:
     enable: true
+  redission:
+    cache:
+      cache-timeout: 900
+      transaction: true
+      eviction-mode: lru
   start-up:
     optional-execute: false
