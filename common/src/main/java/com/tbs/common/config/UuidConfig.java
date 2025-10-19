@@ -1,7 +1,7 @@
 package com.tbs.common.config;
 
 import com.tbs.common.config.property.UuidProperty;
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.uuid.IUuidGenerator;
 import com.tbs.common.uuid.impl.SnowFlakeUUID;
 import org.springframework.context.annotation.Bean;

@@ -1,8 +1,8 @@
 package com.tbs.thread.impl;
 
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.StrUtil;
-import com.tbs.thread.AbstractThreadPoolMananger;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
+import com.tbs.thread.AbstractThreadPoolManager;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import org.jetbrains.annotations.NotNull;
@@ -19,7 +19,7 @@ import java.util.concurrent.Executor;
  *
  * @author tongj
  */
-public class DefaultMultiLayerThreadPoolManager extends AbstractThreadPoolMananger {
+public class DefaultMultiLayerThreadPoolManager extends AbstractThreadPoolManager {
     @Data
     @AllArgsConstructor
     public static final class ExecutorInfo {

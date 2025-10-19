@@ -1,6 +1,6 @@
 package com.tbs.shared.util;
 
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 
 import javax.servlet.http.HttpServletRequest;
 

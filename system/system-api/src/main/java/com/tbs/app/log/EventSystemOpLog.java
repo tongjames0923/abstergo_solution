@@ -2,7 +2,7 @@ package com.tbs.app.log;
 
 import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 

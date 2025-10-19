@@ -1,7 +1,7 @@
 package com.tbs.cache.integration;
 
 import com.tbs.cache.ICacheListenner;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;

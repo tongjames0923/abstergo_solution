@@ -1,9 +1,9 @@
 package com.tbs.web.result.aop;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.BeanUtil;
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxBuilderProvider;

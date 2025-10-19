@@ -1,6 +1,6 @@
 package com.tbs.web.config;
 
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
 import com.tbs.web.gate.ITokenPicker;

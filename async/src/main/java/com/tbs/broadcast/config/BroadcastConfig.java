@@ -15,7 +15,7 @@ import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.dispatcher.impl.SimpleEventDispatcher;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.broadcast.publisher.impl.DispatcherImportedPublisher;
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 
 /**
  * 广播模块配置类

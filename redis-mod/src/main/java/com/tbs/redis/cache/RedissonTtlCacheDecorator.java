@@ -3,13 +3,12 @@ package com.tbs.redis.cache;
 import com.tbs.cache.ITtlCacheDecorator;
 import com.tbs.cache.integration.AbstractTtlCache;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.FeatureWrapperHelper;
+import com.tbs.common.util.helper.FeatureWrapperHelper;
 import com.tbs.redis.config.property.RedissonCacheProperty;
 import org.redisson.spring.cache.RedissonCache;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
-import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.time.Duration;

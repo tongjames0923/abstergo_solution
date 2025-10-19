@@ -6,7 +6,7 @@ import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.IDataHolderManager;
 import com.tbs.common.data.impl.MapDataHolder;
 import com.tbs.common.data.impl.SpringManagedDataHolderManager;
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 import com.tbs.common.IStartup;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
 

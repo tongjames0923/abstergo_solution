@@ -1,7 +1,7 @@
 package com.tbs.web.security.token;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;

@@ -1,6 +1,6 @@
 package com.tbs.common.exception;
 
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 
 /**
  * 带格式的运行时异常

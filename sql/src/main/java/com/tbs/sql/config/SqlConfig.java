@@ -9,7 +9,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.constants.OrderConstant;
 import com.tbs.sql.ef.IEntityQueryWrapper;
 import com.tbs.sql.ef.impl.SimpleEntityQueryWrapper;

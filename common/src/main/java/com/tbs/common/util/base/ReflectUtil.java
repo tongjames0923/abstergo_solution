@@ -1,4 +1,4 @@
-package com.tbs.common.util;
+package com.tbs.common.util.base;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;

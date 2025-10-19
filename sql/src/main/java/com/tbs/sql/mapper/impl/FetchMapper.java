@@ -1,8 +1,8 @@
 package com.tbs.sql.mapper.impl;
 
 import cn.hutool.core.bean.copier.CopyOptions;
-import com.tbs.common.util.BeanUtil;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.sql.framework.driver.IQueryDriver;
 import com.tbs.sql.framework.driver.ISqlContext;
 import com.tbs.sql.mapper.IRawSqlSelectMapper;

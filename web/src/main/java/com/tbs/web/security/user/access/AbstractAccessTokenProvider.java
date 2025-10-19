@@ -1,7 +1,7 @@
 package com.tbs.web.security.user.access;
 
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;

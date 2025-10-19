@@ -1,4 +1,4 @@
-package com.tbs.common.util;
+package com.tbs.common.util.base;
 
 import org.slf4j.helpers.MessageFormatter;
 

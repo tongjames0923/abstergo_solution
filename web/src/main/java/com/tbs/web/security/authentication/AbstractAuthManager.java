@@ -1,8 +1,8 @@
 package com.tbs.web.security.authentication;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;

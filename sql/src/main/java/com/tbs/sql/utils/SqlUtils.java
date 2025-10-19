@@ -6,8 +6,8 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import javax.persistence.Column;
 
-import com.tbs.common.util.ReflectUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.ReflectUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.annotation.QueryMapping;
 
 /**

@@ -1,7 +1,7 @@
 package com.tbs.redis.cache;
 
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
-import com.tbs.common.util.FeatureWrapperHelper;
+import com.tbs.common.util.helper.FeatureWrapperHelper;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.redisson.api.RMapCache;

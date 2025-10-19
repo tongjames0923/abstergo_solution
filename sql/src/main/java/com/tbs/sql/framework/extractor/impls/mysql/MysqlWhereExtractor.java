@@ -8,9 +8,9 @@ import javax.annotation.Resource;
 
 import org.jetbrains.annotations.Nullable;
 
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.SpringUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.framework.converter.IValueConverter;
 import com.tbs.sql.enums.QueryConnectorEnum;
 import com.tbs.sql.enums.QueryContrastEnum;

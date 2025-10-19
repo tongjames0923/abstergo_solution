@@ -4,7 +4,7 @@ import static com.tbs.sql.mapper.impl.FrameworkSelectProvider.getImportedSqlCont
 
 import java.util.List;
 
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.framework.driver.impl.EntityQuerySqlDriver;
 import com.tbs.sql.framework.driver.impl.ImportedSqlContext;
 import com.tbs.sql.framework.model.SqlLimitModel;

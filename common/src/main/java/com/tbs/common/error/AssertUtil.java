@@ -17,8 +17,8 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 
 import lombok.Getter;
 

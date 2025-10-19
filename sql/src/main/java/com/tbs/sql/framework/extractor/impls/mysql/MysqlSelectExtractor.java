@@ -1,7 +1,7 @@
 package com.tbs.sql.framework.extractor.impls.mysql;
 
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.exception.SqlExtractionException;
 import com.tbs.sql.framework.extractor.ISelectSqlExtractor;
 import com.tbs.sql.framework.model.SqlSelectInfoModel;

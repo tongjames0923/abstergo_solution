@@ -1,6 +1,6 @@
 package com.tbs.web.security.authentication.model;
 
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.Getter;

@@ -1,9 +1,7 @@
 package com.tbs.thread;
 
-import com.tbs.common.delegate.IDelegateTemplate;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.StrUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;
@@ -12,7 +10,7 @@ import java.util.concurrent.Executor;
 /**
  * @author tongj
  */
-public abstract class AbstractThreadPoolMananger implements IThreadPoolManager {
+public abstract class AbstractThreadPoolManager implements IThreadPoolManager {
 
     /**
      * 根据名称获取Executor

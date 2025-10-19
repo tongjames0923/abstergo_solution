@@ -6,7 +6,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.AuthenticationException;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.exception.InvalidTokenException;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;

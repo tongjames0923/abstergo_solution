@@ -7,7 +7,7 @@ import org.springframework.util.SerializationUtils;
 
 import com.tbs.broadcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 
 import lombok.extern.slf4j.Slf4j;
 

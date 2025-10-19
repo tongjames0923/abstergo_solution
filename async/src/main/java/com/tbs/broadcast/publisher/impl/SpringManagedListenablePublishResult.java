@@ -10,7 +10,7 @@ import com.tbs.broadcast.event.IEvent;
 import com.tbs.broadcast.publisher.AbstractPublishResult;
 import com.tbs.broadcast.publisher.IEventStatusListenner;
 import com.tbs.broadcast.publisher.IPublisher;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 
 /**
  * Spring管理的可监听发布结果实现类

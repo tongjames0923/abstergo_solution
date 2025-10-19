@@ -16,8 +16,8 @@ import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.broadcast.subscriber.IReceiveHandler;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.CollUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 
 /**
  * 简易使用订阅者

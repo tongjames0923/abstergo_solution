@@ -1,10 +1,9 @@
-package com.tbs.common.util;
+package com.tbs.common.util.base;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * 集合工具类

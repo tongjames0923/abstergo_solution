@@ -7,7 +7,7 @@ import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;

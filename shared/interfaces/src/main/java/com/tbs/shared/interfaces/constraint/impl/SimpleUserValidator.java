@@ -1,7 +1,7 @@
 package com.tbs.shared.interfaces.constraint.impl;
 
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 
 /**
  * 默认用户名密码校验器

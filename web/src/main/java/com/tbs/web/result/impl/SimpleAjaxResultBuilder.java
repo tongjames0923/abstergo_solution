@@ -1,7 +1,7 @@
 package com.tbs.web.result.impl;
 
 import com.tbs.common.function.SConsumer;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxResultBuilder;
 

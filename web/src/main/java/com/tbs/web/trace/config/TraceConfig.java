@@ -2,7 +2,7 @@ package com.tbs.web.trace.config;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.web.trace.aop.MethodTraceAop;
 import com.tbs.web.trace.core.*;
 import com.tbs.web.trace.impl.ImportedTraceInterceptor;

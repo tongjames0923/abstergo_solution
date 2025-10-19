@@ -2,7 +2,7 @@ package com.tbs.sql.ef.impl;
 
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
-import com.tbs.common.util.LambdaUtil;
+import com.tbs.common.util.function.LambdaUtil;
 import com.tbs.sql.annotation.SecretField;
 import com.tbs.sql.ef.IQueryQueryBuilder;
 import com.tbs.sql.ef.IQueryWhereProvider;

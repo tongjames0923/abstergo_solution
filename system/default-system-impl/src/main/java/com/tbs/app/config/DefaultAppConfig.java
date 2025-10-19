@@ -1,7 +1,7 @@
 package com.tbs.app.config;
 
 import com.tbs.app.service.impl.user.DefaultUserInfoService;
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.interfaces.intercept.SystemOperateInterceptor;

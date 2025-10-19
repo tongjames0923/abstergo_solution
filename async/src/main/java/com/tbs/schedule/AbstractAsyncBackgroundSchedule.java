@@ -3,7 +3,7 @@ package com.tbs.schedule;
 import com.tbs.async.annotation.LongTermAsync;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;

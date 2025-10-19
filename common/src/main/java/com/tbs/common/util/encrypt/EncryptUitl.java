@@ -2,7 +2,7 @@ package com.tbs.common.util.encrypt;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;

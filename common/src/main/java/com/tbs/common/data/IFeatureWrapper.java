@@ -1,6 +1,6 @@
 package com.tbs.common.data;
 
-import com.tbs.common.util.FeatureWrapperHelper;
+import com.tbs.common.util.helper.FeatureWrapperHelper;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Optional;

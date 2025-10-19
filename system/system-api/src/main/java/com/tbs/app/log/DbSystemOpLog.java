@@ -1,7 +1,7 @@
 package com.tbs.app.log;
 
 import com.tbs.common.data.IDataHolderManager;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.lock.util.LockUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.mapper.SystemOperateMapper;

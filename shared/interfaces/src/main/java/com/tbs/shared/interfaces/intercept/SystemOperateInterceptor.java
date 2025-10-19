@@ -7,8 +7,8 @@ import javax.servlet.http.HttpServletRequest;
 
 import com.alibaba.fastjson2.JSON;
 import com.tbs.common.data.ValueWrapper;
-import com.tbs.common.util.BeanUtil;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.NetUtil;

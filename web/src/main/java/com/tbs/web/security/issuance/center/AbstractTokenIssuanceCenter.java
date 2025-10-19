@@ -1,7 +1,7 @@
 package com.tbs.web.security.issuance.center;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;

@@ -4,7 +4,7 @@ import com.tbs.cache.ITtlCacheDecorator;
 import com.tbs.cache.impl.DefaultTtlAdaptCacheMananger;
 import com.tbs.cache.impl.DefaultTtlCacheDecorator;
 import com.tbs.cache.integration.AbstractTtlAdaptCacheMananger;
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;

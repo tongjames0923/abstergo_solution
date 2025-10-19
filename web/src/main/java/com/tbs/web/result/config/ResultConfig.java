@@ -1,6 +1,6 @@
 package com.tbs.web.result.config;
 
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.IResultCreator;

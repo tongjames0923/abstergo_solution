@@ -1,7 +1,7 @@
 package com.tbs.web.security.authentication.center.impl;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.web.exception.SimpleAuthException;
 import com.tbs.web.security.authentication.center.AbstractAuthenticationCenter;
 import com.tbs.web.security.authentication.model.DefaultTokenAuthentication;

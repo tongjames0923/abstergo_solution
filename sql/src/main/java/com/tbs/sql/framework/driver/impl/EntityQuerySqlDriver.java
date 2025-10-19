@@ -2,7 +2,7 @@ package com.tbs.sql.framework.driver.impl;
 
 import java.util.List;
 
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.framework.driver.ISqlContext;
 import com.tbs.sql.framework.model.*;
 import com.tbs.sql.query.IQueryCriteria;

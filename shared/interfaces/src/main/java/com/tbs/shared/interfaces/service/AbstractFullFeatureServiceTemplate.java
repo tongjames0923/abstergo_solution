@@ -2,7 +2,7 @@ package com.tbs.shared.interfaces.service;
 
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.shared.util.PageUtil;

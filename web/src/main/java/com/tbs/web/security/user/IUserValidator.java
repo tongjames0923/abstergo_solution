@@ -1,7 +1,7 @@
 package com.tbs.web.security.user;
 
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import org.springframework.core.Ordered;
 import org.springframework.security.core.userdetails.UserDetails;
 

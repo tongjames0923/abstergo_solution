@@ -2,7 +2,7 @@ package com.tbs.sql.framework.extractor.impls.mysql;
 
 import java.util.List;
 
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.sql.framework.extractor.IGroupSqlExtractor;
 import com.tbs.sql.framework.model.SqlGroupModel;
 

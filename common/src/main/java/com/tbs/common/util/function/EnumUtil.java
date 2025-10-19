@@ -1,4 +1,4 @@
-package com.tbs.common.util;
+package com.tbs.common.util.function;
 
 import com.tbs.common.BaseEnum;
 

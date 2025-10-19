@@ -2,7 +2,7 @@ package com.tbs.redis.holder;
 
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.IMatchKeyFounder;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import org.redisson.api.RBucket;
 import org.redisson.api.RKeys;
 import org.redisson.api.RedissonClient;

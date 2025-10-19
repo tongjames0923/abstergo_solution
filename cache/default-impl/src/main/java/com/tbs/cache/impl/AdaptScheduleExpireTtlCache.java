@@ -1,7 +1,7 @@
 package com.tbs.cache.impl;
 
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.schedule.ISchedule;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;

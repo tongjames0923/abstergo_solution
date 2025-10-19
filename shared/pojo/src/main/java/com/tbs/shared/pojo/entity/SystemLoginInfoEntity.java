@@ -1,8 +1,7 @@
 package com.tbs.shared.pojo.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tbs.common.util.SpringUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.util.IUserDetailsTransformer;
@@ -85,7 +84,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 创建时间
      */
     @javax.persistence.Column(name = "create_time")
-    
+
     @Getter
     @Setter
     private Date createTime;
@@ -94,7 +93,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 更新时间
      */
     @javax.persistence.Column(name = "update_time")
-    
+
     @Getter
     @Setter
     private Date updateTime;
@@ -103,7 +102,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 令牌过期时间
      */
     @Column(name = "token_expire_time")
-    
+
     @Getter
     @Setter
     private Date tokenExpireTime;

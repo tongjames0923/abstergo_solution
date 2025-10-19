@@ -3,7 +3,7 @@ package com.tbs.common.config;
 import cn.hutool.extra.spring.SpringUtil;
 import com.tbs.common.IStartup;
 import com.tbs.common.config.property.StartUpProperty;
-import com.tbs.common.util.CollUtil;
+import com.tbs.common.util.base.CollUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

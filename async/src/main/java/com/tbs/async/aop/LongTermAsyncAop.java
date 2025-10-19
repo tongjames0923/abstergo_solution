@@ -2,8 +2,8 @@ package com.tbs.async.aop;
 
 import com.tbs.async.annotation.LongTermAsync;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.SpringUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.base.StrUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;

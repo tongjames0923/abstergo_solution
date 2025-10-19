@@ -1,6 +1,6 @@
 package com.tbs.sql.framework.converter.impl;
 
-import com.tbs.common.util.TimeUtil;
+import com.tbs.common.util.time.TimeUtil;
 import com.tbs.sql.framework.converter.IValueConverter;
 import org.springframework.stereotype.Component;
 

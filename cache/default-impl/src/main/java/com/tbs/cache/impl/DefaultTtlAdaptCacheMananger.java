@@ -3,7 +3,7 @@ package com.tbs.cache.impl;
 import com.tbs.cache.ITtlCacheDecorator;
 import com.tbs.cache.integration.AbstractTtlAdaptCacheMananger;
 import com.tbs.cache.integration.AbstractTtlCache;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 

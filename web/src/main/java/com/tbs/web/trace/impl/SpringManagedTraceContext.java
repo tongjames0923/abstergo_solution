@@ -1,6 +1,6 @@
 package com.tbs.web.trace.impl;
 
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.trace.core.*;
 import com.tbs.web.trace.tool.ITraceContextListenner;
 import org.slf4j.Logger;

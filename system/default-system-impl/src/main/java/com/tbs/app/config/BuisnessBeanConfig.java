@@ -15,7 +15,7 @@ import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
-import com.tbs.common.util.BeanUtil;
+import com.tbs.common.util.base.BeanUtil;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.impl.NoEncryptPassword;

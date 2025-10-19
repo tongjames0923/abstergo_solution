@@ -1,4 +1,4 @@
-package com.tbs.common.util;
+package com.tbs.common.util.base;
 
 import com.tbs.common.exception.FormattedRuntimeException;
 import org.jetbrains.annotations.NotNull;

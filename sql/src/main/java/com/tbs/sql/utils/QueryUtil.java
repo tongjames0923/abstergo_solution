@@ -11,8 +11,8 @@ import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.BeanUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryFields;
 import com.tbs.sql.annotation.QueryIndex;
@@ -152,7 +152,7 @@ public class QueryUtil implements IStartup {
 	public void startUp() throws RuntimeException {
 		try {
 			// 获取所有拦截器并按顺序排序
-			Collection<ISqlInfoComposeIntercepter> interceptorBeans = com.tbs.common.util.SpringUtil
+			Collection<ISqlInfoComposeIntercepter> interceptorBeans = com.tbs.common.util.framework.SpringUtil
 					.getBeansOfType(ISqlInfoComposeIntercepter.class).values();
 			this.interceptors = new ArrayList<>(interceptorBeans);
 			// 预先排序以避免每次拦截时重复排序

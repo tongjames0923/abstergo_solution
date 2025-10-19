@@ -1,6 +1,6 @@
 package com.tbs.sql.utils;
 
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.annotation.SelectSQL;
 import com.tbs.sql.framework.model.SqlSelectInfoModel;
 import com.tbs.sql.framework.model.SqlSelectItemModel;

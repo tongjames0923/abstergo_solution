@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import javax.annotation.Resource;
 
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.lock.ILockProvider;
 import com.tbs.transaction.scalable.*;
 

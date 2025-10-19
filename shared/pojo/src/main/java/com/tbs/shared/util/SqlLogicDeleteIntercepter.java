@@ -2,7 +2,7 @@ package com.tbs.shared.util;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IFlagable;
 import com.tbs.sql.framework.intercepter.ISqlInfoComposeIntercepter;

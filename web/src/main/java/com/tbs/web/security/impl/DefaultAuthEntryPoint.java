@@ -1,6 +1,6 @@
 package com.tbs.web.security.impl;
 
-import com.tbs.common.util.StrUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.web.exception.ReLoginRequestException;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;

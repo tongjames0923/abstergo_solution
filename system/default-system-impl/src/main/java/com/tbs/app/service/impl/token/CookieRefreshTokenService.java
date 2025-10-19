@@ -1,7 +1,7 @@
 package com.tbs.app.service.impl.token;
 
 import com.tbs.common.IStartup;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.security.token.AbstractRefreshTokenService;
 import com.tbs.web.security.token.IRefreshTokenValidator;
 import com.tbs.web.security.token.ITokenModel;

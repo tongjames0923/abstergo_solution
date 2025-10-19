@@ -5,7 +5,7 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.SpringUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
@@ -61,8 +61,8 @@ public class PrivateUserController extends BaseController {
      */
     @GetMapping("/logout")
     @Operation(summary = "用户登出", description = "退出当前登录状态")
-    @ApiResponse(responseCode = "200", description = "成功登出", 
-        content = @Content(mediaType = "application/json", 
+    @ApiResponse(responseCode = "200", description = "成功登出",
+        content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = Boolean.class)))
     public Boolean logout() {
         ITokenModel tokenModel = AuthUtil.getInstance().getCurrentTokenModel();
@@ -82,8 +82,8 @@ public class PrivateUserController extends BaseController {
      */
     @GetMapping("/info")
     @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细信息，包括用户名、昵称、头像和可用角色列表")
-    @ApiResponse(responseCode = "200", description = "成功获取用户信息", 
-        content = @Content(mediaType = "application/json", 
+    @ApiResponse(responseCode = "200", description = "成功获取用户信息",
+        content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = UserInfoVO.class)))
     public UserInfoVO info() {
         UserInfoVO userInfoVO = new UserInfoVO();
@@ -105,8 +105,8 @@ public class PrivateUserController extends BaseController {
      */
     @GetMapping("getRefreshToken")
     @Operation(summary = "获取刷新令牌", description = "获取用于无感刷新的令牌")
-    @ApiResponse(responseCode = "200", description = "成功获取刷新令牌", 
-        content = @Content(mediaType = "application/json", 
+    @ApiResponse(responseCode = "200", description = "成功获取刷新令牌",
+        content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult getRefreshToken() {
         var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
@@ -125,8 +125,8 @@ public class PrivateUserController extends BaseController {
     //    @GetMapping("/statusOptions")
     //    @Cacheable(cacheNames = "DEAD_CACHE", key = "'userStatusOptions'")
     //    @Operation(summary = "获取用户状态选项", description = "获取用户状态的下拉选项列表，结果会被缓存")
-    //    @ApiResponse(responseCode = "200", description = "成功获取用户状态选项", 
-    //        content = @Content(mediaType = "application/json", 
+    //    @ApiResponse(responseCode = "200", description = "成功获取用户状态选项",
+    //        content = @Content(mediaType = "application/json",
     //            schema = @Schema(implementation = Collection.class)))
     //    public Collection<OptionValue<Integer>> getUserStatusOptions() {
     //        return Arrays.stream(SystemUserStatusEnum.values()).map(m -> {
