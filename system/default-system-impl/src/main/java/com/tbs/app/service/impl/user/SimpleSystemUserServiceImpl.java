@@ -7,8 +7,8 @@ import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.function.EnumUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
@@ -16,7 +16,6 @@ import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTe
 import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.security.user.IPasswordEncrypt;
-import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.uitl.AuthUtil;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -76,88 +75,87 @@ public class SimpleSystemUserServiceImpl
         return List.of(entity);
     }
 
-    @Caching(evict = {@CacheEvict(cacheNames = IUserInfoService.USER_DETAILS_CACHE, key = "#entity.userName",
-        condition = "#entity!=null"), @CacheEvict(value = "system_user", key = "#entity.userName",
-        condition = "#entity!=null&&#entity.userName!=null")})
-    @Override
-    public List<SystemUserEntity> save(SystemUserEntity entity) {
-        return super.save(entity);
-    }
+    @Caching(evict = {@CacheEvict(value = "system_user", key = "#entity.userName",
+        condition ="#entity!=null&&#entity.userName!=null")
+})
 
-    @Override
-    protected SystemUserEntity compareAndUpdateValue(SystemUserEntity systemUserEntity,
-        SystemUserEntity oldSystemUserEntity) {
-        //        if (StrUtil.isNotEmpty(systemUserEntity.getUserName())) {
-        //            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUserName()),
-        //                "用户名格式错误");
-        //            oldSystemUserEntity.setUserName(systemUserEntity.getUserName());
-        //        }
-        if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()),
-                "密码格式错误");
-            if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
-                oldSystemUserEntity.setPassword(encrypt.encrypt(systemUserEntity.getPassword()));
-                AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
-            }
+@Override
+public List<SystemUserEntity> save(SystemUserEntity entity) {
+    return super.save(entity);
+}
+
+@Override
+protected SystemUserEntity compareAndUpdateValue(SystemUserEntity systemUserEntity,
+    SystemUserEntity oldSystemUserEntity) {
+    //        if (StrUtil.isNotEmpty(systemUserEntity.getUserName())) {
+    //            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUserName()),
+    //                "用户名格式错误");
+    //            oldSystemUserEntity.setUserName(systemUserEntity.getUserName());
+    //        }
+    if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
+        AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()), "密码格式错误");
+        if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
+            oldSystemUserEntity.setPassword(encrypt.encrypt(systemUserEntity.getPassword()));
+            AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
         }
-        if (StrUtil.isNotEmpty(systemUserEntity.getNickName())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUserEntity.getNickName()),
-                "昵称格式错误");
-            oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
+    }
+    if (StrUtil.isNotEmpty(systemUserEntity.getNickName())) {
+        AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUserEntity.getNickName()), "昵称格式错误");
+        oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
+    }
+    if (systemUserEntity.getFlag() != null) {
+        if (systemUserEntity.getFlag() != oldSystemUserEntity.getFlag()) {
+            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()),
+                "用户状态值异常，不存在{}值", systemUserEntity.getFlag());
+            oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
+            AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
         }
-        if (systemUserEntity.getFlag() != null) {
-            if (systemUserEntity.getFlag() != oldSystemUserEntity.getFlag()) {
-                AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()),
-                    "用户状态值异常，不存在{}值", systemUserEntity.getFlag());
-                oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
-                AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
-            }
-        }
-        if (StrUtil.isNotEmpty(systemUserEntity.getAvatar())) {
-            oldSystemUserEntity.setAvatar(systemUserEntity.getAvatar());
-        }
-        if (StrUtil.isNotEmpty(systemUserEntity.getRemark())) {
-            oldSystemUserEntity.setRemark(systemUserEntity.getRemark());
-        }
-        return oldSystemUserEntity;
     }
+    if (StrUtil.isNotEmpty(systemUserEntity.getAvatar())) {
+        oldSystemUserEntity.setAvatar(systemUserEntity.getAvatar());
+    }
+    if (StrUtil.isNotEmpty(systemUserEntity.getRemark())) {
+        oldSystemUserEntity.setRemark(systemUserEntity.getRemark());
+    }
+    return oldSystemUserEntity;
+}
 
-    @Cacheable(value = "system_user", key = "#id")
-    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
-    @Override
-    public SystemUserEntity queryById(Long id) {
-        return super.queryById(id);
-    }
+@Cacheable(value = "system_user", key = "#id")
+@ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
+@Override
+public SystemUserEntity queryById(Long id) {
+    return super.queryById(id);
+}
 
-    @Override
-    protected SystemUserMapper getMapper() {
-        return mapper;
-    }
+@Override
+protected SystemUserMapper getMapper() {
+    return mapper;
+}
 
-    @Override
-    protected SystemUserEntity newEntity() {
-        return new SystemUserEntity();
-    }
+@Override
+protected SystemUserEntity newEntity() {
+    return new SystemUserEntity();
+}
 
-    @Override
-    protected Integer getFlagDisable() {
-        return SystemUserStatusEnum.DISABLED.getCode();
-    }
+@Override
+protected Integer getFlagDisable() {
+    return SystemUserStatusEnum.DISABLED.getCode();
+}
 
-    @Override
-    public List<SystemUserEntity> queryByUserName(String username) {
-        return ((ISystemUserService)getInstance()).queryUserIdsByUserName(username).stream().map(this::queryById)
-            .collect(Collectors.toList());
-    }
+@Override
+public List<SystemUserEntity> queryByUserName(String username) {
+    return ((ISystemUserService)getInstance()).queryUserIdsByUserName(username).stream().map(this::queryById)
+        .collect(Collectors.toList());
+}
 
-    @Cacheable(cacheNames = "user_name_id_map", key = "#username")
-    @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
-    @Override
-    public List<Long> queryUserIdsByUserName(String username) {
-        var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username).pour().fetch();
-        if (CollUtil.isEmpty(users)) {
-            return new ArrayList<>();
-        }
-        return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
+@Cacheable(cacheNames = "user_name_id_map", key = "#username")
+@ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+@Override
+public List<Long> queryUserIdsByUserName(String username) {
+    var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username).pour().fetch();
+    if (CollUtil.isEmpty(users)) {
+        return new ArrayList<>();
     }
+    return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
+}
 }

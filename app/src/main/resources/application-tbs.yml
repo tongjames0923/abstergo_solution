@@ -24,6 +24,7 @@ tbs:
     data-holder: com.tbs.redis.holder.RedisDataHolder
   redis:
     enable: true
+    value-serializer: org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
   redission:
     cache:
       cache-timeout: 900

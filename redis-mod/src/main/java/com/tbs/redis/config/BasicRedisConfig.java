@@ -1,11 +1,13 @@
 package com.tbs.redis.config;
 
 import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.redis.codec.DefaultSystemCodec;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.Codec;
 import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -43,7 +45,8 @@ public class BasicRedisConfig {
         @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer serializer) {
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
-        config.setCodec(new DefaultSystemCodec(serializer));
+        config.setCodec(SpringUtil.getBeanOptional(Codec.class).orElse(new DefaultSystemCodec(
+            SpringUtil.getBean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER, RedisSerializer.class))));
         RedissonClient redissonClient = Redisson.create(config);
         return redissonClient;
     }

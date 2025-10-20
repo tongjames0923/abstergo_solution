@@ -1,10 +1,10 @@
 package com.tbs.web.security.token.model;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.token.ITokenModel;
+import lombok.Data;
 
 import java.util.Date;
 
@@ -13,6 +13,7 @@ import java.util.Date;
  *
  * @author abstergo
  */
+@Data
 public class SimpleTokenModel implements ITokenModel {
     private static final long serialVersionUID = 1L;
     /**
@@ -28,24 +29,33 @@ public class SimpleTokenModel implements ITokenModel {
     /**
      * token状态
      */
-    private TokenStatusEnum statusEnum;
+    private TokenStatusEnum status;
 
-    private TokenTypeEnum typeEnum;
+    /**
+     * token类型
+     */
+    private TokenTypeEnum tokenType;
 
+    /**
+     * sessionId
+     */
     private String sessionId;
 
     /**
      * 过期时间
      */
-    
+
     private Date expireTime;
 
     /**
      * 创建时间
      */
-    
+
     private Date createTime;
 
+    /**
+     * 创建类型
+     */
     private TokenCreateTypeEnum createType;
 
     public SimpleTokenModel() {
@@ -55,56 +65,12 @@ public class SimpleTokenModel implements ITokenModel {
         Date createTime, TokenCreateTypeEnum createType, String sessionId) {
         this.token = token;
         this.userName = userName;
-        this.statusEnum = status;
-        this.typeEnum = type;
+        this.status = status;
+        this.tokenType = type;
         this.expireTime = expireTime;
         this.createTime = createTime;
         this.createType = createType;
         this.sessionId = sessionId;
     }
 
-    @Override
-    public String getToken() {
-        return token;
-    }
-
-    @Override
-    public Date getExpireTime() {
-        return expireTime;
-    }
-
-    @Override
-    public Date getCreateTime() {
-        return createTime;
-    }
-
-    @Override
-    public String getUserName() {
-        return userName;
-    }
-
-    @Override
-    public TokenCreateTypeEnum getCreateType() {
-        return createType;
-    }
-
-    @Override
-    public TokenStatusEnum getStatus() {
-        return statusEnum;
-    }
-
-    @Override
-    public void setStatus(TokenStatusEnum status) {
-        this.statusEnum = status;
-    }
-
-    @Override
-    public String getSessionId() {
-        return sessionId;
-    }
-
-    @Override
-    public TokenTypeEnum getTokenType() {
-        return typeEnum;
-    }
 }
