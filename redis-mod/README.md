@@ -10,12 +10,14 @@ com.tbs.redis
 │   ├── AbstractRedisEventSupport.java
 │   └── SimpleRedisEventSupport.java
 ├── cache                  # Redis 缓存相关
-│   ├── RedisCacheExpireActuator.java
-│   └── RedisDataHolderExpireActuator.java
+│   ├── RedissonAdaptTtlCache.java
+│   └── RedissonTtlCacheDecorator.java
 ├── config                 # Redis 配置类
 │   ├── BasicRedisConfig.java
-│   └── property
-│       └── RedisProperty.java
+│   ├── RedissonCacheConfig.java
+│   ├── property
+│   │   ├── RedisProperty.java
+│   │   └── RedissonCacheProperty.java
 ├── constants              # 常量定义
 │   └── RedisBeanNameConstants.java
 ├── holder                 # Redis 数据持有者
@@ -27,39 +29,45 @@ com.tbs.redis
 
 ## 核心组件说明
 
-### 1. Redis 配置类 (BasicRedisConfig.java)
+### 1. Redis 配置类
 
-[BasicRedisConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/BasicRedisConfig.java#L23-L152) 是 Redis 的核心配置类，负责创建 Redisson 客户端、序列化器以及缓存管理器等。
+#### BasicRedisConfig.java
 
-#### 主要 Bean 说明
+[BasicRedisConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/BasicRedisConfig.java#L23-L152) 是 Redis 的核心配置类，负责创建 Redisson 客户端、序列化器等。
 
+主要 Bean：
 1. `redissonClient()`: 创建 Redisson 客户端，用于分布式锁、缓存等功能
-2. `keySerializer()`: 创建 Redis 键的序列化器
-3. `valueSerializer()`: 创建 Redis 值的序列化器
-4. `cacheManager()`: Redisson 缓存管理器，替代了传统的 RedisCacheManager
-5. `redisMessageListenerContainer()`: Redis 消息监听容器（已移除，Redisson使用自己的消息机制）
+2. `valueSerializer()`: 创建 Redis 值的序列化器
 
-### 2. Redis 属性配置类 (RedisProperty.java)
+#### RedisProperty.java
 
 [RedisProperty](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/property/RedisProperty.java#L14-L47) 类定义了 Redis 的配置属性，可通过 `application.yml` 进行配置。
 
-#### 配置属性说明
+配置属性说明：
+- `enable`: 是否启用 Redis
+- `ValueSerializer`: Redis 值的序列化器
 
-| 属性名 | 默认值 | 说明 |
-|--------|--------|------|
-| enable | false | 是否启用 Redis |
-| KeySerializer | StringRedisSerializer.class | Redis 键的序列化器 |
-| ValueSerializer | JdkSerializationRedisSerializer.class | Redis 值的序列化器 |
-| HashKeySerializer | StringRedisSerializer.class | Redis 哈希键的序列化器 |
-| HashValueSerializer | JdkSerializationRedisSerializer.class | Redis 哈希值的序列化器 |
-| cacheTimeout | -1L | 缓存超时时间 |
-| allowNullValues | false | 是否允许空值 |
+#### RedissonCacheConfig.java
 
-### 3. Redis 常量类 (RedisBeanNameConstants.java)
+[RedissonCacheConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/RedissonCacheConfig.java#L12-L33) 是 Redisson 缓存配置类，负责创建 Redisson 缓存管理器。
+
+#### RedissonCacheProperty.java
+
+[RedissonCacheProperty](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/property/RedissonCacheProperty.java#L11-L42) 类定义了 Redisson 缓存的配置属性。
+
+配置属性说明：
+- `cacheTimeout`: 缓存超时时间
+- `allowNullValues`: 是否允许空值
+- `transaction`: 是否开启redis事务
+- `maxIdleTime`: redis缓存的key最大空闲时间
+- `maxSize`: redis缓存的key最大数量
+- `evictionMode`: 缓存的key的清除模式
+
+### 2. Redis 常量类
 
 [RedisBeanNameConstants](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/constants/RedisBeanNameConstants.java#L11-L42) 定义了 Redis 相关的 Bean 名称常量，确保 Bean 名称的一致性。
 
-### 4. Redis 数据持有者 (RedisDataHolder.java)
+### 3. Redis 数据持有者
 
 [RedisDataHolder](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/holder/RedisDataHolder.java#L15-L130) 实现了 [IDataHolder](file:///Users/abstergo/IdeaProjects/abstergo_solution/common/src/main/java/com/tbs/common/data/IDataHolder.java#L18-L161) 接口，提供了基于 Redisson 的数据存储功能。
 
@@ -68,16 +76,22 @@ com.tbs.redis
 - 数据过期时间设置
 - 键匹配查找功能
 
-### 5. Redis 分布式锁 (RedissonLock.java & RedissonLockProvider.java)
+### 4. Redis 分布式锁
 
-[RedissonLock](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/lock/RedissonLock.java#L14-L51) 和 [RedissonLockProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/lock/RedissonLockProvider.java#L23-L145) 提供了基于 Redisson 的分布式锁实现。
+#### RedissonLock.java
+
+[RedissonLock](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/lock/RedissonLock.java#L14-L51) 实现了 [ILock](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/lock/ILock.java#L11-L36) 接口，提供了基于 Redisson 的分布式锁实现。
+
+#### RedissonLockProvider.java
+
+[RedissonLockProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/lock/RedissonLockProvider.java#L23-L145) 实现了 [ILockProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/lock/ILockProvider.java#L14-L32) 接口，提供了分布式锁的获取功能。
 
 主要功能：
 - 获取和释放分布式锁
 - 条件锁支持
 - 锁超时控制
 
-### 6. Redis 消息广播
+### 5. Redis 消息广播
 
 #### AbstractRedisEventSupport.java
 
@@ -87,15 +101,15 @@ com.tbs.redis
 
 [SimpleRedisEventSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/boradcast/SimpleRedisEventSupport.java#L16-L73) 是 [AbstractRedisEventSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/boradcast/AbstractRedisEventSupport.java#L18-L76) 的具体实现，处理分布式事件。
 
-### 7. Redis 缓存过期处理器
+### 6. Redis 缓存装饰器
 
-#### RedisCacheExpireActuator.java
+#### RedissonAdaptTtlCache.java
 
-[RedisCacheExpireActuator](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedisCacheExpireActuator.java#L15-L32) 实现了缓存过期处理功能，基于Redisson实现。
+[RedissonAdaptTtlCache](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedissonAdaptTtlCache.java#L16-L57) 实现了 [AbstractAdaptTtlCache](file:///Users/abstergo/IdeaProjects/abstergo_solution/cache/api/src/main/java/com/tbs/cache/integration/AbstractAdaptTtlCache.java#L12-L50)，提供了基于Redisson的TTL缓存适配实现。
 
-#### RedisDataHolderExpireActuator.java
+#### RedissonTtlCacheDecorator.java
 
-[RedisDataHolderExpireActuator](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedisDataHolderExpireActuator.java#L15-L33) 实现了 Redis 数据持有者的过期处理功能，基于Redisson实现。
+[RedissonTtlCacheDecorator](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/cache/RedissonTtlCacheDecorator.java#L15-L38) 实现了 [ITtlCacheDecorator](file:///Users/abstergo/IdeaProjects/abstergo_solution/cache/api/src/main/java/com/tbs/cache/ITtlCacheDecorator.java#L11-L25) 接口，用于装饰Redisson缓存以添加TTL功能。
 
 ## 自定义使用说明
 
@@ -117,37 +131,26 @@ tbs:
   redis:
     # 是否启用 Redis
     enable: true
-    # Redis 键的序列化器
-    key-serializer: org.springframework.data.redis.serializer.StringRedisSerializer
     # Redis 值的序列化器
     value-serializer: org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
-    # Redis 哈希键的序列化器
-    hash-key-serializer: org.springframework.data.redis.serializer.StringRedisSerializer
-    # Redis 哈希值的序列化器
-    hash-value-serializer: org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
-    # 缓存超时时间(毫秒)
-    cache-timeout: 3600000
-    # 是否允许空值
-    allow-null-values: false
+  
+  redission:
+    cache:
+      # 缓存超时时间(毫秒)
+      cache-timeout: 3600000
+      # 是否允许空值
+      allow-null-values: false
+      # 是否开启redis事务
+      transaction: false
+      # redis缓存的key最大空闲时间，单位秒
+      max-idle-time: 1800
+      # redis缓存的key最大数量
+      max-size: 2048
+      # 缓存的key的清除模式
+      eviction-mode: LRU
 ```
 
-### 2. 使用 Redis 缓存
-
-使用 [@Cacheable](file:///Users/abstergo/IdeaProjects/abstergo_solution/cache/src/main/java/com/tbs/cache/core/impl/SpringManagedCacheManager.java#L111-L111) 注解实现方法缓存：
-
-```java
-@Service
-public class UserService {
-    
-    @Cacheable(value = "users", key = "#id")
-    public User getUserById(Long id) {
-        // 从数据库获取用户信息
-        return userRepository.findById(id);
-    }
-}
-```
-
-### 3. 使用 Redis 数据存储
+### 2. 使用 Redis 数据存储
 
 通过 [RedisDataHolder](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/holder/RedisDataHolder.java#L15-L130) 进行数据存储：
 
@@ -168,7 +171,7 @@ public class DataService {
 }
 ```
 
-### 4. 使用 Redis 分布式锁
+### 3. 使用 Redis 分布式锁
 
 通过 [RedissonLockProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/lock/RedissonLockProvider.java#L23-L145) 获取分布式锁：
 
@@ -195,7 +198,7 @@ public class DistributedService {
 }
 ```
 
-### 5. 使用 Redis 消息广播
+### 4. 使用 Redis 消息广播
 
 通过继承 [AbstractRedisEventSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/boradcast/AbstractRedisEventSupport.java#L18-L76) 实现消息广播功能：
 

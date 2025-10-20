@@ -75,7 +75,7 @@ Abstergo Solution 采用分层架构设计，主要包括以下几个层次：
 
 1. **认证与授权**：基于Spring Security的完整认证授权体系
 2. **缓存管理**：支持本地缓存和Redis缓存，提供TTL功能
-3. **异步处理**：线程池管理、定时任务、分布式锁等异步处理功能
+3. **异步处理**：线程池管理、定时任务、分布式锁、事务管理、事件广播等异步处理功能
 4. **消息队列**：集成RabbitMQ，支持分布式事件处理
 5. **数据库访问**：提供实体查询框架，简化数据库操作
 6. **分布式支持**：集成Dubbo和Zookeeper，支持分布式部署
@@ -181,17 +181,26 @@ Abstergo Solution 采用分层架构设计，主要包括以下几个层次：
 
 [cache](cache) 模块是基于Spring Cache的扩展实现，提供了带TTL（Time To Live）功能的缓存管理器，支持缓存过期处理和监听功能。
 
-- **注解和AOP**：
-  - [@ExpireOn](cache/src/main/java/com/tbs/cache/annotation/ExpireOn.java) 缓存过期注解
-  - ExpireAop 缓存过期切面
+- **配置类**：
+  - [TbsCacheProperty](cache/default-impl/src/main/java/com/tbs/cache/config/TbsCacheProperty.java) 缓存属性配置
+  - [TbsCacheConfig](cache/default-impl/src/main/java/com/tbs/cache/config/TbsCacheConfig.java) 缓存配置
 
 - **核心实现**：
-  - [TtlAdaptCache](cache/src/main/java/com/tbs/cache/core/manager/TtlAdaptCache.java) TTL适配缓存
-  - AbstractTtlAwareAdaptCacheManager 抽象TTL缓存管理器
-  - LocalExpireActuatorCache 本地过期执行器缓存
+  - [AbstractTtlAdaptCacheMananger](cache/api/src/main/java/com/tbs/cache/integration/AbstractTtlAdaptCacheMananger.java) 抽象TTL缓存管理器
+  - [DefaultTtlAdaptCacheMananger](cache/default-impl/src/main/java/com/tbs/cache/impl/DefaultTtlAdaptCacheMananger.java) 默认TTL适配缓存管理器
+  - [ITtlCacheDecorator](cache/api/src/main/java/com/tbs/cache/ITtlCacheDecorator.java) TTL缓存装饰器接口
+  - [DefaultTtlCacheDecorator](cache/default-impl/src/main/java/com/tbs/cache/impl/DefaultTtlCacheDecorator.java) 默认TTL缓存装饰器
+
+- **缓存限制**：
+  - [ICacheLimiter](cache/api/src/main/java/com/tbs/cache/limit/ICacheLimiter.java) 缓存限制器接口
+  - [ICacheOperationRecorder](cache/api/src/main/java/com/tbs/cache/limit/ICacheOperationRecorder.java) 缓存操作记录器接口
+
+- **手动缓存**：
+  - [IManualCacheHandler](cache/api/src/main/java/com/tbs/cache/manual/IManualCacheHandler.java) 手动缓存处理器接口
+  - [MapCacheHandler](cache/api/src/main/java/com/tbs/cache/manual/impl/MapCacheHandler.java) Map缓存处理器
 
 - **监听器**：
-  - [ICacheListenner](cache/src/main/java/com/tbs/cache/core/ICacheListenner.java) 缓存监听器接口
+  - [ICacheListenner](cache/api/src/main/java/com/tbs/cache/ICacheListenner.java) 缓存监听器接口
 
 ### 5. SQL 数据库访问模块
 
@@ -270,6 +279,8 @@ Abstergo Solution 采用分层架构设计，主要包括以下几个层次：
 - **Redis配置**：
   - [BasicRedisConfig](redis-mod/src/main/java/com/tbs/redis/config/BasicRedisConfig.java) Redis核心配置类
   - [RedisProperty](redis-mod/src/main/java/com/tbs/redis/config/property/RedisProperty.java) Redis属性配置类
+  - [RedissonCacheConfig](redis-mod/src/main/java/com/tbs/redis/config/RedissonCacheConfig.java) Redisson缓存配置类
+  - [RedissonCacheProperty](redis-mod/src/main/java/com/tbs/redis/config/property/RedissonCacheProperty.java) Redisson缓存属性配置类
 
 - **数据持有者**：
   - [RedisDataHolder](redis-mod/src/main/java/com/tbs/redis/holder/RedisDataHolder.java) Redis数据持有者
@@ -281,6 +292,10 @@ Abstergo Solution 采用分层架构设计，主要包括以下几个层次：
 - **消息广播**：
   - [AbstractRedisEventSupport](redis-mod/src/main/java/com/tbs/redis/boradcast/AbstractRedisEventSupport.java) Redis消息广播抽象基类
   - SimpleRedisEventSupport 具体实现
+
+- **缓存装饰器**：
+  - [RedissonAdaptTtlCache](redis-mod/src/main/java/com/tbs/redis/cache/RedissonAdaptTtlCache.java) Redisson适配TTL缓存
+  - [RedissonTtlCacheDecorator](redis-mod/src/main/java/com/tbs/redis/cache/RedissonTtlCacheDecorator.java) Redisson TTL缓存装饰器
 
 ### 10. RabbitMQ 集成模块
 
@@ -558,9 +573,11 @@ Cache模块提供带TTL功能的缓存管理。
 ```yaml
 tbs:
   cache:
-    expired-actuator: com.tbs.cache.core.impl.LocalExpireActuatorCache  # 缓存过期执行器
-    cache-manager-implementation: org.springframework.cache.concurrent.ConcurrentMapCacheManager  # 缓存管理器实现
-    allow-null-values: false  # 是否允许缓存空值
+    cache-manager-impl: org.springframework.cache.concurrent.ConcurrentMapCacheManager  # 缓存管理器实现
+    ttl-cache-decorator: com.tbs.cache.impl.DefaultTtlCacheDecorator  # ttl缓存装饰器实现
+    recorder: com.tbs.cache.limit.impl.SimpleCacheOperationRecorder  # 缓存操作记录器实现
+    manual-cache-handler: com.tbs.cache.manual.impl.MapCacheHandler  # 手动缓存实现
+    cache-limiter: com.tbs.cache.limit.impl.SimpleCacheLimiter  # 缓存限制器实现
 ```
 
 #### 4. Async模块配置
@@ -644,8 +661,8 @@ system
 ### 自定义组件集成
 
 1. **自定义缓存实现**：
-   - 实现ICacheExpiredActuator接口创建自定义缓存过期执行器
-   - 继承AbstractTtlAwareAdaptCacheManager创建自定义缓存管理器
+   - 实现ITtlCacheDecorator接口创建自定义缓存装饰器
+   - 继承AbstractTtlAdaptCacheMananger创建自定义缓存管理器
 
 2. **自定义异步任务**：
    - 实现IThreadPoolManager接口创建自定义线程池管理器
