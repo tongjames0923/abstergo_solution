@@ -40,11 +40,11 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column prop="id" label="ID" width="80"/>
-        <el-table-column prop="title" label="表单标题" min-width="200"/>
-        <el-table-column prop="labelWidth" label="标签宽度" width="120"/>
-        <el-table-column prop="span" label="栅格列数" width="100"/>
-        <el-table-column prop="gutter" label="栅格间距" width="100"/>
+        <el-table-column prop="id" label="ID" width="80" />
+        <el-table-column prop="title" label="表单标题" min-width="200" />
+        <el-table-column prop="labelWidth" label="标签宽度" width="120" />
+        <el-table-column prop="span" label="栅格列数" width="100" />
+        <el-table-column prop="gutter" label="栅格间距" width="100" />
         <el-table-column label="可展开" width="100">
           <template slot-scope="scope">
             <el-tag :type="scope.row.expandable ? 'success' : 'info'">
@@ -109,7 +109,7 @@
 
 <script>
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import {deleteFormConfig, getFormById, listForms} from '@/api/view'
+import { deleteFormConfig, getFormById, listForms } from '@/api/view'
 
 export default {
   name: 'FormManager',
@@ -184,7 +184,7 @@ export default {
       // 跳转到表单创建页面并传递表单ID
       this.$router.push({
         path: '/admin/form',
-        query: {id: row.id}
+        query: { id: row.id }
       })
     },
 
@@ -227,7 +227,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async () => {
+      }).then(async() => {
         try {
           await deleteFormConfig(row.id)
           this.$message.success('删除成功')

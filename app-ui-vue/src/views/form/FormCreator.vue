@@ -171,7 +171,7 @@ export default {
       try {
         const data = this.$refs.formConfigEditor.getData()
         console.log('表单配置数据:', data)
-        
+
         // 检查是否是更新现有表单
         if (this.$route.query.id) {
           // 更新现有表单
