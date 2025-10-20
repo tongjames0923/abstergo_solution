@@ -145,14 +145,15 @@ public class MysqlWhereExtractor implements IWhereSqlExtractor {
 				String constract = contrast(info.getContrast());
 				return String.format(" (%s %s %s) ", name, constract, valStr);
 			} else {
-				// 空集合处理
-				if (info.getContrast() == QueryContrastEnum.IN) {
-					// IN空集合永远为false
-					return " (1 = 0) ";
-				} else {
-					// NOT IN空集合永远为true
-					return " (1 = 1) ";
-				}
+                return " (1 = 1) ";
+//				// 空集合处理
+//				if (info.getContrast() == QueryContrastEnum.IN) {
+//					// IN空集合永远为false
+//					return " (1 = 0) ";
+//				} else {
+//					// NOT IN空集合永远为true
+//
+//				}
 			}
 		}
 
