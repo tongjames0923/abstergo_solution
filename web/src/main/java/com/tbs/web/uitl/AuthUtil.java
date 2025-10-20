@@ -7,15 +7,12 @@ import com.tbs.web.security.authentication.IAuthManager;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;
 import com.tbs.web.security.token.ITokenModel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Optional;
-
-import static com.tbs.web.security.user.IUserInfoService.USER_DETAILS_CACHE;
 
 /**
  * 认证工具类
@@ -120,7 +117,6 @@ public class AuthUtil {
      */
 
     @Async
-    @CacheEvict(cacheNames = USER_DETAILS_CACHE, key = "#userName")
     public void notifyUserAuthStatusChanged(String userName) {
 
         authManager.notifyUserAuthStatusChanged(userName);
@@ -190,7 +186,5 @@ public class AuthUtil {
     public void clearAuthentication(String token) {
         authManager.clearAuthentication(token);
     }
-
-
 
 }

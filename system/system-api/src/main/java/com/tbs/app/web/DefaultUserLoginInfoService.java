@@ -4,13 +4,12 @@ import cn.hutool.core.date.DateUtil;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
-import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.DelegateUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
@@ -25,12 +24,10 @@ import com.tbs.web.security.user.AbstractUserLoginInfoService;
 import com.tbs.web.security.user.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -133,8 +130,6 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
             .collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = "user_login_info_cache", key = "#token")
-    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
     public UserDetails getUserDetails(String token) {
         return super.getUserDetails(token);
@@ -211,8 +206,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
                 // 获取最后活跃时间（使用最新的令牌创建时间）
                 Date lastActiveTime =
-                    tokens.stream().filter(Objects::nonNull).map(ITokenModel::getCreateTime)
-                        .filter(Objects::nonNull).max(Date::compareTo).orElse(null);
+                    tokens.stream().filter(Objects::nonNull).map(ITokenModel::getCreateTime).filter(Objects::nonNull)
+                        .max(Date::compareTo).orElse(null);
                 vo.setLastActiveTime(lastActiveTime);
 
                 return vo;

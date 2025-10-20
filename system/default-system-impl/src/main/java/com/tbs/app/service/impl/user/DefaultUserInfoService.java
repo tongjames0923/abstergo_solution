@@ -31,8 +31,6 @@ public class DefaultUserInfoService implements IUserInfoService {
     @Resource
     private ICompanyUserRelationService companyUserRelationService;
 
-    @Cacheable(cacheNames = USER_DETAILS_CACHE, key = "#uniqueKey")
-    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
     public UserDetails loadUserInfoByUniqueKey(@NotNull String uniqueKey) {
         var users = systemUserService.queryByUserName(uniqueKey);
