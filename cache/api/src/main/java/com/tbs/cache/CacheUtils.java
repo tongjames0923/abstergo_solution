@@ -3,6 +3,7 @@ package com.tbs.cache;
 import com.tbs.cache.limit.ICacheLimiter;
 import com.tbs.cache.limit.ICacheOperationRecorder;
 import com.tbs.cache.manual.IManualCacheHandler;
+import com.tbs.common.IStartup;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.function.SSupplier;
 import com.tbs.common.util.helper.FeatureWrapperHelper;
@@ -12,7 +13,7 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 
 @Component
-public class CacheUtils {
+public class CacheUtils implements IStartup {
     @Resource
     ICacheLimiter limiter;
 
@@ -21,6 +22,17 @@ public class CacheUtils {
 
     @Resource
     IManualCacheHandler manualCacheHandler;
+
+    private static CacheUtils instance = null;
+
+    @Override
+    public void startUp() throws RuntimeException {
+        instance = this;
+    }
+
+    public static CacheUtils getInstance() {
+        return instance;
+    }
 
     /**
      * 获取缓存
@@ -82,6 +94,13 @@ public class CacheUtils {
             }
         });
         return val;
+    }
+
+    public void remove(String key) {
+        LockUtil.getInstance().lockThen(this, () -> {
+            manualCacheHandler.remove(key);
+            recorder.onRemove(manualCacheHandler, key, 1);
+        });
     }
 
 }
