@@ -32,6 +32,8 @@ public class DefaultUserInfoService implements IUserInfoService {
     private ICompanyUserRelationService companyUserRelationService;
 
     @Override
+    @Cacheable(cacheNames = IUserInfoService.USER_DETAILS_CACHE_NAME, key = "#uniqueKey")
+    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
     public UserDetails loadUserInfoByUniqueKey(@NotNull String uniqueKey) {
         var users = systemUserService.queryByUserName(uniqueKey);
         AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException("用户不存在"));

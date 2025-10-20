@@ -96,6 +96,11 @@ public class CacheUtils implements IStartup {
         return val;
     }
 
+    /**
+     * 删除缓存
+     *
+     * @param key
+     */
     public void remove(String key) {
         LockUtil.getInstance().lockThen(this, () -> {
             manualCacheHandler.remove(key);

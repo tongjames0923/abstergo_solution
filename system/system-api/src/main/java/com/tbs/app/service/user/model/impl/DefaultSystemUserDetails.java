@@ -1,6 +1,8 @@
 package com.tbs.app.service.user.model.impl;
 
 import com.tbs.app.service.user.model.ISystemUserDetails;
+import com.tbs.app.service.user.serial.DefaultSystemUserDetailsBridge;
+import com.tbs.cache.serialize.annotation.CacheTransform;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -9,6 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 @Data
+@CacheTransform(bridgeType = DefaultSystemUserDetailsBridge.class)
 public class DefaultSystemUserDetails implements ISystemUserDetails {
     private List<SystemCompanyEntity> companies;
     private SystemCompanyEntity currentCompany;

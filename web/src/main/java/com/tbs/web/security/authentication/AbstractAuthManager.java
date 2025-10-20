@@ -8,8 +8,10 @@ import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.ITokenRemover;
+import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
@@ -59,6 +61,7 @@ public abstract class AbstractAuthManager implements IAuthManager {
     }
 
     @Override
+    @CacheEvict(cacheNames = IUserInfoService.USER_DETAILS_CACHE_NAME, key = "#userName")
     public void notifyUserAuthStatusChanged(String userName) {
         log.info("用户权限发生变更，用户名:{}", userName);
         var sessionIds = loginInfoService.getUserAvaliableSessionId(userName);
