@@ -19,15 +19,16 @@ public class RedissonCacheConfig {
         var cacheManager = new RedissonSpringCacheManager(redissonClient) {
             @Override
             protected CacheConfig createDefaultConfig() {
-                CacheConfig config = new CacheConfig(property.getCacheTimeout(), property.getMaxIdleTime());
+                CacheConfig config = new CacheConfig(property.getCacheTimeout()*1000, property.getMaxIdleTime()*1000);
                 config.setMaxSize(property.getMaxSize());
                 config.setEvictionMode(property.getEvictionMode());
                 return config;
             }
 
         };
+        cacheManager.setCodec(redissonClient.getConfig().getCodec());
         cacheManager.setAllowNullValues(property.isAllowNullValues());
-        cacheManager.setTransactionAware(property.isTransaction());
+        cacheManager.setTransactionAware(false);
         return cacheManager;
     }
 }

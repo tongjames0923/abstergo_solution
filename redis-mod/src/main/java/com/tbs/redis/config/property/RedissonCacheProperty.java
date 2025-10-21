@@ -11,7 +11,7 @@ public class RedissonCacheProperty {
     /**
      * springboot默认redisCacheing功能的缓存时间 默认-1表示不设置缓存时间，单位秒
      */
-    private long cacheTimeout = -1L;
+    private long cacheTimeout = 3600L;
 
     /**
      * springboot默认redisCacheing功能的是否接收空值

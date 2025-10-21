@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
@@ -24,10 +25,12 @@ import com.tbs.web.security.user.AbstractUserLoginInfoService;
 import com.tbs.web.security.user.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -131,6 +134,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     }
 
     @Override
+    @Cacheable(cacheNames = "user_login_info_cache", key = "#token")
+    @ExpireOn(cacheNames = "user_login_info_cache", value = 5, timeUnit = TimeUnit.MINUTES)
     public UserDetails getUserDetails(String token) {
         return super.getUserDetails(token);
     }

@@ -27,7 +27,6 @@ tbs:
   redission:
     cache:
       cache-timeout: 900
-      transaction: true
       eviction-mode: lru
   start-up:
     optional-execute: false

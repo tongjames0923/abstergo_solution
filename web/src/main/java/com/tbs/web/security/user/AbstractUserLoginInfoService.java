@@ -3,6 +3,7 @@ package com.tbs.web.security.user;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.security.token.ITokenModel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Objects;

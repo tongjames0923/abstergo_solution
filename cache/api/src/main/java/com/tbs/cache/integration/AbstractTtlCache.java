@@ -90,10 +90,10 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
     @Override
     public ValueWrapper get(Object key) {
         var val = getOrginal().get(key);
-        onGet(this, key, val);
         if (val != null && val.get() != null) {
-            return new SimpleValueWrapper(valueTransform(val.get(), TRANSFORM_READ));
+            val = new SimpleValueWrapper(valueTransform(val.get(), TRANSFORM_READ));
         }
+        onGet(this, key, val);
         return val;
     }
 
