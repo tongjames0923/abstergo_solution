@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -18,6 +20,9 @@ import java.util.stream.Collectors;
 public class FeatureWrapperHelper implements IStartup {
 
     private static List<IFeatureWrapperExtension> extentions = Collections.EMPTY_LIST;
+
+    // 在类中增加缓存
+    private static final Map<String, IFeatureWrapperExtension> extensionCache = new ConcurrentHashMap<>();
 
     /**
      * 解包
@@ -33,17 +38,35 @@ public class FeatureWrapperHelper implements IStartup {
             return Optional.empty();
         }
 
-        Optional<F> result = Optional.empty();
-        for (var extention : extentions) {
-            if (extention.support(instance, feature)) {
-                result = Optional.of(extention.unwrap(instance, feature));
-                if (result.isPresent()) {
-                    return result;
+        // 生成缓存key
+        String cacheKey = instance.getClass().getName() + "#" + feature.getName();
+
+        // 尝试从缓存获取
+        IFeatureWrapperExtension cachedExtension = extensionCache.get(cacheKey);
+        if (cachedExtension != null) {
+            if (cachedExtension.support(instance, feature)) {
+                log.debug("从缓存中获取功能包装器 {}", cachedExtension);
+                F result = cachedExtension.unwrap(instance, feature);
+                if (result != null) {
+                    return Optional.of(result);
+                }
+            }
+            // 缓存失效，移除旧缓存
+            extensionCache.remove(cacheKey);
+        }
+        // 遍历所有扩展，找到第一个支持且能解包出结果的扩展
+        for (var extension : extentions) {
+            if (extension.support(instance, feature)) {
+                log.debug("找到功能包装器 {}", extension);
+                F result = extension.unwrap(instance, feature);
+                if (result != null) {
+                    // 缓存结果
+                    extensionCache.put(cacheKey, extension);
+                    return Optional.of(result);
                 }
             }
         }
-
-        return result;
+        return Optional.empty();
     }
 
     @Override

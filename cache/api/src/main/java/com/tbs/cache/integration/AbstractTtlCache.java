@@ -114,7 +114,9 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
 
     @Override
     public void put(Object key, Object value) {
-        value = valueTransform(value, TRANSFORM_WRITE);
+        if (value != null) {
+            value = valueTransform(value, TRANSFORM_WRITE);
+        }
         var wrapper = com.tbs.common.data.ValueWrapper.of(value);
         onPut(this, key, wrapper);
         getOrginal().put(key, wrapper.get().orElse(null));
