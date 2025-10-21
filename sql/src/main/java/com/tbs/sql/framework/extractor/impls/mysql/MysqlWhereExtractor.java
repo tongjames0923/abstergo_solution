@@ -1,24 +1,22 @@
 package com.tbs.sql.framework.extractor.impls.mysql;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-
-import org.jetbrains.annotations.Nullable;
-
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.sql.framework.converter.IValueConverter;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.enums.QueryConnectorEnum;
 import com.tbs.sql.enums.QueryContrastEnum;
+import com.tbs.sql.framework.converter.IValueConverter;
 import com.tbs.sql.framework.extractor.IWhereSqlExtractor;
 import com.tbs.sql.framework.model.SqlWhereCompose;
 import com.tbs.sql.framework.model.SqlWhereInfo;
 import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.properties.SqlProperty;
+import org.jetbrains.annotations.Nullable;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.Resource;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Mysql where条件解析器
@@ -156,6 +154,13 @@ public class MysqlWhereExtractor implements IWhereSqlExtractor {
 //				}
 			}
 		}
+
+        // 处理IS NULL和IS NOT NULL操作符不需要参数值
+        if (info.getContrast() == QueryContrastEnum.IS_NULL || info.getContrast() == QueryContrastEnum.IS_NOT_NULL) {
+            String name = info.getFieldName();
+            String constract = contrast(info.getContrast());
+            return String.format(" (%s %s) ", name, constract);
+        }
 
 		if ((info.getUseSafe() != null && info.getUseSafe()) || !sqlProperty.isUseRawValue()) {
 			valStr = String.format("#{_prs.%s}", key);
