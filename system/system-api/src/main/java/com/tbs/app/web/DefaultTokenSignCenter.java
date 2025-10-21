@@ -3,8 +3,8 @@ package com.tbs.app.web;
 import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.function.EnumUtil;
 import com.tbs.common.util.framework.UuidUtil;
+import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.pojo.criteria.CommonTokenQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
 import com.tbs.shared.util.NetUtil;
@@ -17,6 +17,7 @@ import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.AbstractTokenIssuanceCenter;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
+import com.tbs.app.web.model.SimpleTokenModel;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -57,7 +58,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
      * @return 对应的令牌模型
      */
     private ITokenModel toModel(SystemTokenEntity entity) {
-        return new AdapterTokenModel(entity.getToken(), entity.getUserName(),
+        return new SimpleTokenModel(entity.getToken(), entity.getUserName(),
             EnumUtil.valueOf(TokenStatusEnum.class, entity.getFlag()),
             EnumUtil.valueOf(TokenTypeEnum.class, entity.getTokenType()), entity.getExpireTime(),
             entity.getCreateTime(), EnumUtil.valueOf(TokenCreateTypeEnum.class, entity.getCreateType()),
@@ -79,8 +80,8 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
         entity.setExpireTime(model.getExpireTime());
         entity.setCreateTime(model.getCreateTime());
         entity.setCreateType(model.getCreateType().getCode());
-        if (model instanceof AdapterTokenModel) {
-            var m = (AdapterTokenModel)model;
+        if (model instanceof SimpleTokenModel) {
+            var m = (SimpleTokenModel)model;
             entity.setMacAddress(m.getMacAddr());
             entity.setIpAddress(m.getIpAddr());
         }
@@ -175,7 +176,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     @Override
     protected ITokenModel createModel(@NotNull TokenRequestForm form) {
         Date now = new Date();
-        return new AdapterTokenModel(UuidUtil.getInstance().getUuidString(), form.getUserDetails().getUsername(),
+        return new SimpleTokenModel(UuidUtil.getInstance().getUuidString(), form.getUserDetails().getUsername(),
             TokenStatusEnum.ACTIVE, EnumUtil.valueOf(TokenTypeEnum.class, form.getTokenType()),
             recommendExpireTime(now, form.getTokenType()), now,
             EnumUtil.valueOf(TokenCreateTypeEnum.class, form.getTokenCreateType()), NetUtil.getMac(request),

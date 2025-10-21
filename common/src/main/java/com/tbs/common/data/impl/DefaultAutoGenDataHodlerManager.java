@@ -92,8 +92,7 @@ public class DefaultAutoGenDataHodlerManager extends AbstractAutoGenDataHolderMa
          */
         private IMatchKeyFounder getMatch() {
             var matcher = getFeatureIfExsit(IMatchKeyFounder.class);
-            AssertUtil.isTrue(matcher.isEmpty(),
-                () -> new RuntimeException("数据缓存不支持匹配键"));
+            AssertUtil.isTrue(matcher.isEmpty(), () -> new RuntimeException("数据缓存不支持匹配键"));
             return matcher.get();
         }
 

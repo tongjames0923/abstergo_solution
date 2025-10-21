@@ -1,5 +1,7 @@
-package com.tbs.web.security.token.model;
+package com.tbs.app.web.model;
 
+import com.tbs.app.web.model.bridge.SimpleTokenDtoBridge;
+import com.tbs.cache.serialize.annotation.CacheTransform;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
@@ -14,6 +16,7 @@ import java.util.Date;
  * @author abstergo
  */
 @Data
+@CacheTransform(bridgeType = SimpleTokenDtoBridge.class)
 public class SimpleTokenModel implements ITokenModel {
     private static final long serialVersionUID = 1L;
     /**
@@ -58,11 +61,21 @@ public class SimpleTokenModel implements ITokenModel {
      */
     private TokenCreateTypeEnum createType;
 
+    /**
+     * 客户端MAC地址
+     */
+    private String macAddr;
+
+    /**
+     * 客户端IP地址
+     */
+    private String ipAddr;
+
     public SimpleTokenModel() {
     }
 
     public SimpleTokenModel(String token, String userName, TokenStatusEnum status, TokenTypeEnum type, Date expireTime,
-        Date createTime, TokenCreateTypeEnum createType, String sessionId) {
+        Date createTime, TokenCreateTypeEnum createType, String sessionId, String macAddr, String ipAddr) {
         this.token = token;
         this.userName = userName;
         this.status = status;
@@ -71,6 +84,8 @@ public class SimpleTokenModel implements ITokenModel {
         this.createTime = createTime;
         this.createType = createType;
         this.sessionId = sessionId;
+        this.macAddr = macAddr;
+        this.ipAddr = ipAddr;
     }
 
 }

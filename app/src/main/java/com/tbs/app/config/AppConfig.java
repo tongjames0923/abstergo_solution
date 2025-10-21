@@ -18,8 +18,6 @@ import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
-import org.redisson.client.codec.Codec;
-import org.redisson.codec.Kryo5Codec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
@@ -50,11 +48,6 @@ public class AppConfig {
 
             private Logger logger = LoggerFactory.getLogger(DefaultAppConfig.class);
         };
-    }
-
-    @Bean
-    public Codec codec() {
-        return new Kryo5Codec();
     }
 
     //	@Bean
