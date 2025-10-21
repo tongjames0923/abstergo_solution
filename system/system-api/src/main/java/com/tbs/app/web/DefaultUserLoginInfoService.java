@@ -150,11 +150,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         SystemUserEntity user = CollUtil.first(systemUserService.queryByUserName(username));
         AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
-        query.where().equal(SystemLoginInfoEntity::getUserId, user.getId());
-        query.getOrderSupport().ifPresent((order) -> {
-            order.orderByDesc(SystemLoginInfoEntity::getCreateTime);
-            order.orderByDesc(SystemLoginInfoEntity::getUpdateTime);
-        });
+        query.where().equal(SystemLoginInfoEntity::getUserId, user.getId())
+            .isNotNull(SystemLoginInfoEntity::getSessionId);
         var loginInfo = query.fetch();
         if (CollUtil.isEmpty(loginInfo)) {
             return Collections.emptyList();
@@ -216,6 +213,40 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
                 vo.setLastActiveTime(lastActiveTime);
 
                 return vo;
+            }).sorted((vo1, vo2) -> {
+                //优先按创建时间排序，若创建时间在同一天，则按最后活动时间排序
+                Date createTime1 = vo1.getCreateTime();
+                Date createTime2 = vo2.getCreateTime();
+
+                // 如果创建时间都存在
+                if (createTime1 != null && createTime2 != null) {
+                    // 比较创建日期（年月日）
+                    Date date1 = DateUtil.beginOfDay(createTime1);
+                    Date date2 = DateUtil.beginOfDay(createTime2);
+
+                    int dateCompare = date2.compareTo(date1); // 按创建日期降序排序
+                    if (dateCompare != 0) {
+                        return dateCompare;
+                    }
+
+                    // 如果创建时间在同一天，按最后活动时间排序
+                    Date lastActiveTime1 = vo1.getLastActiveTime();
+                    Date lastActiveTime2 = vo2.getLastActiveTime();
+
+                    if (lastActiveTime1 != null && lastActiveTime2 != null) {
+                        return lastActiveTime2.compareTo(lastActiveTime1); // 按最后活动时间降序排序
+                    } else if (lastActiveTime1 != null) {
+                        return -1;
+                    } else if (lastActiveTime2 != null) {
+                        return 1;
+                    }
+                } else if (createTime1 != null) {
+                    return -1;
+                } else if (createTime2 != null) {
+                    return 1;
+                }
+
+                return 0;
             }).collect(Collectors.toList());
 
     }
