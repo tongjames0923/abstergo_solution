@@ -24,7 +24,7 @@ public class RedissonCacheConfig {
                 config.setEvictionMode(property.getEvictionMode());
                 return config;
             }
-            
+
         };
         cacheManager.setAllowNullValues(property.isAllowNullValues());
         cacheManager.setTransactionAware(property.isTransaction());

@@ -1,5 +1,6 @@
 package com.tbs.app.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.app.log.DbSystemOpLog;
 import com.tbs.app.log.EventSystemOpLog;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
@@ -8,6 +9,7 @@ import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.broadcast.subscriber.impl.SimpleUseSubscriber;
+import com.tbs.cache.ICacheListenner;
 import com.tbs.common.error.IErrorThrowEvent;
 import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
@@ -18,8 +20,11 @@ import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
+import org.redisson.client.codec.Codec;
+import org.redisson.codec.JsonJacksonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -50,41 +55,43 @@ public class AppConfig {
         };
     }
 
-    //	@Bean
-    //	ICacheListenner cacheListenner() {
-    //		return new ICacheListenner() {
-    //
-    //			@Resource
-    //			AbstractTraceContext traceContext;
-    //			private Logger logger = LoggerFactory.getLogger(DefaultAppConfig.class);
-    //
-    //			@Override
-    //			public boolean support(Cache cache) {
-    //				return true;
-    //			}
-    //
-    //			@Override
-    //			public void onGet(String cacheName, Object key, Object value) {
-    //				logger.info("trace:{} ,get cache {} {} {}", traceContext.getRootTrace(), cacheName, key, value);
-    //			}
-    //
-    //			@Override
-    //			public void onPut(String cacheName, Object key, Object value) {
-    //				logger.info("trace:{} ,put cache {} {} {}", traceContext.getRootTrace(), cacheName, key, value);
-    //			}
-    //
-    //			@Override
-    //			public void onEvict(String cacheName, Object key) {
-    //				logger.info("trace:{} ,evict cache {} {}", traceContext.getRootTrace(), cacheName, key);
-    //			}
-    //
-    //			@Override
-    //			public void onClear(String cacheName) {
-    //
-    //				logger.info("trace:{} ,clear cache {}", traceContext.getRootTrace(), cacheName);
-    //			}
-    //		};
-    //	}
+    @Bean
+    public Codec codec(ObjectMapper objectMapper) {
+        return new JsonJacksonCodec(objectMapper);
+    }
+
+    @Bean
+    ICacheListenner cacheListenner() {
+        return new ICacheListenner() {
+
+            private Logger logger = LoggerFactory.getLogger(DefaultAppConfig.class);
+
+            @Override
+            public boolean support(Cache cache) {
+                return true;
+            }
+
+            @Override
+            public void onGet(String cacheName, Object key, Object value) {
+                logger.info("cache {} hit at {} with {}", cacheName, key, value);
+            }
+
+            @Override
+            public void onPut(String cacheName, Object key, Object value) {
+                logger.info("cache {} put {} with {}", cacheName, key, value);
+            }
+
+            @Override
+            public void onEvict(String cacheName, Object key) {
+                logger.info("cache {} evict {}", cacheName, key);
+            }
+
+            @Override
+            public void onClear(String cacheName) {
+                logger.info("cache {} clear", cacheName);
+            }
+        };
+    }
 
     private static final Logger sub_test_logger = LoggerFactory.getLogger("sub_test");
 

@@ -1,6 +1,8 @@
 package com.tbs.app.web.model.dto;
 
 import com.tbs.app.web.model.SimpleTokenModel;
+import com.tbs.app.web.model.bridge.SimpleTokenDtoBridge;
+import com.tbs.cache.serialize.annotation.CacheTransform;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -12,6 +14,7 @@ import java.util.Date;
  * @author abstergo
  */
 @Data
+@CacheTransform(bridgeType = SimpleTokenDtoBridge.class)
 public class TokenModelDto implements Serializable {
     private static final long serialVersionUID = 1L;
     /**
