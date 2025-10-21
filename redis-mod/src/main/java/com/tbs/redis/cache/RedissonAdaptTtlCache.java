@@ -15,15 +15,17 @@ import java.util.Date;
 public class RedissonAdaptTtlCache extends AbstractAdaptTtlCache {
 
     private Duration defaultExpireDuration;
+    private RedissonCache cache;
 
     /**
      * 构造函数，初始化原始缓存
      *
      * @param orginCache 原始Spring Cache实例
      */
-    public RedissonAdaptTtlCache(RedissonCache orginCache, Duration defaultExpireDuration) {
-        super(orginCache);
+    public RedissonAdaptTtlCache(RedissonCache orginCache, Cache orgin, Duration defaultExpireDuration) {
+        super(orgin);
         this.defaultExpireDuration = defaultExpireDuration == null ? Duration.ofHours(1) : defaultExpireDuration;
+        this.cache = orginCache;
     }
 
     @Override

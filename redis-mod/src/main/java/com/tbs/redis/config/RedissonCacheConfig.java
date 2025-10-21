@@ -28,7 +28,7 @@ public class RedissonCacheConfig {
         };
         cacheManager.setCodec(redissonClient.getConfig().getCodec());
         cacheManager.setAllowNullValues(property.isAllowNullValues());
-        cacheManager.setTransactionAware(false);
+        cacheManager.setTransactionAware(property.isTransaction());
         return cacheManager;
     }
 }

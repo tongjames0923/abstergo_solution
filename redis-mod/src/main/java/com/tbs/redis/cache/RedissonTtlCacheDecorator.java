@@ -23,9 +23,8 @@ public class RedissonTtlCacheDecorator implements ITtlCacheDecorator {
     @Override
     public AbstractTtlCache decorateCache(Cache cache, CacheManager manager) {
         var redissonCache = FeatureWrapperHelper.unwrap(cache, RedissonCache.class);
-
         if (redissonCache.isPresent()) {
-            return new RedissonAdaptTtlCache(redissonCache.get(),
+            return new RedissonAdaptTtlCache(redissonCache.get(), cache,
                 Duration.ofSeconds(redissonCacheProperty.getCacheTimeout()));
         } else {
             AssertUtil.throwError(() -> new IllegalArgumentException("cache is not redisson cache"));
