@@ -357,76 +357,79 @@ export default {
 </script>
 
 <style scoped>
+
 .dynamic-form-card {
-  margin-bottom: 20px;
+  margin-bottom: var(--dynamic-form-margin);
+  background: var(--dynamic-form-bg);
 }
 
 .card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  display: var(--card-header-display);
+  justify-content: var(--card-header-justify);
+  align-items: var(--card-header-align);
+  padding: var(--card-header-padding);
 }
 
 .card-title {
-  font-weight: bold;
-  font-size: 16px;
+  font-weight: var(--card-title-weight);
+  font-size: var(--card-title-size);
 }
 
 .expand-button {
-  border: 1px solid rgba(169, 197, 224, 0.4);
-  padding: 8px 16px;
-  border-radius: 6px;
-  transition: all 0.3s ease;
-  background: rgba(240, 248, 255, 0.2);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  color: #2c3e50;
-  font-weight: 500;
+  border: var(--expand-button-border);
+  padding: var(--expand-button-padding);
+  border-radius: var(--expand-button-radius);
+  transition: var(--expand-button-transition);
+  background: var(--expand-button-bg);
+  backdrop-filter: var(--expand-button-backdrop);
+  -webkit-backdrop-filter: var(--expand-button-backdrop);
+  box-shadow: var(--expand-button-box-shadow);
+  color: var(--expand-button-color);
+  font-weight: var(--expand-button-font-weight);
 }
 
 .expand-button:hover {
-  background: rgba(240, 248, 255, 0.3);
-  border-color: rgba(169, 197, 224, 0.5);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  background: var(--expand-button-hover-bg);
+  border-color: var(--expand-button-hover-border);
+  box-shadow: var(--expand-button-hover-box-shadow);
 }
 
 .expand-button.is-expanded {
-  background: rgba(240, 248, 255, 0.25);
-  border-color: rgba(169, 197, 224, 0.45);
+  background: var(--expand-button-expanded-bg);
+  border-color: var(--expand-button-expanded-border);
 }
 
 .form-actions {
-  text-align: center;
-  padding-top: 20px;
-  box-sizing: border-box;
+  text-align: var(--form-actions-align);
+  padding-top: var(--form-actions-padding);
+  box-sizing: var(--form-actions-box);
 }
 
 .dynamic-form-row {
-  margin-left: -10px !important;
-  margin-right: -10px !important;
+  margin-left: var(--dynamic-form-row-margin-x);
+  margin-right: var(--dynamic-form-row-margin-x);
 }
 
 .dynamic-form-col {
-  padding-left: 10px !important;
-  padding-right: 10px !important;
+  padding-left: var(--dynamic-form-col-padding-x);
+  padding-right: var(--dynamic-form-col-padding-x);
 }
 
 .dynamic-form-item ::v-deep .el-form-item__content {
-  display: flex;
+  display: var(--dynamic-form-item-content-display);
 }
 
 .dynamic-form-component {
-  width: 100%;
+  width: var(--dynamic-form-component-width);
 }
 
 .date-range-picker {
-  width: 100%;
+  width: var(--date-range-picker-width);
 }
 
 /* 日期范围选择器弹出框优化 */
 ::v-deep .date-range-picker-popper {
-  max-width: none !important;
+  max-width: var(--date-range-picker-popper-max-width);
 }
 
 ::v-deep .date-range-picker-popper .el-picker-panel__body-wrapper {
@@ -441,18 +444,18 @@ export default {
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__content {
   flex: 1;
-  min-width: 220px;
+  min-width: var(--date-range-picker-content-min-width);
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-left {
-  border-right: 1px solid #e4e4e4;
+  border-right: var(--date-range-picker-popper-border);
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__time-header {
   display: flex;
   justify-content: space-between;
-  padding: 8px 10px;
-  border-bottom: 1px solid #e4e4e4;
+  padding: var(--date-range-picker-popper-header-padding);
+  border-bottom: var(--date-range-picker-popper-header-border);
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__time-header > span {
@@ -467,17 +470,17 @@ export default {
 /* 小屏幕适配 */
 @media (max-width: 768px) {
   ::v-deep .date-range-picker-popper .el-picker-panel {
-    width: auto;
-    min-width: 280px;
+    width: var(--date-range-picker-popper-mobile-width);
+    min-width: var(--date-range-picker-popper-mobile-min-width);
   }
 
   ::v-deep .date-range-picker-popper .el-date-range-picker__content {
-    min-width: 220px;
+    min-width: var(--date-range-picker-content-mobile-min-width);
   }
 
   ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-left {
     border-right: none;
-    border-bottom: 1px solid #e4e4e4;
+    border-bottom: var(--date-range-picker-popper-border);
   }
 
   ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-right {
