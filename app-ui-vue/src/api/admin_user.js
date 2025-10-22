@@ -17,9 +17,13 @@ import request from '@/utils/request'
  * @param {number} [pageSize] - 每页数量
  * @returns {Promise} 查询结果
  */
-export function adminQueryUser(data) {
+export function adminQueryUser(data, pageNum, pageSize) {
   return request({
     url: '/private/admin/user/query',
+    params: {
+      pageNum,
+      pageSize
+    },
     method: 'post',
     data
   })
