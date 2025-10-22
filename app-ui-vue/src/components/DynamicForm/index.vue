@@ -6,8 +6,8 @@
         <span class="card-title">{{ title }}</span>
         <el-button
           v-if="config && config.expandable !== false"
-          style="float: right; padding: 3px 0"
-          type="text"
+          class="expand-button"
+          :class="{ 'is-expanded': isExpanded }"
           @click="toggleExpand"
         >
           {{ isExpanded ? '收起' : '展开' }}
@@ -30,11 +30,20 @@
 
       <!-- 默认布局：根据配置自动生成 -->
       <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
-        <el-row :gutter="config.gutter || 20">
+        <el-row 
+          :gutter="config.gutter || 20"
+          class="dynamic-form-row"
+        >
           <el-col
             v-for="field in config.fields"
             :key="field.prop || field.label || field.type"
-            :span="(field && field.span) || (config && config.span) || 8"
+            :span="getFieldSpan(field)"
+            :xs="getFieldResponsiveSpan(field, 'xs')"
+            :sm="getFieldResponsiveSpan(field, 'sm')"
+            :md="getFieldResponsiveSpan(field, 'md')"
+            :lg="getFieldResponsiveSpan(field, 'lg')"
+            :xl="getFieldResponsiveSpan(field, 'xl')"
+            class="dynamic-form-col"
           >
             <slot
               :field="field"
@@ -45,12 +54,14 @@
               <el-form-item
                 :label="(field && field.label) || ''"
                 :prop="(field && field.prop) || ''"
+                class="dynamic-form-item"
               >
                 <!-- 输入框 -->
                 <el-input
                   v-if="field && field.type === 'input'"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
+                  class="dynamic-form-component"
                   @input="val => setFieldValue((field && field.prop) || '', val)"
                 />
 
@@ -59,6 +70,7 @@
                   v-else-if="field && field.type === 'select'"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
+                  class="dynamic-form-component"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
                 >
                   <el-option
@@ -75,6 +87,7 @@
                   :value="formData[(field && field.prop) || '']"
                   type="daterange"
                   v-bind="field.props"
+                  class="dynamic-form-component date-range-picker"
                   @change="val => handleDateRangeChange((field && field.prop) || '', val)"
                   @input="val => handleDateRangeChange((field && field.prop) || '', val)"
                 />
@@ -84,12 +97,14 @@
                   v-else-if="field && field.type === 'dynamic-options'"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
+                  class="dynamic-form-component"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
                 />
                 <url-image
                   v-else-if="field && field.type === 'url-image'"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
+                  class="dynamic-form-component"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
                 />
                 <!-- 其他自定义组件 -->
@@ -98,6 +113,7 @@
                   v-else-if="field && field.type && customComponents[(field && field.type) || '']"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
+                  class="dynamic-form-component"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
                   @input="val => setFieldValue((field && field.prop) || '', val)"
                 />
@@ -287,6 +303,51 @@ export default {
     // 获取完整的表单数据
     getFormData() {
       return this.formData
+    },
+
+    // 获取字段栅格跨度
+    getFieldSpan(field) {
+      // 优先使用字段自身配置的span
+      if (field && field.span !== undefined) {
+        return field.span;
+      }
+      
+      // 其次使用全局配置的span
+      if (this.config && this.config.span !== undefined) {
+        return this.config.span;
+      }
+      
+      // 默认返回8
+      return 8;
+    },
+
+    // 获取字段响应式栅格跨度
+    getFieldResponsiveSpan(field, size) {
+      // 如果字段配置了特定尺寸的span，则使用该配置
+      if (field && field.responsive && field.responsive[size]) {
+        return field.responsive[size];
+      }
+      
+      // 否则使用全局配置
+      if (this.config && this.config.responsive && this.config.responsive[size]) {
+        return this.config.responsive[size];
+      }
+      
+      // 根据屏幕尺寸设置默认的响应式行为
+      switch (size) {
+        case 'xs':
+          return 24; // 在超小屏幕上占满整行
+        case 'sm':
+          return 12; // 在小屏幕上一行显示2个
+        case 'md':
+          return 8;  // 在中等屏幕上一行显示3个
+        case 'lg':
+          return 8;  // 在大屏幕上一行显示3个
+        case 'xl':
+          return 6;  // 在超大屏幕上一行显示4个
+        default:
+          return undefined;
+      }
     }
   }
 }
@@ -308,10 +369,45 @@ export default {
   font-size: 16px;
 }
 
+.expand-button {
+  border: 1px solid #dcdfe6;
+  padding: 8px 16px;
+  border-radius: 4px;
+  transition: all 0.3s;
+}
+
+.expand-button:hover {
+  background-color: #f5f7fa;
+  border-color: #c0c4cc;
+}
+
+.expand-button.is-expanded {
+  background-color: #ecf5ff;
+  border-color: #b3d8ff;
+}
+
 .form-actions {
   text-align: center;
   padding-top: 20px;
   box-sizing: border-box;
+}
+
+.dynamic-form-row {
+  margin-left: -10px !important;
+  margin-right: -10px !important;
+}
+
+.dynamic-form-col {
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+.dynamic-form-item ::v-deep .el-form-item__content {
+  display: flex;
+}
+
+.dynamic-form-component {
+  width: 100%;
 }
 
 .date-range-picker {
