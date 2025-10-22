@@ -11,7 +11,7 @@
           @click="toggleExpand"
         >
           {{ isExpanded ? '收起' : '展开' }}
-          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"/>
+          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
         </el-button>
       </slot>
     </div>
@@ -27,7 +27,7 @@
       v-on="formListeners"
     >
       <!-- 表单前内容 -->
-      <slot name="before-form"/>
+      <slot name="before-form" />
 
       <!-- 默认布局：根据配置自动生成 -->
       <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
@@ -137,7 +137,7 @@
       />
 
       <!-- 表单后内容 -->
-      <slot name="after-form"/>
+      <slot name="after-form" />
 
       <!-- 操作按钮 -->
       <div class="form-actions">
@@ -407,39 +407,39 @@ export default {
     getFieldSpan(field) {
       // 优先使用字段自身配置的span
       if (field && field.span !== undefined) {
-        return field.span;
+        return field.span
       }
 
       // 其次使用全局配置的默认span
-      return this.defaultSpan;
+      return this.defaultSpan
     },
 
     // 获取字段响应式栅格跨度
     getFieldResponsiveSpan(field, size) {
       // 如果字段配置了特定尺寸的span，则使用该配置
       if (field && field.responsive && field.responsive[size]) {
-        return field.responsive[size];
+        return field.responsive[size]
       }
 
       // 否则使用全局配置
       if (this.config && this.config.responsive && this.config.responsive[size]) {
-        return this.config.responsive[size];
+        return this.config.responsive[size]
       }
 
       // 根据屏幕尺寸设置默认的响应式行为
       switch (size) {
         case 'xs':
-          return 24; // 在超小屏幕上占满整行
+          return 24 // 在超小屏幕上占满整行
         case 'sm':
-          return 12; // 在小屏幕上一行显示2个
+          return 12 // 在小屏幕上一行显示2个
         case 'md':
-          return 8;  // 在中等屏幕上一行显示3个
+          return 8 // 在中等屏幕上一行显示3个
         case 'lg':
-          return 8;  // 在大屏幕上一行显示3个
+          return 8 // 在大屏幕上一行显示3个
         case 'xl':
-          return 6;  // 在超大屏幕上一行显示4个
+          return 6 // 在超大屏幕上一行显示4个
         default:
-          return undefined;
+          return undefined
       }
     },
 
