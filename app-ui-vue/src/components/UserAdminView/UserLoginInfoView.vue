@@ -89,7 +89,7 @@
 
 <script>
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import {getTokensBySessionId, getUserSessions} from '@/api/admin_user'
+import { getTokensBySessionId, getUserSessions } from '@/api/admin_user'
 
 export default {
   name: 'UserLoginInfoView',
@@ -324,11 +324,11 @@ export default {
      */
     getTokenStatusType(status) {
       const statusTypeMap = {
-        'ACTIVE': 'success',     // 有效
-        'INACTIVE': 'info',      // 无效
-        'REVOKE': 'danger',      // 已撤销
-        'EXPIRED': 'warning',    // 已过期
-        'DELETED': 'danger'      // 已删除
+        'ACTIVE': 'success', // 有效
+        'INACTIVE': 'info', // 无效
+        'REVOKE': 'danger', // 已撤销
+        'EXPIRED': 'warning', // 已过期
+        'DELETED': 'danger' // 已删除
       }
       return statusTypeMap[status] || 'info'
     },

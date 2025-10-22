@@ -115,9 +115,9 @@ import QuickUseManagementView from '@/components/QuickUseManagementView/index.vu
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
 import UserLoginInfoView from '@/components/UserAdminView/UserLoginInfoView.vue'
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
-import {rangeQueryTransform} from '@/utils/query-help'
-import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
+import { activateUser, adminQueryUser, deleteUser, disableUser, saveUser } from '@/api/admin_user'
+import { rangeQueryTransform } from '@/utils/query-help'
+import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
 
 export default {
   name: 'UserAdminView',
