@@ -66,11 +66,9 @@
         <template #status="{ row }">
           <el-tag
             size="mini"
-            :type="row.status === 'ACTIVE' ? 'success' : row.status === 'INACTIVE' ? 'info' : row.status === 'REVOKE' ? 'danger' : row.status === 'EXPIRED' ? 'warning' : 'info'"
+            :type="getTokenStatusType(row.status)"
           >
-            {{
-              row.status === 'ACTIVE' ? '活跃' : row.status === 'INACTIVE' ? '无效' : row.status === 'REVOKE' ? '已撤销' : row.status === 'EXPIRED' ? '已过期' : row.status || '未知状态'
-            }}
+            {{ getTokenStatusText(row.status) }}
           </el-tag>
         </template>
 
@@ -91,7 +89,7 @@
 
 <script>
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import { getTokensBySessionId, getUserSessions } from '@/api/admin_user'
+import {getTokensBySessionId, getUserSessions} from '@/api/admin_user'
 
 export default {
   name: 'UserLoginInfoView',
@@ -247,7 +245,7 @@ export default {
      */
     async fetchUserSessions() {
       if (this.userId === undefined) return
-      
+
       this.loadingSessions = true
       try {
         const { data } = await getUserSessions(this.userId)
@@ -319,6 +317,38 @@ export default {
       return `${prefix}****${suffix}`
     },
 
+    /**
+     * 获取Token状态对应的标签类型
+     * @param {string} status - Token状态
+     * @returns {string} Element UI标签类型
+     */
+    getTokenStatusType(status) {
+      const statusTypeMap = {
+        'ACTIVE': 'success',     // 有效
+        'INACTIVE': 'info',      // 无效
+        'REVOKE': 'danger',      // 已撤销
+        'EXPIRED': 'warning',    // 已过期
+        'DELETED': 'danger'      // 已删除
+      }
+      return statusTypeMap[status] || 'info'
+    },
+
+    /**
+     * 获取Token状态对应的文本
+     * @param {string} status - Token状态
+     * @returns {string} 状态文本
+     */
+    getTokenStatusText(status) {
+      const statusTextMap = {
+        'ACTIVE': '有效',
+        'INACTIVE': '无效',
+        'REVOKE': '已撤销',
+        'EXPIRED': '已过期',
+        'DELETED': '已删除'
+      }
+      return statusTextMap[status] || '未知状态'
+    },
+
     // 显示会话下的Token列表
     async showSessionTokens(sessionId) {
       this.loadingTokens = true
@@ -348,7 +378,7 @@ export default {
 <style scoped lang="scss">
 .user-login-info {
   height: 100%;
-  
+
   ::v-deep .el-table-column--selection .cell {
     padding-left: 14px;
     padding-right: 14px;

@@ -11,7 +11,7 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.shared.constant.CommonConstant;
+import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
@@ -102,7 +102,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
                         return new FormattedRuntimeException("用户{}不存在无法生成用户登陆信息", userDetails.getUsername());
                     }));
             loginInfoEntity.setSessionId(token.getSessionId());
-            loginInfoEntity.setFlag(CommonConstant.FLAG_ON);
+            loginInfoEntity.setFlag(LoginInfoFlagEnum.ACTIVE.getCode());
             loginInfoEntity.setCreateTime(new Date());
             mapper.insert(loginInfoEntity);
         }
@@ -115,7 +115,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
             log.info("clean up expired login info");
             return;
         }
-        loginInfoEntity.setFlag(CommonConstant.FLAG_OFF);
+        loginInfoEntity.setFlag(LoginInfoFlagEnum.CANCELLED.getCode());
         mapper.updateByPrimaryKey(loginInfoEntity);
     }
 

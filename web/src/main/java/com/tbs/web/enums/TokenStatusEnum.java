@@ -7,7 +7,27 @@ import com.tbs.common.BaseEnum;
  */
 public enum TokenStatusEnum implements BaseEnum<String> {
 
-    ACTIVE("有效", 1), INACTIVE("无效", 0), REVOKE("已撤销", -1), EXPIRED("已过期", -2);
+    /**
+     * 生效中
+     */
+    ACTIVE("有效", 1),
+    /**
+     * 已删除
+     */
+    DELETED("已删除", 0),
+    /**
+     * 无效
+     */
+    INACTIVE("无效", -3),
+
+    /**
+     * 已撤销
+     */
+    REVOKE("已撤销", -1),
+    /**
+     * 已过期
+     */
+    EXPIRED("已过期", -2);
 
     private String value;
     private Integer code;
