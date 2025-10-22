@@ -11,7 +11,7 @@
           @click="toggleExpand"
         >
           {{ isExpanded ? '收起' : '展开' }}
-          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
+          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"/>
         </el-button>
       </slot>
     </div>
@@ -26,11 +26,11 @@
       v-bind="formProps"
     >
       <!-- 表单前内容 -->
-      <slot name="before-form" />
+      <slot name="before-form"/>
 
       <!-- 默认布局：根据配置自动生成 -->
       <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
-        <el-row 
+        <el-row
           :gutter="config.gutter || 20"
           class="dynamic-form-row"
         >
@@ -88,6 +88,9 @@
                   type="daterange"
                   v-bind="field.props"
                   class="dynamic-form-component date-range-picker"
+                  :popper-class="`date-range-picker-popper ${field.prop || ''}`"
+                  start-placeholder="开始日期"
+                  end-placeholder="结束日期"
                   @change="val => handleDateRangeChange((field && field.prop) || '', val)"
                   @input="val => handleDateRangeChange((field && field.prop) || '', val)"
                 />
@@ -132,7 +135,7 @@
       />
 
       <!-- 表单后内容 -->
-      <slot name="after-form" />
+      <slot name="after-form"/>
 
       <!-- 操作按钮 -->
       <div class="form-actions">
@@ -311,12 +314,12 @@ export default {
       if (field && field.span !== undefined) {
         return field.span;
       }
-      
+
       // 其次使用全局配置的span
       if (this.config && this.config.span !== undefined) {
         return this.config.span;
       }
-      
+
       // 默认返回8
       return 8;
     },
@@ -327,12 +330,12 @@ export default {
       if (field && field.responsive && field.responsive[size]) {
         return field.responsive[size];
       }
-      
+
       // 否则使用全局配置
       if (this.config && this.config.responsive && this.config.responsive[size]) {
         return this.config.responsive[size];
       }
-      
+
       // 根据屏幕尺寸设置默认的响应式行为
       switch (size) {
         case 'xs':
@@ -370,20 +373,27 @@ export default {
 }
 
 .expand-button {
-  border: 1px solid #dcdfe6;
+  border: 1px solid rgba(169, 197, 224, 0.4);
   padding: 8px 16px;
-  border-radius: 4px;
-  transition: all 0.3s;
+  border-radius: 6px;
+  transition: all 0.3s ease;
+  background: rgba(240, 248, 255, 0.2);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+  color: #2c3e50;
+  font-weight: 500;
 }
 
 .expand-button:hover {
-  background-color: #f5f7fa;
-  border-color: #c0c4cc;
+  background: rgba(240, 248, 255, 0.3);
+  border-color: rgba(169, 197, 224, 0.5);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
 .expand-button.is-expanded {
-  background-color: #ecf5ff;
-  border-color: #b3d8ff;
+  background: rgba(240, 248, 255, 0.25);
+  border-color: rgba(169, 197, 224, 0.45);
 }
 
 .form-actions {
@@ -412,5 +422,70 @@ export default {
 
 .date-range-picker {
   width: 100%;
+}
+
+/* 日期范围选择器弹出框优化 */
+::v-deep .date-range-picker-popper {
+  max-width: none !important;
+}
+
+::v-deep .date-range-picker-popper .el-picker-panel__body-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+::v-deep .date-range-picker-popper .el-picker-panel__body {
+  min-width: auto;
+  margin: 0;
+}
+
+::v-deep .date-range-picker-popper .el-date-range-picker__content {
+  flex: 1;
+  min-width: 220px;
+}
+
+::v-deep .date-range-picker-popper .el-date-range-picker__content.is-left {
+  border-right: 1px solid #e4e4e4;
+}
+
+::v-deep .date-range-picker-popper .el-date-range-picker__time-header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid #e4e4e4;
+}
+
+::v-deep .date-range-picker-popper .el-date-range-picker__time-header > span {
+  flex: 1;
+  text-align: center;
+}
+
+::v-deep .date-range-picker-popper .el-date-range-picker__time-header > span:nth-child(2) {
+  text-align: right;
+}
+
+/* 小屏幕适配 */
+@media (max-width: 768px) {
+  ::v-deep .date-range-picker-popper .el-picker-panel {
+    width: auto;
+    min-width: 280px;
+  }
+
+  ::v-deep .date-range-picker-popper .el-date-range-picker__content {
+    min-width: 220px;
+  }
+
+  ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-left {
+    border-right: none;
+    border-bottom: 1px solid #e4e4e4;
+  }
+
+  ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-right {
+    margin-top: 10px;
+  }
+
+  ::v-deep .date-range-picker-popper .el-picker-panel__body-wrapper {
+    flex-direction: column;
+  }
 }
 </style>
