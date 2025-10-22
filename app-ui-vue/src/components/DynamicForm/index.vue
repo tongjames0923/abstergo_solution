@@ -3,7 +3,7 @@
     <!-- 头部区域 -->
     <div slot="header" class="clearfix card-header">
       <slot name="header">
-        <span class="card-title">{{ title }}</span>
+        <span class="card-title">{{ finalTitle }}</span>
         <el-button
           v-if="config && config.expandable !== false"
           class="expand-button"
@@ -20,10 +20,11 @@
     <el-form
       v-show="isExpanded"
       ref="form"
-      :label-width="(config && config.labelWidth) || '100px'"
+      :label-width="finalLabelWidth"
       :model="formData"
       class="dynamic-form"
       v-bind="formProps"
+      v-on="formListeners"
     >
       <!-- 表单前内容 -->
       <slot name="before-form"/>
@@ -31,7 +32,7 @@
       <!-- 默认布局：根据配置自动生成 -->
       <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
         <el-row
-          :gutter="config.gutter || 20"
+          :gutter="finalGutter"
           class="dynamic-form-row"
         >
           <el-col
@@ -55,6 +56,7 @@
                 :label="(field && field.label) || ''"
                 :prop="(field && field.prop) || ''"
                 class="dynamic-form-item"
+                v-bind="getFieldItemProps(field)"
               >
                 <!-- 输入框 -->
                 <el-input
@@ -193,13 +195,90 @@ export default {
   },
   data() {
     return {
-      isExpanded: (this.config && this.config.expanded) !== false,
+      isExpanded: this.getInitialExpandedState(),
       formData: this.initializeFormData(this.value || {})
     }
   },
   computed: {
     form() {
       return this.$refs.form
+    },
+
+    // 计算最终标题，优先使用config.title，其次是props.title，最后是props中的title
+    finalTitle() {
+      if (this.title) {
+        return this.title
+      }
+
+      if (this.config && this.config.title) {
+        return this.config.title
+      }
+
+      if (this.config && this.config.props && this.config.props.title) {
+        return this.config.props.title
+      }
+
+      return ''
+    },
+
+    // 计算最终标签宽度
+    finalLabelWidth() {
+      // 优先使用props中指定的labelWidth
+      if (this.config && this.config.props && this.config.props.labelWidth) {
+        return this.config.props.labelWidth
+      }
+
+      // 其次使用config.labelWidth
+      if (this.config && this.config.labelWidth) {
+        return this.config.labelWidth
+      }
+
+      // 默认值
+      return '100px'
+    },
+
+    // 计算最终gutter
+    finalGutter() {
+      // 优先使用props中指定的gutter
+      if (this.config && this.config.props && this.config.props.gutter !== undefined) {
+        return this.config.props.gutter
+      }
+
+      // 其次使用config.gutter
+      if (this.config && this.config.gutter !== undefined) {
+        return this.config.gutter
+      }
+
+      // 默认值
+      return 20
+    },
+
+    // 计算默认span
+    defaultSpan() {
+      // 优先使用props中指定的span
+      if (this.config && this.config.props && this.config.props.span !== undefined) {
+        return this.config.props.span
+      }
+
+      // 其次使用config.span
+      if (this.config && this.config.span !== undefined) {
+        return this.config.span
+      }
+
+      // 默认值
+      return 8
+    },
+
+    // 表单事件监听器
+    formListeners() {
+      const listeners = {}
+      // 将所有非特殊事件传递给formProps
+      Object.keys(this.$listeners).forEach(event => {
+        if (!['submit', 'reset'].includes(event)) {
+          listeners[event] = this.$listeners[event]
+        }
+      })
+      return listeners
     }
   },
   watch: {
@@ -212,13 +291,29 @@ export default {
     config: {
       handler(newVal) {
         // 当配置发生变化时，确保表单数据仍然有效
-        this.isExpanded = (newVal && newVal.expanded) !== false
+        this.isExpanded = this.getInitialExpandedState()
         this.formData = this.initializeFormData(this.formData)
       },
       deep: true
     }
   },
   methods: {
+    // 获取初始展开状态
+    getInitialExpandedState() {
+      // 优先使用config.expanded
+      if (this.config && this.config.expanded !== undefined) {
+        return this.config.expanded !== false
+      }
+
+      // 其次使用config.props.expanded
+      if (this.config && this.config.props && this.config.props.expanded !== undefined) {
+        return this.config.props.expanded !== false
+      }
+
+      // 默认展开
+      return true
+    },
+
     // 初始化表单数据
     initializeFormData(data) {
       // 创建一个新的对象，避免直接修改传入的数据
@@ -315,13 +410,8 @@ export default {
         return field.span;
       }
 
-      // 其次使用全局配置的span
-      if (this.config && this.config.span !== undefined) {
-        return this.config.span;
-      }
-
-      // 默认返回8
-      return 8;
+      // 其次使用全局配置的默认span
+      return this.defaultSpan;
     },
 
     // 获取字段响应式栅格跨度
@@ -351,6 +441,17 @@ export default {
         default:
           return undefined;
       }
+    },
+
+    // 获取表单项属性
+    getFieldItemProps(field) {
+      // 如果字段有props属性，则返回它
+      if (field && field.itemProps) {
+        return field.itemProps
+      }
+
+      // 默认返回空对象
+      return {}
     }
   }
 }

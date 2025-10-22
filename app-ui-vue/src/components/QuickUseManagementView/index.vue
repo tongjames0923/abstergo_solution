@@ -77,15 +77,15 @@
               {{ deleteActionButtonText }}
             </el-button>
             <!-- 兼容旧版actions插槽 -->
-            <slot name="actions" :row="row" :index="$index" />
+            <slot name="actions" :row="row" :index="$index"/>
             <!-- 更多功能按钮 -->
             <template v-if="$scopedSlots['actions-dropdown']">
               <el-dropdown @command="handleActionCommand($event, row, $index)">
                 <el-button size="mini" type="primary" plain>
-                  更多功能<i class="el-icon-arrow-down el-icon--right" />
+                  更多功能<i class="el-icon-arrow-down el-icon--right"/>
                 </el-button>
                 <el-dropdown-menu>
-                  <slot name="actions-dropdown" :row="row" :index="$index" />
+                  <slot name="actions-dropdown" :row="row" :index="$index"/>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -95,50 +95,28 @@
       </DynamicTable>
     </el-card>
 
-    <!-- 新增弹窗 -->
+    <!-- 通用弹窗 -->
     <el-dialog
-      :title="addFormTitle"
-      :visible.sync="addDialogVisible"
-      width="600px"
-      :modal="false"
-      :close-on-click-modal="false"
+      :title="dialogTitle"
+      :visible.sync="dialogVisible"
+      :modal="true"
+      :close-on-click-modal="true"
+      :modal-append-to-body="false"
       class="form-dialog"
-      @close="handleAddDialogClose"
+      :fullscreen="isMobile"
+      :width="dialogWidth"
+      @close="handleDialogClose"
     >
       <DynamicFormWithApi
-        v-if="addDialogVisible"
-        ref="addForm"
-        :config-name="addFormConfigName"
-      >
-        <template #actions="{formData ,submit,cancel}">
-          <div class="dialog-actions">
-            <el-button @click="handleAddDialogClose">取消</el-button>
-            <el-button type="primary" @click="handleAddSubmit(formData)">保存</el-button>
-          </div>
-        </template>
-      </DynamicFormWithApi>
-    </el-dialog>
-
-    <!-- 编辑弹窗 -->
-    <el-dialog
-      :title="editFormTitle"
-      :visible.sync="editDialogVisible"
-      width="600px"
-      :modal="false"
-      :close-on-click-modal="false"
-      class="form-dialog"
-      @close="handleEditDialogClose"
-    >
-      <DynamicFormWithApi
-        v-if="editDialogVisible"
-        ref="editForm"
-        :config-name="editFormConfigName"
+        v-if="dialogVisible"
+        ref="commonForm"
+        :config-name="currentFormConfigName"
         :value="editFormData"
       >
         <template #actions="{formData ,submit,cancel}">
           <div class="dialog-actions">
-            <el-button @click="handleEditDialogClose">取消</el-button>
-            <el-button type="primary" @click="handleEditSubmit(formData)">保存</el-button>
+            <el-button @click="handleDialogClose">取消</el-button>
+            <el-button type="primary" @click="handleDialogSubmit(formData)">保存</el-button>
           </div>
         </template>
       </DynamicFormWithApi>
@@ -269,14 +247,42 @@ export default {
   data() {
     return {
       searchForm: {},
-      // 新增弹窗可见性
-      addDialogVisible: false,
-      // 编辑弹窗可见性
-      editDialogVisible: false,
+      // 通用弹窗可见性
+      dialogVisible: false,
+      // 弹窗类型 ('add' 或 'edit')
+      dialogType: 'add',
       // 编辑表单数据
       editFormData: {},
       // 内部使用的列配置
       internalColumns: []
+    }
+  },
+  computed: {
+    // 判断是否为移动设备
+    isMobile() {
+      return window.innerWidth <= 768
+    },
+
+    // 根据屏幕宽度动态计算弹窗宽度
+    dialogWidth() {
+      const width = window.innerWidth
+      if (width < 768) {
+        return '90%' // 小屏幕设备使用90%宽度
+      } else if (width < 1200) {
+        return '75%' // 中等屏幕设备使用固定600px
+      } else {
+        return '60%' // 大屏幕设备使用稍宽一些的720px
+      }
+    },
+
+    // 弹窗标题
+    dialogTitle() {
+      return this.dialogType === 'add' ? this.addFormTitle : this.editFormTitle
+    },
+
+    // 当前表单配置名称
+    currentFormConfigName() {
+      return this.dialogType === 'add' ? this.addFormConfigName : this.editFormConfigName
     }
   },
   watch: {
@@ -288,7 +294,21 @@ export default {
       immediate: true
     }
   },
+  mounted() {
+    // 监听窗口大小变化，以动态调整弹窗尺寸
+    window.addEventListener('resize', this.handleResize)
+  },
+  beforeDestroy() {
+    // 组件销毁前移除事件监听器
+    window.removeEventListener('resize', this.handleResize)
+  },
   methods: {
+    // 处理窗口大小变化
+    handleResize() {
+      // 通过触发更新来响应窗口大小变化
+      this.$forceUpdate()
+    },
+
     // 更新列配置的方法
     updateColumns(newColumns) {
       this.internalColumns = [...newColumns]
@@ -412,35 +432,56 @@ export default {
 
     // 显示新增弹窗
     showAddDialog() {
-      this.addDialogVisible = true
+      this.dialogType = 'add'
+      this.editFormData = {}
+      this.dialogVisible = true
     },
 
-    // 处理新增表单提交
-    async handleAddSubmit(formData) {
+    // 处理表单提交
+    async handleDialogSubmit(formData) {
       try {
-        // 如果提供了新增处理器，则调用它
-        if (this.addHandler && typeof this.addHandler === 'function') {
-          await this.addHandler(formData)
-          this.addDialogVisible = false
-          this.$emit('add-success', formData)
-          // 刷新表格数据
-          this.refresh()
+        if (this.dialogType === 'add') {
+          // 如果提供了新增处理器，则调用它
+          if (this.addHandler && typeof this.addHandler === 'function') {
+            await this.addHandler(formData)
+            this.dialogVisible = false
+            this.$emit('add-success', formData)
+            // 刷新表格数据
+            this.refresh()
+          } else {
+            console.warn('未提供 addHandler 方法')
+            this.$message.warning('未配置新增处理器')
+          }
         } else {
-          console.warn('未提供 addHandler 方法')
-          this.$message.warning('未配置新增处理器')
+          // 如果提供了编辑处理器，则调用它
+          if (this.editHandler && typeof this.editHandler === 'function') {
+            await this.editHandler(formData)
+            this.dialogVisible = false
+            this.$emit('edit-success', formData)
+            // 刷新表格数据
+            this.refresh()
+          } else {
+            console.warn('未提供 editHandler 方法')
+            this.$message.warning('未配置编辑处理器')
+          }
         }
       } catch (error) {
-        console.error('新增失败:', error)
-        this.$emit('add-error', error)
+        console.error('操作失败:', error)
+        if (this.dialogType === 'add') {
+          this.$emit('add-error', error)
+        } else {
+          this.$emit('edit-error', error)
+        }
       } finally {
-        this.addDialogVisible = false
+        this.dialogVisible = false
       }
     },
 
     // 显示编辑弹窗
     showEditDialog(rowData) {
-      this.editFormData = { ...rowData }
-      this.editDialogVisible = true
+      this.dialogType = 'edit'
+      this.editFormData = {...rowData}
+      this.dialogVisible = true
     },
 
     // 处理编辑
@@ -448,34 +489,12 @@ export default {
       this.showEditDialog(row)
     },
 
-    // 处理编辑表单提交
-    async handleEditSubmit(formData) {
-      try {
-        // 如果提供了编辑处理器，则调用它
-        if (this.editHandler && typeof this.editHandler === 'function') {
-          await this.editHandler(formData)
-          this.editDialogVisible = false
-          this.$emit('edit-success', formData)
-          // 刷新表格数据
-          this.refresh()
-        } else {
-          console.warn('未提供 editHandler 方法')
-          this.$message.warning('未配置编辑处理器')
-        }
-      } catch (error) {
-        console.error('编辑失败:', error)
-        this.$emit('edit-error', error)
-      } finally {
-        this.editDialogVisible = false
-      }
-    },
-
     handleDelete(row, index) {
       this.$confirm(this.deleteConfirmText(row, index), '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         // 如果提供了删除处理器，则调用它
         if (this.deleteHandler && typeof this.deleteHandler === 'function') {
           await this.deleteHandler(row)
@@ -495,21 +514,18 @@ export default {
     // 处理操作命令
     handleActionCommand(command, row, index) {
       // 这里可以处理下拉菜单中的命令
-      this.$emit('action-command', { command, row, index })
+      this.$emit('action-command', {command, row, index})
     },
 
-    // 处理新增弹窗关闭
-    handleAddDialogClose() {
-      this.$refs.addForm && this.$refs.addForm.resetForm()
-      this.$emit('add-cancel')
-      this.addDialogVisible = false
-    },
-
-    // 处理编辑弹窗关闭
-    handleEditDialogClose() {
-      this.$refs.editForm && this.$refs.editForm.resetForm()
-      this.$emit('edit-cancel')
-      this.editDialogVisible = false
+    // 处理弹窗关闭
+    handleDialogClose() {
+      this.$refs.commonForm && this.$refs.commonForm.resetForm()
+      if (this.dialogType === 'add') {
+        this.$emit('add-cancel')
+      } else {
+        this.$emit('edit-cancel')
+      }
+      this.dialogVisible = false
     }
   }
 }
@@ -595,6 +611,78 @@ export default {
   .form-dialog {
     ::v-deep .el-dialog__body {
       padding: 20px 30px;
+    }
+
+    ::v-deep .el-dialog__header {
+      border-bottom: 1px solid #eee;
+      padding: 15px 20px;
+    }
+
+    ::v-deep .el-dialog__footer {
+      border-top: 1px solid #eee;
+      padding: 15px 20px;
+    }
+
+    // 全屏弹窗样式
+    ::v-deep .el-dialog.is-fullscreen {
+      border-radius: 0;
+
+      .el-dialog__header {
+        border-bottom: 1px solid #eee;
+        padding: 15px 20px;
+      }
+
+      .el-dialog__body {
+        padding: 20px;
+        overflow-y: auto;
+      }
+
+      .el-dialog__footer {
+        border-top: 1px solid #eee;
+        padding: 15px 20px;
+      }
+    }
+  }
+
+  // 移动端适配
+  @media (max-width: 768px) {
+    padding: 10px;
+
+    .header-section {
+      margin-bottom: 15px;
+
+      .header-content {
+        .main-title {
+          font-size: 20px;
+        }
+      }
+    }
+
+    .search-card, .table-card {
+      ::v-deep .el-card__body {
+        padding: 15px;
+      }
+    }
+
+    .table-card {
+      ::v-deep .el-card__body {
+        padding: 15px 5px;
+      }
+    }
+
+    .table-actions {
+      gap: 6px;
+
+      ::v-deep .el-button {
+        padding: 8px 12px;
+        font-size: 12px;
+      }
+    }
+
+    .form-dialog {
+      ::v-deep .el-dialog__body {
+        padding: 15px 20px;
+      }
     }
   }
 }
