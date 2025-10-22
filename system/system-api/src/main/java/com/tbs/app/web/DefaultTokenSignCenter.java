@@ -1,6 +1,7 @@
 package com.tbs.app.web;
 
 import com.tbs.app.service.token.ISystemTokenService;
+import com.tbs.app.web.model.SimpleTokenModel;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.UuidUtil;
@@ -17,7 +18,6 @@ import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.AbstractTokenIssuanceCenter;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
-import com.tbs.app.web.model.SimpleTokenModel;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -62,7 +62,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
             EnumUtil.valueOf(TokenStatusEnum.class, entity.getFlag()),
             EnumUtil.valueOf(TokenTypeEnum.class, entity.getTokenType()), entity.getExpireTime(),
             entity.getCreateTime(), EnumUtil.valueOf(TokenCreateTypeEnum.class, entity.getCreateType()),
-            entity.getMacAddress(), entity.getIpAddress(), entity.getSessionId());
+            entity.getSessionId(), entity.getMacAddress(), entity.getIpAddress());
     }
 
     /**
@@ -179,8 +179,8 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
         return new SimpleTokenModel(UuidUtil.getInstance().getUuidString(), form.getUserDetails().getUsername(),
             TokenStatusEnum.ACTIVE, EnumUtil.valueOf(TokenTypeEnum.class, form.getTokenType()),
             recommendExpireTime(now, form.getTokenType()), now,
-            EnumUtil.valueOf(TokenCreateTypeEnum.class, form.getTokenCreateType()), NetUtil.getMac(request),
-            NetUtil.getIp(request), form.getSessionId());
+            EnumUtil.valueOf(TokenCreateTypeEnum.class, form.getTokenCreateType()), form.getSessionId(),
+            NetUtil.getMac(request), NetUtil.getIp(request));
     }
 
     /**

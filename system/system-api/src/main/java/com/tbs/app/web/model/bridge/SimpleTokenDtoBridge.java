@@ -1,12 +1,12 @@
 package com.tbs.app.web.model.bridge;
 
+import com.tbs.app.web.model.SimpleTokenModel;
+import com.tbs.app.web.model.dto.TokenModelDto;
 import com.tbs.common.data.IDataBridge;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
-import com.tbs.app.web.model.SimpleTokenModel;
-import com.tbs.app.web.model.dto.TokenModelDto;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
