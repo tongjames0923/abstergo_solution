@@ -127,7 +127,7 @@
       :layout="paginationLayout"
       :page-sizes="pageSizes"
       :page-size="pageParams.size"
-      :total="total"
+      :total="computedTotal"
       :current-page="pageParams.page"
       :pager-count="pagerCount"
       :background="paginationBackground"
@@ -268,6 +268,11 @@ export default {
       type: Boolean,
       default: true
     },
+    // 数据总条数（支持从外部传入）
+    total: {
+      type: Number,
+      default: 0
+    },
     // 操作列配置
     actions: {
       type: Array,
@@ -300,8 +305,8 @@ export default {
       tableData: [],
       // 加载状态
       loading: false,
-      // 数据总条数
-      total: 0,
+      // 内部使用的数据总条数
+      internalTotal: 0,
       // 分页参数
       pageParams: {
         page: 1,
@@ -317,6 +322,12 @@ export default {
       selectionData: [],
       // 内部使用的列配置
       internalColumns: []
+    }
+  },
+  computed: {
+    // 计算总条数，优先使用外部传入的total，否则使用内部的internalTotal
+    computedTotal() {
+      return this.total || this.internalTotal
     }
   },
   watch: {
@@ -387,13 +398,13 @@ export default {
         // 处理返回结果
         if (result && typeof result === 'object') {
           this.tableData = Array.isArray(result.data) ? result.data : []
-          this.total = result.total || 0
+          this.internalTotal = result.total || 0
 
           // 更新父组件的数据
           this.$emit('update:data', this.tableData)
         } else {
           this.tableData = []
-          this.total = 0
+          this.internalTotal = 0
         }
 
         // 触发加载成功事件
@@ -401,7 +412,7 @@ export default {
       } catch (error) {
         // 清空数据
         this.tableData = []
-        this.total = 0
+        this.internalTotal = 0
 
         // 触发加载失败事件
         this.$emit('load-error', error)

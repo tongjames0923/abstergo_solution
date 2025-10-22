@@ -83,78 +83,10 @@
       class="login-info-dialog"
       @close="handleLoginInfoDialogClose"
     >
-      <!-- 第一层：会话列表 -->
-      <div v-if="!showTokens">
-        <div style="margin-bottom: 10px;">
-          <el-button v-if="showTokens" size="mini" @click="backToSessions">返回会话列表</el-button>
-        </div>
-        <DynamicTable
-          :data="loginSessions"
-          :columns="sessionColumns"
-          :pagination="false"
-          :border="true"
-          :stripe="true"
-          @row-click="handleSessionRowClick"
-        >
-          <template #actions="{ row }">
-            <el-button size="mini" type="primary" @click.stop="showSessionTokens(row.sessionId)">
-              查看Token
-            </el-button>
-          </template>
-        </DynamicTable>
-      </div>
-
-      <!-- 第二层：Token列表 -->
-      <div v-else>
-        <div style="margin-bottom: 10px;">
-          <el-button size="mini" @click="backToSessions">返回会话列表</el-button>
-          <span style="margin-left: 10px;">会话ID:
-            <el-tooltip :content="currentSessionId" placement="top">
-              <span>{{ formatToken(currentSessionId) }}</span>
-            </el-tooltip>
-          </span>
-        </div>
-        <DynamicTable
-          :data="sessionTokens"
-          :columns="tokenColumns"
-          :pagination="false"
-          :border="true"
-          :stripe="true"
-        >
-          <template #tokenType="{ row }">
-            <el-tag
-              size="mini"
-              :type="row.tokenType === 'ACCESS_TOKEN' ? 'success' : row.tokenType === 'REFRESH_TOKEN' ? 'warning' : 'info'"
-            >
-              {{
-                row.tokenType === 'ACCESS_TOKEN' ? '访问令牌' : row.tokenType === 'REFRESH_TOKEN' ? '刷新令牌' : row.tokenType || '未知类型'
-              }}
-            </el-tag>
-          </template>
-
-          <template #status="{ row }">
-            <el-tag
-              size="mini"
-              :type="row.status === 'ACTIVE' ? 'success' : row.status === 'INACTIVE' ? 'info' : row.status === 'REVOKE' ? 'danger' : row.status === 'EXPIRED' ? 'warning' : 'info'"
-            >
-              {{
-                row.status === 'ACTIVE' ? '活跃' : row.status === 'INACTIVE' ? '无效' : row.status === 'REVOKE' ? '已撤销' : row.status === 'EXPIRED' ? '已过期' : row.status || '未知状态'
-              }}
-            </el-tag>
-          </template>
-
-          <template #createType="{ row }">
-            <el-tag
-              size="mini"
-              :type="row.createType === 'LOGIN' ? 'primary' : row.createType === 'REFRESH' ? 'success' : 'info'"
-            >
-              {{
-                row.createType === 'LOGIN' ? '登录' : row.createType === 'REFRESH' ? '刷新' : row.createType || '未知'
-              }}
-            </el-tag>
-          </template>
-        </DynamicTable>
-      </div>
+      <UserLoginInfoView
+        v-if="loginInfoDialogVisible"
+        :user-id="currentUserId"
+      />
       <div slot="footer" class="dialog-footer">
         <el-button @click="loginInfoDialogVisible = false">关 闭</el-button>
       </div>
@@ -181,16 +113,9 @@
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
+import UserLoginInfoView from '@/components/UserAdminView/UserLoginInfoView.vue'
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import {
-  activateUser,
-  adminQueryUser,
-  deleteUser,
-  disableUser,
-  getTokensBySessionId,
-  getUserSessions,
-  saveUser
-} from '@/api/admin_user'
+import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
 import {rangeQueryTransform} from '@/utils/query-help'
 import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
 
@@ -199,6 +124,7 @@ export default {
   components: {
     QuickUseManagementView,
     UserRoleAdminView,
+    UserLoginInfoView,
     DynamicTable
   },
   data() {
@@ -216,6 +142,7 @@ export default {
     return {
       resetPasswordDialogVisible: false,
       roleManagementDialogVisible: false,
+      loginInfoDialogVisible: false,
       currentUserId: null,
       passwordForm: {
         id: undefined,
@@ -223,11 +150,6 @@ export default {
         password: '',
         confirmPassword: ''
       },
-      loginInfoDialogVisible: false,
-      loginSessions: [], // 会话列表
-      sessionTokens: [], // Token列表
-      showTokens: false, // 是否显示Token列表
-      currentSessionId: '', // 当前查看的会话ID
       passwordRules: {
         password: [
           { required: true, message: '请输入新密码', trigger: 'blur' },
@@ -237,93 +159,6 @@ export default {
           { required: true, validator: validateConfirmPassword, trigger: 'blur' }
         ]
       },
-      // 会话列表列配置
-      sessionColumns: [
-        {
-          prop: 'sessionId',
-          label: '会话ID',
-          minWidth: 180,
-          showOverflowTooltip: true,
-          formatter: (row) => this.formatToken(row.sessionId)
-        },
-        {
-          prop: 'createTime',
-          label: '登录时间',
-          width: 160
-        },
-        {
-          prop: 'tokenCount',
-          label: '令牌数',
-          width: 80
-        },
-        {
-          prop: 'activeRefreshTokenCount',
-          label: '有效刷新令牌',
-          width: 120
-        },
-        {
-          prop: 'online',
-          label: '状态',
-          width: 100,
-          formatter: (row) => row.online ? '在线' : '离线'
-        },
-        {
-          prop: 'lastActiveTime',
-          label: '最后活动时间',
-          width: 160
-        }
-      ],
-      // Token列表列配置
-      tokenColumns: [
-        {
-          prop: 'token',
-          label: 'Token',
-          minWidth: 180,
-          showOverflowTooltip: true,
-          formatter: (row) => this.formatToken(row.token)
-        },
-        {
-          prop: 'userName',
-          label: '用户名',
-          width: 120
-        },
-        {
-          prop: 'tokenType',
-          label: 'Token类型',
-          width: 120,
-          slot: 'tokenType'
-        },
-        {
-          prop: 'status',
-          label: '状态',
-          width: 100,
-          slot: 'status'
-        },
-        {
-          prop: 'createTime',
-          label: '创建时间',
-          width: 160,
-          formatter: (row) => row.createTime ? row.createTime.replace(' ', '\n') : ''
-        },
-        {
-          prop: 'expireTime',
-          label: '过期时间',
-          width: 160,
-          formatter: (row) => row.expireTime ? row.expireTime.replace(' ', '\n') : ''
-        },
-        {
-          prop: 'ipAddr',
-          label: 'IP地址',
-          width: 140,
-          formatter: (row) => row.ipAddr || '无'
-        },
-        {
-          prop: 'createType',
-          label: '创建类型',
-          width: 100,
-          slot: 'createType'
-        }
-      ],
       columns: [
         { prop: 'id', label: 'ID', width: 80 },
         {
@@ -359,33 +194,6 @@ export default {
     }
   },
   methods: {
-    /**
-     * 处理会话行点击事件
-     */
-    handleSessionRowClick(row) {
-      // 可以在这里添加行点击事件的处理逻辑
-      console.log('点击了会话行:', row)
-    },
-
-    /**
-     * 格式化Token显示，前3后4，中间用*代替
-     * @param token 完整的Token字符串
-     * @returns 格式化后的Token显示字符串
-     */
-    formatToken(token) {
-      if (!token) return ''
-
-      // 如果Token长度小于等于7，则直接显示，不进行隐藏处理
-      if (token.length <= 7) {
-        return token
-      }
-
-      // 取前3位和后4位，中间用****代替
-      const prefix = token.substring(0, 3)
-      const suffix = token.substring(token.length - 4)
-      return `${prefix}****${suffix}`
-    },
-
     userEditFormKey() {
       return userEditFormKey
     },
@@ -397,44 +205,13 @@ export default {
     },
 
     async handleShowLoginInfo(row) {
-      try {
-        const { data } = await getUserSessions(row.id)
-        // 使用新的会话数据结构
-        this.loginSessions = data || []
-        this.showTokens = false
-        this.loginInfoDialogVisible = true
-      } catch (error) {
-        console.error('获取登录信息失败:', error)
-        this.$message.error('获取登录信息失败')
-      }
+      this.currentUserId = row.id
+      this.loginInfoDialogVisible = true
     },
 
     handleLoginInfoDialogClose() {
-      this.loginSessions = []
-      this.sessionTokens = []
-      this.showTokens = false
-      this.currentSessionId = ''
+      this.currentUserId = null
       this.loginInfoDialogVisible = false
-    },
-
-    // 显示会话下的Token列表
-    async showSessionTokens(sessionId) {
-      try {
-        const { data } = await getTokensBySessionId(sessionId)
-        this.sessionTokens = data || []
-        this.currentSessionId = sessionId
-        this.showTokens = true
-      } catch (error) {
-        console.error('获取Token信息失败:', error)
-        this.$message.error('获取Token信息失败')
-      }
-    },
-
-    // 返回会话列表
-    backToSessions() {
-      this.showTokens = false
-      this.sessionTokens = []
-      this.currentSessionId = ''
     },
 
     saveUser,
