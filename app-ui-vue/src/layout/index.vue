@@ -108,7 +108,7 @@ export default {
   position: relative;
   height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e4edf9 100%);
+  background: linear-gradient(135deg, #f5f7fa 0%, #adccf5 100%);
   overflow: hidden; // 禁止整个页面滚动
 
   &.mobile.openSidebar {
@@ -257,8 +257,8 @@ export default {
   width: 100%;
   transition: none !important;
   margin-left: 0 !important;
-  padding-left: calc(#{$sideBarCollapseWidth} + 20px); // 减少左侧内边距
-  padding-right: 20px; // 添加右侧内边距
+  padding-left: $sideBarCollapseWidth; // 减少左侧内边距
+  padding-right: 8px;
   box-sizing: border-box;
   overflow: hidden; // 禁止主容器滚动，让滚动发生在app-main内部
   background: transparent;
