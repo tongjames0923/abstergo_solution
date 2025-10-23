@@ -144,12 +144,12 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         getTimeAuditServiceSupport().ifPresent((s) -> {
             if (r.get().isPresent()) {
                 if (flag == UPDATE) {
-                    r.set(s.triggerUpdate(r.get().get(), new Date()));
+                    r.set(s.triggerUpdateTime(r.get().get(), new Date()));
                 } else if (flag == CREATE) {
-                    r.set(s.triggerCreate(r.get().get(), new Date()));
+                    r.set(s.triggerCreateTime(r.get().get(), new Date()));
                 }
                 if (flag == DELETE) {
-                    r.set(s.triggerDelete(r.get().get(), new Date()));
+                    r.set(s.triggerDeleteTime(r.get().get(), new Date()));
                 }
             } else {
                 log.warn("实体数据不存在，无法处理时间审计");
@@ -158,16 +158,16 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         getOperatorAuditServiceSupport().ifPresent((s) -> {
             if (r.get().isPresent()) {
                 if (flag == UPDATE) {
-                    r.set(s.triggerUpdate(r.get().get(),
+                    r.set(s.triggerUpdateOperator(r.get().get(),
                         AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
                             : null));
                 } else if (flag == CREATE) {
-                    r.set(s.triggerCreate(r.get().get(),
+                    r.set(s.triggerCreateOperator(r.get().get(),
                         AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
                             : null));
                 }
                 if (flag == DELETE) {
-                    r.set(s.triggerDelete(r.get().get(),
+                    r.set(s.triggerDeleteOperator(r.get().get(),
                         AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
                             : null));
                 }

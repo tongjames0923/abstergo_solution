@@ -349,7 +349,6 @@ public class ViewServiceImpl implements IViewService {
         }).collect(Collectors.toList());
     }
 
-
     private static @NotNull DynamicFormConfigrationEntity createDynamicFormEntity(@NotNull FormConfig formConfig) {
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity = new DynamicFormConfigrationEntity();
         dynamicFormConfigrationEntity.setTitle(formConfig.getTitle());

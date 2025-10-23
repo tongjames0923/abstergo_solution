@@ -2,7 +2,6 @@ package com.tbs.app.service.impl.role;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.role.ISystemRoleService;
-
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
@@ -12,6 +11,7 @@ import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.mapper.SystemRoleMapper;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -19,7 +19,9 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author abstergo
@@ -28,7 +30,7 @@ import java.util.List;
 @Slf4j
 public class SimpleSystemRoleServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRoleEntity, Long, SystemRoleMapper>
-    implements ISystemRoleService, IStartup {
+    implements ISystemRoleService, IStartup, ITimeAuditService<SystemRoleEntity, Long> {
 
     @Resource
     SystemRoleMapper systemRoleMapper;
@@ -59,14 +61,12 @@ public class SimpleSystemRoleServiceImpl
     @Override
     protected SystemRoleEntity insertNew(SystemRoleEntity entity) {
         entity.setFlag(SystemRoleFlagEnum.ACTIVE.getCode());
-        entity.setCreateTime(new java.util.Date());
         getMapper().insert(entity);
         return entity;
     }
 
     @Override
     protected List<SystemRoleEntity> updateBy(SystemRoleEntity entity) {
-        entity.setUpdateTime(new java.util.Date());
         getMapper().updateByPrimaryKey(entity);
         return List.of(entity);
     }
@@ -133,5 +133,28 @@ public class SimpleSystemRoleServiceImpl
             log.info("系统角色已存在...");
             getMapper().updateByPrimaryKey(RoleConstants.SUPER_ADMIN_ROLE);
         }
+    }
+
+    @Override
+    protected Optional<ITimeAuditService<SystemRoleEntity, Long>> getTimeAuditServiceSupport() {
+        return Optional.of(this);
+    }
+
+    @Override
+    public SystemRoleEntity triggerCreateTime(SystemRoleEntity entity, Date createTime) {
+
+        entity.setCreateTime(createTime);
+        return entity;
+    }
+
+    @Override
+    public SystemRoleEntity triggerUpdateTime(SystemRoleEntity entity, Date updateTime) {
+        entity.setUpdateTime(updateTime);
+        return entity;
+    }
+
+    @Override
+    public SystemRoleEntity triggerDeleteTime(SystemRoleEntity entity, Date deleteTime) {
+        return entity;
     }
 }

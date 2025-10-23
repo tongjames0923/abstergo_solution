@@ -15,7 +15,7 @@ public interface ITimeAuditService<E, K> {
      * @param entity
      * @return
      */
-    E triggerCreate(E entity, Date createTime);
+    E triggerCreateTime(E entity, Date createTime);
 
     /**
      * 触发更新审计
@@ -23,7 +23,7 @@ public interface ITimeAuditService<E, K> {
      * @param entity
      * @return
      */
-    E triggerUpdate(E entity, Date updateTime);
+    E triggerUpdateTime(E entity, Date updateTime);
 
     /**
      * 触发删除审计
@@ -31,5 +31,5 @@ public interface ITimeAuditService<E, K> {
      * @param entity
      * @return
      */
-    E triggerDelete(E entity, Date deleteTime);
+    E triggerDeleteTime(E entity, Date deleteTime);
 }

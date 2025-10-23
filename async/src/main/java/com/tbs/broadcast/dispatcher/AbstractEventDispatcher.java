@@ -119,7 +119,7 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
 		while (started) {
 			ValueWrapper<IPublishResult> iPublishResult = new ValueWrapper<>();
 			try {
-				iPublishResult.set(getEventBus().nextUnhandledEvent(Duration.ofMinutes(15)));
+				iPublishResult.set(getEventBus().nextUnhandledEvent(Duration.ofSeconds(15)));
 				iPublishResult.get().ifPresentOrElse((v) -> {
 					handleEvent(v);
 				}, () -> {

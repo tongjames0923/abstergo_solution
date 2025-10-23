@@ -13,6 +13,7 @@ import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.security.user.IPasswordEncrypt;
@@ -26,6 +27,7 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -36,7 +38,7 @@ import java.util.stream.Collectors;
  */
 public class SimpleSystemUserServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUserEntity, Long, SystemUserMapper>
-    implements ISystemUserService {
+    implements ISystemUserService, ITimeAuditService<SystemUserEntity, Long> {
 
     @Resource
     IUserNamePasswordValidator userNamePasswordValidator;
@@ -61,7 +63,6 @@ public class SimpleSystemUserServiceImpl
         AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickName()), "昵称格式错误");
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
-        entity.setCreateTime(new Date());
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
         getMapper().insert(entity);
         relationService.enableRole(entity.getId(), RoleConstants.NORMAL_USER_ROLE_ID);
@@ -70,92 +71,115 @@ public class SimpleSystemUserServiceImpl
 
     @Override
     protected List<SystemUserEntity> updateBy(SystemUserEntity entity) {
-        entity.setUpdateTime(new Date());
         getMapper().updateByPrimaryKey(entity);
         return List.of(entity);
     }
 
     @Caching(evict = {@CacheEvict(value = "system_user", key = "#entity.userName",
-        condition ="#entity!=null&&#entity.userName!=null")
-})
+        condition = "#entity!=null&&#entity.userName!=null")})
 
-@Override
-public List<SystemUserEntity> save(SystemUserEntity entity) {
-    return super.save(entity);
-}
+    @Override
+    public List<SystemUserEntity> save(SystemUserEntity entity) {
+        return super.save(entity);
+    }
 
-@Override
-protected SystemUserEntity compareAndUpdateValue(SystemUserEntity systemUserEntity,
-    SystemUserEntity oldSystemUserEntity) {
-    //        if (StrUtil.isNotEmpty(systemUserEntity.getUserName())) {
-    //            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUserName()),
-    //                "用户名格式错误");
-    //            oldSystemUserEntity.setUserName(systemUserEntity.getUserName());
-    //        }
-    if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
-        AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()), "密码格式错误");
-        if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
-            oldSystemUserEntity.setPassword(encrypt.encrypt(systemUserEntity.getPassword()));
-            AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
+    @Override
+    protected SystemUserEntity compareAndUpdateValue(SystemUserEntity systemUserEntity,
+        SystemUserEntity oldSystemUserEntity) {
+        //        if (StrUtil.isNotEmpty(systemUserEntity.getUserName())) {
+        //            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUserName()),
+        //                "用户名格式错误");
+        //            oldSystemUserEntity.setUserName(systemUserEntity.getUserName());
+        //        }
+        if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()),
+                "密码格式错误");
+            if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
+                oldSystemUserEntity.setPassword(encrypt.encrypt(systemUserEntity.getPassword()));
+                AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
+            }
         }
-    }
-    if (StrUtil.isNotEmpty(systemUserEntity.getNickName())) {
-        AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUserEntity.getNickName()), "昵称格式错误");
-        oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
-    }
-    if (systemUserEntity.getFlag() != null) {
-        if (systemUserEntity.getFlag() != oldSystemUserEntity.getFlag()) {
-            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()),
-                "用户状态值异常，不存在{}值", systemUserEntity.getFlag());
-            oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
-            AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
+        if (StrUtil.isNotEmpty(systemUserEntity.getNickName())) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUserEntity.getNickName()),
+                "昵称格式错误");
+            oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
         }
+        if (systemUserEntity.getFlag() != null) {
+            if (systemUserEntity.getFlag() != oldSystemUserEntity.getFlag()) {
+                AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()),
+                    "用户状态值异常，不存在{}值", systemUserEntity.getFlag());
+                oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
+                AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
+            }
+        }
+        if (StrUtil.isNotEmpty(systemUserEntity.getAvatar())) {
+            oldSystemUserEntity.setAvatar(systemUserEntity.getAvatar());
+        }
+        if (StrUtil.isNotEmpty(systemUserEntity.getRemark())) {
+            oldSystemUserEntity.setRemark(systemUserEntity.getRemark());
+        }
+        return oldSystemUserEntity;
     }
-    if (StrUtil.isNotEmpty(systemUserEntity.getAvatar())) {
-        oldSystemUserEntity.setAvatar(systemUserEntity.getAvatar());
+
+    @Cacheable(value = "system_user", key = "#id")
+    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public SystemUserEntity queryById(Long id) {
+        return super.queryById(id);
     }
-    if (StrUtil.isNotEmpty(systemUserEntity.getRemark())) {
-        oldSystemUserEntity.setRemark(systemUserEntity.getRemark());
+
+    @Override
+    protected SystemUserMapper getMapper() {
+        return mapper;
     }
-    return oldSystemUserEntity;
-}
 
-@Cacheable(value = "system_user", key = "#id")
-@ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
-@Override
-public SystemUserEntity queryById(Long id) {
-    return super.queryById(id);
-}
-
-@Override
-protected SystemUserMapper getMapper() {
-    return mapper;
-}
-
-@Override
-protected SystemUserEntity newEntity() {
-    return new SystemUserEntity();
-}
-
-@Override
-protected Integer getFlagDisable() {
-    return SystemUserStatusEnum.DISABLED.getCode();
-}
-
-@Override
-public List<SystemUserEntity> queryByUserName(String username) {
-    return ((ISystemUserService)getInstance()).queryUserIdsByUserName(username).stream().map(this::queryById)
-        .collect(Collectors.toList());
-}
-
-@Cacheable(cacheNames = "user_name_id_map", key = "#username")
-@ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
-@Override
-public List<Long> queryUserIdsByUserName(String username) {
-    var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username).pour().fetch();
-    if (CollUtil.isEmpty(users)) {
-        return new ArrayList<>();
+    @Override
+    protected SystemUserEntity newEntity() {
+        return new SystemUserEntity();
     }
-    return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
-}
+
+    @Override
+    protected Integer getFlagDisable() {
+        return SystemUserStatusEnum.DISABLED.getCode();
+    }
+
+    @Override
+    public List<SystemUserEntity> queryByUserName(String username) {
+        return ((ISystemUserService)getInstance()).queryUserIdsByUserName(username).stream().map(this::queryById)
+            .collect(Collectors.toList());
+    }
+
+    @Cacheable(cacheNames = "user_name_id_map", key = "#username")
+    @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public List<Long> queryUserIdsByUserName(String username) {
+        var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username).pour().fetch();
+        if (CollUtil.isEmpty(users)) {
+            return new ArrayList<>();
+        }
+        return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
+    }
+
+    @Override
+    protected Optional<ITimeAuditService<SystemUserEntity, Long>> getTimeAuditServiceSupport() {
+        return Optional.of(this);
+    }
+
+    @Override
+    public SystemUserEntity triggerCreateTime(SystemUserEntity entity, Date createTime) {
+        entity.setCreateTime(createTime);
+        return entity;
+    }
+
+    @Override
+    public SystemUserEntity triggerUpdateTime(SystemUserEntity entity, Date updateTime) {
+        entity.setUpdateTime(updateTime);
+        return entity;
+    }
+
+    @Override
+    public SystemUserEntity triggerDeleteTime(SystemUserEntity entity, Date deleteTime) {
+        entity.setUpdateTime(deleteTime);
+        return entity;
+    }
 }
