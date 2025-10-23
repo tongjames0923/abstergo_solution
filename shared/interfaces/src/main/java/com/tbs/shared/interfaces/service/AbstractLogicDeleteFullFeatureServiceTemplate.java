@@ -16,8 +16,6 @@ import java.util.Objects;
 public abstract class AbstractLogicDeleteFullFeatureServiceTemplate<T extends IIdentifiable<K> & IFlagable, K, M extends IFrameworkMapper<T, K>>
     extends AbstractFullFeatureServiceTemplate<T, K, M> {
 
-    private static final int BATCH_UPDATE_SIZE = 30;
-
     /**
      * 获取禁用的标志
      *
