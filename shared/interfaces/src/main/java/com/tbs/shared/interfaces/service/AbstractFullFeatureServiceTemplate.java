@@ -1,5 +1,6 @@
 package com.tbs.shared.interfaces.service;
 
+import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
@@ -9,10 +10,14 @@ import com.tbs.shared.util.PageUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
+import com.tbs.web.uitl.AuthUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -24,6 +29,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * @param <M> Mapper类型
  * @author abstergo
  */
+@Slf4j
 public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable<K>, K, M extends IFrameworkMapper<T, K>>
     extends AbstractService<T, K, M>
     implements ISearchableService<T, K>, ISaveableService<T, K>, IDeleteableService<T, K> {
@@ -70,7 +76,15 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public T deleteById(K id) {
-        return getInstance().handleDelete(id);
+        AssertUtil.notNull(id, "空Id无法被删除");
+        var entity = getInstance().queryById(id);
+        if (getInstance().isDeleted(entity)) {
+            return null;
+        }
+        var value = ValueWrapper.of(entity);
+        this.auditFunction(value, DELETE);
+        entity = getInstance().handleDelete(id);
+        return entity;
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -81,7 +95,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         }
         AtomicInteger atomicInteger = new AtomicInteger();
         ids.stream().forEach(id -> {
-            getInstance().handleDelete(id);
+            getInstance().deleteById(id);
             atomicInteger.incrementAndGet();
         });
 
@@ -92,16 +106,76 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Override
     public List<T> save(T entity) {
         AssertUtil.notNull(entity, "空对象无法被保存");
+        var r = ValueWrapper.of(entity);
         if (entity.getId() == null) {
-            T r = getInstance().insertNew(entity);
-            return List.of(r);
+            auditFunction(r, CREATE);
+            if (r.get().isPresent()) {
+                r.set(getInstance().insertNew(r.get().get()));
+            } else {
+                log.warn("实体数据不存在，无法保存");
+            }
+            if (r.get().isEmpty()) {
+                log.warn("实体数据不存在，无法保存");
+                return Collections.EMPTY_LIST;
+            } else {
+                return List.of(r.get().orElse(null));
+            }
+
         } else {
-            T oldEntity = getInstance().queryById(entity.getId());
-            AssertUtil.notNull(oldEntity, "实体数据不存在，无法更新");
-            T newEntity = getInstance().compareAndUpdateValue(entity, oldEntity);
-            List<T> r = getInstance().updateBy(newEntity);
-            return r;
+            r.set(getInstance().queryById(entity.getId()));
+            AssertUtil.notNull(r.get().isEmpty(), "实体数据不存在，无法更新");
+            r.set(getInstance().compareAndUpdateValue(entity, r.get().get()));
+            auditFunction(r, UPDATE);
+            if (r.get().isEmpty()) {
+                log.warn("实体数据不存在，无法保存");
+                return Collections.EMPTY_LIST;
+            } else {
+                r.set(CollUtil.first(getInstance().updateBy(r.get().get())));
+                return List.of(r.get().get());
+            }
         }
+    }
+
+    private static final int CREATE = 0;
+    private static final int UPDATE = 1;
+    private static final int DELETE = 2;
+
+    private void auditFunction(ValueWrapper<T> r, int flag) {
+        getTimeAuditServiceSupport().ifPresent((s) -> {
+            if (r.get().isPresent()) {
+                if (flag == UPDATE) {
+                    r.set(s.triggerUpdate(r.get().get(), new Date()));
+                } else if (flag == CREATE) {
+                    r.set(s.triggerCreate(r.get().get(), new Date()));
+                }
+                if (flag == DELETE) {
+                    r.set(s.triggerDelete(r.get().get(), new Date()));
+                }
+            } else {
+                log.warn("实体数据不存在，无法处理时间审计");
+            }
+        });
+        getOperatorAuditServiceSupport().ifPresent((s) -> {
+            if (r.get().isPresent()) {
+                if (flag == UPDATE) {
+                    r.set(s.triggerUpdate(r.get().get(),
+                        AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
+                            : null));
+                } else if (flag == CREATE) {
+                    r.set(s.triggerCreate(r.get().get(),
+                        AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
+                            : null));
+                }
+                if (flag == DELETE) {
+                    r.set(s.triggerDelete(r.get().get(),
+                        AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
+                            : null));
+                }
+
+            } else {
+                log.warn("实体数据不存在，无法处理操作人审计");
+            }
+        });
     }
 
     @Override

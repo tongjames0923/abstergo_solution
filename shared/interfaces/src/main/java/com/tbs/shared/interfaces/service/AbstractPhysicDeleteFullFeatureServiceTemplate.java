@@ -12,23 +12,28 @@ import org.springframework.transaction.annotation.Transactional;
  * @author tongj
  */
 public abstract class AbstractPhysicDeleteFullFeatureServiceTemplate<T extends IIdentifiable<K>, K, M extends IFrameworkMapper<T, K>>
-		extends AbstractFullFeatureServiceTemplate<T, K, M> {
+    extends AbstractFullFeatureServiceTemplate<T, K, M> {
 
-	private static final int BATCH_UPDATE_SIZE = 30;
+    private static final int BATCH_UPDATE_SIZE = 30;
 
-	/**
-	 * 获取禁用的标志
-	 *
-	 * @return
-	 */
-	protected abstract Integer getFlagDisable();
+    /**
+     * 获取禁用的标志
+     *
+     * @return
+     */
+    protected abstract Integer getFlagDisable();
 
-	@Transactional(rollbackFor = Exception.class)
-	@Override
-	protected T handleDelete(K entitys) {
-		T deleteEntity = getInstance().queryById(entitys);
-		AssertUtil.notNull(deleteEntity, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
-		getMapper().deleteByPrimaryKey(entitys);
-		return deleteEntity;
-	}
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    protected T handleDelete(K entitys) {
+        T deleteEntity = getInstance().queryById(entitys);
+        AssertUtil.notNull(deleteEntity, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
+        getMapper().deleteByPrimaryKey(entitys);
+        return deleteEntity;
+    }
+
+    @Override
+    public boolean isDeleted(T entity) {
+        return entity == null;
+    }
 }

@@ -5,7 +5,8 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.shared.pojo.IFlagable;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.mapper.IFrameworkMapper;
-import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Objects;
 
 /**
  * 逻辑删除的完整功能服务模板
@@ -13,24 +14,28 @@ import org.springframework.transaction.annotation.Transactional;
  * @author tongj
  */
 public abstract class AbstractLogicDeleteFullFeatureServiceTemplate<T extends IIdentifiable<K> & IFlagable, K, M extends IFrameworkMapper<T, K>>
-		extends AbstractFullFeatureServiceTemplate<T, K, M> {
+    extends AbstractFullFeatureServiceTemplate<T, K, M> {
 
-	private static final int BATCH_UPDATE_SIZE = 30;
+    private static final int BATCH_UPDATE_SIZE = 30;
 
-	/**
-	 * 获取禁用的标志
-	 *
-	 * @return
-	 */
-	protected abstract Integer getFlagDisable();
+    /**
+     * 获取禁用的标志
+     *
+     * @return
+     */
+    protected abstract Integer getFlagDisable();
 
-	@Transactional(rollbackFor = Exception.class)
-	@Override
-	protected T handleDelete(K entitys) {
+    @Override
+    protected T handleDelete(K entitys) {
         T disableEntitys = getInstance().queryById(entitys);
-		AssertUtil.notNull(disableEntitys, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
-		disableEntitys.setFlag(getFlagDisable());
+        AssertUtil.notNull(disableEntitys, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
+        disableEntitys.setFlag(getFlagDisable());
         getInstance().updateBy(disableEntitys);
-		return disableEntitys;
-	}
+        return disableEntitys;
+    }
+
+    @Override
+    public boolean isDeleted(T entity) {
+        return entity != null && Objects.equals(entity.getFlag(), getFlagDisable());
+    }
 }
