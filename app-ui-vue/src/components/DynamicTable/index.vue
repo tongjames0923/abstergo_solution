@@ -126,6 +126,7 @@
       class="dynamic-table__pagination"
       :layout="paginationLayout"
       :page-sizes="pageSizes"
+      hide-on-single-page
       :page-size="pageParams.size"
       :total="computedTotal"
       :current-page="pageParams.page"
@@ -297,6 +298,14 @@ export default {
     actionsAlign: {
       type: String,
       default: 'center'
+    },
+    currentPage: {
+      type: Number,
+      default: 1
+    },
+    pageSize: {
+      type: Number,
+      default: 10
     }
   },
   data() {
@@ -309,8 +318,8 @@ export default {
       internalTotal: 0,
       // 分页参数
       pageParams: {
-        page: 1,
-        size: 10
+        page: this.currentPage || 1,
+        size: this.pageSize || 10
       },
       // 排序参数
       sortParams: {},
@@ -458,6 +467,7 @@ export default {
     handleSizeChange(size) {
       this.pageParams.size = size
       this.pageParams.page = 1 // 重置到第一页
+      this.$emit('page-size-change', size)
       this.loadData()
     },
 
@@ -467,6 +477,7 @@ export default {
      */
     handleCurrentPageChange(page) {
       this.pageParams.page = page
+      this.$emit('current-page-change', page)
       this.loadData()
     },
 
