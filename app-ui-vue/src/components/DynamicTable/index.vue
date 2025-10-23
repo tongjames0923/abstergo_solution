@@ -355,6 +355,20 @@ export default {
         this.internalColumns = [...newColumns]
       },
       immediate: true
+    },
+    // 监听 currentPage 变化并更新 pageParams
+    currentPage: {
+      handler(newVal) {
+        this.pageParams.page = newVal
+      },
+      immediate: true
+    },
+    // 监听 pageSize 变化并更新 pageParams
+    pageSize: {
+      handler(newVal) {
+        this.pageParams.size = newVal
+      },
+      immediate: true
     }
   },
   created() {
@@ -467,7 +481,8 @@ export default {
     handleSizeChange(size) {
       this.pageParams.size = size
       this.pageParams.page = 1 // 重置到第一页
-      this.$emit('page-size-change', size)
+      this.$emit('update:pageSize', size)
+      this.$emit('update:currentPage', 1)
       this.loadData()
     },
 
@@ -477,7 +492,7 @@ export default {
      */
     handleCurrentPageChange(page) {
       this.pageParams.page = page
-      this.$emit('current-page-change', page)
+      this.$emit('update:currentPage', page)
       this.loadData()
     },
 

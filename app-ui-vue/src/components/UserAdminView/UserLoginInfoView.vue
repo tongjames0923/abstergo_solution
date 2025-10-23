@@ -114,10 +114,10 @@ export default {
       loadingTokens: false, // Token数据加载状态
       // 会话分页相关
       sessionCurrentPage: 1,
-      sessionPageSize: 10,
+      sessionPageSize: 5,
       // Token分页相关
       tokenCurrentPage: 1,
-      tokenPageSize: 10
+      tokenPageSize: 5
     }
   },
   computed: {
