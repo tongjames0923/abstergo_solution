@@ -48,11 +48,11 @@
         :total="sessionTokens.length"
         :page-size="tokenPageSize"
         :current-page="tokenCurrentPage"
-        @current-page-change="handleTokenPageChange"
-        @page-size-change="handleTokenSizeChange"
         :page-sizes="[10, 20, 50]"
         border
         stripe
+        @current-page-change="handleTokenPageChange"
+        @page-size-change="handleTokenSizeChange"
       >
         <template #tokenType="{ row }">
           <el-tag
@@ -91,7 +91,7 @@
 
 <script>
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import {getTokensBySessionId, getUserSessions} from '@/api/admin_user'
+import { getTokensBySessionId, getUserSessions } from '@/api/admin_user'
 
 export default {
   name: 'UserLoginInfoView',
@@ -114,10 +114,10 @@ export default {
       loadingTokens: false, // Token数据加载状态
       // 会话分页相关
       sessionCurrentPage: 1,
-      sessionPageSize: 5,
+      sessionPageSize: 10,
       // Token分页相关
       tokenCurrentPage: 1,
-      tokenPageSize: 5
+      tokenPageSize: 10
     }
   },
   computed: {

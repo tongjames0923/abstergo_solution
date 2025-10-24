@@ -483,6 +483,8 @@ export default {
       this.pageParams.page = 1 // 重置到第一页
       this.$emit('update:pageSize', size)
       this.$emit('update:currentPage', 1)
+      this.$emit('current-page-change', 1)
+      this.$emit('page-size-change', size)
       this.loadData()
     },
 
@@ -493,6 +495,7 @@ export default {
     handleCurrentPageChange(page) {
       this.pageParams.page = page
       this.$emit('update:currentPage', page)
+      this.$emit('current-page-change', page)
       this.loadData()
     },
 

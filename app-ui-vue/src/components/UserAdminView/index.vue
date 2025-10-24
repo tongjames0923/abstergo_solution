@@ -77,7 +77,7 @@
     <el-dialog
       title="用户登录信息"
       :visible.sync="loginInfoDialogVisible"
-      width="80%"
+      width="90%"
       :modal-append-to-body="false"
       :close-on-click-modal="false"
       class="login-info-dialog"
@@ -96,7 +96,7 @@
     <el-dialog
       title="权限管理"
       :visible.sync="roleManagementDialogVisible"
-      width="800px"
+      width="90%"
       :modal-append-to-body="false"
       :close-on-click-modal="false"
       class="role-dialog"

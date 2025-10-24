@@ -11,7 +11,7 @@
           @click="toggleExpand"
         >
           {{ isExpanded ? '收起' : '展开' }}
-          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
+          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'"/>
         </el-button>
       </slot>
     </div>
@@ -27,7 +27,7 @@
       v-on="formListeners"
     >
       <!-- 表单前内容 -->
-      <slot name="before-form" />
+      <slot name="before-form"/>
 
       <!-- 默认布局：根据配置自动生成 -->
       <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
@@ -109,7 +109,7 @@
                   v-else-if="field && field.type === 'url-image'"
                   :value="formData[(field && field.prop) || '']"
                   v-bind="field.props"
-                  class="dynamic-form-component"
+                  class="dynamic-form-component url-image-component"
                   @change="val => setFieldValue((field && field.prop) || '', val)"
                 />
                 <!-- 其他自定义组件 -->
@@ -137,7 +137,7 @@
       />
 
       <!-- 表单后内容 -->
-      <slot name="after-form" />
+      <slot name="after-form"/>
 
       <!-- 操作按钮 -->
       <div class="form-actions">
@@ -405,6 +405,11 @@ export default {
 
     // 获取字段栅格跨度
     getFieldSpan(field) {
+      // url-image 类型字段独占一行
+      if (field && field.type === 'url-image') {
+        return 24
+      }
+
       // 优先使用字段自身配置的span
       if (field && field.span !== undefined) {
         return field.span
@@ -416,6 +421,11 @@ export default {
 
     // 获取字段响应式栅格跨度
     getFieldResponsiveSpan(field, size) {
+      // url-image 类型字段在所有屏幕尺寸下都独占一行
+      if (field && field.type === 'url-image') {
+        return 24
+      }
+
       // 如果字段配置了特定尺寸的span，则使用该配置
       if (field && field.responsive && field.responsive[size]) {
         return field.responsive[size]
@@ -522,6 +532,11 @@ export default {
 
 .dynamic-form-component {
   width: var(--dynamic-form-component-width);
+}
+
+/* 为url-image组件设置特殊样式 */
+.dynamic-form-component.url-image-component {
+  width: 100%;
 }
 
 .date-range-picker {
