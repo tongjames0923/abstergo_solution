@@ -25,7 +25,8 @@
         <module>shared/interfaces</module>
         <module>system/system-api</module>
         <module>system/default-system-impl</module>
-        <module>cache</module>
+        <module>cache/api</module>
+        <module>cache/default-impl</module>
     </modules>
 
     <groupId>com.tbs</groupId>
