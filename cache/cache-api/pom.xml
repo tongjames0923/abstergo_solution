@@ -10,8 +10,8 @@
         <relativePath>../../pom.xml</relativePath>
     </parent>
 
-    <groupId>com.tbs.cache</groupId>
-    <artifactId>api</artifactId>
+    <groupId>com.tbs</groupId>
+    <artifactId>cache-api</artifactId>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
