@@ -22,8 +22,6 @@
         <module>redis-mod</module>
         <module>rabbitmq-mod</module>
         <module>shared</module>
-        <module>system/system-api</module>
-        <module>system/default-system-impl</module>
     </modules>
 
     <groupId>com.tbs</groupId>
