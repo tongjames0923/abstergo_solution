@@ -22,7 +22,6 @@
         <module>redis-mod</module>
         <module>rabbitmq-mod</module>
         <module>shared</module>
-        <module>shared/interfaces</module>
         <module>system/system-api</module>
         <module>system/default-system-impl</module>
     </modules>
@@ -205,12 +204,12 @@
             </dependency>
             <dependency>
                 <groupId>com.tbs.shared</groupId>
-                <artifactId>pojo</artifactId>
+                <artifactId>shared-pojo</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.tbs.shared</groupId>
-                <artifactId>interfaces</artifactId>
+                <artifactId>shared-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
