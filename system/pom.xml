@@ -19,17 +19,5 @@
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>com.tbs.shared</groupId>
-            <artifactId>interfaces</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>cache</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.tbs.shared</groupId>
-            <artifactId>pojo</artifactId>
-        </dependency>
     </dependencies>
 </project>

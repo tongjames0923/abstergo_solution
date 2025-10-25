@@ -16,13 +16,11 @@
         <module>web</module>
         <module>async</module>
         <module>common</module>
-        <module>cache</module>
         <module>sql</module>
         <module>system</module>
         <module>redis-mod</module>
         <module>rabbitmq-mod</module>
         <module>shared</module>
-        <module>shared/interfaces</module>
         <module>system/system-api</module>
         <module>system/default-system-impl</module>
         <module>cache</module>
@@ -101,11 +99,11 @@
             <version>${annotations.version}</version>
             <scope>compile</scope>
         </dependency>
-<!--        &lt;!&ndash; 添加Eureka客户端依赖 &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.springframework.cloud</groupId>-->
-<!--            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>-->
-<!--        </dependency>-->
+        <!--        &lt;!&ndash; 添加Eureka客户端依赖 &ndash;&gt;-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.springframework.cloud</groupId>-->
+        <!--            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>-->
+        <!--        </dependency>-->
 
         <dependency>
             <groupId>org.projectlombok</groupId>
@@ -206,12 +204,12 @@
             </dependency>
             <dependency>
                 <groupId>com.tbs.shared</groupId>
-                <artifactId>pojo</artifactId>
+                <artifactId>shared-pojo</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>com.tbs.shared</groupId>
-                <artifactId>interfaces</artifactId>
+                <artifactId>shared-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
 
