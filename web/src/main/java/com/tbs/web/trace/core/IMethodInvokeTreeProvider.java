@@ -1,6 +1,6 @@
 package com.tbs.web.trace.core;
 
-import com.tbs.common.tree.ITree;
+import com.tbs.struct.tree.api.ITree;
 
 /**
  * 方法调用树提供者

@@ -1,4 +1,4 @@
-package com.tbs.common.tree;
+package com.tbs.struct.tree.api;
 
 import java.util.List;
 

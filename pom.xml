@@ -22,6 +22,7 @@
         <module>redis-mod</module>
         <module>rabbitmq-mod</module>
         <module>shared</module>
+        <module>tree-struct</module>
     </modules>
 
     <groupId>com.tbs</groupId>

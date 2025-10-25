@@ -1,6 +1,6 @@
-package com.tbs.common.tree.impl;
+package com.tbs.struct.tree.model;
 
-import com.tbs.common.tree.ITreeNode;
+import com.tbs.struct.tree.api.ITreeNode;
 
 import java.util.LinkedList;
 import java.util.List;

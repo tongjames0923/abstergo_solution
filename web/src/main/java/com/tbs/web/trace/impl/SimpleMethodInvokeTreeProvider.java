@@ -1,10 +1,10 @@
 package com.tbs.web.trace.impl;
 
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.tree.ITree;
-import com.tbs.common.tree.ITreeNode;
-import com.tbs.common.tree.impl.MultiwayTree;
-import com.tbs.common.tree.impl.SimpleTreeNode;
+import com.tbs.struct.tree.api.ITree;
+import com.tbs.struct.tree.api.ITreeNode;
+import com.tbs.struct.tree.model.MultiwayTree;
+import com.tbs.struct.tree.model.SimpleTreeNode;
 import com.tbs.web.trace.core.IMethodInvokeTreeProvider;
 import com.tbs.web.trace.core.TraceObject;
 
