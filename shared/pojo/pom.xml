@@ -9,16 +9,16 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.tbs</groupId>
+    <groupId>com.tbs.shared</groupId>
     <version>1.0-SNAPSHOT</version>
-    <artifactId>shared-pojo</artifactId>
+    <artifactId>pojo</artifactId>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
-
+    
     <dependencies>
         <dependency>
             <groupId>com.tbs</groupId>

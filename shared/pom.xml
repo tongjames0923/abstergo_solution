@@ -13,10 +13,10 @@
     <version>1.0-SNAPSHOT</version>
     <artifactId>shared</artifactId>
     <packaging>pom</packaging>
-
+    
     <modules>
-        <module>shared-pojo</module>
-        <module>shared-api</module>
+        <module>pojo</module>
+        <module>interfaces</module>
     </modules>
 
     <properties>
