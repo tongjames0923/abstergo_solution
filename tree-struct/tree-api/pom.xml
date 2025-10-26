@@ -17,19 +17,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
     <dependencies>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>cache-api</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>async</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>common</artifactId>
-        </dependency>
+
     </dependencies>
 
 </project>
