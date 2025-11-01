@@ -14,44 +14,39 @@ public interface ITreeStore {
      *
      * @param treeStorable 树存储对象
      */
-    void store(ITreeStorable treeStorable, String parentTreeId);
+    void store(ITreeStorable treeStorable, String parentNodeId);
 
     /**
      * 获取树
      *
-     * @param treeId 树ID
+     * @param nodeId 树ID
      * @return 树存储对象
      */
-    List<ITreeStorable> getChildren(String treeId);
+    List<ITreeStorable> getChildren(String nodeId);
+
 
     /**
      * 获取树父节点
      *
-     * @param treeId 树ID
+     * @param nodeId 树ID
      * @return 树存储对象
      */
-    ITreeStorable getTreeParent(String treeId);
+    ITreeStorable getParentNode(String nodeId);
 
     /**
      * 删除树
      *
-     * @param treeId 树ID
+     * @param nodeId 树ID
      */
-    void delete(String treeId);
+    void delete(String nodeId);
 
     /**
      * 批量删除树
      *
-     * @param treeIds 树ID列表
+     * @param nodeIds 树ID列表
      */
-    void batchDelete(List<String> treeIds);
+    void batchDelete(List<String> nodeIds);
 
-    /**
-     * 批量存储树
-     *
-     * @param nodes 树存储对象列表
-     */
-    void batchStore(List<ITreeStorable> nodes);
 
     /**
      * 获取根节点
@@ -67,5 +62,13 @@ public interface ITreeStore {
      * @return 树组列表
      */
     List<String> listTreeGroups();
+
+    /**
+     * 判断树是否存在
+     *
+     * @param nodeId 树ID
+     * @return 树是否存在
+     */
+    boolean isExist(String nodeId);
 
 }

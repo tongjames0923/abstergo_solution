@@ -23,13 +23,13 @@ public interface ITreeStorable {
      *
      * @return
      */
-    String getTreeId();
+    String getNodeId();
 
     /**
      * 设置树ID
      *
-     * @param treeId
+     * @param nodeId
      */
-    void setTreeId(String treeId);
+    void setNodeId(String nodeId);
 
 }
