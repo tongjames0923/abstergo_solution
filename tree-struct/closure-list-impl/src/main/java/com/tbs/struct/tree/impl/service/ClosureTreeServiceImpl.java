@@ -296,8 +296,13 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         List<TreeRelationEntity> relationsToCreate = new ArrayList<>();
 
         for (TreeRelationEntity descendantRelation : descendantRelations) {
-            if (descendantRelation.getDescendantId().equals(nodeId)) {
-                continue; // 排除节点自身
+            // 为每个后代节点添加自己到自己的关系
+            if (!descendantRelation.getDescendantId().equals(nodeId)) { // 排除节点自身，因为已经添加过了
+                TreeRelationEntity selfRelation = new TreeRelationEntity();
+                selfRelation.setAncestorId(descendantRelation.getDescendantId());
+                selfRelation.setDescendantId(descendantRelation.getDescendantId());
+                selfRelation.setDepth(0);
+                relationsToCreate.add(selfRelation);
             }
 
             // 为每个祖先节点创建到当前后代节点的新关系
@@ -308,7 +313,6 @@ public class ClosureTreeServiceImpl implements ITreeStore {
                 newRelation.setDepth(newAncestorRelation.getDepth() + descendantRelation.getDepth());
                 relationsToCreate.add(newRelation);
             }
-
         }
 
         // 批量检查和插入关系
@@ -335,6 +339,9 @@ public class ClosureTreeServiceImpl implements ITreeStore {
             if (existingRelations.isEmpty()) {
                 uniqueRelations.add(relation);
             }
+        }
+        if (uniqueRelations.isEmpty()) {
+            return;
         }
         treeRelationMapper.insertList(uniqueRelations);
     }
