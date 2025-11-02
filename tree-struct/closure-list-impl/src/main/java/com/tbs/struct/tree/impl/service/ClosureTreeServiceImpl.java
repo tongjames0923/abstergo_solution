@@ -5,7 +5,6 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.sql.utils.TransactionUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.impl.entity.TreeNodeEntity;
@@ -47,6 +46,7 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         condition = "#parentNodeId!=null&&#parentNodeId.length()>0"),
         @CacheEvict(cacheNames = "tree_node_cache", key = "#treeStorable.nodeId",
             condition = "#treeStorable!=null&&#treeStorable.nodeId!=null&&#treeStorable.nodeId.length()>0")})
+    @Transactional(rollbackFor = RuntimeException.class)
     public void store(ITreeStorable treeStorable, String parentNodeId) {
         AssertUtil.notNull(treeStorable, "无法保存空节点");
         AssertUtil.hasText(treeStorable.getNodeId(), "无法保存空的节点id");
@@ -54,14 +54,11 @@ public class ClosureTreeServiceImpl implements ITreeStore {
 
         TreeNodeEntity parentNode = getTreeNode(parentNodeId);
         List<TreeNodeEntity> oldNodes = treeNodeMapper.getNodeById(treeStorable.getNodeId());
-
-        TransactionUtil.getInstance().executeTransaction(() -> {
-            if (CollUtil.isEmpty(oldNodes)) {
-                insertNewNode(treeStorable, parentNode);
-            } else {
-                updateExistingNode(treeStorable, parentNode, oldNodes);
-            }
-        });
+        if (CollUtil.isEmpty(oldNodes)) {
+            insertNewNode(treeStorable, parentNode);
+        } else {
+            updateExistingNode(treeStorable, parentNode, oldNodes);
+        }
     }
 
     /**
@@ -71,11 +68,11 @@ public class ClosureTreeServiceImpl implements ITreeStore {
      * @return 树节点实体
      */
     private TreeNodeEntity getTreeNode(String nodeId) {
-        if (StrUtil.isNotEmpty(nodeId)) {
-            List<TreeNodeEntity> parentNodes = treeNodeMapper.getNodeById(nodeId);
-            return CollUtil.first(parentNodes);
+        if (StrUtil.isEmpty(nodeId)) {
+            return null;
         }
-        return null;
+        List<TreeNodeEntity> parentNodes = treeNodeMapper.getNodeById(nodeId);
+        return CollUtil.first(parentNodes);
     }
 
     /**
@@ -174,13 +171,14 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         List<TreeRelationEntity> ancestorRelations = treeRelationMapper.selectAncestorsByDescendantId(parentId);
 
         for (TreeRelationEntity relation : ancestorRelations) {
-            if (!relation.getAncestorId().equals(parentId)) { // 排除父节点自身
-                TreeRelationEntity newRelation = new TreeRelationEntity();
-                newRelation.setAncestorId(relation.getAncestorId());
-                newRelation.setDescendantId(childId);
-                newRelation.setDepth(relation.getDepth() + 1);
-                treeRelationMapper.insert(newRelation);
+            if (relation.getAncestorId().equals(parentId)) {
+                continue; // 排除父节点自身
             }
+            TreeRelationEntity newRelation = new TreeRelationEntity();
+            newRelation.setAncestorId(relation.getAncestorId());
+            newRelation.setDescendantId(childId);
+            newRelation.setDepth(relation.getDepth() + 1);
+            treeRelationMapper.insert(newRelation);
         }
     }
 
@@ -273,13 +271,14 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         List<TreeRelationEntity> parentAncestorRelations =
             treeRelationMapper.selectAncestorsByDescendantId(parentNode.getId());
         for (TreeRelationEntity relation : parentAncestorRelations) {
-            if (!relation.getAncestorId().equals(parentNode.getId())) { // 排除父节点自身
-                TreeRelationEntity newRelation = new TreeRelationEntity();
-                newRelation.setAncestorId(relation.getAncestorId());
-                newRelation.setDescendantId(nodeId);
-                newRelation.setDepth(relation.getDepth() + 1);
-                treeRelationMapper.insert(newRelation);
+            if (relation.getAncestorId().equals(parentNode.getId())) {
+                continue; // 排除父节点自身
             }
+            TreeRelationEntity newRelation = new TreeRelationEntity();
+            newRelation.setAncestorId(relation.getAncestorId());
+            newRelation.setDescendantId(nodeId);
+            newRelation.setDepth(relation.getDepth() + 1);
+            treeRelationMapper.insert(newRelation);
         }
     }
 
@@ -297,16 +296,19 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         List<TreeRelationEntity> relationsToCreate = new ArrayList<>();
 
         for (TreeRelationEntity descendantRelation : descendantRelations) {
-            if (!descendantRelation.getDescendantId().equals(nodeId)) { // 排除节点自身
-                // 为每个祖先节点创建到当前后代节点的新关系
-                for (TreeRelationEntity newAncestorRelation : newAncestorRelations) {
-                    TreeRelationEntity newRelation = new TreeRelationEntity();
-                    newRelation.setAncestorId(newAncestorRelation.getAncestorId());
-                    newRelation.setDescendantId(descendantRelation.getDescendantId());
-                    newRelation.setDepth(newAncestorRelation.getDepth() + descendantRelation.getDepth());
-                    relationsToCreate.add(newRelation);
-                }
+            if (descendantRelation.getDescendantId().equals(nodeId)) {
+                continue; // 排除节点自身
             }
+
+            // 为每个祖先节点创建到当前后代节点的新关系
+            for (TreeRelationEntity newAncestorRelation : newAncestorRelations) {
+                TreeRelationEntity newRelation = new TreeRelationEntity();
+                newRelation.setAncestorId(newAncestorRelation.getAncestorId());
+                newRelation.setDescendantId(descendantRelation.getDescendantId());
+                newRelation.setDepth(newAncestorRelation.getDepth() + descendantRelation.getDepth());
+                relationsToCreate.add(newRelation);
+            }
+
         }
 
         // 批量检查和插入关系
