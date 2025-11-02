@@ -55,6 +55,12 @@ public class PublicTestController extends BaseController {
         return AjaxUtil.getInstance().success(store.getParentNodes(nodeId));
     }
 
+    @PostMapping("/deleteNode")
+    public AjaxResult deleteNode(String nodeId) {
+        store.delete(nodeId);
+        return AjaxUtil.getInstance().success(null);
+    }
+
     //	@Resource
     //	TestService service;
     //

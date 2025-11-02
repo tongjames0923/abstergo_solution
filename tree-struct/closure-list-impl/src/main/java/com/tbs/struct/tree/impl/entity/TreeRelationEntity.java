@@ -6,7 +6,8 @@ import javax.persistence.*;
 import java.io.Serializable;
 
 @Data
-@Table(name = "tree_closure", uniqueConstraints = {@UniqueConstraint(columnNames = {"ancestor_id", "descendant_id"})})
+@Table(name = "tree_closure", uniqueConstraints = {@UniqueConstraint(columnNames = {"ancestor_id", "descendant_id"})},
+    indexes = {@Index(columnList = "ancestor_id"), @Index(columnList = "descendant_id"), @Index(columnList = "depth")})
 @Entity
 public class TreeRelationEntity implements Serializable {
     private static final long serialVersionUID = 1L;

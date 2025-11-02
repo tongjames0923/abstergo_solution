@@ -327,7 +327,7 @@ public class ClosureTreeServiceImpl implements ITreeStore {
             model.setDepth(relation.getDepth());
             model.setTreeGroup(node.getGroupName());
             return model;
-        }).collect(Collectors.toList());
+        }).sorted((o1, o2) -> o2.getDepth() - o1.getDepth()).collect(Collectors.toList());
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
