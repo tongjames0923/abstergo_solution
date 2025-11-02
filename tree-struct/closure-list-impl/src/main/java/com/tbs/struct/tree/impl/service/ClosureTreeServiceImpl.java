@@ -12,6 +12,7 @@ import com.tbs.struct.tree.impl.entity.TreeRelationEntity;
 import com.tbs.struct.tree.impl.mapper.TreeNodeMapper;
 import com.tbs.struct.tree.impl.mapper.TreeRelationMapper;
 import com.tbs.struct.tree.impl.model.SimpleTreeStrorableModel;
+import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -190,7 +191,7 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         }).collect(Collectors.toList());
     }
 
-    ITreeStorable toTreeStorable(TreeNodeEntity treeNodeEntity) {
+    private ITreeStorable toTreeStorable(TreeNodeEntity treeNodeEntity) {
         var model = new SimpleTreeStrorableModel();
         model.setNodeId(treeNodeEntity.getId());
         model.setTreeGroup(treeNodeEntity.getGroupName());
@@ -198,13 +199,19 @@ public class ClosureTreeServiceImpl implements ITreeStore {
     }
 
     @Override
-    public ITreeStorable getParentNode(String nodeId) {
-        var node = treeNodeMapper.getNodeById(nodeId);
-        if (CollUtil.isEmpty(node)) {
+    public List<TreeNodeModel> getParentNodes(String nodeId) {
+        var node = CollUtil.first(treeNodeMapper.getNodeById(nodeId));
+        if (node == null) {
             return null;
         }
-        var parentNode = treeNodeMapper.getNodeById(CollUtil.first(node).getParentId());
-        return CollUtil.isEmpty(parentNode) ? null : toTreeStorable(CollUtil.first(parentNode));
+
+        return treeRelationMapper.selectAncestorsByDescendantId(nodeId).stream().map(relation -> {
+            var model = new TreeNodeModel();
+            model.setNodeId(relation.getAncestorId());
+            model.setDepth(relation.getDepth());
+            model.setTreeGroup(node.getGroupName());
+            return model;
+        }).collect(Collectors.toList());
     }
 
     @Transactional(rollbackFor = RuntimeException.class)

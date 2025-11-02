@@ -1,5 +1,7 @@
 package com.tbs.struct.tree.api.persistence;
 
+import com.tbs.struct.tree.model.TreeNodeModel;
+
 import java.util.List;
 
 /**
@@ -24,14 +26,13 @@ public interface ITreeStore {
      */
     List<ITreeStorable> getChildren(String nodeId);
 
-
     /**
      * 获取树父节点
      *
      * @param nodeId 树ID
      * @return 树存储对象
      */
-    ITreeStorable getParentNode(String nodeId);
+    List<TreeNodeModel> getParentNodes(String nodeId);
 
     /**
      * 删除树
@@ -46,7 +47,6 @@ public interface ITreeStore {
      * @param nodeIds 树ID列表
      */
     void batchDelete(List<String> nodeIds);
-
 
     /**
      * 获取根节点
