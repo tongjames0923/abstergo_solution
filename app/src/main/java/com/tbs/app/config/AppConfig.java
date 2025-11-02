@@ -18,6 +18,8 @@ import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
+import com.tbs.struct.tree.api.persistence.ITreeStore;
+import com.tbs.struct.tree.impl.service.ClosureTreeServiceImpl;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import org.redisson.client.codec.Codec;
@@ -158,5 +160,10 @@ public class AppConfig {
                 timingWheelScheduleLogger.error("处理任务时产生错误", throwable);
             }
         }, 5L, TimeUnit.SECONDS, 1L, 60 * 5, TimeUnit.SECONDS);
+    }
+
+    @Bean
+    ITreeStore treeStore() {
+        return new ClosureTreeServiceImpl();
     }
 }
