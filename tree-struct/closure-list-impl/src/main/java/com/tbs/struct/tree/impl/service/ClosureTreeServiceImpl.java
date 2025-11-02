@@ -21,10 +21,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -197,7 +194,7 @@ public class ClosureTreeServiceImpl implements ITreeStore {
     private void updateExistingNode(ITreeStorable treeStorable, TreeNodeEntity parentNode,
         List<TreeNodeEntity> oldNodes) {
         var oldNode = CollUtil.first(oldNodes);
-        AssertUtil.isTrue(Objects.equals(treeStorable.getTreeGroup(), oldNode.getGroupName()), "树组不一致，无法更新");
+        AssertUtil.isTrue(!Objects.equals(treeStorable.getTreeGroup(), oldNode.getGroupName()), "树组不一致，无法更新");
         if (parentNode == null) {
             log.info("节点不支持升级到根节点");
             return;
@@ -227,7 +224,8 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         // 1.1 获取节点的所有后代节点
         List<TreeRelationEntity> descendantRelations = treeRelationMapper.selectDescendantsByAncestorId(nodeId);
 
-        deleteOldClosureRelations(nodeId);
+        // 1.2 删除子树的所有旧关系
+        deleteSubtreeOldRelations(descendantRelations);
 
         // 2. 添加新的闭包表关系
         insertNewClosureRelations(nodeId, parentNode);
@@ -242,8 +240,20 @@ public class ClosureTreeServiceImpl implements ITreeStore {
      * @param nodeId 节点ID
      */
     private void deleteOldClosureRelations(String nodeId) {
-        // 1.3 删除所有与该节点相关的路径关系
+        // 删除所有与该节点相关的路径关系
         treeRelationMapper.deleteByDescendantId(nodeId);
+    }
+
+    /**
+     * 删除子树的所有旧关系
+     *
+     * @param descendantRelations 后代关系列表
+     */
+    private void deleteSubtreeOldRelations(List<TreeRelationEntity> descendantRelations) {
+        // 删除子树中每个节点涉及的所有关系
+        for (TreeRelationEntity relation : descendantRelations) {
+            treeRelationMapper.deleteByDescendantId(relation.getDescendantId());
+        }
     }
 
     /**
@@ -280,20 +290,51 @@ public class ClosureTreeServiceImpl implements ITreeStore {
      * @param descendantRelations 后代关系列表
      */
     private void rebuildDescendantRelations(String nodeId, List<TreeRelationEntity> descendantRelations) {
+        // 提前获取所有祖先节点关系，避免在循环中重复查询
+        List<TreeRelationEntity> newAncestorRelations = treeRelationMapper.selectAncestorsByDescendantId(nodeId);
+
+        // 收集所有需要创建的关系
+        List<TreeRelationEntity> relationsToCreate = new ArrayList<>();
+
         for (TreeRelationEntity descendantRelation : descendantRelations) {
             if (!descendantRelation.getDescendantId().equals(nodeId)) { // 排除节点自身
-                // 计算新的深度：祖先到当前节点的深度 + 当前节点到后代节点的深度
-                List<TreeRelationEntity> newAncestorRelations =
-                    treeRelationMapper.selectAncestorsByDescendantId(nodeId);
+                // 为每个祖先节点创建到当前后代节点的新关系
                 for (TreeRelationEntity newAncestorRelation : newAncestorRelations) {
                     TreeRelationEntity newRelation = new TreeRelationEntity();
                     newRelation.setAncestorId(newAncestorRelation.getAncestorId());
                     newRelation.setDescendantId(descendantRelation.getDescendantId());
                     newRelation.setDepth(newAncestorRelation.getDepth() + descendantRelation.getDepth());
-                    treeRelationMapper.insert(newRelation);
+                    relationsToCreate.add(newRelation);
                 }
             }
         }
+
+        // 批量检查和插入关系
+        batchInsertRelations(relationsToCreate);
+    }
+
+    /**
+     * 批量插入关系
+     *
+     * @param relations 关系列表
+     */
+    private void batchInsertRelations(List<TreeRelationEntity> relations) {
+        if (relations.isEmpty()) {
+            return;
+        }
+        List<TreeRelationEntity> uniqueRelations = new ArrayList<>(relations.size());
+        // 为简化实现，我们这里采用逐一插入的方式，但在实际生产环境中可以优化为批量插入
+        for (TreeRelationEntity relation : relations) {
+            // 检查关系是否已存在，避免违反唯一约束
+            List<TreeRelationEntity> existingRelations =
+                treeRelationMapper.selectByAncestorIdAndDescendantId(relation.getAncestorId(),
+                    relation.getDescendantId());
+
+            if (existingRelations.isEmpty()) {
+                uniqueRelations.add(relation);
+            }
+        }
+        treeRelationMapper.insertList(uniqueRelations);
     }
 
     @Override
