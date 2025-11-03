@@ -23,6 +23,7 @@
         <module>rabbitmq-mod</module>
         <module>shared</module>
         <module>tree-struct</module>
+        <module>xxl-job-mod</module>
     </modules>
 
     <groupId>com.tbs</groupId>

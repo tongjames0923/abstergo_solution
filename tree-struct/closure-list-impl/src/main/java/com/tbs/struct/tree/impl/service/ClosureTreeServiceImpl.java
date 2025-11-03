@@ -402,9 +402,7 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         nodeIdsToDelete.add(nodeId);
 
         // 批量删除节点
-        for (String id : nodeIdsToDelete) {
-            treeNodeMapper.deleteByPrimaryKey(id);
-        }
+        treeNodeMapper.deleteByIdList(nodeIdsToDelete);
 
         // 删除所有涉及这些节点的关系
         for (String id : nodeIdsToDelete) {
