@@ -18,10 +18,10 @@ import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
-import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.impl.service.ClosureTreeServiceImpl;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
+import com.tbs.xxl.api.IXXLJobsConfig;
 import org.redisson.client.codec.Codec;
 import org.redisson.codec.JsonJacksonCodec;
 import org.slf4j.Logger;
@@ -163,7 +163,52 @@ public class AppConfig {
     }
 
     @Bean
-    ITreeStore treeStore() {
+    IXXLJobsConfig xxlJobsConfig() {
+        return new IXXLJobsConfig() {
+            @Override
+            public String adminAddress() {
+                return "http://127.0.0.1:9898/xxl-job-admin";
+            }
+
+            @Override
+            public String appName() {
+                return "mainSystemApplication";
+            }
+
+            @Override
+            public String address() {
+                return "";
+            }
+
+            @Override
+            public String ip() {
+                return "";
+            }
+
+            @Override
+            public Integer port() {
+                return null;
+            }
+
+            @Override
+            public String accessToken() {
+                return "123456789";
+            }
+
+            @Override
+            public String logPath() {
+                return "";
+            }
+
+            @Override
+            public Integer logRetentionsDays() {
+                return 0;
+            }
+        };
+    }
+
+    @Bean
+    ClosureTreeServiceImpl treeStore() {
         return new ClosureTreeServiceImpl();
     }
 }

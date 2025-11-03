@@ -30,3 +30,6 @@ tbs:
       eviction-mode: lru
   start-up:
     optional-execute: false
+  xxl-job:
+    enable: true
+    enable-json-job-executor: true
