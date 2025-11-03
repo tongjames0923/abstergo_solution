@@ -6,6 +6,7 @@ import com.tbs.cache.manual.IManualCacheHandler;
 import com.tbs.common.IStartup;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.function.SSupplier;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.helper.FeatureWrapperHelper;
 import com.tbs.lock.util.LockUtil;
 import org.springframework.cache.annotation.CacheEvict;
@@ -30,7 +31,7 @@ public class CacheUtils implements IStartup {
 
     @Override
     public void startUp() throws RuntimeException {
-        instance = this;
+        instance = SpringUtil.getBean(CacheUtils.class);
     }
 
     public static CacheUtils getInstance() {
@@ -118,7 +119,8 @@ public class CacheUtils implements IStartup {
      * @param value 要缓存的对象值
      */
     @CachePut(cacheNames = "CACHE_UTILS_SET", key = "#key")
-    public void cacheableSet(String key, Object value) {
+    public Object cacheableSet(String key, Object value) {
+        return value;
     }
 
     /**

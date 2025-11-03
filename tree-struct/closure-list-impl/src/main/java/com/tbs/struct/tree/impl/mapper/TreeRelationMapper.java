@@ -81,4 +81,10 @@ public interface TreeRelationMapper extends IFrameworkMapper<TreeRelationEntity,
      */
     @Delete("DELETE FROM tree_closure WHERE ancestor_id = #{ancestorId}")
     void deleteByAncestorId(String ancestorId);
+
+    /**
+     * 删除所有关系
+     */
+    @Delete("DELETE FROM tree_closure")
+    void deleteAllRelations();
 }

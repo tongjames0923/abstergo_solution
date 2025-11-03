@@ -1,6 +1,8 @@
 package com.tbs.struct.tree.impl.service;
 
+import com.tbs.cache.CacheUtils;
 import com.tbs.cache.expire.annotation.ExpireOn;
+import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
@@ -25,7 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class ClosureTreeServiceImpl implements ITreeStore {
+public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     @Resource
     private TreeNodeMapper treeNodeMapper;
 
@@ -35,9 +37,6 @@ public class ClosureTreeServiceImpl implements ITreeStore {
     private static ITreeStore instance;
 
     private static ITreeStore getInstance() {
-        if (instance == null) {
-            instance = SpringUtil.getBean(ITreeStore.class);
-        }
         return instance;
     }
 
@@ -48,10 +47,11 @@ public class ClosureTreeServiceImpl implements ITreeStore {
             condition = "#treeStorable!=null&&#treeStorable.nodeId!=null&&#treeStorable.nodeId.length()>0")})
     @Transactional(rollbackFor = RuntimeException.class)
     public void store(ITreeStorable treeStorable, String parentNodeId) {
+
         AssertUtil.notNull(treeStorable, "无法保存空节点");
         AssertUtil.hasText(treeStorable.getNodeId(), "无法保存空的节点id");
         AssertUtil.hasText(treeStorable.getTreeGroup(), "无法保存空的树组");
-
+        rebuildTreeClosureCheck();
         TreeNodeEntity parentNode = getTreeNode(parentNodeId);
         List<TreeNodeEntity> oldNodes = treeNodeMapper.getNodeById(treeStorable.getNodeId());
         if (CollUtil.isEmpty(oldNodes)) {
@@ -370,7 +370,7 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         if (node == null) {
             return null;
         }
-
+        rebuildTreeClosureCheck();
         return treeRelationMapper.selectAncestorsByDescendantId(nodeId).stream().map(relation -> {
             var model = new TreeNodeModel();
             model.setNodeId(relation.getAncestorId());
@@ -393,7 +393,7 @@ public class ClosureTreeServiceImpl implements ITreeStore {
             log.info("节点不存在");
             return;
         }
-
+        rebuildTreeClosureCheck();
         // 通过闭包表获取所有后代节点ID（包括子树）
         List<TreeRelationEntity> descendantRelations = treeRelationMapper.selectDescendantsByAncestorId(nodeId);
         List<String> nodeIdsToDelete =
@@ -446,5 +446,88 @@ public class ClosureTreeServiceImpl implements ITreeStore {
         AssertUtil.hasText(nodeId, "无法查询空的节点id");
         var coll = treeNodeMapper.getNodeById(nodeId);
         return CollUtil.isNotEmpty(coll);
+    }
+
+    /**
+     * 重建树结构闭包表关系表
+     */
+    @Transactional(rollbackFor = RuntimeException.class)
+    public void buildTreeClosure() {
+        CacheUtils.getInstance().cacheableSet(REBUILD_TREE_CLOSURE_LOCK, true);
+        try {
+            // 删除所有关系
+            treeRelationMapper.deleteAllRelations();
+            //查询所有的节点
+            List<TreeNodeEntity> allNodes = treeNodeMapper.selectAll();
+            //根据所有节点的entity的父节点ID来插入关系，符合闭包表关系
+
+            // 创建一个Map来存储节点ID到TreeNodeEntity的映射，便于快速查找
+            Map<String, TreeNodeEntity> nodeMap =
+                allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getId, node -> node));
+
+            // 先为所有节点建立自引用关系
+            for (TreeNodeEntity node : allNodes) {
+                TreeRelationEntity selfRelation = new TreeRelationEntity();
+                selfRelation.setAncestorId(node.getId());
+                selfRelation.setDescendantId(node.getId());
+                selfRelation.setDepth(0);
+                treeRelationMapper.insert(selfRelation);
+            }
+
+            // 再处理父子关系以及祖先关系
+            for (TreeNodeEntity node : allNodes) {
+                // 如果是根节点，跳过处理父子关系
+                if (node.getParentId() == null || node.getParentId().isEmpty()) {
+                    continue;
+                }
+
+                // 添加直接父子关系（深度为1）
+                TreeRelationEntity parentRelation = new TreeRelationEntity();
+                parentRelation.setAncestorId(node.getParentId());
+                parentRelation.setDescendantId(node.getId());
+                parentRelation.setDepth(1);
+                treeRelationMapper.insert(parentRelation);
+
+                // 查询父节点的所有祖先关系
+                List<TreeRelationEntity> ancestorRelations =
+                    treeRelationMapper.selectAncestorsByDescendantId(node.getParentId());
+
+                // 为当前节点添加与所有祖先节点的关系
+                for (TreeRelationEntity ancestorRelation : ancestorRelations) {
+                    // 跳过父节点自身的自引用关系（已经在上面处理过了）
+                    if (ancestorRelation.getAncestorId().equals(node.getParentId()) &&
+                        ancestorRelation.getDepth() == 0) {
+                        continue;
+                    }
+
+                    TreeRelationEntity newRelation = new TreeRelationEntity();
+                    newRelation.setAncestorId(ancestorRelation.getAncestorId());
+                    newRelation.setDescendantId(node.getId());
+                    newRelation.setDepth(ancestorRelation.getDepth() + 1);
+                    treeRelationMapper.insert(newRelation);
+                }
+            }
+
+        } finally {
+            CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
+        }
+
+    }
+
+    private static final String REBUILD_TREE_CLOSURE_LOCK = "rebuildTreeLock";
+
+    private static void rebuildTreeClosureCheck() {
+        var val = CacheUtils.getInstance().cacheableGet(REBUILD_TREE_CLOSURE_LOCK);
+        if (val == null) {
+            return;
+        }
+        throw new RuntimeException("正在重建树结构闭包表关系，请稍后再试");
+    }
+
+    @Override
+    public void startUp() throws RuntimeException {
+        if (instance == null) {
+            instance = SpringUtil.getBean(ITreeStore.class);
+        }
     }
 }
