@@ -474,8 +474,17 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
                 treeRelationMapper.insert(selfRelation);
             }
 
+            // 按层级排序处理节点，确保父节点在子节点之前处理
+            // 这样可以保证当处理子节点时，其所有祖先节点的关系已经建立完成
+            List<TreeNodeEntity> sortedNodes = new ArrayList<>(allNodes);
+            sortedNodes.sort((a, b) -> {
+                int levelA = getNodeLevel(a, nodeMap);
+                int levelB = getNodeLevel(b, nodeMap);
+                return levelA - levelB;
+            });
+
             // 再处理父子关系以及祖先关系
-            for (TreeNodeEntity node : allNodes) {
+            for (TreeNodeEntity node : sortedNodes) {
                 // 如果是根节点，跳过处理父子关系
                 if (node.getParentId() == null || node.getParentId().isEmpty()) {
                     continue;
@@ -512,6 +521,27 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
             CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
         }
 
+    }
+
+    /**
+     * 计算节点在树中的层级（深度）
+     *
+     * @param node    节点
+     * @param nodeMap 节点映射表
+     * @return 层级数，根节点为0
+     */
+    private int getNodeLevel(TreeNodeEntity node, Map<String, TreeNodeEntity> nodeMap) {
+        int level = 0;
+        TreeNodeEntity current = node;
+        while (current.getParentId() != null && !current.getParentId().isEmpty()) {
+            level++;
+            current = nodeMap.get(current.getParentId());
+            // 防止循环引用导致的无限循环
+            if (current == null) {
+                break;
+            }
+        }
+        return level;
     }
 
     private static final String REBUILD_TREE_CLOSURE_LOCK = "rebuildTreeLock";
