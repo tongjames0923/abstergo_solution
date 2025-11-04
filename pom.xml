@@ -24,6 +24,7 @@
         <module>shared</module>
         <module>tree-struct</module>
         <module>xxl-job-mod</module>
+        <module>open-api-starter</module>
     </modules>
 
     <groupId>com.tbs</groupId>
@@ -57,12 +58,6 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter</artifactId>
-        </dependency>
-        <!-- Springdoc OpenAPI 依赖 -->
-        <dependency>
-            <groupId>com.github.xiaoymin</groupId>
-            <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
-            <version>4.4.0</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>

@@ -33,3 +33,6 @@ tbs:
   xxl-job:
     enable: true
     enable-json-job-executor: true
+  knife4j:
+    enable: true
+    show-url: true
