@@ -11,12 +11,15 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Repository
-public interface TreeNodeMapper extends IFrameworkMapper<TreeNodeEntity, String> {
+public interface TreeNodeMapper extends IFrameworkMapper<TreeNodeEntity, Long> {
 
-    @Cacheable(cacheNames = "tree_node_cache", key = "#nodeId")
-    @ExpireOn(value = 2, timeUnit = TimeUnit.MINUTES)
-    @Select("select * from tree_node where id = #{nodeId}")
-    List<TreeNodeEntity> getNodeById(String nodeId);
+    @Cacheable(cacheNames = "tree_node_entity_cache", key = "#id", unless = "#result == null", condition = "#id!=null")
+    @ExpireOn(value = 2, timeUnit = TimeUnit.MINUTES, cacheNames = "tree_node_entity_cache")
+    @Select("select * from tree_node where id = #{id}")
+    TreeNodeEntity getNodeById(Long id);
+
+    @Select("select * from tree_node where node_id = #{nodeId} and group_name=#{treeGroup}")
+    List<TreeNodeEntity> getNodeByNodeIdAndTreeGroup(String nodeId, String treeGroup);
 
     @Select("select group_name from tree_node where parent_id is null group by group_name")
     List<String> listAllGroup();

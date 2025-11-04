@@ -30,23 +30,18 @@ public interface ITreeStore {
      * 获取树父节点
      *
      * @param nodeId 树ID
+     * @param group
      * @return 树存储对象
      */
-    List<TreeNodeModel> getParentNodes(String nodeId);
+    List<TreeNodeModel> getParentNodes(String nodeId, String group);
 
     /**
      * 删除树
      *
      * @param nodeId 树ID
+     * @param group
      */
-    void delete(String nodeId);
-
-    /**
-     * 批量删除树
-     *
-     * @param nodeIds 树ID列表
-     */
-    void batchDelete(List<String> nodeIds);
+    void delete(String nodeId, String group);
 
     /**
      * 获取根节点
@@ -69,6 +64,6 @@ public interface ITreeStore {
      * @param nodeId 树ID
      * @return 树是否存在
      */
-    boolean isExist(String nodeId);
+    boolean isExist(String nodeId, String group);
 
 }

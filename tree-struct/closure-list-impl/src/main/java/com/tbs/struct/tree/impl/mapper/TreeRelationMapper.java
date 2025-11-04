@@ -23,8 +23,8 @@ public interface TreeRelationMapper extends IFrameworkMapper<TreeRelationEntity,
      * @param descendantId 后代节点ID
      * @return 祖先节点关系列表
      */
-    @Select("SELECT * FROM tree_closure WHERE descendant_id = #{descendantId}")
-    List<TreeRelationEntity> selectAncestorsByDescendantId(String descendantId);
+    @Select("SELECT * FROM tree_closure WHERE descendant_id = #{descendantId} and group_name=#{groupName}")
+    List<TreeRelationEntity> selectAncestorsByDescendantId(String descendantId, String groupName);
 
     /**
      * 根据祖先节点ID查询所有后代节点关系
@@ -32,8 +32,8 @@ public interface TreeRelationMapper extends IFrameworkMapper<TreeRelationEntity,
      * @param ancestorId 祖先节点ID
      * @return 后代节点关系列表
      */
-    @Select("SELECT * FROM tree_closure WHERE ancestor_id = #{ancestorId}")
-    List<TreeRelationEntity> selectDescendantsByAncestorId(String ancestorId);
+    @Select("SELECT * FROM tree_closure WHERE ancestor_id = #{ancestorId} and group_name=#{groupName}")
+    List<TreeRelationEntity> selectDescendantsByAncestorId(String ancestorId, String groupName);
 
     /**
      * 根据祖先节点和后代节点更新关系
@@ -44,8 +44,8 @@ public interface TreeRelationMapper extends IFrameworkMapper<TreeRelationEntity,
      * @return 影响行数
      */
     @Update(
-        "UPDATE tree_closure SET depth = #{depth} WHERE ancestor_id = #{ancestorId} AND descendant_id = #{descendantId}")
-    int updateByAncestorIdAndDescendantId(String ancestorId, String descendantId, int depth);
+        "UPDATE tree_closure SET depth = #{depth} WHERE ancestor_id = #{ancestorId} AND descendant_id = #{descendantId} and group_name=#{groupName}")
+    int updateByAncestorIdAndDescendantId(String ancestorId, String descendantId, int depth, String groupName);
 
     /**
      * 根据祖先节点和后代节点查询关系
@@ -54,8 +54,10 @@ public interface TreeRelationMapper extends IFrameworkMapper<TreeRelationEntity,
      * @param descendantId 后代节点ID
      * @return 祖先节点关系列表
      */
-    @Select("SELECT * FROM tree_closure WHERE ancestor_id = #{ancestorId} AND descendant_id = #{descendantId}")
-    List<TreeRelationEntity> selectByAncestorIdAndDescendantId(String ancestorId, String descendantId);
+    @Select(
+        "SELECT * FROM tree_closure WHERE ancestor_id = #{ancestorId} AND descendant_id = #{descendantId} and group_name=#{groupName}")
+    List<TreeRelationEntity> selectByAncestorIdAndDescendantId(String ancestorId, String descendantId,
+        String groupName);
 
     /**
      * 根据祖先节点和后代节点删除关系
@@ -63,24 +65,25 @@ public interface TreeRelationMapper extends IFrameworkMapper<TreeRelationEntity,
      * @param ancestorId   祖先节点ID
      * @param descendantId 后代节点ID
      */
-    @Delete("DELETE FROM tree_closure WHERE ancestor_id = #{ancestorId} AND descendant_id = #{descendantId}")
-    void deleteByAncestorIdAndDescendantId(String ancestorId, String descendantId);
+    @Delete(
+        "DELETE FROM tree_closure WHERE ancestor_id = #{ancestorId} AND descendant_id = #{descendantId} and group_name=#{groupName}")
+    void deleteByAncestorIdAndDescendantId(String ancestorId, String descendantId, String groupName);
 
     /**
      * 根据节点ID删除所有相关的祖先关系
      *
      * @param descendantId 后代节点ID
      */
-    @Delete("DELETE FROM tree_closure WHERE descendant_id = #{descendantId}")
-    void deleteByDescendantId(String descendantId);
+    @Delete("DELETE FROM tree_closure WHERE descendant_id = #{descendantId} and group_name=#{groupName}")
+    void deleteByDescendantId(String descendantId, String groupName);
 
     /**
      * 根据节点ID删除所有相关的后代关系
      *
      * @param ancestorId 祖先节点ID
      */
-    @Delete("DELETE FROM tree_closure WHERE ancestor_id = #{ancestorId}")
-    void deleteByAncestorId(String ancestorId);
+    @Delete("DELETE FROM tree_closure WHERE ancestor_id = #{ancestorId} and group_name=#{groupName}")
+    void deleteByAncestorId(String ancestorId, String groupName);
 
     /**
      * 删除所有关系

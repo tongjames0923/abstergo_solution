@@ -26,6 +26,8 @@ public class PublicTestController extends BaseController {
     @Resource
     private ITreeStore store;
 
+    public static final String TEST_GROUP = "Test Tree Group";
+
     @Data
     public static final class TreeForm implements Serializable {
         private String name;
@@ -35,7 +37,7 @@ public class PublicTestController extends BaseController {
 
     @PostMapping("/createNode")
     public AjaxResult createNode(@RequestBody TreeForm form) {
-        store.store(new SimpleTreeStrorableModel("Test Tree Group", form.getName()), form.getParentId());
+        store.store(new SimpleTreeStrorableModel(TEST_GROUP, form.getName()), form.getParentId());
         return AjaxUtil.getInstance().success(null);
     }
 
@@ -52,12 +54,12 @@ public class PublicTestController extends BaseController {
 
     @PostMapping("/getParentNodes")
     public AjaxResult getParentNodes(String nodeId) {
-        return AjaxUtil.getInstance().success(store.getParentNodes(nodeId));
+        return AjaxUtil.getInstance().success(store.getParentNodes(nodeId, TEST_GROUP));
     }
 
     @PostMapping("/deleteNode")
     public AjaxResult deleteNode(String nodeId) {
-        store.delete(nodeId);
+        store.delete(nodeId, TEST_GROUP);
         return AjaxUtil.getInstance().success(null);
     }
 

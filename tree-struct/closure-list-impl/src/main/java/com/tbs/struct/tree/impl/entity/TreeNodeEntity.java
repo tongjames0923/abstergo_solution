@@ -2,10 +2,7 @@ package com.tbs.struct.tree.impl.entity;
 
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -17,16 +14,25 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "tree_node", indexes = {@javax.persistence.Index(columnList = "group_name,parent_id")})
+@Table(name = "tree_node", uniqueConstraints = @UniqueConstraint(columnNames = {"group_name", "node_id"}),
+    indexes = {@javax.persistence.Index(columnList = "group_name,parent_id")})
 public class TreeNodeEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 节点ID
+     * 主键ID
      */
     @Id
-    @Column(name = "id", length = 64)
-    private String id;
+    @Column(name = "id")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    /**
+     * 节点ID
+     */
+
+    @Column(name = "node_id", length = 64)
+    private String nodeId;
 
     /**
      * 树组名称,作为树的id

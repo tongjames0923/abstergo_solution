@@ -7,7 +7,8 @@ import java.io.Serializable;
 
 @Data
 @Table(name = "tree_closure", uniqueConstraints = {@UniqueConstraint(columnNames = {"ancestor_id", "descendant_id"})},
-    indexes = {@Index(columnList = "ancestor_id"), @Index(columnList = "descendant_id"), @Index(columnList = "depth")})
+    indexes = {@Index(columnList = "ancestor_id"), @Index(columnList = "descendant_id"), @Index(columnList = "depth"),
+        @Index(columnList = "group_name")})
 @Entity
 public class TreeRelationEntity implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -35,5 +36,11 @@ public class TreeRelationEntity implements Serializable {
      */
     @Column(name = "depth", nullable = false)
     private Integer depth;
+
+    /**
+     * 树组名称
+     */
+    @Column(name = "group_name", length = 64, nullable = false)
+    private String groupName;
 
 }

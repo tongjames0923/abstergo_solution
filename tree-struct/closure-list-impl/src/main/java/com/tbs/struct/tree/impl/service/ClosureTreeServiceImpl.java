@@ -1,7 +1,6 @@
 package com.tbs.struct.tree.impl.service;
 
 import com.tbs.cache.CacheUtils;
-import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
@@ -23,7 +22,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -34,45 +32,70 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     @Resource
     private TreeRelationMapper treeRelationMapper;
 
-    private static ITreeStore instance;
+    private static ClosureTreeServiceImpl instance;
 
-    private static ITreeStore getInstance() {
+    private static ClosureTreeServiceImpl getInstance() {
         return instance;
     }
 
+    private static TreeRelationEntity createRelation(String ancestorId, String descendantId, int depth,
+        String groupName) {
+        TreeRelationEntity relationEntity = new TreeRelationEntity();
+        relationEntity.setAncestorId(ancestorId);
+        relationEntity.setDescendantId(descendantId);
+        relationEntity.setDepth(depth);
+        relationEntity.setGroupName(groupName);
+        return relationEntity;
+    }
+
+    private static TreeRelationEntity createSelfRelation(String nodeId, String groupName) {
+        return createRelation(nodeId, nodeId, 0, groupName);
+    }
+
+    public Long getTreeNodeId(String nodeId, String treeGroup) {
+        return treeNodeMapper.getNodeByNodeIdAndTreeGroup(nodeId, treeGroup).stream().findFirst()
+            .map(TreeNodeEntity::getId).orElse(null);
+    }
+
+    /**
+     * 获取树节点
+     *
+     * @param nodeId    节点ID
+     * @param treeGroup 树组
+     * @return 树节点
+     */
+    @Cacheable(cacheNames = "tree_node_cache", key = "#nodeId+#treeGroup",
+        condition = "#nodeId!=null&&#nodeId.length()>0&&#treeGroup!=null&&#treeGroup.length()>0",
+        unless = "#result==null")
+    public TreeNodeEntity getTreeNode(String nodeId, String treeGroup) {
+        Long id = getInstance().getTreeNodeId(nodeId, treeGroup);
+        if (id == null) {
+            return null;
+        }
+        return treeNodeMapper.getNodeById(id);
+    }
+
+
     @Override
-    @Caching(evict = {@CacheEvict(cacheNames = "tree_node_cache", key = "#parentNodeId",
-        condition = "#parentNodeId!=null&&#parentNodeId.length()>0"),
-        @CacheEvict(cacheNames = "tree_node_cache", key = "#treeStorable.nodeId",
-            condition = "#treeStorable!=null&&#treeStorable.nodeId!=null&&#treeStorable.nodeId.length()>0")})
     @Transactional(rollbackFor = RuntimeException.class)
+    @Caching(evict = {@CacheEvict(cacheNames = "tree_node_cache", key = "#parentNodeId+#treeStorable.treeGroup",
+        condition = "#treeStorable!=null&&#parentNodeId!=null&&#parentNodeId.length()>0&&" +
+            "#treeStorable.treeGroup!=null&&#treeStorable.treeGroup.length()>0"),
+        @CacheEvict(cacheNames = "tree_node_cache", key = "#treeStorable.nodeId+#treeStorable.treeGroup",
+            condition = "#treeStorable!=null&&#treeStorable.nodeId!=null&&#treeStorable.nodeId.length()>0&&#treeStorable.treeGroup!=null&&#treeStorable.treeGroup.length()>0")})
     public void store(ITreeStorable treeStorable, String parentNodeId) {
 
         AssertUtil.notNull(treeStorable, "无法保存空节点");
         AssertUtil.hasText(treeStorable.getNodeId(), "无法保存空的节点id");
         AssertUtil.hasText(treeStorable.getTreeGroup(), "无法保存空的树组");
         rebuildTreeClosureCheck();
-        TreeNodeEntity parentNode = getTreeNode(parentNodeId);
-        List<TreeNodeEntity> oldNodes = treeNodeMapper.getNodeById(treeStorable.getNodeId());
-        if (CollUtil.isEmpty(oldNodes)) {
+        TreeNodeEntity parentNode = getInstance().getTreeNode(parentNodeId, treeStorable.getTreeGroup());
+        var oldNode = getInstance().getTreeNode(treeStorable.getNodeId(), treeStorable.getTreeGroup());
+        if (oldNode == null) {
             insertNewNode(treeStorable, parentNode);
         } else {
-            updateExistingNode(treeStorable, parentNode, oldNodes);
+            updateExistingNode(treeStorable, parentNode, oldNode);
         }
-    }
-
-    /**
-     * 获取树节点
-     *
-     * @param nodeId 节点ID
-     * @return 树节点实体
-     */
-    private TreeNodeEntity getTreeNode(String nodeId) {
-        if (StrUtil.isEmpty(nodeId)) {
-            return null;
-        }
-        List<TreeNodeEntity> parentNodes = treeNodeMapper.getNodeById(nodeId);
-        return CollUtil.first(parentNodes);
     }
 
     /**
@@ -83,7 +106,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      */
     private void insertNewNode(ITreeStorable treeStorable, TreeNodeEntity parentNode) {
         TreeNodeEntity node = new TreeNodeEntity();
-        node.setId(treeStorable.getNodeId());
+        node.setNodeId(treeStorable.getNodeId());
         node.setGroupName(treeStorable.getTreeGroup());
         node.setCreateTime(new Date());
 
@@ -107,11 +130,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         node.setParentId(null);
         treeNodeMapper.insert(node);
 
-        TreeRelationEntity relationEntity = new TreeRelationEntity();
-        relationEntity.setDepth(0);
-        relationEntity.setAncestorId(node.getId());
-        relationEntity.setDescendantId(node.getId());
-        treeRelationMapper.insert(relationEntity);
+        treeRelationMapper.insert(createSelfRelation(node.getNodeId(), node.getGroupName()));
     }
 
     /**
@@ -121,17 +140,17 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      * @param parentNode 父节点
      */
     private void insertChildNode(TreeNodeEntity node, TreeNodeEntity parentNode) {
-        node.setParentId(parentNode.getId());
+        node.setParentId(parentNode.getNodeId());
         treeNodeMapper.insert(node);
 
         // 添加自己到自己的关系
-        insertSelfRelation(node.getId());
+        insertSelfRelation(node.getNodeId(), node.getGroupName());
 
         // 添加从父节点到当前节点的关系
-        insertParentChildRelation(parentNode.getId(), node.getId());
+        insertParentChildRelation(parentNode.getNodeId(), node.getNodeId(), parentNode.getGroupName());
 
         // 复制所有祖先节点到父节点的关系，并延伸到当前节点
-        copyAncestorRelations(parentNode.getId(), node.getId());
+        copyAncestorRelations(parentNode.getNodeId(), node.getNodeId(), parentNode.getGroupName());
     }
 
     /**
@@ -139,12 +158,8 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      *
      * @param nodeId 节点ID
      */
-    private void insertSelfRelation(String nodeId) {
-        TreeRelationEntity selfRelation = new TreeRelationEntity();
-        selfRelation.setAncestorId(nodeId);
-        selfRelation.setDescendantId(nodeId);
-        selfRelation.setDepth(0);
-        treeRelationMapper.insert(selfRelation);
+    private void insertSelfRelation(String nodeId, String group) {
+        treeRelationMapper.insert(createSelfRelation(nodeId, group));
     }
 
     /**
@@ -153,12 +168,8 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      * @param parentId 父节点ID
      * @param childId  子节点ID
      */
-    private void insertParentChildRelation(String parentId, String childId) {
-        TreeRelationEntity parentRelation = new TreeRelationEntity();
-        parentRelation.setAncestorId(parentId);
-        parentRelation.setDescendantId(childId);
-        parentRelation.setDepth(1);
-        treeRelationMapper.insert(parentRelation);
+    private void insertParentChildRelation(String parentId, String childId, String groupName) {
+        treeRelationMapper.insert(createRelation(parentId, childId, 1, groupName));
     }
 
     /**
@@ -167,18 +178,16 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      * @param parentId 父节点ID
      * @param childId  子节点ID
      */
-    private void copyAncestorRelations(String parentId, String childId) {
-        List<TreeRelationEntity> ancestorRelations = treeRelationMapper.selectAncestorsByDescendantId(parentId);
+    private void copyAncestorRelations(String parentId, String childId, String groupName) {
+        List<TreeRelationEntity> ancestorRelations =
+            treeRelationMapper.selectAncestorsByDescendantId(parentId, groupName);
 
         for (TreeRelationEntity relation : ancestorRelations) {
             if (relation.getAncestorId().equals(parentId)) {
                 continue; // 排除父节点自身
             }
-            TreeRelationEntity newRelation = new TreeRelationEntity();
-            newRelation.setAncestorId(relation.getAncestorId());
-            newRelation.setDescendantId(childId);
-            newRelation.setDepth(relation.getDepth() + 1);
-            treeRelationMapper.insert(newRelation);
+            treeRelationMapper.insert(
+                createRelation(relation.getAncestorId(), childId, relation.getDepth() + 1, groupName));
         }
     }
 
@@ -189,47 +198,44 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      * @param parentNode   父节点
      * @param oldNodes     旧节点列表
      */
-    private void updateExistingNode(ITreeStorable treeStorable, TreeNodeEntity parentNode,
-        List<TreeNodeEntity> oldNodes) {
-        var oldNode = CollUtil.first(oldNodes);
+    private void updateExistingNode(ITreeStorable treeStorable, TreeNodeEntity parentNode, TreeNodeEntity oldNode) {
+
         AssertUtil.isTrue(!Objects.equals(treeStorable.getTreeGroup(), oldNode.getGroupName()), "树组不一致，无法更新");
         if (parentNode == null) {
             log.info("节点不支持升级到根节点");
             return;
         }
-        if (Objects.equals(oldNode.getParentId(), parentNode.getId())) {
+        if (Objects.equals(oldNode.getParentId(), parentNode.getNodeId())) {
             log.info("节点关系未改变");
             return;
         }
-        var oldParentNodes = getInstance().getParentNodes(oldNode.getParentId());
+        var oldParentNodes = getInstance().getParentNodes(oldNode.getParentId(), treeStorable.getTreeGroup());
         // 更新节点的父节点信息
-        oldNode.setParentId(parentNode.getId());
+        oldNode.setParentId(parentNode.getNodeId());
         oldNode.setUpdateTime(new Date());
         treeNodeMapper.updateByPrimaryKey(oldNode);
 
-        treeRelationMapper.deleteByDescendantId(oldNode.getId());
+        treeRelationMapper.deleteByDescendantId(oldNode.getNodeId(), oldNode.getGroupName());
 
-        var newParentNode = getInstance().getParentNodes(parentNode.getId());
+        var newParentNode = getInstance().getParentNodes(parentNode.getNodeId(), treeStorable.getTreeGroup());
 
-        this.insertSelfRelation(oldNode.getId());
-        insertParentChildRelation(parentNode.getId(), oldNode.getId());
-        copyAncestorRelations(parentNode.getId(), oldNode.getId());
+        this.insertSelfRelation(oldNode.getNodeId(), oldNode.getGroupName());
+        insertParentChildRelation(parentNode.getNodeId(), oldNode.getNodeId(), parentNode.getGroupName());
+        copyAncestorRelations(parentNode.getNodeId(), oldNode.getNodeId(), parentNode.getGroupName());
 
-        var children = treeRelationMapper.selectDescendantsByAncestorId(oldNode.getId());
+        var children = treeRelationMapper.selectDescendantsByAncestorId(oldNode.getNodeId(), oldNode.getGroupName());
         for (var child : children) {
-            if (child.getDescendantId().equals(oldNode.getId())) {
+            if (child.getDescendantId().equals(oldNode.getNodeId())) {
                 continue;
             }
             //删除节点的子节点的无效父节点关系
             for (var oldParent : oldParentNodes) {
-                treeRelationMapper.deleteByAncestorIdAndDescendantId(oldParent.getNodeId(), child.getDescendantId());
+                treeRelationMapper.deleteByAncestorIdAndDescendantId(oldParent.getNodeId(), child.getDescendantId(),
+                    oldParent.getTreeGroup());
             }
             for (var newParent : newParentNode) {
-                TreeRelationEntity newRelation = new TreeRelationEntity();
-                newRelation.setAncestorId(newParent.getNodeId());
-                newRelation.setDescendantId(child.getDescendantId());
-                newRelation.setDepth(newParent.getDepth() + child.getDepth() + 1);
-                treeRelationMapper.insert(newRelation);
+                treeRelationMapper.insert(createRelation(newParent.getNodeId(), child.getDescendantId(),
+                    newParent.getDepth() + child.getDepth() + 1, newParent.getTreeGroup()));
             }
 
         }
@@ -241,79 +247,75 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         var coll = treeNodeMapper.getChildren(nodeId);
         return CollUtil.isEmpty(coll) ? Collections.EMPTY_LIST : coll.stream().map(treeNodeEntity -> {
             var model = new SimpleTreeStrorableModel();
-            model.setNodeId(treeNodeEntity.getId());
+            model.setNodeId(treeNodeEntity.getNodeId());
             model.setTreeGroup(treeNodeEntity.getGroupName());
             return model;
         }).collect(Collectors.toList());
     }
 
     @Override
-    public List<TreeNodeModel> getParentNodes(String nodeId) {
-        var node = CollUtil.first(treeNodeMapper.getNodeById(nodeId));
+    public List<TreeNodeModel> getParentNodes(String nodeId, String group) {
+        var node = getInstance().getTreeNode(nodeId, group);
         if (node == null) {
             return null;
         }
         rebuildTreeClosureCheck();
-        return treeRelationMapper.selectAncestorsByDescendantId(nodeId).stream().map(relation -> {
+        var val = treeRelationMapper.selectAncestorsByDescendantId(nodeId, group).stream().map(relation -> {
             var model = new TreeNodeModel();
             model.setNodeId(relation.getAncestorId());
             model.setDepth(relation.getDepth());
             model.setTreeGroup(node.getGroupName());
             return model;
         }).sorted((o1, o2) -> o2.getDepth() - o1.getDepth()).collect(Collectors.toList());
+
+        val.forEach(model -> {
+            model.setEntityId(getInstance().getTreeNode(model.getNodeId(), model.getTreeGroup()).getId());
+            ;
+        });
+
+        return val;
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
-    @CacheEvict(cacheNames = "tree_node_cache", key = "#nodeId")
+    @CacheEvict(cacheNames = "tree_node_cache", allEntries = true)
     @Override
-    public void delete(String nodeId) {
+    public void delete(String nodeId, String group) {
         if (StrUtil.isEmpty(nodeId)) {
             log.info("节点ID为空");
             return;
         }
-        var node = CollUtil.first(treeNodeMapper.getNodeById(nodeId));
+        var node = getInstance().getTreeNode(nodeId, group);
         if (node == null) {
             log.info("节点不存在");
             return;
         }
         rebuildTreeClosureCheck();
         // 通过闭包表获取所有后代节点ID（包括子树）
-        List<TreeRelationEntity> descendantRelations = treeRelationMapper.selectDescendantsByAncestorId(nodeId);
-        List<String> nodeIdsToDelete =
-            descendantRelations.stream().map(TreeRelationEntity::getDescendantId).collect(Collectors.toList());
+        List<TreeRelationEntity> descendantRelations = treeRelationMapper.selectDescendantsByAncestorId(nodeId, group);
+        var nodeIdsToDelete = descendantRelations.stream().map((val) -> {
+            return getInstance().getTreeNode(val.getDescendantId(), group);
+        }).collect(Collectors.toList());
         // 添加当前节点本身
-        nodeIdsToDelete.add(nodeId);
+        nodeIdsToDelete.add(node);
 
         // 批量删除节点
-        treeNodeMapper.deleteByIdList(nodeIdsToDelete);
+        treeNodeMapper.deleteByIdList(nodeIdsToDelete.stream().map(TreeNodeEntity::getId).collect(Collectors.toList()));
 
         // 删除所有涉及这些节点的关系
-        for (String id : nodeIdsToDelete) {
+        for (var entity : nodeIdsToDelete) {
             // 删除涉及该节点的所有闭包表关系
-            treeRelationMapper.deleteByDescendantId(id);
-            treeRelationMapper.deleteByAncestorId(id);
+            treeRelationMapper.deleteByDescendantId(entity.getNodeId(), group);
+            treeRelationMapper.deleteByAncestorId(entity.getNodeId(), group);
         }
     }
 
-    @Override
-    public void batchDelete(List<String> nodeIds) {
-        if (CollUtil.isEmpty(nodeIds)) {
-            return;
-        }
-        nodeIds.forEach(nodeId -> {
-            getInstance().delete(nodeId);
-        });
-    }
-
-    @Cacheable(cacheNames = "tree_root_node", key = "#treeGroup")
-    @ExpireOn(value = 2, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<ITreeStorable> getRootNodes(String treeGroup) {
         AssertUtil.hasText(treeGroup, "无法查询空的树组");
         var coll = treeNodeMapper.getRootNodeByGroupName(treeGroup);
         return CollUtil.isEmpty(coll) ? Collections.EMPTY_LIST : coll.stream().map(treeNodeEntity -> {
             var model = new SimpleTreeStrorableModel();
-            model.setNodeId(treeNodeEntity.getId());
+            model.setNodeId(treeNodeEntity.getNodeId());
             model.setTreeGroup(treeNodeEntity.getGroupName());
             return model;
         }).collect(Collectors.toList());
@@ -325,10 +327,9 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     }
 
     @Override
-    public boolean isExist(String nodeId) {
+    public boolean isExist(String nodeId, String group) {
         AssertUtil.hasText(nodeId, "无法查询空的节点id");
-        var coll = treeNodeMapper.getNodeById(nodeId);
-        return CollUtil.isNotEmpty(coll);
+        return getInstance().getTreeNode(nodeId, group) != null;
     }
 
     /**
@@ -346,15 +347,11 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
 
             // 创建一个Map来存储节点ID到TreeNodeEntity的映射，便于快速查找
             Map<String, TreeNodeEntity> nodeMap =
-                allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getId, node -> node));
+                allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getNodeId, node -> node));
 
             // 先为所有节点建立自引用关系
             for (TreeNodeEntity node : allNodes) {
-                TreeRelationEntity selfRelation = new TreeRelationEntity();
-                selfRelation.setAncestorId(node.getId());
-                selfRelation.setDescendantId(node.getId());
-                selfRelation.setDepth(0);
-                treeRelationMapper.insert(selfRelation);
+                treeRelationMapper.insert(createSelfRelation(node.getNodeId(), node.getGroupName()));
             }
 
             // 按层级排序处理节点，确保父节点在子节点之前处理
@@ -374,15 +371,12 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
                 }
 
                 // 添加直接父子关系（深度为1）
-                TreeRelationEntity parentRelation = new TreeRelationEntity();
-                parentRelation.setAncestorId(node.getParentId());
-                parentRelation.setDescendantId(node.getId());
-                parentRelation.setDepth(1);
-                treeRelationMapper.insert(parentRelation);
+
+                treeRelationMapper.insert(createRelation(node.getParentId(), node.getNodeId(), 1, node.getGroupName()));
 
                 // 查询父节点的所有祖先关系
                 List<TreeRelationEntity> ancestorRelations =
-                    treeRelationMapper.selectAncestorsByDescendantId(node.getParentId());
+                    treeRelationMapper.selectAncestorsByDescendantId(node.getParentId(), node.getGroupName());
 
                 // 为当前节点添加与所有祖先节点的关系
                 for (TreeRelationEntity ancestorRelation : ancestorRelations) {
@@ -392,11 +386,8 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
                         continue;
                     }
 
-                    TreeRelationEntity newRelation = new TreeRelationEntity();
-                    newRelation.setAncestorId(ancestorRelation.getAncestorId());
-                    newRelation.setDescendantId(node.getId());
-                    newRelation.setDepth(ancestorRelation.getDepth() + 1);
-                    treeRelationMapper.insert(newRelation);
+                    treeRelationMapper.insert(createRelation(ancestorRelation.getAncestorId(), node.getNodeId(),
+                        ancestorRelation.getDepth() + 1, node.getGroupName()));
                 }
             }
 
@@ -440,7 +431,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     @Override
     public void startUp() throws RuntimeException {
         if (instance == null) {
-            instance = SpringUtil.getBean(ITreeStore.class);
+            instance = SpringUtil.getBean(ClosureTreeServiceImpl.class);
         }
     }
 }

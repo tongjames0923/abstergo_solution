@@ -14,6 +14,10 @@ import java.io.Serializable;
 public class TreeNodeModel implements ITreeStorable, Serializable {
     private static final long serialVersionUID = 1L;
     /**
+     * 实体ID
+     */
+    private Long entityId;
+    /**
      * 节点ID
      */
     private String nodeId;
