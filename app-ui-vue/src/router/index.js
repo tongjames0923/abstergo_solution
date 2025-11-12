@@ -103,6 +103,12 @@ export const constantRoutes = [
         name: '表单管理',
         component: () => import('@/views/form/FormManager.vue'),
         meta: { title: '表单管理', icon: 'el-icon-s-order', roles: ['1'] }
+      },
+      {
+        path: 'systemlog',
+        name: '系统运行报表',
+        component: () => import('@/views/admin/systemlog/index.vue'),
+        meta: { title: '系统运行报表', icon: 'el-icon-s-data', roles: ['1'] }
       }
     ]
   },

@@ -4,11 +4,13 @@ import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.company.SimpleCompanyUserRelationService;
+import com.tbs.app.service.impl.log.SimpleSystemLogServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.role.SimpleUserRoleRelationServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
 import com.tbs.app.service.impl.user.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.impl.view.ViewServiceImpl;
+import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.token.ISystemTokenService;
@@ -32,6 +34,12 @@ public class BuisnessBeanConfig {
 
     @Resource
     private AppSettingProperty systemAppProperty;
+
+    @Bean
+    @ConditionalOnMissingBean(ISystemLogService.class)
+    public ISystemLogService systemLogService() {
+        return new SimpleSystemLogServiceImpl();
+    }
 
     @Bean
     @ConditionalOnMissingBean(IUserRoleRelationService.class)
