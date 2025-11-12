@@ -16,44 +16,8 @@
       </div>
     </el-card>
 
-    <el-row :gutter="20" class="statistic-row">
-      <el-col :span="6">
-        <el-card class="statistic-card">
-          <div class="statistic-item">
-            <div class="statistic-title">总操作类型</div>
-            <div class="statistic-value">{{ totalCount }}</div>
-            <div class="statistic-desc">不同操作的数量</div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card class="statistic-card">
-          <div class="statistic-item">
-            <div class="statistic-title">平均成功率</div>
-            <div class="statistic-value">{{ averageSuccessRate }}</div>
-            <div class="statistic-desc">所有操作的成功率均值</div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card class="statistic-card">
-          <div class="statistic-item">
-            <div class="statistic-title">最高稳定性</div>
-            <div class="statistic-value">{{ maxStabilityIndex }}</div>
-            <div class="statistic-desc">最高的稳定性指数</div>
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="6">
-        <el-card class="statistic-card">
-          <div class="statistic-item">
-            <div class="statistic-title">平均响应时间</div>
-            <div class="statistic-value">{{ averageResponseTime }}</div>
-            <div class="statistic-desc">所有操作的平均响应时间(ms)</div>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <!-- 图表组件 -->
+    <system-log-charts :chart-data="tableData"/>
 
     <el-card class="table-card">
       <div slot="header" class="card-header">
@@ -158,9 +122,13 @@
 
 <script>
 import {getSystemLogOperateTypeList} from '@/api/systemlog'
+import SystemLogCharts from '@/components/SystemLogCharts'
 
 export default {
   name: 'SystemLog',
+  components: {
+    SystemLogCharts
+  },
   data() {
     return {
       loading: true,

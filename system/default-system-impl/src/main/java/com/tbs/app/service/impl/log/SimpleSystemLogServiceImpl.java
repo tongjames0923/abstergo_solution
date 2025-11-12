@@ -42,8 +42,6 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     @Override
     public List<LogOperateTypeView> getLogOperateTypeList(int lastDay) {
         Date today = new Date();
-        //将today设置成00:00:00
-        today = DateUtil.beginOfDay(today).toJdkDate();
         Date lastDayStart = DateUtil.offsetDay(today, -lastDay).toJdkDate();
         var data = systemOperateMapper.getQueryWrapper(new SystemOperateRecordEntity()).where()
             .greaterThan(SystemOperateRecordEntity::getOperateTime, lastDayStart)
