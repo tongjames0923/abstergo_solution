@@ -19,62 +19,69 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class DbSystemOpLog implements ISystemOperateLog, DisposableBean {
-	@Resource
-	private SystemOperateMapper systemOperateMapper;
+    @Resource
+    private SystemOperateMapper systemOperateMapper;
 
-	@Resource
-	private IDataHolderManager dataHolderManager;
+    @Resource
+    private IDataHolderManager dataHolderManager;
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(DbSystemOpLog.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DbSystemOpLog.class);
 
-	@Setter
-	@Getter
-	private int batchSize = 100;
+    @Setter
+    @Getter
+    private int batchSize = 100;
 
-	@Getter
-	@Setter
-	private String dataHolderName = "DB_SYS_OPER_RECORD_BUFFER";
+    @Getter
+    @Setter
+    private String dataHolderName = "DB_SYS_OPER_RECORD_BUFFER";
 
-	@Override
-	@Async
-	public void log(SystemOperateRecordEntity operateRecord) {
-		opDataSource((ls) -> {
-			ls.add(operateRecord);
-			if (ls.size() >= getBatchSize()) {
-				flush(ls);
-			}
-		});
-	}
+    @Override
+    @Async
+    public void log(SystemOperateRecordEntity operateRecord) {
+        opDataSource((ls) -> {
+            ls.add(operateRecord);
+            if (ls.size() >= getBatchSize()) {
+                flush(ls);
+            }
+        });
+    }
 
-	private void flush(List<SystemOperateRecordEntity> list) {
-		if (list.isEmpty()) {
-			return;
-		}
-		LOGGER.info("flush data in to db.size={},batch size={}", list.size(), getBatchSize());
-		for (var ls : CollUtil.partition(list, getBatchSize())) {
-			int effect = systemOperateMapper.insertList(ls);
-			LOGGER.info("insert list size={},effect size={}", ls.size(), effect);
-		}
-		list.clear();
-	}
+    @Override
+    public void flush() {
+        opDataSource(ls -> {
+            flush(ls);
+        });
+    }
 
-	private void opDataSource(Consumer<List<SystemOperateRecordEntity>> consumer) {
-		LockUtil.getInstance().lockThen(this, () -> {
-			dataHolderManager.getDataHolder(getDataHolderName()).ifPresent(dataHolder -> {
-				List<SystemOperateRecordEntity> ls = (List<SystemOperateRecordEntity>) dataHolder
-						.get(getDataHolderName()).orElse(new ArrayList<>());
-				consumer.accept(ls);
-				dataHolder.set(getDataHolderName(), ls, true);
-			});
-		});
-	}
+    private void flush(List<SystemOperateRecordEntity> list) {
+        if (list.isEmpty()) {
+            return;
+        }
+        LOGGER.info("flush data in to db.size={},batch size={}", list.size(), getBatchSize());
+        for (var ls : CollUtil.partition(list, getBatchSize())) {
+            int effect = systemOperateMapper.insertList(ls);
+            LOGGER.info("insert list size={},effect size={}", ls.size(), effect);
+        }
+        list.clear();
+    }
 
-	@Override
-	public void destroy() throws Exception {
-		LOGGER.warn("destroy DbSystemOPLog... ");
-		opDataSource((ls) -> {
-			flush(ls);
-			ls.clear();
-		});
-	}
+    private void opDataSource(Consumer<List<SystemOperateRecordEntity>> consumer) {
+        LockUtil.getInstance().lockThen(this, () -> {
+            dataHolderManager.getDataHolder(getDataHolderName()).ifPresent(dataHolder -> {
+                List<SystemOperateRecordEntity> ls =
+                    (List<SystemOperateRecordEntity>)dataHolder.get(getDataHolderName()).orElse(new ArrayList<>());
+                consumer.accept(ls);
+                dataHolder.set(getDataHolderName(), ls, true);
+            });
+        });
+    }
+
+    @Override
+    public void destroy() throws Exception {
+        LOGGER.warn("destroy DbSystemOPLog... ");
+        opDataSource((ls) -> {
+            flush(ls);
+            ls.clear();
+        });
+    }
 }
