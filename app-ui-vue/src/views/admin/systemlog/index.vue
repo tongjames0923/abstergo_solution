@@ -26,7 +26,7 @@
             <i class="el-icon-s-operation"></i>
           </div>
           <div class="stat-content">
-            <div class="stat-value">{{ totalOperations }}</div>
+            <div class="stat-value">{{ formatNumber(totalOperations) }}</div>
             <div class="stat-label">总操作数</div>
           </div>
         </div>
@@ -62,8 +62,33 @@
             <i class="el-icon-warning"></i>
           </div>
           <div class="stat-content">
-            <div class="stat-value">{{ totalErrors }}</div>
+            <div class="stat-value">{{ formatNumber(totalErrors) }}</div>
             <div class="stat-label">错误总数</div>
+          </div>
+        </div>
+      </el-col>
+
+      <!-- 新增的统计卡片 -->
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" class="stat-col">
+        <div class="stat-card info">
+          <div class="stat-icon">
+            <i class="el-icon-user"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ avgUsersPerOperation }}</div>
+            <div class="stat-label">平均每操作用户数</div>
+          </div>
+        </div>
+      </el-col>
+
+      <el-col :xs="24" :sm="12" :md="12" :lg="6" class="stat-col">
+        <div class="stat-card purple">
+          <div class="stat-icon">
+            <i class="el-icon-monitor"></i>
+          </div>
+          <div class="stat-content">
+            <div class="stat-value">{{ stabilityIndex }}%</div>
+            <div class="stat-label">稳定性指数</div>
           </div>
         </div>
       </el-col>
@@ -98,7 +123,37 @@
           </el-card>
         </el-col>
       </el-row>
+
+      <!-- 新增的图表区域 -->
+      <el-row :gutter="20">
+        <!-- 稳定性分析图表 -->
+        <el-col :xs="24" :sm="24" :md="12" class="chart-col">
+          <el-card class="chart-card" shadow="never">
+            <div slot="header" class="chart-header">
+              <div class="chart-header-content">
+                <i class="el-icon-s-data"></i>
+                <span class="chart-title">操作稳定性分析</span>
+              </div>
+            </div>
+            <div ref="stabilityChart" class="chart-container"></div>
+          </el-card>
+        </el-col>
+
+        <!-- 成功率分布图表 -->
+        <el-col :xs="24" :sm="24" :md="12" class="chart-col">
+          <el-card class="chart-card" shadow="never">
+            <div slot="header" class="chart-header">
+              <div class="chart-header-content">
+                <i class="el-icon-pie-chart"></i>
+                <span class="chart-title">成功率分布</span>
+              </div>
+            </div>
+            <div ref="successRateChart" class="chart-container"></div>
+          </el-card>
+        </el-col>
+      </el-row>
     </div>
+
     <!-- 优化后的详细数据区域 -->
     <el-card class="data-card" shadow="never">
       <div slot="header" class="card-header">
@@ -138,28 +193,28 @@
             <el-table-column prop="operateCount" label="操作次数" width="100" sortable align="center"
                              :sort-orders="['descending', 'ascending']">
               <template slot-scope="scope">
-                <el-tag size="small" type="primary">{{ scope.row.operateCount }}</el-tag>
+                <el-tag size="small" type="primary">{{ formatNumber(scope.row.operateCount) }}</el-tag>
               </template>
             </el-table-column>
 
             <el-table-column prop="operateTime" label="总耗时(ms)" width="120" sortable align="center"
                              :sort-orders="['descending', 'ascending']">
               <template slot-scope="scope">
-                <span class="time-value">{{ scope.row.operateTime }}</span>
+                <span class="time-value">{{ formatNumber(scope.row.operateTime) }}</span>
               </template>
             </el-table-column>
 
             <el-table-column prop="operateTimeMax" label="最大耗时(ms)" width="120" sortable align="center"
                              :sort-orders="['descending', 'ascending']">
               <template slot-scope="scope">
-                <span class="time-value max-time">{{ scope.row.operateTimeMax }}</span>
+                <span class="time-value max-time">{{ formatNumber(scope.row.operateTimeMax) }}</span>
               </template>
             </el-table-column>
 
             <el-table-column prop="operateTimeMin" label="最小耗时(ms)" width="120" sortable align="center"
                              :sort-orders="['descending', 'ascending']">
               <template slot-scope="scope">
-                <span class="time-value min-time">{{ scope.row.operateTimeMin }}</span>
+                <span class="time-value min-time">{{ formatNumber(scope.row.operateTimeMin) }}</span>
               </template>
             </el-table-column>
 
@@ -176,8 +231,50 @@
                 <el-tag
                   size="small"
                   :type="scope.row.errorCount > 0 ? 'danger' : 'success'">
-                  {{ scope.row.errorCount }}
+                  {{ formatNumber(scope.row.errorCount) }}
                 </el-tag>
+              </template>
+            </el-table-column>
+
+            <!-- 新增的表格列 -->
+            <el-table-column prop="successRate" label="成功率" width="100" sortable align="center"
+                             :sort-orders="['descending', 'ascending']">
+              <template slot-scope="scope">
+                <el-tag
+                  size="small"
+                  :type="scope.row.successRate >= 95 ? 'success' : (scope.row.successRate >= 80 ? 'warning' : 'danger')">
+                  {{ scope.row.successRate }}%
+                </el-tag>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="operateTime90Percentile" label="90%分位响应时间(ms)" width="150" sortable
+                             align="center"
+                             :sort-orders="['descending', 'ascending']">
+              <template slot-scope="scope">
+                <span class="time-value">{{ formatNumber(scope.row.operateTime90Percentile) }}</span>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="operateTimeStdDev" label="响应时间标准差" width="130" sortable align="center"
+                             :sort-orders="['ascending', 'descending']">
+              <template slot-scope="scope">
+                <span class="time-value">{{ formatNumber(scope.row.operateTimeStdDev) }}</span>
+                <el-tag
+                  size="mini"
+                  :type="scope.row.operateTimeStdDev < 100 ? 'success' : (scope.row.operateTimeStdDev < 500 ? 'warning' : 'danger')"
+                  style="margin-left: 5px;">
+                  {{
+                    scope.row.operateTimeStdDev < 100 ? '稳定' : (scope.row.operateTimeStdDev < 500 ? '一般' : '波动')
+                  }}
+                </el-tag>
+              </template>
+            </el-table-column>
+
+            <el-table-column prop="userCount" label="涉及用户数" width="100" sortable align="center"
+                             :sort-orders="['descending', 'ascending']">
+              <template slot-scope="scope">
+                <el-tag size="small" type="info">{{ formatNumber(scope.row.userCount) }}</el-tag>
               </template>
             </el-table-column>
 
@@ -249,12 +346,103 @@ export default {
     avgResponseTime() {
       if (this.logData.length === 0) return 0
       const totalTime = this.logData.reduce((sum, item) => sum + parseFloat(item.operateTime || 0), 0)
-      return (totalTime / this.logData.length).toFixed(2)
+      const totalCount = this.logData.reduce((sum, item) => sum + parseFloat(item.operateCount || 0), 0)
+      return totalCount > 0 ? (totalTime / totalCount).toFixed(2) : 0
     },
     paginatedData() {
       const start = (this.currentPage - 1) * this.pageSize
       const end = start + this.pageSize
       return this.logData.slice(start, end)
+    },
+    // 新增的计算属性
+    avgUsersPerOperation() {
+      if (this.logData.length === 0) return 0
+      const totalUsers = this.logData.reduce((sum, item) => sum + parseFloat(item.userCount || 0), 0)
+      return (totalUsers / this.logData.length).toFixed(2)
+    },
+
+    stabilityIndex() {
+      if (this.logData.length === 0) return 0
+
+      // 获取有效数据（有操作次数且大于0的记录）
+      const validData = this.logData.filter(item =>
+        item.operateCount > 0
+      )
+
+      if (validData.length === 0) return 0
+
+      // 计算总操作次数
+      const totalOperations = validData.reduce((sum, item) =>
+        sum + parseFloat(item.operateCount || 0), 0)
+
+      if (totalOperations === 0) return 0
+
+      // 1. 成功率因子 (权重: 40%)
+      const totalErrors = validData.reduce((sum, item) =>
+        sum + parseFloat(item.errorCount || 0), 0)
+      const successRate = (totalOperations - totalErrors) / totalOperations
+      const successFactor = successRate * 40
+
+      // 2. 90%分位响应时间因子 (权重: 30%)
+      // 计算加权的90%分位响应时间
+      let weighted90PercentileSum = 0
+      let valid90PercentileOperations = 0
+
+      validData.forEach(item => {
+        if (item.operateTime90Percentile !== undefined &&
+          item.operateTime90Percentile !== null) {
+          const operations = parseFloat(item.operateCount || 0)
+          const percentile90 = parseFloat(item.operateTime90Percentile || 0)
+          weighted90PercentileSum += percentile90 * operations
+          valid90PercentileOperations += operations
+        }
+      })
+
+      let percentileFactor = 0
+      if (valid90PercentileOperations > 0) {
+        const weightedAvg90Percentile = weighted90PercentileSum / valid90PercentileOperations
+        // 500ms内得满分，超过按比例扣分
+        percentileFactor = Math.max(0, 30 * (1 - (weightedAvg90Percentile / 500)))
+      } else {
+        // 如果没有90%分位数据，默认给满分
+        percentileFactor = 30
+      }
+
+      // 3. 标准差因子 (权重: 20%)
+      let weightedStdDevSum = 0
+      let validStdDevOperations = 0
+
+      validData.forEach(item => {
+        if (item.operateTimeStdDev !== undefined &&
+          item.operateTimeStdDev !== null) {
+          const operations = parseFloat(item.operateCount || 0)
+          const stdDev = parseFloat(item.operateTimeStdDev || 0)
+          weightedStdDevSum += stdDev * operations
+          validStdDevOperations += operations
+        }
+      })
+
+      let stdDevFactor = 0
+      if (validStdDevOperations > 0) {
+        const weightedAvgStdDev = weightedStdDevSum / validStdDevOperations
+        // 标准差为0时得满分，随着标准差增大得分递减（参考值1000ms）
+        stdDevFactor = Math.max(0, 20 * Math.exp(-weightedAvgStdDev / 500))
+      } else {
+        // 如果没有标准差数据，默认给满分
+        stdDevFactor = 20
+      }
+
+      // 4. 操作次数因子 (权重: 10%)
+      // 操作次数越多说明越常用，稳定性应该更重要
+      const avgOperations = totalOperations / validData.length
+      // 以1000次为基准，进行对数缩放
+      const operationsFactor = Math.min(10, 10 * (Math.log10(avgOperations + 1) / Math.log10(1000)))
+
+      // 计算最终稳定性指数
+      const stabilityScore = successFactor + percentileFactor + stdDevFactor + operationsFactor
+
+      return Math.max(0, Math.min(100, stabilityScore)).toFixed(2)
+
     }
   },
   mounted() {
@@ -266,6 +454,13 @@ export default {
     }
     if (this.errorChart) {
       this.errorChart.dispose()
+    }
+    // 新增图表的销毁
+    if (this.stabilityChart) {
+      this.stabilityChart.dispose()
+    }
+    if (this.successRateChart) {
+      this.successRateChart.dispose()
     }
   },
   methods: {
@@ -288,6 +483,9 @@ export default {
     initCharts() {
       this.initCombinedChart()
       this.initErrorChart()
+      // 新增图表初始化
+      this.initStabilityChart()
+      this.initSuccessRateChart()
     },
 
     initCombinedChart() {
@@ -314,6 +512,19 @@ export default {
           trigger: 'axis',
           axisPointer: {
             type: 'shadow'
+          },
+          formatter: (params) => {
+            let html = params[0].name + '<br/>'
+            params.forEach(param => {
+              if (param.seriesName === '平均耗时(ms)') {
+                html += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + param.color + ';"></span>'
+                html += param.seriesName + ': <b>' + this.formatNumber(param.value) + ' ms</b><br/>'
+              } else {
+                html += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + param.color + ';"></span>'
+                html += param.seriesName + ': <b>' + this.formatNumber(param.value) + '</b><br/>'
+              }
+            })
+            return html
           }
         },
         legend: {
@@ -349,7 +560,8 @@ export default {
             },
             position: 'left',
             axisLabel: {
-              color: '#666'
+              color: '#666',
+              formatter: (value) => this.formatNumber(value)
             }
           },
           {
@@ -360,7 +572,8 @@ export default {
             },
             position: 'right',
             axisLabel: {
-              color: '#666'
+              color: '#666',
+              formatter: (value) => this.formatNumber(value)
             }
           }
         ],
@@ -441,7 +654,11 @@ export default {
       const option = {
         tooltip: {
           trigger: 'item',
-          formatter: '{a} <br/>{b}: {c} ({d}%)'
+          formatter: (params) => {
+            return params.name + '<br/>' +
+              '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + params.color + ';"></span>' +
+              params.seriesName + ': <b>' + this.formatNumber(params.value) + '</b> (' + params.percent + '%)'
+          }
         },
         legend: {
           orient: 'horizontal',
@@ -487,6 +704,197 @@ export default {
       window.addEventListener('resize', () => this.errorChart.resize())
     },
 
+    // 新增的图表初始化方法
+    initStabilityChart() {
+      if (this.stabilityChart) {
+        this.stabilityChart.dispose()
+      }
+
+      this.stabilityChart = echarts.init(this.$refs.stabilityChart)
+
+      // 准备数据：按稳定性排序，取前10
+      const stabilityData = this.logData
+        .filter(item => item.operateTimeStdDev !== undefined && item.operateTimeStdDev !== null)
+        .map(item => ({
+          operateType: item.operateType,
+          stdDev: parseFloat(item.operateTimeStdDev || 0),
+          avgTime: item.operateCount > 0 ?
+            (parseFloat(item.operateTime) / parseFloat(item.operateCount)).toFixed(2) : 0
+        }))
+
+      const sortedData = stabilityData
+        .sort((a, b) => a.stdDev - b.stdDev) // 标准差越小越稳定
+        .slice(0, 10)
+
+      const option = {
+        tooltip: {
+          trigger: 'axis',
+          axisPointer: {
+            type: 'shadow'
+          },
+          formatter: (params) => {
+            let html = params[0].name + '<br/>'
+            params.forEach(param => {
+              if (param.seriesName === '响应时间标准差') {
+                html += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + param.color + ';"></span>'
+                html += param.seriesName + ': <b>' + this.formatNumber(param.value) + ' ms</b><br/>'
+              } else {
+                html += '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + param.color + ';"></span>'
+                html += param.seriesName + ': <b>' + this.formatNumber(param.value) + ' ms</b><br/>'
+              }
+            })
+            return html
+          }
+        },
+        legend: {
+          data: ['响应时间标准差', '平均响应时间'],
+          top: '5%'
+        },
+        grid: {
+          left: '3%',
+          right: '4%',
+          bottom: '15%',
+          containLabel: true
+        },
+        xAxis: [
+          {
+            type: 'category',
+            data: sortedData.map(item => item.operateType),
+            axisTick: {
+              alignWithLabel: true
+            },
+            axisLabel: {
+              rotate: 30,
+              interval: 0,
+              color: '#666'
+            }
+          }
+        ],
+        yAxis: [
+          {
+            type: 'value',
+            name: '标准差(ms)',
+            nameTextStyle: {
+              color: '#666'
+            },
+            position: 'left',
+            axisLabel: {
+              color: '#666',
+              formatter: (value) => this.formatNumber(value)
+            }
+          },
+          {
+            type: 'value',
+            name: '平均响应时间(ms)',
+            nameTextStyle: {
+              color: '#666'
+            },
+            position: 'right',
+            axisLabel: {
+              color: '#666',
+              formatter: (value) => this.formatNumber(value)
+            }
+          }
+        ],
+        series: [
+          {
+            name: '响应时间标准差',
+            type: 'bar',
+            barWidth: '30%',
+            data: sortedData.map(item => item.stdDev),
+            itemStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                {offset: 0, color: '#67c23a'},
+                {offset: 1, color: '#3b7a1c'}
+              ]),
+              borderRadius: [4, 4, 0, 0]
+            }
+          },
+          {
+            name: '平均响应时间',
+            type: 'line',
+            yAxisIndex: 1,
+            data: sortedData.map(item => item.avgTime),
+            itemStyle: {
+              color: '#409eff'
+            },
+            smooth: true
+          }
+        ]
+      }
+
+      this.stabilityChart.setOption(option)
+      window.addEventListener('resize', () => this.stabilityChart.resize())
+    }
+    ,
+
+    initSuccessRateChart() {
+      if (this.successRateChart) {
+        this.successRateChart.dispose()
+      }
+
+      this.successRateChart = echarts.init(this.$refs.successRateChart)
+
+      // 按成功率分组
+      const highSuccess = this.logData.filter(item => item.successRate >= 95).length
+      const mediumSuccess = this.logData.filter(item => item.successRate >= 80 && item.successRate < 95).length
+      const lowSuccess = this.logData.filter(item => item.successRate < 80).length
+
+      const option = {
+        tooltip: {
+          trigger: 'item',
+          formatter: (params) => {
+            return params.name + '<br/>' +
+              '<span style="display:inline-block;margin-right:5px;border-radius:10px;width:10px;height:10px;background-color:' + params.color + ';"></span>' +
+              params.seriesName + ': <b>' + this.formatNumber(params.value) + '</b> (' + params.percent + '%)'
+          }
+        },
+        legend: {
+          orient: 'horizontal',
+          bottom: '5%',
+          data: ['高成功率(≥95%)', '中等成功率(80-95%)', '低成功率(<80%)']
+        },
+        series: [
+          {
+            name: '成功率分布',
+            type: 'pie',
+            radius: ['40%', '70%'],
+            center: ['50%', '45%'],
+            avoidLabelOverlap: false,
+            itemStyle: {
+              borderRadius: 4,
+              borderColor: '#fff',
+              borderWidth: 2
+            },
+            label: {
+              show: false,
+              position: 'center'
+            },
+            emphasis: {
+              label: {
+                show: true,
+                fontSize: '14',
+                fontWeight: 'bold'
+              }
+            },
+            labelLine: {
+              show: false
+            },
+            data: [
+              {value: highSuccess, name: '高成功率(≥95%)'},
+              {value: mediumSuccess, name: '中等成功率(80-95%)'},
+              {value: lowSuccess, name: '低成功率(<80%)'}
+            ],
+            color: ['#67c23a', '#e6a23c', '#f56c6c']
+          }
+        ]
+      }
+
+      this.successRateChart.setOption(option)
+      window.addEventListener('resize', () => this.successRateChart.resize())
+    }
+    ,
+
     getSuccessRate(row) {
       if (row.operateCount === 0) return 0
       const successRate = ((row.operateCount - row.errorCount) / row.operateCount * 100)
@@ -525,6 +933,13 @@ export default {
       const total = parseFloat(row.operateTime) - parseFloat(row.operateTimeMax) - parseFloat(row.operateTimeMin)
       const count = row.operateCount - 2
       return (total / count).toFixed(2)
+    }
+    ,
+
+    formatNumber(value) {
+      if (value === undefined || value === null) return '0'
+      // 添加千分位分隔符
+      return parseFloat(value).toLocaleString()
     }
   }
 }
@@ -618,6 +1033,15 @@ export default {
   &.danger {
     border-left: 4px solid #f56c6c;
   }
+
+  // 新增的样式
+  &.info {
+    border-left: 4px solid #909399;
+  }
+
+  &.purple {
+    border-left: 4px solid #9c27b0;
+  }
 }
 
 .stat-icon {
@@ -645,6 +1069,15 @@ export default {
 
   .danger & {
     background: linear-gradient(135deg, #f56c6c, #c42f2f);
+  }
+
+  // 新增的样式
+  .info & {
+    background: linear-gradient(135deg, #909399, #606266);
+  }
+
+  .purple & {
+    background: linear-gradient(135deg, #9c27b0, #7b1fa2);
   }
 }
 

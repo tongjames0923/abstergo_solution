@@ -39,4 +39,34 @@ public class LogOperateTypeView implements Serializable {
      */
     private BigDecimal errorCount;
 
+    /**
+     * 成功率
+     */
+    private BigDecimal successRate;
+
+    /**
+     * 90%分位数响应时间
+     */
+    private BigDecimal operateTime90Percentile;
+
+    /**
+     * 中位数响应时间
+     */
+    private BigDecimal operateTimeMedian;
+
+    /**
+     * 操作涉及的用户数
+     */
+    private BigDecimal userCount;
+
+    /**
+     * 操作涉及的IP数
+     */
+    private BigDecimal ipCount;
+
+    /**
+     * 响应时间标准差
+     */
+    private BigDecimal operateTimeStdDev;
+
 }
