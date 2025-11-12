@@ -6,7 +6,6 @@ import com.tbs.shared.serialize.QueryOrderedModelSerializer;
 import com.tbs.sql.order.impl.QueryOrderedModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 
 /**
  * Jackson配置类，用于注册自定义的序列化器和反序列化器

@@ -189,14 +189,14 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     @Resource
     HttpServletRequest request;
 
-    @Cacheable(cacheNames = "tokenCache", key = "#token")
+    @Cacheable(cacheNames = "tokenCache", key = "#token", condition = "#token!=null && #token.length()>0")
     @ExpireOn(cacheNames = "tokenCache", value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
     public ITokenModel getTokenByToken(@NotNull String token) {
         return super.getTokenByToken(token);
     }
 
-    @CacheEvict(cacheNames = "tokenCache", key = "#token")
+    @CacheEvict(cacheNames = "tokenCache", key = "#token", condition = "#token!=null && #token.length()>0")
     @Override
     public void setTokenStatus(@NotNull String token, @NotNull TokenStatusEnum status) {
         super.setTokenStatus(token, status);

@@ -32,5 +32,3 @@ dubbo:
     port: 20888
   shutdown:
     await-duration: 10000
-server:
-  port:

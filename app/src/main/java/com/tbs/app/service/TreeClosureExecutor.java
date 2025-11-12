@@ -14,9 +14,8 @@ public class TreeClosureExecutor {
 
     @XxlJob("rebuildTree")
     public void rebuildTree() {
-        //TODO: 树结构重建
         XxlJobHelper.log(" rebuild tree closure start");
-        closureTreeService.buildTreeClosure();
+        closureTreeService.buildTreeClosure(XxlJobHelper.getJobParam());
         XxlJobHelper.log(" rebuild tree closure success");
     }
 }

@@ -176,6 +176,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      */
     @Override
     public ITokenModel getTokenByToken(@NotNull String token) {
+        AssertUtil.hasText(token, "令牌不能为空");
         ITokenModel model = center.getModel(token);
         if (model == null) {
             return model;

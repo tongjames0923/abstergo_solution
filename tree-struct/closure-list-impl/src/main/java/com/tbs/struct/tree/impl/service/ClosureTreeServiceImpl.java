@@ -75,7 +75,6 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         return treeNodeMapper.getNodeById(id);
     }
 
-
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     @Caching(evict = {@CacheEvict(cacheNames = "tree_node_cache", key = "#parentNodeId+#treeStorable.treeGroup",
@@ -336,22 +335,30 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      * 重建树结构闭包表关系表
      */
     @Transactional(rollbackFor = RuntimeException.class)
-    public void buildTreeClosure() {
+    public void buildTreeClosure(String groupName) {
+        rebuildTreeClosureCheck();
         CacheUtils.getInstance().cacheableSet(REBUILD_TREE_CLOSURE_LOCK, true);
         try {
             // 删除所有关系
             treeRelationMapper.deleteAllRelations();
             //查询所有的节点
-            List<TreeNodeEntity> allNodes = treeNodeMapper.selectAll();
+            TreeNodeEntity search = new TreeNodeEntity();
+            search.setGroupName(groupName);
+            List<TreeNodeEntity> allNodes = treeNodeMapper.select(search);
             //根据所有节点的entity的父节点ID来插入关系，符合闭包表关系
+
+            if (CollUtil.isEmpty(allNodes)) {
+                return;
+            }
 
             // 创建一个Map来存储节点ID到TreeNodeEntity的映射，便于快速查找
             Map<String, TreeNodeEntity> nodeMap =
                 allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getNodeId, node -> node));
 
+            List<TreeRelationEntity> relations = new ArrayList<>(allNodes.size() * 2);
             // 先为所有节点建立自引用关系
             for (TreeNodeEntity node : allNodes) {
-                treeRelationMapper.insert(createSelfRelation(node.getNodeId(), node.getGroupName()));
+                relations.add(createSelfRelation(node.getNodeId(), node.getGroupName()));
             }
 
             // 按层级排序处理节点，确保父节点在子节点之前处理
@@ -371,8 +378,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
                 }
 
                 // 添加直接父子关系（深度为1）
-
-                treeRelationMapper.insert(createRelation(node.getParentId(), node.getNodeId(), 1, node.getGroupName()));
+                relations.add(createRelation(node.getParentId(), node.getNodeId(), 1, node.getGroupName()));
 
                 // 查询父节点的所有祖先关系
                 List<TreeRelationEntity> ancestorRelations =
@@ -385,12 +391,11 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
                         ancestorRelation.getDepth() == 0) {
                         continue;
                     }
-
-                    treeRelationMapper.insert(createRelation(ancestorRelation.getAncestorId(), node.getNodeId(),
+                    relations.add(createRelation(ancestorRelation.getAncestorId(), node.getNodeId(),
                         ancestorRelation.getDepth() + 1, node.getGroupName()));
                 }
             }
-
+            CollUtil.partition(relations, 50).forEach(treeRelationMapper::insertList);
         } finally {
             CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
         }
