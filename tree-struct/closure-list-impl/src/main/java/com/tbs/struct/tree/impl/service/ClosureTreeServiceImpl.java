@@ -356,50 +356,33 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
                 allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getNodeId, node -> node));
 
             List<TreeRelationEntity> relations = new ArrayList<>(allNodes.size() * 2);
-            // 先为所有节点建立自引用关系
-            for (TreeNodeEntity node : allNodes) {
-                relations.add(createSelfRelation(node.getNodeId(), node.getGroupName()));
-            }
-
-            // 按层级排序处理节点，确保父节点在子节点之前处理
-            // 这样可以保证当处理子节点时，其所有祖先节点的关系已经建立完成
-            List<TreeNodeEntity> sortedNodes = new ArrayList<>(allNodes);
-            sortedNodes.sort((a, b) -> {
-                int levelA = getNodeLevel(a, nodeMap);
-                int levelB = getNodeLevel(b, nodeMap);
-                return levelA - levelB;
-            });
-
-            // 再处理父子关系以及祖先关系
-            for (TreeNodeEntity node : sortedNodes) {
-                // 如果是根节点，跳过处理父子关系
-                if (node.getParentId() == null || node.getParentId().isEmpty()) {
-                    continue;
-                }
-
-                // 添加直接父子关系（深度为1）
-                relations.add(createRelation(node.getParentId(), node.getNodeId(), 1, node.getGroupName()));
-
-                // 查询父节点的所有祖先关系
-                List<TreeRelationEntity> ancestorRelations =
-                    treeRelationMapper.selectAncestorsByDescendantId(node.getParentId(), node.getGroupName());
-
-                // 为当前节点添加与所有祖先节点的关系
-                for (TreeRelationEntity ancestorRelation : ancestorRelations) {
-                    // 跳过父节点自身的自引用关系（已经在上面处理过了）
-                    if (ancestorRelation.getAncestorId().equals(node.getParentId()) &&
-                        ancestorRelation.getDepth() == 0) {
-                        continue;
-                    }
-                    relations.add(createRelation(ancestorRelation.getAncestorId(), node.getNodeId(),
-                        ancestorRelation.getDepth() + 1, node.getGroupName()));
-                }
+            for (var node : allNodes) {
+                relations.addAll(traceRelations(nodeMap, node.getNodeId()));
             }
             CollUtil.partition(relations, 50).forEach(treeRelationMapper::insertList);
+
         } finally {
             CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
         }
 
+    }
+
+    List<TreeRelationEntity> traceRelations(Map<String, TreeNodeEntity> nodeMap, String nodeId) {
+        var relations = new ArrayList<TreeRelationEntity>();
+        TreeNodeEntity current = nodeMap.get(nodeId);
+        if (current == null) {
+            return relations;
+        }
+
+        relations.add(createSelfRelation(current.getNodeId(), current.getGroupName()));
+        var temp = current;
+        int dep = 1;
+        while (StrUtil.isNotEmpty(temp.getParentId())) {
+            temp = nodeMap.get(temp.getParentId());
+            AssertUtil.notNull(temp, "无法找到节点：{}", temp.getNodeId());
+            relations.add(createRelation(temp.getNodeId(), current.getNodeId(), dep++, temp.getGroupName()));
+        }
+        return relations;
     }
 
     /**
