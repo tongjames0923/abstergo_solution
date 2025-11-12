@@ -69,4 +69,9 @@ public class LogOperateTypeView implements Serializable {
      */
     private BigDecimal operateTimeStdDev;
 
+    /**
+     * 稳定性指数
+     */
+    private Integer stabilityIndex;
+
 }
