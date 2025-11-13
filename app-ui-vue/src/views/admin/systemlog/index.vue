@@ -122,7 +122,7 @@
 
 <script>
 import {getSystemLogOperateTypeList} from '@/api/systemlog'
-import SystemLogCharts from '@/components/SystemLogCharts'
+import SystemLogCharts from '@/components/Chart/SystemLogCharts.vue'
 
 export default {
   name: 'SystemLog',
