@@ -50,7 +50,8 @@ export function initResponseTimeChart(chartElement, chartData) {
       backgroundColor: 'rgba(0, 0, 0, 0.7)',
       borderColor: 'transparent',
       textStyle: {
-        color: '#fff'
+        color: '#fff',
+        fontSize: 13
       },
       formatter: function(params) {
         let tooltip = `<div style="padding: 10px;">${params[0].name}<br/>`
@@ -64,13 +65,13 @@ export function initResponseTimeChart(chartElement, chartData) {
     },
     legend: {
       data: ['最大响应时间', '90%分位响应时间', '中位数响应时间', '平均耗时', '最小响应时间', '响应时间标准差'],
-      top: '2%',
+      top: '4%',
       textStyle: {
         color: '#606266',
         fontSize: 12
       },
-      itemWidth: 10,
-      itemHeight: 10
+      itemWidth: 12,
+      itemHeight: 12
     },
     grid: {
       left: '3%',

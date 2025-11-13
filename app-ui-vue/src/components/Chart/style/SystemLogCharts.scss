@@ -1,26 +1,35 @@
 .system-log-charts {
   margin-bottom: 20px;
   padding: 20px;
-  background-color: #f5f7fa;
-  border-radius: 8px;
+  background-color: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 
   .chart-statistics {
     margin-bottom: 20px;
+    
+    .el-col {
+      display: flex;
+    }
 
     .stat-card {
       border: none;
-      border-radius: 12px;
-      box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
-      transition: all 0.3s ease;
+      border-radius: 16px;
+      box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.06);
+      transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
       overflow: hidden;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
 
       &:hover {
-        transform: translateY(-4px);
-        box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.12);
+        transform: translateY(-6px);
+        box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
       }
 
       &.stat-card-success {
-        background: linear-gradient(135deg, #f0f9eb 0%, #f6ffed 100%);
+        background: linear-gradient(135deg, #e8fbee 0%, #f6ffed 100%);
 
         .stat-icon i {
           color: #52c41a;
@@ -28,7 +37,7 @@
       }
 
       &.stat-card-primary {
-        background: linear-gradient(135deg, #e6f4ff 0%, #f0f9ff 100%);
+        background: linear-gradient(135deg, #ddf0ff 0%, #f0f9ff 100%);
 
         .stat-icon i {
           color: #1890ff;
@@ -36,7 +45,7 @@
       }
 
       &.stat-card-info {
-        background: linear-gradient(135deg, #f0f5ff 0%, #f6ffed 100%);
+        background: linear-gradient(135deg, #eeeaff 0%, #f9f0ff 100%);
 
         .stat-icon i {
           color: #722ed1;
@@ -44,7 +53,7 @@
       }
 
       &.stat-card-warning {
-        background: linear-gradient(135deg, #fff7e6 0%, #fffbe6 100%);
+        background: linear-gradient(135deg, #fff3e0 0%, #fffbe6 100%);
 
         .stat-icon i {
           color: #faad14;
@@ -53,43 +62,45 @@
 
       .stat-content {
         text-align: center;
-        padding: 25px 0;
+        padding: 30px 20px;
         position: relative;
 
         .stat-icon {
           position: absolute;
-          top: 10px;
-          right: 15px;
-          font-size: 24px;
-          opacity: 0.5;
+          top: 15px;
+          right: 20px;
+          font-size: 28px;
+          opacity: 0.4;
+          transition: all 0.3s ease;
         }
 
         .stat-title {
-          font-size: 14px;
-          color: #606266;
-          margin-bottom: 12px;
-          font-weight: 500;
+          font-size: 15px;
+          color: #555;
+          margin-bottom: 15px;
+          font-weight: 600;
+          letter-spacing: 0.3px;
         }
 
         .stat-value {
-          font-size: 28px;
-          font-weight: bold;
-          color: #303133;
-          margin-bottom: 8px;
-          letter-spacing: 0.5px;
+          font-size: 32px;
+          font-weight: 700;
+          color: #222;
+          margin-bottom: 10px;
+          letter-spacing: 1px;
         }
 
         .stat-desc {
-          font-size: 13px;
-          color: #909399;
-          line-height: 1.4;
+          font-size: 14px;
+          color: #777;
+          line-height: 1.5;
         }
       }
     }
   }
 
   .chart-row {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
 
     &:last-child {
       margin-bottom: 0;
@@ -98,26 +109,30 @@
 
   .chart-card {
     border: none;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.08);
-    transition: all 0.3s ease;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.06);
+    transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    overflow: hidden;
 
     &:hover {
-      box-shadow: 0 6px 16px 0 rgba(0, 0, 0, 0.12);
+      box-shadow: 0 10px 30px 0 rgba(0, 0, 0, 0.1);
+      transform: translateY(-4px);
     }
 
     .chart-header {
-      font-weight: 600;
-      color: #303133;
-      font-size: 16px;
-      padding: 16px 20px;
+      font-weight: 700;
+      color: #222;
+      font-size: 18px;
+      padding: 20px 24px;
       border-bottom: 1px solid #f0f0f0;
+      background-color: #fafafa;
     }
 
     .chart-container {
-      height: 400px;
+      height: 420px;
       width: 100%;
-      padding: 20px;
+      padding: 24px;
+      background-color: #ffffff;
     }
   }
 }
@@ -125,26 +140,26 @@
 // 响应式设计
 @media screen and (max-width: 768px) {
   .system-log-charts {
-    padding: 10px;
+    padding: 15px;
 
     .stat-card {
       .stat-content {
-        padding: 20px 0;
+        padding: 20px 10px;
 
         .stat-value {
-          font-size: 24px;
+          font-size: 26px;
         }
 
         .stat-title {
-          font-size: 13px;
+          font-size: 14px;
         }
       }
     }
 
     .chart-card {
       .chart-container {
-        height: 300px;
-        padding: 10px;
+        height: 320px;
+        padding: 15px;
       }
     }
   }

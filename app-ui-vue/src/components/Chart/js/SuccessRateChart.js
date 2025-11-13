@@ -66,15 +66,16 @@ export function initSuccessRateChart(chartElement, chartData) {
       backgroundColor: 'rgba(0, 0, 0, 0.7)',
       borderColor: 'transparent',
       textStyle: {
-        color: '#fff'
+        color: '#fff',
+        fontSize: 13
       }
     },
     legend: {
-      bottom: '0',
+      bottom: '2%',
       left: 'center',
       textStyle: {
         color: '#606266',
-        fontSize: 12
+        fontSize: 13
       }
     },
     series: [

@@ -36,7 +36,8 @@ export function initVisitCountChart(chartElement, chartData) {
       backgroundColor: 'rgba(0, 0, 0, 0.7)',
       borderColor: 'transparent',
       textStyle: {
-        color: '#fff'
+        color: '#fff',
+        fontSize: 13
       },
       formatter: function (params) {
         const param = params[0]

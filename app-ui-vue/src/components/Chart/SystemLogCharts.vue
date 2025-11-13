@@ -1,7 +1,7 @@
 <template>
   <div class="system-log-charts">
     <el-row :gutter="20" class="chart-statistics">
-      <el-col :span="6">
+      <el-col :span="6" :xs="24" :sm="12">
         <el-card class="stat-card stat-card-success">
           <div class="stat-content">
             <div class="stat-icon">
@@ -13,19 +13,19 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="6" :xs="24" :sm="12">
         <el-card class="stat-card stat-card-primary">
           <div class="stat-content">
             <div class="stat-icon">
               <i class="el-icon-timer"></i>
             </div>
             <div class="stat-title">平均90%分位响应时间</div>
-            <div class="stat-value">{{ average90PercentileResponseTime }}ms</div>
+            <div class="stat-value">{{ average90PercentileResponseTime }}<span style="font-size: 18px;">ms</span></div>
             <div class="stat-desc">大部分请求的响应时间</div>
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="6" :xs="24" :sm="12">
         <el-card class="stat-card stat-card-info">
           <div class="stat-content">
             <div class="stat-icon">
@@ -37,22 +37,22 @@
           </div>
         </el-card>
       </el-col>
-      <el-col :span="6">
+      <el-col :span="6" :xs="24" :sm="12">
         <el-card class="stat-card stat-card-warning">
           <div class="stat-content">
             <div class="stat-icon">
               <i class="el-icon-check"></i>
             </div>
             <div class="stat-title">平均成功率</div>
-            <div class="stat-value">{{ averageSuccessRate }}%</div>
+            <div class="stat-value">{{ averageSuccessRate }}<span style="font-size: 18px;">%</span></div>
             <div class="stat-desc">请求成功比例</div>
           </div>
         </el-card>
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" class="chart-row">
-      <el-col :span="12">
+    <el-row :gutter="24" class="chart-row">
+      <el-col :span="12" :xs="24">
         <el-card class="chart-card">
           <div slot="header" class="chart-header">
             <span>稳定性指数分布</span>
@@ -60,7 +60,7 @@
           <div ref="stabilityChart" class="chart-container"></div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="12" :xs="24">
         <el-card class="chart-card">
           <div slot="header" class="chart-header">
             <span>响应时间分析</span>
@@ -70,9 +70,8 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="20" class="chart-row">
-
-      <el-col :span="12">
+    <el-row :gutter="24" class="chart-row">
+      <el-col :span="12" :xs="24">
         <el-card class="chart-card">
           <div slot="header" class="chart-header">
             <span>访问量Top10</span>
@@ -80,7 +79,7 @@
           <div ref="visitCountChart" class="chart-container"></div>
         </el-card>
       </el-col>
-      <el-col :span="12">
+      <el-col :span="12" :xs="24">
         <el-card class="chart-card">
           <div slot="header" class="chart-header">
             <span>成功率分布</span>
@@ -93,11 +92,10 @@
 </template>
 
 <script>
-import * as echarts from 'echarts'
-import { initResponseTimeChart } from './js/ResponseTimeChart.js'
-import { initStabilityChart } from './js/StabilityChart.js'
-import { initSuccessRateChart } from './js/SuccessRateChart.js'
-import { initVisitCountChart } from './js/VisitCountChart.js'
+import {initResponseTimeChart} from './js/ResponseTimeChart.js'
+import {initStabilityChart} from './js/StabilityChart.js'
+import {initSuccessRateChart} from './js/SuccessRateChart.js'
+import {initVisitCountChart} from './js/VisitCountChart.js'
 
 export default {
   name: 'SystemLogCharts',
