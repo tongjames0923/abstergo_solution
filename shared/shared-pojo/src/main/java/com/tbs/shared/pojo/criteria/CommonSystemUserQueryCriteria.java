@@ -1,11 +1,7 @@
 package com.tbs.shared.pojo.criteria;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
-import com.tbs.shared.serialize.QueryOrderedModelDeserializer;
-import com.tbs.shared.serialize.QueryOrderedModelSerializer;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
 import com.tbs.sql.annotation.QueryOrderField;
@@ -83,23 +79,18 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      */
     @QueryMapping(value = "update_time")
     @QueryField(contrast = QueryContrastEnum.LESS)
-
     private Date updateTimeLessThan;
 
     /**
      * 创建时间排序字段
      */
     @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
-    @JsonSerialize(using = QueryOrderedModelSerializer.class)
-    @JsonDeserialize(using = QueryOrderedModelDeserializer.class)
     private QueryOrderedModel createTimeOrder;
 
     /**
      * 更新时间排序字段
      */
     @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
-    @JsonSerialize(using = QueryOrderedModelSerializer.class)
-    @JsonDeserialize(using = QueryOrderedModelDeserializer.class)
     private QueryOrderedModel updateTimeOrder;
 
     /**
@@ -211,4 +202,5 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
         this.updateTimeOrder = updateTimeOrder;
         return this;
     }
+
 }

@@ -210,9 +210,9 @@ export default {
       return 'exception'
     },
     getStabilityTagType(index) {
-      if (index >= 90) return 'success'
-      if (index >= 80) return 'warning'
-      if (index >= 70) return ''
+      if (index >= 85) return 'success'
+      else if (index >= 60) return 'warning'
+      else if (index >= 45) return ''
       return 'danger'
     },
     formatNumber(value) {
