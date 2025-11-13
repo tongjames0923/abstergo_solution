@@ -64,6 +64,42 @@
         <el-card class="chart-card">
           <div slot="header" class="chart-header">
             <span>响应时间分析</span>
+            <!-- 响应时间图表控制面板 -->
+            <div class="chart-controls">
+              <el-select
+                v-model="responseTimeConfig.sortType"
+                size="mini"
+                placeholder="排序方式"
+                @change="updateResponseTimeChart"
+              >
+                <el-option label="标准差" value="stdDev"></el-option>
+                <el-option label="平均耗时" value="avg"></el-option>
+                <el-option label="最大响应时间" value="max"></el-option>
+                <el-option label="最小响应时间" value="min"></el-option>
+                <el-option label="中位数响应时间" value="median"></el-option>
+                <el-option label="访问量" value="count"></el-option>
+              </el-select>
+              <el-select
+                v-model="responseTimeConfig.sortOrder"
+                size="mini"
+                placeholder="排序顺序"
+                @change="updateResponseTimeChart"
+              >
+                <el-option label="降序" value="desc"></el-option>
+                <el-option label="升序" value="asc"></el-option>
+              </el-select>
+              <el-select
+                v-model="responseTimeConfig.showTop"
+                size="mini"
+                placeholder="显示数量"
+                @change="updateResponseTimeChart"
+              >
+                <el-option label="显示5个" :value="5"></el-option>
+                <el-option label="显示10个" :value="10"></el-option>
+                <el-option label="显示15个" :value="15"></el-option>
+                <el-option label="显示20个" :value="20"></el-option>
+              </el-select>
+            </div>
           </div>
           <div ref="responseTimeChart" class="chart-container"></div>
         </el-card>
@@ -110,7 +146,13 @@ export default {
       stabilityChart: null,
       responseTimeChart: null,
       successRateChart: null,
-      visitCountChart: null
+      visitCountChart: null,
+      // 响应时间图表配置
+      responseTimeConfig: {
+        sortType: 'stdDev',
+        sortOrder: 'desc',
+        showTop: 15
+      }
     }
   },
   computed: {
@@ -197,7 +239,15 @@ export default {
 
     // 初始化响应时间分析图表
     initResponseTimeChart() {
-      this.responseTimeChart = initResponseTimeChart(this.$refs.responseTimeChart, this.chartData)
+      this.responseTimeChart = initResponseTimeChart(this.$refs.responseTimeChart, this.chartData, this.responseTimeConfig)
+    },
+
+    // 更新响应时间分析图表
+    updateResponseTimeChart() {
+      if (this.responseTimeChart) {
+        this.responseTimeChart.dispose()
+      }
+      this.initResponseTimeChart()
     },
 
     // 初始化成功率分布图表
@@ -215,4 +265,19 @@ export default {
 
 <style lang="scss" scoped>
 @import 'style/SystemLogCharts';
+
+.chart-controls {
+  float: right;
+  display: flex;
+  gap: 10px;
+}
+
+// 响应式设计，小屏幕时将控制面板移到下一行
+@media screen and (max-width: 768px) {
+  .chart-controls {
+    float: none;
+    margin-top: 10px;
+    justify-content: flex-end;
+  }
+}
 </style>

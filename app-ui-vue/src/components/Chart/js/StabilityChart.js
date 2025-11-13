@@ -19,19 +19,19 @@ export function initStabilityChart(chartElement, chartData) {
 
   // 分段统计稳定性指数
   const segments = [
-    {name: '优秀(≥90)', value: 0},
-    {name: '良好(80-89)', value: 0},
-    {name: '一般(70-79)', value: 0},
-    {name: '较差(<70)', value: 0}
+    {name: '优秀(≥85)', value: 0},
+    {name: '良好(60-84)', value: 0},
+    {name: '一般(45-59)', value: 0},
+    {name: '较差(<45)', value: 0}
   ]
 
   chartData.forEach(item => {
     const index = item.stabilityIndex
-    if (index >= 90) {
+    if (index >= 85) {
       segments[0].value++
-    } else if (index >= 80) {
+    } else if (index >= 60) {
       segments[1].value++
-    } else if (index >= 70) {
+    } else if (index >= 45) {
       segments[2].value++
     } else {
       segments[3].value++
