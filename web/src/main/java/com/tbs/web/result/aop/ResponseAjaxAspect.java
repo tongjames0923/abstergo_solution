@@ -48,6 +48,7 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
         if (response.isCommitted()) {
             return null;
         }
+        log.error("处理异常", e);
         return AjaxUtil.getInstance().createAjaxResultOnError(AssertUtil.toFormattedRuntimeException(e).orElse(e));
     }
 

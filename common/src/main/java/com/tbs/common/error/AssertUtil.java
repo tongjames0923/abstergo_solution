@@ -11,10 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -34,6 +31,7 @@ public class AssertUtil implements IStartup {
     public void startUp() throws RuntimeException {
         errorTransformers = SpringUtil.getBeansByTypeSafe(IErrorTransformer.class).stream().sorted(Comparators::asc)
             .collect(Collectors.toList());
+        errorThrowEvents = SpringUtil.getBeansByTypeSafe(IErrorThrowEvent.class).stream().collect(Collectors.toList());
     }
 
     /**
@@ -157,18 +155,7 @@ public class AssertUtil implements IStartup {
     }
 
     @Getter
-    private static List<IErrorThrowEvent> errorThrowEvents = new CopyOnWriteArrayList<>();
-
-    @Resource
-    private Map<String, IErrorThrowEvent> ets;
-
-    /**
-     * 初始化方法，在组件构造后执行，收集所有错误抛出事件处理器
-     */
-    @PostConstruct
-    void init() {
-        errorThrowEvents = ets.entrySet().stream().map(entry -> entry.getValue()).collect(Collectors.toList());
-    }
+    private static List<IErrorThrowEvent> errorThrowEvents;
 
     /**
      * 抛出异常

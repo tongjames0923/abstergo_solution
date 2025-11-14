@@ -2,8 +2,11 @@ package com.tbs.web.security.token;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenTypeEnum;
+import com.tbs.web.exception.InvalidTokenException;
+import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.user.IUserInfoService;
@@ -105,11 +108,11 @@ public abstract class AbstractRefreshTokenService implements IRefreshTokenServic
     @Override
     public ITokenModel useRefreshToken() {
         String refreshToken = getRefreshToken().orElse(null);
-        AssertUtil.hasText(refreshToken, "不存在刷新令牌");
+        AssertUtil.isTrue(StrUtil.isEmpty(refreshToken), () -> new NotFoundTokenException("未读取到有效的刷新令牌"));
         ITokenModel refreshTokenModel = center.getTokenByToken(refreshToken);
-        AssertUtil.notNull(refreshTokenModel, "刷新令牌不存在");
+        AssertUtil.isTrue(refreshTokenModel == null, () -> new InvalidTokenException("刷新令牌不存在"));
         UserDetails userDetails = userInfoService.loadUserInfoByUniqueKey(refreshTokenModel.getUserName());
-        AssertUtil.notNull(userDetails, "用户不存在");
+        AssertUtil.isTrue(userDetails == null, () -> new InvalidTokenException("刷新令牌对应的用户详情数据不存在"));
         IRefreshTokenForm form = createRefreshTokenForm(refreshTokenModel);
         getRefreshTokenValidators().forEach(v -> v.validateUse(form, userDetails));
         ITokenModel model = refreshAccessTokenProvider.requestToken(form);

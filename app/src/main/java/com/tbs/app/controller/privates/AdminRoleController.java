@@ -37,129 +37,127 @@ import javax.annotation.Resource;
 @Tag(name = "管理员角色管理接口", description = "管理员角色管理接口")
 public class AdminRoleController extends BaseController {
 
-	@Resource
-	private IUserRoleRelationService relationService;
+    @Resource
+    private IUserRoleRelationService relationService;
 
-	@Resource
-	private ISystemRoleService roleService;
+    @Resource
+    private ISystemRoleService roleService;
 
-	/**
-	 * 查询用户角色列表
-	 *
-	 * @param userId 用户ID
-	 * @return 用户角色列表
-	 */
-	@GetMapping("roles/{userId}")
-	@Operation(summary = "查询用户角色", description = "根据用户ID查询该用户拥有的所有角色")
-	@ApiResponse(responseCode = "200", description = "成功查询用户角色", 
-		content = @Content(mediaType = "application/json", 
-			schema = @Schema(implementation = AjaxResult.class)))
-	public AjaxResult userRoles(@Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
-		return successResult(relationService.queryUserRoles(userId));
-	}
+    /**
+     * 查询用户角色列表
+     *
+     * @param userId 用户ID
+     * @return 用户角色列表
+     */
+    @GetMapping("roles/{userId}")
+    @Operation(summary = "查询用户角色", description = "根据用户ID查询该用户拥有的所有角色")
+    @ApiResponse(responseCode = "200", description = "成功查询用户角色",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult userRoles(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        return successResult(relationService.queryUserRoles(userId));
+    }
 
-	/**
-	 * 启用用户角色
-	 *
-	 * @param userId 用户ID
-	 * @param role   角色名称
-	 * @return 操作结果
-	 */
-	@GetMapping("/role/enable/{userId}")
-	@Operation(summary = "启用用户角色", description = "为指定用户启用指定角色")
-	@ApiResponse(responseCode = "200", description = "成功启用用户角色", 
-		content = @Content(mediaType = "application/json", 
-			schema = @Schema(implementation = AjaxResult.class)))
-	public AjaxResult enable(@Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
-			@Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
-		relationService.enableRole(userId, role);
-		return AjaxUtil.getInstance().success("授权成功", null);
-	}
+    /**
+     * 启用用户角色
+     *
+     * @param userId 用户ID
+     * @param role   角色名称
+     * @return 操作结果
+     */
+    @GetMapping("/role/enable/{userId}")
+    @Operation(summary = "启用用户角色", description = "为指定用户启用指定角色")
+    @ApiResponse(responseCode = "200", description = "成功启用用户角色",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult enable(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
+        @Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
+        relationService.enableRole(userId, role);
+        return AjaxUtil.getInstance().success("授权成功", null);
+    }
 
-	/**
-	 * 查询角色列表
-	 *
-	 * @param criteria 查询条件
-	 * @param page     页码
-	 * @param num      每页数量
-	 * @return 角色列表
-	 */
-	@PostMapping("roles/query")
-	@Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
-	@ApiResponse(responseCode = "200", description = "成功查询角色列表", 
-		content = @Content(mediaType = "application/json", 
-			schema = @Schema(implementation = AjaxResult.class)))
-	public AjaxResult query(
-			@Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,
-			@Parameter(name = "page", description = "页码") @RequestParam(required = false) Long page,
-			@Parameter(name = "num", description = "每页数量") @RequestParam(required = false) Long num) {
-		return successResult(roleService.queryAndPage(criteria, QueryPageModel.of(page, num)));
-	}
+    /**
+     * 查询角色列表
+     *
+     * @param criteria 查询条件
+     * @param page     页码
+     * @param num      每页数量
+     * @return 角色列表
+     */
+    @PostMapping("roles/query")
+    @Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
+    @ApiResponse(responseCode = "200", description = "成功查询角色列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult query(
+        @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,
+        @Parameter(name = "page", description = "页码") @RequestParam(required = false) Long page,
+        @Parameter(name = "num", description = "每页数量") @RequestParam(required = false) Long num) {
+        return successResult(roleService.queryAndPage(criteria, QueryPageModel.of(page, num)));
+    }
 
-	/**
-	 * 禁用用户角色
-	 *
-	 * @param userId 用户ID
-	 * @param role   角色名称
-	 * @return 操作结果
-	 */
-	@GetMapping("/role/disable/{userId}")
-	@Operation(summary = "禁用用户角色", description = "为指定用户禁用指定角色")
-	@ApiResponse(responseCode = "200", description = "成功禁用用户角色", 
-		content = @Content(mediaType = "application/json", 
-			schema = @Schema(implementation = AjaxResult.class)))
-	public AjaxResult disable(@Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
-			@Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
-		relationService.disableRole(userId, role);
-		return AjaxUtil.getInstance().success("取消授权成功", null);
-	}
+    /**
+     * 禁用用户角色
+     *
+     * @param userId 用户ID
+     * @param role   角色名称
+     * @return 操作结果
+     */
+    @GetMapping("/role/disable/{userId}")
+    @Operation(summary = "禁用用户角色", description = "为指定用户禁用指定角色")
+    @ApiResponse(responseCode = "200", description = "成功禁用用户角色",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult disable(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
+        @Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
+        relationService.disableRole(userId, role);
+        return AjaxUtil.getInstance().success("取消授权成功", null);
+    }
 
-	@Resource
-	private ISystemUserService userService;
+    @Resource
+    private ISystemUserService userService;
 
-	/**
-	 * 激活用户账户
-	 *
-	 * @param userId 用户ID
-	 * @return 操作结果
-	 */
-	@GetMapping("/account/activite/{userId}")
-	@Operation(summary = "激活用户账户", description = "激活指定用户的账户")
-	@ApiResponse(responseCode = "200", description = "成功激活用户账户", 
-		content = @Content(mediaType = "application/json", 
-			schema = @Schema(implementation = AjaxResult.class)))
-	public AjaxResult activiteAccount(
-			@Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
-		SystemUserEntity user = userService.queryById(userId);
-		AssertUtil.notNull(user, "用户不存在");
-		user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
-		userService.save(user);
-		relationService.enableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
-		return AjaxUtil.getInstance().success("激活成功", null);
-	}
+    /**
+     * 激活用户账户
+     *
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @GetMapping("/account/activite/{userId}")
+    @Operation(summary = "激活用户账户", description = "激活指定用户的账户")
+    @ApiResponse(responseCode = "200", description = "成功激活用户账户",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult activiteAccount(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        SystemUserEntity user = userService.queryById(userId);
+        AssertUtil.notNull(user, "用户不存在");
+        user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
+        userService.save(user);
+        relationService.enableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
+        return AjaxUtil.getInstance().success("激活成功", null);
+    }
 
-	/**
-	 * 禁用用户账户
-	 *
-	 * @param userId 用户ID
-	 * @return 操作结果
-	 */
-	@GetMapping("/account/disable/{userId}")
-	@Operation(summary = "禁用用户账户", description = "禁用指定用户的账户")
-	@ApiResponse(responseCode = "200", description = "成功禁用用户账户", 
-		content = @Content(mediaType = "application/json", 
-			schema = @Schema(implementation = AjaxResult.class)))
-	public AjaxResult disableAccount(
-			@Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
-		SystemUserEntity user = userService.queryById(userId);
-		AssertUtil.notNull(user, "用户不存在");
-		user.setFlag(SystemUserStatusEnum.DISABLED.getCode());
-		userService.save(user);
-		return AjaxUtil.getInstance().success("禁用成功", null);
-	}
+    /**
+     * 禁用用户账户
+     *
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @GetMapping("/account/disable/{userId}")
+    @Operation(summary = "禁用用户账户", description = "禁用指定用户的账户")
+    @ApiResponse(responseCode = "200", description = "成功禁用用户账户",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult disableAccount(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        SystemUserEntity user = userService.queryById(userId);
+        AssertUtil.notNull(user, "用户不存在");
+        user.setFlag(SystemUserStatusEnum.DISABLED.getCode());
+        userService.save(user);
+        relationService.disableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
+        return AjaxUtil.getInstance().success("禁用成功", null);
+    }
 
-	@Override
-	public String getBusinessName() {
-		return "管理员角色管理";
-	}
+    @Override
+    public String getBusinessName() {
+        return "管理员角色管理";
+    }
 }

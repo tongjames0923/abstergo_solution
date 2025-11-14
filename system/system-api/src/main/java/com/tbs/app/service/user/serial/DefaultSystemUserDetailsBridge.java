@@ -2,6 +2,7 @@ package com.tbs.app.service.user.serial;
 
 import com.tbs.app.service.user.model.impl.DefaultSystemUserDetails;
 import com.tbs.common.data.IDataBridge;
+import com.tbs.common.util.base.CollUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -16,15 +17,15 @@ public class DefaultSystemUserDetailsBridge
     public DefaultSystemUserDetailsDto bridge(@NotNull DefaultSystemUserDetails obj) {
         return new DefaultSystemUserDetailsDto(obj.getCompanies(), obj.getCurrentCompany(), obj.getUsername(),
             obj.getPassword(), obj.isAccountNonExpired(), obj.isAccountNonLocked(), obj.isCredentialsNonExpired(),
-            obj.isEnabled(),
-            obj.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
+            obj.isEnabled(), CollUtil.isEmpty(obj.getAuthorities()) ? null
+            : obj.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
     }
 
     @Override
     public DefaultSystemUserDetails unbridge(@NotNull DefaultSystemUserDetailsDto obj) {
         return new DefaultSystemUserDetails(obj.getCompanies(), obj.getCurrentCompany(), obj.getUsername(),
             obj.getPassword(), obj.isAccountNonExpired(), obj.isAccountNonLocked(), obj.isCredentialsNonExpired(),
-            obj.isEnabled(), obj.getAuthorities().stream().map((s) -> {
+            obj.isEnabled(), CollUtil.isEmpty(obj.getAuthorities()) ? null : obj.getAuthorities().stream().map((s) -> {
             return new SimpleGrantedAuthority(s);
         }).collect(Collectors.toList()));
     }

@@ -41,8 +41,7 @@ public class PublicUserController extends BaseController {
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "用户使用用户名和密码登录系统")
     @ApiResponse(responseCode = "200", description = "成功登录",
-        content = @Content(mediaType = "application/json",
-            schema = @Schema(implementation = ITokenModel.class)))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ITokenModel.class)))
     public ITokenModel login(@Parameter(description = "登录表单") @RequestBody @Validated LoginForm loginForm) {
         ITokenModel tokenModel = loginProvider.requestToken(loginForm);
         return tokenModel;
@@ -51,20 +50,15 @@ public class PublicUserController extends BaseController {
     @GetMapping("refresh")
     @Operation(summary = "刷新令牌", description = "使用刷新令牌获取新的访问令牌")
     @ApiResponse(responseCode = "200", description = "成功刷新令牌",
-        content = @Content(mediaType = "application/json",
-            schema = @Schema(implementation = AjaxResult.class)))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult refresh() {
         var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
         if (refreshTokenService.isEmpty()) {
             return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, "不支持无感刷新", null);
         }
         var service = refreshTokenService.get();
-        try {
-            ITokenModel newModel = service.useRefreshToken();
-            return successResult(newModel);
-        } catch (Exception e) {
-            return AjaxUtil.getInstance().custom(AjaxResult.REFRESH_FAIL_CODE, e.getLocalizedMessage(), null);
-        }
+        ITokenModel newModel = service.useRefreshToken();
+        return successResult(newModel);
     }
 
     @Override
