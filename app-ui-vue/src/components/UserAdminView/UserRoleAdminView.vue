@@ -49,7 +49,6 @@
           :data="paginatedRoles"
           :gap="15"
           :loading="loading"
-          :loading-count="loadingCount"
           :max-height="300"
           :page-size="pageSize"
           :pagination="true"
