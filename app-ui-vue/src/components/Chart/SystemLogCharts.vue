@@ -51,79 +51,102 @@
       </el-col>
     </el-row>
 
-    <el-row :gutter="24" class="chart-row">
-      <el-col :span="12" :xs="24">
-        <el-card class="chart-card">
-          <div slot="header" class="chart-header">
-            <span>稳定性指数分布</span>
-          </div>
-          <div ref="stabilityChart" class="chart-container"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="12" :xs="24">
-        <el-card class="chart-card">
-          <div slot="header" class="chart-header">
-            <span>响应时间分析</span>
-            <!-- 响应时间图表控制面板 -->
-            <div class="chart-controls">
-              <el-select
-                v-model="responseTimeConfig.sortType"
-                size="mini"
-                placeholder="排序方式"
-                @change="updateResponseTimeChart"
-              >
-                <el-option label="标准差" value="stdDev"></el-option>
-                <el-option label="平均耗时" value="avg"></el-option>
-                <el-option label="最大响应时间" value="max"></el-option>
-                <el-option label="最小响应时间" value="min"></el-option>
-                <el-option label="中位数响应时间" value="median"></el-option>
-                <el-option label="访问量" value="count"></el-option>
-              </el-select>
-              <el-select
-                v-model="responseTimeConfig.sortOrder"
-                size="mini"
-                placeholder="排序顺序"
-                @change="updateResponseTimeChart"
-              >
-                <el-option label="降序" value="desc"></el-option>
-                <el-option label="升序" value="asc"></el-option>
-              </el-select>
-              <el-select
-                v-model="responseTimeConfig.showTop"
-                size="mini"
-                placeholder="显示数量"
-                @change="updateResponseTimeChart"
-              >
-                <el-option label="显示5个" :value="5"></el-option>
-                <el-option label="显示10个" :value="10"></el-option>
-                <el-option label="显示15个" :value="15"></el-option>
-                <el-option label="显示20个" :value="20"></el-option>
-              </el-select>
-            </div>
-          </div>
-          <div ref="responseTimeChart" class="chart-container"></div>
-        </el-card>
-      </el-col>
-    </el-row>
+    <!-- 走马灯图表展示区域 -->
+    <el-card class="carousel-chart-card">
+      <div slot="header" class="chart-header">
+        <span>系统运行图表</span>
+        <div class="carousel-controls">
+          <el-button
+            icon="el-icon-arrow-left"
+            circle
+            size="mini"
+            @click="prevChart"
+            :disabled="carouselActiveIndex === 0"
+          ></el-button>
+          <el-button
+            icon="el-icon-arrow-right"
+            circle
+            size="mini"
+            @click="nextChart"
+            :disabled="carouselActiveIndex === 3"
+          ></el-button>
+        </div>
+      </div>
 
-    <el-row :gutter="24" class="chart-row">
-      <el-col :span="12" :xs="24">
-        <el-card class="chart-card">
-          <div slot="header" class="chart-header">
-            <span>访问量Top10</span>
+      <el-carousel
+        ref="chartCarousel"
+        :autoplay="false"
+        indicator-position="none"
+        arrow="never"
+        height="400px"
+        @change="handleCarouselChange"
+      >
+        <el-carousel-item name="stability">
+          <div class="chart-item">
+            <h3>稳定性指数分布</h3>
+            <div ref="stabilityChart" class="chart-container"></div>
           </div>
-          <div ref="visitCountChart" class="chart-container"></div>
-        </el-card>
-      </el-col>
-      <el-col :span="12" :xs="24">
-        <el-card class="chart-card">
-          <div slot="header" class="chart-header">
-            <span>成功率分布</span>
+        </el-carousel-item>
+
+        <el-carousel-item name="responseTime">
+          <div class="chart-item">
+            <h3>响应时间分析</h3>
+            <div class="chart-controls-wrapper">
+              <div class="chart-controls">
+                <el-select
+                  v-model="responseTimeConfig.sortType"
+                  size="mini"
+                  placeholder="排序方式"
+                  @change="updateResponseTimeChart"
+                >
+                  <el-option label="标准差" value="stdDev"></el-option>
+                  <el-option label="平均耗时" value="avg"></el-option>
+                  <el-option label="最大响应时间" value="max"></el-option>
+                  <el-option label="最小响应时间" value="min"></el-option>
+                  <el-option label="中位数响应时间" value="median"></el-option>
+                  <el-option label="访问量" value="count"></el-option>
+                </el-select>
+                <el-select
+                  v-model="responseTimeConfig.sortOrder"
+                  size="mini"
+                  placeholder="排序顺序"
+                  @change="updateResponseTimeChart"
+                >
+                  <el-option label="降序" value="desc"></el-option>
+                  <el-option label="升序" value="asc"></el-option>
+                </el-select>
+                <el-select
+                  v-model="responseTimeConfig.showTop"
+                  size="mini"
+                  placeholder="显示数量"
+                  @change="updateResponseTimeChart"
+                >
+                  <el-option label="显示5个" :value="5"></el-option>
+                  <el-option label="显示10个" :value="10"></el-option>
+                  <el-option label="显示15个" :value="15"></el-option>
+                  <el-option label="显示20个" :value="20"></el-option>
+                </el-select>
+              </div>
+            </div>
+            <div ref="responseTimeChart" class="chart-container"></div>
           </div>
-          <div ref="successRateChart" class="chart-container"></div>
-        </el-card>
-      </el-col>
-    </el-row>
+        </el-carousel-item>
+
+        <el-carousel-item name="visitCount">
+          <div class="chart-item">
+            <h3>访问量Top10</h3>
+            <div ref="visitCountChart" class="chart-container"></div>
+          </div>
+        </el-carousel-item>
+
+        <el-carousel-item name="successRate">
+          <div class="chart-item">
+            <h3>成功率分布</h3>
+            <div ref="successRateChart" class="chart-container"></div>
+          </div>
+        </el-carousel-item>
+      </el-carousel>
+    </el-card>
   </div>
 </template>
 
@@ -152,7 +175,8 @@ export default {
         sortType: 'stdDev',
         sortOrder: 'desc',
         showTop: 15
-      }
+      },
+      carouselActiveIndex: 0
     }
   },
   computed: {
@@ -258,6 +282,27 @@ export default {
     // 初始化访问量图表
     initVisitCountChart() {
       this.visitCountChart = initVisitCountChart(this.$refs.visitCountChart, this.chartData)
+    },
+
+    // 上一个图表
+    prevChart() {
+      if (this.carouselActiveIndex > 0) {
+        this.carouselActiveIndex--
+        this.$refs.chartCarousel.setActiveItem(this.carouselActiveIndex)
+      }
+    },
+
+    // 下一个图表
+    nextChart() {
+      if (this.carouselActiveIndex < 3) {
+        this.carouselActiveIndex++
+        this.$refs.chartCarousel.setActiveItem(this.carouselActiveIndex)
+      }
+    },
+
+    // 处理走马灯切换
+    handleCarouselChange(index) {
+      this.carouselActiveIndex = index
     }
   }
 }
@@ -266,7 +311,44 @@ export default {
 <style lang="scss" scoped>
 @import 'style/SystemLogCharts';
 
+.chart-controls-wrapper {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px;
+}
+
 .chart-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.carousel-chart-card {
+  margin-top: 20px;
+
+  ::v-deep .el-card__body {
+    padding: 10px;
+  }
+}
+
+.chart-item {
+  padding: 10px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+
+  h3 {
+    text-align: center;
+    margin: 10px 0;
+    font-size: 18px;
+    font-weight: bold;
+  }
+
+  .chart-container {
+    flex: 1;
+  }
+}
+
+.carousel-controls {
   float: right;
   display: flex;
   gap: 10px;
@@ -274,10 +356,14 @@ export default {
 
 // 响应式设计，小屏幕时将控制面板移到下一行
 @media screen and (max-width: 768px) {
-  .chart-controls {
+  .chart-controls-wrapper {
+    justify-content: center;
+  }
+
+  .carousel-controls {
     float: none;
+    justify-content: center;
     margin-top: 10px;
-    justify-content: flex-end;
   }
 }
 </style>
