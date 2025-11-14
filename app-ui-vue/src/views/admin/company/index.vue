@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <company-admin-view />
+    <company-admin-view/>
   </div>
 </template>
 
@@ -9,6 +9,6 @@ import CompanyAdminView from '@/components/CompanyAdminView/index.vue'
 
 export default {
   name: 'Company',
-  components: { CompanyAdminView }
+  components: {CompanyAdminView}
 }
 </script>

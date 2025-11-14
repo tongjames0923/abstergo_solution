@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <role-admin-view />
+    <role-admin-view/>
   </div>
 </template>
 
@@ -9,6 +9,6 @@ import RoleAdminView from '@/components/RoleAdminView/index.vue'
 
 export default {
   name: 'Role',
-  components: { RoleAdminView }
+  components: {RoleAdminView}
 }
 </script>

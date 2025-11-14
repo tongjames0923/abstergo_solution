@@ -7,11 +7,11 @@
       </div>
       <div class="header-content">
         <el-alert
-          title="系统运行状态概览"
-          type="info"
+          :closable="false"
           description="以下数据展示了最近28天内系统各项操作的统计情况，包括成功率、响应时间、稳定性等关键指标。"
           show-icon
-          :closable="false">
+          title="系统运行状态概览"
+          type="info">
         </el-alert>
       </div>
     </el-card>
@@ -25,32 +25,32 @@
         <div class="table-header-actions">
           <el-input
             v-model="searchKeyword"
-            placeholder="搜索操作类型..."
             clearable
+            placeholder="搜索操作类型..."
             style="width: 200px; margin-right: 10px;"
             @clear="handleSearch"
             @keyup.enter.native="handleSearch">
             <i slot="prefix" class="el-input__icon el-icon-search"></i>
           </el-input>
-          <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
+          <el-button icon="el-icon-search" type="primary" @click="handleSearch">搜索</el-button>
         </div>
       </div>
 
       <el-table
+        v-loading="loading"
         :data="paginatedTableData"
+        :default-sort="{prop: 'stabilityIndex', order: 'descending'}"
+        element-loading-text="数据加载中..."
         stripe
         style="width: 100%"
-        v-loading="loading"
-        element-loading-text="数据加载中..."
-        :default-sort="{prop: 'stabilityIndex', order: 'descending'}"
       >
-        <el-table-column prop="operateType" label="操作类型" min-width="150" sortable></el-table-column>
-        <el-table-column prop="operateCount" label="操作次数" min-width="100" sortable>
+        <el-table-column label="操作类型" min-width="150" prop="operateType" sortable></el-table-column>
+        <el-table-column label="操作次数" min-width="100" prop="operateCount" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.operateCount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="successRate" label="成功率(%)" min-width="100" sortable>
+        <el-table-column label="成功率(%)" min-width="100" prop="successRate" sortable>
           <template slot-scope="scope">
             <el-progress
               :percentage="parseFloat(formatNumber(scope.row.successRate))"
@@ -59,36 +59,36 @@
             <span>{{ formatNumber(scope.row.successRate) }}%</span>
           </template>
         </el-table-column>
-        <el-table-column prop="operateTime" label="总耗时(ms)" min-width="100" sortable>
+        <el-table-column label="总耗时(ms)" min-width="100" prop="operateTime" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.operateTime) }}
           </template>
         </el-table-column>
-        <el-table-column prop="operateTimeMedian" label="响应时间(ms)" min-width="150" sortable>
+        <el-table-column label="响应时间(ms)" min-width="150" prop="operateTimeMedian" sortable>
           <template slot-scope="scope">
             <div>中位数: {{ formatNumber(scope.row.operateTimeMedian) }}</div>
             <div>90%: {{ formatNumber(scope.row.operateTime90Percentile) }}</div>
             <div>标准差: {{ formatNumber(scope.row.operateTimeStdDev) }}</div>
           </template>
         </el-table-column>
-        <el-table-column prop="stabilityIndex" label="稳定性指数" min-width="120" sortable>
+        <el-table-column label="稳定性指数" min-width="120" prop="stabilityIndex" sortable>
           <template slot-scope="scope">
             <el-tag :type="getStabilityTagType(scope.row.stabilityIndex)">
               {{ scope.row.stabilityIndex }}
             </el-tag>
           </template>
         </el-table-column>
-        <el-table-column prop="userCount" label="用户数" min-width="80" sortable>
+        <el-table-column label="用户数" min-width="80" prop="userCount" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.userCount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="ipCount" label="IP数" min-width="80" sortable>
+        <el-table-column label="IP数" min-width="80" prop="ipCount" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.ipCount) }}
           </template>
         </el-table-column>
-        <el-table-column prop="errorCount" label="错误数" min-width="80" sortable>
+        <el-table-column label="错误数" min-width="80" prop="errorCount" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.errorCount) }}
           </template>
@@ -97,21 +97,21 @@
 
       <div class="pagination-container">
         <el-pagination
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
           :current-page="currentPage"
-          :page-sizes="[10, 20, 50, 100]"
           :page-size="pageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="filteredTableData.length"
           layout="total, sizes, prev, pager, next, jumper"
-          :total="filteredTableData.length">
+          @size-change="handleSizeChange"
+          @current-change="handleCurrentChange">
         </el-pagination>
       </div>
     </el-card>
 
-    <el-dialog title="操作详情" :visible.sync="dialogVisible" width="60%">
+    <el-dialog :visible.sync="dialogVisible" title="操作详情" width="60%">
       <el-table :data="dialogTableData" border>
-        <el-table-column prop="metric" label="指标" width="200"></el-table-column>
-        <el-table-column prop="value" label="数值"></el-table-column>
+        <el-table-column label="指标" prop="metric" width="200"></el-table-column>
+        <el-table-column label="数值" prop="value"></el-table-column>
       </el-table>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">关闭</el-button>
