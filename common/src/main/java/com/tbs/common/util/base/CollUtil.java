@@ -1,5 +1,8 @@
 package com.tbs.common.util.base;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -52,9 +55,9 @@ public class CollUtil extends cn.hutool.core.collection.CollUtil {
         if (isEmpty(array)) {
             return Collections.emptyList();
         }
-        if (size <= 0) {
-            throw new IllegalArgumentException("分割大小必须为正数");
-        }
+
+        AssertUtil.toAssert(size <= 0).message("分割大小必须为正数").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .throwIt();
 
         List<T> list = new ArrayList<>(array);
         int partitionSize = (int)Math.ceil((double)list.size() / size);

@@ -1,5 +1,6 @@
 package com.tbs.common.util.base;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import org.jetbrains.annotations.NotNull;
 
@@ -80,11 +81,12 @@ public class BeanUtil extends cn.hutool.core.bean.BeanUtil {
         try {
             return c.getConstructor(null).newInstance();
         } catch (NoSuchMethodException e) {
-            throw new FormattedRuntimeException(e, "无参构造函数不存在");
+            AssertUtil.throwError(() -> new FormattedRuntimeException(e, "没有无参构造函数"));
         } catch (InstantiationException | IllegalAccessException e) {
-            throw new FormattedRuntimeException(e, "构建bean失败");
+            AssertUtil.throwError(() -> new FormattedRuntimeException(e, "构建bean失败"));
         } catch (InvocationTargetException e) {
-            throw new FormattedRuntimeException(e.getTargetException(), "构建bean失败");
+            AssertUtil.throwError(() -> new FormattedRuntimeException(e, "构建bean失败"));
         }
+        return null;
     }
 }

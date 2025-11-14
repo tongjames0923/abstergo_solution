@@ -1,5 +1,7 @@
 package com.tbs.common.exception;
 
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.StrUtil;
 
 /**
@@ -7,7 +9,8 @@ import com.tbs.common.util.base.StrUtil;
  *
  * @author abstergo
  */
-public class FormattedRuntimeException extends RuntimeException {
+public class FormattedRuntimeException extends RuntimeException implements IExceptionLevel {
+    private ErrorLevelEnum level = ErrorLevelEnum.SYSTEM_ERROR;
 
     private static <T extends Throwable> String causeByExceptionMessage(T cause, String message, Object... params) {
         StringBuilder sb = new StringBuilder();
@@ -33,5 +36,18 @@ public class FormattedRuntimeException extends RuntimeException {
      */
     public <T extends Throwable> FormattedRuntimeException(T cause, String message, Object... params) {
         super(causeByExceptionMessage(cause, message, params));
+    }
+
+    @Override
+    public ErrorLevelEnum getLevel() {
+        return level;
+    }
+
+    public FormattedRuntimeException errorLevel(ErrorLevelEnum errorLevel) {
+        if (errorLevel == null) {
+            return this;
+        }
+        this.level = errorLevel;
+        return this;
     }
 }

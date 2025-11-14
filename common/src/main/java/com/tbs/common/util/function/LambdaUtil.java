@@ -1,7 +1,9 @@
 package com.tbs.common.util.function;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.ExceptionUtil;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.function.SFunction;
 
 import java.beans.Introspector;
@@ -140,8 +142,11 @@ public class LambdaUtil {
             return methodName;
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to extract method name from lambda", e);
+            AssertUtil.throwError(
+                () -> new FormattedRuntimeException(e, "Failed to extract method name from lambda").errorLevel(
+                    ErrorLevelEnum.CRITICAL_SYSTEM_ERROR));
         }
+        return null;
     }
 
     // === 私有辅助方法 ===
