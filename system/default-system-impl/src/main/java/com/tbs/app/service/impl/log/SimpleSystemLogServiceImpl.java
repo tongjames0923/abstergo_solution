@@ -3,6 +3,7 @@ package com.tbs.app.service.impl.log;
 import cn.hutool.core.date.DateUtil;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.log.model.LogOperateTypeView;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.mapper.SystemOperateMapper;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
@@ -85,7 +86,7 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
                 logOperateTypeView.setOperateCount(logOperateTypeView.getOperateCount().add(BigDecimal.ONE));
                 logOperateTypeView.setOperateTime(
                     logOperateTypeView.getOperateTime().add(BigDecimal.valueOf(operateRecordEntity.getCostTime())));
-                if (StrUtil.isNotEmpty(operateRecordEntity.getOperateError())) {
+                if (!isIgnoreError(operateRecordEntity)) {
                     logOperateTypeView.setErrorCount(logOperateTypeView.getErrorCount().add(BigDecimal.ONE));
                 }
                 logOperateTypeView.setOperateTimeMax(
@@ -223,5 +224,11 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
             return v;
         }).collect(Collectors.toList());
 
+    }
+
+    private static boolean isIgnoreError(SystemOperateRecordEntity operateRecordEntity) {
+        return StrUtil.isEmpty(operateRecordEntity.getOperateError()) ||
+            (operateRecordEntity.getOperateErrorLevel() != null &&
+                operateRecordEntity.getOperateErrorLevel() < ErrorLevelEnum.DATA_ACCESS_ERROR.getCode());
     }
 }
