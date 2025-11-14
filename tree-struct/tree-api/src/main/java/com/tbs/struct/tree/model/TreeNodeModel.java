@@ -1,7 +1,9 @@
 package com.tbs.struct.tree.model;
 
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -11,6 +13,8 @@ import java.io.Serializable;
  * @author tbs
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class TreeNodeModel implements ITreeStorable, Serializable {
     private static final long serialVersionUID = 1L;
     /**
@@ -30,4 +34,9 @@ public class TreeNodeModel implements ITreeStorable, Serializable {
      * 树组
      */
     private String treeGroup;
+
+    public TreeNodeModel(String nodeId, String treeGroup) {
+        setNodeId(nodeId);
+        setTreeGroup(treeGroup);
+    }
 }

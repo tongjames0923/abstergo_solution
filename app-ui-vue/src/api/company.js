@@ -90,3 +90,32 @@ export function deleteCompany(id) {
     method: 'post'
   })
 }
+
+/**
+ * 移动公司到指定父级公司下
+ * @param {number} parent - 父级公司ID
+ * @param {number} child - 子级公司ID
+ * @returns {Promise} 操作结果
+ */
+export function moveCompanyTo(parent, child) {
+  return request({
+    url: '/private/admin/company/moveCompanyTo',
+    method: 'post',
+    params: {
+      parent,
+      child
+    }
+  })
+}
+
+/**
+ * 获取指定公司的所有子级公司列表
+ * @param {number} parentId - 父级公司ID
+ * @returns {Promise} 子级公司列表
+ */
+export function listChildren(parentId) {
+  return request({
+    url: `/private/admin/company/listChildren/${parentId}`,
+    method: 'get'
+  })
+}

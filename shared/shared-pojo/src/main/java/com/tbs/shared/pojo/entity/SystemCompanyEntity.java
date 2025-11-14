@@ -1,18 +1,15 @@
 
 package com.tbs.shared.pojo.entity;
 
-import java.util.Date;
-
-import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
+
+import javax.persistence.*;
+import java.util.Date;
 
 @Data
 @Entity
@@ -63,15 +60,15 @@ public class SystemCompanyEntity implements IBaseEntity<Long> {
 	 * 公司创建时间
 	 */
 	@Column(name = "create_time")
-	
+
 	private Date createTime;
 
 	/**
 	 * 公司更新时间
 	 */
 	@Column(name = "update_time")
-	
-	private Date updateTime;
+
+    private Date updateTime;
 
 	/**
 	 * 数据状态
@@ -80,4 +77,17 @@ public class SystemCompanyEntity implements IBaseEntity<Long> {
 	 */
 	@Column(name = "flag")
 	private Integer flag;
+
+    /**
+     * 公司树节点分组
+     */
+    @Column(name = "tree_node_group", length = 64)
+    private String treeNodeGroup;
+
+    /**
+     * 公司树节点ID
+     */
+    @Column(name = "tree_node_id", length = 64)
+    private String treeNodeId;
+
 }

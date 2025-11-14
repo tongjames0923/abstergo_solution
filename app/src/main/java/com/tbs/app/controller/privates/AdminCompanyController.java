@@ -107,6 +107,40 @@ public class AdminCompanyController
 		return super.query(criteria, pageNum, pageSize);
 	}
 
+    /**
+     * 移动公司到指定父级公司下
+     *
+     * @param parent 父级公司ID
+     * @param child  子级公司ID
+     * @return 操作结果
+     */
+    @PostMapping("moveCompanyTo")
+    @Operation(summary = "移动公司到指定父级", description = "将一个公司移动到另一个公司下作为其子级公司")
+    @ApiResponse(responseCode = "200", description = "成功移动公司",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult moveCompanyTo(
+        @Parameter(name = "parent", description = "父级公司ID", required = true) @RequestParam Long parent,
+        @Parameter(name = "child", description = "子级公司ID", required = true) @RequestParam Long child) {
+        companyService.appendChildCompany(parent, child);
+        return successResult(null);
+    }
+
+    /**
+     * 获取指定公司的所有子级公司列表
+     *
+     * @param parent 父级公司ID
+     * @return 子级公司列表
+     */
+    @GetMapping("listChildren/{parent}")
+    @Operation(summary = "获取子级公司列表", description = "获取指定公司的所有直接子级公司列表")
+    @ApiResponse(responseCode = "200", description = "成功获取子级公司列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult listChildren(
+        @Parameter(name = "parent", description = "父级公司ID", required = true) @PathVariable Long parent) {
+        return successResult(companyService.getChildrenCompanies(parent));
+    }
+
+
 	@Override
 	public String getBusinessName() {
 		return "公司业务";

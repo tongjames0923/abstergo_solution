@@ -5,6 +5,7 @@ import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
@@ -12,13 +13,17 @@ import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTe
 import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
+import com.tbs.struct.tree.api.persistence.ITreeStore;
+import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class SimpleCompanyService
@@ -29,14 +34,26 @@ public class SimpleCompanyService
      */
     public static final SystemCompanyEntity SYSTEM_COMPANY =
         new SystemCompanyEntity(1L, "系统公司", "系统公司", "系统公司", null, null, null,
-            SystemCompanyFlagEnum.SYSTEMED.getCode());
+            SystemCompanyFlagEnum.SYSTEMED.getCode(), null, null);
 
     @Resource
     private SystemCompanyMapper mapper;
 
+    @Resource
+    private ITreeStore treeStore;
+
     @Override
     protected Integer getFlagDisable() {
         return SystemCompanyFlagEnum.DELETED.getCode();
+    }
+
+    @Override
+    public SystemCompanyEntity deleteById(Long id) {
+        var entity = super.deleteById(id);
+        if (StrUtil.isNotEmpty(entity.getTreeNodeGroup())) {
+            treeStore.delete(entity.getTreeNodeId(), entity.getTreeNodeGroup());
+        }
+        return entity;
     }
 
     @Override
@@ -131,5 +148,46 @@ public class SimpleCompanyService
     public SystemCompanyEntity triggerDeleteTime(SystemCompanyEntity entity, Date deleteTime) {
         entity.setUpdateTime(deleteTime);
         return entity;
+    }
+
+    private static final String createTreeGroupName(SystemCompanyEntity entity) {
+        return "company_tree:" + entity.getId();
+    }
+
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public void appendChildCompany(Long parentId, Long childId) {
+        var parent = getInstance().queryById(parentId);
+        var child = getInstance().queryById(childId);
+        AssertUtil.isTrue(parent == null || Objects.equals(parent.getFlag(), SystemCompanyFlagEnum.DELETED.getCode()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("目标父公司不存在").throwIt();
+        AssertUtil.isTrue(child == null || Objects.equals(parent.getFlag(), SystemCompanyFlagEnum.DELETED.getCode()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("目标子公司不存在").throwIt();
+        if (StrUtil.isEmpty(parent.getTreeNodeGroup())) {
+            parent.setTreeNodeGroup(createTreeGroupName(parent));
+            parent.setTreeNodeId(parent.getId().toString());
+            getMapper().updateByPrimaryKey(parent);
+            var tree = new TreeNodeModel();
+            tree.setTreeGroup(parent.getTreeNodeGroup());
+            tree.setNodeId(parent.getTreeNodeId());
+            treeStore.store(tree, null);
+        }
+        AssertUtil.isTrue(StrUtil.isNotEmpty(child.getTreeNodeGroup()) &&
+                !Objects.equals(child.getTreeNodeGroup(), parent.getTreeNodeGroup()))
+            .message("不能将子公司添加到其他公司下").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+
+        if (StrUtil.isEmpty(child.getTreeNodeGroup())) {
+            child.setTreeNodeGroup(parent.getTreeNodeGroup());
+            child.setTreeNodeId(child.getId().toString());
+            getMapper().updateByPrimaryKey(child);
+        }
+        treeStore.store(new TreeNodeModel(child.getTreeNodeId(), child.getTreeNodeGroup()), parent.getTreeNodeId());
+    }
+
+    @Override
+    public List<SystemCompanyEntity> getChildrenCompanies(Long id) {
+        var p = getInstance().queryById(id);
+        return treeStore.getChildren(p.getTreeNodeId()).stream()
+            .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId()))).collect(Collectors.toList());
     }
 }
