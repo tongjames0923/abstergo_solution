@@ -1,12 +1,12 @@
 package com.tbs.sql.framework.extractor.impls.mysql;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.exception.SqlExtractionException;
 import com.tbs.sql.framework.extractor.ISelectSqlExtractor;
 import com.tbs.sql.framework.model.SqlSelectInfoModel;
 import com.tbs.sql.framework.model.SqlSelectItemModel;
-
 
 /**
  * mysql select sql extractor
@@ -16,24 +16,23 @@ import com.tbs.sql.framework.model.SqlSelectItemModel;
 public class MysqlSelectExtractor implements ISelectSqlExtractor {
     @Override
     public String extractSelectSql(SqlSelectInfoModel infoModel) {
-        if (infoModel == null) {
-            throw new SqlExtractionException("SqlSelectInfoModel can not be null", this);
-        }
+        AssertUtil.notNull(infoModel, () -> new SqlExtractionException("SqlSelectInfoModel can not be null", this));
         if (StrUtil.isNotEmpty(infoModel.getRawSql())) {
             return infoModel.getRawSql();
         }
-        if (StrUtil.isEmpty(infoModel.getTableName())) {
-            throw new SqlExtractionException("tableName can not be null", this);
-        }
+        AssertUtil.isTrue(StrUtil.isEmpty(infoModel.getTableName()),
+            () -> new SqlExtractionException("tableName can not be null", this));
         if (CollUtil.isEmpty(infoModel.getFieldList())) {
             return "SELECT * FROM " + infoModel.getTableName();
         }
         StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("SELECT ");
         for (SqlSelectItemModel sqlSelectItemModel : infoModel.getFieldList()) {
-            if (StrUtil.isEmpty(sqlSelectItemModel.getFieldName())) {
-                throw new SqlExtractionException("fieldName can not be null", this);
-            }
+            AssertUtil.notNull(sqlSelectItemModel,
+                () -> new SqlExtractionException("SqlSelectItemModel can not be null", this));
+            AssertUtil.isTrue(StrUtil.isEmpty(sqlSelectItemModel.getFieldName()),
+                () -> new SqlExtractionException("fieldName can not be null", this));
+
             stringBuilder.append(sqlSelectItemModel.getFieldName());
             if (StrUtil.isNotEmpty(sqlSelectItemModel.getFieldAlias())) {
                 stringBuilder.append(" AS ");

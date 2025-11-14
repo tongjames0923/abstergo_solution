@@ -1,6 +1,7 @@
 package com.tbs.xxl.config;
 
 import cn.hutool.core.util.StrUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.xxl.api.IXXLJobsConfig;
 import com.tbs.xxl.executor.JsonJobExecutor;
 import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
@@ -19,9 +20,7 @@ public class XxlJobConfig {
     public XxlJobSpringExecutor xxlJobSpringExecutor(final IXXLJobsConfig config) {
         log.info("xxl job config start");
         final XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
-        if (StrUtil.isEmpty(config.adminAddress())) {
-            throw new RuntimeException("管理器地址错误");
-        }
+        AssertUtil.hasText(config.adminAddress(), "管理器地址不能为空");
         xxlJobSpringExecutor.setAdminAddresses(config.adminAddress());
         log.info(String.format("xxl job admin server: %s", config.adminAddress()));
         if (!StrUtil.isEmpty(config.appName())) {

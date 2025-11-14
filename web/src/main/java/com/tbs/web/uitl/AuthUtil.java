@@ -1,6 +1,7 @@
 package com.tbs.web.uitl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.authentication.IAuthManager;
@@ -132,23 +133,18 @@ public class AuthUtil {
      * @throws FormattedRuntimeException 当用户详情验证失败时抛出相应异常： - 用户详情不存在 - 用户已禁用 - 用户已过期 - 用户已锁定
      */
     public static void checkUserDetails(UserDetails details) throws FormattedRuntimeException {
-        if (details == null) {
-            throw new FormattedRuntimeException("用户详情不存在");
-        }
-        if (!details.isEnabled()) {
-            throw new FormattedRuntimeException("用户已禁用");
-        }
-        if (!details.isAccountNonExpired()) {
-            throw new FormattedRuntimeException("用户已过期");
-        }
-        if (!details.isAccountNonLocked()) {
-            throw new FormattedRuntimeException("用户已锁定");
-        }
-        if (!details.isCredentialsNonExpired()) {
-            throw new FormattedRuntimeException("用户凭证已过期");
-        }
+        AssertUtil.isTrue(details == null).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("用户详情不存在").throwIt();
         AssertUtil.hasText(details.getUsername(), "用户信息中用户名不能为空");
         AssertUtil.hasText(details.getPassword(), "用户信息中密码不能为空");
+        AssertUtil.isTrue(!details.isEnabled()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("用户已禁用")
+            .throwIt();
+        AssertUtil.isTrue(!details.isAccountNonExpired()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .message("用户已过期").throwIt();
+        AssertUtil.isTrue(!details.isAccountNonLocked()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .message("用户已锁定").throwIt();
+        AssertUtil.isTrue(!details.isCredentialsNonExpired()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .message("用户凭证已过期").throwIt();
+
     }
 
     /**

@@ -3,6 +3,7 @@ package com.tbs.struct.tree.impl.service;
 import com.tbs.cache.CacheUtils;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -410,10 +411,8 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
 
     private static void rebuildTreeClosureCheck() {
         var val = CacheUtils.getInstance().cacheableGet(REBUILD_TREE_CLOSURE_LOCK);
-        if (val == null) {
-            return;
-        }
-        throw new RuntimeException("正在重建树结构闭包表关系，请稍后再试");
+        AssertUtil.toAssert(val != null).message("正在重建树结构闭包表关系，请稍后再试")
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
     }
 
     @Override

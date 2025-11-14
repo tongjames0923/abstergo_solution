@@ -1,5 +1,6 @@
 package com.tbs.lock.util;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;
@@ -135,7 +136,7 @@ public class LockUtil {
                 lock.unLock();
             }
         } else {
-            throw new FormattedRuntimeException("锁{} 加锁失败", lock.toString());
+            AssertUtil.throwError(() -> new FormattedRuntimeException("锁{} 加锁失败", lock.toString()));
         }
     }
 

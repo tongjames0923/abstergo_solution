@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.model;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.sql.framework.model.SqlSelectInfoModel;
 import com.tbs.sql.query.AbstractResourceBaseQueryCriteria;
 import lombok.Getter;
@@ -53,17 +54,11 @@ public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria
     public final Class<T> getType(ClassBaseQueryCriteria<T> target) {
         Type superClass = target.getClass().getGenericSuperclass();
         Class<T> type = null;
-        if (superClass instanceof ParameterizedType) {
-            ParameterizedType parameterizedType = (ParameterizedType)superClass;
-            Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
-            if (actualTypeArguments.length > 0) {
-                type = (Class<T>)actualTypeArguments[0];
-            } else {
-                throw new IllegalArgumentException("未找到泛型参数");
-            }
-        } else {
-            throw new IllegalArgumentException("未指定泛型参数");
-        }
+        AssertUtil.toAssert(!(superClass instanceof ParameterizedType)).message("类型参数不存在").throwIt();
+        ParameterizedType parameterizedType = (ParameterizedType)superClass;
+        Type[] actualTypeArguments = parameterizedType.getActualTypeArguments();
+        AssertUtil.toAssert(actualTypeArguments.length <= 0).message("未找到泛型参数").throwIt();
+        type = (Class<T>)actualTypeArguments[0];
         this.type = type;
         return type;
     }

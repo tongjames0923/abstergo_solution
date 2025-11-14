@@ -1,5 +1,7 @@
 package com.tbs.sql.ef.impl;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
 import com.tbs.common.util.function.LambdaUtil;
@@ -70,9 +72,8 @@ public class EntityQueryWhereProvider<T> implements IQueryWhereProvider<T> {
 
     private <P> void initSqlInfo(SFunction<T, P> acc, SqlWhereInfo sqlWhereInfo, P val) {
         Field field = LambdaUtil.getField(acc);
-        if (field == null) {
-            throw new RuntimeException("无法获取字段数据");
-        }
+        AssertUtil.isTrue(field == null).message("无法获取字段数据").errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR)
+            .throwIt();
         sqlWhereInfo.setFieldName(SqlUtils.getFiledNameWithMapping(field));
         sqlWhereInfo.setValueType(field.getType());
         sqlWhereInfo.setTableName(SqlUtils.getTableName(targetType));

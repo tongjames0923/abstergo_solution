@@ -1,9 +1,9 @@
 package com.tbs.async.aop;
 
 import com.tbs.async.annotation.LongTermAsync;
-import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -27,9 +27,7 @@ public class LongTermAsyncAop {
     @Around("@annotation(com.tbs.async.annotation.LongTermAsync)")
     public Object around(ProceedingJoinPoint point) throws Throwable {
         MethodSignature methodSignature = (MethodSignature)point.getSignature();
-        if (methodSignature.getReturnType() != void.class) {
-            throw new FormattedRuntimeException("长期异步函数无返回值函数");
-        }
+        AssertUtil.isTrue(methodSignature.getReturnType() != void.class, "长期异步函数无返回值函数");
         LongTermAsync longTermAsync = methodSignature.getMethod().getDeclaredAnnotation(LongTermAsync.class);
         if (longTermAsync == null) {
             return point.proceed();
@@ -45,7 +43,7 @@ public class LongTermAsyncAop {
             } catch (Throwable throwable) {
                 SpringUtil.getBeanSafe(longTermAsync.onThreadError(), (e) -> {
                     log.error("线程执行错误.", e);
-                });
+                }).onThreadError(throwable, Thread.currentThread());
             }
         });
         return r[0];

@@ -107,26 +107,26 @@ public class AppConfig {
 
     private static final Logger system_oper_log = LoggerFactory.getLogger("system_oper_log");
 
-    @Bean
-    AbstractSubscriber systemLogSub() {
-        return SimpleUseSubscriber.Builder.newBuilder("system_oper_log", (event, publisher) -> {
-            if (event == null) {
-                system_oper_log.warn("event null for receive");
-                return AbstractSubscriber.RECEIVE_FAILED;
-            }
-            var systemOperateRecordEntity = event.getEventDataClass().map(clazz -> {
-                if (clazz.equals(SystemOperateRecordEntity.class) && event instanceof SimpleEvent) {
-                    SimpleEvent event1 = (SimpleEvent)event;
-                    return event1.getDeserializedData();
-                }
-                return null;
-            });
-            systemOperateRecordEntity.ifPresent(record -> {
-                system_oper_log.info("system operate log {}", record);
-            });
-            return AbstractSubscriber.RECEIVE_SUCCESS;
-        }).supportEventIds(Arrays.asList(EventSystemOpLog.DEFAULT_EVENT_ID)).build();
-    }
+    //    @Bean
+    //    AbstractSubscriber systemLogSub() {
+    //        return SimpleUseSubscriber.Builder.newBuilder("system_oper_log", (event, publisher) -> {
+    //            if (event == null) {
+    //                system_oper_log.warn("event null for receive");
+    //                return AbstractSubscriber.RECEIVE_FAILED;
+    //            }
+    //            var systemOperateRecordEntity = event.getEventDataClass().map(clazz -> {
+    //                if (clazz.equals(SystemOperateRecordEntity.class) && event instanceof SimpleEvent) {
+    //                    SimpleEvent event1 = (SimpleEvent)event;
+    //                    return event1.getDeserializedData();
+    //                }
+    //                return null;
+    //            });
+    //            systemOperateRecordEntity.ifPresent(record -> {
+    //                system_oper_log.info("system operate log {}", record);
+    //            });
+    //            return AbstractSubscriber.RECEIVE_SUCCESS;
+    //        }).supportEventIds(Arrays.asList(EventSystemOpLog.DEFAULT_EVENT_ID)).build();
+    //    }
 
     @Bean
     ISystemOperateLog systemOperateLog() {

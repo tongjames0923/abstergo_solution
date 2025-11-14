@@ -1,5 +1,6 @@
 package com.tbs.sql.exception;
 
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 
 /**
@@ -9,8 +10,8 @@ import com.tbs.common.exception.FormattedRuntimeException;
  */
 public class SqlExtractionException extends FormattedRuntimeException {
 
-
     public SqlExtractionException(String message, Object from, Object... args) {
         super("from:{} ,details:" + message, from, args);
+        errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR);
     }
 }

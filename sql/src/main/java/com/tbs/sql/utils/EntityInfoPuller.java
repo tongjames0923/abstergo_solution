@@ -1,5 +1,6 @@
 package com.tbs.sql.utils;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.annotation.SelectSQL;
 import com.tbs.sql.framework.model.SqlSelectInfoModel;
@@ -21,10 +22,7 @@ public class EntityInfoPuller {
     private static Map<Class<?>, SqlSelectInfoModel> cache = new ConcurrentHashMap<>(32);
 
     public static SqlSelectInfoModel pullFromClass(Class<?> c) {
-
-        if (c == null) {
-            throw new RuntimeException("根据实体类型提取查询语句，实体类型不能为空");
-        }
+        AssertUtil.notNull(c, "根据实体类型提取查询语句，实体类型不能为空");
         return cache.computeIfAbsent(c, entityClass -> {
 
             SqlSelectInfoModel sqlSelectInfoModel = new SqlSelectInfoModel();
@@ -36,9 +34,7 @@ public class EntityInfoPuller {
 
             // 添加表名
             Table table = entityClass.getDeclaredAnnotation(Table.class);
-            if (table == null) {
-                throw new RuntimeException("实体类" + entityClass.getName() + "没有添加@Table注解");
-            }
+            AssertUtil.notNull(table, "实体类" + entityClass.getName() + "没有添加@Table注解");
             sqlSelectInfoModel.setTableName(table.name());
             List<SqlSelectItemModel> items = new LinkedList<>();
             Field[] fields = entityClass.getDeclaredFields();

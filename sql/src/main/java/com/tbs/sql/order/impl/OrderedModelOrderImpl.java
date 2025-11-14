@@ -1,5 +1,8 @@
 package com.tbs.sql.order.impl;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.sql.enums.QueryOrderEnum;
 import com.tbs.sql.order.IQueryOrderBy;
 import com.tbs.sql.order.IQueryOrderedModel;
@@ -22,12 +25,14 @@ public class OrderedModelOrderImpl implements IQueryOrderBy {
                 }
                 result = orderedModel.getOrdered();
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                AssertUtil.throwError(() -> new FormattedRuntimeException(e, "获取OrderedModel失败"));
             } finally {
                 field.setAccessible(false);
             }
         } else {
-            throw new UnsupportedOperationException("only support for IOrderedModel");
+            AssertUtil.throwError(
+                () -> new FormattedRuntimeException("OrderedModelOrderImpl只支持IQueryOrderedModel").errorLevel(
+                    ErrorLevelEnum.CRITICAL_SYSTEM_ERROR));
         }
 
         return result;

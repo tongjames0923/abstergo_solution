@@ -1,5 +1,7 @@
 package com.tbs.sql.query.impl;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.sql.query.IPage;
 
 import java.io.Serializable;
@@ -19,12 +21,10 @@ public class QueryPageModel implements IPage, Serializable {
     public static final QueryPageModel ONE = QueryPageModel.of(1L, 1L);
 
     public QueryPageModel(final long page, final long perPage) {
-        if (1 > page) {
-            throw new IllegalArgumentException("Page must be greater than 0");
-        }
-        if (1 > perPage) {
-            throw new IllegalArgumentException("PerPage must be greater than 0");
-        }
+        AssertUtil.toAssert(1 > page).message("Page must be greater than 0").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
+        AssertUtil.toAssert(1 > perPage).message("PerPage must be greater than 0")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         this.page = page;
         this.perPage = perPage;
     }
