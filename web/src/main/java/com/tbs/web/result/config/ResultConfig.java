@@ -4,15 +4,21 @@ import com.tbs.common.util.base.BeanUtil;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.IResultCreator;
-import com.tbs.web.result.impl.DefaultResultCreateor;
-import com.tbs.web.result.impl.SimpleBuilderProvider;
 import com.tbs.web.result.impl.DefaultErrorAjaxProvider;
+import com.tbs.web.result.impl.DefaultResultCreateor;
+import com.tbs.web.result.impl.ReLoginErrorAjaxProvider;
+import com.tbs.web.result.impl.SimpleBuilderProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
 
+/**
+ * 创建结果构建器提供者
+ *
+ * @author tongj
+ */
 @Configuration
 public class ResultConfig {
 
@@ -43,10 +49,15 @@ public class ResultConfig {
      */
     @Bean
     @ConditionalOnMissingBean(IOnErrorAjaxProvider.class)
-    public IOnErrorAjaxProvider errorResultBuilderProvider() {
+    public IOnErrorAjaxProvider commonErrorAjaxResultProvider() {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new DefaultErrorAjaxProvider();
         }, resultProperty.getErrorResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    public IOnErrorAjaxProvider reLoginErrorAjaxResultProvider() {
+        return new ReLoginErrorAjaxProvider();
     }
 
     @Bean

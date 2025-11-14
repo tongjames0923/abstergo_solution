@@ -35,7 +35,7 @@ public class AssertUtil {
 
         private boolean isBuild = false;
         private String message;
-        private List<Object> params;
+        private List<Object> params = CollUtil.newArrayList();
 
         private ErrorLevelEnum errorLevel;
 

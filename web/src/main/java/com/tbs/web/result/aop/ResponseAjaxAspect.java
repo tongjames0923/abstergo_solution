@@ -1,6 +1,8 @@
 package com.tbs.web.result.aop;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -38,76 +40,74 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class ResponseAjaxAspect implements ResponseBodyAdvice {
 
-	@Resource
-	private IOnErrorAjaxProvider onErrorAjaxProvider;
+    @Resource
+    private IOnErrorAjaxProvider onErrorAjaxProvider;
 
-	@Resource
-	private IAjaxBuilderProvider provider;
+    @Resource
+    private IAjaxBuilderProvider provider;
 
-	@Resource
-	private HttpServletResponse response;
+    @Resource
+    private HttpServletResponse response;
 
-	@ExceptionHandler(Throwable.class)
-	public AjaxResult handleException(Throwable e) throws Throwable {
-        log.error("出现异常！", e);
-		if (response.isCommitted()) {
-			return null;
-		}
-		if (e instanceof AccessDeniedException) {
-            AssertUtil.throwError(() -> (AccessDeniedException)e);
-		}
-		return onErrorAjaxProvider.onError(e);
-	}
+    @ExceptionHandler(Throwable.class)
+    public AjaxResult handleException(Throwable e) throws Throwable {
+        if (response.isCommitted()) {
+            return null;
+        }
+        return onErrorAjaxProvider.onError(e);
+    }
 
-	private static final Map<String, Boolean> methodCache = new java.util.HashMap<>();
-	private static final Map<String, Wrapped> methodWrappedCache = new java.util.HashMap<>();
+    private static final Map<String, Boolean> methodCache = new java.util.HashMap<>();
+    private static final Map<String, Wrapped> methodWrappedCache = new java.util.HashMap<>();
 
-	private String getMethodName(Method method) {
-		return method.getDeclaringClass().getName() + "." + method.getName();
-	}
+    private String getMethodName(Method method) {
+        return method.getDeclaringClass().getName() + "." + method.getName();
+    }
 
-	@Override
-	public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
-			Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
-		if (body instanceof AjaxResult) {
-			return ((AjaxResult) body).getMap();
-		}
-		if (AnnotatedElementUtils.hasAnnotation(returnType.getMethod(), NoWrapped.class)) {
-			return body;
-		}
-		String methodName = getMethodName(returnType.getMethod());
-		Wrapped wrapped = methodWrappedCache.get(methodName);
-		if (wrapped == null) {
-			return ((BaseController) SpringUtil.getBean(returnType.getContainingClass())).successResult(body).getMap();
-		}
-		IResultCreator resultCreator = SpringUtil.getBeanSafe(wrapped.value(), throwable -> log
-				.error("处理结果创建器 {} 错误.Msg:{}", wrapped.value().getName(), throwable.getLocalizedMessage()));
-		if (resultCreator == null) {
-			return body;
-		}
-		return resultCreator.create(provider.getAjaxResultBuilder(), body).build().getMap();
-	}
+    @Override
+    public Object beforeBodyWrite(Object body, MethodParameter returnType, MediaType selectedContentType,
+        Class selectedConverterType, ServerHttpRequest request, ServerHttpResponse response) {
+        if (body instanceof AjaxResult) {
+            return ((AjaxResult)body).getMap();
+        }
+        if (AnnotatedElementUtils.hasAnnotation(returnType.getMethod(), NoWrapped.class)) {
+            return body;
+        }
+        String methodName = getMethodName(returnType.getMethod());
+        Wrapped wrapped = methodWrappedCache.get(methodName);
+        if (wrapped == null) {
+            return ((BaseController)SpringUtil.getBean(returnType.getContainingClass())).successResult(body).getMap();
+        }
+        IResultCreator resultCreator = SpringUtil.getBeanSafe(wrapped.value(),
+            throwable -> log.error("处理结果创建器 {} 错误.Msg:{}", wrapped.value().getName(),
+                throwable.getLocalizedMessage()));
+        if (resultCreator == null) {
+            return body;
+        }
+        return resultCreator.create(provider.getAjaxResultBuilder(), body).build().getMap();
+    }
 
-	@Override
-	public boolean supports(MethodParameter returnType, Class converterType) {
-		Method method = returnType.getMethod();
-		return methodCache.computeIfAbsent(getMethodName(method), k -> {
-			if (method.getReturnType().equals(AjaxResult.class)) {
-				return true;
-			}
-			if (AnnotatedElementUtils.hasAnnotation(method, NoWrapped.class)) {
-				return false;
-			}
-			if (BeanUtil.isBaseFrom(method.getDeclaringClass(), BaseController.class)) {
-				return true;
-			}
-			Collection<Wrapped> wrappeds = AnnotatedElementUtils.findAllMergedAnnotations(method, Wrapped.class)
-					.stream().filter((w) -> w != null).collect(Collectors.toList());
-			if (CollUtil.isEmpty(wrappeds)) {
-				return false;
-			}
-			return provider.support(method);
-		});
+    @Override
+    public boolean supports(MethodParameter returnType, Class converterType) {
+        Method method = returnType.getMethod();
+        return methodCache.computeIfAbsent(getMethodName(method), k -> {
+            if (method.getReturnType().equals(AjaxResult.class)) {
+                return true;
+            }
+            if (AnnotatedElementUtils.hasAnnotation(method, NoWrapped.class)) {
+                return false;
+            }
+            if (BeanUtil.isBaseFrom(method.getDeclaringClass(), BaseController.class)) {
+                return true;
+            }
+            Collection<Wrapped> wrappeds =
+                AnnotatedElementUtils.findAllMergedAnnotations(method, Wrapped.class).stream().filter((w) -> w != null)
+                    .collect(Collectors.toList());
+            if (CollUtil.isEmpty(wrappeds)) {
+                return false;
+            }
+            return provider.support(method);
+        });
 
-	}
+    }
 }

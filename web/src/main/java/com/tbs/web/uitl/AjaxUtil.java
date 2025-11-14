@@ -1,16 +1,22 @@
 package com.tbs.web.uitl;
 
 import com.alibaba.fastjson2.JSON;
+import com.tbs.common.IStartup;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.function.Comparators;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IAjaxResultBuilder;
+import com.tbs.web.result.IOnErrorAjaxProvider;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.Collection;
+import java.util.stream.Collectors;
 
 /**
  * Ajax工具类，用于构建统一的Ajax响应结果 提供了成功、失败和错误等不同情况下的响应结果构建方法
@@ -18,13 +24,15 @@ import java.io.PrintWriter;
  * @author tongj
  */
 @Component
-public class AjaxUtil {
+public class AjaxUtil implements IStartup {
 
     /**
      * IAjaxBuilderProvider实例，用于创建AjaxResult对象
      */
     @Resource
     private IAjaxBuilderProvider ajaxBuilderProvider;
+
+    private Collection<IOnErrorAjaxProvider> onErrorAjaxProviders;
 
     /**
      * 静态方法，用于将AjaxResult对象写入HTTP响应中
@@ -53,20 +61,26 @@ public class AjaxUtil {
     private static AjaxUtil ajaxUtil;
 
     /**
-     * 初始化方法，设置静态实例为当前实例，确保单例模式
-     */
-    @PostConstruct
-    public void init() {
-        ajaxUtil = this;
-    }
-
-    /**
      * 获取Ajax工具类实例
      *
      * @return AjaxUtil实例
      */
     public static AjaxUtil getInstance() {
         return ajaxUtil;
+    }
+
+    public static final <T extends Throwable> AjaxResult createAjaxResultOnError(T e) {
+        if (e == null) {
+            return AjaxUtil.getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, null);
+        }
+        if (CollUtil.isNotEmpty(getInstance().onErrorAjaxProviders)) {
+            for (IOnErrorAjaxProvider provider : getInstance().onErrorAjaxProviders) {
+                if (provider.support(e.getClass())) {
+                    return provider.onError(e);
+                }
+            }
+        }
+        return AjaxUtil.getInstance().error(e.getLocalizedMessage(), e);
     }
 
     /**
@@ -152,5 +166,13 @@ public class AjaxUtil {
      */
     public AjaxResult error(Object data) {
         return getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data);
+    }
+
+    @Override
+    public void startUp() throws RuntimeException {
+        ajaxUtil = this;
+        this.onErrorAjaxProviders =
+            SpringUtil.getBeansByTypeSafe(IOnErrorAjaxProvider.class).stream().sorted(Comparators::asc)
+                .collect(Collectors.toList());
     }
 }
