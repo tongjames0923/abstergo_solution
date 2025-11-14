@@ -17,6 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 import java.util.Date;
 
 /**
@@ -163,8 +165,11 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
             SystemOperContext operateContext = (SystemOperContext)context;
             operateContext.getOperateRecord()
                 .setCostTime(System.currentTimeMillis() - operateContext.getOperateRecord().getOperateTime().getTime());
+            var baos = new ByteArrayOutputStream();
+            e.printStackTrace(new PrintStream(baos));
+
             operateContext.getOperateRecord()
-                .setOperateError(String.format("%s:%s", e.getClass().getName(), e.getLocalizedMessage()));
+                .setOperateError(String.format("%s:%s", e.getClass().getName(), new String(baos.toByteArray())));
             if (e instanceof IExceptionLevel) {
                 operateContext.getOperateRecord().setOperateErrorLevel(((IExceptionLevel)e).getLevel().getCode());
             } else {
