@@ -1,25 +1,22 @@
 package com.tbs.web.result.aop;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxBuilderProvider;
-import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.IResultCreator;
 import com.tbs.web.result.annotation.NoWrapped;
 import com.tbs.web.result.annotation.Wrapped;
+import com.tbs.web.uitl.AjaxUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.MethodParameter;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.server.ServerHttpRequest;
 import org.springframework.http.server.ServerHttpResponse;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseBodyAdvice;
@@ -41,9 +38,6 @@ import java.util.stream.Collectors;
 public class ResponseAjaxAspect implements ResponseBodyAdvice {
 
     @Resource
-    private IOnErrorAjaxProvider onErrorAjaxProvider;
-
-    @Resource
     private IAjaxBuilderProvider provider;
 
     @Resource
@@ -54,7 +48,7 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
         if (response.isCommitted()) {
             return null;
         }
-        return onErrorAjaxProvider.onError(e);
+        return AjaxUtil.getInstance().createAjaxResultOnError(AssertUtil.toFormattedRuntimeException(e).orElse(e));
     }
 
     private static final Map<String, Boolean> methodCache = new java.util.HashMap<>();

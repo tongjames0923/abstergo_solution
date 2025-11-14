@@ -1,8 +1,11 @@
 package com.tbs.common.error;
 
+import com.tbs.common.IStartup;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.function.Comparators;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -10,10 +13,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.Collection;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -26,7 +26,15 @@ import java.util.stream.Collectors;
  */
 
 @Component
-public class AssertUtil {
+public class AssertUtil implements IStartup {
+
+    private static Collection<IErrorTransformer> errorTransformers;
+
+    @Override
+    public void startUp() throws RuntimeException {
+        errorTransformers = SpringUtil.getBeansByTypeSafe(IErrorTransformer.class).stream().sorted(Comparators::asc)
+            .collect(Collectors.toList());
+    }
 
     /**
      * 断言构建器内部类，用于构建格式化的运行时异常
@@ -176,6 +184,29 @@ public class AssertUtil {
             return;
         }
         throw e;
+    }
+
+    /**
+     * 转换异常为格式化运行时异常
+     *
+     * @param e 异常
+     * @return 格式化运行时异常
+     */
+    public static <T extends Throwable> Optional<Throwable> toFormattedRuntimeException(T e) {
+        if (e == null) {
+            return Optional.empty();
+        }
+        if (e instanceof FormattedRuntimeException) {
+            return Optional.of(e);
+        }
+        if (CollUtil.isNotEmpty(errorTransformers)) {
+            for (IErrorTransformer transformer : errorTransformers) {
+                if (transformer.support(e)) {
+                    return Optional.of(transformer.toFormattedRuntimeException(e));
+                }
+            }
+        }
+        return Optional.ofNullable(e);
     }
 
     /**

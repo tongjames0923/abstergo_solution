@@ -69,9 +69,15 @@ public class AjaxUtil implements IStartup {
         return ajaxUtil;
     }
 
-    public static final <T extends Throwable> AjaxResult createAjaxResultOnError(T e) {
+    /**
+     * 创建Ajax结果对象，用于处理异常
+     *
+     * @param e 异常对象
+     * @return AjaxResult对象
+     */
+    public final <T extends Throwable> AjaxResult createAjaxResultOnError(T e) {
         if (e == null) {
-            return AjaxUtil.getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, null);
+            return error(AjaxResult.DEFAULT_ERROR_MESSAGE, null);
         }
         if (CollUtil.isNotEmpty(getInstance().onErrorAjaxProviders)) {
             for (IOnErrorAjaxProvider provider : getInstance().onErrorAjaxProviders) {
@@ -80,7 +86,7 @@ public class AjaxUtil implements IStartup {
                 }
             }
         }
-        return AjaxUtil.getInstance().error(e.getLocalizedMessage(), e);
+        return error(e.getLocalizedMessage(), e);
     }
 
     /**

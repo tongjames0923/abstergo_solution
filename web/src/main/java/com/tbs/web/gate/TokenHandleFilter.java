@@ -1,10 +1,9 @@
 package com.tbs.web.gate;
 
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.gate.center.IGateWayCenter;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AjaxUtil;
@@ -31,55 +30,51 @@ import java.util.stream.Collectors;
 @Slf4j
 public class TokenHandleFilter extends OncePerRequestFilter {
 
-	@Resource
-	private IOnErrorAjaxProvider onErrorAjaxProvider;
+    private Collection<IGateWayCenter> securityManagers = new LinkedList<>();
 
-	private Collection<IGateWayCenter> securityManagers = new LinkedList<>();
-
-	@Resource
+    @Resource
     ITokenIssuanceCenter tokenIssuanceCenter;
 
-	@PostConstruct
-	void init() {
-		try {
-			this.securityManagers.addAll(SpringUtil.getBeansOfType(IGateWayCenter.class).values());
-			this.securityManagers = this.securityManagers.stream()
-					.sorted((o1, o2) -> o1.getOrder() - o2.getOrder())
-					.collect(Collectors.toList());
-		} catch (Exception e) {
-			log.error("init security manager error", e);
-		}
-		log.info("security manager size: {}", this.securityManagers.size());
-	}
+    @PostConstruct
+    void init() {
+        try {
+            this.securityManagers.addAll(SpringUtil.getBeansOfType(IGateWayCenter.class).values());
+            this.securityManagers = this.securityManagers.stream().sorted((o1, o2) -> o1.getOrder() - o2.getOrder())
+                .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("init security manager error", e);
+        }
+        log.info("security manager size: {}", this.securityManagers.size());
+    }
 
-	@Override
-	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
-			throws ServletException, IOException {
-		for (IGateWayCenter manager : securityManagers) {
-			if (!manager.support(request)) {
-				continue;
-			}
-			try {
-				String token = manager.getTokenPicker().pick(request);
-				ITokenModel model = tokenIssuanceCenter.getTokenByToken(token);
+    @Override
+    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+        throws ServletException, IOException {
+        for (IGateWayCenter manager : securityManagers) {
+            if (!manager.support(request)) {
+                continue;
+            }
+            try {
+                String token = manager.getTokenPicker().pick(request);
+                ITokenModel model = tokenIssuanceCenter.getTokenByToken(token);
                 if (model == null || StrUtil.isEmpty(model.getToken())) {
                     manager.onNoneToken();
                     continue;
                 }
-				manager.handleToken(model);
-			} catch (Throwable e) {
-				boolean willBroken = manager.onErrorWillBroken(e);
-				if (willBroken) {
-					AjaxResult result = onErrorAjaxProvider.onError(e);
-					AjaxUtil.writeInfoResp(response, result);
-					return;
-				} else {
-					log.warn("安全管理器处理非紧急异常。详情：{}", e.getLocalizedMessage());
-				}
-			}
+                manager.handleToken(model);
+            } catch (Throwable e) {
+                boolean willBroken = manager.onErrorWillBroken(e);
+                if (willBroken) {
+                    AjaxResult result = AjaxUtil.getInstance().createAjaxResultOnError(e);
+                    AjaxUtil.writeInfoResp(response, result);
+                    return;
+                } else {
+                    log.warn("安全管理器处理非紧急异常。详情：{}", e.getLocalizedMessage());
+                }
+            }
 
-		}
+        }
 
-		filterChain.doFilter(request, response);
-	}
+        filterChain.doFilter(request, response);
+    }
 }
