@@ -1,5 +1,7 @@
 package com.tbs.web.exception;
 
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.error.IExceptionLevel;
 import org.springframework.security.core.AuthenticationException;
 
 /**
@@ -7,8 +9,13 @@ import org.springframework.security.core.AuthenticationException;
  *
  * @author tongj
  */
-public abstract class ReLoginRequestException extends AuthenticationException {
+public abstract class ReLoginRequestException extends AuthenticationException implements IExceptionLevel {
     public ReLoginRequestException(String message) {
         super(message);
+    }
+
+    @Override
+    public ErrorLevelEnum getLevel() {
+        return ErrorLevelEnum.BUSINESS_LOGIC_ERROR;
     }
 }
