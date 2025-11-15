@@ -25,6 +25,7 @@
                 v-model="searchForm.likeName"
                 placeholder="请输入公司名称"
                 clearable
+                @input="onSearchInput"
                 @keyup.enter.native="handleSearch"
               />
             </el-form-item>
@@ -35,6 +36,7 @@
                 v-model="searchForm.equalsTaxNumber"
                 placeholder="请输入税号"
                 clearable
+                @input="onSearchInput"
                 @keyup.enter.native="handleSearch"
               />
             </el-form-item>
@@ -69,67 +71,100 @@
 
     <!-- 表格区域 -->
     <el-card class="table-card" shadow="never">
-      <el-table
-        :data="tableData"
-        row-key="id"
-        :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-        border
-        stripe
-        v-loading="loading"
-        lazy
-        :load="loadNode"
-        @sort-change="handleSortChange"
-      >
-        <el-table-column prop="companyName" label="公司名称" width="250"/>
-        <el-table-column prop="taxNumber" label="税号" width="200"/>
-        <el-table-column prop="flag" label="状态" width="100">
-          <template slot-scope="scope">
-            <el-tag :type="getCompanyStatusTagType(scope.row.flag)">
-              {{ getCompanyStatusLabel(scope.row.flag) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="createTime" label="创建时间" width="180" sortable="custom">
-          <template slot-scope="scope">
-            {{ scope.row.createTime | formatDate }}
-          </template>
-        </el-table-column>
-        <el-table-column prop="updateTime" label="更新时间" width="180" sortable="custom">
-          <template slot-scope="scope">
-            {{ scope.row.updateTime | formatDate }}
-          </template>
-        </el-table-column>
-        <el-table-column label="操作" fixed="right" width="200">
-          <template slot-scope="scope">
-            <el-button size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-            <el-dropdown @command="handleMoreActions">
-              <el-button size="mini">
-                更多<i class="el-icon-arrow-down el-icon--right"></i>
-              </el-button>
-              <el-dropdown-menu slot="dropdown">
-                <el-dropdown-item :command="{type: 'addChild', row: scope.row}">
-                  新增子公司
-                </el-dropdown-item>
-                <el-dropdown-item :command="{type: 'move', row: scope.row}">
-                  移动到其他公司
-                </el-dropdown-item>
-                <el-dropdown-item :command="{type: 'delete', row: scope.row}" divided>
-                  删除
-                </el-dropdown-item>
-              </el-dropdown-menu>
-            </el-dropdown>
-          </template>
-        </el-table-column>
-      </el-table>
+      <div v-loading="loading" style="min-height:200px; position:relative;">
+        <el-table
+          :data="tableData"
+          row-key="id"
+          :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+          border
+          stripe
+          lazy
+          :load="loadNode"
+          @sort-change="handleSortChange"
+          style="width: 100%;"
+        >
+          <el-table-column prop="companyName" label="公司名称" width="300">
+            <template slot-scope="scope">
+              <el-tooltip class="item" effect="dark" :content="scope.row.companyName" placement="top">
+                <span v-html="highlight(scope.row.companyName)"></span>
+              </el-tooltip>
+              <span v-if="scope.row.childrenCount && scope.row.childrenCount > 0" class="children-count">
+                ({{ scope.row.childrenCount }})
+              </span>
+            </template>
+          </el-table-column>
+          <el-table-column prop="taxNumber" label="税号" width="200">
+            <template slot-scope="scope">
+              <el-tooltip class="item" effect="dark" :content="scope.row.taxNumber" placement="top">
+                <span>{{ maskTaxNumber(scope.row.taxNumber) }}</span>
+              </el-tooltip>
+            </template>
+          </el-table-column>
+          <el-table-column prop="flag" label="状态" width="120">
+            <template slot-scope="scope">
+              <el-tag :type="getCompanyStatusTagType(scope.row.flag)">
+                {{ getCompanyStatusLabel(scope.row.flag) }}
+              </el-tag>
+            </template>
+          </el-table-column>
+          <el-table-column prop="createTime" label="创建时间" width="180" sortable="custom">
+            <template slot-scope="scope">
+              {{ scope.row.createTime | formatDate }}
+            </template>
+          </el-table-column>
+          <el-table-column prop="updateTime" label="更新时间" width="180" sortable="custom">
+            <template slot-scope="scope">
+              {{ scope.row.updateTime | formatDate }}
+            </template>
+          </el-table-column>
+          <el-table-column label="操作" fixed="right" width="220">
+            <template slot-scope="scope">
+              <el-button size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+              <el-dropdown @command="handleMoreActions">
+                <el-button size="mini">
+                  更多<i class="el-icon-arrow-down el-icon--right"></i>
+                </el-button>
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item :command="{type: 'move', row: scope.row}">
+                    移动到其他公司
+                  </el-dropdown-item>
+                  <el-dropdown-item v-if="scope.row.id!==1" :command="{type: 'delete', row: scope.row}" divided>
+                    删除
+                  </el-dropdown-item>
+                </el-dropdown-menu>
+              </el-dropdown>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <div v-if="!loading && (!tableData || tableData.length === 0)" class="empty-wrap">
+          <el-empty description="暂无数据"/>
+        </div>
+      </div>
+
+      <!-- 分页 -->
+      <div class="pagination-wrap" v-if="total > 0">
+        <el-pagination
+          background
+          layout="total, sizes, prev, pager, next, jumper"
+          :total="total"
+          :page-sizes="[10, 20, 50, 100]"
+          :page-size="pageSize"
+          :current-page="currentPage"
+          @size-change="handleSizeChange"
+          @current-change="handlePageChange"
+        />
+      </div>
     </el-card>
 
     <!-- 公司编辑对话框 -->
     <el-dialog
       :title="dialogTitle"
       :visible.sync="dialogVisible"
-      width="500px"
-      :modal="false"
+      width="520px"
+      :modal="true"
       :before-close="handleDialogClose"
+      append-to-body
     >
       <el-form :model="editForm" :rules="formRules" ref="editForm" label-width="100px">
         <el-form-item label="公司名称" prop="companyName">
@@ -159,33 +194,51 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleDialogClose">取 消</el-button>
-        <el-button type="primary" @click="handleDialogConfirm">确 定</el-button>
+        <el-button type="primary" @click="handleDialogConfirm" :loading="dialogSaving">确 定</el-button>
       </div>
     </el-dialog>
 
-    <!-- 移动公司对话框 -->
+    <!-- 移动公司对话框（改为远程搜索父公司） -->
     <el-dialog
       title="移动公司"
       :visible.sync="moveCompanyDialogVisible"
-      width="500px"
-      :modal="false"
+      width="520px"
+      :modal="true"
       :before-close="handleMoveCompanyDialogClose"
+      append-to-body
     >
       <el-form :model="moveCompanyForm" ref="moveCompanyForm" label-width="100px">
         <el-form-item label="目标父公司">
-          <el-select v-model="moveCompanyForm.targetParentId" placeholder="请选择目标父公司" style="width: 100%">
-            <el-option
-              v-for="item in allCompanies"
-              :key="item.id"
-              :label="item.companyName"
-              :value="item.id"
-            />
-          </el-select>
+          <el-alert type="info" show-icon
+                    title="支持模糊搜索目标父公司；请选择目标父公司，不能选择自身"/>
+          <div style="margin-top:10px;">
+            <el-select
+              v-model="moveCompanyForm.targetParentId"
+              filterable
+              remote
+              clearable
+              placeholder="请输入公司名称或税号搜索"
+              :remote-method="remoteSearchParents"
+              :loading="parentRemoteLoading"
+              style="width:100%;"
+              :popper-class="'parent-select-popper'"
+              @change="onParentSelect"
+            >
+              <el-option
+                v-for="item in parentCandidates"
+                :key="item.id"
+                :label="item.companyName + (item.taxNumber ? ' — ' + item.taxNumber : '')"
+                :value="item.id"
+              />
+              <el-option v-if="!parentCandidates.length && !parentRemoteLoading" :key="'no-result'"
+                         :label="'无匹配结果'" :value="null" disabled/>
+            </el-select>
+          </div>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleMoveCompanyDialogClose">取 消</el-button>
-        <el-button type="primary" @click="handleMoveCompanyConfirm">确 定</el-button>
+        <el-button type="primary" @click="handleMoveCompanyConfirm" :loading="moveSaving">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -199,29 +252,41 @@ export default {
   data() {
     return {
       loading: false,
+      dialogSaving: false,
+      moveSaving: false,
+      searchDebounceTimer: null,
       searchForm: {
         likeName: '',
         equalsTaxNumber: '',
         flagEquals: [],
-        treeRootFlag: 1 // 默认限制只查询顶级节点
+        treeRootFlag: 1
       },
-      sortParams: {}, // 排序参数
+      sortParams: {},
+      currentPage: 1,
+      pageSize: 10,
+      total: 0,
       tableData: [],
       dialogVisible: false,
-      moveCompanyDialogVisible: false, // 移动公司对话框可见性
-      dialogType: 'add', // 'add' 或 'edit'
+      moveCompanyDialogVisible: false,
+      dialogType: 'add',
       editForm: {
         id: undefined,
         companyName: '',
         taxNumber: '',
         description: '',
-        flag: 1 // 默认激活状态
+        flag: 1,
+        parentId: undefined
       },
       moveCompanyForm: {
-        companyId: undefined, // 要移动的公司ID
-        targetParentId: undefined // 目标父公司ID
+        companyId: undefined,
+        targetParentId: undefined
       },
-      allCompanies: [], // 所有公司列表（用于移动公司时选择父公司）
+      // 远程选择父公司相关状态
+      parentCandidates: [],
+      parentRemoteLoading: false,
+      parentRemoteSize: 50,
+      parentRemoteLastQuery: '',
+      allCompanies: [],
       formRules: {
         companyName: [
           {required: true, message: '请输入公司名称', trigger: 'blur'}
@@ -234,7 +299,6 @@ export default {
         ]
       },
       statusOptions: [
-        {code: 0, label: '已删除'},
         {code: 1, label: '已激活'},
         {code: 2, label: '禁用'},
         {code: 5, label: '系统内置'}
@@ -244,6 +308,22 @@ export default {
   computed: {
     dialogTitle() {
       return this.dialogType === 'add' ? '新增公司' : '编辑公司'
+    },
+    companyTree() {
+      const map = {}
+      const roots = []
+      for (const c of this.allCompanies) {
+        map[c.id] = {...c, children: []}
+      }
+      for (const id in map) {
+        const node = map[id]
+        if (node.parentId && map[node.parentId]) {
+          map[node.parentId].children.push(node)
+        } else {
+          roots.push(node)
+        }
+      }
+      return roots
     }
   },
   created() {
@@ -257,20 +337,48 @@ export default {
     }
   },
   methods: {
-    // 加载公司数据（构建树形结构）
+    escapeHtml(str = '') {
+      return String(str).replace(/[&<>"'\/]/g, function (s) {
+        const entityMap = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;'}
+        return entityMap[s]
+      })
+    },
+    highlight(text = '') {
+      const keyword = (this.searchForm.likeName || '').trim()
+      if (!keyword) return this.escapeHtml(text)
+      const safe = this.escapeHtml(text)
+      const re = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig')
+      return safe.replace(re, '<mark>$1</mark>')
+    },
+    maskTaxNumber(tax = '') {
+      if (!tax) return ''
+      if (tax.length <= 6) return tax
+      return tax.slice(0, 3) + '****' + tax.slice(-3)
+    },
+
+    onSearchInput() {
+      clearTimeout(this.searchDebounceTimer)
+      this.searchDebounceTimer = setTimeout(() => {
+        this.currentPage = 1
+        this.handleSearch()
+      }, 450)
+    },
+
     async loadCompanyData() {
       this.loading = true
       try {
-        // 查询根节点公司（parentId为null的公司）
-        const response = await adminQueryCompany({
+        const params = {
           ...this.searchForm,
           ...this.sortParams,
-          treeRootFlag: 1 // 限制只查询顶级节点
-        })
-        
-        // 构建树形结构
-        const rootCompanies = response.data.data || []
-        const treeData = await this.buildTreeData(rootCompanies)
+          page: this.currentPage,
+          size: this.pageSize,
+          treeRootFlag: 1
+        }
+        const response = await adminQueryCompany(params)
+        const resData = response.data || {}
+        const list = (resData.data && Array.isArray(resData.data)) ? resData.data : (resData.list || [])
+        this.total = resData.total != null ? resData.total : list.length
+        const treeData = await this.buildTreeData(list)
         this.tableData = treeData
       } catch (error) {
         console.error('加载公司数据失败:', error)
@@ -280,12 +388,10 @@ export default {
       }
     },
 
-    // 构建树形数据
     async buildTreeData(companies) {
       const treeData = []
       for (const company of companies) {
         const companyWithChildren = {...company}
-        // 使用childrenCount字段判断是否有子节点
         if (company.childrenCount && company.childrenCount > 0) {
           companyWithChildren.hasChildren = true
         }
@@ -294,15 +400,12 @@ export default {
       return treeData
     },
 
-    // 加载树节点
     async loadNode(tree, treeNode, resolve) {
       try {
         const response = await listChildren(tree.id)
         const children = response.data || []
-        // 处理子节点，标记它们是否还有子节点
         const childrenWithHasChildren = []
         for (const child of children) {
-          // 使用childrenCount字段判断是否有子节点
           if (child.childrenCount && child.childrenCount > 0) {
             child.hasChildren = true
           }
@@ -315,24 +418,24 @@ export default {
       }
     },
 
-    // 搜索
     handleSearch() {
+      this.currentPage = 1
       this.loadCompanyData()
     },
 
-    // 重置搜索
     handleReset() {
       this.searchForm = {
         likeName: '',
         equalsTaxNumber: '',
         flagEquals: [],
-        treeRootFlag: 1 // 保持顶级节点限制
+        treeRootFlag: 1
       }
       this.sortParams = {}
+      this.currentPage = 1
+      this.pageSize = 10
       this.loadCompanyData()
     },
 
-    // 新增公司
     handleAdd() {
       this.dialogType = 'add'
       this.editForm = {
@@ -340,12 +443,12 @@ export default {
         companyName: '',
         taxNumber: '',
         description: '',
-        flag: 1
+        flag: 1,
+        parentId: undefined
       }
       this.dialogVisible = true
     },
 
-    // 新增子公司
     handleAddChild(row) {
       this.dialogType = 'add'
       this.editForm = {
@@ -353,43 +456,28 @@ export default {
         companyName: '',
         taxNumber: '',
         description: '',
-        flag: 1
+        flag: 1,
+        parentId: row && row.id ? row.id : undefined
       }
-
-      // 如果有父级公司，则设置为该父级公司的子级
-      if (row && row.id) {
-        // 这里可以设置一些标记，表示是添加子级
-        this.editForm.parentId = row.id
-      }
-
       this.dialogVisible = true
     },
 
-    // 处理移动公司
     async handleMoveCompany(row) {
       this.moveCompanyForm.companyId = row.id
+      this.moveCompanyForm.targetParentId = undefined
+      this.parentCandidates = []
+      this.parentRemoteLastQuery = ''
       this.moveCompanyDialogVisible = true
-      
-      // 加载所有公司数据用于选择目标父公司
-      try {
-        const response = await adminQueryCompany({
-          treeRootFlag: undefined // 加载所有公司，不限制顶级节点
-        })
-        this.allCompanies = response.data.data || []
-      } catch (error) {
-        console.error('加载公司数据失败:', error)
-        this.$message.error('加载公司数据失败')
-      }
+      // 预加载最近的若干（可快速选择父级）
+      this.remoteSearchParents('')
     },
 
-    // 编辑公司
     handleEdit(row) {
       this.dialogType = 'edit'
       this.editForm = {...row}
       this.dialogVisible = true
     },
 
-    // 删除公司
     handleDelete(row) {
       this.$confirm(`确定要删除公司 "${row.companyName}" 吗？`, '提示', {
         confirmButtonText: '确定',
@@ -407,71 +495,65 @@ export default {
       })
     },
 
-    // 获取公司状态标签类型
     getCompanyStatusTagType(flag) {
       switch (flag) {
-        case 0: // 已删除
+        case 0:
           return 'info'
-        case 1: // 已激活
+        case 1:
           return 'success'
-        case 2: // 禁用
+        case 2:
           return 'warning'
-        case 5: // 系统内置
+        case 5:
           return 'primary'
         default:
           return 'info'
       }
     },
 
-    // 获取公司状态标签文本
     getCompanyStatusLabel(flag) {
       const status = this.statusOptions.find(item => item.code === flag)
       return status ? status.label : '未知状态'
     },
 
-    // 对话框关闭
     handleDialogClose() {
       this.dialogVisible = false
-      this.$refs.editForm.resetFields()
+      if (this.$refs.editForm && this.$refs.editForm.resetFields) {
+        this.$refs.editForm.resetFields()
+      }
     },
 
-    // 对话框确认
-    handleDialogConfirm() {
+    async handleDialogConfirm() {
       this.$refs.editForm.validate(async (valid) => {
         if (valid) {
+          this.dialogSaving = true
           try {
-            // 如果是新增子公司，需要在保存后设置父子关系
             if (this.dialogType === 'add' && this.editForm.parentId) {
-              // 先保存公司
               const saveResponse = await saveCompany({
                 companyName: this.editForm.companyName,
                 taxNumber: this.editForm.taxNumber,
                 description: this.editForm.description,
                 flag: this.editForm.flag
               })
-
               if (saveResponse.data && saveResponse.data.id) {
-                // 保存成功后，设置父子关系
                 await moveCompanyTo(this.editForm.parentId, saveResponse.data.id)
                 this.$message.success('新增子公司成功')
               }
             } else {
-              // 普通保存操作
               await saveCompany(this.editForm)
               this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
             }
-
             this.dialogVisible = false
             this.loadCompanyData()
           } catch (error) {
             console.error('保存失败:', error)
             this.$message.error('保存失败')
+          } finally {
+            this.dialogSaving = false
           }
         }
       })
     },
 
-    // 处理更多操作
     handleMoreActions(command) {
       switch (command.type) {
         case 'addChild':
@@ -486,10 +568,8 @@ export default {
       }
     },
 
-    // 处理排序变化
     handleSortChange({column, prop, order}) {
       if (order) {
-        // 根据 Element UI 的排序规则转换为后端需要的参数
         const direction = order === 'ascending' ? 'ASC' : 'DESC'
         this.sortParams = {
           [prop + 'Order']: direction
@@ -500,24 +580,63 @@ export default {
       this.loadCompanyData()
     },
 
-    // 移动公司对话框关闭
     handleMoveCompanyDialogClose() {
       this.moveCompanyDialogVisible = false
-      this.$refs.moveCompanyForm.resetFields()
+      this.moveCompanyForm.targetParentId = undefined
+      this.parentCandidates = []
+      this.parentRemoteLoading = false
+      this.parentRemoteLastQuery = ''
+      if (this.$refs.moveCompanyForm && this.$refs.moveCompanyForm.resetFields) {
+        this.$refs.moveCompanyForm.resetFields()
+      }
     },
 
-    // 处理移动公司确认
+    onParentSelect(selectedId) {
+      if (!selectedId) return
+      if (selectedId === this.moveCompanyForm.companyId) {
+        this.$message.warning('不能将公司移动到自身')
+        this.moveCompanyForm.targetParentId = undefined
+      }
+    },
+
+    // 远程搜索父公司（防止一次性加载全部公司）
+    async remoteSearchParents(query) {
+      // 避免重复同样的快速请求
+      if (query === this.parentRemoteLastQuery) return
+      this.parentRemoteLastQuery = query
+      this.parentRemoteLoading = true
+      try {
+        const params = {
+          likeName: query || undefined,
+          equalsTaxNumber: query && /^\d+$/.test(query) ? query : undefined,
+          page: 1,
+          size: this.parentRemoteSize,
+          treeRootFlag: undefined
+        }
+        const response = await adminQueryCompany(params)
+        const resData = response.data || {}
+        const list = (resData.data && Array.isArray(resData.data)) ? resData.data : (resData.list || [])
+        // 过滤掉自身（前端快速防护），后端仍需校验子孙关系
+        this.parentCandidates = list.filter(item => item.id !== this.moveCompanyForm.companyId)
+      } catch (error) {
+        console.error('搜索父公司失败:', error)
+        this.$message.error('搜索父公司失败')
+        this.parentCandidates = []
+      } finally {
+        this.parentRemoteLoading = false
+      }
+    },
+
     async handleMoveCompanyConfirm() {
       if (!this.moveCompanyForm.targetParentId) {
         this.$message.warning('请选择目标父公司')
         return
       }
-
       if (this.moveCompanyForm.targetParentId === this.moveCompanyForm.companyId) {
         this.$message.warning('不能将公司移动到自身')
         return
       }
-
+      this.moveSaving = true
       try {
         await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId)
         this.$message.success('移动公司成功')
@@ -525,9 +644,27 @@ export default {
         this.loadCompanyData()
       } catch (error) {
         console.error('移动公司失败:', error)
-        this.$message.error('移动公司失败')
+        // 如果后端返回子孙校验失败，应显示后端错误信息
+        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动公司失败'
+        this.$message.error(msg)
+      } finally {
+        this.moveSaving = false
       }
+    },
+
+    handlePageChange(page) {
+      this.currentPage = page
+      this.loadCompanyData()
+    },
+
+    handleSizeChange(size) {
+      this.pageSize = size
+      this.currentPage = 1
+      this.loadCompanyData()
     }
+  },
+  beforeDestroy() {
+    clearTimeout(this.searchDebounceTimer)
   }
 }
 </script>
@@ -535,87 +672,87 @@ export default {
 <style lang="scss" scoped>
 .company-admin-view {
   padding: 20px;
-  background-color: #f5f7fa;
   min-height: calc(100vh - 84px);
 
   .header-section {
     margin-bottom: 20px;
+  }
 
-    .header-content {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-
-      .main-title {
-        font-size: 24px;
-        font-weight: 600;
-        margin: 0;
-        color: #303133;
-      }
-
-      .header-actions {
-        .add-button {
-          height: 36px;
-        }
-      }
-    }
+  .main-title {
+    font-size: 24px;
+    font-weight: 600;
+    color: #303133;
   }
 
   .search-card {
     margin-bottom: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
 
     ::v-deep .el-card__body {
       padding: 20px;
-    }
-
-    .search-form {
-      .search-actions {
-        display: flex;
-        justify-content: flex-start;
-        gap: 10px;
-        align-items: center;
-        height: 100%;
-      }
     }
   }
 
   .table-card {
     border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
 
     ::v-deep .el-card__body {
-      padding: 20px 10px;
+      padding: 10px;
     }
+  }
+
+  .children-count {
+    color: #909399;
+    margin-left: 6px;
+    font-size: 12px;
+  }
+
+  .pagination-wrap {
+    display: flex;
+    justify-content: flex-end;
+    padding: 12px 0;
+  }
+
+  .empty-wrap {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px 0;
+  }
+
+  .move-tree-wrap {
+    max-height: 320px;
+    overflow: auto;
+    border: 1px solid #edf0f5;
+    border-radius: 4px;
+    padding: 10px;
+    margin-top: 10px;
+    background: #fff;
+  }
+
+  mark {
+    background: #ffe58f;
+    padding: 0 2px;
+    border-radius: 3px;
   }
 
   @media (max-width: 768px) {
     padding: 10px;
-
-    .header-section {
-      margin-bottom: 15px;
-
-      .header-content {
-        .main-title {
-          font-size: 20px;
-        }
-      }
+    .main-title {
+      font-size: 20px;
     }
-
-    .search-card,
-    .table-card {
+    .search-card, .table-card {
       ::v-deep .el-card__body {
-        padding: 15px;
-      }
-    }
-
-    .table-card {
-      ::v-deep .el-card__body {
-        padding: 15px 5px;
+        padding: 12px;
       }
     }
   }
+}
+
+/* 可选：调整下拉样式使显示更友好 */
+.parent-select-popper .el-select-dropdown__item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>
