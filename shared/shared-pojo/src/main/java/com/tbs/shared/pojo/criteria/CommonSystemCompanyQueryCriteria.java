@@ -92,4 +92,12 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
     @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
 
     private QueryOrderedModel updateTimeOrder;
+
+    /**
+     * 树节点根标记
+     */
+    @QueryMapping("tree_root_flag")
+    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    private Integer treeRootFlag;
+
 }

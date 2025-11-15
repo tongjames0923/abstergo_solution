@@ -8,6 +8,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
+import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.ITimeAuditService;
@@ -34,7 +35,7 @@ public class SimpleCompanyService
      */
     public static final SystemCompanyEntity SYSTEM_COMPANY =
         new SystemCompanyEntity(1L, "系统公司", "系统公司", "系统公司", null, null, null,
-            SystemCompanyFlagEnum.SYSTEMED.getCode(), null, null);
+            SystemCompanyFlagEnum.SYSTEMED.getCode(), null, null, CommonConstant.FLAG_ON);
 
     @Resource
     private SystemCompanyMapper mapper;
@@ -64,6 +65,7 @@ public class SimpleCompanyService
     @Override
     protected SystemCompanyEntity insertNew(SystemCompanyEntity entity) {
         entity.setFlag(SystemCompanyFlagEnum.DISABLED.getCode());
+        entity.setTreeRootFlag(CommonConstant.FLAG_ON);
         getMapper().insert(entity);
         return entity;
     }
@@ -179,6 +181,7 @@ public class SimpleCompanyService
         if (StrUtil.isEmpty(child.getTreeNodeGroup())) {
             child.setTreeNodeGroup(parent.getTreeNodeGroup());
             child.setTreeNodeId(child.getId().toString());
+            child.setTreeRootFlag(CommonConstant.FLAG_OFF);
             getMapper().updateByPrimaryKey(child);
         }
         treeStore.store(new TreeNodeModel(child.getTreeNodeId(), child.getTreeNodeGroup()), parent.getTreeNodeId());
