@@ -76,7 +76,8 @@
         border
         stripe
         v-loading="loading"
-        default-expand-all
+        lazy
+        :load="loadNode"
         @sort-change="handleSortChange"
       >
         <el-table-column prop="companyName" label="公司名称" width="250"/>
@@ -284,24 +285,33 @@ export default {
       const treeData = []
       for (const company of companies) {
         const companyWithChildren = {...company}
-        // 获取子节点
-        const children = await this.loadChildren(company.id)
-        if (children && children.length > 0) {
-          companyWithChildren.children = await this.buildTreeData(children)
+        // 使用childrenCount字段判断是否有子节点
+        if (company.childrenCount && company.childrenCount > 0) {
+          companyWithChildren.hasChildren = true
         }
         treeData.push(companyWithChildren)
       }
       return treeData
     },
 
-    // 加载子节点
-    async loadChildren(parentId) {
+    // 加载树节点
+    async loadNode(tree, treeNode, resolve) {
       try {
-        const response = await listChildren(parentId)
-        return response.data || []
+        const response = await listChildren(tree.id)
+        const children = response.data || []
+        // 处理子节点，标记它们是否还有子节点
+        const childrenWithHasChildren = []
+        for (const child of children) {
+          // 使用childrenCount字段判断是否有子节点
+          if (child.childrenCount && child.childrenCount > 0) {
+            child.hasChildren = true
+          }
+          childrenWithHasChildren.push(child)
+        }
+        resolve(childrenWithHasChildren)
       } catch (error) {
-        console.error(`加载公司 ${parentId} 的子节点失败:`, error)
-        return []
+        console.error(`加载公司 ${tree.id} 的子节点失败:`, error)
+        resolve([])
       }
     },
 
