@@ -1,7 +1,7 @@
 <template>
-  <div class="app-container">
-    <company-admin-view/>
-  </div>
+
+  <company-admin-view/>
+
 </template>
 
 <script>
