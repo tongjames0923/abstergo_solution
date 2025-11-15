@@ -24,7 +24,15 @@ public interface ITreeStore {
      * @param nodeId 树ID
      * @return 树存储对象
      */
-    List<ITreeStorable> getChildren(String nodeId);
+    List<ITreeStorable> getChildren(String nodeId, String group);
+
+    /**
+     * 获取树子节点
+     *
+     * @param nodeId 树ID
+     * @return 树存储对象列表
+     */
+    List<ITreeStorable> getDirectChildren(String nodeId,String group);
 
     /**
      * 获取树父节点

@@ -243,12 +243,26 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     }
 
     @Override
-    public List<ITreeStorable> getChildren(String nodeId) {
-        var coll = treeNodeMapper.getChildren(nodeId);
+    public List<ITreeStorable> getChildren(String nodeId, String group) {
+        var coll = treeNodeMapper.getChildren(nodeId, group);
         return CollUtil.isEmpty(coll) ? Collections.EMPTY_LIST : coll.stream().map(treeNodeEntity -> {
             var model = new SimpleTreeStrorableModel();
             model.setNodeId(treeNodeEntity.getNodeId());
             model.setTreeGroup(treeNodeEntity.getGroupName());
+            return model;
+        }).collect(Collectors.toList());
+    }
+
+    @Override
+    public List<ITreeStorable> getDirectChildren(String nodeId, String group) {
+        var relation = new TreeRelationEntity();
+        relation.setAncestorId(nodeId);
+        relation.setDepth(1);
+        relation.setGroupName(group);
+        return treeRelationMapper.select(relation).stream().map(res -> {
+            var model = new SimpleTreeStrorableModel();
+            model.setTreeGroup(res.getGroupName());
+            model.setNodeId(res.getDescendantId());
             return model;
         }).collect(Collectors.toList());
     }

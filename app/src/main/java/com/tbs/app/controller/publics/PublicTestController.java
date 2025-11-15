@@ -49,7 +49,7 @@ public class PublicTestController extends BaseController {
      */
     @PostMapping("/getChildren")
     public AjaxResult getChildren(String nodeId) {
-        return AjaxUtil.getInstance().success(store.getChildren(nodeId));
+        return AjaxUtil.getInstance().success(store.getChildren(nodeId, TEST_GROUP));
     }
 
     @PostMapping("/getParentNodes")

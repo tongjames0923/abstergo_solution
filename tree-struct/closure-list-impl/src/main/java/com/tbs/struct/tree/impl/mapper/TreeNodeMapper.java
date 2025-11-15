@@ -27,6 +27,6 @@ public interface TreeNodeMapper extends IFrameworkMapper<TreeNodeEntity, Long> {
     @Select("select * from tree_node where parent_id is null and group_name = #{groupName}")
     List<TreeNodeEntity> getRootNodeByGroupName(String groupName);
 
-    @Select("select * from tree_node where parent_id = #{nodeId}")
-    List<TreeNodeEntity> getChildren(String nodeId);
+    @Select("select * from tree_node where parent_id = #{nodeId} and group_name=#{treeGroup}")
+    List<TreeNodeEntity> getChildren(String nodeId, String treeGroup);
 }

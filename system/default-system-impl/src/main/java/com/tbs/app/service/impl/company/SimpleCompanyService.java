@@ -154,8 +154,15 @@ public class SimpleCompanyService
     }
 
     private static final String createTreeGroupName(SystemCompanyEntity entity) {
-        return "company_tree:" + entity.getId();
+        return COMPANY_TREE_GROUP + entity.getId();
     }
+
+    private static final String createTreeNodeId(SystemCompanyEntity entity) {
+        return COMPANY_TREE_GROUP + entity.getId().toString();
+    }
+
+    private static final String COMPANY_TREE_GROUP = "COT:";
+
 
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
@@ -168,31 +175,34 @@ public class SimpleCompanyService
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("目标子公司不存在").throwIt();
         if (StrUtil.isEmpty(parent.getTreeNodeGroup())) {
             parent.setTreeNodeGroup(createTreeGroupName(parent));
-            parent.setTreeNodeId(parent.getId().toString());
+            parent.setTreeNodeId(createTreeNodeId(parent));
             var tree = new TreeNodeModel();
             tree.setTreeGroup(parent.getTreeNodeGroup());
             tree.setNodeId(parent.getTreeNodeId());
             treeStore.store(tree, null);
         }
-        parent.setChildrenCount(parent.getChildrenCount() + 1L);
-        getMapper().updateByPrimaryKey(parent);
         AssertUtil.isTrue(StrUtil.isNotEmpty(child.getTreeNodeGroup()) &&
                 !Objects.equals(child.getTreeNodeGroup(), parent.getTreeNodeGroup()))
             .message("不能将子公司添加到其他公司下").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
 
         if (StrUtil.isEmpty(child.getTreeNodeGroup())) {
             child.setTreeNodeGroup(parent.getTreeNodeGroup());
-            child.setTreeNodeId(child.getId().toString());
+            child.setTreeNodeId(createTreeNodeId(child));
             child.setTreeRootFlag(CommonConstant.FLAG_OFF);
             getMapper().updateByPrimaryKey(child);
         }
         treeStore.store(new TreeNodeModel(child.getTreeNodeId(), child.getTreeNodeGroup()), parent.getTreeNodeId());
+        var children = treeStore.getDirectChildren(parent.getTreeNodeId(), parent.getTreeNodeGroup()).size();
+
+        parent.setChildrenCount(new Long(children));
+        getMapper().updateByPrimaryKey(parent);
     }
 
     @Override
     public List<SystemCompanyEntity> getChildrenCompanies(Long id) {
         var p = getInstance().queryById(id);
-        return treeStore.getChildren(p.getTreeNodeId()).stream()
-            .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId()))).collect(Collectors.toList());
+        return treeStore.getDirectChildren(p.getTreeNodeId(), p.getTreeNodeGroup()).stream()
+            .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId().substring(4, it.getNodeId().length()))))
+            .collect(Collectors.toList());
     }
 }

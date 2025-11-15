@@ -1,3 +1,4 @@
+Cou
 <template>
   <div class="company-admin-view">
     <div class="header-section">
@@ -124,7 +125,7 @@
                 <el-button size="mini">
                   更多<i class="el-icon-arrow-down el-icon--right"></i>
                 </el-button>
-                <el-dropdown-menu slot="dropdown">
+                <el-dropdown-menu>
                   <el-dropdown-item :command="{type: 'move', row: scope.row}">
                     移动到其他公司
                   </el-dropdown-item>
@@ -487,7 +488,11 @@ export default {
         try {
           await deleteCompany(row.id)
           this.$message.success('删除成功')
-          this.loadCompanyData()
+          await this.loadCompanyData()
+          // 强制更新表格以刷新树形结构显示
+          this.$nextTick(() => {
+            this.tableData = [...this.tableData]
+          })
         } catch (error) {
           console.error('删除失败:', error)
           this.$message.error('删除失败')
@@ -543,7 +548,11 @@ export default {
               this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
             }
             this.dialogVisible = false
-            this.loadCompanyData()
+            await this.loadCompanyData()
+            // 强制更新表格以刷新树形结构显示
+            this.$nextTick(() => {
+              this.tableData = [...this.tableData]
+            })
           } catch (error) {
             console.error('保存失败:', error)
             this.$message.error('保存失败')
@@ -641,7 +650,11 @@ export default {
         await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId)
         this.$message.success('移动公司成功')
         this.handleMoveCompanyDialogClose()
-        this.loadCompanyData()
+        await this.loadCompanyData()
+        // 强制更新表格以刷新树形结构显示
+        this.$nextTick(() => {
+          this.tableData = [...this.tableData]
+        })
       } catch (error) {
         console.error('移动公司失败:', error)
         // 如果后端返回子孙校验失败，应显示后端错误信息
