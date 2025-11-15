@@ -35,7 +35,7 @@ public class SimpleCompanyService
      */
     public static final SystemCompanyEntity SYSTEM_COMPANY =
         new SystemCompanyEntity(1L, "系统公司", "系统公司", "系统公司", null, null, null,
-            SystemCompanyFlagEnum.SYSTEMED.getCode(), null, null, CommonConstant.FLAG_ON);
+            SystemCompanyFlagEnum.SYSTEMED.getCode(), null, null, CommonConstant.FLAG_ON, 0L);
 
     @Resource
     private SystemCompanyMapper mapper;
@@ -66,6 +66,7 @@ public class SimpleCompanyService
     protected SystemCompanyEntity insertNew(SystemCompanyEntity entity) {
         entity.setFlag(SystemCompanyFlagEnum.DISABLED.getCode());
         entity.setTreeRootFlag(CommonConstant.FLAG_ON);
+        entity.setChildrenCount(0L);
         getMapper().insert(entity);
         return entity;
     }
@@ -168,12 +169,13 @@ public class SimpleCompanyService
         if (StrUtil.isEmpty(parent.getTreeNodeGroup())) {
             parent.setTreeNodeGroup(createTreeGroupName(parent));
             parent.setTreeNodeId(parent.getId().toString());
-            getMapper().updateByPrimaryKey(parent);
             var tree = new TreeNodeModel();
             tree.setTreeGroup(parent.getTreeNodeGroup());
             tree.setNodeId(parent.getTreeNodeId());
             treeStore.store(tree, null);
         }
+        parent.setChildrenCount(parent.getChildrenCount() + 1L);
+        getMapper().updateByPrimaryKey(parent);
         AssertUtil.isTrue(StrUtil.isNotEmpty(child.getTreeNodeGroup()) &&
                 !Objects.equals(child.getTreeNodeGroup(), parent.getTreeNodeGroup()))
             .message("不能将子公司添加到其他公司下").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();

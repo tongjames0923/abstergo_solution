@@ -97,5 +97,11 @@ public class SystemCompanyEntity implements IBaseEntity<Long> {
     @Column(name = "tree_root_flag")
     private Integer treeRootFlag;
 
+    /**
+     * 子公司数量
+     */
+    @Column(name = "children_count")
+    private Long childrenCount;
+
 
 }
