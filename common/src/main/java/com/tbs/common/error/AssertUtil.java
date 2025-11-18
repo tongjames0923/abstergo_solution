@@ -220,6 +220,88 @@ public class AssertUtil implements IStartup {
     }
 
     /**
+     * 断言条件为真并指定错误级别
+     *
+     * @param condition  待判断的条件
+     * @param errorLevel 错误级别枚举
+     * @return 如果条件为真返回带有指定错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isTrueWithLevel(boolean condition, ErrorLevelEnum errorLevel) {
+        return toAssert(condition).errorLevel(errorLevel);
+    }
+
+    /**
+     * 断言条件为假并指定错误级别
+     *
+     * @param condition  待判断的条件
+     * @param errorLevel 错误级别枚举
+     * @return 如果条件为假返回带有指定错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isFalseWithLevel(boolean condition, ErrorLevelEnum errorLevel) {
+        return toAssert(!condition).errorLevel(errorLevel);
+    }
+
+    /**
+     * 断言条件为真并指定错误级别为用户输入错误
+     *
+     * @param condition 待判断的条件
+     * @return 如果条件为真返回带有用户输入错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isTrueUserInputError(boolean condition) {
+        return toAssert(condition).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR);
+    }
+
+    /**
+     * 断言条件为假并指定错误级别为用户输入错误
+     *
+     * @param condition 待判断的条件
+     * @return 如果条件为假返回带有用户输入错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isFalseUserInputError(boolean condition) {
+        return toAssert(!condition).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR);
+    }
+
+    /**
+     * 断言条件为真并指定错误级别为系统错误
+     *
+     * @param condition 待判断的条件
+     * @return 如果条件为真返回带有系统错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isTrueSystemError(boolean condition) {
+        return toAssert(condition).errorLevel(ErrorLevelEnum.SYSTEM_ERROR);
+    }
+
+    /**
+     * 断言条件为假并指定错误级别为系统错误
+     *
+     * @param condition 待判断的条件
+     * @return 如果条件为假返回带有系统错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isFalseSystemError(boolean condition) {
+        return toAssert(!condition).errorLevel(ErrorLevelEnum.SYSTEM_ERROR);
+    }
+
+    /**
+     * 断言条件为真并指定错误级别为业务逻辑错误
+     *
+     * @param condition 待判断的条件
+     * @return 如果条件为真返回带有业务逻辑错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isTrueBusinessError(boolean condition) {
+        return toAssert(condition).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR);
+    }
+
+    /**
+     * 断言条件为假并指定错误级别为业务逻辑错误
+     *
+     * @param condition 待判断的条件
+     * @return 如果条件为假返回带有业务逻辑错误级别的断言构建器，否则返回不可构建的断言构建器
+     */
+    public static AssertBuilder isFalseBusinessError(boolean condition) {
+        return toAssert(!condition).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR);
+    }
+
+    /**
      * 断言条件为假
      *
      * @param condition 待判断的条件
@@ -394,4 +476,99 @@ public class AssertUtil implements IStartup {
         // 使用CollUtil.isEmpty判断Map是否为空，如果为空则抛出异常
         isTrue(CollUtil.isEmpty(map), FormattedRuntimeException::new, message, params);
     }
+
+    /**
+     * 断言对象非空并指定错误级别
+     *
+     * @param object     待检查的对象
+     * @param errorLevel 错误级别枚举
+     * @param message    错误消息模板
+     * @param params     错误消息参数
+     * @return 如果对象非空返回不可构建的断言构建器，否则返回可构建的断言构建器
+     */
+    public static AssertBuilder notNullWithLevel(@Nullable Object object, ErrorLevelEnum errorLevel, String message, Object... params) {
+        return toAssert(object != null).errorLevel(errorLevel).message(message).params(params);
+    }
+
+    /**
+     * 断言对象为空并指定错误级别
+     *
+     * @param object     待检查的对象
+     * @param errorLevel 错误级别枚举
+     * @param message    错误消息模板
+     * @param params     错误消息参数
+     * @return 如果对象为空返回不可构建的断言构建器，否则返回可构建的断言构建器
+     */
+    public static AssertBuilder isNullWithLevel(@Nullable Object object, ErrorLevelEnum errorLevel, String message, Object... params) {
+        return toAssert(object == null).errorLevel(errorLevel).message(message).params(params);
+    }
+
+    /**
+     * 断言字符串非空且包含文本并指定错误级别
+     *
+     * @param text       待检查的字符串
+     * @param errorLevel 错误级别枚举
+     * @param message    错误消息模板
+     * @param params     错误消息参数
+     * @return 如果字符串非空且包含文本返回不可构建的断言构建器，否则返回可构建的断言构建器
+     */
+    public static AssertBuilder hasTextWithLevel(@Nullable String text, ErrorLevelEnum errorLevel, String message, Object... params) {
+        return toAssert(!StrUtil.isEmpty(text)).errorLevel(errorLevel).message(message).params(params);
+    }
+
+    /**
+     * 断言集合非空并指定错误级别
+     *
+     * @param collection 待检查的集合
+     * @param errorLevel 错误级别枚举
+     * @param message    错误消息模板
+     * @param params     错误消息参数
+     * @return 如果集合非空返回不可构建的断言构建器，否则返回可构建的断言构建器
+     */
+    public static AssertBuilder notEmptyWithLevel(@Nullable Collection<?> collection, ErrorLevelEnum errorLevel, String message, Object... params) {
+        return toAssert(!CollUtil.isEmpty(collection)).errorLevel(errorLevel).message(message).params(params);
+    }
+
+    /**
+     * 断言数组非空并指定错误级别
+     *
+     * @param array      待检查的数组
+     * @param errorLevel 错误级别枚举
+     * @param message    错误消息模板
+     * @param params     错误消息参数
+     * @param <T>        数组元素类型
+     * @return 如果数组非空返回不可构建的断言构建器，否则返回可构建的断言构建器
+     */
+    public static <T> AssertBuilder notEmptyWithLevel(@Nullable T[] array, ErrorLevelEnum errorLevel, String message, Object... params) {
+        return toAssert(!CollUtil.isEmpty(array)).errorLevel(errorLevel).message(message).params(params);
+    }
+
+    /**
+     * 断言对象相等并指定错误级别
+     *
+     * @param obj1       第一个对象
+     * @param obj2       第二个对象
+     * @param errorLevel 错误级别枚举
+     * @param message    错误消息模板
+     * @param params     错误消息参数
+     * @return 如果对象相等返回不可构建的断言构建器，否则返回可构建的断言构建器
+     */
+    public static AssertBuilder equalsWithLevel(Object obj1, Object obj2, ErrorLevelEnum errorLevel, String message, Object... params) {
+        return toAssert(Objects.equals(obj1, obj2)).errorLevel(errorLevel).message(message).params(params);
+    }
+
+    /**
+     * 断言对象不相等并指定错误级别
+     *
+     * @param obj1       第一个对象
+     * @param obj2       第二个对象
+     * @param errorLevel 错误级别枚举
+     * @param message    错误消息模板
+     * @param params     错误消息参数
+     * @return 如果对象不相等返回不可构建的断言构建器，否则返回可构建的断言构建器
+     */
+    public static AssertBuilder notEqualsWithLevel(Object obj1, Object obj2, ErrorLevelEnum errorLevel, String message, Object... params) {
+        return toAssert(!Objects.equals(obj1, obj2)).errorLevel(errorLevel).message(message).params(params);
+    }
+
 }

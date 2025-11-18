@@ -164,9 +164,10 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @PostMapping("token/disable/")
     public AjaxResult tokenDisable(@RequestBody @Valid DisableTokenForm form) {
         var user = getService().queryById(form.getUserId());
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var tokenModel = center.getTokenByToken(form.getToken());
-        AssertUtil.notNull(tokenModel, "Token不存在");
+        AssertUtil.isTrue(tokenModel == null).message("Token不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
         AssertUtil.isTrue(!Objects.equals(user.getUserName(), tokenModel.getUserName())).message("Token不属于该用户")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         center.setTokenStatus(form.getToken(), TokenStatusEnum.REVOKE);
