@@ -95,12 +95,28 @@ const actions = {
    */
   async refreshToken({ commit }) {
     try {
-      const { code, data } = await request('public/user/refresh')
+      // 添加超时控制，避免长时间等待
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
+      
+      const response = await request({
+        url: 'public/user/refresh',
+        method: 'get',
+        signal: controller.signal
+      })
+      
+      clearTimeout(timeoutId)
+      
+      const { code, data } = response
       setToken(data.token)
       commit('SET_TOKEN', data.token)
       setToken(data.token, getRememberMe())
       return data
     } catch (error) {
+      // 检查是否是超时错误
+      if (error.name === 'AbortError') {
+        throw new Error('Token刷新超时，请检查网络连接')
+      }
       throw error
     }
   }

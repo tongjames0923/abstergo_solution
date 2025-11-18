@@ -1,12 +1,15 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.form.DisableTokenForm;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.interfaces.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
+import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
@@ -22,7 +25,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import javax.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -61,9 +66,8 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Override
     @GetMapping("get/{id}")
     @Operation(summary = "获取管理员用户", description = "根据用户ID获取管理员用户详细信息")
-    @ApiResponse(responseCode = "200", description = "成功获取管理员用户", 
-        content = @Content(mediaType = "application/json", 
-            schema = @Schema(implementation = AjaxResult.class)))
+    @ApiResponse(responseCode = "200", description = "成功获取管理员用户",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult get(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
@@ -77,9 +81,8 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Override
     @PostMapping("save")
     @Operation(summary = "保存管理员用户", description = "创建或更新管理员用户信息")
-    @ApiResponse(responseCode = "200", description = "成功保存管理员用户", 
-        content = @Content(mediaType = "application/json", 
-            schema = @Schema(implementation = AjaxResult.class)))
+    @ApiResponse(responseCode = "200", description = "成功保存管理员用户",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult save(
         @Parameter(name = "entity", description = "用户信息", required = true) @RequestBody SystemUserEntity entity) {
         return super.save(entity);
@@ -94,9 +97,8 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Override
     @PostMapping("delete/{id}")
     @Operation(summary = "删除管理员用户", description = "根据用户ID删除管理员用户")
-    @ApiResponse(responseCode = "200", description = "成功删除管理员用户", 
-        content = @Content(mediaType = "application/json", 
-            schema = @Schema(implementation = AjaxResult.class)))
+    @ApiResponse(responseCode = "200", description = "成功删除管理员用户",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult delete(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.delete(id);
     }
@@ -112,9 +114,8 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Override
     @PostMapping("query")
     @Operation(summary = "查询管理员用户", description = "根据条件查询管理员用户列表，支持分页")
-    @ApiResponse(responseCode = "200", description = "成功查询管理员用户列表", 
-        content = @Content(mediaType = "application/json", 
-            schema = @Schema(implementation = AjaxResult.class)))
+    @ApiResponse(responseCode = "200", description = "成功查询管理员用户列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult query(
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemUserQueryCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
@@ -130,10 +131,10 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @GetMapping("sessions/{id}")
     @Operation(summary = "获取用户登录会话列表", description = "根据用户ID获取用户登录会话列表")
-    @ApiResponse(responseCode = "200", description = "成功获取用户登录会话列表", 
-        content = @Content(mediaType = "application/json", 
-            schema = @Schema(implementation = LoginSessionVO.class)))
-    public List<LoginSessionVO> getUserSessions(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
+    @ApiResponse(responseCode = "200", description = "成功获取用户登录会话列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginSessionVO.class)))
+    public List<LoginSessionVO> getUserSessions(
+        @Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         var user = getService().queryById(id);
         AssertUtil.notNull(user, "用户不存在");
         return loginInfoService.listUserSessions(user.getUserName());
@@ -147,11 +148,29 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @GetMapping("tokens/{sessionId}")
     @Operation(summary = "获取用户登录会话的Token数据", description = "根据会话ID获取用户登录会话的Token数据")
-    @ApiResponse(responseCode = "200", description = "成功获取用户登录会话的Token数据", 
-        content = @Content(mediaType = "application/json", 
-            schema = @Schema(implementation = ITokenModel.class)))
-    public List<ITokenModel> listTokensBySessionId(@Parameter(name = "sessionId", description = "用户登录会话ID", required = true) @PathVariable String sessionId) {
+    @ApiResponse(responseCode = "200", description = "成功获取用户登录会话的Token数据",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ITokenModel.class)))
+    public List<ITokenModel> listTokensBySessionId(@Parameter(name = "sessionId", description = "用户登录会话ID",
+        required = true) @PathVariable String sessionId) {
         return center.getTokensBySessionId(sessionId).stream().collect(Collectors.toList());
+    }
+
+    /**
+     * 禁用用户登录会话的Token数据
+     *
+     * @param token 用户登录会话的Token数据
+     * @return 用户登录会话列表
+     */
+    @PostMapping("token/disable/")
+    public AjaxResult tokenDisable(@RequestBody @Valid DisableTokenForm form) {
+        var user = getService().queryById(form.getUserId());
+        AssertUtil.notNull(user, "用户不存在");
+        var tokenModel = center.getTokenByToken(form.getToken());
+        AssertUtil.notNull(tokenModel, "Token不存在");
+        AssertUtil.isTrue(!Objects.equals(user.getUserName(), tokenModel.getUserName())).message("Token不属于该用户")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        center.setTokenStatus(form.getToken(), TokenStatusEnum.REVOKE);
+        return successResult(null);
     }
 
     @Override

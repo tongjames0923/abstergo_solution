@@ -29,7 +29,6 @@ export function adminQueryUser(data, pageNum, pageSize) {
   })
 }
 
-// ... existing code ...
 /**
  * 激活用户账户
  * @param {number} userId - 用户ID
@@ -90,7 +89,7 @@ export function enableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/enable/${userId}`,
     method: 'get',
-    params: { role }
+    params: {role}
   })
 }
 
@@ -98,7 +97,7 @@ export function disableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/disable/${userId}`,
     method: 'get',
-    params: { role }
+    params: {role}
   })
 }
 
@@ -148,5 +147,22 @@ export function getTokensBySessionId(sessionId) {
   return request({
     url: 'private/admin/user/tokens/' + sessionId,
     method: 'get'
+  })
+}
+
+/**
+ * 禁用用户的Token
+ * @param token - 要禁用的Token
+ * @param userId - 用户ID
+ * @returns {*}
+ */
+export function disableUserToken(token, userId) {
+  return request({
+    url: 'private/admin/user/token/disable/',
+    method: 'post',
+    data: {
+      token: token,
+      userId: userId
+    }
   })
 }

@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { Message, MessageBox } from 'element-ui'
+import { Message, MessageBox, Loading } from 'element-ui'
 import store from '@/store'
 import { getToken } from '@/utils/auth'
 import settings from '@/settings'
@@ -14,6 +14,7 @@ const service = axios.create({
 // Token刷新相关状态
 let isRefreshing = false
 let failedQueue = []
+let refreshLoadingInstance = null
 
 const processQueue = (error, token = null) => {
   failedQueue.forEach(prom => {
@@ -73,6 +74,14 @@ const refreshTokenHandler = async(response) => {
   isRefreshing = true
   config._retry = true
 
+  // 显示刷新Token的加载提示，提升用户体验
+  refreshLoadingInstance = Loading.service({
+    lock: true,
+    text: '登录状态即将过期，正在自动续期...',
+    spinner: 'el-icon-loading',
+    background: 'rgba(0, 0, 0, 0.7)'
+  })
+
   try {
     await store.dispatch('user/refreshToken')
     // 处理队列中的请求
@@ -92,6 +101,11 @@ const refreshTokenHandler = async(response) => {
     throw err
   } finally {
     isRefreshing = false
+    // 关闭加载提示
+    if (refreshLoadingInstance) {
+      refreshLoadingInstance.close()
+      refreshLoadingInstance = null
+    }
   }
 }
 
