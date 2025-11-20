@@ -25,6 +25,7 @@
         <module>tree-struct</module>
         <module>xxl-job-mod</module>
         <module>open-api-starter</module>
+        <module>dynamic-view-route</module>
     </modules>
 
     <groupId>com.tbs</groupId>
