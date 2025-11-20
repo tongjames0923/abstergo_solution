@@ -1,131 +1,202 @@
-# App 模块
+# 🚀 App 模块 - 后端Web应用运行包
 
-App 模块是整个应用程序的主入口模块，负责启动 Spring Boot 应用并整合各个功能模块。
+## 📋 项目概述
 
-## 目录结构
+App模块是Abstergo解决方案的后端Web应用核心运行包，基于Spring Boot框架构建，提供完整的系统管理功能，包括用户管理、角色管理、公司管理等核心业务功能。
+
+## 🏗️ 技术架构
+
+### 核心框架
+- **Spring Boot 2.x** - 应用主框架
+- **Spring Data JPA** - 数据持久化
+- **MyBatis** - ORM框架
+- **Dubbo** - RPC框架（用于微服务通信）
+- **Redisson** - 分布式缓存管理
+
+### 数据库支持
+- **MySQL** - 主数据库
+- **Redis** - 缓存数据库
+- **RabbitMQ** - 消息队列
+
+### 安全与认证
+- **JWT Token** - 身份认证
+- **RBAC** - 基于角色的访问控制
+
+## 📁 项目结构
 
 ```
-com.tbs.app
-├── AppApplication.java     # Spring Boot 启动类
-├── config                  # 应用配置类
-├── controller              # 控制器类
-├── form                    # 表单类
-├── service                 # 业务服务类
-└── vo                      # 视图对象类
+src/main/java/com/tbs/app/
+├── AppApplication.java          # 应用启动类
+├── config/                      # 配置类目录
+│   └── AppConfig.java          # 应用配置
+├── controller/                  # 控制器层
+│   ├── privates/               # 私有接口（需要认证）
+│   │   ├── AdminCompanyController.java    # 公司管理接口
+│   │   ├── AdminRoleController.java       # 角色管理接口
+│   │   ├── AdminSystemLogController.java  # 系统日志接口
+│   │   ├── AdminUserController.java       # 用户管理接口
+│   │   ├── PrivateCompanyController.java  # 私有公司接口
+│   │   ├── PrivateTestController.java     # 私有测试接口
+│   │   ├── PrivateUserController.java     # 私有用户接口
+│   │   ├── RoleController.java            # 角色接口
+│   │   └── ViewController.java            # 视图控制器
+│   └── publics/                 # 公共接口（无需认证）
+│       ├── PublicTestController.java      # 公共测试接口
+│       └── PublicUserController.java      # 公共用户接口
+├── form/                        # 表单对象
+│   ├── DisableTokenForm.java    # Token禁用表单
+│   └── LoginForm.java           # 登录表单
+├── service/                     # 服务层
+│   ├── AppExecutor.java         # 应用执行器
+│   ├── Test2Service.java        # 测试服务2
+│   └── TestService.java         # 测试服务
+└── vo/                          # 值对象
+    └── UserInfoVO.java          # 用户信息视图对象
 ```
 
-## 核心组件说明
+## ⚙️ 配置说明
 
-### 1. 启动类 (AppApplication.java)
+### 主配置文件 (application.yml)
+- **应用名称**: app-service
+- **国际化支持**: i18n/messages
+- **Dubbo配置**: Zookeeper注册中心 (127.0.0.1:2181)
+- **协议端口**: 20888
 
-[AppApplication](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L30)
-是整个应用程序的启动类，包含 main 方法用于启动 Spring Boot 应用。
+### 数据库配置 (application-db.yml)
+- **数据库驱动**: P6Spy (SQL监控)
+- **连接池**: HikariCP
+- **连接配置**: 最小5个连接，最大20个连接
+- **JPA配置**: 自动DDL更新，显示SQL
 
-#### 主要注解说明
+### 缓存配置 (application-redis.yml)
+- **Redis主机**: localhost:6379
+- **认证密码**: 123456
+- **RabbitMQ**: 127.0.0.1:5672 (admin/admin123)
 
-- [@SpringBootApplication](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L17):
-  标识这是一个 Spring Boot 应用
-- [@EnableTbsSqlUtils](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L17):
-  启用 TBS SQL 工具
-- [@MYSQL](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L17):
-  指定使用 MySQL 数据库方言
-- [@MapperScan](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L17):
-  扫描 MyBatis Mapper 接口
-- [@EntityScan](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L17):
-  扫描 JPA 实体类
-- [@EnableAspectJAutoProxy](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L17):
-  启用 AspectJ 自动代理
+## 🚀 快速开始
 
-### 2. 配置类 (config)
+### 环境要求
+- Java 11+
+- Maven 3.6+
+- MySQL 5.7+
+- Redis 5.0+
+- Zookeeper 3.6+
 
-包含应用程序的各种配置类。
+### 启动步骤
 
-### 3. 控制器类 (controller)
+1. **克隆项目**
+   ```bash
+   git clone <repository-url>
+   cd abstergo_solution
+   ```
 
-包含处理 HTTP 请求的控制器类。
+2. **配置数据库**
+   - 创建数据库: `app_system`
+   - 修改 `application-db.yml` 中的数据库连接信息
 
-### 4. 表单类 (form)
+3. **启动依赖服务**
+   ```bash
+   # 启动Redis
+   redis-server
+   
+   # 启动Zookeeper
+   zkServer.sh start
+   ```
 
-包含用于接收前端请求数据的表单类。
+4. **编译运行**
+   ```bash
+   # 编译项目
+   mvn clean compile
+   
+   # 运行应用
+   mvn spring-boot:run
+   ```
 
-### 5. 业务服务类 (service)
+### 接口访问
 
-包含业务逻辑处理的服务类。
+应用启动后，可以通过以下地址访问：
+- **应用主页**: http://localhost:8080
+- **健康检查**: http://localhost:8080/actuator/health
+- **API文档**: http://localhost:8080/swagger-ui.html
 
-### 6. 视图对象类 (vo)
+## 🔧 核心功能
 
-包含用于向前端返回数据的视图对象类。
+### 用户管理模块
+- 用户注册、登录、注销
+- 用户信息管理
+- 权限分配
+- Token管理
 
-## 自定义使用说明
+### 角色管理模块
+- 角色创建、修改、删除
+- 权限配置
+- 角色分配
 
-### 1. 启动应用
+### 公司管理模块
+- 公司信息管理
+- 组织架构维护
+- 多租户支持
 
-要启动应用，可以运行 [AppApplication](file:///Users/abstergo/IdeaProjects/abstergo_solution/app/src/main/java/com/tbs/app/AppApplication.java#L17-L30)
-类的 main 方法：
+### 系统日志模块
+- 操作日志记录
+- 系统监控
+- 异常追踪
 
+## 📊 监控与运维
+
+### 健康检查
+应用内置Spring Boot Actuator，提供以下端点：
+- `/actuator/health` - 健康状态
+- `/actuator/info` - 应用信息
+- `/actuator/metrics` - 性能指标
+
+### 日志配置
+- 日志级别: INFO
+- 日志文件: logs/app.log
+- 支持SQL语句日志输出
+
+## 🔒 安全特性
+
+### 认证机制
+- JWT Token认证
+- 支持Token刷新
+- Token失效管理
+
+### 权限控制
+- 基于角色的访问控制(RBAC)
+- 接口级别权限验证
+- 数据权限隔离
+
+## 🚀 部署说明
+
+### 开发环境
 ```bash
 mvn spring-boot:run
 ```
 
-或者打包后运行：
-
+### 生产环境
 ```bash
-mvn clean package
+# 打包
+mvn clean package -DskipTests
+
+# 运行
 java -jar target/app-1.0-SNAPSHOT.jar
 ```
 
-### 2. 配置说明
-
-在 `application.yml` 中配置相关参数：
-
-```yaml
-# 服务器配置
-server:
-  port: 8080
-
-# 数据库配置
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/your_database
-    username: your_username
-    password: your_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
-
-# MyBatis 配置
-mybatis:
-  mapper-locations: classpath:mapper/*.xml
-  type-aliases-package: com.tbs.shared.pojo.entity
-
-# 日志配置
-logging:
-  level:
-    com.tbs: DEBUG
+### Docker部署
+```dockerfile
+FROM openjdk:11-jre-slim
+COPY target/app-1.0-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
 ```
 
-## 最佳实践
+## 📞 技术支持
 
-1. **模块化设计**：
-    - 将不同功能的代码放在对应的包中
-    - 保持 controller 层的简洁，将业务逻辑放在 service 层
+如有问题或建议，请联系：
+- **开发者**: abstergo
+- **邮箱**: tongjames@live.com
 
-2. **配置管理**：
-    - 使用 application.yml 进行配置管理
-    - 敏感信息如密码应使用环境变量或配置中心管理
+---
 
-3. **启动优化**：
-    - 合理使用组件扫描范围，避免不必要的类加载
-    - 根据实际需要启用相关功能模块
-
-## 注意事项
-
-1. **依赖管理**：
-    - 确保 pom.xml 中包含了所有必要的依赖
-    - 定期更新依赖版本以修复安全漏洞
-
-2. **数据库连接**：
-    - 确保数据库连接配置正确
-    - 合理配置连接池参数以优化性能
-
-3. **日志配置**：
-    - 合理配置日志级别，避免生产环境输出过多调试信息
-    - 定期清理日志文件，避免磁盘空间不足
+**最后更新**: 2024年
+**版本**: 1.0-SNAPSHOT
