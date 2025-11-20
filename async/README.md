@@ -1,354 +1,276 @@
-# Async 异步功能模块
+# Async 异步功能解决方案
 
-异步功能模块提供了完整的异步编程解决方案，包括线程管理、定时任务、分布式锁、事务管理、事件广播等核心功能。
+## 概述
 
-## 目录结构
+Async是一个功能强大的Java异步编程解决方案，基于Spring Boot框架构建，提供了完整的异步处理、事件驱动、任务调度和分布式锁等功能。该模块旨在简化异步编程的复杂性，提高系统的并发处理能力和响应性能。
 
-```
-com.tbs.async
-├── annotation                  # 注解类
-│   └── LongTermAsync.java     # 长期异步执行注解
-├── aop                         # AOP切面
-│   └── LongTermAsyncAop.java  # 长期异步执行切面
-├── config                      # 配置类
-│   ├── property               # 配置属性
-│   │   └── ExecutorProperty.java
-│   └── AsyncConfig.java       # 异步配置
-└── constant                    # 常量定义
-    └── AsyncBeanNameConstant.java
+## 核心功能模块
 
-com.tbs.broadcast               # 事件广播模块
-├── bus                         # 事件总线
-│   ├── impl                   # 实现类
-│   │   └── SimpleEventBus.java
-│   ├── AbstractEventBus.java
-│   ├── AbstractSemaphoreEventBus.java
-│   ├── IDistributedBusSupport.java
-│   └── IEventBus.java
-├── config                      # 配置类
-│   ├── property              # 配置属性
-│   │   └── BroadcastProperty.java
-│   └── BroadcastConfig.java   # 广播配置
-├── constant                    # 常量定义
-│   └── BroadcastBeanNameConstant.java
-├── dispatcher                  # 事件分发器
-│   ├── impl                   # 实现类
-│   │   └── SimpleEventDispatcher.java
-│   ├── AbstractEventDispatcher.java
-│   ├── IDistributedDispatcherSupport.java
-│   └── IEventDispatcher.java
-├── enums                       # 枚举类
-│   ├── EventStatusEnum.java   # 事件状态枚举
-│   └── HandleMode.java        # 处理模式枚举
-├── event                       # 事件定义
-│   ├── impl                   # 实现类
-│   │   └── SimpleEvent.java
-│   └── IEvent.java            # 事件接口
-├── publisher                   # 事件发布者
-│   ├── impl                   # 实现类
-│   │   ├── DispatcherImportedPublisher.java
-│   │   ├── SimpleDistributedAcceptedPublishResult.java
-│   │   └── SpringManagedListenablePublishResult.java
-│   ├── AbstractPublishResult.java
-│   ├── AbstractPublisher.java
-│   ├── IEventStatusListenner.java
-│   ├── IPublishResult.java
-│   └── IPublisher.java
-├── subscriber                  # 事件订阅者
-│   ├── impl                   # 实现类
-│   │   └── SimpleUseSubscriber.java
-│   ├── AbstractSubscriber.java
-│   └── IReceiveHandler.java
-└── support                     # 支持类
-    └── AbstractDistributedSupport.java
+### 1. 异步执行 (Async)
 
-com.tbs.lock                    # 分布式锁模块
-├── config                      # 配置类
-│   ├── LockConfig.java        # 锁配置
-│   └── LockProperty.java      # 锁属性配置
-├── impls                       # 锁实现
-│   ├── providers              # 锁提供者
-│   │   └── JdkLockProvider.java
-│   ├── LockAdapter.java       # 锁适配器
-│   └── ReadWriteLockAdapter.java
-├── util                        # 工具类
-│   └── LockUtil.java          # 锁工具类
-├── IConditionLock.java        # 条件锁接口
-├── ILock.java                 # 锁接口
-├── ILockProvider.java         # 锁提供者接口
-└── IReadWriteLock.java        # 读写锁接口
+提供基于AOP的异步方法执行能力，支持长期异步任务的执行和异常处理。
 
-com.tbs.schedule                # 定时任务模块
-├── config                      # 配置类
-│   ├── ScheduleConfig.java    # 定时任务配置
-│   └── ScheduleProperty.java  # 定时任务属性
-├── impl                        # 实现类
-│   ├── DelayQueueSchedule.java
-│   ├── DelayedTaskWrapper.java
-│   ├── SimpleLogErrorHandle.java
-│   ├── SimpleScheduleTask.java
-│   └── TimingWheelSchedule.java
-├── AbstractAsyncBackgroundSchedule.java
-├── AbstractDelayQueueAsyncBackgroundSchedule.java
-├── AbstractTimingWheelAsyncBackgroundSchedule.java
-├── ISchedule.java             # 定时任务接口
-├── IScheduleExecuteErrorHandle.java
-└── IScheduleTask.java         # 定时任务实体接口
+**核心组件：**
+- `@LongTermAsync` - 异步执行注解
+- `LongTermAsyncAop` - 异步切面处理
+- `AsyncDelegateInvoker` - 异步委托调用器
 
-com.tbs.thread                  # 线程管理模块
-├── impl                        # 实现类
-│   ├── DefaultMultiLayerThreadPoolManager.java
-│   ├── DefaultOnThreadError.java
-│   ├── DefaultThreadCall.java
-│   ├── LongTermThreadExecutor.java
-│   └── SimpleThreadRequest.java
-├── AbstractThreadPoolMananger.java
-├── IOnThreadError.java
-├── IThreadPoolManager.java
-└── IThreadRequest.java
-
-com.tbs.transaction             # 事务管理模块
-├── exception                   # 异常类
-│   └── NoRollbackTransactionException.java
-├── scalable                    # 可扩展事务
-│   ├── conflict               # 冲突解决
-│   │   └── UniqueTransactionConflictSolver.java
-│   ├── impl                   # 实现类
-│   │   ├── DataHolderTransactionStore.java
-│   │   ├── ImportedScalableTransaction.java
-│   │   └── SpringManagedScalableTransaction.java
-│   ├── info                   # 事务信息
-│   │   ├── impl               # 实现类
-│   │   │   ├── DefaultRollbackableData.java
-│   │   │   ├── DefaultRollbackableTransactionInfo.java
-│   │   │   └── DefaultTransactionCreator.java
-│   │   ├── AbstractRollbackableTransactionInfo.java
-│   │   └── IRollbackableData.java
-│   ├── AbstractScalableTransaction.java
-│   ├── ITransactionConflictSolver.java
-│   ├── ITransactionCreator.java
-│   ├── ITransactionEdgeController.java
-│   ├── ITransactionStatusChangeLisenner.java
-│   └── ITransactionStore.java
-├── AbstractTransaction.java
-├── ITransaction.java          # 事务接口
-├── ITransactionInfo.java      # 事务信息接口
-└── TransactionStatus.java     # 事务状态枚举
-```
-
-## 核心组件说明
-
-### 1. 异步注解和AOP
-
-#### @LongTermAsync 注解
-
-用于标记需要长期异步执行的方法，支持以下属性：
-
-- `value()`: 线程名称，默认为空
-- `onThreadError()`: 线程错误处理类，默认为`IOnThreadError`的实现
-
-#### LongTermAsyncAop 切面
-
-处理[@LongTermAsync](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/async/annotation/LongTermAsync.java#L11-L33)
-注解的AOP切面，自动将标记的方法放入独立线程中执行。
-
-### 2. 事件广播系统
-
-#### 核心接口
-
-- [IEvent](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/broadcast/event/IEvent.java#L11-L50):
-  事件接口
-- [IPublisher](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/broadcast/publisher/IPublisher.java#L15-L58):
-  事件发布者接口
-- [IEventDispatcher](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/broadcast/dispatcher/IEventDispatcher.java#L15-L51):
-  事件分发器接口
-- [IEventBus](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/broadcast/bus/IEventBus.java#L14-L58):
-  事件总线接口
-
-#### 使用示例
-
+**使用示例：**
 ```java
-// 发布事件
-@Autowired
-private IPublisher publisher;
-
-public void publishEvent() {
-    SimpleEvent event = new SimpleEvent();
-    event.setEventName("user.login");
-    event.setData("user data");
-    publisher.publish(event);
-}
-
-// 订阅事件
-@Component
-public class UserLoginSubscriber extends SimpleUseSubscriber {
-
-    public UserLoginSubscriber() {
-        super((event, publisher) -> {
-                // 处理事件
-                System.out.println("处理用户登录事件: " + event.getData());
-                return RECEIVE_SUCCESS;
-            }, Collections.singleton("user.login"),  // 支持的事件名称
-            null,  // 支持的事件ID
-            false, // 是否支持任意事件名称
-            false, // 是否支持任意事件ID
-            "userLoginSubscriber" // 订阅者ID
-        );
+@Service
+public class UserService {
+    
+    @LongTermAsync("user-process-thread")
+    public void processUserData(User user) {
+        // 异步执行的业务逻辑
+        // 该方法会在单独的线程中执行
     }
 }
 ```
 
-### 3. 分布式锁
+### 2. 事件广播 (Broadcast)
 
-#### 核心接口
+完整的事件驱动架构，支持事件的发布、订阅、分发和处理，提供同步和异步两种处理模式。
 
-- [ILock](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/lock/ILock.java#L10-L48):
-  锁接口
-- [ILockProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/lock/ILockProvider.java#L8-L23):
-  锁提供者接口
-- [IReadWriteLock](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/lock/IReadWriteLock.java#L7-L21):
-  读写锁接口
+**核心组件：**
+- `IEventBus` - 事件总线接口
+- `IPublisher` - 事件发布者
+- `IEventDispatcher` - 事件分发器
+- `AbstractSubscriber` - 事件订阅者基类
 
-#### 使用示例
+**功能特性：**
+- 支持分布式事件处理
+- 事件队列管理和优先级排序
+- 同步/异步事件处理模式
+- 事件状态监听和回调
 
+**使用示例：**
 ```java
-
+// 发布事件
 @Autowired
-private LockUtil lockUtil;
+private IPublisher eventPublisher;
 
-public void doSomething() {
-    lockUtil.lockThen("myLock", () -> {
-        // 执行需要加锁的操作
-        System.out.println("执行需要同步的操作");
-    });
+public void publishUserEvent(User user) {
+    IEvent event = new SimpleEvent("user.created", user);
+    // 异步发布
+    IPublishResult result = eventPublisher.pushlishAsync(event);
+    // 同步发布
+    // IPublishResult result = eventPublisher.pushlishSync(event);
+}
+
+// 订阅事件
+@Component
+public class UserEventHandler extends AbstractSubscriber {
+    
+    @Override
+    public void onEvent(IEvent event) {
+        if ("user.created".equals(event.getEventType())) {
+            User user = (User) event.getPayload();
+            // 处理用户创建事件
+        }
+    }
 }
 ```
 
-### 4. 定时任务
+### 3. 任务调度 (Schedule)
 
-#### 核心接口
+灵活的任务调度系统，支持延迟任务执行和定时任务管理。
 
-- [ISchedule](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/schedule/ISchedule.java#L11-L34):
-  定时任务接口
-- [IScheduleTask](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/schedule/IScheduleTask.java#L9-L45):
-  定时任务实体接口
+**核心组件：**
+- `ISchedule` - 调度器接口
+- `IScheduleTask` - 调度任务
+- `DelayQueueSchedule` - 延迟队列调度器
+- `TimingWheelSchedule` - 时间轮调度器
 
-#### 使用示例
+**功能特性：**
+- 支持延迟任务执行
+- 任务取消机制
+- 任务执行错误处理
+- 多种调度策略支持
 
+**使用示例：**
 ```java
-
 @Autowired
 private ISchedule schedule;
 
 public void scheduleTask() {
     // 延迟5秒执行任务
-    schedule.pin(() -> {
-        System.out.println("定时任务执行");
+    IScheduleTask task = schedule.pin(() -> {
+        // 需要延迟执行的任务逻辑
+        System.out.println("任务执行了");
     }, Duration.ofSeconds(5));
+    
+    // 取消任务
+    // schedule.unPin(task);
 }
 ```
 
-### 5. 线程管理
+### 4. 分布式锁 (Lock)
 
-#### 核心接口
+提供分布式环境下的锁机制，支持读写锁和条件锁。
 
-- [IThreadPoolManager](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/thread/IThreadPoolManager.java#L8-L17):
-  线程池管理器接口
-- [IThreadRequest](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/thread/IThreadRequest.java#L9-L30):
-  线程请求接口
+**核心组件：**
+- `ILock` - 锁接口
+- `IReadWriteLock` - 读写锁接口
+- `IConditionLock` - 条件锁接口
+- `ILockProvider` - 锁提供者
 
-#### 使用示例
+**功能特性：**
+- 支持超时获取锁
+- 读写锁分离
+- 条件等待机制
+- 可扩展的锁提供者
 
+**使用示例：**
 ```java
+@Autowired
+private ILockProvider lockProvider;
 
+public void processWithLock() {
+    ILock lock = lockProvider.getLock("resource-lock");
+    
+    try {
+        if (lock.tryLock(Duration.ofSeconds(5))) {
+            // 获取锁成功，执行业务逻辑
+            // ...
+        }
+    } finally {
+        lock.unLock();
+    }
+}
+```
+
+### 5. 线程池管理 (Thread)
+
+统一的线程池管理框架，支持多层线程池和线程错误处理。
+
+**核心组件：**
+- `IThreadPoolManager` - 线程池管理器
+- `IThreadRequest` - 线程请求
+- `IOnThreadError` - 线程错误处理
+- `DefaultMultiLayerThreadPoolManager` - 默认多层线程池管理器
+
+**功能特性：**
+- 多层线程池管理
+- 线程异常处理机制
+- 线程请求封装
+- 线程池资源管理
+
+**使用示例：**
+```java
 @Autowired
 private IThreadPoolManager threadPoolManager;
 
 public void submitTask() {
     IThreadRequest request = new SimpleThreadRequest(() -> {
-        System.out.println("在线程池中执行任务");
+        // 需要在线程池中执行的任务
+        System.out.println("线程任务执行");
     });
-
-    threadPoolManager.submit(request, (thread, throwable) -> {
-        System.err.println("线程执行出错: " + throwable.getMessage());
-    });
-}
-```
-
-### 6. 事务管理
-
-#### 核心接口
-
-- [ITransaction](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/transaction/ITransaction.java#L17-L87):
-  事务接口
-- [ITransactionInfo](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/transaction/ITransactionInfo.java#L12-L69):
-  事务信息接口
-
-#### 使用示例
-
-```java
-
-@Autowired
-private ITransaction transaction;
-
-public void doTransaction() {
-    String transactionId = "txn-" + System.currentTimeMillis();
-
-    // 开始事务
-    transaction.begin(transactionId);
-
-    try {
-        // 执行业务操作
-        doBusinessOperation();
-
-        // 提交事务
-        transaction.commit(transactionId);
-    } catch (Exception e) {
-        // 回滚事务
-        transaction.rollback(transactionId);
-        throw e;
-    }
+    
+    threadPoolManager.submit(request, new DefaultOnThreadError());
 }
 ```
 
 ## 配置说明
 
-### application.yml配置示例
+### Maven依赖
 
-```yaml
-tbs:
-  async:
-    executor:
-      core-pool-size: 10
-      max-pool-size: 20
-      queue-capacity: 100
-  broadcast:
-    event-dispatcher: com.tbs.broadcast.dispatcher.impl.SimpleEventDispatcher
-    event-bus: com.tbs.broadcast.bus.impl.SimpleEventBus
-  lock:
-    lock-provider-type: com.tbs.lock.impls.providers.JdkLockProvider
-  schedule:
-    schedule-execute-error-handle: com.tbs.schedule.impl.SimpleLogErrorHandle
+```xml
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>async</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
 ```
 
-## 最佳实践
+### Spring Boot配置
 
-1. **合理使用异步注解**
-   ：对于耗时较长的操作，使用[@LongTermAsync](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/async/annotation/LongTermAsync.java#L11-L33)
-   注解避免阻塞主线程
-2. **正确管理锁资源**
-   ：使用[LockUtil](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/lock/util/LockUtil.java#L15-L108)
-   工具类确保锁的正确获取和释放
-3. **事件驱动架构**：使用事件广播系统解耦组件间的依赖关系
-4. **定时任务管理**
-   ：使用[ISchedule](file:///Users/abstergo/IdeaProjects/abstergo_solution/async/src/main/java/com/tbs/schedule/ISchedule.java#L11-L34)
-   接口统一管理定时任务
-5. **事务边界控制**：合理划分事务边界，避免长时间持有锁
+模块提供了自动配置功能，只需在配置文件中添加相关配置即可：
 
-## 注意事项
+```yaml
+# 异步配置
+async:
+  executor:
+    core-pool-size: 10
+    max-pool-size: 50
+    queue-capacity: 100
 
-1. **异常处理**：异步操作中的异常需要特别处理，避免丢失
-2. **资源释放**：注意线程、锁等资源的正确释放
-3. **线程安全**：在多线程环境中确保共享资源的线程安全
-4. **性能考虑**：合理配置线程池参数，避免资源浪费
-5. **事务一致性**：分布式环境下需要考虑事务的一致性问题
+# 广播配置
+broadcast:
+  enabled: true
+  mode: async
+
+# 调度配置
+schedule:
+  type: delay-queue
+  error-handle: log
+
+# 锁配置
+lock:
+  provider: jdk
+  timeout: 30s
+```
+
+## 架构设计
+
+### 模块分层
+
+```
+async/
+├── async/          # 异步执行模块
+├── broadcast/      # 事件广播模块
+├── schedule/       # 任务调度模块
+├── lock/           # 分布式锁模块
+└── thread/         # 线程池管理模块
+```
+
+### 设计原则
+
+1. **解耦性** - 各模块功能独立，可单独使用
+2. **扩展性** - 接口设计支持多种实现
+3. **易用性** - 提供注解和配置化使用方式
+4. **可靠性** - 完善的异常处理和资源管理
+
+## 使用场景
+
+### 适合场景
+
+- 需要异步处理的耗时操作
+- 事件驱动的微服务架构
+- 分布式环境下的资源竞争控制
+- 定时任务和延迟任务管理
+- 高并发场景下的线程资源管理
+
+### 最佳实践
+
+1. **异步处理** - 对于耗时操作，使用`@LongTermAsync`注解
+2. **事件驱动** - 系统解耦时使用事件广播机制
+3. **资源保护** - 并发访问共享资源时使用分布式锁
+4. **任务调度** - 延迟任务使用调度器管理
+5. **线程管理** - 统一使用线程池管理器提交任务
+
+## 性能考虑
+
+- 事件总线使用队列机制，避免阻塞
+- 调度器支持多种实现，可根据场景选择
+- 锁机制支持超时，避免死锁
+- 线程池支持配置调优
+
+## 扩展开发
+
+模块提供了丰富的接口和抽象类，支持自定义扩展：
+
+- 实现`IEventBus`接口创建自定义事件总线
+- 继承`AbstractSubscriber`创建事件处理器
+- 实现`ISchedule`接口创建自定义调度器
+- 扩展`ILockProvider`支持更多锁实现
+
+## 版本信息
+
+- **当前版本**: 1.0-SNAPSHOT
+- **Java版本**: 11+
+- **Spring Boot**: 2.7+
+
+## 贡献指南
+
+欢迎提交Issue和Pull Request来改进这个项目。

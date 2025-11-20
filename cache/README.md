@@ -1,154 +1,73 @@
-# Cache 缓存模块
+# Cache 缓存解决方案
 
-缓存模块是基于Spring Cache的扩展实现，提供了带TTL（Time To Live）功能的缓存管理器，支持缓存过期处理和监听功能。
+## 概述
 
-## 目录结构
+Cache模块是一个基于Spring Cache框架的增强缓存解决方案，提供了TTL（Time To Live）缓存、缓存操作监控、缓存限制等高级功能。该模块采用模块化设计，分为API接口层和实现层，支持灵活的配置和扩展。
+
+## 核心特性
+
+### 1. TTL缓存支持
+- 支持基于时间的缓存过期机制
+- 可配置的过期时间管理
+- 支持单个缓存项和批量缓存项的过期控制
+
+### 2. 缓存操作监控
+- 完整的缓存操作记录（put/get/remove）
+- 操作次数统计和时间戳记录
+- 异步操作记录，不影响主业务流程
+
+### 3. 缓存限制器
+- 可配置的缓存执行限制
+- 防止缓存滥用和过度使用
+- 与操作记录器协同工作
+
+### 4. 手动缓存处理器
+- 提供手动缓存操作接口
+- 支持多种缓存存储后端（默认使用HashMap）
+- 线程安全的缓存操作
+
+### 5. 缓存监听器
+- 支持缓存事件的监听
+- 可扩展的监听器接口
+- 支持多种缓存操作事件
+
+## 模块结构
 
 ```
-com.tbs.cache
-├── config                  # 配置类
-│   └── TbsCacheProperty.java # 缓存属性配置
-├── impl                    # 实现类
-│   ├── AdaptScheduleExpireTtlCache.java          # 适配调度过期TTL缓存
-│   ├── DefaultTtlAdaptCacheMananger.java         # 默认TTL适配缓存管理器
-│   └── DefaultTtlCacheDecorator.java             # 默认TTL缓存装饰器
-├── integration             # 集成类
-│   ├── AbstractAdaptTtlCache.java                # 抽象适配TTL缓存
-│   ├── AbstractTtlAdaptCacheMananger.java        # 抽象TTL适配缓存管理器
-│   └── AbstractTtlCache.java                     # 抽象TTL缓存
-├── expire                  # 过期处理相关
-│   ├── ICacheExpiredActuator.java                # 缓存过期执行器接口
-│   └── IExpiredActuator.java                     # 通用过期执行器接口
-├── limit                   # 缓存限制相关
-│   ├── ICacheLimiter.java                        # 缓存限制器接口
-│   ├── ICacheOperationRecorder.java              # 缓存操作记录器接口
-│   ├── impl                                      # 限制器实现
-│   │   ├── SimpleCacheLimiter.java               # 简单缓存限制器
-│   │   └── SimpleCacheOperationRecorder.java     # 简单缓存操作记录器
-├── manual                  # 手动缓存相关
-│   ├── IManualCacheHandler.java                  # 手动缓存处理器接口
-│   └── impl                                      # 手动缓存实现
-│       └── MapCacheHandler.java                  # Map缓存处理器
-├── serialize               # 序列化相关
-│   └── annotation                                # 序列化注解
-│       └── CacheTransform.java                   # 缓存转换注解
-├── CacheUtils.java         # 缓存工具类
-├── ICacheListenner.java    # 缓存监听器接口
-├── IListenable.java        # 可监听接口
-└── ITtlCacheDecorator.java # TTL缓存装饰器接口
+cache/
+├── cache-api/          # API接口定义模块
+│   ├── src/main/java/com/tbs/cache/
+│   │   ├── ICacheListenner.java          # 缓存监听器接口
+│   │   ├── ITtlCacheDecorator.java       # TTL缓存装饰器接口
+│   │   ├── CacheUtils.java               # 缓存工具类
+│   │   ├── manual/                       # 手动缓存处理
+│   │   ├── limit/                        # 缓存限制相关
+│   │   ├── expire/                       # 过期处理
+│   │   └── integration/                  # 集成相关
+│   └── pom.xml
+├── cache-impl/         # 实现模块
+│   ├── src/main/java/com/tbs/cache/
+│   │   ├── impl/                         # 具体实现类
+│   │   └── config/                       # 配置类
+│   └── pom.xml
+└── pom.xml             # 主pom文件
 ```
 
-## 核心组件说明
+## 快速开始
 
-### 1. 配置类
+### 1. 添加依赖
 
-#### TbsCacheProperty 配置属性
-
-```java
-@ConfigurationProperties(prefix = "tbs.cache")
-@Component
-@Data
-public class TbsCacheProperty {
-    private Class<? extends CacheManager> cacheManagerImpl = ConcurrentMapCacheManager.class;
-    private Class<? extends ITtlCacheDecorator> ttlCacheDecorator = DefaultTtlCacheDecorator.class;
-    private Class<? extends ICacheOperationRecorder> recorder = SimpleCacheOperationRecorder.class;
-    private Class<? extends IManualCacheHandler> manualCacheHandler = MapCacheHandler.class;
-    private Class<? extends ICacheLimiter> cacheLimiter = SimpleCacheLimiter.class;
-}
+```xml
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>cache</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
 ```
 
-#### TbsCacheConfig 配置
+### 2. 配置缓存
 
-注册缓存相关的Bean，包括缓存管理器、TTL缓存装饰器等。
-
-### 2. 核心实现
-
-#### AbstractTtlAdaptCacheMananger 抽象TTL缓存管理器
-
-抽象类，实现了CacheManager接口，提供了TTL功能的缓存管理基础实现。
-
-#### DefaultTtlAdaptCacheMananger 默认TTL适配缓存管理器
-
-默认的TTL缓存管理器实现，基于Spring CacheManager实现。
-
-#### ITtlCacheDecorator TTL缓存装饰器接口
-
-TTL缓存装饰器接口，用于装饰原始缓存以添加TTL功能。
-
-#### DefaultTtlCacheDecorator 默认TTL缓存装饰器
-
-默认的TTL缓存装饰器实现。
-
-### 3. 缓存限制
-
-#### ICacheLimiter 缓存限制器接口
-
-缓存限制器接口，用于限制缓存的使用。
-
-#### ICacheOperationRecorder 缓存操作记录器接口
-
-缓存操作记录器接口，用于记录缓存操作。
-
-### 4. 手动缓存
-
-#### IManualCacheHandler 手动缓存处理器接口
-
-手动缓存处理器接口，用于手动操作缓存。
-
-#### MapCacheHandler Map缓存处理器
-
-基于Map的手动缓存处理器实现。
-
-### 5. 监听器
-
-#### ICacheListenner 缓存监听器接口
-
-提供缓存操作的监听功能：
-
-- `onGet(String cacheName, Object key, Object value)`: 缓存获取事件
-- `onPut(String cacheName, Object key, Object value)`: 缓存设置事件
-- `onEvict(String cacheName, Object key)`: 缓存删除事件
-- `onClear(String cacheName)`: 缓存清除事件
-
-### 6. 工具类
-
-#### CacheUtils 缓存工具类
-
-[CacheUtils](file:///Users/abstergo/IdeaProjects/abstergo_solution/cache/api/src/main/java/com/tbs/cache/CacheUtils.java#L16-L110) 提供了静态方法来操作缓存，包括获取、设置、删除缓存等操作。它实现了[IStartup](file:///Users/abstergo/IdeaProjects/abstergo_solution/common/src/main/java/com/tbs/common/IStartup.java#L11-L18)接口，在应用启动时初始化。
-
-主要方法：
-- `get(String key, Class<T> clazz)`: 获取缓存值
-- `put(String key, T value)`: 设置缓存值
-- `computeIfAbsent(String key, SSupplier<T> sSupplier, Class<T> clazz)`: 如果缓存中不存在则计算并放入缓存
-- `remove(String key)`: 删除缓存
-
-使用示例：
-```java
-// 获取缓存
-ValueWrapper<User> userWrapper = CacheUtils.getInstance().get("user_123", User.class);
-User user = userWrapper.orElse(null);
-
-// 设置缓存
-CacheUtils.getInstance().put("user_123", user);
-
-// 计算并缓存（如果不存在）
-ValueWrapper<User> userWrapper = CacheUtils.getInstance().computeIfAbsent("user_123", () -> {
-    return userService.getUserById(123);
-}, User.class);
-
-// 删除缓存
-CacheUtils.getInstance().remove("user_123");
-```
-
-### 7. 序列化
-
-#### CacheTransform 注解
-
-[CacheTransform](file:///Users/abstergo/IdeaProjects/abstergo_solution/cache/api/src/main/java/com/tbs/cache/serialize/annotation/CacheTransform.java#L12-L16) 注解用于指定缓存数据的转换方式，通过实现[IDataBridge](file:///Users/abstergo/IdeaProjects/abstergo_solution/common/src/main/java/com/tbs/common/data/IDataBridge.java#L10-L20)接口来定义数据的序列化和反序列化方式。
-
-## 配置说明
-
-### application.yml配置示例
+在Spring Boot配置文件中添加缓存配置：
 
 ```yaml
 tbs:
@@ -160,115 +79,231 @@ tbs:
     cache-limiter: com.tbs.cache.limit.impl.SimpleCacheLimiter
 ```
 
-## 使用示例
+### 3. 启用缓存
 
-### 1. 基本缓存使用
-
-```java
-@Service
-public class UserService {
-
-    @Cacheable("users")
-    public User getUserById(Long id) {
-        // 从数据库获取用户
-        return userRepository.findById(id);
-    }
-
-    @CacheEvict("users")
-    public void updateUser(User user) {
-        // 更新用户信息
-        userRepository.save(user);
-    }
-}
-```
-
-### 2. 自定义缓存管理器
+在配置类上添加注解：
 
 ```java
 @Configuration
-public class CustomCacheConfig {
-
-    @Bean
-    public CacheManager customCacheManager() {
-        return new DefaultTtlAdaptCacheMananger(ConcurrentMapCacheManager.class);
-    }
+@EnableCaching
+public class CacheConfig {
+    // 配置将自动生效
 }
 ```
 
-### 3. 实现缓存监听器
+## 核心API使用
+
+### 缓存工具类 (CacheUtils)
+
+```java
+// 获取缓存实例
+CacheUtils cacheUtils = CacheUtils.getInstance();
+
+// 放入缓存
+cacheUtils.put("user:1", user);
+
+// 获取缓存
+ValueWrapper<User> userWrapper = cacheUtils.get("user:1", User.class);
+if (userWrapper.isPresent()) {
+    User user = userWrapper.get();
+}
+
+// 计算并缓存（如果不存在）
+ValueWrapper<User> userWrapper = cacheUtils.computeIfAbsent(
+    "user:1", 
+    () -> userService.findById(1), 
+    User.class
+);
+
+// 删除缓存
+cacheUtils.remove("user:1");
+```
+
+### 手动缓存处理器 (IManualCacheHandler)
+
+```java
+@Autowired
+private IManualCacheHandler manualCacheHandler;
+
+// 基本缓存操作
+manualCacheHandler.put("key", "value");
+Object value = manualCacheHandler.get("key");
+boolean exists = manualCacheHandler.contains("key");
+manualCacheHandler.remove("key");
+Collection<String> keys = manualCacheHandler.keys();
+```
+
+### TTL缓存功能
+
+```java
+// 获取TTL缓存装饰器
+@Autowired
+private ITtlCacheDecorator ttlCacheDecorator;
+
+// 装饰缓存为TTL缓存
+AbstractTtlCache ttlCache = ttlCacheDecorator.decorateCache(cache, cacheManager);
+
+// 设置缓存项过期时间
+ttlCache.callToExpire("key", new Date(System.currentTimeMillis() + 3600000)); // 1小时后过期
+
+// 设置所有缓存项过期时间
+ttlCache.callToExpireAll(new Date(System.currentTimeMillis() + 1800000)); // 30分钟后全部过期
+```
+
+## 高级功能
+
+### 缓存操作记录
+
+缓存操作记录器会记录每个缓存键的操作统计信息：
+
+```java
+@Autowired
+private ICacheOperationRecorder recorder;
+
+// 获取缓存操作视图
+ICacheOperationView operationView = recorder.getCacheOperationView(handler, "key");
+
+// 查看操作统计
+int putCount = operationView.getPutCount();      // 存入次数
+int getCount = operationView.getGetCount();      // 获取次数
+int removeCount = operationView.getRemoveCount(); // 删除次数
+Date lastPutTime = operationView.getLastPutTime(); // 最后存入时间
+```
+
+### 缓存监听器
+
+实现自定义缓存监听器来监听缓存事件：
 
 ```java
 @Component
 public class CustomCacheListener implements ICacheListenner {
-
+    
     @Override
     public boolean support(Cache cache) {
-        return "users".equals(cache.getName());
+        return cache.getName().startsWith("user");
     }
-
+    
     @Override
     public void onGet(String cacheName, Object key, Object value) {
-        log.info("Cache get: name={}, key={}, value={}", cacheName, key, value);
+        log.info("缓存获取: {} - {}", cacheName, key);
     }
-
+    
     @Override
     public void onPut(String cacheName, Object key, Object value) {
-        log.info("Cache put: name={}, key={}, value={}", cacheName, key, value);
+        log.info("缓存设置: {} - {}", cacheName, key);
     }
-
+    
     @Override
     public void onEvict(String cacheName, Object key) {
-        log.info("Cache evict: name={}, key={}", cacheName, key);
+        log.info("缓存删除: {} - {}", cacheName, key);
     }
-
+    
     @Override
     public void onClear(String cacheName) {
-        log.info("Cache clear: name={}", cacheName);
+        log.info("缓存清空: {}", cacheName);
     }
 }
 ```
 
-### 4. 使用CacheUtils工具类
+### 缓存限制器
+
+缓存限制器可以防止缓存滥用：
+
+```java
+@Autowired
+private ICacheLimiter cacheLimiter;
+
+// 限制器会在缓存操作时自动执行限制逻辑
+// 可自定义实现复杂的限制策略
+```
+
+## 配置选项
+
+### TbsCacheProperty 配置属性
+
+| 属性 | 类型 | 默认值 | 描述 |
+|------|------|--------|------|
+| cacheManagerImpl | Class | ConcurrentMapCacheManager | 缓存管理器实现类 |
+| ttlCacheDecorator | Class | DefaultTtlCacheDecorator | TTL缓存装饰器实现类 |
+| recorder | Class | SimpleCacheOperationRecorder | 缓存操作记录器实现类 |
+| manualCacheHandler | Class | MapCacheHandler | 手动缓存处理器实现类 |
+| cacheLimiter | Class | SimpleCacheLimiter | 缓存限制器实现类 |
+
+## 扩展开发
+
+### 自定义缓存处理器
 
 ```java
 @Component
-public class BusinessService {
+public class CustomCacheHandler implements IManualCacheHandler {
+    private final Map<String, Object> cache = new ConcurrentHashMap<>();
     
-    public User getUserWithCache(Long userId) {
-        // 使用CacheUtils获取缓存
-        ValueWrapper<User> userWrapper = CacheUtils.getInstance().get("user_" + userId, User.class);
-        if (!userWrapper.isEmpty()) {
-            return userWrapper.get();
-        }
-        
-        // 缓存未命中，从数据库获取
-        User user = userRepository.findById(userId);
-        if (user != null) {
-            // 将结果放入缓存
-            CacheUtils.getInstance().put("user_" + userId, user);
-        }
-        return user;
+    @Override
+    public void put(String key, Object value) {
+        cache.put(key, value);
     }
     
-    public void updateUser(User user) {
-        // 更新数据库
-        userRepository.save(user);
-        // 删除缓存
-        CacheUtils.getInstance().remove("user_" + user.getId());
+    @Override
+    public Object get(String key) {
+        return cache.get(key);
+    }
+    
+    // 实现其他接口方法...
+}
+```
+
+### 自定义TTL缓存装饰器
+
+```java
+@Component
+public class CustomTtlCacheDecorator implements ITtlCacheDecorator {
+    
+    @Override
+    public AbstractTtlCache decorateCache(Cache cache, CacheManager manager) {
+        return new CustomTtlCache(cache);
     }
 }
 ```
 
+## 依赖关系
+
+- **Spring Boot Starter Cache**: 提供基础的缓存功能
+- **Common模块**: 提供通用工具和基础类
+- **Async模块**: 提供异步执行支持
+- **Spring Boot Starter AOP**: 提供AOP支持
+
 ## 最佳实践
 
-1. **合理设置缓存策略**：根据业务需求选择合适的缓存管理器实现
-2. **使用监听器监控缓存**：通过实现[ICacheListenner](file:///Users/abstergo/IdeaProjects/abstergo_solution/cache/api/src/main/java/com/tbs/cache/ICacheListenner.java#L12-L54)接口监控缓存操作，便于问题排查和性能优化
-3. **选择合适的缓存管理器**：根据业务需求选择合适的底层缓存实现，如ConcurrentMap、Redis等
-4. **避免缓存雪崩**：为不同数据设置不同的过期时间，避免大量缓存同时过期
+1. **合理设置TTL**: 根据业务需求设置合适的缓存过期时间
+2. **监控缓存命中率**: 使用操作记录器监控缓存使用情况
+3. **避免缓存穿透**: 使用computeIfAbsent方法防止缓存穿透
+4. **合理使用缓存监听器**: 用于业务监控和日志记录
+5. **配置缓存限制**: 防止缓存被过度使用
 
-## 注意事项
+## 故障排除
 
-1. **线程安全**：缓存实现保证了线程安全性，但在监听器实现中需要注意线程安全问题
-2. **异常处理**：缓存操作中的异常不会影响主流程，但应记录日志便于排查
-3. **资源释放**：在应用关闭时，确保缓存资源得到正确释放
-4. **性能考虑**：监听器中的操作应尽量轻量，避免影响缓存性能
+### 常见问题
+
+1. **缓存不生效**: 检查是否启用了@EnableCaching注解
+2. **TTL功能无效**: 确认TTL缓存装饰器配置正确
+3. **操作记录为空**: 检查异步配置和线程池设置
+
+### 日志调试
+
+启用调试日志来查看缓存操作详情：
+
+```yaml
+logging:
+  level:
+    com.tbs.cache: DEBUG
+```
+
+## 版本信息
+
+- **当前版本**: 1.0-SNAPSHOT
+- **Java版本**: 11+
+- **Spring Boot**: 兼容版本
+
+## 贡献指南
+
+欢迎提交Issue和Pull Request来改进这个缓存解决方案。
