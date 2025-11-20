@@ -1,138 +1,74 @@
-# Common 通用工具包
+# Abstergo Common 通用工具包
 
-通用工具包是项目的核心基础组件库，提供了一系列常用的工具类、配置和接口，用于简化开发流程，提高代码复用性和一致性。
+## 概述
 
-## 目录结构
+Abstergo Common 是一个企业级 Java 通用工具包，为 Abstergo 解决方案平台提供核心基础组件支持。该包封装了项目中常用的工具类、配置管理、数据持有、代理模式、错误处理等通用功能，旨在提高代码复用性、降低开发复杂度、统一技术规范。
 
-```
-com.tbs.common
-├── config                    # 配置类
-│   ├── property              # 配置属性类
-│   │   ├── DataHolderProperty.java
-│   │   ├── DelegateProperty.java
-│   │   ├── StartUpProperty.java
-│   │   └── UuidProperty.java
-│   ├── DataHolderConfig.java
-│   ├── DelegateConfig.java
-│   ├── StartUpConfig.java
-│   └── UuidConfig.java
-├── constant                  # 常量定义
-│   └── DataHolderBeanNameConstant.java
-├── context                   # 上下文接口
-│   └── IContext.java
-├── data                      # 数据持有者相关接口和实现
-│   ├── impl                  # 实现类
-│   │   ├── AbstractAntStyleMatchKeyFounder.java
-│   │   ├── AbstractAutoGenDataHolderManager.java
-│   │   ├── AbstractDataHolderManager.java
-│   │   ├── DefaultAutoGenDataHodlerManager.java
-│   │   ├── JsonTransformer.java
-│   │   ├── MapDataHolder.java
-│   │   └── SpringManagedDataHolderManager.java
-│   ├── IDataBridge.java
-│   ├── IDataHolder.java
-│   ├── IDataHolderManager.java
-│   ├── IFeatureWrapper.java
-│   ├── IMatchKeyFounder.java
-│   ├── IPartitionableDataHolder.java
-│   ├── ITransformer.java
-│   └── ValueWrapper.java
-├── delegate                  # 代理模式相关接口和实现
-│   ├── impl                  # 实现类
-│   │   ├── CallerRunsDelegateTarget.java
-│   │   ├── CompletableFutureDelegateFlag.java
-│   │   ├── SimpleDelegateInvoker.java
-│   │   └── SpringManagedDelegateTemplate.java
-│   ├── provider              # 提供者接口和实现
-│   │   ├── impl              # 实现类
-│   │   │   ├── CompletableFutureFlagProvider.java
-│   │   │   ├── SimpleCallerDelegateTargetProvider.java
-│   │   │   └── SpringManagedTypeBaseInvokerProvider.java
-│   │   ├── IDelegateFlagProvider.java
-│   │   ├── IDelegateInvokerProvider.java
-│   │   └── IDelegateTargetProvider.java
-│   ├── AbstractDelegateInvoker.java
-│   ├── IDelegateFlag.java
-│   ├── IDelegateInvoker.java
-│   ├── IDelegateTarget.java
-│   └── IDelegateTemplate.java
-├── error                     # 错误处理工具
-│   ├── impl                  # 实现类
-│   │   └── DefaultErrorTransformer.java
-│   ├── AssertUtil.java
-│   ├── ErrorLevelEnum.java
-│   ├── ExceptionUtil.java
-│   ├── IErrorThrowEvent.java
-│   ├── IErrorTransformer.java
-│   └── IExceptionLevel.java
-├── exception                 # 自定义异常
-│   └── FormattedRuntimeException.java
-├── function                  # 函数式接口
-│   ├── SBiConsumer.java
-│   ├── SConsumer.java
-│   ├── SFunction.java
-│   └── SSupplier.java
-├── util                      # 工具类
-│   ├── base                  # 基础工具
-│   │   ├── BeanUtil.java
-│   │   ├── CollUtil.java
-│   │   ├── ReflectUtil.java
-│   │   └── StrUtil.java
-│   ├── encrypt               # 加密工具
-│   │   ├── AESUtil.java
-│   │   ├── EncryptUitl.java
-│   │   └── RSAUtil.java
-│   ├── framework             # 框架工具
-│   │   ├── DelegateUtil.java
-│   │   ├── SpringUtil.java
-│   │   └── UuidUtil.java
-│   ├── function              # 函数式工具
-│   │   ├── Comparators.java
-│   │   ├── EnumUtil.java
-│   │   └── LambdaUtil.java
-│   ├── helper                # 辅助工具
-│   │   ├── FeatureWrapperHelper.java
-│   │   ├── IFeatureWrapperExtension.java
-│   │   └── impl              # 实现类
-│   │       ├── DirectCastWrapperExtension.java
-│   │       └── FeatureWrapperExtension.java
-│   └── time                  # 时间工具
-│       └── TimeUtil.java
-├── uuid                      # UUID生成器相关接口和实现
-│   ├── impl                  # 实现类
-│   │   ├── SimpleUUID.java
-│   │   └── SnowFlakeUUID.java
-│   └── IUuidGenerator.java
-├── BaseEnum.java             # 枚举基类
-└── IStartup.java             # 启动接口
+## 特性
+
+- **模块化设计**：清晰的模块划分，便于按需使用
+- **Spring Boot 集成**：无缝集成 Spring Boot 框架，支持自动配置
+- **企业级质量**：完善的错误处理、类型安全、性能优化
+- **可扩展架构**：基于接口设计，支持自定义实现
+- **文档完善**：详细的代码注释和使用示例
+
+## 快速开始
+
+### 依赖引入
+
+在 Maven 项目中添加依赖：
+
+```xml
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>common</artifactId>
+    <version>1.0.0</version>
+</dependency>
 ```
 
-## 核心组件详细说明
+### 基础配置
 
-### 1. 基础组件
+在 `application.yml` 中配置：
 
-#### BaseEnum.java
+```yaml
+tbs:
+  uuid:
+    type: com.tbs.common.uuid.impl.SnowFlakeUUID
+    snow-flake-worker-id: 1
+    snow-flake-data-center-id: 1
+    except-length: 32
+  
+  data:
+    data-holder-manager: com.tbs.common.data.impl.SpringManagedDataHolderManager
+    data-holder: com.tbs.common.data.impl.MapDataHolder
+  
+  delegate:
+    delegate-target-provider: com.tbs.common.delegate.provider.impl.SimpleCallerDelegateTargetProvider
+    delegate-flag-provider: com.tbs.common.delegate.provider.impl.CompletableFutureFlagProvider
+  
+  startup:
+    enable-auto-startup: true
+    startup-order: 0
+```
+
+## 核心模块详解
+
+### 1. 基础接口
+
+#### BaseEnum - 枚举基类
+
+提供统一的枚举接口规范，所有业务枚举都应实现此接口：
 
 ```java
-public interface BaseEnum<T> {
-    T getValue(); // 获取枚举值
-    int getCode(); // 获取枚举编码 
-}
-```
-
-- 所有枚举需实现该接口
-- 提供统一的枚举值获取方法
-- 示例：
-
-```java
-public enum StatusEnum implements BaseEnum<String> {
-    SUCCESS(0, "success"), 
-    FAIL(1, "fail");
+public enum UserStatus implements BaseEnum<String> {
+    ACTIVE(1, "active"),
+    INACTIVE(0, "inactive"),
+    DELETED(-1, "deleted");
     
-    private final int code;
+    private final Integer code;
     private final String value;
     
-    StatusEnum(int code, String value) {
+    UserStatus(Integer code, String value) {
         this.code = code;
         this.value = value;
     }
@@ -143,855 +79,483 @@ public enum StatusEnum implements BaseEnum<String> {
     }
     
     @Override
-    public int getCode() {
+    public Integer getCode() {
         return code;
     }
 }
 ```
 
-#### IStartup.java
+#### IStartup - 启动接口
+
+Spring 应用启动后执行的初始化任务接口：
 
 ```java
-public interface IStartup extends Ordered {
-    void startUp() throws RuntimeException;
+@Component
+public class SystemInitializer implements IStartup {
+    
     @Override
-    default int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
+    public void startUp() throws RuntimeException {
+        // 系统初始化逻辑
+        initCache();
+        loadConfig();
+    }
+    
+    @Override
+    public int getOrder() {
+        return 0; // 执行顺序，数值越小优先级越高
     }
 }
 ```
-
-- 应用启动后执行的初始化接口
-- 实现该接口的类会在Spring启动完成后自动执行`startUp()`方法
-- 通过`getOrder()`方法控制执行顺序
 
 ### 2. 配置体系
 
 #### 配置属性类
 
-##### UuidProperty.java
+- **UuidProperty**: UUID 生成器配置
+- **DataHolderProperty**: 数据持有者配置  
+- **DelegateProperty**: 代理模式配置
+- **StartUpProperty**: 启动配置
+
+#### 自动配置类
+
+Spring Boot 自动配置，无需手动创建 Bean：
+
+- **UuidConfig**: UUID 生成器自动配置
+- **DataHolderConfig**: 数据持有者自动配置
+- **DelegateConfig**: 代理模式自动配置
+- **StartUpConfig**: 启动组件自动配置
+
+### 3. 数据持有者 (DataHolder)
+
+#### 核心接口
+
+- **IDataHolder**: 数据存储接口，提供键值对存储功能
+- **IDataHolderManager**: 数据持有者管理器接口
+- **IDataBridge**: 数据桥接接口，支持数据转换
+- **IFeatureWrapper**: 功能包装器接口
+
+#### 使用示例
 
 ```java
-@ConfigurationProperties("tbs.uuid")
-@Data
-public class UuidProperty {
-    private Class<? extends IUuidGenerator> type = SimpleUUID.class;
-    private long snowFlakeWorkerId = 0;
-    private long snowFlakeDataCenterId = 0;
-    private int exceptLength = 32;
-}
-```
-
-##### DataHolderProperty.java
-
-```java
-@ConfigurationProperties(prefix = "tbs.data")
-@Data
-public class DataHolderProperty {
-    private Class<? extends IDataHolderManager> dataHolderManager = SpringManagedDataHolderManager.class;
-    private Class<? extends IDataHolder> dataHolder = MapDataHolder.class;
-}
-```
-
-##### DelegateProperty.java
-
-```java
-@ConfigurationProperties("tbs.delegate")
-@Data
-public class DelegateProperty {
-    private Class<? extends IDelegateTargetProvider> delegateTargetProvider = SimpleCallerDelegateTargetProvider.class;
-    private Class<? extends IDelegateFlagProvider> delegateFlagProvider = CompletableFutureFlagProvider.class;
-}
-```
-
-##### StartUpProperty.java
-
-```java
-@ConfigurationProperties("tbs.startup")
-@Data
-public class StartUpProperty {
-    private boolean enableAutoStartup = true;
-    private int startupOrder = Ordered.LOWEST_PRECEDENCE;
-}
-```
-
-#### 配置类
-
-##### UuidConfig.java
-
-```java
-@Configuration
-public class UuidConfig {
-    @Resource
-    private UuidProperty uuidProperty;
-
-    @Bean
-    public IUuidGenerator mainUuidGenerator() {
-        if (uuidProperty.getType() == SnowFlakeUUID.class) {
-            return new SnowFlakeUUID(uuidProperty.getSnowFlakeWorkerId(), uuidProperty.getSnowFlakeDataCenterId());
-        } else {
-            return BeanUtil.buildBeanFromProperties(() -> {
-                return new SnowFlakeUUID();
-            }, uuidProperty.getType(), BeanUtil::buildByEmptyArgs);
-        }
-    }
-}
-```
-
-### 3. 数据持有者(DataHolder)
-
-#### IDataHolder.java
-
-数据存储接口，定义了通用的数据存储功能，提供了数据的增删改查、清空、状态检查等操作。
-
-```java
-public interface IDataHolder {
-    boolean set(String key, Object value, boolean force);
-    <T> Optional<T> get(String key);
-    void remove(String key);
-    void clear();
-    boolean isEmpty();
-    int size();
-    boolean containsKey(String key);
-    Collection<Map.Entry<String, Object>> entries();
-    Collection<String> keys();
-    Collection<Object> values();
+@Service
+public class UserService {
     
-    default <T> T computeIfAbsent(String key, SFunction<String, T> function) {
-        if (containsKey(key)) {
-            return (T) get(key);
-        } else {
-            T value = function.apply(key);
-            set(key, value, true);
-            return value;
-        }
+    @Resource
+    private IDataHolder dataHolder;
+    
+    public void cacheUserInfo(User user) {
+        // 存储用户信息
+        dataHolder.set("user:" + user.getId(), user, true);
+    }
+    
+    public Optional<User> getUserInfo(String userId) {
+        // 获取用户信息
+        return dataHolder.get("user:" + userId);
     }
 }
 ```
 
 #### 实现类
 
-##### MapDataHolder.java
+- **MapDataHolder**: 基于 Map 的内存数据存储
+- **SpringManagedDataHolderManager**: Spring 托管的数持者管理器
+- **JsonTransformer**: JSON 数据转换器
 
-基于Map的数据存储实现类，使用LinkedHashMap作为底层存储结构。
+### 4. 代理模式 (Delegate)
+
+#### 核心概念
+
+代理模式提供了一种解耦调用者和执行者的机制，支持同步/异步执行、结果回调等功能。
+
+#### 核心接口
+
+- **IDelegateInvoker**: 代理执行器
+- **IDelegateTarget**: 代理目标
+- **IDelegateFlag**: 代理执行标记
+- **IDelegateTemplate**: 代理模板
+
+#### 使用示例
 
 ```java
-public class MapDataHolder extends AbstractAntStyleMatchKeyFounder implements IDataHolder {
-    private Map<String, Object> map;
+@Service
+public class OrderService {
     
-    public MapDataHolder(Map<String, Object> map) {
-        AssertUtil.notNull(map, "map is null");
-        this.map = map;
+    @Resource
+    private IDelegateTemplate delegateTemplate;
+    
+    public void processOrderAsync(Order order) {
+        // 异步处理订单
+        IDelegateInvoker<OrderProcessor> invoker = delegateTemplate.createInvoker(OrderProcessor.class);
+        
+        invoker.takeIn(OrderProcessor::process, () -> order)
+               .executeOnce();
     }
     
-    public MapDataHolder() {
-        this.map = new LinkedHashMap<>(8);
+    public CompletableFuture<OrderResult> processOrderWithResult(Order order) {
+        // 异步处理并获取结果
+        IDelegateInvoker<OrderProcessor> invoker = delegateTemplate.createInvoker(OrderProcessor.class);
+        
+        CompletableFuture<OrderResult> future = new CompletableFuture<>();
+        
+        invoker.takeOut(OrderProcessor::processWithResult, future::complete)
+               .executeOnce();
+        
+        return future;
     }
+}
+```
+
+#### 实现类
+
+- **SimpleDelegateInvoker**: 简单代理执行器（同步）
+- **CompletableFutureDelegateFlag**: 基于 CompletableFuture 的异步标记
+- **CallerRunsDelegateTarget**: 调用者线程执行目标
+
+### 5. 错误处理体系
+
+#### AssertUtil - 增强断言工具
+
+提供丰富的断言方法和错误级别支持：
+
+```java
+@Service
+public class UserService {
+    
+    public User getUser(String userId) {
+        // 参数校验
+        AssertUtil.notNull(userId, "用户ID不能为空");
+        AssertUtil.isTrue(userId.length() > 0, "用户ID格式错误");
+        
+        User user = userRepository.findById(userId);
+        
+        // 业务校验
+        AssertUtil.notNull(user, "用户不存在: {}", userId);
+        AssertUtil.isTrue(user.isActive(), "用户已被禁用");
+        
+        return user;
+    }
+}
+```
+
+#### ErrorLevelEnum - 错误级别
+
+定义不同级别的错误类型：
+
+- **USER_INPUT_ERROR**: 用户输入错误
+- **BUSINESS_LOGIC_ERROR**: 业务逻辑错误  
+- **SYSTEM_ERROR**: 系统错误
+- **CRITICAL_SYSTEM_ERROR**: 严重系统错误
+
+#### FormattedRuntimeException - 格式化异常
+
+支持参数化错误消息：
+
+```java
+throw new FormattedRuntimeException("用户 {} 不存在", userId);
+```
+
+### 6. 工具类矩阵
+
+#### 加密工具
+
+| 工具类 | 功能 | 主要方法 |
+|--------|------|----------|
+| **AESUtil** | AES 对称加密 | `encrypt(data, key)`, `decrypt(encryptedData, key)` |
+| **RSAUtil** | RSA 非对称加密 | `encrypt(data, publicKey)`, `decrypt(encryptedData, privateKey)` |
+| **EncryptUitl** | 哈希加密 | `sha256(data)`, `sha512(data)` |
+
+#### 基础工具
+
+**StrUtil - 字符串工具**
+
+```java
+// 字符串判空
+if (StrUtil.isEmpty(text)) {
+    throw new IllegalArgumentException("文本不能为空");
+}
+
+// 格式化字符串
+String message = StrUtil.format("用户 {} 的年龄是 {}", userName, age);
+
+// 字节数组转十六进制
+String hex = StrUtil.bytesToHex(bytes);
+```
+
+**CollUtil - 集合工具**
+
+```java
+// 集合判空
+if (CollUtil.isEmpty(users)) {
+    return Collections.emptyList();
+}
+
+// 创建集合
+List<String> names = CollUtil.newArrayList("Alice", "Bob", "Charlie");
+Map<String, User> userMap = CollUtil.newHashMap();
+```
+
+**BeanUtil - Bean 工具**
+
+```java
+// 根据配置创建 Bean
+IUuidGenerator generator = BeanUtil.buildBeanFromProperties(
+    () -> new SimpleUUID(), 
+    uuidProperty.getType(), 
+    BeanUtil::buildByEmptyArgs
+);
+```
+
+#### 函数式工具
+
+**LambdaUtil - Lambda 表达式工具**
+
+```java
+// 从 Lambda 表达式获取字段名
+String fieldName = LambdaUtil.extractFieldName(User::getName);
+
+// 获取字段对象
+Field nameField = LambdaUtil.getField(User::getName);
+```
+
+**EnumUtil - 枚举工具**
+
+```java
+// 根据编码获取枚举
+UserStatus status = EnumUtil.getByCode(UserStatus.class, 1);
+
+// 根据值获取枚举  
+UserStatus status = EnumUtil.getByValue(UserStatus.class, "active");
+```
+
+#### 框架工具
+
+**SpringUtil - Spring 上下文工具**
+
+```java
+// 获取 Spring Bean
+UserService userService = SpringUtil.getBean(UserService.class);
+
+// 获取所有指定类型的 Bean
+Collection<IErrorTransformer> transformers = SpringUtil.getBeansByTypeSafe(IErrorTransformer.class);
+```
+
+**UuidUtil - UUID 工具**
+
+```java
+// 生成 UUID
+String uuid = UuidUtil.generate();
+
+// 生成指定长度的 UUID
+String shortUuid = UuidUtil.generate(16);
+```
+
+### 7. UUID 生成器
+
+#### 核心接口
+
+**IUuidGenerator**: UUID 生成器接口
+
+#### 实现类
+
+- **SimpleUUID**: 基于 UUID.randomUUID() 的简单实现
+- **SnowFlakeUUID**: 雪花算法实现，支持分布式环境
+
+#### 使用示例
+
+```java
+@Service
+public class OrderService {
+    
+    @Resource
+    private IUuidGenerator uuidGenerator;
+    
+    public String createOrder(OrderRequest request) {
+        String orderId = uuidGenerator.generate();
+        // 创建订单逻辑
+        return orderId;
+    }
+}
+```
+
+## 最佳实践
+
+### 1. 错误处理规范
+
+```java
+@Service
+public class UserService {
+    
+    public User updateUser(User user) {
+        try {
+            // 参数校验
+            AssertUtil.notNull(user, "用户信息不能为空");
+            AssertUtil.notNull(user.getId(), "用户ID不能为空");
+            
+            // 业务逻辑
+            User existingUser = userRepository.findById(user.getId());
+            AssertUtil.notNull(existingUser, "用户不存在: {}", user.getId());
+            
+            return userRepository.save(user);
+            
+        } catch (FormattedRuntimeException e) {
+            // 业务异常，直接抛出
+            throw e;
+        } catch (Exception e) {
+            // 系统异常，包装后抛出
+            throw ExceptionUtil.newException(e, "更新用户失败");
+        }
+    }
+}
+```
+
+### 2. 数据持有者使用
+
+```java
+@Service
+public class CacheService {
+    
+    @Resource
+    private IDataHolder dataHolder;
+    
+    public <T> T getOrCreate(String key, Supplier<T> supplier) {
+        return dataHolder.computeIfAbsent(key, k -> supplier.get());
+    }
+    
+    public void clearUserCache(String userId) {
+        // 清除用户相关缓存
+        dataHolder.remove("user:" + userId);
+        dataHolder.remove("user_permissions:" + userId);
+        dataHolder.remove("user_profile:" + userId);
+    }
+}
+```
+
+### 3. 代理模式应用
+
+```java
+@Service  
+public class NotificationService {
+    
+    @Resource
+    private IDelegateTemplate delegateTemplate;
+    
+    public void sendNotifications(List<Notification> notifications) {
+        IDelegateInvoker<NotificationSender> invoker = 
+            delegateTemplate.createInvoker(NotificationSender.class);
+        
+        // 批量发送通知
+        for (Notification notification : notifications) {
+            invoker.takeIn(NotificationSender::send, () -> notification);
+        }
+        
+        // 异步执行
+        Collection<IDelegateFlag<NotificationSender>> flags = invoker.executeAll();
+        
+        // 等待所有任务完成（可选）
+        flags.forEach(flag -> {
+            try {
+                flag.await();
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        });
+    }
+}
+```
+
+## 配置说明
+
+### 完整配置示例
+
+```yaml
+tbs:
+  # UUID 配置
+  uuid:
+    type: com.tbs.common.uuid.impl.SnowFlakeUUID  # UUID 生成器类型
+    snow-flake-worker-id: 1                       # 雪花算法工作节点ID
+    snow-flake-data-center-id: 1                  # 雪花算法数据中心ID
+    except-length: 32                             # 期望的UUID长度
+  
+  # 数据持有者配置
+  data:
+    data-holder-manager: com.tbs.common.data.impl.SpringManagedDataHolderManager  # 数据持有者管理器
+    data-holder: com.tbs.common.data.impl.MapDataHolder                           # 数据持有者实现
+  
+  # 代理模式配置
+  delegate:
+    delegate-target-provider: com.tbs.common.delegate.provider.impl.SimpleCallerDelegateTargetProvider  # 代理目标提供者
+    delegate-flag-provider: com.tbs.common.delegate.provider.impl.CompletableFutureFlagProvider        # 代理标记提供者
+  
+  # 启动配置
+  startup:
+    enable-auto-startup: true    # 是否启用自动启动
+    startup-order: 0             # 启动顺序（数值越小优先级越高）
+```
+
+## 扩展开发
+
+### 自定义数据持有者
+
+```java
+@Component
+public class RedisDataHolder implements IDataHolder {
+    
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
     
     @Override
     public boolean set(String key, Object value, boolean force) {
         if (force) {
-            map.put(key, value);
+            redisTemplate.opsForValue().set(key, value);
             return true;
         }
-        if (map.containsKey(key)) {
-            return false;
-        }
-        map.put(key, value);
-        return true;
+        return redisTemplate.opsForValue().setIfAbsent(key, value);
     }
     
     @Override
     public <T> Optional<T> get(String key) {
-        if (map.containsKey(key)) {
-            Object val = map.get(key);
-            return Optional.ofNullable((T)val);
-        }
-        return Optional.empty();
+        Object value = redisTemplate.opsForValue().get(key);
+        return Optional.ofNullable((T) value);
     }
     
     // 其他方法实现...
 }
 ```
 
-##### SpringManagedDataHolderManager.java
-
-Spring管理的数据持有者管理器，支持自动装配和生命周期管理。
-
-### 4. 代理模式(Delegate)
-
-#### 核心接口
-
-##### IDelegateInvoker.java
-
-代理执行器接口，定义了代理模式中执行器的功能规范。
-
-```java
-public interface IDelegateInvoker<T> {
-    void setTarget(IDelegateTarget<T> delegateTarget);
-    IDelegateTarget<T> getTarget();
-    
-    <P> IDelegateInvoker<T> takeIn(SBiConsumer<T, P> method, SSupplier<P> p);
-    <P> IDelegateInvoker<T> takeOut(SFunction<T, P> method, SConsumer<P> consumer);
-    
-    IDelegateFlag<T> executeOnce();
-    Collection<IDelegateFlag<T>> executeAll();
-    int waittingCount();
-}
-```
-
-##### IDelegateTarget.java
-
-代理目标接口，定义了代理操作的目标对象。
-
-##### IDelegateFlag.java
-
-代理执行标记接口，用于跟踪和管理代理任务的执行状态和结果。
-
-#### 实现类
-
-##### SimpleDelegateInvoker.java
-
-简单代理执行器实现类，直接在调用者线程中同步执行代理任务。
-
-```java
-public class SimpleDelegateInvoker<T> extends AbstractDelegateInvoker<T> {
-    @Resource
-    private IDelegateFlagProvider delegateFlagProvider;
-    
-    @Override
-    protected IDelegateFlagProvider getDelegateFlagProvider() {
-        return delegateFlagProvider;
-    }
-    
-    @Override
-    protected <P> void executeTakeIn(IDelegateFlag<T> flag, SBiConsumer<T, P> method, SSupplier<P> p) {
-        getTarget().write(method, p);
-        flag.setFinished(this);
-    }
-    
-    @Override
-    protected <P> void executeTakeOut(IDelegateFlag<T> flag, SFunction<T, P> method, SConsumer<P> consumer) {
-        getTarget().read(method, consumer);
-        flag.setFinished(this);
-    }
-}
-```
-
-##### CallerRunsDelegateTarget.java
-
-在调用者线程中执行的代理目标实现。
-
-##### CompletableFutureDelegateFlag.java
-
-基于CompletableFuture的异步代理执行标记实现。
-
-### 5. 错误处理体系
-
-#### AssertUtil.java
-
-增强型断言工具类，提供丰富的断言方法和错误级别支持。
+### 自定义错误转换器
 
 ```java
 @Component
-public class AssertUtil implements IStartup {
-    private static Collection<IErrorTransformer> errorTransformers;
-    private static List<IErrorThrowEvent> errorThrowEvents;
+public class CustomErrorTransformer implements IErrorTransformer {
     
     @Override
-    public void startUp() throws RuntimeException {
-        errorTransformers = SpringUtil.getBeansByTypeSafe(IErrorTransformer.class).stream()
-            .sorted(Comparators::asc)
-            .collect(Collectors.toList());
-        errorThrowEvents = SpringUtil.getBeansByTypeSafe(IErrorThrowEvent.class).stream()
-            .collect(Collectors.toList());
-    }
-    
-    public static void notNull(Object object, String msg, Object... params) {
-        notNull(object, FormattedRuntimeException::new, msg, params);
-    }
-    
-    public static void notNull(Object object, Function<String, ? extends RuntimeException> exceptionSupplier, 
-                              String message, Object... params) {
-        isTrue(object == null, exceptionSupplier, message, params);
-    }
-    
-    public static void isTrue(boolean expression, String message, Object... params) {
-        isTrue(expression, FormattedRuntimeException::new, message, params);
-    }
-    
-    public static void isTrue(boolean expression, Function<String, ? extends RuntimeException> exceptionSupplier, 
-                             String message, Object... params) {
-        if (expression) {
-            throwError(() -> exceptionSupplier.apply(StrUtil.format(message, params)));
-        }
-    }
-    
-    public static <T extends RuntimeException> void throwError(Supplier<T> exceptionSupplier) {
-        T e = exceptionSupplier.get();
-        if (errorThrowEvents.stream().anyMatch(event -> event.onAssertUtilThrow(e))) {
-            return;
-        }
-        throw e;
-    }
-    
-    // 更多断言方法...
-}
-```
-
-#### ErrorLevelEnum.java
-
-错误级别枚举，定义了不同级别的错误类型。
-
-```java
-public enum ErrorLevelEnum implements BaseEnum<String> {
-    USER_INPUT_ERROR("user_input_error", "用户输入错误"),
-    BUSINESS_LOGIC_ERROR("business_logic_error", "业务逻辑错误"),
-    SYSTEM_ERROR("system_error", "系统错误"),
-    CRITICAL_SYSTEM_ERROR("critical_system_error", "严重系统错误");
-    
-    private final String value;
-    private final String description;
-    
-    ErrorLevelEnum(String value, String description) {
-        this.value = value;
-        this.description = description;
-    }
-    
-    @Override
-    public String getValue() {
-        return value;
-    }
-    
-    public String getDescription() {
-        return description;
-    }
-    
-    @Override
-    public int getCode() {
-        return ordinal();
-    }
-}
-```
-
-#### FormattedRuntimeException.java
-
-格式化运行时异常，支持参数化错误消息和错误级别。
-
-### 6. 工具类矩阵
-
-#### 加密工具
-
-| 工具类 | 功能 | 算法 | 主要方法 |
-|--------|------|------|----------|
-| AESUtil | 对称加密 | AES/CBC/PKCS5Padding | `encrypt(String data, String key)`, `decrypt(String encryptedData, String key)` |
-| RSAUtil | 非对称加密 | RSA | `encrypt(String data, String publicKey)`, `decrypt(String encryptedData, String privateKey)` |
-| EncryptUitl | 哈希加密 | SHA-128/256/512 | `sha256(String data)`, `sha512(String data)` |
-
-#### 基础工具
-
-##### StrUtil.java
-
-字符串工具类，提供字符串操作相关功能。
-
-```java
-public class StrUtil {
-    public static boolean isEmpty(String text) {
-        return text == null || text.trim().isEmpty();
-    }
-    
-    public static String format(String template, Object... params) {
-        if (params == null || params.length == 0) {
-            return template;
-        }
-        return String.format(template.replace("{}", "%s"), params);
-    }
-    
-    public static String bytesToHex(byte[] bytes) {
-        StringBuilder hexString = new StringBuilder();
-        for (byte b : bytes) {
-            String hex = Integer.toHexString(0xff & b);
-            if (hex.length() == 1) {
-                hexString.append('0');
-            }
-            hexString.append(hex);
-        }
-        return hexString.toString();
-    }
-    
-    // 更多字符串方法...
-}
-```
-
-##### CollUtil.java
-
-集合工具类，提供集合操作相关功能。
-
-```java
-public class CollUtil {
-    public static boolean isEmpty(Collection<?> collection) {
-        return collection == null || collection.isEmpty();
-    }
-    
-    public static boolean isEmpty(Map<?, ?> map) {
-        return map == null || map.isEmpty();
-    }
-    
-    public static <T> boolean isEmpty(T[] array) {
-        return array == null || array.length == 0;
-    }
-    
-    public static <E> ArrayList<E> newArrayList() {
-        return new ArrayList<>();
-    }
-    
-    public static <E> ArrayList<E> newArrayList(E... elements) {
-        ArrayList<E> list = new ArrayList<>(elements.length);
-        Collections.addAll(list, elements);
-        return list;
-    }
-    
-    // 更多集合方法...
-}
-```
-
-##### BeanUtil.java
-
-Bean工具类，提供Bean操作相关功能。
-
-```java
-public class BeanUtil {
-    public static <T> T buildBeanFromProperties(Supplier<T> defaultSupplier, 
-                                               Class<? extends T> targetClass, 
-                                               Function<Class<? extends T>, T> builder) {
-        if (targetClass == null) {
-            return defaultSupplier.get();
-        }
-        return builder.apply(targetClass);
-    }
-    
-    public static <T> T buildByEmptyArgs(Class<T> clazz) {
-        try {
-            return clazz.getDeclaredConstructor().newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to create instance of " + clazz.getName(), e);
-        }
-    }
-    
-    // 更多Bean方法...
-}
-```
-
-#### 函数式工具
-
-##### LambdaUtil.java
-
-Lambda表达式解析工具，用于从Lambda表达式中提取对应的Field、Method或字段名。
-
-```java
-public class LambdaUtil {
-    private static final ConcurrentMap<String, Field> FIELD_CACHE = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<String, String> FIELD_NAME_CACHE = new ConcurrentHashMap<>();
-    private static final ConcurrentMap<String, Method> METHOD_CACHE = new ConcurrentHashMap<>();
-    
-    public static <T, R> Field getField(SFunction<T, R> func) {
-        try {
-            SerializedLambda lambda = extractSerializedLambda(func);
-            String key = buildCacheKey(lambda);
-            
-            return FIELD_CACHE.computeIfAbsent(key, k -> {
-                try {
-                    String methodName = lambda.getImplMethodName();
-                    String fieldName;
-                    if (methodName.startsWith("get") || methodName.startsWith("set")) {
-                        fieldName = Introspector.decapitalize(methodName.substring(3));
-                    } else if (methodName.startsWith("is")) {
-                        fieldName = Introspector.decapitalize(methodName.substring(2));
-                    } else {
-                        fieldName = Introspector.decapitalize(methodName);
-                    }
-                    
-                    Class<?> targetClass = Class.forName(lambda.getImplClass().replace('/', '.'));
-                    return targetClass.getDeclaredField(fieldName);
-                } catch (Exception e) {
-                    AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
-                }
-                return null;
-            });
-        } catch (Exception e) {
-            AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
-        }
-        return null;
-    }
-    
-    public static <T, R> String extractFieldName(SFunction<T, R> func) {
-        try {
-            SerializedLambda lambda = extractSerializedLambda(func);
-            String key = buildCacheKey(lambda);
-            
-            return FIELD_NAME_CACHE.computeIfAbsent(key, k -> {
-                String methodName = lambda.getImplMethodName();
-                if (methodName.startsWith("get") || methodName.startsWith("set")) {
-                    return Introspector.decapitalize(methodName.substring(3));
-                } else if (methodName.startsWith("is")) {
-                    return Introspector.decapitalize(methodName.substring(2));
-                }
-                return methodName;
-            });
-        } catch (Exception e) {
-            AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
-        }
-        return null;
-    }
-    
-    // 更多Lambda方法...
-}
-```
-
-##### EnumUtil.java
-
-枚举工具类，提供枚举操作相关功能。
-
-#### 框架工具
-
-##### UuidUtil.java
-
-统一UUID生成入口工具类。
-
-```java
-@Component
-public class UuidUtil {
-    @Getter
-    private static UuidUtil instance;
-    @Resource
-    private IUuidGenerator uuidGenerator;
-    @Resource
-    private UuidProperty uuidProperty;
-    
-    public UuidUtil() {
-        instance = this;
-    }
-    
-    public String getUuidString() {
-        return uuidGenerator.getUuidString(uuidProperty.getExceptLength());
-    }
-}
-```
-
-##### SpringUtil.java
-
-Spring工具类，提供Spring上下文操作相关功能。
-
-##### DelegateUtil.java
-
-代理工具类，提供代理模式相关工具方法。
-
-### 7. UUID生成体系
-
-#### IUuidGenerator.java
-
-UUID生成器接口，定义了UUID生成的标准方法。
-
-```java
-public interface IUuidGenerator {
-    byte[] getUuid(int exceptLength);
-    String getUuidString(int exceptLength);
-}
-```
-
-#### 实现类
-
-##### SimpleUUID.java
-
-简单UUID生成器，基于哈希算法生成UUID。
-
-```java
-public class SimpleUUID implements IUuidGenerator {
-    @Override
-    public byte[] getUuid(int exceptLength) {
-        return getUuidString(exceptLength).getBytes(StandardCharsets.UTF_8);
-    }
-    
-    @Override
-    public String getUuidString(int exceptLength) {
-        UUID uuid = UUID.randomUUID();
-        String uuidStr = uuid.toString().replace("-", "");
-        if (uuidStr.length() > exceptLength) {
-            return uuidStr.substring(0, exceptLength);
-        }
-        return uuidStr;
-    }
-}
-```
-
-##### SnowFlakeUUID.java
-
-雪花算法UUID生成器，支持分布式环境下的有序唯一ID生成。
-
-```java
-public class SnowFlakeUUID implements IUuidGenerator {
-    private final long twepoch = 1598598185157L; // 开始时间截 (2020-08-28)
-    private final long workerIdBits = 5L;        // 机器id所占的位数
-    private final long datacenterIdBits = 5L;    // 数据标识id所占的位数
-    private final long sequenceBits = 12L;       // 序列在id中占的位数
-    
-    private final long maxWorkerId = -1L ^ (-1L << workerIdBits);        // 支持的最大机器id
-    private final long maxDatacenterId = -1L ^ (-1L << datacenterIdBits); // 支持的最大数据标识id
-    private final long sequenceMask = -1L ^ (-1L << sequenceBits);       // 生成序列的掩码
-    
-    private final long workerIdShift = sequenceBits;                     // 机器ID向左移12位
-    private final long datacenterIdShift = sequenceBits + workerIdBits;  // 数据标识id向左移17位
-    private final long timestampLeftShift = sequenceBits + workerIdBits + datacenterIdBits; // 时间截向左移22位
-    
-    private long workerId;      // 工作机器ID(0~31)
-    private long datacenterId;  // 数据中心ID(0~31)
-    private long sequence = 0L; // 毫秒内序列(0~4095)
-    private long lastTimestamp = -1L; // 上次生成ID的时间截
-    
-    public SnowFlakeUUID(long workerId, long datacenterId) {
-        AssertUtil.isTrue(!(workerId <= maxWorkerId && workerId >= 0),
-            "worker Id can t be greater than %d or less than 0", maxWorkerId);
-        AssertUtil.isTrue(!(datacenterId <= maxDatacenterId && datacenterId >= 0),
-            "datacenter Id can t be greater than %d or less than 0", maxDatacenterId);
-        this.workerId = workerId;
-        this.datacenterId = datacenterId;
-    }
-    
-    public synchronized long nextId() {
-        long timestamp = timeGen();
-        
-        AssertUtil.isTrue(timestamp < lastTimestamp,
-            "Clock moved backwards.  Refusing to generate id for {} milliseconds", timestamp - lastTimestamp);
-        
-        if (lastTimestamp == timestamp) {
-            sequence = (sequence + 1) & sequenceMask;
-            if (sequence == 0) {
-                timestamp = tilNextMillis(lastTimestamp);
-            }
-        } else {
-            sequence = 0L;
+    public RuntimeException transform(Throwable throwable) {
+        if (throwable instanceof BusinessException) {
+            return (BusinessException) throwable;
         }
         
-        lastTimestamp = timestamp;
-        
-        long id = ((timestamp - twepoch) << timestampLeftShift)
-            | (datacenterId << datacenterIdShift)
-            | (workerId << workerIdShift)
-            | sequence;
-        return id;
+        // 自定义错误转换逻辑
+        return new FormattedRuntimeException("系统异常: {}", throwable.getMessage());
     }
     
     @Override
-    public String getUuidString(int exceptLength) {
-        Long uuid = 0L;
-        StringBuilder uuidBuilder = new StringBuilder();
-        while (uuidBuilder.length() < exceptLength) {
-            uuid = nextId();
-            uuidBuilder.append(Long.toHexString(uuid));
-        }
-        return uuidBuilder.substring(0, exceptLength);
+    public int getOrder() {
+        return 0; // 转换器执行顺序
     }
-    
-    // 其他方法...
 }
 ```
-
-#### 雪花算法特性
-
-- **时间戳位数**：41位（69年时间范围）
-- **机器ID位数**：5位（最多32台机器）
-- **数据中心位数**：5位（最多32个数据中心）
-- **序列号位数**：12位（每毫秒4096个序列号）
-- **总位数**：64位（长整型）
-
-#### 策略对比
-
-| 策略 | 生成方式 | 特性 | 适用场景 |
-|------|----------|------|----------|
-| SimpleUUID | 哈希算法 | 简单快速，无序 | 一般场景，单机应用 |
-| SnowFlakeUUID | 雪花算法 | 有序唯一，分布式 | 分布式系统，高并发场景 |
-
-## 配置说明
-
-### application.yml配置示例
-
-```yaml
-tbs:
-  data:
-    data-holder-manager: com.tbs.common.data.impl.SpringManagedDataHolderManager
-    data-holder: com.tbs.common.data.impl.MapDataHolder
-  delegate:
-    delegate-target-provider: com.tbs.common.delegate.provider.impl.SimpleCallerDelegateTargetProvider
-    delegate-flag-provider: com.tbs.common.delegate.provider.impl.CompletableFutureFlagProvider
-  uuid:
-    type: com.tbs.common.uuid.impl.SnowFlakeUUID
-    snow-flake-worker-id: 0
-    snow-flake-data-center-id: 0
-    except-length: 32
-  startup:
-    enable-auto-startup: true
-    startup-order: -2147483648
-```
-
-### Maven依赖配置
-
-```xml
-<dependency>
-    <groupId>com.tbs</groupId>
-    <artifactId>common</artifactId>
-    <version>1.0.0</version>
-</dependency>
-```
-
-## 最佳实践
-
-### 1. 数据持有者使用模式
-
-```java
-// 获取数据持有者
-IDataHolder dataHolder = new MapDataHolder();
-
-// 存储数据
-dataHolder.set("user", user, true);
-
-// 获取数据
-Optional<User> user = dataHolder.get("user");
-
-// 使用computeIfAbsent避免重复计算
-User cachedUser = dataHolder.computeIfAbsent("user", key -> loadUserFromDB());
-
-// 批量操作
-Collection<Map.Entry<String, Object>> allData = dataHolder.entries();
-Collection<String> allKeys = dataHolder.keys();
-Collection<Object> allValues = dataHolder.values();
-```
-
-### 2. 代理模式使用模式
-
-```java
-// 创建代理目标
-IDelegateTarget<User> target = new CallerRunsDelegateTarget<>(user);
-
-// 创建代理执行器
-IDelegateInvoker<User> invoker = new SimpleDelegateInvoker<>();
-invoker.setTarget(target);
-
-// 执行代理操作
-IDelegateFlag<User> flag = invoker
-    .takeIn(User::setName, () -> "newName")
-    .takeOut(User::getName, name -> System.out.println("Name: " + name))
-    .executeOnce();
-
-// 等待执行完成
-IDelegateTarget<User> result = flag.get();
-
-// 批量执行
-Collection<IDelegateFlag<User>> flags = invoker.executeAll();
-```
-
-### 3. 断言工具使用模式
-
-```java
-// 基础断言
-AssertUtil.notNull(user, "用户对象不能为空");
-AssertUtil.isTrue(user.getAge() > 0, "用户年龄必须大于0");
-AssertUtil.hasText(user.getName(), "用户名不能为空");
-AssertUtil.notEmpty(userList, "用户列表不能为空");
-
-// 带错误级别的断言
-AssertUtil.notNullWithLevel(user, ErrorLevelEnum.BUSINESS_LOGIC_ERROR, "用户对象不能为空");
-AssertUtil.isTrueSystemError(condition, "系统条件不满足");
-
-// 使用断言构建器
-AssertUtil.AssertBuilder builder = AssertUtil.isTrue(condition)
-    .message("条件不满足")
-    .params("param1", "param2")
-    .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR);
-if (builder.isBuild()) {
-    builder.throwIt();
-}
-```
-
-### 4. UUID生成使用模式
-
-```java
-// 获取UUID
-String uuid = UuidUtil.getUuidString();
-
-// 直接使用生成器
-IUuidGenerator generator = new SnowFlakeUUID(1, 1);
-String snowflakeUuid = generator.getUuidString(32);
-
-// 简单UUID生成
-IUuidGenerator simpleGenerator = new SimpleUUID();
-String simpleUuid = simpleGenerator.getUuidString(36);
-```
-
-### 5. Lambda工具使用模式
-
-```java
-// 提取字段对象
-Field field = LambdaUtil.getField(User::getName);
-
-// 提取字段名
-String fieldName = LambdaUtil.extractFieldName(User::getName);
-
-// 提取方法对象
-Method method = LambdaUtil.getMethod(User::getName);
-
-// 提取方法名
-String methodName = LambdaUtil.extractMethodName(User::getName);
-```
-
-## 注意事项
-
-### 1. 线程安全
-
-- **MapDataHolder**：非线程安全，多线程环境下需要使用同步机制
-- **SnowFlakeUUID**：线程安全，使用`synchronized`保证原子性
-- **AssertUtil**：线程安全，静态方法支持并发调用
-
-### 2. 资源管理
-
-- 数据持有者需要手动管理生命周期
-- 代理执行器会自动管理执行标记
-- UUID生成器无需特殊资源管理
-
-### 3. 异常处理
-
-- 建议实现`IErrorThrowEvent`接口进行全局异常捕获
-- 使用`FormattedRuntimeException`提供结构化的错误信息
-- 通过`ErrorLevelEnum`区分不同级别的错误
-
-### 4. 性能考虑
-
-- **SnowFlakeUUID**：高性能，适合高并发场景
-- **LambdaUtil**：使用缓存提高性能
-- **AssertUtil**：轻量级，对性能影响小
-
-### 5. 配置建议
-
-- 分布式环境下合理配置SnowFlakeUUID的节点ID
-- 根据业务需求选择合适的DataHolder实现
-- 调整代理模式的执行策略以适应不同场景
 
 ## 版本历史
 
-- **v1.0.0**：初始版本，包含基础工具类和框架组件
-- 支持数据持有者模式
-- 支持代理模式
-- 提供丰富的工具类矩阵
-- 实现雪花算法UUID生成器
+- **v1.0.0** (2024-01-01)
+  - 初始版本发布
+  - 包含基础工具类、数据持有者、代理模式等核心功能
+  - 支持 Spring Boot 自动配置
 
-## 贡献指南
+## 技术支持
 
-欢迎提交Issue和Pull Request来改进这个通用工具包。在提交代码时，请确保：
+如有问题或建议，请联系开发团队或提交 Issue。
 
-1. 遵循现有的代码风格
-2. 添加适当的单元测试
-3. 更新相关文档
-4. 通过所有现有的测试
+---
 
-## 许可证
-
-本项目采用MIT许可证，详情请参阅LICENSE文件。
+*Abstergo Common - 让 Java 开发更简单、更高效*
