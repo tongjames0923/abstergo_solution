@@ -1,231 +1,361 @@
 # RabbitMQ 模块
 
-RabbitMQ 模块提供了基于 RabbitMQ 的消息广播和分布式事件处理功能，实现了应用间的异步通信。
+RabbitMQ 模块是基于 Spring Boot AMQP 的分布式消息广播解决方案，为 Abstergo Solution 提供可靠的消息通信能力。该模块实现了完整的消息生产、消费、确认机制，支持分布式环境下的异步事件处理。
 
-## 功能特点
+## 核心特性
 
-1. **自动创建组件**：通过Spring Bean自动创建交换机、队列和绑定关系
-2. **代码创建组件**：提供通过代码动态创建RabbitMQ组件的能力
-3. **高可用性**：支持队列的高可用策略和消息TTL设置
-4. **灵活配置**：支持通过配置文件或代码方式配置RabbitMQ组件
+### 🚀 开箱即用
+- **自动配置**：基于 Spring Boot 自动配置 RabbitMQ 连接工厂、模板和管理器
+- **组件自动声明**：应用启动时自动创建交换机、队列和绑定关系
+- **配置驱动**：支持通过 YAML 配置文件灵活调整 RabbitMQ 参数
 
-## 目录结构
+### 🔒 可靠性保障
+- **消息确认机制**：支持发布者确认和手动消费者确认
+- **消息持久化**：队列和交换机默认启用持久化，防止消息丢失
+- **重试机制**：内置连接重试和消息处理失败重试机制
+- **高可用性**：支持队列镜像和高可用策略
 
+### 📡 分布式支持
+- **节点标识**：支持多节点环境下的消息路由和事件分发
+- **事件桥接**：提供事件对象的序列化和反序列化桥接机制
+- **统一接口**：与 Abstergo Solution 的事件分发系统无缝集成
+
+### ⚡ 性能优化
+- **连接池管理**：优化的连接工厂配置，支持连接复用
+- **消息转换器**：高效的 JSON 序列化消息转换器
+- **预取控制**：支持消费者预取数量配置，平衡吞吐量和公平性
+
+## 快速开始
+
+### 1. 添加依赖
+
+在项目的 `pom.xml` 中添加 RabbitMQ 模块依赖：
+
+```xml
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>rabbitmq</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
 ```
-com.tbs.broadcast.rabbitmq
-├── config                          # RabbitMQ 配置类
-│   ├── RabbitMqConfig.java        # RabbitMQ 核心配置
-│   ├── RabbitMqInitializer.java   # RabbitMQ组件初始化器
-│   └── property                   # 配置属性类
-│       └── RabbitMqProperty.java
-└── support                         # RabbitMQ 支持类
-    ├── AbstractRabbaitMqSupport.java
-    └── SimpleRabbitMqSupport.java
-```
 
-## 核心组件说明
+### 2. 基础配置
 
-### 1. RabbitMQ 配置类 (RabbitMqConfig.java)
-
-[RabbitMqConfig](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqConfig.java#L13-L132) 是 RabbitMQ 的核心配置类，负责创建连接工厂、RabbitTemplate、消息转换器以及定义交换机、队列和绑定关系。
-
-#### 主要 Bean 说明
-
-1. `connectionFactory()`: 创建 RabbitMQ 连接工厂
-2. `rabbitTemplate()`: 创建用于发送消息的 RabbitTemplate
-3. `amqpAdmin()`: 创建 RabbitMQ 管理器
-4. `jsonMessageConverter()`: 创建 JSON 消息转换器
-5. `broadcastExchange()`: 创建广播交换机
-6. `broadcastQueue()`: 创建广播队列
-7. `broadcastBinding()`: 绑定队列到交换机
-
-### 2. RabbitMQ 初始化器 (RabbitMqInitializer.java)
-
-[RabbitMqInitializer](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqInitializer.java#L15-L90) 类负责在应用程序启动时通过代码直接创建交换机、队列和绑定关系。
-
-#### 主要功能
-
-1. `initialize()`: 应用程序启动时初始化RabbitMQ组件
-2. `createExchange()`: 动态创建交换机
-3. `createQueue()`: 动态创建队列
-4. `createBinding()`: 动态创建绑定关系
-
-### 3. RabbitMQ 属性配置类 (RabbitMqProperty.java)
-
-[RabbitMqProperty](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/property/RabbitMqProperty.java#L10-L35) 类定义了 RabbitMQ 的配置属性，可通过 `application.yml` 进行配置。
-
-#### 配置属性说明
-
-| 属性名 | 默认值 | 说明 |
-|--------|--------|------|
-| exchangeName | "tbs.broadcast.exchange" | 交换机名称 |
-| queueName | "tbs.broadcast.queue" | 队列名称 |
-| routingKey | "tbs.broadcast.routing.key" | 路由键 |
-| nodeId | null | 节点 ID |
-| publisherConfirm | true | 是否启用发布确认 |
-
-### 3. RabbitMQ 支持类
-
-#### AbstractRabbaitMqSupport.java
-
-[AbstractRabbaitMqSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/support/AbstractRabbaitMqSupport.java#L19-L85) 是 RabbitMQ 支持的抽象基类，实现了消息监听和广播功能。
-
-主要功能：
-- 消息监听和处理
-- 消息广播发送
-- 手动 ACK 确认机制
-
-#### SimpleRabbitMqSupport.java
-
-[SimpleRabbitMqSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/support/SimpleRabbitMqSupport.java#L11-L20) 是 [AbstractRabbaitMqSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/support/AbstractRabbaitMqSupport.java#L19-L85) 的具体实现，处理 [SimpleDistributedAcceptedPublishResult](file:///Users/abstergo/IdeaProjects/abstergo_solution/broadcast/src/main/java/com/tbs/broadcast/publisher/impl/SimpleDistributedAcceptedPublishResult.java#L15-L69) 类型的消息。
-
-## 自定义使用说明
-
-### 1. 配置说明
-
-在 `application.yml` 中添加以下配置：
+在 `application.yml` 中配置 RabbitMQ 连接信息：
 
 ```yaml
-# RabbitMQ 连接配置
 spring:
   rabbitmq:
-    host: localhost
+    host: 127.0.0.1
     port: 5672
-    username: guest
-    password: guest
+    username: admin
+    password: admin123
     virtual-host: /
+    
+    # 连接超时配置
+    connection-timeout: 15000
+    
+    # 生产者配置
+    publisher-confirm-type: correlated
+    publisher-returns: true
+    
+    # 消费者配置
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+        retry:
+          enabled: true
+          max-attempts: 3
 
-# TBS RabbitMQ 配置
 tbs:
   rabbitmq:
-    # 交换机名称
-    exchange-name: tbs.broadcast.exchange
-    # 队列名称
-    queue-name: tbs.broadcast.queue
-    # 路由键
-    routing-key: tbs.broadcast.routing.key
-    # 节点ID
-    node-id: node1
-    # 是否启用发布确认
-    publisher-confirm: true
+    exchange-name: tbs.broadcast.exchange    # 交换机名称
+    queue-name: tbs.broadcast.queue         # 队列名称
+    routing-key: tbs.broadcast.routing.key  # 路由键
+    node-id: node1                          # 节点标识
+    publisher-confirm: true                  # 启用发布确认
 ```
 
-### 2. 通过代码创建RabbitMQ组件
+### 3. 创建消息监听器
 
-除了通过配置自动创建RabbitMQ组件外，还可以通过代码动态创建：
+继承 `AbstractRabbaitMqSupport` 类创建自定义消息处理器：
 
 ```java
 @Component
-public class CustomRabbitMqInitializer {
+public class UserEventHandler extends AbstractRabbaitMqSupport<UserEvent> {
     
-    @Autowired
+    @Override
+    public void receiveEvent(UserEvent event) {
+        // 处理接收到的用户事件
+        log.info("接收到用户事件: {}", event);
+        
+        // 业务逻辑处理
+        userService.processUserEvent(event);
+    }
+    
+    @Override
+    public UserEvent bridge(@NotNull IPublishResult obj) {
+        // 将发布结果转换为具体的事件对象
+        return (UserEvent) obj.getEvent();
+    }
+    
+    @Override
+    public IPublishResult unbridge(@NotNull UserEvent event) {
+        // 将事件对象转换为发布结果
+        return new SpringManagedListenablePublishResult(
+            event, 
+            event.getPublisher(), 
+            event.getHandleMode()
+        );
+    }
+}
+```
+
+### 4. 发送消息
+
+使用注入的 `RabbitTemplate` 发送消息：
+
+```java
+@Service
+public class MessageService {
+    
+    @Resource
+    private RabbitTemplate rabbitTemplate;
+    
+    @Resource
+    private RabbitMqProperty rabbitMqProperty;
+    
+    public void sendUserEvent(UserEvent event) {
+        // 发送消息到指定交换机和路由键
+        rabbitTemplate.convertAndSend(
+            rabbitMqProperty.getExchangeName(),
+            rabbitMqProperty.getRoutingKey(),
+            event
+        );
+        
+        log.info("用户事件已发送: {}", event);
+    }
+}
+```
+
+## 核心组件详解
+
+### RabbitMqConfig - 核心配置类
+
+<mcsymbol name="RabbitMqConfig" filename="RabbitMqConfig.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqConfig.java" startline="22" type="class">RabbitMqConfig</mcsymbol> 是模块的核心配置类，负责创建和管理 RabbitMQ 相关组件：
+
+**主要 Bean 定义：**
+- `connectionFactory()`: 创建带连接池的 RabbitMQ 连接工厂
+- `rabbitTemplate()`: 配置消息发送模板，支持发布确认
+- `amqpAdmin()`: 提供 RabbitMQ 管理功能
+- `jsonMessageConverter()`: JSON 序列化消息转换器
+- `broadcastExchange()`: 创建持久化直连交换机
+- `broadcastQueue()`: 创建带 TTL 和高可用策略的队列
+- `broadcastBinding()`: 绑定队列到交换机
+
+### RabbitMqInitializer - 组件初始化器
+
+<mcsymbol name="RabbitMqInitializer" filename="RabbitMqInitializer.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqInitializer.java" startline="17" type="class">RabbitMqInitializer</mcsymbol> 在应用启动时主动创建 RabbitMQ 组件：
+
+**初始化流程：**
+1. 创建持久化直连交换机
+2. 创建带消息 TTL（60秒）和高可用策略的队列
+3. 建立队列到交换机的绑定关系
+4. 记录初始化日志
+
+### AbstractRabbaitMqSupport - 消息支持基类
+
+<mcsymbol name="AbstractRabbaitMqSupport" filename="AbstractRabbaitMqSupport.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/support/AbstractRabbaitMqSupport.java" startline="24" type="class">AbstractRabbaitMqSupport</mcsymbol> 是消息处理的核心抽象类：
+
+**核心功能：**
+- **消息监听**：自动创建消息监听容器，监听指定队列
+- **手动 ACK**：实现手动消息确认机制，确保消息可靠处理
+- **异常处理**：消息处理失败时自动拒绝并重新入队
+- **事件广播**：提供统一的事件广播接口
+- **队列管理**：自动确保队列存在，避免声明冲突
+
+### RabbitMqProperty - 配置属性
+
+<mcsymbol name="RabbitMqProperty" filename="RabbitMqProperty.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/property/RabbitMqProperty.java" startline="10" type="class">RabbitMqProperty</mcsymbol> 封装了 RabbitMQ 相关配置：
+
+**配置属性：**
+- `exchangeName`: 交换机名称（默认：tbs.broadcast.exchange）
+- `queueName`: 队列名称（默认：tbs.broadcast.queue）
+- `routingKey`: 路由键（默认：tbs.broadcast.routing.key）
+- `nodeId`: 节点标识，用于分布式环境
+- `publisherConfirm`: 是否启用发布确认（默认：true）
+
+## 高级用法
+
+### 自定义队列配置
+
+```java
+@Component
+public class CustomQueueConfig {
+    
+    @Resource
     private AmqpAdmin amqpAdmin;
     
-    public void createCustomQueue() {
-        // 创建队列
-        Queue queue = QueueBuilder.durable("custom.queue")
-            .withArgument("x-message-ttl", 30000)
+    @PostConstruct
+    public void createCustomQueues() {
+        // 创建带特殊属性的队列
+        Queue customQueue = QueueBuilder.durable("custom.queue")
+            .withArgument("x-message-ttl", 30000)           // 消息TTL 30秒
+            .withArgument("x-max-length", 1000)             // 最大消息数量
+            .withArgument("x-dead-letter-exchange", "dlx") // 死信交换机
+            .withArgument("x-ha-policy", "all")            // 高可用策略
             .build();
-        amqpAdmin.declareQueue(queue);
         
-        // 创建交换机
-        DirectExchange exchange = new DirectExchange("custom.exchange");
-        amqpAdmin.declareExchange(exchange);
-        
-        // 创建绑定
-        Binding binding = BindingBuilder.bind(queue)
-            .to(exchange)
-            .with("custom.routing.key");
-        amqpAdmin.declareBinding(binding);
+        amqpAdmin.declareQueue(customQueue);
     }
 }
 ```
 
-### 3. 使用 RabbitMQ 广播功能
-
-要使用 RabbitMQ 的广播功能，需要：
-
-1. 创建自定义的 RabbitMQ 支持类：
+### 批量消息处理
 
 ```java
 @Component
-public class CustomRabbitMqSupport extends AbstractRabbaitMqSupport<YourEventType> {
+public class BatchMessageProcessor extends AbstractRabbaitMqSupport<List<BatchEvent>> {
     
     @Override
-    public YourEventType bridge(@NotNull IPublishResult obj) {
-        // 实现事件对象的桥接转换
-        return (YourEventType) obj.getEvent();
-    }
-
-    @Override
-    public IPublishResult unbridge(@NotNull YourEventType obj) {
-        // 实现事件对象的反向桥接转换
-        return new SpringManagedListenablePublishResult(obj, null, null);
-    }
-}
-```
-
-2. 发送消息：
-
-```java
-@Resource
-private RabbitTemplate rabbitTemplate;
-
-public void sendMessage(String message) {
-    rabbitTemplate.convertAndSend("tbs.broadcast.exchange", "tbs.broadcast.routing.key", message);
-}
-```
-
-### 4. 监听消息
-
-通过继承 [AbstractRabbaitMqSupport](file:///Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/support/AbstractRabbaitMqSupport.java#L19-L85) 类并实现相关方法来监听消息：
-
-```java
-@Component
-public class MessageListener extends AbstractRabbaitMqSupport<String> {
-    
-    @Override
-    public void receiveEvent(String message) {
-        // 处理接收到的消息
-        System.out.println("Received message: " + message);
+    public void receiveEvent(List<BatchEvent> events) {
+        // 批量处理消息
+        events.forEach(event -> {
+            try {
+                processSingleEvent(event);
+            } catch (Exception e) {
+                log.error("处理事件失败: {}", event, e);
+            }
+        });
     }
     
     // 实现其他抽象方法...
 }
 ```
 
+### 消息优先级处理
+
+```java
+@Component
+public class PriorityMessageHandler extends AbstractRabbaitMqSupport<PriorityEvent> {
+    
+    @Override
+    public void receiveEvent(PriorityEvent event) {
+        // 根据优先级处理消息
+        switch (event.getPriority()) {
+            case HIGH:
+                processHighPriority(event);
+                break;
+            case NORMAL:
+                processNormalPriority(event);
+                break;
+            case LOW:
+                processLowPriority(event);
+                break;
+        }
+    }
+}
+```
+
+## 监控和调试
+
+### 启用详细日志
+
+在 `application.yml` 中启用 RabbitMQ 相关日志：
+
+```yaml
+logging:
+  level:
+    com.tbs.broadcast.rabbitmq: DEBUG
+    org.springframework.amqp: INFO
+    com.rabbitmq.client: WARN
+```
+
+### 健康检查
+
+模块自动集成 Spring Boot Actuator 的健康检查：
+
+```bash
+# 检查 RabbitMQ 连接状态
+curl http://localhost:8080/actuator/health
+```
+
+### 管理界面
+
+访问 RabbitMQ 管理界面查看队列状态：
+- **地址**: http://localhost:15672
+- **用户名**: admin
+- **密码**: admin123
+
 ## 最佳实践
 
-1. **消息确认机制**：
-   - 启用手动 ACK 确认确保消息被正确处理
-   - 合理处理消息处理失败的情况，避免消息丢失
+### 1. 连接管理
+- 合理配置连接超时和心跳间隔
+- 使用连接池避免频繁创建连接
+- 监控连接状态，及时处理连接异常
 
-2. **连接管理**：
-   - 合理配置连接池参数
-   - 及时关闭不再使用的连接
+### 2. 消息设计
+- 消息体尽量小，避免大消息影响性能
+- 使用合理的消息 TTL，避免消息积压
+- 为重要消息设置持久化属性
 
-3. **错误处理**：
-   - 实现完善的消息处理异常处理机制
-   - 对于处理失败的消息，可以选择重新入队或记录日志
+### 3. 错误处理
+- 实现完善的异常处理机制
+- 对于处理失败的消息，记录详细日志
+- 考虑实现死信队列处理无法处理的消息
 
-4. **性能优化**：
-   - 合理设置预取数量以提高消费效率
-   - 使用批量发送提高生产效率
+### 4. 性能优化
+- 根据业务需求调整预取数量
+- 使用批量发送提高吞吐量
+- 监控队列深度，及时扩容消费者
 
-## 注意事项
+## 故障排除
 
-1. **依赖管理**：
-   - 确保项目中包含了 RabbitMQ 相关依赖
-   - 注意 RabbitMQ 客户端版本与服务器版本的兼容性
+### 常见问题
 
-2. **配置正确性**：
-   - 确保 RabbitMQ 服务器地址、端口、用户名和密码配置正确
-   - 确保交换机、队列和路由键配置正确
+**1. 连接失败**
+```
+检查 RabbitMQ 服务是否启动
+确认连接参数（主机、端口、用户名、密码）是否正确
+检查网络连接和防火墙设置
+```
 
-3. **消息持久化**：
-   - 对于重要消息，应设置持久化选项
-   - 合理配置队列和交换机的持久化属性
+**2. 消息丢失**
+```
+确认启用了发布确认机制
+检查消息持久化设置
+验证消费者 ACK 机制是否正确实现
+```
 
-4. **监控和日志**：
-   - 实现消息发送和接收的监控
-   - 记录详细日志以便问题排查
+**3. 性能问题**
+```
+调整连接池大小和预取数量
+检查消息体大小和序列化效率
+监控系统资源使用情况
+```
+
+### 调试技巧
+
+1. **启用调试日志**：查看详细的 RabbitMQ 操作日志
+2. **使用管理界面**：通过 Web 界面监控队列状态
+3. **消息追踪**：实现消息 ID 追踪，便于问题定位
+
+## 版本信息
+
+- **Spring Boot**: 2.x+
+- **RabbitMQ**: 3.8+
+- **Java**: 11+
+
+## 贡献指南
+
+欢迎提交 Issue 和 Pull Request 来改进 RabbitMQ 模块。在提交代码前请确保：
+
+1. 代码符合项目的编码规范
+2. 添加相应的单元测试
+3. 更新相关文档
+4. 通过所有现有测试
+
+## 许可证
+
+本项目基于 Abstergo Solution 许可证。详情请参阅项目根目录的 LICENSE 文件。
