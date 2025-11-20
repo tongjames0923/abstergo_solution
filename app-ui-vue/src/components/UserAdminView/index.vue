@@ -165,7 +165,9 @@ export default {
           label: '头像',
           width: 120,
           render: (h, scope) => {
-            return <el-avatar src={scope.row.avatar}></el-avatar>
+            return <el-avatar fit="fill" src={scope.row.avatar}>
+              <i class="el-icon-warning-outline"></i>
+            </el-avatar>
           }
         },
         {prop: 'userName', label: '用户名', width: 180},
