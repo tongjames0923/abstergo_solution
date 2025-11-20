@@ -1,226 +1,113 @@
-# SQL 模块
+# TBS SQL 框架
 
-SQL 模块是一个功能强大的数据库访问框架，基于 MyBatis 和 Spring Data JPA 构建，提供了实体查询、动态 SQL 生成、自动填充、SQL 日志记录等功能。该模块通过函数式编程和链式调用的方式，极大地简化了数据库查询操作。
+一个基于注解驱动的强大SQL查询构建框架，提供类型安全的查询构建、自动SQL生成和灵活的查询配置。
 
-## 目录结构
+## 功能特性
 
-```
-com.tbs.sql
-├── annotation                  # 注解类
-│   ├── dialect                # 方言注解
-│   │   └── MYSQL.java
-│   ├── AutoSetDate.java      # 自动设置日期注解
-│   ├── EnableTbsSqlUtils.java # 启用 SQL 工具注解
-│   ├── OrField.java          # 或字段注解
-│   ├── QueryField.java       # 查询字段注解
-│   ├── QueryFields.java      # 查询字段集合注解
-│   ├── QueryIndex.java       # 查询索引注解
-│   ├── QueryMapping.java     # 查询映射注解
-│   ├── QueryOrderField.java  # 查询排序字段注解
-│   ├── SecretField.java      # 敏感字段注解
-│   ├── SelectSQL.java        # 选择 SQL 注解
-│   └── SqlAutoValue.java     # SQL 自动值注解
-├── config                      # 配置类
-│   ├── MysqlDialectConfig.java # MySQL 方言配置
-│   └── SqlConfig.java         # SQL 配置
-├── constants                   # 常量定义
-│   └── OrderConstant.java     # 排序常量
-├── ef                          # 实体查询框架 (Entity Framework)
-│   ├── impl                   # 实现类
-│   │   ├── EntityPageProvider.java
-│   │   ├── EntityQueryBuilder.java
-│   │   ├── EntityQueryOrderProvider.java
-│   │   ├── EntityQueryWhereProvider.java
-│   │   └── SimpleEntityQueryWrapper.java
-│   ├── IEntityQueryWrapper.java
-│   ├── IFeatureProviderPour.java
-│   ├── IQueryFetcher.java
-│   ├── IQueryOrderProvider.java
-│   ├── IQueryPageProvider.java
-│   ├── IQueryQueryBuilder.java
-│   └── IQueryWhereProvider.java
-├── enums                       # 枚举类
-│   ├── QueryConnectorEnum.java # 查询连接器枚举 (AND/OR)
-│   ├── QueryContrastEnum.java  # 查询对比枚举 (=, >, <, LIKE等)
-│   └── QueryOrderEnum.java     # 查询排序枚举 (ASC/DESC)
-├── exception                   # 异常类
-│   └── SqlExtractionException.java # SQL 提取异常
-├── framework                   # 框架核心
-│   ├── assembler              # SQL 组装器
-│   │   ├── impl               # 实现类
-│   │   │   └── DefaultSqlAssembler.java
-│   │   └── ISqlAssembler.java # SQL 组装器接口
-│   ├── converter              # 值转换器
-│   │   ├── impl               # 实现类
-│   │   │   ├── CommonValueConverter.java
-│   │   │   └── IterableValueConverter.java
-│   │   └── IValueConverter.java # 值转换器接口
-│   ├── driver                 # 查询驱动
-│   │   ├── impl               # 实现类
-│   │   │   ├── AbstractSqlDriver.java
-│   │   │   ├── EntityQuerySqlDriver.java
-│   │   │   └── ImportedSqlContext.java
-│   │   ├── AbstractSqlContext.java
-│   │   ├── IQueryDriver.java  # 查询驱动接口
-│   │   └── ISqlContext.java   # SQL 上下文接口
-│   ├── extractor              # SQL 提取器
-│   │   ├── impls              # 实现类
-│   │   │   ├── dialect        # 方言实现
-│   │   │   │   └── ImportedDialect.java
-│   │   │   └── mysql          # MySQL 实现
-│   │   │       ├── MysqlGroupExtractor.java
-│   │   │       ├── MysqlLimitExtractor.java
-│   │   │       ├── MysqlOrderExtractor.java
-│   │   │       ├── MysqlSelectExtractor.java
-│   │   │       └── MysqlWhereExtractor.java
-│   │   ├── IGroupSqlExtractor.java
-│   │   ├── ILimitSqlExtractor.java
-│   │   ├── IOrderSqlExtractor.java
-│   │   ├── ISelectSqlDialect.java
-│   │   ├── ISelectSqlExtractor.java
-│   │   └── IWhereSqlExtractor.java
-│   ├── intercepter            # 拦截器
-│   │   ├── ISqlInfoComposeIntercepter.java
-│   │   ├── SqlAutoFillIntercepter.java
-│   │   └── SqlLoggingInterceptor.java
-│   └── model                  # 模型类
-│       ├── SqlGroupModel.java
-│       ├── SqlLimitModel.java
-│       ├── SqlOrderInfo.java
-│       ├── SqlSelectInfoModel.java
-│       ├── SqlSelectItemModel.java
-│       ├── SqlWhereCompose.java
-│       ├── SqlWhereInfo.java
-│       └── SqlWhereNode.java
-├── logger                      # 日志记录
-│   ├── impl                   # 实现类
-│   │   ├── NoSqlLogger.java
-│   │   └── SimpleJsonLogger.java
-│   ├── ISqlLogger.java        # SQL 日志接口
-│   └── SqlRuntimeStatus.java  # SQL 运行状态
-├── mapper                      # 映射器
-│   ├── impl                   # 实现类
-│   │   ├── FetchMapper.java
-│   │   ├── FrameworkSelectProvider.java
-│   │   └── RawSqlSelectProvider.java
-│   ├── IFrameworkMapper.java  # 框架映射器接口
-│   └── IRawSqlSelectMapper.java # 原始 SQL 映射器接口
-├── order                       # 排序
-│   ├── impl                   # 实现类
-│   │   ├── AscStaticOrder.java
-│   │   ├── DescStaticOrder.java
-│   │   ├── OrderedModelOrderImpl.java
-│   │   └── QueryOrderedModel.java
-│   ├── IQueryOrderBy.java     # 查询排序接口
-│   └── IQueryOrderedModel.java # 查询排序模型接口
-├── properties                  # 属性配置
-│   └── SqlProperty.java       # SQL 属性
-├── provider                    # 提供者
-│   ├── impl                   # 实现类
-│   │   └── DateValueAutoProvider.java
-│   ├── IAutoValueProvider.java # 自动值提供者接口
-│   └── ICustomWhereProvider.java # 自定义 WHERE 提供者接口
-├── query                       # 查询
-│   ├── impl                   # 实现类
-│   │   ├── DefaultEntityClassBaseQueryCriteria.java
-│   │   └── QueryPageModel.java
-│   ├── AbstractEntityClassBaseQueryCriteria.java
-│   ├── AbstractResourceBaseQueryCriteria.java
-│   ├── IPage.java             # 分页接口
-│   └── IQueryCriteria.java    # 查询条件接口
-└── utils                       # 工具类
-    ├── EntityInfoPuller.java  # 实体信息提取器
-    ├── QueryUtil.java         # 查询工具类
-    ├── SqlUtils.java          # SQL 工具类
-    └── TransactionUtil.java   # 事务工具类
+### 🚀 核心功能
+- **注解驱动查询**：通过注解定义查询条件，无需手动编写SQL
+- **类型安全**：编译时检查查询条件，避免运行时错误
+- **多数据库支持**：支持MySQL等主流数据库方言
+- **自动SQL生成**：根据注解自动生成优化的SQL语句
+- **查询条件组合**：支持AND/OR逻辑组合查询
+- **分页查询**：内置分页支持，简化分页逻辑
+
+### 🔧 高级特性
+- **自定义查询提供器**：支持自定义查询条件逻辑
+- **SQL拦截器**：可配置的SQL执行前后拦截
+- **自动值填充**：支持自动填充创建时间、更新时间等字段
+- **事务管理**：集成Spring事务管理
+- **SQL日志**：可配置的SQL执行日志记录
+
+## 快速开始
+
+### 1. 添加依赖
+
+确保在项目中添加了SQL模块依赖：
+
+```xml
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>sql</artifactId>
+</dependency>
 ```
 
-## 核心组件说明
+### 2. 启用框架
 
-### 1. 实体查询框架 (Entity Framework)
-
-实体查询框架是 SQL 模块的核心功能之一，它提供了一种链式调用的方式来构建和执行数据库查询。
-
-#### IEntityQueryWrapper 实体查询包装器
-
-[IEntityQueryWrapper](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/ef/IEntityQueryWrapper.java#L24-L41) 是实体查询的入口点，用于包装实体对象并提供查询功能。
+在Spring Boot启动类上添加注解：
 
 ```java
-// 创建实体查询包装器
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
-
-// 或者使用已有的实体对象
-User user = new User();
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(user);
+@EnableTbsSqlUtils
+@SpringBootApplication
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
 ```
 
-#### IQueryQueryBuilder 查询构建器
+### 3. 配置属性
 
-[IQueryQueryBuilder](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/ef/IQueryQueryBuilder.java#L28-L119) 是查询的核心接口，提供了完整的查询构建功能。
+在`application.yml`中配置SQL相关属性：
+
+```yaml
+tbs:
+  sql:
+    enable-log-interceptor: true          # 启用SQL日志拦截器
+    enable-auto-fill-value-interceptor: true  # 启用自动填充值拦截器
+    use-raw-value: false                  # 是否使用原始值（默认使用占位符）
+```
+
+## 核心注解说明
+
+### @QueryField - 查询字段注解
+
+定义查询条件的核心注解，通常与`@QueryMapping`配合使用：
 
 ```java
-// 获取查询构建器并执行查询
-List<User> users = wrapper.query()
-    .where()
-    .equal(User::getName, "John")
-    .and()
-    .greaterThan(User::getAge, 18)
-    .pour()
-    .fetch();
+@Getter
+public class UserQuery extends ClassBaseQueryCriteria<User> {
+    
+    @QueryMapping(value = "username")
+    @QueryField(contrast = QueryContrastEnum.EQUAL, ignoreNull = true)
+    private String username;
+    
+    @QueryMapping(value = "age")
+    @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    private Integer minAge;
+    
+    @QueryMapping(value = "name")
+    @QueryField(contrast = QueryContrastEnum.LIKE, ignoreCase = true)
+    private String searchKey;
+    
+    @QueryMapping(value = "status")
+    @QueryField(contrast = QueryContrastEnum.IN)
+    private List<Integer> statusList;
+}
 ```
 
-#### IQueryWhereProvider 条件提供者
+**参数说明：**
+- `contrast`：比较操作符（等于、大于、LIKE等）
+- `connector`：逻辑连接符（AND/OR，默认AND）
+- `ignoreCase`：是否忽略大小写
+- `ignoreNull`：是否忽略空值
+- `customWhereProvider`：自定义查询条件提供器
 
-[IQueryWhereProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/ef/IQueryWhereProvider.java#L25-L432) 提供了构建 SQL WHERE 子句的各种方法。
+### @QueryOrderField - 排序字段注解
+
+定义查询结果的排序规则：
 
 ```java
-// 多种条件查询示例
-List<User> users = wrapper.query()
-    .where()
-    .like(User::getName, "John")           // LIKE 查询
-    .and()
-    .between(User::getAge, 18, 65)         // 范围查询
-    .and()
-    .in(User::getStatus, Arrays.asList("ACTIVE", "PENDING")) // IN 查询
-    .and()
-    .isNull(User::getDeletedAt)            // IS NULL 查询
-    .pour()
-    .fetch();
+public class UserQuery implements IQueryCriteria {
+    
+    @QueryOrderField(mappedName = "create_time", order = AscStaticOrder.class)
+    private Boolean orderByCreateTime;
+}
 ```
 
-#### IQueryOrderProvider 排序提供者
+### @SelectSQL - 直接SQL查询
 
-[IQueryOrderProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/ef/IQueryOrderProvider.java#L23-L88) 用于构建查询的 ORDER BY 子句。
-
-```java
-// 排序查询示例
-List<User> users = wrapper.query()
-    .order()
-    .orderByDesc(User::getCreatedAt)       // 按创建时间倒序
-    .orderByAsc(User::getName)             // 按名称正序
-    .pour()
-    .fetch();
-```
-
-#### IQueryPageProvider 分页提供者
-
-[IQueryPageProvider](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/ef/IQueryPageProvider.java#L19-L59) 用于构建查询的 LIMIT/OFFSET 子句。
-
-```java
-// 分页查询示例
-IPage page = QueryPageModel.of(1L, 10L); // 第1页，每页10条
-List<User> users = wrapper.query()
-    .page(page)
-    .fetch();
-```
-
-### 2. 注解系统
-
-SQL 模块提供了丰富的注解来简化数据库操作。
-
-#### @SelectSQL 注解
-
-用于在实体类上指定自定义 SQL 查询语句：
+支持在实体类上直接定义SQL查询语句，用于自定义查询逻辑：
 
 ```java
 @SelectSQL("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.dept_id = d.id")
@@ -232,106 +119,28 @@ public class UserWithDepartment {
 }
 ```
 
-#### @QueryField 注解
-
-用于在查询对象中定义查询字段：
-
+**使用示例：**
 ```java
-public class UserQuery {
-    @QueryField(column = "name", contrast = QueryContrastEnum.LIKE)
-    private String name;
-    
-    @QueryField(column = "age", contrast = QueryContrastEnum.GT)
-    private Integer age;
-    
-    @QueryField(column = "status", contrast = QueryContrastEnum.IN)
-    private List<String> statuses;
-}
+// 使用自定义SQL查询实体
+IEntityQueryWrapper<UserWithDepartment> wrapper = QueryUtil.getEntityQueryWrapper(UserWithDepartment.class);
+List<UserWithDepartment> users = wrapper.query().fetch();
 ```
 
-#### @SqlAutoValue 注解
+**注意：** 当实体类上标注了`@SelectSQL`注解时，框架会优先使用注解中定义的SQL语句，而不会自动生成查询语句。该注解适用于需要复杂JOIN查询或自定义SQL逻辑的场景。
 
-用于自动填充字段值：
+### @AutoSetDate - 自动日期填充
+
+自动填充日期字段：
 
 ```java
 public class User {
-    @SqlAutoValue(DateValueAutoProvider.class)
+    
+    @AutoSetDate
     private Date createTime;
     
-    @SqlAutoValue(DateValueAutoProvider.class)
+    @AutoSetDate(onUpdate = true)
     private Date updateTime;
 }
-```
-
-### 3. SQL 驱动和上下文
-
-#### ISqlContext SQL 上下文
-
-[ISqlContext](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/driver/ISqlContext.java#L13-L57) 管理 SQL 查询的上下文信息，包括参数、查询条件等。
-
-#### IQueryDriver 查询驱动
-
-[IQueryDriver](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/driver/IQueryDriver.java#L12-L25) 负责将查询条件转换为实际的 SQL 语句。
-
-### 4. SQL 提取器和方言
-
-SQL 模块支持多种数据库方言，通过提取器来生成特定数据库的 SQL 语句。
-
-#### ISelectSqlDialect SQL 方言接口
-
-[ISelectSqlDialect](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/extractor/ISelectSqlDialect.java#L11-L43) 定义了 SQL 方言的接口，包括各种 SQL 提取器。
-
-#### 提取器接口
-
-- [ISelectSqlExtractor](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/extractor/ISelectSqlExtractor.java#L10-L23): SELECT 语句提取器
-- [IWhereSqlExtractor](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/extractor/IWhereSqlExtractor.java#L14-L31): WHERE 语句提取器
-- [IOrderSqlExtractor](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/extractor/IOrderSqlExtractor.java#L11-L21): ORDER BY 语句提取器
-- [IGroupSqlExtractor](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/extractor/IGroupSqlExtractor.java#L10-L20): GROUP BY 语句提取器
-- [ILimitSqlExtractor](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/framework/extractor/ILimitSqlExtractor.java#L9-L19): LIMIT 语句提取器
-
-### 5. 拦截器
-
-#### SqlAutoFillIntercepter 自动填充拦截器
-
-在 SQL 执行前自动填充标记了 [@SqlAutoValue](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/annotation/SqlAutoValue.java#L12-L34) 注解的字段。
-
-#### SqlLoggingInterceptor SQL 日志拦截器
-
-记录 SQL 执行日志，包括执行时间、参数等信息。
-
-### 6. 映射器
-
-#### IFrameworkMapper 框架映射器
-
-扩展了 MyBatis 的 BaseMapper，提供了更多便捷的数据库操作方法。
-
-#### IRawSqlSelectMapper 原始 SQL 映射器
-
-支持执行原始 SQL 语句。
-
-## 配置说明
-
-### 启用 SQL 工具
-
-在 Spring Boot 应用的配置类上添加 [@EnableTbsSqlUtils](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/annotation/EnableTbsSqlUtils.java#L15-L23) 注解：
-
-```java
-@SpringBootApplication
-@EnableTbsSqlUtils
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
-```
-
-### application.yml 配置示例
-
-```yaml
-tbs:
-  sql:
-    logger-type: com.tbs.sql.logger.impl.SimpleJsonLogger
-    use-raw-value: false  # 是否使用原始值而非参数化查询
 ```
 
 ## 使用示例
@@ -362,135 +171,295 @@ List<User> activeUsers = wrapper.query()
     .fetch();
 ```
 
-### 2. 复杂条件查询
+### 2. 基于查询类的查询
 
 ```java
-// 复杂条件查询
-List<User> users = wrapper.query()
-    .where()
-    .like(User::getName, "John")
-    .and()
-    .greaterThanOrEqual(User::getAge, 18)
-    .and()
-    .lessThan(User::getAge, 65)
-    .and()
-    .in(User::getStatus, Arrays.asList("ACTIVE", "PENDING"))
-    .pour()
-    .fetch();
-```
-
-### 3. 分页查询
-
-```java
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
-IPage page = QueryPageModel.of(1L, 10L); // 第1页，每页10条
-
-List<User> users = wrapper.query()
-    .where()
-    .equal(User::getStatus, "ACTIVE")
-    .pour()
-    .page(page)
-    .fetch();
-```
-
-### 4. 排序查询
-
-```java
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
-
-List<User> users = wrapper.query()
-    .order()
-    .orderByDesc(User::getCreatedAt)
-    .orderByAsc(User::getName)
-    .pour()
-    .fetch();
-```
-
-### 5. 使用注解进行查询
-
-```java
-// 定义查询对象
-public class UserQuery implements IQueryCriteria {
+// 定义查询类，继承ClassBaseQueryCriteria
+@Getter
+public class UserQuery extends ClassBaseQueryCriteria<User> {
+    
+    @QueryMapping(value = "name")
     @QueryField(contrast = QueryContrastEnum.LIKE)
-    private String name;
+    private String nameLike;
     
+    @QueryMapping(value = "age") 
     @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
-    private Integer age;
+    private Integer minAge;
     
+    @QueryMapping(value = "status")
     @QueryField(contrast = QueryContrastEnum.IN)
     private List<String> statuses;
     
-    // getter 和 setter 方法
+    // 链式设置方法
+    public UserQuery setNameLike(String nameLike) {
+        this.nameLike = nameLike;
+        return this;
+    }
+    
+    public UserQuery setMinAge(Integer minAge) {
+        this.minAge = minAge;
+        return this;
+    }
+    
+    public UserQuery setStatuses(List<String> statuses) {
+        this.statuses = statuses;
+        return this;
+    }
 }
 
-// 使用查询对象
-UserQuery query = new UserQuery();
-query.setName("John");
-query.setAge(18);
-query.setStatuses(Arrays.asList("ACTIVE", "PENDING"));
+// 使用查询类
+UserQuery query = new UserQuery()
+    .setNameLike("John")
+    .setMinAge(18)
+    .setStatuses(Arrays.asList("ACTIVE", "PENDING"));
 
-IEntityQueryWrapper<UserQuery> wrapper = QueryUtil.getEntityQueryWrapper(query);
-List<User> users = wrapper.query().fetch();
+// 执行查询
+IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
+List<User> users = wrapper.query()
+    .where(query)
+    .fetch();
 ```
 
-### 6. 自定义 SQL 查询
+### 3. 自定义SQL查询
 
 ```java
-@SelectSQL("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.dept_id = d.id WHERE u.status = 'ACTIVE'")
-public class ActiveUserWithDepartment {
+// 使用@SelectSQL注解定义自定义查询
+@SelectSQL("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.dept_id = d.id")
+public class UserWithDepartment {
     private Long id;
     private String name;
     private String deptName;
     // getter 和 setter 方法
 }
 
-IEntityQueryWrapper<ActiveUserWithDepartment> wrapper = QueryUtil.getEntityQueryWrapper(ActiveUserWithDepartment.class);
-List<ActiveUserWithDepartment> users = wrapper.query().fetch();
+// 执行自定义SQL查询
+IEntityQueryWrapper<UserWithDepartment> wrapper = QueryUtil.getEntityQueryWrapper(UserWithDepartment.class);
+List<UserWithDepartment> users = wrapper.query().fetch();
 ```
 
-### 7. 使用 IFrameworkMapper
+### 4. 链式条件查询
 
 ```java
-@Repository
-public interface UserMapper extends IFrameworkMapper<User, Long> {
-    // 继承了基本的 CRUD 方法
+// 使用链式API构建复杂查询
+IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
+
+// 简单条件查询（默认使用AND连接）
+List<User> users = wrapper.query()
+    .where()
+    .like(User::getName, "John")  // 模糊查询
+    .greaterEqual(User::getAge, 18)  // 大于等于
+    .in(User::getStatus, Arrays.asList("ACTIVE", "PENDING"))  // IN查询
+    .pour()
+    .fetch();
+
+// 复杂条件组合（使用include方法）
+List<User> complexUsers = wrapper.query()
+    .where()
+    .like(User::getName, "John")
+    .andInclude(where -> where
+        .greaterEqual(User::getAge, 18)
+        .or()
+        .lessThan(User::getAge, 25)
+    )
+    .pour()
+    .fetch();
+
+// 构建复杂的查询条件
+List<User> complexQueryUsers = wrapper.query()
+    .where()
+    .like(User::getName, "John")  // 模糊查询
+    .andInclude(where -> where
+        .greaterThanOrEqual(User::getAge, 18)  // 大于等于
+        .or()
+        .equal(User::getStatus, "ACTIVE")  // 等于
+    )
+    .isNotNull(User::getEmail)  // 非空
+    .pour()
+    .fetch();
+
+// 更复杂的嵌套条件
+List<User> nestedComplexUsers = wrapper.query()
+    .where()
+    .like(User::getName, "John")
+    .orInclude(where -> where
+        .andInclude(innerWhere -> innerWhere
+            .greaterThanOrEqual(User::getAge, 18)
+            .lessThan(User::getAge, 30)
+        )
+        .equal(User::getStatus, "ACTIVE")
+    )
+    .pour()
+    .fetch();
+```
+
+### 5. 分页查询
+
+```java
+// 分页查询
+IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
+
+// 获取分页支持
+Optional<IQueryPageProvider<User>> pageSupport = wrapper.query().getPageSupport();
+if (pageSupport.isPresent()) {
+    // 设置分页参数：第1页，每页10条
+    List<User> users = pageSupport.get()
+        .page(1, 10)
+        .fetch();
 }
+```
 
-// 使用 mapper
-@Autowired
-private UserMapper userMapper;
+## 查询操作符支持
 
-public void saveUser(User user) {
-    userMapper.insertSelective(user);
+框架支持丰富的查询操作符：
+
+| 操作符 | 说明 | SQL等价 |
+|--------|------|---------|
+| `EQUAL` | 等于 | `=` |
+| `NOT_EQUAL` | 不等于 | `!=`或`<>` |
+| `GREATER` | 大于 | `>` |
+| `LESS` | 小于 | `<` |
+| `GREATER_EQUAL` | 大于等于 | `>=` |
+| `LESS_EQUAL` | 小于等于 | `<=` |
+| `LIKE` | 模糊匹配 | `LIKE '%value%'` |
+| `LLIKE` | 左模糊 | `LIKE 'value%'` |
+| `RLIKE` | 右模糊 | `LIKE '%value'` |
+| `NOT_LIKE` | 不匹配 | `NOT LIKE` |
+| `IN` | 在集合中 | `IN (...)` |
+| `NOT_IN` | 不在集合中 | `NOT IN (...)` |
+| `IS_NULL` | 为空 | `IS NULL` |
+| `IS_NOT_NULL` | 不为空 | `IS NOT NULL` |
+
+## 高级功能
+
+### 自定义查询条件
+
+实现`ICustomWhereProvider`接口创建自定义查询逻辑：
+
+```java
+@Component
+public class CustomUserProvider implements ICustomWhereProvider {
+    
+    @Override
+    public String provideWhereClause(Object value, String fieldName) {
+        // 自定义WHERE条件逻辑
+        return "status = 1 AND is_active = true";
+    }
 }
+```
 
-public User findUserById(Long id) {
-    return userMapper.selectByPrimaryKey(id);
+### SQL拦截器
+
+实现`ISqlInfoComposeIntercepter`接口进行SQL拦截：
+
+```java
+@Component
+public class SecurityInterceptor implements ISqlInfoComposeIntercepter {
+    
+    @Override
+    public void intercept(SqlWhereCompose compose, Class<?> entityClass) {
+        // 添加安全过滤条件
+        compose.addWhere("tenant_id = ?", getCurrentTenantId());
+    }
+    
+    @Override
+    public int getOrder() {
+        return 0; // 执行顺序
+    }
 }
+```
 
-public List<User> findActiveUsers() {
-    User example = new User();
-    example.setStatus("ACTIVE");
-    return userMapper.select(example);
+## 配置说明
+
+### 数据库方言配置
+
+框架默认支持MySQL方言，如需配置其他数据库：
+
+```java
+@Configuration
+public class DatabaseConfig {
+    
+    @Bean
+    public ISelectSqlDialect sqlDialect() {
+        return new MySQLDialect(); // 或其他数据库方言
+    }
+}
+```
+
+### 事务配置
+
+框架已集成Spring事务管理，可通过`@Transactional`注解使用：
+
+```java
+@Service
+public class UserService {
+    
+    @Transactional
+    public void updateUser(User user) {
+        // 数据库操作
+    }
 }
 ```
 
 ## 最佳实践
 
-1. **合理使用注解**：使用 [@QueryField](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/annotation/QueryField.java#L25-L72) 等注解简化查询条件的构建
-2. **分页查询**：对于大数据量的查询，始终使用分页避免性能问题
-3. **SQL 日志**：开启 SQL 日志便于调试和性能优化
-4. **自动填充**：使用 [@SqlAutoValue](file:///Users/abstergo/IdeaProjects/abstergo_solution/sql/src/main/java/com/tbs/sql/annotation/SqlAutoValue.java#L12-L34) 注解自动填充创建时间、更新时间等字段
-5. **实体映射**：合理使用 JPA 注解进行数据库表和实体类的映射
-6. **避免 N+1 查询**：使用 JOIN 查询或批量查询来避免 N+1 查询问题
-7. **使用连接池**：配置合适的数据库连接池参数以提高性能
+### 1. 查询对象设计
+- 为每个查询场景创建专用的查询对象
+- 合理使用`ignoreNull`避免不必要的查询条件
+- 使用`@QueryIndex`控制字段查询顺序
 
-## 注意事项
+### 2. 性能优化
+- 对常用查询字段建立数据库索引
+- 合理使用分页避免大数据量查询
+- 使用`select`指定需要的字段
 
-1. **事务管理**：在需要事务控制的方法上添加 [@Transactional](file:///Users/abstergo/IdeaProjects/abstergo_solution/web/src/main/java/com/tbs/web/security/impl/DefaultUserDetailsServiceImpl.java#L29-L29) 注解
-2. **SQL 注入**：使用框架提供的参数绑定机制避免 SQL 注入风险
-3. **性能优化**：对于复杂查询，建议编写优化后的原生 SQL
-4. **异常处理**：正确处理 SQL 相关异常，如数据重复、外键约束等
-5. **连接池配置**：根据应用负载合理配置数据库连接池参数
-6. **索引优化**：为经常查询的字段添加数据库索引
-7. **批量操作**：对于大量数据操作，使用批量插入、更新等方法提高效率
+### 3. 安全考虑
+- 使用参数化查询防止SQL注入
+- 通过拦截器实现数据权限控制
+- 对用户输入进行验证和过滤
+
+## 故障排除
+
+### 常见问题
+
+1. **查询条件不生效**
+   - 检查是否实现了`IQueryCriteria`接口
+   - 确认字段上有正确的注解
+   - 检查`ignoreNull`配置
+
+2. **SQL生成错误**
+   - 验证数据库方言配置
+   - 检查字段名映射是否正确
+   - 查看生成的SQL日志
+
+3. **性能问题**
+   - 检查是否使用了合适的索引
+   - 避免`LIKE '%value%'`全表扫描
+   - 使用分页限制结果集大小
+
+### 日志调试
+
+启用SQL日志查看生成的SQL语句：
+
+```yaml
+tbs:
+  sql:
+    enable-log-interceptor: true
+logging:
+  level:
+    com.tbs.sql: DEBUG
+```
+
+## 版本信息
+
+- **当前版本**: 1.0-SNAPSHOT
+- **Java版本**: 11+
+- **Spring Boot**: 2.x+
+- **数据库**: MySQL 5.7+
+
+## 贡献指南
+
+欢迎提交Issue和Pull Request来改进这个框架。
+
+## 许可证
+
+本项目基于TBS内部许可证。
