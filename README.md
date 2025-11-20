@@ -1,6 +1,7 @@
 # Abstergo Solution
 
-Abstergo Solution 是一个基于 Spring Boot 的企业级应用开发框架，提供了完整的后端解决方案和现代化的前端管理界面。该项目采用模块化设计，集成了常用的企业级应用功能，如认证授权、缓存、异步处理、消息队列、数据库访问等。
+Abstergo Solution 是一个基于 Spring Boot 2.7.14
+的企业级应用开发框架，提供了完整的后端解决方案和现代化的前端管理界面。该项目采用模块化设计，集成了常用的企业级应用功能，如认证授权、缓存、异步处理、消息队列、数据库访问、分布式服务等，旨在为企业级应用提供开箱即用的技术解决方案。
 
 ## 目录结构
 
@@ -61,15 +62,22 @@ Abstergo Solution 采用分层架构设计，主要包括以下几个层次：
 - **后端**：
   - Spring Boot 2.7.14
   - Spring Security
-  - MyBatis & Spring Data JPA
-  - Redis & RabbitMQ
-  - Dubbo & Zookeeper
-  - Maven
+  - Spring Data JPA
+  - MyBatis (TK Mapper 4.2.3)
+  - MySQL 8.0.32
+  - Redis (Redisson 3.52.0)
+  - RabbitMQ
+  - Dubbo 3.2.5 + Zookeeper 3.6.3
+  - Maven 3.6+
+  - P6Spy 3.8.2 (SQL日志)
+  - Knife4j 3.0.3 (API文档)
 
 - **前端**：
-  - Vue.js
+    - Vue.js 2.x
   - Element UI
   - Axios
+    - Vuex (状态管理)
+    - Vue Router (路由管理)
 
 ### 核心功能
 
@@ -403,33 +411,68 @@ Abstergo Solution 采用分层架构设计，主要包括以下几个层次：
 
 - JDK 11+
 - Maven 3.6+
-- MySQL 5.7+
-- Redis 3.0+
-- RabbitMQ 3.7+
-- Node.js 12+ (仅前端需要)
+- MySQL 8.0+ (或 5.7+)
+- Redis 3.0+ (建议 5.0+)
+- RabbitMQ 3.7+ (建议 3.8+)
+- Zookeeper 3.6+ (如需使用 Dubbo)
+- Node.js 14+ 和 npm 6+ (仅前端需要)
 
 ### 后端部署
 
 1. 克隆项目代码：
    ```bash
    git clone <repository-url>
-   ```
-
-2. 修改配置文件：
-   ```bash
    cd abstergo_solution
-   # 修改各模块下的 application.yml 配置文件
    ```
 
-3. 编译和打包：
+2. 初始化数据库：
    ```bash
-   mvn clean package
+   # 创建数据库
+   mysql -u root -p
+   CREATE DATABASE your_database DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+   
+   # 执行 SQL 脚本 (位于 app/src/main/resources/sql/ 目录)
+   mysql -u root -p your_database < app/src/main/resources/sql/init.sql
    ```
 
-4. 运行应用：
+3. 配置应用：
    ```bash
+   # 修改 app/src/main/resources/application.yml 以及相关配置文件
+   # application-db.yml - 数据库配置
+   # application-redis.yml - Redis配置
+   # application-mq.yml - RabbitMQ配置
+   # application-tbs.yml - 业务配置
+   ```
+
+4. 编译和打包：
+   ```bash
+   # 清理并编译整个项目
+   mvn clean install
+   
+   # 或者只编译不执行测试
+   mvn clean install -DskipTests
+   ```
+
+5. 启动应用：
+   ```bash
+   # 方式1: 使用 Maven 插件运行
    cd app
-   java -jar target/app-1.0-SNAPSHOT.jar
+   mvn spring-boot:run
+   
+   # 方式2: 运行 JAR 包
+   java -jar app/target/app-1.0-SNAPSHOT.jar
+   
+   # 方式3: 指定配置文件
+   java -jar app/target/app-1.0-SNAPSHOT.jar --spring.profiles.active=prod
+   ```
+
+6. 验证部署：
+   ```bash
+   # 访问健康检查接口
+   curl http://localhost:8080/actuator/health
+   
+   # 访问 API 文档 (Knife4j)
+   浏览器打开: http://localhost:8080/doc.html
    ```
 
 ### 前端部署
@@ -437,22 +480,74 @@ Abstergo Solution 采用分层架构设计，主要包括以下几个层次：
 1. 安装依赖：
    ```bash
    cd app-ui-vue
+   # 使用 npm 安装
    npm install
+   
+   # 或使用国内镜像加速
+   npm install --registry=https://registry.npmmirror.com
    ```
 
-2. 开发环境运行：
+2. 配置后端地址：
+   ```bash
+   # 修改 .env.development 文件（开发环境）
+   VUE_APP_BASE_API = 'http://localhost:8080'
+   
+   # 修改 .env.production 文件（生产环境）
+   VUE_APP_BASE_API = 'https://your-production-api.com'
+   ```
+
+3. 开发环境运行：
    ```bash
    npm run dev
+   # 默认访问地址: http://localhost:9528
    ```
 
-3. 生产环境构建：
+4. 生产环境构建：
    ```bash
+   # 构建生产环境
    npm run build:prod
+   
+   # 构建测试环境
+   npm run build:stage
+   
+   # 构建后的文件在 dist/ 目录，部署到 Nginx 或其他 Web 服务器即可
+   ```
+
+5. Nginx 配置示例：
+   ```nginx
+   server {
+       listen 80;
+       server_name your-domain.com;
+       
+       location / {
+           root /path/to/dist;
+           index index.html;
+           try_files $uri $uri/ /index.html;
+       }
+       
+       # API 代理
+       location /api/ {
+           proxy_pass http://localhost:8080/api/;
+           proxy_set_header Host $host;
+           proxy_set_header X-Real-IP $remote_addr;
+       }
+   }
    ```
 
 ## 项目配置详解
 
-Abstergo Solution 采用统一的配置管理方式，通过 application.yml 文件进行配置。项目支持多种配置方式，包括环境变量、命令行参数等，优先级从高到低为：命令行参数 > 环境变量 > application-{profile}.yml > application.yml。
+Abstergo Solution 采用 Spring Boot 的配置管理方式，通过 application.yml
+文件进行配置。项目支持多种配置方式，包括环境变量、命令行参数等，优先级从高到低为：命令行参数 > 环境变量 >
+application-{profile}.yml > application.yml。
+
+配置文件位于 `app/src/main/resources/` 目录，包括：
+
+- `application.yml` - 主配置文件
+- `application-db.yml` - 数据库配置
+- `application-redis.yml` - Redis 配置
+- `application-mq.yml` - RabbitMQ 配置
+- `application-tbs.yml` - TBS 框架自定义配置
+- `spy.properties` - P6Spy SQL 日志配置
 
 ### 核心配置项
 
@@ -466,43 +561,115 @@ server:
 #### 2. 数据库配置
 
 ```yaml
+# application-db.yml
 spring:
   datasource:
-    url: jdbc:mysql://localhost:3306/database_name
+    # 数据源基本配置
+    url: jdbc:mysql://localhost:3306/your_database?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: your_username
     password: your_password
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    driver-class-name: com.p6spy.engine.spy.P6SpyDriver  # 使用 P6Spy 进行 SQL 日志记录
+    # driver-class-name: com.mysql.cj.jdbc.Driver  # 不使用 P6Spy 时的配置
+
+    # 连接池配置 (HikariCP)
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      pool-name: HikariCP-Pool
+
+  # JPA 配置
+  jpa:
+    hibernate:
+      ddl-auto: none  # 生产环境建议使用 none
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
+        format_sql: true
+
+# MyBatis 配置
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.tbs.shared.pojo.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: true
 ```
 
 #### 3. Redis配置
 
 ```yaml
+# application-redis.yml
 spring:
   redis:
+    # 单机模式配置
     host: localhost
     port: 6379
-    password: 
+    password:
+    database: 0
+    timeout: 30000ms
+
+    # 连接池配置 (Lettuce)
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+        max-wait: -1ms
 
 tbs:
   redis:
-    enable: true  # 是否启用Redis功能
+    enable: true  # 是否启用 Redis 功能
+    value-serializer: org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer
+
+  redission:
+    cache:
+      cache-timeout: 3600000  # 缓存超时时间(毫秒)，1小时
+      allow-null-values: false  # 是否允许空值
+      transaction: false  # 是否开启redis事务
+      max-idle-time: 1800  # redis缓存的key最大空闲时间，单位秒
+      max-size: 2048  # redis缓存的key最大数量
+      eviction-mode: LRU  # 缓存的key的清除模式 (LRU/LFU/SOFT/WEAK/NONE)
 ```
 
 #### 4. RabbitMQ配置
 
 ```yaml
+# application-mq.yml
 spring:
   rabbitmq:
     host: localhost
     port: 5672
     username: guest
     password: guest
+    virtual-host: /
+
+    # 连接配置
+    connection-timeout: 15000
+
+    # 生产者配置
+    publisher-confirm-type: correlated  # 开启发布确认
+    publisher-returns: true  # 开启发布返回
+
+    # 消费者配置
+    listener:
+      simple:
+        acknowledge-mode: manual  # 手动确认模式
+        prefetch: 1  # 预取数量
+        retry:
+          enabled: true
+          max-attempts: 3
 
 tbs:
   rabbitmq:
     exchange-name: tbs.broadcast.exchange
     queue-name: tbs.broadcast.queue
     routing-key: tbs.broadcast.routing.key
+    node-id: node1  # 节点ID，用于分布式环境
+    publisher-confirm: true  # 是否启用发布确认
 ```
 
 ### 模块详细配置
@@ -512,13 +679,14 @@ tbs:
 Common模块包含基础工具类和通用配置，是其他模块的基础。
 
 ```yaml
+# application-tbs.yml
 tbs:
   # UUID配置
   uuid:
     type: com.tbs.common.uuid.impl.SimpleUUID  # UUID生成策略 (SimpleUUID 或 SnowFlakeUUID)
-    snowFlakeWorkerId: 0  # 雪花算法工作节点ID
-    snowFlakeDataCenterId: 0  # 雪花算法数据中心ID
-    exceptLength: 32  # 期望的UUID长度
+    snow-flake-worker-id: 0  # 雪花算法工作节点ID (0-31)
+    snow-flake-data-center-id: 0  # 雪花算法数据中心ID (0-31)
+    except-length: 32  # 期望的UUID长度
   
   # 数据持有者配置
   data:
@@ -536,25 +704,32 @@ tbs:
 Web模块提供认证授权、API网关、统一结果返回等功能。
 
 ```yaml
+# application-tbs.yml
 tbs:
   # Web基础配置
   web:
     enable-cors: true  # 是否启用跨域
     enable-csrf: false  # 是否启用CSRF保护
     enable-anonymous: true  # 是否启用匿名访问
+    enable-form-login: false  # 是否启用表单登录
+    enable-http-basic: false  # 是否启用HTTP Basic认证
+    enable-logout: false  # 是否启用注销功能
     secured-paths:  # 需要认证才能访问的路径
       - "/api/**"
     permit-all-paths:  # 允许所有用户访问的路径
       - "/"
       - "/login"
       - "/public/**"
+      - "/doc.html"  # API文档
+      - "/swagger-resources/**"
+      - "/v2/api-docs"
   
   # 认证配置
   auth:
     enable: true  # 是否启用认证
     token-source: HEADER  # Token来源(HEADER, PARAMETER, COOKIE)
     token-filed-name: "Authorization"  # Token字段名
-    token-expire-time: 3600  # Token过期时间(秒)
+    token-expire-time: 60  # Token过期时间(分钟)
     refresh-token-expire-time: 168  # 刷新Token过期时间(小时)
     token-picker-impl: com.tbs.web.security.impl.DefaultLoginTokenPicker  # Token提取器实现类
     authentication-center-impl: com.tbs.web.security.authentication.center.impl.SimpleAuthenticationCenter  # 认证中心实现类
@@ -564,6 +739,13 @@ tbs:
     trace-id-object-generator: com.tbs.web.trace.impl.UuidTraceObjectGenerator  # Trace ID生成器
     trace-context: com.tbs.web.trace.impl.SpringManagedTraceContext  # 链路追踪上下文
     method-invoke-tree-provider: com.tbs.web.trace.impl.SimpleMethodInvokeTreeProvider  # 方法调用树提供者
+    exclude-paths: # 排除追踪的路径
+      - "/actuator/**"
+      - "/static/**"
+
+  # 结果返回配置
+  result:
+    result-builder-provier: com.tbs.web.result.impl.SimpleBuilderProvider  # 结果构建器提供者
 ```
 
 #### 3. Cache模块配置
@@ -571,13 +753,16 @@ tbs:
 Cache模块提供带TTL功能的缓存管理。
 
 ```yaml
+# application-tbs.yml
 tbs:
   cache:
     cache-manager-impl: org.springframework.cache.concurrent.ConcurrentMapCacheManager  # 缓存管理器实现
-    ttl-cache-decorator: com.tbs.cache.impl.DefaultTtlCacheDecorator  # ttl缓存装饰器实现
+    ttl-cache-decorator: com.tbs.cache.impl.DefaultTtlCacheDecorator  # TTL缓存装饰器实现
     recorder: com.tbs.cache.limit.impl.SimpleCacheOperationRecorder  # 缓存操作记录器实现
     manual-cache-handler: com.tbs.cache.manual.impl.MapCacheHandler  # 手动缓存实现
     cache-limiter: com.tbs.cache.limit.impl.SimpleCacheLimiter  # 缓存限制器实现
+
+# 使用 Redisson 作为缓存实现时，需要在启动类上添加 @UseRedissonCacheMananger 注解
 ```
 
 #### 4. Async模块配置
@@ -585,13 +770,26 @@ tbs:
 Async模块提供异步处理能力，包括线程池、定时任务等。
 
 ```yaml
+# application-tbs.yml
 tbs:
   async:
     executor:
       # 主执行器配置
-      main-executor-service-core-pool-size: 10  # 核心线程数
-      main-executor-service-max-pool-size: 100  # 最大线程数
-      main-executor-service-queue-capacity: 100  # 任务队列容量
+      core-pool-size: 10  # 核心线程数
+      max-pool-size: 20  # 最大线程数
+      queue-capacity: 100  # 任务队列容量
+      keep-alive-seconds: 60  # 线程空闲时间(秒)
+      thread-name-prefix: "async-exec-"  # 线程名称前缀
+
+  broadcast:
+    event-dispatcher: com.tbs.broadcast.dispatcher.impl.SimpleEventDispatcher  # 事件分发器
+    event-bus: com.tbs.broadcast.bus.impl.SimpleEventBus  # 事件总线
+
+  lock:
+    lock-provider-type: com.tbs.lock.impls.providers.JdkLockProvider  # 锁提供者类型
+
+  schedule:
+    schedule-execute-error-handle: com.tbs.schedule.impl.SimpleLogErrorHandle  # 定时任务错误处理
 ```
 
 ### 配置优先级和环境管理
@@ -607,12 +805,89 @@ tbs:
 ```yaml
 spring:
   profiles:
-    active: dev
+    active: dev  # 激活开发环境
 ```
 
-### 配置热更新
+命令行指定环境：
 
-部分配置支持运行时更新，无需重启应用。具体支持热更新的配置项请参考各模块文档。
+```bash
+# 开发环境
+java -jar app.jar --spring.profiles.active=dev
+
+# 生产环境
+java -jar app.jar --spring.profiles.active=prod
+```
+
+### 额外配置说明
+
+#### Dubbo 配置
+
+```yaml
+# application.yml
+dubbo:
+  application:
+    name: abstergo-solution
+    version: 1.0.0
+
+  registry:
+    address: zookeeper://localhost:2181  # Zookeeper注册中心地址
+    timeout: 5000
+
+  protocol:
+    name: dubbo
+    port: 20880
+    threads: 200
+
+  consumer:
+    timeout: 3000
+    retries: 0
+
+  provider:
+    timeout: 3000
+    retries: 0
+```
+
+#### Knife4j API文档配置
+
+```yaml
+knife4j:
+  enable: true  # 启用Knife4j
+  production: false  # 生产环境建议设为true，禁用API文档
+  basic:
+    enable: false  # 是否启用认证
+    username: admin
+    password: 123456
+```
+
+#### Actuator 监控配置
+
+```yaml
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,env  # 暴露的监控端点
+  endpoint:
+    health:
+      show-details: always  # 显示详细健康信息
+```
+
+#### 日志配置
+
+```yaml
+logging:
+  level:
+    root: INFO
+    com.tbs: DEBUG  # TBS框架日志级别
+    org.springframework.web: DEBUG
+    org.hibernate.SQL: DEBUG  # SQL语句日志
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/application.log
+    max-size: 10MB
+    max-history: 30
+```
 
 ## 扩展开发指南
 
@@ -620,42 +895,243 @@ spring:
 
 Abstergo Solution 采用API与实现分离的设计理念，类似于system模块的结构，支持自定义模块开发。可以按照以下步骤进行：
 
-1. **创建模块结构**：
-   - 创建API模块（定义接口）
-   - 创建实现模块（具体实现）
+#### 1. 创建模块结构
 
-2. **API模块设计**：
-   - 定义服务接口，继承IServiceTemplate或相关基础接口
-   - 定义数据传输对象(DTO)和实体类
-   - 定义配置类和属性类
+以创建一个名为 `custom-module` 的模块为例：
 
-3. **实现模块设计**：
-   - 实现API模块中定义的接口
-   - 提供自动配置类，使用Spring的@EnableAutoConfiguration机制
-   - 实现具体的业务逻辑
-
-4. **模块集成**：
-   - 在app模块中添加对新模块的依赖
-   - 在需要使用的地方注入相应的服务接口
-
-例如，system模块的结构如下：
 ```
-system
-├── system-api          # API模块
-│   ├── src/main/java
-│   │   └── com/tbs/app/service  # 服务接口定义
-│   │       ├── user
-│   │       │   └── ISystemUserService.java  # 用户服务接口
-│   │       └── ...
+custom-module/
+├── custom-module-api/          # API模块（定义接口）
+│   ├── src/main/java/
+│   │   └── com/tbs/custom/
+│   │       ├── service/           # 服务接口
+│   │       │   └── ICustomService.java
+│   │       ├── dto/               # 数据传输对象
+│   │       │   └── CustomDTO.java
+│   │       └── entity/            # 实体类
+│   │           └── CustomEntity.java
 │   └── pom.xml
-├── default-system-impl  # 默认实现模块
-│   ├── src/main/java
-│   │   └── com/tbs/app/service/impl  # 服务接口实现
-│   │       ├── user
-│   │       │   └── SimpleSystemUserServiceImpl.java  # 用户服务实现
-│   │       └── ...
+├── custom-module-impl/         # 实现模块（具体实现）
+│   ├── src/main/java/
+│   │   └── com/tbs/custom/
+│   │       ├── config/            #自动配置
+│   │       │   └── CustomModuleAutoConfiguration.java
+│   │       ├── service/impl/      # 服务实现
+│   │       │   └── CustomServiceImpl.java
+│   │       └── mapper/            # MyBatis Mapper
+│   │           └── CustomMapper.java
 │   └── pom.xml
-└── pom.xml
+└── pom.xml                     # 父模块POM
+```
+
+#### 2. API模块设计
+
+**服务接口定义** (ICustomService.java):
+
+```java
+package com.tbs.custom.service;
+
+import com.tbs.custom.dto.CustomDTO;
+import com.tbs.custom.entity.CustomEntity;
+
+import java.util.List;
+
+/**
+ * 自定义服务接口
+ */
+public interface ICustomService {
+
+    /**
+     * 创建自定义实体
+     */
+    CustomEntity create(CustomDTO dto);
+
+    /**
+     * 更新自定义实体
+     */
+    CustomEntity update(Long id, CustomDTO dto);
+
+    /**
+     * 删除自定义实体
+     */
+    void delete(Long id);
+
+    /**
+     * 根据ID查询
+     */
+    CustomEntity findById(Long id);
+
+    /**
+     * 查询列表
+     */
+    List<CustomEntity> findAll();
+}
+```
+
+**实体类定义** (CustomEntity.java):
+
+```java
+package com.tbs.custom.entity;
+
+import lombok.Data;
+
+import javax.persistence.*;
+import java.util.Date;
+
+@Data
+@Entity
+@Table(name = "custom_entity")
+public class CustomEntity {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "name", nullable = false, length = 100)
+    private String name;
+
+    @Column(name = "description")
+    private String description;
+
+    @Column(name = "create_time")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date createTime;
+
+    @Column(name = "update_time")
+    @Temporal(TemporalType.TIMESTAMP)
+    private Date updateTime;
+}
+```
+
+#### 3. 实现模块设计
+
+**服务实现** (CustomServiceImpl.java):
+
+```java
+package com.tbs.custom.service.impl;
+
+import com.tbs.custom.dto.CustomDTO;
+import com.tbs.custom.entity.CustomEntity;
+import com.tbs.custom.mapper.CustomMapper;
+import com.tbs.custom.service.ICustomService;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
+
+import java.util.Date;
+import java.util.List;
+
+@Service
+@RequiredArgsConstructor
+public class CustomServiceImpl implements ICustomService {
+
+    private final CustomMapper customMapper;
+
+    @Override
+    @Transactional
+    public CustomEntity create(CustomDTO dto) {
+        CustomEntity entity = new CustomEntity();
+        entity.setName(dto.getName());
+        entity.setDescription(dto.getDescription());
+        entity.setCreateTime(new Date());
+        entity.setUpdateTime(new Date());
+
+        customMapper.insertSelective(entity);
+        return entity;
+    }
+
+    @Override
+    @Transactional
+    public CustomEntity update(Long id, CustomDTO dto) {
+        CustomEntity entity = customMapper.selectByPrimaryKey(id);
+        if (entity == null) {
+            throw new RuntimeException("实体不存在");
+        }
+
+        entity.setName(dto.getName());
+        entity.setDescription(dto.getDescription());
+        entity.setUpdateTime(new Date());
+
+        customMapper.updateByPrimaryKeySelective(entity);
+        return entity;
+    }
+
+    @Override
+    @Transactional
+    public void delete(Long id) {
+        customMapper.deleteByPrimaryKey(id);
+    }
+
+    @Override
+    public CustomEntity findById(Long id) {
+        return customMapper.selectByPrimaryKey(id);
+    }
+
+    @Override
+    public List<CustomEntity> findAll() {
+        return customMapper.selectAll();
+    }
+}
+```
+
+**自动配置类** (CustomModuleAutoConfiguration.java):
+
+```java
+package com.tbs.custom.config;
+
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import tk.mybatis.spring.annotation.MapperScan;
+
+@Configuration
+@ComponentScan("com.tbs.custom")
+@MapperScan("com.tbs.custom.mapper")
+public class CustomModuleAutoConfiguration {
+    // 自动配置类，启用组件扫描和Mapper扫描
+}
+```
+
+创建 `src/main/resources/META-INF/spring.factories` 文件：
+
+```properties
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+com.tbs.custom.config.CustomModuleAutoConfiguration
+```
+
+#### 4. 模块集成
+
+在app模块的 `pom.xml` 中添加对新模块的依赖：
+
+```xml
+
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>custom-module-impl</artifactId>
+    <version>${project.version}</version>
+</dependency>
+```
+
+在需要使用的地方注入相应的服务接口：
+
+```java
+
+@RestController
+@RequestMapping("/api/custom")
+public class CustomController {
+
+    @Resource
+    private ICustomService customService;
+
+    @PostMapping
+    public CustomEntity create(@RequestBody CustomDTO dto) {
+        return customService.create(dto);
+    }
+
+    @GetMapping("/{id}")
+    public CustomEntity findById(@PathVariable Long id) {
+        return customService.findById(id);
+    }
+}
 ```
 
 ### 自定义组件集成
@@ -675,6 +1151,206 @@ system
 4. **自定义数据源**：
    - 实现IDataHolder接口创建自定义数据持有者
    - 实现IFrameworkMapper接口创建自定义数据访问接口
+
+## 常见问题解答 (FAQ)
+
+### 1. 如何解决数据库连接失败？
+
+**问题**：启动应用时报错“Communications link failure”
+
+**解决方案**：
+
+- 检查MySQL服务是否启动
+- 确认application-db.yml中的数据库地址、端口、用户名和密码正确
+- 检查防火墙设置，确保3306端口可访问
+- 如果使用Docker，确保容器网络配置正确
+
+### 2. 如何启用/禁用某个模块？
+
+**解决方案**：
+在pom.xml中注释掉不需要的模块依赖，或者在配置文件中设置 `enable: false`。
+
+例如禁用Redis：
+
+```yaml
+tbs:
+  redis:
+    enable: false
+```
+
+### 3. 如何修改默认端口？
+
+**解决方案**：
+在application.yml中修改：
+
+```yaml
+server:
+  port: 8081  # 修改为想要的端口号
+```
+
+### 4. P6Spy如何配置？
+
+**解决方案**：
+修改 `app/src/main/resources/spy.properties` 文件：
+
+```properties
+# 使用Slf4j记录SQL
+appender=com.p6spy.engine.spy.appender.Slf4JLogger
+# 自定义SQL日志格式
+logMessageFormat=com.p6spy.engine.spy.appender.CustomLineFormat
+customLogMessageFormat=%(currentTime) | SQL耗时: %(executionTime) ms | 连接信息: %(category)-%(connectionId) | 执行SQL: %(sql)
+# 过滤日志
+excludecategories=info,debug,result,resultset,batch
+```
+
+### 5. 如何集成Swagger/Knife4j？
+
+**解决方案**：
+项目已经集成Knife4j，直接访问 `http://localhost:8080/doc.html` 即可查看API文档。
+
+如需添加认证，在application.yml中配置：
+
+```yaml
+knife4j:
+  basic:
+    enable: true
+    username: admin
+    password: 123456
+```
+
+### 6. 如何进行分布式部署？
+
+**解决方案**：
+
+1. 部署Zookeeper集群
+2. 配置Dubbo注册中心地址
+3. 为每个节点配置不同的node-id
+4. 部署多个应用实例
+
+```yaml
+dubbo:
+  registry:
+    address: zookeeper://zk1:2181,zk2:2181,zk3:2181
+
+tbs:
+  rabbitmq:
+    node-id: node1  # 每个节点使用不同ID
+```
+
+### 7. 如何优化启动速度？
+
+**解决方案**：
+
+1. 缩小组件扫描范围：
+
+```java
+@SpringBootApplication(scanBasePackages = "com.tbs.app")  // 只扫描需要的包
+```
+
+2. 关闭不需要的自动配置：
+
+```java
+@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class  // 示例：排除数据源自动配置
+})
+```
+
+3. 使用懒加载：
+
+```java
+
+@Bean
+@Lazy
+public MyService myService() {
+    return new MyServiceImpl();
+}
+```
+
+### 8. 如何调试SQL语句？
+
+**解决方案**：
+
+1. 启用P6Spy（项目默认已启用）
+2. 设置日志级别：
+
+```yaml
+logging:
+  level:
+    com.p6spy: DEBUG
+    org.hibernate.SQL: DEBUG
+```
+
+3. 查看控制台输出的SQL语句
+
+## 性能优化建议
+
+### 1. 数据库优化
+
+- 为常用查询字段添加索引
+- 使用连接池，合理配置连接池参数
+- 对于大表考虑分表分库
+- 使用预编译语句防止SQL注入并提升性能
+
+### 2. 缓存优化
+
+- 合理设置缓存过期时间
+- 使用多级缓存策略（本地缓存 + Redis）
+- 对热点数据进行缓存预热
+- 防止缓存雪崩、穿透和击穿
+
+### 3. 并发优化
+
+- 合理配置线程池参数
+- 使用异步处理耗时操作
+- 使用消息队列实现异步解耦
+- 使用分布式锁控制并发访问
+
+### 4. JVM调优
+
+```bash
+java -jar app.jar \
+  -Xms2g \
+  -Xmx2g \
+  -XX:+UseG1GC \
+  -XX:MaxGCPauseMillis=200 \
+  -XX:+HeapDumpOnOutOfMemoryError \
+  -XX:HeapDumpPath=/logs/heapdump.hprof
+```
+
+### 5. 网络优化
+
+- 启用GZIP压缩
+- 使用CDN加速静态资源
+- 使用HTTP/2
+- 合理配置连接超时
+
+## 安全最佳实践
+
+### 1. 身份认证
+
+- 使用强密码策略
+- 启用Token过期机制
+- 实现刷新Token机制
+- 防止暴力破解（限制登录尝试次数）
+
+### 2. 数据安全
+
+- 敏感数据加密存储
+- 使用HTTPS传输数据
+- 实现数据脱敏机制
+- 定期备份数据
+
+### 3. 接口安全
+
+- 防止SQL注入
+- 防止XSS攻击
+- 防止CSRF攻击
+- 实现请求频率限制
+
+### 4. 依赖安全
+
+- 定期更新依赖包
+- 扫描并修复安全漏洞
+- 使用依赖管理工具（如OWASP Dependency Check）
 
 ## 贡献指南
 
