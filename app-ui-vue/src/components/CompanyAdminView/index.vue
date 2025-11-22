@@ -651,10 +651,13 @@ export default {
   }
 
   .table-card {
-    border-radius: 8px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #ebeef5;
 
     ::v-deep .el-card__body {
-      padding: 10px;
+      padding: 20px;
+      min-height: 400px;
     }
   }
 
@@ -674,7 +677,27 @@ export default {
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 40px 0;
+    padding: 80px 0;
+    min-height: 300px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    border-radius: 8px;
+    margin: 20px 0;
+  }
+
+  /* 加载动画优化 */
+  ::v-deep .el-loading-mask {
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+  }
+
+  ::v-deep .el-loading-spinner .circular {
+    width: 42px;
+    height: 42px;
+  }
+
+  ::v-deep .el-loading-spinner .path {
+    stroke: #409eff;
+    stroke-width: 3;
   }
 
   .move-tree-wrap {
@@ -693,21 +716,104 @@ export default {
     border-radius: 3px;
   }
 
+  /* 树形组件样式优化 */
+  ::v-deep .el-tree {
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  ::v-deep .el-tree-node {
+    margin: 8px 0;
+  }
+
+  ::v-deep .el-tree-node__content {
+    height: 44px;
+    line-height: 44px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border-radius: 6px;
+    margin: 4px 0;
+  }
+
+  ::v-deep .el-tree-node__content:hover {
+    background-color: #f5f7fa;
+    transform: translateX(4px);
+  }
+
+  ::v-deep .el-tree-node:focus > .el-tree-node__content {
+    background-color: #ecf5ff;
+  }
+
+  ::v-deep .el-tree-node__expand-icon {
+    font-size: 18px;
+    color: #606266;
+    margin-right: 8px;
+  }
+
+  ::v-deep .el-tree-node__expand-icon.expanded {
+    transform: rotate(0deg);
+  }
+
+  ::v-deep .el-tree-node__expand-icon.is-leaf {
+    color: transparent;
+  }
+
   .custom-tree-node {
     flex: 1;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    font-size: 14px;
-    padding-right: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 0 12px;
+    min-height: 40px;
   }
 
   .tree-node-actions {
     display: none;
+    margin-left: 12px;
   }
 
   .custom-tree-node:hover .tree-node-actions {
-    display: inline-block;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tree-node-actions .el-button {
+    font-size: 14px;
+    padding: 6px 12px;
+    border-radius: 4px;
+    transition: all 0.3s ease;
+  }
+
+  .tree-node-actions .el-button:hover {
+    background-color: #409eff;
+    color: #fff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+  }
+
+  /* 高亮搜索关键词样式 */
+  mark {
+    background: linear-gradient(135deg, #ffd740, #ffab00);
+    color: #000;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-weight: 600;
+    box-shadow: 0 1px 3px rgba(255, 171, 0, 0.3);
+  }
+
+  /* 子节点数量样式 */
+  .children-count {
+    color: #909399;
+    margin-left: 8px;
+    font-size: 14px;
+    background: #f0f2f5;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-weight: 400;
   }
 
   @media (max-width: 768px) {
