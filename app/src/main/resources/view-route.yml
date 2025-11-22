@@ -1,70 +1,69 @@
-routes:
-  admin:
-    - path: /admin
-      component: Layout
-      name: admin
-      redirect: /admin/user
-      meta:
-        routeGroup: default
-        title: 管理员操作
-        icon: el-icon-s-help
-        roles:
-          - "1"
-      children:
-        - path: user
-          name: 用户管理
-          component: "views/admin/user/index.vue"
-          meta:
-            routeGroup: default
-            title: 用户管理
-            icon: table
-            roles:
-              - "1"
-        - path: role
-          name: 角色管理
-          component: "views/admin/role/index.vue"
-          meta:
-            routeGroup: default
-            title: 角色管理
-            icon: eye
-            roles:
-              - "1"
-        - path: company
-          name: 公司管理
-          component: "views/admin/company/index.vue"
-          meta:
-            routeGroup: default
-            title: 公司管理
-            icon: el-icon-s-custom
-            roles:
-              - "1"
-        - path: form
-          name: 表单创建
-          component: "views/form/FormCreator.vue"
-          meta:
-            routeGroup: default
-            title: 表单创建
-            icon: el-icon-s-custom
-            roles:
-              - "1"
-        - path: form-manager
-          name: 表单管理
-          component: "views/form/FormManager.vue"
-          meta:
-            routeGroup: default
-            title: 表单管理
-            icon: el-icon-s-order
-            roles:
-              - "1"
-        - path: systemlog
-          name: 系统运行报表
-          component: "views/admin/systemlog/index.vue"
-          meta:
-            routeGroup: default
-            title: 系统运行报表
-            icon: el-icon-s-data
-            roles:
-              - "1"
+admin:
+  - path: /admin
+    component: Layout
+    name: admin
+    redirect: /admin/user
+    meta:
+      routeGroup: default
+      title: 管理员操作
+      icon: el-icon-s-help
+      roles:
+        - "1"
+    children:
+      - path: user
+        name: 用户管理
+        component: "/admin/user/index.vue"
+        meta:
+          routeGroup: default
+          title: 用户管理
+          icon: table
+          roles:
+            - "1"
+      - path: role
+        name: 角色管理
+        component: "/admin/role/index.vue"
+        meta:
+          routeGroup: default
+          title: 角色管理
+          icon: eye
+          roles:
+            - "1"
+      - path: company
+        name: 公司管理
+        component: "/admin/company/index.vue"
+        meta:
+          routeGroup: default
+          title: 公司管理
+          icon: el-icon-s-custom
+          roles:
+            - "1"
+      - path: form
+        name: 表单创建
+        component: "/form/FormCreator.vue"
+        meta:
+          routeGroup: default
+          title: 表单创建
+          icon: el-icon-s-custom
+          roles:
+            - "1"
+      - path: form-manager
+        name: 表单管理
+        component: "/form/FormManager.vue"
+        meta:
+          routeGroup: default
+          title: 表单管理
+          icon: el-icon-s-order
+          roles:
+            - "1"
+      - path: systemlog
+        name: 系统运行报表
+        component: "/admin/systemlog/index.vue"
+        meta:
+          routeGroup: default
+          title: 系统运行报表
+          icon: el-icon-s-data
+          roles:
+            - "1"
 
 #  # 添加404页面作为最后的路由
 #  fallback:

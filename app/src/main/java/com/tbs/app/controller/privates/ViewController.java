@@ -6,7 +6,6 @@ import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,9 +15,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/private/view")
@@ -112,20 +110,11 @@ public class ViewController extends BaseController {
      */
     @GetMapping("/routes")
     public AjaxResult getViewRoutes() {
-        Map<String, Object> result = new HashMap<>();
-        Map<String, Object> routes = new HashMap<>();
-
-        // 获取所有路由分组
-        List<String> groups = viewRouteService.getAllViewRouteGroups();
-
-        // 获取每个分组下的路由信息
-        for (String group : groups) {
-            List<ViewRouteModel> routeModels = viewRouteService.getViewRoutesByGroup(group);
-            routes.put(group, routeModels);
+        var result = new LinkedList<ViewRouteModel>();
+        for (String group : viewRouteService.getAllViewRouteGroups()) {
+            result.addAll(viewRouteService.getViewRoutesByGroup(group));
         }
-
-        result.put("routes", routes);
-        return AjaxUtil.getInstance().success(result);
+        return successResult(result);
     }
 
     @Override

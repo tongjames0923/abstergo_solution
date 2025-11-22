@@ -1,6 +1,6 @@
 <template>
   <div :class="{'has-logo':showLogo}" class="glass-sidebar">
-    <logo v-if="showLogo" :collapse="isCollapse" />
+    <logo v-if="showLogo" :collapse="isCollapse"/>
     <div class="sidebar-menu-wrapper">
       <el-scrollbar wrap-class="scrollbar-wrapper" class="sidebar-scrollbar">
         <el-menu
@@ -27,13 +27,13 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import {mapGetters} from 'vuex'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
 
 export default {
-  components: { SidebarItem, Logo },
+  components: {SidebarItem, Logo},
   computed: {
     ...mapGetters([
       'sidebar',
@@ -42,11 +42,12 @@ export default {
     processedRoutes() {
       // 使用缓存的路由数据，避免每次渲染都重新计算
       const routes = this.$router.options.routes
-      return this.filterRoutesByRole(routes, this.roles)
+      const filteredRoutes = this.filterRoutesByRole(routes, this.roles)
+      return filteredRoutes
     },
     activeMenu() {
       const route = this.$route
-      const { meta, path } = route
+      const {meta, path} = route
       // if set path, the sidebar will highlight the path you set
       if (meta.activeMenu) {
         return meta.activeMenu
@@ -68,7 +69,7 @@ export default {
       // 使用记忆化技术避免重复计算
       const res = []
       routes.forEach(route => {
-        const tmp = { ...route }
+        const tmp = {...route}
         if (this.hasRolePermission(roles, tmp)) {
           if (tmp.children) {
             // 使用深度克隆避免修改原始路由对象
@@ -81,7 +82,9 @@ export default {
     },
     hasRolePermission(roles, route) {
       if (route.meta && route.meta.roles) {
-        return roles.some(role => route.meta.roles.includes(role))
+        // 检查用户角色是否包含路由所需的任意一个角色
+        const hasPermission = roles.some(role => route.meta.roles.includes(role))
+        return hasPermission
       } else {
         // 如果路由没有设置角色，则默认可见
         return true

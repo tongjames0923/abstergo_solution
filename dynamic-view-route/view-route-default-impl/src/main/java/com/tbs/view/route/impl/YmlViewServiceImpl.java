@@ -44,75 +44,130 @@ public class YmlViewServiceImpl implements IViewRouteService, IStartup {
     @Override
     public void startUp() throws RuntimeException {
         try {
-            // 从 resource/view-route.yml 中加载路由信息
+            // 加载 YAML 文件
             ClassPathResource resource = new ClassPathResource("view-route.yml");
             if (!resource.exists()) {
-                System.err.println("警告: view-route.yml 文件不存在，跳过路由加载");
+                log.warn("view-route.yml 文件不存在，跳过路由加载");
                 return;
             }
 
+            InputStream inputStream = resource.getInputStream();
             Yaml yaml = new Yaml();
-            try (InputStream inputStream = resource.getInputStream()) {
-                // 解析 YAML 文件
-                Map<String, Object> yamlData = yaml.load(inputStream);
+            Map<String, Object> yamlData = yaml.load(inputStream);
 
-                if (yamlData != null && yamlData.containsKey("routes")) {
-                    @SuppressWarnings("unchecked")
-                    Map<String, List<Map<String, Object>>> routesMap = (Map<String, List<Map<String, Object>>>) yamlData.get("routes");
+            // 解析 YAML 数据并转换为 ViewRouteModel
+            for (Map.Entry<String, Object> entry : yamlData.entrySet()) {
+                String group = entry.getKey();
+                Object value = entry.getValue();
 
-                    // 清空现有缓存
-                    viewRouteModelMap.clear();
-
-                    // 遍历所有路由分组
-                    for (Map.Entry<String, List<Map<String, Object>>> entry : routesMap.entrySet()) {
-                        String group = entry.getKey();
-                        List<Map<String, Object>> routeList = entry.getValue();
-
-                        List<ViewRouteModel> viewRoutes = new ArrayList<>();
-
-                        // 转换每个路由配置为 ViewRouteModel 对象
-                        for (Map<String, Object> routeConfig : routeList) {
-                            ViewRouteModel route = new ViewRouteModel();
-                            route.setPath((String) routeConfig.get("path"));
-                            route.setComponent((String) routeConfig.get("component"));
-                            
-                            // 设置元数据
-                            ViewRouteMetaModel meta = new ViewRouteMetaModel();
-                            meta.setRouteGroup((String) routeConfig.get("routeGroup"));
-                            meta.setTitle((String) routeConfig.get("title"));
-                            meta.setIcon((String) routeConfig.get("icon"));
-                            
-                            // 处理 roles 字段
-                            Object rolesObj = routeConfig.get("roles");
-                            if (rolesObj instanceof List) {
-                                @SuppressWarnings("unchecked")
-                                List<String> roles = (List<String>) rolesObj;
-                                meta.setRoles(new ArrayList<>(roles));
-                            }
-                            
-                            // 处理 breadcrumb 字段
-                            Object breadcrumbObj = routeConfig.get("breadcrumb");
-                            if (breadcrumbObj != null) {
-                                meta.setBreadcrumb((Boolean) breadcrumbObj);
-                            }
-                            
-                            meta.setActiveMenu((String) routeConfig.get("activeMenu"));
-                            route.setMeta(meta);
-
-                            viewRoutes.add(route);
-                        }
-
-                        // 将路由信息保存到缓存中
-                        viewRouteModelMap.put(group, viewRoutes);
-                    }
-
-                    System.out.println("成功加载路由配置，共 " + viewRouteModelMap.size() + " 个分组");
-                } else {
-                    System.err.println("警告: view-route.yml 文件中未找到有效的路由配置");
+                if (value instanceof List) {
+                    List<ViewRouteModel> routeModels = parseRouteList((List<Map<String, Object>>) value);
+                    viewRouteModelMap.put(group, routeModels);
+                    log.info("成功加载路由分组: {}，包含 {} 个路由", group, routeModels.size());
                 }
             }
+
+            inputStream.close();
+            log.info("路由配置加载完成，共加载 {} 个分组", viewRouteModelMap.size());
+
         } catch (Exception e) {
-            throw new RuntimeException("加载路由配置失败: " + e.getMessage(), e);
+            log.error("加载路由配置失败", e);
+            throw new RuntimeException("路由配置加载失败", e);
         }
+    }
+
+    /**
+     * 解析路由列表
+     */
+    private List<ViewRouteModel> parseRouteList(List<Map<String, Object>> routeList) {
+        List<ViewRouteModel> result = new ArrayList<>();
+
+        for (Map<String, Object> routeData : routeList) {
+            ViewRouteModel routeModel = parseRouteModel(routeData);
+            if (routeModel != null) {
+                result.add(routeModel);
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 解析单个路由模型
+     */
+    private ViewRouteModel parseRouteModel(Map<String, Object> routeData) {
+        try {
+            ViewRouteModel routeModel = new ViewRouteModel();
+
+            // 设置基本属性
+            routeModel.setPath((String) routeData.get("path"));
+            routeModel.setComponent((String) routeData.get("component"));
+            routeModel.setName((String) routeData.get("name"));
+            routeModel.setRedirect((String) routeData.get("redirect"));
+
+            // 设置隐藏属性
+            if (routeData.containsKey("hidden")) {
+                routeModel.setHidden((Boolean) routeData.get("hidden"));
+            }
+
+            // 设置始终显示属性
+            if (routeData.containsKey("alwaysShow")) {
+                routeModel.setAlwaysShow((Boolean) routeData.get("alwaysShow"));
+            }
+
+            // 解析元数据
+            if (routeData.containsKey("meta")) {
+                Object metaData = routeData.get("meta");
+                if (metaData instanceof Map) {
+                    ViewRouteMetaModel metaModel = parseMetaModel((Map<String, Object>) metaData);
+                    routeModel.setMeta(metaModel);
+                }
+            }
+
+            // 解析子路由
+            if (routeData.containsKey("children")) {
+                Object childrenData = routeData.get("children");
+                if (childrenData instanceof List) {
+                    List<ViewRouteModel> children = parseRouteList((List<Map<String, Object>>) childrenData);
+                    routeModel.setChildren(children);
+                }
+            }
+
+            return routeModel;
+        } catch (Exception e) {
+            log.error("解析路由数据失败: {}", routeData, e);
+            return null;
+        }
+    }
+
+    /**
+     * 解析元数据模型
+     */
+    private ViewRouteMetaModel parseMetaModel(Map<String, Object> metaData) {
+        ViewRouteMetaModel metaModel = new ViewRouteMetaModel();
+
+        metaModel.setRouteGroup((String) metaData.get("routeGroup"));
+        metaModel.setTitle((String) metaData.get("title"));
+        metaModel.setIcon((String) metaData.get("icon"));
+
+        // 解析权限角色
+        if (metaData.containsKey("roles")) {
+            Object rolesData = metaData.get("roles");
+            if (rolesData instanceof List) {
+                metaModel.setRoles((List<String>) rolesData);
+            }
+        }
+
+        // 设置面包屑显示
+        if (metaData.containsKey("breadcrumb")) {
+            metaModel.setBreadcrumb((Boolean) metaData.get("breadcrumb"));
+        }
+
+        // 设置激活菜单
+        if (metaData.containsKey("activeMenu")) {
+            metaModel.setActiveMenu((String) metaData.get("activeMenu"));
+        }
+
+        return metaModel;
     }
 }
