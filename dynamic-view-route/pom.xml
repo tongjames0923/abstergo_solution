@@ -9,11 +9,13 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
+    <groupId>com.tbs</groupId>
     <artifactId>dynamic-view-route</artifactId>
 
     <packaging>pom</packaging>
     <modules>
         <module>view-route-api</module>
+        <module>view-route-default-impl</module>
     </modules>
     <description>前端动态路由模块</description>
     <properties>

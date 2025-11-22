@@ -1,6 +1,6 @@
 package com.tbs.view.route.api;
 
-import com.tbs.view.route.model.ViewRouteMetaModel;
+import com.tbs.view.route.model.ViewRouteModel;
 
 import java.util.List;
 
@@ -9,6 +9,7 @@ import java.util.List;
  * <p>
  * 该接口定义了路由服务的基本操作，包括获取路由分组、获取分组下的路由信息、保存路由信息、删除路由信息等
  * </p>
+ * @author tongj
  */
 public interface IViewRouteService {
 
@@ -25,14 +26,15 @@ public interface IViewRouteService {
      * @param group 分组名称
      * @return 路由信息列表
      */
-    List<ViewRouteMetaModel> getViewRoutesByGroup(String group);
+    List<ViewRouteModel> getViewRoutesByGroup(String group);
 
     /**
      * 保存路由信息
      *
-     * @param viewRouteMetaModel 路由信息
+     * @param group              分组名称
+     * @param viewRouteModel 路由信息列表
      */
-    void saveViewRoute(String group, List<ViewRouteMetaModel> viewRouteMetaModel);
+    void saveViewRoute(String group, List<ViewRouteModel> viewRouteModel);
 
     /**
      * 删除路由信息
