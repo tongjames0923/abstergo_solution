@@ -255,6 +255,9 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
 
     @Override
     public List<ITreeStorable> getDirectChildren(String nodeId, String group) {
+        if (StrUtil.isEmpty(nodeId) || StrUtil.isEmpty(group)) {
+            return Collections.EMPTY_LIST;
+        }
         var relation = new TreeRelationEntity();
         relation.setAncestorId(nodeId);
         relation.setDepth(1);

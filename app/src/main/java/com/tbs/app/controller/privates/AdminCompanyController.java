@@ -1,11 +1,15 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.company.ISystemCompanyService;
+import com.tbs.async.delegate.AsyncDelegateInvoker;
+import com.tbs.common.delegate.IDelegateFlag;
+import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.interfaces.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
+import com.tbs.sql.query.impl.QueryPageModel;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.LinkedList;
 
 /**
  * 管理员公司管理控制器
@@ -53,7 +58,9 @@ public class AdminCompanyController
     @ApiResponse(responseCode = "200", description = "成功获取公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult get(@Parameter(name = "id", description = "公司ID", required = true) @PathVariable Long id) {
-		return super.get(id);
+        SystemCompanyEntity entity = getService().queryById(id);
+        entity.setChildrenCount((long)companyService.getChildrenCompanies(entity.getId()).size());
+        return successResult(entity);
 	}
 
 	/**
@@ -104,7 +111,18 @@ public class AdminCompanyController
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemCompanyQueryCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
         @Parameter(name = "pageSize", description = "每页大小") @RequestParam(required = false) Long pageSize) {
-		return super.query(criteria, pageNum, pageSize);
+        var data = getService().queryAndPage(criteria, QueryPageModel.of(pageNum, pageSize));
+        var ls = new LinkedList<IDelegateFlag>();
+        for (var entity : data.getData()) {
+            ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
+                .takeIn(SystemCompanyEntity::setChildrenCount, () -> {
+                    return (long)companyService.getChildrenCompanies(entity.getId()).size();
+                }).executeOnce());
+        }
+        for (var i : ls) {
+            i.waitUntilFinished();
+        }
+        return successResult(data);
 	}
 
     /**
@@ -137,7 +155,18 @@ public class AdminCompanyController
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult listChildren(
         @Parameter(name = "parent", description = "父级公司ID", required = true) @PathVariable Long parent) {
-        return successResult(companyService.getChildrenCompanies(parent));
+        var data = companyService.getChildrenCompanies(parent);
+        var ls = new LinkedList<IDelegateFlag>();
+        for (var entity : data) {
+            ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
+                .takeIn(SystemCompanyEntity::setChildrenCount, () -> {
+                    return (long)companyService.getChildrenCompanies(entity.getId()).size();
+                }).executeOnce());
+        }
+        for (var i : ls) {
+            i.waitUntilFinished();
+        }
+        return successResult(data);
     }
 
 

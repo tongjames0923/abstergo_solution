@@ -100,7 +100,7 @@ public class SystemCompanyEntity implements IBaseEntity<Long> {
     /**
      * 子公司数量
      */
-    @Column(name = "children_count")
+    @Transient
     private Long childrenCount;
 
 

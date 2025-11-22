@@ -66,7 +66,6 @@ public class SimpleCompanyService
     protected SystemCompanyEntity insertNew(SystemCompanyEntity entity) {
         entity.setFlag(SystemCompanyFlagEnum.DISABLED.getCode());
         entity.setTreeRootFlag(CommonConstant.FLAG_ON);
-        entity.setChildrenCount(0L);
         getMapper().insert(entity);
         return entity;
     }
@@ -192,9 +191,6 @@ public class SimpleCompanyService
             getMapper().updateByPrimaryKey(child);
         }
         treeStore.store(new TreeNodeModel(child.getTreeNodeId(), child.getTreeNodeGroup()), parent.getTreeNodeId());
-        var children = treeStore.getDirectChildren(parent.getTreeNodeId(), parent.getTreeNodeGroup()).size();
-
-        parent.setChildrenCount(new Long(children));
         getMapper().updateByPrimaryKey(parent);
     }
 
@@ -205,4 +201,5 @@ public class SimpleCompanyService
             .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId().substring(4, it.getNodeId().length()))))
             .collect(Collectors.toList());
     }
+
 }

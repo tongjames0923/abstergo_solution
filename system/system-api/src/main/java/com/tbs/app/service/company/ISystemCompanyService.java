@@ -23,5 +23,4 @@ public interface ISystemCompanyService extends IServiceTemplate<SystemCompanyEnt
      */
     List<SystemCompanyEntity> getChildrenCompanies(Long id);
 
-
 }
