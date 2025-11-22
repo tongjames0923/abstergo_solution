@@ -1,4 +1,4 @@
-import router, { initDynamicRoutes } from './router'
+import router from './router'
 import store from './store'
 import { Message } from 'element-ui'
 import NProgress from 'nprogress' // progress bar
@@ -31,9 +31,6 @@ router.beforeEach(async(to, from, next) => {
         try {
           // get user info
           await store.dispatch('user/getInfo')
-
-          // 初始化动态路由
-          await initDynamicRoutes()
         } catch (error) {
           // remove token and go to login page to re-login
           await store.dispatch('user/resetToken')

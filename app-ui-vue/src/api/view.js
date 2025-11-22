@@ -44,13 +44,3 @@ export function getFormById(id) {
     method: 'get'
   })
 }
-
-/**
- * 获取动态路由配置
- */
-export function getViewRoutes() {
-  return request({
-    url: '/private/view/routes',
-    method: 'get'
-  })
-}
