@@ -2,6 +2,7 @@ import Vue from 'vue'
 import Router from 'vue-router'
 /* Layout */
 import Layout from '@/layout'
+import DynamicRouter from '@/utils/dynamic-router'
 
 Vue.use(Router)
 
@@ -117,13 +118,27 @@ export const constantRoutes = [
   { path: '*', redirect: '/404', hidden: true }
 ]
 
-const createRouter = () => new Router({
+const createRouter = (routes = constantRoutes) => new Router({
   // mode: 'history', // require service support
   scrollBehavior: () => ({ y: 0 }),
-  routes: constantRoutes
+  routes: routes
 })
 
 const router = createRouter()
+
+/**
+ * 初始化动态路由
+ * 在用户登录后调用此方法来加载动态路由
+ */
+export async function initDynamicRoutes() {
+  try {
+    const success = await DynamicRouter.initDynamicRoutes(router, constantRoutes)
+    return success
+  } catch (error) {
+    console.error('初始化动态路由失败:', error)
+    return false
+  }
+}
 
 // Detail see: https://github.com/vuejs/vue-router/issues/1234#issuecomment-357941465
 export function resetRouter() {

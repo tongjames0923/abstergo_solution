@@ -40,8 +40,14 @@ export default {
       'roles' // 直接获取roles而不是通过$store.getters.roles
     ]),
     processedRoutes() {
-      // 使用缓存的路由数据，避免每次渲染都重新计算
-      const routes = this.$router.options.routes
+      // 使用router实例的getRoutes方法获取当前路由配置（Vue Router 3.x兼容）
+      let routes = []
+      if (this.$router.options && this.$router.options.routes) {
+        routes = this.$router.options.routes
+      } else if (this.$router.getRoutes) {
+        // Vue Router 4.x 使用getRoutes方法
+        routes = this.$router.getRoutes()
+      }
       return this.filterRoutesByRole(routes, this.roles)
     },
     activeMenu() {
