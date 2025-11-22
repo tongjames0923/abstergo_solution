@@ -13,7 +13,7 @@ routes:
       children:
         - path: user
           name: 用户管理
-          component: "@/views/admin/user/index.vue"
+          component: "views/admin/user/index.vue"
           meta:
             routeGroup: default
             title: 用户管理
@@ -22,7 +22,7 @@ routes:
               - "1"
         - path: role
           name: 角色管理
-          component: "@/views/admin/role/index.vue"
+          component: "views/admin/role/index.vue"
           meta:
             routeGroup: default
             title: 角色管理
@@ -31,7 +31,7 @@ routes:
               - "1"
         - path: company
           name: 公司管理
-          component: "@/views/admin/company/index.vue"
+          component: "views/admin/company/index.vue"
           meta:
             routeGroup: default
             title: 公司管理
@@ -40,7 +40,7 @@ routes:
               - "1"
         - path: form
           name: 表单创建
-          component: "@/views/form/FormCreator.vue"
+          component: "views/form/FormCreator.vue"
           meta:
             routeGroup: default
             title: 表单创建
@@ -49,7 +49,7 @@ routes:
               - "1"
         - path: form-manager
           name: 表单管理
-          component: "@/views/form/FormManager.vue"
+          component: "views/form/FormManager.vue"
           meta:
             routeGroup: default
             title: 表单管理
@@ -58,7 +58,7 @@ routes:
               - "1"
         - path: systemlog
           name: 系统运行报表
-          component: "@/views/admin/systemlog/index.vue"
+          component: "views/admin/systemlog/index.vue"
           meta:
             routeGroup: default
             title: 系统运行报表
