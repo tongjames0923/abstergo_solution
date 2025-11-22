@@ -113,6 +113,17 @@
         </div>
       </div>
     </el-card>
+    <div class="pagination-section">
+      <el-pagination
+        :current-page="pageNum"
+        :page-sizes="[10, 20, 50, 100]"
+        :page-size="pageSize"
+        :total="total"
+        layout="total, sizes, prev, pager, next, jumper"
+        @size-change="handlePageSizeChange"
+        @current-change="handlePageNumChange"
+      />
+    </div>
 
     <!-- 公司编辑对话框 -->
     <el-dialog
@@ -332,11 +343,9 @@ export default {
         const params = {
           ...this.searchForm,
           ...this.sortParams,
-          page: this.currentPage,
-          size: this.pageSize,
           treeRootFlag: 1
         }
-        const response = await adminQueryCompany(params)
+        const response = await adminQueryCompany(params, this.currentPage, this.pageSize)
         const resData = response.data || {}
         const list = (resData.data && Array.isArray(resData.data)) ? resData.data : (resData.list || [])
         this.total = resData.total != null ? resData.total : list.length
