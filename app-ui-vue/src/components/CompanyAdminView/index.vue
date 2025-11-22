@@ -82,8 +82,58 @@
         >
           <span class="custom-tree-node" slot-scope="{ node, data }">
             <span>
-              <el-tooltip class="item" effect="dark" :content="data.companyName" placement="top">
-                <span v-html="highlight(data.companyName)"></span>
+              <el-tooltip class="item" placement="right" effect="light" popper-class="company-info-tooltip">
+                <span class="tree-node-title">{{ data.companyName }}</span>
+                <template slot="content">
+                  <div class="company-detail-card">
+                    <div class="card-header">
+                      <h3>公司信息</h3>
+                    </div>
+                    <div class="card-content">
+                      <el-row :gutter="12">
+                        <el-col :span="12">
+                          <div class="info-item">
+                            <span class="info-label">公司名称:</span>
+                            <span class="info-value">{{ data.companyName }}</span>
+                          </div>
+                        </el-col>
+                        <el-col :span="12">
+                          <div class="info-item">
+                            <span class="info-label">税号:</span>
+                            <span class="info-value tax-number">{{ data.taxNumber }}</span>
+                          </div>
+                        </el-col>
+                        <el-col :span="12">
+                          <div class="info-item">
+                            <span class="info-label">状态:</span>
+                            <el-tag size="small" :type="getCompanyStatusTagType(data.flag)">
+                              {{ getCompanyStatusLabel(data.flag) }}
+                            </el-tag>
+                          </div>
+                        </el-col>
+                        <el-col :span="12">
+                          <div class="info-item">
+                            <span class="info-label">添加时间:</span>
+                            <span class="info-value">{{ data.createTime }}</span>
+                          </div>
+                        </el-col>
+                        <el-col :span="12">
+                          <div class="info-item">
+                            <span class="info-label">更新时间:</span>
+                            <span class="info-value">{{ data.updateTime }}</span>
+                          </div>
+                        </el-col>
+
+                        <el-col :span="24">
+                          <div class="info-item">
+                            <span class="info-label">描述:</span>
+                            <span class="info-value description">{{ data.description || '无' }}</span>
+                          </div>
+                        </el-col>
+                      </el-row>
+                    </div>
+                  </div>
+                </template>
               </el-tooltip>
               <span v-if="data.childrenCount && data.childrenCount > 0" class="children-count">
                 ({{ data.childrenCount }})
@@ -371,7 +421,6 @@ export default {
     async loadNode(node, resolve) {
       // 根节点
       if (node.level === 0) {
-        await this.loadCompanyData();
         resolve(this.treeData);
         return;
       }
@@ -823,6 +872,71 @@ export default {
     padding: 2px 8px;
     border-radius: 12px;
     font-weight: 400;
+  }
+
+  /* 公司详情卡片样式 */
+  .company-detail-card {
+    min-width: 320px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    overflow: hidden;
+
+    .card-header {
+      padding: 16px;
+      background: linear-gradient(120deg, #409eff 0%, #1a73e8 100%);
+      color: white;
+
+      h3 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+    }
+
+    .card-content {
+      padding: 16px;
+
+      .info-item {
+        display: flex;
+        margin-bottom: 12px;
+        align-items: center;
+
+        &:last-child {
+          margin-bottom: 0;
+        }
+
+        .info-label {
+          font-weight: 500;
+          color: #606266;
+          width: 80px;
+          font-size: 14px;
+        }
+
+        .info-value {
+          flex: 1;
+          color: #303133;
+          font-size: 14px;
+
+          &.tax-number {
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+          }
+
+          &.description {
+            line-height: 1.5;
+          }
+        }
+      }
+    }
+  }
+
+  /* 自定义 tooltip 样式 */
+  ::v-deep .company-info-tooltip {
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    box-shadow: none !important;
   }
 
   @media (max-width: 768px) {
