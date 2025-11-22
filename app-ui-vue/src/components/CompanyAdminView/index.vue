@@ -1,4 +1,3 @@
-Cou
 <template>
   <div class="company-admin-view">
     <div class="header-section">
@@ -70,91 +69,48 @@ Cou
       </el-form>
     </el-card>
 
-    <!-- 表格区域 -->
+    <!-- 树形区域 -->
     <el-card class="table-card" shadow="never">
       <div v-loading="loading" style="min-height:200px; position:relative;">
-        <el-table
-          :data="tableData"
-          row-key="id"
-          :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
-          border
-          stripe
+        <el-tree
+          :data="treeData"
+          :props="treeProps"
+          node-key="id"
           lazy
           :load="loadNode"
-          @sort-change="handleSortChange"
-          style="width: 100%;"
+          ref="companyTree"
         >
-          <el-table-column prop="companyName" label="公司名称" width="300">
-            <template slot-scope="scope">
-              <el-tooltip class="item" effect="dark" :content="scope.row.companyName" placement="top">
-                <span v-html="highlight(scope.row.companyName)"></span>
+          <span class="custom-tree-node" slot-scope="{ node, data }">
+            <span>
+              <el-tooltip class="item" effect="dark" :content="data.companyName" placement="top">
+                <span v-html="highlight(data.companyName)"></span>
               </el-tooltip>
-              <span v-if="scope.row.childrenCount && scope.row.childrenCount > 0" class="children-count">
-                ({{ scope.row.childrenCount }})
+              <span v-if="data.childrenCount && data.childrenCount > 0" class="children-count">
+                ({{ data.childrenCount }})
               </span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="taxNumber" label="税号" width="200">
-            <template slot-scope="scope">
-              <el-tooltip class="item" effect="dark" :content="scope.row.taxNumber" placement="top">
-                <span>{{ maskTaxNumber(scope.row.taxNumber) }}</span>
-              </el-tooltip>
-            </template>
-          </el-table-column>
-          <el-table-column prop="flag" label="状态" width="120">
-            <template slot-scope="scope">
-              <el-tag :type="getCompanyStatusTagType(scope.row.flag)">
-                {{ getCompanyStatusLabel(scope.row.flag) }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="createTime" label="创建时间" width="180" sortable="custom">
-            <template slot-scope="scope">
-              {{ scope.row.createTime | formatDate }}
-            </template>
-          </el-table-column>
-          <el-table-column prop="updateTime" label="更新时间" width="180" sortable="custom">
-            <template slot-scope="scope">
-              {{ scope.row.updateTime | formatDate }}
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" fixed="right" width="220">
-            <template slot-scope="scope">
-              <el-button size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
-              <el-dropdown @command="handleMoreActions">
-                <el-button size="mini">
+            </span>
+            <span class="tree-node-actions">
+              <el-button type="text" size="mini" @click="handleEdit(data)">编辑</el-button>
+              <el-dropdown @command="handleMoreActions" size="mini">
+                <el-button type="text" size="mini">
                   更多<i class="el-icon-arrow-down el-icon--right"></i>
                 </el-button>
-                <el-dropdown-menu>
-                  <el-dropdown-item :command="{type: 'move', row: scope.row}">
+                <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item :command="{type: 'move', row: data}">
                     移动到其他公司
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="scope.row.id!==1" :command="{type: 'delete', row: scope.row}" divided>
+                  <el-dropdown-item v-if="data.id!==1" :command="{type: 'delete', row: data}" divided>
                     删除
                   </el-dropdown-item>
                 </el-dropdown-menu>
               </el-dropdown>
-            </template>
-          </el-table-column>
-        </el-table>
+            </span>
+          </span>
+        </el-tree>
 
-        <div v-if="!loading && (!tableData || tableData.length === 0)" class="empty-wrap">
+        <div v-if="!loading && (!treeData || treeData.length === 0)" class="empty-wrap">
           <el-empty description="暂无数据"/>
         </div>
-      </div>
-
-      <!-- 分页 -->
-      <div class="pagination-wrap" v-if="total > 0">
-        <el-pagination
-          background
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-          :page-sizes="[10, 20, 50, 100]"
-          :page-size="pageSize"
-          :current-page="currentPage"
-          @size-change="handleSizeChange"
-          @current-change="handlePageChange"
-        />
       </div>
     </el-card>
 
@@ -266,7 +222,7 @@ export default {
       currentPage: 1,
       pageSize: 10,
       total: 0,
-      tableData: [],
+      treeData: [], // 树形数据
       dialogVisible: false,
       moveCompanyDialogVisible: false,
       dialogType: 'add',
@@ -303,7 +259,12 @@ export default {
         {code: 1, label: '已激活'},
         {code: 2, label: '禁用'},
         {code: 5, label: '系统内置'}
-      ]
+      ],
+      treeProps: {
+        label: 'companyName',
+        children: 'children',
+        isLeaf: 'isLeaf'
+      }
     }
   },
   computed: {
@@ -379,8 +340,17 @@ export default {
         const resData = response.data || {}
         const list = (resData.data && Array.isArray(resData.data)) ? resData.data : (resData.list || [])
         this.total = resData.total != null ? resData.total : list.length
-        const treeData = await this.buildTreeData(list)
-        this.tableData = treeData
+
+        // 转换为树形结构数据
+        const treeData = []
+        for (const company of list) {
+          const companyWithChildren = {
+            ...company,
+            isLeaf: !(company.childrenCount && company.childrenCount > 0)
+          }
+          treeData.push(companyWithChildren)
+        }
+        this.treeData = treeData
       } catch (error) {
         console.error('加载公司数据失败:', error)
         this.$message.error('加载公司数据失败')
@@ -389,33 +359,28 @@ export default {
       }
     },
 
-    async buildTreeData(companies) {
-      const treeData = []
-      for (const company of companies) {
-        const companyWithChildren = {...company}
-        if (company.childrenCount && company.childrenCount > 0) {
-          companyWithChildren.hasChildren = true
-        }
-        treeData.push(companyWithChildren)
+    async loadNode(node, resolve) {
+      // 根节点
+      if (node.level === 0) {
+        await this.loadCompanyData();
+        resolve(this.treeData);
+        return;
       }
-      return treeData
-    },
 
-    async loadNode(tree, treeNode, resolve) {
       try {
-        const response = await listChildren(tree.id)
-        const children = response.data || []
-        const childrenWithHasChildren = []
+        const response = await listChildren(node.data.id);
+        const children = response.data || [];
+        const childrenWithIsLeaf = [];
         for (const child of children) {
-          if (child.childrenCount && child.childrenCount > 0) {
-            child.hasChildren = true
-          }
-          childrenWithHasChildren.push(child)
+          childrenWithIsLeaf.push({
+            ...child,
+            isLeaf: !(child.childrenCount && child.childrenCount > 0)
+          });
         }
-        resolve(childrenWithHasChildren)
+        resolve(childrenWithIsLeaf);
       } catch (error) {
-        console.error(`加载公司 ${tree.id} 的子节点失败:`, error)
-        resolve([])
+        console.error(`加载公司 ${node.data.id} 的子节点失败:`, error);
+        resolve([]);
       }
     },
 
@@ -486,18 +451,15 @@ export default {
         type: 'warning'
       }).then(async () => {
         try {
-          await deleteCompany(row.id)
-          this.$message.success('删除成功')
-          await this.loadCompanyData()
-          // 强制更新表格以刷新树形结构显示
-          this.$nextTick(() => {
-            this.tableData = [...this.tableData]
-          })
+          await deleteCompany(row.id);
+          this.$message.success('删除成功');
+          // 重新加载整个树
+          this.loadCompanyData();
         } catch (error) {
-          console.error('删除失败:', error)
-          this.$message.error('删除失败')
+          console.error('删除失败:', error);
+          this.$message.error('删除失败');
         }
-      })
+      });
     },
 
     getCompanyStatusTagType(flag) {
@@ -530,7 +492,7 @@ export default {
     async handleDialogConfirm() {
       this.$refs.editForm.validate(async (valid) => {
         if (valid) {
-          this.dialogSaving = true
+          this.dialogSaving = true;
           try {
             if (this.dialogType === 'add' && this.editForm.parentId) {
               const saveResponse = await saveCompany({
@@ -538,29 +500,26 @@ export default {
                 taxNumber: this.editForm.taxNumber,
                 description: this.editForm.description,
                 flag: this.editForm.flag
-              })
+              });
               if (saveResponse.data && saveResponse.data.id) {
-                await moveCompanyTo(this.editForm.parentId, saveResponse.data.id)
-                this.$message.success('新增子公司成功')
+                await moveCompanyTo(this.editForm.parentId, saveResponse.data.id);
+                this.$message.success('新增子公司成功');
               }
             } else {
-              await saveCompany(this.editForm)
-              this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
+              await saveCompany(this.editForm);
+              this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功');
             }
-            this.dialogVisible = false
-            await this.loadCompanyData()
-            // 强制更新表格以刷新树形结构显示
-            this.$nextTick(() => {
-              this.tableData = [...this.tableData]
-            })
+            this.dialogVisible = false;
+            // 重新加载整个树
+            this.loadCompanyData();
           } catch (error) {
-            console.error('保存失败:', error)
-            this.$message.error('保存失败')
+            console.error('保存失败:', error);
+            this.$message.error('保存失败');
           } finally {
-            this.dialogSaving = false
+            this.dialogSaving = false;
           }
         }
-      })
+      });
     },
 
     handleMoreActions(command) {
@@ -575,18 +534,6 @@ export default {
           this.handleDelete(command.row)
           break
       }
-    },
-
-    handleSortChange({column, prop, order}) {
-      if (order) {
-        const direction = order === 'ascending' ? 'ASC' : 'DESC'
-        this.sortParams = {
-          [prop + 'Order']: direction
-        }
-      } else {
-        this.sortParams = {}
-      }
-      this.loadCompanyData()
     },
 
     handleMoveCompanyDialogClose() {
@@ -647,19 +594,16 @@ export default {
       }
       this.moveSaving = true
       try {
-        await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId)
-        this.$message.success('移动公司成功')
-        this.handleMoveCompanyDialogClose()
-        await this.loadCompanyData()
-        // 强制更新表格以刷新树形结构显示
-        this.$nextTick(() => {
-          this.tableData = [...this.tableData]
-        })
+        await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId);
+        this.$message.success('移动公司成功');
+        this.handleMoveCompanyDialogClose();
+        // 重新加载整个树
+        this.loadCompanyData();
       } catch (error) {
-        console.error('移动公司失败:', error)
+        console.error('移动公司失败:', error);
         // 如果后端返回子孙校验失败，应显示后端错误信息
-        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动公司失败'
-        this.$message.error(msg)
+        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动公司失败';
+        this.$message.error(msg);
       } finally {
         this.moveSaving = false
       }
@@ -747,6 +691,23 @@ export default {
     background: #ffe58f;
     padding: 0 2px;
     border-radius: 3px;
+  }
+
+  .custom-tree-node {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 14px;
+    padding-right: 8px;
+  }
+
+  .tree-node-actions {
+    display: none;
+  }
+
+  .custom-tree-node:hover .tree-node-actions {
+    display: inline-block;
   }
 
   @media (max-width: 768px) {
