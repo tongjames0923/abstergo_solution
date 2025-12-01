@@ -10,6 +10,7 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 
 import javax.annotation.Resource;
 import java.util.Collection;
@@ -34,7 +35,16 @@ public class StartUpConfig {
 
         boolean optionalExecute = startUpProperty.isOptionalExecute();
         startups.stream().filter(a -> a != null).sorted((a1, a2) -> {
-            return a1.getOrder() - a2.getOrder();
+
+            int a11 = 0, a22 = 0;
+            if (a1 instanceof Ordered) {
+                a11 = ((Ordered)a1).getOrder();
+            }
+            if (a2 instanceof Ordered) {
+                a22 = ((Ordered)a2).getOrder();
+            }
+            return a11 - a22;
+
         }).forEach(startup -> {
             if (!optionalExecute && startup.isOptional()) {
                 log.info("skip optional startup {}", startup.getClass().getSimpleName());

@@ -29,7 +29,7 @@ import org.springframework.context.annotation.Configuration;
 import javax.annotation.Resource;
 
 @Configuration
-@ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
+
 public class BuisnessBeanConfig {
 
     @Resource
@@ -37,41 +37,48 @@ public class BuisnessBeanConfig {
 
     @Bean
     @ConditionalOnMissingBean(ISystemLogService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemLogService systemLogService() {
         return new SimpleSystemLogServiceImpl();
     }
 
     @Bean
     @ConditionalOnMissingBean(IUserRoleRelationService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IUserRoleRelationService userRoleRelationService() {
         return new SimpleUserRoleRelationServiceImpl();
     }
 
     @Bean
     @ConditionalOnMissingBean(ISystemUserService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemUserService systemUserService() {
         return new SimpleSystemUserServiceImpl();
     }
 
     @Bean
     @ConditionalOnMissingBean(ISystemCompanyService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemCompanyService companyService() {
         return new SimpleCompanyService();
     }
 
     @Bean
     @ConditionalOnMissingBean(IViewService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IViewService viewService() {
         return new ViewServiceImpl();
     }
 
     @Bean
     @ConditionalOnMissingBean(ISystemRoleService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemRoleService roleService() {
         return new SimpleSystemRoleServiceImpl();
     }
 
     @Bean
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IPasswordEncrypt passwordEncrypt() {
         return BeanUtil.buildBeanFromProperties(NoEncryptPassword::new, systemAppProperty.getPasswordEncryptImpl(),
             BeanUtil::buildByEmptyArgs);
@@ -79,18 +86,21 @@ public class BuisnessBeanConfig {
 
     @Bean
     @ConditionalOnMissingBean(ICompanyUserRelationService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ICompanyUserRelationService companyUserRelationService() {
         return new SimpleCompanyUserRelationService();
     }
 
     @Bean
     @ConditionalOnMissingBean(IUserLoginInfoService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IUserLoginInfoService userLoginInfoService() {
         return new DefaultUserLoginInfoService();
     }
 
     @Bean
     @ConditionalOnMissingBean(ISystemTokenService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemTokenService systemTokenService() {
         return new DefaultSystemTokenService();
     }

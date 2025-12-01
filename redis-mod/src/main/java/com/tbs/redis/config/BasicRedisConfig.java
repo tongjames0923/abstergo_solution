@@ -24,7 +24,6 @@ import javax.annotation.Resource;
  * @author abstergo
  */
 @Configuration
-@ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
 public class BasicRedisConfig {
 
     @Value("${spring.redis.host:localhost}")
@@ -41,6 +40,7 @@ public class BasicRedisConfig {
 
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(RedissonClient.class)
+    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
     public RedissonClient redissonClient(
         @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer serializer) {
         Config config = new Config();
@@ -53,6 +53,7 @@ public class BasicRedisConfig {
 
     @Bean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
+    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
     RedisSerializer valueSerializer() throws Throwable {
         return BeanUtil.buildBeanFromProperties(GenericJackson2JsonRedisSerializer::new, property.getValueSerializer(),
             BeanUtil::buildByEmptyArgs);

@@ -20,8 +20,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 public class PrivateTestController extends BaseController {
 	@GetMapping("/test")
 	@Operation(summary = "测试权限", description = "测试权限")
-	@ApiResponse(responseCode = "200", description = "测试权限", 
-		content = @Content(mediaType = "application/json", 
+	@ApiResponse(responseCode = "200", description = "测试权限",
+		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult test(@Parameter(name = "value", description = "测试值") int value) {
 		return AjaxUtil.getInstance().custom(468, "测试权限", value);
@@ -29,8 +29,8 @@ public class PrivateTestController extends BaseController {
 
 	@GetMapping("/testAuth")
 	@Operation(summary = "测试认证", description = "测试认证")
-	@ApiResponse(responseCode = "200", description = "测试认证成功", 
-		content = @Content(mediaType = "application/json", 
+	@ApiResponse(responseCode = "200", description = "测试认证成功",
+		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult testAuth() {
 		return AjaxUtil.getInstance().success(null);

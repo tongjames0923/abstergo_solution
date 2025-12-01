@@ -61,8 +61,8 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
     /**
      * 扫描结束 扫描结束 可以进行一些操作
      */
-    protected void end() {
-        log.info("扫描包: {} 完成", getPackName());
+    protected void end(int count) {
+        log.info("扫描包: {} 完成, 共扫描到 {} 个 Bean", getPackName(), count);
     }
 
     @Override
@@ -77,8 +77,8 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
                 scanAnnotations.stream().filter(annotation -> annotation != null)
                     .forEach(scanAnnotation -> scanner.addIncludeFilter(new AnnotationTypeFilter(scanAnnotation)));
             }
-            scanner.scan(getBasePackages());
-            end();
+            var count = scanner.scan(getBasePackages());
+            end(count);
             return true;
         });
 

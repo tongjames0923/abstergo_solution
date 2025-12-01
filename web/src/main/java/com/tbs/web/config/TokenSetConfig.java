@@ -12,9 +12,9 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 
 import javax.annotation.Resource;
-
 
 /**
  * token设置
@@ -22,30 +22,31 @@ import javax.annotation.Resource;
  * @author abstergo
  */
 @Configuration
-@ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
 public class TokenSetConfig {
 
-	@Resource
-	WebAuthProperty webAuthProperty;
+    @Resource
+    WebAuthProperty webAuthProperty;
 
-	@Bean(name = WebBeanNameConstant.LOGIN_TOKEN_PICKER)
-
+    @Bean(name = WebBeanNameConstant.LOGIN_TOKEN_PICKER)
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
     public ITokenPicker tokenPicker() {
-		return BeanUtil.buildBeanFromProperties(() -> {
-			return new DefaultLoginTokenPicker();
-		}, webAuthProperty.getTokenPickerImpl(), BeanUtil::buildByEmptyArgs);
-	}
+        return BeanUtil.buildBeanFromProperties(() -> {
+            return new DefaultLoginTokenPicker();
+        }, webAuthProperty.getTokenPickerImpl(), BeanUtil::buildByEmptyArgs);
+    }
 
-	@Bean
-	@ConditionalOnMissingBean(ITokenIssuanceCenter.class)
-	ITokenIssuanceCenter tokenIssuanceCenter() {
-		return BeanUtil.buildBeanFromProperties(() -> {
-			return new NoImplTokenIssuanceCenter();
-		}, webAuthProperty.getTokenIssuanceCenterImpl(), BeanUtil::buildByEmptyArgs);
-	}
+    @Bean
+    @ConditionalOnMissingBean(ITokenIssuanceCenter.class)
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
+    ITokenIssuanceCenter tokenIssuanceCenter() {
+        return BeanUtil.buildBeanFromProperties(() -> {
+            return new NoImplTokenIssuanceCenter();
+        }, webAuthProperty.getTokenIssuanceCenterImpl(), BeanUtil::buildByEmptyArgs);
+    }
 
-	@Bean
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
     public TokenHandleFilter tokenPickFilter() {
-		return new TokenHandleFilter();
-	}
+        return new TokenHandleFilter();
+    }
 }

@@ -1,13 +1,11 @@
 package com.tbs.common;
 
-import org.springframework.core.Ordered;
-
 /**
  * 当Application 启动后运行
  *
  * @author abstergo
  */
-public interface IStartup extends Ordered {
+public interface IStartup {
     /**
      * 运行方法
      *
@@ -24,13 +22,4 @@ public interface IStartup extends Ordered {
         return false;
     }
 
-    /**
-     * 启动运行顺序
-     *
-     * @return 顺序
-     */
-    @Override
-    default int getOrder() {
-        return Ordered.LOWEST_PRECEDENCE;
-    }
 }

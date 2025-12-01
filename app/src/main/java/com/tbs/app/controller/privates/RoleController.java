@@ -49,8 +49,8 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@Override
 	@GetMapping("get/{id}")
 	@Operation(summary = "获取角色信息", description = "根据角色ID获取角色详细信息")
-	@ApiResponse(responseCode = "200", description = "成功获取角色信息", 
-		content = @Content(mediaType = "application/json", 
+	@ApiResponse(responseCode = "200", description = "成功获取角色信息",
+		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult get(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
 		return super.get(id);
@@ -65,8 +65,8 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@Override
 	@PostMapping("save")
 	@Operation(summary = "保存角色信息", description = "创建或更新角色信息")
-	@ApiResponse(responseCode = "200", description = "成功保存角色信息", 
-		content = @Content(mediaType = "application/json", 
+	@ApiResponse(responseCode = "200", description = "成功保存角色信息",
+		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult save(
 			@Parameter(name = "entity", description = "角色信息", required = true) @RequestBody SystemRoleEntity entity) {
@@ -82,8 +82,8 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@Override
 	@PostMapping("delete/{id}")
 	@Operation(summary = "删除角色", description = "根据角色ID删除角色")
-	@ApiResponse(responseCode = "200", description = "成功删除角色", 
-		content = @Content(mediaType = "application/json", 
+	@ApiResponse(responseCode = "200", description = "成功删除角色",
+		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult delete(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
 		return super.delete(id);
@@ -100,8 +100,8 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@Override
 	@PostMapping("query")
 	@Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
-	@ApiResponse(responseCode = "200", description = "成功查询角色列表", 
-		content = @Content(mediaType = "application/json", 
+	@ApiResponse(responseCode = "200", description = "成功查询角色列表",
+		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult query(
 			@Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,

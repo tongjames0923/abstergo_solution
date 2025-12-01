@@ -12,11 +12,12 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@ConditionalOnProperty(value = "tbs.xxl-job.enable", havingValue = "true", matchIfMissing = false)
+
 @Component
 public class XxlJobConfig {
     @Bean
     @ConditionalOnBean(IXXLJobsConfig.class)
+    @ConditionalOnProperty(value = "tbs.xxl-job.enable", havingValue = "true", matchIfMissing = false)
     public XxlJobSpringExecutor xxlJobSpringExecutor(final IXXLJobsConfig config) {
         log.info("xxl job config start");
         final XxlJobSpringExecutor xxlJobSpringExecutor = new XxlJobSpringExecutor();
@@ -55,6 +56,7 @@ public class XxlJobConfig {
     }
 
     @Bean
+    @ConditionalOnBean(IXXLJobsConfig.class)
     @ConditionalOnProperty(value = "tbs.xxl-job.enable-json-job-executor", havingValue = "true", matchIfMissing = false)
     public JsonJobExecutor jsonJobExecutor() {
         return new JsonJobExecutor();

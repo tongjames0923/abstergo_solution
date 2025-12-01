@@ -11,7 +11,6 @@ import com.tbs.shared.pojo.entity.SystemTokenEntity;
 import com.tbs.shared.util.NetUtil;
 import com.tbs.sql.enums.QueryOrderEnum;
 import com.tbs.sql.order.impl.QueryOrderedModel;
-import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
@@ -21,6 +20,7 @@ import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -44,12 +44,6 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
      */
     @Resource
     ISystemTokenService tokenService;
-
-    /**
-     * Web认证配置属性，用于获取令牌过期时间等配置信息
-     */
-    @Resource
-    WebAuthProperty webAuthProperty;
 
     /**
      * 将系统令牌实体转换为令牌模型

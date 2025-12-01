@@ -1,9 +1,7 @@
 package com.tbs.web.result.annotation;
 
-import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IResultCreator;
 import com.tbs.web.result.impl.DefaultResultCreateor;
-import com.tbs.web.result.impl.SimpleBuilderProvider;
 
 import java.lang.annotation.*;
 

@@ -26,7 +26,6 @@ import javax.annotation.Resource;
  * @author abstergo
  */
 @Configuration
-@ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
 @Slf4j
 public class DefaultAppConfig {
     @Resource
@@ -38,6 +37,7 @@ public class DefaultAppConfig {
 
     @Bean
     @ConditionalOnMissingBean(IUserNamePasswordValidator.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
     public IUserNamePasswordValidator userNamePasswordValidator() {
         return BeanUtil.buildBeanFromProperties(() -> new SimpleUserValidator(),
             systemAppProperty.getSystemUserNamePasswordValidatorImpl(), BeanUtil::buildByEmptyArgs);
@@ -45,31 +45,35 @@ public class DefaultAppConfig {
 
     @Bean
     @ConditionalOnMissingBean(IUserInfoService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
     public IUserInfoService userInfoService() {
         return new DefaultUserInfoService();
     }
 
     @Bean
     @ConditionalOnMissingBean(IUsernamePasswordAccessTokenProvider.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
     IUsernamePasswordAccessTokenProvider usernamePasswordAccessTokenProvider() {
         return new DefaultUserPasswordAccessTokenProvider();
     }
 
     @Bean
     @ConditionalOnMissingBean(ITokenRemover.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
     public ITokenRemover tokenRemover() {
         return new DefaultTokenRemover();
     }
 
     @Bean
     @ConditionalOnBean(IRefreshTokenService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
     @ConditionalOnMissingBean(IRefreshAccessTokenProvider.class)
     public IRefreshAccessTokenProvider refreshAccessTokenProvider() {
         return new DefaultRefreshAccessTokenProvider();
     }
 
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.system", name = "enable-operate-log", havingValue = "true",
+    @ConditionalOnProperty(prefix = "tbs.system", name = {"enable-operate-log", "enable"}, havingValue = "true",
         matchIfMissing = true)
     SystemOperateInterceptor systemOperAop() {
         return new SystemOperateInterceptor();

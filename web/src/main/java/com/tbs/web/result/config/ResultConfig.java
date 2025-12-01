@@ -1,6 +1,7 @@
 package com.tbs.web.result.config;
 
 import com.tbs.common.util.base.BeanUtil;
+import com.tbs.web.result.config.property.ResultProperty;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.IResultCreator;
@@ -9,6 +10,7 @@ import com.tbs.web.result.impl.DefaultResultCreateor;
 import com.tbs.web.result.impl.ReLoginErrorAjaxProvider;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,10 +22,11 @@ import javax.annotation.Resource;
  * @author tongj
  */
 @Configuration
+@ConditionalOnProperty(prefix = "tbs.result", name = "enable", havingValue = "true", matchIfMissing = true)
 public class ResultConfig {
 
     @Resource
-    private com.tbs.web.result.config.property.ResultProperty resultProperty;
+    private ResultProperty resultProperty;
 
     /**
      * 创建 AJAX 结果构建器提供者

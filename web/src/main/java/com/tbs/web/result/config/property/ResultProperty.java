@@ -3,9 +3,9 @@ package com.tbs.web.result.config.property;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.result.IResultCreator;
+import com.tbs.web.result.impl.DefaultErrorAjaxProvider;
 import com.tbs.web.result.impl.DefaultResultCreateor;
 import com.tbs.web.result.impl.SimpleBuilderProvider;
-import com.tbs.web.result.impl.DefaultErrorAjaxProvider;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -17,6 +17,12 @@ import org.springframework.stereotype.Component;
 @Data
 @ConfigurationProperties("tbs.result")
 public class ResultProperty {
+
+    /**
+     * 是否启用
+     */
+    private boolean enable = true;
+
     /**
      * 创建结果对象
      */

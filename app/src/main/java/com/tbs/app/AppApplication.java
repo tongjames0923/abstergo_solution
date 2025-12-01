@@ -6,6 +6,7 @@ import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.sql.annotation.EnableTbsSqlUtils;
 import com.tbs.sql.annotation.dialect.MYSQL;
+import com.tbs.web.annotation.EnableWebPack;
 import com.tbs.xxl.annotation.UseXxlJob;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
@@ -19,13 +20,12 @@ import tk.mybatis.spring.annotation.MapperScan;
  *
  * @author abstergo
  */
-@SpringBootApplication(
-    scanBasePackages = {"com.tbs.shared", "com.tbs.app", "com.tbs.web", "com.tbs.struct", "com.tbs.view"})
+@EnableWebPack
+@SpringBootApplication(scanBasePackages = {"com.tbs.app", "com.tbs.shared", "com.tbs.struct", "com.tbs.view"})
 @EnableTbsSqlUtils
 @EnableTbsAsyncPack
 @EnableTbsCache
 @EnableRabbitMq
-
 @UseXxlJob
 @MYSQL
 @MapperScan(basePackages = "com.tbs.shared.mapper")
