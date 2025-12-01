@@ -1,8 +1,8 @@
-package com.tbs.shared.interfaces.view.impl;
+package com.tbs.view.impl;
 
 import com.tbs.common.data.impl.JsonTransformer;
-import com.tbs.shared.constant.ViewConstants;
-import com.tbs.shared.interfaces.view.IPropertyValueTransformer;
+import com.tbs.view.IPropertyValueTransformer;
+import com.tbs.view.constant.ViewConstants;
 import org.springframework.stereotype.Component;
 
 /**

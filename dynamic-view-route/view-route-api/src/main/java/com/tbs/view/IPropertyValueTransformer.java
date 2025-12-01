@@ -1,4 +1,4 @@
-package com.tbs.shared.interfaces.view;
+package com.tbs.view;
 
 import com.tbs.common.data.ITransformer;
 

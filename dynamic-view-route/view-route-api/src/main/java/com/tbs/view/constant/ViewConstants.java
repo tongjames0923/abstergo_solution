@@ -1,4 +1,4 @@
-package com.tbs.shared.constant;
+package com.tbs.view.constant;
 
 /**
  * View constants

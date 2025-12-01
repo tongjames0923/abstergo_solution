@@ -39,858 +39,858 @@ CREATE TABLE `property_value`
 -- Records of property_value
 -- ----------------------------
 INSERT INTO `property_value`
-VALUES (1, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"number\"',
+VALUES (1, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"number\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (2, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
+VALUES (2, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (3, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
+VALUES (3, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (4, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (4, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (5, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (5, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (6, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (6, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (7, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (7, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (8, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
+VALUES (8, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (9, 'options', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (9, 'options', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '[{\"label\":\"激活的\",\"value\":\"1\"},{\"label\":\"被锁定的\",\"value\":\"2\"},{\"label\":\"禁用的\",\"value\":\"0\"}]',
         'java.util.ArrayList');
 INSERT INTO `property_value`
-VALUES (10, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (10, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (11, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (11, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (12, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (12, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (13, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (13, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (14, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (14, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (15, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (15, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (16, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (16, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (17, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (17, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (18, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (18, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (19, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (19, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (20, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (20, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (21, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (21, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (22, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (22, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (23, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (23, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (24, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (24, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (25, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (25, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (26, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (26, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (27, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (27, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (28, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (28, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (29, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (29, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (30, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (30, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (31, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (31, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (32, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (32, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (33, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (33, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (34, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (34, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (35, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (35, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (36, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (36, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (37, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (37, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (38, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (38, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (39, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (39, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (40, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (40, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (41, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (41, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (42, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (42, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (43, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (43, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (44, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (44, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (45, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (45, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (46, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (46, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (47, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (47, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (48, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入公司Id\"',
+VALUES (48, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入公司Id\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (49, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
+VALUES (49, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (50, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入公司名称\"',
+VALUES (50, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入公司名称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (51, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (51, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"el-icon-office-building\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (52, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入税号\"',
+VALUES (52, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入税号\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (53, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-document\"',
+VALUES (53, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-document\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (54, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (54, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (55, 'multiple', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (55, 'multiple', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (56, 'options', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (56, 'options', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '[{\"label\":\"系统\",\"value\":\"5\"},{\"label\":\"已激活\",\"value\":\"1\"},{\"label\":\"禁用\",\"value\":\"2\"},{\"label\":\"已删除\",\"value\":\"0\"}]',
         'java.util.ArrayList');
 INSERT INTO `property_value`
-VALUES (57, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (57, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (58, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (58, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (59, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (59, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (60, 'end-placeholer', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (60, 'end-placeholer', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (61, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (61, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (62, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (62, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (63, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (63, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (64, 'end-placeholer', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (64, 'end-placeholer', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (65, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入公司名称\"',
+VALUES (65, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入公司名称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (66, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (66, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"el-icon-office-building\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (67, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (67, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (68, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (68, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (69, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-document\"',
+VALUES (69, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-document\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (70, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (70, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (71, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入公司描述信息\"',
+VALUES (71, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入公司描述信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (72, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (72, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (73, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (73, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (74, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '5', 'java.lang.Integer');
+VALUES (74, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '5', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (75, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入LogoUrl\"',
+VALUES (75, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入LogoUrl\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (76, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (76, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (77, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (77, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"el-icon-picture-outline\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (78, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
+VALUES (78, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (79, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"number\"',
+VALUES (79, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"number\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (80, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
+VALUES (80, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (81, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (81, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (82, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (82, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (83, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (83, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (84, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (84, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (85, 'options', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (85, 'options', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '[{\"label\":\"激活的\",\"value\":\"1\"},{\"label\":\"被锁定的\",\"value\":\"2\"},{\"label\":\"禁用的\",\"value\":\"0\"}]',
         'java.util.ArrayList');
 INSERT INTO `property_value`
-VALUES (86, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
+VALUES (86, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (87, 'multiple', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (87, 'multiple', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (88, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (88, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (89, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (89, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (90, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (90, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (91, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (91, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (92, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"date\"', 'java.lang.String');
+VALUES (92, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"date\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (93, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (93, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (94, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (94, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (95, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (95, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (96, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (96, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (97, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"date\"', 'java.lang.String');
+VALUES (97, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"date\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (98, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
+VALUES (98, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (99, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"number\"',
+VALUES (99, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"number\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (100, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
+VALUES (100, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (101, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (101, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (102, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (102, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (103, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"text\"',
+VALUES (103, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"text\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (104, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (104, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (105, 'show-word-limit', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (105, 'show-word-limit', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (106, 'maxlength', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '64',
+VALUES (106, 'maxlength', 'com.tbs.view.impl.JsonPropertyValueTransformer', '64',
         'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (107, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (107, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (108, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (108, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (109, 'maxlength', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '64',
+VALUES (109, 'maxlength', 'com.tbs.view.impl.JsonPropertyValueTransformer', '64',
         'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (110, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (110, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (111, 'show-word-limit', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (111, 'show-word-limit', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (112, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"text\"',
+VALUES (112, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"text\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (113, 'options', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (113, 'options', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '[{\"label\":\"激活的\",\"value\":\"1\"},{\"label\":\"被锁定的\",\"value\":\"2\"},{\"label\":\"禁用的\",\"value\":\"0\"}]',
         'java.util.ArrayList');
 INSERT INTO `property_value`
-VALUES (114, 'multiple', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (114, 'multiple', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (115, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
+VALUES (115, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (116, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (116, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (117, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (117, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (118, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (118, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (119, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"date\"',
+VALUES (119, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"date\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (120, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (120, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (121, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"small\"',
+VALUES (121, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"small\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (122, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (122, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (123, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (123, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (124, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (124, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (125, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (125, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (126, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"date\"',
+VALUES (126, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"date\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (127, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (127, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (128, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"small\"',
+VALUES (128, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"small\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (129, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (129, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (130, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (130, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (131, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (131, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (132, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (132, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (133, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (133, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (134, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (134, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (135, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (135, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (136, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (136, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (137, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (137, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (138, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (138, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (139, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (139, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (140, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (140, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (141, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (141, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (142, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (142, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (143, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (143, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (144, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (144, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (145, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (145, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (146, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (146, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (147, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (147, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (148, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (148, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (149, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (149, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (150, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (150, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (151, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (151, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (152, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (152, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (153, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (153, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (154, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (154, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (155, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (155, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (156, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (156, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (157, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (157, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (158, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (158, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (159, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (159, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (160, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (160, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (161, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (161, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (162, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (162, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (163, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (163, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (164, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (164, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (165, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (165, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (166, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (166, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (167, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (167, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (168, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (168, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (169, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (169, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (170, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (170, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (171, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (171, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (172, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (172, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (173, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (173, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (174, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (174, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (175, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (175, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (176, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (176, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (177, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (177, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (178, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (178, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (179, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (179, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (180, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (180, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (181, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (181, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (182, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (182, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (183, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (183, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (184, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (184, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (185, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (185, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (186, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (186, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (187, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (187, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (188, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (188, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (189, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (189, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (190, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (190, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (191, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (191, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (192, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (192, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (193, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (193, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (194, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (194, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (195, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (195, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (196, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (196, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (197, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (197, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (198, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (198, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (199, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (199, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (200, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (200, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (201, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (201, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (202, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (202, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (203, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (203, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (204, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (204, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (205, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (205, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (206, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (206, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (207, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (207, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (208, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (208, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (209, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (209, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (210, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (210, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (211, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (211, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (212, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (212, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (213, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (213, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (214, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (214, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (215, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (215, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (216, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (216, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (217, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (217, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (218, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (218, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (219, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (219, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (220, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (220, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (221, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (221, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (222, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (222, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (223, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (223, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (224, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (224, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (225, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (225, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (226, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (226, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (227, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (227, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (228, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (228, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (229, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (229, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (230, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (230, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (231, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (231, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (232, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (232, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (233, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (233, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (234, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (234, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (235, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (235, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (236, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (236, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (237, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (237, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (238, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (238, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (239, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (239, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (240, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (240, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (241, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (241, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (242, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (242, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (243, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (243, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (244, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (244, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (245, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (245, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (246, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (246, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (247, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (247, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (248, 'showPassword', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (248, 'showPassword', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (249, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
+VALUES (249, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入密码\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (250, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"password\"',
+VALUES (250, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"password\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (251, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
+VALUES (251, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-lock\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (252, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"medium\"',
+VALUES (252, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"medium\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (253, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
+VALUES (253, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入备注信息\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (254, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
+VALUES (254, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"textarea\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (255, 'rows', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
+VALUES (255, 'rows', 'com.tbs.view.impl.JsonPropertyValueTransformer', '2', 'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (256, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
+VALUES (256, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户ID\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (257, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"number\"',
+VALUES (257, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"number\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (258, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
+VALUES (258, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-search\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (259, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (259, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (260, 'maxlength', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '64',
+VALUES (260, 'maxlength', 'com.tbs.view.impl.JsonPropertyValueTransformer', '64',
         'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (261, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
+VALUES (261, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入用户名\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (262, 'show-word-limit', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (262, 'show-word-limit', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (263, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"text\"',
+VALUES (263, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"text\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (264, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
+VALUES (264, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-user\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (265, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (265, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (266, 'maxlength', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '64',
+VALUES (266, 'maxlength', 'com.tbs.view.impl.JsonPropertyValueTransformer', '64',
         'java.lang.Integer');
 INSERT INTO `property_value`
-VALUES (267, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
+VALUES (267, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请输入昵称\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (268, 'show-word-limit', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (268, 'show-word-limit', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (269, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"text\"',
+VALUES (269, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"text\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (270, 'prefix-icon', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
+VALUES (270, 'prefix-icon', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"el-icon-star-off\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (271, 'options', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (271, 'options', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '[{\"label\":\"激活的\",\"value\":\"1\"},{\"label\":\"被锁定的\",\"value\":\"2\"},{\"label\":\"禁用的\",\"value\":\"0\"}]',
         'java.util.ArrayList');
 INSERT INTO `property_value`
-VALUES (272, 'multiple', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (272, 'multiple', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (273, 'placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
+VALUES (273, 'placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"请选择用户状态\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (274, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (274, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (275, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"small\"',
+VALUES (275, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"small\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (276, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (276, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (277, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (277, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (278, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (278, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (279, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"date\"',
+VALUES (279, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"date\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (280, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (280, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (281, 'clearable', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', 'true',
+VALUES (281, 'clearable', 'com.tbs.view.impl.JsonPropertyValueTransformer', 'true',
         'java.lang.Boolean');
 INSERT INTO `property_value`
-VALUES (282, 'size', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"small\"',
+VALUES (282, 'size', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"small\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (283, 'start-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
+VALUES (283, 'start-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"开始日期\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (284, 'value-format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer',
+VALUES (284, 'value-format', 'com.tbs.view.impl.JsonPropertyValueTransformer',
         '\"yyyy-MM-dd HH:mm:ss\"', 'java.lang.String');
 INSERT INTO `property_value`
-VALUES (285, 'format', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
+VALUES (285, 'format', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"yyyy-MM-dd\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (286, 'type', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"date\"',
+VALUES (286, 'type', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"date\"',
         'java.lang.String');
 INSERT INTO `property_value`
-VALUES (287, 'end-placeholder', 'com.tbs.shared.interfaces.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
+VALUES (287, 'end-placeholder', 'com.tbs.view.impl.JsonPropertyValueTransformer', '\"结束日期\"',
         'java.lang.String');
 
 -- ----------------------------
