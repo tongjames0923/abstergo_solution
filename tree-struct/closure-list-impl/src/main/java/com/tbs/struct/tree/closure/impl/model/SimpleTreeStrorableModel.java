@@ -1,4 +1,4 @@
-package com.tbs.struct.tree.impl.model;
+package com.tbs.struct.tree.closure.impl.model;
 
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
 import lombok.AllArgsConstructor;

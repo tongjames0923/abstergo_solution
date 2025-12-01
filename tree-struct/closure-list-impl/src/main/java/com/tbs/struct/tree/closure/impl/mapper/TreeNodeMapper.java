@@ -1,16 +1,15 @@
-package com.tbs.struct.tree.impl.mapper;
+package com.tbs.struct.tree.closure.impl.mapper;
 
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.sql.mapper.IFrameworkMapper;
-import com.tbs.struct.tree.impl.entity.TreeNodeEntity;
+import com.tbs.struct.tree.closure.impl.entity.TreeNodeEntity;
 import org.apache.ibatis.annotations.Select;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Repository;
+import tk.mybatis.mapper.common.Mapper;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Repository
 public interface TreeNodeMapper extends IFrameworkMapper<TreeNodeEntity, Long> {
 
     @Cacheable(cacheNames = "tree_node_entity_cache", key = "#id", unless = "#result == null", condition = "#id!=null")

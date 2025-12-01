@@ -2,7 +2,7 @@ package com.tbs.app.service;
 
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
-import com.tbs.struct.tree.impl.service.ClosureTreeServiceImpl;
+import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.springframework.stereotype.Component;

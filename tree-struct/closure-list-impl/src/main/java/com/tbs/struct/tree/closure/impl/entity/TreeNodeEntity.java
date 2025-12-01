@@ -1,4 +1,4 @@
-package com.tbs.struct.tree.impl.entity;
+package com.tbs.struct.tree.closure.impl.entity;
 
 import lombok.Data;
 

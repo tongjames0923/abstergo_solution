@@ -2,10 +2,8 @@ package com.tbs.app.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.app.log.DbSystemOpLog;
-import com.tbs.app.log.EventSystemOpLog;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
-import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
 import com.tbs.broadcast.subscriber.AbstractSubscriber;
 import com.tbs.broadcast.subscriber.impl.SimpleUseSubscriber;
@@ -16,9 +14,8 @@ import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.TimingWheelSchedule;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
-import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
-import com.tbs.struct.tree.impl.service.ClosureTreeServiceImpl;
+import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.xxl.api.IXXLJobsConfig;
@@ -30,7 +27,6 @@ import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 /**

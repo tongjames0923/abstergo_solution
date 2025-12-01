@@ -6,6 +6,7 @@ import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.sql.annotation.EnableTbsSqlUtils;
 import com.tbs.sql.annotation.dialect.MYSQL;
+import com.tbs.struct.tree.closure.annotation.UseClosureTableTree;
 import com.tbs.view.annotation.EnableViewControl;
 import com.tbs.web.annotation.EnableWebPack;
 import com.tbs.xxl.annotation.UseXxlJob;
@@ -22,7 +23,7 @@ import tk.mybatis.spring.annotation.MapperScan;
  * @author abstergo
  */
 @EnableWebPack
-@SpringBootApplication(scanBasePackages = {"com.tbs.app", "com.tbs.shared", "com.tbs.struct"})
+@SpringBootApplication(scanBasePackages = {"com.tbs.app", "com.tbs.shared"})
 @EnableTbsSqlUtils
 @EnableTbsAsyncPack
 @EnableTbsCache
@@ -30,6 +31,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 @UseXxlJob
 @EnableViewControl
 @MYSQL
+@UseClosureTableTree
 @MapperScan(basePackages = "com.tbs.shared.mapper")
 @EntityScan({"com.tbs.shared.pojo.entity", "com.tbs.shared.pojo.entity.view"})
 @EnableAspectJAutoProxy(exposeProxy = true)

@@ -1,7 +1,7 @@
-package com.tbs.struct.tree.impl.mapper;
+package com.tbs.struct.tree.closure.impl.mapper;
 
 import com.tbs.sql.mapper.IFrameworkMapper;
-import com.tbs.struct.tree.impl.entity.TreeRelationEntity;
+import com.tbs.struct.tree.closure.impl.entity.TreeRelationEntity;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.Update;

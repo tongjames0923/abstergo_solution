@@ -1,4 +1,4 @@
-package com.tbs.struct.tree.impl.service;
+package com.tbs.struct.tree.closure.impl.service;
 
 import com.tbs.cache.CacheUtils;
 import com.tbs.common.IStartup;
@@ -9,22 +9,28 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
-import com.tbs.struct.tree.impl.entity.TreeNodeEntity;
-import com.tbs.struct.tree.impl.entity.TreeRelationEntity;
-import com.tbs.struct.tree.impl.mapper.TreeNodeMapper;
-import com.tbs.struct.tree.impl.mapper.TreeRelationMapper;
-import com.tbs.struct.tree.impl.model.SimpleTreeStrorableModel;
+import com.tbs.struct.tree.closure.impl.entity.TreeNodeEntity;
+import com.tbs.struct.tree.closure.impl.entity.TreeRelationEntity;
+import com.tbs.struct.tree.closure.impl.mapper.TreeNodeMapper;
+import com.tbs.struct.tree.closure.impl.mapper.TreeRelationMapper;
+import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/**
+ * 树结构存储实现
+ *
+ * @author tongj
+ */
 @Slf4j
 public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     @Resource

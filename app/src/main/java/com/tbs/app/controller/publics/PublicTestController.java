@@ -1,7 +1,7 @@
 package com.tbs.app.controller.publics;
 
 import com.tbs.struct.tree.api.persistence.ITreeStore;
-import com.tbs.struct.tree.impl.model.SimpleTreeStrorableModel;
+import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
