@@ -7,6 +7,7 @@ import java.util.concurrent.TimeUnit;
 
 import javax.annotation.PostConstruct;
 
+import com.tbs.common.IStartup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,7 +28,7 @@ import com.tbs.lock.util.LockUtil;
  * @see IEventBus 事件总线接口
  * @see IPublishResult 事件发布结果接口
  */
-public abstract class AbstractEventBus<T> implements IEventBus {
+public abstract class AbstractEventBus<T> implements IEventBus, IStartup {
 	/**
 	 * 获取事件队列
 	 * <p>
@@ -51,21 +52,13 @@ public abstract class AbstractEventBus<T> implements IEventBus {
 	 */
 	ILock lock = null;
 
-	/**
-	 * 初始化方法
-	 * <p>
-	 * 在Bean创建完成后自动调用，用于初始化锁对象和其他必要组件。 通过@PostConstruct注解标记为初始化回调方法。
-	 *
-	 * @see PostConstruct 初始化注解
-	 * @see LockUtil 锁工具类
-	 */
-	@PostConstruct
-	public void init() {
-		logger.debug("初始化事件总线");
-		lock = LockUtil.getInstance().getLockerByClass(this.getClass());
-	}
+    @Override
+    public void startUp() throws RuntimeException {
+        logger.debug("初始化事件总线");
+        lock = LockUtil.getInstance().getLockerByClass(this.getClass());
+    }
 
-	/**
+    /**
 	 * 发送队列信号
 	 * <p>
 	 * 当有新事件入队时调用此方法通知等待事件的线程。具体的信号机制由子类实现， 可以是信号量、条件变量或其他同步机制。

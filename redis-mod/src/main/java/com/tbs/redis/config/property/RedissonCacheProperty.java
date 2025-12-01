@@ -3,9 +3,11 @@ package com.tbs.redis.config.property;
 import lombok.Data;
 import org.redisson.api.EvictionMode;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 @Data
 @ConfigurationProperties("tbs.redission.cache")
+@Component
 public class RedissonCacheProperty {
 
     /**

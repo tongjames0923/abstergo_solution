@@ -1,4 +1,4 @@
-package com.tbs.redis.lock;
+package com.tbs.lock.redis;
 
 import java.time.Duration;
 import java.util.Date;
@@ -7,14 +7,14 @@ import java.util.concurrent.locks.Condition;
 
 import javax.annotation.Resource;
 
+import com.tbs.lock.IConditionLock;
+import com.tbs.lock.ILock;
+import com.tbs.lock.ILockProvider;
 import org.jetbrains.annotations.NotNull;
 import org.redisson.api.RCountDownLatch;
 import org.redisson.api.RedissonClient;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.lock.IConditionLock;
-import com.tbs.lock.ILock;
-import com.tbs.lock.ILockProvider;
 
 import lombok.extern.slf4j.Slf4j;
 

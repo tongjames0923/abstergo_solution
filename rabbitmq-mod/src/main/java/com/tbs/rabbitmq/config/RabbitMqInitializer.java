@@ -1,6 +1,6 @@
-package com.tbs.broadcast.rabbitmq.config;
+package com.tbs.rabbitmq.config;
 
-import com.tbs.broadcast.rabbitmq.config.property.RabbitMqProperty;
+import com.tbs.rabbitmq.property.RabbitMqProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.*;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;

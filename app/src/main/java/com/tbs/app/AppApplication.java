@@ -1,8 +1,12 @@
 package com.tbs.app;
 
-import com.tbs.redis.annotation.UseRedissonCacheMananger;
+import com.tbs.async.annotation.EnableTbsAsyncPack;
+import com.tbs.cache.annotation.EnableTbsCache;
+import com.tbs.rabbitmq.annotation.EnableRabbitMq;
+import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.sql.annotation.EnableTbsSqlUtils;
 import com.tbs.sql.annotation.dialect.MYSQL;
+import com.tbs.xxl.annotation.UseXxlJob;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -15,19 +19,25 @@ import tk.mybatis.spring.annotation.MapperScan;
  *
  * @author abstergo
  */
-@SpringBootApplication(scanBasePackages = "com.tbs.**")
+@SpringBootApplication(
+    scanBasePackages = {"com.tbs.shared", "com.tbs.app", "com.tbs.web", "com.tbs.struct", "com.tbs.view"})
 @EnableTbsSqlUtils
+@EnableTbsAsyncPack
+@EnableTbsCache
+@EnableRabbitMq
+
+@UseXxlJob
 @MYSQL
 @MapperScan(basePackages = "com.tbs.shared.mapper")
 @EntityScan({"com.tbs.shared.pojo.entity", "com.tbs.shared.pojo.entity.view"})
 @EnableAspectJAutoProxy(exposeProxy = true)
-@UseRedissonCacheMananger
+@EnableTbsRedis
 @EnableDubbo
 //@EnableTrace
 public class AppApplication {
 
-	public static void main(String[] args) {
-		SpringApplication.run(AppApplication.class, args);
-	}
+    public static void main(String[] args) {
+        SpringApplication.run(AppApplication.class, args);
+    }
 
 }

@@ -1,4 +1,4 @@
-package com.tbs.redis.cache;
+package com.tbs.cache.redis;
 
 import com.tbs.cache.ITtlCacheDecorator;
 import com.tbs.cache.integration.AbstractTtlCache;

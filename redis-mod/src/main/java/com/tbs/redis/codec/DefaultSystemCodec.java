@@ -9,6 +9,9 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 
 import java.io.IOException;
 
+/**
+ * @author tongj
+ */
 public class DefaultSystemCodec extends BaseCodec {
     RedisSerializer serializer;
 

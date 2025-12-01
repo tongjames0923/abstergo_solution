@@ -6,6 +6,9 @@ import com.tbs.broadcast.publisher.IPublishResult;
 import com.tbs.broadcast.publisher.impl.SimpleDistributedAcceptedPublishResult;
 import com.tbs.broadcast.publisher.impl.SpringManagedListenablePublishResult;
 
+/**
+ * @author tongj
+ */
 public class SimpleRabbitMqSupport extends AbstractRabbaitMqSupport<SimpleDistributedAcceptedPublishResult> {
 	@Override
 	public SimpleDistributedAcceptedPublishResult bridge(@NotNull IPublishResult obj) {

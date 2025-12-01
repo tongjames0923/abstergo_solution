@@ -1,4 +1,4 @@
-package com.tbs.redis.lock;
+package com.tbs.lock.redis;
 
 import com.tbs.lock.ILock;
 import org.redisson.api.RLock;

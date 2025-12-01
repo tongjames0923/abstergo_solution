@@ -1,4 +1,4 @@
-package com.tbs.knife4j;
+package com.tbs.knife4j.config;
 
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;

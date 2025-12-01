@@ -1,4 +1,4 @@
-package com.tbs.broadcast.rabbitmq.config.property;
+package com.tbs.rabbitmq.property;
 
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

@@ -1,4 +1,4 @@
-package com.tbs.redis.boradcast;
+package com.tbs.broadcast.redis;
 
 import javax.annotation.Resource;
 

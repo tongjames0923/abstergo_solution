@@ -14,11 +14,11 @@ tbs:
     enable: true
   cache:
     cache-manager-impl: org.redisson.spring.cache.RedissonSpringCacheManager
-    ttl-cache-decorator: com.tbs.redis.cache.RedissonTtlCacheDecorator
+    ttl-cache-decorator: com.tbs.cache.redis.RedissonTtlCacheDecorator
   boardcast:
     event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
   lock:
-    lock-provider-type: com.tbs.redis.lock.RedissonLockProvider
+    lock-provider-type: com.tbs.lock.redis.RedissonLockProvider
   data:
     data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHodlerManager
     data-holder: com.tbs.redis.holder.RedisDataHolder

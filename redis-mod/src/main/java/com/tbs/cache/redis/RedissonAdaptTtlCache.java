@@ -1,4 +1,4 @@
-package com.tbs.redis.cache;
+package com.tbs.cache.redis;
 
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.common.util.helper.FeatureWrapperHelper;
