@@ -1,9 +1,11 @@
 import Vue from 'vue'
 import Router from 'vue-router'
+import store from '@/store'
 /* Layout */
 import Layout from '@/layout'
 import {getRoutes} from "@/api/view";
 import {setUpRouterPermissions} from "@/permission";
+import {getToken} from "@/utils/auth";
 
 Vue.use(Router)
 
@@ -167,32 +169,44 @@ var currentRouter = null
 
 async function generateRoutesFromServer() {
   try {
-    var res = await getRoutes()
-    res = res.data
-    console.log("从后端获取的动态路由数据:", res) // 调试日志
+    const hasToken = getToken()
     var routes = []
+
     // 合并静态路由
     constantRoutes.forEach((r) => {
       routes.push(r)
     })
 
-    // 映射 component 字段为实际组件路径
-    for (let i = 0; i < res.length; i++) {
-      mapComponent(res[i])
-      routes.push(res[i])
+    // 如果有token，则从线上获取动态路由
+    if (hasToken) {
+      try {
+        var res = await getRoutes()
+        res = res.data
+        console.log("从后端获取的动态路由数据:", res) // 调试日志
+
+        // 映射 component 字段为实际组件路径
+        for (let i = 0; i < res.length; i++) {
+          mapComponent(res[i])
+          routes.push(res[i])
+        }
+        console.log("映射后的动态路由:", routes) // 调试日志
+      } catch (error) {
+        console.error("获取动态路由失败:", error)
+        // 如果获取动态路由失败，只返回静态路由
+        console.log("使用静态路由作为备选方案")
+      }
+    } else {
+      console.log("未检测到token，仅使用静态路由")
     }
-    console.log("映射后的动态路由:", routes) // 调试日志
 
-
-    constantRoutes.push(  // 404 page must be placed at the end !!!
-      {path: '*', redirect: '/404', hidden: true})
+    // 添加404路由
+    routes.push({path: '*', redirect: '/404', hidden: true})
     console.log("合并后的所有路由:", routes) // 调试日志
     return routes
   } catch (error) {
-    console.error("获取动态路由失败:", error)
-    // 如果获取动态路由失败，只返回静态路由
-    return [...constantRoutes,  // 404 page must be placed at the end !!!
-      {path: '*', redirect: '/404', hidden: true}]
+    console.error("生成路由失败:", error)
+    // 如果生成路由失败，返回基础路由（静态路由 + 404）
+    return [...constantRoutes, {path: '*', redirect: '/404', hidden: true}]
   }
 }
 
@@ -207,24 +221,40 @@ async function getServiceRouter() {
 }
 
 export async function updateRouter() {
-  // 1. 重置旧路由
-  if (currentRouter) {
-    await resetRouter()
+  try {
+    // 1. 获取新路由
+    const newRoutes = await generateRoutesFromServer()
+
+    // 2. 创建新 router 实例
+    const newRouter = new Router({
+      scrollBehavior: () => ({y: 0}),
+      routes: newRoutes
+    })
+
+    // 3. 设置权限守卫
+    setUpRouterPermissions(newRouter)
+
+    // 4. 更新当前路由实例
+    currentRouter = newRouter
+
+    // 5. 更新store中的路由数据（只存储动态路由部分）
+    // 过滤掉静态路由，只保留动态路由
+    const dynamicRoutes = newRoutes.filter(route =>
+      !constantRoutes.some(constantRoute => constantRoute.path === route.path)
+    )
+    store.commit('user/SET_ROUTES', dynamicRoutes)
+
+    // 6. 更新Vue实例中的router（如果Vue实例已存在）
+    if (window.vueInstance && window.vueInstance.$router) {
+      window.vueInstance.$router.matcher = newRouter.matcher
+    }
+
+    console.log('路由更新成功，动态路由数量:', dynamicRoutes.length)
+    return currentRouter
+  } catch (error) {
+    console.error('路由更新失败:', error)
+    throw error
   }
-
-  // 2. 获取新路由
-  const newRoutes = await generateRoutesFromServer()
-
-  // 3. 创建新 router 实例
-  currentRouter = new Router({
-    scrollBehavior: () => ({y: 0}),
-    routes: newRoutes
-  })
-
-  // 4. 设置权限守卫
-  setUpRouterPermissions(currentRouter)
-
-  return currentRouter
 }
 
 export default getServiceRouter

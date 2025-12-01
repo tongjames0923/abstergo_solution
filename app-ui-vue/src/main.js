@@ -37,12 +37,17 @@ var router = null
 
 async function bootstrap() {
   router = await getServiceRouter()
-  return new Vue({
+  const vueInstance = new Vue({
     el: '#app',
     router: router,
     store,
     render: (h) => h(App)
   })
+
+  // 将Vue实例保存到window对象中，以便updateRouter函数能够访问
+  window.vueInstance = vueInstance
+
+  return vueInstance
 }
 
 bootstrap()

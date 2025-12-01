@@ -34,15 +34,24 @@ import variables from '@/styles/variables.scss'
 
 export default {
   components: {SidebarItem, Logo},
+  created() {
+    // 确保组件创建时能够获取到最新的路由数据
+    console.log('侧边栏组件创建，当前路由数据:', this.routes)
+  },
   computed: {
     ...mapGetters([
       'sidebar',
-      'roles' // 直接获取roles而不是通过$store.getters.roles
+      'roles', // 直接获取roles而不是通过$store.getters.roles
+      'routes' // 从store获取路由数据
     ]),
     processedRoutes() {
-      // 使用缓存的路由数据，避免每次渲染都重新计算
-      const routes = this.$router.options.routes
-      const filteredRoutes = this.filterRoutesByRole(routes, this.roles)
+      // 使用store中的路由数据，确保数据更新时组件重新渲染
+      // 合并静态路由和动态路由
+      const staticRoutes = this.$router.options.routes.filter(route =>
+        route.path === '/' || route.path === '/404' || route.path === '/403' || route.path === '/login'
+      )
+      const allRoutes = [...staticRoutes, ...this.routes]
+      const filteredRoutes = this.filterRoutesByRole(allRoutes, this.roles)
       return filteredRoutes
     },
     activeMenu() {

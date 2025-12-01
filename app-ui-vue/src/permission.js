@@ -31,6 +31,10 @@ export function setUpRouterPermissions(router){
           try {
             // get user info
             await store.dispatch('user/getInfo')
+
+            // 获取用户信息后，更新路由数据
+            const { updateRouter } = await import('@/router')
+            await updateRouter()
           } catch (error) {
             // remove token and go to login page to re-login
             await store.dispatch('user/resetToken')

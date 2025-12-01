@@ -30,6 +30,9 @@ const mutations = {
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
+  },
+  SET_ROUTES: (state, routes) => {
+    state.routes = routes
   }
 }
 
@@ -98,15 +101,15 @@ const actions = {
       // 添加超时控制，避免长时间等待
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
-      
+
       const response = await request({
         url: 'public/user/refresh',
         method: 'get',
         signal: controller.signal
       })
-      
+
       clearTimeout(timeoutId)
-      
+
       const { code, data } = response
       setToken(data.token)
       commit('SET_TOKEN', data.token)
