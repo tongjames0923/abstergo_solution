@@ -3,6 +3,7 @@
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
     <div
       ref="sidebarContainerWrapper"
+      :class="{ 'hideSidebar': !sidebar.opened }"
       class="sidebar-container-wrapper"
       @click="handleSidebarClick"
     >
@@ -28,9 +29,8 @@
     </div>
 
     <div
-      ref="mainContainer"
       class="main-container"
-      @click="handleMainContainerClick"
+      :style="mainContainerStyle"
     >
       <app-main />
     </div>
@@ -71,9 +71,25 @@ export default {
       }
     },
     currentPageName() {
-      const matched = this.$route.matched.filter(item => item.meta && item.meta.title)
-      const lastItem = matched[matched.length - 1]
-      return lastItem ? lastItem.meta.title : ''
+      // 优化路由匹配逻辑，减少不必要的计算
+      const matched = this.$route.matched
+      for (let i = matched.length - 1; i >= 0; i--) {
+        if (matched[i].meta && matched[i].meta.title) {
+          return matched[i].meta.title
+        }
+      }
+      return ''
+    },
+    mainContainerStyle() {
+      // 动态计算主容器的内边距，根据侧边栏的状态调整
+      const paddingLeft = this.sidebar.opened 
+        ? 'calc(300px + 24px)' // 侧边栏展开时
+        : 'calc(100px + 24px)' // 侧边栏收起时
+      
+      return {
+        paddingLeft: paddingLeft,
+        transition: 'padding-left 0.45s cubic-bezier(0.23, 1, 0.32, 1)'
+      }
     }
   },
   methods: {
@@ -85,12 +101,8 @@ export default {
       if (!this.sidebar.opened) {
         this.$store.dispatch('app/toggleSideBar')
       }
-    },
-    handleMainContainerClick(event) {
-      // 只有在侧边栏展开且不是移动端时，点击主容器才收起侧边栏
-      if (this.sidebar.opened && this.device !== 'mobile') {
-        this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
-      }
+      // 阻止事件冒泡，避免触发其他事件
+      event.stopPropagation()
     },
     goToHome() {
       this.$router.push('/')
@@ -175,67 +187,72 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
 }
 
 .sidebar-container-wrapper {
-  position: fixed;
-  width: $sideBarWidth !important;
-  height: calc(100% - 24px);
-  top: 12px;
-  left: 12px;
-  z-index: 1001;
-  transition: $appleTransition;
-  display: flex;
-  flex-direction: column;
-  will-change: transform, box-shadow, background;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  // MacOS 26风格圆角
-  border-radius: 24px;
-  // 增强的玻璃态效果
-  background: $appleGlassBg;
-  backdrop-filter: blur(24px) saturate(130%);
-  -webkit-backdrop-filter: blur(24px) saturate(130%);
-  // 苹果风格阴影
-  box-shadow: $appleShadow, $appleInnerShadow;
-  // 苹果风格边框
-  border: 1px solid $appleBorder;
-  // 添加内部发光效果
-  &::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    position: fixed;
+    width: $sideBarWidth;
+    height: calc(100% - 24px);
+    top: 12px;
+    left: 12px;
+    z-index: 1001;
+    transition: $appleTransition;
+    display: flex;
+    flex-direction: column;
+    will-change: transform, box-shadow, background, width, height, top;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    // MacOS 26风格圆角
     border-radius: 24px;
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 0 40px rgba(255, 255, 255, 0.15);
-    pointer-events: none;
-    z-index: -1;
-  }
-
-  // 悬停效果增强 - MacOS 26风格
-  &:hover {
-    box-shadow: $appleShadowHover, $appleInnerShadow;
-    background: $appleGlassHover;
-    // 添加微妙的上浮效果
-    transform: translateY(-2px);
-  }
-
-  &.hideSidebar {
-    width: $sideBarCollapseWidth !important;
-    height: $sideBarMinHeight !important;
-    top: 50%;
-    transform: translateY(-50%);
-    transition: $appleTransition;
-    // 收起状态下保持精致阴影
+    // 增强的玻璃态效果
+    background: $appleGlassBg;
+    backdrop-filter: blur(24px) saturate(130%);
+    -webkit-backdrop-filter: blur(24px) saturate(130%);
+    // 苹果风格阴影
     box-shadow: $appleShadow, $appleInnerShadow;
-    // 收起状态下简化内部效果
+    // 苹果风格边框
+    border: 1px solid $appleBorder;
+    // 添加内部发光效果
     &::before {
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      border-radius: 24px;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 0 40px rgba(255, 255, 255, 0.15);
+      pointer-events: none;
+      z-index: -1;
+      transition: box-shadow 0.45s cubic-bezier(0.23, 1, 0.32, 1);
     }
-  }
 
-  &.openSidebar {
-    transition: $appleTransition;
-  }
+    // 悬停效果增强 - MacOS 26风格
+    &:hover {
+      box-shadow: $appleShadowHover, $appleInnerShadow;
+      background: $appleGlassHover;
+      // 添加微妙的上浮效果
+      transform: translateY(-2px);
+    }
+
+    &.hideSidebar {
+      width: $sideBarCollapseWidth;
+      height: $sideBarMinHeight;
+      top: 50%;
+      transform: translateY(-50%);
+      // 收起状态下保持精致阴影
+      box-shadow: $appleShadow, $appleInnerShadow;
+      // 收起状态下简化内部效果
+      &::before {
+        box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+      }
+      
+      // 收起状态下移除悬停效果，避免不必要的动画
+      &:hover {
+        transform: translateY(-50%);
+      }
+    }
+
+    &.openSidebar {
+      transition: $appleTransition;
+    }
 
   .user-avatar-outside {
     display: flex;
@@ -325,6 +342,12 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
     // 侧边栏内容区域添加精致边框
     border-top: 1px solid rgba(255, 255, 255, 0.4);
     border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+    transition: height 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+    
+    // 侧边栏收起时调整高度
+    .hideSidebar & {
+      height: calc(100% - 80px);
+    }
   }
 }
 
@@ -387,16 +410,14 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
 }
 
 .main-container {
-  height: 100%;
-  width: 100%;
-  transition: none !important;
-  margin-left: 0 !important;
-  padding-left: calc(#{$sideBarCollapseWidth} + 12px);
-  padding-right: 12px;
-  padding-top: 12px;
-  padding-bottom: 12px;
-  box-sizing: border-box;
-  overflow: hidden; // 禁止主容器滚动，让滚动发生在app-main内部
-  background: transparent;
-}
+    height: 100%;
+    width: 100%;
+    margin-left: 0 !important;
+    padding-right: 12px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    box-sizing: border-box;
+    overflow: hidden; // 禁止主容器滚动，让滚动发生在app-main内部
+    background: transparent;
+  }
 </style>
