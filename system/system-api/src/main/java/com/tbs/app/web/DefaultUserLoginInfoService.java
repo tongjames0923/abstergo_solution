@@ -22,6 +22,7 @@ import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserLoginInfoService;
+import com.tbs.web.security.user.IUserDetailsTransformer;
 import com.tbs.web.security.user.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
@@ -75,25 +76,58 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         return queryWrapper.fetchOne();
     }
 
+    private UserDetails getUserDetails(SystemLoginInfoEntity loginInfoEntity) {
+        if (StrUtil.isEmpty(loginInfoEntity.getUserDetailsTransformerImpl()) ||
+            StrUtil.isEmpty(loginInfoEntity.getUserDetailsTargetClass())) {
+            log.warn("用户详情转换失败: userDetailsTransformerImpl or userDetailsTargetClass is null");
+            return null;
+        }
+        UserDetails userDetailsObject = null;
+        try {
+            IUserDetailsTransformer transformer = (IUserDetailsTransformer)SpringUtil.getBean(
+                Class.forName(loginInfoEntity.getUserDetailsTransformerImpl()));
+            userDetailsObject = transformer.reverseTransform(loginInfoEntity.getUserDetails(),
+                (Class<? extends UserDetails>)Class.forName(loginInfoEntity.getUserDetailsTargetClass()));
+        } catch (Exception e) {
+            log.error("用户详情转换失败: {}", e.getMessage());
+        }
+
+        return userDetailsObject;
+    }
+
+    SystemLoginInfoEntity setUserDetails(SystemLoginInfoEntity loginInfoEntity, UserDetails userDetails) {
+        AssertUtil.notNull(userDetails, () -> new FormattedRuntimeException("用户详情不能为空"));
+        AssertUtil.notNull(loginInfoEntity, () -> new FormattedRuntimeException("用户登陆信息不能为空"));
+        IUserDetailsTransformer transformer = null;
+        try {
+            transformer = SpringUtil.getBeanSafe(appSettingProperty.getUserDetailsTransformerClass(),
+                (t) -> new FormattedRuntimeException("用户详情转换失败: {}", t.getMessage()));
+        } catch (Exception e) {
+            AssertUtil.isTrue(true, () -> new FormattedRuntimeException("用户详情转换失败: {}", e.getMessage()));
+        }
+        loginInfoEntity.setUserDetails(transformer.transform(userDetails));
+        loginInfoEntity.setUserDetailsTransformerImpl(transformer.getClass().getName());
+        loginInfoEntity.setUserDetailsTargetClass(userDetails.getClass().getName());
+        return loginInfoEntity;
+    }
+
     @Override
     protected UserDetails readUserDetails(String token) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
-        return loginInfoEntity == null ? null : loginInfoEntity.getUserDetailsObject();
+        return loginInfoEntity == null ? null : getUserDetails(loginInfoEntity);
     }
 
     @Override
     protected void writeUserDetails(ITokenModel token, UserDetails userDetails) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token.getToken());
         if (loginInfoEntity != null) {
-            loginInfoEntity.setUserDetailsObject(userDetails,
-                SpringUtil.getBean(appSettingProperty.getUserDetailsTransformerClass()));
+            loginInfoEntity = setUserDetails(loginInfoEntity, userDetails);
             loginInfoEntity.setTokenExpireTime(token.getExpireTime());
             loginInfoEntity.setUpdateTime(new Date());
             mapper.updateByPrimaryKey(loginInfoEntity);
         } else {
             loginInfoEntity = new SystemLoginInfoEntity();
-            loginInfoEntity.setUserDetailsObject(userDetails,
-                SpringUtil.getBean(appSettingProperty.getUserDetailsTransformerClass()));
+            loginInfoEntity = setUserDetails(loginInfoEntity, userDetails);
             loginInfoEntity.setToken(token.getToken());
             loginInfoEntity.setTokenExpireTime(token.getExpireTime());
             loginInfoEntity.setUserId(

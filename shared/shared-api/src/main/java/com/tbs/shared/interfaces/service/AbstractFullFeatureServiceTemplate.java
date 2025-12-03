@@ -10,7 +10,6 @@ import com.tbs.shared.util.PageUtil;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.query.IPage;
 import com.tbs.sql.query.IQueryCriteria;
-import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.transaction.annotation.Transactional;
@@ -158,18 +157,12 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         getOperatorAuditServiceSupport().ifPresent((s) -> {
             if (r.get().isPresent()) {
                 if (flag == UPDATE) {
-                    r.set(s.triggerUpdateOperator(r.get().get(),
-                        AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
-                            : null));
+                    r.set(s.triggerUpdateOperator(r.get().get()));
                 } else if (flag == CREATE) {
-                    r.set(s.triggerCreateOperator(r.get().get(),
-                        AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
-                            : null));
+                    r.set(s.triggerCreateOperator(r.get().get()));
                 }
                 if (flag == DELETE) {
-                    r.set(s.triggerDeleteOperator(r.get().get(),
-                        AuthUtil.getInstance().isUserLoggedIn() ? AuthUtil.getInstance().getCurrentUser().getUsername()
-                            : null));
+                    r.set(s.triggerDeleteOperator(r.get().get()));
                 }
 
             } else {

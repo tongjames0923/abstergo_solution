@@ -4,7 +4,7 @@ import com.tbs.app.service.impl.user.DefaultUserInfoService;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
-import com.tbs.shared.interfaces.intercept.SystemOperateInterceptor;
+import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.web.security.token.DefaultTokenRemover;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenRemover;

@@ -1,7 +1,6 @@
-package com.tbs.shared.util.impl;
+package com.tbs.web.security.user;
 
 import com.tbs.common.data.impl.JsonTransformer;
-import com.tbs.shared.util.IUserDetailsTransformer;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 

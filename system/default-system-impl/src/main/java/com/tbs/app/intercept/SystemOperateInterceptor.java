@@ -1,6 +1,7 @@
-package com.tbs.shared.interfaces.intercept;
+package com.tbs.app.intercept;
 
 import com.alibaba.fastjson2.JSON;
+import com.tbs.web.uitl.NetUtil;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
@@ -8,7 +9,6 @@ import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
-import com.tbs.shared.util.NetUtil;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
 import com.tbs.web.uitl.AuthUtil;

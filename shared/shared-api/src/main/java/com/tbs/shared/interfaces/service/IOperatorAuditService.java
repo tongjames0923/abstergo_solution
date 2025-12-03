@@ -13,7 +13,7 @@ public interface IOperatorAuditService<E> {
      * @param entity
      * @return
      */
-    E triggerCreateOperator(E entity, String byUserUniqueName);
+    E triggerCreateOperator(E entity);
 
     /**
      * 触发更新操作
@@ -21,7 +21,7 @@ public interface IOperatorAuditService<E> {
      * @param entity
      * @return
      */
-    E triggerUpdateOperator(E entity, String byUserUniqueName);
+    E triggerUpdateOperator(E entity);
 
     /**
      * 触发删除操作
@@ -29,6 +29,6 @@ public interface IOperatorAuditService<E> {
      * @param entity
      * @return
      */
-    E triggerDeleteOperator(E entity, String byUserUniqueName);
+    E triggerDeleteOperator(E entity);
 
 }

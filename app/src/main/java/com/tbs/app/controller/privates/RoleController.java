@@ -2,7 +2,7 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.shared.constant.RoleConstants;
-import com.tbs.shared.interfaces.AbstractCrudController;
+import com.tbs.app.web.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;

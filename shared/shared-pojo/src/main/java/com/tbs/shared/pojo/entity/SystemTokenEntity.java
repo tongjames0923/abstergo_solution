@@ -1,10 +1,7 @@
 package com.tbs.shared.pojo.entity;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
-import com.tbs.web.enums.TokenCreateTypeEnum;
-import com.tbs.web.enums.TokenStatusEnum;
 import lombok.Data;
 import lombok.ToString;
 
@@ -47,12 +44,12 @@ public class SystemTokenEntity implements IBaseEntity<Long> {
      * 创建时间
      */
     @Column(name = "create_time")
-    
+
     private Date createTime;
     /**
      * 更新时间
      */
-    
+
     @Column(name = "update_time")
     private Date updateTime;
     /**
@@ -65,7 +62,7 @@ public class SystemTokenEntity implements IBaseEntity<Long> {
      * 过期时间
      */
     @Column(name = "expire_time")
-    
+
     private Date expireTime;
 
     /**

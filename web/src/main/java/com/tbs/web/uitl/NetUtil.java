@@ -1,4 +1,4 @@
-package com.tbs.shared.util;
+package com.tbs.web.uitl;
 
 import com.tbs.common.util.base.StrUtil;
 

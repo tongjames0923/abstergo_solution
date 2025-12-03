@@ -5,7 +5,7 @@ import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.delegate.IDelegateFlag;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.shared.constant.RoleConstants;
-import com.tbs.shared.interfaces.AbstractCrudController;
+import com.tbs.app.web.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
