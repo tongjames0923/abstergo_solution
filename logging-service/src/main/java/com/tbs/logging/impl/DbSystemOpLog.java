@@ -1,6 +1,9 @@
-package com.tbs.app.log;
+package com.tbs.logging.impl;
 
+import cn.hutool.core.date.DateUtil;
 import com.tbs.common.data.IDataHolderManager;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.lock.util.LockUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
@@ -15,6 +18,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -74,6 +78,28 @@ public class DbSystemOpLog implements ISystemOperateLog, DisposableBean {
                 dataHolder.set(getDataHolderName(), ls, true);
             });
         });
+    }
+
+    private static final SystemOperateRecordEntity SYSTEM_OPERATE_RECORD_ENTITY = new SystemOperateRecordEntity();
+
+    @Override
+    public List<SystemOperateRecordEntity> listSystemOperateRecords(Date beginTime, Date endTime) {
+        if (beginTime == null) {
+            beginTime = DateUtil.offsetDay(new Date(), -28);
+            beginTime = DateUtil.beginOfDay(beginTime);
+        }
+        if (endTime == null) {
+            endTime = DateUtil.beginOfDay(new Date());
+        }
+        AssertUtil.isTrue(endTime.before(beginTime)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .message("开始时间不能大于结束时间").throwIt();
+        var query = systemOperateMapper.getQueryWrapper(SYSTEM_OPERATE_RECORD_ENTITY).where()
+            .greaterThanOrEqual(SystemOperateRecordEntity::getOperateTime, beginTime)
+            .lessThanOrEqual(SystemOperateRecordEntity::getOperateTime, endTime).pour();
+        query.getOrderSupport().ifPresent(order -> {
+            order.orderByDesc(SystemOperateRecordEntity::getOperateTime);
+        });
+        return query.fetch();
     }
 
     @Override

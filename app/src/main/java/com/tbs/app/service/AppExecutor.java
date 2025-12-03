@@ -1,10 +1,10 @@
 package com.tbs.app.service;
 
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -13,6 +13,9 @@ import javax.annotation.Resource;
 public class AppExecutor {
     @Resource
     private ClosureTreeServiceImpl closureTreeService;
+
+    @DubboReference
+    private ISystemOperateLog systemOperateLog;
 
     /**
      * 重建树结构
@@ -30,7 +33,6 @@ public class AppExecutor {
     @XxlJob("flushLogData")
     public void flushLogData() {
         XxlJobHelper.log(" flush log data start");
-        ISystemOperateLog systemOperateLog = SpringUtil.getBean(ISystemOperateLog.class);
         systemOperateLog.flush();
         XxlJobHelper.log(" flush log data success");
     }

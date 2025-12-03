@@ -5,10 +5,10 @@ import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.mapper.SystemOperateMapper;
+import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
+import org.apache.dubbo.config.annotation.DubboReference;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 
 public class SimpleSystemLogServiceImpl implements ISystemLogService {
 
-    @Resource
-    SystemOperateMapper systemOperateMapper;
+    @DubboReference
+    private ISystemOperateLog systemOperateLog;
 
     private String suitTypeName(String type) {
 
@@ -44,10 +44,7 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     public List<LogOperateTypeView> getLogOperateTypeList(int lastDay) {
         Date today = new Date();
         Date lastDayStart = DateUtil.offsetDay(today, -lastDay).toJdkDate();
-        var data = systemOperateMapper.getQueryWrapper(new SystemOperateRecordEntity()).where()
-            .greaterThan(SystemOperateRecordEntity::getOperateTime, lastDayStart)
-            .lessThanOrEqual(SystemOperateRecordEntity::getOperateTime, today).pour().fetch();
-
+        var data = systemOperateLog.listSystemOperateRecords(lastDayStart, today);
         Map<String, LogOperateTypeView> dataMap = new HashMap<>();
         Map<String, Set<String>> userMap = new HashMap<>(); // 记录每个操作类型的用户数
         Map<String, Set<String>> ipMap = new HashMap<>();   // 记录每个操作类型的IP数

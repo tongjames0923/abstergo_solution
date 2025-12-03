@@ -9,6 +9,10 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
+/**
+ * 启用共享库bean
+ * @author tongj
+ */
 @EnableCommonPack
 @Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
 @Target(java.lang.annotation.ElementType.TYPE)

@@ -1,19 +1,19 @@
 package com.tbs.app.intercept;
 
 import com.alibaba.fastjson2.JSON;
-import com.tbs.web.uitl.NetUtil;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.BeanUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
 import com.tbs.web.uitl.AuthUtil;
+import com.tbs.web.uitl.NetUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboReference;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -34,6 +34,9 @@ import java.util.Date;
  */
 @Slf4j
 public class SystemOperateInterceptor implements IApiInvokeInterceptor {
+
+    @DubboReference
+    ISystemOperateLog systemOperateLog;
 
     /**
      * 系统操作上下文类
@@ -134,8 +137,7 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
             result.get()
                 .ifPresent(val -> operateContext.getOperateRecord().setOperateResultJson(JSON.toJSONString(val)));
             try {
-                SpringUtil.getBeanSafe(ISystemOperateLog.class, throwable -> log.error("记录操作日志错误", throwable))
-                    .log(operateContext.getOperateRecord());
+                systemOperateLog.log(operateContext.getOperateRecord());
             } catch (Throwable e) {
                 log.error("record log error", e);
             }
@@ -177,8 +179,7 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
             }
 
             try {
-                SpringUtil.getBeanSafe(ISystemOperateLog.class, throwable -> log.error("记录操作日志错误", throwable))
-                    .log(operateContext.getOperateRecord());
+                systemOperateLog.log(operateContext.getOperateRecord());
             } catch (Throwable ex) {
                 log.error("record log error", ex);
             }

@@ -107,12 +107,21 @@ public class ApiInvokeAop implements IStartup {
             result.set(joinPoint.proceed());
         } catch (Throwable e) {
             for (int i = 0; i < contexts.size(); i++) {
-                interceptors.get(i).onException(contexts.get(i), e);
+                try {
+                    interceptors.get(i).onException(contexts.get(i), e);
+                } catch (Exception e1) {
+                    log.error("日志拦截器异常", e1);
+                }
+
             }
             throw e;
         }
         for (int i = 0; i < contexts.size(); i++) {
-            interceptors.get(i).afterInvoke(contexts.get(i), result);
+            try {
+                interceptors.get(i).afterInvoke(contexts.get(i), result);
+            } catch (Exception e) {
+                log.error("日志拦截器异常", e);
+            }
         }
         return result.get().orElse(null);
     }

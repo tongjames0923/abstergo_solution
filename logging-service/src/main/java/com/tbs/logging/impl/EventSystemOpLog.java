@@ -1,4 +1,4 @@
-package com.tbs.app.log;
+package com.tbs.logging.impl;
 
 import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;

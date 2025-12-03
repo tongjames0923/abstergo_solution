@@ -1,7 +1,6 @@
 package com.tbs.app.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.tbs.app.log.DbSystemOpLog;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
@@ -13,7 +12,9 @@ import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.TimingWheelSchedule;
-import com.tbs.shared.interfaces.log.ISystemOperateLog;
+import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
+import com.tbs.shared.interfaces.constraint.PasswordValidator;
+import com.tbs.shared.interfaces.constraint.UserNameValidator;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
 import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
 import com.tbs.web.security.token.IRefreshTokenService;
@@ -23,6 +24,7 @@ import org.redisson.client.codec.Codec;
 import org.redisson.codec.JsonJacksonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -124,11 +126,23 @@ public class AppConfig {
     //        }).supportEventIds(Arrays.asList(EventSystemOpLog.DEFAULT_EVENT_ID)).build();
     //    }
 
+    //    @Bean
+    //    ISystemOperateLog systemOperateLog() {
+    //        var i = new DbSystemOpLog();
+    //        i.setBatchSize(100);
+    //        return i;
+    //    }
+
     @Bean
-    ISystemOperateLog systemOperateLog() {
-        var i = new DbSystemOpLog();
-        i.setBatchSize(100);
-        return i;
+    @ConditionalOnBean(IUserNamePasswordValidator.class)
+    UserNameValidator userNameValidator() {
+        return new UserNameValidator();
+    }
+
+    @Bean
+    @ConditionalOnBean(IUserNamePasswordValidator.class)
+    PasswordValidator passwordValidator() {
+        return new PasswordValidator();
     }
 
     @Bean

@@ -26,7 +26,7 @@
         <module>xxl-job-mod</module>
         <module>open-api-starter</module>
         <module>dynamic-view-route</module>
-        <module>dubbo-demo</module>
+        <module>logging-service</module>
     </modules>
 
     <groupId>com.tbs</groupId>
