@@ -12,7 +12,6 @@ import com.tbs.schedule.ISchedule;
 import com.tbs.schedule.IScheduleExecuteErrorHandle;
 import com.tbs.schedule.IScheduleTask;
 import com.tbs.schedule.impl.TimingWheelSchedule;
-import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.PasswordValidator;
 import com.tbs.shared.interfaces.constraint.UserNameValidator;
 import com.tbs.shared.util.SqlLogicDeleteIntercepter;
@@ -24,7 +23,6 @@ import org.redisson.client.codec.Codec;
 import org.redisson.codec.JsonJacksonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -132,18 +130,6 @@ public class AppConfig {
     //        i.setBatchSize(100);
     //        return i;
     //    }
-
-    @Bean
-    @ConditionalOnBean(IUserNamePasswordValidator.class)
-    UserNameValidator userNameValidator() {
-        return new UserNameValidator();
-    }
-
-    @Bean
-    @ConditionalOnBean(IUserNamePasswordValidator.class)
-    PasswordValidator passwordValidator() {
-        return new PasswordValidator();
-    }
 
     @Bean
     SimpleRabbitMqSupport rabbitMqSupport() {

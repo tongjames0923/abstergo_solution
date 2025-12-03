@@ -1,10 +1,12 @@
 package com.tbs.app.config;
 
+import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.app.service.impl.user.DefaultUserInfoService;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
+import com.tbs.shared.interfaces.constraint.PasswordValidator;
+import com.tbs.shared.interfaces.constraint.UserNameValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
-import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.web.security.token.DefaultTokenRemover;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenRemover;
@@ -35,12 +37,26 @@ public class DefaultAppConfig {
         log.info("初始化内置默认系统配置...");
     }
 
+
+
     @Bean
     @ConditionalOnMissingBean(IUserNamePasswordValidator.class)
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
     public IUserNamePasswordValidator userNamePasswordValidator() {
         return BeanUtil.buildBeanFromProperties(() -> new SimpleUserValidator(),
             systemAppProperty.getSystemUserNamePasswordValidatorImpl(), BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    @ConditionalOnBean(IUserNamePasswordValidator.class)
+    UserNameValidator userNameValidator() {
+        return new UserNameValidator();
+    }
+
+    @Bean
+    @ConditionalOnBean(IUserNamePasswordValidator.class)
+    PasswordValidator passwordValidator() {
+        return new PasswordValidator();
     }
 
     @Bean
