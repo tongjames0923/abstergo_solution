@@ -2,6 +2,7 @@ package com.tbs.app;
 
 import com.tbs.async.annotation.EnableTbsAsyncPack;
 import com.tbs.cache.annotation.EnableTbsCache;
+import com.tbs.knife4j.annotation.UseKnife4jPack;
 import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.shared.annotation.EnableSharedLibBean;
@@ -28,6 +29,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableTbsCache
 @EnableRabbitMq
 @UseXxlJob
+@UseKnife4jPack
 @EnableViewControl
 @EnableSharedLibBean
 @MYSQL
