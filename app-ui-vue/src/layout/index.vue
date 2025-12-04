@@ -1,6 +1,6 @@
 <template>
   <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
+    <div v-if="sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
     <div
       ref="sidebarContainerWrapper"
       :class="{ 'hideSidebar': !sidebar.opened }"
@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import { AppMain, Sidebar } from './components'
+import {AppMain, Sidebar} from './components'
 import UserAvatar from '@/components/UserAvatar'
 import CapsuleBreadcrumb from '@/components/Breadcrumb/CapsuleBreadcrumb'
 import ResizeMixin from './mixin/ResizeHandler'
@@ -82,10 +82,10 @@ export default {
     },
     mainContainerStyle() {
       // 动态计算主容器的内边距，根据侧边栏的状态调整
-      const paddingLeft = this.sidebar.opened 
+      const paddingLeft = this.sidebar.opened
         ? 'calc(300px + 24px)' // 侧边栏展开时
         : 'calc(100px + 24px)' // 侧边栏收起时
-      
+
       return {
         paddingLeft: paddingLeft,
         transition: 'padding-left 0.45s cubic-bezier(0.23, 1, 0.32, 1)'
@@ -243,7 +243,7 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
       &::before {
         box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
       }
-      
+
       // 收起状态下移除悬停效果，避免不必要的动画
       &:hover {
         transform: translateY(-50%);
@@ -343,7 +343,7 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
     border-top: 1px solid rgba(255, 255, 255, 0.4);
     border-bottom: 1px solid rgba(255, 255, 255, 0.4);
     transition: height 0.45s cubic-bezier(0.23, 1, 0.32, 1);
-    
+
     // 侧边栏收起时调整高度
     .hideSidebar & {
       height: calc(100% - 80px);
