@@ -92,16 +92,11 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
   border: 1px solid $appleBorder;
   // 增强的过渡效果
   transition: $appleTransition;
-  will-change: transform, box-shadow, background;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 
   // 悬停效果增强 - MacOS 26风格
   &:hover {
     box-shadow: $appleShadowHover, $appleInnerShadow;
     background: $appleGlassHover;
-    // 添加微妙的上浮效果
-    transform: translateY(-2px);
   }
 
   &::before {

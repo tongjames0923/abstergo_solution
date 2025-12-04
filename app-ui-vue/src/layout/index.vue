@@ -81,14 +81,14 @@ export default {
       return ''
     },
     mainContainerStyle() {
-      // 动态计算主容器的内边距，根据侧边栏的状态调整
+      // 使用缓存值避免重复计算
       const paddingLeft = this.sidebar.opened
         ? 'calc(300px + 24px)' // 侧边栏展开时
         : 'calc(100px + 24px)' // 侧边栏收起时
 
       return {
         paddingLeft: paddingLeft,
-        transition: 'padding-left 0.45s cubic-bezier(0.23, 1, 0.32, 1)'
+        transition: 'padding-left 0.3s cubic-bezier(0.4, 0, 0.2, 1)' // 同步动画时长
       }
     }
   },
@@ -122,7 +122,8 @@ $appleBorder: rgba(255, 255, 255, 0.3);
 $appleShadow: 0 10px 38px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0, 0, 0, 0.05);
 $appleShadowHover: 0 16px 48px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
 $appleInnerShadow: inset 0 1px 0 rgba(255, 255, 255, 0.5), inset 0 0 30px rgba(255, 255, 255, 0.1);
-$appleTransition: all 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+// 优化动画时长和缓动函数
+$appleTransition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); // 更快的动画，使用更平滑的缓动函数
 $appleAccentColor: rgba(64, 158, 255, 0.2);
 $appleAccentBorder: rgba(64, 158, 255, 0.3);
 $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
@@ -183,7 +184,7 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
   height: 100%;
   position: absolute;
   z-index: 999;
-  transition: opacity 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+  transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1); // 更快的淡入淡出
 }
 
 .sidebar-container-wrapper {
@@ -193,12 +194,12 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
     top: 12px;
     left: 12px;
     z-index: 1001;
-    transition: $appleTransition;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  height 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  top 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+  transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); // 分离动画属性，提高性能
     display: flex;
     flex-direction: column;
-    will-change: transform, box-shadow, background, width, height, top;
-    transform: translateZ(0);
-    backface-visibility: hidden;
     // MacOS 26风格圆角
     border-radius: 24px;
     // 增强的玻璃态效果
@@ -209,6 +210,11 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
     box-shadow: $appleShadow, $appleInnerShadow;
     // 苹果风格边框
     border: 1px solid $appleBorder;
+  // 启用GPU硬件加速
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform, width, height; // 提示浏览器提前准备
+
     // 添加内部发光效果
     &::before {
       content: '';
@@ -221,22 +227,21 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6), inset 0 0 40px rgba(255, 255, 255, 0.15);
       pointer-events: none;
       z-index: -1;
-      transition: box-shadow 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+      transition: box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     }
 
     // 悬停效果增强 - MacOS 26风格
     &:hover {
       box-shadow: $appleShadowHover, $appleInnerShadow;
       background: $appleGlassHover;
-      // 添加微妙的上浮效果
-      transform: translateY(-2px);
     }
 
     &.hideSidebar {
       width: $sideBarCollapseWidth;
       height: $sideBarMinHeight;
       top: 50%;
-      transform: translateY(-50%);
+      transform: translateY(-50%) translateZ(0); // 保持硬件加速
+      -webkit-transform: translateY(-50%) translateZ(0);
       // 收起状态下保持精致阴影
       box-shadow: $appleShadow, $appleInnerShadow;
       // 收起状态下简化内部效果
@@ -246,7 +251,8 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
 
       // 收起状态下移除悬停效果，避免不必要的动画
       &:hover {
-        transform: translateY(-50%);
+        transform: translateY(-50%) translateZ(0);
+        -webkit-transform: translateY(-50%) translateZ(0);
       }
     }
 
@@ -259,9 +265,6 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
     justify-content: center;
     margin: 16px 0 12px;
     flex-shrink: 0;
-    will-change: transform;
-    transform: translateZ(0);
-    backface-visibility: hidden;
   }
 
   .collapsed-nav {
@@ -282,7 +285,9 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
       backdrop-filter: blur(12px) saturate(120%);
       -webkit-backdrop-filter: blur(12px) saturate(120%);
       cursor: pointer;
-      transition: $appleTransition;
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+      box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1); // 分离动画属性
       transform: scale(1);
       margin-bottom: 10px;
       box-shadow: 0 3px 12px rgba(0, 0, 0, 0.08);
@@ -290,7 +295,7 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
 
       &:hover {
         background: rgba(64, 158, 255, 0.2);
-        transform: scale(1.08);
+        transform: scale(1.05); // 减小缩放幅度，提高性能
         box-shadow: 0 5px 20px rgba(64, 158, 255, 0.25);
         border-color: $appleAccentBorder;
       }
@@ -335,14 +340,11 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
     flex: 1;
     height: calc(100% - 60px);
     width: 100%;
-    will-change: transform;
-    transform: translateZ(0);
-    backface-visibility: hidden;
     overflow: hidden;
     // 侧边栏内容区域添加精致边框
     border-top: 1px solid rgba(255, 255, 255, 0.4);
     border-bottom: 1px solid rgba(255, 255, 255, 0.4);
-    transition: height 0.45s cubic-bezier(0.23, 1, 0.32, 1);
+    transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
     // 侧边栏收起时调整高度
     .hideSidebar & {
@@ -371,7 +373,9 @@ $appleAccentShadow: 0 4px 16px rgba(64, 158, 255, 0.15);
 :deep(.el-submenu__title) {
   border-radius: 14px !important;
   margin: 6px 8px !important;
-  transition: $appleTransition !important;
+  transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+  background 0.2s cubic-bezier(0.4, 0, 0.2, 1),
+  box-shadow 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important; // 分离动画属性
   border: 1px solid transparent;
   // 增强文字对比度
   color: rgba(30, 41, 59, 0.85) !important;

@@ -109,11 +109,8 @@ export default {
   flex-direction: column;
   height: 100%;
   border-radius: 10px; // 根据规范调整为10px
-  will-change: transform; // 提升整体动画性能
   position: relative;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .sidebar-menu-wrapper {
@@ -125,9 +122,6 @@ export default {
   overflow: hidden;
   min-height: 200px; // 确保即使在项目很少时也有最小高度
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .sidebar-scrollbar {
@@ -144,9 +138,6 @@ export default {
   }
 
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 }
 
 .sidebar-menu {
@@ -154,16 +145,12 @@ export default {
   display: flex;
   flex-direction: column;
   transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-  will-change: transform;
-  transform: translateZ(0);
-  backface-visibility: hidden;
 
   // 调整菜单项间距，减少底部留白
   ::v-deep {
     .el-menu-item,
     .el-submenu {
       margin-bottom: 2px;
-      will-change: transform; // 提升动画性能
     }
 
     // 最后一个菜单项不需要底部边距
@@ -176,10 +163,6 @@ export default {
     .el-menu-item,
     .el-submenu__title {
       margin-top: 2px;
-      will-change: transform; // 提升动画性能
-      // 添加硬件加速
-      transform: translateZ(0);
-      backface-visibility: hidden;
       // 添加更优雅的过渡效果
       transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     }
@@ -202,9 +185,6 @@ export default {
 
     // 优化子菜单展开动画
     .el-submenu .el-menu {
-      will-change: transform, opacity;
-      transform: translateZ(0);
-      backface-visibility: hidden;
       // 添加更优雅的过渡效果
       transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
     }
