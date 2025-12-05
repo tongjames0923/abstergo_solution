@@ -19,7 +19,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @EnableTbsSqlUtils
 @MYSQL
 @EnableTbsRedis
-@EnableTbsAsyncPack
+@EnableTbsAsyncPack(useBroadcast = false)
 @EnableTbsCache
 public class LoggingApplication {
     public static void main(String[] args) {

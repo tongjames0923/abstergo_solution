@@ -54,7 +54,8 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
      *
      * @param scanner
      */
-    protected void begin(ClassPathBeanDefinitionScanner scanner) {
+    protected void begin(ClassPathBeanDefinitionScanner scanner, AnnotationMetadata importingClassMetadata,
+        BeanDefinitionRegistry registry, BeanNameGenerator importBeanNameGenerator) {
         log.info("开始扫描包: {}", getPackName());
     }
 
@@ -68,10 +69,9 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
     @Override
     public void registerBeanDefinitions(AnnotationMetadata importingClassMetadata, BeanDefinitionRegistry registry,
         BeanNameGenerator importBeanNameGenerator) {
-
         PACK_MAP.computeIfAbsent(getPackName(), k -> {
             ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry, true);
-            begin(scanner);
+            begin(scanner, importingClassMetadata, registry, importBeanNameGenerator);
             var scanAnnotations = getScanAnnotations();
             if (CollUtil.isNotEmpty(scanAnnotations)) {
                 scanAnnotations.stream().filter(annotation -> annotation != null)
