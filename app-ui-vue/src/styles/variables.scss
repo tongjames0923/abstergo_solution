@@ -3,11 +3,11 @@ $menuText: #6e6e73;
 $menuActiveText: #0071e3;
 $subMenuActiveText: #0071e3;
 
-$menuBg: #ffffff;
-$menuHover: #f5f5f7;
+$menuBg: #f6f8fa;
+$menuHover: #eaeff5;
 
-$subMenuBg: #ffffff;
-$subMenuHover: #f5f5f7;
+$subMenuBg: #f6f8fa;
+$subMenuHover: #eaeff5;
 
 $sideBarWidth: 220px;
 $sidebarBorderRadius: 12px;
@@ -24,6 +24,4 @@ $sidebarPadding: 8px;
   subMenuBg: $subMenuBg;
   subMenuHover: $subMenuHover;
   sideBarWidth: $sideBarWidth;
-  sidebarBorderRadius: $sidebarBorderRadius;
-  sidebarPadding: $sidebarPadding;
 }

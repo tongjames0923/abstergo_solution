@@ -106,13 +106,19 @@
 
       .el-tooltip {
         padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
 
         .svg-icon {
-          margin-left: 20px;
+          margin-left: 0;
+          margin-right: 0;
         }
 
         .sub-el-icon {
-          margin-left: 19px;
+          margin-left: 0;
+          margin-right: 0;
         }
       }
     }
@@ -122,13 +128,18 @@
 
       & > .el-submenu__title {
         padding: 0 !important;
+        display: flex;
+        align-items: center;
+        justify-content: center;
 
         .svg-icon {
-          margin-left: 20px;
+          margin-left: 0;
+          margin-right: 0;
         }
 
         .sub-el-icon {
-          margin-left: 19px;
+          margin-left: 0;
+          margin-right: 0;
         }
 
         .el-submenu__icon-arrow {
