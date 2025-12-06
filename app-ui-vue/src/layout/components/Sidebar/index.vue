@@ -1,5 +1,5 @@
 <template>
-  <div :class="{'has-logo':showLogo}">
+  <div :class="{'has-logo':showLogo}" class="sidebar-container-macos">
     <logo v-if="showLogo" :collapse="isCollapse"/>
     <el-scrollbar wrap-class="scrollbar-wrapper">
       <el-menu
@@ -11,6 +11,7 @@
         :active-text-color="variables.menuActiveText"
         :collapse-transition="false"
         mode="vertical"
+        class="sidebar-menu-macos"
       >
         <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path"/>
       </el-menu>
@@ -54,3 +55,67 @@ export default {
   }
 }
 </script>
+
+<style lang="scss" scoped>
+@import "~@/styles/variables.scss";
+.sidebar-container-macos {
+  background-color: $menuBg;
+  border-radius: $sidebarBorderRadius;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  margin: 8px;
+  padding: $sidebarPadding;
+  height: calc(100vh - 16px);
+  overflow: hidden;
+}
+
+.sidebar-menu-macos {
+  background-color: transparent !important;
+  border-right: none !important;
+  border-radius: $sidebarBorderRadius;
+  padding: 4px 0;
+
+  .el-menu-item,
+  .el-submenu__title {
+    height: 36px;
+    line-height: 36px;
+    margin: 2px 8px;
+    border-radius: 8px;
+    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+
+    &:hover {
+      background-color: $menuHover !important;
+      color: $menuText !important;
+    }
+
+    &.is-active {
+      background-color: $menuHover !important;
+      color: $menuActiveText !important;
+      font-weight: 500;
+    }
+  }
+
+  .el-submenu {
+    .el-submenu__title {
+      &:hover {
+        background-color: $menuHover !important;
+      }
+    }
+
+    .el-menu {
+      background-color: transparent !important;
+      border-radius: 8px;
+      margin: 0 8px;
+      padding: 4px 0;
+
+      .el-menu-item {
+        padding-left: 48px !important;
+        margin: 2px 0;
+      }
+    }
+  }
+
+  .el-scrollbar {
+    height: calc(100% - 50px);
+  }
+}
+</style>
