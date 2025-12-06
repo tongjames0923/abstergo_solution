@@ -1,5 +1,5 @@
 <template>
-  <div class="navbar">
+  <div class="navbar-macos">
     <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar"/>
 
     <breadcrumb class="breadcrumb-container"/>
@@ -59,12 +59,20 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.navbar {
+.navbar-macos {
   height: 50px;
   overflow: hidden;
   position: relative;
-  background: #fff;
+  background: #f0f0f0;
   box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
+  margin: 8px 8px 0 8px;
+  border-radius: 12px;
+  
+  // 添加毛玻璃效果
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  background: rgba(240, 240, 240, 0.8);
+  border: 1px solid rgba(255, 255, 255, 0.2);
 
   .hamburger-container {
     line-height: 46px;
@@ -73,6 +81,7 @@ export default {
     cursor: pointer;
     transition: background .3s;
     -webkit-tap-highlight-color: transparent;
+    border-radius: 12px;
 
     &:hover {
       background: rgba(0, 0, 0, .025)
@@ -81,6 +90,8 @@ export default {
 
   .breadcrumb-container {
     float: left;
+    line-height: 50px;
+    margin-left: 10px;
   }
 
   .right-menu {
@@ -103,6 +114,7 @@ export default {
       &.hover-effect {
         cursor: pointer;
         transition: background .3s;
+        border-radius: 12px;
 
         &:hover {
           background: rgba(0, 0, 0, .025)
@@ -111,7 +123,7 @@ export default {
     }
 
     .avatar-container {
-      margin-right: 30px;
+      margin-right: 20px;
 
       .avatar-wrapper {
         margin-top: 5px;
