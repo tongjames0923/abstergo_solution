@@ -79,12 +79,28 @@ export default {
     height: 36px;
     line-height: 36px;
     margin: 2px 8px;
-    border-radius: 8px;
-    transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+    border-radius: 12px;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+
+    // 默认状态下轻微的玻璃效果
+    backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: blur(5px);
+    background: rgba(255, 255, 255, 0.4);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.2);
 
     &:hover {
-      background-color: $menuHover !important;
+      background: rgba(255, 255, 255, 0.7) !important;
       color: $menuText !important;
+
+      // 增强的玻璃效果和光影
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+
+      // 添加发光效果
+      transform: translateY(-1px);
     }
 
     &.is-active {
@@ -110,6 +126,7 @@ export default {
       .el-menu-item {
         padding-left: 48px !important;
         margin: 2px 0;
+        border-radius: 10px;
       }
     }
   }
