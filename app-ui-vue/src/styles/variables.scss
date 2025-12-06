@@ -1,19 +1,15 @@
 // sidebar
-$menuText:#303133;
-$menuActiveText:#409EFF;
-$subMenuActiveText:#606266; //https://github.com/ElemeFE/element/issues/12951
+$menuText: #bfcbd9;
+$menuActiveText: #409EFF;
+$subMenuActiveText: #f4f4f5; //https://github.com/ElemeFE/element/issues/12951
 
-$menuBg:#ffffff;
-$menuHover:#e6e6e6;
+$menuBg: #304156;
+$menuHover: #263445;
 
-$subMenuBg:#f5f5f5;
-$subMenuHover:#e6e6e6;
+$subMenuBg: #1f2d3d;
+$subMenuHover: #001528;
 
-$sideBarWidth: 300px;
-// 定义侧边栏收起时的宽度，足够容纳图标和少量文本
-$sideBarCollapseWidth: 100px;
-// 定义侧边栏最小高度，足够容纳7个图标
-$sideBarMinHeight: 300px;
+$sideBarWidth: 210px;
 
 // the :export directive is the magic sauce for webpack
 // https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
@@ -26,5 +22,4 @@ $sideBarMinHeight: 300px;
   subMenuBg: $subMenuBg;
   subMenuHover: $subMenuHover;
   sideBarWidth: $sideBarWidth;
-  sideBarCollapseWidth: $sideBarCollapseWidth;
 }
