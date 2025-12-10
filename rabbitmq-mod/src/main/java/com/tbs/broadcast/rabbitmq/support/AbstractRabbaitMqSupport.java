@@ -20,7 +20,15 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 /**
+ * RabbitMQ广播支持抽象类
+ * <p>
+ * 继承自AbstractDistributedSupport，实现ChannelAwareMessageListener接口
+ * 提供基于RabbitMQ的分布式事件广播和接收功能
+ * </p>
+ *
+ * @param <T> 事件类型
  * @author tongj
+ * @since 1.0.0
  */
 @Slf4j
 @AutoConfigureAfter({IEventDispatcher.class})
@@ -48,10 +56,25 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
     @Lazy
     private IEventDispatcher dispatcher;
 
+    /**
+     * 构造方法
+     * <p>
+     * 创建AbstractRabbaitMqSupport实例
+     * </p>
+     */
     public AbstractRabbaitMqSupport() {
         log.info("AbstractRabbaitMqSupport init");
     }
 
+    /**
+     * 初始化方法
+     * <p>
+     * 在应用启动时执行初始化操作，包括：
+     * 1. 确保队列存在
+     * 2. 创建并配置消息监听器容器
+     * 3. 启动消息监听器
+     * </p>
+     */
     @PostConstruct
     public void init() {
         // 确保队列存在
@@ -66,6 +89,9 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
 
     /**
      * 确保队列存在，如果不存在则创建
+     * <p>
+     * 尝试声明队列，如果队列已存在则忽略异常
+     * </p>
      */
     private void declareQueueIfNeeded() {
         try {
@@ -78,6 +104,18 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
         }
     }
 
+    /**
+     * 处理接收到的消息
+     * <p>
+     * 实现ChannelAwareMessageListener接口的onMessage方法
+     * 负责将接收到的RabbitMQ消息转换为事件对象，并进行处理
+     * 使用手动ACK模式确认消息处理结果
+     * </p>
+     *
+     * @param message 接收到的消息
+     * @param channel 消息通道
+     * @throws Exception 处理消息时可能发生的异常
+     */
     @Override
     public void onMessage(Message message, Channel channel) throws Exception {
         try {
@@ -92,16 +130,45 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
         }
     }
 
+    /**
+     * 广播事件
+     * <p>
+     * 实现IDistributedBusSupport接口的broadcastEvent方法
+     * 使用AMQP模板将事件对象发送到指定的交换机和路由键
+     * </p>
+     *
+     * @param result 要广播的事件对象
+     */
     @Override
     public void broadcastEvent(T result) {
         amqpTemplate.convertAndSend(property.getExchangeName(), property.getRoutingKey(), result);
     }
 
+    /**
+     * 获取节点ID
+     * <p>
+     * 实现IDistributedBusSupport接口的nodeId方法
+     * 从配置属性中获取节点ID
+     * </p>
+     *
+     * @return 节点ID
+     */
     @Override
     public String nodeId() {
         return property.getNodeId();
     }
 
+    /**
+     * 处理事件
+     * <p>
+     * 实现IDistributedBusSupport接口的handleEvent方法
+     * 使用事件分发器处理接收到的事件
+     * </p>
+     *
+     * @param val     事件值
+     * @param support 分布式总线支持实例
+     * @param <R>     事件类型
+     */
     @Override
     public <R> void handleEvent(R val, IDistributedBusSupport<R> support) {
         dispatcher.handleEvent(support.getDataBridge().unbridge(val));

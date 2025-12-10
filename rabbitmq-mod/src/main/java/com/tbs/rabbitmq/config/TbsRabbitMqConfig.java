@@ -18,7 +18,13 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 /**
+ * TBS RabbitMQ配置类
+ * <p>
+ * 提供RabbitMQ相关组件的配置，包括连接工厂、RabbitTemplate、交换机、队列和绑定关系
+ * </p>
+ *
  * @author tongj
+ * @since 1.0.0
  */
 @Slf4j
 @Configuration
@@ -103,9 +109,12 @@ public class TbsRabbitMqConfig {
     }
 
     /**
-     * 创建JSON消息转换器
+     * 创建序列化消息转换器
+     * <p>
+     * 创建SerializerMessageConverter实例，用于消息的序列化和反序列化
+     * </p>
      *
-     * @return MessageConverter实例
+     * @return SerializerMessageConverter实例
      */
     @Bean
     public MessageConverter jsonMessageConverter() {
@@ -137,9 +146,14 @@ public class TbsRabbitMqConfig {
 
     /**
      * 在RabbitMQ中声明队列，确保其存在
+     * <p>
+     * 创建一个初始化对象，在应用启动时声明队列
+     * 如果队列已存在，记录信息；如果声明失败，记录错误
+     * </p>
      *
      * @param amqpAdmin AMQP管理器
-     * @param queue     队列
+     * @param queue     要声明的队列
+     * @return 初始化对象
      */
     @Bean
     public Object declareQueue(AmqpAdmin amqpAdmin, Queue queue) {
