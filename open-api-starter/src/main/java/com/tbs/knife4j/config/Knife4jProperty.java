@@ -6,6 +6,14 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * knife4j配置属性类
+ * <p>
+ * 该类定义了knife4j的基本配置属性，如是否启用knife4j、是否显示knife4j的url、文档标题、描述、版本号、许可证等
+ * </p>
+ *
+ * @author abstergo
+ */
 @Data
 @Component
 @ConfigurationProperties(prefix = "tbs.knife4j")

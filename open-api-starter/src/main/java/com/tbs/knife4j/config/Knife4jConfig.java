@@ -19,10 +19,21 @@ import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * knife4j配置类
+ * <p>
+ * 该类配置了knife4j的基本属性，如标题、描述、版本号、许可证等
+ * </p>
+ *
+ * @author abstergo
+ */
 @Configuration
 @Slf4j
 public class Knife4jConfig {
 
+    /**
+     * knife4j配置属性
+     */
     @Resource
     private Knife4jProperty property;
 
