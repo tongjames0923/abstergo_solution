@@ -21,7 +21,13 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import javax.annotation.Resource;
 
 /**
+ * Redis基础配置类
+ * <p>
+ * 提供Redis相关基础组件的配置，包括Redisson客户端和Redis序列化器
+ * </p>
+ *
  * @author abstergo
+ * @since 1.0.0
  */
 @Configuration
 public class BasicRedisConfig {
@@ -38,6 +44,16 @@ public class BasicRedisConfig {
     @Resource
     RedisProperty property;
 
+    /**
+     * 创建Redisson客户端实例
+     * <p>
+     * 配置Redisson客户端，使用单服务器模式连接Redis，设置密码和编解码器
+     * 仅当tbs.redis.enable属性为true且不存在RedissonClient实例时创建
+     * </p>
+     *
+     * @param serializer Redis值序列化器
+     * @return Redisson客户端实例
+     */
     @Bean(destroyMethod = "shutdown")
     @ConditionalOnMissingBean(RedissonClient.class)
     @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
@@ -51,6 +67,16 @@ public class BasicRedisConfig {
         return redissonClient;
     }
 
+    /**
+     * 创建Redis值序列化器
+     * <p>
+     * 使用BeanUtil从配置属性构建GenericJackson2JsonRedisSerializer实例
+     * 仅当tbs.redis.enable属性为true且不存在REDIS_VALUE_SERIALIZER实例时创建
+     * </p>
+     *
+     * @return Redis值序列化器
+     * @throws Throwable 构建过程中可能出现的异常
+     */
     @Bean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")

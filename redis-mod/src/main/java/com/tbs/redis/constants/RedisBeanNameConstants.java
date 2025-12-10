@@ -4,7 +4,9 @@ package com.tbs.redis.constants;
  * RedisBeanNameConstants 类用于定义 Redis 相关的 Bean 名称常量
  * 这些常量在 Spring 等框架中配置和使用 Redis 时非常有用
  * 通过使用这些常量，可以确保 Bean 名称的一致性和避免拼写错误
+ *
  * @author tongj
+ * @since 1.0.0
  */
 public class RedisBeanNameConstants {
     /**
