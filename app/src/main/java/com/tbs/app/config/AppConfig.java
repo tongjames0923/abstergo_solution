@@ -30,16 +30,38 @@ import org.springframework.context.annotation.Configuration;
 import java.util.concurrent.TimeUnit;
 
 /**
+ * 应用程序配置类
+ * <p>
+ * 该类负责配置应用程序的各种组件和服务，包括缓存、消息队列、定时任务等
+ * </p>
+ *
  * @author tongj
+ * @since 1.0.0
  */
 @Configuration
 public class AppConfig {
 
+    /**
+     * SQL逻辑删除拦截器配置
+     * <p>
+     * 配置SQL逻辑删除功能，用于处理数据库记录的软删除
+     * </p>
+     *
+     * @return SQL逻辑删除拦截器实例
+     */
     @Bean
     public SqlLogicDeleteIntercepter sqlLogicDeleteIntercepter() {
         return new SqlLogicDeleteIntercepter();
     }
 
+    /**
+     * 错误抛出事件配置
+     * <p>
+     * 配置全局错误处理事件，用于记录和处理系统中的错误
+     * </p>
+     *
+     * @return 错误抛出事件实例
+     */
     @Bean
     IErrorThrowEvent errorThrowEvent() {
         return new IErrorThrowEvent() {
@@ -53,11 +75,28 @@ public class AppConfig {
         };
     }
 
+    /**
+     * Redisson编解码器配置
+     * <p>
+     * 配置Redis使用的JSON编解码器，用于对象的序列化和反序列化
+     * </p>
+     *
+     * @param objectMapper Jackson对象映射器
+     * @return Redisson编解码器实例
+     */
     @Bean
     public Codec codec(ObjectMapper objectMapper) {
         return new JsonJacksonCodec(objectMapper);
     }
 
+    /**
+     * 缓存监听器配置
+     * <p>
+     * 配置缓存监听器，用于记录缓存的各种操作（获取、放入、移除、清除）
+     * </p>
+     *
+     * @return 缓存监听器实例
+     */
     @Bean
     ICacheListenner cacheListenner() {
         return new ICacheListenner() {
@@ -93,6 +132,14 @@ public class AppConfig {
 
     private static final Logger sub_test_logger = LoggerFactory.getLogger("sub_test");
 
+    /**
+     * 事件订阅者配置
+     * <p>
+     * 配置简单的事件订阅者，用于处理系统中的事件
+     * </p>
+     *
+     * @return 事件订阅者实例
+     */
     @Bean
     AbstractSubscriber subscriber() {
         return SimpleUseSubscriber.Builder.newBuilder("simple log", (e, p) -> {
@@ -131,6 +178,14 @@ public class AppConfig {
     //        return i;
     //    }
 
+    /**
+     * RabbitMQ支持配置
+     * <p>
+     * 配置RabbitMQ支持组件，用于简化RabbitMQ的使用
+     * </p>
+     *
+     * @return RabbitMQ支持实例
+     */
     @Bean
     SimpleRabbitMqSupport rabbitMqSupport() {
         return new SimpleRabbitMqSupport();
@@ -138,16 +193,40 @@ public class AppConfig {
 
     private static final Logger timingWheelScheduleLogger = LoggerFactory.getLogger(TimingWheelSchedule.class);
 
+    /**
+     * 用户登录信息服务配置
+     * <p>
+     * 配置用户登录信息服务，用于处理用户登录相关的信息
+     * </p>
+     *
+     * @return 用户登录信息服务实例
+     */
     @Bean
     public IUserLoginInfoService userLoginInfoService() {
         return new DefaultUserLoginInfoService();
     }
 
+    /**
+     * 刷新令牌服务配置
+     * <p>
+     * 配置刷新令牌服务，用于处理用户令牌的刷新
+     * </p>
+     *
+     * @return 刷新令牌服务实例
+     */
     @Bean
     IRefreshTokenService refreshTokenService() {
         return new CookieRefreshTokenService();
     }
 
+    /**
+     * 时间轮调度器配置
+     * <p>
+     * 配置时间轮调度器，用于处理定时任务
+     * </p>
+     *
+     * @return 时间轮调度器实例
+     */
     @Bean
     TimingWheelSchedule timingWheelSchedule() {
         return new TimingWheelSchedule(new IScheduleExecuteErrorHandle() {
@@ -158,6 +237,14 @@ public class AppConfig {
         }, 5L, TimeUnit.SECONDS, 1L, 60 * 5, TimeUnit.SECONDS);
     }
 
+    /**
+     * XXL-Job配置
+     * <p>
+     * 配置XXL-Job分布式任务调度中心的连接信息
+     * </p>
+     *
+     * @return XXL-Job配置实例
+     */
     @Bean
     IXXLJobsConfig xxlJobsConfig() {
         return new IXXLJobsConfig() {
@@ -203,6 +290,14 @@ public class AppConfig {
         };
     }
 
+    /**
+     * 闭包树服务配置
+     * <p>
+     * 配置闭包树服务，用于处理树形结构数据
+     * </p>
+     *
+     * @return 闭包树服务实例
+     */
     @Bean
     ClosureTreeServiceImpl treeStore() {
         return new ClosureTreeServiceImpl();

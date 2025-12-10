@@ -9,6 +9,15 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
+/**
+ * XXL-Job任务执行器
+ * <p>
+ * 负责执行系统中的定时任务，包括树结构重建和日志数据刷新
+ * </p>
+ *
+ * @author abstergo
+ * @since 1.0.0
+ */
 @Component
 public class AppExecutor {
     @Resource
@@ -18,7 +27,10 @@ public class AppExecutor {
     private ISystemOperateLog systemOperateLog;
 
     /**
-     * 重建树结构
+     * 重建树结构任务
+     * <p>
+     * 使用XXL-Job调度，根据参数重建树的闭包表结构
+     * </p>
      */
     @XxlJob("rebuildTree")
     public void rebuildTree() {
@@ -28,7 +40,10 @@ public class AppExecutor {
     }
 
     /**
-     * 刷新日志数据
+     * 刷新日志数据任务
+     * <p>
+     * 使用XXL-Job调度，将系统操作日志数据刷新到持久化存储
+     * </p>
      */
     @XxlJob("flushLogData")
     public void flushLogData() {

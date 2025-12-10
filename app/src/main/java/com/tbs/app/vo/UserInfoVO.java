@@ -12,6 +12,7 @@ import lombok.Data;
  * </p>
  *
  * @author tongj
+ * @since 1.0.0
  */
 @Data
 public class UserInfoVO implements Serializable {

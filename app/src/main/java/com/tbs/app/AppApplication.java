@@ -18,9 +18,13 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 /**
- * 启动类
- *
+ * 应用程序启动类
+ * <p>
+ * 该类是应用程序的入口点，负责初始化Spring Boot应用程序并启用各种框架功能
+ * </p>
+ * 
  * @author abstergo
+ * @since 1.0.0
  */
 @EnableWebPack
 @SpringBootApplication(scanBasePackages = {"com.tbs.app"})

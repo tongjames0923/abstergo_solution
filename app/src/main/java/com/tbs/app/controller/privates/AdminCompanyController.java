@@ -30,6 +30,7 @@ import java.util.LinkedList;
  * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 @RestController
 @RequestMapping("/private/admin/company")

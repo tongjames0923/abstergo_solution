@@ -16,7 +16,13 @@ import javax.annotation.Resource;
 import java.io.Serializable;
 
 /**
+ * 公共测试控制器
+ * <p>
+ * 提供公共访问的测试接口，用于测试系统功能
+ * </p>
+ *
  * @author abstergo
+ * @since 1.0.0
  */
 @RestController
 @RequestMapping("/public")
@@ -28,13 +34,35 @@ public class PublicTestController extends BaseController {
 
     public static final String TEST_GROUP = "Test Tree Group";
 
+    /**
+     * 树节点表单
+     * <p>
+     * 用于接收创建树节点的请求参数
+     * </p>
+     */
     @Data
     public static final class TreeForm implements Serializable {
+        /**
+         * 节点名称
+         */
         private String name;
+        
+        /**
+         * 父节点ID
+         */
         private String parentId;
 
     }
 
+    /**
+     * 创建树节点
+     * <p>
+     * 根据表单参数创建一个新的树节点
+     * </p>
+     *
+     * @param form 树节点表单参数
+     * @return 创建结果
+     */
     @PostMapping("/createNode")
     public AjaxResult createNode(@RequestBody TreeForm form) {
         store.store(new SimpleTreeStrorableModel(TEST_GROUP, form.getName()), form.getParentId());
@@ -42,10 +70,13 @@ public class PublicTestController extends BaseController {
     }
 
     /**
-     * 获取子节点
+     * 获取子节点列表
+     * <p>
+     * 根据节点ID获取所有子节点
+     * </p>
      *
-     * @param nodeId
-     * @return
+     * @param nodeId 节点ID
+     * @return 子节点列表
      */
     @PostMapping("/getChildren")
     public AjaxResult getChildren(String nodeId) {

@@ -30,6 +30,7 @@ import javax.annotation.Resource;
  * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 @RequestMapping("/private/admin")
 @RestController

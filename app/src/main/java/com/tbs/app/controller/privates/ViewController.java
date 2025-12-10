@@ -18,6 +18,15 @@ import javax.annotation.Resource;
 import java.util.LinkedList;
 import java.util.List;
 
+/**
+ * 视图控制器
+ * <p>
+ * 提供视图相关的接口，用于管理表单配置和视图路由
+ * </p>
+ *
+ * @author abstergo
+ * @since 1.0.0
+ */
 @RestController
 @RequestMapping("/private/view")
 @Tag(name = "视图控制器", description = "视图控制器")
@@ -45,8 +54,13 @@ public class ViewController extends BaseController {
 
     /**
      * 获取所有表单配置
+     * <p>
+     * 分页获取系统中所有的表单配置信息
+     * </p>
      *
-     * @return 所有表单配置
+     * @param pageNum  页码
+     * @param pageSize 每页大小
+     * @return 所有表单配置列表
      */
     @GetMapping("/listForms")
     @Operation(summary = "获取所有表单配置", description = "获取所有表单配置")
@@ -105,10 +119,16 @@ public class ViewController extends BaseController {
 
     /**
      * 获取所有视图路由配置
+     * <p>
+     * 获取系统中所有的视图路由配置信息，按组分类
+     * </p>
      *
-     * @return 路由配置信息
+     * @return 所有视图路由配置列表
      */
     @GetMapping("/routes")
+    @Operation(summary = "获取所有视图路由配置", description = "获取所有视图路由配置")
+    @ApiResponse(responseCode = "200", description = "成功获取所有视图路由配置",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult getViewRoutes() {
         var result = new LinkedList<ViewRouteModel>();
         for (String group : viewRouteService.getAllViewRouteGroups()) {
@@ -117,6 +137,14 @@ public class ViewController extends BaseController {
         return successResult(result);
     }
 
+    /**
+     * 获取业务名称
+     * <p>
+     * 实现BaseController接口的方法，返回当前控制器的业务名称
+     * </p>
+     *
+     * @return 业务名称
+     */
     @Override
     public String getBusinessName() {
         return "视图控制器";

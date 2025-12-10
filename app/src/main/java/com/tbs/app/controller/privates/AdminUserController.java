@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
  * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 @RestController
 @RequestMapping("/private/admin/user")

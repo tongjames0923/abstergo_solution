@@ -35,6 +35,7 @@ import java.util.Optional;
  * </p>
  *
  * @author tongj
+ * @since 1.0.0
  */
 @RestController
 @RequestMapping("/private/user")

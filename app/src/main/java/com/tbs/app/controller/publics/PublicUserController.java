@@ -22,9 +22,13 @@ import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * 公开的用户控制器
+ * 公开用户控制器
+ * <p>
+ * 提供无需登录即可访问的用户相关接口，包括用户登录和令牌刷新
+ * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 @RestController
 @RequestMapping("/public/user")
@@ -38,6 +42,15 @@ public class PublicUserController extends BaseController {
     @Resource
     HttpServletRequest request;
 
+    /**
+     * 用户登录接口
+     * <p>
+     * 用户使用用户名和密码登录系统，成功后返回访问令牌
+     * </p>
+     *
+     * @param loginForm 登录表单，包含用户名和密码
+     * @return 登录成功后的令牌信息
+     */
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "用户使用用户名和密码登录系统")
     @ApiResponse(responseCode = "200", description = "成功登录",
@@ -47,6 +60,14 @@ public class PublicUserController extends BaseController {
         return tokenModel;
     }
 
+    /**
+     * 刷新令牌接口
+     * <p>
+     * 使用刷新令牌获取新的访问令牌，实现无感登录
+     * </p>
+     *
+     * @return 刷新成功后的令牌信息
+     */
     @GetMapping("refresh")
     @Operation(summary = "刷新令牌", description = "使用刷新令牌获取新的访问令牌")
     @ApiResponse(responseCode = "200", description = "成功刷新令牌",
@@ -61,6 +82,14 @@ public class PublicUserController extends BaseController {
         return successResult(newModel);
     }
 
+    /**
+     * 获取业务名称
+     * <p>
+     * 实现BaseController接口的方法，返回当前控制器的业务名称
+     * </p>
+     *
+     * @return 业务名称
+     */
     @Override
     public String getBusinessName() {
         return "公开用户控制器";
