@@ -1,4 +1,4 @@
-package tbs.framework.sql.interfaces.impls;
+package com.tbs.sql.logger.impl;
 
 import com.tbs.sql.logger.ISqlLogger;
 import com.tbs.sql.logger.SqlRuntimeStatus;
