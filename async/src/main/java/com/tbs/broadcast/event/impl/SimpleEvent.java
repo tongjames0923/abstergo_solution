@@ -1,15 +1,13 @@
 package com.tbs.broadcast.event.impl;
 
-import java.util.Optional;
-
-import org.jetbrains.annotations.NotNull;
-import org.springframework.util.SerializationUtils;
-
 import com.tbs.broadcast.event.IEvent;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
-
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.util.SerializationUtils;
+
+import java.util.Optional;
 
 /**
  * 默认事件实现类
@@ -120,13 +118,20 @@ public class SimpleEvent implements IEvent {
 		return SerializationUtils.deserialize(eventData);
 	}
 
+	/**
+	 * 获取事件数据的原始类型信息
+	 * <p>
+	 * 返回事件数据原始类型的类名
+	 *
+	 * @return 事件数据原始类型的类名
+	 */
 	@Override
 	public Optional<Class<?>> getEventDataClass() {
 		if (StrUtil.isEmpty(eventDataClass)) {
 			return Optional.empty();
 		}
 		try {
-			return Optional.ofNullable(Class.forName(eventDataClass));
+			return Optional.of(Class.forName(eventDataClass));
 		} catch (ClassNotFoundException e) {
 			log.error("class not found", e);
 			return Optional.empty();
