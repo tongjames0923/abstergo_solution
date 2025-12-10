@@ -16,35 +16,73 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
+/**
+ * 缓存工具类
+ * <p>
+ * 提供缓存的获取、放入、删除等操作的工具类
+ * 实现了单例模式，通过IStartup接口在Spring启动时初始化实例
+ * </p>
+ *
+ * @author tongj
+ * @since 1.0.0
+ */
 @Component
 public class CacheUtils implements IStartup {
+    /**
+     * 缓存限制器
+     */
     @Resource
     ICacheLimiter limiter;
 
+    /**
+     * 缓存操作记录器
+     */
     @Resource
     ICacheOperationRecorder recorder;
 
+    /**
+     * 手动缓存处理器
+     */
     @Resource
     IManualCacheHandler manualCacheHandler;
 
     private static CacheUtils instance = null;
 
+    /**
+     * Spring启动时的初始化方法
+     * <p>
+     * 通过SpringUtil获取CacheUtils实例并设置为单例
+     * </p>
+     *
+     * @throws RuntimeException 如果初始化失败
+     */
     @Override
     public void startUp() throws RuntimeException {
         instance = SpringUtil.getBean(CacheUtils.class);
     }
 
+    /**
+     * 获取CacheUtils单例实例
+     * <p>
+     * 返回Spring启动时初始化的单例实例
+     * </p>
+     *
+     * @return CacheUtils单例实例
+     */
     public static CacheUtils getInstance() {
         return instance;
     }
 
     /**
      * 获取缓存
+     * <p>
+     * 根据指定的键和类型从缓存中获取值
+     * </p>
      *
-     * @param key
-     * @param clazz
-     * @param <T>
-     * @return
+     * @param key   缓存键
+     * @param clazz 值的类型
+     * @param <T>   泛型类型
+     * @return 包含缓存值的ValueWrapper对象
      */
     public <T> ValueWrapper<T> get(String key, Class<T> clazz) {
         ValueWrapper<T> value = ValueWrapper.empty();
@@ -59,9 +97,13 @@ public class CacheUtils implements IStartup {
 
     /**
      * 放入缓存
+     * <p>
+     * 将指定的键值对放入缓存中
+     * </p>
      *
-     * @param key
-     * @param value
+     * @param key   缓存键
+     * @param value 缓存值
+     * @param <T>   泛型类型
      */
     public <T> void put(String key, T value) {
         if (value == null) {
@@ -77,12 +119,15 @@ public class CacheUtils implements IStartup {
 
     /**
      * 获取缓存，如果缓存中不存在则调用sSupplier获取并放入缓存
+     * <p>
+     * 这是一个原子操作，通过锁机制确保线程安全
+     * </p>
      *
-     * @param key
-     * @param sSupplier
-     * @param clazz
-     * @param <T>
-     * @return
+     * @param key        缓存键
+     * @param sSupplier  值不存在时的供应函数
+     * @param clazz      值的类型
+     * @param <T>        泛型类型
+     * @return 包含缓存值的ValueWrapper对象
      */
     public <T> ValueWrapper<T> computeIfAbsent(String key, SSupplier<T> sSupplier, Class<T> clazz) {
         ValueWrapper<T> val = ValueWrapper.empty();
@@ -102,8 +147,11 @@ public class CacheUtils implements IStartup {
 
     /**
      * 删除缓存
+     * <p>
+     * 根据指定的键删除缓存
+     * </p>
      *
-     * @param key
+     * @param key 缓存键
      */
     public void remove(String key) {
         LockUtil.getInstance().lockThen(this, () -> {

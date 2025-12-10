@@ -10,21 +10,52 @@ import org.springframework.cache.Cache;
 import java.time.Duration;
 import java.util.Date;
 
+/**
+ * 基于调度器的TTL缓存适配器
+ * <p>
+ * 继承自AbstractAdaptTtlCache，通过调度器实现缓存的TTL（Time To Live）功能
+ * 使用ISchedule接口实现缓存条目的定时过期
+ * </p>
+ *
+ * @author tongj
+ * @since 1.0.0
+ */
 @Slf4j
 public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
+    /**
+     * 构造方法
+     * <p>
+     * 创建AdaptScheduleExpireTtlCache实例，包装原始缓存
+     * </p>
+     *
+     * @param orginCache 要包装的原始缓存实例
+     */
     public AdaptScheduleExpireTtlCache(Cache orginCache) {
         super(orginCache);
     }
 
     /**
-     * 获取调度器
+     * 获取调度器实例
+     * <p>
+     * 从Spring容器中获取ISchedule实例
+     * </p>
      *
-     * @return
+     * @return ISchedule调度器实例
      */
     protected ISchedule getSchedule() {
         return SpringUtil.getBean(ISchedule.class);
     }
 
+    /**
+     * 设置所有缓存条目的过期时间
+     * <p>
+     * 使用调度器在指定时间清空整个缓存
+     * </p>
+     *
+     * @param cache      要设置过期时间的缓存实例
+     * @param expireTime 过期时间
+     * @return 如果调度任务成功添加则返回true，否则返回false
+     */
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
         try {
@@ -37,6 +68,17 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
         }
     }
 
+    /**
+     * 设置单个缓存条目的过期时间
+     * <p>
+     * 使用调度器在指定时间删除特定键的缓存条目
+     * </p>
+     *
+     * @param cache      要设置过期时间的缓存实例
+     * @param key        要设置过期时间的缓存键
+     * @param expireTime 过期时间
+     * @return 如果调度任务成功添加则返回true，否则返回false
+     */
     @Override
     public boolean expire(@NotNull Cache cache, Object key, @NotNull Date expireTime) {
         try {
