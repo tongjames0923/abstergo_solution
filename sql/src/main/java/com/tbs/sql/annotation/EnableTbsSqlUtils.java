@@ -12,7 +12,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
+ * 启用TBS SQL工具注解
+ * <p>
+ * 用于启用TBS SQL工具的自动配置和功能
+ * </p>
+ *
  * @author abstergo
+ * @since 1.0.0
  */
 
 @EnableTransactionManagement

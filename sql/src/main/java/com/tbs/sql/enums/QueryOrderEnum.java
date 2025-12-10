@@ -6,14 +6,20 @@ package com.tbs.sql.enums;
  * 该枚举类包含两种排序方式：降序(DESC)和升序(ASC)，
  * 并提供了在字符串表示和枚举值之间相互转换的方法。
  * </p>
+ * @author abstergo
+ * @since 1.0.0
  */
 public enum QueryOrderEnum {
     /**
      * 降序排序枚举值
+     * <p>对应SQL中的DESC关键字</p>
+     * 示例：ORDER BY create_time DESC
      */
     DESC,
     /**
      * 升序排序枚举值
+     * <p>对应SQL中的ASC关键字</p>
+     * 示例：ORDER BY create_time ASC
      */
     ASC;
 

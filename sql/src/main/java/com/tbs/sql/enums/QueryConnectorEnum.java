@@ -7,6 +7,7 @@ package com.tbs.sql.enums;
  * 在构建复杂查询条件时，通过该枚举来指定条件间的逻辑关系。
  * </p>
  * @author abstergo
+ * @since 1.0.0
  */
 public enum QueryConnectorEnum {
     /**

@@ -9,6 +9,7 @@ package com.tbs.sql.ef;
  *
  * @param <T> 实体类类型
  * @author tongj
+ * @since 1.0.0
  * @see IQueryQueryBuilder
  */
 public interface IEntityQueryWrapper<T> {

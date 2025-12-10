@@ -7,6 +7,7 @@ package com.tbs.sql.enums;
  * 以及模糊匹配、空值判断和集合匹配等操作。
  * </p>
  * @author abstergo
+ * @since 1.0.0
  */
 public enum QueryContrastEnum {
 

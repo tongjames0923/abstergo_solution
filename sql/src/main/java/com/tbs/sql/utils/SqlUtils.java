@@ -12,8 +12,12 @@ import com.tbs.sql.annotation.QueryMapping;
 
 /**
  * SQL工具类，提供数据库相关操作的工具方法
+ * <p>
+ * 包含表名获取、字段名映射、字段过滤等功能
+ * </p>
  *
  * @author tongj
+ * @since 1.0.0
  */
 public class SqlUtils {
 	/**
@@ -23,6 +27,9 @@ public class SqlUtils {
 
 	/**
 	 * 获取字段名，支持从@Column和@QueryMapping注解中获取映射名称
+	 * <p>
+	 * 优先级：@QueryMapping > @Column > 字段名
+	 * </p>
 	 *
 	 * @param field 字段对象
 	 * @return 映射的字段名或字段本身名称
@@ -44,7 +51,10 @@ public class SqlUtils {
 	}
 
 	/**
-	 * 判断是否应该跳过该字段，静态、final或@Transient注解的字段会被跳过
+	 * 判断是否应该跳过该字段
+	 * <p>
+	 * 静态、final或@Transient注解的字段会被跳过
+	 * </p>
 	 *
 	 * @param field 字段对象
 	 * @return 是否应该跳过该字段
@@ -55,7 +65,10 @@ public class SqlUtils {
 	}
 
 	/**
-	 * 获取类对应的表名，从@Table注解获取，如果没有则使用类名
+	 * 获取类对应的表名
+	 * <p>
+	 * 优先从@Table注解获取，如果没有则使用类名
+	 * </p>
 	 *
 	 * @param clazz 类对象
 	 * @return 表名

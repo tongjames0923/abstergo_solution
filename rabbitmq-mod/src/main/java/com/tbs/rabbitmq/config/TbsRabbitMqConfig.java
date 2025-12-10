@@ -37,7 +37,11 @@ public class TbsRabbitMqConfig {
     private RabbitProperties rabbitProperties;
 
     /**
-     * 创建连接工厂
+     * 创建RabbitMQ连接工厂
+     * <p>
+     * 配置RabbitMQ连接信息，包括主机、端口、用户名、密码和虚拟主机
+     * 启用连接缓存和发布确认机制
+     * </p>
      *
      * @return ConnectionFactory实例
      */
@@ -78,6 +82,9 @@ public class TbsRabbitMqConfig {
 
     /**
      * 创建RabbitTemplate用于发送消息
+     * <p>
+     * 配置消息发送模板，设置消息转换器和确认回调
+     * </p>
      *
      * @param connectionFactory 连接工厂
      * @param messageConverter  消息转换器

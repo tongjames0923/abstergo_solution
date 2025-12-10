@@ -5,15 +5,23 @@ import org.springframework.core.Ordered;
 import com.tbs.sql.framework.model.SqlWhereCompose;
 
 /**
- * sql信息组合拦截器
+ * SQL信息组合拦截器接口
+ * <p>
+ * 定义SQL信息组合拦截的方法，用于拦截和处理SQL信息组合
+ * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 public interface ISqlInfoComposeIntercepter extends Ordered {
 	/**
-	 * 拦截sql信息组合
+	 * 拦截SQL信息组合
+	 * <p>
+	 * 拦截SQL条件组合信息，对SQL条件进行处理
+	 * </p>
 	 *
-	 * @param compose
+	 * @param compose SQL条件组合信息
+	 * @param entityClass SQL实体类
 	 */
 	void intercept(SqlWhereCompose compose, Class<?> entityClass);
 

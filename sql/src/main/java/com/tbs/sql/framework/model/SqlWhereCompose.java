@@ -8,9 +8,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Sql数据集合，通常对应的是一个括号中所有的SQL where语句
+ * SQL条件组合模型
+ * <p>
+ * 表示SQL WHERE子句中的条件组合，通常对应于一对括号中的所有SQL条件语句
+ * </p>
  *
  * @author tongj
+ * @since 1.0.0
  */
 public class SqlWhereCompose implements Serializable {
     private static final long serialVersionUID = 1L;

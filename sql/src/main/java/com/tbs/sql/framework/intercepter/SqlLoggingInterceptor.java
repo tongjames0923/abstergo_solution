@@ -21,9 +21,13 @@ import com.tbs.sql.logger.SqlRuntimeStatus;
 import cn.hutool.core.collection.CollUtil;
 
 /**
- * The type Sql logging interceptor.
+ * SQL日志拦截器
+ * <p>
+ * MyBatis插件，用于拦截SQL执行，记录SQL日志信息
+ * </p>
  *
  * @author Abstergo
+ * @since 1.0.0
  */
 @Intercepts({
 		@Signature(type = Executor.class, method = "query", args = { MappedStatement.class, Object.class,
@@ -31,16 +35,26 @@ import cn.hutool.core.collection.CollUtil;
 		@Signature(type = Executor.class, method = "update", args = { MappedStatement.class, Object.class }) })
 public class SqlLoggingInterceptor implements Interceptor {
 
+	/**
+	 * SQL日志记录器映射
+	 */
 	@Resource
 	@Lazy
 	private Map<String, ISqlLogger> sqlLoggers;
 
 	/**
-	 * Instantiates a new Sql logging interceptor.
+	 * 构造函数
 	 */
 	public SqlLoggingInterceptor() {
 	}
 
+	/**
+	 * 拦截SQL执行，记录SQL日志
+	 *
+	 * @param invocation MyBatis插件调用对象
+	 * @return 原始操作的结果
+	 * @throws Throwable 如果发生异常
+	 */
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 		if (CollUtil.isEmpty(sqlLoggers)) {
@@ -66,11 +80,22 @@ public class SqlLoggingInterceptor implements Interceptor {
 		return result;
 	}
 
+	/**
+	 * 创建代理对象，用于拦截目标对象
+	 *
+	 * @param o 目标对象
+	 * @return 代理对象
+	 */
 	@Override
 	public Object plugin(Object o) {
 		return Plugin.wrap(o, this);
 	}
 
+	/**
+	 * 设置插件属性
+	 *
+	 * @param properties 插件属性
+	 */
 	@Override
 	public void setProperties(Properties properties) {
 

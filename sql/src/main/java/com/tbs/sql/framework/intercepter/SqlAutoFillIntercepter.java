@@ -27,6 +27,7 @@ import java.util.Set;
  * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 @Intercepts(@Signature(type = ParameterHandler.class, method = "setParameters", args = {PreparedStatement.class}))
 public class SqlAutoFillIntercepter implements Interceptor {
@@ -96,13 +97,13 @@ public class SqlAutoFillIntercepter implements Interceptor {
     }
 
     /**
-     * 创建代理对象，用于拦截目标对象。
+     * 创建代理对象，用于拦截目标对象
      *
      * @param o 目标对象
      * @return 代理对象
      */
-    @Override
-    public Object plugin(Object o) {
+      @Override
+      public Object plugin(Object o) {
         return Plugin.wrap(o, this);
     }
 

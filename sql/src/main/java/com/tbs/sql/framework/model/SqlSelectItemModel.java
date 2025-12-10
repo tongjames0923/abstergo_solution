@@ -7,9 +7,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * 查询字段信息
+ * SQL查询字段模型
+ * <p>
+ * 封装SQL查询中的字段信息，包括字段名称和字段别名
+ * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 @Data
 @AllArgsConstructor
