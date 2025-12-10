@@ -17,33 +17,47 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 抽象自动注册 用于自动注册Bean定义
+ * 抽象自动Bean注册器
+ * <p>
+ * 用于自动注册Spring Bean定义的抽象基类。实现了ImportBeanDefinitionRegistrar接口，
+ * 提供了扫描指定包和注解的Bean并自动注册到Spring容器的功能。
+ * </p>
  *
  * @author tongj
+ * @since 1.0.0
  */
 @Slf4j
 public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRegistrar {
 
     /**
-     * 获取包名
+     * 获取注册包的名称
+     * <p>
+     * 用于标识当前注册器扫描的包
+     * </p>
      *
-     * @return
+     * @return 注册包的名称
      */
     protected abstract String getPackName();
 
     private static final Map<String, Boolean> PACK_MAP = new HashMap<>(32);
 
     /**
-     * 获取扫描的包
+     * 获取需要扫描的基础包路径
+     * <p>
+     * 返回一个字符串数组，包含所有需要扫描的包路径
+     * </p>
      *
-     * @return
+     * @return 需要扫描的基础包路径数组
      */
     protected abstract String[] getBasePackages();
 
     /**
-     * 获取扫描的注解
+     * 获取需要扫描的注解类型
+     * <p>
+     * 返回一个注解类型集合，默认包含Component和Configuration注解
+     * </p>
      *
-     * @return
+     * @return 需要扫描的注解类型集合
      */
     protected Collection<Class<? extends Annotation>> getScanAnnotations() {
         return CollUtil.newArrayList(Component.class, Configuration.class);

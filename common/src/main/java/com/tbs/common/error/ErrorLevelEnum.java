@@ -6,10 +6,12 @@ import lombok.Getter;
 /**
  * 错误级别枚举类
  * <p>
- * 该枚举定义了系统中不同类型的错误级别，按照功能重要性和影响范围进行分类。 从用户输入错误到严重系统错误，级别数字越大表示严重程度越高。
+ * 该枚举定义了系统中不同类型的错误级别，按照功能重要性和影响范围进行分类。
+ * 从用户输入错误到严重系统错误，级别数字越大表示严重程度越高。
  * </p>
  *
  * @author tongj
+ * @since 1.0.0
  */
 @Getter
 public enum ErrorLevelEnum implements BaseEnum<String> {
@@ -40,11 +42,17 @@ public enum ErrorLevelEnum implements BaseEnum<String> {
 
     /**
      * 错误级别代码
+     * <p>
+     * 表示错误级别的数字代码，数字越大表示严重程度越高
+     * </p>
      */
     private Integer code;
 
     /**
      * 错误级别描述
+     * <p>
+     * 错误级别的文字描述，用于日志记录和错误展示
+     * </p>
      */
     private String value;
 

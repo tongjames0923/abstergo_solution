@@ -7,56 +7,66 @@ import java.time.format.DateTimeFormatter;
 import java.util.concurrent.TimeUnit;
 
 /**
- * The enum Time util.
+ * 时间工具类
+ * <p>
+ * 提供时间相关的工具方法，包括日期格式化常量和UTC时间获取功能
+ * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 public enum TimeUtil {
     ;
     /**
-     * The constant DATE_FORMAT_yyyyMMddHHmmss_STR.
+     * 日期时间格式字符串（年-月-日 时:分:秒）
      */
     public static final String DATE_FORMAT_yyyyMMddHHmmss_STR = "yyyy-MM-dd HH:mm:ss";
     /**
-     * The constant DATE_FORMAT_yyyyMMddHHmm_STR.
+     * 日期时间格式字符串（年-月-日 时:分）
      */
     public static final String DATE_FORMAT_yyyyMMddHHmm_STR = "yyyy-MM-dd HH:mm";
     /**
-     * The constant DATE_FORMAT_yyyyMMddHHmmss.
+     * 日期时间格式化对象（年-月-日 时:分:秒）
      */
     public static final SimpleDateFormat DATE_FORMAT_yyyyMMddHHmmss =
         new SimpleDateFormat(TimeUtil.DATE_FORMAT_yyyyMMddHHmmss_STR);
     /**
-     * The constant DATE_FORMAT_yyyyMMddHHmm.
+     * 日期时间格式化对象（年-月-日 时:分）
      */
     public static final SimpleDateFormat DATE_FORMAT_yyyyMMddHHmm =
         new SimpleDateFormat(TimeUtil.DATE_FORMAT_yyyyMMddHHmm_STR);
     /**
-     * The constant DATE_FORMAT_TEMPORAL_yyyyMMddHHmmss.
+     * JDK 8+日期时间格式化器（年-月-日 时:分:秒）
      */
     public static final DateTimeFormatter DATE_FORMAT_TEMPORAL_yyyyMMddHHmmss =
         DateTimeFormatter.ofPattern(TimeUtil.DATE_FORMAT_yyyyMMddHHmmss_STR);
 
     /**
-     * The constant DATE_FORMAT_TEMPORAL_yyyyMMddHHmm.
+     * JDK 8+日期时间格式化器（年-月-日 时:分）
      */
     public static final DateTimeFormatter DATE_FORMAT_TEMPORAL_yyyyMMddHHmm =
         DateTimeFormatter.ofPattern(TimeUtil.DATE_FORMAT_yyyyMMddHHmm_STR);
 
     /**
-     * 获取utc时间戳，
+     * 获取UTC时间戳
+     * <p>
+     * 根据指定的时间单位返回当前UTC时间戳
+     * </p>
      *
      * @param timeUnit 时间单位
-     * @return
+     * @return UTC时间戳，单位由参数指定
      */
     public static long getUtcTime(TimeUnit timeUnit) {
         return timeUnit.convert(getUtcTime(), TimeUnit.MILLISECONDS);
     }
 
     /**
-     * 获取utc时间戳，单位毫秒
+     * 获取UTC时间戳（毫秒单位）
+     * <p>
+     * 返回当前UTC时间的毫秒级时间戳
+     * </p>
      *
-     * @return
+     * @return UTC时间戳（毫秒单位）
      */
     public static long getUtcTime() {
         return LocalDateTime.now().toInstant(ZoneOffset.UTC).toEpochMilli();

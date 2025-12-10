@@ -18,10 +18,15 @@ import java.util.stream.Collectors;
 
 /**
  * 断言工具类
+ * <p>
+ * 提供一系列断言方法，用于验证业务逻辑条件和参数有效性。
+ * 断言失败时会抛出格式化的运行时异常，便于统一错误处理和日志记录。
+ * 该类实现了IStartup接口，在应用启动时初始化错误转换器和错误抛出事件。
+ * </p>
  *
  * @author tbs
+ * @since 1.0.0
  */
-
 @Component
 public class AssertUtil implements IStartup {
 

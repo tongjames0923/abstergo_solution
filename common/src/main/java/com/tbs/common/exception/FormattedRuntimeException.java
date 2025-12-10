@@ -6,12 +6,28 @@ import com.tbs.common.util.base.StrUtil;
 
 /**
  * 带格式的运行时异常
+ * <p>
+ * 支持消息格式化的运行时异常类，实现了IExceptionLevel接口，可以设置异常级别
+ * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 public class FormattedRuntimeException extends RuntimeException implements IExceptionLevel {
     private ErrorLevelEnum level = ErrorLevelEnum.SYSTEM_ERROR;
 
+    /**
+     * 构建由原因异常引起的异常消息
+     * <p>
+     * 将原因异常信息和自定义消息格式化为统一的异常消息
+     * </p>
+     *
+     * @param cause   原因异常
+     * @param message 自定义消息模板
+     * @param params  消息参数
+     * @param <T>     异常类型
+     * @return 格式化后的异常消息
+     */
     private static <T extends Throwable> String causeByExceptionMessage(T cause, String message, Object... params) {
         StringBuilder sb = new StringBuilder();
         if (cause != null) {
@@ -19,30 +35,55 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
                 StrUtil.format("异常类型:{},异常信息:{}.", cause.getClass().getName(), cause.getLocalizedMessage()));
         }
         if (StrUtil.isNotEmpty(message)) {
-            sb.append(StrUtil.format(" 更多信息:{} .", StrUtil.format(message, params)));
+            sb.append(StrUtil.format(" 更多信息:{}.", StrUtil.format(message, params)));
         }
         return sb.toString();
     }
 
     /**
-     * 带格式的运行时异常
+     * 构造带格式的运行时异常
+     *
+     * @param message 消息模板
+     * @param params  消息参数
      */
     public FormattedRuntimeException(String message, Object... params) {
         super(StrUtil.format(message, params));
     }
 
     /**
-     * 带格式的运行时异常
+     * 构造带格式和原因的运行时异常
+     *
+     * @param cause   原因异常
+     * @param message 消息模板
+     * @param params  消息参数
+     * @param <T>     异常类型
      */
     public <T extends Throwable> FormattedRuntimeException(T cause, String message, Object... params) {
         super(causeByExceptionMessage(cause, message, params));
     }
 
+    /**
+     * 获取异常级别
+     * <p>
+     * 实现IExceptionLevel接口的方法
+     * </p>
+     *
+     * @return 异常级别
+     */
     @Override
     public ErrorLevelEnum getLevel() {
         return level;
     }
 
+    /**
+     * 设置异常级别
+     * <p>
+     * 支持链式调用
+     * </p>
+     *
+     * @param errorLevel 异常级别
+     * @return 当前异常对象
+     */
     public FormattedRuntimeException errorLevel(ErrorLevelEnum errorLevel) {
         if (errorLevel == null) {
             return this;
