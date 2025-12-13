@@ -1,5 +1,6 @@
 package com.tbs.script.api.executor;
 
+import com.tbs.script.api.compiler.IScriptCompiler;
 import com.tbs.script.api.context.IScriptContext;
 import com.tbs.script.model.ScriptResult;
 
@@ -26,7 +27,9 @@ public interface ICompiledExecutor {
      * @param context 脚本上下文
      * @return 脚本执行结果
      */
-    CompletableFuture<ScriptResult> executeAsync();
+    default CompletableFuture<ScriptResult> executeAsync() {
+        return CompletableFuture.supplyAsync(this::execute);
+    }
 
     /**
      * 获取脚本上下文
@@ -34,6 +37,13 @@ public interface ICompiledExecutor {
      * @return 脚本上下文
      */
     IScriptContext getContext();
+
+    /**
+     * 获取脚本编译器
+     *
+     * @return 脚本编译器
+     */
+    IScriptCompiler getCompiler();
 
     /**
      * 脚本是否正在执行
