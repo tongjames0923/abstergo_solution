@@ -1,7 +1,12 @@
 package com.tbs.script.api.engine;
 
 import com.tbs.script.api.compiler.IScriptCompiler;
-import com.tbs.script.api.context.IScriptContext;
+import com.tbs.script.api.compiler.IScriptCompilerMeta;
+import com.tbs.script.api.context.IScriptContextFactory;
+import com.tbs.script.model.ScriptCompilerSpec;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Optional;
 
 /**
  * 脚本引擎接口
@@ -9,27 +14,38 @@ import com.tbs.script.api.context.IScriptContext;
  * @author tboss
  */
 public interface IScriptEngine {
+
     /**
      * 获取脚本编译器
      *
+     * @param compilerName 编译器名称
+     * @param version      版本
      * @return 脚本编译器
      */
-    IScriptCompiler getCompiler();
+    Optional<ScriptCompilerSpec> getCompilerSpecWithVersion(String compilerName, String version);
 
     /**
-     * 创建脚本上下文
+     * 获取脚本编译器
      *
-     * @return 脚本上下文
+     * @param compilerName 脚本编译器名称
+     * @return 脚本编译器
      */
-    IScriptContext createScriptContext();
+    Optional<ScriptCompilerSpec> getCompilerSpecWithLatestVersion(String compilerName);
+
+
+
+
+
 
     /**
-     * 获取脚本引擎支持的脚本语言
+     * 注册脚本编译器
      *
-     * @return 脚本语言
+     * @param compilerSpec       脚本编译器元数据
+     * @param compiler           脚本编译器
+     * @param contextFactory     脚本上下文工厂
      */
-    String scriptLanguage();
-
+    void registerCompilerSpec(@NotNull IScriptCompilerMeta compilerSpec, @NotNull IScriptCompiler compiler,
+        @NotNull IScriptContextFactory contextFactory);
 
 
 }

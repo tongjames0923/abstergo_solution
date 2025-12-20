@@ -20,18 +20,4 @@ public interface IScriptCompiler {
      */
     ICompiledExecutor compile(String script, IScriptContext scriptContext) throws ScriptException;
 
-    /**
-     * 获取编译器名称
-     *
-     * @return 返回编译器名称
-     */
-    String getCompilerName();
-
-    /**
-     * 获取编译器版本
-     *
-     * @return 获取编译器版本
-     */
-    String getCompilerVersion();
-
 }
