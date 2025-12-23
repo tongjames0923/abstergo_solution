@@ -3,6 +3,7 @@ package com.tbs.script.model;
 import com.tbs.script.api.compiler.IScriptCompiler;
 import com.tbs.script.api.compiler.IScriptCompilerMeta;
 import com.tbs.script.api.context.IScriptContextFactory;
+import com.tbs.script.api.executor.ICompiledExecutor;
 import lombok.Getter;
 import org.jetbrains.annotations.NotNull;
 
@@ -45,4 +46,15 @@ public class ScriptCompilerSpec {
         this.compilerMeta = Objects.requireNonNull(compilerMeta, "compilerMeta cannot be null");
         this.contextFactory = Objects.requireNonNull(contextFactory, "contextFactory cannot be null");
     }
+
+    /**
+     * 编译脚本
+     *
+     * @param script 脚本
+     * @return 脚本执行器
+     */
+    public ICompiledExecutor compile(String script) {
+        return compiler.compile(script, contextFactory.createContextForCompiler(compilerMeta));
+    }
+
 }

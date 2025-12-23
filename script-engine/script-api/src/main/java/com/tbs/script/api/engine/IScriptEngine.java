@@ -6,6 +6,7 @@ import com.tbs.script.api.context.IScriptContextFactory;
 import com.tbs.script.model.ScriptCompilerSpec;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Collection;
 import java.util.Optional;
 
 /**
@@ -19,33 +20,27 @@ public interface IScriptEngine {
      * 获取脚本编译器
      *
      * @param compilerName 编译器名称
-     * @param version      版本
+     * @param major        版本
+     * @param min
      * @return 脚本编译器
      */
-    Optional<ScriptCompilerSpec> getCompilerSpecWithVersion(String compilerName, String version);
+    Optional<ScriptCompilerSpec> getCompilerSpecWithVersion(String compilerName, Integer major, Integer min);
 
     /**
-     * 获取脚本编译器
+     * 获取所有脚本编译器
      *
-     * @param compilerName 脚本编译器名称
-     * @return 脚本编译器
+     * @return 所有脚本编译器
      */
-    Optional<ScriptCompilerSpec> getCompilerSpecWithLatestVersion(String compilerName);
-
-
-
-
-
+    Collection<ScriptCompilerSpec> getAllCompilerSpec();
 
     /**
      * 注册脚本编译器
      *
-     * @param compilerSpec       脚本编译器元数据
-     * @param compiler           脚本编译器
-     * @param contextFactory     脚本上下文工厂
+     * @param meta           脚本编译器元数据
+     * @param compiler       脚本编译器
+     * @param contextFactory 脚本上下文工厂
      */
-    void registerCompilerSpec(@NotNull IScriptCompilerMeta compilerSpec, @NotNull IScriptCompiler compiler,
-        @NotNull IScriptContextFactory contextFactory);
-
+    void registerCompilerSpec(@NotNull IScriptCompilerMeta meta, @NotNull IScriptCompiler compiler,
+        IScriptContextFactory contextFactory);
 
 }
