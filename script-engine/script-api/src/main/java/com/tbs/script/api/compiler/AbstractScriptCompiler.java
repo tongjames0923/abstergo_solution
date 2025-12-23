@@ -2,7 +2,7 @@ package com.tbs.script.api.compiler;
 
 import com.tbs.script.api.context.IScriptContext;
 import com.tbs.script.api.executor.ICompiledExecutor;
-import com.tbs.script.api.executor.SimpleScriptRunnerExecutor;
+import com.tbs.script.api.executor.impl.SimpleScriptRunnerExecutor;
 import com.tbs.script.exception.ScriptException;
 import com.tbs.script.model.ScriptCompilerFeatures;
 import com.tbs.script.model.ScriptResult;

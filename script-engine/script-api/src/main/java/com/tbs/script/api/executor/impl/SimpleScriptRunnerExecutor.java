@@ -1,10 +1,11 @@
-package com.tbs.script.api.executor;
+package com.tbs.script.api.executor.impl;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.script.api.compiler.AbstractScriptCompiler;
 import com.tbs.script.api.compiler.IScriptCompiler;
 import com.tbs.script.api.context.IScriptContext;
+import com.tbs.script.api.executor.ICompiledExecutor;
 import com.tbs.script.model.ScriptResult;
 import lombok.extern.slf4j.Slf4j;
 

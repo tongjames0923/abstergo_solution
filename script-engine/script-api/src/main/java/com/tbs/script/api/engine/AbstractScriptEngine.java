@@ -49,6 +49,11 @@ public abstract class AbstractScriptEngine implements IScriptEngine {
         return compilerSpecs.values();
     }
 
+    /**
+     * 导入编译器规范
+     */
+    protected abstract void importCompilerSpecs();
+
     @Override
     public void registerCompilerSpec(@NotNull IScriptCompilerMeta meta, @NotNull IScriptCompiler compiler,
         @NotNull IScriptContextFactory contextFactory) {
@@ -62,6 +67,7 @@ public abstract class AbstractScriptEngine implements IScriptEngine {
         ScriptCompilerSpec spec = new ScriptCompilerSpec(compiler, meta, contextFactory);
         if (compilerSpecs.containsKey(compilerSpecKey)) {
             log.warn("compiler spec {} already registered", compilerSpecKey);
+            compilerSpecs.put(compilerSpecKey, spec);
             return;
         }
         compilerSpecs.put(compilerSpecKey, spec);

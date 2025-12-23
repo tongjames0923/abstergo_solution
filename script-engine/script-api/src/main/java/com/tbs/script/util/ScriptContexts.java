@@ -10,10 +10,6 @@ import com.tbs.script.api.context.impl.SimpleLocalMapSciptContext;
  */
 public final class ScriptContexts {
 
-    private ScriptContexts() {
-        // 防止实例化
-    }
-
     /**
      * 创建简单的脚本上下文
      *
