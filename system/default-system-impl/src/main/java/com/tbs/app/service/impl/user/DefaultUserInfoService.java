@@ -37,7 +37,7 @@ public class DefaultUserInfoService implements IUserInfoService {
     public UserDetails loadUserInfoByUniqueKey(@NotNull String uniqueKey) {
         var users = systemUserService.queryByUserName(uniqueKey);
         AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException("用户不存在"));
-        var user = CollUtil.first(users);
+        var user = CollUtil.of(users).findFirstOrNull();
 
         var builder = DefaultSystemUserDetails.builder().userName(user.getUserName()).password(user.getPassword())
             .accountNonLocked(!SystemUserStatusEnum.LOCKED.getCode().equals(user.getFlag())).accountNonExpired(true)

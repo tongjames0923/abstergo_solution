@@ -5,6 +5,7 @@ import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.CollWrapper;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
@@ -19,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -383,7 +383,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
             for (var node : allNodes) {
                 relations.addAll(traceRelations(nodeMap, node.getNodeId()));
             }
-            CollUtil.partition(relations, 50).forEach(treeRelationMapper::insertList);
+            CollUtil.of(relations).partition(50).map(CollWrapper::toList).forEach(treeRelationMapper::insertList);
 
         } finally {
             CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);

@@ -1,12 +1,9 @@
 package com.tbs.common.util.base;
 
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
-
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * 集合工具类
@@ -16,59 +13,57 @@ import java.util.List;
 public class CollUtil extends cn.hutool.core.collection.CollUtil {
 
     /**
-     * 判断数组是否为空
+     * 创建包含指定流的集合包装器
      *
-     * @param array 数组
-     * @return 是否为空
+     * @param <T>    包装元素的类型
+     * @param stream 要包装的流
+     * @return 包含指定流的集合包装器实例
      */
-    public static <T> boolean isEmpty(T[] array) {
-        return array == null || array.length == 0;
-    }
-
-    public static <T> T first(T[] array) {
-        if (isEmpty(array)) {
-            return null;
-        }
-        return array[0];
-    }
-
-    public static <T> T last(T[] array) {
-        if (isEmpty(array)) {
-            return null;
-        }
-        return array[array.length - 1];
-    }
-
-    public static <T> T first(Collection<T> collection) {
-        return isEmpty(collection) ? null : collection.iterator().next();
+    public static <T> CollWrapper<T> of(Stream<T> stream) {
+        return new CollWrapper<>(stream);
     }
 
     /**
-     * 将集合均分成n个集合
+     * 从集合创建集合包装器
      *
-     * @param array
-     * @param size
-     * @param <T>
-     * @return
+     * @param <T>        包装元素的类型
+     * @param collection 源集合
+     * @return 包含集合流的集合包装器实例
      */
-    public static <T> List<List<T>> partition(Collection<T> array, int size) {
-        if (isEmpty(array)) {
-            return Collections.emptyList();
-        }
+    public static <T> CollWrapper<T> of(Collection<T> collection) {
+        return new CollWrapper<>(collection.stream());
+    }
 
-        AssertUtil.toAssert(size <= 0).message("分割大小必须为正数").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
-            .throwIt();
+    /**
+     * 从可迭代对象创建集合包装器
+     *
+     * @param <T>      包装元素的类型
+     * @param iterable 源可迭代对象
+     * @return 包含可迭代对象流的集合包装器实例
+     */
+    public static <T> CollWrapper<T> of(Iterable<T> iterable) {
+        return new CollWrapper<>(StreamSupport.stream(iterable.spliterator(), false));
+    }
 
-        List<T> list = new ArrayList<>(array);
-        int partitionSize = (int)Math.ceil((double)list.size() / size);
-        List<List<T>> result = new ArrayList<>(partitionSize);
+    /**
+     * 从数组创建集合包装器
+     *
+     * @param <T> 包装元素的类型
+     * @param ts  源数组
+     * @return 包含数组流的集合包装器实例
+     */
+    public static <T> CollWrapper<T> of(T... ts) {
+        return new CollWrapper<>(Arrays.stream(ts));
+    }
 
-        for (int i = 0; i < partitionSize; i++) {
-            int start = i * size;
-            int end = Math.min(start + size, list.size());
-            result.add(list.subList(start, end));
-        }
-        return result;
+    /**
+     * 创建包含空流的集合包装器
+     *
+     * @param <T> 包装元素的类型
+     * @return 包含空流的集合包装器实例
+     */
+    public static <T> CollWrapper<T> of() {
+        return new CollWrapper<>(Stream.empty());
     }
 
 }

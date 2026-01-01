@@ -4,8 +4,8 @@ import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.function.LambdaUtil;
 import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.function.LambdaUtil;
 import com.tbs.sql.ef.IQueryOrderProvider;
 import com.tbs.sql.ef.IQueryPageProvider;
 import com.tbs.sql.ef.IQueryQueryBuilder;
@@ -24,8 +24,7 @@ import java.util.Optional;
 /**
  * 实体查询构建器实现类，用于构建和执行针对实体对象的SQL查询
  * <p>
- * 该类是IQueryQueryBuilder接口的具体实现，提供了完整的查询构建和执行功能。
- * 包括WHERE条件构建、排序设置、分页设置、分组设置等功能，并最终执行查询操作。
+ * 该类是IQueryQueryBuilder接口的具体实现，提供了完整的查询构建和执行功能。 包括WHERE条件构建、排序设置、分页设置、分组设置等功能，并最终执行查询操作。
  * </p>
  *
  * @param <T> 实体类类型
@@ -42,12 +41,12 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
     private static volatile FetchMapper fetchMapper;
     /**
      * 分组模型列表，用于存储查询的分组条件
-	 */
-	List<SqlGroupModel> groups = new LinkedList<>();
+     */
+    List<SqlGroupModel> groups = new LinkedList<>();
     /**
      * 实体对象，用于存储查询相关的实体信息
      */
-	private T entity;
+    private T entity;
     /**
      * WHERE条件提供者，用于构建查询的WHERE条件
      */
@@ -63,12 +62,12 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
 
     /**
      * 构造函数，初始化实体查询构建器
-	 *
-	 * @param entity 实体对象
-	 */
-	public EntityQueryBuilder(T entity) {
+     *
+     * @param entity 实体对象
+     */
+    public EntityQueryBuilder(T entity) {
         this.entity = entity;
-	}
+    }
 
     /**
      * 创建一个限制只返回一条记录的分页提供者
@@ -78,13 +77,13 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      * @return 分页提供者，限制只返回一条记录
      */
     public static <T> IQueryPageProvider<T> topOne(IQueryQueryBuilder<T> builder) {
-		return new EntityPageProvider<>(builder).limit(0L, 1L);
+        return new EntityPageProvider<>(builder).limit(0L, 1L);
     }
 
     /**
      * 获取数据获取映射器
-	 *
-	 * @return FetchMapper实例
+     *
+     * @return FetchMapper实例
      */
     private FetchMapper getFetchMapper() {
         if (fetchMapper == null) {
@@ -97,12 +96,12 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
         return fetchMapper;
     }
 
-	/**
-	 * 获取实体对象
-	 *
-	 * @return 实体对象
-	 */
-	@Override
+    /**
+     * 获取实体对象
+     *
+     * @return 实体对象
+     */
+    @Override
     public T getEntity() {
         return entity;
     }
@@ -113,16 +112,16 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      * 通过SBiConsumer函数式接口设置实体对象的特定属性值。
      * </p>
      *
-     * @param accessor  双参数消费者接口，用于设置实体属性
-     * @param property  要设置的属性值
-     * @param <P>       属性值类型
+     * @param accessor 双参数消费者接口，用于设置实体属性
+     * @param property 要设置的属性值
+     * @param <P>      属性值类型
      * @return 返回自身，用于链式调用
      * @see SBiConsumer
      */
     @Override
     public <P> IQueryQueryBuilder<T> access(SBiConsumer<T, P> accessor, P property) {
         if (entity != null) {
-			accessor.accept(entity, property);
+            accessor.accept(entity, property);
         }
         return this;
     }
@@ -133,8 +132,8 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      * 通过SConsumer函数式接口直接对内部实体对象进行操作。
      * </p>
      *
-     * @param operator  单参数消费者接口，用于操作实体对象
-	 * @return 返回自身，用于链式调用
+     * @param operator 单参数消费者接口，用于操作实体对象
+     * @return 返回自身，用于链式调用
      * @see SConsumer
      */
     @Override
@@ -152,9 +151,9 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      * </p>
      *
      * @return WHERE条件提供者接口实例
-	 * @see IQueryWhereProvider
-	 */
-	@Override
+     * @see IQueryWhereProvider
+     */
+    @Override
     public IQueryWhereProvider<T> where() {
         if (whereProvider == null) {
             whereProvider = new EntityQueryWhereProvider<>(this);
@@ -170,10 +169,10 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      *
      * @return 包含排序提供者的Optional包装
      * @see Optional
-	 * @see IQueryOrderProvider
-	 */
-	@Override
-	public Optional<IQueryOrderProvider<T>> getOrderSupport() {
+     * @see IQueryOrderProvider
+     */
+    @Override
+    public Optional<IQueryOrderProvider<T>> getOrderSupport() {
         if (orderProvider == null) {
             orderProvider = new EntityQueryOrderProvider<>(this);
         }
@@ -188,10 +187,10 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      *
      * @return 包含分页提供者的Optional包装
      * @see Optional
-	 * @see IQueryPageProvider
-	 */
-	@Override
-	public Optional<IQueryPageProvider<T>> getPageLimitSupport() {
+     * @see IQueryPageProvider
+     */
+    @Override
+    public Optional<IQueryPageProvider<T>> getPageLimitSupport() {
         if (pageProvider == null) {
             pageProvider = new EntityPageProvider<>(this);
         }
@@ -204,18 +203,18 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      * 添加GROUP BY子句到查询中，根据指定的实体属性进行分组。
      * </p>
      *
-     * @param accessor  函数式接口，用于访问实体类属性
-     * @param <P>       实体类属性类型
-	 * @return 返回自身，用于链式调用
-	 * @see SFunction
-	 */
-	@Override
-	public <P> IQueryQueryBuilder<T> groupBy(SFunction<T, P> accessor) {
+     * @param accessor 函数式接口，用于访问实体类属性
+     * @param <P>      实体类属性类型
+     * @return 返回自身，用于链式调用
+     * @see SFunction
+     */
+    @Override
+    public <P> IQueryQueryBuilder<T> groupBy(SFunction<T, P> accessor) {
         if (entity != null) {
             Field field = LambdaUtil.getField(accessor);
             SqlGroupModel sqlGroupModel = new SqlGroupModel();
             sqlGroupModel.setFieldName(SqlUtils.getFiledNameWithMapping(field));
-			groups.add(sqlGroupModel);
+            groups.add(sqlGroupModel);
         }
         return this;
     }
@@ -227,15 +226,15 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      * </p>
      *
      * @return 查询结果列表，包含所有符合条件的实体对象
-	 * @see List
+     * @see List
      */
     @Override
     public List<T> fetch() {
         if (entity == null) {
             return CollUtil.newArrayList();
         }
-		EntityQuerySqlDriver driver = createDriver();
-		ImportedSqlContext sqlContext = new ImportedSqlContext(() -> entity);
+        EntityQuerySqlDriver driver = createDriver();
+        ImportedSqlContext sqlContext = new ImportedSqlContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
         return getFetchMapper().<T>fetch(sqlContext, driver, (Class<T>)entity.getClass());
@@ -246,40 +245,41 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
      * <p>
      * 执行查询操作并返回第一条符合条件的结果。
      * </p>
-	 *
-	 * @return 查询结果中的第一个实体对象，如果无结果则返回null
+     *
+     * @return 查询结果中的第一个实体对象，如果无结果则返回null
      */
     @Override
     public T fetchOne() {
         if (entity == null) {
             return null;
         }
-		EntityQuerySqlDriver driver = createDriver();
-		ImportedSqlContext sqlContext = new ImportedSqlContext(() -> entity);
+        EntityQuerySqlDriver driver = createDriver();
+        ImportedSqlContext sqlContext = new ImportedSqlContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
         driver.setLimit(topOne(this).getLimit());
-        return CollUtil.first(getFetchMapper().<T>fetch(sqlContext, driver, (Class<T>)entity.getClass()));
+        return CollUtil.of(getFetchMapper().<T>fetch(sqlContext, driver, (Class<T>)entity.getClass()))
+            .findFirstOrNull();
     }
 
     /**
      * 获取查询结果数量
      * <p>
      * 执行COUNT查询操作，返回符合条件的记录总数。
-	 * </p>
-	 *
-	 * @return 符合条件的记录总数
+     * </p>
+     *
+     * @return 符合条件的记录总数
      */
     @Override
     public Long count() {
         if (entity == null) {
             return 0L;
         }
-		EntityQuerySqlDriver driver = createDriver();
-		ImportedSqlContext sqlContext = new ImportedSqlContext(() -> entity);
+        EntityQuerySqlDriver driver = createDriver();
+        ImportedSqlContext sqlContext = new ImportedSqlContext(() -> entity);
         sqlContext.rebuild();
-		configureDriver(driver);
-		return getFetchMapper().count(sqlContext, driver);
+        configureDriver(driver);
+        return getFetchMapper().count(sqlContext, driver);
     }
 
     /**
@@ -301,5 +301,5 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
         driver.setWhereInfo(whereProvider != null ? whereProvider.getCompose() : null);
         driver.setLimit(pageProvider != null ? pageProvider.getLimit() : null);
         driver.setOrders(orderProvider != null ? orderProvider.getSqlOrders() : null);
-	}
+    }
 }

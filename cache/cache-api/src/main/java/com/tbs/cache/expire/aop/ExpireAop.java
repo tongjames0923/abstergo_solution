@@ -23,6 +23,11 @@ import org.springframework.stereotype.Component;
 import javax.annotation.Resource;
 import java.util.*;
 
+/**
+ * 缓存过期切面
+ *
+ * @author tongj
+ */
 @Aspect
 @Component
 public class ExpireAop {
@@ -72,7 +77,7 @@ public class ExpireAop {
         Collection<CacheOperation> opts, Object result) {
         String methodName = signature.getMethod().getName();
         String[] explicitCacheNames = expireOn.cacheNames();
-        boolean useExplicitNames = !CollUtil.isEmpty(explicitCacheNames);
+        boolean useExplicitNames = !CollUtil.of(explicitCacheNames).isEmpty();
 
         // 缓存名称来源优先级：显式声明 > 操作关联 > 全局缓存
         Set<String> cacheNamesSet = new HashSet<>(Math.min(8, opts.size()));

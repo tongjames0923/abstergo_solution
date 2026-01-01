@@ -129,7 +129,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
                 log.warn("实体数据不存在，无法保存");
                 return Collections.EMPTY_LIST;
             } else {
-                r.set(CollUtil.first(getInstance().updateBy(r.get().get())));
+                r.set(CollUtil.of(getInstance().updateBy(r.get().get())).findFirstOrNull());
                 return List.of(r.get().get());
             }
         }

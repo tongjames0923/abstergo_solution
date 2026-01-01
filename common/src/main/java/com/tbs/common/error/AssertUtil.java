@@ -462,7 +462,7 @@ public class AssertUtil implements IStartup {
      */
     public static <T> void notEmpty(@Nullable T[] array, String message, Object... params) {
         // 使用CollUtil.isEmpty判断数组是否为空，如果为空则抛出异常
-        isTrue(CollUtil.isEmpty(array), FormattedRuntimeException::new, message, params);
+        isTrue(CollUtil.of(array).isEmpty(), FormattedRuntimeException::new, message, params);
     }
 
     /**
@@ -486,7 +486,8 @@ public class AssertUtil implements IStartup {
      * @param params     错误消息参数
      * @return 如果对象非空返回不可构建的断言构建器，否则返回可构建的断言构建器
      */
-    public static AssertBuilder notNullWithLevel(@Nullable Object object, ErrorLevelEnum errorLevel, String message, Object... params) {
+    public static AssertBuilder notNullWithLevel(@Nullable Object object, ErrorLevelEnum errorLevel, String message,
+        Object... params) {
         return toAssert(object != null).errorLevel(errorLevel).message(message).params(params);
     }
 
@@ -499,7 +500,8 @@ public class AssertUtil implements IStartup {
      * @param params     错误消息参数
      * @return 如果对象为空返回不可构建的断言构建器，否则返回可构建的断言构建器
      */
-    public static AssertBuilder isNullWithLevel(@Nullable Object object, ErrorLevelEnum errorLevel, String message, Object... params) {
+    public static AssertBuilder isNullWithLevel(@Nullable Object object, ErrorLevelEnum errorLevel, String message,
+        Object... params) {
         return toAssert(object == null).errorLevel(errorLevel).message(message).params(params);
     }
 
@@ -512,7 +514,8 @@ public class AssertUtil implements IStartup {
      * @param params     错误消息参数
      * @return 如果字符串非空且包含文本返回不可构建的断言构建器，否则返回可构建的断言构建器
      */
-    public static AssertBuilder hasTextWithLevel(@Nullable String text, ErrorLevelEnum errorLevel, String message, Object... params) {
+    public static AssertBuilder hasTextWithLevel(@Nullable String text, ErrorLevelEnum errorLevel, String message,
+        Object... params) {
         return toAssert(!StrUtil.isEmpty(text)).errorLevel(errorLevel).message(message).params(params);
     }
 
@@ -525,7 +528,8 @@ public class AssertUtil implements IStartup {
      * @param params     错误消息参数
      * @return 如果集合非空返回不可构建的断言构建器，否则返回可构建的断言构建器
      */
-    public static AssertBuilder notEmptyWithLevel(@Nullable Collection<?> collection, ErrorLevelEnum errorLevel, String message, Object... params) {
+    public static AssertBuilder notEmptyWithLevel(@Nullable Collection<?> collection, ErrorLevelEnum errorLevel,
+        String message, Object... params) {
         return toAssert(!CollUtil.isEmpty(collection)).errorLevel(errorLevel).message(message).params(params);
     }
 
@@ -539,8 +543,9 @@ public class AssertUtil implements IStartup {
      * @param <T>        数组元素类型
      * @return 如果数组非空返回不可构建的断言构建器，否则返回可构建的断言构建器
      */
-    public static <T> AssertBuilder notEmptyWithLevel(@Nullable T[] array, ErrorLevelEnum errorLevel, String message, Object... params) {
-        return toAssert(!CollUtil.isEmpty(array)).errorLevel(errorLevel).message(message).params(params);
+    public static <T> AssertBuilder notEmptyWithLevel(@Nullable T[] array, ErrorLevelEnum errorLevel, String message,
+        Object... params) {
+        return toAssert(!CollUtil.of(array).isEmpty()).errorLevel(errorLevel).message(message).params(params);
     }
 
     /**
@@ -553,7 +558,8 @@ public class AssertUtil implements IStartup {
      * @param params     错误消息参数
      * @return 如果对象相等返回不可构建的断言构建器，否则返回可构建的断言构建器
      */
-    public static AssertBuilder equalsWithLevel(Object obj1, Object obj2, ErrorLevelEnum errorLevel, String message, Object... params) {
+    public static AssertBuilder equalsWithLevel(Object obj1, Object obj2, ErrorLevelEnum errorLevel, String message,
+        Object... params) {
         return toAssert(Objects.equals(obj1, obj2)).errorLevel(errorLevel).message(message).params(params);
     }
 
@@ -567,7 +573,8 @@ public class AssertUtil implements IStartup {
      * @param params     错误消息参数
      * @return 如果对象不相等返回不可构建的断言构建器，否则返回可构建的断言构建器
      */
-    public static AssertBuilder notEqualsWithLevel(Object obj1, Object obj2, ErrorLevelEnum errorLevel, String message, Object... params) {
+    public static AssertBuilder notEqualsWithLevel(Object obj1, Object obj2, ErrorLevelEnum errorLevel, String message,
+        Object... params) {
         return toAssert(!Objects.equals(obj1, obj2)).errorLevel(errorLevel).message(message).params(params);
     }
 
