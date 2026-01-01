@@ -19,10 +19,10 @@ export function initStabilityChart(chartElement, chartData) {
 
   // 分段统计稳定性指数
   const segments = [
-    {name: '优秀(≥85)', value: 0},
-    {name: '良好(60-84)', value: 0},
-    {name: '一般(45-59)', value: 0},
-    {name: '较差(<45)', value: 0}
+    { name: '优秀(≥85)', value: 0 },
+    { name: '良好(60-84)', value: 0 },
+    { name: '一般(45-59)', value: 0 },
+    { name: '较差(<45)', value: 0 }
   ]
 
   chartData.forEach(item => {
@@ -41,20 +41,20 @@ export function initStabilityChart(chartElement, chartData) {
   // 设置渐变颜色
   const colors = [
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-      {offset: 0, color: '#52c41a'},
-      {offset: 1, color: '#73d13d'}
+      { offset: 0, color: '#52c41a' },
+      { offset: 1, color: '#73d13d' }
     ]),
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-      {offset: 0, color: '#1890ff'},
-      {offset: 1, color: '#40a9ff'}
+      { offset: 0, color: '#1890ff' },
+      { offset: 1, color: '#40a9ff' }
     ]),
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-      {offset: 0, color: '#faad14'},
-      {offset: 1, color: '#ffc53d'}
+      { offset: 0, color: '#faad14' },
+      { offset: 1, color: '#ffc53d' }
     ]),
     new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-      {offset: 0, color: '#f5222d'},
-      {offset: 1, color: '#ff4d4f'}
+      { offset: 0, color: '#f5222d' },
+      { offset: 1, color: '#ff4d4f' }
     ])
   ]
 
@@ -120,7 +120,7 @@ export function initStabilityChart(chartElement, chartData) {
         })),
         animationType: 'scale',
         animationEasing: 'elasticOut',
-        animationDelay: function (idx) {
+        animationDelay: function(idx) {
           return Math.random() * 200
         }
       }

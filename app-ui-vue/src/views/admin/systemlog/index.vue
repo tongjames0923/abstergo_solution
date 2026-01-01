@@ -11,13 +11,13 @@
           description="以下数据展示了最近28天内系统各项操作的统计情况，包括成功率、响应时间、稳定性等关键指标。"
           show-icon
           title="系统运行状态概览"
-          type="info">
-        </el-alert>
+          type="info"
+        />
       </div>
     </el-card>
 
     <!-- 图表组件 -->
-    <system-log-charts :chart-data="tableData"/>
+    <system-log-charts :chart-data="tableData" />
 
     <el-card class="table-card">
       <div slot="header" class="card-header">
@@ -29,8 +29,9 @@
             placeholder="搜索操作类型..."
             style="width: 200px; margin-right: 10px;"
             @clear="handleSearch"
-            @keyup.enter.native="handleSearch">
-            <i slot="prefix" class="el-input__icon el-icon-search"></i>
+            @keyup.enter.native="handleSearch"
+          >
+            <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
           <el-button icon="el-icon-search" type="primary" @click="handleSearch">搜索</el-button>
         </div>
@@ -44,7 +45,7 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column label="操作类型" min-width="150" prop="operateType" sortable></el-table-column>
+        <el-table-column label="操作类型" min-width="150" prop="operateType" sortable />
         <el-table-column label="操作次数" min-width="100" prop="operateCount" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.operateCount) }}
@@ -54,8 +55,8 @@
           <template slot-scope="scope">
             <el-progress
               :percentage="parseFloat(formatNumber(scope.row.successRate))"
-              :status="getProgressStatus(scope.row.successRate)">
-            </el-progress>
+              :status="getProgressStatus(scope.row.successRate)"
+            />
             <span>{{ formatNumber(scope.row.successRate) }}%</span>
           </template>
         </el-table-column>
@@ -103,15 +104,15 @@
           :total="filteredTableData.length"
           layout="total, sizes, prev, pager, next, jumper"
           @size-change="handleSizeChange"
-          @current-change="handleCurrentChange">
-        </el-pagination>
+          @current-change="handleCurrentChange"
+        />
       </div>
     </el-card>
 
     <el-dialog :visible.sync="dialogVisible" title="操作详情" width="60%">
       <el-table :data="dialogTableData" border>
-        <el-table-column label="指标" prop="metric" width="200"></el-table-column>
-        <el-table-column label="数值" prop="value"></el-table-column>
+        <el-table-column label="指标" prop="metric" width="200" />
+        <el-table-column label="数值" prop="value" />
       </el-table>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">关闭</el-button>
@@ -121,7 +122,7 @@
 </template>
 
 <script>
-import {getSystemLogOperateTypeList} from '@/api/systemlog'
+import { getSystemLogOperateTypeList } from '@/api/systemlog'
 import SystemLogCharts from '@/components/Chart/SystemLogCharts.vue'
 
 export default {
@@ -221,19 +222,19 @@ export default {
     },
     showDetail(row) {
       this.dialogTableData = [
-        {metric: '操作类型', value: row.operateType},
-        {metric: '操作次数', value: this.formatNumber(row.operateCount)},
-        {metric: '操作总时间', value: this.formatNumber(row.operateTime)},
-        {metric: '最长执行时间', value: this.formatNumber(row.operateTimeMax)},
-        {metric: '最短执行时间', value: this.formatNumber(row.operateTimeMin)},
-        {metric: '错误次数', value: this.formatNumber(row.errorCount)},
-        {metric: '成功率', value: this.formatNumber(row.successRate) + '%'},
-        {metric: '90%分位数响应时间', value: this.formatNumber(row.operateTime90Percentile)},
-        {metric: '中位数响应时间', value: this.formatNumber(row.operateTimeMedian)},
-        {metric: '用户数', value: this.formatNumber(row.userCount)},
-        {metric: 'IP数', value: this.formatNumber(row.ipCount)},
-        {metric: '响应时间标准差', value: this.formatNumber(row.operateTimeStdDev)},
-        {metric: '稳定性指数', value: row.stabilityIndex}
+        { metric: '操作类型', value: row.operateType },
+        { metric: '操作次数', value: this.formatNumber(row.operateCount) },
+        { metric: '操作总时间', value: this.formatNumber(row.operateTime) },
+        { metric: '最长执行时间', value: this.formatNumber(row.operateTimeMax) },
+        { metric: '最短执行时间', value: this.formatNumber(row.operateTimeMin) },
+        { metric: '错误次数', value: this.formatNumber(row.errorCount) },
+        { metric: '成功率', value: this.formatNumber(row.successRate) + '%' },
+        { metric: '90%分位数响应时间', value: this.formatNumber(row.operateTime90Percentile) },
+        { metric: '中位数响应时间', value: this.formatNumber(row.operateTimeMedian) },
+        { metric: '用户数', value: this.formatNumber(row.userCount) },
+        { metric: 'IP数', value: this.formatNumber(row.ipCount) },
+        { metric: '响应时间标准差', value: this.formatNumber(row.operateTimeStdDev) },
+        { metric: '稳定性指数', value: row.stabilityIndex }
       ]
       this.dialogVisible = true
     }

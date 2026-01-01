@@ -5,7 +5,7 @@
         <el-card class="stat-card stat-card-success">
           <div class="stat-content">
             <div class="stat-icon">
-              <i class="el-icon-shield"></i>
+              <i class="el-icon-shield" />
             </div>
             <div class="stat-title">平均稳定性指数</div>
             <div class="stat-value">{{ averageStabilityIndex }}</div>
@@ -17,7 +17,7 @@
         <el-card class="stat-card stat-card-primary">
           <div class="stat-content">
             <div class="stat-icon">
-              <i class="el-icon-timer"></i>
+              <i class="el-icon-timer" />
             </div>
             <div class="stat-title">平均90%分位响应时间</div>
             <div class="stat-value">{{ average90PercentileResponseTime }}<span style="font-size: 18px;">ms</span></div>
@@ -29,7 +29,7 @@
         <el-card class="stat-card stat-card-info">
           <div class="stat-content">
             <div class="stat-icon">
-              <i class="el-icon-s-data"></i>
+              <i class="el-icon-s-data" />
             </div>
             <div class="stat-title">总访问量</div>
             <div class="stat-value">{{ totalVisitCount }}</div>
@@ -41,7 +41,7 @@
         <el-card class="stat-card stat-card-warning">
           <div class="stat-content">
             <div class="stat-icon">
-              <i class="el-icon-check"></i>
+              <i class="el-icon-check" />
             </div>
             <div class="stat-title">平均成功率</div>
             <div class="stat-value">{{ averageSuccessRate }}<span style="font-size: 18px;">%</span></div>
@@ -60,16 +60,16 @@
             icon="el-icon-arrow-left"
             circle
             size="mini"
-            @click="prevChart"
             :disabled="carouselActiveIndex === 0"
-          ></el-button>
+            @click="prevChart"
+          />
           <el-button
             icon="el-icon-arrow-right"
             circle
             size="mini"
-            @click="nextChart"
             :disabled="carouselActiveIndex === 3"
-          ></el-button>
+            @click="nextChart"
+          />
         </div>
       </div>
 
@@ -84,7 +84,7 @@
         <el-carousel-item name="stability">
           <div class="chart-item">
             <h3>稳定性指数分布</h3>
-            <div ref="stabilityChart" class="chart-container"></div>
+            <div ref="stabilityChart" class="chart-container" />
           </div>
         </el-carousel-item>
 
@@ -99,12 +99,12 @@
                   placeholder="排序方式"
                   @change="updateResponseTimeChart"
                 >
-                  <el-option label="标准差" value="stdDev"></el-option>
-                  <el-option label="平均耗时" value="avg"></el-option>
-                  <el-option label="最大响应时间" value="max"></el-option>
-                  <el-option label="最小响应时间" value="min"></el-option>
-                  <el-option label="中位数响应时间" value="median"></el-option>
-                  <el-option label="访问量" value="count"></el-option>
+                  <el-option label="标准差" value="stdDev" />
+                  <el-option label="平均耗时" value="avg" />
+                  <el-option label="最大响应时间" value="max" />
+                  <el-option label="最小响应时间" value="min" />
+                  <el-option label="中位数响应时间" value="median" />
+                  <el-option label="访问量" value="count" />
                 </el-select>
                 <el-select
                   v-model="responseTimeConfig.sortOrder"
@@ -112,8 +112,8 @@
                   placeholder="排序顺序"
                   @change="updateResponseTimeChart"
                 >
-                  <el-option label="降序" value="desc"></el-option>
-                  <el-option label="升序" value="asc"></el-option>
+                  <el-option label="降序" value="desc" />
+                  <el-option label="升序" value="asc" />
                 </el-select>
                 <el-select
                   v-model="responseTimeConfig.showTop"
@@ -121,28 +121,28 @@
                   placeholder="显示数量"
                   @change="updateResponseTimeChart"
                 >
-                  <el-option label="显示5个" :value="5"></el-option>
-                  <el-option label="显示10个" :value="10"></el-option>
-                  <el-option label="显示15个" :value="15"></el-option>
-                  <el-option label="显示20个" :value="20"></el-option>
+                  <el-option label="显示5个" :value="5" />
+                  <el-option label="显示10个" :value="10" />
+                  <el-option label="显示15个" :value="15" />
+                  <el-option label="显示20个" :value="20" />
                 </el-select>
               </div>
             </div>
-            <div ref="responseTimeChart" class="chart-container"></div>
+            <div ref="responseTimeChart" class="chart-container" />
           </div>
         </el-carousel-item>
 
         <el-carousel-item name="visitCount">
           <div class="chart-item">
             <h3>访问量Top10</h3>
-            <div ref="visitCountChart" class="chart-container"></div>
+            <div ref="visitCountChart" class="chart-container" />
           </div>
         </el-carousel-item>
 
         <el-carousel-item name="successRate">
           <div class="chart-item">
             <h3>成功率分布</h3>
-            <div ref="successRateChart" class="chart-container"></div>
+            <div ref="successRateChart" class="chart-container" />
           </div>
         </el-carousel-item>
       </el-carousel>
@@ -151,10 +151,10 @@
 </template>
 
 <script>
-import {initResponseTimeChart} from './js/ResponseTimeChart.js'
-import {initStabilityChart} from './js/StabilityChart.js'
-import {initSuccessRateChart} from './js/SuccessRateChart.js'
-import {initVisitCountChart} from './js/VisitCountChart.js'
+import { initResponseTimeChart } from './js/ResponseTimeChart.js'
+import { initStabilityChart } from './js/StabilityChart.js'
+import { initSuccessRateChart } from './js/SuccessRateChart.js'
+import { initVisitCountChart } from './js/VisitCountChart.js'
 
 export default {
   name: 'SystemLogCharts',

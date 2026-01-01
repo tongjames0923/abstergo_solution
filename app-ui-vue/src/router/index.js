@@ -3,9 +3,9 @@ import Router from 'vue-router'
 import store from '@/store'
 /* Layout */
 import Layout from '@/layout'
-import {getRoutes} from "@/api/view";
-import {setUpRouterPermissions} from "@/permission";
-import {getToken} from "@/utils/auth";
+import { getRoutes } from '@/api/view'
+import { setUpRouterPermissions } from '@/permission'
+import { getToken } from '@/utils/auth'
 
 Vue.use(Router)
 
@@ -55,21 +55,21 @@ export const constantRoutes = [
     path: '/',
     component: Layout,
     redirect: '/dashboard',
-    meta: {title: '首页', icon: 'el-icon-s-home'},
+    meta: { title: '首页', icon: 'el-icon-s-home' },
     children: [{
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: {title: 'Dashboard', icon: 'el-icon-star-on', roles: ['2']}
+      meta: { title: 'Dashboard', icon: 'el-icon-star-on', roles: ['2'] }
     },
-      {
-        path: 'table',
-        name: 'Table',
-        component: () => import('@/views/table/index'),
-        meta: {title: 'Table', icon: 'el-icon-star-on', roles: ['2']}
-      }
+    {
+      path: 'table',
+      name: 'Table',
+      component: () => import('@/views/table/index'),
+      meta: { title: 'Table', icon: 'el-icon-star-on', roles: ['2'] }
+    }
     ]
-  },
+  }
   //
   // {
   //   path: '/admin',
@@ -182,38 +182,38 @@ async function generateRoutesFromServer() {
       try {
         var res = await getRoutes()
         res = res.data
-        console.log("从后端获取的动态路由数据:", res) // 调试日志
+        console.log('从后端获取的动态路由数据:', res) // 调试日志
 
         // 映射 component 字段为实际组件路径
         for (let i = 0; i < res.length; i++) {
           mapComponent(res[i])
           routes.push(res[i])
         }
-        console.log("映射后的动态路由:", routes) // 调试日志
+        console.log('映射后的动态路由:', routes) // 调试日志
       } catch (error) {
-        console.error("获取动态路由失败:", error)
+        console.error('获取动态路由失败:', error)
         // 如果获取动态路由失败，只返回静态路由
-        console.log("使用静态路由作为备选方案")
+        console.log('使用静态路由作为备选方案')
       }
     } else {
-      console.log("未检测到token，仅使用静态路由")
+      console.log('未检测到token，仅使用静态路由')
     }
 
     // 添加404路由
-    routes.push({path: '*', redirect: '/404', hidden: true})
-    console.log("合并后的所有路由:", routes) // 调试日志
+    routes.push({ path: '*', redirect: '/404', hidden: true })
+    console.log('合并后的所有路由:', routes) // 调试日志
     return routes
   } catch (error) {
-    console.error("生成路由失败:", error)
+    console.error('生成路由失败:', error)
     // 如果生成路由失败，返回基础路由（静态路由 + 404）
-    return [...constantRoutes, {path: '*', redirect: '/404', hidden: true}]
+    return [...constantRoutes, { path: '*', redirect: '/404', hidden: true }]
   }
 }
 
 async function getServiceRouter() {
   const routes = await generateRoutesFromServer()
   currentRouter = new Router({
-    scrollBehavior: () => ({y: 0}),
+    scrollBehavior: () => ({ y: 0 }),
     routes
   })
   setUpRouterPermissions(currentRouter)
@@ -227,7 +227,7 @@ export async function updateRouter() {
 
     // 2. 创建新 router 实例
     const newRouter = new Router({
-      scrollBehavior: () => ({y: 0}),
+      scrollBehavior: () => ({ y: 0 }),
       routes: newRoutes
     })
 

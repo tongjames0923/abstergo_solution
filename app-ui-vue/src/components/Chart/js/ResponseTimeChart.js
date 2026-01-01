@@ -13,9 +13,9 @@ export function initResponseTimeChart(chartElement, chartData, options = {}) {
   // 默认配置
   const defaultOptions = {
     sortType: 'stdDev', // stdDev, avg, max, min, median, count
-    sortOrder: 'desc',  // desc, asc
-    showTop: 15,        // 显示前N个
-    showAverage: true   // 是否显示平均耗时指标
+    sortOrder: 'desc', // desc, asc
+    showTop: 15, // 显示前N个
+    showAverage: true // 是否显示平均耗时指标
   }
 
   const config = { ...defaultOptions, ...options }
@@ -30,7 +30,7 @@ export function initResponseTimeChart(chartElement, chartData, options = {}) {
 
   // 根据配置排序和筛选数据
   let sortedData = [...chartData]
-  
+
   // 排序函数
   const getSortValue = (item, type) => {
     switch (type) {
@@ -80,8 +80,8 @@ export function initResponseTimeChart(chartElement, chartData, options = {}) {
   const seriesCount = sortedData.map(item => parseFloat(item.operateCount) || 0).reverse()
 
   // 计算整体平均值
-  const totalAvg = sortedData.length > 0 ? 
-    sortedData.reduce((sum, item) => {
+  const totalAvg = sortedData.length > 0
+    ? sortedData.reduce((sum, item) => {
       const totalTime = parseFloat(item.operateTime) || 0
       const count = parseFloat(item.operateCount) || 0
       return sum + (count > 0 ? (totalTime / count) : 0)
@@ -311,7 +311,7 @@ export function initResponseTimeChart(chartElement, chartData, options = {}) {
         params.forEach(param => {
           const dotStyle = `style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background-color: ${param.color}; margin-right: 5px;"`
           // 确保值是数字后再调用 toFixed 方法
-          let value = param.value;
+          const value = param.value
           // 对访问量做特殊处理，显示为整数
           if (param.seriesName === '访问量') {
             tooltip += `<div style="margin: 3px 0;"><span ${dotStyle}></span>${param.seriesName}: ${parseInt(value).toLocaleString()}</div>`
@@ -403,7 +403,7 @@ export function initResponseTimeChart(chartElement, chartData, options = {}) {
         }
       }
     })
-    
+
     // 更新图例
     option.legend.data.push('整体平均耗时')
   }

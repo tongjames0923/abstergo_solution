@@ -114,9 +114,9 @@ import QuickUseManagementView from '@/components/QuickUseManagementView/index.vu
 import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
 import UserLoginInfoView from '@/components/UserAdminView/UserLoginInfoView.vue'
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
-import {rangeQueryTransform} from '@/utils/query-help'
-import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
+import { activateUser, adminQueryUser, deleteUser, disableUser, saveUser } from '@/api/admin_user'
+import { rangeQueryTransform } from '@/utils/query-help'
+import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
 
 export default {
   name: 'UserAdminView',
@@ -151,28 +151,28 @@ export default {
       },
       passwordRules: {
         password: [
-          {required: true, message: '请输入新密码', trigger: 'blur'},
-          {min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur'}
+          { required: true, message: '请输入新密码', trigger: 'blur' },
+          { min: 6, max: 20, message: '长度在 6 到 20 个字符', trigger: 'blur' }
         ],
         confirmPassword: [
-          {required: true, validator: validateConfirmPassword, trigger: 'blur'}
+          { required: true, validator: validateConfirmPassword, trigger: 'blur' }
         ]
       },
       columns: [
-        {prop: 'id', label: 'ID', width: 80},
+        { prop: 'id', label: 'ID', width: 80 },
         {
           prop: 'avatar',
           label: '头像',
           width: 120,
           render: (h, scope) => {
-            return <el-avatar fit="fill" src={scope.row.avatar}>
-              <i class="el-icon-warning-outline"></i>
+            return <el-avatar fit='fill' src={scope.row.avatar}>
+              <i class='el-icon-warning-outline'></i>
             </el-avatar>
           }
         },
-        {prop: 'userName', label: '用户名', width: 180},
-        {prop: 'nickName', label: '昵称', width: 180},
-        {prop: 'remark', label: '备注', minWidth: 200},
+        { prop: 'userName', label: '用户名', width: 180 },
+        { prop: 'nickName', label: '昵称', width: 180 },
+        { prop: 'remark', label: '备注', minWidth: 200 },
         {
           prop: 'flag',
           label: '状态',
@@ -189,8 +189,8 @@ export default {
             }
           }
         },
-        {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
-        {prop: 'updateTime', label: '更新时间', width: 180, sortable: true}
+        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
+        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
       ]
     }
   },
@@ -285,7 +285,7 @@ export default {
      * 处理密码重置提交事件
      */
     async handlePasswordSubmit() {
-      this.$refs.passwordForm.validate(async (valid) => {
+      this.$refs.passwordForm.validate(async(valid) => {
         if (valid) {
           try {
             const response = await saveUser(this.passwordForm)

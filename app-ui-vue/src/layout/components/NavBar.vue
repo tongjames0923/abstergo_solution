@@ -1,14 +1,14 @@
 <template>
   <div class="navbar-macos">
-    <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar"/>
+    <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
 
-    <breadcrumb class="breadcrumb-container"/>
+    <breadcrumb class="breadcrumb-container" />
 
     <div class="right-menu">
       <el-dropdown class="avatar-container" trigger="click">
         <div class="avatar-wrapper">
           <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
-          <i class="el-icon-caret-bottom"/>
+          <i class="el-icon-caret-bottom" />
         </div>
         <el-dropdown-menu slot="dropdown" class="user-dropdown">
           <router-link to="/">
@@ -26,10 +26,10 @@
 </template>
 
 <script>
-import {mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
-import sidebar from "@/layout/components/Sidebar/index.vue";
+import sidebar from '@/layout/components/Sidebar/index.vue'
 
 export default {
   name: 'Navbar',
@@ -67,7 +67,7 @@ export default {
   box-shadow: 0 1px 4px rgba(0, 21, 41, .08);
   margin: 8px 8px 0 8px;
   border-radius: 12px;
-  
+
   // 添加毛玻璃效果
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);

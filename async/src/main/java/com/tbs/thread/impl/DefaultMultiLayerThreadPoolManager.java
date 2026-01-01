@@ -52,9 +52,9 @@ public class DefaultMultiLayerThreadPoolManager extends AbstractThreadPoolManage
         ExecutorInfo... executorInfos) {
         this.defaultExecutorInfo = defaultExecutorInfo;
         executorMap.put(defaultExecutorInfo.getName(), defaultExecutorInfo);
-        this.executorInfos = new ArrayList<>(CollUtil.isEmpty(executorInfos) ? 1 : executorInfos.length + 1);
+        this.executorInfos = new ArrayList<>(CollUtil.of(executorInfos).isEmpty() ? 1 : executorInfos.length + 1);
         this.executorInfos.add(defaultExecutorInfo);
-        if (CollUtil.isEmpty(executorInfos)) {
+        if (CollUtil.of(executorInfos).isEmpty()) {
             return;
         }
         for (ExecutorInfo executorInfo : executorInfos) {

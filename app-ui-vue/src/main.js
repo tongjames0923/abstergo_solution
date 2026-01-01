@@ -11,7 +11,7 @@ import store from './store'
 
 import '@/icons' // icon
 import '@/permission'
-import getServiceRouter from "@/router"; // permission control
+import getServiceRouter from '@/router' // permission control
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api
@@ -31,7 +31,6 @@ if (process.env.NODE_ENV === 'production') {
 Vue.use(ElementUI)
 
 Vue.config.productionTip = false
-
 
 var router = null
 

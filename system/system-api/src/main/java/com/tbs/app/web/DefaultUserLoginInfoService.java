@@ -130,11 +130,11 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
             loginInfoEntity = setUserDetails(loginInfoEntity, userDetails);
             loginInfoEntity.setToken(token.getToken());
             loginInfoEntity.setTokenExpireTime(token.getExpireTime());
-            loginInfoEntity.setUserId(
-                Optional.ofNullable(CollUtil.first(systemUserService.queryByUserName(userDetails.getUsername())))
-                    .map(SystemUserEntity::getId).orElseThrow(() -> {
-                        return new FormattedRuntimeException("用户{}不存在无法生成用户登陆信息", userDetails.getUsername());
-                    }));
+            loginInfoEntity.setUserId(Optional.ofNullable(
+                    CollUtil.of(systemUserService.queryByUserName(userDetails.getUsername())).findFirstOrNull())
+                .map(SystemUserEntity::getId).orElseThrow(() -> {
+                    return new FormattedRuntimeException("用户{}不存在无法生成用户登陆信息", userDetails.getUsername());
+                }));
             loginInfoEntity.setSessionId(token.getSessionId());
             loginInfoEntity.setFlag(LoginInfoFlagEnum.ACTIVE.getCode());
             loginInfoEntity.setCreateTime(new Date());
@@ -154,7 +154,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     }
 
     private List<String> getUserAvaliableSessionIdsByUserName(String username) {
-        SystemUserEntity user = CollUtil.first(systemUserService.queryByUserName(username));
+        SystemUserEntity user = CollUtil.of(systemUserService.queryByUserName(username)).findFirstOrNull();
         AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
         query.where().equal(SystemLoginInfoEntity::getUserId, user.getId());
@@ -181,7 +181,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
     @Override
     public List<LoginSessionVO> listUserSessions(String username) {
-        SystemUserEntity user = CollUtil.first(systemUserService.queryByUserName(username));
+        SystemUserEntity user = CollUtil.of(systemUserService.queryByUserName(username)).findFirstOrNull();
         AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
         query.where().equal(SystemLoginInfoEntity::getUserId, user.getId())

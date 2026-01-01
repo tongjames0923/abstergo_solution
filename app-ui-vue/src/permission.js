@@ -9,8 +9,8 @@ import getPageTitle from '@/utils/get-page-title'
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['/login'] // no redirect whitelist
-export function setUpRouterPermissions(router){
-  router.beforeEach(async (to, from, next) => {
+export function setUpRouterPermissions(router) {
+  router.beforeEach(async(to, from, next) => {
     // start progress bar
     NProgress.start()
 
@@ -23,7 +23,7 @@ export function setUpRouterPermissions(router){
     if (hasToken) {
       if (to.path === '/login') {
         // if is logged in, redirect to the home page
-        next({path: '/'})
+        next({ path: '/' })
         NProgress.done()
       } else {
         const hasGetUserInfo = store.getters.name
@@ -82,5 +82,4 @@ export function setUpRouterPermissions(router){
     // finish progress bar
     NProgress.done()
   })
-
 }

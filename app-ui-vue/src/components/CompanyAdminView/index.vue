@@ -17,7 +17,7 @@
 
     <!-- 搜索区域 -->
     <el-card class="search-card" shadow="never">
-      <el-form :model="searchForm" ref="searchForm" label-width="100px" class="search-form">
+      <el-form ref="searchForm" :model="searchForm" label-width="100px" class="search-form">
         <el-row :gutter="20">
           <el-col :span="6">
             <el-form-item label="公司名称">
@@ -73,14 +73,14 @@
     <el-card class="table-card" shadow="never">
       <div v-loading="loading" style="min-height:200px; position:relative;">
         <el-tree
+          ref="companyTree"
           :data="treeData"
           :props="treeProps"
           node-key="id"
           lazy
           :load="loadNode"
-          ref="companyTree"
         >
-          <span class="custom-tree-node" slot-scope="{ node, data }">
+          <span slot-scope="{ node, data }" class="custom-tree-node">
             <span>
               <el-tooltip class="item" placement="right" effect="light" popper-class="company-info-tooltip">
                 <span class="tree-node-title">{{ data.companyName }}</span>
@@ -141,9 +141,9 @@
             </span>
             <span class="tree-node-actions">
               <el-button type="text" size="mini" @click="handleEdit(data)">编辑</el-button>
-              <el-dropdown @command="handleMoreActions" size="mini">
+              <el-dropdown size="mini" @command="handleMoreActions">
                 <el-button type="text" size="mini">
-                  更多<i class="el-icon-arrow-down el-icon--right"></i>
+                  更多<i class="el-icon-arrow-down el-icon--right" />
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item :command="{type: 'move', row: data}">
@@ -159,7 +159,7 @@
         </el-tree>
 
         <div v-if="!loading && (!treeData || treeData.length === 0)" class="empty-wrap">
-          <el-empty description="暂无数据"/>
+          <el-empty description="暂无数据" />
         </div>
       </div>
     </el-card>
@@ -184,12 +184,12 @@
       :before-close="handleDialogClose"
       append-to-body
     >
-      <el-form :model="editForm" :rules="formRules" ref="editForm" label-width="100px">
+      <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="100px">
         <el-form-item label="公司名称" prop="companyName">
-          <el-input v-model="editForm.companyName" placeholder="请输入公司名称"/>
+          <el-input v-model="editForm.companyName" placeholder="请输入公司名称" />
         </el-form-item>
         <el-form-item label="税号" prop="taxNumber">
-          <el-input v-model="editForm.taxNumber" placeholder="请输入税号"/>
+          <el-input v-model="editForm.taxNumber" placeholder="请输入税号" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input
@@ -212,7 +212,7 @@
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleDialogClose">取 消</el-button>
-        <el-button type="primary" @click="handleDialogConfirm" :loading="dialogSaving">确 定</el-button>
+        <el-button type="primary" :loading="dialogSaving" @click="handleDialogConfirm">确 定</el-button>
       </div>
     </el-dialog>
 
@@ -225,10 +225,13 @@
       :before-close="handleMoveCompanyDialogClose"
       append-to-body
     >
-      <el-form :model="moveCompanyForm" ref="moveCompanyForm" label-width="100px">
+      <el-form ref="moveCompanyForm" :model="moveCompanyForm" label-width="100px">
         <el-form-item label="目标父公司">
-          <el-alert type="info" show-icon
-                    title="支持模糊搜索目标父公司；请选择目标父公司，不能选择自身"/>
+          <el-alert
+            type="info"
+            show-icon
+            title="支持模糊搜索目标父公司；请选择目标父公司，不能选择自身"
+          />
           <div style="margin-top:10px;">
             <el-select
               v-model="moveCompanyForm.targetParentId"
@@ -248,25 +251,37 @@
                 :label="item.companyName + (item.taxNumber ? ' — ' + item.taxNumber : '')"
                 :value="item.id"
               />
-              <el-option v-if="!parentCandidates.length && !parentRemoteLoading" :key="'no-result'"
-                         :label="'无匹配结果'" :value="null" disabled/>
+              <el-option
+                v-if="!parentCandidates.length && !parentRemoteLoading"
+                :key="'no-result'"
+                :label="'无匹配结果'"
+                :value="null"
+                disabled
+              />
             </el-select>
           </div>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
         <el-button @click="handleMoveCompanyDialogClose">取 消</el-button>
-        <el-button type="primary" @click="handleMoveCompanyConfirm" :loading="moveSaving">确 定</el-button>
+        <el-button type="primary" :loading="moveSaving" @click="handleMoveCompanyConfirm">确 定</el-button>
       </div>
     </el-dialog>
   </div>
 </template>
 
 <script>
-import {adminQueryCompany, deleteCompany, listChildren, moveCompanyTo, saveCompany} from '@/api/company'
+import { adminQueryCompany, deleteCompany, listChildren, moveCompanyTo, saveCompany } from '@/api/company'
 
 export default {
   name: 'CompanyAdminView',
+  filters: {
+    formatDate(date) {
+      if (!date) return ''
+      const d = new Date(date)
+      return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
+    }
+  },
   data() {
     return {
       loading: false,
@@ -307,19 +322,19 @@ export default {
       allCompanies: [],
       formRules: {
         companyName: [
-          {required: true, message: '请输入公司名称', trigger: 'blur'}
+          { required: true, message: '请输入公司名称', trigger: 'blur' }
         ],
         taxNumber: [
-          {required: true, message: '请输入税号', trigger: 'blur'}
+          { required: true, message: '请输入税号', trigger: 'blur' }
         ],
         flag: [
-          {required: true, message: '请选择状态', trigger: 'change'}
+          { required: true, message: '请选择状态', trigger: 'change' }
         ]
       },
       statusOptions: [
-        {code: 1, label: '已激活'},
-        {code: 2, label: '禁用'},
-        {code: 5, label: '系统内置'}
+        { code: 1, label: '已激活' },
+        { code: 2, label: '禁用' },
+        { code: 5, label: '系统内置' }
       ],
       treeProps: {
         label: 'companyName',
@@ -336,7 +351,7 @@ export default {
       const map = {}
       const roots = []
       for (const c of this.allCompanies) {
-        map[c.id] = {...c, children: []}
+        map[c.id] = { ...c, children: [] }
       }
       for (const id in map) {
         const node = map[id]
@@ -352,17 +367,13 @@ export default {
   created() {
     this.loadCompanyData()
   },
-  filters: {
-    formatDate(date) {
-      if (!date) return ''
-      const d = new Date(date)
-      return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
-    }
+  beforeDestroy() {
+    clearTimeout(this.searchDebounceTimer)
   },
   methods: {
     escapeHtml(str = '') {
-      return String(str).replace(/[&<>"'\/]/g, function (s) {
-        const entityMap = {'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;'}
+      return String(str).replace(/[&<>"'\/]/g, function(s) {
+        const entityMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' }
         return entityMap[s]
       })
     },
@@ -421,24 +432,24 @@ export default {
     async loadNode(node, resolve) {
       // 根节点
       if (node.level === 0) {
-        resolve(this.treeData);
-        return;
+        resolve(this.treeData)
+        return
       }
 
       try {
-        const response = await listChildren(node.data.id);
-        const children = response.data || [];
-        const childrenWithIsLeaf = [];
+        const response = await listChildren(node.data.id)
+        const children = response.data || []
+        const childrenWithIsLeaf = []
         for (const child of children) {
           childrenWithIsLeaf.push({
             ...child,
             isLeaf: !(child.childrenCount && child.childrenCount > 0)
-          });
+          })
         }
-        resolve(childrenWithIsLeaf);
+        resolve(childrenWithIsLeaf)
       } catch (error) {
-        console.error(`加载公司 ${node.data.id} 的子节点失败:`, error);
-        resolve([]);
+        console.error(`加载公司 ${node.data.id} 的子节点失败:`, error)
+        resolve([])
       }
     },
 
@@ -498,7 +509,7 @@ export default {
 
     handleEdit(row) {
       this.dialogType = 'edit'
-      this.editForm = {...row}
+      this.editForm = { ...row }
       this.dialogVisible = true
     },
 
@@ -507,17 +518,17 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async () => {
+      }).then(async() => {
         try {
-          await deleteCompany(row.id);
-          this.$message.success('删除成功');
+          await deleteCompany(row.id)
+          this.$message.success('删除成功')
           // 重新加载整个树
-          this.loadCompanyData();
+          this.loadCompanyData()
         } catch (error) {
-          console.error('删除失败:', error);
-          this.$message.error('删除失败');
+          console.error('删除失败:', error)
+          this.$message.error('删除失败')
         }
-      });
+      })
     },
 
     getCompanyStatusTagType(flag) {
@@ -548,9 +559,9 @@ export default {
     },
 
     async handleDialogConfirm() {
-      this.$refs.editForm.validate(async (valid) => {
+      this.$refs.editForm.validate(async(valid) => {
         if (valid) {
-          this.dialogSaving = true;
+          this.dialogSaving = true
           try {
             if (this.dialogType === 'add' && this.editForm.parentId) {
               const saveResponse = await saveCompany({
@@ -558,26 +569,26 @@ export default {
                 taxNumber: this.editForm.taxNumber,
                 description: this.editForm.description,
                 flag: this.editForm.flag
-              });
+              })
               if (saveResponse.data && saveResponse.data.id) {
-                await moveCompanyTo(this.editForm.parentId, saveResponse.data.id);
-                this.$message.success('新增子公司成功');
+                await moveCompanyTo(this.editForm.parentId, saveResponse.data.id)
+                this.$message.success('新增子公司成功')
               }
             } else {
-              await saveCompany(this.editForm);
-              this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功');
+              await saveCompany(this.editForm)
+              this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
             }
-            this.dialogVisible = false;
+            this.dialogVisible = false
             // 重新加载整个树
-            this.loadCompanyData();
+            this.loadCompanyData()
           } catch (error) {
-            console.error('保存失败:', error);
-            this.$message.error('保存失败');
+            console.error('保存失败:', error)
+            this.$message.error('保存失败')
           } finally {
-            this.dialogSaving = false;
+            this.dialogSaving = false
           }
         }
-      });
+      })
     },
 
     handleMoreActions(command) {
@@ -652,16 +663,16 @@ export default {
       }
       this.moveSaving = true
       try {
-        await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId);
-        this.$message.success('移动公司成功');
-        this.handleMoveCompanyDialogClose();
+        await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId)
+        this.$message.success('移动公司成功')
+        this.handleMoveCompanyDialogClose()
         // 重新加载整个树
-        this.loadCompanyData();
+        this.loadCompanyData()
       } catch (error) {
-        console.error('移动公司失败:', error);
+        console.error('移动公司失败:', error)
         // 如果后端返回子孙校验失败，应显示后端错误信息
-        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动公司失败';
-        this.$message.error(msg);
+        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动公司失败'
+        this.$message.error(msg)
       } finally {
         this.moveSaving = false
       }
@@ -677,9 +688,6 @@ export default {
       this.currentPage = 1
       this.loadCompanyData()
     }
-  },
-  beforeDestroy() {
-    clearTimeout(this.searchDebounceTimer)
   }
 }
 </script>

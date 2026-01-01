@@ -5,6 +5,7 @@ import com.tbs.common.data.IDataHolderManager;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.CollWrapper;
 import com.tbs.lock.util.LockUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLog;
 import com.tbs.shared.mapper.SystemOperateMapper;
@@ -62,10 +63,11 @@ public class DbSystemOpLog implements ISystemOperateLog, DisposableBean {
             return;
         }
         LOGGER.info("flush data in to db.size={},batch size={}", list.size(), getBatchSize());
-        for (var ls : CollUtil.partition(list, getBatchSize())) {
+        CollUtil.of(list).partition(getBatchSize()).map(CollWrapper::toList).forEach(ls -> {
             int effect = systemOperateMapper.insertList(ls);
             LOGGER.info("insert list size={},effect size={}", ls.size(), effect);
-        }
+        });
+
         list.clear();
     }
 

@@ -1,20 +1,20 @@
 <template>
   <div :class="classObj" class="app-wrapper">
-    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside"/>
-    <sidebar class="sidebar-container"/>
+    <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
+    <sidebar class="sidebar-container" />
     <div class="main-container">
       <div :class="{'fixed-header':fixedHeader}" style="margin-left: 10px">
-        <navbar/>
+        <navbar />
       </div>
-      <app-main/>
+      <app-main />
     </div>
   </div>
 </template>
 
 <script>
-import {Sidebar, AppMain} from './components'
+import { Sidebar, AppMain } from './components'
 import ResizeMixin from './mixin/ResizeHandler'
-import Navbar from "@/layout/components/NavBar.vue";
+import Navbar from '@/layout/components/NavBar.vue'
 
 export default {
   name: 'Layout',
@@ -45,7 +45,7 @@ export default {
   },
   methods: {
     handleClickOutside() {
-      this.$store.dispatch('app/closeSideBar', {withoutAnimation: false})
+      this.$store.dispatch('app/closeSideBar', { withoutAnimation: false })
     }
   }
 }
