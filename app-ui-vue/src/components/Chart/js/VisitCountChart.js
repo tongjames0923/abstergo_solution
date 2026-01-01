@@ -39,7 +39,7 @@ export function initVisitCountChart(chartElement, chartData) {
         color: '#fff',
         fontSize: 13
       },
-      formatter: function (params) {
+      formatter: function(params) {
         const param = params[0]
         return `${param.name}<br/>访问量: ${parseInt(param.value).toLocaleString()}`
       }
@@ -60,7 +60,7 @@ export function initVisitCountChart(chartElement, chartData) {
       },
       axisLabel: {
         color: '#606266',
-        formatter: function (value) {
+        formatter: function(value) {
           if (value >= 1000) {
             return (value / 1000).toFixed(1) + 'k'
           }
@@ -93,8 +93,8 @@ export function initVisitCountChart(chartElement, chartData) {
         data: seriesData,
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-            {offset: 0, color: '#40a9ff'},
-            {offset: 1, color: '#1890ff'}
+            { offset: 0, color: '#40a9ff' },
+            { offset: 1, color: '#1890ff' }
           ]),
           borderRadius: [0, 6, 6, 0],
           shadowBlur: 8,
@@ -104,8 +104,8 @@ export function initVisitCountChart(chartElement, chartData) {
         emphasis: {
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
-              {offset: 0, color: '#69c0ff'},
-              {offset: 1, color: '#40a9ff'}
+              { offset: 0, color: '#69c0ff' },
+              { offset: 1, color: '#40a9ff' }
             ]),
             shadowBlur: 15,
             shadowOffsetX: 5,
@@ -118,7 +118,7 @@ export function initVisitCountChart(chartElement, chartData) {
           color: '#303133',
           fontWeight: 'bold',
           fontSize: 11,
-          formatter: function (params) {
+          formatter: function(params) {
             // 在柱状图右侧显示数值，大于1000的显示为k单位
             const value = params.value
             if (value >= 1000) {
@@ -127,13 +127,13 @@ export function initVisitCountChart(chartElement, chartData) {
             return value
           }
         },
-        animationDelay: function (idx) {
+        animationDelay: function(idx) {
           return idx * 30
         }
       }
     ],
     animationEasing: 'elasticOut',
-    animationDelayUpdate: function (idx) {
+    animationDelayUpdate: function(idx) {
       return idx * 5
     }
   }

@@ -89,7 +89,7 @@ export function enableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/enable/${userId}`,
     method: 'get',
-    params: {role}
+    params: { role }
   })
 }
 
@@ -97,7 +97,7 @@ export function disableRoleForUser(userId, role) {
   return request({
     url: `/private/admin/role/disable/${userId}`,
     method: 'get',
-    params: {role}
+    params: { role }
   })
 }
 

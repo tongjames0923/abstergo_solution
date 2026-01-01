@@ -5,7 +5,7 @@
       <div style="margin-bottom: 10px;">
         <el-button v-if="showTokens" size="mini" @click="backToSessions">返回会话列表</el-button>
       </div>
-      <el-skeleton v-if="loadingSessions" :rows="5" animated/>
+      <el-skeleton v-if="loadingSessions" :rows="5" animated />
       <DynamicTable
         v-else
         :data="paginatedSessions"
@@ -39,7 +39,7 @@
           </el-tooltip>
         </span>
       </div>
-      <el-skeleton v-if="loadingTokens" :rows="5" animated/>
+      <el-skeleton v-if="loadingTokens" :rows="5" animated />
       <DynamicTable
         v-else
         :data="paginatedTokens"
@@ -102,7 +102,7 @@
 
 <script>
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import {disableUserToken, getTokensBySessionId, getUserSessions} from '@/api/admin_user'
+import { disableUserToken, getTokensBySessionId, getUserSessions } from '@/api/admin_user'
 
 export default {
   name: 'UserLoginInfoView',
@@ -261,7 +261,7 @@ export default {
 
       this.loadingSessions = true
       try {
-        const {data} = await getUserSessions(this.userId)
+        const { data } = await getUserSessions(this.userId)
         // 使用新的会话数据结构
         this.loginSessions = data || []
         this.showTokens = false
@@ -366,7 +366,7 @@ export default {
     async showSessionTokens(sessionId) {
       this.loadingTokens = true
       try {
-        const {data} = await getTokensBySessionId(sessionId)
+        const { data } = await getTokensBySessionId(sessionId)
         this.sessionTokens = data || []
         this.currentSessionId = sessionId
         this.showTokens = true
@@ -392,21 +392,21 @@ export default {
           confirmButtonText: '确定',
           cancelButtonText: '取消',
           type: 'warning'
-        });
+        })
 
-        await disableUserToken(row.token, this.userId);
-        this.$message.success('Token禁用成功');
+        await disableUserToken(row.token, this.userId)
+        this.$message.success('Token禁用成功')
 
         // 更新当前列表中的Token状态
-        const tokenIndex = this.sessionTokens.findIndex(token => token.token === row.token);
+        const tokenIndex = this.sessionTokens.findIndex(token => token.token === row.token)
         if (tokenIndex !== -1) {
-          this.sessionTokens[tokenIndex].status = 'REVOKE';
+          this.sessionTokens[tokenIndex].status = 'REVOKE'
         }
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('禁用Token失败:', error);
-          this.$message.error('禁用Token失败: ' + (error.message || '未知错误'));
-          this.backToSessions();
+          console.error('禁用Token失败:', error)
+          this.$message.error('禁用Token失败: ' + (error.message || '未知错误'))
+          this.backToSessions()
         }
       }
     }

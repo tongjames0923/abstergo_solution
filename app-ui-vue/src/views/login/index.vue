@@ -51,7 +51,7 @@
               @blur="handleInputBlur"
             />
             <span class="show-pwd" @click="showPwd">
-              <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'"/>
+              <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'" />
             </span>
           </el-form-item>
 
@@ -73,7 +73,7 @@
       <div class="login-decoration">
         <div class="decoration-content">
           <div class="decoration-icon">
-            <i class="el-icon-office-building float-animation"/>
+            <i class="el-icon-office-building float-animation" />
           </div>
           <!--          <h3>高效企业管理</h3>-->
           <!--          <p>一站式解决方案，提升企业运营效率</p>-->
@@ -84,10 +84,10 @@
 </template>
 
 <script>
-import {validUsername} from '@/utils/validate'
-import {getRememberMe} from '@/utils/auth'
+import { validUsername } from '@/utils/validate'
+import { getRememberMe } from '@/utils/auth'
 import settings from '@/settings'
-import {updateRouter} from '@/router'
+import { updateRouter } from '@/router'
 
 export default {
   name: 'Login',
@@ -114,8 +114,8 @@ export default {
         rememberMe: false
       },
       loginRules: {
-        username: [{required: true, trigger: 'blur', validator: validateUsername}],
-        password: [{required: true, trigger: 'blur', validator: validatePassword}]
+        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       loading: false,
       passwordType: 'password',
@@ -129,7 +129,7 @@ export default {
   },
   watch: {
     $route: {
-      handler: function (route) {
+      handler: function(route) {
         this.redirect = route.query && route.query.redirect
       },
       immediate: true
@@ -166,16 +166,16 @@ export default {
         if (valid) {
           this.loading = true
 
-          this.$store.dispatch('user/login', this.loginForm).then(async () => {
+          this.$store.dispatch('user/login', this.loginForm).then(async() => {
             // 等待一小段时间确保token已经设置到请求拦截器中
             await new Promise(resolve => setTimeout(resolve, 100))
             // 登录成功后更新路由数据
             try {
               await updateRouter()
-              this.$router.push({path: '/'})
+              this.$router.push({ path: '/' })
             } catch (error) {
               console.error('路由更新失败:', error)
-              this.$router.push({path: '/'})
+              this.$router.push({ path: '/' })
             }
             this.loading = false
           }).catch(() => {

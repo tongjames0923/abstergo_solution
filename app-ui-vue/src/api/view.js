@@ -34,7 +34,7 @@ export function listForms(pageNum, pageSize) {
   return request({
     url: '/private/view/listForms',
     method: 'get',
-    params: {pageNum, pageSize}
+    params: { pageNum, pageSize }
   })
 }
 
@@ -44,7 +44,6 @@ export function getFormById(id) {
     method: 'get'
   })
 }
-
 
 export function getRoutes() {
   return request({
