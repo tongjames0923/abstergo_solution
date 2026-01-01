@@ -6,6 +6,7 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.base.StructUtils;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 脚本编译器执行特性
@@ -98,7 +99,7 @@ public class ScriptCompilerFeatures {
      * @return 特性名称列表
      */
     public List<String> getFeatureNames() {
-        return features.keySet().stream().toList();
+        return features.keySet().stream().collect(Collectors.toList());
     }
 
     /**
@@ -107,7 +108,7 @@ public class ScriptCompilerFeatures {
      * @return 脚本编译器特性列表
      */
     public Collection<KeyValuePair<String, Integer>> getFeatures() {
-        return features.entrySet().stream().map(StructUtils::mapEntryToTuple).toList();
+        return features.entrySet().stream().map(StructUtils::mapEntryToTuple).collect(Collectors.toList());
     }
 
 }
