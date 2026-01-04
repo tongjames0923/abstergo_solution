@@ -1,5 +1,8 @@
 package com.tbs.app.controller.publics;
 
+import com.tbs.common.util.base.StrUtil;
+import com.tbs.script.api.compiler.impl.SpelCompiler;
+import com.tbs.script.api.engine.IScriptEngine;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.web.BaseController;
@@ -46,7 +49,7 @@ public class PublicTestController extends BaseController {
          * 节点名称
          */
         private String name;
-        
+
         /**
          * 父节点ID
          */
@@ -92,6 +95,45 @@ public class PublicTestController extends BaseController {
     public AjaxResult deleteNode(String nodeId) {
         store.delete(nodeId, TEST_GROUP);
         return AjaxUtil.getInstance().success(null);
+    }
+
+    @Resource
+    private IScriptEngine scriptEngine;
+
+    @Data
+    public static class SpelForm {
+        /**
+         * 脚本内容
+         */
+        private String script;
+
+        private String resultType;
+    }
+
+    /**
+     * 脚本测试
+     * <p>
+     * 测试脚本引擎执行脚本
+     * </p>
+     *
+     * @param script 脚本内容
+     * @return 执行结果
+     */
+    @PostMapping("/scriptTest")
+    public AjaxResult scriptTest(@RequestBody SpelForm script) {
+        var spec = scriptEngine.getCompilerSpecWithVersion(SpelCompiler.COMPILER_NAME, SpelCompiler.MAJOR_VERSION,
+            SpelCompiler.MINOR_VERSION).orElseThrow(() -> new RuntimeException("不支持的脚本编译器"));
+        SpelCompiler compiler = (SpelCompiler)spec.getCompiler();
+        if (StrUtil.isNotEmpty(script.getResultType())) {
+            try {
+                compiler.setResultType(Class.forName(script.getResultType()));
+            } catch (ClassNotFoundException e) {
+
+            }
+        }
+        var executor = spec.compile(script.getScript());
+        var result = executor.execute();
+        return AjaxUtil.getInstance().success(result);
     }
 
     //	@Resource

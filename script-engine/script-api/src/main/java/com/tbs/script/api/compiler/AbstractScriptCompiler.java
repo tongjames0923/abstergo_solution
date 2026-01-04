@@ -14,6 +14,8 @@ import com.tbs.script.model.ScriptResult;
  */
 public abstract class AbstractScriptCompiler implements IScriptCompiler, IScriptCompilerMeta {
 
+    private ScriptCompilerFeatures features = new ScriptCompilerFeatures();
+
     public static interface IScriptRunner {
         /**
          * 执行脚本
@@ -49,6 +51,6 @@ public abstract class AbstractScriptCompiler implements IScriptCompiler, IScript
 
     @Override
     public ScriptCompilerFeatures getFeatures() {
-        return new ScriptCompilerFeatures();
+        return features;
     }
 }

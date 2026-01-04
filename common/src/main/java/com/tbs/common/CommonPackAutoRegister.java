@@ -27,7 +27,7 @@ public class CommonPackAutoRegister extends AbstractAutoBeanRegister {
      * @return 需要扫描的基础包路径数组
      */
     @Override
-    protected String[] getBasePackages() {
+    protected String[] getScanningPackages() {
         return new String[] {"com.tbs.common"};
     }
 }

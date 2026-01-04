@@ -48,7 +48,7 @@ public class AsyncAutoRegister extends AbstractAutoBeanRegister {
      * @return 基础包路径数组
      */
     @Override
-    protected String[] getBasePackages() {
+    protected String[] getScanningPackages() {
         for (String packageName : m_packages) {
             basePackages.add(packageName);
         }

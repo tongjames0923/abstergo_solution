@@ -13,7 +13,7 @@ public class WebAutoRegister extends AbstractAutoBeanRegister {
     }
 
     @Override
-    protected String[] getBasePackages() {
+    protected String[] getScanningPackages() {
         return new String[] {"com.tbs.web"};
     }
 }

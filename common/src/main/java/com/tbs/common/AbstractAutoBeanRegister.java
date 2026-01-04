@@ -19,8 +19,7 @@ import java.util.Map;
 /**
  * 抽象自动Bean注册器
  * <p>
- * 用于自动注册Spring Bean定义的抽象基类。实现了ImportBeanDefinitionRegistrar接口，
- * 提供了扫描指定包和注解的Bean并自动注册到Spring容器的功能。
+ * 用于自动注册Spring Bean定义的抽象基类。实现了ImportBeanDefinitionRegistrar接口， 提供了扫描指定包和注解的Bean并自动注册到Spring容器的功能。
  * </p>
  *
  * @author tongj
@@ -49,7 +48,7 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
      *
      * @return 需要扫描的基础包路径数组
      */
-    protected abstract String[] getBasePackages();
+    protected abstract String[] getScanningPackages();
 
     /**
      * 获取需要扫描的注解类型
@@ -91,7 +90,7 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
                 scanAnnotations.stream().filter(annotation -> annotation != null)
                     .forEach(scanAnnotation -> scanner.addIncludeFilter(new AnnotationTypeFilter(scanAnnotation)));
             }
-            var count = scanner.scan(getBasePackages());
+            var count = scanner.scan(getScanningPackages());
             end(count);
             return true;
         });

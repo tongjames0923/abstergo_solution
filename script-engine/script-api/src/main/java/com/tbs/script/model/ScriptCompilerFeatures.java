@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
  * @author abstergo
  */
 public class ScriptCompilerFeatures {
-    private Map<String, Integer> features = new HashMap<>(32);
+    private Map<String, Object> features = new HashMap<>(32);
 
     public ScriptCompilerFeatures() {
     }
@@ -67,7 +67,7 @@ public class ScriptCompilerFeatures {
      * @param featureName 特性名称
      * @return 特性代码
      */
-    public Optional<Integer> getFeatureCode(String featureName) {
+    public Optional<Object> getFeatureCode(String featureName) {
         return Optional.ofNullable(features.get(featureName));
     }
 
@@ -77,8 +77,8 @@ public class ScriptCompilerFeatures {
      * @param featureName 特性名称
      * @param featureCode 特性代码
      */
-    public ScriptCompilerFeatures putFeatureCode(String featureName, int featureCode) {
-        features.put(featureName, featureCode);
+    public ScriptCompilerFeatures putFeatureCode(String featureName, Object value) {
+        features.put(featureName, value);
         return this;
     }
 
@@ -88,8 +88,8 @@ public class ScriptCompilerFeatures {
      * @param featureName 特性名称
      * @param featureCode 特性代码
      */
-    public ScriptCompilerFeatures putFeatureCodeIfAbsent(String featureName, int featureCode) {
-        features.putIfAbsent(featureName, featureCode);
+    public ScriptCompilerFeatures putFeatureCodeIfAbsent(String featureName, Object value) {
+        features.putIfAbsent(featureName, value);
         return this;
     }
 
@@ -107,7 +107,7 @@ public class ScriptCompilerFeatures {
      *
      * @return 脚本编译器特性列表
      */
-    public Collection<KeyValuePair<String, Integer>> getFeatures() {
+    public Collection<KeyValuePair<String, Object>> getFeatures() {
         return features.entrySet().stream().map(StructUtils::mapEntryToTuple).collect(Collectors.toList());
     }
 

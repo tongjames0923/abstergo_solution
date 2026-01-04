@@ -14,7 +14,7 @@ public class XxlAutoRegister extends AbstractAutoBeanRegister {
     }
 
     @Override
-    protected String[] getBasePackages() {
+    protected String[] getScanningPackages() {
         return new String[] {"com.tbs.xxl"};
     }
 }

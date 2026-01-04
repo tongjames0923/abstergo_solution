@@ -34,7 +34,7 @@ public class RedisPackAutoRegister extends AbstractAutoBeanRegister {
      * @return 基础扫描包路径数组
      */
     @Override
-    protected String[] getBasePackages() {
+    protected String[] getScanningPackages() {
         return new String[] {"com.tbs.redis"};
     }
 }

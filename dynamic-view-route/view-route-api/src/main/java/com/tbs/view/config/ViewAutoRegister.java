@@ -14,7 +14,7 @@ public class ViewAutoRegister extends AbstractAutoBeanRegister {
     }
 
     @Override
-    protected String[] getBasePackages() {
+    protected String[] getScanningPackages() {
         return new String[] {"com.tbs.view"};
     }
 }

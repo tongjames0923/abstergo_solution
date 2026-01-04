@@ -5,6 +5,7 @@ import com.tbs.cache.annotation.EnableTbsCache;
 import com.tbs.knife4j.annotation.UseKnife4jPack;
 import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
+import com.tbs.script.annotation.EnableScriptEngine;
 import com.tbs.shared.annotation.EnableSharedLibBean;
 import com.tbs.sql.annotation.EnableTbsSqlUtils;
 import com.tbs.sql.annotation.dialect.MYSQL;
@@ -22,7 +23,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  * <p>
  * 该类是应用程序的入口点，负责初始化Spring Boot应用程序并启用各种框架功能
  * </p>
- * 
+ *
  * @author abstergo
  * @since 1.0.0
  */
@@ -41,6 +42,8 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableTbsRedis
 @EnableDubbo
+
+@EnableScriptEngine
 //@EnableTrace
 public class AppApplication {
 

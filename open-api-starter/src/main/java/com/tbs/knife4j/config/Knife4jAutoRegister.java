@@ -14,7 +14,7 @@ public class Knife4jAutoRegister extends AbstractAutoBeanRegister {
     }
 
     @Override
-    protected String[] getBasePackages() {
+    protected String[] getScanningPackages() {
         return new String[] {"com.tbs.knife4j"};
     }
 }

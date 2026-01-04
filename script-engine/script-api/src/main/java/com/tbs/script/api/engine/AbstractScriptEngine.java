@@ -1,5 +1,6 @@
 package com.tbs.script.api.engine;
 
+import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.script.api.compiler.IScriptCompiler;
 import com.tbs.script.api.compiler.IScriptCompilerMeta;
@@ -21,7 +22,7 @@ import java.util.Optional;
  */
 
 @Slf4j
-public abstract class AbstractScriptEngine implements IScriptEngine {
+public abstract class AbstractScriptEngine implements IScriptEngine, IStartup {
 
     private Map<String, ScriptCompilerSpec> compilerSpecs = new HashMap<>();
 
@@ -53,6 +54,11 @@ public abstract class AbstractScriptEngine implements IScriptEngine {
      * 导入编译器规范
      */
     protected abstract void importCompilerSpecs();
+
+    @Override
+    public void startUp() throws RuntimeException {
+        importCompilerSpecs();
+    }
 
     @Override
     public void registerCompilerSpec(@NotNull IScriptCompilerMeta meta, @NotNull IScriptCompiler compiler,
