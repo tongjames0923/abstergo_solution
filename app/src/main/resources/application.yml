@@ -26,6 +26,8 @@ dubbo:
   application:
     name: dubbo-app-system-service
     logger: slf4j
+    check-serializable: false
+    serialize-check-status: WARN
   registry:
     address: zookeeper://127.0.0.1:2181
   protocol:
