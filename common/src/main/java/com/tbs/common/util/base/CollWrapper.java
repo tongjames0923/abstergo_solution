@@ -16,7 +16,11 @@ import java.util.stream.Stream;
  * @author abstergo
  */
 public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
-    Stream<T> stream;
+    // 使用 Supplier 实现惰性求值，每次需要时重新创建 Stream
+    private final java.util.function.Supplier<Stream<T>> streamSupplier;
+
+    // 缓存已物化的数据（可选优化）
+    private volatile List<T> cachedList = null;
 
     /**
      * 构造函数，创建包含指定流的集合包装器
@@ -24,18 +28,44 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @param stream 要包装的流，如果为null则使用空流
      */
     public CollWrapper(Stream<T> stream) {
-        this.stream = stream == null ? Stream.empty() : stream;
+        // 将 Stream 转换为 Supplier，支持多次创建新的 Stream
+        if (stream == null) {
+            this.streamSupplier = Stream::empty;
+        } else {
+            // 注意：传入的 Stream 会被立即消费并缓存
+            List<T> data = stream.collect(Collectors.toList());
+            this.streamSupplier = () -> data.stream();
+            this.cachedList = data;
+        }
+    }
 
+    /**
+     * 内部构造函数，使用 Supplier 创建包装器（用于中间操作）
+     */
+    private CollWrapper(java.util.function.Supplier<Stream<T>> streamSupplier) {
+        this.streamSupplier = streamSupplier;
+    }
+
+    /**
+     * 获取一个新的 Stream 实例（每次调用返回新的 Stream）
+     */
+    private Stream<T> getStream() {
+        return streamSupplier.get();
     }
 
     @Override
     public Collection<T> getOrginal() {
-        return stream.collect(Collectors.toList());
+        return toList();
     }
 
     @Override
     public void setOrginal(Collection<T> orginal) {
-        this.stream = orginal == null ? Stream.empty() : orginal.stream();
+        if (orginal == null) {
+            // 不修改，保持原有设计的一致性
+            throw new IllegalArgumentException("Cannot set original to null");
+        }
+        // 这里实际上不应该被调用，因为 CollWrapper 应该是不可变的
+        throw new UnsupportedOperationException("CollWrapper is immutable");
     }
 
     /**
@@ -45,7 +75,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含过滤后元素的新集合包装器
      */
     public CollWrapper<T> filter(java.util.function.Predicate<T> predicate) {
-        return new CollWrapper<>(stream.filter(predicate));
+        return new CollWrapper<>(() -> getStream().filter(predicate));
     }
 
     /**
@@ -55,11 +85,11 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含转换后元素的新集合包装器
      */
     public <R> CollWrapper<R> map(java.util.function.Function<T, R> mapper) {
-        return new CollWrapper<>(stream.map(mapper));
+        return new CollWrapper<>(() -> getStream().map(mapper));
     }
 
     public CollWrapper<T> forEach(java.util.function.Consumer<T> action) {
-        stream.forEach(action);
+        getStream().forEach(action);
         return this;
     }
 
@@ -70,7 +100,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含扁平化后元素的新集合包装器
      */
     public CollWrapper<T> flatMap(java.util.function.Function<T, Stream<T>> mapper) {
-        return new CollWrapper<>(stream.flatMap(mapper));
+        return new CollWrapper<>(() -> getStream().flatMap(mapper));
     }
 
     /**
@@ -80,7 +110,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含相同元素的新集合包装器（但带有副作用操作）
      */
     public CollWrapper<T> peek(java.util.function.Consumer<T> action) {
-        return new CollWrapper<>(stream.peek(action));
+        return new CollWrapper<>(() -> getStream().peek(action));
     }
 
     /**
@@ -90,7 +120,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含限制后元素的新集合包装器
      */
     public CollWrapper<T> limit(long maxSize) {
-        return new CollWrapper<>(stream.limit(maxSize));
+        return new CollWrapper<>(() -> getStream().limit(maxSize));
     }
 
     /**
@@ -99,7 +129,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含第一个元素的Optional对象，如果流为空则返回空Optional
      */
     public Optional<T> findFirst() {
-        return stream.findFirst();
+        return getStream().findFirst();
     }
 
     /**
@@ -117,7 +147,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含任意元素的Optional对象，如果流为空则返回空Optional
      */
     public Optional<T> findAny() {
-        return stream.findAny();
+        return getStream().findAny();
     }
 
     /**
@@ -127,7 +157,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含跳过后剩余元素的新集合包装器
      */
     public CollWrapper<T> skip(long n) {
-        return new CollWrapper<>(stream.skip(n));
+        return new CollWrapper<>(() -> getStream().skip(n));
     }
 
     /**
@@ -137,7 +167,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含排序后元素的新集合包装器
      */
     public CollWrapper<T> sorted(java.util.Comparator<T> comparator) {
-        return new CollWrapper<>(stream.sorted(comparator));
+        return new CollWrapper<>(() -> getStream().sorted(comparator));
     }
 
     /**
@@ -146,7 +176,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含自然排序后元素的新集合包装器
      */
     public CollWrapper<T> sorted() {
-        return new CollWrapper<>(stream.sorted());
+        return new CollWrapper<>(() -> getStream().sorted());
     }
 
     /**
@@ -155,7 +185,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含去重后元素的新集合包装器
      */
     public CollWrapper<T> distinct() {
-        return new CollWrapper<>(stream.distinct());
+        return new CollWrapper<>(() -> getStream().distinct());
     }
 
     /**
@@ -164,7 +194,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含并行流元素的新集合包装器
      */
     public CollWrapper<T> parallel() {
-        return new CollWrapper<>(stream.parallel());
+        return new CollWrapper<>(() -> getStream().parallel());
     }
 
     /**
@@ -173,7 +203,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含顺序流元素的新集合包装器
      */
     public CollWrapper<T> sequential() {
-        return new CollWrapper<>(stream.sequential());
+        return new CollWrapper<>(() -> getStream().sequential());
     }
 
     /**
@@ -182,7 +212,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含无序流元素的新集合包装器
      */
     public CollWrapper<T> unordered() {
-        return new CollWrapper<>(stream.unordered());
+        return new CollWrapper<>(() -> getStream().unordered());
     }
 
     /**
@@ -192,7 +222,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 如果有任何元素匹配谓词则返回true，否则返回false
      */
     public boolean anyMatch(java.util.function.Predicate<T> predicate) {
-        return stream.anyMatch(predicate);
+        return getStream().anyMatch(predicate);
     }
 
     /**
@@ -202,7 +232,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 如果所有元素都匹配谓词则返回true，否则返回false
      */
     public boolean allMatch(java.util.function.Predicate<T> predicate) {
-        return stream.allMatch(predicate);
+        return getStream().allMatch(predicate);
     }
 
     /**
@@ -212,7 +242,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 如果没有任何元素匹配谓词则返回true，否则返回false
      */
     public boolean noneMatch(java.util.function.Predicate<T> predicate) {
-        return stream.noneMatch(predicate);
+        return getStream().noneMatch(predicate);
     }
 
     /**
@@ -221,7 +251,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 流中元素的数量
      */
     public long count() {
-        return stream.count();
+        return getStream().count();
     }
 
     /**
@@ -230,7 +260,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含流中所有元素的列表
      */
     public List<T> toList() {
-        return stream.collect(Collectors.toList());
+        return getStream().collect(Collectors.toList());
     }
 
     /**
@@ -239,7 +269,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含流中所有元素的不可变列表
      */
     public List<T> toUnmodifiableList() {
-        return Collections.unmodifiableList(stream.collect(Collectors.toList()));
+        return Collections.unmodifiableList(getStream().collect(Collectors.toList()));
     }
 
     /**
@@ -250,7 +280,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 转换后的结果
      */
     public <R> R to(java.util.function.Function<Stream<T>, R> mapper) {
-        return mapper.apply(stream);
+        return mapper.apply(getStream());
     }
 
     /**
@@ -264,7 +294,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      */
     public <K, V> Map<K, V> toMap(java.util.function.Function<T, K> keyMapper,
         java.util.function.Function<T, V> valueMapper) {
-        return stream.collect(Collectors.toMap(keyMapper, valueMapper));
+        return getStream().collect(Collectors.toMap(keyMapper, valueMapper));
     }
 
     /**
@@ -279,7 +309,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      */
     public <K, V> Map<K, V> toMap(java.util.function.Function<T, K> keyMapper,
         java.util.function.Function<T, V> valueMapper, java.util.function.BinaryOperator<V> mergeFunction) {
-        return stream.collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction));
+        return getStream().collect(Collectors.toMap(keyMapper, valueMapper, mergeFunction));
     }
 
     /**
@@ -295,7 +325,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      */
     public <K, V, M extends Map<K, V>> M toMap(java.util.function.Function<T, K> keyMapper,
         java.util.function.Function<T, V> valueMapper, java.util.function.Supplier<M> mapFactory) {
-        return stream.collect(Collectors.toMap(keyMapper, valueMapper, (v1, v2) -> v1, mapFactory));
+        return getStream().collect(Collectors.toMap(keyMapper, valueMapper, (v1, v2) -> v1, mapFactory));
     }
 
     /**
@@ -304,7 +334,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含流中所有元素的Set
      */
     public Set<T> toSet() {
-        return stream.collect(Collectors.toSet());
+        return getStream().collect(Collectors.toSet());
     }
 
     /**
@@ -313,7 +343,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含流中所有元素的不可变Set
      */
     public Set<T> toUnmodifiableSet() {
-        return Collections.unmodifiableSet(new HashSet<>(stream.collect(Collectors.toSet())));
+        return Collections.unmodifiableSet(new HashSet<>(getStream().collect(Collectors.toSet())));
     }
 
     /**
@@ -322,7 +352,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含流中所有元素的数组
      */
     public Object[] toArray() {
-        return stream.toArray();
+        return getStream().toArray();
     }
 
     /**
@@ -333,7 +363,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含流中所有元素的数组
      */
     public <A> A[] toArray(java.util.function.IntFunction<A[]> generator) {
-        return stream.toArray(generator);
+        return getStream().toArray(generator);
     }
 
     /**
@@ -343,7 +373,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含最大元素的Optional对象，如果流为空则返回空Optional
      */
     public Optional<T> max(Comparator<T> comparator) {
-        return stream.max(comparator);
+        return getStream().max(comparator);
     }
 
     /**
@@ -353,7 +383,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 包含最小元素的Optional对象，如果流为空则返回空Optional
      */
     public Optional<T> min(Comparator<T> comparator) {
-        return stream.min(comparator);
+        return getStream().min(comparator);
     }
 
     /**
@@ -363,7 +393,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 归约后的结果，如果没有元素则返回Optional.empty()
      */
     public Optional<T> reduce(BinaryOperator<T> accumulator) {
-        return stream.reduce(accumulator);
+        return getStream().reduce(accumulator);
     }
 
     /**
@@ -374,7 +404,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 归约后的结果
      */
     public T reduce(T identity, BinaryOperator<T> accumulator) {
-        return stream.reduce(identity, accumulator);
+        return getStream().reduce(identity, accumulator);
     }
 
     /**
@@ -388,7 +418,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      */
     public <U> U reduce(U identity, java.util.function.BiFunction<U, ? super T, U> accumulator,
         BinaryOperator<U> combiner) {
-        return stream.reduce(identity, accumulator, combiner);
+        return getStream().reduce(identity, accumulator, combiner);
     }
 
     /**
@@ -397,7 +427,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 如果流为空则返回true，否则返回false
      */
     public boolean isEmpty() {
-        return !stream.findAny().isPresent();
+        return !getStream().findAny().isPresent();
     }
 
     /**
@@ -406,7 +436,7 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      * @return 如果流非空则返回true，否则返回false
      */
     public boolean isNotEmpty() {
-        return stream.findAny().isPresent();
+        return getStream().findAny().isPresent();
     }
 
     /**
@@ -419,18 +449,22 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
      */
     public CollWrapper<CollWrapper<T>> partition(int size) {
         if (isEmpty()) {
-            return new CollWrapper<>(null);
+            return new CollWrapper<>(Stream.<CollWrapper<T>>empty());
         }
 
         AssertUtil.toAssert(size <= 0).message("分割大小必须为正数").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
             .throwIt();
-        int partitionSize = (int)Math.ceil((double)count() / size);
+
+        // 先将 Stream 转换为 List，避免 Stream 被重复消费
+        List<T> dataList = this.toList();
+        int totalSize = dataList.size();
+        int partitionSize = (int)Math.ceil((double)totalSize / size);
         List<CollWrapper<T>> result = new ArrayList<>(partitionSize);
 
         for (int i = 0; i < partitionSize; i++) {
             int start = i * size;
-            int end = Math.toIntExact(Math.min(start + size, count()));
-            result.add(new CollWrapper<T>(stream.skip(start).limit(end)));
+            int end = Math.min(start + size, totalSize);
+            result.add(new CollWrapper<T>(dataList.subList(start, end).stream()));
         }
         return new CollWrapper<>(result.stream());
     }
