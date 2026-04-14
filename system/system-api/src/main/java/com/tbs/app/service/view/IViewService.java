@@ -23,13 +23,24 @@ public interface IViewService {
      */
     DynamicFormConfigrationEntity saveForm(@NotNull FormConfig formConfig);
 
+
     /**
      * 更新表单配置
      *
-     * @param formConfig
+     * @param formConfigId 表单配置ID
+     * @param formConfig 表单配置
      * @return
      */
     DynamicFormConfigrationEntity updateForm(Long formConfigId, @NotNull FormConfig formConfig);
+
+    /**
+     * 删除表单配置
+     *
+     * @param formConfigId
+     * @return
+     */
+    DynamicFormConfigrationEntity deleteForm(Long formConfigId);
+
 
     /**
      * 获取表单列表

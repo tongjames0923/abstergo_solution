@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.entity.view;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IIdentifiable;
 import lombok.Data;
 
@@ -12,8 +13,11 @@ import java.io.Serializable;
  * 表单配置
  */
 @Entity
-@Table(name = "dynamic_form_configration")
+@Table(name = "dynamic_form_configration",
+    indexes = {@javax.persistence.Index(columnList = "flag"), @javax.persistence.Index(columnList = "title"),
+        @javax.persistence.Index(columnList = "expandable,expanded"),})
 @Data
+@LogicDeleteEntity(deleteFlagValue = -1)
 public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
     @javax.persistence.Id
@@ -47,5 +51,12 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
 
     @Column(name = "title", length = 128)
     private String title;
+
+    /**
+     * 标记
+     * @see com.tbs.shared.enums.DynamicFormConfigFlagEnum
+     */
+    @Column(name = "flag")
+    private Integer flag;
 
 }

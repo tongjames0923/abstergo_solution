@@ -6,6 +6,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.constant.CommonConstant;
+import com.tbs.shared.enums.DynamicFormConfigFlagEnum;
 import com.tbs.shared.mapper.view.*;
 import com.tbs.shared.pojo.entity.view.*;
 import com.tbs.shared.pojo.model.view.FormConfig;
@@ -47,7 +48,9 @@ public class ViewServiceImpl implements IViewService {
     @Override
     public FormConfig getForm(Long id) {
         AssertUtil.notNull(id, "表单ID不能为空");
-        DynamicFormConfigrationEntity dynamicFormConfigrationEntity = formConfigMapper.selectByPrimaryKey(id);
+        DynamicFormConfigrationEntity dynamicFormConfigrationEntity =
+            QueryUtil.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
+                .equal(DynamicFormConfigrationEntity::getId, id).pour().fetchOne();
         AssertUtil.notNull(dynamicFormConfigrationEntity, "表单配置不存在");
         FormConfig formConfig = new FormConfig();
         IPropertyValueTransformer transformer = SpringUtil.getBean(IPropertyValueTransformer.class);
@@ -200,7 +203,10 @@ public class ViewServiceImpl implements IViewService {
         AssertUtil.notNull(formConfig, "表单配置不能为空");
 
         // 获取现有的表单配置实体
-        DynamicFormConfigrationEntity existingEntity = formConfigMapper.selectByPrimaryKey(formConfigId);
+        DynamicFormConfigrationEntity existingEntity =
+            QueryUtil.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
+                .equal(DynamicFormConfigrationEntity::getId, formConfigId).pour().fetchOne();
+
         AssertUtil.notNull(existingEntity, "表单配置不存在");
 
         // 更新基本属性
@@ -326,6 +332,21 @@ public class ViewServiceImpl implements IViewService {
         }
 
         return existingEntity;
+    }
+
+    @Override
+    @CacheEvict(cacheNames = "view_form_cache", key = "#formConfigId")
+    public DynamicFormConfigrationEntity deleteForm(Long formConfigId) {
+        AssertUtil.notNull(formConfigId, "表单配置ID不能为空");
+        DynamicFormConfigrationEntity form =
+            QueryUtil.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
+                .equal(DynamicFormConfigrationEntity::getId, formConfigId).pour().fetchOne();
+        if (form == null) {
+            return null;
+        }
+        form.setFlag(DynamicFormConfigFlagEnum.DELETED.getCode());
+        formConfigMapper.updateByPrimaryKey(form);
+        return null;
     }
 
     @Override

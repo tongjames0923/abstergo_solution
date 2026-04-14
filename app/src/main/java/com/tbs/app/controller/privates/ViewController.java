@@ -96,8 +96,7 @@ public class ViewController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult deleteForm(
         @Parameter(name = "id", description = "配置ID", required = true) @PathVariable Long id) {
-        // TODO: 实现删除逻辑
-        return successResult("功能尚未实现");
+        return successResult(viewService.deleteForm(id));
     }
 
     /**

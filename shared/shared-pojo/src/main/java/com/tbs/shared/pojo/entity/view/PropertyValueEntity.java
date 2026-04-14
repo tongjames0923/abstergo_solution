@@ -5,6 +5,7 @@ import lombok.Data;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.Index;
 import javax.persistence.Table;
 import java.io.Serializable;
 
@@ -13,7 +14,7 @@ import java.io.Serializable;
  */
 @Data
 @Entity
-@Table(name = "property_value")
+@Table(name = "property_value", indexes = {@Index(name = "name_idx", columnList = "prop_name"),})
 public class PropertyValueEntity implements IIdentifiable<Long>, Serializable {
 
     private static final long serialVersionUID = 1L;
