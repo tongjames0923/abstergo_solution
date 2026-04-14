@@ -157,13 +157,14 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         SystemUserEntity user = CollUtil.of(systemUserService.queryByUserName(username)).findFirstOrNull();
         AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
-        query.where().equal(SystemLoginInfoEntity::getUserId, user.getId());
+        query.where().equal(SystemLoginInfoEntity::getUserId, user.getId())
+            .isNotNull(SystemLoginInfoEntity::getSessionId);
         query.getOrderSupport().ifPresent((order) -> {
             order.orderByDesc(SystemLoginInfoEntity::getCreateTime);
             order.orderByDesc(SystemLoginInfoEntity::getUpdateTime);
         });
-        query.groupBy(SystemLoginInfoEntity::getSessionId);
-        return query.fetch().stream().map(SystemLoginInfoEntity::getSessionId).collect(Collectors.toSet()).stream()
+        // 移除 GROUP BY，改为在 Java 中去重，避免 MySQL ONLY_FULL_GROUP_BY 错误
+        return query.fetch().stream().map(SystemLoginInfoEntity::getSessionId).filter(StrUtil::isNotEmpty).distinct()
             .collect(Collectors.toList());
     }
 
