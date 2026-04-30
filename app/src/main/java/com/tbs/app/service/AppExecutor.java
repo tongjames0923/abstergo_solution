@@ -1,6 +1,7 @@
 package com.tbs.app.service;
 
-import com.tbs.shared.interfaces.log.ISystemOperateLog;
+import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
+import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
@@ -23,8 +24,8 @@ public class AppExecutor {
     @Resource
     private ClosureTreeServiceImpl closureTreeService;
 
-    @DubboReference
-    private ISystemOperateLog systemOperateLog;
+    @Resource
+    private ISystemOperateLogSender systemOperateLog;
 
     /**
      * 重建树结构任务

@@ -5,7 +5,7 @@ import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.BeanUtil;
-import com.tbs.shared.interfaces.log.ISystemOperateLog;
+import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
@@ -13,7 +13,6 @@ import com.tbs.web.uitl.AuthUtil;
 import com.tbs.web.uitl.NetUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.DubboReference;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -35,8 +34,8 @@ import java.util.Date;
 @Slf4j
 public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 
-    @DubboReference
-    ISystemOperateLog systemOperateLog;
+    @Resource
+    ISystemOperateLogSender systemOperateLog;
 
     /**
      * 系统操作上下文类

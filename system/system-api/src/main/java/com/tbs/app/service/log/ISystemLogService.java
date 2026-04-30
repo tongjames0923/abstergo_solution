@@ -4,6 +4,11 @@ import com.tbs.app.service.log.model.LogOperateTypeView;
 
 import java.util.List;
 
+/**
+ * 系统操作日志服务
+ *
+ *
+ * @author abstergo*/
 public interface ISystemLogService {
 
     /**

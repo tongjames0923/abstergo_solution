@@ -5,10 +5,10 @@ import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.interfaces.log.ISystemOperateLog;
+import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
-import org.apache.dubbo.config.annotation.DubboReference;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -16,8 +16,8 @@ import java.util.stream.Collectors;
 
 public class SimpleSystemLogServiceImpl implements ISystemLogService {
 
-    @DubboReference
-    private ISystemOperateLog systemOperateLog;
+    @Resource
+    private ISystemOperateLogViewService systemOperateLog;
 
     private String suitTypeName(String type) {
 

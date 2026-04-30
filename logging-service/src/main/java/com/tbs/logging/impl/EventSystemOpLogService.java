@@ -3,7 +3,8 @@ package com.tbs.logging.impl;
 import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.interfaces.log.ISystemOperateLog;
+import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
+import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 
 import javax.annotation.Resource;
@@ -13,7 +14,7 @@ import javax.annotation.Resource;
  *
  * @author tongj
  */
-public class EventSystemOpLog implements ISystemOperateLog {
+public class EventSystemOpLogService implements ISystemOperateLogViewService, ISystemOperateLogSender {
 
 	@Resource
 	private IPublisher publisher;
@@ -30,12 +31,12 @@ public class EventSystemOpLog implements ISystemOperateLog {
 	 */
 	private boolean isAsync;
 
-	public EventSystemOpLog(String eventId, boolean isAsync) {
+	public EventSystemOpLogService(String eventId, boolean isAsync) {
 		this.eventId = StrUtil.isEmpty(eventId) ? DEFAULT_EVENT_ID : eventId;
 		this.isAsync = isAsync;
 	}
 
-	public EventSystemOpLog() {
+	public EventSystemOpLogService() {
 		this(null, true);
 	}
 

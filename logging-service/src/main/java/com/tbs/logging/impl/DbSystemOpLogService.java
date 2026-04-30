@@ -7,7 +7,8 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.CollWrapper;
 import com.tbs.lock.util.LockUtil;
-import com.tbs.shared.interfaces.log.ISystemOperateLog;
+import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
+import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.shared.mapper.SystemOperateMapper;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import lombok.Getter;
@@ -23,14 +24,14 @@ import java.util.Date;
 import java.util.List;
 import java.util.function.Consumer;
 
-public class DbSystemOpLog implements ISystemOperateLog, DisposableBean {
+public class DbSystemOpLogService implements ISystemOperateLogViewService, ISystemOperateLogSender, DisposableBean {
     @Resource
     private SystemOperateMapper systemOperateMapper;
 
     @Resource
     private IDataHolderManager dataHolderManager;
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(DbSystemOpLog.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DbSystemOpLogService.class);
 
     @Setter
     @Getter

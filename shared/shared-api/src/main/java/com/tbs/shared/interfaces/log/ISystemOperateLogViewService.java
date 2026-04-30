@@ -11,20 +11,7 @@ import java.util.List;
  * @author jiangnan
  * @date 2020/01/09
  */
-public interface ISystemOperateLog {
-    /**
-     * 日志
-     *
-     * @param operateRecord 操作记录
-     */
-    void log(SystemOperateRecordEntity operateRecord);
-
-    /**
-     * 刷新
-     */
-    default void flush() {
-        return;
-    }
+public interface ISystemOperateLogViewService {
 
     /**
      * 查询系统操作记录
