@@ -4,7 +4,7 @@ import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.company.SimpleCompanyUserRelationService;
-import com.tbs.app.service.impl.log.SimpleSystemLogServiceImpl;
+import com.tbs.app.service.impl.log.SimpleDbSystemLogServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.role.SimpleUserRoleRelationServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
@@ -18,6 +18,10 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.common.util.base.BeanUtil;
+import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
+import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
+import com.tbs.shared.interfaces.log.impl.NoViewLogServiceImpl;
+import com.tbs.shared.interfaces.log.impl.SimpleLoggerSender;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.impl.NoEncryptPassword;
@@ -39,8 +43,25 @@ public class BuisnessBeanConfig {
     @ConditionalOnMissingBean(ISystemLogService.class)
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemLogService systemLogService() {
-        return new SimpleSystemLogServiceImpl();
+        return new SimpleDbSystemLogServiceImpl();
     }
+
+    @Bean
+    @ConditionalOnMissingBean(ISystemOperateLogSender.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public ISystemOperateLogSender systemOperateLogSender() {
+        return BeanUtil.buildBeanFromProperties(SimpleLoggerSender::new, systemAppProperty.getLogRecorderImpl(),
+            BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ISystemOperateLogViewService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public ISystemOperateLogViewService systemOperateLogViewService() {
+        return BeanUtil.buildBeanFromProperties(NoViewLogServiceImpl::new, systemAppProperty.getLogViewerImpl(),
+            BeanUtil::buildByEmptyArgs);
+    }
+
 
     @Bean
     @ConditionalOnMissingBean(IUserRoleRelationService.class)

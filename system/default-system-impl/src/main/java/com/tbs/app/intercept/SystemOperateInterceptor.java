@@ -13,6 +13,7 @@ import com.tbs.web.uitl.AuthUtil;
 import com.tbs.web.uitl.NetUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -35,6 +36,7 @@ import java.util.Date;
 public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 
     @Resource
+    @Qualifier("systemOperateLogSender")
     ISystemOperateLogSender systemOperateLog;
 
     /**

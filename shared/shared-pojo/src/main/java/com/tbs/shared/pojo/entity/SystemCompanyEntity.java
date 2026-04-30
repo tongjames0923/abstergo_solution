@@ -18,7 +18,7 @@ import java.util.Date;
     @Index(name = "idx_update_time", columnList = "update_time"),
     @Index(name = "tree_idx", columnList = "tree_node_group,tree_node_id,tree_root_flag")})
 @ToString
-@LogicDeleteEntity(deleteFlagValue = 0, filedName = "flag")
+@LogicDeleteEntity(filedName = "flag", activeFlagValues = {1, 2, 5})
 @AllArgsConstructor
 @NoArgsConstructor
 /**

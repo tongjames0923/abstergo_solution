@@ -17,7 +17,7 @@ import java.io.Serializable;
     indexes = {@javax.persistence.Index(columnList = "flag"), @javax.persistence.Index(columnList = "title"),
         @javax.persistence.Index(columnList = "expandable,expanded"),})
 @Data
-@LogicDeleteEntity(deleteFlagValue = -1)
+@LogicDeleteEntity(activeFlagValues = {0, 1})
 public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
     @javax.persistence.Id

@@ -26,7 +26,6 @@
         <module>xxl-job-mod</module>
         <module>open-api-starter</module>
         <module>dynamic-view-route</module>
-        <module>logging-service</module>
         <module>script-engine</module>
     </modules>
 

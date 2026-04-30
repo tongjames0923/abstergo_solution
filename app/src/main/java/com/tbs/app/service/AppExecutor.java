@@ -1,11 +1,10 @@
 package com.tbs.app.service;
 
 import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
-import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
-import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -25,6 +24,7 @@ public class AppExecutor {
     private ClosureTreeServiceImpl closureTreeService;
 
     @Resource
+    @Qualifier("systemOperateLogSender")
     private ISystemOperateLogSender systemOperateLog;
 
     /**

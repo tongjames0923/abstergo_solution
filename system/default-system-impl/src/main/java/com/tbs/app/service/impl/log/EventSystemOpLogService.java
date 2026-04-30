@@ -1,10 +1,9 @@
-package com.tbs.logging.impl;
+package com.tbs.app.service.impl.log;
 
 import com.tbs.broadcast.event.impl.SimpleEvent;
 import com.tbs.broadcast.publisher.IPublisher;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
-import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 
 import javax.annotation.Resource;
@@ -14,7 +13,7 @@ import javax.annotation.Resource;
  *
  * @author tongj
  */
-public class EventSystemOpLogService implements ISystemOperateLogViewService, ISystemOperateLogSender {
+public class EventSystemOpLogService implements ISystemOperateLogSender {
 
 	@Resource
 	private IPublisher publisher;

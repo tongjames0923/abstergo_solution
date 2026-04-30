@@ -5,14 +5,16 @@ import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IFlagable;
-import com.tbs.sql.framework.intercepter.ISqlInfoComposeIntercepter;
 import com.tbs.sql.enums.QueryConnectorEnum;
 import com.tbs.sql.enums.QueryContrastEnum;
+import com.tbs.sql.framework.intercepter.ISqlInfoComposeIntercepter;
 import com.tbs.sql.framework.model.SqlWhereCompose;
 import com.tbs.sql.framework.model.SqlWhereInfo;
 import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.utils.SqlUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -36,10 +38,18 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
             }
             LogicDeleteEntity logicDeleteEntity = entityClass.getDeclaredAnnotation(LogicDeleteEntity.class);
             //生成whereInfo，flag不等于disable值，若disableFlagMap中存在disableFlag，则使用disableFlagMap中的值，否则使用默认值0
-            Integer disableFlag = logicDeleteEntity.deleteFlagValue();
+            var activeFlags = logicDeleteEntity.activeFlagValues();
             SqlWhereInfo info = new SqlWhereInfo();
-            info.setContrast(QueryContrastEnum.NOT_EQUAL);
-            info.setFieldValueStr(disableFlag.toString());
+            info.setContrast(QueryContrastEnum.IN);
+            if (activeFlags != null && activeFlags.length > 0) {
+                List<Integer> activeFlagList = new ArrayList<>(activeFlags.length);
+                for (int i = 0; i < activeFlags.length; i++) {
+                    activeFlagList.add(activeFlags[i]);
+                }
+                info.setFieldValue(activeFlagList);
+            } else {
+                return Optional.empty();
+            }
             String flagFieldName = logicDeleteEntity.filedName();
             if (StrUtil.isEmpty(flagFieldName)) {
                 flagFieldName = "flag";

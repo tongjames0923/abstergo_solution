@@ -21,7 +21,7 @@ import java.util.Date;
 @Entity
 @ToString
 @Data
-@LogicDeleteEntity(deleteFlagValue = 0, filedName = "flag")
+@LogicDeleteEntity(activeFlagValues = {1, -1, -2, -3}, filedName = "flag")
 public class SystemTokenEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
     /**

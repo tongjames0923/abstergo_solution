@@ -4,6 +4,10 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
+import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
+import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
+import com.tbs.shared.interfaces.log.impl.NoViewLogServiceImpl;
+import com.tbs.shared.interfaces.log.impl.SimpleLoggerSender;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserDetailsTransformer;
 import com.tbs.web.security.user.SimpleUserDetailsTransformer;
@@ -49,4 +53,15 @@ public class AppSettingProperty {
      * 是否启用操作日志
      */
     private boolean enableOperateLog = false;
+
+    /**
+     * 操作日志记录实现类
+     */
+    Class<? extends ISystemOperateLogSender> logRecorderImpl = SimpleLoggerSender.class;
+
+    /**
+     * 操作日志查看实现类
+     */
+    Class<? extends ISystemOperateLogViewService> logViewerImpl = NoViewLogServiceImpl.class;
+
 }

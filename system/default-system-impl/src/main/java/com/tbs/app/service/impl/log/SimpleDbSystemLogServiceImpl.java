@@ -14,7 +14,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SimpleSystemLogServiceImpl implements ISystemLogService {
+public class SimpleDbSystemLogServiceImpl implements ISystemLogService {
 
     @Resource
     private ISystemOperateLogViewService systemOperateLog;

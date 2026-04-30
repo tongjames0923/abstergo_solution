@@ -1,4 +1,4 @@
-package com.tbs.logging.impl;
+package com.tbs.app.service.impl.log;
 
 import cn.hutool.core.date.DateUtil;
 import com.tbs.common.data.IDataHolderManager;
