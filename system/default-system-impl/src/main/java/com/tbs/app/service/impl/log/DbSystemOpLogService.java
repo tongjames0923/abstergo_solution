@@ -45,6 +45,7 @@ public class DbSystemOpLogService implements ISystemOperateLogViewService, ISyst
     @Async
     public void log(SystemOperateRecordEntity operateRecord) {
         opDataSource((ls) -> {
+
             ls.add(operateRecord);
             if (ls.size() >= getBatchSize()) {
                 flush(ls);

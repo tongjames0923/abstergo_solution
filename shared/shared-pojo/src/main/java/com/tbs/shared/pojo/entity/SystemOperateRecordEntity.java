@@ -78,12 +78,12 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
     /**
      * 操作参数json
      */
-    @javax.persistence.Column(name = "operate_param_json", columnDefinition = "text")
+    @javax.persistence.Column(name = "operate_param_json", columnDefinition = "longtext")
     private String operateParamJson;
     /**
      * 操作结果json
      */
-    @javax.persistence.Column(name = "operate_result_json", columnDefinition = "text")
+    @javax.persistence.Column(name = "operate_result_json", columnDefinition = "longtext")
     private String operateResultJson;
 
     /**
@@ -96,7 +96,7 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
     /**
      * 操作异常信息
      */
-    @javax.persistence.Column(name = "operate_error", columnDefinition = "text")
+    @javax.persistence.Column(name = "operate_error", columnDefinition = "longtext")
     private String operateError;
 
     /**
