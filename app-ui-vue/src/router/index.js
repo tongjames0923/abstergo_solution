@@ -167,6 +167,9 @@ function mapComponent(route) {
 
 var currentRouter = null
 
+// 添加一个标志位，防止重复加载动态路由
+let hasLoadedDynamicRoutes = false
+
 async function generateRoutesFromServer() {
   try {
     const hasToken = getToken()
@@ -190,6 +193,9 @@ async function generateRoutesFromServer() {
           routes.push(res[i])
         }
         console.log('映射后的动态路由:', routes) // 调试日志
+        
+        // 标记动态路由已加载
+        hasLoadedDynamicRoutes = true
       } catch (error) {
         console.error('获取动态路由失败:', error)
         // 如果获取动态路由失败，只返回静态路由
@@ -234,23 +240,37 @@ export async function updateRouter() {
     // 3. 设置权限守卫
     setUpRouterPermissions(newRouter)
 
-    // 4. 更新当前路由实例
-    currentRouter = newRouter
-
-    // 5. 更新store中的路由数据（只存储动态路由部分）
+    // 4. 更新store中的路由数据（只存储动态路由部分）
     // 过滤掉静态路由，只保留动态路由
     const dynamicRoutes = newRoutes.filter(route =>
       !constantRoutes.some(constantRoute => constantRoute.path === route.path)
     )
     store.commit('user/SET_ROUTES', dynamicRoutes)
 
-    // 6. 更新Vue实例中的router（如果Vue实例已存在）
+    // 5. 关键修复：先更新 matcher，再替换 router 引用
+    // 这样可以确保所有引用都指向新的路由配置
+    if (currentRouter) {
+      // 更新现有 router 的 matcher
+      currentRouter.matcher = newRouter.matcher
+    }
+    
+    // 6. 更新全局 router 引用
+    currentRouter = newRouter
+
+    // 7. 如果有全局 Vue 实例，也更新它的路由
     if (window.vueInstance && window.vueInstance.$router) {
       window.vueInstance.$router.matcher = newRouter.matcher
     }
 
     console.log('路由更新成功，动态路由数量:', dynamicRoutes.length)
-    return currentRouter
+    
+    // 8. 返回 Promise，确保调用者可以等待更新完成
+    return new Promise((resolve) => {
+      // 使用 Vue.nextTick 确保 DOM 更新完成
+      Vue.nextTick(() => {
+        resolve(currentRouter)
+      })
+    })
   } catch (error) {
     console.error('路由更新失败:', error)
     throw error

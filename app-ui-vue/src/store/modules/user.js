@@ -1,6 +1,6 @@
-import { getInfo, login, logout } from '@/api/user'
-import { getRememberMe, getToken, removeToken, setRememberMe, setToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
+import {getInfo, login, logout} from '@/api/user'
+import {getRememberMe, getToken, removeToken, setRememberMe, setToken} from '@/utils/auth'
+import {resetRouter} from '@/router'
 import request from '@/utils/request'
 
 const getDefaultState = () => {
@@ -9,7 +9,8 @@ const getDefaultState = () => {
     refreshToken: null,
     name: '',
     avatar: '',
-    roles: []
+    roles: [],
+    routes: [] // 存储动态路由
   }
 }
 

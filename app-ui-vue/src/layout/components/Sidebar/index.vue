@@ -13,7 +13,7 @@
         mode="vertical"
         class="sidebar-menu-macos"
       >
-        <sidebar-item v-for="route in routes" :key="route.path" :item="route" :base-path="route.path" />
+        <sidebar-item v-for="route in allRoutes" :key="route.path" :item="route" :base-path="route.path" />
       </el-menu>
     </el-scrollbar>
   </div>
@@ -24,15 +24,19 @@ import { mapGetters } from 'vuex'
 import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
+import { constantRoutes } from '@/router'
 
 export default {
   components: { SidebarItem, Logo },
   computed: {
     ...mapGetters([
-      'sidebar'
+      'sidebar',
+      'routes' // 从 store 中获取动态路由
     ]),
-    routes() {
-      return this.$router.options.routes
+    // 合并静态路由和动态路由
+    allRoutes() {
+      // 将 store 中的动态路由与静态路由合并
+      return [...constantRoutes, ...this.routes]
     },
     activeMenu() {
       const route = this.$route

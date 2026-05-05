@@ -165,17 +165,24 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-
+    
           this.$store.dispatch('user/login', this.loginForm).then(async() => {
-            // 等待一小段时间确保token已经设置到请求拦截器中
+            // 等待一小段时间确俜token已经设置到请求拦截器中
             await new Promise(resolve => setTimeout(resolve, 100))
-            // 登录成功后更新路由数据
+                
             try {
+              // 先获取用户信息，再更新路由
+              await this.$store.dispatch('user/getInfo')
+              // 登录成功后更新路由数据
               await updateRouter()
-              this.$router.push({ path: '/' })
+              // 确保路由更新完成后才跳转
+              await this.$nextTick()
+              // 跳转到首页或重定向页面
+              this.$router.push({ path: this.redirect || '/' })
             } catch (error) {
               console.error('路由更新失败:', error)
-              this.$router.push({ path: '/' })
+              // 即使路由更新失败，也允许跳转，让路由守卫处理
+              this.$router.push({ path: this.redirect || '/' })
             }
             this.loading = false
           }).catch(() => {

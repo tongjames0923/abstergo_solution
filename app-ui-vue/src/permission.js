@@ -9,6 +9,10 @@ import getPageTitle from '@/utils/get-page-title'
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
 const whiteList = ['/login'] // no redirect whitelist
+
+// 标记是否已经在登录时加载过动态路由
+let dynamicRoutesLoaded = false
+
 export function setUpRouterPermissions(router) {
   router.beforeEach(async(to, from, next) => {
     // start progress bar
@@ -33,8 +37,12 @@ export function setUpRouterPermissions(router) {
             await store.dispatch('user/getInfo')
 
             // 获取用户信息后，更新路由数据
-            const { updateRouter } = await import('@/router')
-            await updateRouter()
+            // 如果是从登录页跳转过来，且已经加载过路由，则跳过
+            if (from.path !== '/login' || !dynamicRoutesLoaded) {
+              const { updateRouter } = await import('@/router')
+              await updateRouter()
+              dynamicRoutesLoaded = true
+            }
           } catch (error) {
             // remove token and go to login page to re-login
             await store.dispatch('user/resetToken')
