@@ -164,7 +164,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(String msg, Object data) {
-        return getInstance().error(msg, data, WebMessageTypeEnum.INFO, 10 * 1000);
+        return getInstance().error(msg, data, WebMessageTypeEnum.ERROR, 10 * 1000);
     }
 
     /**
@@ -245,7 +245,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(Object data) {
-        return getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data, WebMessageTypeEnum.INFO, 10 * 1000);
+        return getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data, WebMessageTypeEnum.ERROR, 10 * 1000);
     }
 
     @Override

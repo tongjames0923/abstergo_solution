@@ -134,7 +134,13 @@ service.interceptors.response.use(
    * You can also judge the status by HTTP Status Code
    */
   async response => {
+    if (!response) {
+      return Promise.reject(new Error('网络连接失败，请检查网络设置'))
+    }
     const res = response.data
+    if (!res.code) {
+      return Promise.reject(new Error('返回配置错误，请检查网络设置'))
+    }
     if (res.code === settings.successCode) {
       return res
     } else {
@@ -149,41 +155,29 @@ service.interceptors.response.use(
           return await noLoginFunction(res)
         }
       } else {
-        return Promise.reject(res)
+        if (settings.debugCodes.includes(res.code)) {
+          console.log(res.message)
+          return Promise.reject(new Error(res.message || 'Error'))
+        } else if (settings.noticeCodes.includes(res.code)) {
+          Notification({
+            title: res.title || '提示',
+            type: res.type || 'info',
+            message: res.message || '提示',
+            duration: res.duration || 3 * 1000,
+            showClose: true
+          })
+        } else {
+          Message({
+            message: res.message || '错误',
+            type: res.type || 'error',
+            duration: res.duration || 3 * 1000
+          })
+        }
+        return Promise.reject(new Error(res.message || 'Error'))
       }
     }
   }, error => {
-    // 处理HTTP错误或网络错误
-    const res = error.response?.data || error
-    if (!res.code) {
-      // 网络错误或服务器无响应
-      Message({
-        message: '网络连接失败，请检查网络设置',
-        type: 'error',
-        duration: 5 * 1000
-      })
-      return Promise.reject(error)
-    }
-
-    if (settings.debugCodes.includes(res.code)) {
-      console.log(res.message)
-      return Promise.reject(new Error(res.message || 'Error'))
-    } else if (settings.noticeCodes.includes(res.code)) {
-      Notification({
-        title: res.title || '提示',
-        type: res.type || 'info',
-        message: res.message || '提示',
-        duration: res.duration || 3 * 1000,
-        showClose: true
-      })
-    } else {
-      Message({
-        message: res.message || '错误',
-        type: res.type || 'error',
-        duration: res.duration || 3 * 1000
-      })
-    }
-    return Promise.reject(new Error(res.message || 'Error'))
+    console.error(error)
   }
 )
 
