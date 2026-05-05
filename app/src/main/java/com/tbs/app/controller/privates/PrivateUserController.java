@@ -65,15 +65,24 @@ public class PrivateUserController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功登出",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = Boolean.class)))
-    public Boolean logout() {
-        ITokenModel tokenModel = AuthUtil.getInstance().getCurrentTokenModel();
-        tokenRemover.inactiveToken(tokenModel);
-        userLoginInfoService.removeUserLoginInfo(tokenModel.getToken());
+    public AjaxResult logout() {
 
-        var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
-        refreshTokenService.ifPresent(service -> service.inactiveRefreshToken());
+        try {
+            ITokenModel tokenModel = AuthUtil.getInstance().getCurrentTokenModel();
+            tokenRemover.inactiveToken(tokenModel);
+            userLoginInfoService.removeUserLoginInfo(tokenModel.getToken());
+        } catch (Exception e) {
+            return AjaxUtil.getInstance().error(e.getMessage(), e);
+        }
 
-        return true;
+        try {
+            var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
+            refreshTokenService.ifPresent(service -> service.inactiveRefreshToken());
+
+        } catch (Exception e) {
+            return AjaxUtil.getInstance().debugError(e.getMessage(), e);
+        }
+        return AjaxUtil.getInstance().success(null);
     }
 
     /**

@@ -47,6 +47,19 @@ module.exports = {
    * 成功的code
    */
   successCode: 200,
+
+  /**
+   * @type {array}
+   * 调试信息
+   */
+  debugCodes: [601],
+
+  /**
+   * @type {array}
+   * 通知信息
+   */
+  noticeCodes: [701],
+
   /**
    * @type {string}
    * token存在cookie中的 key

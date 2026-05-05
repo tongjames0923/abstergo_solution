@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { Message, MessageBox, Loading } from 'element-ui'
+import {Loading, Message, MessageBox, Notification} from 'element-ui'
 import store from '@/store'
-import { getToken } from '@/utils/auth'
+import {getToken} from '@/utils/auth'
 import settings from '@/settings'
 
 // create an axios instance
@@ -113,7 +113,8 @@ async function noLoginFunction(res) {
   // 刷新token失败，要求重新登录
   await MessageBox.confirm('登录已过期，请重新登录。详情：' + res.message, '提示', {
     confirmButtonText: '重新登录',
-    showCancelButton: false
+    showCancelButton: false,
+    type: 'warning'
   })
   await store.dispatch('user/resetToken')
   location.reload()
@@ -137,33 +138,52 @@ service.interceptors.response.use(
     if (res.code === settings.successCode) {
       return res
     } else {
-      if (settings.refreshTokenCode.includes(res.code)) {
-        noLoginFunction(res)
-      } else if (settings.noLoginCode.includes(res.code)) {
-        // 当遇到未登录错误时，先尝试刷新token
+      if (settings.noLoginCode.includes(res.code)) {
+        // 当遇到需要重新登录的错误码(405)时，直接要求重新登录
+        return await noLoginFunction(res)
+      } else if (settings.refreshTokenCode.includes(res.code)) {
+        // 当遇到刷新token失败的错误码(468)时，先尝试刷新token
         try {
           return await refreshTokenHandler(response)
         } catch (err) {
           return await noLoginFunction(res)
         }
       } else {
-        Message({
-          message: res.message || '错误',
-          type: 'error',
-          duration: 3 * 1000
-        })
-
-        return Promise.reject(new Error(res.message || '错误'))
+        return Promise.reject(res)
       }
     }
-  },
-  error => {
-    Message({
-      message: error.message,
-      type: 'error',
-      duration: 5 * 1000
-    })
-    return Promise.reject(error)
+  }, error => {
+    // 处理HTTP错误或网络错误
+    const res = error.response?.data || error
+    if (!res.code) {
+      // 网络错误或服务器无响应
+      Message({
+        message: '网络连接失败，请检查网络设置',
+        type: 'error',
+        duration: 5 * 1000
+      })
+      return Promise.reject(error)
+    }
+
+    if (settings.debugCodes.includes(res.code)) {
+      console.log(res.message)
+      return Promise.reject(new Error(res.message || 'Error'))
+    } else if (settings.noticeCodes.includes(res.code)) {
+      Notification({
+        title: res.title || '提示',
+        type: res.type || 'info',
+        message: res.message || '提示',
+        duration: res.duration || 3 * 1000,
+        showClose: true
+      })
+    } else {
+      Message({
+        message: res.message || '错误',
+        type: res.type || 'error',
+        duration: res.duration || 3 * 1000
+      })
+    }
+    return Promise.reject(new Error(res.message || 'Error'))
   }
 )
 

@@ -3,8 +3,10 @@ package com.tbs.web.uitl;
 import com.alibaba.fastjson2.JSON;
 import com.tbs.common.IStartup;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.Comparators;
+import com.tbs.web.enums.WebMessageTypeEnum;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.IAjaxBuilderProvider;
 import com.tbs.web.result.IAjaxResultBuilder;
@@ -132,25 +134,26 @@ public class AjaxUtil implements IStartup {
         return getInstance().success(AjaxResult.DEFAULT_SUCCESS_MESSAGE, data);
     }
 
+
+
     /**
-     * 构建失败的Ajax响应结果，包含消息和数据
+     * 构建错误的Ajax响应结果，包含消息和数据
      *
      * @param msg  响应消息
      * @param data 响应数据
      * @return AjaxResult对象
      */
-    public AjaxResult fail(String msg, Object data) {
-        return getInstance().custom(AjaxResult.DEFAULT_FAIL_CODE, msg, data);
-    }
-
-    /**
-     * 构建失败的Ajax响应结果，仅包含数据
-     *
-     * @param data 响应数据
-     * @return AjaxResult对象
-     */
-    public AjaxResult fail(Object data) {
-        return getInstance().fail(AjaxResult.DEFAULT_FAIL_MESSAGE, data);
+    public AjaxResult error(String msg, Object data, WebMessageTypeEnum webMessageTypeEnum, Integer duration) {
+        var map = getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE, msg, data).getMap();
+        if (webMessageTypeEnum != null) {
+            map.put("type", webMessageTypeEnum.getValue());
+        }
+        if (duration != null && duration > 0) {
+            map.put("duration", duration);
+        }
+        AjaxResult ajaxResult = new AjaxResult();
+        ajaxResult.setMap(map);
+        return ajaxResult;
     }
 
     /**
@@ -161,8 +164,79 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(String msg, Object data) {
-        return getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE, msg, data);
+        return getInstance().error(msg, data, WebMessageTypeEnum.INFO, 10 * 1000);
     }
+
+    /**
+     * 构建调试错误的Ajax响应结果，包含消息和数据
+     *
+     * @param msg  响应消息
+     * @param data 响应数据
+     * @return AjaxResult对象
+     */
+    public AjaxResult debugError(String msg, Object data) {
+        return getInstance().custom(AjaxResult.DEBUG_ERROR_CODE, msg, data);
+    }
+
+    /**
+     * 构建错误的Ajax响应结果，包含消息和数据
+     *
+     * @param msg  响应消息
+     * @param data 响应数据
+     * @return AjaxResult对象
+     */
+    public AjaxResult debugError(String msg) {
+        return getInstance().custom(AjaxResult.DEBUG_ERROR_CODE, msg, null);
+    }
+
+    /**
+     * 构建通知错误的Ajax响应结果，包含消息和数据
+     *
+     * @param msg  响应消息
+     * @param data 响应数据
+     * @return AjaxResult对象
+     */
+    public AjaxResult noticeError(String msg, Object data, WebMessageTypeEnum webNoticeType, Integer duration,
+        String title) {
+        var map = getInstance().custom(AjaxResult.NOTICE_CODE, msg, data).getMap();
+        if (webNoticeType != null) {
+            map.put("type", webNoticeType.getValue());
+        }
+        if (duration != null && duration > 0) {
+            map.put("duration", duration);
+        }
+        if (StrUtil.isNotEmpty(title)) {
+            map.put("title", title);
+        }
+        AjaxResult ajaxResult = new AjaxResult();
+        ajaxResult.setMap(map);
+        return ajaxResult;
+    }
+
+    /**
+     * 构建通知错误的Ajax响应结果，包含消息和数据
+     *
+     * @param msg  响应消息
+     * @param data 响应数据
+     * @return AjaxResult对象
+     */
+    public AjaxResult noticeError(String title, String msg, WebMessageTypeEnum webNoticeType, Integer duration) {
+        return noticeError(msg, null, webNoticeType, duration, title);
+    }
+
+    /**
+     * 构建通知错误的Ajax响应结果，包含消息和数据
+     *
+     * @param msg  响应消息
+     * @param data 响应数据
+     * @return AjaxResult对象
+     */
+    public AjaxResult noticeError(String title, String msg, WebMessageTypeEnum webNoticeType) {
+        return noticeError(msg, msg, webNoticeType, 5 * 1000);
+    }
+
+
+
 
     /**
      * 构建错误的Ajax响应结果，仅包含数据
@@ -171,7 +245,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(Object data) {
-        return getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data);
+        return getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data, WebMessageTypeEnum.INFO, 10 * 1000);
     }
 
     @Override

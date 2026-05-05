@@ -1,9 +1,9 @@
 package com.tbs.web.result;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Map;
-
-import lombok.Data;
 
 /**
  * ajax结果
@@ -30,10 +30,6 @@ public class AjaxResult implements Serializable {
 	 */
 	public static final int DEFAULT_SUCCESS_CODE = 200;
 	/**
-	 * 默认失败码
-	 */
-	public static final int DEFAULT_FAIL_CODE = 500;
-	/**
 	 * 默认错误码
 	 */
 	public static final int DEFAULT_ERROR_CODE = 500;
@@ -55,6 +51,16 @@ public class AjaxResult implements Serializable {
 	public static final int REFRESH_FAIL_CODE = 468;
 
     public static final String REFRESH_FAIL_CODE_MESSAGE = "Token失效且刷新Token失败";
+
+	/**
+	 * 默认调试错误码
+	 */
+	public static final int DEBUG_ERROR_CODE = 601;
+
+	/**
+	 * 默认通知码
+	 */
+	public static final int NOTICE_CODE = 701;
 
 	/**
 	 * 默认未授权信息

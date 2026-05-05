@@ -11,7 +11,7 @@ import org.springframework.core.Ordered;
  *
  * @author tongj
  */
-public class DefaultErrorAjaxProvider implements IOnErrorAjaxProvider {
+public class DefaultErrorAjaxProvider implements IOnErrorAjaxProvider<Throwable> {
     @Override
     public AjaxResult onError(Throwable throwable) {
         return AjaxUtil.getInstance()
