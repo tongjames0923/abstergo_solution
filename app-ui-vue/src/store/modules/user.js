@@ -78,11 +78,12 @@ const actions = {
   async logout({ commit, state }) {
     try {
       await logout()
+    } catch (error) {
+      console.error('Logout API request failed:', error)
+    } finally {
       removeToken() // must remove  token  first
       resetRouter()
       commit('RESET_STATE')
-    } catch (error) {
-      throw error
     }
   },
 
