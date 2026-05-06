@@ -34,7 +34,7 @@ public class AjaxUtil implements IStartup {
     @Resource
     private IAjaxBuilderProvider ajaxBuilderProvider;
 
-    private Collection<IOnErrorAjaxProvider> onErrorAjaxProviders;
+    private static volatile Collection<IOnErrorAjaxProvider> onErrorAjaxProviders;
 
     /**
      * 静态方法，用于将AjaxResult对象写入HTTP响应中
@@ -50,11 +50,10 @@ public class AjaxUtil implements IStartup {
         httpResponse.setCharacterEncoding("UTF-8");
         httpResponse.setContentType("application/json");
         String jsonResponse = JSON.toJSONString(ajaxResult.getMap());
-        PrintWriter writer = null;
-        writer = httpResponse.getWriter();
-        writer.print(jsonResponse);
-        writer.flush();
-        writer.close();
+        try (PrintWriter writer = httpResponse.getWriter()) {
+            writer.print(jsonResponse);
+            writer.flush();
+        }
     }
 
     /**
@@ -81,8 +80,9 @@ public class AjaxUtil implements IStartup {
         if (e == null) {
             return error(AjaxResult.DEFAULT_ERROR_MESSAGE, null);
         }
-        if (CollUtil.isNotEmpty(getInstance().onErrorAjaxProviders)) {
-            for (IOnErrorAjaxProvider provider : getInstance().onErrorAjaxProviders) {
+        Collection<IOnErrorAjaxProvider> providers = onErrorAjaxProviders;
+        if (CollUtil.isNotEmpty(providers)) {
+            for (IOnErrorAjaxProvider provider : providers) {
                 if (provider.support(e.getClass())) {
                     return provider.onError(e);
                 }
@@ -251,7 +251,7 @@ public class AjaxUtil implements IStartup {
     @Override
     public void startUp() throws RuntimeException {
         ajaxUtil = this;
-        this.onErrorAjaxProviders =
+        onErrorAjaxProviders =
             SpringUtil.getBeansByTypeSafe(IOnErrorAjaxProvider.class).stream().sorted(Comparators::asc)
                 .collect(Collectors.toList());
     }

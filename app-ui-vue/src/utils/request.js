@@ -57,13 +57,6 @@ const refreshTokenHandler = async(response) => {
       failedQueue.push({ resolve, reject })
     }).then(token => {
       config.headers[settings.tokenHeader] = token
-      // 修复：确保不会重复添加baseURL
-      if (config.baseURL && config.url.startsWith(config.baseURL)) {
-        // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
-        const newConfig = { ...config }
-        newConfig.url = config.url.substring(config.baseURL.length)
-        return service(newConfig)
-      }
       return service(config)
     }).catch(err => {
       return Promise.reject(err)
@@ -87,13 +80,6 @@ const refreshTokenHandler = async(response) => {
     // 处理队列中的请求
     processQueue(null, getToken())
     // 重新发送当前请求并返回结果
-    // 修复：确保不会重复添加baseURL
-    if (config.baseURL && config.url.startsWith(config.baseURL)) {
-      // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
-      const newConfig = { ...config }
-      newConfig.url = config.url.substring(config.baseURL.length)
-      return await service(newConfig)
-    }
     return await service(config)
   } catch (err) {
     // 处理刷新token失败的情况
@@ -178,6 +164,42 @@ service.interceptors.response.use(
     }
   }, error => {
     console.error(error)
+    // 处理HTTP错误（如网络错误、超时等）
+    let message = '网络连接失败'
+    
+    if (error.response) {
+      switch (error.response.status) {
+        case 401:
+          message = '未授权，请重新登录'
+          break
+        case 403:
+          message = '拒绝访问'
+          break
+        case 404:
+          message = '请求地址不存在'
+          break
+        case 500:
+          message = '服务器内部错误'
+          break
+        case 504:
+          message = '网关超时'
+          break
+        default:
+          message = error.response.data?.message || '请求失败'
+      }
+    } else if (error.code === 'ECONNABORTED') {
+      message = '请求超时'
+    } else if (error.message) {
+      message = error.message
+    }
+    
+    Message({
+      message,
+      type: 'error',
+      duration: 5 * 1000
+    })
+    
+    return Promise.reject(error)
   }
 )
 
