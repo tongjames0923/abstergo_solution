@@ -19,7 +19,10 @@ spring:
     time-zone: GMT+8
 server:
   port: 8081
-
+logging:
+  level:
+    com.alibaba: warn
+    org.apache: warn
 dubbo:
   application:
     name: dubbo-logging-service
