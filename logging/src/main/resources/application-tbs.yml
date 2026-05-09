@@ -22,5 +22,5 @@ tbs:
   start-up:
     optional-execute: false
   logging:
-    system-operate-log-sender: com.tbs.app.service.impl.log.DbSystemOpLogService
-    system-operate-log-view-service: com.tbs.app.service.impl.log.DbSystemOpLogService
+    system-operate-log-sender: com.tbs.logging.log.DbSystemOpLogService
+    system-operate-log-view-service: com.tbs.logging.log.DbSystemOpLogService

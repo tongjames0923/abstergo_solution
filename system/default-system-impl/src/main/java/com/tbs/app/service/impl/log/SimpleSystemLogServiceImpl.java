@@ -15,7 +15,7 @@ import java.math.RoundingMode;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class SimpleDbSystemLogServiceImpl implements ISystemLogService {
+public class SimpleSystemLogServiceImpl implements ISystemLogService {
 
     @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.NoViewLogServiceImpl",
     check = false)

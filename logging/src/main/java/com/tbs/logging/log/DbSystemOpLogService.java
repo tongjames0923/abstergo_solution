@@ -1,4 +1,4 @@
-package com.tbs.app.service.impl.log;
+package com.tbs.logging.log;
 
 import cn.hutool.core.date.DateUtil;
 import com.tbs.common.data.IDataHolderManager;
@@ -45,7 +45,6 @@ public class DbSystemOpLogService implements ISystemOperateLogViewService, ISyst
     @Async
     public void log(SystemOperateRecordEntity operateRecord) {
         opDataSource((ls) -> {
-
             ls.add(operateRecord);
             if (ls.size() >= getBatchSize()) {
                 flush(ls);
