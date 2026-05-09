@@ -32,8 +32,10 @@ import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
 
+/**
+ * @author abstergo
+ */
 @Configuration
-
 public class BuisnessBeanConfig {
 
     @Resource

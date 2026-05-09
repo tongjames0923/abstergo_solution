@@ -2,6 +2,8 @@ package com.tbs.app.config;
 
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
+import com.tbs.common.error.IErrorThrowEvent;
+import com.tbs.common.error.impl.SimpleErrorThrowEvent;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
 import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
@@ -63,5 +65,10 @@ public class AppSettingProperty {
      * 操作日志查看实现类
      */
     Class<? extends ISystemOperateLogViewService> logViewerImpl = NoViewLogServiceImpl.class;
+
+    /**
+     * 错误抛出事件实现类
+     */
+    Class<? extends IErrorThrowEvent> errorThrowEventImpl = SimpleErrorThrowEvent.class;
 
 }

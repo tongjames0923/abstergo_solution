@@ -1,9 +1,8 @@
 package com.tbs.rabbitmq.property;
 
+import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
-import lombok.Data;
 
 /**
  * RabbitMQ配置属性类
@@ -38,8 +37,4 @@ public class RabbitMqProperty {
 	 */
 	private String nodeId;
 
-	/**
-	 * 是否启用发布确认
-	 */
-	private boolean publisherConfirm = true;
 }

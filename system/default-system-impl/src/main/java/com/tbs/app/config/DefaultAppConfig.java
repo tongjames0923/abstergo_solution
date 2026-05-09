@@ -7,6 +7,7 @@ import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.PasswordValidator;
 import com.tbs.shared.interfaces.constraint.UserNameValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
+import com.tbs.shared.util.SqlLogicDeleteIntercepter;
 import com.tbs.web.security.token.DefaultTokenRemover;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenRemover;
@@ -94,4 +95,18 @@ public class DefaultAppConfig {
     SystemOperateInterceptor systemOperAop() {
         return new SystemOperateInterceptor();
     }
+
+    /**
+     * SQL逻辑删除拦截器配置
+     * <p>
+     * 配置SQL逻辑删除功能，用于处理数据库记录的软删除
+     * </p>
+     *
+     * @return SQL逻辑删除拦截器实例
+     */
+    @Bean
+    public SqlLogicDeleteIntercepter sqlLogicDeleteIntercepter() {
+        return new SqlLogicDeleteIntercepter();
+    }
+
 }

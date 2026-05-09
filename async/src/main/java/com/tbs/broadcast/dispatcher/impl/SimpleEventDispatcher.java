@@ -1,20 +1,16 @@
 package com.tbs.broadcast.dispatcher.impl;
 
-import java.util.Optional;
-
-import javax.annotation.Resource;
-
-import org.springframework.context.annotation.Lazy;
-
 import com.tbs.broadcast.dispatcher.AbstractEventDispatcher;
 import com.tbs.broadcast.dispatcher.IDistributedDispatcherSupport;
 import com.tbs.broadcast.enums.HandleMode;
 import com.tbs.broadcast.publisher.IPublishResult;
 import com.tbs.broadcast.publisher.IPublisher;
-
+import com.tbs.common.util.framework.SpringUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Optional;
 
 /**
  * 简单事件分发器实现类
@@ -59,8 +55,6 @@ public class SimpleEventDispatcher extends AbstractEventDispatcher {
 	@Setter
 	private IHandleEventError handleEventError;
 
-	@Resource
-	@Lazy
 	private IDistributedDispatcherSupport distributedDispatcherSupport;
 
 	/**
@@ -107,6 +101,8 @@ public class SimpleEventDispatcher extends AbstractEventDispatcher {
 		});
 	}
 
+	private Optional<IDistributedDispatcherSupport> dispatcherSupport;
+
 	/**
 	 * 获取分布式分发支持实例
 	 * <p>
@@ -117,6 +113,13 @@ public class SimpleEventDispatcher extends AbstractEventDispatcher {
 	 */
 	@Override
 	public Optional<IDistributedDispatcherSupport> getDistributedDispatcherSupport() {
-		return Optional.ofNullable(distributedDispatcherSupport);
+		if (distributedDispatcherSupport == null) {
+			synchronized (this) {
+				if (distributedDispatcherSupport == null) {
+					dispatcherSupport = SpringUtil.getBeanOptional(IDistributedDispatcherSupport.class);
+				}
+			}
+		}
+		return dispatcherSupport;
 	}
 }

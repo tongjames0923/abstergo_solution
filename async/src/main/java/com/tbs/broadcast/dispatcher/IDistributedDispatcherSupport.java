@@ -7,6 +7,7 @@ import com.tbs.broadcast.bus.IDistributedBusSupport;
  * <p>
  * 该接口定义了在分布式环境下处理事件的方法，用于支持跨节点的事件分发处理。
  *
+ * @author abstergo
  * @see IDistributedBusSupport
  */
 public interface IDistributedDispatcherSupport {

@@ -42,9 +42,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableTbsRedis
 @EnableDubbo
-
 @EnableScriptEngine
-//@EnableTrace
 public class AppApplication {
 
     public static void main(String[] args) {

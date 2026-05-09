@@ -28,7 +28,7 @@ public interface IDistributedBusSupport<T> {
 	/**
 	 * 从分布式系统中获取接收事件
 	 *
-	 * @param raw
+	 * @param data
 	 */
 	public void receiveEvent(T data);
 

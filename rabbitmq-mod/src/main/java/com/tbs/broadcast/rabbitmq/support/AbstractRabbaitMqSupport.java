@@ -83,7 +83,8 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
         container = new SimpleMessageListenerContainer(connectionFactory);
         container.setQueueNames(property.getQueueName());
         container.setMessageListener(this);
-        container.setAcknowledgeMode(org.springframework.amqp.core.AcknowledgeMode.MANUAL); // 设置为手动ACK
+        // 设置为手动ACK
+        container.setAcknowledgeMode(org.springframework.amqp.core.AcknowledgeMode.MANUAL);
         container.start();
     }
 
