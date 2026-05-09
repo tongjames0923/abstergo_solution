@@ -1,10 +1,7 @@
 package com.tbs.redis.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.redis.config.property.RedissonCacheProperty;
 import org.redisson.api.RedissonClient;
-import org.redisson.client.codec.Codec;
-import org.redisson.codec.JsonJacksonCodec;
 import org.redisson.spring.cache.CacheConfig;
 import org.redisson.spring.cache.RedissonSpringCacheManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -63,20 +60,6 @@ public class RedissonCacheConfig {
         cacheManager.setAllowNullValues(property.isAllowNullValues());
         cacheManager.setTransactionAware(property.isTransaction());
         return cacheManager;
-    }
-
-    /**
-     * Redisson编解码器配置
-     * <p>
-     * 配置Redis使用的JSON编解码器，用于对象的序列化和反序列化
-     * </p>
-     *
-     * @param objectMapper Jackson对象映射器
-     * @return Redisson编解码器实例
-     */
-    @Bean
-    public Codec codec(ObjectMapper objectMapper) {
-        return new JsonJacksonCodec(objectMapper);
     }
 
 }

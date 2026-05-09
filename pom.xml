@@ -73,7 +73,6 @@
             <groupId>org.apache.dubbo</groupId>
             <artifactId>dubbo-zookeeper-spring-boot-starter</artifactId>
         </dependency>
-        <!-- SpringBoot Web容器 -->
         <dependency>
             <groupId>org.jetbrains</groupId>
             <artifactId>annotations</artifactId>

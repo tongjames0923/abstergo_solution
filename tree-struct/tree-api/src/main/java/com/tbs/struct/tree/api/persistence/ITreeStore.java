@@ -74,4 +74,12 @@ public interface ITreeStore {
      */
     boolean isExist(String nodeId, String group);
 
+    /**
+     * 尝试重建树结构
+     *
+     * @param treeGroup 树组
+     */
+    void tryRebuildStructure(String treeGroup);
+
+
 }

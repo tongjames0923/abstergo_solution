@@ -7,8 +7,8 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
+import org.apache.dubbo.config.annotation.DubboReference;
 
-import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -16,11 +16,10 @@ import java.util.stream.Collectors;
 
 public class SimpleDbSystemLogServiceImpl implements ISystemLogService {
 
-    @Resource
+    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.NoViewLogServiceImpl")
     private ISystemOperateLogViewService systemOperateLog;
 
     private String suitTypeName(String type) {
-
         //com.tbs.app.controller.privates.PrivateUserController.info
         //截取类名和方法名
         StringBuilder sb = new StringBuilder();

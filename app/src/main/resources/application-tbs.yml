@@ -13,8 +13,6 @@ tbs:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
     enable: true
     enable-operate-log: true
-    log-recorder-impl: com.tbs.app.service.impl.log.DbSystemOpLogService
-    log-viewer-impl: com.tbs.app.service.impl.log.DbSystemOpLogService
   cache:
     cache-manager-impl: org.redisson.spring.cache.RedissonSpringCacheManager
     ttl-cache-decorator: com.tbs.cache.redis.RedissonTtlCacheDecorator

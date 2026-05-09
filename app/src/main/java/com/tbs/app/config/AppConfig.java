@@ -3,16 +3,14 @@ package com.tbs.app.config;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
-import com.tbs.schedule.IScheduleExecuteErrorHandle;
-import com.tbs.schedule.impl.TimingWheelSchedule;
+import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.xxl.api.IXXLJobsConfig;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * 应用程序配置类
@@ -181,7 +179,8 @@ public class AppConfig {
      * @return 闭包树服务实例
      */
     @Bean
-    ClosureTreeServiceImpl treeStore() {
+    @DubboService
+    ITreeStore treeStore() {
         return new ClosureTreeServiceImpl();
     }
 }

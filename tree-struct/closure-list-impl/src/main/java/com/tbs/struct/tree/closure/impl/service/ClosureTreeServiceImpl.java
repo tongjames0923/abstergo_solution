@@ -17,6 +17,7 @@ import com.tbs.struct.tree.closure.impl.mapper.TreeRelationMapper;
 import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -32,6 +33,7 @@ import java.util.stream.Collectors;
  * @author tongj
  */
 @Slf4j
+@DubboService
 public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     @Resource
     private TreeNodeMapper treeNodeMapper;
@@ -359,7 +361,8 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      * 重建树结构闭包表关系表
      */
     @Transactional(rollbackFor = RuntimeException.class)
-    public void buildTreeClosure(String groupName) {
+    @Override
+    public void tryRebuildStructure(String groupName) {
         rebuildTreeClosureCheck();
         CacheUtils.getInstance().cacheableSet(REBUILD_TREE_CLOSURE_LOCK, true);
         try {

@@ -1,5 +1,6 @@
 package com.tbs.app.web.model;
 
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.tbs.app.web.model.bridge.SimpleTokenDtoBridge;
 import com.tbs.cache.serialize.annotation.CacheTransform;
 import com.tbs.web.enums.TokenCreateTypeEnum;
@@ -16,6 +17,7 @@ import java.util.Date;
  * @author abstergo
  */
 @Data
+@JsonTypeInfo(use = JsonTypeInfo.Id.CLASS, include = JsonTypeInfo.As.PROPERTY, property = "@class")
 @CacheTransform(bridgeType = SimpleTokenDtoBridge.class)
 public class SimpleTokenModel implements ITokenModel {
     private static final long serialVersionUID = 1L;

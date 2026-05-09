@@ -1,9 +1,11 @@
 package com.tbs.app.service;
 
 import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
-import com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl;
+import com.tbs.shared.interfaces.log.impl.SimpleLoggerSender;
+import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -21,10 +23,10 @@ import javax.annotation.Resource;
 @Component
 public class AppExecutor {
     @Resource
-    private ClosureTreeServiceImpl closureTreeService;
+    private ITreeStore closureTreeService;
 
-    @Resource
-    @Qualifier("systemOperateLogSender")
+
+    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.SimpleLoggerSender")
     private ISystemOperateLogSender systemOperateLog;
 
     /**
@@ -36,7 +38,7 @@ public class AppExecutor {
     @XxlJob("rebuildTree")
     public void rebuildTree() {
         XxlJobHelper.log(" rebuild tree closure start");
-        closureTreeService.buildTreeClosure(XxlJobHelper.getJobParam());
+        closureTreeService.tryRebuildStructure(XxlJobHelper.getJobParam());
         XxlJobHelper.log(" rebuild tree closure success");
     }
 

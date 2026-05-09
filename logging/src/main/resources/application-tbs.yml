@@ -1,0 +1,26 @@
+tbs:
+  system:
+    main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
+    enable: true
+    enable-operate-log: true
+    log-recorder-impl: com.tbs.app.service.impl.log.DbSystemOpLogService
+    log-viewer-impl: com.tbs.app.service.impl.log.DbSystemOpLogService
+  cache:
+    cache-manager-impl: org.redisson.spring.cache.RedissonSpringCacheManager
+    ttl-cache-decorator: com.tbs.cache.redis.RedissonTtlCacheDecorator
+  boardcast:
+    event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
+  lock:
+    lock-provider-type: com.tbs.lock.redis.RedissonLockProvider
+  data:
+    data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHodlerManager
+    data-holder: com.tbs.redis.holder.RedisDataHolder
+  redission:
+    cache:
+      cache-timeout: 900
+      eviction-mode: lru
+  start-up:
+    optional-execute: false
+  logging:
+    system-operate-log-sender: com.tbs.app.service.impl.log.DbSystemOpLogService
+    system-operate-log-view-service: com.tbs.app.service.impl.log.DbSystemOpLogService
