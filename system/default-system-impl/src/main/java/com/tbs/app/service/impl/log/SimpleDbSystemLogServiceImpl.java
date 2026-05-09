@@ -4,6 +4,7 @@ import cn.hutool.core.date.DateUtil;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
@@ -16,7 +17,8 @@ import java.util.stream.Collectors;
 
 public class SimpleDbSystemLogServiceImpl implements ISystemLogService {
 
-    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.NoViewLogServiceImpl")
+    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.NoViewLogServiceImpl",
+    check = false)
     private ISystemOperateLogViewService systemOperateLog;
 
     private String suitTypeName(String type) {
@@ -48,7 +50,9 @@ public class SimpleDbSystemLogServiceImpl implements ISystemLogService {
         Map<String, Set<String>> userMap = new HashMap<>(); // 记录每个操作类型的用户数
         Map<String, Set<String>> ipMap = new HashMap<>();   // 记录每个操作类型的IP数
         Map<String, List<Long>> timeListMap = new HashMap<>(); // 记录每个操作类型的时间列表用于计算分位数
-
+        if (CollUtil.isEmpty(data)) {
+            return new ArrayList<>();
+        }
         for (SystemOperateRecordEntity operateRecordEntity : data) {
             String operateType = operateRecordEntity.getOperateType();
             Long costTime = operateRecordEntity.getCostTime();

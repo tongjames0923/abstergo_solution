@@ -35,7 +35,7 @@ import java.util.Date;
 @Slf4j
 public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 
-    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.SimpleLoggerSender")
+    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.SimpleLoggerSender", check = false)
     ISystemOperateLogSender systemOperateLog;
 
     /**
