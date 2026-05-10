@@ -35,14 +35,16 @@ etc/
   - 管理界面: 15672
   - 默认用户: admin/admin123
 
-- **Zookeeper注册中心** (abstergo_zookeeper)
-  - 客户端端口: 2181
-  - 集群端口: 2888/3888
-  - 管理端口: 8989
+- **Nacos注册中心** (abstergo_nacos)
+  - 服务端口: 8848
+  - gRPC端口: 9848/9849
+  - Web控制台: 9999
+  - 单机模式运行
 
 - **Dubbo管理控制台** (abstergo_dubbo_admin)
   - 访问端口: 9600
-  - 集成Zookeeper注册中心
+  - 账号密码: admin/admin123
+  - 集成Nacos注册中心
 
 - **XXL-Job任务调度中心** (xxl_job_admin)
   - 访问端口: 9898
@@ -109,7 +111,8 @@ etc/
 3. **验证服务状态**
    - Redis: `redis-cli -h localhost -p 6379 -a 123456 ping`
    - RabbitMQ: 访问 http://localhost:15672 (admin/admin123)
-   - Dubbo Admin: 访问 http://localhost:9600
+   - Nacos: 访问 http://localhost:9999/nacos
+   - Dubbo Admin: 访问 http://localhost:9600 (root/root)
    - XXL-Job: 访问 http://localhost:9898
 
 ## ⚙️ 配置说明
@@ -174,7 +177,7 @@ xxl-job-admin:
 ### 服务监控
 - **Redis**: 内置监控命令
 - **RabbitMQ**: Web管理界面监控
-- **Zookeeper**: 四字命令监控
+- **Nacos**: Web控制台监控
 - **XXL-Job**: 任务执行监控面板
 
 ### 日志管理
@@ -223,7 +226,7 @@ xxl-job-admin:
 - **Docker Compose**: 3.8
 - **Redis**: 6.2.19
 - **RabbitMQ**: 3-management
-- **Zookeeper**: latest
+- **Nacos**: v2.2.3
 - **XXL-Job**: 2.4.0
 - **Dubbo Admin**: latest
 

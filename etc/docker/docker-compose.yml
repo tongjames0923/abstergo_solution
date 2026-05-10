@@ -46,20 +46,6 @@ services:
       - "8989:8080"
     restart: always
 
-  dubbo-admin:
-    image: apache/dubbo-admin:latest
-    container_name: abstergo_dubbo_admin
-    ports:
-      - "9600:38080"
-    environment:
-      - admin.registry.address=zookeeper://zookeeper:2181
-      - admin.config-center=zookeeper://zookeeper:2181
-      - admin.metadata-report.address=zookeeper://zookeeper:2181
-      - server.port= 38080
-    depends_on:
-      - zookeeper
-    restart: always
-
   xxl-job-admin:
     image: xuxueli/xxl-job-admin:2.4.0
     container_name: xxl_job_admin
@@ -71,6 +57,19 @@ services:
       - mysql
     restart: always
 
+  dubbo-admin:
+    image: apache/dubbo-admin
+    container_name: abstergo_dubbo_admin
+    ports:
+      - "9600:38080"
+    environment:
+      - admin.registry.address=nacos://nacos:8848
+      - admin.config-center=nacos://nacos:8848
+      - admin.metadata-report.address=nacos://nacos:8848
+      - server.port= 38080
+    depends_on:
+      - nacos
+    restart: always
   nacos:
     image: nacos/nacos-server
     container_name: abstergo_nacos
