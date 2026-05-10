@@ -10,6 +10,7 @@ import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,7 +33,7 @@ import java.io.Serializable;
 @Tag(name = "公共测试控制器", description = "公共测试控制器")
 public class PublicTestController extends BaseController {
 
-    @Resource
+    @DubboReference
     private ITreeStore store;
 
     public static final String TEST_GROUP = "Test Tree Group";

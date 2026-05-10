@@ -7,8 +7,6 @@ import com.xxl.job.core.handler.annotation.XxlJob;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-
 /**
  * XXL-Job任务执行器
  * <p>
@@ -20,7 +18,7 @@ import javax.annotation.Resource;
  */
 @Component
 public class AppExecutor {
-    @Resource
+    @DubboReference
     private ITreeStore closureTreeService;
 
     @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.SimpleLoggerSender", check = false)

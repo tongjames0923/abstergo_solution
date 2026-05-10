@@ -6,6 +6,8 @@ import com.tbs.common.error.IErrorThrowEvent;
 import com.tbs.common.error.impl.SimpleErrorThrowEvent;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.impl.SimpleUserValidator;
+import com.tbs.struct.tree.api.persistence.ITreeStore;
+import com.tbs.struct.tree.api.persistence.impl.NoImplTreeStore;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserDetailsTransformer;
 import com.tbs.web.security.user.SimpleUserDetailsTransformer;
@@ -56,5 +58,6 @@ public class AppSettingProperty {
      * 错误抛出事件实现类
      */
     Class<? extends IErrorThrowEvent> errorThrowEventImpl = SimpleErrorThrowEvent.class;
+
 
 }
