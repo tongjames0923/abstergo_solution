@@ -47,7 +47,7 @@ services:
     restart: always
 
   dubbo-admin:
-    image: docker.1ms.run/apache/dubbo-admin:0.4.0
+    image: docker.1ms.run/apache/dubbo-admin:0.6.0
     container_name: abstergo_dubbo_admin
     ports:
       - "9600:38080"
