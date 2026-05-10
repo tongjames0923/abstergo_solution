@@ -48,8 +48,14 @@ public class AjaxResult implements Serializable {
 	 */
 	public static final String DEFAULT_RELOGIN_MESSAGE = "请重新登录";
 
+	/**
+	 * 默认刷新失败码
+	 */
 	public static final int REFRESH_FAIL_CODE = 468;
 
+	/**
+	 * 默认刷新失败信息
+	 */
     public static final String REFRESH_FAIL_CODE_MESSAGE = "Token失效且刷新Token失败";
 
 	/**

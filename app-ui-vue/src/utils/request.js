@@ -57,6 +57,13 @@ const refreshTokenHandler = async(response) => {
       failedQueue.push({ resolve, reject })
     }).then(token => {
       config.headers[settings.tokenHeader] = token
+      // 修复：确保不会重复添加baseURL
+      if (config.baseURL && config.url.startsWith(config.baseURL)) {
+        // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
+        const newConfig = {...config}
+        newConfig.url = config.url.substring(config.baseURL.length)
+        return service(newConfig)
+      }
       return service(config)
     }).catch(err => {
       return Promise.reject(err)
@@ -79,6 +86,13 @@ const refreshTokenHandler = async(response) => {
     await store.dispatch('user/refreshToken')
     // 处理队列中的请求
     processQueue(null, getToken())
+    // 修复：确保不会重复添加baseURL
+    if (config.baseURL && config.url.startsWith(config.baseURL)) {
+      // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
+      const newConfig = {...config}
+      newConfig.url = config.url.substring(config.baseURL.length)
+      return await service(newConfig)
+    }
     // 重新发送当前请求并返回结果
     return await service(config)
   } catch (err) {
@@ -130,10 +144,10 @@ service.interceptors.response.use(
     if (res.code === settings.successCode) {
       return res
     } else {
-      if (settings.noLoginCode.includes(res.code)) {
+      if (settings.refreshTokenCode.includes(res.code)) {
         // 当遇到需要重新登录的错误码(405)时，直接要求重新登录
         return await noLoginFunction(res)
-      } else if (settings.refreshTokenCode.includes(res.code)) {
+      } else if (settings.noLoginCode.includes(res.code)) {
         // 当遇到刷新token失败的错误码(468)时，先尝试刷新token
         try {
           return await refreshTokenHandler(response)
@@ -166,7 +180,7 @@ service.interceptors.response.use(
     console.error(error)
     // 处理HTTP错误（如网络错误、超时等）
     let message = '网络连接失败'
-    
+
     if (error.response) {
       switch (error.response.status) {
         case 401:
@@ -192,13 +206,13 @@ service.interceptors.response.use(
     } else if (error.message) {
       message = error.message
     }
-    
+
     Message({
       message,
       type: 'error',
       duration: 5 * 1000
     })
-    
+
     return Promise.reject(error)
   }
 )
