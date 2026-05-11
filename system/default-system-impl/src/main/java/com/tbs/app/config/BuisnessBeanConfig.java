@@ -2,8 +2,12 @@ package com.tbs.app.config;
 
 import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.app.service.company.ISystemCompanyService;
+import com.tbs.app.service.department.IDepartmentUserRelationService;
+import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.company.SimpleCompanyUserRelationService;
+import com.tbs.app.service.impl.department.SimpleDepartmentService;
+import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
 import com.tbs.app.service.impl.log.SimpleSystemLogServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.role.SimpleUserRoleRelationServiceImpl;
@@ -91,6 +95,20 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ICompanyUserRelationService companyUserRelationService() {
         return new SimpleCompanyUserRelationService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(ISystemDepartmentService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public ISystemDepartmentService departmentService() {
+        return new SimpleDepartmentService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IDepartmentUserRelationService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IDepartmentUserRelationService departmentUserRelationService() {
+        return new SimpleDepartmentUserRelationService();
     }
 
     @Bean
