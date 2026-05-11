@@ -1,6 +1,6 @@
 package com.tbs.app.service.user.model;
 
-import com.tbs.shared.pojo.entity.SystemCompanyEntity;
+import com.tbs.app.vo.DepartmentInfoVO;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
@@ -8,23 +8,23 @@ import java.util.List;
 public interface ISystemUserDetails extends UserDetails {
 
     /**
-     * 获取当前用户所属公司列表
+     * 获取当前用户所属部门列表
      *
      * @return
      */
-    List<SystemCompanyEntity> getCompanies();
+    List<DepartmentInfoVO> getDepartments();
 
     /**
-     * 获取当前用户所属公司
+     * 获取当前用户所属部门
      *
      * @return
      */
-    SystemCompanyEntity getCurrentCompany();
+    DepartmentInfoVO getCurrentDepartment();
 
     /**
-     * 设置当前用户所属公司
+     * 设置当前用户所属部门
      *
-     * @param company
+     * @param department
      */
-    void setCurrentCompany( SystemCompanyEntity company);
+    void setCurrentDepartment(long department);
 }

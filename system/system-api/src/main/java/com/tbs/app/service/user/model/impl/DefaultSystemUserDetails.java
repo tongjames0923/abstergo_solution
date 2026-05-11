@@ -2,7 +2,9 @@ package com.tbs.app.service.user.model.impl;
 
 import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.app.service.user.serial.DefaultSystemUserDetailsBridge;
+import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.cache.serialize.annotation.CacheTransform;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,8 +15,8 @@ import java.util.List;
 @Data
 @CacheTransform(bridgeType = DefaultSystemUserDetailsBridge.class)
 public class DefaultSystemUserDetails implements ISystemUserDetails {
-    private List<SystemCompanyEntity> companies;
-    private SystemCompanyEntity currentCompany;
+    private List<DepartmentInfoVO> departments;
+    private DepartmentInfoVO currentDepartment;
     private String username;
     private String password;
     private boolean accountNonExpired = true;
@@ -23,11 +25,11 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
     private boolean enabled = true;
     private List<? extends GrantedAuthority> authorities;
 
-    public DefaultSystemUserDetails(List<SystemCompanyEntity> companies, SystemCompanyEntity currentCompany,
+    public DefaultSystemUserDetails(List<DepartmentInfoVO> departments, DepartmentInfoVO currentDepartment,
         String username, String password, boolean accountNonExpired, boolean accountNonLocked,
         boolean credentialsNonExpired, boolean enabled, List<? extends GrantedAuthority> authorities) {
-        this.companies = companies;
-        this.currentCompany = currentCompany;
+        this.departments = departments;
+        this.currentDepartment = currentDepartment;
         this.username = username;
         this.password = password;
         this.accountNonExpired = accountNonExpired;
@@ -41,18 +43,25 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
     }
 
     @Override
-    public List<SystemCompanyEntity> getCompanies() {
-        return companies;
+    public List<DepartmentInfoVO> getDepartments() {
+        return departments;
     }
 
     @Override
-    public SystemCompanyEntity getCurrentCompany() {
-        return currentCompany;
+    public DepartmentInfoVO getCurrentDepartment() {
+        return currentDepartment;
     }
 
     @Override
-    public void setCurrentCompany(SystemCompanyEntity company) {
-        this.currentCompany = company;
+    public void setCurrentDepartment(long department) {
+        AssertUtil.notEmpty(departments, "用户未绑定任何部门");
+        for (var d : departments) {
+            if (d.getDepartmentId() == department) {
+                this.currentDepartment = d;
+                return;
+            }
+        }
+        AssertUtil.throwError(() -> new IllegalArgumentException("部门编号不存在"));
     }
 
     @Override
@@ -93,6 +102,8 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
     public static class Builder {
         private List<SystemCompanyEntity> companies;
         private SystemCompanyEntity currentCompany;
+        private List<DepartmentInfoVO> departments;
+        private DepartmentInfoVO currentDepartment;
         private String username;
         private String password;
         private boolean accountNonExpired;
@@ -149,8 +160,18 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
             return this;
         }
 
+        public Builder departments(List<DepartmentInfoVO> departments) {
+            this.departments = departments;
+            return this;
+        }
+
+        public Builder currentDepartment(DepartmentInfoVO currentDepartment) {
+            this.currentDepartment = currentDepartment;
+            return this;
+        }
+
         public DefaultSystemUserDetails build() {
-            return new DefaultSystemUserDetails(companies, currentCompany, username, password, accountNonExpired,
+            return new DefaultSystemUserDetails(departments, currentDepartment, username, password, accountNonExpired,
                 accountNonLocked, credentialsNonExpired, enabled, authorities);
         }
     }

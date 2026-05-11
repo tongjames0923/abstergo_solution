@@ -15,7 +15,7 @@ public class DefaultSystemUserDetailsBridge
     implements IDataBridge<DefaultSystemUserDetailsDto, DefaultSystemUserDetails> {
     @Override
     public DefaultSystemUserDetailsDto bridge(@NotNull DefaultSystemUserDetails obj) {
-        return new DefaultSystemUserDetailsDto(obj.getCompanies(), obj.getCurrentCompany(), obj.getUsername(),
+        return new DefaultSystemUserDetailsDto(obj.getDepartments(), obj.getCurrentDepartment(), obj.getUsername(),
             obj.getPassword(), obj.isAccountNonExpired(), obj.isAccountNonLocked(), obj.isCredentialsNonExpired(),
             obj.isEnabled(), CollUtil.isEmpty(obj.getAuthorities()) ? null
             : obj.getAuthorities().stream().map(GrantedAuthority::getAuthority).collect(Collectors.toList()));
@@ -23,7 +23,7 @@ public class DefaultSystemUserDetailsBridge
 
     @Override
     public DefaultSystemUserDetails unbridge(@NotNull DefaultSystemUserDetailsDto obj) {
-        return new DefaultSystemUserDetails(obj.getCompanies(), obj.getCurrentCompany(), obj.getUsername(),
+        return new DefaultSystemUserDetails(obj.getDepartments(), obj.getCurrentDepartment(), obj.getUsername(),
             obj.getPassword(), obj.isAccountNonExpired(), obj.isAccountNonLocked(), obj.isCredentialsNonExpired(),
             obj.isEnabled(), CollUtil.isEmpty(obj.getAuthorities()) ? null : obj.getAuthorities().stream().map((s) -> {
             return new SimpleGrantedAuthority(s);
