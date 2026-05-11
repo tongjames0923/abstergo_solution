@@ -2,6 +2,8 @@ package com.tbs.app.config;
 
 import com.tbs.app.remote.auth.IAuthRemoteService;
 import com.tbs.app.remote.auth.impl.DefaultAuthRemoteServiceImpl;
+import com.tbs.app.remote.user.IUserRemoteService;
+import com.tbs.app.remote.user.impl.DefaultUserRemoteServiceImpl;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.api.persistence.impl.NoImplTreeStore;
@@ -17,6 +19,7 @@ import javax.annotation.Resource;
  * 配置远程服务
  * </p>
  *
+ * @author abstergo
  */
 @Configuration
 @ConditionalOnProperty(prefix = "tbs.system.remote", name = "enable", havingValue = "true")
@@ -44,6 +47,13 @@ public class RemoteConfig {
     @DubboService
     IAuthRemoteService authRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultAuthRemoteServiceImpl::new, property.getAuthRemoteServiceImpl(),
+            BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    @DubboService
+    IUserRemoteService userRemoteService() {
+        return BeanUtil.buildBeanFromProperties(DefaultUserRemoteServiceImpl::new, property.getUserRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 }
