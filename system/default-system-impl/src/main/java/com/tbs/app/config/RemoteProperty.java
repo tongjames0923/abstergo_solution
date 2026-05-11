@@ -2,6 +2,8 @@ package com.tbs.app.config;
 
 import com.tbs.app.remote.auth.IAuthRemoteService;
 import com.tbs.app.remote.auth.impl.DefaultAuthRemoteServiceImpl;
+import com.tbs.app.remote.company.ICompanyRemoteService;
+import com.tbs.app.remote.company.impl.DefaultCompanyRemoteServiceImpl;
 import com.tbs.app.remote.user.IUserRemoteService;
 import com.tbs.app.remote.user.impl.DefaultUserRemoteServiceImpl;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
@@ -32,4 +34,9 @@ public class RemoteProperty {
      * 用户服务实现类
      */
     private Class<? extends IUserRemoteService> userRemoteServiceImpl = DefaultUserRemoteServiceImpl.class;
+
+    /**
+     * 公司服务实现类
+     */
+    private Class<? extends ICompanyRemoteService> companyRemoteServiceImpl = DefaultCompanyRemoteServiceImpl.class;
 }

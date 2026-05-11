@@ -2,6 +2,8 @@ package com.tbs.app.config;
 
 import com.tbs.app.remote.auth.IAuthRemoteService;
 import com.tbs.app.remote.auth.impl.DefaultAuthRemoteServiceImpl;
+import com.tbs.app.remote.company.ICompanyRemoteService;
+import com.tbs.app.remote.company.impl.DefaultCompanyRemoteServiceImpl;
 import com.tbs.app.remote.user.IUserRemoteService;
 import com.tbs.app.remote.user.impl.DefaultUserRemoteServiceImpl;
 import com.tbs.common.util.base.BeanUtil;
@@ -54,6 +56,13 @@ public class RemoteConfig {
     @DubboService
     IUserRemoteService userRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultUserRemoteServiceImpl::new, property.getUserRemoteServiceImpl(),
+            BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    @DubboService
+    ICompanyRemoteService companyRemoteService() {
+        return BeanUtil.buildBeanFromProperties(DefaultCompanyRemoteServiceImpl::new, property.getCompanyRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 }
