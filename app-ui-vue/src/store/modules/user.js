@@ -2,6 +2,7 @@ import {getInfo, login, logout} from '@/api/user'
 import {getRememberMe, getToken, removeToken, setRememberMe, setToken} from '@/utils/auth'
 import {resetRouter} from '@/router'
 import request from '@/utils/request'
+import routeCacheService from '@/utils/route-cache'
 
 const getDefaultState = () => {
   return {
@@ -83,6 +84,10 @@ const actions = {
     } finally {
       removeToken() // must remove  token  first
       resetRouter()
+      
+      // 清除路由缓存
+      routeCacheService.clearCache()
+      
       commit('RESET_STATE')
     }
   },

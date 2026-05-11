@@ -6,6 +6,7 @@ import Layout from '@/layout'
 import { getRoutes } from '@/api/view'
 import { setUpRouterPermissions } from '@/permission'
 import { getToken } from '@/utils/auth'
+import routeCacheService from '@/utils/route-cache'
 
 Vue.use(Router)
 
@@ -183,9 +184,20 @@ async function generateRoutesFromServer() {
     // 如果有token，则从线上获取动态路由
     if (hasToken) {
       try {
-        var res = await getRoutes()
-        res = res.data
-        console.log('从后端获取的动态路由数据:', res) // 调试日志
+        // 先尝试从缓存中获取路由数据
+        let res = routeCacheService.getCachedRoutes()
+        
+        if (res) {
+          console.log('使用缓存的动态路由数据') // 调试日志
+        } else {
+          // 缓存中没有数据，从后端获取
+          const response = await getRoutes()
+          res = response.data
+          console.log('从后端获取的动态路由数据:', res) // 调试日志
+          
+          // 将获取到的路由数据缓存起来
+          routeCacheService.cacheRoutes(res)
+        }
 
         // 映射 component 字段为实际组件路径
         for (let i = 0; i < res.length; i++) {
@@ -228,7 +240,7 @@ async function getServiceRouter() {
 
 export async function updateRouter() {
   try {
-    // 1. 获取新路由
+    // 1. 获取新路由（使用缓存或重新获取）
     const newRoutes = await generateRoutesFromServer()
 
     // 2. 创建新 router 实例
@@ -273,6 +285,25 @@ export async function updateRouter() {
     })
   } catch (error) {
     console.error('路由更新失败:', error)
+    throw error
+  }
+}
+
+/**
+ * 强制刷新路由缓存并更新路由
+ * @returns {Promise<void>}
+ */
+export async function refreshRoutes() {
+  try {
+    // 清除缓存
+    routeCacheService.clearCache()
+    
+    // 重新获取路由数据并更新路由
+    await updateRouter()
+    
+    console.log('路由缓存已刷新')
+  } catch (error) {
+    console.error('刷新路由失败:', error)
     throw error
   }
 }
