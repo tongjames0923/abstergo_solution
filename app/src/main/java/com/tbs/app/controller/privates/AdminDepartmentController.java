@@ -1,6 +1,9 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.department.ISystemDepartmentService;
+import com.tbs.async.delegate.AsyncDelegateInvoker;
+import com.tbs.common.delegate.IDelegateFlag;
+import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
@@ -18,6 +21,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.LinkedList;
 
 /**
  * 管理员部门管理控制器
@@ -55,7 +59,9 @@ public class AdminDepartmentController
     @ApiResponse(responseCode = "200", description = "成功获取部门信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult get(@Parameter(name = "id", description = "部门ID", required = true) @PathVariable Long id) {
-        return super.get(id);
+        SystemDepartmentEntity entity = getService().queryById(id);
+        entity.setChildrenCount((long)departmentService.getChildrenDepartments(entity.getId()).size());
+        return successResult(entity);
 	}
 
 	/**
@@ -106,8 +112,63 @@ public class AdminDepartmentController
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemDepartmentQueryCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
         @Parameter(name = "pageSize", description = "每页大小") @RequestParam(required = false) Long pageSize) {
-        return super.query(criteria, pageNum, pageSize);
+        var data = getService().queryAndPage(criteria, QueryPageModel.of(pageNum, pageSize));
+        var ls = new LinkedList<IDelegateFlag>();
+        for (var entity : data.getData()) {
+            ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
+                .takeIn(SystemDepartmentEntity::setChildrenCount, () -> {
+                    return (long)departmentService.getChildrenDepartments(entity.getId()).size();
+                }).executeOnce());
+        }
+        for (var i : ls) {
+            i.waitUntilFinished();
+        }
+        return successResult(data);
 	}
+
+    /**
+     * 移动部门到指定父级部门下
+     *
+     * @param parent 父级部门ID
+     * @param child  子级部门ID
+     * @return 操作结果
+     */
+    @PostMapping("moveDepartmentTo")
+    @Operation(summary = "移动部门到指定父级", description = "将一个部门移动到另一个部门下作为其子级部门")
+    @ApiResponse(responseCode = "200", description = "成功移动部门",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult moveDepartmentTo(
+        @Parameter(name = "parent", description = "父级部门ID", required = true) @RequestParam Long parent,
+        @Parameter(name = "child", description = "子级部门ID", required = true) @RequestParam Long child) {
+        departmentService.appendChildDepartment(parent, child);
+        return successResult(null);
+    }
+
+    /**
+     * 获取指定部门的所有子级部门列表
+     *
+     * @param parent 父级部门ID
+     * @return 子级部门列表
+     */
+    @GetMapping("listChildren/{parent}")
+    @Operation(summary = "获取子级部门列表", description = "获取指定部门的所有直接子级部门列表")
+    @ApiResponse(responseCode = "200", description = "成功获取子级部门列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult listChildren(
+        @Parameter(name = "parent", description = "父级部门ID", required = true) @PathVariable Long parent) {
+        var data = departmentService.getChildrenDepartments(parent);
+        var ls = new LinkedList<IDelegateFlag>();
+        for (var entity : data) {
+            ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
+                .takeIn(SystemDepartmentEntity::setChildrenCount, () -> {
+                    return (long)departmentService.getChildrenDepartments(entity.getId()).size();
+                }).executeOnce());
+        }
+        for (var i : ls) {
+            i.waitUntilFinished();
+        }
+        return successResult(data);
+    }
 
 	@Override
 	public String getBusinessName() {

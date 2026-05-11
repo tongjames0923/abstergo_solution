@@ -2,15 +2,20 @@ package com.tbs.app.service.impl.department;
 
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
+import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
+import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemDepartmentFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
+import com.tbs.struct.tree.api.persistence.ITreeStore;
+import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,14 +24,23 @@ import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
+/**
+ * 部门服务实现
+ *
+ * @author abstergo
+ */
 @Slf4j
 public class SimpleDepartmentService
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemDepartmentEntity, Long, SystemDepartmentMapper>
-    implements ISystemDepartmentService, ITimeAuditService<SystemDepartmentEntity, Long> {
+    implements ISystemDepartmentService, IStartup, ITimeAuditService<SystemDepartmentEntity, Long> {
 
     @Resource
     private SystemDepartmentMapper mapper;
+
+    @Resource
+    private ITreeStore treeStore;
 
     @Override
     protected Integer getFlagDisable() {
@@ -35,7 +49,11 @@ public class SimpleDepartmentService
 
     @Override
     public SystemDepartmentEntity deleteById(Long id) {
-        return super.deleteById(id);
+        var entity = super.deleteById(id);
+        if (StrUtil.isNotEmpty(entity.getTreeNodeGroup())) {
+            treeStore.delete(entity.getTreeNodeId(), entity.getTreeNodeGroup());
+        }
+        return entity;
     }
 
     @Override
@@ -46,6 +64,7 @@ public class SimpleDepartmentService
     @Override
     protected SystemDepartmentEntity insertNew(SystemDepartmentEntity entity) {
         entity.setFlag(SystemDepartmentFlagEnum.DISABLED.getCode());
+        entity.setTreeRootFlag(CommonConstant.FLAG_ON);
         getMapper().insert(entity);
         return entity;
     }
@@ -114,4 +133,58 @@ public class SimpleDepartmentService
         return entity;
     }
 
+    private static final String createTreeGroupName(SystemDepartmentEntity entity) {
+        return DEPARTMENT_TREE_GROUP + entity.getId();
+    }
+
+    private static final String createTreeNodeId(SystemDepartmentEntity entity) {
+        return DEPARTMENT_TREE_GROUP + entity.getId().toString();
+    }
+
+    private static final String DEPARTMENT_TREE_GROUP = "DET:";
+
+    @Override
+    @Transactional(rollbackFor = RuntimeException.class)
+    public void appendChildDepartment(Long parentId, Long childId) {
+        var parent = getInstance().queryById(parentId);
+        var child = getInstance().queryById(childId);
+        AssertUtil.isTrue(
+                parent == null || Objects.equals(parent.getFlag(), SystemDepartmentFlagEnum.DELETED.getCode()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("目标父部门不存在").throwIt();
+        AssertUtil.isTrue(child == null || Objects.equals(child.getFlag(), SystemDepartmentFlagEnum.DELETED.getCode()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("目标子部门不存在").throwIt();
+        if (StrUtil.isEmpty(parent.getTreeNodeGroup())) {
+            parent.setTreeNodeGroup(createTreeGroupName(parent));
+            parent.setTreeNodeId(createTreeNodeId(parent));
+            var tree = new TreeNodeModel();
+            tree.setTreeGroup(parent.getTreeNodeGroup());
+            tree.setNodeId(parent.getTreeNodeId());
+            treeStore.store(tree, null);
+        }
+        AssertUtil.isTrue(StrUtil.isNotEmpty(child.getTreeNodeGroup()) &&
+                !Objects.equals(child.getTreeNodeGroup(), parent.getTreeNodeGroup()))
+            .message("不能将子部门添加到其他部门下").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+
+        if (StrUtil.isEmpty(child.getTreeNodeGroup())) {
+            child.setTreeNodeGroup(parent.getTreeNodeGroup());
+            child.setTreeNodeId(createTreeNodeId(child));
+            child.setTreeRootFlag(CommonConstant.FLAG_OFF);
+            getMapper().updateByPrimaryKey(child);
+        }
+        treeStore.store(new TreeNodeModel(child.getTreeNodeId(), child.getTreeNodeGroup()), parent.getTreeNodeId());
+        getMapper().updateByPrimaryKey(parent);
+    }
+
+    @Override
+    public List<SystemDepartmentEntity> getChildrenDepartments(Long id) {
+        var p = getInstance().queryById(id);
+        return treeStore.getDirectChildren(p.getTreeNodeId(), p.getTreeNodeGroup()).stream()
+            .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId().substring(4, it.getNodeId().length()))))
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public void startUp() throws RuntimeException {
+
+    }
 }
