@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
 import com.tbs.app.remote.company.ICompanyRemoteService;
 import com.tbs.app.service.company.ISystemCompanyService;
+import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.vo.RemoteCompanyInfoVO;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
@@ -22,6 +23,9 @@ public class DefaultCompanyRemoteServiceImpl implements ICompanyRemoteService {
 
     @Resource
     private ISystemCompanyService companyService;
+
+    @Resource
+    private CompanyTreeStructService companyTreeStructService;
 
     @Override
     public RemoteCompanyInfoVO getCompanyInfoById(Long companyId) {
@@ -69,7 +73,9 @@ public class DefaultCompanyRemoteServiceImpl implements ICompanyRemoteService {
         if (parentId == null) {
             return Collections.emptyList();
         }
-        List<SystemCompanyEntity> childCompanies = companyService.getChildrenCompanies(parentId);
+        List<SystemCompanyEntity> childCompanies = companyTreeStructService.getChildren(parentId).stream().map(node -> {
+            return companyTreeStructService.queryByNodeId(node.getNodeId(), node.getTreeGroup());
+        }).collect(Collectors.toList());
         if (CollUtil.isEmpty(childCompanies)) {
             return Collections.emptyList();
         }

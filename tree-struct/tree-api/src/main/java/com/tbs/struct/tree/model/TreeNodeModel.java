@@ -15,12 +15,12 @@ import java.io.Serializable;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class TreeNodeModel implements ITreeStorable, Serializable {
+public class TreeNodeModel<ID> implements ITreeStorable, Serializable {
     private static final long serialVersionUID = 1L;
     /**
      * 实体ID
      */
-    private Long entityId;
+    private ID entityId;
     /**
      * 节点ID
      */

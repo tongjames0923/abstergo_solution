@@ -3,6 +3,7 @@ package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ITreeStructModel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,8 +24,7 @@ import java.util.Date;
 @NoArgsConstructor
 /**
  * 系统公司实体类 用于表示系统中的公司信息，包含公司基本信息、状态及创建更新时间等字段
- */
-public class SystemCompanyEntity implements IBaseEntity<Long> {
+ */ public class SystemCompanyEntity implements IBaseEntity<Long>, ITreeStructModel<Long> {
 
 	/**
 	 * 公司ID
@@ -97,7 +97,7 @@ public class SystemCompanyEntity implements IBaseEntity<Long> {
     @Column(name = "tree_root_flag")
     private Integer treeRootFlag;
 
-    /**
+	/**
      * 子公司数量
      */
     @Transient

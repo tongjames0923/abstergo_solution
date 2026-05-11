@@ -1,7 +1,6 @@
 
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -13,13 +12,14 @@ import java.util.Date;
 
 @Data
 @Entity
-@Table(name = "sys_department", indexes = { @Index(name = "idx_department_name", columnList = "department_name"),
+@Table(name = "sys_department",
+	indexes = {@Index(name = "idx_name_code", columnList = "department_name,department_code"),
 		@Index(name = "idx_flag", columnList = "flag"), @Index(name = "idx_create_time", columnList = "create_time"),
     @Index(name = "idx_update_time", columnList = "update_time"),
     @Index(name = "idx_company_id", columnList = "company_id"),
+		@Index(name = "idx_parent_id", columnList = "parent_id"),
     @Index(name = "tree_idx", columnList = "tree_node_group,tree_node_id,tree_root_flag")})
 @ToString
-@LogicDeleteEntity(filedName = "flag", activeFlagValues = {1, 2, 5})
 @AllArgsConstructor
 @NoArgsConstructor
 /**
@@ -47,7 +47,7 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	private String departmentCode;
 
 	/**
-	 * 所属公司ID（一对一关联）
+	 * 所属公司ID
 	 */
 	@Column(name = "company_id", nullable = false)
 	private Long companyId;
@@ -101,6 +101,13 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
      */
     @Column(name = "tree_root_flag")
     private Integer treeRootFlag;
+
+	/**
+	 * 父部门ID
+	 */
+
+	@Column(name = "parent_id")
+	private Long parentId;
 
     /**
      * 子部门数量

@@ -6,14 +6,11 @@ import com.tbs.common.BaseEnum;
  * 系统部门状态枚举类 用于表示部门实体的各种状态，包括删除、激活、禁用和系统内置状态
  */
 public enum SystemDepartmentFlagEnum implements BaseEnum<String> {
-	/** 已删除状态 */
-	DELETED("已删除", 0),
+
 	/** 已激活状态 */
 	ACTIVITED("已激活", 1),
 	/** 禁用状态 */
-	DISABLED("禁用", 2),
-	/** 系统内置状态 */
-	SYSTEMED("系统", 5);
+	DISABLED("禁用", 2);
 
 	private String val;
 

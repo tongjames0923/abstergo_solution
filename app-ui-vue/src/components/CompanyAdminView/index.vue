@@ -165,13 +165,13 @@
     </el-card>
     <div class="pagination-section">
       <el-pagination
-        :current-page="pageNum"
+        :current-page="currentPage"
         :page-sizes="[10, 20, 50, 100]"
         :page-size="pageSize"
         :total="total"
         layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handlePageSizeChange"
-        @current-change="handlePageNumChange"
+        @size-change="handleSizeChange"
+        @current-change="handlePageChange"
       />
     </div>
 

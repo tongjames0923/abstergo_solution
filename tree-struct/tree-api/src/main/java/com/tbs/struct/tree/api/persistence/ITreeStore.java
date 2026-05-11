@@ -19,15 +19,7 @@ public interface ITreeStore {
     void store(ITreeStorable treeStorable, String parentNodeId);
 
     /**
-     * 获取树
-     *
-     * @param nodeId 树ID
-     * @return 树存储对象
-     */
-    List<ITreeStorable> getChildren(String nodeId, String group);
-
-    /**
-     * 获取树子节点
+     * 根据深度快速获取树子节点
      *
      * @param nodeId 树ID
      * @return 树存储对象列表
@@ -81,5 +73,13 @@ public interface ITreeStore {
      */
     void tryRebuildStructure(String treeGroup);
 
+    /**
+     * 获取树节点
+     *
+     * @param nodeId 树节点ID
+     * @param group  树组
+     * @return 树节点
+     */
+    ITreeStorable getNode(String nodeId, String group);
 
 }

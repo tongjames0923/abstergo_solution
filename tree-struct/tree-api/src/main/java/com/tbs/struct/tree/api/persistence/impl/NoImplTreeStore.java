@@ -23,11 +23,6 @@ public class NoImplTreeStore implements ITreeStore {
     }
 
     @Override
-    public List<ITreeStorable> getChildren(String nodeId, String group) {
-        return List.of();
-    }
-
-    @Override
     public List<ITreeStorable> getDirectChildren(String nodeId, String group) {
         return List.of();
     }
@@ -60,5 +55,10 @@ public class NoImplTreeStore implements ITreeStore {
     @Override
     public void tryRebuildStructure(String treeGroup) {
 
+    }
+
+    @Override
+    public ITreeStorable getNode(String nodeId, String group) {
+        return null;
     }
 }

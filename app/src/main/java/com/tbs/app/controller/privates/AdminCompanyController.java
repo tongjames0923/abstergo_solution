@@ -1,11 +1,12 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.company.ISystemCompanyService;
+import com.tbs.app.service.impl.company.CompanyTreeStructService;
+import com.tbs.app.web.AbstractCrudController;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.delegate.IDelegateFlag;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.shared.constant.RoleConstants;
-import com.tbs.app.web.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 /**
  * 管理员公司管理控制器
@@ -42,6 +44,9 @@ public class AdminCompanyController
 	@Resource
 	private ISystemCompanyService companyService;
 
+	@Resource
+	private CompanyTreeStructService companyTreeStructService;
+
 	@Override
 	public IServiceTemplate<SystemCompanyEntity, Long> getService() {
 		return companyService;
@@ -60,7 +65,7 @@ public class AdminCompanyController
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult get(@Parameter(name = "id", description = "公司ID", required = true) @PathVariable Long id) {
         SystemCompanyEntity entity = getService().queryById(id);
-        entity.setChildrenCount((long)companyService.getChildrenCompanies(entity.getId()).size());
+		entity.setChildrenCount((long)companyTreeStructService.getChildren(entity.getId()).size());
         return successResult(entity);
 	}
 
@@ -117,7 +122,7 @@ public class AdminCompanyController
         for (var entity : data.getData()) {
             ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
                 .takeIn(SystemCompanyEntity::setChildrenCount, () -> {
-                    return (long)companyService.getChildrenCompanies(entity.getId()).size();
+					return (long)companyTreeStructService.getChildren(entity.getId()).size();
                 }).executeOnce());
         }
         for (var i : ls) {
@@ -140,7 +145,7 @@ public class AdminCompanyController
     public AjaxResult moveCompanyTo(
         @Parameter(name = "parent", description = "父级公司ID", required = true) @RequestParam Long parent,
         @Parameter(name = "child", description = "子级公司ID", required = true) @RequestParam Long child) {
-        companyService.appendChildCompany(parent, child);
+		companyTreeStructService.setToTree(child, parent);
         return successResult(null);
     }
 
@@ -156,12 +161,14 @@ public class AdminCompanyController
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult listChildren(
         @Parameter(name = "parent", description = "父级公司ID", required = true) @PathVariable Long parent) {
-        var data = companyService.getChildrenCompanies(parent);
+		var data = companyTreeStructService.getChildren(parent).stream().map((p) -> {
+			return companyTreeStructService.queryByNodeId(p.getNodeId(), p.getTreeGroup());
+		}).collect(Collectors.toList());
         var ls = new LinkedList<IDelegateFlag>();
         for (var entity : data) {
             ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
-                .takeIn(SystemCompanyEntity::setChildrenCount, () -> {
-                    return (long)companyService.getChildrenCompanies(entity.getId()).size();
+				.takeIn(SystemCompanyEntity::setChildrenCount, () -> {
+					return (long)(companyTreeStructService.getChildren(entity.getId()).size());
                 }).executeOnce());
         }
         for (var i : ls) {

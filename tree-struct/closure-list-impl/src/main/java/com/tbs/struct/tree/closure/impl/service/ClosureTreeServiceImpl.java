@@ -248,17 +248,6 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     }
 
     @Override
-    public List<ITreeStorable> getChildren(String nodeId, String group) {
-        var coll = treeNodeMapper.getChildren(nodeId, group);
-        return CollUtil.isEmpty(coll) ? Collections.EMPTY_LIST : coll.stream().map(treeNodeEntity -> {
-            var model = new SimpleTreeStrorableModel();
-            model.setNodeId(treeNodeEntity.getNodeId());
-            model.setTreeGroup(treeNodeEntity.getGroupName());
-            return model;
-        }).collect(Collectors.toList());
-    }
-
-    @Override
     public List<ITreeStorable> getDirectChildren(String nodeId, String group) {
         if (StrUtil.isEmpty(nodeId) || StrUtil.isEmpty(group)) {
             return Collections.EMPTY_LIST;
@@ -292,7 +281,6 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
 
         val.forEach(model -> {
             model.setEntityId(getInstance().getTreeNode(model.getNodeId(), model.getTreeGroup()).getId());
-            ;
         });
 
         return val;
@@ -409,26 +397,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         return relations;
     }
 
-    /**
-     * 计算节点在树中的层级（深度）
-     *
-     * @param node    节点
-     * @param nodeMap 节点映射表
-     * @return 层级数，根节点为0
-     */
-    private int getNodeLevel(TreeNodeEntity node, Map<String, TreeNodeEntity> nodeMap) {
-        int level = 0;
-        TreeNodeEntity current = node;
-        while (current.getParentId() != null && !current.getParentId().isEmpty()) {
-            level++;
-            current = nodeMap.get(current.getParentId());
-            // 防止循环引用导致的无限循环
-            if (current == null) {
-                break;
-            }
-        }
-        return level;
-    }
+
 
     private static final String REBUILD_TREE_CLOSURE_LOCK = "rebuildTreeLock";
 
@@ -436,6 +405,20 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         var val = CacheUtils.getInstance().cacheableGet(REBUILD_TREE_CLOSURE_LOCK);
         AssertUtil.toAssert(val != null).message("正在重建树结构闭包表关系，请稍后再试")
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+    }
+
+    @Override
+    public ITreeStorable getNode(String nodeId, String group) {
+        var node = ClosureTreeServiceImpl.getInstance().getTreeNode(nodeId, group);
+        if (node == null) {
+            return null;
+        }
+        var model = new TreeNodeModel();
+        model.setNodeId(node.getNodeId());
+        model.setTreeGroup(node.getGroupName());
+        model.setNodeId(node.getNodeId());
+        model.setDepth(-1);
+        return model;
     }
 
     @Override

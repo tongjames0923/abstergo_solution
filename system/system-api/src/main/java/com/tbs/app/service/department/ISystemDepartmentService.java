@@ -5,6 +5,11 @@ import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 
 import java.util.List;
 
+/**
+ * 部门服务接口
+ *
+ * @author abstergo
+ */
 public interface ISystemDepartmentService extends IServiceTemplate<SystemDepartmentEntity, Long> {
 
     /**

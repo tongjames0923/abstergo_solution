@@ -4,6 +4,7 @@ import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
+import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.company.SimpleCompanyUserRelationService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
@@ -96,6 +97,12 @@ public class BuisnessBeanConfig {
     public ICompanyUserRelationService companyUserRelationService() {
         return new SimpleCompanyUserRelationService();
     }
+
+    @Bean
+    public CompanyTreeStructService companyTreeStructService() {
+        return new CompanyTreeStructService();
+    }
+
 
     @Bean
     @ConditionalOnMissingBean(ISystemDepartmentService.class)
