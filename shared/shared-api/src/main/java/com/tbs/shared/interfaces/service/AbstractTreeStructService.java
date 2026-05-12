@@ -5,7 +5,7 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 
-import com.tbs.shared.pojo.ITreeStructModel;
+import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-public abstract class AbstractTreeStructService<E extends ITreeStructModel<ID>, ID>
+public abstract class AbstractTreeStructService<E extends IIdentifiable<ID>, ID>
     implements ITreeStructService<E, ID> {
 
     /**

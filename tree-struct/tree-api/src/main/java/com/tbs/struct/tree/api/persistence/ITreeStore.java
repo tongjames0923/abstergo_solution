@@ -82,4 +82,12 @@ public interface ITreeStore {
      */
     ITreeStorable getNode(String nodeId, String group);
 
+    /**
+     * 根据实体ID获取树节点
+     *
+     * @param id 实体ID
+     * @return 树节点
+     */
+    List<ITreeStorable> getNodeByEntityId(Long id);
+
 }

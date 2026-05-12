@@ -26,4 +26,9 @@ public class SimpleTreeStrorableModel implements ITreeStorable, Serializable {
      * 节点ID
      */
     private String nodeId;
+
+    /**
+     * 实体ID
+     */
+    private Long entityId;
 }

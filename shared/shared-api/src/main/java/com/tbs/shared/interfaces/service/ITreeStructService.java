@@ -1,6 +1,6 @@
 package com.tbs.shared.interfaces.service;
 
-import com.tbs.shared.pojo.ITreeStructModel;
+import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
 
 import java.util.List;
@@ -10,7 +10,7 @@ import java.util.List;
  *
  * @author abstergo
  */
-public interface ITreeStructService<E extends ITreeStructModel<ID>, ID> {
+public interface ITreeStructService<E extends IIdentifiable<ID>, ID> {
 
     /**
      * 根据ID获取树实体的子树

@@ -422,6 +422,13 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
     }
 
     @Override
+    public List<ITreeStorable> getNodeByEntityId(Long id) {
+        return treeNodeMapper.getNodesByEntityId(id).stream()
+            .map(node -> new SimpleTreeStrorableModel(node.getGroupName(), node.getNodeId(), node.getEntityId()))
+            .collect(Collectors.toList());
+    }
+
+    @Override
     public void startUp() throws RuntimeException {
         if (instance == null) {
             instance = this;

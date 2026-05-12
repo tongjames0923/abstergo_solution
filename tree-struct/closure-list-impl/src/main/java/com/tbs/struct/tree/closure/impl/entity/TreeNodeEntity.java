@@ -15,7 +15,8 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "tree_node", uniqueConstraints = @UniqueConstraint(columnNames = {"group_name", "node_id"}),
-    indexes = {@javax.persistence.Index(columnList = "group_name,parent_id")})
+    indexes = {@javax.persistence.Index(columnList = "group_name,parent_id"),
+        @javax.persistence.Index(columnList = "entity_id")})
 public class TreeNodeEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -56,5 +57,11 @@ public class TreeNodeEntity implements Serializable {
      */
     @Column(name = "update_time")
     private Date updateTime;
+
+    /**
+     * 实体ID
+     */
+    @Column(name = "entity_id")
+    private Long entityId;
 
 }

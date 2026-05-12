@@ -32,4 +32,18 @@ public interface ITreeStorable {
      */
     void setNodeId(String nodeId);
 
+    /**
+     * 设置数据域id
+     *
+     * @param id
+     */
+    void setEntityId(Long id);
+
+    /**
+     * 获取数据域id
+     *
+     * @return
+     */
+    Long getEntityId();
+
 }

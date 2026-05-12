@@ -61,4 +61,9 @@ public class NoImplTreeStore implements ITreeStore {
     public ITreeStorable getNode(String nodeId, String group) {
         return null;
     }
+
+    @Override
+    public List<ITreeStorable> getNodeByEntityId(Long id) {
+        return List.of();
+    }
 }
