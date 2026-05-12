@@ -1,6 +1,7 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.department.ISystemDepartmentService;
+import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.delegate.IDelegateFlag;
 import com.tbs.common.util.framework.DelegateUtil;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.LinkedList;
+import java.util.stream.Collectors;
 
 /**
  * 管理员部门管理控制器
@@ -42,6 +44,9 @@ public class AdminDepartmentController
 	@Resource
 	private ISystemDepartmentService departmentService;
 
+	@Resource
+	private DepartmentTreeStructService departmentTreeStructService;
+
 	@Override
 	public IServiceTemplate<SystemDepartmentEntity, Long> getService() {
 		return departmentService;
@@ -60,7 +65,7 @@ public class AdminDepartmentController
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult get(@Parameter(name = "id", description = "部门ID", required = true) @PathVariable Long id) {
         SystemDepartmentEntity entity = getService().queryById(id);
-        entity.setChildrenCount((long)departmentService.getChildrenDepartments(entity.getId()).size());
+		entity.setChildrenCount((long)departmentTreeStructService.getChildren(entity.getId()).size());
         return successResult(entity);
 	}
 
@@ -117,7 +122,7 @@ public class AdminDepartmentController
         for (var entity : data.getData()) {
             ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
                 .takeIn(SystemDepartmentEntity::setChildrenCount, () -> {
-                    return (long)departmentService.getChildrenDepartments(entity.getId()).size();
+                    return (long)departmentTreeStructService.getChildren(entity.getId()).size();
                 }).executeOnce());
         }
         for (var i : ls) {
@@ -140,7 +145,7 @@ public class AdminDepartmentController
     public AjaxResult moveDepartmentTo(
         @Parameter(name = "parent", description = "父级部门ID", required = true) @RequestParam Long parent,
         @Parameter(name = "child", description = "子级部门ID", required = true) @RequestParam Long child) {
-        departmentService.appendChildDepartment(parent, child);
+		departmentTreeStructService.setToTree(child, parent);
         return successResult(null);
     }
 
@@ -156,12 +161,14 @@ public class AdminDepartmentController
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult listChildren(
         @Parameter(name = "parent", description = "父级部门ID", required = true) @PathVariable Long parent) {
-        var data = departmentService.getChildrenDepartments(parent);
+        var data = departmentTreeStructService.getChildren(parent).stream().map((p) -> {
+			return departmentService.queryById(p.getEntityId());
+		}).collect(Collectors.toList());
         var ls = new LinkedList<IDelegateFlag>();
         for (var entity : data) {
             ls.add(DelegateUtil.getInstance().delegateWithTarget(entity).build(AsyncDelegateInvoker.class)
-                .takeIn(SystemDepartmentEntity::setChildrenCount, () -> {
-                    return (long)departmentService.getChildrenDepartments(entity.getId()).size();
+				.takeIn(SystemDepartmentEntity::setChildrenCount, () -> {
+					return (long)(departmentTreeStructService.getChildren(entity.getId()).size());
                 }).executeOnce());
         }
         for (var i : ls) {

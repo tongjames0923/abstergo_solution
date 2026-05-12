@@ -17,8 +17,7 @@ import java.util.Date;
 		@Index(name = "idx_flag", columnList = "flag"), @Index(name = "idx_create_time", columnList = "create_time"),
     @Index(name = "idx_update_time", columnList = "update_time"),
     @Index(name = "idx_company_id", columnList = "company_id"),
-		@Index(name = "idx_parent_id", columnList = "parent_id"),
-    @Index(name = "tree_idx", columnList = "tree_node_group,tree_node_id,tree_root_flag")})
+		@Index(name = "idx_parent_id", columnList = "parent_id")})
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
@@ -43,7 +42,7 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	/**
 	 * 部门编码
 	 */
-	@Column(name = "department_code", length = 64, unique = true)
+	@Column(name = "department_code", length = 64, unique = false)
 	private String departmentCode;
 
 	/**
@@ -84,22 +83,10 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	@Column(name = "flag")
 	private Integer flag;
 
-    /**
-     * 部门树节点分组
-     */
-    @Column(name = "tree_node_group", length = 64)
-    private String treeNodeGroup;
-
-    /**
-     * 部门树节点ID
-     */
-    @Column(name = "tree_node_id", length = 64)
-    private String treeNodeId;
-
-    /**
+	/**
      * 是否是树根节点
      */
-    @Column(name = "tree_root_flag")
+	@Transient
     private Integer treeRootFlag;
 
 	/**

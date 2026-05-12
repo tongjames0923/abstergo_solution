@@ -7,6 +7,7 @@ import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.company.SimpleCompanyUserRelationService;
+import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
 import com.tbs.app.service.impl.log.SimpleSystemLogServiceImpl;
@@ -101,6 +102,11 @@ public class BuisnessBeanConfig {
     @Bean
     public CompanyTreeStructService companyTreeStructService() {
         return new CompanyTreeStructService();
+    }
+
+    @Bean
+    public DepartmentTreeStructService departmentTreeStructService() {
+        return new DepartmentTreeStructService();
     }
 
 

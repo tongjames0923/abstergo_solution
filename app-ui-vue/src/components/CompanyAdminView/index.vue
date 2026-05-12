@@ -146,6 +146,9 @@
                   更多<i class="el-icon-arrow-down el-icon--right" />
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
+                  <el-dropdown-item :command="{type: 'manageDept', row: data}">
+                    管理部门
+                  </el-dropdown-item>
                   <el-dropdown-item :command="{type: 'move', row: data}">
                     移动到其他公司
                   </el-dropdown-item>
@@ -267,14 +270,41 @@
         <el-button type="primary" :loading="moveSaving" @click="handleMoveCompanyConfirm">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!-- 部门管理弹窗 -->
+    <el-dialog
+      title="部门管理"
+      :visible.sync="departmentDialogVisible"
+      width="900px"
+      :modal="true"
+      :close-on-click-modal="false"
+      :close-on-press-escape="false"
+      :show-close="false"
+      append-to-body
+      class="department-dialog"
+    >
+      <div slot="title" class="dialog-header">
+        <span>部门管理 - {{ currentCompany.companyName }}</span>
+        <el-button type="primary" size="small" icon="el-icon-close" @click="closeDepartmentDialog">关闭</el-button>
+      </div>
+      <department-tree-view
+        v-if="departmentDialogVisible"
+        :company-id="currentCompany.id"
+        :company-name="currentCompany.companyName"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import {adminQueryCompany, deleteCompany, listChildren, moveCompanyTo, saveCompany} from '@/api/company'
+import DepartmentTreeView from '@/components/DepartmentTreeView/index.vue'
 
 export default {
   name: 'CompanyAdminView',
+  components: {
+    DepartmentTreeView
+  },
   filters: {
     formatDate(date) {
       if (!date) return ''
@@ -320,6 +350,12 @@ export default {
       parentRemoteSize: 50,
       parentRemoteLastQuery: '',
       allCompanies: [],
+      // 部门管理弹窗相关
+      departmentDialogVisible: false,
+      currentCompany: {
+        id: null,
+        companyName: ''
+      },
       formRules: {
         companyName: [
           { required: true, message: '请输入公司名称', trigger: 'blur' }
@@ -596,6 +632,9 @@ export default {
         case 'addChild':
           this.handleAddChild(command.row)
           break
+        case 'manageDept':
+          this.handleManageDepartment(command.row)
+          break
         case 'move':
           this.handleMoveCompany(command.row)
           break
@@ -687,6 +726,24 @@ export default {
       this.pageSize = size
       this.currentPage = 1
       this.loadCompanyData()
+    },
+
+    // 管理部门
+    handleManageDepartment(row) {
+      this.currentCompany = {
+        id: row.id,
+        companyName: row.companyName
+      }
+      this.departmentDialogVisible = true
+    },
+
+    // 关闭部门管理弹窗
+    closeDepartmentDialog() {
+      this.departmentDialogVisible = false
+      this.currentCompany = {
+        id: null,
+        companyName: ''
+      }
     }
   }
 }
@@ -965,5 +1022,41 @@ export default {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* 部门管理弹窗样式 */
+::v-deep .department-dialog {
+  .el-dialog__header {
+    padding: 16px 20px;
+    border-bottom: 1px solid #ebeef5;
+    background: linear-gradient(120deg, #67c23a 0%, #529b2e 100%);
+    
+    .dialog-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+      
+      .el-button {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: rgba(255, 255, 255, 0.3);
+        color: white;
+        
+        &:hover {
+          background: rgba(255, 255, 255, 0.3);
+          border-color: rgba(255, 255, 255, 0.5);
+        }
+      }
+    }
+  }
+  
+  .el-dialog__body {
+    padding: 20px;
+    max-height: 75vh;
+    overflow-y: auto;
+  }
 }
 </style>

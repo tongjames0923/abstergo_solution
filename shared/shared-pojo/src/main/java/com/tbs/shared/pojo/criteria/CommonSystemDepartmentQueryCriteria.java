@@ -2,10 +2,12 @@ package com.tbs.shared.pojo.criteria;
 
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
+import com.tbs.sql.annotation.OrField;
 import com.tbs.sql.annotation.QueryField;
 import com.tbs.sql.annotation.QueryMapping;
 import com.tbs.sql.annotation.QueryOrderField;
 import com.tbs.sql.constants.OrderConstant;
+import com.tbs.sql.enums.QueryConnectorEnum;
 import com.tbs.sql.enums.QueryContrastEnum;
 import com.tbs.sql.order.impl.QueryOrderedModel;
 import lombok.Data;
@@ -94,5 +96,12 @@ public class CommonSystemDepartmentQueryCriteria extends ClassBaseQueryCriteria<
      */
     @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
     private QueryOrderedModel updateTimeOrder;
+
+    /**
+     * 树节点根标记
+     */
+    @QueryMapping("tree_root_flag")
+    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    private Integer treeRootFlag;
 
 }

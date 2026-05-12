@@ -21,6 +21,7 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * 部门服务实现
@@ -36,7 +37,7 @@ public class SimpleDepartmentService
     private SystemDepartmentMapper mapper;
 
     @Resource
-    private ITreeStore treeStore;
+    private DepartmentTreeStructService departmentTreeStructService;
 
     private static ISystemDepartmentService instance;
 
@@ -44,9 +45,7 @@ public class SimpleDepartmentService
     @Override
     public SystemDepartmentEntity deleteById(Long id) {
         var entity = super.deleteById(id);
-        if (StrUtil.isNotEmpty(entity.getTreeNodeGroup())) {
-            treeStore.delete(entity.getTreeNodeId(), entity.getTreeNodeGroup());
-        }
+        departmentTreeStructService.deleteLeaf(id);
         return entity;
     }
 
@@ -58,8 +57,8 @@ public class SimpleDepartmentService
     @Override
     protected SystemDepartmentEntity insertNew(SystemDepartmentEntity entity) {
         entity.setFlag(SystemDepartmentFlagEnum.DISABLED.getCode());
-        entity.setTreeRootFlag(CommonConstant.FLAG_ON);
         getMapper().insert(entity);
+        departmentTreeStructService.setToTree(entity.getId(), null);
         return entity;
     }
 
@@ -85,6 +84,9 @@ public class SimpleDepartmentService
         }
         if (StrUtil.isNotEmpty(newOne.getDescription())) {
             oldOne.setDescription(newOne.getDescription());
+        }
+        if (newOne.getParentId() != null) {
+            oldOne.setParentId(newOne.getParentId());
         }
         if (newOne.getFlag() != null) {
             AssertUtil.isTrue(!EnumUtil.isValidCode(SystemDepartmentFlagEnum.class, newOne.getFlag()), "无效标志");
@@ -140,16 +142,14 @@ public class SimpleDepartmentService
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public void appendChildDepartment(Long parentId, Long childId) {
-
+        departmentTreeStructService.setToTree(childId, parentId);
     }
 
     @Override
     public List<SystemDepartmentEntity> getChildrenDepartments(Long id) {
-        //        var p = getInstance().queryById(id);
-        //        return treeStore.getDirectChildren(p.getTreeNodeId(), p.getTreeNodeGroup()).stream()
-        //            .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId().substring(4, it.getNodeId().length()))))
-        //            .collect(Collectors.toList());
-        return null;
+        return departmentTreeStructService.getChildren(id).stream()
+            .map(it -> queryById(it.getEntityId()))
+            .collect(Collectors.toList());
     }
 
     @Override
