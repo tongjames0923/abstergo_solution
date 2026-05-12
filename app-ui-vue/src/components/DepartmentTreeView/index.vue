@@ -2,12 +2,13 @@
   <div class="department-tree-view">
     <div class="header-section">
       <div class="header-content">
-        <h3 class="main-title">部门管理 - {{ companyName }}</h3>
+        <h3 class="main-title">🏢 部门管理 - {{ companyName }}</h3>
         <div class="header-actions">
           <el-button
             type="primary"
             icon="el-icon-plus"
             @click="handleAdd"
+            class="add-department-btn"
           >
             新增部门
           </el-button>
@@ -18,7 +19,7 @@
     <!-- 搜索区域 -->
     <el-card class="search-card" shadow="never">
       <el-form ref="searchForm" :model="searchForm" label-width="100px" class="search-form">
-        <el-row :gutter="20">
+        <el-row :gutter="24">
           <el-col :span="8">
             <el-form-item label="部门名称">
               <el-input
@@ -63,8 +64,8 @@
         <el-row>
           <el-col :span="24">
             <div class="search-actions">
-              <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-              <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+              <el-button type="primary" icon="el-icon-search" size="medium" @click="handleSearch">搜索</el-button>
+              <el-button icon="el-icon-refresh" size="medium" @click="handleReset">重置</el-button>
             </div>
           </el-col>
         </el-row>
@@ -83,7 +84,7 @@
           :load="loadNode"
         >
           <span slot-scope="{ node, data }" class="custom-tree-node">
-            <span>
+            <span class="tree-node-content">
               <el-tooltip class="item" placement="right" effect="light" popper-class="department-info-tooltip">
                 <span class="tree-node-title">{{ data.departmentName }}</span>
                 <template slot="content">
@@ -147,16 +148,16 @@
               </span>
             </span>
             <span class="tree-node-actions">
-              <el-button type="text" size="mini" @click="handleEdit(data)">编辑</el-button>
-              <el-dropdown size="mini" @command="handleMoreActions">
-                <el-button type="text" size="mini">
-                  更多<i class="el-icon-arrow-down el-icon--right"/>
+              <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(data)">编辑</el-button>
+              <el-dropdown size="mini" @command="handleMoreActions" trigger="click">
+                <el-button type="success" size="mini" icon="el-icon-more">
+                  更多
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item :command="{type: 'move', row: data}">
+                  <el-dropdown-item :command="{type: 'move', row: data}" icon="el-icon-sort">
                     移动到其他部门
                   </el-dropdown-item>
-                  <el-dropdown-item :command="{type: 'delete', row: data}" divided>
+                  <el-dropdown-item :command="{type: 'delete', row: data}" divided icon="el-icon-delete">
                     删除
                   </el-dropdown-item>
                 </el-dropdown-menu>
@@ -187,31 +188,32 @@
     <el-dialog
       :title="dialogTitle"
       :visible.sync="dialogVisible"
-      width="520px"
+      width="560px"
       :modal="true"
       :before-close="handleDialogClose"
       append-to-body
+      class="department-edit-dialog"
     >
       <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="100px">
         <el-form-item label="部门名称" prop="departmentName">
-          <el-input v-model="editForm.departmentName" placeholder="请输入部门名称"/>
+          <el-input v-model="editForm.departmentName" placeholder="请输入部门名称" size="medium"/>
         </el-form-item>
         <el-form-item label="部门编码" prop="departmentCode">
-          <el-input v-model="editForm.departmentCode" placeholder="请输入部门编码"/>
+          <el-input v-model="editForm.departmentCode" placeholder="请输入部门编码" size="medium"/>
         </el-form-item>
         <el-form-item label="负责人" prop="manager">
-          <el-input v-model="editForm.manager" placeholder="请输入负责人"/>
+          <el-input v-model="editForm.manager" placeholder="请输入负责人" size="medium"/>
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input
             v-model="editForm.description"
             type="textarea"
             placeholder="请输入描述"
-            :rows="3"
+            :rows="4"
           />
         </el-form-item>
         <el-form-item label="状态" prop="flag">
-          <el-select v-model="editForm.flag" placeholder="请选择状态" style="width: 100%">
+          <el-select v-model="editForm.flag" placeholder="请选择状态" size="medium" style="width: 100%">
             <el-option
               v-for="item in statusOptions"
               :key="item.code"
@@ -222,8 +224,8 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="handleDialogClose">取 消</el-button>
-        <el-button type="primary" :loading="dialogSaving" @click="handleDialogConfirm">确 定</el-button>
+        <el-button @click="handleDialogClose" size="medium">取 消</el-button>
+        <el-button type="primary" :loading="dialogSaving" @click="handleDialogConfirm" size="medium">确 定</el-button>
       </div>
     </el-dialog>
 
@@ -696,9 +698,15 @@ export default {
   min-height: 400px;
   max-height: 70vh;
   overflow-y: auto;
+  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
 
   .header-section {
-    margin-bottom: 16px;
+    margin-bottom: 24px;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #409eff;
   }
 
   .header-content {
@@ -708,41 +716,88 @@ export default {
   }
 
   .main-title {
-    font-size: 18px;
+    font-size: 20px;
     font-weight: 600;
     color: #303133;
     margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .header-actions {
+    .add-department-btn {
+      background: #409eff;
+      border-color: #409eff;
+      color: #fff;
+      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+
+      i {
+        font-size: 15px;
+        margin-right: 6px;
+      }
+
+      &:hover {
+        background: #66b1ff;
+        border-color: #66b1ff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
   }
 
   .search-card {
-    margin-bottom: 16px;
-    border-radius: 8px;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8eaed;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
 
     ::v-deep .el-card__body {
-      padding: 16px;
+      padding: 24px;
     }
   }
 
   .table-card {
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border: 1px solid #ebeef5;
+    border-radius: 12px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e8eaed;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
 
     ::v-deep .el-card__body {
-      padding: 16px;
+      padding: 24px;
       min-height: 300px;
     }
   }
 
   .children-count {
     color: #909399;
-    margin-left: 6px;
+    margin-left: 8px;
     font-size: 12px;
+    background: #f4f4f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
   }
 
   .pagination-section {
-    margin-top: 16px;
+    margin-top: 24px;
     text-align: right;
+    padding: 16px 0;
   }
 
   .empty-wrap {
@@ -762,9 +817,11 @@ export default {
   }
 
   mark {
-    background: #ffe58f;
-    padding: 0 2px;
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 4px;
     border-radius: 3px;
+    font-weight: 500;
   }
 
   ::v-deep .el-tree {
@@ -773,22 +830,22 @@ export default {
   }
 
   ::v-deep .el-tree-node {
-    margin: 6px 0;
+    margin: 8px 0;
   }
 
   ::v-deep .el-tree-node__content {
-    height: 40px;
-    line-height: 40px;
+    height: 48px;
+    line-height: 48px;
     font-size: 14px;
     font-weight: 500;
-    transition: all 0.3s ease;
-    border-radius: 6px;
-    margin: 3px 0;
-  }
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    margin: 6px 0;
+    padding: 0 12px;
 
-  ::v-deep .el-tree-node__content:hover {
-    background-color: #f5f7fa;
-    transform: translateX(4px);
+    &:hover {
+      background: #f5f7fa;
+    }
   }
 
   ::v-deep .el-tree-node:focus > .el-tree-node__content {
@@ -797,8 +854,13 @@ export default {
 
   ::v-deep .el-tree-node__expand-icon {
     font-size: 16px;
-    color: #606266;
+    color: #909399;
     margin-right: 8px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      color: #409eff;
+    }
   }
 
   ::v-deep .el-tree-node__expand-icon.expanded {
@@ -816,33 +878,88 @@ export default {
     justify-content: space-between;
     font-size: 14px;
     font-weight: 500;
-    padding: 0 10px;
-    min-height: 36px;
+    padding: 8px 12px;
+    min-height: 40px;
+    border-radius: 6px;
+    transition: all 0.3s ease;
+
+    &:hover {
+      background: #ecf5ff;
+      box-shadow: 0 2px 6px rgba(64, 158, 255, 0.15);
+    }
+  }
+
+  .tree-node-content {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 8px;
   }
 
   .tree-node-actions {
-    display: none;
-    margin-left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transform: translateX(10px);
+    transition: all 0.3s ease;
+    margin-left: 12px;
   }
 
   .custom-tree-node:hover .tree-node-actions {
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    opacity: 1;
+    transform: translateX(0);
   }
 
   .tree-node-actions .el-button {
     font-size: 13px;
-    padding: 5px 10px;
+    padding: 6px 12px;
     border-radius: 4px;
     transition: all 0.3s ease;
+    font-weight: 500;
+
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+    }
   }
 
-  .tree-node-actions .el-button:hover {
-    background-color: #409eff;
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(64, 158, 255, 0.3);
+  .tree-node-actions .el-button[type="primary"] {
+    background: #409eff;
+    border-color: #409eff;
+    color: white;
+
+    &:hover {
+      background: #66b1ff;
+      border-color: #66b1ff;
+    }
+  }
+
+  .tree-node-actions .el-button[type="success"] {
+    background: #67c23a;
+    border-color: #67c23a;
+    color: white;
+
+    &:hover {
+      background: #85ce61;
+      border-color: #85ce61;
+    }
+  }
+
+  /* 编辑对话框样式 */
+  ::v-deep .department-edit-dialog {
+    .el-dialog__body {
+      padding: 24px 32px;
+    }
+
+    .el-form-item {
+      margin-bottom: 22px;
+    }
+
+    .el-input__inner,
+    .el-textarea__inner {
+      border-radius: 6px;
+    }
   }
 
   mark {

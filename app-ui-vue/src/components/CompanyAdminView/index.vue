@@ -2,12 +2,13 @@
   <div class="company-admin-view">
     <div class="header-section">
       <div class="header-content">
-        <h2 class="main-title">公司管理</h2>
+        <h2 class="main-title">🏢 公司管理</h2>
         <div class="header-actions">
           <el-button
             type="primary"
             icon="el-icon-plus"
             @click="handleAdd"
+            class="add-company-btn"
           >
             新增公司
           </el-button>
@@ -18,7 +19,7 @@
     <!-- 搜索区域 -->
     <el-card class="search-card" shadow="never">
       <el-form ref="searchForm" :model="searchForm" label-width="100px" class="search-form">
-        <el-row :gutter="20">
+        <el-row :gutter="24">
           <el-col :span="6">
             <el-form-item label="公司名称">
               <el-input
@@ -61,8 +62,8 @@
           </el-col>
           <el-col :span="6">
             <div class="search-actions">
-              <el-button type="primary" icon="el-icon-search" @click="handleSearch">搜索</el-button>
-              <el-button icon="el-icon-refresh" @click="handleReset">重置</el-button>
+              <el-button type="primary" icon="el-icon-search" size="medium" @click="handleSearch">搜索</el-button>
+              <el-button icon="el-icon-refresh" size="medium" @click="handleReset">重置</el-button>
             </div>
           </el-col>
         </el-row>
@@ -140,19 +141,20 @@
               </span>
             </span>
             <span class="tree-node-actions" v-if="data.flag!==5">
-              <el-button type="text" size="mini" @click="handleEdit(data)">编辑</el-button>
-              <el-dropdown size="mini" @command="handleMoreActions">
-                <el-button type="text" size="mini">
-                  更多<i class="el-icon-arrow-down el-icon--right" />
+              <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(data)">编辑</el-button>
+              <el-dropdown size="mini" @command="handleMoreActions" trigger="click">
+                <el-button type="success" size="mini" icon="el-icon-more">
+                  更多
                 </el-button>
                 <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item :command="{type: 'manageDept', row: data}">
+                  <el-dropdown-item :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">
                     管理部门
                   </el-dropdown-item>
-                  <el-dropdown-item :command="{type: 'move', row: data}">
+                  <el-dropdown-item :command="{type: 'move', row: data}" icon="el-icon-sort">
                     移动到其他公司
                   </el-dropdown-item>
-                  <el-dropdown-item v-if="data.id!==1" :command="{type: 'delete', row: data}" divided>
+                  <el-dropdown-item v-if="data.id!==1" :command="{type: 'delete', row: data}" divided
+                                    icon="el-icon-delete">
                     删除
                   </el-dropdown-item>
                 </el-dropdown-menu>
@@ -182,28 +184,29 @@
     <el-dialog
       :title="dialogTitle"
       :visible.sync="dialogVisible"
-      width="520px"
+      width="560px"
       :modal="true"
       :before-close="handleDialogClose"
       append-to-body
+      class="company-edit-dialog"
     >
       <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="100px">
         <el-form-item label="公司名称" prop="companyName">
-          <el-input v-model="editForm.companyName" placeholder="请输入公司名称" />
+          <el-input v-model="editForm.companyName" placeholder="请输入公司名称" size="medium"/>
         </el-form-item>
         <el-form-item label="税号" prop="taxNumber">
-          <el-input v-model="editForm.taxNumber" placeholder="请输入税号" />
+          <el-input v-model="editForm.taxNumber" placeholder="请输入税号" size="medium"/>
         </el-form-item>
         <el-form-item label="描述" prop="description">
           <el-input
             v-model="editForm.description"
             type="textarea"
             placeholder="请输入描述"
-            :rows="3"
+            :rows="4"
           />
         </el-form-item>
         <el-form-item label="状态" prop="flag">
-          <el-select v-model="editForm.flag" placeholder="请选择状态" style="width: 100%">
+          <el-select v-model="editForm.flag" placeholder="请选择状态" size="medium" style="width: 100%">
             <el-option
               v-for="item in statusOptions"
               :key="item.code"
@@ -214,8 +217,8 @@
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="handleDialogClose">取 消</el-button>
-        <el-button type="primary" :loading="dialogSaving" @click="handleDialogConfirm">确 定</el-button>
+        <el-button @click="handleDialogClose" size="medium">取 消</el-button>
+        <el-button type="primary" :loading="dialogSaving" @click="handleDialogConfirm" size="medium">确 定</el-button>
       </div>
     </el-dialog>
 
@@ -271,28 +274,26 @@
       </div>
     </el-dialog>
 
-    <!-- 部门管理弹窗 -->
-    <el-dialog
+    <!-- 部门管理抽屉 -->
+    <el-drawer
       title="部门管理"
-      :visible.sync="departmentDialogVisible"
-      width="900px"
+      :visible.sync="departmentDrawerVisible"
+      direction="rtl"
+      size="900px"
       :modal="true"
-      :close-on-click-modal="false"
-      :close-on-press-escape="false"
-      :show-close="false"
-      append-to-body
-      class="department-dialog"
+      :append-to-body="true"
+      class="department-drawer"
     >
-      <div slot="title" class="dialog-header">
-        <span>部门管理 - {{ currentCompany.companyName }}</span>
-        <el-button type="primary" size="small" icon="el-icon-close" @click="closeDepartmentDialog">关闭</el-button>
+      <div v-if="departmentDrawerVisible" class="drawer-content">
+        <div class="drawer-header">
+          <h3 class="drawer-title">🏢 {{ currentCompany.companyName }}</h3>
+        </div>
+        <department-tree-view
+          :company-id="currentCompany.id"
+          :company-name="currentCompany.companyName"
+        />
       </div>
-      <department-tree-view
-        v-if="departmentDialogVisible"
-        :company-id="currentCompany.id"
-        :company-name="currentCompany.companyName"
-      />
-    </el-dialog>
+    </el-drawer>
   </div>
 </template>
 
@@ -350,8 +351,8 @@ export default {
       parentRemoteSize: 50,
       parentRemoteLastQuery: '',
       allCompanies: [],
-      // 部门管理弹窗相关
-      departmentDialogVisible: false,
+      // 部门管理抽屉相关
+      departmentDrawerVisible: false,
       currentCompany: {
         id: null,
         companyName: ''
@@ -734,17 +735,8 @@ export default {
         id: row.id,
         companyName: row.companyName
       }
-      this.departmentDialogVisible = true
+      this.departmentDrawerVisible = true
     },
-
-    // 关闭部门管理弹窗
-    closeDepartmentDialog() {
-      this.departmentDialogVisible = false
-      this.currentCompany = {
-        id: null,
-        companyName: ''
-      }
-    }
   }
 }
 </script>
@@ -755,45 +747,103 @@ export default {
   min-height: calc(100vh - 84px);
 
   .header-section {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+  }
+
+  .header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    border-left: 4px solid #409eff;
   }
 
   .main-title {
-    font-size: 24px;
+    font-size: 20px;
     font-weight: 600;
     color: #303133;
+    margin: 0;
+    letter-spacing: 0.5px;
+  }
+
+  .header-actions {
+    .add-company-btn {
+      background: #409eff;
+      border-color: #409eff;
+      color: #fff;
+      font-weight: 500;
+      padding: 12px 24px;
+      border-radius: 6px;
+      font-size: 15px;
+      transition: all 0.3s ease;
+
+      i {
+        font-size: 15px;
+        margin-right: 6px;
+      }
+
+      &:hover {
+        background: #66b1ff;
+        border-color: #66b1ff;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+      }
+
+      &:active {
+        transform: translateY(0);
+      }
+    }
   }
 
   .search-card {
-    margin-bottom: 20px;
-    border-radius: 8px;
+    margin-bottom: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+    border: 1px solid #e8eaed;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    }
 
     ::v-deep .el-card__body {
-      padding: 20px;
+      padding: 24px;
     }
   }
 
   .table-card {
     border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #ebeef5;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    border: 1px solid #e8eaed;
+    transition: all 0.3s ease;
+
+    &:hover {
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+    }
 
     ::v-deep .el-card__body {
-      padding: 20px;
+      padding: 24px;
       min-height: 400px;
     }
   }
 
   .children-count {
     color: #909399;
-    margin-left: 6px;
+    margin-left: 8px;
     font-size: 12px;
+    background: #f4f4f5;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 500;
   }
 
   .pagination-wrap {
-    display: flex;
-    justify-content: flex-end;
-    padding: 12px 0;
+    margin-top: 24px;
+    text-align: right;
+    padding: 16px 0;
   }
 
   .empty-wrap {
@@ -834,9 +884,11 @@ export default {
   }
 
   mark {
-    background: #ffe58f;
-    padding: 0 2px;
+    background: #fff3cd;
+    color: #856404;
+    padding: 2px 4px;
     border-radius: 3px;
+    font-weight: 500;
   }
 
   /* 树形组件样式优化 */
@@ -850,213 +902,267 @@ export default {
   }
 
   ::v-deep .el-tree-node__content {
-    height: 44px;
-    line-height: 44px;
-    font-size: 16px;
+    height: 48px;
+    line-height: 48px;
+    font-size: 14px;
     font-weight: 500;
-    transition: all 0.3s ease;
-    border-radius: 6px;
-    margin: 4px 0;
-  }
-
-  ::v-deep .el-tree-node__content:hover {
-    background-color: #f5f7fa;
-    transform: translateX(4px);
-  }
-
-  ::v-deep .el-tree-node:focus > .el-tree-node__content {
-    background-color: #ecf5ff;
-  }
-
-  ::v-deep .el-tree-node__expand-icon {
-    font-size: 18px;
-    color: #606266;
-    margin-right: 8px;
-  }
-
-  ::v-deep .el-tree-node__expand-icon.expanded {
-    transform: rotate(0deg);
-  }
-
-  ::v-deep .el-tree-node__expand-icon.is-leaf {
-    color: transparent;
-  }
-
-  .custom-tree-node {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 16px;
-    font-weight: 500;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border-radius: 8px;
+    margin: 6px 0;
     padding: 0 12px;
-    min-height: 40px;
-  }
 
-  .tree-node-actions {
-    display: none;
-    margin-left: 12px;
-  }
-
-  .custom-tree-node:hover .tree-node-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .tree-node-actions .el-button {
-    font-size: 14px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-  }
-
-  .tree-node-actions .el-button:hover {
-    background-color: #409eff;
-    color: #fff;
-    transform: translateY(-1px);
-    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
-  }
-
-  /* 高亮搜索关键词样式 */
-  mark {
-    background: linear-gradient(135deg, #ffd740, #ffab00);
-    color: #000;
-    padding: 2px 6px;
-    border-radius: 4px;
-    font-weight: 600;
-    box-shadow: 0 1px 3px rgba(255, 171, 0, 0.3);
-  }
-
-  /* 子节点数量样式 */
-  .children-count {
-    color: #909399;
-    margin-left: 8px;
-    font-size: 14px;
-    background: #f0f2f5;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-weight: 400;
-  }
-
-  /* 公司详情卡片样式 */
-  .company-detail-card {
-    min-width: 320px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-    overflow: hidden;
-
-    .card-header {
-      padding: 16px;
-      background: linear-gradient(120deg, #409eff 0%, #1a73e8 100%);
-      color: white;
-
-      h3 {
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-      }
+    ::v-deep .el-tree-node:focus > .el-tree-node__content {
+      background-color: #ecf5ff;
     }
 
-    .card-content {
-      padding: 16px;
-
-      .info-item {
-        display: flex;
-        margin-bottom: 12px;
-        align-items: center;
-
-        &:last-child {
-          margin-bottom: 0;
-        }
-
-        .info-label {
-          font-weight: 500;
-          color: #606266;
-          width: 80px;
-          font-size: 14px;
-        }
-
-        .info-value {
-          flex: 1;
-          color: #303133;
-          font-size: 14px;
-
-          &.tax-number {
-            font-family: 'Courier New', monospace;
-            letter-spacing: 1px;
-          }
-
-          &.description {
-            line-height: 1.5;
-          }
-        }
-      }
-    }
-  }
-
-  /* 自定义 tooltip 样式 */
-  ::v-deep .company-info-tooltip {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-  }
-
-  @media (max-width: 768px) {
-    padding: 10px;
-    .main-title {
-      font-size: 20px;
-    }
-    .search-card, .table-card {
-      ::v-deep .el-card__body {
-        padding: 12px;
-      }
-    }
-  }
-}
-
-/* 可选：调整下拉样式使显示更友好 */
-.parent-select-popper .el-select-dropdown__item {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* 部门管理弹窗样式 */
-::v-deep .department-dialog {
-  .el-dialog__header {
-    padding: 16px 20px;
-    border-bottom: 1px solid #ebeef5;
-    background: linear-gradient(120deg, #67c23a 0%, #529b2e 100%);
-    
-    .dialog-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      width: 100%;
-      color: white;
+    ::v-deep .el-tree-node__expand-icon {
       font-size: 16px;
-      font-weight: 600;
-      
-      .el-button {
-        background: rgba(255, 255, 255, 0.2);
-        border-color: rgba(255, 255, 255, 0.3);
+      color: #909399;
+      margin-right: 8px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        color: #409eff;
+      }
+    }
+
+    ::v-deep .el-tree-node__expand-icon.expanded {
+      transform: rotate(0deg);
+    }
+
+    ::v-deep .el-tree-node__expand-icon.is-leaf {
+      color: transparent;
+    }
+
+    .custom-tree-node {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 14px;
+      font-weight: 500;
+      padding: 8px 12px;
+      min-height: 40px;
+      border-radius: 6px;
+      transition: all 0.3s ease;
+
+      &:hover {
+        background: #ecf5ff;
+        box-shadow: 0 2px 6px rgba(64, 158, 255, 0.15);
+      }
+    }
+
+    .tree-node-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tree-node-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      opacity: 0;
+      transform: translateX(10px);
+      transition: all 0.3s ease;
+      margin-left: 12px;
+    }
+
+    .custom-tree-node:hover .tree-node-actions {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .tree-node-actions .el-button {
+      font-size: 13px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      transition: all 0.3s ease;
+      font-weight: 500;
+
+      &:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
+      }
+    }
+
+    .tree-node-actions .el-button[type="primary"] {
+      background: #409eff;
+      border-color: #409eff;
+      color: white;
+
+      &:hover {
+        background: #66b1ff;
+        border-color: #66b1ff;
+      }
+    }
+
+    .tree-node-actions .el-button[type="success"] {
+      background: #67c23a;
+      border-color: #67c23a;
+      color: white;
+
+      &:hover {
+        background: #85ce61;
+        border-color: #85ce61;
+      }
+    }
+
+    /* 高亮搜索关键词样式 */
+    mark {
+      background: #fff3cd;
+      color: #856404;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-weight: 500;
+    }
+
+    /* 子节点数量样式 */
+    .children-count {
+      color: #909399;
+      margin-left: 8px;
+      font-size: 14px;
+      background: #f0f2f5;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-weight: 400;
+    }
+
+    /* 公司详情卡片样式 */
+    .company-detail-card {
+      min-width: 320px;
+      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+      border-radius: 10px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+
+      .card-header {
+        padding: 16px;
+        background: linear-gradient(120deg, #409eff 0%, #1a73e8 100%);
         color: white;
-        
-        &:hover {
-          background: rgba(255, 255, 255, 0.3);
-          border-color: rgba(255, 255, 255, 0.5);
+
+        h3 {
+          margin: 0;
+          font-size: 18px;
+          font-weight: 600;
+        }
+      }
+
+      .card-content {
+        padding: 16px;
+
+        .info-item {
+          display: flex;
+          margin-bottom: 12px;
+          align-items: center;
+
+          &:last-child {
+            margin-bottom: 0;
+          }
+
+          .info-label {
+            font-weight: 500;
+            color: #606266;
+            width: 80px;
+            font-size: 14px;
+          }
+
+          .info-value {
+            flex: 1;
+            color: #303133;
+            font-size: 14px;
+
+            &.tax-number {
+              font-family: 'Courier New', monospace;
+              letter-spacing: 1px;
+            }
+
+            &.description {
+              line-height: 1.5;
+            }
+          }
+        }
+      }
+    }
+
+    /* 自定义 tooltip 样式 */
+    ::v-deep .company-info-tooltip {
+      background: transparent !important;
+      border: none !important;
+      padding: 0 !important;
+      box-shadow: none !important;
+    }
+
+    @media (max-width: 768px) {
+      padding: 10px;
+      .main-title {
+        font-size: 20px;
+      }
+      .search-card, .table-card {
+        ::v-deep .el-card__body {
+          padding: 12px;
         }
       }
     }
   }
-  
-  .el-dialog__body {
-    padding: 20px;
-    max-height: 75vh;
-    overflow-y: auto;
+
+  /* 可选：调整下拉样式使显示更友好 */
+  .parent-select-popper .el-select-dropdown__item {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* 公司编辑对话框样式 */
+  ::v-deep .company-edit-dialog {
+    .el-dialog__body {
+      padding: 24px 32px;
+    }
+
+    .el-form-item {
+      margin-bottom: 22px;
+    }
+
+    .el-input__inner,
+    .el-textarea__inner {
+      border-radius: 6px;
+    }
+  }
+
+  /* 部门管理抽屉样式 */
+  ::v-deep .department-drawer {
+    .el-drawer__header {
+      margin-bottom: 0;
+      padding: 24px 32px;
+      border-bottom: 1px solid #ebeef5;
+      background: #fff;
+    }
+
+    .el-drawer__body {
+      overflow: hidden;
+      background: #f5f7fa;
+    }
+
+    .drawer-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .drawer-header {
+      padding: 20px 32px;
+      background: #fff;
+      border-bottom: 1px solid #ebeef5;
+
+      .drawer-title {
+        margin: 0;
+        font-size: 20px;
+        font-weight: 600;
+        color: #303133;
+        letter-spacing: 0.5px;
+      }
+    }
   }
 }
 </style>
