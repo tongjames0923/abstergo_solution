@@ -21,7 +21,6 @@ import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 部门服务实现
@@ -146,10 +145,11 @@ public class SimpleDepartmentService
 
     @Override
     public List<SystemDepartmentEntity> getChildrenDepartments(Long id) {
-        var p = getInstance().queryById(id);
-        return treeStore.getDirectChildren(p.getTreeNodeId(), p.getTreeNodeGroup()).stream()
-            .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId().substring(4, it.getNodeId().length()))))
-            .collect(Collectors.toList());
+        //        var p = getInstance().queryById(id);
+        //        return treeStore.getDirectChildren(p.getTreeNodeId(), p.getTreeNodeGroup()).stream()
+        //            .map(it -> getInstance().queryById(Long.parseLong(it.getNodeId().substring(4, it.getNodeId().length()))))
+        //            .collect(Collectors.toList());
+        return null;
     }
 
     @Override

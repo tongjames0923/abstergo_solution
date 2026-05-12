@@ -3,6 +3,7 @@ package com.tbs.struct.tree.api.persistence;
 import com.tbs.struct.tree.model.TreeNodeModel;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 树存储接口
@@ -10,7 +11,7 @@ import java.util.List;
  * @author tbs
  * @date 2022/3/23 11:05
  */
-public interface ITreeStore {
+public interface ITreeStore<ID> {
     /**
      * 存储树
      *
@@ -88,6 +89,18 @@ public interface ITreeStore {
      * @param id 实体ID
      * @return 树节点
      */
-    List<ITreeStorable> getNodeByEntityId(Long id);
+    List<ITreeStorable> getNodesByEntityId(ID id);
+
+    /**
+     * 根据实体ID获取树节点
+     *
+     * @param id    实体ID
+     * @param group 树组
+     * @return 树节点
+     */
+    default ITreeStorable getNodeByEntityIdAndGroup(ID id, String group) {
+        return getNodesByEntityId(id).stream().filter(e -> Objects.equals(group, e.getTreeGroup())).findFirst()
+            .orElse(null);
+    }
 
 }

@@ -15,8 +15,7 @@ import java.util.Date;
 @Entity
 @Table(name = "sys_company", indexes = { @Index(name = "idx_company_name", columnList = "company_name"),
 		@Index(name = "idx_flag", columnList = "flag"), @Index(name = "idx_create_time", columnList = "create_time"),
-    @Index(name = "idx_update_time", columnList = "update_time"),
-    @Index(name = "tree_idx", columnList = "tree_node_group,tree_node_id,tree_root_flag")})
+	@Index(name = "idx_update_time", columnList = "update_time"),})
 @ToString
 @LogicDeleteEntity(filedName = "flag", activeFlagValues = {1, 2, 5})
 @AllArgsConstructor
@@ -77,15 +76,6 @@ import java.util.Date;
 	 */
 	@Column(name = "flag")
 	private Integer flag;
-
-	@Transient
-    private String treeNodeGroup;
-
-	@Transient
-    private String treeNodeId;
-
-	@Transient
-    private Integer treeRootFlag;
 
 	/**
      * 子公司数量

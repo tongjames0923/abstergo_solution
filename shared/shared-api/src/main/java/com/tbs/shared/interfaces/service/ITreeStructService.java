@@ -10,15 +10,15 @@ import java.util.List;
  *
  * @author abstergo
  */
-public interface ITreeStructService<E extends IIdentifiable<ID>, ID> {
+public interface ITreeStructService<E extends IIdentifiable<Long>> {
 
     /**
-     * 根据ID获取树实体的子树
+     * 根据ID获取树实体的直接子节点
      *
      * @param id
      * @return
      */
-    public List<ITreeStorable> getChildren(ID id);
+    public List<ITreeStorable> getChildren(Long id);
 
     /**
      * 根据ID获取树结构数据
@@ -26,15 +26,7 @@ public interface ITreeStructService<E extends IIdentifiable<ID>, ID> {
      * @param id
      * @return
      */
-    public ITreeStorable getNode(ID id);
-
-    /**
-     * 根据ID获取树实体的直接子树
-     *
-     * @param id
-     * @return
-     */
-    public List<E> getDirectChildren(ID id);
+    public ITreeStorable getNode(Long id);
 
     /**
      * 删除叶子
@@ -42,7 +34,7 @@ public interface ITreeStructService<E extends IIdentifiable<ID>, ID> {
      * @param id
      * @return
      */
-    public boolean deleteLeaf(ID id);
+    public boolean deleteLeaf(Long id);
 
     /**
      * 判断是否是叶子
@@ -50,7 +42,7 @@ public interface ITreeStructService<E extends IIdentifiable<ID>, ID> {
      * @param id
      * @return
      */
-    public boolean isLeaf(ID id);
+    public boolean isLeaf(Long id);
 
     /**
      * 判断是否是根
@@ -58,7 +50,7 @@ public interface ITreeStructService<E extends IIdentifiable<ID>, ID> {
      * @param id
      * @return
      */
-    public boolean isRoot(ID id);
+    public boolean isRoot(Long id);
 
     /**
      * 设置为树,若parent为空则设置为根树
@@ -66,7 +58,7 @@ public interface ITreeStructService<E extends IIdentifiable<ID>, ID> {
      * @param data
      * @param parent
      */
-    public void setToTree(ID data, ID parent);
+    public void setToTree(Long data, Long parent);
 
     /**
      * 根据节点ID查询

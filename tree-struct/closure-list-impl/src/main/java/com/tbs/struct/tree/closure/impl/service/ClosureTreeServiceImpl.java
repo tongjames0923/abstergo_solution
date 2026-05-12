@@ -1,6 +1,7 @@
 package com.tbs.struct.tree.closure.impl.service;
 
 import com.tbs.cache.CacheUtils;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -16,6 +17,8 @@ import com.tbs.struct.tree.closure.impl.mapper.TreeRelationMapper;
 import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -31,12 +35,15 @@ import java.util.stream.Collectors;
  * @author tongj
  */
 @Slf4j
-public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
+public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
     @Resource
     private TreeNodeMapper treeNodeMapper;
 
     @Resource
     private TreeRelationMapper treeRelationMapper;
+
+    @Resource
+    private CacheManager cacheManager;
 
     private static ClosureTreeServiceImpl instance;
 
@@ -70,9 +77,10 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
      * @param treeGroup 树组
      * @return 树节点
      */
-    @Cacheable(cacheNames = "tree_node_cache", key = "#nodeId+#treeGroup",
+    @Cacheable(cacheNames = "tree_node_cache", key = "#nodeId + ':' + #treeGroup",
         condition = "#nodeId!=null&&#nodeId.length()>0&&#treeGroup!=null&&#treeGroup.length()>0",
         unless = "#result==null")
+    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES, cacheNames = "tree_node_cache")
     public TreeNodeEntity getTreeNode(String nodeId, String treeGroup) {
         Long id = getInstance().getTreeNodeId(nodeId, treeGroup);
         if (id == null) {
@@ -83,10 +91,10 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
 
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
-    @Caching(evict = {@CacheEvict(cacheNames = "tree_node_cache", key = "#parentNodeId+#treeStorable.treeGroup",
+    @Caching(evict = {@CacheEvict(cacheNames = "tree_node_cache", key = "#parentNodeId + ':' + #treeStorable.treeGroup",
         condition = "#treeStorable!=null&&#parentNodeId!=null&&#parentNodeId.length()>0&&" +
             "#treeStorable.treeGroup!=null&&#treeStorable.treeGroup.length()>0"),
-        @CacheEvict(cacheNames = "tree_node_cache", key = "#treeStorable.nodeId+#treeStorable.treeGroup",
+        @CacheEvict(cacheNames = "tree_node_cache", key = "#treeStorable.nodeId + ':' + #treeStorable.treeGroup",
             condition = "#treeStorable!=null&&#treeStorable.nodeId!=null&&#treeStorable.nodeId.length()>0&&#treeStorable.treeGroup!=null&&#treeStorable.treeGroup.length()>0")})
     public void store(ITreeStorable treeStorable, String parentNodeId) {
 
@@ -113,6 +121,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         TreeNodeEntity node = new TreeNodeEntity();
         node.setNodeId(treeStorable.getNodeId());
         node.setGroupName(treeStorable.getTreeGroup());
+        node.setEntityId(treeStorable.getEntityId());
         node.setCreateTime(new Date());
 
         //根节点插入
@@ -212,11 +221,21 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         }
         if (Objects.equals(oldNode.getParentId(), parentNode.getNodeId())) {
             log.info("节点关系未改变");
+            // 即使关系未改变，也需要更新entityId
+            if (treeStorable.getEntityId() != null &&
+                !Objects.equals(treeStorable.getEntityId(), oldNode.getEntityId())) {
+                oldNode.setEntityId(treeStorable.getEntityId());
+                oldNode.setUpdateTime(new Date());
+                treeNodeMapper.updateByPrimaryKey(oldNode);
+            }
             return;
         }
         var oldParentNodes = getInstance().getParentNodes(oldNode.getParentId(), treeStorable.getTreeGroup());
-        // 更新节点的父节点信息
+        // 更新节点的父节点信息和entityId
         oldNode.setParentId(parentNode.getNodeId());
+        if (treeStorable.getEntityId() != null) {
+            oldNode.setEntityId(treeStorable.getEntityId());
+        }
         oldNode.setUpdateTime(new Date());
         treeNodeMapper.updateByPrimaryKey(oldNode);
 
@@ -260,6 +279,11 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
             var model = new SimpleTreeStrorableModel();
             model.setTreeGroup(res.getGroupName());
             model.setNodeId(res.getDescendantId());
+            // 获取节点实体以填充entityId
+            var treeNode = getInstance().getTreeNode(res.getDescendantId(), res.getGroupName());
+            if (treeNode != null) {
+                model.setEntityId(treeNode.getEntityId());
+            }
             return model;
         }).collect(Collectors.toList());
     }
@@ -280,14 +304,16 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         }).sorted((o1, o2) -> o2.getDepth() - o1.getDepth()).collect(Collectors.toList());
 
         val.forEach(model -> {
-            model.setEntityId(getInstance().getTreeNode(model.getNodeId(), model.getTreeGroup()).getId());
+            var treeNode = getInstance().getTreeNode(model.getNodeId(), model.getTreeGroup());
+            if (treeNode != null) {
+                model.setEntityId(treeNode.getEntityId());
+            }
         });
 
         return val;
     }
 
     @Transactional(rollbackFor = RuntimeException.class)
-    @CacheEvict(cacheNames = "tree_node_cache", allEntries = true)
     @Override
     public void delete(String nodeId, String group) {
         if (StrUtil.isEmpty(nodeId)) {
@@ -308,6 +334,14 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         // 添加当前节点本身
         nodeIdsToDelete.add(node);
 
+        // 批量删除节点前先清除缓存
+        Cache cache = cacheManager.getCache("tree_node_cache");
+        if (cache != null) {
+            for (var entity : nodeIdsToDelete) {
+                cache.evict(entity.getNodeId() + ":" + group);
+            }
+        }
+
         // 批量删除节点
         treeNodeMapper.deleteByIdList(nodeIdsToDelete.stream().map(TreeNodeEntity::getId).collect(Collectors.toList()));
 
@@ -327,6 +361,7 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
             var model = new SimpleTreeStrorableModel();
             model.setNodeId(treeNodeEntity.getNodeId());
             model.setTreeGroup(treeNodeEntity.getGroupName());
+            model.setEntityId(treeNodeEntity.getEntityId());
             return model;
         }).collect(Collectors.toList());
     }
@@ -375,6 +410,11 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
 
         } finally {
             CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
+            // 重建后清除该树组的所有缓存，确保数据一致性
+            Cache cache = cacheManager.getCache("tree_node_cache");
+            if (cache != null) {
+                cache.clear();
+            }
         }
 
     }
@@ -416,13 +456,13 @@ public class ClosureTreeServiceImpl implements ITreeStore, IStartup {
         var model = new TreeNodeModel();
         model.setNodeId(node.getNodeId());
         model.setTreeGroup(node.getGroupName());
-        model.setNodeId(node.getNodeId());
+        model.setEntityId(node.getEntityId());
         model.setDepth(-1);
         return model;
     }
 
     @Override
-    public List<ITreeStorable> getNodeByEntityId(Long id) {
+    public List<ITreeStorable> getNodesByEntityId(Long id) {
         return treeNodeMapper.getNodesByEntityId(id).stream()
             .map(node -> new SimpleTreeStrorableModel(node.getGroupName(), node.getNodeId(), node.getEntityId()))
             .collect(Collectors.toList());

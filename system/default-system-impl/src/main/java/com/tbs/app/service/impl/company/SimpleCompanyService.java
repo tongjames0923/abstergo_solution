@@ -7,13 +7,11 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
-import com.tbs.struct.tree.api.persistence.ITreeStore;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
@@ -31,13 +29,13 @@ public class SimpleCompanyService
      */
     public static final SystemCompanyEntity SYSTEM_COMPANY =
         new SystemCompanyEntity(1L, "系统公司", "系统公司", "系统公司", null, null, null,
-            SystemCompanyFlagEnum.SYSTEMED.getCode(), null, null, CommonConstant.FLAG_ON, 0L);
+            SystemCompanyFlagEnum.SYSTEMED.getCode(), 0L);
 
     @Resource
     private SystemCompanyMapper mapper;
 
     @Resource
-    private ITreeStore treeStore;
+    CompanyTreeStructService companyTreeStructService;
 
     @Override
     protected Integer getFlagDisable() {
@@ -47,9 +45,7 @@ public class SimpleCompanyService
     @Override
     public SystemCompanyEntity deleteById(Long id) {
         var entity = super.deleteById(id);
-        if (StrUtil.isNotEmpty(entity.getTreeNodeGroup())) {
-            treeStore.delete(entity.getTreeNodeId(), entity.getTreeNodeGroup());
-        }
+        companyTreeStructService.deleteLeaf(id);
         return entity;
     }
 
@@ -61,7 +57,6 @@ public class SimpleCompanyService
     @Override
     protected SystemCompanyEntity insertNew(SystemCompanyEntity entity) {
         entity.setFlag(SystemCompanyFlagEnum.DISABLED.getCode());
-        entity.setTreeRootFlag(CommonConstant.FLAG_ON);
         getMapper().insert(entity);
         return entity;
     }

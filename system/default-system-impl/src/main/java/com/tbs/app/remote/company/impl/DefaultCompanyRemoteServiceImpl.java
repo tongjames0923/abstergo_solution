@@ -98,7 +98,6 @@ public class DefaultCompanyRemoteServiceImpl implements ICompanyRemoteService {
         vo.setFlag(entity.getFlag());
         vo.setCreateTime(entity.getCreateTime());
         vo.setUpdateTime(entity.getUpdateTime());
-        vo.setTreeRootFlag(entity.getTreeRootFlag());
         vo.setChildrenCount(entity.getChildrenCount());
         return vo;
     }

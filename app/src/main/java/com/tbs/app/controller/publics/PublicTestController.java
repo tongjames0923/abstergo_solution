@@ -58,20 +58,20 @@ public class PublicTestController extends BaseController {
 
     }
 
-    /**
-     * 创建树节点
-     * <p>
-     * 根据表单参数创建一个新的树节点
-     * </p>
-     *
-     * @param form 树节点表单参数
-     * @return 创建结果
-     */
-    @PostMapping("/createNode")
-    public AjaxResult createNode(@RequestBody TreeForm form) {
-        store.store(new SimpleTreeStrorableModel(TEST_GROUP, form.getName()), form.getParentId());
-        return AjaxUtil.getInstance().success(null);
-    }
+//    /**
+//     * 创建树节点
+//     * <p>
+//     * 根据表单参数创建一个新的树节点
+//     * </p>
+//     *
+//     * @param form 树节点表单参数
+//     * @return 创建结果
+//     */
+//    @PostMapping("/createNode")
+//    public AjaxResult createNode(@RequestBody TreeForm form) {
+//        store.store(new SimpleTreeStrorableModel(TEST_GROUP, form.getName()), form.getParentId());
+//        return AjaxUtil.getInstance().success(null);
+//    }
 
     /**
      * 获取子节点列表

@@ -11,7 +11,7 @@ import java.util.List;
  * 树存储接口实现类
  *
  */
-public class NoImplTreeStore implements ITreeStore {
+public class NoImplTreeStore<ID> implements ITreeStore<ID> {
 
     public NoImplTreeStore() {
         throw new FormattedRuntimeException("树类未实现");
@@ -63,7 +63,7 @@ public class NoImplTreeStore implements ITreeStore {
     }
 
     @Override
-    public List<ITreeStorable> getNodeByEntityId(Long id) {
+    public List<ITreeStorable> getNodesByEntityId(ID id) {
         return List.of();
     }
 }
