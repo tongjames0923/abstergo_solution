@@ -162,7 +162,7 @@ public class AdminCompanyController
     public AjaxResult listChildren(
         @Parameter(name = "parent", description = "父级公司ID", required = true) @PathVariable Long parent) {
 		var data = companyTreeStructService.getChildren(parent).stream().map((p) -> {
-			return companyTreeStructService.queryByNodeId(p.getNodeId(), p.getTreeGroup());
+			return companyService.queryById(p.getEntityId());
 		}).collect(Collectors.toList());
         var ls = new LinkedList<IDelegateFlag>();
         for (var entity : data) {

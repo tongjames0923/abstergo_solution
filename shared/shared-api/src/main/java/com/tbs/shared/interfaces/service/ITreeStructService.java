@@ -59,14 +59,4 @@ public interface ITreeStructService<E extends IIdentifiable<Long>> {
      * @param parent
      */
     public void setToTree(Long data, Long parent);
-
-    /**
-     * 根据节点ID查询
-     *
-     * @param nodeId
-     * @param group
-     * @return
-     */
-
-    E queryByNodeId(String nodeId, String group);
 }

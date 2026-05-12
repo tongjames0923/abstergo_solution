@@ -139,7 +139,7 @@
                 ({{ data.childrenCount }})
               </span>
             </span>
-            <span class="tree-node-actions">
+            <span class="tree-node-actions" v-if="data.flag!==5">
               <el-button type="text" size="mini" @click="handleEdit(data)">编辑</el-button>
               <el-dropdown size="mini" @command="handleMoreActions">
                 <el-button type="text" size="mini">
@@ -271,7 +271,7 @@
 </template>
 
 <script>
-import { adminQueryCompany, deleteCompany, listChildren, moveCompanyTo, saveCompany } from '@/api/company'
+import {adminQueryCompany, deleteCompany, listChildren, moveCompanyTo, saveCompany} from '@/api/company'
 
 export default {
   name: 'CompanyAdminView',

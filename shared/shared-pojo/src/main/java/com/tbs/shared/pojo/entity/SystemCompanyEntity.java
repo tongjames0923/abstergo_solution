@@ -1,7 +1,6 @@
 
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,7 +16,6 @@ import java.util.Date;
 		@Index(name = "idx_flag", columnList = "flag"), @Index(name = "idx_create_time", columnList = "create_time"),
 	@Index(name = "idx_update_time", columnList = "update_time"),})
 @ToString
-@LogicDeleteEntity(filedName = "flag", activeFlagValues = {1, 2, 5})
 @AllArgsConstructor
 @NoArgsConstructor
 /**

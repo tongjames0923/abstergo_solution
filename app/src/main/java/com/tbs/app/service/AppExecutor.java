@@ -1,11 +1,13 @@
 package com.tbs.app.service;
 
+import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
-import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.stereotype.Component;
+
+import javax.annotation.Resource;
 
 /**
  * XXL-Job任务执行器
@@ -18,23 +20,15 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class AppExecutor {
-    @DubboReference
-    private ITreeStore closureTreeService;
 
     @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.SimpleLoggerSender", check = false)
     private ISystemOperateLogSender systemOperateLog;
 
-    /**
-     * 重建树结构任务
-     * <p>
-     * 使用XXL-Job调度，根据参数重建树的闭包表结构
-     * </p>
-     */
-    @XxlJob("rebuildTree")
-    public void rebuildTree() {
-        XxlJobHelper.log(" rebuild tree closure start");
-        closureTreeService.tryRebuildStructure(XxlJobHelper.getJobParam());
-        XxlJobHelper.log(" rebuild tree closure success");
+    @Resource
+    CompanyTreeStructService companyTreeStructService;
+
+    @XxlJob("company_tree_rebuild")
+    public void companyTreeRebuild() {
     }
 
     /**

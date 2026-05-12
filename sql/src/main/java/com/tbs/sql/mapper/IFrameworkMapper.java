@@ -21,7 +21,7 @@ import tk.mybatis.mapper.common.special.InsertListMapper;
 
 import java.util.List;
 
-import static com.tbs.sql.mapper.impl.FrameworkSelectProvider.getImportedSqlContext;
+import static com.tbs.sql.mapper.impl.FrameworkSelectProvider.buildSqlContext;
 
 /**
  * @author abstergo
@@ -47,7 +47,7 @@ public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<
      * @return 查询结果
      */
 	default List<T> queryByQO(IQueryCriteria qo, IPage page, Class<T> entityClass) {
-		ImportedSqlContext sqlContext = getImportedSqlContext(entityClass);
+		ImportedSqlContext sqlContext = buildSqlContext(qo);
 		EntityQuerySqlDriver driver = new EntityQuerySqlDriver();
 		driver.setWhereInfo(FrameworkSelectProvider.buildConditions(qo));
 		if (page != null) {
@@ -65,7 +65,7 @@ public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<
      * @return 统计结果
      */
 	default Long countByQO(IQueryCriteria qo,Class<?> entityClass) {
-		ImportedSqlContext sqlContext = getImportedSqlContext(entityClass);
+		ImportedSqlContext sqlContext = buildSqlContext(qo);
 		EntityQuerySqlDriver driver = new EntityQuerySqlDriver();
 		driver.setWhereInfo(FrameworkSelectProvider.buildConditions(qo));
 		return SpringUtil.getBean(FetchMapper.class).count(sqlContext, driver);

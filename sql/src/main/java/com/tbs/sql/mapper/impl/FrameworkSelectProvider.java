@@ -1,13 +1,7 @@
 package com.tbs.sql.mapper.impl;
 
-import java.lang.reflect.Field;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import org.jetbrains.annotations.NotNull;
-import org.springframework.core.annotation.AnnotatedElementUtils;
-
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.extra.spring.SpringUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.sql.annotation.OrField;
@@ -20,10 +14,13 @@ import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.provider.ICustomWhereProvider;
 import com.tbs.sql.query.IQueryCriteria;
 import com.tbs.sql.utils.SqlUtils;
-
-import cn.hutool.core.collection.CollUtil;
-import cn.hutool.extra.spring.SpringUtil;
 import lombok.Getter;
+import org.springframework.core.annotation.AnnotatedElementUtils;
+
+import java.lang.reflect.Field;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 public class FrameworkSelectProvider<T> {
 	private static final Map<Class<?>, Object> sqlEntitySupplierMap = new ConcurrentHashMap<>();
@@ -181,18 +178,13 @@ public class FrameworkSelectProvider<T> {
 		return compose;
 	}
 
-	public static <E> @NotNull ImportedSqlContext getImportedSqlContext(Class<E> entityClass) {
-		ImportedSqlContext sqlContext = new ImportedSqlContext(() -> {
-			return sqlEntitySupplierMap.computeIfAbsent(entityClass, (c) -> {
-				try {
-					return entityClass.getDeclaredConstructor().newInstance();
-				} catch (Exception e) {
-					AssertUtil.throwError(() -> new FormattedRuntimeException(e, "构建实体失败"));
-				}
-				return null;
-			});
-		});
-		sqlContext.rebuild();
-		return sqlContext;
+	public static <QO extends IQueryCriteria> ImportedSqlContext buildSqlContext(QO queryObject) {
+		if (queryObject == null) {
+			throw new FormattedRuntimeException("QO 不能为空");
+		}
+		var context = new ImportedSqlContext(() -> queryObject);
+		context.rebuild();
+		return context;
 	}
+
 }

@@ -74,7 +74,7 @@ public class DefaultCompanyRemoteServiceImpl implements ICompanyRemoteService {
             return Collections.emptyList();
         }
         List<SystemCompanyEntity> childCompanies = companyTreeStructService.getChildren(parentId).stream().map(node -> {
-            return companyTreeStructService.queryByNodeId(node.getNodeId(), node.getTreeGroup());
+            return companyService.queryById(node.getEntityId());
         }).collect(Collectors.toList());
         if (CollUtil.isEmpty(childCompanies)) {
             return Collections.emptyList();

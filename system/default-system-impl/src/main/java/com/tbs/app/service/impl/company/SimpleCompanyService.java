@@ -8,7 +8,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
-import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
@@ -22,7 +22,7 @@ import java.util.Optional;
 
 @Slf4j
 public class SimpleCompanyService
-    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemCompanyEntity, Long, SystemCompanyMapper>
+    extends AbstractPhysicDeleteFullFeatureServiceTemplate<SystemCompanyEntity, Long, SystemCompanyMapper>
     implements ISystemCompanyService, IStartup, ITimeAuditService<SystemCompanyEntity, Long> {
     /**
      * 系统公司
@@ -36,11 +36,6 @@ public class SimpleCompanyService
 
     @Resource
     CompanyTreeStructService companyTreeStructService;
-
-    @Override
-    protected Integer getFlagDisable() {
-        return SystemCompanyFlagEnum.DELETED.getCode();
-    }
 
     @Override
     public SystemCompanyEntity deleteById(Long id) {
@@ -58,6 +53,7 @@ public class SimpleCompanyService
     protected SystemCompanyEntity insertNew(SystemCompanyEntity entity) {
         entity.setFlag(SystemCompanyFlagEnum.DISABLED.getCode());
         getMapper().insert(entity);
+        companyTreeStructService.setToTree(entity.getId(), null);
         return entity;
     }
 
