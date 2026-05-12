@@ -1,7 +1,6 @@
 package com.tbs.struct.tree.closure.impl.service;
 
 import com.tbs.cache.CacheUtils;
-import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -19,14 +18,10 @@ import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -77,10 +72,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
      * @param treeGroup 树组
      * @return 树节点
      */
-    @Cacheable(cacheNames = "tree_node_cache", key = "#nodeId + ':' + #treeGroup",
-        condition = "#nodeId!=null&&#nodeId.length()>0&&#treeGroup!=null&&#treeGroup.length()>0",
-        unless = "#result==null")
-    @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES, cacheNames = "tree_node_cache")
+
     public TreeNodeEntity getTreeNode(String nodeId, String treeGroup) {
         Long id = getInstance().getTreeNodeId(nodeId, treeGroup);
         if (id == null) {
@@ -91,11 +83,6 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
 
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
-    @Caching(evict = {@CacheEvict(cacheNames = "tree_node_cache", key = "#parentNodeId + ':' + #treeStorable.treeGroup",
-        condition = "#treeStorable!=null&&#parentNodeId!=null&&#parentNodeId.length()>0&&" +
-            "#treeStorable.treeGroup!=null&&#treeStorable.treeGroup.length()>0"),
-        @CacheEvict(cacheNames = "tree_node_cache", key = "#treeStorable.nodeId + ':' + #treeStorable.treeGroup",
-            condition = "#treeStorable!=null&&#treeStorable.nodeId!=null&&#treeStorable.nodeId.length()>0&&#treeStorable.treeGroup!=null&&#treeStorable.treeGroup.length()>0")})
     public void store(ITreeStorable treeStorable, String parentNodeId) {
 
         AssertUtil.notNull(treeStorable, "无法保存空节点");
@@ -292,7 +279,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
     public List<TreeNodeModel> getParentNodes(String nodeId, String group) {
         var node = getInstance().getTreeNode(nodeId, group);
         if (node == null) {
-            return null;
+            return List.of();
         }
         rebuildTreeClosureCheck();
         var val = treeRelationMapper.selectAncestorsByDescendantId(nodeId, group).stream().map(relation -> {

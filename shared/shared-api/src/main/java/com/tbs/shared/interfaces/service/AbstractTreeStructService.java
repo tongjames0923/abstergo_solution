@@ -31,7 +31,7 @@ public abstract class AbstractTreeStructService<E extends IIdentifiable<Long>> i
      * @param d
      * @return
      */
-    protected abstract String getGroupName(Long d);
+    protected abstract String getGroupName();
 
     /**
      * 获取实体
@@ -51,8 +51,7 @@ public abstract class AbstractTreeStructService<E extends IIdentifiable<Long>> i
     protected abstract String getNodeId(Long d, E e);
 
     ITreeStorable getTreeNode(Long id) {
-        String group = getGroupName(id);
-        var s = getTreeStore().getNodeByEntityIdAndGroup(id, group);
+        var s = getTreeStore().getNodeByEntityIdAndGroup(id, getGroupName());
         if (s != null) {
             return s;
         }
@@ -88,18 +87,18 @@ public abstract class AbstractTreeStructService<E extends IIdentifiable<Long>> i
     public void setToTree(Long id, Long p) {
         var ce = queryById(id);
         AssertUtil.isTrue(ce == null, "数据不存在");
+        ITreeStorable parent = null;
         if (p != null) {
             var pe = queryById(p);
             AssertUtil.isTrue(pe == null, "数据不存在");
-            var parent = getTreeNode(id);
+            parent = getTreeNode(p);
             // 如果父节点没有树信息，先创建父节点的树节点
             if (parent == null) {
-                parent = new TreeNodeModel(getNodeId(p, pe), getGroupName(p), p);
+                parent = new TreeNodeModel(getNodeId(p, pe), getGroupName(), p);
                 getTreeStore().store(parent, null);
             }
         }
-        var parent = getTreeNode(p);
-        var group = parent == null ? getGroupName(id) : parent.getTreeGroup();
+        var group = parent == null ? getGroupName() : parent.getTreeGroup();
         var source = getTreeNode(id);
         if (source == null) {
             source = new TreeNodeModel(getNodeId(id, ce), group, id);

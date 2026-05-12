@@ -21,16 +21,16 @@ public class CompanyTreeStructService extends AbstractTreeStructService<SystemCo
         return treeStore;
     }
 
-    private static final String COMPANY_TREE_GROUP = "COT:";
+    private static final String COMPANY_TREE_GROUP = "COMPANY_TREE";
 
     @Override
-    protected String getGroupName(Long d) {
-        return COMPANY_TREE_GROUP + String.valueOf(d);
+    protected String getGroupName() {
+        return COMPANY_TREE_GROUP;
     }
 
     @Override
     protected String getNodeId(Long d, SystemCompanyEntity systemCompanyEntity) {
-        return COMPANY_TREE_GROUP + String.valueOf(d);
+        return COMPANY_TREE_GROUP + "::" + String.valueOf(d);
     }
 
     @Override
