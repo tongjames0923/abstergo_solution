@@ -14,7 +14,15 @@ services:
     restart: always
     volumes:
       - mysql_data:/var/lib/mysql
-
+  zookeeper:
+    image: docker.1ms.run/library/zookeeper:3.9.5
+    container_name: abstergo_zookeeper
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+      - "8989:8080"
+    restart: always
   redis:
     image: docker.m.daocloud.io/library/redis:6.2.19
     container_name: abstergo_redis
@@ -52,38 +60,14 @@ services:
     ports:
       - "9600:38080"
     environment:
-      - admin.registry.address=nacos://nacos:8848
-      - admin.config-center=nacos://nacos:8848
-      - admin.metadata-report.address=nacos://nacos:8848
+      - admin.registry.address=zookeeper://zookeeper:8848
+      - admin.config-center=zookeeper://zookeeper:8848
+      - admin.metadata-report.address=zookeeper://zookeeper:8848
       - server.port= 38080
     depends_on:
-      - nacos
+      - zookeeper
     restart: always
-  nacos:
-    image: docker.1ms.run/nacos/nacos-server:v2.3.2-slim
-    container_name: abstergo_nacos
-    ports:
-      - "8848:8848"
-      - "9848:9848"
-      - "9849:9849"
-    environment:
-      - MODE=standalone
-      - SPRING_DATASOURCE_PLATFORM=mysql
-      - MYSQL_SERVICE_HOST=mysql
-      - MYSQL_SERVICE_PORT=3306
-      - MYSQL_SERVICE_DB_NAME=nacos_config
-      - MYSQL_SERVICE_USER=root
-      - MYSQL_SERVICE_PASSWORD=123456
-      - NACOS_AUTH_ENABLE=false
-      - NACOS_AUTH_TOKEN=SecretKey012345678901234567890123456789012345678901234567890123456789
-      - NACOS_AUTH_IDENTITY_KEY=nacos
-      - NACOS_AUTH_IDENTITY_VALUE=nacos
-      - JVM_XMS=512m
-      - JVM_XMX=512m
-      - JVM_XMN=256m
-    depends_on:
-      - mysql
-    restart: always
+
 
 volumes:
   mysql_data:
