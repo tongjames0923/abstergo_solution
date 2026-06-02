@@ -1,8 +1,8 @@
-# Abstergo Common 通用工具包
+# Common 模块 - 通用工具包
 
-## 概述
+## 模块概述
 
-Abstergo Common 是一个企业级 Java 通用工具包，为 Abstergo 解决方案平台提供核心基础组件支持。该包封装了项目中常用的工具类、配置管理、数据持有、代理模式、错误处理等通用功能，旨在提高代码复用性、降低开发复杂度、统一技术规范。
+Common模块是一个企业级Java通用工具包，为Abstergo解决方案平台提供核心基础组件支持。该包封装了项目中常用的工具类、配置管理、数据持有、代理模式、错误处理等通用功能，旨在提高代码复用性、降低开发复杂度、统一技术规范。
 
 ## 特性
 
@@ -22,7 +22,7 @@ Abstergo Common 是一个企业级 Java 通用工具包，为 Abstergo 解决方
 <dependency>
     <groupId>com.tbs</groupId>
     <artifactId>common</artifactId>
-    <version>1.0.0</version>
+    <version>1.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -545,17 +545,11 @@ public class CustomErrorTransformer implements IErrorTransformer {
 }
 ```
 
-## 版本历史
+## 许可证
 
-- **v1.0.0** (2024-01-01)
-  - 初始版本发布
-  - 包含基础工具类、数据持有者、代理模式等核心功能
-  - 支持 Spring Boot 自动配置
-
-## 技术支持
-
-如有问题或建议，请联系开发团队或提交 Issue。
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
 
 ---
 
-*Abstergo Common - 让 Java 开发更简单、更高效*
+**最后更新**: 2026年6月
+**版本**: 1.0-SNAPSHOT

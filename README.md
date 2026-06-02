@@ -1,25 +1,25 @@
 # Abstergo Solution - 企业级全栈解决方案
 
-🌐 **基于Spring Boot + Vue.js的现代化企业级应用开发平台**
+基于Spring Boot + Vue.js的现代化企业级应用开发平台
 
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7+-green.svg)](https://spring.io/projects/spring-boot)
 [![Vue.js](https://img.shields.io/badge/Vue.js-2.6+-brightgreen.svg)](https://vuejs.org/)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-## 📖 项目简介
+## 项目简介
 
 Abstergo Solution是一个完整的企业级全栈解决方案，采用微服务架构设计，提供从后端API到前端UI的完整技术栈支持。项目基于Spring
 Boot和Vue.js构建，集成了现代化的开发工具和最佳实践。
 
-### 🎯 核心特性
+### 核心特性
 
-- **🔧 模块化架构** - 清晰的模块划分，支持独立开发和部署
-- **🛡️ 安全认证** - 完整的RBAC权限管理和JWT令牌认证
-- **🚀 高性能** - 集成Redis缓存、异步处理等性能优化
-- **📊 监控运维** - 完整的日志、监控和运维支持
-- **🐳 容器化部署** - Docker Compose一键部署
+- **模块化架构** - 清晰的模块划分，支持独立开发和部署
+- **安全认证** - 完整的RBAC权限管理和JWT令牌认证
+- **高性能** - 集成Redis缓存、异步处理等性能优化
+- **监控运维** - 完整的日志、监控和运维支持
+- **容器化部署** - Docker Compose一键部署
 
-## 🏗️ 项目架构
+## 项目架构
 
 ### 后端模块 (Spring Boot)
 
@@ -51,7 +51,7 @@ Boot和Vue.js构建，集成了现代化的开发工具和最佳实践。
 | **shared** | 共享组件库 |
 | **etc**    | 部署配置  |
 
-## 🚀 快速开始
+## 快速开始
 
 ### 环境要求
 
@@ -94,7 +94,7 @@ npm install
 npm run serve
 ```
 
-## 📋 核心功能详解
+## 核心功能详解
 
 ### 1. 系统管理 (system模块)
 
@@ -170,7 +170,7 @@ npm run serve
 - Knife4j界面: http://localhost:8080/doc.html
 - Swagger界面: http://localhost:8080/swagger-ui/index.html
 
-## 🔧 配置说明
+## 配置说明
 
 ### 应用配置 (application.yml)
 
@@ -211,7 +211,7 @@ web:
       refresh-expire-time: 86400
 ```
 
-## 📊 监控与运维
+## 监控与运维
 
 ### 健康检查
 
@@ -242,7 +242,7 @@ XXL-Job任务调度中心：http://localhost:9898
 - 执行器管理
 - 调度日志分析
 
-## 🎯 开发指南
+## 开发指南
 
 ### 代码规范
 
@@ -297,7 +297,7 @@ UserQuery query = new UserQuery().setNameLike("John").setMinAge(18);
 List<User> users = QueryUtil.getEntityQueryWrapper(User.class).where(query).fetch();
 ```
 
-## 🔍 故障排查
+## 故障排查
 
 ### 常见问题
 
@@ -346,7 +346,7 @@ List<User> users = QueryUtil.getEntityQueryWrapper(User.class).where(query).fetc
    java -Xms512m -Xmx1024m -jar app.jar
    ```
 
-## 🤝 贡献指南
+## 贡献指南
 
 欢迎为Abstergo Solution贡献代码！请遵循以下流程：
 
@@ -363,15 +363,11 @@ List<User> users = QueryUtil.getEntityQueryWrapper(User.class).where(query).fetc
 - 更新相关文档和README
 - 通过代码审查
 
-## 📄 许可证
+## 许可证
 
-本项目基于MIT许可证开源。详情请参阅 [LICENSE](LICENSE) 文件。
+本项目基于 Apache License 2.0 许可证开源。详情请参阅 [LICENSE](LICENSE) 文件。
 
-## 📞 技术支持
-
-- **邮箱支持**: [tongjames@live.com]
-
-## 🙏 致谢
+## 致谢
 
 感谢以下开源项目的支持：
 
@@ -384,5 +380,6 @@ List<User> users = QueryUtil.getEntityQueryWrapper(User.class).where(query).fetc
 
 ---
 
-**Abstergo Solution** - 让企业级应用开发更简单、更高效！ 🚀
+**最后更新**: 2026年6月
+**版本**: 1.0-SNAPSHOT
 

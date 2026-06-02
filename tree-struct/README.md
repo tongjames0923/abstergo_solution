@@ -1,30 +1,31 @@
-# Tree-Struct 树结构模块
+# Tree-Struct 模块 - 树结构管理
 
-🌳 **基于闭包表算法的树结构数据存储和管理解决方案**
-
-## 📋 核心特性
-
-### 🚀 开箱即用
+## 模块概述
 - **零配置启动**：自动配置数据库映射和实体扫描
 - **标准化接口**：提供统一的树结构操作API
 - **内存与持久化**：支持内存树结构和数据库持久化存储
 
-### 🔒 数据完整性
+### 核心特性
+
+#### 开箱即用
 - **闭包表算法**：基于闭包表实现高效的树关系存储
 - **事务支持**：完整的数据库事务管理
 - **缓存优化**：集成Spring Cache提供性能优化
 
-### 📊 丰富功能
+#### 数据完整性
+- **闭包表算法**：基于闭包表实现高效的树关系存储
 - **多叉树支持**：支持任意多叉树结构
 - **层级查询**：支持深度查询、叶子节点查询等
 - **关系维护**：自动维护父子节点关系
 
-### 🔧 灵活扩展
+#### 丰富功能
+- **多叉树支持**：支持任意多叉树结构
 - **接口抽象**：基于接口设计，易于扩展
 - **多种实现**：提供内存树和闭包表两种实现方式
 - **配置灵活**：支持自定义配置和扩展
 
-## 🚀 快速开始
+#### 灵活扩展
+- **接口抽象**：基于接口设计，易于扩展
 
 ### 1. 添加依赖
 
@@ -146,7 +147,7 @@ public class TreeService {
 }
 ```
 
-## 🏗️ 核心组件详解
+## 快速开始
 
 ### 1. 树结构API层 (tree-api)
 
@@ -196,11 +197,11 @@ public class TreeService {
 - **自动配置**：配置实体扫描和Mapper扫描
 - **零配置**：开箱即用的配置
 
-## 🔧 高级用法
+## 核心组件详解
 
 ### 1. 自定义树节点
 
-```java
+``java
 @Data
 public class CustomTreeNode implements ITreeStorable {
     private String nodeId;
@@ -229,7 +230,7 @@ public class CustomTreeNode implements ITreeStorable {
 
 ### 2. 批量操作优化
 
-```java
+``java
 @Service
 public class BatchTreeService {
     
@@ -253,7 +254,7 @@ public class BatchTreeService {
 
 ### 3. 缓存配置优化
 
-```yaml
+``yaml
 # application.yml
 spring:
   cache:
@@ -268,11 +269,11 @@ cache:
       ttl: 1800  # 30分钟
 ```
 
-## 📊 性能优化
+## 高级用法
 
 ### 1. 查询优化策略
 
-```java
+``java
 // 使用缓存提升查询性能
 @Cacheable(cacheNames = "tree_node_cache", key = "#nodeId+#treeGroup")
 public TreeNodeEntity getTreeNode(String nodeId, String treeGroup) {
@@ -290,7 +291,7 @@ public List<ITreeStorable> getMultipleNodes(List<String> nodeIds, String treeGro
 
 ### 2. 数据库索引优化
 
-```sql
+``sql
 -- 确保关键字段都有索引
 CREATE INDEX idx_tree_node_group ON tree_node(group_name);
 CREATE INDEX idx_tree_closure_ancestor ON tree_closure(ancestor_id);
@@ -298,11 +299,11 @@ CREATE INDEX idx_tree_closure_descendant ON tree_closure(descendant_id);
 CREATE INDEX idx_tree_closure_group ON tree_closure(group_name);
 ```
 
-## 🔍 监控与调试
+## 性能优化
 
 ### 1. 日志配置
 
-```yaml
+```
 logging:
   level:
     com.tbs.struct.tree: DEBUG
@@ -310,7 +311,7 @@ logging:
 
 ### 2. 健康检查
 
-```java
+``java
 @Component
 public class TreeHealthIndicator implements HealthIndicator {
     
@@ -331,14 +332,14 @@ public class TreeHealthIndicator implements HealthIndicator {
 }
 ```
 
-## 🛠️ 故障排除
+## 监控与调试
 
 ### 1. 常见问题
 
 #### 问题：节点关系不一致
 **症状**：查询到的父子关系与预期不符
 **解决方案**：
-```java
+``java
 // 重建闭包表关系
 treeService.buildTreeClosure("your-tree-group");
 ```
@@ -353,7 +354,7 @@ treeService.buildTreeClosure("your-tree-group");
 #### 问题：事务回滚失败
 **症状**：部分操作未正确回滚
 **解决方案**：
-```java
+``java
 @Transactional(rollbackFor = Exception.class)
 public void safeTreeOperation() {
     // 业务逻辑
@@ -362,7 +363,7 @@ public void safeTreeOperation() {
 
 ### 2. 调试技巧
 
-```java
+``java
 // 启用调试日志
 @Slf4j
 @Service
@@ -382,7 +383,7 @@ public class DebugTreeService {
 }
 ```
 
-## 📈 最佳实践
+## 故障排除
 
 ### 1. 设计原则
 
@@ -402,35 +403,11 @@ public class DebugTreeService {
 - **异常处理**：完善的异常处理和回滚机制
 - **数据验证**：操作前验证数据的有效性
 
-## 🔄 版本信息
+## 许可证
 
-- **当前版本**：1.0-SNAPSHOT
-- **Java版本**：11+
-- **Spring Boot**：2.7+
-- **数据库**：MySQL 5.7+/PostgreSQL 10+
-
-## 🤝 贡献指南
-
-欢迎提交Issue和Pull Request来改进这个模块！
-
-### 开发环境设置
-
-1. 克隆项目
-2. 导入IDE
-3. 运行测试：`mvn test`
-4. 构建项目：`mvn clean package`
-
-### 代码规范
-
-- 遵循Google Java代码风格
-- 添加必要的单元测试
-- 更新相关文档
-- 确保向后兼容性
-
-## 📄 许可证
-
-本项目基于MIT许可证开源。
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
 
 ---
 
-**Tree-Struct模块** - 为您的应用提供强大而灵活的树结构管理能力！ 🌳
+**最后更新**: 2026年6月
+**版本**: 1.0-SNAPSHOT

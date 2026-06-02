@@ -1,23 +1,25 @@
-# 📁 Etc 模块 - 系统配置与部署资源
+# Etc 模块 - 系统配置与部署资源
 
-## 📋 模块概述
+## 模块概述
 
 Etc模块是Abstergo解决方案的配置和部署资源目录，包含Docker容器化部署配置、数据库初始化脚本以及系统表单配置等关键资源文件。该模块为整个系统的部署和运维提供基础设施支持。
 
-## 🏗️ 目录结构
+## 目录结构
 
 ```
 etc/
 ├── docker/                          # Docker容器化部署配置
 │   └── docker-compose.yml          # Docker Compose编排文件
 └── sql_file/                       # 数据库初始化脚本
+    ├── app_system.sql              # 应用系统数据库初始化
+    ├── nacos_config.sql            # Nacos配置中心数据库初始化
     ├── form-config/                # 表单配置相关SQL
     │   └── form-configv1.sql       # 表单配置表结构及数据
     └── xxl-job/                    # XXL-Job任务调度SQL
         └── xxl_job_init.sql        # XXL-Job初始化脚本
 ```
 
-## 🔧 核心功能
+## 核心功能
 
 ### 1. Docker容器化部署
 
@@ -25,6 +27,18 @@ etc/
 提供完整的微服务基础设施容器化部署方案：
 
 **支持的服务容器：**
+- **MySQL数据库** (abstergo_mysql)
+  - 端口: 3306
+  - 根密码: 123456
+  - 字符集: utf8mb4
+  - 自动重启策略
+
+- **Zookeeper注册中心** (abstergo_zookeeper)
+  - 客户端端口: 2181
+  - 集群通信端口: 2888, 3888
+  - 管理界面端口: 8989
+  - 自动重启策略
+
 - **Redis缓存服务** (abstergo_redis)
   - 端口: 6379
   - 认证密码: 123456
@@ -34,24 +48,40 @@ etc/
   - 服务端口: 5672
   - 管理界面: 15672
   - 默认用户: admin/admin123
-
-- **Nacos注册中心** (abstergo_nacos)
-  - 服务端口: 8848
-  - gRPC端口: 9848/9849
-  - Web控制台: 9999
-  - 单机模式运行
-
-- **Dubbo管理控制台** (abstergo_dubbo_admin)
-  - 访问端口: 9600
-  - 账号密码: admin/admin123
-  - 集成Nacos注册中心
+  - 自动重启策略
 
 - **XXL-Job任务调度中心** (xxl_job_admin)
   - 访问端口: 9898
   - 支持MySQL数据库连接
   - 访问令牌: 123456789
+  - 自动重启策略
+
+- **Dubbo管理控制台** (abstergo_dubbo_admin)
+  - 访问端口: 9600
+  - 集成Zookeeper注册中心
+  - 自动重启策略
 
 ### 2. 数据库初始化脚本
+
+#### 应用系统数据库 (app_system.sql)
+完整的应用系统数据库初始化脚本，包含：
+- 动态表单配置表
+- 表单字段配置表
+- 表单字段关系表
+- 属性关系表
+- 属性值配置表
+- 用户管理相关表
+- 公司管理相关表
+
+#### Nacos配置中心数据库 (nacos_config.sql)
+Nacos配置中心数据库初始化脚本，包含：
+- 配置信息表
+- 配置聚合表
+- 配置Beta表
+- 配置标签表
+- 集群容量信息表
+- 历史配置信息表
+- 租户容量信息表
 
 #### XXL-Job任务调度初始化 (xxl_job_init.sql)
 完整的XXL-Job分布式任务调度系统数据库初始化脚本：
@@ -84,7 +114,7 @@ etc/
 - 包含Element UI组件属性配置
 - 预置用户管理、公司管理等表单配置
 
-## 🚀 快速部署
+## 快速部署
 
 ### 环境要求
 - Docker 20.10+
@@ -101,28 +131,53 @@ etc/
 
 2. **初始化数据库**
    ```bash
+   # 执行应用系统数据库初始化
+   mysql -h localhost -P 3306 -u root -p < sql_file/app_system.sql
+   
+   # 执行Nacos配置中心数据库初始化
+   mysql -h localhost -P 3306 -u root -p < sql_file/nacos_config.sql
+   
    # 执行XXL-Job初始化
-   mysql -h 192.168.50.198 -P 3306 -u root -p < sql_file/xxl-job/xxl_job_init.sql
+   mysql -h localhost -P 3306 -u root -p < sql_file/xxl-job/xxl_job_init.sql
    
    # 执行表单配置初始化
-   mysql -h 192.168.50.198 -P 3306 -u root -p < sql_file/form-config/form-configv1.sql
+   mysql -h localhost -P 3306 -u root -p < sql_file/form-config/form-configv1.sql
    ```
 
 3. **验证服务状态**
+   - MySQL: `mysql -h localhost -P 3306 -u root -p`
    - Redis: `redis-cli -h localhost -p 6379 -a 123456 ping`
    - RabbitMQ: 访问 http://localhost:15672 (admin/admin123)
-   - Nacos: 访问 http://localhost:9999/nacos
-   - Dubbo Admin: 访问 http://localhost:9600 (root/root)
+   - Zookeeper: 访问 http://localhost:8989
+   - Dubbo Admin: 访问 http://localhost:9600
    - XXL-Job: 访问 http://localhost:9898
 
-## ⚙️ 配置说明
+## 配置说明
 
 ### Docker服务配置
+
+#### MySQL配置
+```yaml
+mysql:
+  image: docker.m.daocloud.io/library/mysql:8.4
+  ports: ["3306:3306"]
+  environment:
+    MYSQL_ROOT_PASSWORD: 123456
+    TZ: Asia/Shanghai
+  command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+```
+
+#### Zookeeper配置
+```yaml
+zookeeper:
+  image: docker.1ms.run/library/zookeeper:3.9.5
+  ports: ["2181:2181", "2888:2888", "3888:3888", "8989:8080"]
+```
 
 #### Redis配置
 ```yaml
 redis:
-  image: redis:6.2.19
+  image: docker.m.daocloud.io/library/redis:6.2.19
   ports: ["6379:6379"]
   command: redis-server --requirepass 123456
 ```
@@ -130,7 +185,7 @@ redis:
 #### RabbitMQ配置
 ```yaml
 rabbitmq:
-  image: rabbitmq:3-management
+  image: docker.1ms.run/library/rabbitmq:3.10-management
   ports: ["5672:5672", "15672:15672"]
   environment:
     RABBITMQ_DEFAULT_USER: admin
@@ -140,29 +195,42 @@ rabbitmq:
 #### XXL-Job配置
 ```yaml
 xxl-job-admin:
-  image: xuxueli/xxl-job-admin:2.4.0
+  image: docker.1ms.run/xuxueli/xxl-job-admin:2.5.0
   environment:
-    PARAMS: '--xxl.job.accessToken=123456789 --spring.datasource.url=jdbc:mysql://192.168.50.198:3306/xxlJob?...'
+    PARAMS: '--xxl.job.accessToken=123456789 --spring.datasource.url=jdbc:mysql://mysql:3306/xxl_job?useUnicode=true&characterEncoding=UTF-8&autoReconnect=true&serverTimezone=Asia/Shanghai --spring.datasource.username=root --spring.datasource.password=123456'
   ports: ["9898:8080"]
+```
+
+#### Dubbo Admin配置
+```yaml
+dubbo-admin:
+  image: docker.1ms.run/apache/dubbo-admin:0.6.0
+  ports: ["9600:38080"]
+  environment:
+    - admin.registry.address=zookeeper://zookeeper:2181
+    - admin.config-center=zookeeper://zookeeper:2181
+    - admin.metadata-report.address=zookeeper://zookeeper:2181
+    - server.port= 38080
 ```
 
 ### 数据库配置
 
-#### XXL-Job数据库连接
-- 数据库: xxlJob
-- 用户名: root
-- 密码: !Ty1997923
-- 字符集: UTF-8
-- 时区: Asia/Shanghai
-
-#### 表单配置数据库
+#### 应用系统数据库
 - 数据库: app_system
 - 字符集: utf8mb4
 - 支持中文存储
 
-## 🔒 安全配置
+#### XXL-Job数据库
+- 数据库: xxl_job
+- 用户名: root
+- 密码: 123456
+- 字符集: UTF-8
+- 时区: Asia/Shanghai
+
+## 安全配置
 
 ### 服务认证
+- **MySQL**: 密码认证 (123456)
 - **Redis**: 密码认证 (123456)
 - **RabbitMQ**: 用户名密码认证 (admin/admin123)
 - **XXL-Job**: 访问令牌认证 (123456789)
@@ -172,12 +240,13 @@ xxl-job-admin:
 - 端口映射到宿主机
 - 支持内网访问控制
 
-## 📊 监控与运维
+## 监控与运维
 
 ### 服务监控
+- **MySQL**: 内置监控命令
 - **Redis**: 内置监控命令
 - **RabbitMQ**: Web管理界面监控
-- **Nacos**: Web控制台监控
+- **Zookeeper**: Web控制台监控
 - **XXL-Job**: 任务执行监控面板
 
 ### 日志管理
@@ -185,7 +254,7 @@ xxl-job-admin:
 - 服务日志: 各服务内置日志系统
 - 任务日志: XXL-Job执行日志记录
 
-## 🔧 故障排查
+## 故障排查
 
 ### 常见问题
 
@@ -220,29 +289,28 @@ xxl-job-admin:
 - 设置合理的队列长度
 - 优化消费者配置
 
-## 📄 版本信息
+## 版本信息
 
 ### 当前版本
 - **Docker Compose**: 3.8
+- **MySQL**: 8.4
+- **Zookeeper**: 3.9.5
 - **Redis**: 6.2.19
-- **RabbitMQ**: 3-management
-- **Nacos**: v2.2.3
-- **XXL-Job**: 2.4.0
-- **Dubbo Admin**: latest
+- **RabbitMQ**: 3.10-management
+- **XXL-Job**: 2.5.0
+- **Dubbo Admin**: 0.6.0
 
 ### 更新日志
 - v1.0.0: 初始版本，包含基础服务容器化配置
 - v1.1.0: 新增XXL-Job任务调度支持
 - v1.2.0: 完善表单配置和数据库初始化脚本
+- v1.3.0: 新增MySQL和Zookeeper服务支持
 
-## 📞 技术支持
+## 许可证
 
-如有部署或配置问题，请联系：
-- **部署文档**: [部署指南链接]
-- **问题反馈**: [技术支持邮箱]
-- **社区支持**: [社区论坛链接]
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
 
 ---
 
-**最后更新**: 2024年  
-**版本**: 1.0-SNAPSHOT
+**最后更新**: 2026年6月  
+**版本**: 1.3-SNAPSHOT

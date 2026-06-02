@@ -2,7 +2,7 @@
 
 Shared模块是Abstergo解决方案的核心共享组件库，提供了系统开发中通用的基础设施、数据模型和业务接口。该模块采用Maven多模块架构，包含shared-api和shared-pojo两个子模块，为整个系统提供统一的开发标准和可复用组件。
 
-## 🏗️ 模块架构
+## 模块架构
 
 ### shared-pojo模块
 **数据模型与基础组件**
@@ -20,7 +20,7 @@ Shared模块是Abstergo解决方案的核心共享组件库，提供了系统开
 - **验证框架**: 自定义验证注解（@UserNameValid、@PasswordValid）
 - **拦截器**: 系统操作日志拦截器(SystemOperateInterceptor)
 
-## 📋 核心功能
+## 核心功能
 
 ### 1. 标准CRUD操作
 提供基于模板的CRUD操作实现，支持：
@@ -47,7 +47,7 @@ Shared模块是Abstergo解决方案的核心共享组件库，提供了系统开
 - 登录信息（SystemLoginInfoEntity）
 - 操作记录（SystemOperateRecordEntity）
 
-## 🚀 快速开始
+## 快速开始
 
 ### 依赖配置
 在pom.xml中添加依赖：
@@ -116,7 +116,7 @@ public class DemoController extends AbstractCrudController<DemoEntity, Long, Dem
 }
 ```
 
-## 🔧 配置说明
+## 配置说明
 
 ### Jackson序列化配置
 模块提供自定义的JSON序列化配置：
@@ -133,7 +133,7 @@ public class SqlLogicDeleteIntercepter implements Interceptor {
 }
 ```
 
-## 📊 数据模型关系
+## 数据模型关系
 
 ### 用户-角色-公司关系
 - 用户与角色：多对多关系（通过UserRoleRelationEntity）
@@ -146,7 +146,7 @@ public class SqlLogicDeleteIntercepter implements Interceptor {
 - 逻辑删除标志位
 - 操作人信息记录（可选）
 
-## 🎯 最佳实践
+## 最佳实践
 
 ### 1. 实体设计规范
 - 所有实体必须实现IBaseEntity接口
@@ -163,40 +163,11 @@ public class SqlLogicDeleteIntercepter implements Interceptor {
 - 自定义业务接口时保持RESTful风格
 - 统一使用AjaxResult作为响应格式
 
-## 🔄 版本信息
+## 许可证
 
-- **Java版本**: 11
-- **Spring Boot**: 集成Spring Boot Starter
-- **数据库**: 支持JPA和MyBatis
-- **构建工具**: Maven
-
-## 📝 开发指南
-
-### 新增实体步骤
-1. 在shared-pojo中定义实体类，实现IBaseEntity
-2. 在shared-api中创建对应的Mapper接口
-3. 实现服务类和控制器类
-4. 配置数据库表和索引
-
-### 自定义验证器
-```java
-public class CustomValidator implements ConstraintValidator<CustomValid, String> {
-    // 实现自定义验证逻辑
-}
-```
-
-## 🤝 贡献指南
-
-欢迎为Shared模块贡献代码！请确保：
-1. 遵循现有的代码风格和架构
-2. 添加必要的单元测试
-3. 更新相关文档
-4. 通过代码审查
-
-## 📞 技术支持
-
-如有问题或建议，请联系开发团队或提交Issue。
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
 
 ---
 
-*最后更新: 基于当前代码实现的最新功能说明*
+**最后更新**: 2026年6月
+**版本**: 1.0-SNAPSHOT

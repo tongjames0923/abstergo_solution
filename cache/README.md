@@ -1,6 +1,6 @@
-# Cache 缓存解决方案
+# Cache 模块 - 缓存解决方案
 
-## 概述
+## 模块概述
 
 Cache模块是一个基于Spring Cache框架的增强缓存解决方案，提供了TTL（Time To Live）缓存、缓存操作监控、缓存限制等高级功能。该模块采用模块化设计，分为API接口层和实现层，支持灵活的配置和扩展。
 
@@ -298,12 +298,11 @@ logging:
     com.tbs.cache: DEBUG
 ```
 
-## 版本信息
+## 许可证
 
-- **当前版本**: 1.0-SNAPSHOT
-- **Java版本**: 11+
-- **Spring Boot**: 兼容版本
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
 
-## 贡献指南
+---
 
-欢迎提交Issue和Pull Request来改进这个缓存解决方案。
+**最后更新**: 2026年6月
+**版本**: 1.0-SNAPSHOT

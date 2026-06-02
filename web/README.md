@@ -1,10 +1,12 @@
-# TBS Web 框架
+# TBS Web 模块 - Web应用框架
+
+## 模块概述
 
 TBS Web 是一个基于 Spring Boot 和 Spring Security 的企业级 Web 应用框架，提供完整的认证授权、统一响应格式、请求追踪和 API 拦截等核心功能。
 
 ## 功能特性
 
-### 🔐 安全认证
+### 安全认证
 - **多种认证方式支持**: 
   - **用户名密码认证**: 支持传统的用户名密码登录方式
   - **Token认证**: 支持基于Token的认证机制（不限于JWT）
@@ -13,19 +15,19 @@ TBS Web 是一个基于 Spring Boot 和 Spring Security 的企业级 Web 应用�
 - **灵活认证配置**: 可根据业务需求配置认证开关、Token有效期等参数
 - **认证状态管理**: 提供完整的认证状态变更通知机制
 
-### 📊 统一响应
+### 统一响应
 - **标准化响应格式**: 提供统一的 AjaxResult 响应对象
 - **自动包装**: 通过 AOP 自动包装控制器返回值
 - **异常处理**: 统一的异常处理和错误码定义
 - **自定义注解**: 支持 `@Wrapped` 和 `@NoWrapped` 注解控制响应包装
 
-### 🔍 请求追踪
+### 请求追踪
 - **方法调用追踪**: 自动记录方法调用链路
 - **Trace ID 生成**: 支持 UUID 等 Trace ID 生成策略
 - **调用树构建**: 提供方法调用树的构建和追踪
 - **性能监控**: 集成方法执行时间监控
 
-### 🚪 API 网关
+### API 网关
 - **路径拦截**: 基于 AntPath 的路径匹配和拦截
 - **自定义拦截器**: 支持自定义 API 调用拦截器
 - **网关中心**: 提供统一的网关管理和路由控制
@@ -345,7 +347,7 @@ public class GlobalExceptionHandler {
 
 TBS Web 框架采用高度模块化和接口化的设计，提供了强大的横向拓展能力，支持业务方根据具体需求灵活定制和扩展功能。
 
-### 🔧 可扩展的认证体系
+## 可扩展的认证体系
 
 #### 1. 认证中心扩展
 框架提供 `IAuthenticationCenter` 接口，支持自定义认证逻辑：
@@ -422,7 +424,7 @@ public class OAuthAccessTokenProvider extends AbstractAccessTokenProvider<IOAuth
 }
 ```
 
-### 🔌 可插拔的组件架构
+## 可插拔的组件架构
 
 #### 1. Token提取器扩展
 支持从不同来源提取Token：
@@ -469,7 +471,7 @@ public class CustomPasswordEncrypt implements IPasswordEncrypt {
 }
 ```
 
-### 🎯 配置驱动的扩展
+## 配置驱动的扩展
 
 #### 1. 动态配置切换
 通过配置文件灵活切换实现类：
@@ -502,7 +504,7 @@ public class CustomAuthConfig {
 }
 ```
 
-### 🚀 扩展场景示例
+## 扩展场景示例
 
 #### 1. 多租户认证扩展
 ```java
@@ -547,7 +549,7 @@ public class BiometricAccessTokenProvider extends AbstractAccessTokenProvider<IB
 }
 ```
 
-### 📋 扩展最佳实践
+## 扩展最佳实践
 
 1. **遵循接口契约**：自定义实现必须严格遵循接口定义的方法契约
 2. **异常处理**：合理处理各种异常情况，提供清晰的错误信息
@@ -573,16 +575,11 @@ public class BiometricAccessTokenProvider extends AbstractAccessTokenProvider<IB
    - 检查控制器是否继承 BaseController
    - 确认方法是否被 ResponseAjaxAspect 拦截
 
-## 版本信息
-
-- **Spring Boot**: 2.x+
-- **Java**: 11+
-- **Spring Security**: 5.x+
-
-## 贡献指南
-
-欢迎提交 Issue 和 Pull Request 来改进这个框架。
-
 ## 许可证
 
-本项目基于 TBS 内部许可证。
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
+
+---
+
+**最后更新**: 2026年6月
+**版本**: 1.0-SNAPSHOT

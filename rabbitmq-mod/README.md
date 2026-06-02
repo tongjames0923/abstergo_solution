@@ -1,26 +1,22 @@
-# RabbitMQ 模块
+# RabbitMQ 模块 - 分布式消息广播解决方案
 
-RabbitMQ 模块是基于 Spring Boot AMQP 的分布式消息广播解决方案，为 Abstergo Solution 提供可靠的消息通信能力。该模块实现了完整的消息生产、消费、确认机制，支持分布式环境下的异步事件处理。
-
-## 核心特性
-
-### 🚀 开箱即用
+## 模块概述
 - **自动配置**：基于 Spring Boot 自动配置 RabbitMQ 连接工厂、模板和管理器
 - **组件自动声明**：应用启动时自动创建交换机、队列和绑定关系
 - **配置驱动**：支持通过 YAML 配置文件灵活调整 RabbitMQ 参数
 
-### 🔒 可靠性保障
+### 可靠性保障
 - **消息确认机制**：支持发布者确认和手动消费者确认
 - **消息持久化**：队列和交换机默认启用持久化，防止消息丢失
 - **重试机制**：内置连接重试和消息处理失败重试机制
 - **高可用性**：支持队列镜像和高可用策略
 
-### 📡 分布式支持
+### 分布式支持
 - **节点标识**：支持多节点环境下的消息路由和事件分发
 - **事件桥接**：提供事件对象的序列化和反序列化桥接机制
 - **统一接口**：与 Abstergo Solution 的事件分发系统无缝集成
 
-### ⚡ 性能优化
+### 性能优化
 - **连接池管理**：优化的连接工厂配置，支持连接复用
 - **消息转换器**：高效的 JSON 序列化消息转换器
 - **预取控制**：支持消费者预取数量配置，平衡吞吐量和公平性
@@ -143,9 +139,9 @@ public class MessageService {
 
 ### RabbitMqConfig - 核心配置类
 
-<mcsymbol name="RabbitMqConfig" filename="RabbitMqConfig.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqConfig.java" startline="22" type="class">RabbitMqConfig</mcsymbol> 是模块的核心配置类，负责创建和管理 RabbitMQ 相关组件：
+RabbitMqConfig是模块的核心配置类，负责创建和管理RabbitMQ相关组件：
 
-**主要 Bean 定义：**
+**主要Bean定义：**
 - `connectionFactory()`: 创建带连接池的 RabbitMQ 连接工厂
 - `rabbitTemplate()`: 配置消息发送模板，支持发布确认
 - `amqpAdmin()`: 提供 RabbitMQ 管理功能
@@ -156,7 +152,7 @@ public class MessageService {
 
 ### RabbitMqInitializer - 组件初始化器
 
-<mcsymbol name="RabbitMqInitializer" filename="RabbitMqInitializer.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/RabbitMqInitializer.java" startline="17" type="class">RabbitMqInitializer</mcsymbol> 在应用启动时主动创建 RabbitMQ 组件：
+RabbitMqInitializer在应用启动时主动创建RabbitMQ组件：
 
 **初始化流程：**
 1. 创建持久化直连交换机
@@ -166,7 +162,7 @@ public class MessageService {
 
 ### AbstractRabbaitMqSupport - 消息支持基类
 
-<mcsymbol name="AbstractRabbaitMqSupport" filename="AbstractRabbaitMqSupport.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/support/AbstractRabbaitMqSupport.java" startline="24" type="class">AbstractRabbaitMqSupport</mcsymbol> 是消息处理的核心抽象类：
+AbstractRabbaitMqSupport是消息处理的核心抽象类：
 
 **核心功能：**
 - **消息监听**：自动创建消息监听容器，监听指定队列
@@ -177,7 +173,7 @@ public class MessageService {
 
 ### RabbitMqProperty - 配置属性
 
-<mcsymbol name="RabbitMqProperty" filename="RabbitMqProperty.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/rabbitmq-mod/src/main/java/com/tbs/broadcast/rabbitmq/config/property/RabbitMqProperty.java" startline="10" type="class">RabbitMqProperty</mcsymbol> 封装了 RabbitMQ 相关配置：
+RabbitMqProperty封装了RabbitMQ相关配置：
 
 **配置属性：**
 - `exchangeName`: 交换机名称（默认：tbs.broadcast.exchange）
@@ -341,21 +337,11 @@ curl http://localhost:8080/actuator/health
 2. **使用管理界面**：通过 Web 界面监控队列状态
 3. **消息追踪**：实现消息 ID 追踪，便于问题定位
 
-## 版本信息
-
-- **Spring Boot**: 2.x+
-- **RabbitMQ**: 3.8+
-- **Java**: 11+
-
-## 贡献指南
-
-欢迎提交 Issue 和 Pull Request 来改进 RabbitMQ 模块。在提交代码前请确保：
-
-1. 代码符合项目的编码规范
-2. 添加相应的单元测试
-3. 更新相关文档
-4. 通过所有现有测试
-
 ## 许可证
 
-本项目基于 Abstergo Solution 许可证。详情请参阅项目根目录的 LICENSE 文件。
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
+
+---
+
+**最后更新**: 2026年6月
+**版本**: 1.0-SNAPSHOT
