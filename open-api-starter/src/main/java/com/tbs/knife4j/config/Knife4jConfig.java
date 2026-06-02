@@ -3,7 +3,6 @@ package com.tbs.knife4j.config;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.tbs.common.util.base.CollUtil;
-import io.swagger.v3.oas.models.ExternalDocumentation;
 import io.swagger.v3.oas.models.OpenAPI;
 import io.swagger.v3.oas.models.info.Info;
 import io.swagger.v3.oas.models.info.License;
@@ -41,13 +40,34 @@ public class Knife4jConfig {
     private String port;
 
     @Bean
-    @ConditionalOnProperty(name = "tbs.knife4j.enable", havingValue = "true")
+    @ConditionalOnProperty(name = "tbs.knife4j.enable", havingValue = "true", matchIfMissing = true)
     public OpenAPI tbsOpenAPI() {
-        OpenAPI openAPI = new OpenAPI().info(
-            new Info().title(property.getTitle()).description(property.getDescription()).version(property.getVersion())
-                .license(new License().name(property.getLicense()).url(property.getLicenseUrl()))).externalDocs(
-            new ExternalDocumentation().description(property.getExternalDocsDescription())
-                .url(property.getExternalDocsUrl()));
+        if (property == null) {
+            property = new Knife4jProperty();
+        }
+        var info = new Info();
+        if (com.tbs.common.util.base.StrUtil.isNotEmpty(property.getTitle())) {
+            info.title(property.getTitle());
+        } else {
+            info.title("TBS 后端服务 API 文档");
+        }
+        if (com.tbs.common.util.base.StrUtil.isNotEmpty(property.getDescription())) {
+            info.description(property.getDescription());
+        } else {
+            info.description("TBS 后端服务 API 文档");
+        }
+        if (com.tbs.common.util.base.StrUtil.isNotEmpty(property.getVersion())) {
+            info.version(property.getVersion());
+        }
+        {
+            info.version("v1.0.0");
+        }
+        if (com.tbs.common.util.base.StrUtil.isNotEmpty(property.getLicense())) {
+            info.license(new License().name(property.getLicense()).url(property.getLicenseUrl()));
+        } else {
+            info.license(new License().name("Apache 2.0").url("http://springdoc.org"));
+        }
+        OpenAPI openAPI = new OpenAPI().info(info);
         // 添加服务器配置
         if (CollUtil.isNotEmpty(property.getServers())) {
             List<Server> servers = new ArrayList<>();
