@@ -1,12 +1,14 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.role.ISystemRoleService;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.app.web.AbstractCrudController;
+import com.tbs.shared.constant.RoleConstants;
+import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -110,6 +112,35 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 			@Parameter(name = "pageSize", description = "每页大小") @RequestParam(required = false) Long pageSize) {
 		return super.query(criteria, pageNum, pageSize);
 	}
+
+	@GetMapping("/enable/{id}")
+	@Operation(summary = "启用角色", description = "启用角色")
+	@ApiResponse(responseCode = "200", description = "成功启用角色",
+		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+	public AjaxResult enable(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
+		SystemRoleEntity entity = roleService.queryById(id);
+		if (entity == null) {
+			return AjaxUtil.getInstance().error("角色不存在");
+		}
+		entity.setFlag(SystemRoleFlagEnum.ACTIVE.getCode());
+		roleService.save(entity);
+		return AjaxUtil.getInstance().success("启用成功", null);
+	}
+
+	@GetMapping("/disable/{id}")
+	@Operation(summary = "禁用角色", description = "禁用角色")
+	@ApiResponse(responseCode = "200", description = "成功禁用角色",
+		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+	public AjaxResult disable(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
+		SystemRoleEntity entity = roleService.queryById(id);
+		if (entity == null) {
+			return AjaxUtil.getInstance().error("角色不存在");
+		}
+		entity.setFlag(SystemRoleFlagEnum.DISABLE.getCode());
+		roleService.save(entity);
+		return AjaxUtil.getInstance().success("禁用成功", null);
+	}
+
 
 	@Override
 	public String getBusinessName() {

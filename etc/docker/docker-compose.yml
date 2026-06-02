@@ -1,7 +1,6 @@
 version: '3.8'
-
+name: "app_system_core_env"
 services:
-
   mysql:
     image: docker.m.daocloud.io/library/mysql:8.4
     container_name: abstergo_mysql
@@ -60,9 +59,9 @@ services:
     ports:
       - "9600:38080"
     environment:
-      - admin.registry.address=zookeeper://zookeeper:8848
-      - admin.config-center=zookeeper://zookeeper:8848
-      - admin.metadata-report.address=zookeeper://zookeeper:8848
+      - admin.registry.address=zookeeper://zookeeper:2181
+      - admin.config-center=zookeeper://zookeeper:2181
+      - admin.metadata-report.address=zookeeper://zookeeper:2181
       - server.port= 38080
     depends_on:
       - zookeeper

@@ -32,7 +32,7 @@ import javax.annotation.Resource;
  * @author abstergo
  * @since 1.0.0
  */
-@RequestMapping("/private/admin")
+@RequestMapping("/private/admin/roles")
 @RestController
 @PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
 @Tag(name = "管理员角色管理接口", description = "管理员角色管理接口")
@@ -50,7 +50,7 @@ public class AdminRoleController extends BaseController {
      * @param userId 用户ID
      * @return 用户角色列表
      */
-    @GetMapping("roles/{userId}")
+    @GetMapping("/{userId}")
     @Operation(summary = "查询用户角色", description = "根据用户ID查询该用户拥有的所有角色")
     @ApiResponse(responseCode = "200", description = "成功查询用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -66,7 +66,7 @@ public class AdminRoleController extends BaseController {
      * @param role   角色名称
      * @return 操作结果
      */
-    @GetMapping("/role/enable/{userId}")
+    @GetMapping("/enable/{userId}")
     @Operation(summary = "启用用户角色", description = "为指定用户启用指定角色")
     @ApiResponse(responseCode = "200", description = "成功启用用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -78,32 +78,13 @@ public class AdminRoleController extends BaseController {
     }
 
     /**
-     * 查询角色列表
-     *
-     * @param criteria 查询条件
-     * @param page     页码
-     * @param num      每页数量
-     * @return 角色列表
-     */
-    @PostMapping("roles/query")
-    @Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
-    @ApiResponse(responseCode = "200", description = "成功查询角色列表",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    public AjaxResult query(
-        @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,
-        @Parameter(name = "page", description = "页码") @RequestParam(required = false) Long page,
-        @Parameter(name = "num", description = "每页数量") @RequestParam(required = false) Long num) {
-        return successResult(roleService.queryAndPage(criteria, QueryPageModel.of(page, num)));
-    }
-
-    /**
      * 禁用用户角色
      *
      * @param userId 用户ID
      * @param role   角色名称
      * @return 操作结果
      */
-    @GetMapping("/role/disable/{userId}")
+    @GetMapping("/disable/{userId}")
     @Operation(summary = "禁用用户角色", description = "为指定用户禁用指定角色")
     @ApiResponse(responseCode = "200", description = "成功禁用用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -112,6 +93,25 @@ public class AdminRoleController extends BaseController {
         @Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
         relationService.disableRole(userId, role);
         return AjaxUtil.getInstance().success("取消授权成功", null);
+    }
+
+    /**
+     * 查询角色列表
+     *
+     * @param criteria 查询条件
+     * @param page     页码
+     * @param num      每页数量
+     * @return 角色列表
+     */
+    @PostMapping("/query")
+    @Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
+    @ApiResponse(responseCode = "200", description = "成功查询角色列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult query(
+        @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,
+        @Parameter(name = "page", description = "页码") @RequestParam(required = false) Long page,
+        @Parameter(name = "num", description = "每页数量") @RequestParam(required = false) Long num) {
+        return successResult(roleService.queryAndPage(criteria, QueryPageModel.of(page, num)));
     }
 
     @Resource

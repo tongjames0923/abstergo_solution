@@ -29,7 +29,7 @@ dubbo:
     check-serializable: false
     serialize-check-status: DISABLE
   registry:
-    address: zookeeper://127.0.0.1:8848
+    address: zookeeper://127.0.0.1:2181
   protocol:
     port: 20888
     name: tri

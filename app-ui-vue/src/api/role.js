@@ -72,7 +72,7 @@ export function deleteRole(id) {
  */
 export function activateRole(id) {
   return request({
-    url: `/private/admin/role/activite/${id}`,
+    url: `/private/admin/role/enable/${id}`,
     method: 'get'
   })
 }
