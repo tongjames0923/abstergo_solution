@@ -24,9 +24,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 /**
- * 管理员角色管理控制器
+ * 管理员角色管理控制器,用于管理用户使用的角色权限。
  * <p>
- * 该控制器用于管理管理员角色相关的操作，包括查询用户角色、启用/禁用角色、激活/禁用账户等操作
+ * 该控制器用于控制用户与权限的绑定关系
  * </p>
  *
  * @author abstergo
@@ -35,7 +35,7 @@ import javax.annotation.Resource;
 @RequestMapping("/private/admin/roles")
 @RestController
 @PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
-@Tag(name = "管理员角色管理接口", description = "管理员角色管理接口")
+@Tag(name = "用户角色管理接口", description = "用户角色管理接口")
 public class AdminRoleController extends BaseController {
 
     @Resource
