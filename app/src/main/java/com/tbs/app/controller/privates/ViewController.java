@@ -1,11 +1,13 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.view.IViewService;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.web.uitl.AuthUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -15,8 +17,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 视图控制器

@@ -5,6 +5,7 @@ import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
+import { hasRole } from '@/utils/permission'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -55,14 +56,9 @@ export function setUpRouterPermissions(router) {
 
         // 检查路由是否需要特定角色权限
         if (to.meta && to.meta.roles && to.meta.roles.length > 0) {
-          // 确保用户拥有访问该路由所需的所有角色
-          const requiredRoles = to.meta.roles
           const userRoles = store.getters.roles || []
 
-          // 检查用户角色是否包含所有必需的角色
-          const hasAllRequiredRoles = requiredRoles.every(role => userRoles.includes(role))
-
-          if (!hasAllRequiredRoles) {
+          if (!hasRole(userRoles, to.meta.roles)) {
             next(`/403`)
             NProgress.done()
             return

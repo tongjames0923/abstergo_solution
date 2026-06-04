@@ -71,52 +71,6 @@ export const constantRoutes = [
     }
     ]
   }
-  //
-  // {
-  //   path: '/admin',
-  //   component: Layout,
-  //   name: 'admin',
-  //   redirect: '/admin/user',
-  //   meta: {title: '管理员操作', icon: 'el-icon-s-help', roles: ['1']},
-  //   children: [
-  //     {
-  //       path: 'user',
-  //       name: '用户管理',
-  //       component: () => import('@/views/admin/user/index.vue'),
-  //       meta: {title: '用户管理', icon: 'table', roles: ['1']}
-  //     },
-  //     {
-  //       path: 'role',
-  //       name: '角色管理',
-  //       component: () => import('@/views/admin/role/index.vue'),
-  //       meta: {title: '角色管理', icon: 'eye', roles: ['1']}
-  //     },
-  //     {
-  //       path: 'company',
-  //       name: '公司管理',
-  //       component: () => import('@/views/admin/company/index.vue'),
-  //       meta: {title: '公司管理', icon: 'el-icon-s-custom', roles: ['1']}
-  //     },
-  //     {
-  //       path: 'form',
-  //       name: '表单创建',
-  //       component: () => import('@/views/form/FormCreator.vue'),
-  //       meta: {title: '表单创建', icon: 'el-icon-s-custom', roles: ['1']}
-  //     },
-  //     {
-  //       path: 'form-manager',
-  //       name: '表单管理',
-  //       component: () => import('@/views/form/FormManager.vue'),
-  //       meta: {title: '表单管理', icon: 'el-icon-s-order', roles: ['1']}
-  //     },
-  //     {
-  //       path: 'systemlog',
-  //       name: '系统运行报表',
-  //       component: () => import('@/views/admin/systemlog/index.vue'),
-  //       meta: {title: '系统运行报表', icon: 'el-icon-s-data', roles: ['1']}
-  //     }
-  //   ]
-  // },
 ]
 
 export async function resetRouter() {
@@ -186,7 +140,7 @@ async function generateRoutesFromServer() {
       try {
         // 先尝试从缓存中获取路由数据
         let res = routeCacheService.getCachedRoutes()
-        
+
         if (res) {
           console.log('使用缓存的动态路由数据') // 调试日志
         } else {
@@ -194,7 +148,7 @@ async function generateRoutesFromServer() {
           const response = await getRoutes()
           res = response.data
           console.log('从后端获取的动态路由数据:', res) // 调试日志
-          
+
           // 将获取到的路由数据缓存起来
           routeCacheService.cacheRoutes(res)
         }
@@ -205,7 +159,7 @@ async function generateRoutesFromServer() {
           routes.push(res[i])
         }
         console.log('映射后的动态路由:', routes) // 调试日志
-        
+
         // 标记动态路由已加载
         hasLoadedDynamicRoutes = true
       } catch (error) {
@@ -265,7 +219,7 @@ export async function updateRouter() {
       // 更新现有 router 的 matcher
       currentRouter.matcher = newRouter.matcher
     }
-    
+
     // 6. 更新全局 router 引用
     currentRouter = newRouter
 
@@ -275,7 +229,7 @@ export async function updateRouter() {
     }
 
     console.log('路由更新成功，动态路由数量:', dynamicRoutes.length)
-    
+
     // 8. 返回 Promise，确保调用者可以等待更新完成
     return new Promise((resolve) => {
       // 使用 Vue.nextTick 确保 DOM 更新完成
@@ -297,10 +251,10 @@ export async function refreshRoutes() {
   try {
     // 清除缓存
     routeCacheService.clearCache()
-    
+
     // 重新获取路由数据并更新路由
     await updateRouter()
-    
+
     console.log('路由缓存已刷新')
   } catch (error) {
     console.error('刷新路由失败:', error)

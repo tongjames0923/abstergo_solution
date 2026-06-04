@@ -25,18 +25,21 @@ import Logo from './Logo'
 import SidebarItem from './SidebarItem'
 import variables from '@/styles/variables.scss'
 import { constantRoutes } from '@/router'
+import { isRouteVisible } from '@/utils/permission'
 
 export default {
   components: { SidebarItem, Logo },
   computed: {
     ...mapGetters([
       'sidebar',
-      'routes' // 从 store 中获取动态路由
+      'routes', // 从 store 中获取动态路由
+      'roles' // 获取用户角色
     ]),
     // 合并静态路由和动态路由
     allRoutes() {
-      // 将 store 中的动态路由与静态路由合并
-      return [...constantRoutes, ...this.routes]
+      // 将 store 中的动态路由与静态路由合并，并进行权限过滤
+      const allRoutes = [...constantRoutes, ...this.routes]
+      return this.filterRoutes(allRoutes)
     },
     activeMenu() {
       const route = this.$route
@@ -55,6 +58,26 @@ export default {
     },
     isCollapse() {
       return !this.sidebar.opened
+    }
+  },
+  methods: {
+    // 过滤路由，只保留用户有权限访问的路由
+    filterRoutes(routes) {
+      return routes.filter(route => {
+        // 检查当前路由是否对用户可见
+        const isVisible = isRouteVisible(route, this.roles)
+        
+        // 如果有子路由，递归过滤子路由
+        if (route.children && route.children.length > 0) {
+          const filteredChildren = this.filterRoutes(route.children)
+          // 更新子路由
+          route.children = filteredChildren
+          // 如果过滤后没有子路由，则父路由也不显示
+          return isVisible && filteredChildren.length > 0
+        }
+        
+        return isVisible
+      })
     }
   }
 }
