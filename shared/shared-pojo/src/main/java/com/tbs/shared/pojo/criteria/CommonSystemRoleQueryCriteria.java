@@ -1,7 +1,6 @@
 package com.tbs.shared.pojo.criteria;
 
-import java.util.List;
-
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.QueryField;
@@ -10,14 +9,16 @@ import com.tbs.sql.annotation.QueryOrderField;
 import com.tbs.sql.constants.OrderConstant;
 import com.tbs.sql.enums.QueryContrastEnum;
 import com.tbs.sql.order.impl.QueryOrderedModel;
-
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 通用系统角色查询条件 用于构建系统角色表(SystemRoleEntity)的查询条件
  *
  * @author abstergo
  */
+@LogicDeleteEntity(activeFlagValues = {1, 2, 0}, filedName = "flag")
 @Data
 public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<SystemRoleEntity> {
 	/**

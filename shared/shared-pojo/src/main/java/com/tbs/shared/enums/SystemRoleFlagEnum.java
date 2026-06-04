@@ -2,6 +2,11 @@ package com.tbs.shared.enums;
 
 import com.tbs.common.BaseEnum;
 
+/**
+ * 系统角色标志枚举
+ *
+ * @author tongj
+ */
 public enum SystemRoleFlagEnum implements BaseEnum<String> {
 	/**
 	 * 激活可用标志
@@ -11,6 +16,8 @@ public enum SystemRoleFlagEnum implements BaseEnum<String> {
 	 * 失效标志
 	 */
 	DISABLE("失效", 0),
+
+	DELETE("删除", -1),
 	/**
 	 * 系统标志，不可删除不可编辑角色
 	 */

@@ -33,9 +33,6 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
             if (!entityClass.isAnnotationPresent(LogicDeleteEntity.class)) {
                 return Optional.empty();
             }
-            if (!IFlagable.class.isAssignableFrom(entityClass)) {
-                return Optional.empty();
-            }
             LogicDeleteEntity logicDeleteEntity = entityClass.getDeclaredAnnotation(LogicDeleteEntity.class);
             //生成whereInfo，flag不等于disable值，若disableFlagMap中存在disableFlag，则使用disableFlagMap中的值，否则使用默认值0
             var activeFlags = logicDeleteEntity.activeFlagValues();

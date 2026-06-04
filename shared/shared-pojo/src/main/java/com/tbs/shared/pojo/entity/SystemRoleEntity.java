@@ -1,13 +1,11 @@
 package com.tbs.shared.pojo.entity;
 
-import java.util.Date;
+import com.tbs.shared.annotations.LogicDeleteEntity;
+import com.tbs.shared.pojo.IBaseEntity;
+import lombok.*;
 
 import javax.persistence.*;
-
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.tbs.shared.pojo.IBaseEntity;
-
-import lombok.*;
+import java.util.Date;
 
 /**
  * @author tongj
@@ -21,6 +19,7 @@ import lombok.*;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@LogicDeleteEntity(activeFlagValues = {1, 2, 0})
 public class SystemRoleEntity implements IBaseEntity<Long> {
 	private static final long serialVersionUID = 1L;
 
@@ -45,17 +44,18 @@ public class SystemRoleEntity implements IBaseEntity<Long> {
 	/**
 	 * 创建时间
 	 */
-	
+
 	@Column(name = "create_time")
 	private Date createTime;
 	/**
 	 * 修改时间
 	 */
-	
+
 	@Column(name = "update_time")
 	private Date updateTime;
 	/**
 	 * 状态
+	 * @see com.tbs.shared.enums.SystemRoleFlagEnum
 	 */
 	@Column(name = "flag")
 	private Integer flag;

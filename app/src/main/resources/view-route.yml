@@ -45,7 +45,7 @@ admin:
           title: 表单创建
           icon: el-icon-s-custom
           roles:
-            - "1"
+            - "3"
       - path: form-manager
         name: 表单管理
         component: "/form/FormManager.vue"
@@ -54,7 +54,7 @@ admin:
           title: 表单管理
           icon: el-icon-s-order
           roles:
-            - "1"
+            - "3"
       - path: systemlog
         name: 系统运行报表
         component: "/admin/systemlog/index.vue"
@@ -63,7 +63,7 @@ admin:
           title: 系统运行报表
           icon: el-icon-s-data
           roles:
-            - "1"
+            - "3"
 
 #  # 添加404页面作为最后的路由
 #  fallback:

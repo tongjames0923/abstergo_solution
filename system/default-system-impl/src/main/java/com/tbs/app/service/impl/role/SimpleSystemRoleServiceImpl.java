@@ -7,7 +7,6 @@ import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
@@ -55,7 +54,7 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     protected Integer getFlagDisable() {
-        return CommonConstant.FLAG_OFF;
+        return SystemRoleFlagEnum.DELETE.getCode();
     }
 
     @Override
