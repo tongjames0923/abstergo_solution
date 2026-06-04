@@ -30,15 +30,6 @@ import static com.tbs.sql.mapper.impl.FrameworkSelectProvider.buildSqlContext;
 public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<T>, BatchUpdateMapper<T>,
 		BatchUpdateSelectiveMapper<T>, IdListMapper<T, K> {
 
-    /**
-     * 获取查询包装器
-     *
-     * @param entity 实体对象
-     * @return 查询包装器
-     */
-    default IQueryQueryBuilder<T> getQueryWrapper(@NotNull T entity) {
-        return SpringUtil.getBean(IEntityQueryWrapper.class).makeQueryable(entity).query();
-    }
 
     /**
      * 根据查询条件查询

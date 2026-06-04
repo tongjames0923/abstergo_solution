@@ -82,7 +82,6 @@ public class QueryUtil implements IStartup {
         this.selectSqlDialect = dialect;
         this.sqlProperty = sqlProperty;
         this.sqlAssembler = sqlAssembler;
-        instance = this;
     }
 
     // ==================== 生命周期方法 ====================
@@ -156,6 +155,7 @@ public class QueryUtil implements IStartup {
             this.interceptors = new ArrayList<>(interceptorBeans);
             // 预先排序以避免每次拦截时重复排序
             this.interceptors.sort(Comparator.comparingInt(ISqlInfoComposeIntercepter::getOrder));
+            instance = this;
         } catch (Exception e) {
             log.error("获取SQL拦截器失败", e);
             this.interceptors = new ArrayList<>(1);
@@ -192,7 +192,7 @@ public class QueryUtil implements IStartup {
         IQueryDriver.SqlQueryData data = queryDriver.getSqlQueryData(context);
         String selectSql = dialect.getSelectSqlExtractor().extractSelectSql(data.getSelectInfo());
         String whereSql = dialect.getWhereSqlExtractor()
-            .extraWhereSql(instance.intercept(data.getSqlWhereInfo(), context.getSqlEntityClass()),
+            .extraWhereSql(getInstance().intercept(data.getSqlWhereInfo(), context.getSqlEntityClass()),
                 context.getSqlParams());
 
         String orderSql = dialect.getOrderSqlExtractor().extraOrderSql(data.getSqlOrders());
