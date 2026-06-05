@@ -2,9 +2,9 @@ package com.tbs.shared.util;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
-import com.tbs.shared.pojo.IFlagable;
 import com.tbs.sql.enums.QueryConnectorEnum;
 import com.tbs.sql.enums.QueryContrastEnum;
 import com.tbs.sql.framework.intercepter.ISqlInfoComposeIntercepter;
@@ -13,10 +13,7 @@ import com.tbs.sql.framework.model.SqlWhereInfo;
 import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.utils.SqlUtils;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -27,7 +24,7 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
     private Map<Class<?>, Optional<SqlWhereInfo>> flagSqlWhereInfoMap = new ConcurrentHashMap<>(8);
 
     @Override
-    public void intercept(SqlWhereCompose compose, Class<?> entityClass) {
+    public SqlWhereCompose intercept(SqlWhereCompose compose, Class<?> entityClass) {
         var sqlWhereInfo = flagSqlWhereInfoMap.computeIfAbsent(entityClass, (k) -> {
             //确认entityClass是否是逻辑删除实体,是否被LogicDeleteEntity注解
             if (!entityClass.isAnnotationPresent(LogicDeleteEntity.class)) {
@@ -63,7 +60,16 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
             info.setValueType(Integer.class);
             return Optional.of(info);
         });
-        sqlWhereInfo.ifPresent(
-            info -> compose.getChildren().add(SqlWhereNode.createInfoNode(QueryConnectorEnum.AND, info)));
+        if (compose == null) {
+            compose = new SqlWhereCompose();
+        }
+        var ls = compose.getChildren();
+        if (CollUtil.isEmpty(ls)) {
+            ls = new LinkedList<>();
+        }
+        if (sqlWhereInfo.isPresent()) {
+            ls.add(SqlWhereNode.createInfoNode(QueryConnectorEnum.AND, sqlWhereInfo.get()));
+        }
+        return compose;
     }
 }

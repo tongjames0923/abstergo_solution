@@ -1,15 +1,19 @@
 package com.tbs.sql.framework.driver.impl;
 
-import java.util.List;
-
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.framework.driver.ISqlContext;
 import com.tbs.sql.framework.model.*;
 import com.tbs.sql.query.IQueryCriteria;
 import com.tbs.sql.utils.EntityInfoPuller;
-
 import lombok.Setter;
 
+import java.util.List;
+
+/**
+ * 实体查询SQL驱动类
+ *
+ * @author abstergo
+ */
 public class EntityQuerySqlDriver extends AbstractSqlDriver {
 
 	@Setter
@@ -27,11 +31,11 @@ public class EntityQuerySqlDriver extends AbstractSqlDriver {
 		return selectInfoModel;
 	}
 
-	private SqlWhereCompose compose;
+	private SqlWhereCompose compose = new SqlWhereCompose();
 
-	private SqlLimitModel limit;
+	private SqlLimitModel limit = new SqlLimitModel();
 
-	private List<SqlOrderInfo> orders;
+	private List<SqlOrderInfo> orders = new java.util.ArrayList<>();
 
 	public EntityQuerySqlDriver setWhereInfo(SqlWhereCompose compose) {
 		this.compose = compose;

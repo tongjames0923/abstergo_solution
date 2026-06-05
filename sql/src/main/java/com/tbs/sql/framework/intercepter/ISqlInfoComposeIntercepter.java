@@ -23,7 +23,7 @@ public interface ISqlInfoComposeIntercepter extends Ordered {
 	 * @param compose SQL条件组合信息
 	 * @param entityClass SQL实体类
 	 */
-	void intercept(SqlWhereCompose compose, Class<?> entityClass);
+	SqlWhereCompose intercept(SqlWhereCompose compose, Class<?> entityClass);
 
 	@Override
 	default int getOrder() {

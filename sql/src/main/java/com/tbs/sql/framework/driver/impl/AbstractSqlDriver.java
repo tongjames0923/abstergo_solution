@@ -6,6 +6,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.sql.framework.driver.IQueryDriver;
 import com.tbs.sql.framework.driver.ISqlContext;
 import com.tbs.sql.framework.model.*;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * SQL驱动抽象类，实现了IQueryDriver接口 提供了SQL查询相关的基本框架和抽象方法，具体实现由子类完成
@@ -18,7 +19,7 @@ public abstract class AbstractSqlDriver implements IQueryDriver {
 	 * @param context SQL上下文环境
 	 * @return SqlSelectInfoModel SELECT信息模型
 	 */
-	protected abstract SqlSelectInfoModel getSelectInfo(ISqlContext context);
+	protected abstract @NotNull SqlSelectInfoModel getSelectInfo(ISqlContext context);
 
 	/**
 	 * 获取SQL查询的WHERE条件信息
@@ -26,7 +27,7 @@ public abstract class AbstractSqlDriver implements IQueryDriver {
 	 * @param context SQL上下文环境
 	 * @return SqlWhereCompose WHERE条件组合
 	 */
-	protected abstract SqlWhereCompose getSqlWhereInfo(ISqlContext context);
+	protected abstract @NotNull SqlWhereCompose getSqlWhereInfo(ISqlContext context);
 
 	/**
 	 * 获取SQL查询的GROUP BY信息
@@ -34,7 +35,7 @@ public abstract class AbstractSqlDriver implements IQueryDriver {
 	 * @param context SQL上下文环境
 	 * @return List<SqlGroupModel> 分组模型列表
 	 */
-	protected abstract List<SqlGroupModel> getSqlGroups(ISqlContext context);
+	protected abstract @NotNull List<SqlGroupModel> getSqlGroups(ISqlContext context);
 
 	/**
 	 * 获取SQL查询的LIMIT信息
@@ -42,7 +43,7 @@ public abstract class AbstractSqlDriver implements IQueryDriver {
 	 * @param context SQL上下文环境
 	 * @return SqlLimitModel LIMIT模型
 	 */
-	protected abstract SqlLimitModel getSqlLimit(ISqlContext context);
+	protected abstract @NotNull SqlLimitModel getSqlLimit(ISqlContext context);
 
 	/**
 	 * 获取SQL查询的ORDER BY信息
@@ -50,7 +51,7 @@ public abstract class AbstractSqlDriver implements IQueryDriver {
 	 * @param context SQL上下文环境
 	 * @return List<SqlOrderInfo> 排序信息列表
 	 */
-	protected abstract List<SqlOrderInfo> getSqlOrders(ISqlContext context);
+	protected abstract @NotNull List<SqlOrderInfo> getSqlOrders(ISqlContext context);
 
 	/**
 	 * 判断是否支持指定的上下文环境

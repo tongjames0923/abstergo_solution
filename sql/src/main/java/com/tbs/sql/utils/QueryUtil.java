@@ -213,7 +213,7 @@ public class QueryUtil implements IStartup {
     private SqlWhereCompose intercept(SqlWhereCompose compose, Class<?> entityClass) {
         // 使用增强for循环替代forEach以提高性能
         for (ISqlInfoComposeIntercepter interceptor : interceptors) {
-            interceptor.intercept(compose, entityClass);
+            compose = interceptor.intercept(compose, entityClass);
         }
         return compose;
     }
