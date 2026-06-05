@@ -28,10 +28,7 @@
             <groupId>com.tbs</groupId>
             <artifactId>async</artifactId>
         </dependency>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>cache</artifactId>
-        </dependency>
+
         <dependency>
             <groupId>com.tbs</groupId>
             <artifactId>cache-impl</artifactId>
