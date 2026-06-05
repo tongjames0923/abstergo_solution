@@ -380,6 +380,7 @@ public class ViewServiceImpl implements IViewService {
         dynamicFormConfigrationEntity.setGutter(formConfig.getGutter());
         dynamicFormConfigrationEntity.setLabelWidth(formConfig.getLabelWidth());
         dynamicFormConfigrationEntity.setSpan(formConfig.getSpan());
+        dynamicFormConfigrationEntity.setFlag(DynamicFormConfigFlagEnum.INACTIVITED.getCode());
         return dynamicFormConfigrationEntity;
     }
 }

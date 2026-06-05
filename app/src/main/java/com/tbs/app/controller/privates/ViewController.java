@@ -20,6 +20,7 @@ import javax.annotation.Resource;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -123,10 +124,17 @@ public class ViewController extends BaseController {
     /**
      * 获取所有视图路由配置
      * <p>
-     * 获取系统中所有的视图路由配置信息，按组分类
+     * 获取系统中所有的视图路由配置信息，按组分类。该方法会根据当前用户的角色自动过滤无权限访问的路由。
+     * 具体流程如下：
+     * <ol>
+     *     <li>获取当前用户的所有角色</li>
+     *     <li>遍历所有视图路由组</li>
+     *     <li>对每个组的路由根据用户角色进行过滤</li>
+     *     <li>返回过滤后的所有路由配置
+     * </ol>
      * </p>
      *
-     * @return 所有视图路由配置列表
+     * @return 包含所有视图路由配置的AjaxResult对象
      */
     @GetMapping("/routes")
     @Operation(summary = "获取所有视图路由配置", description = "获取所有视图路由配置")
@@ -134,10 +142,65 @@ public class ViewController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult getViewRoutes() {
         var result = new LinkedList<ViewRouteModel>();
+        var roles = AuthUtil.getInstance().getCurrentUser().getAuthorities().stream().map(item -> item.getAuthority())
+            .collect(Collectors.toSet());
         for (String group : viewRouteService.getAllViewRouteGroups()) {
-            result.addAll(viewRouteService.getViewRoutesByGroup(group));
+            var viewRoutes = viewRouteService.getViewRoutesByGroup(group);
+            result.addAll(removeWithRole(roles, viewRoutes));
         }
         return successResult(result);
+    }
+
+    /**
+     * 根据用户角色过滤视图路由列表
+     * <p>
+     * 递归地过滤视图路由列表，移除用户没有权限访问的路由。过滤逻辑如下：
+     * <ul>
+     *     <li>如果用户角色集合为空，则返回空列表</li>
+     *     <li>如果视图路由的meta信息为空，则保留该路由</li>
+     *     <li>如果视图路由的meta信息中角色列表为空，则保留该路由</li>
+     *     <li>如果用户角色与路由所需角色有交集，则保留该路由并递归过滤其子路由</li>
+     *     <li>否则移除该路由</li>
+     * </ul>
+     * </p>
+     *
+     * @param roles      用户角色集合
+     * @param viewRoutes 待过滤的视图路由列表
+     * @return 过滤后的视图路由列表
+     */
+    List<ViewRouteModel> removeWithRole(Set<String> roles, List<ViewRouteModel> viewRoutes) {
+        if (CollUtil.isEmpty(roles)) {
+            return List.of();
+        }
+        if (CollUtil.isEmpty(viewRoutes)) {
+            return List.of();
+        }
+        Iterator<ViewRouteModel> iterator = viewRoutes.iterator();
+        while (iterator.hasNext()) {
+            ViewRouteModel viewRoute = iterator.next();
+            if (viewRoute.getMeta() == null) {
+                continue;
+            }
+            if (CollUtil.isEmpty(viewRoute.getMeta().getRoles())) {
+                continue;
+            }
+            var flag = false;
+            for (String role : viewRoute.getMeta().getRoles()) {
+                if (roles.contains(role)) {
+                    flag = true;
+                    break;
+                }
+            }
+            if (!flag) {
+                iterator.remove();
+            } else {
+                if (CollUtil.isNotEmpty(viewRoute.getChildren())) {
+                    viewRoute.setChildren(
+                        removeWithRole(roles, viewRoute.getChildren().stream().collect(Collectors.toList())));
+                }
+            }
+        }
+        return viewRoutes;
     }
 
     /**
