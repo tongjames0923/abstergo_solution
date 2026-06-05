@@ -11,7 +11,7 @@ import java.util.Date;
  * @author tongj
  */
 @Entity
-@Table(name = "sys_role", uniqueConstraints = @UniqueConstraint(columnNames = { "role" }), indexes = {
+@Table(name = "sys_role", indexes = {@Index(name = "idx_role", columnList = "role"),
 		@Index(name = "idx_flag", columnList = "flag"),
 		@Index(name = "idx_time", columnList = "create_time,update_time") })
 @Getter
@@ -34,7 +34,7 @@ public class SystemRoleEntity implements IBaseEntity<Long> {
 	/**
 	 * 角色
 	 */
-	@Column(name = "role", length = 128, unique = true, nullable = false)
+	@Column(name = "role", length = 128, nullable = false)
 	private String role;
 	/**
 	 * 描述
