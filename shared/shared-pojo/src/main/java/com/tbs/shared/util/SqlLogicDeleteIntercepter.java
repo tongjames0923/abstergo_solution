@@ -2,7 +2,6 @@ package com.tbs.shared.util;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
-import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.sql.enums.QueryConnectorEnum;
@@ -64,12 +63,13 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
             compose = new SqlWhereCompose();
         }
         var ls = compose.getChildren();
-        if (CollUtil.isEmpty(ls)) {
+        if (ls == null) {
             ls = new LinkedList<>();
         }
         if (sqlWhereInfo.isPresent()) {
             ls.add(SqlWhereNode.createInfoNode(QueryConnectorEnum.AND, sqlWhereInfo.get()));
         }
+        compose.setChildren(ls);
         return compose;
     }
 }

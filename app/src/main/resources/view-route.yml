@@ -37,15 +37,18 @@ admin:
           icon: el-icon-s-custom
           roles:
             - "1"
-      - path: form
-        name: 表单创建
-        component: "/form/FormCreator.vue"
-        meta:
-          routeGroup: default
-          title: 表单创建
-          icon: el-icon-s-custom
-          roles:
-            - "3"
+develop:
+  - path: /develop
+    component: Layout
+    name: develop
+    redirect: /develop/form-manager
+    meta:
+      routeGroup: default
+      title: 开发者操作
+      icon: el-icon-s-help
+      roles:
+        - "3"
+    children:
       - path: form-manager
         name: 表单管理
         component: "/form/FormManager.vue"
@@ -53,6 +56,15 @@ admin:
           routeGroup: default
           title: 表单管理
           icon: el-icon-s-order
+          roles:
+            - "3"
+      - path: form
+        name: 表单创建
+        component: "/form/FormCreator.vue"
+        meta:
+          routeGroup: default
+          title: 表单创建
+          icon: el-icon-s-custom
           roles:
             - "3"
       - path: systemlog
@@ -64,8 +76,7 @@ admin:
           icon: el-icon-s-data
           roles:
             - "3"
-
-#  # 添加404页面作为最后的路由
+            - "1"
 #  fallback:
 #    - path: "*"
 #      redirect: /404
