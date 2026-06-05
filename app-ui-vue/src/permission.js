@@ -6,6 +6,7 @@ import 'nprogress/nprogress.css' // progress bar style
 import { getToken } from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
 import { hasRole } from '@/utils/permission'
+import { isRouteUpdating, waitForRouteUpdate } from '@/router'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -31,6 +32,12 @@ export function setUpRouterPermissions(router) {
         next({ path: '/' })
         NProgress.done()
       } else {
+        // 如果路由正在更新中，等待更新完成
+        if (isRouteUpdating()) {
+          console.log('路由正在更新中，等待更新完成...')
+          await waitForRouteUpdate()
+        }
+
         const hasGetUserInfo = store.getters.name
         if (!hasGetUserInfo) {
           try {

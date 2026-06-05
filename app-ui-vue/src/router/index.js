@@ -98,23 +98,19 @@ function mapComponent(route) {
 
     try {
       // 使用 require.context 加载组件
+      // require.context 已经预加载了 @/views 目录下所有 .vue 文件
       const component = allViews(componentKey).default
       route.component = component
       console.log('组件加载成功') // 调试日志
     } catch (e) {
-      console.error(`找不到组件：${componentKey}`, e)
-      // 尝试使用动态导入
-      try {
-        route.component = () => import(`@/views${route.component}`)
-        console.log('使用动态导入成功') // 调试日志
-      } catch (importError) {
-        console.error('动态导入也失败:', importError)
-        route.component = () => import('@/views/404') // fallback 组件
-      }
+      // require.context 未找到组件，使用 404 页面作为 fallback
+      console.error(`找不到组件：${componentKey}，将使用404页面`, e)
+      route.component = () => import('@/views/404')
     }
   }
 
-  if (route.children) {
+  // 递归处理子路由
+  if (route.children && Array.isArray(route.children)) {
     console.log('处理子路由:', route.children.length) // 调试日志
     route.children.forEach(mapComponent)
   }
@@ -124,6 +120,12 @@ var currentRouter = null
 
 // 添加一个标志位，防止重复加载动态路由
 let hasLoadedDynamicRoutes = false
+
+// 路由更新锁，防止并发更新
+let isUpdatingRoutes = false
+
+// 路由更新等待队列
+let updateWaitQueue = []
 
 async function generateRoutesFromServer() {
   try {
@@ -193,6 +195,16 @@ async function getServiceRouter() {
 }
 
 export async function updateRouter() {
+  // 如果正在更新路由，返回当前路由器
+  if (isUpdatingRoutes) {
+    console.log('路由正在更新中，等待更新完成...')
+    return new Promise((resolve) => {
+      updateWaitQueue.push(resolve)
+    })
+  }
+
+  isUpdatingRoutes = true
+
   try {
     // 1. 获取新路由（使用缓存或重新获取）
     const newRoutes = await generateRoutesFromServer()
@@ -230,7 +242,11 @@ export async function updateRouter() {
 
     console.log('路由更新成功，动态路由数量:', dynamicRoutes.length)
 
-    // 8. 返回 Promise，确保调用者可以等待更新完成
+    // 8. 处理等待队列中的回调
+    updateWaitQueue.forEach(resolve => resolve(currentRouter))
+    updateWaitQueue = []
+
+    // 9. 返回 Promise，确保调用者可以等待更新完成
     return new Promise((resolve) => {
       // 使用 Vue.nextTick 确保 DOM 更新完成
       Vue.nextTick(() => {
@@ -240,6 +256,8 @@ export async function updateRouter() {
   } catch (error) {
     console.error('路由更新失败:', error)
     throw error
+  } finally {
+    isUpdatingRoutes = false
   }
 }
 
@@ -260,6 +278,21 @@ export async function refreshRoutes() {
     console.error('刷新路由失败:', error)
     throw error
   }
+}
+
+// 导出路由更新状态检查函数
+export function isRouteUpdating() {
+  return isUpdatingRoutes
+}
+
+// 导出等待路由更新完成的函数
+export function waitForRouteUpdate() {
+  if (!isUpdatingRoutes) {
+    return Promise.resolve(currentRouter)
+  }
+  return new Promise((resolve) => {
+    updateWaitQueue.push(resolve)
+  })
 }
 
 export default getServiceRouter
