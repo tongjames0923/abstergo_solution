@@ -1,12 +1,10 @@
 package com.tbs.app.config;
 
-import com.tbs.app.service.company.ICompanyUserRelationService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
-import com.tbs.app.service.impl.company.SimpleCompanyUserRelationService;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
@@ -90,13 +88,6 @@ public class BuisnessBeanConfig {
     public IPasswordEncrypt passwordEncrypt() {
         return BeanUtil.buildBeanFromProperties(NoEncryptPassword::new, systemAppProperty.getPasswordEncryptImpl(),
             BeanUtil::buildByEmptyArgs);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(ICompanyUserRelationService.class)
-    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
-    public ICompanyUserRelationService companyUserRelationService() {
-        return new SimpleCompanyUserRelationService();
     }
 
     @Bean

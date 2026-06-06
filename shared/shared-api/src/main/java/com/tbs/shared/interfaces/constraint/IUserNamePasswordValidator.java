@@ -21,12 +21,5 @@ public interface IUserNamePasswordValidator {
 	 * @return
 	 */
 	boolean validatePassword(String password);
-
-	/**
-	 * 验证昵称合法性
-	 *
-	 * @param nickName
-	 * @return
-	 */
-	boolean validateNickName(String nickName);
+	
 }

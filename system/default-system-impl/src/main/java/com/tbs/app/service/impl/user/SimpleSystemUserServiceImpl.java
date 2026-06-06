@@ -19,6 +19,7 @@ import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.uitl.AuthUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
@@ -37,6 +38,7 @@ import java.util.stream.Collectors;
  *
  * @author abstergo
  */
+@Slf4j
 public class SimpleSystemUserServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUserEntity, Long, SystemUserMapper>
     implements ISystemUserService {
@@ -62,7 +64,6 @@ public class SimpleSystemUserServiceImpl
     protected SystemUserEntity insertNew(SystemUserEntity entity) {
         AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUserName()), "用户名格式错误");
         AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
-        AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(entity.getNickName()), "昵称格式错误");
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
         getMapper().insert(entity);
@@ -95,11 +96,11 @@ public class SimpleSystemUserServiceImpl
                 AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
             }
         }
-        if (StrUtil.isNotEmpty(systemUserEntity.getNickName())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validateNickName(systemUserEntity.getNickName()),
-                "昵称格式错误");
-            oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
+        if (StrUtil.isNotEmpty(systemUserEntity.getUserName()) &&
+            !Objects.equals(oldSystemUserEntity.getUserName(), systemUserEntity.getUserName())) {
+            AssertUtil.isTrue(true, "不支持修改用户名，此为用户唯一标识");
         }
+
         if (systemUserEntity.getFlag() != null) {
             if (!Objects.equals(systemUserEntity.getFlag(), oldSystemUserEntity.getFlag())) {
                 AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()),
@@ -113,6 +114,9 @@ public class SimpleSystemUserServiceImpl
         }
         if (StrUtil.isNotEmpty(systemUserEntity.getRemark())) {
             oldSystemUserEntity.setRemark(systemUserEntity.getRemark());
+        }
+        if (StrUtil.isNotEmpty(systemUserEntity.getNickName())) {
+            oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
         }
         return oldSystemUserEntity;
     }
