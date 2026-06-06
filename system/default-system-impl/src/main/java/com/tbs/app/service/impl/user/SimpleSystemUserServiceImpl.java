@@ -27,6 +27,7 @@ import org.springframework.context.annotation.Lazy;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -100,7 +101,7 @@ public class SimpleSystemUserServiceImpl
             oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
         }
         if (systemUserEntity.getFlag() != null) {
-            if (systemUserEntity.getFlag() != oldSystemUserEntity.getFlag()) {
+            if (!Objects.equals(systemUserEntity.getFlag(), oldSystemUserEntity.getFlag())) {
                 AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()),
                     "用户状态值异常，不存在{}值", systemUserEntity.getFlag());
                 oldSystemUserEntity.setFlag(systemUserEntity.getFlag());

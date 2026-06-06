@@ -31,9 +31,9 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- * 管理员用户管理控制器
+ * 管理员管理用户数据控制器
  * <p>
- * 该控制器用于管理系统管理员用户，提供用户的基本增删改查操作
+ * 该控制器用于管理员管理用户数据，提供用户的基本增删改查操作
  * </p>
  *
  * @author abstergo
@@ -42,7 +42,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/private/admin/user")
 @PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
-@Tag(name = "管理员用户管理接口", description = "管理员用户管理接口")
+@Tag(name = "管理员管理用户数据接口", description = "管理员管理用户数据接口")
 public class AdminUserController extends AbstractCrudController<SystemUserEntity, Long, CommonSystemUserQueryCriteria> {
     @Resource
     private ISystemUserService service;
@@ -59,30 +59,30 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     }
 
     /**
-     * 根据ID获取管理员用户信息
+     * 根据ID获取用户数据信息
      *
      * @param id 用户ID
      * @return 用户信息
      */
     @Override
     @GetMapping("get/{id}")
-    @Operation(summary = "获取管理员用户", description = "根据用户ID获取管理员用户详细信息")
-    @ApiResponse(responseCode = "200", description = "成功获取管理员用户",
+    @Operation(summary = "获取用户数据", description = "根据用户ID获取用户数据详细信息")
+    @ApiResponse(responseCode = "200", description = "成功获取用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult get(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
 
     /**
-     * 保存管理员用户信息
+     * 保存用户数据信息
      *
      * @param entity 用户实体对象
      * @return 保存后的用户信息
      */
     @Override
     @PostMapping("save")
-    @Operation(summary = "保存管理员用户", description = "创建或更新管理员用户信息")
-    @ApiResponse(responseCode = "200", description = "成功保存管理员用户",
+    @Operation(summary = "保存用户数据", description = "创建或更新用户数据信息")
+    @ApiResponse(responseCode = "200", description = "成功保存用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult save(
         @Parameter(name = "entity", description = "用户信息", required = true) @RequestBody SystemUserEntity entity) {
@@ -90,22 +90,22 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     }
 
     /**
-     * 删除管理员用户
+     * 删除用户数据
      *
      * @param id 用户ID
      * @return 删除结果
      */
     @Override
     @PostMapping("delete/{id}")
-    @Operation(summary = "删除管理员用户", description = "根据用户ID删除管理员用户")
-    @ApiResponse(responseCode = "200", description = "成功删除管理员用户",
+    @Operation(summary = "删除用户数据", description = "根据用户ID删除用户数据")
+    @ApiResponse(responseCode = "200", description = "成功删除用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult delete(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.delete(id);
     }
 
     /**
-     * 查询管理员用户列表
+     * 查询用户数据列表
      *
      * @param criteria 查询条件
      * @param pageNum  页码
@@ -114,8 +114,8 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @PostMapping("query")
-    @Operation(summary = "查询管理员用户", description = "根据条件查询管理员用户列表，支持分页")
-    @ApiResponse(responseCode = "200", description = "成功查询管理员用户列表",
+    @Operation(summary = "查询用户数据", description = "根据条件查询用户数据列表，支持分页")
+    @ApiResponse(responseCode = "200", description = "成功查询用户数据列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult query(
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemUserQueryCriteria criteria,
@@ -177,6 +177,6 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
 
     @Override
     public String getBusinessName() {
-        return "管理员用户管理";
+        return "管理员管理用户数据";
     }
 }

@@ -1,7 +1,7 @@
 package com.tbs.shared.interfaces.constraint.impl;
 
-import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 
 /**
  * 默认用户名密码校验器
@@ -26,12 +26,4 @@ public class SimpleUserValidator implements IUserNamePasswordValidator {
         return password.matches(strongPasswordRegex);
     }
 
-    @Override
-    public boolean validateNickName(String nickName) {
-        if (StrUtil.isEmpty(nickName)) {
-            return false;
-        }
-        String chineseNicknameRegex = "^[\\u4e00-\\u9fa5a-zA-Z0-9_]{2,20}$";
-        return nickName.matches(chineseNicknameRegex);
-    }
 }
