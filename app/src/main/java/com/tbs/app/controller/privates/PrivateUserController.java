@@ -1,7 +1,9 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
@@ -55,6 +57,9 @@ public class PrivateUserController extends BaseController {
     @Resource
     IUserLoginInfoService userLoginInfoService;
 
+    @Resource
+    IDepartmentUserRelationService departmentUserRelationService;
+
     /**
      * 用户登出
      *
@@ -105,6 +110,8 @@ public class PrivateUserController extends BaseController {
         userInfoVO.setNickName(user.get().getNickName());
         userInfoVO.setAvatar(user.get().getAvatar());
         userInfoVO.setAvaliableRoles(relationService.queryRoles(user.get().getId()));
+        userInfoVO.setAvaliableDepartments(DepartmentInfoVO.convertToDepartmentVOs(
+            departmentUserRelationService.queryUserDepartments(user.get().getId())));
         return userInfoVO;
     }
 

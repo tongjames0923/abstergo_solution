@@ -1,9 +1,16 @@
 package com.tbs.app.vo;
 
+import com.tbs.app.service.company.ISystemCompanyService;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.shared.pojo.entity.SystemCompanyEntity;
+import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 部门信息VO
@@ -87,4 +94,53 @@ public class DepartmentInfoVO implements Serializable {
      * 所属公司税号
      */
     private String companyTaxNumber;
+
+    /**
+     * 将部门实体列表转换为部门VO列表
+     *
+     * @param departments 部门实体列表
+     * @return 部门VO列表
+     */
+    public static final List<DepartmentInfoVO> convertToDepartmentVOs(List<SystemDepartmentEntity> departments) {
+        if (CollUtil.isEmpty(departments)) {
+            return CollUtil.newArrayList();
+        }
+        // 收集所有公司ID
+        List<Long> companyIds =
+            departments.stream().map(SystemDepartmentEntity::getCompanyId).distinct().collect(Collectors.toList());
+
+        // 批量查询公司信息
+        List<SystemCompanyEntity> companies =
+            companyIds.stream().map(SpringUtil.getBean(ISystemCompanyService.class)::queryById)
+                .filter(company -> company != null).collect(Collectors.toList());
+
+        // 构建公司ID到公司实体的映射
+        java.util.Map<Long, SystemCompanyEntity> companyMap =
+            companies.stream().collect(Collectors.toMap(SystemCompanyEntity::getId, company -> company));
+
+        // 转换为VO
+        return departments.stream().map(dept -> {
+            DepartmentInfoVO vo = new DepartmentInfoVO();
+            vo.setDepartmentId(dept.getId());
+            vo.setDepartmentName(dept.getDepartmentName());
+            vo.setDepartmentCode(dept.getDepartmentCode());
+            vo.setManager(dept.getManager());
+            vo.setDescription(dept.getDescription());
+            vo.setFlag(dept.getFlag());
+            vo.setCreateTime(dept.getCreateTime());
+            vo.setUpdateTime(dept.getUpdateTime());
+            vo.setTreeRootFlag(dept.getTreeRootFlag());
+            vo.setCompanyId(dept.getCompanyId());
+
+            // 设置公司信息
+            SystemCompanyEntity company = companyMap.get(dept.getCompanyId());
+            if (company != null) {
+                vo.setCompanyName(company.getCompanyName());
+                vo.setCompanyLogoImage(company.getLogoImage());
+                vo.setCompanyTaxNumber(company.getTaxNumber());
+            }
+
+            return vo;
+        }).collect(Collectors.toList());
+    }
 }

@@ -5,7 +5,6 @@ import com.tbs.app.service.user.serial.DefaultSystemUserDetailsBridge;
 import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.cache.serialize.annotation.CacheTransform;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -100,8 +99,6 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
     }
 
     public static class Builder {
-        private List<SystemCompanyEntity> companies;
-        private SystemCompanyEntity currentCompany;
         private List<DepartmentInfoVO> departments;
         private DepartmentInfoVO currentDepartment;
         private String username;
@@ -147,16 +144,6 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
 
         public Builder enabled(boolean enabled) {
             this.enabled = enabled;
-            return this;
-        }
-
-        public Builder companies(List<SystemCompanyEntity> companies) {
-            this.companies = companies;
-            return this;
-        }
-
-        public Builder currentCompany(SystemCompanyEntity currentCompany) {
-            this.currentCompany = currentCompany;
             return this;
         }
 

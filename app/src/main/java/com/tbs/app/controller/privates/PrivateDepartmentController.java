@@ -4,11 +4,14 @@ import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 
@@ -24,6 +27,7 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("/private/department")
 @PreAuthorize(value = "#authUtil.userLoggedIn")
+@Tag(name = "私有部门管理接口", description = "需要登录才能访问的部门相关接口")
 public class PrivateDepartmentController extends BaseController {
 
     @Resource
@@ -39,8 +43,72 @@ public class PrivateDepartmentController extends BaseController {
      * @return 用户可访问的部门列表
      */
     @GetMapping("avaliable/{userId}")
-    public AjaxResult avaliable(@PathVariable Long userId) {
+    @Operation(summary = "获取用户可访问部门列表", description = "根据用户ID查询该用户可以访问的所有部门信息")
+    @ApiResponse(responseCode = "200", description = "成功获取用户可访问部门列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult avaliable(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         return AjaxUtil.getInstance().success(relationService.queryUserDepartments(userId));
+    }
+
+    /**
+     * 将用户添加到指定部门
+     * <p>
+     * 根据部门ID和用户ID建立用户与部门的关联关系
+     * </p>
+     *
+     * @param depId  部门ID
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @PostMapping("addEmp/{depId}/{userId}")
+    @Operation(summary = "添加用户到部门", description = "将指定用户添加到指定部门")
+    @ApiResponse(responseCode = "200", description = "成功添加用户到部门",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult addToDep(
+        @Parameter(name = "depId", description = "部门ID", required = true) @PathVariable Long depId,
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        relationService.addUserToDepartment(userId, depId);
+        return AjaxUtil.getInstance().success(null);
+    }
+
+    /**
+     * 从指定部门移除用户
+     * <p>
+     * 根据部门ID和用户ID解除用户与部门的关联关系
+     * </p>
+     *
+     * @param depId  部门ID
+     * @param userId 用户ID
+     * @return 操作结果
+     */
+    @PostMapping("delEmp/{depId}/{userId}")
+    @Operation(summary = "从部门移除用户", description = "将指定用户从指定部门移除")
+    @ApiResponse(responseCode = "200", description = "成功从部门移除用户",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult deleteFromDep(
+        @Parameter(name = "depId", description = "部门ID", required = true) @PathVariable Long depId,
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        relationService.deleteUserFromDepartment(userId, depId);
+        return AjaxUtil.getInstance().success(null);
+    }
+
+    /**
+     * 获取指定部门的员工列表
+     * <p>
+     * 根据部门ID查询该部门下的所有员工信息
+     * </p>
+     *
+     * @param depId 部门ID
+     * @return 部门员工列表
+     */
+    @GetMapping("employee/{depId}")
+    @Operation(summary = "获取部门员工列表", description = "根据部门ID查询该部门下的所有员工")
+    @ApiResponse(responseCode = "200", description = "成功获取部门员工列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult getEmployee(
+        @Parameter(name = "depId", description = "部门ID", required = true) @PathVariable Long depId) {
+        return AjaxUtil.getInstance().success(relationService.queryDepartmentUsers(depId));
     }
 
     /**

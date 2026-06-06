@@ -1,9 +1,9 @@
 package com.tbs.app.vo;
 
+import lombok.Data;
+
 import java.io.Serializable;
 import java.util.Collection;
-
-import lombok.Data;
 
 /**
  * 用户信息VO（View Object）
@@ -35,4 +35,9 @@ public class UserInfoVO implements Serializable {
 	 * 用户可用角色列表
 	 */
 	private Collection<String> avaliableRoles;
+
+	/**
+	 * 用户可用部门列表
+	 */
+	private Collection<DepartmentInfoVO> avaliableDepartments;
 }
