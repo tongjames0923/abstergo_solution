@@ -1,196 +1,164 @@
 <template>
-  <div class="company-admin-view">
-    <div class="header-section">
-      <div class="header-content">
-        <h2 class="main-title">🏢 公司管理</h2>
-        <div class="header-actions">
-          <el-button
-            type="primary"
-            icon="el-icon-plus"
-            @click="handleAdd"
-            class="add-company-btn"
+  <div class="company-admin">
+    <!-- Page Header -->
+    <div class="ca-header">
+      <div class="ca-header-left">
+        <div class="ca-header-icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+        </div>
+        <div>
+          <h1 class="ca-title">公司管理</h1>
+          <p class="ca-subtitle">管理公司组织架构与部门信息</p>
+        </div>
+      </div>
+      <button class="ca-btn ca-btn-primary" @click="handleAdd">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        新增公司
+      </button>
+    </div>
+
+    <!-- Search -->
+    <div class="ca-search">
+      <div class="ca-search-inner">
+        <div class="ca-search-field">
+          <svg class="ca-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            v-model="searchForm.likeName"
+            type="text"
+            class="ca-input"
+            placeholder="搜索公司名称..."
+            @input="onSearchInput"
+            @keyup.enter="handleSearch"
+          />
+        </div>
+        <div class="ca-search-field ca-search-field-sm">
+          <input
+            v-model="searchForm.equalsTaxNumber"
+            type="text"
+            class="ca-input"
+            placeholder="税号"
+            @input="onSearchInput"
+            @keyup.enter="handleSearch"
+          />
+        </div>
+        <div class="ca-search-field ca-search-field-select">
+          <el-select
+            v-model="searchForm.flagEquals"
+            placeholder="状态"
+            clearable
+            multiple
+            collapse-tags
+            @change="handleSearch"
           >
-            新增公司
-          </el-button>
+            <el-option v-for="item in statusOptions" :key="item.code" :label="item.label" :value="item.code" />
+          </el-select>
+        </div>
+        <div class="ca-search-actions">
+          <button class="ca-btn ca-btn-primary ca-btn-sm" @click="handleSearch">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            搜索
+          </button>
+          <button class="ca-btn ca-btn-ghost" @click="handleReset">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            重置
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- 搜索区域 -->
-    <el-card class="search-card" shadow="never">
-      <el-form ref="searchForm" :model="searchForm" label-width="100px" class="search-form">
-        <el-row :gutter="24">
-          <el-col :span="6">
-            <el-form-item label="公司名称">
-              <el-input
-                v-model="searchForm.likeName"
-                placeholder="请输入公司名称"
-                clearable
-                @input="onSearchInput"
-                @keyup.enter.native="handleSearch"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="税号">
-              <el-input
-                v-model="searchForm.equalsTaxNumber"
-                placeholder="请输入税号"
-                clearable
-                @input="onSearchInput"
-                @keyup.enter.native="handleSearch"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <el-form-item label="状态">
-              <el-select
-                v-model="searchForm.flagEquals"
-                placeholder="请选择状态"
-                clearable
-                multiple
-                @change="handleSearch"
-              >
-                <el-option
-                  v-for="item in statusOptions"
-                  :key="item.code"
-                  :label="item.label"
-                  :value="item.code"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-          <el-col :span="6">
-            <div class="search-actions">
-              <el-button type="primary" icon="el-icon-search" size="medium" @click="handleSearch">搜索</el-button>
-              <el-button icon="el-icon-refresh" size="medium" @click="handleReset">重置</el-button>
-            </div>
-          </el-col>
-        </el-row>
-      </el-form>
-    </el-card>
-
-    <!-- 树形区域 -->
-    <el-card class="table-card" shadow="never">
-      <div v-loading="loading" style="min-height:200px; position:relative;">
-        <el-tree
-          ref="companyTree"
-          :data="treeData"
-          :props="treeProps"
-          node-key="id"
-          lazy
-          :load="loadNode"
-        >
-          <span slot-scope="{ node, data }" class="custom-tree-node">
-            <span>
-              <el-tooltip class="item" placement="right" effect="light" popper-class="company-info-tooltip">
-                <span class="tree-node-title">{{ data.companyName }}</span>
-                <template slot="content">
-                  <div class="company-detail-card">
-                    <div class="card-header">
-                      <h3>公司信息</h3>
-                    </div>
-                    <div class="card-content">
-                      <el-row :gutter="12">
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">公司名称:</span>
-                            <span class="info-value">{{ data.companyName }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">税号:</span>
-                            <span class="info-value tax-number">{{ data.taxNumber }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">状态:</span>
-                            <el-tag size="small" :type="getCompanyStatusTagType(data.flag)">
-                              {{ getCompanyStatusLabel(data.flag) }}
-                            </el-tag>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">添加时间:</span>
-                            <span class="info-value">{{ data.createTime }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">更新时间:</span>
-                            <span class="info-value">{{ data.updateTime }}</span>
-                          </div>
-                        </el-col>
-
-                        <el-col :span="24">
-                          <div class="info-item">
-                            <span class="info-label">描述:</span>
-                            <span class="info-value description">{{ data.description || '无' }}</span>
-                          </div>
-                        </el-col>
-                      </el-row>
-                    </div>
-                  </div>
-                </template>
-              </el-tooltip>
-              <span v-if="data.childrenCount && data.childrenCount > 0" class="children-count">
-                ({{ data.childrenCount }})
+    <!-- Master-Detail Layout -->
+    <div class="ca-layout">
+      <!-- Left: Company Tree -->
+      <div class="ca-panel ca-panel-left">
+        <div class="ca-panel-header">
+          <span class="ca-panel-label">公司列表</span>
+          <span class="ca-panel-count">{{ total }} 家</span>
+        </div>
+        <div v-loading="loading" class="ca-tree-wrap">
+          <el-tree
+            ref="companyTree"
+            :data="treeData"
+            :props="treeProps"
+            node-key="id"
+            lazy
+            :load="loadNode"
+            :highlight-current="true"
+            :expand-on-click-node="false"
+            @node-click="handleNodeClick"
+          >
+            <span slot-scope="{ node, data }" class="ca-tree-row">
+              <span class="ca-tree-main">
+                <span class="ca-tree-name" v-html="highlight(data.companyName)" />
+                <span v-if="data.flag" class="ca-status-badge" :class="'ca-status-' + data.flag">
+                  {{ getCompanyStatusLabel(data.flag) }}
+                </span>
+                <span v-if="data.childrenCount > 0" class="ca-count-badge">
+                  {{ data.childrenCount }} 子
+                </span>
+              </span>
+              <span class="ca-tree-actions" @click.stop>
+                <button class="ca-action-btn" title="编辑" @click="handleEdit(data)">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </button>
+                <el-dropdown size="small" @command="handleMoreActions" trigger="click">
+                  <button class="ca-action-btn ca-action-more" title="更多">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                  </button>
+                  <el-dropdown-menu slot="dropdown">
+                    <el-dropdown-item :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">管理部门</el-dropdown-item>
+                    <el-dropdown-item :command="{type: 'move', row: data}" icon="el-icon-sort">移动到其他公司</el-dropdown-item>
+                    <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'delete', row: data}" divided icon="el-icon-delete">删除</el-dropdown-item>
+                  </el-dropdown-menu>
+                </el-dropdown>
               </span>
             </span>
-            <span class="tree-node-actions" v-if="data.flag!==5">
-              <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(data)">编辑</el-button>
-              <el-dropdown size="mini" @command="handleMoreActions" trigger="click">
-                <el-button type="success" size="mini" icon="el-icon-more">
-                  更多
-                </el-button>
-                <el-dropdown-menu slot="dropdown">
-                  <el-dropdown-item :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">
-                    管理部门
-                  </el-dropdown-item>
-                  <el-dropdown-item :command="{type: 'move', row: data}" icon="el-icon-sort">
-                    移动到其他公司
-                  </el-dropdown-item>
-                  <el-dropdown-item v-if="data.id!==1" :command="{type: 'delete', row: data}" divided
-                                    icon="el-icon-delete">
-                    删除
-                  </el-dropdown-item>
-                </el-dropdown-menu>
-              </el-dropdown>
-            </span>
-          </span>
-        </el-tree>
-
-        <div v-if="!loading && (!treeData || treeData.length === 0)" class="empty-wrap">
-          <el-empty description="暂无数据" />
+          </el-tree>
+          <div v-if="!loading && (!treeData || treeData.length === 0)" class="ca-empty">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.25"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/></svg>
+            <p>暂无公司数据</p>
+          </div>
+        </div>
+        <div class="ca-pagination">
+          <el-pagination
+            :current-page="currentPage"
+            :page-sizes="[10, 20, 50, 100]"
+            :page-size="pageSize"
+            :total="total"
+            layout="total, sizes, prev, pager, next"
+            @size-change="handleSizeChange"
+            @current-change="handlePageChange"
+          />
         </div>
       </div>
-    </el-card>
-    <div class="pagination-section">
-      <el-pagination
-        :current-page="currentPage"
-        :page-sizes="[10, 20, 50, 100]"
-        :page-size="pageSize"
-        :total="total"
-        layout="total, sizes, prev, pager, next, jumper"
-        @size-change="handleSizeChange"
-        @current-change="handlePageChange"
-      />
+
+      <!-- Right: Department Panel -->
+      <div class="ca-panel ca-panel-right">
+        <div v-if="selectedCompany" :key="selectedCompany.id" class="ca-dept-host">
+          <department-tree-view
+            :company-id="selectedCompany.id"
+            :company-name="selectedCompany.companyName"
+          />
+        </div>
+        <div v-else class="ca-placeholder">
+          <div class="ca-placeholder-icon">
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+          </div>
+          <p class="ca-placeholder-text">点击左侧公司查看部门</p>
+          <p class="ca-placeholder-hint">选择一家公司，即可在此管理其下的部门架构</p>
+        </div>
+      </div>
     </div>
 
-    <!-- 公司编辑对话框 -->
+    <!-- Company Edit Dialog -->
     <el-dialog
       :title="dialogTitle"
       :visible.sync="dialogVisible"
-      width="560px"
-      :modal="true"
+      width="520px"
       :before-close="handleDialogClose"
       append-to-body
-      class="company-edit-dialog"
+      class="ca-dialog"
     >
-      <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="100px">
+      <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="90px" class="ca-form">
         <el-form-item label="公司名称" prop="companyName">
           <el-input v-model="editForm.companyName" placeholder="请输入公司名称" size="medium"/>
         </el-form-item>
@@ -198,102 +166,63 @@
           <el-input v-model="editForm.taxNumber" placeholder="请输入税号" size="medium"/>
         </el-form-item>
         <el-form-item label="描述" prop="description">
-          <el-input
-            v-model="editForm.description"
-            type="textarea"
-            placeholder="请输入描述"
-            :rows="4"
-          />
+          <el-input v-model="editForm.description" type="textarea" placeholder="请输入描述" :rows="3" resize="none"/>
         </el-form-item>
         <el-form-item label="状态" prop="flag">
-          <el-select v-model="editForm.flag" placeholder="请选择状态" size="medium" style="width: 100%">
-            <el-option
-              v-for="item in statusOptions"
-              :key="item.code"
-              :label="item.label"
-              :value="item.code"
-            />
+          <el-select v-model="editForm.flag" placeholder="请选择状态" size="medium" style="width:100%">
+            <el-option v-for="item in statusOptions" :key="item.code" :label="item.label" :value="item.code"/>
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="handleDialogClose" size="medium">取 消</el-button>
-        <el-button type="primary" :loading="dialogSaving" @click="handleDialogConfirm" size="medium">确 定</el-button>
+      <div slot="footer" class="ca-dialog-footer">
+        <button class="ca-btn ca-btn-ghost" @click="handleDialogClose">取消</button>
+        <button class="ca-btn ca-btn-primary" :disabled="dialogSaving" @click="handleDialogConfirm">
+          <span v-if="dialogSaving" class="ca-spinner"></span>
+          {{ dialogSaving ? '保存中...' : '确认' }}
+        </button>
       </div>
     </el-dialog>
 
-    <!-- 移动公司对话框（改为远程搜索父公司） -->
+    <!-- Move Company Dialog -->
     <el-dialog
       title="移动公司"
       :visible.sync="moveCompanyDialogVisible"
       width="520px"
-      :modal="true"
       :before-close="handleMoveCompanyDialogClose"
       append-to-body
+      class="ca-dialog"
     >
-      <el-form ref="moveCompanyForm" :model="moveCompanyForm" label-width="100px">
+      <el-form ref="moveCompanyForm" :model="moveCompanyForm" label-width="90px" class="ca-form">
         <el-form-item label="目标父公司">
-          <el-alert
-            type="info"
-            show-icon
-            title="支持模糊搜索目标父公司；请选择目标父公司，不能选择自身"
-          />
-          <div style="margin-top:10px;">
-            <el-select
-              v-model="moveCompanyForm.targetParentId"
-              filterable
-              remote
-              clearable
-              placeholder="请输入公司名称或税号搜索"
-              :remote-method="remoteSearchParents"
-              :loading="parentRemoteLoading"
-              style="width:100%;"
-              :popper-class="'parent-select-popper'"
-              @change="onParentSelect"
-            >
-              <el-option
-                v-for="item in parentCandidates"
-                :key="item.id"
-                :label="item.companyName + (item.taxNumber ? ' — ' + item.taxNumber : '')"
-                :value="item.id"
-              />
-              <el-option
-                v-if="!parentCandidates.length && !parentRemoteLoading"
-                :key="'no-result'"
-                :label="'无匹配结果'"
-                :value="null"
-                disabled
-              />
-            </el-select>
+          <div class="ca-move-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>支持模糊搜索；不能选择自身作为目标</span>
           </div>
+          <el-select
+            v-model="moveCompanyForm.targetParentId"
+            filterable
+            remote
+            clearable
+            placeholder="请输入公司名称或税号搜索"
+            :remote-method="remoteSearchParents"
+            :loading="parentRemoteLoading"
+            style="width:100%; margin-top:8px;"
+            :popper-class="'ca-parent-select-popper'"
+            @change="onParentSelect"
+          >
+            <el-option v-for="item in parentCandidates" :key="item.id" :label="item.companyName + (item.taxNumber ? ' — ' + item.taxNumber : '')" :value="item.id"/>
+            <el-option v-if="!parentCandidates.length && !parentRemoteLoading" :key="'no-result'" label="无匹配结果" :value="null" disabled/>
+          </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="handleMoveCompanyDialogClose">取 消</el-button>
-        <el-button type="primary" :loading="moveSaving" @click="handleMoveCompanyConfirm">确 定</el-button>
+      <div slot="footer" class="ca-dialog-footer">
+        <button class="ca-btn ca-btn-ghost" @click="handleMoveCompanyDialogClose">取消</button>
+        <button class="ca-btn ca-btn-primary" :disabled="moveSaving" @click="handleMoveCompanyConfirm">
+          <span v-if="moveSaving" class="ca-spinner"></span>
+          {{ moveSaving ? '移动中...' : '确认移动' }}
+        </button>
       </div>
     </el-dialog>
-
-    <!-- 部门管理抽屉 -->
-    <el-drawer
-      title="部门管理"
-      :visible.sync="departmentDrawerVisible"
-      direction="rtl"
-      size="900px"
-      :modal="true"
-      :append-to-body="true"
-      class="department-drawer"
-    >
-      <div v-if="departmentDrawerVisible" class="drawer-content">
-        <div class="drawer-header">
-          <h3 class="drawer-title">🏢 {{ currentCompany.companyName }}</h3>
-        </div>
-        <department-tree-view
-          :company-id="currentCompany.id"
-          :company-name="currentCompany.companyName"
-        />
-      </div>
-    </el-drawer>
   </div>
 </template>
 
@@ -303,102 +232,45 @@ import DepartmentTreeView from '@/components/DepartmentTreeView/index.vue'
 
 export default {
   name: 'CompanyAdminView',
-  components: {
-    DepartmentTreeView
-  },
-  filters: {
-    formatDate(date) {
-      if (!date) return ''
-      const d = new Date(date)
-      return `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}:${d.getSeconds().toString().padStart(2, '0')}`
-    }
-  },
+  components: { DepartmentTreeView },
   data() {
     return {
       loading: false,
       dialogSaving: false,
       moveSaving: false,
       searchDebounceTimer: null,
-      searchForm: {
-        likeName: '',
-        equalsTaxNumber: '',
-        flagEquals: [],
-        treeRootFlag: 1
-      },
+      searchForm: { likeName: '', equalsTaxNumber: '', flagEquals: [], treeRootFlag: 1 },
       sortParams: {},
       currentPage: 1,
       pageSize: 10,
       total: 0,
-      treeData: [], // 树形数据
+      treeData: [],
+      selectedCompany: null,
       dialogVisible: false,
       moveCompanyDialogVisible: false,
       dialogType: 'add',
-      editForm: {
-        id: undefined,
-        companyName: '',
-        taxNumber: '',
-        description: '',
-        flag: 1,
-        parentId: undefined
-      },
-      moveCompanyForm: {
-        companyId: undefined,
-        targetParentId: undefined
-      },
-      // 远程选择父公司相关状态
+      editForm: { id: undefined, companyName: '', taxNumber: '', description: '', flag: 1, parentId: undefined },
+      moveCompanyForm: { companyId: undefined, targetParentId: undefined },
       parentCandidates: [],
       parentRemoteLoading: false,
       parentRemoteSize: 50,
       parentRemoteLastQuery: '',
-      allCompanies: [],
-      // 部门管理抽屉相关
-      departmentDrawerVisible: false,
-      currentCompany: {
-        id: null,
-        companyName: ''
-      },
       formRules: {
-        companyName: [
-          { required: true, message: '请输入公司名称', trigger: 'blur' }
-        ],
-        taxNumber: [
-          { required: true, message: '请输入税号', trigger: 'blur' }
-        ],
-        flag: [
-          { required: true, message: '请选择状态', trigger: 'change' }
-        ]
+        companyName: [{ required: true, message: '请输入公司名称', trigger: 'blur' }],
+        taxNumber: [{ required: true, message: '请输入税号', trigger: 'blur' }],
+        flag: [{ required: true, message: '请选择状态', trigger: 'change' }]
       },
       statusOptions: [
         { code: 1, label: '已激活' },
         { code: 2, label: '禁用' },
         { code: 5, label: '系统内置' }
       ],
-      treeProps: {
-        label: 'companyName',
-        children: 'children',
-        isLeaf: 'isLeaf'
-      }
+      treeProps: { label: 'companyName', children: 'children', isLeaf: 'isLeaf' }
     }
   },
   computed: {
     dialogTitle() {
       return this.dialogType === 'add' ? '新增公司' : '编辑公司'
-    },
-    companyTree() {
-      const map = {}
-      const roots = []
-      for (const c of this.allCompanies) {
-        map[c.id] = { ...c, children: [] }
-      }
-      for (const id in map) {
-        const node = map[id]
-        if (node.parentId && map[node.parentId]) {
-          map[node.parentId].children.push(node)
-        } else {
-          roots.push(node)
-        }
-      }
-      return roots
     }
   },
   created() {
@@ -421,43 +293,19 @@ export default {
       const re = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'ig')
       return safe.replace(re, '<mark>$1</mark>')
     },
-    maskTaxNumber(tax = '') {
-      if (!tax) return ''
-      if (tax.length <= 6) return tax
-      return tax.slice(0, 3) + '****' + tax.slice(-3)
-    },
-
     onSearchInput() {
       clearTimeout(this.searchDebounceTimer)
-      this.searchDebounceTimer = setTimeout(() => {
-        this.currentPage = 1
-        this.handleSearch()
-      }, 450)
+      this.searchDebounceTimer = setTimeout(() => { this.currentPage = 1; this.handleSearch() }, 450)
     },
-
     async loadCompanyData() {
       this.loading = true
       try {
-        const params = {
-          ...this.searchForm,
-          ...this.sortParams,
-          treeRootFlag: 1
-        }
+        const params = { ...this.searchForm, ...this.sortParams, treeRootFlag: 1 }
         const response = await adminQueryCompany(params, this.currentPage, this.pageSize)
         const resData = response.data || {}
         const list = (resData.data && Array.isArray(resData.data)) ? resData.data : (resData.list || [])
         this.total = resData.total != null ? resData.total : list.length
-
-        // 转换为树形结构数据
-        const treeData = []
-        for (const company of list) {
-          const companyWithChildren = {
-            ...company,
-            isLeaf: !(company.childrenCount && company.childrenCount > 0)
-          }
-          treeData.push(companyWithChildren)
-        }
-        this.treeData = treeData
+        this.treeData = list.map(c => ({ ...c, isLeaf: !(c.childrenCount && c.childrenCount > 0) }))
       } catch (error) {
         console.error('加载公司数据失败:', error)
         this.$message.error('加载公司数据失败')
@@ -465,101 +313,50 @@ export default {
         this.loading = false
       }
     },
-
     async loadNode(node, resolve) {
-      // 根节点
-      if (node.level === 0) {
-        resolve(this.treeData)
-        return
-      }
-
+      if (node.level === 0) { resolve(this.treeData); return }
       try {
         const response = await listChildren(node.data.id)
         const children = response.data || []
-        const childrenWithIsLeaf = []
-        for (const child of children) {
-          childrenWithIsLeaf.push({
-            ...child,
-            isLeaf: !(child.childrenCount && child.childrenCount > 0)
-          })
-        }
-        resolve(childrenWithIsLeaf)
+        resolve(children.map(c => ({ ...c, isLeaf: !(c.childrenCount && c.childrenCount > 0) })))
       } catch (error) {
-        console.error(`加载公司 ${node.data.id} 的子节点失败:`, error)
+        console.error(`加载子节点失败:`, error)
         resolve([])
       }
     },
-
-    handleSearch() {
-      this.currentPage = 1
-      this.loadCompanyData()
-    },
-
-    handleReset() {
-      this.searchForm = {
-        likeName: '',
-        equalsTaxNumber: '',
-        flagEquals: [],
-        treeRootFlag: 1
+    handleNodeClick(data) {
+      if (this.selectedCompany && this.selectedCompany.id === data.id) {
+        this.selectedCompany = null
+      } else {
+        this.selectedCompany = { id: data.id, companyName: data.companyName }
       }
+    },
+    handleSearch() { this.currentPage = 1; this.loadCompanyData() },
+    handleReset() {
+      this.searchForm = { likeName: '', equalsTaxNumber: '', flagEquals: [], treeRootFlag: 1 }
       this.sortParams = {}
       this.currentPage = 1
       this.pageSize = 10
       this.loadCompanyData()
     },
-
     handleAdd() {
       this.dialogType = 'add'
-      this.editForm = {
-        id: undefined,
-        companyName: '',
-        taxNumber: '',
-        description: '',
-        flag: 1,
-        parentId: undefined
-      }
+      this.editForm = { id: undefined, companyName: '', taxNumber: '', description: '', flag: 1, parentId: undefined }
       this.dialogVisible = true
     },
-
-    handleAddChild(row) {
-      this.dialogType = 'add'
-      this.editForm = {
-        id: undefined,
-        companyName: '',
-        taxNumber: '',
-        description: '',
-        flag: 1,
-        parentId: row && row.id ? row.id : undefined
-      }
-      this.dialogVisible = true
-    },
-
-    async handleMoveCompany(row) {
-      this.moveCompanyForm.companyId = row.id
-      this.moveCompanyForm.targetParentId = undefined
-      this.parentCandidates = []
-      this.parentRemoteLastQuery = ''
-      this.moveCompanyDialogVisible = true
-      // 预加载最近的若干（可快速选择父级）
-      this.remoteSearchParents('')
-    },
-
     handleEdit(row) {
       this.dialogType = 'edit'
       this.editForm = { ...row }
       this.dialogVisible = true
     },
-
     handleDelete(row) {
       this.$confirm(`确定要删除公司 "${row.companyName}" 吗？`, '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning'
+        confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
       }).then(async() => {
         try {
           await deleteCompany(row.id)
           this.$message.success('删除成功')
-          // 重新加载整个树
+          if (this.selectedCompany && this.selectedCompany.id === row.id) this.selectedCompany = null
           this.loadCompanyData()
         } catch (error) {
           console.error('删除失败:', error)
@@ -567,74 +364,41 @@ export default {
         }
       })
     },
-
-    getCompanyStatusTagType(flag) {
-      switch (flag) {
-        case 0:
-          return 'info'
-        case 1:
-          return 'success'
-        case 2:
-          return 'warning'
-        case 5:
-          return 'primary'
-        default:
-          return 'info'
-      }
-    },
-
     getCompanyStatusLabel(flag) {
-      const status = this.statusOptions.find(item => item.code === flag)
-      return status ? status.label : '未知状态'
+      const s = this.statusOptions.find(i => i.code === flag)
+      return s ? s.label : '未知'
     },
-
     handleDialogClose() {
       this.dialogVisible = false
-      if (this.$refs.editForm && this.$refs.editForm.resetFields) {
-        this.$refs.editForm.resetFields()
-      }
+      if (this.$refs.editForm && this.$refs.editForm.resetFields) this.$refs.editForm.resetFields()
     },
-
     async handleDialogConfirm() {
       this.$refs.editForm.validate(async(valid) => {
-        if (valid) {
-          this.dialogSaving = true
-          try {
-            if (this.dialogType === 'add' && this.editForm.parentId) {
-              const saveResponse = await saveCompany({
-                companyName: this.editForm.companyName,
-                taxNumber: this.editForm.taxNumber,
-                description: this.editForm.description,
-                flag: this.editForm.flag
-              })
-              if (saveResponse.data && saveResponse.data.id) {
-                await moveCompanyTo(this.editForm.parentId, saveResponse.data.id)
-                this.$message.success('新增子公司成功')
-              }
-            } else {
-              await saveCompany(this.editForm)
-              this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
-            }
-            this.dialogVisible = false
-            // 重新加载整个树
-            this.loadCompanyData()
-          } catch (error) {
-            console.error('保存失败:', error)
-            this.$message.error('保存失败')
-          } finally {
-            this.dialogSaving = false
+        if (!valid) return
+        this.dialogSaving = true
+        try {
+          if (this.dialogType === 'add' && this.editForm.parentId) {
+            const res = await saveCompany({ companyName: this.editForm.companyName, taxNumber: this.editForm.taxNumber, description: this.editForm.description, flag: this.editForm.flag })
+            if (res.data && res.data.id) await moveCompanyTo(this.editForm.parentId, res.data.id)
+            this.$message.success('新增子公司成功')
+          } else {
+            await saveCompany(this.editForm)
+            this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
           }
+          this.dialogVisible = false
+          this.loadCompanyData()
+        } catch (error) {
+          console.error('保存失败:', error)
+          this.$message.error('保存失败')
+        } finally {
+          this.dialogSaving = false
         }
       })
     },
-
     handleMoreActions(command) {
       switch (command.type) {
-        case 'addChild':
-          this.handleAddChild(command.row)
-          break
         case 'manageDept':
-          this.handleManageDepartment(command.row)
+          this.selectedCompany = { id: command.row.id, companyName: command.row.companyName }
           break
         case 'move':
           this.handleMoveCompany(command.row)
@@ -644,44 +408,37 @@ export default {
           break
       }
     },
-
+    async handleMoveCompany(row) {
+      this.moveCompanyForm.companyId = row.id
+      this.moveCompanyForm.targetParentId = undefined
+      this.parentCandidates = []
+      this.parentRemoteLastQuery = ''
+      this.moveCompanyDialogVisible = true
+      this.remoteSearchParents('')
+    },
     handleMoveCompanyDialogClose() {
       this.moveCompanyDialogVisible = false
       this.moveCompanyForm.targetParentId = undefined
       this.parentCandidates = []
       this.parentRemoteLoading = false
       this.parentRemoteLastQuery = ''
-      if (this.$refs.moveCompanyForm && this.$refs.moveCompanyForm.resetFields) {
-        this.$refs.moveCompanyForm.resetFields()
-      }
+      if (this.$refs.moveCompanyForm && this.$refs.moveCompanyForm.resetFields) this.$refs.moveCompanyForm.resetFields()
     },
-
     onParentSelect(selectedId) {
-      if (!selectedId) return
-      if (selectedId === this.moveCompanyForm.companyId) {
+      if (selectedId && selectedId === this.moveCompanyForm.companyId) {
         this.$message.warning('不能将公司移动到自身')
         this.moveCompanyForm.targetParentId = undefined
       }
     },
-
-    // 远程搜索父公司（防止一次性加载全部公司）
     async remoteSearchParents(query) {
-      // 避免重复同样的快速请求
       if (query === this.parentRemoteLastQuery) return
       this.parentRemoteLastQuery = query
       this.parentRemoteLoading = true
       try {
-        const params = {
-          likeName: query || undefined,
-          equalsTaxNumber: query && /^\d+$/.test(query) ? query : undefined,
-          page: 1,
-          size: this.parentRemoteSize,
-          treeRootFlag: undefined
-        }
+        const params = { likeName: query || undefined, equalsTaxNumber: query && /^\d+$/.test(query) ? query : undefined, page: 1, size: this.parentRemoteSize, treeRootFlag: undefined }
         const response = await adminQueryCompany(params)
         const resData = response.data || {}
         const list = (resData.data && Array.isArray(resData.data)) ? resData.data : (resData.list || [])
-        // 过滤掉自身（前端快速防护），后端仍需校验子孙关系
         this.parentCandidates = list.filter(item => item.id !== this.moveCompanyForm.companyId)
       } catch (error) {
         console.error('搜索父公司失败:', error)
@@ -691,478 +448,594 @@ export default {
         this.parentRemoteLoading = false
       }
     },
-
     async handleMoveCompanyConfirm() {
-      if (!this.moveCompanyForm.targetParentId) {
-        this.$message.warning('请选择目标父公司')
-        return
-      }
-      if (this.moveCompanyForm.targetParentId === this.moveCompanyForm.companyId) {
-        this.$message.warning('不能将公司移动到自身')
-        return
-      }
+      if (!this.moveCompanyForm.targetParentId) { this.$message.warning('请选择目标父公司'); return }
+      if (this.moveCompanyForm.targetParentId === this.moveCompanyForm.companyId) { this.$message.warning('不能将公司移动到自身'); return }
       this.moveSaving = true
       try {
         await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId)
         this.$message.success('移动公司成功')
         this.handleMoveCompanyDialogClose()
-        // 重新加载整个树
         this.loadCompanyData()
       } catch (error) {
         console.error('移动公司失败:', error)
-        // 如果后端返回子孙校验失败，应显示后端错误信息
         const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动公司失败'
         this.$message.error(msg)
       } finally {
         this.moveSaving = false
       }
     },
-
-    handlePageChange(page) {
-      this.currentPage = page
-      this.loadCompanyData()
-    },
-
-    handleSizeChange(size) {
-      this.pageSize = size
-      this.currentPage = 1
-      this.loadCompanyData()
-    },
-
-    // 管理部门
-    handleManageDepartment(row) {
-      this.currentCompany = {
-        id: row.id,
-        companyName: row.companyName
-      }
-      this.departmentDrawerVisible = true
-    },
+    handlePageChange(page) { this.currentPage = page; this.loadCompanyData() },
+    handleSizeChange(size) { this.pageSize = size; this.currentPage = 1; this.loadCompanyData() }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-.company-admin-view {
-  padding: 20px;
+/* ==================== Design Tokens ==================== */
+.company-admin {
+  --ca-primary: #D97706;
+  --ca-primary-light: #F59E0B;
+  --ca-primary-bg: #FFFBEB;
+  --ca-primary-border: #FDE68A;
+  --ca-text: #1E293B;
+  --ca-text-secondary: #64748B;
+  --ca-text-muted: #94A3B8;
+  --ca-surface: #FFFFFF;
+  --ca-bg: #F8FAFC;
+  --ca-border: #E2E8F0;
+  --ca-border-light: #F1F5F9;
+  --ca-success: #059669;
+  --ca-success-bg: #ECFDF5;
+  --ca-warning: #D97706;
+  --ca-danger: #DC2626;
+  --ca-danger-bg: #FEF2F2;
+  --ca-radius: 12px;
+  --ca-radius-sm: 8px;
+  --ca-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: var(--ca-text);
+  background: var(--ca-bg);
+  padding: 28px 32px;
   min-height: calc(100vh - 84px);
+}
 
-  .header-section {
-    margin-bottom: 24px;
+/* ==================== Header ==================== */
+.ca-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.ca-header-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.ca-header-icon {
+  width: 52px;
+  height: 52px;
+  border-radius: var(--ca-radius);
+  background: var(--ca-primary-bg);
+  border: 1px solid var(--ca-primary-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ca-primary);
+  flex-shrink: 0;
+}
+
+.ca-title {
+  font-size: 26px;
+  font-weight: 700;
+  color: var(--ca-text);
+  margin: 0 0 2px 0;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.ca-subtitle {
+  font-size: 14px;
+  color: var(--ca-text-muted);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ==================== Buttons ==================== */
+.ca-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 10px 22px;
+  border: none;
+  border-radius: var(--ca-radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--ca-transition);
+  white-space: nowrap;
+  line-height: 1;
+}
+
+.ca-btn-primary {
+  background: var(--ca-primary);
+  color: #fff;
+  &:hover:not(:disabled) {
+    background: var(--ca-primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
   }
+  &:active:not(:disabled) { transform: translateY(0); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
 
-  .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px 24px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #409eff;
+.ca-btn-ghost {
+  background: transparent;
+  color: var(--ca-text-secondary);
+  border: 1px solid var(--ca-border);
+  &:hover { color: var(--ca-text); border-color: var(--ca-text-muted); background: var(--ca-border-light); }
+}
+
+.ca-btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+/* ==================== Search ==================== */
+.ca-search {
+  background: var(--ca-surface);
+  border-radius: var(--ca-radius);
+  border: 1px solid var(--ca-border);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  transition: border-color var(--ca-transition);
+  &:focus-within { border-color: var(--ca-primary-border); }
+}
+
+.ca-search-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.ca-search-field {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+.ca-search-field-sm { min-width: 140px; flex: 0.6; }
+.ca-search-field-select { min-width: 160px; flex: 0.8; }
+
+.ca-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ca-text-muted);
+  pointer-events: none;
+}
+
+.ca-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--ca-border);
+  border-radius: var(--ca-radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--ca-text);
+  background: var(--ca-bg);
+  transition: all var(--ca-transition);
+  outline: none;
+  &:focus {
+    border-color: var(--ca-primary);
+    background: var(--ca-surface);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
   }
+  &::placeholder { color: var(--ca-text-muted); }
+}
 
-  .main-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #303133;
-    margin: 0;
-    letter-spacing: 0.5px;
-  }
+.ca-search-field:first-child .ca-input { padding-left: 38px; }
 
-  .header-actions {
-    .add-company-btn {
-      background: #409eff;
-      border-color: #409eff;
-      color: #fff;
-      font-weight: 500;
-      padding: 12px 24px;
-      border-radius: 6px;
-      font-size: 15px;
-      transition: all 0.3s ease;
+.ca-search-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
 
-      i {
-        font-size: 15px;
-        margin-right: 6px;
-      }
+/* ==================== Master-Detail Layout ==================== */
+.ca-layout {
+  display: flex;
+  gap: 20px;
+  min-height: 500px;
+}
 
-      &:hover {
-        background: #66b1ff;
-        border-color: #66b1ff;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-      }
+.ca-panel {
+  background: var(--ca-surface);
+  border-radius: var(--ca-radius);
+  border: 1px solid var(--ca-border);
+  overflow: hidden;
+}
 
-      &:active {
-        transform: translateY(0);
-      }
-    }
-  }
+.ca-panel-left {
+  width: 420px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+}
 
-  .search-card {
-    margin-bottom: 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e8eaed;
-    transition: all 0.3s ease;
+.ca-panel-right {
+  flex: 1;
+  min-width: 0;
+}
 
-    &:hover {
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    }
+.ca-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--ca-border-light);
+}
 
-    ::v-deep .el-card__body {
-      padding: 24px;
-    }
-  }
+.ca-panel-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ca-text);
+  letter-spacing: -0.1px;
+}
 
-  .table-card {
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e8eaed;
-    transition: all 0.3s ease;
+.ca-panel-count {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--ca-text-muted);
+  background: var(--ca-bg);
+  padding: 3px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--ca-border);
+}
 
-    &:hover {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    }
+/* ==================== Tree ==================== */
+.ca-tree-wrap {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 6px;
+  min-height: 200px;
+  position: relative;
+}
 
-    ::v-deep .el-card__body {
-      padding: 24px;
-      min-height: 400px;
-    }
-  }
+.ca-tree-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 10px;
+  border-radius: var(--ca-radius-sm);
+  transition: background var(--ca-transition);
+  min-height: 42px;
+}
 
-  .children-count {
-    color: #909399;
-    margin-left: 8px;
-    font-size: 12px;
-    background: #f4f4f5;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
+.ca-tree-main {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
 
-  .pagination-wrap {
-    margin-top: 24px;
-    text-align: right;
-    padding: 16px 0;
-  }
+.ca-tree-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--ca-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
-  .empty-wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 80px 0;
-    min-height: 300px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 8px;
-    margin: 20px 0;
-  }
-
-  /* 加载动画优化 */
-  ::v-deep .el-loading-mask {
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
-  }
-
-  ::v-deep .el-loading-spinner .circular {
-    width: 42px;
-    height: 42px;
-  }
-
-  ::v-deep .el-loading-spinner .path {
-    stroke: #409eff;
-    stroke-width: 3;
-  }
-
-  .move-tree-wrap {
-    max-height: 320px;
-    overflow: auto;
-    border: 1px solid #edf0f5;
-    border-radius: 4px;
-    padding: 10px;
-    margin-top: 10px;
-    background: #fff;
-  }
-
-  mark {
-    background: #fff3cd;
-    color: #856404;
-    padding: 2px 4px;
+  ::v-deep mark {
+    background: var(--ca-primary-bg);
+    color: var(--ca-primary);
+    padding: 1px 4px;
     border-radius: 3px;
-    font-weight: 500;
+    font-weight: 600;
+    border: 1px solid var(--ca-primary-border);
   }
+}
 
-  /* 树形组件样式优化 */
-  ::v-deep .el-tree {
-    font-size: 16px;
-    line-height: 1.6;
+.ca-status-badge {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  line-height: 1.3;
+  flex-shrink: 0;
+
+  &.ca-status-1 {
+    color: var(--ca-success);
+    background: var(--ca-success-bg);
+    border: 1px solid #A7F3D0;
   }
-
-  ::v-deep .el-tree-node {
-    margin: 8px 0;
+  &.ca-status-2 {
+    color: #B45309;
+    background: #FEF3C7;
+    border: 1px solid #FDE68A;
   }
-
-  ::v-deep .el-tree-node__content {
-    height: 48px;
-    line-height: 48px;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 8px;
-    margin: 6px 0;
-    padding: 0 12px;
-
-    ::v-deep .el-tree-node:focus > .el-tree-node__content {
-      background-color: #ecf5ff;
-    }
-
-    ::v-deep .el-tree-node__expand-icon {
-      font-size: 16px;
-      color: #909399;
-      margin-right: 8px;
-      transition: all 0.3s ease;
-
-      &:hover {
-        color: #409eff;
-      }
-    }
-
-    ::v-deep .el-tree-node__expand-icon.expanded {
-      transform: rotate(0deg);
-    }
-
-    ::v-deep .el-tree-node__expand-icon.is-leaf {
-      color: transparent;
-    }
-
-    .custom-tree-node {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 14px;
-      font-weight: 500;
-      padding: 8px 12px;
-      min-height: 40px;
-      border-radius: 6px;
-      transition: all 0.3s ease;
-
-      &:hover {
-        background: #ecf5ff;
-        box-shadow: 0 2px 6px rgba(64, 158, 255, 0.15);
-      }
-    }
-
-    .tree-node-content {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .tree-node-actions {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      opacity: 0;
-      transform: translateX(10px);
-      transition: all 0.3s ease;
-      margin-left: 12px;
-    }
-
-    .custom-tree-node:hover .tree-node-actions {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
-    .tree-node-actions .el-button {
-      font-size: 13px;
-      padding: 6px 12px;
-      border-radius: 4px;
-      transition: all 0.3s ease;
-      font-weight: 500;
-
-      &:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-      }
-    }
-
-    .tree-node-actions .el-button[type="primary"] {
-      background: #409eff;
-      border-color: #409eff;
-      color: white;
-
-      &:hover {
-        background: #66b1ff;
-        border-color: #66b1ff;
-      }
-    }
-
-    .tree-node-actions .el-button[type="success"] {
-      background: #67c23a;
-      border-color: #67c23a;
-      color: white;
-
-      &:hover {
-        background: #85ce61;
-        border-color: #85ce61;
-      }
-    }
-
-    /* 高亮搜索关键词样式 */
-    mark {
-      background: #fff3cd;
-      color: #856404;
-      padding: 2px 4px;
-      border-radius: 3px;
-      font-weight: 500;
-    }
-
-    /* 子节点数量样式 */
-    .children-count {
-      color: #909399;
-      margin-left: 8px;
-      font-size: 14px;
-      background: #f0f2f5;
-      padding: 2px 8px;
-      border-radius: 12px;
-      font-weight: 400;
-    }
-
-    /* 公司详情卡片样式 */
-    .company-detail-card {
-      min-width: 320px;
-      background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      border-radius: 10px;
-      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-      overflow: hidden;
-
-      .card-header {
-        padding: 16px;
-        background: linear-gradient(120deg, #409eff 0%, #1a73e8 100%);
-        color: white;
-
-        h3 {
-          margin: 0;
-          font-size: 18px;
-          font-weight: 600;
-        }
-      }
-
-      .card-content {
-        padding: 16px;
-
-        .info-item {
-          display: flex;
-          margin-bottom: 12px;
-          align-items: center;
-
-          &:last-child {
-            margin-bottom: 0;
-          }
-
-          .info-label {
-            font-weight: 500;
-            color: #606266;
-            width: 80px;
-            font-size: 14px;
-          }
-
-          .info-value {
-            flex: 1;
-            color: #303133;
-            font-size: 14px;
-
-            &.tax-number {
-              font-family: 'Courier New', monospace;
-              letter-spacing: 1px;
-            }
-
-            &.description {
-              line-height: 1.5;
-            }
-          }
-        }
-      }
-    }
-
-    /* 自定义 tooltip 样式 */
-    ::v-deep .company-info-tooltip {
-      background: transparent !important;
-      border: none !important;
-      padding: 0 !important;
-      box-shadow: none !important;
-    }
-
-    @media (max-width: 768px) {
-      padding: 10px;
-      .main-title {
-        font-size: 20px;
-      }
-      .search-card, .table-card {
-        ::v-deep .el-card__body {
-          padding: 12px;
-        }
-      }
-    }
+  &.ca-status-5 {
+    color: #6366F1;
+    background: #EEF2FF;
+    border: 1px solid #C7D2FE;
   }
+}
 
-  /* 可选：调整下拉样式使显示更友好 */
-  .parent-select-popper .el-select-dropdown__item {
-    white-space: nowrap;
+.ca-count-badge {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ca-text-muted);
+  background: var(--ca-border-light);
+  padding: 2px 7px;
+  border-radius: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* ==================== Tree Actions ==================== */
+.ca-tree-actions {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: all var(--ca-transition);
+  flex-shrink: 0;
+  margin-left: 8px;
+}
+
+.ca-tree-row:hover .ca-tree-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.ca-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ca-border);
+  border-radius: 6px;
+  background: var(--ca-surface);
+  color: var(--ca-text-secondary);
+  cursor: pointer;
+  transition: all var(--ca-transition);
+  padding: 0;
+
+  &:hover {
+    border-color: var(--ca-primary);
+    color: var(--ca-primary);
+    background: var(--ca-primary-bg);
+  }
+}
+
+.ca-action-more {
+  width: auto;
+  padding: 0 6px;
+}
+
+/* ==================== Empty State ==================== */
+.ca-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  color: var(--ca-text-muted);
+  p { margin: 10px 0 0; font-size: 14px; }
+}
+
+/* ==================== Pagination ==================== */
+.ca-pagination {
+  padding: 12px 20px;
+  border-top: 1px solid var(--ca-border-light);
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* ==================== Right Panel: Department Host ==================== */
+.ca-dept-host {
+  height: 100%;
+}
+
+.ca-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  padding: 40px;
+}
+
+.ca-placeholder-icon {
+  margin-bottom: 16px;
+  color: var(--ca-text-muted);
+}
+
+.ca-placeholder-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--ca-text-secondary);
+  margin: 0 0 6px 0;
+}
+
+.ca-placeholder-hint {
+  font-size: 13px;
+  color: var(--ca-text-muted);
+  margin: 0;
+}
+
+/* ==================== Element Overrides ==================== */
+::v-deep .el-tree {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--ca-text);
+}
+::v-deep .el-tree-node { margin: 2px 0; }
+::v-deep .el-tree-node__content {
+  height: auto;
+  min-height: 42px;
+  line-height: normal;
+  border-radius: var(--ca-radius-sm);
+  margin: 0;
+  padding: 0;
+  transition: background var(--ca-transition);
+  &:hover { background: transparent; }
+}
+::v-deep .el-tree-node:focus > .el-tree-node__content { background: transparent; }
+::v-deep .el-tree-node.is-current > .el-tree-node__content {
+  background: var(--ca-primary-bg) !important;
+  border-right: 3px solid var(--ca-primary);
+}
+::v-deep .el-tree-node__expand-icon {
+  font-size: 14px;
+  color: var(--ca-text-muted);
+  margin-right: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--ca-transition);
+  border-radius: 4px;
+  &:not(.is-leaf):hover { color: var(--ca-primary); background: var(--ca-primary-bg); }
+}
+::v-deep .el-tree-node__expand-icon.expanded { transform: rotate(90deg); }
+::v-deep .el-tree-node__expand-icon.is-leaf { color: transparent; cursor: default; }
+
+::v-deep .el-loading-mask {
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(2px);
+  border-radius: var(--ca-radius);
+}
+
+/* Search Select */
+::v-deep .ca-search-field-select .el-input__inner {
+  height: 40px;
+  line-height: 40px;
+  border-radius: var(--ca-radius-sm);
+  border-color: var(--ca-border);
+  background: var(--ca-bg);
+  font-size: 13px;
+}
+::v-deep .ca-search-field-select .el-tag {
+  background: var(--ca-primary-bg);
+  border-color: var(--ca-primary-border);
+  color: var(--ca-primary);
+}
+
+/* ==================== Dialog ==================== */
+::v-deep .ca-dialog {
+  .el-dialog {
+    border-radius: var(--ca-radius);
     overflow: hidden;
-    text-overflow: ellipsis;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
   }
-
-  /* 公司编辑对话框样式 */
-  ::v-deep .company-edit-dialog {
-    .el-dialog__body {
-      padding: 24px 32px;
-    }
-
-    .el-form-item {
-      margin-bottom: 22px;
-    }
-
-    .el-input__inner,
-    .el-textarea__inner {
-      border-radius: 6px;
-    }
+  .el-dialog__header {
+    padding: 20px 24px 16px;
+    margin: 0;
+    border-bottom: 1px solid var(--ca-border-light);
+    background: var(--ca-surface);
   }
-
-  /* 部门管理抽屉样式 */
-  ::v-deep .department-drawer {
-    .el-drawer__header {
-      margin-bottom: 0;
-      padding: 24px 32px;
-      border-bottom: 1px solid #ebeef5;
-      background: #fff;
-    }
-
-    .el-drawer__body {
-      overflow: hidden;
-      background: #f5f7fa;
-    }
-
-    .drawer-content {
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .drawer-header {
-      padding: 20px 32px;
-      background: #fff;
-      border-bottom: 1px solid #ebeef5;
-
-      .drawer-title {
-        margin: 0;
-        font-size: 20px;
-        font-weight: 600;
-        color: #303133;
-        letter-spacing: 0.5px;
-      }
-    }
+  .el-dialog__title { font-size: 16px; font-weight: 700; color: var(--ca-text); letter-spacing: -0.2px; }
+  .el-dialog__headerbtn { top: 20px; right: 20px; }
+  .el-dialog__body { padding: 0; }
+  .el-dialog__footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--ca-border-light);
+    background: var(--ca-bg);
   }
+}
+
+.ca-form {
+  padding: 24px;
+  ::v-deep .el-form-item { margin-bottom: 20px; &:last-child { margin-bottom: 0; } }
+  ::v-deep .el-form-item__label { font-size: 13px; font-weight: 600; color: var(--ca-text-secondary); }
+  ::v-deep .el-input__inner,
+  ::v-deep .el-textarea__inner {
+    border-radius: var(--ca-radius-sm);
+    border-color: var(--ca-border);
+    font-size: 13px;
+    transition: all var(--ca-transition);
+    &:focus { border-color: var(--ca-primary); box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.08); }
+  }
+}
+
+.ca-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.ca-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: ca-spin 0.6s linear infinite;
+  margin-right: 6px;
+}
+
+@keyframes ca-spin { to { transform: rotate(360deg); } }
+
+/* Move Hint */
+.ca-move-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #EFF6FF;
+  border-radius: var(--ca-radius-sm);
+  border: 1px solid #BFDBFE;
+  font-size: 12px;
+  color: #1D4ED8;
+}
+
+/* Parent Select Popper */
+.ca-parent-select-popper .el-select-dropdown__item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 1024px) {
+  .ca-layout {
+    flex-direction: column;
+  }
+  .ca-panel-left {
+    width: 100%;
+  }
+}
+@media (max-width: 768px) {
+  .company-admin { padding: 16px; }
+  .ca-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .ca-title { font-size: 22px; }
+  .ca-search-inner { flex-direction: column; }
+  .ca-search-field, .ca-search-field-sm, .ca-search-field-select { min-width: 100%; }
+  .ca-search-actions { width: 100%; margin-left: 0; }
+}
+</style>
+
+<style lang="scss">
+.ca-parent-select-popper .el-select-dropdown__item {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 </style>

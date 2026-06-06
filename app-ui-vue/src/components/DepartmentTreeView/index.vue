@@ -1,80 +1,79 @@
 <template>
-  <div class="department-tree-view">
-    <div class="header-section">
-      <div class="header-content">
-        <h3 class="main-title">🏢 部门管理 - {{ companyName }}</h3>
-        <div class="header-actions">
-          <el-button
-            type="primary"
-            icon="el-icon-plus"
-            @click="handleAdd"
-            class="add-department-btn"
+  <div class="dept-view">
+    <!-- 页面头部 -->
+    <div class="dept-hero">
+      <div class="hero-left">
+        <div class="hero-badge">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+          <h2 class="hero-title">部门管理</h2>
+          <p class="hero-subtitle">{{ companyName }}</p>
+        </div>
+      </div>
+      <button class="dept-btn-primary" @click="handleAdd">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>新增部门</span>
+      </button>
+    </div>
+
+    <!-- 搜索区域 -->
+    <div class="dept-search">
+      <div class="dept-search-inner">
+        <div class="search-field">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            v-model="searchForm.likeName"
+            type="text"
+            class="search-input"
+            placeholder="搜索部门名称..."
+            @input="onSearchInput"
+            @keyup.enter="handleSearch"
+          />
+        </div>
+        <div class="search-field">
+          <input
+            v-model="searchForm.equalsDepartmentCode"
+            type="text"
+            class="search-input"
+            placeholder="部门编码"
+            @input="onSearchInput"
+            @keyup.enter="handleSearch"
+          />
+        </div>
+        <div class="search-field search-select-field">
+          <el-select
+            v-model="searchForm.flagEquals"
+            placeholder="状态筛选"
+            clearable
+            multiple
+            collapse-tags
+            @change="handleSearch"
           >
-            新增部门
-          </el-button>
+            <el-option
+              v-for="item in statusOptions"
+              :key="item.code"
+              :label="item.label"
+              :value="item.code"
+            />
+          </el-select>
+        </div>
+        <div class="search-actions">
+          <button class="dept-btn-primary dept-btn-sm" @click="handleSearch">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            搜索
+          </button>
+          <button class="dept-btn-ghost" @click="handleReset">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            重置
+          </button>
         </div>
       </div>
     </div>
 
-    <!-- 搜索区域 -->
-    <el-card class="search-card" shadow="never">
-      <el-form ref="searchForm" :model="searchForm" label-width="100px" class="search-form">
-        <el-row :gutter="24">
-          <el-col :span="8">
-            <el-form-item label="部门名称">
-              <el-input
-                v-model="searchForm.likeName"
-                placeholder="请输入部门名称"
-                clearable
-                @input="onSearchInput"
-                @keyup.enter.native="handleSearch"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="部门编码">
-              <el-input
-                v-model="searchForm.equalsDepartmentCode"
-                placeholder="请输入部门编码"
-                clearable
-                @input="onSearchInput"
-                @keyup.enter.native="handleSearch"
-              />
-            </el-form-item>
-          </el-col>
-          <el-col :span="8">
-            <el-form-item label="状态">
-              <el-select
-                v-model="searchForm.flagEquals"
-                placeholder="请选择状态"
-                clearable
-                multiple
-                @change="handleSearch"
-              >
-                <el-option
-                  v-for="item in statusOptions"
-                  :key="item.code"
-                  :label="item.label"
-                  :value="item.code"
-                />
-              </el-select>
-            </el-form-item>
-          </el-col>
-        </el-row>
-        <el-row>
-          <el-col :span="24">
-            <div class="search-actions">
-              <el-button type="primary" icon="el-icon-search" size="medium" @click="handleSearch">搜索</el-button>
-              <el-button icon="el-icon-refresh" size="medium" @click="handleReset">重置</el-button>
-            </div>
-          </el-col>
-        </el-row>
-      </el-form>
-    </el-card>
-
     <!-- 树形区域 -->
-    <el-card class="table-card" shadow="never">
-      <div v-loading="loading" style="min-height:200px; position:relative;">
+    <div class="dept-tree-wrap">
+      <div v-loading="loading" class="dept-tree-inner">
         <el-tree
           ref="departmentTree"
           :data="treeData"
@@ -83,76 +82,65 @@
           lazy
           :load="loadNode"
         >
-          <span slot-scope="{ node, data }" class="custom-tree-node">
-            <span class="tree-node-content">
-              <el-tooltip class="item" placement="right" effect="light" popper-class="department-info-tooltip">
-                <span class="tree-node-title">{{ data.departmentName }}</span>
+          <span slot-scope="{ node, data }" class="tree-row">
+            <span class="tree-row-main">
+              <el-tooltip class="item" placement="right" effect="light" popper-class="dept-tooltip">
+                <span class="tree-name">{{ data.departmentName }}</span>
                 <template slot="content">
-                  <div class="department-detail-card">
-                    <div class="card-header">
-                      <h3>部门信息</h3>
+                  <div class="detail-card">
+                    <div class="detail-head">
+                      <span class="detail-head-icon">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                      </span>
+                      部门详情
                     </div>
-                    <div class="card-content">
-                      <el-row :gutter="12">
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">部门名称:</span>
-                            <span class="info-value">{{ data.departmentName }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">部门编码:</span>
-                            <span class="info-value">{{ data.departmentCode || '无' }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">负责人:</span>
-                            <span class="info-value">{{ data.manager || '无' }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">状态:</span>
-                            <el-tag size="small" :type="getDepartmentStatusTagType(data.flag)">
-                              {{ getDepartmentStatusLabel(data.flag) }}
-                            </el-tag>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">添加时间:</span>
-                            <span class="info-value">{{ data.createTime | formatDate }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="12">
-                          <div class="info-item">
-                            <span class="info-label">更新时间:</span>
-                            <span class="info-value">{{ data.updateTime | formatDate }}</span>
-                          </div>
-                        </el-col>
-                        <el-col :span="24">
-                          <div class="info-item">
-                            <span class="info-label">描述:</span>
-                            <span class="info-value description">{{ data.description || '无' }}</span>
-                          </div>
-                        </el-col>
-                      </el-row>
+                    <div class="detail-body">
+                      <div class="detail-row">
+                        <span class="detail-label">名称</span>
+                        <span class="detail-val">{{ data.departmentName }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">编码</span>
+                        <span class="detail-val">{{ data.departmentCode || '—' }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">负责人</span>
+                        <span class="detail-val">{{ data.manager || '—' }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">状态</span>
+                        <span class="detail-val">
+                          <span class="status-dot" :class="'dot-' + data.flag"></span>
+                          {{ getDepartmentStatusLabel(data.flag) }}
+                        </span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">添加时间</span>
+                        <span class="detail-val">{{ data.createTime | formatDate }}</span>
+                      </div>
+                      <div class="detail-row">
+                        <span class="detail-label">更新时间</span>
+                        <span class="detail-val">{{ data.updateTime | formatDate }}</span>
+                      </div>
+                      <div class="detail-row detail-row-full">
+                        <span class="detail-label">描述</span>
+                        <span class="detail-val">{{ data.description || '—' }}</span>
+                      </div>
                     </div>
                   </div>
                 </template>
               </el-tooltip>
-              <span v-if="data.childrenCount && data.childrenCount > 0" class="children-count">
-                ({{ data.childrenCount }})
-              </span>
+              <span v-if="data.childrenCount && data.childrenCount > 0" class="dept-count">{{ data.childrenCount }}</span>
             </span>
-            <span class="tree-node-actions">
-              <el-button type="primary" size="mini" icon="el-icon-edit" @click="handleEdit(data)">编辑</el-button>
-              <el-dropdown size="mini" @command="handleMoreActions" trigger="click">
-                <el-button type="success" size="mini" icon="el-icon-more">
-                  更多
-                </el-button>
+            <span class="tree-row-actions">
+              <button class="action-btn action-edit" @click="handleEdit(data)" title="编辑">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                <span>编辑</span>
+              </button>
+              <el-dropdown size="small" @command="handleMoreActions" trigger="click">
+                <button class="action-btn action-more" title="更多">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                </button>
                 <el-dropdown-menu slot="dropdown">
                   <el-dropdown-item :command="{type: 'move', row: data}" icon="el-icon-sort">
                     移动到其他部门
@@ -166,13 +154,15 @@
           </span>
         </el-tree>
 
-        <div v-if="!loading && (!treeData || treeData.length === 0)" class="empty-wrap">
-          <el-empty description="暂无数据"/>
+        <div v-if="!loading && (!treeData || treeData.length === 0)" class="dept-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.3"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+          <p>暂无部门数据</p>
         </div>
       </div>
-    </el-card>
+    </div>
 
-    <div class="pagination-section">
+    <!-- 分页 -->
+    <div class="dept-pagination">
       <el-pagination
         :current-page="currentPage"
         :page-sizes="[10, 20, 50, 100]"
@@ -188,13 +178,13 @@
     <el-dialog
       :title="dialogTitle"
       :visible.sync="dialogVisible"
-      width="560px"
+      width="520px"
       :modal="true"
       :before-close="handleDialogClose"
       append-to-body
-      class="department-edit-dialog"
+      class="dept-dialog"
     >
-      <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="100px">
+      <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="90px" class="dept-form">
         <el-form-item label="部门名称" prop="departmentName">
           <el-input v-model="editForm.departmentName" placeholder="请输入部门名称" size="medium"/>
         </el-form-item>
@@ -209,7 +199,8 @@
             v-model="editForm.description"
             type="textarea"
             placeholder="请输入描述"
-            :rows="4"
+            :rows="3"
+            resize="none"
           />
         </el-form-item>
         <el-form-item label="状态" prop="flag">
@@ -223,9 +214,12 @@
           </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="handleDialogClose" size="medium">取 消</el-button>
-        <el-button type="primary" :loading="dialogSaving" @click="handleDialogConfirm" size="medium">确 定</el-button>
+      <div slot="footer" class="dept-dialog-footer">
+        <button class="dept-btn-ghost" @click="handleDialogClose">取消</button>
+        <button class="dept-btn-primary" :disabled="dialogSaving" @click="handleDialogConfirm">
+          <span v-if="dialogSaving" class="btn-spinner"></span>
+          {{ dialogSaving ? '保存中...' : '确认' }}
+        </button>
       </div>
     </el-dialog>
 
@@ -233,51 +227,52 @@
     <el-dialog
       title="移动部门"
       :visible.sync="moveDepartmentDialogVisible"
-      width="520px"
+      width="480px"
       :modal="true"
       :before-close="handleMoveDepartmentDialogClose"
       append-to-body
+      class="dept-dialog"
     >
-      <el-form ref="moveDepartmentForm" :model="moveDepartmentForm" label-width="100px">
+      <el-form ref="moveDepartmentForm" :model="moveDepartmentForm" label-width="90px" class="dept-form">
         <el-form-item label="目标父部门">
-          <el-alert
-            type="info"
-            show-icon
-            title="支持模糊搜索目标父部门；请选择目标父部门，不能选择自身"
-          />
-          <div style="margin-top:10px;">
-            <el-select
-              v-model="moveDepartmentForm.targetParentId"
-              filterable
-              remote
-              clearable
-              placeholder="请输入部门名称搜索"
-              :remote-method="remoteSearchParents"
-              :loading="parentRemoteLoading"
-              style="width:100%;"
-              :popper-class="'parent-select-popper'"
-              @change="onParentSelect"
-            >
-              <el-option
-                v-for="item in parentCandidates"
-                :key="item.id"
-                :label="item.departmentName + (item.departmentCode ? ' — ' + item.departmentCode : '')"
-                :value="item.id"
-              />
-              <el-option
-                v-if="!parentCandidates.length && !parentRemoteLoading"
-                :key="'no-result'"
-                :label="'无匹配结果'"
-                :value="null"
-                disabled
-              />
-            </el-select>
+          <div class="move-hint">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>支持模糊搜索；不能选择自身作为目标</span>
           </div>
+          <el-select
+            v-model="moveDepartmentForm.targetParentId"
+            filterable
+            remote
+            clearable
+            placeholder="请输入部门名称搜索"
+            :remote-method="remoteSearchParents"
+            :loading="parentRemoteLoading"
+            style="width:100%; margin-top: 8px;"
+            :popper-class="'parent-select-popper'"
+            @change="onParentSelect"
+          >
+            <el-option
+              v-for="item in parentCandidates"
+              :key="item.id"
+              :label="item.departmentName + (item.departmentCode ? ' — ' + item.departmentCode : '')"
+              :value="item.id"
+            />
+            <el-option
+              v-if="!parentCandidates.length && !parentRemoteLoading"
+              :key="'no-result'"
+              :label="'无匹配结果'"
+              :value="null"
+              disabled
+            />
+          </el-select>
         </el-form-item>
       </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="handleMoveDepartmentDialogClose">取 消</el-button>
-        <el-button type="primary" :loading="moveSaving" @click="handleMoveDepartmentConfirm">确 定</el-button>
+      <div slot="footer" class="dept-dialog-footer">
+        <button class="dept-btn-ghost" @click="handleMoveDepartmentDialogClose">取消</button>
+        <button class="dept-btn-primary" :disabled="moveSaving" @click="handleMoveDepartmentConfirm">
+          <span v-if="moveSaving" class="btn-spinner"></span>
+          {{ moveSaving ? '移动中...' : '确认移动' }}
+        </button>
       </div>
     </el-dialog>
   </div>
@@ -693,365 +688,679 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.department-tree-view {
-  padding: 0;
+/* ==================== Design Tokens ==================== */
+.dept-view {
+  --dv-primary: #D97706;
+  --dv-primary-light: #F59E0B;
+  --dv-primary-bg: #FFFBEB;
+  --dv-primary-border: #FDE68A;
+  --dv-text: #1E293B;
+  --dv-text-secondary: #64748B;
+  --dv-text-muted: #94A3B8;
+  --dv-surface: #FFFFFF;
+  --dv-bg: #F8FAFC;
+  --dv-border: #E2E8F0;
+  --dv-border-light: #F1F5F9;
+  --dv-success: #059669;
+  --dv-success-bg: #ECFDF5;
+  --dv-warning: #D97706;
+  --dv-warning-bg: #FFFBEB;
+  --dv-radius: 12px;
+  --dv-radius-sm: 8px;
+  --dv-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+
+  font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  color: var(--dv-text);
+  background: var(--dv-bg);
+  padding: 28px 32px;
   min-height: 400px;
   max-height: 70vh;
   overflow-y: auto;
-  background: linear-gradient(180deg, #fafbfc 0%, #ffffff 100%);
+  overflow-x: hidden;
+}
 
-  .header-section {
-    margin-bottom: 24px;
-    padding: 20px 24px;
-    background: #fff;
-    border-radius: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    border-left: 4px solid #409eff;
+/* ==================== Hero Header ==================== */
+.dept-hero {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--dv-border);
+}
+
+.hero-left {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.hero-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: var(--dv-radius);
+  background: var(--dv-primary-bg);
+  border: 1px solid var(--dv-primary-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--dv-primary);
+  flex-shrink: 0;
+}
+
+.hero-title {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--dv-text);
+  margin: 0 0 2px 0;
+  letter-spacing: -0.3px;
+  line-height: 1.2;
+}
+
+.hero-subtitle {
+  font-size: 14px;
+  color: var(--dv-text-muted);
+  margin: 0;
+  font-weight: 400;
+}
+
+/* ==================== Primary Button ==================== */
+.dept-btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  background: var(--dv-primary);
+  color: #fff;
+  border: none;
+  border-radius: var(--dv-radius-sm);
+  font-size: 14px;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--dv-transition);
+  white-space: nowrap;
+  line-height: 1;
+
+  &:hover:not(:disabled) {
+    background: var(--dv-primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(217, 119, 6, 0.35);
   }
 
-  .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  &:active:not(:disabled) {
+    transform: translateY(0);
   }
 
-  .main-title {
-    font-size: 20px;
-    font-weight: 600;
-    color: #303133;
-    margin: 0;
-    letter-spacing: 0.5px;
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.dept-btn-sm {
+  padding: 8px 16px;
+  font-size: 13px;
+  border-radius: 6px;
+}
+
+/* ==================== Ghost Button ==================== */
+.dept-btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 22px;
+  background: transparent;
+  color: var(--dv-text-secondary);
+  border: 1px solid var(--dv-border);
+  border-radius: var(--dv-radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--dv-transition);
+  line-height: 1;
+
+  &:hover {
+    color: var(--dv-text);
+    border-color: var(--dv-text-muted);
+    background: var(--dv-border-light);
+  }
+}
+
+/* ==================== Search Section ==================== */
+.dept-search {
+  background: var(--dv-surface);
+  border-radius: var(--dv-radius);
+  border: 1px solid var(--dv-border);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  transition: border-color var(--dv-transition);
+
+  &:focus-within {
+    border-color: var(--dv-primary-border);
+  }
+}
+
+.dept-search-inner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.search-field {
+  position: relative;
+  flex: 1;
+  min-width: 180px;
+}
+
+.search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--dv-text-muted);
+  pointer-events: none;
+}
+
+.search-input {
+  width: 100%;
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--dv-border);
+  border-radius: var(--dv-radius-sm);
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--dv-text);
+  background: var(--dv-bg);
+  transition: all var(--dv-transition);
+  outline: none;
+
+  &:focus {
+    border-color: var(--dv-primary);
+    background: var(--dv-surface);
+    box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
   }
 
-  .header-actions {
-    .add-department-btn {
-      background: #409eff;
-      border-color: #409eff;
-      color: #fff;
-      font-weight: 500;
-      padding: 12px 24px;
-      border-radius: 6px;
-      font-size: 15px;
-      transition: all 0.3s ease;
-
-      i {
-        font-size: 15px;
-        margin-right: 6px;
-      }
-
-      &:hover {
-        background: #66b1ff;
-        border-color: #66b1ff;
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-      }
-
-      &:active {
-        transform: translateY(0);
-      }
-    }
+  &::placeholder {
+    color: var(--dv-text-muted);
   }
+}
 
-  .search-card {
-    margin-bottom: 24px;
-    border-radius: 12px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-    border: 1px solid #e8eaed;
-    transition: all 0.3s ease;
+.search-field:first-child .search-input {
+  padding-left: 38px;
+}
 
-    &:hover {
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-    }
+.search-select-field {
+  min-width: 160px;
+}
 
-    ::v-deep .el-card__body {
-      padding: 24px;
-    }
+.search-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+/* ==================== Tree Section ==================== */
+.dept-tree-wrap {
+  background: var(--dv-surface);
+  border-radius: var(--dv-radius);
+  border: 1px solid var(--dv-border);
+  overflow: hidden;
+}
+
+.dept-tree-inner {
+  min-height: 200px;
+  padding: 8px 4px;
+  position: relative;
+}
+
+.tree-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 8px;
+  border-radius: var(--dv-radius-sm);
+  transition: background var(--dv-transition);
+  min-height: 42px;
+}
+
+.tree-row:hover {
+  background: var(--dv-primary-bg);
+}
+
+.tree-row-main {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.tree-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--dv-text);
+  cursor: default;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dept-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--dv-primary);
+  background: var(--dv-primary-bg);
+  border: 1px solid var(--dv-primary-border);
+  border-radius: 11px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+/* ==================== Tree Actions ==================== */
+.tree-row-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  opacity: 0;
+  transform: translateX(8px);
+  transition: all var(--dv-transition);
+  flex-shrink: 0;
+  margin-left: 12px;
+}
+
+.tree-row:hover .tree-row-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  border: 1px solid var(--dv-border);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all var(--dv-transition);
+  background: var(--dv-surface);
+  color: var(--dv-text-secondary);
+  line-height: 1;
+  white-space: nowrap;
+
+  &:hover {
+    border-color: var(--dv-primary);
+    color: var(--dv-primary);
+    background: var(--dv-primary-bg);
   }
+}
 
-  .table-card {
-    border-radius: 12px;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
-    border: 1px solid #e8eaed;
-    transition: all 0.3s ease;
-
-    &:hover {
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-    }
-
-    ::v-deep .el-card__body {
-      padding: 24px;
-      min-height: 300px;
-    }
+.action-edit {
+  svg {
+    flex-shrink: 0;
   }
+}
 
-  .children-count {
-    color: #909399;
-    margin-left: 8px;
-    font-size: 12px;
-    background: #f4f4f5;
-    padding: 2px 8px;
-    border-radius: 10px;
-    font-weight: 500;
-  }
+.action-more {
+  padding: 5px 8px;
+}
 
-  .pagination-section {
-    margin-top: 24px;
-    text-align: right;
-    padding: 16px 0;
-  }
+/* ==================== Empty State ==================== */
+.dept-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px;
+  color: var(--dv-text-muted);
 
-  .empty-wrap {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 60px 0;
-    min-height: 250px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-    border-radius: 8px;
-    margin: 16px 0;
-  }
-
-  ::v-deep .el-loading-mask {
-    background-color: rgba(255, 255, 255, 0.9);
-    border-radius: 8px;
-  }
-
-  mark {
-    background: #fff3cd;
-    color: #856404;
-    padding: 2px 4px;
-    border-radius: 3px;
-    font-weight: 500;
-  }
-
-  ::v-deep .el-tree {
+  p {
+    margin: 12px 0 0 0;
     font-size: 14px;
-    line-height: 1.6;
+    color: var(--dv-text-muted);
+  }
+}
+
+/* ==================== Pagination ==================== */
+.dept-pagination {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 0;
+}
+
+/* ==================== Loading Mask ==================== */
+::v-deep .el-loading-mask {
+  background-color: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(2px);
+  border-radius: var(--dv-radius);
+}
+
+/* ==================== Tree Element Overrides ==================== */
+::v-deep .el-tree {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--dv-text);
+}
+
+::v-deep .el-tree-node {
+  margin: 2px 0;
+}
+
+::v-deep .el-tree-node__content {
+  height: auto;
+  min-height: 42px;
+  line-height: normal;
+  border-radius: var(--dv-radius-sm);
+  margin: 0;
+  padding: 0;
+  transition: background var(--dv-transition);
+
+  &:hover {
+    background: transparent;
+  }
+}
+
+::v-deep .el-tree-node:focus > .el-tree-node__content {
+  background: transparent;
+}
+
+::v-deep .el-tree-node__expand-icon {
+  font-size: 14px;
+  color: var(--dv-text-muted);
+  margin-right: 4px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--dv-transition);
+  border-radius: 4px;
+
+  &:not(.is-leaf):hover {
+    color: var(--dv-primary);
+    background: var(--dv-primary-bg);
+  }
+}
+
+::v-deep .el-tree-node__expand-icon.expanded {
+  transform: rotate(90deg);
+}
+
+::v-deep .el-tree-node__expand-icon.is-leaf {
+  color: transparent;
+  cursor: default;
+}
+
+/* ==================== Search Input Overrides ==================== */
+::v-deep .search-select-field .el-input__inner {
+  height: 40px;
+  line-height: 40px;
+  border-radius: var(--dv-radius-sm);
+  border-color: var(--dv-border);
+  background: var(--dv-bg);
+  font-size: 13px;
+}
+
+::v-deep .search-select-field .el-input__suffix {
+  right: 8px;
+}
+
+::v-deep .search-select-field .el-tag {
+  background: var(--dv-primary-bg);
+  border-color: var(--dv-primary-border);
+  color: var(--dv-primary);
+}
+
+/* ==================== Tooltip ==================== */
+::v-deep .dept-tooltip {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  box-shadow: none !important;
+  &.popper__arrow {
+    display: none !important;
+  }
+}
+
+.detail-card {
+  min-width: 280px;
+  max-width: 360px;
+  background: var(--dv-surface);
+  border-radius: var(--dv-radius);
+  border: 1px solid var(--dv-border);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.detail-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--dv-text);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+.detail-head-icon {
+  display: flex;
+  align-items: center;
+  opacity: 0.7;
+}
+
+.detail-body {
+  padding: 12px 16px 14px;
+}
+
+.detail-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 6px 0;
+  font-size: 13px;
+  border-bottom: 1px solid var(--dv-border-light);
+
+  &:last-child {
+    border-bottom: none;
+  }
+}
+
+.detail-row-full {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.detail-label {
+  color: var(--dv-text-muted);
+  width: 64px;
+  flex-shrink: 0;
+  font-weight: 500;
+}
+
+.detail-val {
+  color: var(--dv-text);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.dot-1 {
+    background: var(--dv-success);
+    box-shadow: 0 0 0 3px var(--dv-success-bg);
   }
 
-  ::v-deep .el-tree-node {
-    margin: 8px 0;
+  &.dot-2 {
+    background: var(--dv-warning);
+    box-shadow: 0 0 0 3px var(--dv-warning-bg);
   }
+}
 
-  ::v-deep .el-tree-node__content {
-    height: 48px;
-    line-height: 48px;
-    font-size: 14px;
-    font-weight: 500;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    border-radius: 8px;
-    margin: 6px 0;
-    padding: 0 12px;
-
-    &:hover {
-      background: #f5f7fa;
-    }
-  }
-
-  ::v-deep .el-tree-node:focus > .el-tree-node__content {
-    background-color: #ecf5ff;
-  }
-
-  ::v-deep .el-tree-node__expand-icon {
-    font-size: 16px;
-    color: #909399;
-    margin-right: 8px;
-    transition: all 0.3s ease;
-
-    &:hover {
-      color: #409eff;
-    }
-  }
-
-  ::v-deep .el-tree-node__expand-icon.expanded {
-    transform: rotate(0deg);
-  }
-
-  ::v-deep .el-tree-node__expand-icon.is-leaf {
-    color: transparent;
-  }
-
-  .custom-tree-node {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    font-size: 14px;
-    font-weight: 500;
-    padding: 8px 12px;
-    min-height: 40px;
-    border-radius: 6px;
-    transition: all 0.3s ease;
-
-    &:hover {
-      background: #ecf5ff;
-      box-shadow: 0 2px 6px rgba(64, 158, 255, 0.15);
-    }
-  }
-
-  .tree-node-content {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .tree-node-actions {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    opacity: 0;
-    transform: translateX(10px);
-    transition: all 0.3s ease;
-    margin-left: 12px;
-  }
-
-  .custom-tree-node:hover .tree-node-actions {
-    opacity: 1;
-    transform: translateX(0);
-  }
-
-  .tree-node-actions .el-button {
-    font-size: 13px;
-    padding: 6px 12px;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    font-weight: 500;
-
-    &:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 4px 12px rgba(64, 158, 255, 0.3);
-    }
-  }
-
-  .tree-node-actions .el-button[type="primary"] {
-    background: #409eff;
-    border-color: #409eff;
-    color: white;
-
-    &:hover {
-      background: #66b1ff;
-      border-color: #66b1ff;
-    }
-  }
-
-  .tree-node-actions .el-button[type="success"] {
-    background: #67c23a;
-    border-color: #67c23a;
-    color: white;
-
-    &:hover {
-      background: #85ce61;
-      border-color: #85ce61;
-    }
-  }
-
-  /* 编辑对话框样式 */
-  ::v-deep .department-edit-dialog {
-    .el-dialog__body {
-      padding: 24px 32px;
-    }
-
-    .el-form-item {
-      margin-bottom: 22px;
-    }
-
-    .el-input__inner,
-    .el-textarea__inner {
-      border-radius: 6px;
-    }
-  }
-
-  mark {
-    background: linear-gradient(135deg, #ffd740, #ffab00);
-    color: #000;
-    padding: 2px 5px;
-    border-radius: 3px;
-    font-weight: 600;
-    box-shadow: 0 1px 2px rgba(255, 171, 0, 0.3);
-  }
-
-  .children-count {
-    color: #909399;
-    margin-left: 6px;
-    font-size: 12px;
-    background: #f0f2f5;
-    padding: 2px 6px;
-    border-radius: 10px;
-    font-weight: 400;
-  }
-
-  .department-detail-card {
-    min-width: 300px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-    border-radius: 8px;
-    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.12);
+/* ==================== Dialog ==================== */
+::v-deep .dept-dialog {
+  .el-dialog {
+    border-radius: var(--dv-radius);
     overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  }
 
-    .card-header {
-      padding: 14px;
-      background: linear-gradient(120deg, #67c23a 0%, #529b2e 100%);
-      color: white;
+  .el-dialog__header {
+    padding: 20px 24px 16px;
+    margin: 0;
+    border-bottom: 1px solid var(--dv-border-light);
+    background: var(--dv-surface);
+  }
 
-      h3 {
-        margin: 0;
-        font-size: 16px;
-        font-weight: 600;
-      }
-    }
+  .el-dialog__title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--dv-text);
+    letter-spacing: -0.2px;
+  }
 
-    .card-content {
-      padding: 14px;
+  .el-dialog__headerbtn {
+    top: 20px;
+    right: 20px;
+  }
 
-      .info-item {
-        display: flex;
-        margin-bottom: 10px;
-        align-items: center;
+  .el-dialog__body {
+    padding: 0;
+  }
 
-        &:last-child {
-          margin-bottom: 0;
-        }
+  .el-dialog__footer {
+    padding: 16px 24px;
+    border-top: 1px solid var(--dv-border-light);
+    background: var(--dv-bg);
+  }
+}
 
-        .info-label {
-          font-weight: 500;
-          color: #606266;
-          width: 75px;
-          font-size: 13px;
-        }
+.dept-form {
+  padding: 24px;
 
-        .info-value {
-          flex: 1;
-          color: #303133;
-          font-size: 13px;
+  ::v-deep .el-form-item {
+    margin-bottom: 20px;
 
-          &.description {
-            line-height: 1.5;
-          }
-        }
-      }
+    &:last-child {
+      margin-bottom: 0;
     }
   }
 
-  ::v-deep .department-info-tooltip {
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    box-shadow: none !important;
+  ::v-deep .el-form-item__label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--dv-text-secondary);
   }
 
-  @media (max-width: 768px) {
-    padding: 10px;
-    .main-title {
-      font-size: 16px;
-    }
-    .search-card, .table-card {
-      ::v-deep .el-card__body {
-        padding: 10px;
-      }
+  ::v-deep .el-input__inner,
+  ::v-deep .el-textarea__inner {
+    border-radius: var(--dv-radius-sm);
+    border-color: var(--dv-border);
+    font-size: 13px;
+    transition: all var(--dv-transition);
+
+    &:focus {
+      border-color: var(--dv-primary);
+      box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.08);
     }
   }
 }
 
+.dept-dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* ==================== Loading Spinner ==================== */
+.btn-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: dv-spin 0.6s linear infinite;
+}
+
+@keyframes dv-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== Search Highlight ==================== */
+::v-deep mark {
+  background: var(--dv-primary-bg);
+  color: var(--dv-primary);
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 600;
+  border: 1px solid var(--dv-primary-border);
+}
+
+/* ==================== Move Dialog Hint ==================== */
+.move-hint {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  background: #EFF6FF;
+  border-radius: var(--dv-radius-sm);
+  border: 1px solid #BFDBFE;
+  font-size: 12px;
+  color: #1D4ED8;
+  margin-bottom: 8px;
+}
+
+/* ==================== Responsive ==================== */
+@media (max-width: 768px) {
+  .dept-view {
+    padding: 16px;
+  }
+
+  .dept-hero {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+  }
+
+  .hero-title {
+    font-size: 20px;
+  }
+
+  .dept-search-inner {
+    flex-direction: column;
+  }
+
+  .search-field {
+    min-width: 100%;
+  }
+
+  .search-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+}
+</style>
+
+<style lang="scss">
 .parent-select-popper .el-select-dropdown__item {
   white-space: nowrap;
   overflow: hidden;
