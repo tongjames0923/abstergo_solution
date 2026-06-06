@@ -48,6 +48,7 @@ develop:
       icon: el-icon-s-help
       roles:
         - "3"
+        - "1"
     children:
       - path: form-manager
         name: 表单管理

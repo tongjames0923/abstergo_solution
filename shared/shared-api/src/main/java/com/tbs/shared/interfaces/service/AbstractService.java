@@ -53,7 +53,7 @@ public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K
      *
      * @return
      */
-    protected Optional<IOperatorAuditService<E>> getOperatorAuditServiceSupport() {
+    protected Optional<IOperatorAuditService<E, K>> getOperatorAuditServiceSupport() {
         return Optional.empty();
     }
 

@@ -79,10 +79,9 @@ public class AuthUtil {
      * @throws FormattedRuntimeException 当用户数据获取失败时抛出
      */
     public UserDetails getCurrentUser() {
-        //        AssertUtil.isTrue(!isUserLoggedIn(), () -> new NoLoginException("当前用户未登录"));
-        //        return getAuthentication().map(ITokenAuthentication::getUserDetails)
-        //            .orElseThrow(() -> new FormattedRuntimeException("用户数据获取失败"));
-        return authManager.getCurrentUser();
+        AssertUtil.isTrue(!isUserLoggedIn(), () -> new NoLoginException("当前用户未登录"));
+        return getAuthentication().map(ITokenAuthentication::getUserDetails)
+            .orElseThrow(() -> new FormattedRuntimeException("用户数据获取失败"));
     }
 
     /**

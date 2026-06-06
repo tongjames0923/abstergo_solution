@@ -1,7 +1,5 @@
 package com.tbs.shared.pojo;
 
-import com.tbs.shared.pojo.audit.time.IDateTimeAuditable;
-
 import java.io.Serializable;
 
 /**
@@ -10,6 +8,6 @@ import java.io.Serializable;
  * @param <K>
  * @author tongj
  */
-public interface IBaseEntity<K> extends IIdentifiable<K>, IFlagable, IDateTimeAuditable, Serializable {
+public interface IBaseEntity<K> extends IIdentifiable<K>, IFlagable, ICommonTimeAuditable, Serializable {
 
 }

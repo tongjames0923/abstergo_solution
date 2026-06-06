@@ -23,7 +23,7 @@ public class RoleConstants {
 	 * </p>
 	 */
 	public static final SystemRoleEntity SUPER_ADMIN_ROLE = new SystemRoleEntity(SUPER_ADMIN_ROLE_ID, "超级管理员",
-			"管理员功能都需要此权限", null, null, SystemRoleFlagEnum.SYSTEMED.getCode());
+		"开放数据后台管理和系统日志查看功能。", null, null, SystemRoleFlagEnum.SYSTEMED.getCode());
 
 	/**
 	 * 普通用户角色ID
@@ -36,6 +36,21 @@ public class RoleConstants {
 	 * 包含角色ID、名称、描述等完整信息的系统角色对象
 	 * </p>
 	 */
-	public static final SystemRoleEntity NORMAL_USER_ROLE = new SystemRoleEntity(NORMAL_USER_ROLE_ID, "普通用户", "普通用户功能",
+	public static final SystemRoleEntity NORMAL_USER_ROLE =
+		new SystemRoleEntity(NORMAL_USER_ROLE_ID, "普通用户", "基础登录权限，若无此权限，用户将无法登录",
 			null, null, SystemRoleFlagEnum.SYSTEMED.getCode());
+
+	/**
+	 * 开发者角色ID
+	 */
+	public static final long DEVELOPER_ROLE_ID = 3L;
+	/**
+	 * 开发者角色实体
+	 * <p>
+	 * 包含角色ID、名称、描述等完整信息的系统角色对象
+	 * </p>
+	 */
+	public static final SystemRoleEntity DEVELOPER_ROLE =
+		new SystemRoleEntity(DEVELOPER_ROLE_ID, "开发者", "开放表单管理和日志功能。", null, null,
+			SystemRoleFlagEnum.SYSTEMED.getCode());
 }

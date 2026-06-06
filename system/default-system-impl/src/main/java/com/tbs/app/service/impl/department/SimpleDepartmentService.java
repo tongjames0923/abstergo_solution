@@ -7,18 +7,16 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
-import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemDepartmentFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.ITimeAuditService;
+import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
 import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
-import com.tbs.struct.tree.api.persistence.ITreeStore;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -31,7 +29,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class SimpleDepartmentService
     extends AbstractPhysicDeleteFullFeatureServiceTemplate<SystemDepartmentEntity, Long, SystemDepartmentMapper>
-    implements ISystemDepartmentService, IStartup, ITimeAuditService<SystemDepartmentEntity, Long> {
+    implements ISystemDepartmentService, IStartup {
 
     @Resource
     private SystemDepartmentMapper mapper;
@@ -106,29 +104,6 @@ public class SimpleDepartmentService
         return new SystemDepartmentEntity();
     }
 
-    @Override
-    protected Optional<ITimeAuditService<SystemDepartmentEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(this);
-    }
-
-    @Override
-    public SystemDepartmentEntity triggerCreateTime(SystemDepartmentEntity entity, Date createTime) {
-        entity.setCreateTime(createTime);
-        return entity;
-    }
-
-    @Override
-    public SystemDepartmentEntity triggerUpdateTime(SystemDepartmentEntity entity, Date updateTime) {
-        entity.setUpdateTime(updateTime);
-        return entity;
-    }
-
-    @Override
-    public SystemDepartmentEntity triggerDeleteTime(SystemDepartmentEntity entity, Date deleteTime) {
-        entity.setUpdateTime(deleteTime);
-        return entity;
-    }
-
     private static final String createTreeGroupName(SystemDepartmentEntity entity) {
         return DEPARTMENT_TREE_GROUP + entity.getId();
     }
@@ -157,5 +132,10 @@ public class SimpleDepartmentService
         if (instance == null) {
             instance = this;
         }
+    }
+
+    @Override
+    protected Optional<ITimeAuditService<SystemDepartmentEntity, Long>> getTimeAuditServiceSupport() {
+        return Optional.of(new SimpleTimeAuditServiceImpl<>());
     }
 }

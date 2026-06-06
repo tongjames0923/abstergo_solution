@@ -63,7 +63,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
         AssertUtil.notNull(user, "用户不存在");
         SystemRoleEntity roleEntity = systemRoleService.queryById(role);
         AssertUtil.notNull(roleEntity, "角色不存在");
-        AssertUtil.isTrue(SystemRoleFlagEnum.DISABLE.getCode().equals(roleEntity.getFlag()), "角色 {} 已失效", role);
+        AssertUtil.isTrue(!SystemRoleFlagEnum.ACTIVE.getCode().equals(roleEntity.getFlag()), "角色 {} 已失效", role);
         UserRoleRelationEntity relation = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
             .equal(UserRoleRelationEntity::getRoleId, roleEntity.getId()).pour().fetchOne();
         if (relation == null) {
@@ -95,8 +95,10 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
         if (CollUtil.isEmpty(relations)) {
             return Arrays.asList();
         }
-        return relations.stream().map(relation -> systemRoleService.queryById(relation.getRoleId()))
-            .filter(role -> role != null && !SystemRoleFlagEnum.DISABLE.getCode().equals(role.getFlag())).distinct()
+        return relations.stream().map(relation -> systemRoleService.queryById(relation.getRoleId())).filter(
+                role -> role != null &&
+                    CollUtil.isIn(role.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(),
+                        SystemRoleFlagEnum.SYSTEMED.getCode())).distinct()
             .collect(Collectors.toList());
     }
 
@@ -108,7 +110,8 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
             .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetch().stream()
             .map(relation -> systemRoleService.queryById(relation.getRoleId())).filter(role -> role != null &&
                 role.getId() != null &&
-                !SystemRoleFlagEnum.DISABLE.getCode().equals(role.getFlag())).map(role -> role.getId())
+                CollUtil.isIn(role.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(),
+                    SystemRoleFlagEnum.SYSTEMED.getCode())).map(role -> role.getId())
             .map(roleId -> roleId.toString()).collect(Collectors.toList());
     }
 }

@@ -6,11 +6,13 @@ import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.ITimeAuditService;
+import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
 import com.tbs.shared.mapper.SystemRoleMapper;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +20,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,7 +30,7 @@ import java.util.Optional;
 @Slf4j
 public class SimpleSystemRoleServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRoleEntity, Long, SystemRoleMapper>
-    implements ISystemRoleService, IStartup, ITimeAuditService<SystemRoleEntity, Long> {
+    implements ISystemRoleService, IStartup {
 
     @Resource
     SystemRoleMapper systemRoleMapper;
@@ -82,6 +83,8 @@ public class SimpleSystemRoleServiceImpl
         if (newOne.getFlag() != null) {
             AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode()),
                 "不允许接口设置角色属性到系统角色");
+            AssertUtil.isTrue(!CollUtil.isIn(newOne.getRole(), SystemRoleFlagEnum.ACTIVE.getCode(),
+                SystemRoleFlagEnum.DISABLE.getCode()), "角色状态错误");
             if (newOne.getFlag().equals(SystemRoleFlagEnum.ACTIVE.getCode()) ||
                 newOne.getFlag().equals(SystemRoleFlagEnum.DISABLE.getCode())) {
                 oldOne.setFlag(newOne.getFlag());
@@ -136,24 +139,7 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     protected Optional<ITimeAuditService<SystemRoleEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(this);
+        return Optional.of(new SimpleTimeAuditServiceImpl());
     }
 
-    @Override
-    public SystemRoleEntity triggerCreateTime(SystemRoleEntity entity, Date createTime) {
-
-        entity.setCreateTime(createTime);
-        return entity;
-    }
-
-    @Override
-    public SystemRoleEntity triggerUpdateTime(SystemRoleEntity entity, Date updateTime) {
-        entity.setUpdateTime(updateTime);
-        return entity;
-    }
-
-    @Override
-    public SystemRoleEntity triggerDeleteTime(SystemRoleEntity entity, Date deleteTime) {
-        return entity;
-    }
 }

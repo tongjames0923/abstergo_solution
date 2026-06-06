@@ -10,20 +10,25 @@ import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.ITimeAuditService;
+import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
 import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+/**
+ * 系统公司服务实现类
+ *
+ * @author abstergo
+ */
 @Slf4j
 public class SimpleCompanyService
     extends AbstractPhysicDeleteFullFeatureServiceTemplate<SystemCompanyEntity, Long, SystemCompanyMapper>
-    implements ISystemCompanyService, IStartup, ITimeAuditService<SystemCompanyEntity, Long> {
+    implements ISystemCompanyService, IStartup {
     /**
      * 系统公司
      */
@@ -104,11 +109,6 @@ public class SimpleCompanyService
     }
 
     @Override
-    protected Optional<ITimeAuditService<SystemCompanyEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(this);
-    }
-
-    @Override
     public void startUp() throws RuntimeException {
         log.info("启动系统公司服务");
         mapper.deleteByPrimaryKey(SYSTEM_COMPANY.getId());
@@ -122,21 +122,7 @@ public class SimpleCompanyService
     }
 
     @Override
-    public SystemCompanyEntity triggerCreateTime(SystemCompanyEntity entity, Date createTime) {
-        entity.setCreateTime(createTime);
-        return entity;
+    protected Optional<ITimeAuditService<SystemCompanyEntity, Long>> getTimeAuditServiceSupport() {
+        return Optional.of(new SimpleTimeAuditServiceImpl<SystemCompanyEntity>());
     }
-
-    @Override
-    public SystemCompanyEntity triggerUpdateTime(SystemCompanyEntity entity, Date updateTime) {
-        entity.setUpdateTime(updateTime);
-        return entity;
-    }
-
-    @Override
-    public SystemCompanyEntity triggerDeleteTime(SystemCompanyEntity entity, Date deleteTime) {
-        entity.setUpdateTime(deleteTime);
-        return entity;
-    }
-
 }

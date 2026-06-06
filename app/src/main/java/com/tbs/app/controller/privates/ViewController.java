@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -142,7 +143,11 @@ public class ViewController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult getViewRoutes() {
         var result = new LinkedList<ViewRouteModel>();
-        var roles = AuthUtil.getInstance().getCurrentUser().getAuthorities().stream().map(item -> item.getAuthority())
+        var authorities = AuthUtil.getInstance().getCurrentUser().getAuthorities();
+        if (authorities == null) {
+            authorities = new LinkedList<>();
+        }
+        var roles = authorities.stream().map(GrantedAuthority::getAuthority)
             .collect(Collectors.toSet());
         for (String group : viewRouteService.getAllViewRouteGroups()) {
             var viewRoutes = viewRouteService.getViewRoutesByGroup(group);

@@ -2,6 +2,7 @@ package com.tbs.common.util.base;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Set;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -11,6 +12,56 @@ import java.util.stream.StreamSupport;
  * @author abstergo
  */
 public class CollUtil extends cn.hutool.core.collection.CollUtil {
+
+    /**
+     * 判断指定值是否在指定数组中
+     *
+     * @param val 要判断的值
+     * @param arr 数组
+     * @param <T> 数组元素类型
+     * @return 如果指定值在数组中，则返回true，否则返回false
+     */
+    public static <T> boolean isIn(T val, T... arr) {
+        if (isEmpty(arr)) {
+            return false;
+        }
+        return Set.of(arr).contains(val);
+    }
+
+    /**
+     * 判断指定值是否在指定集合中
+     *
+     * @param val 要判断的值
+     * @param arr 集合
+     * @param <T> 集合元素类型
+     * @return 如果指定值在集合中，则返回true，否则返回false
+     */
+    public static <T> boolean isIn(T val, Collection<T> arr) {
+        if (CollUtil.isEmpty(arr)) {
+            return false;
+        }
+        return arr.contains(val);
+    }
+
+    /**
+     * 判断对象数组是否为空
+     *
+     * @param arr 待检查的对象数组
+     * @return 如果数组为null或长度为0，则返回true，否则返回false
+     */
+    public static boolean isEmpty(Object[] arr) {
+        return arr == null || arr.length == 0;
+    }
+
+    /**
+     * 判断对象数组是否不为空
+     *
+     * @param arr 待检查的对象数组
+     * @return 如果数组不为null且长度大于0，则返回true，否则返回false
+     */
+    public static boolean isNotEmpty(Object[] arr) {
+        return !isEmpty(arr);
+    }
 
     /**
      * 创建包含指定流的集合包装器

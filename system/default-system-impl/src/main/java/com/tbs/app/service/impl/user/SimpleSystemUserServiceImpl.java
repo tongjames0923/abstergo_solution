@@ -13,7 +13,6 @@ import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
-import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.security.user.IPasswordEncrypt;
@@ -25,9 +24,7 @@ import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -38,7 +35,7 @@ import java.util.stream.Collectors;
  */
 public class SimpleSystemUserServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUserEntity, Long, SystemUserMapper>
-    implements ISystemUserService, ITimeAuditService<SystemUserEntity, Long> {
+    implements ISystemUserService {
 
     @Resource
     IUserNamePasswordValidator userNamePasswordValidator;
@@ -86,11 +83,6 @@ public class SimpleSystemUserServiceImpl
     @Override
     protected SystemUserEntity compareAndUpdateValue(SystemUserEntity systemUserEntity,
         SystemUserEntity oldSystemUserEntity) {
-        //        if (StrUtil.isNotEmpty(systemUserEntity.getUserName())) {
-        //            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(systemUserEntity.getUserName()),
-        //                "用户名格式错误");
-        //            oldSystemUserEntity.setUserName(systemUserEntity.getUserName());
-        //        }
         if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()),
                 "密码格式错误");
@@ -160,26 +152,4 @@ public class SimpleSystemUserServiceImpl
         return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
     }
 
-    @Override
-    protected Optional<ITimeAuditService<SystemUserEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(this);
-    }
-
-    @Override
-    public SystemUserEntity triggerCreateTime(SystemUserEntity entity, Date createTime) {
-        entity.setCreateTime(createTime);
-        return entity;
-    }
-
-    @Override
-    public SystemUserEntity triggerUpdateTime(SystemUserEntity entity, Date updateTime) {
-        entity.setUpdateTime(updateTime);
-        return entity;
-    }
-
-    @Override
-    public SystemUserEntity triggerDeleteTime(SystemUserEntity entity, Date deleteTime) {
-        entity.setUpdateTime(deleteTime);
-        return entity;
-    }
 }

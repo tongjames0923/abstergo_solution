@@ -16,7 +16,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -143,12 +142,12 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         getTimeAuditServiceSupport().ifPresent((s) -> {
             if (r.get().isPresent()) {
                 if (flag == UPDATE) {
-                    r.set(s.triggerUpdateTime(r.get().get(), new Date()));
+                    r.set(s.onUpdate(r.get().get()));
                 } else if (flag == CREATE) {
-                    r.set(s.triggerCreateTime(r.get().get(), new Date()));
+                    r.set(s.onCreate(r.get().get()));
                 }
                 if (flag == DELETE) {
-                    r.set(s.triggerDeleteTime(r.get().get(), new Date()));
+                    r.set(s.onDelete(r.get().get()));
                 }
             } else {
                 log.warn("实体数据不存在，无法处理时间审计");
@@ -157,12 +156,12 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         getOperatorAuditServiceSupport().ifPresent((s) -> {
             if (r.get().isPresent()) {
                 if (flag == UPDATE) {
-                    r.set(s.triggerUpdateOperator(r.get().get()));
+                    r.set(s.onUpdate(r.get().get()));
                 } else if (flag == CREATE) {
-                    r.set(s.triggerCreateOperator(r.get().get()));
+                    r.set(s.onCreate(r.get().get()));
                 }
                 if (flag == DELETE) {
-                    r.set(s.triggerDeleteOperator(r.get().get()));
+                    r.set(s.onDelete(r.get().get()));
                 }
 
             } else {
