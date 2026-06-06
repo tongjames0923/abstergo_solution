@@ -13,6 +13,8 @@ import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.ITimeAuditService;
+import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
 import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.security.user.IPasswordEncrypt;
@@ -25,6 +27,7 @@ import org.springframework.context.annotation.Lazy;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -152,4 +155,8 @@ public class SimpleSystemUserServiceImpl
         return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
     }
 
+    @Override
+    protected Optional<ITimeAuditService<SystemUserEntity, Long>> getTimeAuditServiceSupport() {
+        return Optional.of(new SimpleTimeAuditServiceImpl<SystemUserEntity>());
+    }
 }
