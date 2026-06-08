@@ -17,11 +17,11 @@ import java.util.List;
 public interface SystemUserDepartmentRelationMapper extends IFrameworkMapper<SystemUserDepartmentRelationEntity, Long> {
 
     @Select(
-        "SELECT sd.* FROM sys_department sd RIGHT JOIN system_user_department_relation sudr ON sudr.user_id=#{userId}  AND sudr.department_id=sd.id;")
+        "SELECT sd.* FROM sys_department sd INNER JOIN system_user_department_relation sudr ON sudr.user_id=#{userId} AND sudr.department_id=sd.id WHERE sd.id IS NOT NULL;")
     List<SystemDepartmentEntity> queryUserDepartments(@NotNull Long userId);
 
     @Select(
-        "SELECT * FROM sys_user su RIGHT JOIN system_user_department_relation sudr ON sudr.department_id=#{departmentId}  and sudr.user_id=su.id")
+        "SELECT su.* FROM sys_user su INNER JOIN system_user_department_relation sudr ON sudr.department_id=#{departmentId} AND sudr.user_id=su.id WHERE su.id IS NOT NULL;")
     List<SystemUserEntity> queryDepartmentUsers(@NotNull Long departmentId);
 
     @Select("SELECT * FROM system_user_department_relation WHERE user_id=#{userId} AND department_id=#{departmentId}")
