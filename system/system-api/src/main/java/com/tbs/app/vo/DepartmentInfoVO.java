@@ -107,8 +107,12 @@ public class DepartmentInfoVO implements Serializable {
         }
         // 收集所有公司ID
         List<Long> companyIds =
-            departments.stream().map(SystemDepartmentEntity::getCompanyId).distinct().collect(Collectors.toList());
+            departments.stream().filter(dept -> dept != null).map(SystemDepartmentEntity::getCompanyId).distinct()
+                .collect(Collectors.toList());
 
+        if (CollUtil.isEmpty(companyIds)) {
+            return CollUtil.newArrayList();
+        }
         // 批量查询公司信息
         List<SystemCompanyEntity> companies =
             companyIds.stream().map(SpringUtil.getBean(ISystemCompanyService.class)::queryById)
