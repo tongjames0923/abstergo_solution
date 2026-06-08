@@ -26,7 +26,7 @@ import javax.annotation.Resource;
  */
 @RestController
 @RequestMapping("/private/department")
-@PreAuthorize(value = "#authUtil.userLoggedIn")
+@PreAuthorize("@authUtil.userLoggedIn")
 @Tag(name = "私有部门管理接口", description = "需要登录才能访问的部门相关接口")
 public class PrivateDepartmentController extends BaseController {
 

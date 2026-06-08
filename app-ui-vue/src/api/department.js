@@ -99,3 +99,42 @@ export function listChildren(parentId) {
     method: 'get'
   })
 }
+
+
+/**
+ * 申请用户加入部门
+ * @param userId
+ * @param departmentId
+ * @returns {*}
+ */
+export function applyUserToDepartment(userId, departmentId) {
+  return request({
+    url: 'private/department/addEmp/' + departmentId + '/' + userId,
+    method: 'post',
+  })
+}
+
+/**
+ * 移除用户从部门
+ * @param userId
+ * @param departmentId
+ * @returns {*}
+ */
+export function removeUserFromDepartment(userId, departmentId) {
+  return request({
+    url: 'private/department/delEmp/' + departmentId + '/' + userId,
+    method: 'post',
+  })
+}
+
+/**
+ * 获取指定部门的员工列表
+ * @param {number} departmentId - 部门ID
+ * @returns {Promise} 员工列表
+ */
+export function getDepartmentEmployees(departmentId) {
+  return request({
+    url: `/private/department/employee/${departmentId}`,
+    method: 'get'
+  })
+}

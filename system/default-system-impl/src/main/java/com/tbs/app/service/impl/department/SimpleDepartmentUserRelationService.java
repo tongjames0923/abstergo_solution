@@ -55,7 +55,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
         AssertUtil.notNull(department, "部门不存在");
         var relations = departmentRelationMapper.queryUserDepartmentRelation(userId, departmentId);
-        AssertUtil.isTrue(CollUtil.isEmpty(relations), "用户已加入 {} ", department.getDepartmentName());
+        AssertUtil.isTrue(!CollUtil.isEmpty(relations), "用户已加入 {} ", department.getDepartmentName());
         SystemUserDepartmentRelationEntity relation = new SystemUserDepartmentRelationEntity();
         relation.setUserId(userId);
         relation.setDepartmentId(departmentId);
@@ -70,7 +70,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
         AssertUtil.notNull(department, "部门不存在");
         var relations = departmentRelationMapper.queryUserDepartmentRelation(userId, departmentId);
-        AssertUtil.isTrue(CollUtil.isNotEmpty(relations), "用户未加入 {}", department.getDepartmentName());
+        AssertUtil.isTrue(!CollUtil.isNotEmpty(relations), "用户未加入 {}", department.getDepartmentName());
         departmentRelationMapper.deleteByPrimaryKey(relations.get(0).getId());
     }
 }
