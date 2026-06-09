@@ -191,7 +191,9 @@ public class ViewServiceImpl implements IViewService {
                 }).collect(Collectors.toList()));
             }
         }
-        propertyRelationMapper.insertList(relationEntities);
+        if (CollUtil.isNotEmpty(relationEntities)) {
+            propertyRelationMapper.insertList(relationEntities);
+        }
         return dynamicFormConfigrationEntity;
     }
 
