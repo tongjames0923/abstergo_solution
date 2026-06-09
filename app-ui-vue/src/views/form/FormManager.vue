@@ -109,7 +109,7 @@
 
 <script>
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import { deleteFormConfig, getFormById, listForms } from '@/api/view'
+import {deleteFormConfig, getFormById, listForms} from '@/api/view'
 
 export default {
   name: 'FormManager',
@@ -152,7 +152,6 @@ export default {
         // 如果后端支持分页，应该返回总记录数
         this.pagination.total = response.data ? response.data.length : 0
       } catch (error) {
-        this.$message.error('获取表单列表失败: ' + error.message)
         console.error('获取表单列表失败:', error)
       } finally {
         this.loading = false
@@ -176,14 +175,14 @@ export default {
 
     // 新建表单
     handleCreate() {
-      this.$router.push('/admin/form')
+      this.$router.push('form')
     },
 
     // 编辑表单
     handleEdit(row) {
       // 跳转到表单创建页面并传递表单ID
       this.$router.push({
-        path: '/admin/form',
+        path: 'form',
         query: { id: row.id }
       })
     },
@@ -230,10 +229,8 @@ export default {
       }).then(async() => {
         try {
           await deleteFormConfig(row.id)
-          this.$message.success('删除成功')
           this.fetchFormList()
         } catch (error) {
-          this.$message.error('删除失败: ' + error.message)
         }
       }).catch(() => {
         // 用户取消删除

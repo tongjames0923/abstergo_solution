@@ -468,70 +468,174 @@ export default {
 </script>
 
 <style scoped>
-
 .dynamic-form-card {
   margin-bottom: var(--dynamic-form-margin);
   background: var(--dynamic-form-bg);
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.dynamic-form-card:hover {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
+  transform: translateY(-1px);
 }
 
 .card-header {
-  display: var(--card-header-display);
-  justify-content: var(--card-header-justify);
-  align-items: var(--card-header-align);
-  padding: var(--card-header-padding);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.9) 100%);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  backdrop-filter: blur(10px);
 }
 
 .card-title {
-  font-weight: var(--card-title-weight);
-  font-size: var(--card-title-size);
+  font-weight: 600;
+  font-size: 16px;
+  color: #1a1a2e;
+  letter-spacing: -0.01em;
+  position: relative;
+  padding-left: 12px;
+}
+
+.card-title::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 4px;
+  height: 18px;
+  background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  border-radius: 2px;
 }
 
 .expand-button {
-  border: var(--expand-button-border);
-  padding: var(--expand-button-padding);
-  border-radius: var(--expand-button-radius);
-  transition: var(--expand-button-transition);
-  background: var(--expand-button-bg);
-  backdrop-filter: var(--expand-button-backdrop);
-  -webkit-backdrop-filter: var(--expand-button-backdrop);
-  box-shadow: var(--expand-button-box-shadow);
-  color: var(--expand-button-color);
-  font-weight: var(--expand-button-font-weight);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 8px 16px;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: rgba(59, 130, 246, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .expand-button:hover {
-  background: var(--expand-button-hover-bg);
-  border-color: var(--expand-button-hover-border);
-  box-shadow: var(--expand-button-hover-box-shadow);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.3);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
+  transform: translateY(-1px);
+}
+
+.expand-button:active {
+  transform: translateY(0);
 }
 
 .expand-button.is-expanded {
-  background: var(--expand-button-expanded-bg);
-  border-color: var(--expand-button-expanded-border);
+  background: rgba(59, 130, 246, 0.1);
+  border-color: rgba(59, 130, 246, 0.25);
+}
+
+.expand-button i {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.expand-button.is-expanded i {
+  transform: rotate(180deg);
 }
 
 .form-actions {
-  text-align: var(--form-actions-align);
-  padding-top: var(--form-actions-padding);
-  box-sizing: var(--form-actions-box);
+  text-align: center;
+  padding: 24px 0 8px;
+  margin-top: 16px;
+  border-top: 1px solid rgba(0, 0, 0, 0.04);
+  background: linear-gradient(180deg, transparent 0%, rgba(248, 250, 252, 0.5) 100%);
+}
+
+.form-actions .el-button {
+  min-width: 100px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-actions .el-button--primary {
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.form-actions .el-button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+}
+
+.form-actions .el-button--default {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.form-actions .el-button--default:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  transform: translateY(-2px);
 }
 
 .dynamic-form-row {
-  margin-left: var(--dynamic-form-row-margin-x);
-  margin-right: var(--dynamic-form-row-margin-x);
+  margin-left: -10px;
+  margin-right: -10px;
+  padding: 16px 0;
 }
 
 .dynamic-form-col {
-  padding-left: var(--dynamic-form-col-padding-x);
-  padding-right: var(--dynamic-form-col-padding-x);
+  padding-left: 10px;
+  padding-right: 10px;
+  margin-bottom: 16px;
+}
+
+.dynamic-form-item {
+  margin-bottom: 0;
+  transition: all 0.3s ease;
+}
+
+.dynamic-form-item:hover {
+  transform: translateX(2px);
+}
+
+.dynamic-form-item ::v-deep .el-form-item__label {
+  font-weight: 500;
+  color: #374151;
+  padding-right: 12px;
 }
 
 .dynamic-form-item ::v-deep .el-form-item__content {
-  display: var(--dynamic-form-item-content-display);
+  display: flex;
+  align-items: center;
 }
 
 .dynamic-form-component {
-  width: var(--dynamic-form-component-width);
+  width: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border-radius: 8px !important;
+}
+
+.dynamic-form-component:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.dynamic-form-component:focus-within {
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 /* 为url-image组件设置特殊样式 */
@@ -540,43 +644,58 @@ export default {
 }
 
 .date-range-picker {
-  width: var(--date-range-picker-width);
+  width: 100%;
 }
 
 /* 日期范围选择器弹出框优化 */
 ::v-deep .date-range-picker-popper {
-  max-width: var(--date-range-picker-popper-max-width);
+  max-width: none !important;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
 }
 
 ::v-deep .date-range-picker-popper .el-picker-panel__body-wrapper {
   display: flex;
   flex-wrap: wrap;
+  padding: 8px;
 }
 
 ::v-deep .date-range-picker-popper .el-picker-panel__body {
   min-width: auto;
   margin: 0;
+  padding: 8px;
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__content {
   flex: 1;
-  min-width: var(--date-range-picker-content-min-width);
+  min-width: 220px;
+  border-radius: 8px;
+  overflow: hidden;
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-left {
-  border-right: var(--date-range-picker-popper-border);
+  border-right: 1px solid #e5e7eb;
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__time-header {
   display: flex;
   justify-content: space-between;
-  padding: var(--date-range-picker-popper-header-padding);
-  border-bottom: var(--date-range-picker-popper-header-border);
+  padding: 10px 12px;
+  border-bottom: 1px solid #e5e7eb;
+  background: rgba(248, 250, 252, 0.5);
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__time-header > span {
   flex: 1;
   text-align: center;
+  padding: 6px 12px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+::v-deep .date-range-picker-popper .el-date-range-picker__time-header > span:hover {
+  background: rgba(59, 130, 246, 0.05);
 }
 
 ::v-deep .date-range-picker-popper .el-date-range-picker__time-header > span:nth-child(2) {
@@ -585,18 +704,43 @@ export default {
 
 /* 小屏幕适配 */
 @media (max-width: 768px) {
+  .card-header {
+    padding: 14px 16px;
+  }
+
+  .card-title {
+    font-size: 15px;
+  }
+
+  .form-actions {
+    padding: 16px 0 4px;
+  }
+
+  .form-actions .el-button {
+    min-width: 80px;
+    padding: 10px 16px;
+  }
+
+  .dynamic-form-row {
+    padding: 8px 0;
+  }
+
+  .dynamic-form-col {
+    margin-bottom: 12px;
+  }
+
   ::v-deep .date-range-picker-popper .el-picker-panel {
-    width: var(--date-range-picker-popper-mobile-width);
-    min-width: var(--date-range-picker-popper-mobile-min-width);
+    width: auto;
+    min-width: 280px;
   }
 
   ::v-deep .date-range-picker-popper .el-date-range-picker__content {
-    min-width: var(--date-range-picker-content-mobile-min-width);
+    min-width: 220px;
   }
 
   ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-left {
     border-right: none;
-    border-bottom: var(--date-range-picker-popper-border);
+    border-bottom: 1px solid #e5e7eb;
   }
 
   ::v-deep .date-range-picker-popper .el-date-range-picker__content.is-right {
@@ -607,4 +751,35 @@ export default {
     flex-direction: column;
   }
 }
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dynamic-form-card {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 表单项出现动画 */
+.dynamic-form-col {
+  animation: fadeIn 0.3s ease forwards;
+  opacity: 0;
+}
+
+.dynamic-form-col:nth-child(1) { animation-delay: 0.05s; }
+.dynamic-form-col:nth-child(2) { animation-delay: 0.1s; }
+.dynamic-form-col:nth-child(3) { animation-delay: 0.15s; }
+.dynamic-form-col:nth-child(4) { animation-delay: 0.2s; }
+.dynamic-form-col:nth-child(5) { animation-delay: 0.25s; }
+.dynamic-form-col:nth-child(6) { animation-delay: 0.3s; }
+.dynamic-form-col:nth-child(7) { animation-delay: 0.35s; }
+.dynamic-form-col:nth-child(8) { animation-delay: 0.4s; }
 </style>

@@ -2,87 +2,216 @@
   /* 动态表单主题变量 */
   --dynamic-form-bg: #fff;
   --dynamic-form-margin: 20px;
+  --dynamic-form-border-radius: 12px;
+  --dynamic-form-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --dynamic-form-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
+  --dynamic-form-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 
   /* 头部样式变量 */
   --card-header-display: flex;
   --card-header-justify: space-between;
   --card-header-align: center;
-  --card-header-padding: 15px 20px;
+  --card-header-padding: 18px 24px;
+  --card-header-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.9) 100%);
+  --card-header-border: 1px solid rgba(0, 0, 0, 0.04);
 
   /* 标题样式变量 */
-  --card-title-weight: bold;
+  --card-title-weight: 600;
   --card-title-size: 16px;
+  --card-title-color: #1a1a2e;
+  --card-title-letter-spacing: -0.01em;
+
+  /* 标题装饰线 */
+  --card-title-line-width: 4px;
+  --card-title-line-height: 18px;
+  --card-title-line-bg: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+  --card-title-line-radius: 2px;
 
   /* 展开按钮样式变量 */
-  --expand-button-border: 1px solid rgba(169, 197, 224, 0.4);
+  --expand-button-border: 1px solid rgba(59, 130, 246, 0.2);
   --expand-button-padding: 8px 16px;
-  --expand-button-radius: 6px;
-  --expand-button-transition: all 0.3s ease;
-  --expand-button-bg: rgba(240, 248, 255, 0.2);
-  --expand-button-backdrop: blur(6px);
-  --expand-button-box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
-  --expand-button-color: #2c3e50;
+  --expand-button-radius: 8px;
+  --expand-button-transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --expand-button-bg: rgba(59, 130, 246, 0.05);
+  --expand-button-backdrop: blur(10px);
+  --expand-button-box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+  --expand-button-color: #3b82f6;
   --expand-button-font-weight: 500;
+  --expand-button-font-size: 13px;
 
   /* 展开按钮悬停样式变量 */
-  --expand-button-hover-bg: rgba(240, 248, 255, 0.3);
-  --expand-button-hover-border: rgba(169, 197, 224, 0.5);
-  --expand-button-hover-box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  --expand-button-hover-bg: rgba(59, 130, 246, 0.1);
+  --expand-button-hover-border: rgba(59, 130, 246, 0.3);
+  --expand-button-hover-box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
 
   /* 展开按钮激活样式变量 */
-  --expand-button-expanded-bg: rgba(240, 248, 255, 0.25);
-  --expand-button-expanded-border: rgba(169, 197, 224, 0.45);
+  --expand-button-expanded-bg: rgba(59, 130, 246, 0.1);
+  --expand-button-expanded-border: rgba(59, 130, 246, 0.25);
 
   /* 表单操作区域样式变量 */
   --form-actions-align: center;
-  --form-actions-padding: 20px;
+  --form-actions-padding: 24px 0 8px;
   --form-actions-box: border-box;
+  --form-actions-margin-top: 16px;
+  --form-actions-border: 1px solid rgba(0, 0, 0, 0.04);
+  --form-actions-bg: linear-gradient(180deg, transparent 0%, rgba(248, 250, 252, 0.5) 100%);
+
+  /* 按钮样式变量 */
+  --button-min-width: 100px;
+  --button-font-weight: 500;
+  --button-primary-bg: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  --button-primary-border: none;
+  --button-primary-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  --button-primary-hover-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  --button-default-border: 1px solid rgba(0, 0, 0, 0.1);
+  --button-default-bg: rgba(255, 255, 255, 0.8);
 
   /* 表单栅格样式变量 */
   --dynamic-form-row-margin-x: -10px !important;
   --dynamic-form-col-padding-x: 10px !important;
+  --dynamic-form-col-margin-bottom: 16px;
 
   /* 表单项样式变量 */
   --dynamic-form-item-content-display: flex;
+  --dynamic-form-item-hover-translate: translateX(2px);
+  --dynamic-form-item-label-weight: 500;
+  --dynamic-form-item-label-color: #374151;
+  --dynamic-form-item-label-padding-right: 12px;
 
   /* 表单组件样式变量 */
   --dynamic-form-component-width: 100%;
+  --dynamic-form-component-border-radius: 8px !important;
+  --dynamic-form-component-hover-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --dynamic-form-component-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 
   /* 日期选择器样式变量 */
   --date-range-picker-width: 100%;
 
   /* 日期选择器弹出框样式变量 */
   --date-range-picker-popper-max-width: none !important;
-  --date-range-picker-popper-border: 1px solid #e4e4e4;
-  --date-range-picker-popper-header-padding: 8px 10px;
-  --date-range-picker-popper-header-border: 1px solid #e4e4e4;
+  --date-range-picker-popper-border-radius: 12px;
+  --date-range-picker-popper-shadow: 0 12px 40px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --date-range-picker-popper-border: 1px solid #e5e7eb;
+  --date-range-picker-popper-header-padding: 10px 12px;
+  --date-range-picker-popper-header-border: 1px solid #e5e7eb;
+  --date-range-picker-popper-header-bg: rgba(248, 250, 252, 0.5);
 
   /* 小屏幕适配变量 */
   --date-range-picker-popper-mobile-width: auto;
   --date-range-picker-popper-mobile-min-width: 280px;
   --date-range-picker-content-min-width: 220px;
   --date-range-picker-content-mobile-min-width: 220px;
+
+  /* 加载状态样式变量 */
+  --loading-spinner-size: 40px;
+  --loading-spinner-border: 3px solid rgba(59, 130, 246, 0.1);
+  --loading-spinner-color: #3b82f6;
+  --loading-title-size: 16px;
+  --loading-title-weight: 600;
+  --loading-title-color: #1a1a2e;
+  --loading-subtitle-size: 13px;
+  --loading-subtitle-color: #6b7280;
+
+  /* 错误状态样式变量 */
+  --error-card-border: 1px solid rgba(239, 68, 68, 0.15);
+  --error-card-shadow: 0 4px 24px rgba(239, 68, 68, 0.08);
+  --error-card-bg: linear-gradient(135deg, rgba(254, 242, 242, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
+  --error-icon-size: 64px;
+  --error-icon-bg: rgba(239, 68, 68, 0.1);
+  --error-icon-color: #ef4444;
+  --error-title-size: 18px;
+  --error-title-weight: 600;
+  --error-title-color: #1a1a2e;
+  --error-message-size: 14px;
+  --error-message-color: #6b7280;
+
+  /* 空状态样式变量 */
+  --empty-card-bg: linear-gradient(135deg, rgba(248, 250, 252, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
+  --empty-icon-size: 80px;
+  --empty-icon-bg: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%);
+  --empty-icon-color: #3b82f6;
+  --empty-title-size: 16px;
+  --empty-title-weight: 600;
+  --empty-title-color: #1a1a2e;
+  --empty-subtitle-size: 13px;
+  --empty-subtitle-color: #6b7280;
 }
 
 /* 暗色主题变量 */
 [data-theme="dark"] {
   /* 动态表单主题变量 */
   --dynamic-form-bg: #2d2d2d;
+  --dynamic-form-shadow: 0 4px 24px rgba(0, 0, 0, 0.2), 0 1px 2px rgba(0, 0, 0, 0.1);
+  --dynamic-form-shadow-hover: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 4px rgba(0, 0, 0, 0.15);
+
+  /* 头部样式变量 */
+  --card-header-bg: linear-gradient(135deg, rgba(45, 45, 45, 0.9) 0%, rgba(30, 30, 40, 0.95) 100%);
+  --card-header-border: 1px solid rgba(255, 255, 255, 0.06);
+
+  /* 标题样式变量 */
+  --card-title-color: #f3f4f6;
+
+  /* 标题装饰线 */
+  --card-title-line-bg: linear-gradient(180deg, #60a5fa 0%, #3b82f6 100%);
 
   /* 展开按钮样式变量 */
-  --expand-button-border: 1px solid rgba(100, 149, 237, 0.4);
-  --expand-button-bg: rgba(30, 30, 40, 0.3);
-  --expand-button-color: #e0e0e0;
+  --expand-button-border: 1px solid rgba(96, 165, 250, 0.3);
+  --expand-button-bg: rgba(96, 165, 250, 0.1);
+  --expand-button-color: #60a5fa;
+  --expand-button-box-shadow: 0 2px 4px rgba(96, 165, 250, 0.15);
 
   /* 展开按钮悬停样式变量 */
-  --expand-button-hover-bg: rgba(30, 30, 40, 0.4);
-  --expand-button-hover-border: rgba(100, 149, 237, 0.6);
+  --expand-button-hover-bg: rgba(96, 165, 250, 0.15);
+  --expand-button-hover-border: rgba(96, 165, 250, 0.4);
+  --expand-button-hover-box-shadow: 0 4px 8px rgba(96, 165, 250, 0.2);
 
   /* 展开按钮激活样式变量 */
-  --expand-button-expanded-bg: rgba(30, 30, 40, 0.35);
-  --expand-button-expanded-border: rgba(100, 149, 237, 0.5);
+  --expand-button-expanded-bg: rgba(96, 165, 250, 0.12);
+  --expand-button-expanded-border: rgba(96, 165, 250, 0.35);
+
+  /* 表单操作区域样式变量 */
+  --form-actions-border: 1px solid rgba(255, 255, 255, 0.06);
+  --form-actions-bg: linear-gradient(180deg, transparent 0%, rgba(45, 45, 45, 0.5) 100%);
+
+  /* 按钮样式变量 */
+  --button-primary-bg: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  --button-primary-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  --button-primary-hover-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+  --button-default-border: 1px solid rgba(255, 255, 255, 0.15);
+  --button-default-bg: rgba(45, 45, 45, 0.8);
+
+  /* 表单项样式变量 */
+  --dynamic-form-item-label-color: #d1d5db;
+
+  /* 表单组件样式变量 */
+  --dynamic-form-component-hover-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  --dynamic-form-component-focus-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 
   /* 日期选择器弹出框样式变量 */
-  --date-range-picker-popper-border: 1px solid #555;
-  --date-range-picker-popper-header-border: 1px solid #555;
+  --date-range-picker-popper-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 4px 12px rgba(0, 0, 0, 0.2);
+  --date-range-picker-popper-border: 1px solid rgba(255, 255, 255, 0.1);
+  --date-range-picker-popper-header-border: 1px solid rgba(255, 255, 255, 0.1);
+  --date-range-picker-popper-header-bg: rgba(45, 45, 45, 0.5);
+
+  /* 加载状态样式变量 */
+  --loading-spinner-border: 3px solid rgba(96, 165, 250, 0.2);
+  --loading-spinner-color: #60a5fa;
+  --loading-title-color: #f3f4f6;
+  --loading-subtitle-color: #9ca3af;
+
+  /* 错误状态样式变量 */
+  --error-card-border: 1px solid rgba(248, 113, 113, 0.2);
+  --error-card-shadow: 0 4px 24px rgba(248, 113, 113, 0.1);
+  --error-card-bg: linear-gradient(135deg, rgba(127, 29, 29, 0.3) 0%, rgba(45, 45, 45, 1) 100%);
+  --error-icon-bg: rgba(248, 113, 113, 0.15);
+  --error-icon-color: #f87171;
+  --error-title-color: #f3f4f6;
+  --error-message-color: #9ca3af;
+
+  /* 空状态样式变量 */
+  --empty-card-bg: linear-gradient(135deg, rgba(45, 45, 45, 0.5) 0%, rgba(30, 30, 40, 1) 100%);
+  --empty-icon-bg: linear-gradient(135deg, rgba(96, 165, 250, 0.15) 0%, rgba(59, 130, 246, 0.1) 100%);
+  --empty-icon-color: #60a5fa;
+  --empty-title-color: #f3f4f6;
+  --empty-subtitle-color: #9ca3af;
 }

@@ -16,18 +16,51 @@
       </template>
     </DynamicForm>
 
-    <el-card v-else-if="loading" shadow="never">
+    <!-- 加载状态 -->
+    <el-card v-else-if="loading" shadow="never" class="loading-card">
       <div class="loading-placeholder">
-        <i class="el-icon-loading" />
-        <span>加载配置中...</span>
+        <div class="loading-spinner">
+          <div class="spinner"></div>
+        </div>
+        <div class="loading-content">
+          <span class="loading-title">正在加载表单配置</span>
+          <span class="loading-subtitle">请稍候...</span>
+        </div>
       </div>
     </el-card>
 
-    <el-card v-else-if="error" shadow="never">
+    <!-- 错误状态 -->
+    <el-card v-else-if="error" shadow="never" class="error-card">
       <div class="error-placeholder">
-        <i class="el-icon-warning" />
-        <span>加载配置失败: {{ error }}</span>
-        <el-button size="mini" @click="loadConfig">重新加载</el-button>
+        <div class="error-icon">
+          <i class="el-icon-warning" />
+        </div>
+        <div class="error-content">
+          <span class="error-title">加载失败</span>
+          <span class="error-message">{{ error }}</span>
+          <el-button 
+            type="primary" 
+            size="small" 
+            class="retry-button"
+            @click="loadConfig"
+          >
+            <i class="el-icon-refresh" />
+            重新加载
+          </el-button>
+        </div>
+      </div>
+    </el-card>
+
+    <!-- 空配置状态 -->
+    <el-card v-else shadow="never" class="empty-card">
+      <div class="empty-placeholder">
+        <div class="empty-icon">
+          <i class="el-icon-document" />
+        </div>
+        <div class="empty-content">
+          <span class="empty-title">暂无表单配置</span>
+          <span class="empty-subtitle">未找到对应的表单配置信息</span>
+        </div>
       </div>
     </el-card>
   </div>
@@ -218,21 +251,220 @@ export default {
 </script>
 
 <style scoped>
-.loading-placeholder, .error-placeholder {
+.dynamic-form-with-api {
+  width: 100%;
+}
+
+/* 加载状态样式 */
+.loading-card {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+}
+
+.loading-placeholder {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 20px;
-  color: #909399;
+  padding: 60px 20px;
+  min-height: 200px;
+}
+
+.loading-spinner {
+  margin-bottom: 20px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid rgba(59, 130, 246, 0.1);
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.loading-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.loading-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 错误状态样式 */
+.error-card {
+  border-radius: 12px;
+  border: 1px solid rgba(239, 68, 68, 0.15);
+  box-shadow: 0 4px 24px rgba(239, 68, 68, 0.08);
+  background: linear-gradient(135deg, rgba(254, 242, 242, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
 }
 
 .error-placeholder {
+  display: flex;
   flex-direction: column;
-  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  min-height: 200px;
 }
 
-.loading-placeholder i, .error-placeholder i {
-  margin-right: 5px;
+.error-icon {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+.error-icon i {
+  font-size: 32px;
+  color: #ef4444;
+}
+
+.error-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-title {
   font-size: 18px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.error-message {
+  font-size: 14px;
+  color: #6b7280;
+  text-align: center;
+  max-width: 300px;
+  line-height: 1.5;
+}
+
+.retry-button {
+  margin-top: 16px;
+  padding: 10px 24px;
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.retry-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.retry-button i {
+  margin-right: 6px;
+}
+
+/* 空配置状态样式 */
+.empty-card {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04);
+  background: linear-gradient(135deg, rgba(248, 250, 252, 0.5) 0%, rgba(255, 255, 255, 1) 100%);
+}
+
+.empty-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  min-height: 200px;
+}
+
+.empty-icon {
+  width: 80px;
+  height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%);
+  border-radius: 50%;
+  margin-bottom: 20px;
+}
+
+.empty-icon i {
+  font-size: 36px;
+  color: #3b82f6;
+}
+
+.empty-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.empty-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1a1a2e;
+}
+
+.empty-subtitle {
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 动画效果 */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.loading-card,
+.error-card,
+.empty-card {
+  animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .loading-placeholder,
+  .error-placeholder,
+  .empty-placeholder {
+    padding: 40px 16px;
+    min-height: 160px;
+  }
+
+  .loading-title,
+  .error-title,
+  .empty-title {
+    font-size: 15px;
+  }
+
+  .error-message {
+    font-size: 13px;
+  }
 }
 </style>

@@ -1,10 +1,12 @@
 package com.tbs.app.service.impl.company;
 
 import com.tbs.app.service.company.ISystemCompanyService;
+import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
@@ -12,8 +14,10 @@ import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceT
 import com.tbs.shared.interfaces.service.ITimeAuditService;
 import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
 import com.tbs.shared.mapper.SystemCompanyMapper;
+import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -29,6 +33,11 @@ import java.util.Optional;
 public class SimpleCompanyService
     extends AbstractPhysicDeleteFullFeatureServiceTemplate<SystemCompanyEntity, Long, SystemCompanyMapper>
     implements ISystemCompanyService, IStartup {
+
+    @Resource
+    @Lazy
+    private ISystemDepartmentService departmentService;
+
     /**
      * 系统公司
      */
@@ -44,8 +53,13 @@ public class SimpleCompanyService
 
     @Override
     public SystemCompanyEntity deleteById(Long id) {
+        CommonSystemDepartmentQueryCriteria criteria = new CommonSystemDepartmentQueryCriteria();
+        criteria.setEqualsCompanyId(id);
+        var ls = departmentService.query(criteria, null);
+        AssertUtil.isTrue(CollUtil.isNotEmpty(ls), "公司下有部门，请先删除部门");
         var entity = super.deleteById(id);
-        companyTreeStructService.deleteLeaf(id);
+        boolean deleted = companyTreeStructService.deleteLeaf(id);
+        AssertUtil.isTrue(!deleted, "公司删除失败,可能存在子部门情况");
         return entity;
     }
 

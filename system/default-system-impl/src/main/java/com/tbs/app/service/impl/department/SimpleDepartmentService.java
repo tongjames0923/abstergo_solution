@@ -1,10 +1,12 @@
 package com.tbs.app.service.impl.department;
 
+import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemDepartmentFlagEnum;
@@ -14,6 +16,7 @@ import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
 import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -39,11 +42,18 @@ public class SimpleDepartmentService
 
     private static ISystemDepartmentService instance;
 
+    @Resource
+    @Lazy
+    IDepartmentUserRelationService departmentUserRelationService;
+
 
     @Override
     public SystemDepartmentEntity deleteById(Long id) {
+        AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(id)),
+            "部门存在用户,不能删除");
         var entity = super.deleteById(id);
-        departmentTreeStructService.deleteLeaf(id);
+        boolean deleted = departmentTreeStructService.deleteLeaf(id);
+        AssertUtil.isTrue(!deleted, "部门删除失败,可能存在子部门情况");
         return entity;
     }
 

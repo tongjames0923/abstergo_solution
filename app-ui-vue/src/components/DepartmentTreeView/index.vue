@@ -671,7 +671,6 @@ export default {
           this.loadDepartmentData()
         } catch (error) {
           console.error('删除失败:', error)
-          this.$message.error('删除失败')
         }
       })
     },
@@ -784,7 +783,6 @@ export default {
         this.parentCandidates = list.filter(item => item.id !== this.moveDepartmentForm.departmentId)
       } catch (error) {
         console.error('搜索父部门失败:', error)
-        this.$message.error('搜索父部门失败')
         this.parentCandidates = []
       } finally {
         this.parentRemoteLoading = false
@@ -808,8 +806,6 @@ export default {
         this.loadDepartmentData()
       } catch (error) {
         console.error('移动部门失败:', error)
-        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动部门失败'
-        this.$message.error(msg)
       } finally {
         this.moveSaving = false
       }
@@ -882,8 +878,6 @@ export default {
         this.searchUsers = this.searchUsers.filter(u => u.id !== user.id)
       } catch (error) {
         console.error('添加员工失败:', error)
-        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '添加员工失败'
-        this.$message.error(msg)
       } finally {
         this.addingUserId = null
       }
@@ -902,8 +896,6 @@ export default {
           this.loadEmployees(this.selectedDepartment.id)
         } catch (error) {
           console.error('移除员工失败:', error)
-          const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移除员工失败'
-          this.$message.error(msg)
         }
       }).catch(() => {})
     },

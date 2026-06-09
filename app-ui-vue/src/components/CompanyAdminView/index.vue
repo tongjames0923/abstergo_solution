@@ -308,7 +308,6 @@ export default {
         this.treeData = list.map(c => ({ ...c, isLeaf: !(c.childrenCount && c.childrenCount > 0) }))
       } catch (error) {
         console.error('加载公司数据失败:', error)
-        this.$message.error('加载公司数据失败')
       } finally {
         this.loading = false
       }
@@ -360,7 +359,6 @@ export default {
           this.loadCompanyData()
         } catch (error) {
           console.error('删除失败:', error)
-          this.$message.error('删除失败')
         }
       })
     },
@@ -441,8 +439,6 @@ export default {
         const list = (resData.data && Array.isArray(resData.data)) ? resData.data : (resData.list || [])
         this.parentCandidates = list.filter(item => item.id !== this.moveCompanyForm.companyId)
       } catch (error) {
-        console.error('搜索父公司失败:', error)
-        this.$message.error('搜索父公司失败')
         this.parentCandidates = []
       } finally {
         this.parentRemoteLoading = false
@@ -459,8 +455,6 @@ export default {
         this.loadCompanyData()
       } catch (error) {
         console.error('移动公司失败:', error)
-        const msg = (error && error.response && error.response.data && error.response.data.message) ? error.response.data.message : '移动公司失败'
-        this.$message.error(msg)
       } finally {
         this.moveSaving = false
       }
