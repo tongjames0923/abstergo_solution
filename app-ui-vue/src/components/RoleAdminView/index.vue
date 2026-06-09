@@ -8,8 +8,6 @@
       :columns="columns"
       :add-form-config-name="roleAddFormKey()"
       :add-handler="handleSaveRole"
-      :edit-form-config-name="roleEditFormKey()"
-      :edit-handler="handleSaveRole"
       :delete-handler="handleDeleteRole"
       :delete-confirm-text="deleteConfirmText"
       :editable="(row) => row.flag !== 2"
@@ -33,8 +31,8 @@
 
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
-import { activateRole, deleteRole, disableRole, queryRoles, saveRole } from '@/api/role'
-import { roleAddFormKey, roleEditFormKey, roleSearchFormKey } from '@/settings'
+import {activateRole, deleteRole, disableRole, queryRoles, saveRole} from '@/api/role'
+import {roleAddFormKey, roleSearchFormKey} from '@/settings'
 
 export default {
   name: 'RoleAdminView',
@@ -73,10 +71,6 @@ export default {
     roleAddFormKey() {
       return roleAddFormKey
     },
-    roleEditFormKey() {
-      return roleEditFormKey
-    },
-
     saveRole,
     activateRole,
     disableRole,
