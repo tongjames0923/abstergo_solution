@@ -6,7 +6,7 @@ tbs:
       - /private/**
     auth:
       enable: true
-      token-expire-time: 600
+      token-expire-time: 1800
       token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
     enable-cors: true
   system:

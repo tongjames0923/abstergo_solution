@@ -97,16 +97,17 @@
                 </span>
               </span>
               <span class="ca-tree-actions" @click.stop>
-                <button class="ca-action-btn" title="编辑" @click="handleEdit(data)">
+                <button class="ca-action-btn" title="编辑" @click="handleEdit(data)" v-if="data.id!==1 && data.flag!==5">
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                 </button>
-                <el-dropdown size="small" @command="handleMoreActions" trigger="click">
+                <el-dropdown size="small" @command="handleMoreActions" trigger="click"
+                             v-if="data.id!==1 && data.flag!==5">
                   <button class="ca-action-btn ca-action-more" title="更多">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
                   </button>
                   <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">管理部门</el-dropdown-item>
-                    <el-dropdown-item :command="{type: 'move', row: data}" icon="el-icon-sort">移动到其他公司</el-dropdown-item>
+                    <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">管理部门</el-dropdown-item>
+                    <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'move', row: data}" icon="el-icon-sort">移动到其他公司</el-dropdown-item>
                     <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'delete', row: data}" divided icon="el-icon-delete">删除</el-dropdown-item>
                   </el-dropdown-menu>
                 </el-dropdown>
