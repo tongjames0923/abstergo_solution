@@ -171,7 +171,10 @@ export default {
     // 列配置
     columns: {
       type: Array,
-      default: () => []
+      default: () => [],
+      validator(value) {
+        return Array.isArray(value)
+      }
     },
     // 是否自动加载数据
     autoLoad: {
@@ -277,7 +280,10 @@ export default {
     // 操作列配置
     actions: {
       type: Array,
-      default: null
+      default: null,
+      validator(value) {
+        return value === null || Array.isArray(value)
+      }
     },
     // 操作列标签
     actionsLabel: {
@@ -475,17 +481,37 @@ export default {
     },
 
     /**
+     * 更新分页状态并加载数据
+     * @param {Object} options - 分页选项
+     * @param {Number} options.page - 页码
+     * @param {Number} options.size - 每页条数
+     */
+    updatePagination({page, size}) {
+      if (page !== undefined) {
+        this.pageParams.page = page
+        this.$emit('update:currentPage', page)
+        this.$emit('current-page-change', page)
+      }
+      if (size !== undefined) {
+        this.pageParams.size = size
+        this.$emit('update:pageSize', size)
+        this.$emit('page-size-change', size)
+        // 切换每页条数时重置到第一页
+        if (page === undefined) {
+          this.pageParams.page = 1
+          this.$emit('update:currentPage', 1)
+          this.$emit('current-page-change', 1)
+        }
+      }
+      this.loadData()
+    },
+
+    /**
      * 处理分页大小变化
      * @param {Number} size - 新的分页大小
      */
     handleSizeChange(size) {
-      this.pageParams.size = size
-      this.pageParams.page = 1 // 重置到第一页
-      this.$emit('update:pageSize', size)
-      this.$emit('update:currentPage', 1)
-      this.$emit('current-page-change', 1)
-      this.$emit('page-size-change', size)
-      this.loadData()
+      this.updatePagination({size})
     },
 
     /**
@@ -493,10 +519,7 @@ export default {
      * @param {Number} page - 新的当前页
      */
     handleCurrentPageChange(page) {
-      this.pageParams.page = page
-      this.$emit('update:currentPage', page)
-      this.$emit('current-page-change', page)
-      this.loadData()
+      this.updatePagination({page})
     },
 
     /**
@@ -524,50 +547,29 @@ export default {
      * @param {Object} currentRow - 当前行
      * @param {Object} oldCurrentRow - 旧行
      */
+    // 通用事件转发方法
+    forwardEvent(eventName, ...args) {
+      this.$emit(eventName, ...args)
+    },
+
     handleCurrentChange(currentRow, oldCurrentRow) {
-      this.$emit('current-change', currentRow, oldCurrentRow)
+      this.forwardEvent('current-change', currentRow, oldCurrentRow)
     },
 
-    /**
-     * 处理行点击
-     * @param {Object} row - 点击的行
-     * @param {Object} column - 点击的列
-     * @param {Event} event - 事件对象
-     */
     handleRowClick(row, column, event) {
-      this.$emit('row-click', row, column, event)
+      this.forwardEvent('row-click', row, column, event)
     },
 
-    /**
-     * 处理行双击
-     * @param {Object} row - 双击的行
-     * @param {Object} column - 双击的列
-     * @param {Event} event - 事件对象
-     */
     handleRowDblclick(row, column, event) {
-      this.$emit('row-dblclick', row, column, event)
+      this.forwardEvent('row-dblclick', row, column, event)
     },
 
-    /**
-     * 处理单元格点击
-     * @param {Object} row - 点击的行
-     * @param {Object} column - 点击的列
-     * @param {Object} cell - 点击的单元格
-     * @param {Event} event - 事件对象
-     */
     handleCellClick(row, column, cell, event) {
-      this.$emit('cell-click', row, column, cell, event)
+      this.forwardEvent('cell-click', row, column, cell, event)
     },
 
-    /**
-     * 处理单元格双击
-     * @param {Object} row - 双击的行
-     * @param {Object} column - 双击的列
-     * @param {Object} cell - 双击的单元格
-     * @param {Event} event - 事件对象
-     */
     handleCellDblclick(row, column, cell, event) {
-      this.$emit('cell-dblclick', row, column, cell, event)
+      this.forwardEvent('cell-dblclick', row, column, cell, event)
     },
 
     /**
@@ -580,47 +582,39 @@ export default {
     },
 
     /**
-     * 检查按钮是否禁用
+     * 检查操作按钮的属性值
      * @param {Object} action - 操作按钮配置
+     * @param {String} prop - 属性名（disabled/loading）
      * @param {Object} row - 行数据
      * @param {Number} index - 行索引
-     * @returns {Boolean} 是否禁用
+     * @returns {Boolean} 属性值
+     */
+    checkActionProp(action, prop, row, index) {
+      const value = action[prop]
+      if (value === true) return true
+      if (typeof value === 'function') return value(row, index)
+      return false
+    },
+
+    /**
+     * 检查按钮是否禁用
      */
     checkDisabled(action, row, index) {
-      if (action.disabled === true) {
-        return true
-      }
-      if (typeof action.disabled === 'function') {
-        return action.disabled(row, index)
-      }
-      return false
+      return this.checkActionProp(action, 'disabled', row, index)
     },
 
     /**
      * 检查按钮是否加载中
-     * @param {Object} action - 操作按钮配置
-     * @param {Object} row - 行数据
-     * @param {Number} index - 行索引
-     * @returns {Boolean} 是否加载中
      */
     checkLoading(action, row, index) {
-      if (action.loading === true) {
-        return true
-      }
-      if (typeof action.loading === 'function') {
-        return action.loading(row, index)
-      }
-      return false
+      return this.checkActionProp(action, 'loading', row, index)
     },
 
     /**
      * 处理操作按钮点击
-     * @param {Object} action - 操作按钮配置
-     * @param {Object} row - 行数据
-     * @param {Number} index - 行索引
      */
     handleAction(action, row, index) {
-      if (action.handler && typeof action.handler === 'function') {
+      if (typeof action.handler === 'function') {
         action.handler(row, index)
       }
     },

@@ -60,7 +60,7 @@
               size="mini"
               type="primary"
               plain
-              :disabled="(editable!=null&&!editable(row,$index))"
+              :disabled="isEditDisabled(row, $index)"
               @click="handleEdit(row, $index)"
             >
               {{ editActionButtonText }}
@@ -71,7 +71,7 @@
               size="mini"
               type="danger"
               plain
-              :disabled="(deleteable!=null&&!deleteable(row,$index))"
+              :disabled="isDeleteDisabled(row, $index)"
               @click="handleDelete(row, $index)"
             >
               {{ deleteActionButtonText }}
@@ -135,18 +135,22 @@ export default {
     DynamicTable
   },
   props: {
+    // 主标题
     mainTitle: {
       type: String,
       default: '管理'
     },
+    // 新增按钮文本
     addButtonText: {
       type: String,
       default: '新增'
     },
+    // 搜索表单标题
     searchFormTitle: {
       type: String,
       default: '查询'
     },
+    // 搜索表单配置名称（必填）
     configName: {
       type: String,
       required: true
@@ -154,17 +158,22 @@ export default {
     // 表格列配置
     columns: {
       type: Array,
-      default: () => []
+      default: () => [],
+      validator(value) {
+        return Array.isArray(value)
+      }
     },
+    // 删除按钮文本
     deleteActionButtonText: {
       type: String,
       default: '删除'
     },
+    // 编辑按钮文本
     editActionButtonText: {
       type: String,
       default: '编辑'
     },
-    // 操作按钮配置
+    // 表格操作按钮配置
     actions: {
       type: Array,
       default: () => []
@@ -174,7 +183,7 @@ export default {
       type: Boolean,
       default: true
     },
-    // 查询处理器，由使用者提供具体实现
+    // 查询处理器（必填）
     searchHandler: {
       type: Function,
       required: true
@@ -194,6 +203,7 @@ export default {
       type: Function,
       default: null
     },
+    // 编辑表单配置名称
     editFormConfigName: {
       type: String,
       default: ''
@@ -208,6 +218,7 @@ export default {
       type: Function,
       default: null
     },
+    // 编辑按钮禁用判断函数
     editable: {
       type: Function,
       default: null
@@ -217,28 +228,27 @@ export default {
       type: Function,
       default: null
     },
+    // 删除按钮禁用判断函数
     deleteable: {
       type: Function,
       default: null
     },
+    // 删除确认文本生成函数
     deleteConfirmText: {
       type: Function,
-      default: (row, index) => {
-        // 输出确定要删除第index项吗？
-        return `确定要删除第${index + 1}项吗？`
-      }
+      default: (row, index) => `确定要删除第${index + 1}项吗？`
     },
-    // 查询参数转换器，可选
+    // 查询参数转换器
     queryTransformer: {
       type: Function,
       default: null
     },
-    // 排序参数转换器，可选
+    // 排序参数转换器
     sortTransformer: {
       type: Function,
       default: null
     },
-    // 分页参数转换器，可选
+    // 分页参数转换器
     pageTransformer: {
       type: Function,
       default: null
@@ -247,31 +257,25 @@ export default {
   data() {
     return {
       searchForm: {},
-      // 通用弹窗可见性
       dialogVisible: false,
-      // 弹窗类型 ('add' 或 'edit')
       dialogType: 'add',
-      // 编辑表单数据
       editFormData: {},
-      // 内部使用的列配置
-      internalColumns: []
+      internalColumns: [],
+      windowWidth: window.innerWidth
     }
   },
   computed: {
-    // 判断是否为移动设备
     isMobile() {
-      return window.innerWidth <= 768
+      return this.windowWidth <= 768
     },
 
-    // 根据屏幕宽度动态计算弹窗宽度
     dialogWidth() {
-      const width = window.innerWidth
-      if (width < 768) {
-        return '90%' // 小屏幕设备使用90%宽度
-      } else if (width < 1200) {
-        return '75%' // 中等屏幕设备使用固定600px
+      if (this.windowWidth < 768) {
+        return '90%'
+      } else if (this.windowWidth < 1200) {
+        return '75%'
       } else {
-        return '60%' // 大屏幕设备使用稍宽一些的720px
+        return '60%'
       }
     },
 
@@ -303,10 +307,20 @@ export default {
     window.removeEventListener('resize', this.handleResize)
   },
   methods: {
+    // 检查编辑按钮是否禁用
+    isEditDisabled(row, index) {
+      return this.editable != null && !this.editable(row, index)
+    },
+
+    // 检查删除按钮是否禁用
+    isDeleteDisabled(row, index) {
+      return this.deleteable != null && !this.deleteable(row, index)
+    },
+
     // 处理窗口大小变化
     handleResize() {
-      // 通过触发更新来响应窗口大小变化
-      this.$forceUpdate()
+      // 通过触发计算属性更新来响应窗口大小变化
+      this.windowWidth = window.innerWidth
     },
 
     // 更新列配置的方法
@@ -368,15 +382,12 @@ export default {
 
     // 转换查询参数
     transformQueryParams(queryParams) {
-      // 如果提供了自定义转换器，则使用它
-      if (this.queryTransformer && typeof this.queryTransformer === 'function') {
+      if (typeof this.queryTransformer === 'function') {
         return this.queryTransformer({
           ...queryParams,
           ...this.searchForm
         })
       }
-
-      // 默认处理：合并表单数据和查询参数
       return {
         ...queryParams,
         ...this.searchForm
@@ -385,30 +396,24 @@ export default {
 
     // 转换排序参数
     transformSortParams(sortParams) {
-      // 如果提供了自定义转换器，则使用它
-      if (this.sortTransformer && typeof this.sortTransformer === 'function') {
+      if (typeof this.sortTransformer === 'function') {
         return this.sortTransformer(sortParams)
       }
 
-      // 默认处理：将DynamicTable的排序参数转换为后端需要的格式
       if (sortParams.prop && sortParams.order) {
         const direction = sortParams.order === 'ascending' ? 'ASC' : 'DESC'
         return {
-          [sortParams.prop + 'Order']: direction
+          [`${sortParams.prop}Order`]: direction
         }
       }
-
       return {}
     },
 
     // 转换分页参数
     transformPageParams(pageParams) {
-      // 如果提供了自定义转换器，则使用它
-      if (this.pageTransformer && typeof this.pageTransformer === 'function') {
+      if (typeof this.pageTransformer === 'function') {
         return this.pageTransformer(pageParams)
       }
-
-      // 默认处理：转换为后端期望的参数名
       return {
         pageNum: pageParams.page,
         pageSize: pageParams.size
@@ -439,41 +444,26 @@ export default {
 
     // 处理表单提交
     async handleDialogSubmit(formData) {
+      const isAdd = this.dialogType === 'add'
+      const handler = isAdd ? this.addHandler : this.editHandler
+      const successEvent = isAdd ? 'add-success' : 'edit-success'
+      const errorEvent = isAdd ? 'add-error' : 'edit-error'
+      const warningMsg = isAdd ? '未配置新增处理器' : '未配置编辑处理器'
+
+      if (!handler || typeof handler !== 'function') {
+        console.warn(`未提供 ${isAdd ? 'addHandler' : 'editHandler'} 方法`)
+        this.$message.warning(warningMsg)
+        return
+      }
+
       try {
-        if (this.dialogType === 'add') {
-          // 如果提供了新增处理器，则调用它
-          if (this.addHandler && typeof this.addHandler === 'function') {
-            await this.addHandler(formData)
-            this.dialogVisible = false
-            this.$emit('add-success', formData)
-            // 刷新表格数据
-            this.refresh()
-          } else {
-            console.warn('未提供 addHandler 方法')
-            this.$message.warning('未配置新增处理器')
-          }
-        } else {
-          // 如果提供了编辑处理器，则调用它
-          if (this.editHandler && typeof this.editHandler === 'function') {
-            await this.editHandler(formData)
-            this.dialogVisible = false
-            this.$emit('edit-success', formData)
-            // 刷新表格数据
-            this.refresh()
-          } else {
-            console.warn('未提供 editHandler 方法')
-            this.$message.warning('未配置编辑处理器')
-          }
-        }
+        await handler(formData)
+        this.dialogVisible = false
+        this.$emit(successEvent, formData)
+        this.refresh()
       } catch (error) {
         console.error('操作失败:', error)
-        if (this.dialogType === 'add') {
-          this.$emit('add-error', error)
-        } else {
-          this.$emit('edit-error', error)
-        }
-      } finally {
-        this.dialogVisible = false
+        this.$emit(errorEvent, error)
       }
     },
 
@@ -513,18 +503,14 @@ export default {
 
     // 处理操作命令
     handleActionCommand(command, row, index) {
-      // 这里可以处理下拉菜单中的命令
       this.$emit('action-command', { command, row, index })
     },
 
     // 处理弹窗关闭
     handleDialogClose() {
       this.$refs.commonForm && this.$refs.commonForm.resetForm()
-      if (this.dialogType === 'add') {
-        this.$emit('add-cancel')
-      } else {
-        this.$emit('edit-cancel')
-      }
+      const cancelEvent = this.dialogType === 'add' ? 'add-cancel' : 'edit-cancel'
+      this.$emit(cancelEvent)
       this.dialogVisible = false
     }
   }
@@ -607,42 +593,7 @@ export default {
     gap: 12px;
     padding: 0 20px 20px;
   }
-  //
-  //.form-dialog {
-  //  ::v-deep .el-dialog__body {
-  //    padding: 20px 30px;
-  //  }
-  //
-  //  ::v-deep .el-dialog__header {
-  //    border-bottom: 1px solid #eee;
-  //    padding: 15px 20px;
-  //  }
-  //
-  //  ::v-deep .el-dialog__footer {
-  //    border-top: 1px solid #eee;
-  //    padding: 15px 20px;
-  //  }
-  //
-  //  // 全屏弹窗样式
-  //  ::v-deep .el-dialog.is-fullscreen {
-  //    border-radius: 0;
-  //
-  //    .el-dialog__header {
-  //      border-bottom: 1px solid #eee;
-  //      padding: 15px 20px;
-  //    }
-  //
-  //    .el-dialog__body {
-  //      padding: 20px;
-  //      overflow-y: auto;
-  //    }
-  //
-  //    .el-dialog__footer {
-  //      border-top: 1px solid #eee;
-  //      padding: 15px 20px;
-  //    }
-  //  }
-  //}
+
 
   // 移动端适配
   @media (max-width: 768px) {
