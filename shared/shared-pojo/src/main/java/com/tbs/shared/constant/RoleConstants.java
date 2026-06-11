@@ -57,7 +57,7 @@ public class RoleConstants {
 	/**
 	 * 开发者角色名称
 	 */
-	public static final String DEVELOPER_ROLE_NAME = "开发者";
+	public static final String DEVELOPER_ROLE_NAME = "开发员";
 	/**
 	 * 开发者角色实体
 	 * <p>

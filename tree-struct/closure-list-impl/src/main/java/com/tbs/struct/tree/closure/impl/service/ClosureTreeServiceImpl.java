@@ -16,8 +16,9 @@ import com.tbs.struct.tree.closure.impl.mapper.TreeRelationMapper;
 import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.struct.tree.model.TreeNodeModel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
@@ -73,6 +74,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
      * @return 树节点
      */
 
+    @Cacheable(cacheNames = "tree_node_entity", key = "#treeGroup+':'+#nodeId")
     public TreeNodeEntity getTreeNode(String nodeId, String treeGroup) {
         Long id = getInstance().getTreeNodeId(nodeId, treeGroup);
         if (id == null) {
@@ -302,6 +304,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
 
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
+    @CacheEvict(cacheNames = "tree_node_entity", key = "#treeGroup+':'+#nodeId")
     public void delete(String nodeId, String group) {
         if (StrUtil.isEmpty(nodeId)) {
             log.info("节点ID为空");
@@ -320,14 +323,6 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
         }).collect(Collectors.toList());
         // 添加当前节点本身
         nodeIdsToDelete.add(node);
-
-        // 批量删除节点前先清除缓存
-        Cache cache = cacheManager.getCache("tree_node_cache");
-        if (cache != null) {
-            for (var entity : nodeIdsToDelete) {
-                cache.evict(entity.getNodeId() + ":" + group);
-            }
-        }
 
         // 批量删除节点
         treeNodeMapper.deleteByIdList(nodeIdsToDelete.stream().map(TreeNodeEntity::getId).collect(Collectors.toList()));
@@ -369,6 +364,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
      */
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
+    @CacheEvict(cacheNames = "tree_node_entity", allEntries = true)
     public void tryRebuildStructure(String groupName) {
         rebuildTreeClosureCheck();
         CacheUtils.getInstance().cacheableSet(REBUILD_TREE_CLOSURE_LOCK, true);
@@ -397,11 +393,6 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
 
         } finally {
             CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
-            // 重建后清除该树组的所有缓存，确保数据一致性
-            Cache cache = cacheManager.getCache("tree_node_cache");
-            if (cache != null) {
-                cache.clear();
-            }
         }
 
     }

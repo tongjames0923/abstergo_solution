@@ -17,6 +17,7 @@ import java.util.stream.Collectors;
 
 /**
  * 抽象TTL缓存适配器类，提供基于Spring Cache的TTL（Time To Live）功能实现 该类扩展了AbstractTtlCache，提供了缓存过期机制的通用实现
+ * @author abstergo
  */
 @Slf4j
 public abstract class AbstractAdaptTtlCache extends AbstractTtlCache {

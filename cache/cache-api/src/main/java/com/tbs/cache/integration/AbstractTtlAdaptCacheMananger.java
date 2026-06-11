@@ -1,6 +1,7 @@
 package com.tbs.cache.integration;
 
 import com.tbs.common.data.IFeatureWrapper;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.support.AbstractCacheManager;
@@ -21,6 +22,13 @@ public abstract class AbstractTtlAdaptCacheMananger extends AbstractCacheManager
         return getOrginal().getCacheNames().stream().map(this::getCache).collect(Collectors.toList());
     }
 
+    public static final String CACHE_NAME_PREFIX = "SYSTEM:CACHE:";
+
+    @Override
+    public @Nullable Cache getCache(String name) {
+        return super.getCache(CACHE_NAME_PREFIX + name);
+    }
+
     /**
      * 创建缓存
      *
@@ -32,9 +40,9 @@ public abstract class AbstractTtlAdaptCacheMananger extends AbstractCacheManager
     }
 
     /**
-     * 创建缓存
+     * 装饰缓存
      *
-     * @param name
+     * @param cache
      * @return
      */
     protected abstract AbstractTtlCache decorateCacheToTtl(Cache cache);

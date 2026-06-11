@@ -11,8 +11,6 @@ import java.util.concurrent.TimeUnit;
 
 public interface TreeNodeMapper extends IFrameworkMapper<TreeNodeEntity, Long> {
 
-    @Cacheable(cacheNames = "tree_node_entity_cache", key = "#id", unless = "#result == null", condition = "#id!=null")
-    @ExpireOn(value = 2, timeUnit = TimeUnit.MINUTES, cacheNames = "tree_node_entity_cache")
     @Select("select * from tree_node where id = #{id}")
     TreeNodeEntity getNodeById(Long id);
 
