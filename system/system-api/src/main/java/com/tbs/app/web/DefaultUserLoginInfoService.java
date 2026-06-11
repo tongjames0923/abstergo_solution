@@ -27,6 +27,7 @@ import com.tbs.web.security.user.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
@@ -272,13 +273,15 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService<De
 
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token")
+    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token",condition =
+    "#token!=null and #token.length()>0")
     @Override
     public void removeUserLoginInfo(String token) {
         super.removeUserLoginInfo(token);
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token")
+    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token.token",condition =
+    "#token!=null and #token.token!=null and #token.token.length()>0")
     @Override
     public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {
         super.replaceUserDetails(userDetails, token);

@@ -30,7 +30,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -118,6 +117,10 @@ public class PrivateUserController extends BaseController {
         userInfoVO.setAvatar(user.get().getAvatar());
         userInfoVO.setAvaliableRoles(relationService.queryRoles(user.get().getId()));
         var ud = AuthUtil.getInstance().getCurrentUser();
+
+        if (ud instanceof ISystemUserDetails) {
+            userInfoVO.setCurrentDepartment(((ISystemUserDetails)ud).getCurrentDepartment());
+        }
 
         userInfoVO.setAvaliableDepartments(DepartmentInfoVO.convertToDepartmentVOs(
             departmentUserRelationService.queryUserDepartments(user.get().getId())));
