@@ -9,6 +9,9 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.List;
 
+/**
+ * 默认用户详情DTO
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor

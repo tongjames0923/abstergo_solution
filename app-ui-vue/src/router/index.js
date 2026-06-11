@@ -3,9 +3,9 @@ import Router from 'vue-router'
 import store from '@/store'
 /* Layout */
 import Layout from '@/layout'
-import { getRoutes } from '@/api/view'
-import { setUpRouterPermissions } from '@/permission'
-import { getToken } from '@/utils/auth'
+import {getRoutes} from '@/api/view'
+import {setUpRouterPermissions} from '@/permission'
+import {getToken} from '@/utils/auth'
 import routeCacheService from '@/utils/route-cache'
 
 Vue.use(Router)
@@ -61,13 +61,13 @@ export const constantRoutes = [
       path: 'dashboard',
       name: 'Dashboard',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'el-icon-star-on', roles: ['2'] }
+      meta: {title: 'Dashboard', icon: 'el-icon-star-on'}
     },
     {
       path: 'table',
       name: 'Table',
       component: () => import('@/views/table/index'),
-      meta: { title: 'Table', icon: 'el-icon-star-on', roles: ['2'] }
+      meta: {title: 'Table', icon: 'el-icon-star-on', roles: ['普通用户']}
     }
     ]
   }

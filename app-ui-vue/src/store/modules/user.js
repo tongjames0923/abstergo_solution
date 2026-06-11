@@ -1,4 +1,4 @@
-import {getInfo, login, logout} from '@/api/user'
+import {getInfo, login, logout, setCurrentDepartment} from '@/api/user'
 import {getRememberMe, getToken, removeToken, setRememberMe, setToken} from '@/utils/auth'
 import {resetRouter} from '@/router'
 import request from '@/utils/request'
@@ -9,8 +9,11 @@ const getDefaultState = () => {
     token: getToken(),
     refreshToken: null,
     name: '',
+    userName: '',
     avatar: '',
     roles: [],
+    departments: [],
+    currentDepartment: null,
     routes: [] // 存储动态路由
   }
 }
@@ -27,11 +30,20 @@ const mutations = {
   SET_NAME: (state, name) => {
     state.name = name
   },
+  SET_USER_NAME: (state, userName) => {
+    state.userName = userName
+  },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
+  },
+  SET_DEPARTMENTS: (state, departments) => {
+    state.departments = departments
+  },
+  SET_CURRENT_DEPARTMENT: (state, department) => {
+    state.currentDepartment = department
   },
   SET_ROUTES: (state, routes) => {
     state.routes = routes
@@ -64,12 +76,31 @@ const actions = {
         throw new Error('Verification failed, please Login again.')
       }
 
-      const { nickName, avatar, avaliableRoles } = data
+      const { nickName, userName, avatar, avaliableRoles, avaliableDepartments } = data
 
       commit('SET_NAME', nickName)
+      commit('SET_USER_NAME', userName)
       commit('SET_AVATAR', avatar)
       commit('SET_ROLES', avaliableRoles)
+      commit('SET_DEPARTMENTS', avaliableDepartments || [])
+      commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
       return data
+    } catch (error) {
+      throw error
+    }
+  },
+
+  // 切换当前部门
+  async switchDepartment({ commit }, departmentId) {
+    try {
+      await setCurrentDepartment(departmentId)
+      // 刷新用户信息以获取最新的 currentDepartment
+      const response = await getInfo()
+      const { data } = response
+      if (data) {
+        commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
+        commit('SET_DEPARTMENTS', data.avaliableDepartments || [])
+      }
     } catch (error) {
       throw error
     }

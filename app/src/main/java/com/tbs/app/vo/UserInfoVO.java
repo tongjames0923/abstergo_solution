@@ -40,4 +40,9 @@ public class UserInfoVO implements Serializable {
 	 * 用户可用部门列表
 	 */
 	private Collection<DepartmentInfoVO> avaliableDepartments;
+
+	/**
+	 * 用户当前选中的部门
+	 */
+	private DepartmentInfoVO currentDepartment;
 }

@@ -111,7 +111,6 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
             .map(relation -> systemRoleService.queryById(relation.getRoleId())).filter(role -> role != null &&
                 role.getId() != null &&
                 CollUtil.isIn(role.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(),
-                    SystemRoleFlagEnum.SYSTEMED.getCode())).map(role -> role.getId())
-            .map(roleId -> roleId.toString()).collect(Collectors.toList());
+                    SystemRoleFlagEnum.SYSTEMED.getCode())).map(role -> role.getRole()).collect(Collectors.toList());
     }
 }

@@ -1,14 +1,15 @@
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Index;
+import javax.persistence.Table;
 import java.util.Date;
 
 /**
@@ -58,19 +59,6 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
     private byte[] userDetails;
 
     /**
-     * 登录信息转换器实现类
-     */
-    @javax.persistence.Column(name = "user_details_transformer_impl", length = 128)
-    @Getter
-    @Setter
-    private String userDetailsTransformerImpl;
-
-    @javax.persistence.Column(name = "user_details_target_class", length = 256)
-    @Getter
-    @Setter
-    private String userDetailsTargetClass;
-
-    /**
      * 状态
      */
     @javax.persistence.Column(name = "flag")
@@ -112,55 +100,5 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
     @Getter
     @Setter
     private String sessionId;
-
-//    @Transient
-//    private UserDetails userDetailsObject;
-
-//    @Transient
-//    public UserDetails getUserDetailsObject() {
-//        if (getUserDetails() == null || getUserDetails().length == 0) {
-//            log.warn("用户详情转换失败: userDetails is null");
-//            return null;
-//        }
-//        if (StrUtil.isEmpty(getUserDetailsTransformerImpl()) || StrUtil.isEmpty(getUserDetailsTargetClass())) {
-//            log.warn("用户详情转换失败: userDetailsTransformerImpl or userDetailsTargetClass is null");
-//            return null;
-//        }
-//        if (userDetailsObject == null) {
-//            try {
-//                IUserDetailsTransformer transformer =
-//                    (IUserDetailsTransformer)SpringUtil.getBean(Class.forName(getUserDetailsTransformerImpl()));
-//                userDetailsObject = transformer.reverseTransform(getUserDetails(),
-//                    (Class<? extends UserDetails>)Class.forName(getUserDetailsTargetClass()));
-//            } catch (Exception e) {
-//                log.error("用户详情转换失败: {}", e.getMessage());
-//            }
-//        }
-//        return userDetailsObject;
-//    }
-
-//    @Transient
-//    public void setUserDetailsObject(UserDetails userDetailsObject, IUserDetailsTransformer transformer) {
-//        if (userDetailsObject == null || transformer == null) {
-//            log.warn("用户详情转换失败: userDetailsObject or transformer is null");
-//            setUserDetails(null);
-//            setUserDetailsTargetClass(null);
-//            return;
-//        }
-//        this.userDetailsObject = userDetailsObject;
-//        byte[] oldUserDetails = getUserDetails();
-//        String oldTargetClass = getUserDetailsTargetClass();
-//        String oldTransformer = getUserDetailsTransformerImpl();
-//        try {
-//            setUserDetails(transformer.transform(userDetailsObject));
-//            setUserDetailsTargetClass(userDetailsObject.getClass().getName());
-//            setUserDetailsTransformerImpl(transformer.getClass().getName());
-//        } catch (Exception e) {
-//            log.warn("用户详情转换失败: {}", e.getMessage());
-//            setUserDetails(oldUserDetails);
-//            setUserDetailsTargetClass(oldTargetClass);
-//            setUserDetailsTransformerImpl(oldTransformer);
-//        }
-//    }
 
 }

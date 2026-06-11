@@ -8,7 +8,7 @@ admin:
       title: 管理员操作
       icon: el-icon-s-help
       roles:
-        - "1"
+        - "超级管理员"
     children:
       - path: user
         name: 用户管理
@@ -18,7 +18,7 @@ admin:
           title: 用户管理
           icon: table
           roles:
-            - "1"
+            - "超级管理员"
       - path: role
         name: 角色管理
         component: "/admin/role/index.vue"
@@ -27,7 +27,7 @@ admin:
           title: 角色管理
           icon: eye
           roles:
-            - "1"
+            - "超级管理员"
       - path: company
         name: 公司管理
         component: "/admin/company/index.vue"
@@ -36,7 +36,7 @@ admin:
           title: 公司管理
           icon: el-icon-s-custom
           roles:
-            - "1"
+            - "超级管理员"
 develop:
   - path: /develop
     component: Layout
@@ -47,8 +47,8 @@ develop:
       title: 开发者操作
       icon: el-icon-s-help
       roles:
-        - "3"
-        - "1"
+        - "开发员"
+        - "超级管理员"
     children:
       - path: form-manager
         name: 表单管理
@@ -58,7 +58,7 @@ develop:
           title: 表单管理
           icon: el-icon-s-order
           roles:
-            - "3"
+            - "开发员"
       - path: form
         name: 表单创建
         component: "/form/FormCreator.vue"
@@ -67,7 +67,7 @@ develop:
           title: 表单创建
           icon: el-icon-s-custom
           roles:
-            - "3"
+            - "开发员"
       - path: systemlog
         name: 系统运行报表
         component: "/admin/systemlog/index.vue"
@@ -76,8 +76,8 @@ develop:
           title: 系统运行报表
           icon: el-icon-s-data
           roles:
-            - "3"
-            - "1"
+            - "开发员"
+            - "超级管理员"
 #  fallback:
 #    - path: "*"
 #      redirect: /404

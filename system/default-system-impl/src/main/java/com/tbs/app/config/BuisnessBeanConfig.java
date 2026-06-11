@@ -19,10 +19,14 @@ import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.user.serial.DefaultUserDetailsTransformer;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
+import com.tbs.common.error.IErrorThrowEvent;
+import com.tbs.common.error.impl.SimpleErrorThrowEvent;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.web.security.user.IPasswordEncrypt;
+import com.tbs.web.security.user.IUserDetailsTransformer;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.impl.NoEncryptPassword;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -46,6 +50,14 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemLogService systemLogService() {
         return new SimpleSystemLogServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IErrorThrowEvent.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IErrorThrowEvent errorThrowEvent() {
+        return BeanUtil.buildBeanFromProperties(SimpleErrorThrowEvent::new, systemAppProperty.getErrorThrowEventImpl(),
+            BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
@@ -120,6 +132,13 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IUserLoginInfoService userLoginInfoService() {
         return new DefaultUserLoginInfoService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IUserDetailsTransformer.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    IUserDetailsTransformer userDetailsTransformer() {
+        return new DefaultUserDetailsTransformer();
     }
 
     @Bean

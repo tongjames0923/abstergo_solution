@@ -31,7 +31,7 @@ import javax.annotation.Resource;
  */
 @RestController
 @RequestMapping("private/admin/role")
-@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
+@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
 @Tag(name = "角色管理接口", description = "角色管理接口")
 public class RoleController extends AbstractCrudController<SystemRoleEntity, Long, CommonSystemRoleQueryCriteria> {
 

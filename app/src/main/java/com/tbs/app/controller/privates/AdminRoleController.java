@@ -34,7 +34,7 @@ import javax.annotation.Resource;
  */
 @RequestMapping("/private/admin/roles")
 @RestController
-@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_ID + "')")
+@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
 @Tag(name = "用户角色管理接口", description = "用户角色管理接口")
 public class AdminRoleController extends BaseController {
 

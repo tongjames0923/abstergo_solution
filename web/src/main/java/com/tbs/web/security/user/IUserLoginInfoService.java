@@ -3,13 +3,17 @@ package com.tbs.web.security.user;
 import com.tbs.web.security.token.ITokenModel;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
 import java.util.List;
 
 /**
  * 用户登录信息处理服务
  *
+ * @author abstergo
  */
 public interface IUserLoginInfoService {
+
+
     /**
      * 用户登录成功,处理登录成功后的用户数据
      *

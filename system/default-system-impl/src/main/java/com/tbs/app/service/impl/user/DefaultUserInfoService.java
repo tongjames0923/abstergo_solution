@@ -52,7 +52,7 @@ public class DefaultUserInfoService implements IUserInfoService {
         var roles = userRoleRelationService.queryUserRoles(user.getId());
         if (CollUtil.isNotEmpty(roles)) {
             builder.authorities(roles.stream().map(role -> {
-                return new DefaultGrantedAuthority(role.getId().toString());
+                return new DefaultGrantedAuthority(role.getRole());
             }).collect(Collectors.toList()));
         }
         var departments = departmentUserRelationService.queryUserDepartments(user.getId());

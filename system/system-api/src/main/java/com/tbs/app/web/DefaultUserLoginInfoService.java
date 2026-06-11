@@ -1,8 +1,9 @@
 package com.tbs.app.web;
 
 import cn.hutool.core.date.DateUtil;
-import com.tbs.app.config.AppSettingProperty;
+import com.alibaba.fastjson2.JSON;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.user.serial.DefaultSystemUserDetailsDto;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
@@ -10,7 +11,6 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.DelegateUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
@@ -40,10 +40,12 @@ import java.util.stream.Collectors;
  * @author abstergo
  */
 @Slf4j
-public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
+public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService<DefaultSystemUserDetailsDto> {
+
 
     @Resource
-    private AppSettingProperty appSettingProperty;
+    private IUserDetailsTransformer userDetailsTransformer;
+
     @Resource
     private LoginInfoMapper mapper;
 
@@ -76,49 +78,33 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         return queryWrapper.fetchOne();
     }
 
-    private UserDetails getUserDetails(SystemLoginInfoEntity loginInfoEntity) {
-        if (StrUtil.isEmpty(loginInfoEntity.getUserDetailsTransformerImpl()) ||
-            StrUtil.isEmpty(loginInfoEntity.getUserDetailsTargetClass())) {
-            log.warn("用户详情转换失败: userDetailsTransformerImpl or userDetailsTargetClass is null");
-            return null;
-        }
-        UserDetails userDetailsObject = null;
-        try {
-            IUserDetailsTransformer transformer = (IUserDetailsTransformer)SpringUtil.getBean(
-                Class.forName(loginInfoEntity.getUserDetailsTransformerImpl()));
-            userDetailsObject = transformer.reverseTransform(loginInfoEntity.getUserDetails(),
-                (Class<? extends UserDetails>)Class.forName(loginInfoEntity.getUserDetailsTargetClass()));
-        } catch (Exception e) {
-            log.error("用户详情转换失败: {}", e.getMessage());
-        }
-
-        return userDetailsObject;
-    }
-
-    SystemLoginInfoEntity setUserDetails(SystemLoginInfoEntity loginInfoEntity, UserDetails userDetails) {
+    SystemLoginInfoEntity setUserDetails(SystemLoginInfoEntity loginInfoEntity,
+        DefaultSystemUserDetailsDto userDetails) {
         AssertUtil.notNull(userDetails, () -> new FormattedRuntimeException("用户详情不能为空"));
         AssertUtil.notNull(loginInfoEntity, () -> new FormattedRuntimeException("用户登陆信息不能为空"));
-        IUserDetailsTransformer transformer = null;
-        try {
-            transformer = SpringUtil.getBeanSafe(appSettingProperty.getUserDetailsTransformerClass(),
-                (t) -> new FormattedRuntimeException("用户详情转换失败: {}", t.getMessage()));
-        } catch (Exception e) {
-            AssertUtil.isTrue(true, () -> new FormattedRuntimeException("用户详情转换失败: {}", e.getMessage()));
-        }
-        loginInfoEntity.setUserDetails(transformer.transform(userDetails));
-        loginInfoEntity.setUserDetailsTransformerImpl(transformer.getClass().getName());
-        loginInfoEntity.setUserDetailsTargetClass(userDetails.getClass().getName());
+        loginInfoEntity.setUserDetails(JSON.toJSONBytes(userDetails));
         return loginInfoEntity;
     }
 
     @Override
-    protected UserDetails readUserDetails(String token) {
-        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
-        return loginInfoEntity == null ? null : getUserDetails(loginInfoEntity);
+    public IUserDetailsTransformer getUserDetailsTransformer() {
+        return userDetailsTransformer;
     }
 
     @Override
-    protected void writeUserDetails(ITokenModel token, UserDetails userDetails) {
+    public Class<DefaultSystemUserDetailsDto> getSerializableClass() {
+        return DefaultSystemUserDetailsDto.class;
+    }
+
+    @Override
+    protected DefaultSystemUserDetailsDto readUserDetails(String token) {
+        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
+        return loginInfoEntity == null ? null
+            : JSON.parseObject(loginInfoEntity.getUserDetails(), getSerializableClass());
+    }
+
+    @Override
+    protected void writeUserDetails(ITokenModel token, DefaultSystemUserDetailsDto userDetails) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token.getToken());
         if (loginInfoEntity != null) {
             loginInfoEntity = setUserDetails(loginInfoEntity, userDetails);

@@ -31,3 +31,15 @@ export function getRefreshToken() {
     url: '/private/user/getRefreshToken', method: 'get'
   })
 }
+
+/**
+ * 设置当前选中的部门
+ * @param {number} departmentId - 部门ID
+ * @returns {Promise}
+ */
+export function setCurrentDepartment(departmentId) {
+  return request({
+    url: `/private/user/setCurrentDepartment/${departmentId}`,
+    method: 'post'
+  })
+}
