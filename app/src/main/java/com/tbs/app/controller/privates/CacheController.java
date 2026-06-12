@@ -1,24 +1,24 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.form.CacheForm;
+import com.tbs.app.service.CacheListenner;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.web.BaseController;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.result.AjaxResult;
-import org.springframework.cache.support.AbstractCacheManager;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.*;
-
-import javax.annotation.Resource;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.cache.support.AbstractCacheManager;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * 缓存管理控制器
@@ -38,6 +38,9 @@ public class CacheController extends BaseController {
     @Resource
     private AbstractCacheManager cacheManager;
 
+    @Resource
+    private CacheListenner cacheListenner;
+
     /**
      * 获取所有缓存名称
      *
@@ -48,8 +51,28 @@ public class CacheController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功获取缓存名称列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult getCacheNames() {
-        var cacheNames = cacheManager.getCacheNames();
+        var cacheNames = cacheListenner.getCacheNames();
         return successResult(cacheNames);
+    }
+
+    /**
+     * 获取缓存键列表
+     *
+     * @param form 缓存查询表单，包含缓存名称
+     * @return 缓存键列表
+     */
+    @PostMapping("keys")
+    @Operation(summary = "获取缓存键列表", description = "根据缓存名称获取缓存键列表")
+    @ApiResponse(responseCode = "200", description = "成功获取缓存键列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult getCacheKeys(
+        @Parameter(name = "form", description = "缓存查询表单", required = true) @RequestBody CacheForm form) {
+        if (form == null) {
+            return successResult(null);
+        }
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getCacheName()), () -> new NotFoundTokenException("未找到指定的缓存"));
+        var keys = cacheListenner.getKeys(form.getCacheName());
+        return successResult(keys);
     }
 
     /**
@@ -66,10 +89,14 @@ public class CacheController extends BaseController {
         if (form == null) {
             return successResult(null);
         }
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getCacheName()) || StrUtil.isEmpty(form.getKey()),
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getCacheName()) || form.getKey() == null,
             () -> new NotFoundTokenException("未找到指定的缓存"));
         var cache = cacheManager.getCache(form.getCacheName());
-        return successResult(cache.get(form.getKey()));
+        var value = cache.get(form.getKey());
+        if (value == null) {
+            return successResult(null);
+        }
+        return successResult(value.get());
     }
 
     /**
@@ -83,7 +110,7 @@ public class CacheController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult evictCache(@Parameter(name = "form", description = "缓存清除表单", required = true) @RequestBody CacheForm form) {
         AssertUtil.isTrue(StrUtil.isEmpty(form.getCacheName()), () -> new NotFoundTokenException("未找到指定的缓存"));
-        if (StrUtil.isEmpty(form.getKey())) {
+        if (form.getKey() == null) {
             cacheManager.getCache(form.getCacheName()).clear();
         } else {
             cacheManager.getCache(form.getCacheName()).evictIfPresent(form.getKey());

@@ -55,14 +55,14 @@ public class BasicRedisConfig {
      * @return Redisson客户端实例
      */
     @Bean(destroyMethod = "shutdown")
-    @ConditionalOnMissingBean(RedissonClient.class)
     @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
     public RedissonClient redissonClient(
         @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer serializer) {
         Config config = new Config();
         config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
-        config.setCodec(SpringUtil.getBeanOptional(Codec.class).orElse(new DefaultSystemCodec(
-            SpringUtil.getBean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER, RedisSerializer.class))));
+        var codec= SpringUtil.getBeanOptional(Codec.class).orElse(new DefaultSystemCodec(
+            SpringUtil.getBean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER, RedisSerializer.class)));
+        config.setCodec(codec);
         RedissonClient redissonClient = Redisson.create(config);
         return redissonClient;
     }

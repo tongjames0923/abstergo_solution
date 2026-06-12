@@ -12,5 +12,5 @@ import java.io.Serializable;
 @Data
 public class CacheForm implements Serializable {
     private String cacheName;
-    private String key;
+    private Object key;
 }

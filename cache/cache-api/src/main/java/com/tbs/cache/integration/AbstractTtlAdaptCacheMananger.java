@@ -26,6 +26,9 @@ public abstract class AbstractTtlAdaptCacheMananger extends AbstractCacheManager
 
     @Override
     public @Nullable Cache getCache(String name) {
+        if (name.startsWith(CACHE_NAME_PREFIX)) {
+            return super.getCache(name);
+        }
         return super.getCache(CACHE_NAME_PREFIX + name);
     }
 

@@ -50,6 +50,15 @@ develop:
         - "开发员"
         - "超级管理员"
     children:
+      - path: cache
+        name: 缓存管理
+        component: "/cache/index.vue"
+        meta:
+          routeGroup: default
+          title: 缓存管理
+          icon: el-icon-s-data
+          roles:
+              - "开发员"
       - path: form-manager
         name: 表单管理
         component: "/form/FormManager.vue"
