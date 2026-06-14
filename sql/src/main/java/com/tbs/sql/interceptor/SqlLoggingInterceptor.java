@@ -18,10 +18,46 @@ import java.util.Map;
 import java.util.Properties;
 
 /**
- * SQL日志MyBatis插件
+ * SQL日志MyBatis插件，用于记录SQL执行日志。
+ *
+ * <p>该类实现了MyBatis的 {@link Interceptor} 接口，通过拦截 {@link Executor}
+ * 的query和update方法，记录SQL执行的详细日志，包括SQL语句、执行时间、结果等。</p>
+ *
+ * <h3>主要功能</h3>
+ * <ul>
+ *   <li>记录SQL执行日志</li>
+ *   <li>记录SQL执行时间</li>
+ *   <li>记录SQL执行结果</li>
+ *   <li>支持多种日志记录器 {@link ISqlLogger}</li>
+ * </ul>
+ *
+ * <h3>使用场景</h3>
+ * <ul>
+ *   <li>记录SQL执行日志用于调试</li>
+ *   <li>监控SQL执行性能</li>
+ *   <li>记录SQL执行异常</li>
+ * </ul>
+ *
+ * <h3>使用示例</h3>
+ * <pre>{@code
+ * // 启用SQL日志拦截器
+ * // application.yml
+ * tbs:
+ *   sql:
+ *     enable-log-interceptor: true
+ * }</pre>
+ *
+ * <h3>注意事项</h3>
+ * <ul>
+ *   <li>需要在配置中启用 {@code tbs.sql.enable-log-interceptor: true}</li>
+ *   <li>日志记录器需要注册为Spring Bean</li>
+ *   <li>日志记录失败不会中断SQL执行</li>
+ * </ul>
  *
  * @author abstergo
  * @since 1.0.0
+ * @see ISqlLogger
+ * @see SqlRuntimeStatus
  */
 @Intercepts({
     @Signature(type = Executor.class, method = "query", args = {MappedStatement.class, Object.class, RowBounds.class, ResultHandler.class}),

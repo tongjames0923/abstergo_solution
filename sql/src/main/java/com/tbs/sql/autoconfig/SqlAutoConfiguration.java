@@ -29,10 +29,50 @@ import tk.mybatis.spring.annotation.MapperScan;
 import javax.annotation.Resource;
 
 /**
- * SQL模块自动配置类
+ * SQL模块自动配置类，负责注册和配置SQL框架的所有核心组件。
+ *
+ * <p>该类是TBS SQL框架的核心配置类，通过Spring Boot的自动配置机制，
+ * 注册并配置SQL查询引擎、组装器、拦截器、日志记录器等核心组件。</p>
+ *
+ * <h3>主要功能</h3>
+ * <ul>
+ *   <li>注册SQL查询引擎 {@link QueryEngine}</li>
+ *   <li>注册SQL组装器 {@link ISqlAssembler}</li>
+ *   <li>注册实体查询包装器 {@link IEntityQueryWrapper}</li>
+ *   <li>配置SQL日志拦截器 {@link SqlLoggingInterceptor}</li>
+ *   <li>配置自动填充值拦截器 {@link SqlAutoFillInterceptor}</li>
+ *   <li>注册排序策略Bean</li>
+ * </ul>
+ *
+ * <h3>配置说明</h3>
+ * <p>需要在 {@code application.yml} 中配置以下属性：</p>
+ * <pre>{@code
+ * tbs:
+ *   sql:
+ *     enable-log-interceptor: true          # 启用SQL日志拦截器
+ *     enable-auto-fill-value-interceptor: true  # 启用自动填充值拦截器
+ *     sql-assembler-type: DefaultSqlAssembler  # SQL组装器类型
+ *     sql-logger-type: SimpleSqlLogger       # SQL日志记录器类型
+ * }</pre>
+ *
+ * <h3>使用场景</h3>
+ * <ul>
+ *   <li>在Spring Boot应用中自动配置SQL框架</li>
+ *   <li>通过 {@link com.tbs.sql.annotation.core.EnableTbsSql} 注解启用</li>
+ * </ul>
+ *
+ * <h3>注意事项</h3>
+ * <ul>
+ *   <li>需要配合 {@link com.tbs.sql.annotation.core.EnableTbsSql} 注解使用</li>
+ *   <li>拦截器可以通过配置属性控制是否启用</li>
+ *   <li>实体查询包装器使用原型作用域，每次请求都会创建新实例</li>
+ * </ul>
  *
  * @author abstergo
  * @since 2.0.0
+ * @see QueryEngine
+ * @see ISqlAssembler
+ * @see com.tbs.sql.annotation.core.EnableTbsSql
  */
 @MapperScan(basePackages = "com.tbs.sql.mapper")
 public class SqlAutoConfiguration {

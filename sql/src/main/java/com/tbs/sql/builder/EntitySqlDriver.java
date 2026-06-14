@@ -14,10 +14,48 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 实体查询SQL驱动
+ * 实体查询SQL驱动类，负责从实体类中提取SQL查询数据。
+ *
+ * <p>该类继承自 {@link AbstractSqlDriver}，专门用于处理实体类查询。它从实体类中
+ * 提取SELECT信息、WHERE条件、分组、排序和分页信息，支持基于注解的自动提取。</p>
+ *
+ * <h3>主要功能</h3>
+ * <ul>
+ *   <li>从实体类元数据中提取SELECT信息</li>
+ *   <li>从查询条件中提取WHERE子句</li>
+ *   <li>提取分组、排序和分页信息</li>
+ *   <li>支持 {@link IQueryCriteria} 接口的查询类</li>
+ * </ul>
+ *
+ * <h3>使用场景</h3>
+ * <ul>
+ *   <li>处理基于实体类的查询</li>
+ *   <li>处理基于查询条件的查询</li>
+ *   <li>在SQL引擎中驱动实体查询</li>
+ * </ul>
+ *
+ * <h3>使用示例</h3>
+ * <pre>{@code
+ * EntitySqlDriver driver = new EntitySqlDriver();
+ * driver.setWhereInfo(whereCompose);
+ * driver.setOrders(orderInfos);
+ * driver.setLimit(limitModel);
+ * 
+ * // 从上下文中提取SQL查询数据
+ * SqlDriver.SqlQueryData data = driver.getSqlQueryData(context);
+ * }</pre>
+ *
+ * <h3>注意事项</h3>
+ * <ul>
+ *   <li>需要确保实体类正确配置了表名和字段映射</li>
+ *   <li>查询条件需要正确设置，否则可能生成错误的SQL</li>
+ * </ul>
  *
  * @author abstergo
  * @since 2.0.0
+ * @see AbstractSqlDriver
+ * @see SqlDriver
+ * @see IQueryCriteria
  */
 public class EntitySqlDriver extends AbstractSqlDriver {
     @Setter List<GroupModel> sqlGroups;
