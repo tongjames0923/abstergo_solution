@@ -3,12 +3,12 @@ package com.tbs.shared.pojo.criteria;
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
-import com.tbs.sql.annotation.QueryField;
-import com.tbs.sql.annotation.QueryMapping;
-import com.tbs.sql.annotation.QueryOrderField;
-import com.tbs.sql.constants.OrderConstant;
-import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.order.impl.QueryOrderedModel;
+import com.tbs.sql.annotation.condition.QueryField;
+import com.tbs.sql.annotation.mapping.QueryMapping;
+import com.tbs.sql.annotation.order.QueryOrderField;
+import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.enums.ContrastEnum;
+import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Data;
 
 import java.util.List;
@@ -25,32 +25,32 @@ public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<System
 	 * 按ID精确查询条件
 	 */
 	@QueryMapping(value = "id")
-	@QueryField(contrast = QueryContrastEnum.EQUAL)
+	@QueryField(contrast = ContrastEnum.EQUAL)
 	private Long idEquals;
 
 	/**
 	 * 按角色名精确查询条件
 	 */
 	@QueryMapping(value = "role")
-	@QueryField(contrast = QueryContrastEnum.EQUAL)
+	@QueryField(contrast = ContrastEnum.EQUAL)
 	private String roleEquals;
 
 	/**
 	 * 按标志位IN查询条件
 	 */
 	@QueryMapping(value = "flag")
-	@QueryField(contrast = QueryContrastEnum.IN)
+	@QueryField(contrast = ContrastEnum.IN)
 	private List<Integer> flagEquals;
 
 	/**
 	 * 按创建时间排序条件
 	 */
-	@QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
-	private QueryOrderedModel createTimeOrder;
+	@QueryOrderField(mappedName = "create_time", order = OrderConstants.ORDERED_MODEL)
+	private OrderedModel createTimeOrder;
 
 	/**
 	 * 按更新时间排序条件
 	 */
-	@QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
-	private QueryOrderedModel updateTimeOrder;
+	@QueryOrderField(mappedName = "update_time", order = OrderConstants.ORDERED_MODEL)
+	private OrderedModel updateTimeOrder;
 }

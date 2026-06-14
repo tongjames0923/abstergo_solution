@@ -7,6 +7,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
  * SQL提取异常
  *
  * @author abstergo
+ * @since 1.0.0
  */
 public class SqlExtractionException extends FormattedRuntimeException {
 

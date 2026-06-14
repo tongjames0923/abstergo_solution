@@ -1,6 +1,6 @@
 package com.tbs.shared.interfaces.service;
 
-import com.tbs.sql.ef.IEntityQueryWrapper;
+import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.mapper.IFrameworkMapper;
 
 import javax.annotation.PostConstruct;

@@ -2,12 +2,12 @@ package com.tbs.shared.pojo.criteria;
 
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
-import com.tbs.sql.annotation.QueryField;
-import com.tbs.sql.annotation.QueryMapping;
-import com.tbs.sql.annotation.QueryOrderField;
-import com.tbs.sql.constants.OrderConstant;
-import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.order.impl.QueryOrderedModel;
+import com.tbs.sql.annotation.condition.QueryField;
+import com.tbs.sql.annotation.mapping.QueryMapping;
+import com.tbs.sql.annotation.order.QueryOrderField;
+import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.enums.ContrastEnum;
+import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Data;
 
 import java.util.Date;
@@ -30,7 +30,7 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
     /**
      * 按公司名称模糊查询（左模糊）
      */
-    @QueryField(contrast = QueryContrastEnum.LLIKE)
+    @QueryField(contrast = ContrastEnum.LLIKE)
     @QueryMapping(value = "company_name")
     private String likeName;
 
@@ -44,7 +44,7 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
     /**
      * 按状态标记IN查询（支持多个状态）
      */
-    @QueryField(contrast = QueryContrastEnum.IN)
+    @QueryField(contrast = ContrastEnum.IN)
     @QueryMapping(value = "flag")
     private List<Integer> flagEquals;
 
@@ -53,14 +53,14 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
      */
     @QueryMapping("create_time")
 
-    @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
     private Date createTimeStart;
 
     /**
      * 按创建时间范围查询（结束时间 <=）
      */
     @QueryMapping("create_time")
-    @QueryField(contrast = QueryContrastEnum.LESS_EQUAL)
+    @QueryField(contrast = ContrastEnum.LESS_EQUAL)
 
     private Date createTimeEnd;
 
@@ -68,7 +68,7 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
      * 按更新时间范围查询（起始时间 >=）
      */
     @QueryMapping("update_time")
-    @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
 
     private Date updateTimeStart;
 
@@ -76,28 +76,28 @@ public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<Sys
      * 按更新时间范围查询（结束时间 <=）
      */
     @QueryMapping("update_time")
-    @QueryField(contrast = QueryContrastEnum.LESS_EQUAL)
+    @QueryField(contrast = ContrastEnum.LESS_EQUAL)
 
     private Date updateTimeEnd;
 
     /**
      * 创建时间排序字段
      */
-    @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
-    private QueryOrderedModel createTimeOrder;
+    @QueryOrderField(mappedName = "create_time", order = OrderConstants.ORDERED_MODEL)
+    private OrderedModel createTimeOrder;
 
     /**
      * 更新时间排序字段
      */
-    @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
+    @QueryOrderField(mappedName = "update_time", order = OrderConstants.ORDERED_MODEL)
 
-    private QueryOrderedModel updateTimeOrder;
+    private OrderedModel updateTimeOrder;
 
     /**
      * 树节点根标记
      */
     @QueryMapping("tree_root_flag")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private Integer treeRootFlag;
 
 }

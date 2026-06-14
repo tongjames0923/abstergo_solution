@@ -8,8 +8,8 @@ import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.pojo.criteria.CommonTokenQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
-import com.tbs.sql.enums.QueryOrderEnum;
-import com.tbs.sql.order.impl.QueryOrderedModel;
+import com.tbs.sql.enums.OrderEnum;
+import com.tbs.sql.order.impl.OrderedModel;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
@@ -151,8 +151,8 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
         return tokenService.query(
                 new CommonTokenQueryCriteria().setUserNameEquals(userName).setTokenTypeEquals(tokenType)
                     .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
-                    .setCreateTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC))
-                    .setExpireTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC)), null).stream().map(this::toModel)
+                    .setCreateTimeOrdered(new OrderedModel(OrderEnum.DESC))
+                    .setExpireTimeOrdered(new OrderedModel(OrderEnum.DESC)), null).stream().map(this::toModel)
             .collect(Collectors.toList());
     }
 
@@ -160,8 +160,8 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     protected Collection<ITokenModel> getTokensWithSessionId(String sessionId) {
         return tokenService.query(new CommonTokenQueryCriteria().setSessionIdEquals(sessionId)
             .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
-            .setCreateTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC))
-            .setExpireTimeOrdered(new QueryOrderedModel(QueryOrderEnum.DESC)), null).stream().map((v) -> {
+            .setCreateTimeOrdered(new OrderedModel(OrderEnum.DESC))
+            .setExpireTimeOrdered(new OrderedModel(OrderEnum.DESC)), null).stream().map((v) -> {
             return getInstance().getTokenByToken(v.getToken());
         }).collect(Collectors.toList());
     }

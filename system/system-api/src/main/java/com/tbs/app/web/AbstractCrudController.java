@@ -1,8 +1,8 @@
 package com.tbs.app.web;
 
 import com.tbs.shared.interfaces.service.IServiceTemplate;
-import com.tbs.sql.query.IQueryCriteria;
-import com.tbs.sql.query.impl.QueryPageModel;
+import com.tbs.sql.criteria.IQueryCriteria;
+import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;

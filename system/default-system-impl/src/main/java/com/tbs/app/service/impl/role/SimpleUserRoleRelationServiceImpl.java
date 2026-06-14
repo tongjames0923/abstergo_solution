@@ -12,7 +12,7 @@ import com.tbs.shared.mapper.UserRoleRelationMapper;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.entity.UserRoleRelationEntity;
-import com.tbs.sql.ef.IEntityQueryWrapper;
+import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.web.uitl.AuthUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;

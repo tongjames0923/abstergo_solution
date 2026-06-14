@@ -4,13 +4,13 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
-import com.tbs.sql.enums.QueryConnectorEnum;
-import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.framework.intercepter.ISqlInfoComposeIntercepter;
-import com.tbs.sql.framework.model.SqlWhereCompose;
-import com.tbs.sql.framework.model.SqlWhereInfo;
-import com.tbs.sql.framework.model.SqlWhereNode;
-import com.tbs.sql.utils.SqlUtils;
+import com.tbs.sql.enums.ConnectorEnum;
+import com.tbs.sql.enums.ContrastEnum;
+import com.tbs.sql.interceptor.SqlComposeInterceptor;
+import com.tbs.sql.model.where.WhereCompose;
+import com.tbs.sql.model.where.WhereInfo;
+import com.tbs.sql.model.where.WhereNode;
+import com.tbs.sql.util.SqlUtils;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -18,13 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * @author abstergo
  */
-public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
+public class SqlLogicDeleteIntercepter implements SqlComposeInterceptor {
 
-    private Map<Class<?>, Optional<SqlWhereInfo>> flagSqlWhereInfoMap = new ConcurrentHashMap<>(8);
+    private Map<Class<?>, Optional<WhereInfo>> flagWhereInfoMap = new ConcurrentHashMap<>(8);
 
     @Override
-    public SqlWhereCompose intercept(SqlWhereCompose compose, Class<?> entityClass) {
-        var sqlWhereInfo = flagSqlWhereInfoMap.computeIfAbsent(entityClass, (k) -> {
+    public WhereCompose intercept(WhereCompose compose, Class<?> entityClass) {
+        var sqlWhereInfo = flagWhereInfoMap.computeIfAbsent(entityClass, (k) -> {
             //确认entityClass是否是逻辑删除实体,是否被LogicDeleteEntity注解
             if (!entityClass.isAnnotationPresent(LogicDeleteEntity.class)) {
                 return Optional.empty();
@@ -32,8 +32,8 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
             LogicDeleteEntity logicDeleteEntity = entityClass.getDeclaredAnnotation(LogicDeleteEntity.class);
             //生成whereInfo，flag不等于disable值，若disableFlagMap中存在disableFlag，则使用disableFlagMap中的值，否则使用默认值0
             var activeFlags = logicDeleteEntity.activeFlagValues();
-            SqlWhereInfo info = new SqlWhereInfo();
-            info.setContrast(QueryContrastEnum.IN);
+            WhereInfo info = new WhereInfo();
+            info.setContrast(ContrastEnum.IN);
             if (activeFlags != null && activeFlags.length > 0) {
                 List<Integer> activeFlagList = new ArrayList<>(activeFlags.length);
                 for (int i = 0; i < activeFlags.length; i++) {
@@ -48,7 +48,7 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
                 flagFieldName = "flag";
                 //设置字段名，读取反射信息中的flag字段名
                 try {
-                    flagFieldName = SqlUtils.getFiledNameWithMapping(entityClass.getField("flag"));
+                    flagFieldName = SqlUtils.getFieldNameWithMapping(entityClass.getField("flag"));
                 } catch (Exception e) {
                     AssertUtil.throwError(() -> ExceptionUtil.newException(e, "释放字段异常"));
                 }
@@ -60,14 +60,14 @@ public class SqlLogicDeleteIntercepter implements ISqlInfoComposeIntercepter {
             return Optional.of(info);
         });
         if (compose == null) {
-            compose = new SqlWhereCompose();
+            compose = new WhereCompose();
         }
         var ls = compose.getChildren();
         if (ls == null) {
             ls = new LinkedList<>();
         }
         if (sqlWhereInfo.isPresent()) {
-            ls.add(SqlWhereNode.createInfoNode(QueryConnectorEnum.AND, sqlWhereInfo.get()));
+            ls.add(WhereNode.createInfoNode(ConnectorEnum.AND, sqlWhereInfo.get()));
         }
         compose.setChildren(ls);
         return compose;

@@ -69,19 +69,19 @@ tbs:
 public class UserQuery extends ClassBaseQueryCriteria<User> {
     
     @QueryMapping(value = "username")
-    @QueryField(contrast = QueryContrastEnum.EQUAL, ignoreNull = true)
+    @QueryField(contrast = ContrastEnum.EQUAL, ignoreNull = true)
     private String username;
     
     @QueryMapping(value = "age")
-    @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
     private Integer minAge;
     
     @QueryMapping(value = "name")
-    @QueryField(contrast = QueryContrastEnum.LIKE, ignoreCase = true)
+    @QueryField(contrast = ContrastEnum.LIKE, ignoreCase = true)
     private String searchKey;
     
     @QueryMapping(value = "status")
-    @QueryField(contrast = QueryContrastEnum.IN)
+    @QueryField(contrast = ContrastEnum.IN)
     private List<Integer> statusList;
 }
 ```
@@ -179,15 +179,15 @@ List<User> activeUsers = wrapper.query()
 public class UserQuery extends ClassBaseQueryCriteria<User> {
     
     @QueryMapping(value = "name")
-    @QueryField(contrast = QueryContrastEnum.LIKE)
+    @QueryField(contrast = ContrastEnum.LIKE)
     private String nameLike;
     
     @QueryMapping(value = "age") 
-    @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
     private Integer minAge;
     
     @QueryMapping(value = "status")
-    @QueryField(contrast = QueryContrastEnum.IN)
+    @QueryField(contrast = ContrastEnum.IN)
     private List<String> statuses;
     
     // 链式设置方法

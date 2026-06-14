@@ -1,7 +1,7 @@
 package com.tbs.struct.tree.closure.annotation;
 
 import com.tbs.common.annotation.EnableCommonPack;
-import com.tbs.sql.annotation.EnableTbsSqlUtils;
+import com.tbs.sql.annotation.core.EnableTbsSql;
 import com.tbs.struct.tree.closure.impl.config.ClosureTableAutoRegister;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Import;
@@ -18,7 +18,7 @@ import java.lang.annotation.Target;
  * @author tongj
  */
 @EnableCommonPack
-@EnableTbsSqlUtils
+@EnableTbsSql
 @Import(ClosureTableAutoRegister.class)
 @Retention(java.lang.annotation.RetentionPolicy.RUNTIME)
 @Target(java.lang.annotation.ElementType.TYPE)

@@ -16,8 +16,8 @@ import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.sql.ef.IQueryQueryBuilder;
-import com.tbs.sql.utils.QueryUtil;
+import com.tbs.sql.dsl.IQueryBuilder;
+import com.tbs.sql.service.QueryEngine;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
@@ -51,10 +51,15 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @Resource
     private ITokenIssuanceCenter tokenIssuanceCenter;
 
-    IQueryQueryBuilder<SystemLoginInfoEntity> getAvailableTokensQuery() {
+    /**
+     * 获取可用的token查询条件
+     *
+     * @return
+     */
+    IQueryBuilder<SystemLoginInfoEntity> getAvailableTokensQuery() {
         Date now = new Date();
         Date availableTime = DateUtil.offsetDay(now, -28);
-        return QueryUtil.getEntityQueryWrapper(SystemLoginInfoEntity.class).query().where()
+        return QueryEngine.getEntityQueryWrapper(SystemLoginInfoEntity.class).query().where()
             .greaterThanOrEqual(SystemLoginInfoEntity::getCreateTime, availableTime).pour();
     }
 

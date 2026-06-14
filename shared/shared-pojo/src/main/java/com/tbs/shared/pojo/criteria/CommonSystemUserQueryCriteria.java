@@ -2,12 +2,12 @@ package com.tbs.shared.pojo.criteria;
 
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
-import com.tbs.sql.annotation.QueryField;
-import com.tbs.sql.annotation.QueryMapping;
-import com.tbs.sql.annotation.QueryOrderField;
-import com.tbs.sql.constants.OrderConstant;
-import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.order.impl.QueryOrderedModel;
+import com.tbs.sql.annotation.condition.QueryField;
+import com.tbs.sql.annotation.mapping.QueryMapping;
+import com.tbs.sql.annotation.order.QueryOrderField;
+import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.enums.ContrastEnum;
+import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Getter;
 
 import java.util.Date;
@@ -26,35 +26,35 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      * 根据ID精确查询
      */
     @QueryMapping(value = "id")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private String idEquals;
 
     /**
      * 根据用户名精确查询
      */
     @QueryMapping(value = "user_name")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private String userNameEquals;
 
     /**
      * 根据昵称左模糊查询
      */
     @QueryMapping(value = "nick_name")
-    @QueryField(contrast = QueryContrastEnum.LLIKE)
+    @QueryField(contrast = ContrastEnum.LLIKE)
     private String nickNameLike;
 
     /**
      * 根据状态标志精确查询
      */
     @QueryMapping(value = "flag")
-    @QueryField(contrast = QueryContrastEnum.IN)
+    @QueryField(contrast = ContrastEnum.IN)
     private List<Integer> flagEquals;
 
     /**
      * 根据创建时间大于查询
      */
     @QueryMapping(value = "create_time")
-    @QueryField(contrast = QueryContrastEnum.GREATER)
+    @QueryField(contrast = ContrastEnum.GREATER)
 
     private Date createTimeGreaterThan;
 
@@ -62,7 +62,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      * 根据创建时间小于查询
      */
     @QueryMapping(value = "create_time")
-    @QueryField(contrast = QueryContrastEnum.LESS)
+    @QueryField(contrast = ContrastEnum.LESS)
 
     private Date createTimeLessThan;
 
@@ -70,7 +70,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      * 根据更新时间大于查询
      */
     @QueryMapping(value = "update_time")
-    @QueryField(contrast = QueryContrastEnum.GREATER)
+    @QueryField(contrast = ContrastEnum.GREATER)
 
     private Date updateTimeGreaterThan;
 
@@ -78,20 +78,20 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      * 根据更新时间小于查询
      */
     @QueryMapping(value = "update_time")
-    @QueryField(contrast = QueryContrastEnum.LESS)
+    @QueryField(contrast = ContrastEnum.LESS)
     private Date updateTimeLessThan;
 
     /**
      * 创建时间排序字段
      */
-    @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
-    private QueryOrderedModel createTimeOrder;
+    @QueryOrderField(mappedName = "create_time", order = OrderConstants.ORDERED_MODEL)
+    private OrderedModel createTimeOrder;
 
     /**
      * 更新时间排序字段
      */
-    @QueryOrderField(mappedName = "update_time", order = OrderConstant.ORDERED_MODEL)
-    private QueryOrderedModel updateTimeOrder;
+    @QueryOrderField(mappedName = "update_time", order = OrderConstants.ORDERED_MODEL)
+    private OrderedModel updateTimeOrder;
 
     /**
      * 设置ID精确查询条件
@@ -187,7 +187,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      * @param createTimeOrder 创建时间排序模型
      * @return 当前查询条件对象，用于链式调用
      */
-    public CommonSystemUserQueryCriteria setCreateTimeOrder(QueryOrderedModel createTimeOrder) {
+    public CommonSystemUserQueryCriteria setCreateTimeOrder(OrderedModel createTimeOrder) {
         this.createTimeOrder = createTimeOrder;
         return this;
     }
@@ -198,7 +198,7 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      * @param updateTimeOrder 更新时间排序模型
      * @return 当前查询条件对象，用于链式调用
      */
-    public CommonSystemUserQueryCriteria setUpdateTimeOrder(QueryOrderedModel updateTimeOrder) {
+    public CommonSystemUserQueryCriteria setUpdateTimeOrder(OrderedModel updateTimeOrder) {
         this.updateTimeOrder = updateTimeOrder;
         return this;
     }

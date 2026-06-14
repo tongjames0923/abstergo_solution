@@ -1,8 +1,8 @@
 package com.tbs.shared.pojo.model;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.sql.framework.model.SqlSelectInfoModel;
-import com.tbs.sql.query.AbstractResourceBaseQueryCriteria;
+import com.tbs.sql.model.select.SelectInfoModel;
+import com.tbs.sql.criteria.AbstractResourceCriteria;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -14,7 +14,7 @@ import java.lang.reflect.Type;
  *
  * @author abstergo
  */
-public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria {
+public class ClassBaseQueryCriteria<T> extends AbstractResourceCriteria {
 
     @Getter
     @Setter
@@ -45,8 +45,8 @@ public class ClassBaseQueryCriteria<T> extends AbstractResourceBaseQueryCriteria
     }
 
     @Override
-    public SqlSelectInfoModel getSelectSQLInfo() {
-        SqlSelectInfoModel selectInfoModel = super.getSelectSQLInfo();
+    public SelectInfoModel getSelectSQLInfo() {
+        SelectInfoModel selectInfoModel = super.getSelectSQLInfo();
         selectInfoModel.setEntityClass(type);
         return selectInfoModel;
     }

@@ -1,9 +1,9 @@
 package com.tbs.shared.config;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.tbs.shared.serialize.QueryOrderedModelDeserializer;
-import com.tbs.shared.serialize.QueryOrderedModelSerializer;
-import com.tbs.sql.order.impl.QueryOrderedModel;
+import com.tbs.shared.serialize.OrderedModelDeserializer;
+import com.tbs.shared.serialize.OrderedModelSerializer;
+import com.tbs.sql.order.impl.OrderedModel;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -16,8 +16,8 @@ public class JacksonConfig {
     @Bean
     public SimpleModule queryOrderModule() {
         SimpleModule module = new SimpleModule();
-        module.addSerializer(QueryOrderedModel.class, new QueryOrderedModelSerializer());
-        module.addDeserializer(QueryOrderedModel.class, new QueryOrderedModelDeserializer());
+        module.addSerializer(OrderedModel.class, new OrderedModelSerializer());
+        module.addDeserializer(OrderedModel.class, new OrderedModelDeserializer());
         return module;
     }
 }

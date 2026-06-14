@@ -1,16 +1,11 @@
 package com.tbs.sql.provider;
 
 /**
- * 根据数据主动生成where条件
+ * 自定义WHERE条件提供者接口
  *
- * @author tongj
+ * @author abstergo
+ * @since 1.0.0
  */
 public interface ICustomWhereProvider<T> {
-    /**
-     * 根据数据生成where条件
-     *
-     * @param value
-     * @return
-     */
     String getConditionSql(T value);
 }

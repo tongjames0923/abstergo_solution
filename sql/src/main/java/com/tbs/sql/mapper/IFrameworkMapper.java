@@ -1,16 +1,15 @@
 package com.tbs.sql.mapper;
 
 import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.sql.ef.IEntityQueryWrapper;
-import com.tbs.sql.ef.IQueryQueryBuilder;
-import com.tbs.sql.framework.driver.impl.EntityQuerySqlDriver;
-import com.tbs.sql.framework.driver.impl.ImportedSqlContext;
-import com.tbs.sql.framework.model.SqlLimitModel;
+import com.tbs.sql.builder.EntitySqlDriver;
+import com.tbs.sql.builder.ImportedSqlBuildContext;
+import com.tbs.sql.criteria.IPage;
+import com.tbs.sql.criteria.IQueryCriteria;
+import com.tbs.sql.mapper.impl.ConditionBuilder;
 import com.tbs.sql.mapper.impl.FetchMapper;
-import com.tbs.sql.mapper.impl.FrameworkSelectProvider;
-import com.tbs.sql.query.IPage;
-import com.tbs.sql.query.IQueryCriteria;
-import com.tbs.sql.utils.QueryUtil;
+import com.tbs.sql.model.limit.LimitModel;
+import com.tbs.sql.model.order.OrderInfo;
+import com.tbs.sql.service.QueryEngine;
 import org.jetbrains.annotations.NotNull;
 import tk.mybatis.mapper.additional.idlist.IdListMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateMapper;
@@ -21,44 +20,28 @@ import tk.mybatis.mapper.common.special.InsertListMapper;
 
 import java.util.List;
 
-import static com.tbs.sql.mapper.impl.FrameworkSelectProvider.buildSqlContext;
+import static com.tbs.sql.mapper.impl.ConditionBuilder.buildSqlContext;
 
-/**
- * @author abstergo
- */
 @RegisterMapper
 public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<T>, BatchUpdateMapper<T>,
-		BatchUpdateSelectiveMapper<T>, IdListMapper<T, K> {
+        BatchUpdateSelectiveMapper<T>, IdListMapper<T, K> {
 
-
-    /**
-     * 根据查询条件查询
-     *
-     * @param qo 查询条件
-     * @return 查询结果
-     */
-	default List<T> queryByQO(IQueryCriteria qo, IPage page, Class<T> entityClass) {
-		ImportedSqlContext sqlContext = buildSqlContext(qo);
-		EntityQuerySqlDriver driver = new EntityQuerySqlDriver();
-		driver.setWhereInfo(FrameworkSelectProvider.buildConditions(qo));
-		if (page != null) {
-			driver.setLimit(new SqlLimitModel(page.from(), page.number()));
-		}
-		var orders = QueryUtil.collectOrderInfos(qo);
-		driver.setOrders(orders);
-		return SpringUtil.getBean(FetchMapper.class).<T>fetch(sqlContext, driver, entityClass);
+    default List<T> queryByQO(IQueryCriteria qo, IPage page, Class<T> entityClass) {
+        ImportedSqlBuildContext sqlContext = buildSqlContext(qo);
+        EntitySqlDriver driver = new EntitySqlDriver();
+        driver.setWhereInfo(ConditionBuilder.buildConditions(qo));
+        if (page != null) {
+            driver.setLimit(new LimitModel(page.from(), page.number()));
+        }
+        var orders = QueryEngine.collectOrderInfos(qo);
+        driver.setOrders(orders);
+        return SpringUtil.getBean(FetchMapper.class).<T>fetch(sqlContext, driver, entityClass);
     }
 
-    /**
-     * 根据查询条件查询
-     *
-     * @param qo 查询条件
-     * @return 统计结果
-     */
-	default Long countByQO(IQueryCriteria qo,Class<?> entityClass) {
-		ImportedSqlContext sqlContext = buildSqlContext(qo);
-		EntityQuerySqlDriver driver = new EntityQuerySqlDriver();
-		driver.setWhereInfo(FrameworkSelectProvider.buildConditions(qo));
-		return SpringUtil.getBean(FetchMapper.class).count(sqlContext, driver);
-	}
+    default Long countByQO(IQueryCriteria qo, Class<?> entityClass) {
+        ImportedSqlBuildContext sqlContext = buildSqlContext(qo);
+        EntitySqlDriver driver = new EntitySqlDriver();
+        driver.setWhereInfo(ConditionBuilder.buildConditions(qo));
+        return SpringUtil.getBean(FetchMapper.class).count(sqlContext, driver);
+    }
 }

@@ -10,7 +10,7 @@ import com.tbs.app.web.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
-import com.tbs.sql.query.impl.QueryPageModel;
+import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

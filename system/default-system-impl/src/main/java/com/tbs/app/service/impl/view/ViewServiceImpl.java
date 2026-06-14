@@ -11,7 +11,7 @@ import com.tbs.shared.mapper.view.*;
 import com.tbs.shared.pojo.entity.view.*;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.shared.pojo.model.view.FormField;
-import com.tbs.sql.utils.QueryUtil;
+import com.tbs.sql.service.QueryEngine;
 import com.tbs.view.IPropertyValueTransformer;
 import com.tbs.view.constant.ViewConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -49,7 +49,7 @@ public class ViewServiceImpl implements IViewService {
     public FormConfig getForm(Long id) {
         AssertUtil.notNull(id, "表单ID不能为空");
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity =
-            QueryUtil.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
+            QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
                 .equal(DynamicFormConfigrationEntity::getId, id).pour().fetchOne();
         AssertUtil.notNull(dynamicFormConfigrationEntity, "表单配置不存在");
         FormConfig formConfig = new FormConfig();
@@ -206,7 +206,7 @@ public class ViewServiceImpl implements IViewService {
 
         // 获取现有的表单配置实体
         DynamicFormConfigrationEntity existingEntity =
-            QueryUtil.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
+            QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
                 .equal(DynamicFormConfigrationEntity::getId, formConfigId).pour().fetchOne();
 
         AssertUtil.notNull(existingEntity, "表单配置不存在");
@@ -341,7 +341,7 @@ public class ViewServiceImpl implements IViewService {
     public DynamicFormConfigrationEntity deleteForm(Long formConfigId) {
         AssertUtil.notNull(formConfigId, "表单配置ID不能为空");
         DynamicFormConfigrationEntity form =
-            QueryUtil.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
+            QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
                 .equal(DynamicFormConfigrationEntity::getId, formConfigId).pour().fetchOne();
         if (form == null) {
             return null;
@@ -361,7 +361,7 @@ public class ViewServiceImpl implements IViewService {
         }
         int finalPageNum = pageNum;
         int finalPageSize = pageSize;
-        var query = QueryUtil.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query();
+        var query = QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query();
         query.getPageLimitSupport().ifPresentOrElse(pageLimit -> {
             pageLimit.pageOf((long)finalPageNum, (long)finalPageSize);
         }, () -> {

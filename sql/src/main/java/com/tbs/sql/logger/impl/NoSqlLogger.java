@@ -1,18 +1,12 @@
 package com.tbs.sql.logger.impl;
 
 import com.tbs.sql.logger.ISqlLogger;
-import com.tbs.sql.logger.SqlRuntimeStatus;
+import com.tbs.sql.model.runtime.SqlRuntimeStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * 空SQL日志器
- *
- * @author abstergo
- */
 public class NoSqlLogger implements ISqlLogger {
     private boolean hasShow = false;
-
     private static final Logger logger = LoggerFactory.getLogger(NoSqlLogger.class);
 
     @Override

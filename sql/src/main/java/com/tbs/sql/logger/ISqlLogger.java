@@ -1,19 +1,14 @@
 package com.tbs.sql.logger;
 
+import com.tbs.sql.model.runtime.SqlRuntimeStatus;
 import org.jetbrains.annotations.NotNull;
 
-
 /**
- * mybatis sql 运行时日志记录器
+ * SQL运行时日志记录器
  *
- * @author Abstergo
+ * @author abstergo
+ * @since 1.0.0
  */
 public interface ISqlLogger {
-    /**
-     * Log.
-     *
-     * @param sqlRuntimeStatus the sql runtime status
-     */
     void log(@NotNull SqlRuntimeStatus sqlRuntimeStatus);
-
 }

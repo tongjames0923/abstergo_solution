@@ -4,15 +4,15 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
-import com.tbs.shared.serialize.QueryOrderedModelDeserializer;
-import com.tbs.shared.serialize.QueryOrderedModelSerializer;
-import com.tbs.sql.annotation.QueryField;
-import com.tbs.sql.annotation.QueryMapping;
-import com.tbs.sql.annotation.QueryOrderField;
-import com.tbs.sql.constants.OrderConstant;
-import com.tbs.sql.enums.QueryContrastEnum;
-import com.tbs.sql.order.impl.QueryOrderedModel;
-import com.tbs.sql.query.impl.DefaultEntityClassBaseQueryCriteria;
+import com.tbs.shared.serialize.OrderedModelDeserializer;
+import com.tbs.shared.serialize.OrderedModelSerializer;
+import com.tbs.sql.annotation.condition.QueryField;
+import com.tbs.sql.annotation.mapping.QueryMapping;
+import com.tbs.sql.annotation.order.QueryOrderField;
+import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.enums.ContrastEnum;
+import com.tbs.sql.order.impl.OrderedModel;
+import com.tbs.sql.criteria.impl.DefaultEntityCriteria;
 import lombok.Getter;
 
 import java.util.Date;
@@ -29,40 +29,40 @@ import java.util.Date;
  * @author abstergo
  */
 @Getter
-public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteria {
+public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
     /**
      * 等值匹配的令牌字段 对应数据库中的token字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "token")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private String tokenEquals;
 
     /**
      * 等值匹配的用户名字段 对应数据库中的user_name字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "user_name")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private String userNameEquals;
 
     /**
      * 等值匹配的标识字段 对应数据库中的flag字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "flag")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private Integer flagEquals;
 
     /**
      * 等值匹配的令牌类型字段 对应数据库中的token_type字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "token_type")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private Integer tokenTypeEquals;
 
     /**
      * 等值匹配的会话ID字段 对应数据库中的session_id字段，使用EQUAL比较条件
      */
     @QueryMapping(value = "session_id")
-    @QueryField(contrast = QueryContrastEnum.EQUAL)
+    @QueryField(contrast = ContrastEnum.EQUAL)
     private String sessionIdEquals;
 
     /**
@@ -70,7 +70,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      */
     @QueryMapping("create_time")
     
-    @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
     private Date createTimeAfter;
 
     /**
@@ -78,7 +78,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      */
     @QueryMapping("expire_time")
     
-    @QueryField(contrast = QueryContrastEnum.GREATER_EQUAL)
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
     private Date expireTimeAfter;
 
     /**
@@ -86,24 +86,24 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      */
     @QueryMapping("expire_time")
     
-    @QueryField(contrast = QueryContrastEnum.LESS_EQUAL)
+    @QueryField(contrast = ContrastEnum.LESS_EQUAL)
     private Date expireTimeBefore;
 
     /**
      * 创建时间排序
      */
-    @QueryOrderField(mappedName = "create_time", order = OrderConstant.ORDERED_MODEL)
+    @QueryOrderField(mappedName = "create_time", order = OrderConstants.ORDERED_MODEL)
 
 
-    private QueryOrderedModel createTimeOrdered;
+    private OrderedModel createTimeOrdered;
 
     /**
      * 过期时间排序
      */
-    @QueryOrderField(mappedName = "expire_time", order = OrderConstant.ORDERED_MODEL)
+    @QueryOrderField(mappedName = "expire_time", order = OrderConstants.ORDERED_MODEL)
 
 
-    private QueryOrderedModel expireTimeOrdered;
+    private OrderedModel expireTimeOrdered;
 
     /**
      * 设置创建时间排序模型
@@ -111,7 +111,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      * @param createTimeOrdered 创建时间排序模型
      * @return 当前查询条件实例，支持链式调用
      */
-    public CommonTokenQueryCriteria setCreateTimeOrdered(QueryOrderedModel createTimeOrdered) {
+    public CommonTokenQueryCriteria setCreateTimeOrdered(OrderedModel createTimeOrdered) {
         this.createTimeOrdered = createTimeOrdered;
         return this;
     }
@@ -122,7 +122,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityClassBaseQueryCriteri
      * @param expireTimeOrdered 过期时间排序模型
      * @return 当前查询条件实例，支持链式调用
      */
-    public CommonTokenQueryCriteria setExpireTimeOrdered(QueryOrderedModel expireTimeOrdered) {
+    public CommonTokenQueryCriteria setExpireTimeOrdered(OrderedModel expireTimeOrdered) {
         this.expireTimeOrdered = expireTimeOrdered;
         return this;
     }

@@ -11,7 +11,7 @@ import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
 import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
 import com.tbs.shared.mapper.SystemOperateMapper;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
-import com.tbs.sql.utils.QueryUtil;
+import com.tbs.sql.service.QueryEngine;
 import lombok.Getter;
 import lombok.Setter;
 import org.slf4j.Logger;
@@ -97,7 +97,7 @@ public class DbSystemOpLogService implements ISystemOperateLogViewService, ISyst
         }
         AssertUtil.isTrue(endTime.before(beginTime)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .message("开始时间不能大于结束时间").throwIt();
-        var query = QueryUtil.getEntityQueryWrapper(SYSTEM_OPERATE_RECORD_ENTITY).query().where()
+        var query = QueryEngine.getEntityQueryWrapper(SYSTEM_OPERATE_RECORD_ENTITY).query().where()
             .greaterThanOrEqual(SystemOperateRecordEntity::getOperateTime, beginTime)
             .lessThanOrEqual(SystemOperateRecordEntity::getOperateTime, endTime).pour();
         query.getOrderSupport().ifPresent(order -> {
