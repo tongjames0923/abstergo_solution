@@ -1,10 +1,10 @@
 package com.tbs.common.data;
 
+import com.tbs.common.function.SFunction;
+
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
-
-import com.tbs.common.function.SFunction;
 
 /**
  * 数据存储接口
@@ -42,7 +42,7 @@ public interface IDataHolder {
 	 */
 	default <T> T computeIfAbsent(String key, SFunction<String, T> function) {
 		if (containsKey(key)) {
-			return (T) get(key);
+			return (T)get(key).orElse(null);
 		} else {
 			T value = function.apply(key);
 			set(key, value, true);

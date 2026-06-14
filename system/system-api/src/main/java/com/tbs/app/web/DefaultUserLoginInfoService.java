@@ -6,6 +6,7 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.user.serial.DefaultSystemUserDetailsDto;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.cache.expire.annotation.ExpireOn;
+import com.tbs.cache.serialize.utils.ValueTransformUtils;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
@@ -22,12 +23,10 @@ import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserLoginInfoService;
-import com.tbs.web.security.user.IUserDetailsTransformer;
 import com.tbs.web.security.user.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.cache.annotation.Caching;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
@@ -41,11 +40,7 @@ import java.util.stream.Collectors;
  * @author abstergo
  */
 @Slf4j
-public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService<DefaultSystemUserDetailsDto> {
-
-
-    @Resource
-    private IUserDetailsTransformer userDetailsTransformer;
+public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
     @Resource
     private LoginInfoMapper mapper;
@@ -79,33 +74,24 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService<De
         return queryWrapper.fetchOne();
     }
 
-    SystemLoginInfoEntity setUserDetails(SystemLoginInfoEntity loginInfoEntity,
-        DefaultSystemUserDetailsDto userDetails) {
+    SystemLoginInfoEntity setUserDetails(SystemLoginInfoEntity loginInfoEntity, UserDetails userDetails) {
         AssertUtil.notNull(userDetails, () -> new FormattedRuntimeException("用户详情不能为空"));
         AssertUtil.notNull(loginInfoEntity, () -> new FormattedRuntimeException("用户登陆信息不能为空"));
-        loginInfoEntity.setUserDetails(JSON.toJSONBytes(userDetails));
+        loginInfoEntity.setUserDetails(
+            JSON.toJSONBytes(ValueTransformUtils.valueTransform(userDetails, ValueTransformUtils.TRANSFORM_WRITE)));
         return loginInfoEntity;
     }
 
     @Override
-    public IUserDetailsTransformer getUserDetailsTransformer() {
-        return userDetailsTransformer;
-    }
-
-    @Override
-    public Class<DefaultSystemUserDetailsDto> getSerializableClass() {
-        return DefaultSystemUserDetailsDto.class;
-    }
-
-    @Override
-    protected DefaultSystemUserDetailsDto readUserDetails(String token) {
+    protected UserDetails readUserDetails(String token) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
-        return loginInfoEntity == null ? null
-            : JSON.parseObject(loginInfoEntity.getUserDetails(), getSerializableClass());
+        return loginInfoEntity == null ? null : (UserDetails)ValueTransformUtils.valueTransform(
+            JSON.parseObject(loginInfoEntity.getUserDetails(), DefaultSystemUserDetailsDto.class),
+            ValueTransformUtils.TRANSFORM_READ);
     }
 
     @Override
-    protected void writeUserDetails(ITokenModel token, DefaultSystemUserDetailsDto userDetails) {
+    protected void writeUserDetails(ITokenModel token, UserDetails userDetails) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token.getToken());
         if (loginInfoEntity != null) {
             loginInfoEntity = setUserDetails(loginInfoEntity, userDetails);

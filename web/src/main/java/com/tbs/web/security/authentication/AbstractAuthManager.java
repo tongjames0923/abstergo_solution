@@ -61,7 +61,6 @@ public abstract class AbstractAuthManager implements IAuthManager {
     }
 
     @Override
-    @CacheEvict(cacheNames = IUserInfoService.USER_DETAILS_CACHE_NAME, key = "#userName")
     public void notifyUserAuthStatusChanged(String userName) {
         log.info("用户权限发生变更，用户名:{}", userName);
         var sessionIds = loginInfoService.getUserAvaliableSessionId(userName);

@@ -1,25 +1,19 @@
 package com.tbs.cache.integration;
 
-import com.tbs.cache.CacheUtils;
 import com.tbs.cache.ICacheListenner;
 import com.tbs.cache.IListenable;
 import com.tbs.cache.expire.ICacheExpiredActuator;
-import com.tbs.common.data.IDataBridge;
 import com.tbs.common.data.IFeatureWrapper;
-import com.tbs.common.util.base.StrUtil;
-import com.tbs.common.util.framework.SpringUtil;
-import lombok.AllArgsConstructor;
-import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Callable;
+
+import static com.tbs.cache.serialize.utils.ValueTransformUtils.*;
 
 @Slf4j
 public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, IFeatureWrapper<Cache>, IListenable {
@@ -51,41 +45,7 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
         return getOrginal().getNativeCache();
     }
 
-    @Data
-    @AllArgsConstructor
-    private class TransformInfo implements Serializable {
-        private static final long serialVersionUID = 1L;
-        private Class<?> type;
-        Class<? extends IDataBridge> bridgeType;
-        IDataBridge bridge;
-    }
 
-    private static final int TRANSFORM_READ = 0;
-    private static final int TRANSFORM_WRITE = 1;
-
-    private Object valueTransform(@NotNull Object value, int mode) {
-        Class<?> clazz = value.getClass();
-        var info = CacheUtils.getInstance().computeIfAbsent("CACHE_TRANSFORM_INFO" + clazz.getName(), () -> {
-            if (!clazz.isAnnotationPresent(com.tbs.cache.serialize.annotation.CacheTransform.class)) {
-                return new TransformInfo(clazz, null, null);
-            }
-            var cacheTransform = clazz.getDeclaredAnnotation(com.tbs.cache.serialize.annotation.CacheTransform.class);
-            return new TransformInfo(clazz, cacheTransform.bridgeType(),
-                StrUtil.isEmpty(cacheTransform.bridgeName()) ? SpringUtil.getBean(cacheTransform.bridgeType())
-                    : SpringUtil.getBean(cacheTransform.bridgeName(), cacheTransform.bridgeType()));
-        }, TransformInfo.class).get();
-        if (info.isPresent()) {
-            var bridge = info.get().getBridge();
-            if (bridge != null) {
-                if (mode == TRANSFORM_WRITE) {
-                    return bridge.bridge(value);
-                } else if (mode == TRANSFORM_READ) {
-                    return bridge.unbridge(value);
-                }
-            }
-        }
-        return value;
-    }
 
     @Override
     public ValueWrapper get(Object key) {
