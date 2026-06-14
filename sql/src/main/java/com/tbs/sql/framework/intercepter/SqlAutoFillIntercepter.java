@@ -16,6 +16,7 @@ import java.sql.PreparedStatement;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
@@ -33,6 +34,11 @@ import java.util.Set;
 public class SqlAutoFillIntercepter implements Interceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(SqlAutoFillIntercepter.class);
+
+    /**
+     * IAutoValueProvider缓存，避免每次拦截时重复从Spring容器获取Bean
+     */
+    private static final Map<Class<? extends IAutoValueProvider>, IAutoValueProvider> providerCache = new ConcurrentHashMap<>();
 
     /**
      * 拦截器方法，在设置参数之前，自动填充对象的字段值。
@@ -82,7 +88,8 @@ public class SqlAutoFillIntercepter implements Interceptor {
             field.setAccessible(true);
             for (SqlAutoValue sqlAutoValue : f) {
                 try {
-                    IAutoValueProvider valueProvider = SpringUtil.getBean(sqlAutoValue.value());
+                    IAutoValueProvider valueProvider = providerCache.computeIfAbsent(
+                        sqlAutoValue.value(), SpringUtil::getBean);
                     if (valueProvider.support(field.getType(), field.get(o))) {
                         field.set(o, valueProvider.getValue(o, field));
                         logger.debug("自动填充字段{}，值为{}", field.getName(), field.get(o));

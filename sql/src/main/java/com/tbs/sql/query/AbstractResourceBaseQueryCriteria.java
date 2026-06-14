@@ -30,19 +30,15 @@ public abstract class AbstractResourceBaseQueryCriteria implements IQueryCriteri
 	 * @return SqlSelectInfoModel SQL信息模型
 	 */
 	protected SqlSelectInfoModel loadSql(String resourcePath) {
-		synchronized (this) {
-			try (BufferedReader reader = ResourceUtil.getUtf8Reader(resourcePath)) {
-				final StringBuilder sql = new StringBuilder();
-				reader.lines().forEach(line -> {
-					sql.append(line);
-				});
-				SqlSelectInfoModel selectSqlInfo = SqlSelectInfoModel.rawSql(sql.toString().trim());
-				return selectSqlInfo;
-			} catch (Exception e) {
-				AssertUtil.throwError(() -> new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath));
-			}
+		try (BufferedReader reader = ResourceUtil.getUtf8Reader(resourcePath)) {
+			final StringBuilder sql = new StringBuilder();
+			reader.lines().forEach(sql::append);
+			return SqlSelectInfoModel.rawSql(sql.toString().trim());
+		} catch (Exception e) {
+			AssertUtil.throwError(() -> new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath));
 		}
-		return null;
+		// unreachable: throwError always throws
+		throw new FormattedRuntimeException("加载SQL失败：{}", resourcePath);
 	}
 
 	/**

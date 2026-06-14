@@ -274,7 +274,14 @@ public class QueryUtil implements IStartup {
                 if (queryOrderField == null) {
                     continue;
                 }
-
+                if (StrUtil.isEmpty(queryOrderField.order())) {
+                    log.warn("排序字段 {} 未指定排序方式，跳过排序", field.getName());
+                    continue;
+                }
+                if (StrUtil.isEmpty(queryOrderField.mappedName())) {
+                    log.warn("排序字段 {} 未指定映射字段，跳过排序", field.getName());
+                    continue;
+                }
                 boolean originalAccessible = field.isAccessible();
                 field.setAccessible(true);
                 Object val = null;
@@ -287,7 +294,7 @@ public class QueryUtil implements IStartup {
                     field.setAccessible(originalAccessible);
                 }
                 if (val == null) {
-                    log.trace("Field: {} is null skip order field", field.getName());
+                    log.debug("排序字段 {} 值为null，跳过排序", field.getName());
                     continue;
                 }
 
@@ -300,7 +307,7 @@ public class QueryUtil implements IStartup {
                     continue;
                 }
                 if (order == null) {
-                    log.trace("order value: {} is null skip order field ", field.getName());
+                    log.debug("排序Bean [{}] 为空，跳过字段 {} 的排序", queryOrderField.order(), field.getName());
                     continue;
                 }
 
@@ -312,7 +319,7 @@ public class QueryUtil implements IStartup {
                     continue;
                 }
                 if (orderEnum == null) {
-                    log.trace("order enum value: {} is null skip order field ", field.getName());
+                    log.debug("排序方向为null，跳过字段 {} 的排序", field.getName());
                     continue;
                 }
 

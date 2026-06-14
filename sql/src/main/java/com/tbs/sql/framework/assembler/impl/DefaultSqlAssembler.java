@@ -2,6 +2,8 @@ package com.tbs.sql.framework.assembler.impl;
 
 import com.tbs.sql.framework.assembler.ISqlAssembler;
 
+import java.util.StringJoiner;
+
 /**
  * 默认的SQL组装器实现类
  * <p>
@@ -32,6 +34,22 @@ public class DefaultSqlAssembler implements ISqlAssembler {
      */
     @Override
     public String assembleSelectSql(String selectSql, String whereSql, String orderSql, String groupSql, String limitSql) {
-        return selectSql + SPACE + whereSql + SPACE + groupSql + SPACE + orderSql + SPACE + limitSql;
+        StringJoiner joiner = new StringJoiner(SPACE);
+        if (selectSql != null && !selectSql.isEmpty()) {
+            joiner.add(selectSql);
+        }
+        if (whereSql != null && !whereSql.isEmpty()) {
+            joiner.add(whereSql);
+        }
+        if (groupSql != null && !groupSql.isEmpty()) {
+            joiner.add(groupSql);
+        }
+        if (orderSql != null && !orderSql.isEmpty()) {
+            joiner.add(orderSql);
+        }
+        if (limitSql != null && !limitSql.isEmpty()) {
+            joiner.add(limitSql);
+        }
+        return joiner.toString();
     }
 }

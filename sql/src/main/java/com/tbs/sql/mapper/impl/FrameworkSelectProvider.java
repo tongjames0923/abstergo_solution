@@ -86,15 +86,7 @@ public class FrameworkSelectProvider<T> {
 	 * @return 字段元数据列表
 	 */
 	private static List<FieldMetadata> getFieldMetadata(Class<?> clazz) {
-		// 使用显式缓存检查替代computeIfAbsent以提高性能
-		List<FieldMetadata> cachedMetadata = fieldMetadataCache.get(clazz);
-		if (cachedMetadata != null) {
-			return cachedMetadata;
-		}
-
-		List<FieldMetadata> metadataList = buildFieldMetadata(clazz);
-		fieldMetadataCache.put(clazz, metadataList);
-		return metadataList;
+		return fieldMetadataCache.computeIfAbsent(clazz, FrameworkSelectProvider::buildFieldMetadata);
 	}
 
 	/**

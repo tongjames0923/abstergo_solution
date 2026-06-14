@@ -37,10 +37,6 @@
             <groupId>com.tbs</groupId>
             <artifactId>common</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-aop</artifactId>
-        </dependency>
         <!-- p6spy Format Sql -->
         <dependency>
             <groupId>p6spy</groupId>
