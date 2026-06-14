@@ -37,4 +37,9 @@ public class SqlRuntimeStatus implements Serializable {
      * 结果对象
      */
     private Object resultObject;
+
+    /**
+     * 异常信息（SQL执行失败时记录）
+     */
+    private Throwable error;
 }

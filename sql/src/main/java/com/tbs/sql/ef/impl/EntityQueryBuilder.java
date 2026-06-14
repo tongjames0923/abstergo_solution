@@ -36,10 +36,6 @@ import java.util.Optional;
  */
 public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
     /**
-     * FetchMapper实例缓存
-     */
-    private static volatile FetchMapper fetchMapper;
-    /**
      * 分组模型列表，用于存储查询的分组条件
      */
     List<SqlGroupModel> groups = new LinkedList<>();
@@ -82,18 +78,15 @@ public class EntityQueryBuilder<T> implements IQueryQueryBuilder<T> {
 
     /**
      * 获取数据获取映射器
+     * <p>
+     * 直接从Spring容器获取FetchMapper Bean，避免静态缓存导致的Spring生命周期冲突。
+     * FetchMapper为单例Bean，Spring容器本身保证线程安全，无需手动缓存。
+     * </p>
      *
      * @return FetchMapper实例
      */
     private FetchMapper getFetchMapper() {
-        if (fetchMapper == null) {
-            synchronized (EntityQueryBuilder.class) {
-                if (fetchMapper == null) {
-                    fetchMapper = SpringUtil.getBean(FetchMapper.class);
-                }
-            }
-        }
-        return fetchMapper;
+        return SpringUtil.getBean(FetchMapper.class);
     }
 
     /**

@@ -1,11 +1,9 @@
 package com.tbs.sql.framework.intercepter;
 
-import java.util.Date;
-import java.util.Map;
-import java.util.Properties;
-
-import javax.annotation.Resource;
-
+import cn.hutool.core.collection.CollUtil;
+import com.tbs.sql.logger.ISqlLogger;
+import com.tbs.sql.logger.SqlRuntimeStatus;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.executor.Executor;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.MappedStatement;
@@ -15,10 +13,9 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.context.annotation.Lazy;
 
-import com.tbs.sql.logger.ISqlLogger;
-import com.tbs.sql.logger.SqlRuntimeStatus;
-
-import cn.hutool.core.collection.CollUtil;
+import javax.annotation.Resource;
+import java.util.Map;
+import java.util.Properties;
 
 /**
  * SQL日志拦截器
@@ -33,6 +30,7 @@ import cn.hutool.core.collection.CollUtil;
 		@Signature(type = Executor.class, method = "query", args = { MappedStatement.class, Object.class,
 				RowBounds.class, ResultHandler.class }),
 		@Signature(type = Executor.class, method = "update", args = { MappedStatement.class, Object.class }) })
+@Slf4j
 public class SqlLoggingInterceptor implements Interceptor {
 
 	/**
@@ -58,26 +56,37 @@ public class SqlLoggingInterceptor implements Interceptor {
 	@Override
 	public Object intercept(Invocation invocation) throws Throwable {
 		if (CollUtil.isEmpty(sqlLoggers)) {
-			Object result = invocation.proceed();
+			return invocation.proceed();
+		}
+		long startTime = System.currentTimeMillis();
+		Object result = null;
+		Throwable exception = null;
+		try {
+			result = invocation.proceed();
 			return result;
-		}
-		Date date = new Date();
-		Object result = invocation.proceed();
-		Date date1 = new Date();
-		long costTime = date1.getTime() - date.getTime();
-		MappedStatement mappedStatement = (MappedStatement) invocation.getArgs()[0];
-		BoundSql boundSql = mappedStatement.getBoundSql(invocation.getArgs()[1]);
-		String sql = boundSql.getSql();
-		SqlCommandType commandType = mappedStatement.getSqlCommandType();
-		SqlRuntimeStatus status = new SqlRuntimeStatus(commandType, sql, costTime, invocation.getArgs()[1], result);
-		for (ISqlLogger sqlLogger : sqlLoggers.values()) {
-			if (null == sqlLogger) {
-				continue;
+		} catch (Throwable t) {
+			exception = t;
+			throw t;
+		} finally {
+			long costTime = System.currentTimeMillis() - startTime;
+			try {
+				MappedStatement mappedStatement = (MappedStatement)invocation.getArgs()[0];
+				BoundSql boundSql = mappedStatement.getBoundSql(invocation.getArgs()[1]);
+				String sql = boundSql.getSql();
+				SqlCommandType commandType = mappedStatement.getSqlCommandType();
+				SqlRuntimeStatus status =
+					new SqlRuntimeStatus(commandType, sql, costTime, invocation.getArgs()[1], result, exception);
+				for (ISqlLogger sqlLogger : sqlLoggers.values()) {
+					if (null == sqlLogger) {
+						continue;
+					}
+					sqlLogger.log(status);
+				}
+			} catch (Exception ignored) {
+				log.warn("SQL日志记录失败...", ignored);
+				// 日志记录失败不应影响SQL执行流程
 			}
-			sqlLogger.log(status);
 		}
-
-		return result;
 	}
 
 	/**

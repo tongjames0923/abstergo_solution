@@ -21,6 +21,24 @@ import java.util.concurrent.ConcurrentHashMap;
 public class EntityInfoPuller {
     private static Map<Class<?>, SqlSelectInfoModel> cache = new ConcurrentHashMap<>(32);
 
+    /**
+     * 清除指定实体类的缓存
+     *
+     * @param entityClass 实体类
+     */
+    public static void clearCache(Class<?> entityClass) {
+        if (entityClass != null) {
+            cache.remove(entityClass);
+        }
+    }
+
+    /**
+     * 清除所有缓存
+     */
+    public static void clearCache() {
+        cache.clear();
+    }
+
     public static SqlSelectInfoModel pullFromClass(Class<?> c) {
         AssertUtil.notNull(c, "根据实体类型提取查询语句，实体类型不能为空");
         return cache.computeIfAbsent(c, entityClass -> {
