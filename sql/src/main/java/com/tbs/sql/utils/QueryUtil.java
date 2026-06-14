@@ -49,8 +49,8 @@ public class QueryUtil implements IStartup {
     @Getter
     private static volatile QueryUtil instance;
 
-    // 指定初始容量以减少扩容
-    private static final Map<Class<?>, IEntityQueryWrapper> entityWrapperCache = new ConcurrentHashMap<>(32);
+    // entityWrapperCache已移除：IEntityQueryWrapper为prototype作用域，缓存会导致entity对象被复用
+    // 每次调用getEntityQueryWrapper时应创建新实例
 
     // ==================== 核心组件 ====================
 
@@ -95,17 +95,16 @@ public class QueryUtil implements IStartup {
      * @return 实体查询包装器
      */
     public static final <T> IEntityQueryWrapper<T> getEntityQueryWrapper(Class<T> clazz, Supplier<T> entity) {
-        return entityWrapperCache.computeIfAbsent(clazz, clazz1 -> {
-            try {
-                IEntityQueryWrapper<T> entityWrapper = SpringUtil.getBean(IEntityQueryWrapper.class);
-                return entityWrapper.makeQueryable(entity.get());
-            } catch (Exception e) {
-                AssertUtil.throwError(
-                    () -> new FormattedRuntimeException(e, "Failed to create entity wrapper for class: {}",
-                        clazz1.getName(), e));
-            }
-            return null;
-        });
+        try {
+            // IEntityQueryWrapper为prototype作用域，每次创建新实例以确保entity对象不被复用
+            IEntityQueryWrapper<T> entityWrapper = SpringUtil.getBean(IEntityQueryWrapper.class);
+            return entityWrapper.makeQueryable(entity.get());
+        } catch (Exception e) {
+            AssertUtil.throwError(
+                () -> new FormattedRuntimeException(e, "Failed to create entity wrapper for class: {}",
+                    clazz.getName(), e));
+        }
+        return null;
     }
 
     // ==================== 公共API ====================
@@ -171,8 +170,9 @@ public class QueryUtil implements IStartup {
      */
     public String driveSql(ISqlContext context, IQueryDriver driver) {
         AssertUtil.notNull(driver, "查询驱动器不可为空");
-        ISelectSqlDialect dialect = instance.selectSqlDialect;
-        ISqlAssembler assembler = instance.sqlAssembler;
+        // 使用this而非instance，避免通过静态字段访问当前实例的成员
+        ISelectSqlDialect dialect = this.selectSqlDialect;
+        ISqlAssembler assembler = this.sqlAssembler;
         return driveSql(dialect, assembler, context, driver);
     }
 
@@ -261,6 +261,9 @@ public class QueryUtil implements IStartup {
      * @return SQL排序信息列表
      */
     public static List<SqlOrderInfo> collectOrderInfos(IQueryCriteria queryObject) {
+        if (instance == null) {
+            throw new FormattedRuntimeException("QueryUtil尚未初始化，请确保@EnableTbsSqlUtils已启用且应用已启动");
+        }
         List<Field> fields = instance.collectFields(queryObject);
         // 预先分配容量
         List<SqlOrderInfo> orderInfos = new ArrayList<>(fields.size() / 2);

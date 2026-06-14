@@ -14,6 +14,7 @@ import com.tbs.sql.framework.model.SqlWhereCompose;
 import com.tbs.sql.framework.model.SqlWhereInfo;
 import com.tbs.sql.framework.model.SqlWhereNode;
 import com.tbs.sql.properties.SqlProperty;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.PostConstruct;
@@ -26,6 +27,7 @@ import java.util.stream.Collectors;
  *
  * @author abstergo
  */
+@Slf4j
 public class MysqlWhereExtractor implements IWhereSqlExtractor {
     @Resource
     private SqlProperty sqlProperty;
@@ -34,6 +36,9 @@ public class MysqlWhereExtractor implements IWhereSqlExtractor {
 
     @PostConstruct
     void init() {
+        if (sqlProperty.isUseRawValue()) {
+            log.warn("[TBS-SQL] useRawValue已启用，SQL参数将直接拼接，存在SQL注入风险！请确保所有输入值都经过严格校验。");
+        }
         try {
             valueConverters = SpringUtil.getBeansOfType(IValueConverter.class).values().stream()
                 .sorted(Comparator.comparingInt(IValueConverter::getPriority)).collect(Collectors.toList());
@@ -136,10 +141,10 @@ public class MysqlWhereExtractor implements IWhereSqlExtractor {
                     }
                     valStr = "(" + String.join(",", placeholders) + ")";
                 } else {
-                    // 非安全模式：直接拼接值
+                    // 非安全模式：直接拼接值（需转义防止SQL注入）
                     List<String> values = new ArrayList<>();
                     for (Object item : collection) {
-                        String convertedValue = convert(item);
+                        String convertedValue = escapeSqlString(convert(item));
                         values.add("'" + convertedValue + "'");
                     }
                     valStr = "(" + String.join(",", values) + ")";
@@ -149,15 +154,12 @@ public class MysqlWhereExtractor implements IWhereSqlExtractor {
                 String constract = contrast(info.getContrast());
                 return String.format(" (%s %s %s) ", name, constract, valStr);
             } else {
-                return " (1 = 1) ";
-                //				// 空集合处理
-                //				if (info.getContrast() == QueryContrastEnum.IN) {
-                //					// IN空集合永远为false
-                //					return " (1 = 0) ";
-                //				} else {
-                //					// NOT IN空集合永远为true
-                //
-                //				}
+                // 空集合处理：IN空集合恒假(1=0)，NOT IN空集合恒真(1=1)
+                if (info.getContrast() == QueryContrastEnum.IN) {
+                    return " (1 = 0) ";
+                } else {
+                    return " (1 = 1) ";
+                }
             }
         }
 
@@ -176,7 +178,7 @@ public class MysqlWhereExtractor implements IWhereSqlExtractor {
             paramMap.put(key, val);
         } else {
             Object value = info.getFieldValue();
-            valStr = String.format("'%s'", convert(value));
+            valStr = String.format("'%s'", escapeSqlString(convert(value)));
             valStr = contrastStrSet(info.getContrast(), valStr);
             paramMap.put(key, valStr);
         }
@@ -236,6 +238,21 @@ public class MysqlWhereExtractor implements IWhereSqlExtractor {
     public String extraWhereSql(SqlWhereCompose sqlWhereCompose, Map<String, Object> paramMap) {
         String where = extraWhereSql(sqlWhereCompose, new Long[] {0L}, paramMap).trim();
         return StrUtil.isEmpty(where) ? "" : " where " + where;
+    }
+
+    /**
+     * 转义SQL字符串中的特殊字符，防止SQL注入
+     * 将单引号(')转义为两个单引号('')
+     *
+     * @param value 原始字符串值
+     * @return 转义后的字符串
+     */
+    static String escapeSqlString(String value) {
+        if (value == null) {
+            return null;
+        }
+        // 转义单引号：' -> ''
+        return value.replace("'", "''");
     }
 
     String convert(Object value) {
