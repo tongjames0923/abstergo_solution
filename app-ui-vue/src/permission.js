@@ -15,6 +15,14 @@ const whiteList = ['/login'] // no redirect whitelist
 // 标记是否已经在登录时加载过动态路由
 let dynamicRoutesLoaded = false
 
+/**
+ * 重置动态路由加载状态
+ * 用于用户退出登录时调用，确保重新登录时能正确加载路由
+ */
+export function resetDynamicRoutesLoaded() {
+  dynamicRoutesLoaded = false
+}
+
 export function setUpRouterPermissions(router) {
   router.beforeEach(async(to, from, next) => {
     // start progress bar

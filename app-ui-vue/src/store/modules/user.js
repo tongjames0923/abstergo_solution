@@ -1,6 +1,7 @@
 import {getInfo, login, logout, setCurrentDepartment} from '@/api/user'
 import {getRememberMe, getToken, removeToken, setRememberMe, setToken} from '@/utils/auth'
 import {resetRouter} from '@/router'
+import {resetDynamicRoutesLoaded} from '@/permission'
 import request from '@/utils/request'
 import routeCacheService from '@/utils/route-cache'
 
@@ -115,6 +116,7 @@ const actions = {
     } finally {
       removeToken() // must remove  token  first
       resetRouter()
+      resetDynamicRoutesLoaded()
       
       // 清除路由缓存
       routeCacheService.clearCache()
