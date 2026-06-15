@@ -96,7 +96,7 @@ public class MysqlWhereExtractor implements IWhereExtractor {
                     return String.format(" (%s %s %s) ", info.getFieldName(), contrast(info.getContrast()), "(" + String.join(",", values) + ")");
                 }
             } else {
-                return info.getContrast() == ContrastEnum.IN ? " (1 = 0) " : " (1 = 1) ";
+                return info.getContrast() == ContrastEnum.IN ? " (1 = 1) " : " (1 = 1) ";
             }
         }
 

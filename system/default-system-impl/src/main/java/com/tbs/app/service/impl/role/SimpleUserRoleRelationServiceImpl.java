@@ -63,7 +63,8 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
         AssertUtil.notNull(user, "用户不存在");
         SystemRoleEntity roleEntity = systemRoleService.queryById(role);
         AssertUtil.notNull(roleEntity, "角色不存在");
-        AssertUtil.isTrue(!SystemRoleFlagEnum.ACTIVE.getCode().equals(roleEntity.getFlag()), "角色 {} 已失效", role);
+        AssertUtil.isTrue(CollUtil.isIn(roleEntity.getFlag(), SystemRoleFlagEnum.DISABLE.getCode(),
+            SystemRoleFlagEnum.DELETE.getCode()), "角色 {} 已失效", role);
         UserRoleRelationEntity relation = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
             .equal(UserRoleRelationEntity::getRoleId, roleEntity.getId()).pour().fetchOne();
         if (relation == null) {

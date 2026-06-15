@@ -28,7 +28,7 @@ public class YmlViewServiceImpl implements IViewRouteService, IStartup {
 
     @Override
     public List<ViewRouteModel> getViewRoutesByGroup(String group) {
-        return viewRouteModelMap.getOrDefault(group, Collections.emptyList());
+        return new ArrayList<>(viewRouteModelMap.getOrDefault(group, Collections.emptyList()));
     }
 
     @Override
