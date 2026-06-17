@@ -1,6 +1,7 @@
 package com.tbs.app.service;
 
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
+import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
@@ -27,8 +28,16 @@ public class AppExecutor {
     @Resource
     CompanyTreeStructService companyTreeStructService;
 
+    @Resource
+    DepartmentTreeStructService departmentTreeStructService;
+
     @XxlJob("company_tree_rebuild")
     public void companyTreeRebuild() {
+    }
+
+    @XxlJob("department_tree_rebuild")
+    public void departmentTreeRebuild() {
+        departmentTreeStructService.rebuildTree();
     }
 
     /**

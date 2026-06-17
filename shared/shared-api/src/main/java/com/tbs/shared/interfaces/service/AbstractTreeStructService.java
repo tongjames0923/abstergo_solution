@@ -50,7 +50,19 @@ public abstract class AbstractTreeStructService<E extends IIdentifiable<Long>> i
      */
     protected abstract String getNodeId(Long d, E e);
 
-    ITreeStorable getTreeNode(Long id) {
+    /**
+     * 重建树结构
+     */
+    public void rebuildTree() {
+        getTreeStore().tryRebuildStructure(getGroupName());
+    }
+
+    /**
+     * 获取树节点实体
+     * @param id 树节点id
+     * @return
+     */
+    public ITreeStorable getTreeNode(Long id) {
         var s = getTreeStore().getNodeByEntityIdAndGroup(id, getGroupName());
         if (s != null) {
             return s;
