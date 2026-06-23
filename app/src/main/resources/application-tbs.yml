@@ -8,6 +8,8 @@ tbs:
       enable: true
       token-expire-time: 1800
       token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
+      refresh-token-expire-time: 168
+      application-token-expire-time: 168
     enable-cors: true
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker

@@ -9,10 +9,7 @@ import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Collection;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -39,7 +36,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
     /**
      * 推荐令牌到期时间
      * <p>
-     * 根据令牌类型计算并返回推荐的过期时间。 对于刷新令牌，使用刷新令牌过期时间配置；对于其他令牌，使用普通令牌过期时间配置。
+     * 抽象方法，由子类实现具体的推荐逻辑。目前逻辑：根据配置文件分别适配不同的令牌类型，并返回对应的推荐到期时间。
      * </p>
      *
      * @param now       当前时间
@@ -49,10 +46,12 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
     protected Date recommendExpireTime(Date now, int tokenType) {
         WebAuthProperty authProperty = SpringUtil.getBean(WebAuthProperty.class);
         Date exp = null;
-        if (tokenType == TokenTypeEnum.REFRESH_TOKEN.getCode()) {
+        if (Objects.equals(tokenType, TokenTypeEnum.REFRESH_TOKEN.getCode())) {
             exp = new Date(now.getTime() + TimeUnit.HOURS.toMillis(authProperty.getRefreshTokenExpireTime()));
-        } else {
+        } else if (Objects.equals(tokenType, TokenTypeEnum.WEB_ACCESS_TOKEN.getCode())) {
             exp = new Date(now.getTime() + TimeUnit.SECONDS.toMillis(authProperty.getTokenExpireTime()));
+        } else if (Objects.equals(tokenType, TokenTypeEnum.APPLICATION_ACCESS_TOKEN.getCode())) {
+            exp = new Date(now.getTime() + TimeUnit.HOURS.toMillis(authProperty.getApplicationTokenExpireTime()));
         }
         return exp;
     }

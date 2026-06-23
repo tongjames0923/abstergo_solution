@@ -47,6 +47,12 @@ public class WebAuthProperty {
     private int refreshTokenExpireTime = 7 * 24;
 
     /**
+     * 应用token有效期,单位：小时
+     */
+    private int applicationTokenExpireTime = 7 * 24;
+
+
+    /**
      * token获取器实现类
      */
     private Class<? extends ITokenPicker> tokenPickerImpl = DefaultLoginTokenPicker.class;

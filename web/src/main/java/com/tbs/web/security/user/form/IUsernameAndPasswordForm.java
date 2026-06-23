@@ -21,4 +21,12 @@ public interface IUsernameAndPasswordForm extends Serializable {
      * @return
      */
     String getPassword();
+
+    /**
+     * 登录类型
+     * <p> 0/null web登录，1客户端登录
+     */
+    default Integer getLoginType() {
+        return 0;
+    }
 }

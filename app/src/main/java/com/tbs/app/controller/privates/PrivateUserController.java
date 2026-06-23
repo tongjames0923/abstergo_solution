@@ -26,6 +26,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -42,6 +43,7 @@ import java.util.stream.Collectors;
  * @author tongj
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/private/user")
 @PreAuthorize("@authUtil.userLoggedIn")
@@ -91,7 +93,7 @@ public class PrivateUserController extends BaseController {
             refreshTokenService.ifPresent(service -> service.inactiveRefreshToken());
 
         } catch (Exception e) {
-            return AjaxUtil.getInstance().debugError(e.getMessage(), e);
+            log.warn("刷新Token失效失败 {}", e.getMessage());
         }
         return AjaxUtil.getInstance().success(null);
     }

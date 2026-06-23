@@ -8,10 +8,8 @@ import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.ITokenRemover;
-import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
@@ -76,7 +74,7 @@ public abstract class AbstractAuthManager implements IAuthManager {
                 for (var token : tokens) {
                     try {
                         remover.revokeToken(token);
-                        if (TokenTypeEnum.ACCESS_TOKEN.getCode().equals(token.getTokenType().getCode())) {
+                        if (TokenTypeEnum.WEB_ACCESS_TOKEN.getCode().equals(token.getTokenType().getCode())) {
                             loginInfoService.removeUserLoginInfo(token.getToken());
                         }
                     } catch (Exception e) {

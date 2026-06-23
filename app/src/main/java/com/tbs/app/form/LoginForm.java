@@ -27,7 +27,7 @@ public class LoginForm implements IUsernameAndPasswordForm {
      */
     @UserNameValid
     private String username;
-    
+
     /**
      * 密码
      * <p>
@@ -36,4 +36,9 @@ public class LoginForm implements IUsernameAndPasswordForm {
      */
     @PasswordValid
     private String password;
+
+    /**
+     * 登录类型，0/null web登录，1客户端登录
+     */
+    private Integer loginType;
 }

@@ -50,7 +50,9 @@ public class DefaultUserPasswordAccessTokenProvider extends AbstractAccessTokenP
     protected TokenRequestForm createTokenRequestForm(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm,
         UserDetails details) {
         return new TokenRequestForm(UuidUtil.getInstance().getUuidString(), details,
-            TokenTypeEnum.ACCESS_TOKEN.getCode(), TokenCreateTypeEnum.LOGIN.getCode());
+            Objects.equals(1, iUsernameAndPasswordForm.getLoginType())
+                ? TokenTypeEnum.APPLICATION_ACCESS_TOKEN.getCode() : TokenTypeEnum.WEB_ACCESS_TOKEN.getCode(),
+            TokenCreateTypeEnum.LOGIN.getCode());
     }
 
 }

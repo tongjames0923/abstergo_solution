@@ -63,6 +63,6 @@ public class DefaultRefreshAccessTokenProvider extends AbstractAccessTokenProvid
     protected TokenRequestForm createTokenRequestForm(@NotNull IRefreshTokenForm iRefreshTokenForm,
         UserDetails details) {
         return new TokenRequestForm(iRefreshTokenForm.getRefreshToken().getSessionId(), details,
-            TokenTypeEnum.ACCESS_TOKEN.getCode(), TokenCreateTypeEnum.REFRESH.getCode());
+            TokenTypeEnum.WEB_ACCESS_TOKEN.getCode(), TokenCreateTypeEnum.REFRESH.getCode());
     }
 }
