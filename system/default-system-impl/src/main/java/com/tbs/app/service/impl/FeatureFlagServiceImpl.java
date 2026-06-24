@@ -1,9 +1,8 @@
 package com.tbs.app.service.impl;
 
-import com.tbs.app.constant.UserServiceFeatureFlagConstants;
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.dic.enums.DataDicCompareEnum;
+import com.tbs.dic.model.DicItemModel;
 import com.tbs.dic.model.DicModel;
 import com.tbs.dic.service.IDataDicService;
 import lombok.extern.slf4j.Slf4j;
@@ -22,18 +21,32 @@ public class FeatureFlagServiceImpl implements IFeatureFlagService {
 
     @Override
     public boolean isEnableValue(String flagName, String value) {
+        DicModel dicModel = null;
         try {
-            var featureFlag = dicService.valueEquals("SYSTEM", flagName, value);
-            if (Objects.equals(featureFlag, DataDicCompareEnum.EQUALS.getCode())) {
-                return true;
-            } else if (CollUtil.isIn(featureFlag, DataDicCompareEnum.NO_DIC.getCode(),
-                DataDicCompareEnum.NO_ITEM.getCode())) {
-                log.warn("不存在SYSTEM字典的{}字典项。", UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR);
+            var model = dicService.getDicByCode("SYSTEM", true);
+            if (CollUtil.isEmpty(model)) {
+                log.warn("未找到系统数据字典");
+                return false;
             }
+            dicModel = CollUtil.getFirst(model);
         } catch (Exception e) {
-            log.error("获取用户名密码校验功能开关异常", e);
+            log.error("获取系统字典失败", e);
         }
-        return false;
+        if (dicModel == null) {
+            log.warn("未找到系统数据字典");
+            return false;
+        }
+        var items = dicModel.getItems();
+        if (CollUtil.isEmpty(items)) {
+            log.warn("未找到系统数据字典项");
+            return false;
+        }
+        var map = items.stream().collect(Collectors.toMap(DicItemModel::getLabel, DicItemModel::getValue));
+        if (!map.containsKey(flagName)) {
+            log.warn("未找到系统数据字典项:{}", flagName);
+            return false;
+        }
+        return Objects.equals(value, map.get(flagName));
     }
 
     @Override
