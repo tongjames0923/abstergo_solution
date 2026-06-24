@@ -1,6 +1,8 @@
 package com.tbs.app.config;
 
 import com.tbs.app.intercept.SystemOperateInterceptor;
+import com.tbs.app.service.IFeatureFlagService;
+import com.tbs.app.service.impl.FeatureFlagServiceImpl;
 import com.tbs.app.service.impl.user.DefaultUserInfoService;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
@@ -46,6 +48,15 @@ public class DefaultAppConfig {
     public IUserNamePasswordValidator userNamePasswordValidator() {
         return BeanUtil.buildBeanFromProperties(() -> new SimpleUserValidator(),
             systemAppProperty.getSystemUserNamePasswordValidatorImpl(), BeanUtil::buildByEmptyArgs);
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IFeatureFlagService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
+    public IFeatureFlagService featureFlagService() {
+        return BeanUtil.buildBeanFromProperties(() -> new FeatureFlagServiceImpl(),
+            systemAppProperty.getFeatureFlagServiceImpl(), BeanUtil::buildByEmptyArgs);
+
     }
 
     @Bean

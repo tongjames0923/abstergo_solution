@@ -1,5 +1,6 @@
 package com.tbs.app.config;
 
+import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.impl.SimpleDelegateInvoker;
 import com.tbs.common.error.IErrorThrowEvent;
@@ -24,6 +25,11 @@ public class AppSettingProperty {
      * 登录用户名密码校验器
      */
     private Class<? extends IUserNamePasswordValidator> systemUserNamePasswordValidatorImpl = SimpleUserValidator.class;
+
+    /**
+     * 功能开关服务
+     */
+    private Class<? extends IFeatureFlagService> featureFlagServiceImpl;
 
     /**
      * 主代理实现类
