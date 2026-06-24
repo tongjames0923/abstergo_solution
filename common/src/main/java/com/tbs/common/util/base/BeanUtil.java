@@ -74,7 +74,7 @@ public class BeanUtil extends cn.hutool.core.bean.BeanUtil {
      */
     public static <T> T buildBeanFromProperties(Supplier<? extends T> defaultBean, Class<? extends T> property,
         Function<Class<? extends T>, T> func) {
-        if (func == null) {
+        if (func == null || property == null) {
             return defaultBean.get();
         }
         T bean = func.apply(property);
