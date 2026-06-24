@@ -27,6 +27,7 @@
         <module>open-api-starter</module>
         <module>dynamic-view-route</module>
         <module>script-engine</module>
+        <module>dic</module>
     </modules>
 
     <groupId>com.tbs</groupId>

@@ -10,7 +10,6 @@
     </parent>
 
     <groupId>com.tbs</groupId>
-    <version>1.0-SNAPSHOT</version>
     <artifactId>shared-pojo</artifactId>
 
     <properties>
