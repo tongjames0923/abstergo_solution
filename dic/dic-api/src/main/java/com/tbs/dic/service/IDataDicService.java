@@ -16,7 +16,7 @@ public interface IDataDicService {
      * @param code
      * @return
      */
-    List<String> getDicCodesLike(String code);
+    List<String> getDicCodesByCodeLike(String code);
 
     /**
      * 根据字典名称模糊查询字典项
@@ -24,7 +24,7 @@ public interface IDataDicService {
      * @param name
      * @return
      */
-    List<String> getDicNamesLike(String name);
+    List<String> getDicCodesByNamesLike(String name);
 
     /**
      * 根据字典编码获取字典项

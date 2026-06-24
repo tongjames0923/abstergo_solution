@@ -1,6 +1,8 @@
 package com.tbs.app.service.impl.user;
 
 import com.tbs.app.config.AppSettingProperty;
+import com.tbs.app.constant.UserServiceFeatureFlagConstants;
+import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.cache.expire.annotation.ExpireOn;
@@ -49,6 +51,10 @@ public class SimpleSystemUserServiceImpl
     SystemUserMapper mapper;
     @Resource
     private IPasswordEncrypt encrypt;
+
+    @Resource
+    private IFeatureFlagService featureFlagService;
+
     @Resource
     @Lazy
     private IUserRoleRelationService relationService;
@@ -62,8 +68,11 @@ public class SimpleSystemUserServiceImpl
 
     @Override
     protected SystemUserEntity insertNew(SystemUserEntity entity) {
-        AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUserName()), "用户名格式错误");
-        AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
+        if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
+            UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
+            AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUserName()), "用户名格式错误");
+            AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()), "密码格式错误");
+        }
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
         getMapper().insert(entity);
@@ -89,8 +98,12 @@ public class SimpleSystemUserServiceImpl
     protected SystemUserEntity compareAndUpdateValue(SystemUserEntity systemUserEntity,
         SystemUserEntity oldSystemUserEntity) {
         if (StrUtil.isNotEmpty(systemUserEntity.getPassword())) {
-            AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()),
-                "密码格式错误");
+            if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
+                UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
+                AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()),
+                    "密码格式错误");
+            }
+
             if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
                 oldSystemUserEntity.setPassword(encrypt.encrypt(systemUserEntity.getPassword()));
                 AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());

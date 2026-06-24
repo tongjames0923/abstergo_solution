@@ -30,7 +30,7 @@ open class DataDicServiceImpl : IDataDicService {
     private val dicEntity = SystemDataDicEntity();
     private val dicItemEntity = SystemDataDicItemEntity();
 
-    override fun getDicCodesLike(code: String): List<String> {
+    override fun getDicCodesByCodeLike(code: String): List<String> {
         return QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
             .leftLike(SystemDataDicEntity::getDataDicCode, code).equal(
                 SystemDataDicEntity::getFlag, DataDicFlagEnum.ENABLE.code
@@ -39,12 +39,12 @@ open class DataDicServiceImpl : IDataDicService {
             }.toList();
     }
 
-    override fun getDicNamesLike(name: String): List<String> {
+    override fun getDicCodesByNamesLike(name: String): List<String> {
         return QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
             .leftLike(SystemDataDicEntity::getDataDicName, name).equal(
                 SystemDataDicEntity::getFlag, DataDicFlagEnum.ENABLE.code
             ).pour().fetch().stream().map {
-                it.dataDicName
+                it.dataDicCode
             }.toList();
     }
 
