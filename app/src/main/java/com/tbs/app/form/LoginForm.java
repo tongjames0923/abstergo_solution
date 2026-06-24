@@ -1,7 +1,5 @@
 package com.tbs.app.form;
 
-import com.tbs.shared.interfaces.annoation.PasswordValid;
-import com.tbs.shared.interfaces.annoation.UserNameValid;
 import com.tbs.web.security.user.form.IUsernameAndPasswordForm;
 import lombok.Data;
 
@@ -25,7 +23,6 @@ public class LoginForm implements IUsernameAndPasswordForm {
      * 用户登录账号，需符合用户名格式验证规则
      * </p>
      */
-    @UserNameValid
     private String username;
 
     /**
@@ -34,7 +31,6 @@ public class LoginForm implements IUsernameAndPasswordForm {
      * 用户登录密码，需符合密码格式验证规则
      * </p>
      */
-    @PasswordValid
     private String password;
 
     /**

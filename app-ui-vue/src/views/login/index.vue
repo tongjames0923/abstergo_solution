@@ -114,8 +114,8 @@ export default {
         rememberMe: false
       },
       loginRules: {
-        username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        password: [{ required: true, trigger: 'blur', validator: validatePassword }]
+        // username: [{ required: true, trigger: 'blur', validator: validateUsername }],
+        // password: [{ required: true, trigger: 'blur', validator: validatePassword }]
       },
       loading: false,
       passwordType: 'password',
@@ -165,11 +165,11 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-    
+
           this.$store.dispatch('user/login', this.loginForm).then(async() => {
             // 等待一小段时间确俜token已经设置到请求拦截器中
             await new Promise(resolve => setTimeout(resolve, 100))
-                
+
             try {
               // 先获取用户信息，再更新路由
               await this.$store.dispatch('user/getInfo')

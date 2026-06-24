@@ -15,7 +15,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -55,7 +54,7 @@ public class PublicUserController extends BaseController {
     @Operation(summary = "用户登录", description = "用户使用用户名和密码登录系统")
     @ApiResponse(responseCode = "200", description = "成功登录",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = ITokenModel.class)))
-    public ITokenModel login(@Parameter(description = "登录表单") @RequestBody @Validated LoginForm loginForm) {
+    public ITokenModel login(@Parameter(description = "登录表单") @RequestBody LoginForm loginForm) {
         ITokenModel tokenModel = loginProvider.requestToken(loginForm);
         return tokenModel;
     }
