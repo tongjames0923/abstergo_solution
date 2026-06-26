@@ -36,7 +36,7 @@ export function adminQueryUser(data, pageNum, pageSize) {
  */
 export function activateUser(userId) {
   return request({
-    url: `/private/admin/account/activite/${userId}`,
+    url: `/private/admin/roles/account/activite/${userId}`,
     method: 'get'
   })
 }
@@ -48,7 +48,7 @@ export function activateUser(userId) {
  */
 export function disableUser(userId) {
   return request({
-    url: `/private/admin/account/disable/${userId}`,
+    url: `/private/admin/roles/account/disable/${userId}`,
     method: 'get'
   })
 }
