@@ -3,7 +3,6 @@ package com.tbs.dic.service;
 import com.tbs.dic.entity.SystemDataDicEntity;
 import com.tbs.dic.entity.SystemDataDicItemEntity;
 import com.tbs.dic.enums.DataDicCompareEnum;
-import com.tbs.dic.enums.DataDicFlagEnum;
 import com.tbs.dic.model.DicModel;
 
 import java.util.List;
@@ -52,21 +51,34 @@ public interface IDataDicService {
     void saveDataDicItem(String dicCode, SystemDataDicItemEntity item);
 
     /**
-     * 设置字典项的标志
+     * 启用字典
      *
-     * @param dicCode  字典编码
-     * @param id       字典项id
-     * @param flagEnum 标志
+     * @param dicCode
      */
-    void setDicItemFlag(String dicCode, String label, DataDicFlagEnum flagEnum);
+    void enableDataDic(String dicCode);
 
     /**
-     * 设置字典的标志
+     * 禁用字典
      *
-     * @param dicCode  字典编码
-     * @param flagEnum 标志
+     * @param dicCode
      */
-    void setDicFlag(String dicCode, DataDicFlagEnum flagEnum);
+    void disableDataDic(String dicCode);
+
+    /**
+     * 启用字典项
+     *
+     * @param dicCode
+     * @param label
+     */
+    void enableDataDicItem(String dicCode, String label);
+
+    /**
+     * 禁用字典项
+     *
+     * @param dicCode
+     * @param label
+     */
+    void disableDataDicItem(String dicCode, String label);
 
     /**
      * 匹配字典项值是否一致
@@ -79,4 +91,20 @@ public interface IDataDicService {
      *
      */
     int valueEquals(String dicCode, String label, String value);
+
+    /**
+     * 删除字典
+     *
+     * @param dicCode
+     */
+    void deleteDataDic(String dicCode);
+
+    /**
+     * 删除字典项
+     *
+     * @param dicCode
+     * @param label
+     */
+    void deleteDataDicItem(String dicCode, String label);
+
 }

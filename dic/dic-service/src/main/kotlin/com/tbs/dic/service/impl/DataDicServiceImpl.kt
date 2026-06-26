@@ -1,6 +1,7 @@
 package com.tbs.dic.service.impl
 
 import com.tbs.common.error.AssertUtil
+import com.tbs.common.util.base.StrUtil
 import com.tbs.dic.entity.SystemDataDicEntity
 import com.tbs.dic.entity.SystemDataDicItemEntity
 import com.tbs.dic.enums.DataDicCompareEnum
@@ -104,10 +105,13 @@ open class DataDicServiceImpl : IDataDicService {
             val e = dataDicDao.selectByPrimaryKey(dic.id);
             AssertUtil.isTrue(e == null, "数据字典ID[${dic.id}]不存在")
             AssertUtil.isTrue(old.id != e.id, "数据字典[${dic.dataDicCode}]已存在")
-            val dic = SystemDataDicEntity(
-                e.id, dic.dataDicName, dic.dataDicCode, e.flag,
-                dic.remark, e.createTime, Date(),
-            )
+            if (StrUtil.isNotEmpty(dic.remark)) {
+                e.remark = dic.remark;
+            }
+            if (StrUtil.isNotEmpty(dic.dataDicName)) {
+                e.dataDicName = dic.dataDicName;
+            }
+            e.updateTime = Date();
             dataDicDao.updateByPrimaryKey(dic)
             return dic;
         }
@@ -154,21 +158,24 @@ open class DataDicServiceImpl : IDataDicService {
             val e = dataDicItemDao.selectByPrimaryKey(item.id);
             AssertUtil.isTrue(e == null, "数据字典项ID[${item.id}]不存在")
             AssertUtil.isTrue(oi.id != e.id, "数据字典项[${item.label}]已存在")
-            val dic = SystemDataDicItemEntity(
-                e.id, dicCode, item.label, item.value, item.remark, item.sort,
-                e.createTime, Date(), e.flag
-            )
-            dataDicItemDao.updateByPrimaryKey(dic)
+            if (StrUtil.isNotEmpty(item.value)) {
+                e.value = item.value
+            }
+            if (StrUtil.isNotEmpty(item.remark)) {
+                e.remark = item.remark
+            }
+            if (item.sort != null) {
+                e.sort = item.sort
+            }
+            e.updateTime = Date()
+            dataDicItemDao.updateByPrimaryKey(e)
         }
     }
 
-    @CacheEvict(
-        cacheNames = ["data_dic"],
-        key = "#dicCode",
-    )
-    override fun setDicItemFlag(
+
+    private fun setDicItemFlag(
         dicCode: String,
-        label: String?,
+        label: String,
         flagEnum: DataDicFlagEnum
     ) {
         val QW = QueryEngine.getEntityQueryWrapper(dicItemEntity).query().where().equal(
@@ -181,21 +188,14 @@ open class DataDicServiceImpl : IDataDicService {
                 DataDicFlagEnum.DISABLE.code
             )
         ).pour().fetchOne();
-        if (QW == null) {
-            return;
-        }
-        val dic = SystemDataDicItemEntity(
-            QW.id, QW.dicCode, QW.label, QW.value, QW.remark, QW.sort,
-            QW.createTime, Date(), flagEnum.code
-        )
-        dataDicItemDao.updateByPrimaryKey(dic)
+        AssertUtil.isTrue(QW == null, "数据字典项[${label}]不存在")
+        QW.flag = flagEnum.code
+        QW.updateTime = Date()
+        dataDicItemDao.updateByPrimaryKey(QW)
     }
 
-    @CacheEvict(
-        cacheNames = ["data_dic"],
-        key = "#dicCode",
-    )
-    override fun setDicFlag(dicCode: String, flagEnum: DataDicFlagEnum) {
+
+    private fun setDicFlag(dicCode: String, flagEnum: DataDicFlagEnum) {
         val QW = QueryEngine.getEntityQueryWrapper(dicEntity).query().where().equal(
             SystemDataDicEntity::getDataDicCode, dicCode
         ).`in`(
@@ -204,14 +204,23 @@ open class DataDicServiceImpl : IDataDicService {
                 DataDicFlagEnum.DISABLE.code
             )
         ).pour().fetchOne();
-        if (QW == null) {
-            return;
+        AssertUtil.isTrue(QW == null, "数据字典[${dicCode}]不存在")
+
+        if (Objects.equals(flagEnum.code, DataDicFlagEnum.DELETE.code)) {
+            val item = QueryEngine.getEntityQueryWrapper(dicItemEntity)
+                .query().where()
+                .equal(SystemDataDicItemEntity::getDicCode, dicCode)
+                .`in`(
+                    SystemDataDicItemEntity::getFlag, Arrays.asList(
+                        DataDicFlagEnum.ENABLE.code, DataDicFlagEnum.DISABLE.code
+                    )
+                ).pour().fetchOne();
+            AssertUtil.isTrue(item != null, "数据字典[${dicCode}]有未删除的项")
         }
-        val dic = SystemDataDicEntity(
-            QW.id, QW.dataDicCode, QW.dataDicName, flagEnum.code,
-            QW.remark, QW.createTime, Date(),
-        )
-        dataDicDao.updateByPrimaryKey(dic)
+
+        QW.flag = flagEnum.code
+        QW.updateTime = Date()
+        dataDicDao.updateByPrimaryKey(QW)
     }
 
     override fun valueEquals(dicCode: String, label: String, value: String): Int {
@@ -242,4 +251,51 @@ open class DataDicServiceImpl : IDataDicService {
 
     }
 
+    @CacheEvict(
+        cacheNames = ["data_dic"],
+        key = "#dicCode",
+    )
+    override fun deleteDataDic(dicCode: String) {
+        setDicFlag(dicCode, DataDicFlagEnum.DELETE)
+    }
+
+    @CacheEvict(
+        cacheNames = ["data_dic"],
+        key = "#dicCode",
+    )
+    override fun deleteDataDicItem(dicCode: String, label: String) {
+        setDicItemFlag(dicCode, label, DataDicFlagEnum.DELETE)
+    }
+
+    @CacheEvict(
+        cacheNames = ["data_dic"],
+        key = "#dicCode",
+    )
+    override fun enableDataDic(dicCode: String) {
+        setDicFlag(dicCode, DataDicFlagEnum.ENABLE)
+    }
+
+    @CacheEvict(
+        cacheNames = ["data_dic"],
+        key = "#dicCode",
+    )
+    override fun disableDataDic(dicCode: String) {
+        setDicFlag(dicCode, DataDicFlagEnum.DISABLE)
+    }
+
+    @CacheEvict(
+        cacheNames = ["data_dic"],
+        key = "#dicCode",
+    )
+    override fun enableDataDicItem(dicCode: String, label: String) {
+        setDicItemFlag(dicCode, label, DataDicFlagEnum.ENABLE)
+    }
+
+    @CacheEvict(
+        cacheNames = ["data_dic"],
+        key = "#dicCode",
+    )
+    override fun disableDataDicItem(dicCode: String, label: String) {
+        setDicItemFlag(dicCode, label, DataDicFlagEnum.DISABLE)
+    }
 }
