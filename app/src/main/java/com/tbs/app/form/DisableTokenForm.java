@@ -1,5 +1,6 @@
 package com.tbs.app.form;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.ToString;
 
@@ -18,6 +19,7 @@ import java.io.Serializable;
  */
 @Data
 @ToString
+@Schema(description = "禁用Token表单")
 public class DisableTokenForm implements Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -28,6 +30,7 @@ public class DisableTokenForm implements Serializable {
      * </p>
      */
     @NotBlank
+    @Schema(description = "Token值", requiredMode = Schema.RequiredMode.REQUIRED)
     private String token;
 
     /**
@@ -37,5 +40,6 @@ public class DisableTokenForm implements Serializable {
      * </p>
      */
     @NotNull
+    @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long userId;
 }

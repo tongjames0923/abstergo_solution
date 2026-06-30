@@ -1,6 +1,7 @@
 package com.tbs.app.form;
 
 import com.tbs.web.security.user.form.IUsernameAndPasswordForm;
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -13,6 +14,7 @@ import lombok.Data;
  * @since 1.0.0
  */
 @Data
+@Schema(description = "用户登录表单")
 public class LoginForm implements IUsernameAndPasswordForm {
 
     private static final long serialVersionUID = 1L;
@@ -23,6 +25,7 @@ public class LoginForm implements IUsernameAndPasswordForm {
      * 用户登录账号，需符合用户名格式验证规则
      * </p>
      */
+    @Schema(description = "用户名", requiredMode = Schema.RequiredMode.REQUIRED)
     private String username;
 
     /**
@@ -31,10 +34,12 @@ public class LoginForm implements IUsernameAndPasswordForm {
      * 用户登录密码，需符合密码格式验证规则
      * </p>
      */
+    @Schema(description = "密码", requiredMode = Schema.RequiredMode.REQUIRED)
     private String password;
 
     /**
      * 登录类型，0/null web登录，1客户端登录
      */
+    @Schema(description = "登录类型，0/null web登录，1客户端登录")
     private Integer loginType;
 }
