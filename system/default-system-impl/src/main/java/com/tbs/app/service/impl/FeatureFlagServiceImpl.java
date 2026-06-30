@@ -34,7 +34,8 @@ public class FeatureFlagServiceImpl implements IFeatureFlagService {
             log.warn("未找到系统数据字典项");
             return false;
         }
-        var map = items.stream().collect(Collectors.toMap(DicItemModel::getLabel, DicItemModel::getValue));
+        var map = items.stream().filter(i -> i != null && Objects.equals(i.getFlag(), DataDicFlagEnum.ENABLE.getCode()))
+            .collect(Collectors.toMap(DicItemModel::getLabel, DicItemModel::getValue));
         if (!map.containsKey(flagName)) {
             log.warn("未找到系统数据字典项:{}", flagName);
             return false;

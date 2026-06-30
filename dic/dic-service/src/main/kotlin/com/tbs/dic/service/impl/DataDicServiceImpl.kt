@@ -56,16 +56,22 @@ open class DataDicServiceImpl : IDataDicService {
         insertItem: Boolean
     ): List<DicModel> {
         val QW = QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
-            .equal(SystemDataDicEntity::getDataDicCode, code).equal(
-                SystemDataDicEntity::getFlag, DataDicFlagEnum.ENABLE.code
+            .equal(SystemDataDicEntity::getDataDicCode, code).`in`(
+                SystemDataDicEntity::getFlag, Arrays.asList(
+                    DataDicFlagEnum.ENABLE.code,
+                    DataDicFlagEnum.DISABLE.code
+                )
             ).pour().fetchOne();
         if (QW == null) {
             return emptyList();
         }
         val items = QueryEngine.getEntityQueryWrapper(dicItemEntity).query().where().equal(
             SystemDataDicItemEntity::getDicCode, code
-        ).equal(
-            SystemDataDicItemEntity::getFlag, DataDicFlagEnum.ENABLE.code
+        ).`in`(
+            SystemDataDicItemEntity::getFlag, Arrays.asList(
+                DataDicFlagEnum.ENABLE.code,
+                DataDicFlagEnum.DISABLE.code
+            )
         ).pour().fetch().stream()
             .filter { e -> e != null }
             .sorted { entity, entity1 ->

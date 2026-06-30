@@ -36,4 +36,10 @@ public class DicItemSaveForm implements Serializable {
      */
     @Schema(description = "字典项值", requiredMode = Schema.RequiredMode.REQUIRED)
     private String dicItemValue;
+
+    /**
+     * 字典项描述
+     */
+    @Schema(description = "字典项描述")
+    private String dicItemDesc;
 }

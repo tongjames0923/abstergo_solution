@@ -6,14 +6,15 @@ import com.tbs.app.form.DicSaveForm;
 import com.tbs.app.form.DicSearchForm;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.dic.entity.SystemDataDicEntity;
 import com.tbs.dic.entity.SystemDataDicItemEntity;
 import com.tbs.dic.model.DicModel;
 import com.tbs.dic.service.IDataDicService;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -40,11 +41,9 @@ import java.util.List;
  * @since 1.0.0
  */
 @RestController
-@PreAuthorize("@authUtil.userLoggedIn and @hasAnyAuthority(" +
-    RoleConstants.SUPER_ADMIN_ROLE_NAME +
-    "," +
-    RoleConstants.DEVELOPER_ROLE_NAME +
-    ")")
+@PreAuthorize("@authUtil.userLoggedIn and hasAnyAuthority(" + "'" +
+    RoleConstants.SUPER_ADMIN_ROLE_NAME + "', '" +
+    RoleConstants.DEVELOPER_ROLE_NAME + "')")
 @RequestMapping("private/admin/dic")
 @Tag(name = "数据字典管理接口", description = "数据字典管理相关操作接口")
 public class SystemDataDicController extends BaseController {
@@ -247,6 +246,9 @@ public class SystemDataDicController extends BaseController {
         SystemDataDicEntity dic = new SystemDataDicEntity();
         dic.setDataDicCode(form.getDicCode());
         dic.setDataDicName(form.getDicName());
+        if (StrUtil.isNotBlank(form.getDicDesc())) {
+            dic.setRemark(form.getDicDesc());
+        }
         return successResult(dataDicService.saveDataDic(dic));
     }
 
@@ -276,6 +278,9 @@ public class SystemDataDicController extends BaseController {
         item.setDicCode(form.getDicCode());
         item.setLabel(form.getDicItemLabel());
         item.setValue(form.getDicItemValue());
+        if (StrUtil.isNotBlank(form.getDicItemDesc())) {
+            item.setRemark(form.getDicItemDesc());
+        }
         dataDicService.saveDataDicItem(form.getDicCode(), item);
         return successResult(null);
     }

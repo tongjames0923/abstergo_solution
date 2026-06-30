@@ -30,4 +30,10 @@ public class DicSaveForm implements Serializable {
      */
     @Schema(description = "字典名称", requiredMode = Schema.RequiredMode.REQUIRED)
     private String dicName;
+
+    /**
+     * 字典描述
+     */
+    @Schema(description = "字典描述")
+    private String dicDesc;
 }
