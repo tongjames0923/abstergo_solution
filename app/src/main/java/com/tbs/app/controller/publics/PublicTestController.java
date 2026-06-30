@@ -8,6 +8,7 @@ import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -83,16 +84,19 @@ public class PublicTestController extends BaseController {
      * @return 子节点列表
      */
     @PostMapping("/getChildren")
+    @AjaxResponseType(Object.class)
     public AjaxResult getChildren(String nodeId) {
         return AjaxUtil.getInstance().success(store.getDirectChildren(nodeId, TEST_GROUP));
     }
 
     @PostMapping("/getParentNodes")
+    @AjaxResponseType(Object.class)
     public AjaxResult getParentNodes(String nodeId) {
         return AjaxUtil.getInstance().success(store.getParentNodes(nodeId, TEST_GROUP));
     }
 
     @PostMapping("/deleteNode")
+    @AjaxResponseType(void.class)
     public AjaxResult deleteNode(String nodeId) {
         store.delete(nodeId, TEST_GROUP);
         return AjaxUtil.getInstance().success(null);
@@ -121,6 +125,7 @@ public class PublicTestController extends BaseController {
      * @return 执行结果
      */
     @PostMapping("/scriptTest")
+    @AjaxResponseType(Object.class)
     public AjaxResult scriptTest(@RequestBody SpelForm script) {
         var spec = scriptEngine.getCompilerSpecWithVersion(SpelCompiler.COMPILER_NAME, SpelCompiler.MAJOR_VERSION,
             SpelCompiler.MINOR_VERSION).orElseThrow(() -> new RuntimeException("不支持的脚本编译器"));

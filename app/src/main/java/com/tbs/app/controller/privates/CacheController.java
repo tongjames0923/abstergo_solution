@@ -8,6 +8,7 @@ import com.tbs.shared.constant.RoleConstants;
 import com.tbs.web.BaseController;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -47,6 +48,7 @@ public class CacheController extends BaseController {
      * @return 所有缓存名称列表
      */
     @GetMapping("names")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {String.class})
     @Operation(summary = "获取缓存名称列表", description = "获取系统中所有缓存的名称")
     @ApiResponse(responseCode = "200", description = "成功获取缓存名称列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -62,6 +64,7 @@ public class CacheController extends BaseController {
      * @return 缓存键列表
      */
     @PostMapping("keys")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {String.class})
     @Operation(summary = "获取缓存键列表", description = "根据缓存名称获取缓存键列表")
     @ApiResponse(responseCode = "200", description = "成功获取缓存键列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -82,6 +85,7 @@ public class CacheController extends BaseController {
      * @return 缓存值，如果未找到则返回null
      */
     @PostMapping("get")
+    @AjaxResponseType(Object.class)
     @Operation(summary = "获取缓存值", description = "根据缓存名称和键获取对应的缓存值")
     @ApiResponse(responseCode = "200", description = "成功获取缓存值",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -105,6 +109,7 @@ public class CacheController extends BaseController {
      * @param form 缓存清除表单，包含缓存名称和可选的键
      */
     @PostMapping("evict")
+    @AjaxResponseType(void.class)
     @Operation(summary = "清除缓存", description = "根据缓存名称清除缓存，如果指定键则只清除该键对应的缓存")
     @ApiResponse(responseCode = "200", description = "成功清除缓存",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

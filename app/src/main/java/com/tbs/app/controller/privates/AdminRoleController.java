@@ -12,6 +12,8 @@ import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.shared.pojo.model.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,6 +24,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * 管理员角色管理控制器,用于管理用户使用的角色权限。
@@ -51,6 +54,7 @@ public class AdminRoleController extends BaseController {
      * @return 用户角色列表
      */
     @GetMapping("/{userId}")
+    @AjaxResponseType(value = List.class)
     @Operation(summary = "查询用户角色", description = "根据用户ID查询该用户拥有的所有角色")
     @ApiResponse(responseCode = "200", description = "成功查询用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -67,6 +71,7 @@ public class AdminRoleController extends BaseController {
      * @return 操作结果
      */
     @GetMapping("/enable/{userId}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "启用用户角色", description = "为指定用户启用指定角色")
     @ApiResponse(responseCode = "200", description = "成功启用用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -85,6 +90,7 @@ public class AdminRoleController extends BaseController {
      * @return 操作结果
      */
     @GetMapping("/disable/{userId}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "禁用用户角色", description = "为指定用户禁用指定角色")
     @ApiResponse(responseCode = "200", description = "成功禁用用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -104,6 +110,7 @@ public class AdminRoleController extends BaseController {
      * @return 角色列表
      */
     @PostMapping("/query")
+    @AjaxResponseType(PageVO.class)
     @Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询角色列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -124,6 +131,7 @@ public class AdminRoleController extends BaseController {
      * @return 操作结果
      */
     @GetMapping("/account/activite/{userId}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "激活用户账户", description = "激活指定用户的账户")
     @ApiResponse(responseCode = "200", description = "成功激活用户账户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -144,6 +152,7 @@ public class AdminRoleController extends BaseController {
      * @return 操作结果
      */
     @GetMapping("/account/disable/{userId}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "禁用用户账户", description = "禁用指定用户的账户")
     @ApiResponse(responseCode = "200", description = "成功禁用用户账户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

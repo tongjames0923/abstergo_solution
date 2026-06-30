@@ -13,6 +13,7 @@ import com.tbs.dic.service.IDataDicService;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -64,6 +65,7 @@ public class SystemDataDicController extends BaseController {
      * @return 匹配的字典模型列表
      */
     @PostMapping("query")
+    @AjaxResponseType(value = List.class, genericArgs = {DicModel.class})
     @Operation(summary = "模糊查询字典", description = "根据字典名称和编码模糊查询字典列表")
     @ApiResponse(responseCode = "200", description = "成功查询字典列表",
         content = @Content(mediaType = "application/json",
@@ -99,6 +101,7 @@ public class SystemDataDicController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("enableDic")
+    @AjaxResponseType(void.class)
     @Operation(summary = "启用数据字典", description = "根据字典编码启用对应的数据字典")
     @ApiResponse(responseCode = "200", description = "成功启用数据字典",
         content = @Content(mediaType = "application/json",
@@ -119,6 +122,7 @@ public class SystemDataDicController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("disableDic")
+    @AjaxResponseType(void.class)
     @Operation(summary = "禁用数据字典", description = "根据字典编码禁用对应的数据字典")
     @ApiResponse(responseCode = "200", description = "成功禁用数据字典",
         content = @Content(mediaType = "application/json",
@@ -139,6 +143,7 @@ public class SystemDataDicController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("enableDicItem")
+    @AjaxResponseType(void.class)
     @Operation(summary = "启用数据字典项", description = "根据字典编码和字典项标签启用对应的字典项")
     @ApiResponse(responseCode = "200", description = "成功启用数据字典项",
         content = @Content(mediaType = "application/json",
@@ -160,6 +165,7 @@ public class SystemDataDicController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("disableDicItem")
+    @AjaxResponseType(void.class)
     @Operation(summary = "禁用数据字典项", description = "根据字典编码和字典项标签禁用对应的字典项")
     @ApiResponse(responseCode = "200", description = "成功禁用数据字典项",
         content = @Content(mediaType = "application/json",
@@ -181,6 +187,7 @@ public class SystemDataDicController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("deleteDic")
+    @AjaxResponseType(void.class)
     @Operation(summary = "删除数据字典", description = "根据字典编码删除对应的数据字典")
     @ApiResponse(responseCode = "200", description = "成功删除数据字典",
         content = @Content(mediaType = "application/json",
@@ -201,6 +208,7 @@ public class SystemDataDicController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("deleteDicItem")
+    @AjaxResponseType(void.class)
     @Operation(summary = "删除数据字典项", description = "根据字典编码和字典项标签删除对应的字典项")
     @ApiResponse(responseCode = "200", description = "成功删除数据字典项",
         content = @Content(mediaType = "application/json",
@@ -225,6 +233,7 @@ public class SystemDataDicController extends BaseController {
      * @return 保存后的字典实体信息
      */
     @PostMapping("saveDic")
+    @AjaxResponseType(SystemDataDicEntity.class)
     @Operation(summary = "保存数据字典", description = "创建或更新数据字典信息")
     @ApiResponse(responseCode = "200", description = "成功保存数据字典",
         content = @Content(mediaType = "application/json",
@@ -251,6 +260,7 @@ public class SystemDataDicController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("saveDicItem")
+    @AjaxResponseType(void.class)
     @Operation(summary = "保存数据字典项", description = "在指定字典下创建或更新字典项")
     @ApiResponse(responseCode = "200", description = "成功保存数据字典项",
         content = @Content(mediaType = "application/json",

@@ -8,6 +8,7 @@ import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AuthUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -85,6 +86,7 @@ public class ViewController extends BaseController {
      * @return 保存结果
      */
     @PostMapping("saveForm")
+    @AjaxResponseType(FormConfig.class)
     @Operation(summary = "保存表单配置", description = "保存表单配置")
     @ApiResponse(responseCode = "200", description = "成功保存表单配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -99,6 +101,7 @@ public class ViewController extends BaseController {
      * @return 删除结果
      */
     @DeleteMapping("/form/{id}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "删除表单配置", description = "根据ID删除表单配置")
     @ApiResponse(responseCode = "200", description = "成功删除表单配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -115,6 +118,7 @@ public class ViewController extends BaseController {
      * @return 更新结果
      */
     @PutMapping("updateForm/{id}")
+    @AjaxResponseType(FormConfig.class)
     @Operation(summary = "更新表单配置", description = "更新表单配置")
     @ApiResponse(responseCode = "200", description = "成功更新表单配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -140,6 +144,7 @@ public class ViewController extends BaseController {
      * @return 包含所有视图路由配置的AjaxResult对象
      */
     @GetMapping("/routes")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {ViewRouteModel.class})
     @Operation(summary = "获取所有视图路由配置", description = "获取所有视图路由配置")
     @ApiResponse(responseCode = "200", description = "成功获取所有视图路由配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

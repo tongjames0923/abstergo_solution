@@ -1,9 +1,11 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.department.IDepartmentUserRelationService;
+import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -43,6 +45,7 @@ public class PrivateDepartmentController extends BaseController {
      * @return 用户可访问的部门列表
      */
     @GetMapping("avaliable/{userId}")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {DepartmentInfoVO.class})
     @Operation(summary = "获取用户可访问部门列表", description = "根据用户ID查询该用户可以访问的所有部门信息")
     @ApiResponse(responseCode = "200", description = "成功获取用户可访问部门列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -62,6 +65,7 @@ public class PrivateDepartmentController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("addEmp/{depId}/{userId}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "添加用户到部门", description = "将指定用户添加到指定部门")
     @ApiResponse(responseCode = "200", description = "成功添加用户到部门",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -83,6 +87,7 @@ public class PrivateDepartmentController extends BaseController {
      * @return 操作结果
      */
     @PostMapping("delEmp/{depId}/{userId}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "从部门移除用户", description = "将指定用户从指定部门移除")
     @ApiResponse(responseCode = "200", description = "成功从部门移除用户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -103,6 +108,7 @@ public class PrivateDepartmentController extends BaseController {
      * @return 部门员工列表
      */
     @GetMapping("employee/{depId}")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {Object.class})
     @Operation(summary = "获取部门员工列表", description = "根据部门ID查询该部门下的所有员工")
     @ApiResponse(responseCode = "200", description = "成功获取部门员工列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

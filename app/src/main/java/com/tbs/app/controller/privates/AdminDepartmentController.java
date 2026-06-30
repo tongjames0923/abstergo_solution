@@ -12,6 +12,8 @@ import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.shared.pojo.model.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -60,6 +62,7 @@ public class AdminDepartmentController
 	 */
 	@Override
 	@GetMapping("get/{id}")
+    @AjaxResponseType(SystemDepartmentEntity.class)
     @Operation(summary = "获取部门信息", description = "根据部门ID获取部门详细信息")
     @ApiResponse(responseCode = "200", description = "成功获取部门信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -77,6 +80,7 @@ public class AdminDepartmentController
 	 */
 	@Override
 	@PostMapping("save")
+    @AjaxResponseType(SystemDepartmentEntity.class)
     @Operation(summary = "保存部门信息", description = "创建或更新部门信息")
     @ApiResponse(responseCode = "200", description = "成功保存部门信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -93,6 +97,7 @@ public class AdminDepartmentController
 	 */
 	@Override
 	@PostMapping("delete/{id}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "删除部门信息", description = "根据部门ID删除部门信息")
     @ApiResponse(responseCode = "200", description = "成功删除部门信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -110,6 +115,7 @@ public class AdminDepartmentController
 	 */
 	@Override
 	@PostMapping("query")
+    @AjaxResponseType(PageVO.class)
     @Operation(summary = "查询部门列表", description = "根据条件查询部门列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询部门列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -139,6 +145,7 @@ public class AdminDepartmentController
      * @return 操作结果
      */
     @PostMapping("moveDepartmentTo")
+    @AjaxResponseType(void.class)
     @Operation(summary = "移动部门到指定父级", description = "将一个部门移动到另一个部门下作为其子级部门")
     @ApiResponse(responseCode = "200", description = "成功移动部门",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -156,6 +163,7 @@ public class AdminDepartmentController
      * @return 子级部门列表
      */
     @GetMapping("listChildren/{parent}")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {SystemDepartmentEntity.class})
     @Operation(summary = "获取子级部门列表", description = "获取指定部门的所有直接子级部门列表")
     @ApiResponse(responseCode = "200", description = "成功获取子级部门列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

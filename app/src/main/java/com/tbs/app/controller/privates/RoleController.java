@@ -9,6 +9,8 @@ import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.shared.pojo.model.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -51,6 +53,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	 */
 	@Override
 	@GetMapping("get/{id}")
+	@AjaxResponseType(SystemRoleEntity.class)
 	@Operation(summary = "获取角色信息", description = "根据角色ID获取角色详细信息")
 	@ApiResponse(responseCode = "200", description = "成功获取角色信息",
 		content = @Content(mediaType = "application/json",
@@ -67,6 +70,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	 */
 	@Override
 	@PostMapping("save")
+	@AjaxResponseType(SystemRoleEntity.class)
 	@Operation(summary = "保存角色信息", description = "创建或更新角色信息")
 	@ApiResponse(responseCode = "200", description = "成功保存角色信息",
 		content = @Content(mediaType = "application/json",
@@ -84,6 +88,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	 */
 	@Override
 	@PostMapping("delete/{id}")
+	@AjaxResponseType(void.class)
 	@Operation(summary = "删除角色", description = "根据角色ID删除角色")
 	@ApiResponse(responseCode = "200", description = "成功删除角色",
 		content = @Content(mediaType = "application/json",
@@ -102,6 +107,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	 */
 	@Override
 	@PostMapping("query")
+	@AjaxResponseType(PageVO.class)
 	@Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
 	@ApiResponse(responseCode = "200", description = "成功查询角色列表",
 		content = @Content(mediaType = "application/json",
@@ -114,6 +120,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	}
 
 	@GetMapping("/enable/{id}")
+	@AjaxResponseType(void.class)
 	@Operation(summary = "启用角色", description = "启用角色")
 	@ApiResponse(responseCode = "200", description = "成功启用角色",
 		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -128,6 +135,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	}
 
 	@GetMapping("/disable/{id}")
+	@AjaxResponseType(void.class)
 	@Operation(summary = "禁用角色", description = "禁用角色")
 	@ApiResponse(responseCode = "200", description = "成功禁用角色",
 		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -37,6 +38,7 @@ public class PrivateTestController extends BaseController {
 	 * @return 测试结果
 	 */
 	@GetMapping("/test")
+	@AjaxResponseType(Object.class)
 	@Operation(summary = "测试权限", description = "测试权限")
 	@ApiResponse(responseCode = "200", description = "测试权限",
 		content = @Content(mediaType = "application/json",
@@ -54,6 +56,7 @@ public class PrivateTestController extends BaseController {
 	 * @return 测试认证结果
 	 */
 	@GetMapping("/testAuth")
+	@AjaxResponseType(void.class)
 	@Operation(summary = "测试认证", description = "测试认证")
 	@ApiResponse(responseCode = "200", description = "测试认证成功",
 		content = @Content(mediaType = "application/json",

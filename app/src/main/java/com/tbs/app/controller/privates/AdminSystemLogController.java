@@ -3,6 +3,7 @@ package com.tbs.app.controller.privates;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -34,6 +35,7 @@ public class AdminSystemLogController extends BaseController {
      * @return 日志操作类型列表及统计结果
      */
     @GetMapping("listWithOpType")
+    @AjaxResponseType(Object.class)
     public AjaxResult listWithOpType() {
         return successResult(systemLogService.getLogOperateTypeList(28));
     }

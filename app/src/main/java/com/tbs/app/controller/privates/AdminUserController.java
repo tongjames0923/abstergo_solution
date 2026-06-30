@@ -15,6 +15,8 @@ import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.LoginSessionVO;
+import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.shared.pojo.model.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -66,6 +68,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @GetMapping("get/{id}")
+    @AjaxResponseType(SystemUserEntity.class)
     @Operation(summary = "获取用户数据", description = "根据用户ID获取用户数据详细信息")
     @ApiResponse(responseCode = "200", description = "成功获取用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -81,6 +84,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @PostMapping("save")
+    @AjaxResponseType(SystemUserEntity.class)
     @Operation(summary = "保存用户数据", description = "创建或更新用户数据信息")
     @ApiResponse(responseCode = "200", description = "成功保存用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -97,6 +101,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @PostMapping("delete/{id}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "删除用户数据", description = "根据用户ID删除用户数据")
     @ApiResponse(responseCode = "200", description = "成功删除用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -114,6 +119,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @Override
     @PostMapping("query")
+    @AjaxResponseType(PageVO.class)
     @Operation(summary = "查询用户数据", description = "根据条件查询用户数据列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询用户数据列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -163,6 +169,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      * @return 用户登录会话列表
      */
     @PostMapping("token/disable/")
+    @AjaxResponseType(void.class)
     public AjaxResult tokenDisable(@RequestBody @Valid DisableTokenForm form) {
         var user = getService().queryById(form.getUserId());
         AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();

@@ -21,6 +21,7 @@ import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.uitl.AjaxUtil;
 import com.tbs.web.uitl.AuthUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -74,6 +75,7 @@ public class PrivateUserController extends BaseController {
      * @return 登出结果，true表示登出成功
      */
     @GetMapping("/logout")
+    @AjaxResponseType(void.class)
     @Operation(summary = "用户登出", description = "退出当前登录状态")
     @ApiResponse(responseCode = "200", description = "成功登出",
         content = @Content(mediaType = "application/json",
@@ -135,6 +137,7 @@ public class PrivateUserController extends BaseController {
      * @return 刷新令牌
      */
     @GetMapping("getRefreshToken")
+    @AjaxResponseType(void.class)
     @Operation(summary = "获取刷新令牌", description = "获取用于无感刷新的令牌")
     @ApiResponse(responseCode = "200", description = "成功获取刷新令牌",
         content = @Content(mediaType = "application/json",
@@ -149,6 +152,7 @@ public class PrivateUserController extends BaseController {
     }
 
     @PostMapping("setCurrentDepartment/{departmentId}")
+    @AjaxResponseType(void.class)
     @Operation(summary = "设置当前部门", description = "设置当前登录用户所选部门")
     @ApiResponse(responseCode = "200", description = "成功设置当前部门",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

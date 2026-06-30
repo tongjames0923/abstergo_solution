@@ -6,10 +6,12 @@ import com.tbs.app.web.AbstractCrudController;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.delegate.IDelegateFlag;
 import com.tbs.common.util.framework.DelegateUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
+import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,6 +62,7 @@ public class AdminCompanyController
 	 */
 	@Override
 	@GetMapping("get/{id}")
+	@AjaxResponseType(SystemCompanyEntity.class)
     @Operation(summary = "获取公司信息", description = "根据公司ID获取公司详细信息")
     @ApiResponse(responseCode = "200", description = "成功获取公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -77,6 +80,7 @@ public class AdminCompanyController
 	 */
 	@Override
 	@PostMapping("save")
+	@AjaxResponseType(SystemCompanyEntity.class)
     @Operation(summary = "保存公司信息", description = "创建或更新公司信息")
     @ApiResponse(responseCode = "200", description = "成功保存公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -93,6 +97,7 @@ public class AdminCompanyController
 	 */
 	@Override
 	@PostMapping("delete/{id}")
+	@AjaxResponseType(void.class)
     @Operation(summary = "删除公司信息", description = "根据公司ID删除公司信息")
     @ApiResponse(responseCode = "200", description = "成功删除公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -110,6 +115,7 @@ public class AdminCompanyController
 	 */
 	@Override
 	@PostMapping("query")
+	@AjaxResponseType(value = PageVO.class, genericArgs = {SystemCompanyEntity.class})
     @Operation(summary = "查询公司列表", description = "根据条件查询公司列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询公司列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -139,6 +145,7 @@ public class AdminCompanyController
      * @return 操作结果
      */
     @PostMapping("moveCompanyTo")
+	@AjaxResponseType(void.class)
     @Operation(summary = "移动公司到指定父级", description = "将一个公司移动到另一个公司下作为其子级公司")
     @ApiResponse(responseCode = "200", description = "成功移动公司",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
@@ -156,6 +163,7 @@ public class AdminCompanyController
      * @return 子级公司列表
      */
     @GetMapping("listChildren/{parent}")
+	@AjaxResponseType(value = java.util.List.class, genericArgs = {SystemCompanyEntity.class})
     @Operation(summary = "获取子级公司列表", description = "获取指定公司的所有直接子级公司列表")
     @ApiResponse(responseCode = "200", description = "成功获取子级公司列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))

@@ -8,6 +8,7 @@ import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.access.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.uitl.AjaxUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -68,6 +69,7 @@ public class PublicUserController extends BaseController {
      * @return 刷新成功后的令牌信息
      */
     @GetMapping("refresh")
+    @AjaxResponseType(ITokenModel.class)
     @Operation(summary = "刷新令牌", description = "使用刷新令牌获取新的访问令牌")
     @ApiResponse(responseCode = "200", description = "成功刷新令牌",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
