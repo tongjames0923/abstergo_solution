@@ -1,11 +1,8 @@
 package com.tbs.schedule.config;
 
 import com.tbs.common.util.base.BeanUtil;
-import com.tbs.schedule.AbstractTimingWheelAsyncBackgroundSchedule;
-import com.tbs.schedule.ISchedule;
-import com.tbs.schedule.IScheduleExecuteErrorHandle;
+import com.tbs.schedule.*;
 import com.tbs.schedule.impl.SimpleLogErrorHandle;
-import com.tbs.schedule.impl.TimingWheelSchedule;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
@@ -17,7 +14,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 定时任务配置
  *
- * @author tongj
+ * @author abstergo
  */
 @Configuration
 public class ScheduleConfig {
@@ -26,26 +23,43 @@ public class ScheduleConfig {
     private ScheduleProperty scheduleProperty;
 
     @Bean
-    @ConditionalOnClass(ISchedule.class)
     @ConditionalOnMissingBean(IScheduleExecuteErrorHandle.class)
     public IScheduleExecuteErrorHandle scheduleExecuteErrorHandle() {
         return BeanUtil.buildBeanFromProperties(SimpleLogErrorHandle::new,
             scheduleProperty.getScheduleExecuteErrorHandle(), BeanUtil::buildByEmptyArgs);
     }
 
-    /**
-     * 时间轮调度器配置
-     * <p>
-     * 配置时间轮调度器，用于处理定时任务
-     * </p>
-     *
-     * @return 时间轮调度器实例
-     */
     @Bean
-    @ConditionalOnMissingBean(AbstractTimingWheelAsyncBackgroundSchedule.class)
+    @ConditionalOnMissingBean(ISchedule.class)
     @ConditionalOnClass(IScheduleExecuteErrorHandle.class)
-    AbstractTimingWheelAsyncBackgroundSchedule timingWheelSchedule(IScheduleExecuteErrorHandle errorHandle) {
-        return new TimingWheelSchedule(errorHandle, 5L, TimeUnit.SECONDS, 1L, 60 * 5, TimeUnit.SECONDS);
+    public DefaultSchedule defaultSchedule(IScheduleExecuteErrorHandle errorHandle,
+        ScheduleStrategy<IScheduleTask> strategy) {
+        TimeUnit unit = scheduleProperty.getPollTimeUnit();
+        return new DefaultSchedule(errorHandle, scheduleProperty.getPollTime(), unit, strategy);
     }
 
+    @Bean
+    @ConditionalOnMissingBean(ScheduleStrategy.class)
+    public ScheduleStrategy<IScheduleTask> scheduleStrategy() {
+        return buildStrategy();
+    }
+
+    private ScheduleStrategy<IScheduleTask> buildStrategy() {
+        Class<? extends ScheduleStrategy> clazz = scheduleProperty.getStrategy();
+        try {
+            // 优先尝试带配置参数的构造函数（适用于 TimingWheelStrategy 等）
+            return clazz.getConstructor(long.class, int.class, int.class)
+                .newInstance(scheduleProperty.getTickDuration(), scheduleProperty.getWheelSize(),
+                    scheduleProperty.getMaxTicksPerPoll());
+        } catch (NoSuchMethodException e) {
+            try {
+                // 无参构造函数（适用于 DelayQueueStrategy 等）
+                return clazz.getConstructor().newInstance();
+            } catch (Exception ex) {
+                throw new RuntimeException("无法实例化调度策略: " + clazz.getName(), ex);
+            }
+        } catch (Exception e) {
+            throw new RuntimeException("无法实例化调度策略: " + clazz.getName(), e);
+        }
+    }
 }

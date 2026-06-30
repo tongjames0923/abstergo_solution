@@ -31,4 +31,14 @@ public @interface EnableTbsAsyncPack {
      * @return true 使用广播模块，false 不使用广播模块
      */
     boolean useBroadcast() default true;
+
+    /**
+     * 是否使用计划模块
+     * <p>
+     * 设置为true时，将启用计划功能
+     * </p>
+     *
+     * @return true 使用计划模块，false 不使用计划模块
+     */
+    boolean useSchedule() default true;
 }

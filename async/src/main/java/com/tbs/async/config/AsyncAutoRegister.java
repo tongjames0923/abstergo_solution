@@ -34,7 +34,7 @@ public class AsyncAutoRegister extends AbstractAutoBeanRegister {
         return "Async Package";
     }
 
-    private String[] m_packages = new String[] {"com.tbs.async", "com.tbs.lock", "com.tbs.schedule", "com.tbs.thread"};
+    private String[] m_packages = new String[] {"com.tbs.async", "com.tbs.lock", "com.tbs.thread"};
 
     private Collection<String> basePackages = new HashSet<>();
 
@@ -79,6 +79,11 @@ public class AsyncAutoRegister extends AbstractAutoBeanRegister {
         var useBroadcast = enableTbsAsyncPack.getBoolean("useBroadcast");
         if (useBroadcast) {
             basePackages.add("com.tbs.broadcast");
+        }
+
+        var useSchedule = enableTbsAsyncPack.getBoolean("useSchedule");
+        if (useSchedule) {
+            basePackages.add("com.tbs.schedule");
         }
     }
 }
