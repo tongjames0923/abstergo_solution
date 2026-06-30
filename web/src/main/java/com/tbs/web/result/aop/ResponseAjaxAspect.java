@@ -26,6 +26,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -52,8 +53,8 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
         return AjaxUtil.getInstance().createAjaxResultOnError(AssertUtil.toFormattedRuntimeException(e).orElse(e));
     }
 
-    private static final Map<String, Boolean> methodCache = new java.util.HashMap<>();
-    private static final Map<String, Wrapped> methodWrappedCache = new java.util.HashMap<>();
+    private static final Map<String, Boolean> methodCache = new ConcurrentHashMap<>();
+    private static final Map<String, Wrapped> methodWrappedCache = new ConcurrentHashMap<>();
 
     private String getMethodName(Method method) {
         return method.getDeclaringClass().getName() + "." + method.getName();
@@ -85,7 +86,8 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
     @Override
     public boolean supports(MethodParameter returnType, Class converterType) {
         Method method = returnType.getMethod();
-        return methodCache.computeIfAbsent(getMethodName(method), k -> {
+        String methodName = getMethodName(method);
+        return methodCache.computeIfAbsent(methodName, k -> {
             if (method.getReturnType().equals(AjaxResult.class)) {
                 return true;
             }
@@ -101,6 +103,8 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
             if (CollUtil.isEmpty(wrappeds)) {
                 return false;
             }
+            // 缓存 @Wrapped 注解实例，供 beforeBodyWrite 使用
+            methodWrappedCache.put(methodName, wrappeds.iterator().next());
             return provider.support(method);
         });
 

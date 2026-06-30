@@ -232,7 +232,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult noticeError(String title, String msg, WebMessageTypeEnum webNoticeType) {
-        return noticeError(msg, msg, webNoticeType, 5 * 1000);
+        return noticeError(title, msg, webNoticeType, 5 * 1000);
     }
 
 
