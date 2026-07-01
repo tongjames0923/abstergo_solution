@@ -52,7 +52,7 @@ public class PageUtil {
         PageVO<T> vo = new PageVO<>();
         DelegateUtil.getInstance().delegateWithTarget(vo).build(type).takeIn(PageVO::setData, listS)
             .takeIn(PageVO::setTotal, totalS).executeAll().forEach(flag -> {
-                flag.waitUntilFinished().expceptionThenThrow().get();
+                flag.waitUntilFinished().exceptionThenThrow().get();
             });
         log.debug("构建分页结果完成");
         return vo;
