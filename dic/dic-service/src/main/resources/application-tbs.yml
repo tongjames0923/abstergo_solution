@@ -7,7 +7,7 @@ tbs:
   lock:
     lock-provider-type: com.tbs.lock.redis.RedissonLockProvider
   data:
-    data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHodlerManager
+    data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHolderManager
     data-holder: com.tbs.redis.holder.RedisDataHolder
   redis:
     enable: true
