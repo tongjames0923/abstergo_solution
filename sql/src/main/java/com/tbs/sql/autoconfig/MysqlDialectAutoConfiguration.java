@@ -1,5 +1,7 @@
 package com.tbs.sql.autoconfig;
 
+import com.tbs.sql.assembler.ISqlAssembler;
+import com.tbs.sql.assembler.impl.DefaultSqlAssembler;
 import com.tbs.sql.dialect.*;
 import com.tbs.sql.dialect.mysql.MysqlDialect;
 import com.tbs.sql.dialect.mysql.extractor.*;
@@ -45,6 +47,11 @@ public class MysqlDialectAutoConfiguration {
     @Bean public ISelectExtractor selectExtractor() { return new MysqlSelectExtractor(); }
     @Bean public IOrderExtractor orderExtractor() { return new MysqlOrderExtractor(); }
     @Bean public IWhereExtractor whereExtractor() { return new MysqlWhereExtractor(); }
+
+    @Bean
+    public ISqlAssembler systemSqlAssembler() throws Throwable {
+        return new DefaultSqlAssembler();
+    }
 
     @Bean
     public SqlDialect sqlDialect(IGroupExtractor groupExtractor, ILimitExtractor limitExtractor,

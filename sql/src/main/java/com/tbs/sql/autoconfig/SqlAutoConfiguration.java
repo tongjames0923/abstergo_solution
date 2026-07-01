@@ -2,11 +2,10 @@ package com.tbs.sql.autoconfig;
 
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
-import com.tbs.sql.assembler.impl.DefaultSqlAssembler;
 import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.impl.SimpleEntityQueryWrapper;
-import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.interceptor.SqlAutoFillInterceptor;
 import com.tbs.sql.interceptor.SqlLoggingInterceptor;
 import com.tbs.sql.logger.ISqlLogger;
@@ -82,11 +81,6 @@ public class SqlAutoConfiguration {
 
     @Bean
     FetchMapper fetchMapper() { return new FetchMapper(); }
-
-    @Bean
-    public ISqlAssembler systemSqlAssembler() throws Throwable {
-        return BeanUtil.buildBeanFromProperties(DefaultSqlAssembler::new, sqlProperty.getSqlAssemblerType(), BeanUtil::buildByEmptyArgs);
-    }
 
     @Bean
     public QueryEngine queryEngine(SqlDialect dialect, ISqlAssembler sqlAssembler) {
