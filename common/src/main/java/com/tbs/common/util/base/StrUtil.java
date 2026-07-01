@@ -3,6 +3,7 @@ package com.tbs.common.util.base;
 import org.slf4j.helpers.MessageFormatter;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
@@ -46,8 +47,11 @@ public class StrUtil extends cn.hutool.core.util.StrUtil {
      * @return 读取到的字符串
      */
     public static String readStreamAsString(InputStream str, Charset charset) {
-        return new BufferedReader(new InputStreamReader(str, charset)).lines()
-            .collect(Collectors.joining(System.lineSeparator()));
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(str, charset))) {
+            return reader.lines().collect(Collectors.joining("\n"));
+        } catch (IOException e) {
+            throw new cn.hutool.core.io.IORuntimeException(e);
+        }
     }
 
     /**

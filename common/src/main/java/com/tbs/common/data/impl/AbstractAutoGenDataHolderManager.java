@@ -7,9 +7,9 @@ import com.tbs.common.error.AssertUtil;
 
 import javax.annotation.Resource;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 抽象自动生成数据持有者管理器实现类
@@ -42,7 +42,7 @@ public abstract class AbstractAutoGenDataHolderManager implements IDataHolderMan
      * <p>
      * 用于存储已创建的数据持有者实例，键为数据持有者名称，值为对应的数据持有者实例。 使用HashMap实现，初始容量为8，支持按需创建和缓存数据持有者实例。
      */
-    private Map<String, IDataHolder> dataHolders = new HashMap<>(8);
+    private Map<String, IDataHolder> dataHolders = new ConcurrentHashMap<>(8);
 
     /**
      * 获取部分数据持有者

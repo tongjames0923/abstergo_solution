@@ -1,7 +1,7 @@
 package com.tbs.common.delegate;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
 import com.tbs.common.delegate.provider.IDelegateFlagProvider;
@@ -36,7 +36,7 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	 *
 	 * @see IDelegateTarget 代理目标接口
 	 */
-	IDelegateTarget<T> delegateTarget;
+	private IDelegateTarget<T> delegateTarget;
 
 	/**
 	 * 设置代理目标对象
@@ -100,11 +100,11 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	/**
 	 * 任务索引计数器
 	 * <p>
-	 * 用于生成任务的顺序索引，确保任务按添加顺序执行，使用原子整数保证线程安全。
+	 * 用于生成任务的顺序索引，确保任务按添加顺序执行，使用原子长整型保证线程安全。
 	 *
-	 * @see AtomicInteger 原子整数类
+	 * @see AtomicLong 原子长整型类
 	 */
-	AtomicLong index = new AtomicLong(0);
+	private AtomicLong index = new AtomicLong(0);
 
 	/**
 	 * 获取委托执行标志提供者
@@ -119,13 +119,12 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	/**
 	 * 代理任务队列
 	 * <p>
-	 * 使用优先级队列存储待执行的代理任务，按照任务索引进行排序， 确保任务按添加顺序执行。使用Comparator比较器基于索引值进行排序。
+	 * 使用线程安全的并发队列存储待执行的代理任务，按照任务添加顺序执行。 使用AtomicLong索引保证任务按添加顺序入队，ConcurrentLinkedQueue保证并发安全。
 	 *
-	 * @see Queue 队列接口
+	 * @see ConcurrentLinkedQueue 并发链接队列
 	 * @see InvokeTask 代理任务封装类
-	 * @see Comparator 比较器接口
 	 */
-	private Queue<InvokeTask> tasks = new PriorityQueue<>(Comparator.comparing(InvokeTask::getIndex));
+	private Queue<InvokeTask> tasks = new ConcurrentLinkedQueue<>();
 
 	/**
 	 * 获取代理目标对象

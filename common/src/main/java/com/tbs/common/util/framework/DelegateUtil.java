@@ -5,6 +5,7 @@ import com.tbs.common.delegate.IDelegateTarget;
 import com.tbs.common.delegate.IDelegateTemplate;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 
 /**
@@ -18,6 +19,10 @@ public class DelegateUtil {
     private IDelegateTemplate delegateTemplate;
 
     public DelegateUtil() {
+    }
+
+    @PostConstruct
+    private void init() {
         INSTANCE = this;
     }
 

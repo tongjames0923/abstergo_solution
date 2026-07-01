@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Component
 public class FeatureWrapperHelper implements IStartup {
 
-    private static List<IFeatureWrapperExtension> extentions = Collections.EMPTY_LIST;
+    private static List<IFeatureWrapperExtension> extensions = Collections.emptyList();
 
     // 在类中增加缓存
     private static final Map<String, IFeatureWrapperExtension> extensionCache = new ConcurrentHashMap<>();
@@ -55,7 +55,7 @@ public class FeatureWrapperHelper implements IStartup {
             extensionCache.remove(cacheKey);
         }
         // 遍历所有扩展，找到第一个支持且能解包出结果的扩展
-        for (var extension : extentions) {
+        for (var extension : extensions) {
             if (extension.support(instance, feature)) {
                 log.debug("找到功能包装器 {}", extension);
                 F result = extension.unwrap(instance, feature);
@@ -71,9 +71,9 @@ public class FeatureWrapperHelper implements IStartup {
 
     @Override
     public void startUp() throws RuntimeException {
-        extentions = SpringUtil.getBeansByTypeSafe(IFeatureWrapperExtension.class).stream().sorted(Comparators::desc)
+        extensions = SpringUtil.getBeansByTypeSafe(IFeatureWrapperExtension.class).stream().sorted(Comparators::desc)
             .collect(Collectors.toList());
-        log.info("加载功能包装器完成 {}", extentions);
+        log.info("加载功能包装器完成 {}", extensions);
     }
 
 }

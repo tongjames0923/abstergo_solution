@@ -4,9 +4,9 @@ import com.tbs.common.data.IDataHolder;
 import com.tbs.common.error.AssertUtil;
 
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 基于Map的数据存储实现类
@@ -46,12 +46,12 @@ public class MapDataHolder extends AbstractAntStyleMatchKeyFounder implements ID
     /**
      * 默认构造函数
      * <p>
-     * 创建一个新的LinkedHashMap实例作为底层数据存储结构，初始容量为8。
+     * 创建一个新的ConcurrentHashMap实例作为底层数据存储结构，初始容量为8。
      *
-     * @see LinkedHashMap 链式哈希映射实现
+     * @see ConcurrentHashMap 并发哈希映射实现
      */
     public MapDataHolder() {
-        this.map = new LinkedHashMap<>(8);
+        this.map = new ConcurrentHashMap<>(8);
     }
 
     /**

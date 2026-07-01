@@ -35,7 +35,7 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
                 StrUtil.format("异常类型:{},异常信息:{}.", cause.getClass().getName(), cause.getLocalizedMessage()));
         }
         if (StrUtil.isNotEmpty(message)) {
-            sb.append(StrUtil.format(" 更多信息:{}.", StrUtil.format(message, params)));
+            sb.append(" 更多信息:").append(StrUtil.format(message, params)).append(".");
         }
         return sb.toString();
     }

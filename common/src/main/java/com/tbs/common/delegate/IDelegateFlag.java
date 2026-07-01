@@ -89,7 +89,7 @@ public interface IDelegateFlag<T> {
 	 * @see AssertUtil#throwError(java.util.function.Supplier) 断言工具类抛出异常方法
 	 * @see FormattedRuntimeException 格式化运行时异常类
 	 */
-	default IDelegateFlag<T> expceptionThenThrow() throws FormattedRuntimeException {
+	default IDelegateFlag<T> exceptionThenThrow() throws FormattedRuntimeException {
 		if (getException() != null) {
 			AssertUtil.throwError(() -> new FormattedRuntimeException(getException(), "delegate error"));
 		}
