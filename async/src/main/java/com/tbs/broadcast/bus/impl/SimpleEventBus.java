@@ -31,17 +31,13 @@ public class SimpleEventBus extends AbstractSemaphoreEventBus {
 	 * 事件优先级队列
 	 * <p>
 	 * 使用PriorityQueue实现，根据事件优先级进行排序，优先级数值越大的事件越优先被处理。
-	 * 队列中的元素类型为IPublishResult，表示事件发布结果。 该队列是静态的，在所有SimpleEventBus实例间共享。
+	 * 队列中的元素类型为IPublishResult，表示事件发布结果。依赖Spring单例保证只有一个实例。
 	 *
 	 * @see IPublishResult 事件发布结果接口
 	 * @see Comparator 比较器接口
 	 */
-	private static PriorityQueue<IPublishResult> queue = new PriorityQueue<>(new Comparator<IPublishResult>() {
-		@Override
-		public int compare(IPublishResult o1, IPublishResult o2) {
-			return o1.getEvent().getEventPriority() - o2.getEvent().getEventPriority();
-		}
-	});
+	private final PriorityQueue<IPublishResult> queue = new PriorityQueue<>(Comparator.comparingInt(
+			o -> o.getEvent().getEventPriority()));
 
 	/**
 	 * 获取事件队列

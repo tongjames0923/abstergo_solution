@@ -77,9 +77,12 @@ public abstract class AbstractPublishResult implements IPublishResult {
 	}
 
 	/**
-	 * 默认构造函数
+	 * 默认构造函数（仅用于框架反序列化等场景）
 	 */
 	public AbstractPublishResult() {
+		this.event = null;
+		this.publisherId = null;
+		this.handleMode = null;
 	}
 
 	@Override
@@ -137,8 +140,8 @@ public abstract class AbstractPublishResult implements IPublishResult {
 	@Override
 	public void setEventStatus(EventStatusEnum eventStatus) {
 		AssertUtil.notNull(eventStatus, "eventStatus can not be null");
-		AssertUtil.isTrue(isEventComplete(), "can not set event status to " + eventStatus.getValue()
-				+ " when event status is " + getEventStatus().getValue());
+		AssertUtil.isTrue(!isEventComplete(), "can not set event status to " + eventStatus.getValue()
+				+ " when event status is already terminal: " + getEventStatus().getValue());
 		getStatusListeners().forEach(listenner -> listenner.onEventStatusChange(eventStatus, getEventStatus(), this));
 		this.eventStatus = eventStatus;
 	}

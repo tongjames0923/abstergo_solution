@@ -166,7 +166,9 @@ public abstract class AbstractEventBus<T> implements IEventBus, IStartup {
 		if (!getQueue().isEmpty()) {
 			LockUtil.getInstance().lockThen(lock, () -> {
 				result[0] = getQueue().poll();
-				logger.debug("获取事件:{}", result[0].getEvent().getEventId());
+				if (result[0] != null) {
+					logger.debug("获取事件:{}", result[0].getEvent().getEventId());
+				}
 			});
 		}
 

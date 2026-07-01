@@ -94,6 +94,7 @@ public class DefaultSchedule implements ISchedule, IStartup {
     @Override
     public void destroy() throws Exception {
         flag = 0;
+        semaphore.release();
         if (isExecuteAllOnDestroy()) {
             log.warn("销毁计划器中...... 所有任务都将提前执行...");
             handleTaskList(strategy.dropAll());

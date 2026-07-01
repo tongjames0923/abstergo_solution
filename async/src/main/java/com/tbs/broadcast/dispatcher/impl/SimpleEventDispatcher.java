@@ -71,6 +71,7 @@ public class SimpleEventDispatcher extends AbstractEventDispatcher {
 	public <T> void handleError(Throwable throwable, IPublishResult publishResult) {
 		if (getHandleEventError() == null) {
 			log.error("handleEventError is null", throwable);
+			return;
 		}
 		getHandleEventError().handleError(throwable, publishResult);
 	}

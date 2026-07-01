@@ -3,8 +3,8 @@ package com.tbs.thread.impl;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.DisposableBean;
 
-import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.Executor;
 
 /**
@@ -13,7 +13,7 @@ import java.util.concurrent.Executor;
  * @author tongj
  */
 public class LongTermThreadExecutor implements Executor, DisposableBean {
-    List<Thread> threads = new LinkedList<>();
+    List<Thread> threads = new CopyOnWriteArrayList<>();
 
     @Override
     public void execute(@NotNull Runnable command) {

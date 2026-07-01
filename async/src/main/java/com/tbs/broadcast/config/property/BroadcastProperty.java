@@ -19,7 +19,7 @@ import lombok.Data;
  * @author abstergo
  */
 @Component
-@ConfigurationProperties(prefix = "tbs.boardcast")
+@ConfigurationProperties(prefix = "tbs.broadcast")
 @Data
 public class BroadcastProperty {
 
