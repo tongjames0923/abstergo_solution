@@ -50,7 +50,10 @@ public abstract class AbstractRabbitMqSupport<T> extends AbstractMqConsumer<T>
     protected MqConsumerProperties getProperties() {
         return MqConsumerProperties.builder(property.getQueueName()).exchange(property.getExchangeName())
             .routingKey(property.getRoutingKey()).concurrency(property.getConsumerConcurrency())
-            .maxRetryCount(property.getMaxRetryCount()).acknowledgeMode(AcknowledgeMode.MANUAL).build();
+            .maxRetryCount(property.getMaxRetryCount()).acknowledgeMode(AcknowledgeMode.MANUAL)
+            .messageTtl(property.getMessageTtl())
+            .deadLetterExchange(property.getDeadLetterExchange())
+            .build();
     }
 
     /**

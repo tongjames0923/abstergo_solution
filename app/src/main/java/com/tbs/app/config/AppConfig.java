@@ -3,11 +3,18 @@ package com.tbs.app.config;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
+import com.tbs.logging.core.ILogExtractor;
+import com.tbs.logging.core.ILogRecorder;
+import com.tbs.logging.form.LoggingRecordExtractForm;
+import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
+import com.tbs.logging.vo.LogRecordVO;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.xxl.api.IXXLJobsConfig;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.util.List;
 
 /**
  * 应用程序配置类
@@ -25,6 +32,12 @@ public class AppConfig {
     SimpleRabbitMqSupport rabbitMqSupport() {
         return new SimpleRabbitMqSupport();
     }
+
+    @Bean
+    public ILogRecorder loggerRecoreder() {
+        return new RabbitMqLoggingRecorder("tbs.log.queue", "systemLog");
+    }
+
 
     /**
      * 用户登录信息服务配置

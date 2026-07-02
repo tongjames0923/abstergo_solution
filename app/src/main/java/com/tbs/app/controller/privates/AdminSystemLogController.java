@@ -1,14 +1,13 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.log.ISystemLogService;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
-import com.tbs.knife4j.annotation.AjaxResponseType;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import javax.annotation.Resource;
 
 /**
  * 系统日志管理控制器
@@ -23,7 +22,7 @@ import javax.annotation.Resource;
 @RequestMapping("/private/log/")
 public class AdminSystemLogController extends BaseController {
 
-    @Resource
+    @DubboReference(check = false, lazy = true)
     private ISystemLogService systemLogService;
 
     /**

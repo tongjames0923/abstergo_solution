@@ -1,0 +1,39 @@
+# Spring配置
+spring:
+  profiles:
+    include:
+      - redis
+      - db
+      - tbs
+      - mq
+  application:
+    name: logging-service
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  # 资源信息
+  messages:
+    # 国际化资源文件路径
+    basename: i18n/messages
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+logging:
+  level:
+    com.alibaba: warn
+    org.apache: warn
+
+dubbo:
+  application:
+    name: dubbo-logging-view-service
+    logger: slf4j
+    check-serializable: false
+    serialize-check-status: DISABLE
+  registry:
+    address: zookeeper://192.168.80.32:2181
+  protocol:
+    port: 20780
+    name: tri
+  shutdown:
+    await-duration: 10000
+server:
+  port: 8081

@@ -28,6 +28,7 @@
         <module>dynamic-view-route</module>
         <module>script-engine</module>
         <module>dic</module>
+        <module>logging</module>
     </modules>
 
     <groupId>com.tbs</groupId>
@@ -159,6 +160,11 @@
             <dependency>
                 <groupId>com.tbs.shared</groupId>
                 <artifactId>shared-api</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>logging-api</artifactId>
                 <version>${project.version}</version>
             </dependency>
 

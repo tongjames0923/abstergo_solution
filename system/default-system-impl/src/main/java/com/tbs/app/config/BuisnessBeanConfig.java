@@ -8,13 +8,11 @@ import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
-import com.tbs.app.service.impl.log.SimpleSystemLogServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.role.SimpleUserRoleRelationServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
 import com.tbs.app.service.impl.user.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.impl.view.ViewServiceImpl;
-import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.token.ISystemTokenService;
@@ -43,12 +41,6 @@ public class BuisnessBeanConfig {
     @Resource
     private AppSettingProperty systemAppProperty;
 
-    @Bean
-    @ConditionalOnMissingBean(ISystemLogService.class)
-    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
-    public ISystemLogService systemLogService() {
-        return new SimpleSystemLogServiceImpl();
-    }
 
     @Bean
     @ConditionalOnMissingBean(IErrorThrowEvent.class)

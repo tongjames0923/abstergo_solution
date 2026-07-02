@@ -5,13 +5,43 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>com.tbs</groupId>
-        <artifactId>logging</artifactId>
+        <artifactId>solution</artifactId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
     <artifactId>logging-impl</artifactId>
+    <name>logging-service</name>
+    <description>日志Dubbo服务模块</description>
 
     <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>logging-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>cache-impl</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>redis</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>shared-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>system-api</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>com.tbs</groupId>
             <artifactId>rabbitmq</artifactId>
@@ -23,5 +53,27 @@
         <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+                <configuration>
+                    <mainClass>com.tbs.logging.LoggingServiceApplication</mainClass>
+                    <skip>false</skip>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>repackage</id>
+                        <goals>
+                            <goal>repackage</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

@@ -15,6 +15,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * TBS RabbitMQ配置类
@@ -34,6 +36,11 @@ public class TbsRabbitMqConfig {
 
     @Resource
     private RabbitProperties rabbitProperties;
+
+    /**
+     * 允许反序列化的类名前缀列表
+     */
+    private static final List<String> TRUSTED_PACKAGES = Arrays.asList("*");
 
     /**
      * 创建RabbitMQ连接工厂
@@ -110,12 +117,18 @@ public class TbsRabbitMqConfig {
 
     /**
      * 创建序列化消息转换器
+     * <p>
+     * 配置允许反序列化的类名模式，解决Spring AMQP 2.4+的反序列化安全限制
+     * </p>
      *
      * @return SerializerMessageConverter实例
      */
     @Bean
     public MessageConverter jsonMessageConverter() {
-        return new SerializerMessageConverter();
+        SerializerMessageConverter converter = new SerializerMessageConverter();
+        converter.setAllowedListPatterns(TRUSTED_PACKAGES);
+        log.info("RabbitMQ消息转换器已配置，允许反序列化的包: {}", TRUSTED_PACKAGES);
+        return converter;
     }
 
 }
