@@ -8,14 +8,14 @@ import org.jetbrains.annotations.NotNull;
 /**
  * 简单RabbitMQ广播支持实现类
  * <p>
- * 继承自AbstractRabbaitMqSupport，提供基于RabbitMQ的简单事件广播和接收功能
+ * 继承自AbstractRabbitMqSupport，提供基于RabbitMQ的简单事件广播和接收功能
  * 实现了事件对象的桥接转换功能
  * </p>
  *
  * @author tongj
  * @since 1.0.0
  */
-public class SimpleRabbitMqSupport extends AbstractRabbaitMqSupport<SimpleDistributedAcceptedPublishResult> {
+public class SimpleRabbitMqSupport extends AbstractRabbitMqSupport<SimpleDistributedAcceptedPublishResult> {
 	/**
 	 * 将IPublishResult桥接转换为SimpleDistributedAcceptedPublishResult
 	 * <p>

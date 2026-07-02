@@ -6,18 +6,18 @@ import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.support.AbstractDistributedSupport;
 import com.tbs.rabbitmq.property.RabbitMqProperty;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer;
 import org.springframework.amqp.rabbit.listener.api.ChannelAwareMessageListener;
 import org.springframework.amqp.support.converter.MessageConverter;
-import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
+import java.io.IOException;
 
 /**
  * RabbitMQ广播支持抽象类
@@ -31,8 +31,7 @@ import javax.annotation.Resource;
  * @since 1.0.0
  */
 @Slf4j
-@AutoConfigureAfter({IEventDispatcher.class})
-public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSupport<T>
+public abstract class AbstractRabbitMqSupport<T> extends AbstractDistributedSupport<T>
     implements ChannelAwareMessageListener {
 
     @Resource
@@ -40,9 +39,6 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
 
     @Resource
     private AmqpTemplate amqpTemplate;
-
-    @Resource
-    private AmqpAdmin amqpAdmin;
 
     @Resource
     private MessageConverter messageConverter;
@@ -57,51 +53,33 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
     private IEventDispatcher dispatcher;
 
     /**
-     * 构造方法
-     * <p>
-     * 创建AbstractRabbaitMqSupport实例
-     * </p>
-     */
-    public AbstractRabbaitMqSupport() {
-        log.info("AbstractRabbaitMqSupport init");
-    }
-
-    /**
      * 初始化方法
      * <p>
-     * 在应用启动时执行初始化操作，包括：
-     * 1. 确保队列存在
-     * 2. 创建并配置消息监听器容器
+     * 在应用启动时创建并配置消息监听器容器，包括：
+     * 1. 创建监听器容器
+     * 2. 设置队列、监听器、ACK模式和并发度
      * 3. 启动消息监听器
      * </p>
      */
     @PostConstruct
     public void init() {
-        // 确保队列存在
-        declareQueueIfNeeded();
-
         container = new SimpleMessageListenerContainer(connectionFactory);
         container.setQueueNames(property.getQueueName());
         container.setMessageListener(this);
-        // 设置为手动ACK
         container.setAcknowledgeMode(org.springframework.amqp.core.AcknowledgeMode.MANUAL);
+        container.setConcurrency(property.getConsumerConcurrency());
         container.start();
+        log.info("RabbitMQ消费者已启动，队列: {}，并发度: {}", property.getQueueName(), property.getConsumerConcurrency());
     }
 
     /**
-     * 确保队列存在，如果不存在则创建
-     * <p>
-     * 尝试声明队列，如果队列已存在则忽略异常
-     * </p>
+     * 应用关闭时停止消息监听器容器
      */
-    private void declareQueueIfNeeded() {
-        try {
-            // 尝试声明队列
-            org.springframework.amqp.core.Queue queue =
-                new org.springframework.amqp.core.Queue(property.getQueueName(), true);
-            amqpAdmin.declareQueue(queue);
-        } catch (Exception e) {
-            log.warn("队列声明失败，可能已存在: {}", e.getMessage());
+    @PreDestroy
+    public void destroy() {
+        if (container != null && container.isRunning()) {
+            container.stop();
+            log.info("RabbitMQ消费者已停止，队列: {}", property.getQueueName());
         }
     }
 
@@ -119,16 +97,75 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
      */
     @Override
     public void onMessage(Message message, Channel channel) throws Exception {
+        long deliveryTag = message.getMessageProperties().getDeliveryTag();
         try {
             T obj = (T)messageConverter.fromMessage(message);
             this.receiveEvent(obj);
-            // 处理成功后手动ACK
-            channel.basicAck(message.getMessageProperties().getDeliveryTag(), false);
+            channel.basicAck(deliveryTag, false);
         } catch (Exception e) {
-            log.error("RabbitMqSupport.onMessage error", e);
-            // 处理失败后拒绝消息，可以选择是否重新入队
-            channel.basicNack(message.getMessageProperties().getDeliveryTag(), false, true);
+            log.error("RabbitMQ消息处理失败, deliveryTag={}", deliveryTag, e);
+            nackMessage(channel, message, deliveryTag);
         }
+    }
+
+    /**
+     * 拒绝消息处理
+     * <p>
+     * 根据消息重试次数决定是否重新入队：
+     * - 超过最大重试次数时，直接丢弃消息（如果配置了死信队列则路由到死信队列）
+     * - 未超过时，重新入队等待重试
+     * </p>
+     *
+     * @param channel     消息通道
+     * @param message     消息对象
+     * @param deliveryTag 投递标签
+     */
+    private void nackMessage(Channel channel, Message message, long deliveryTag) {
+        try {
+            int retryCount = getRetryCount(message);
+            if (retryCount >= property.getMaxRetryCount()) {
+                log.warn("消息超过最大重试次数({})，丢弃消息, deliveryTag={}", property.getMaxRetryCount(), deliveryTag);
+                channel.basicNack(deliveryTag, false, false);
+            } else {
+                channel.basicNack(deliveryTag, false, true);
+            }
+        } catch (IOException nackEx) {
+            log.error("basicNack执行失败, deliveryTag={}", deliveryTag, nackEx);
+            try {
+                channel.basicAck(deliveryTag, false);
+            } catch (IOException ackEx) {
+                log.error("basicAck降级执行失败, deliveryTag={}", deliveryTag, ackEx);
+            }
+        }
+    }
+
+    /**
+     * 获取消息的重试次数
+     * <p>
+     * 通过RabbitMQ的x-death头信息判断消息已被拒绝重入队的次数
+     * </p>
+     *
+     * @param message 消息对象
+     * @return 重试次数
+     */
+    @SuppressWarnings("unchecked")
+    private int getRetryCount(Message message) {
+        Object xDeath = message.getMessageProperties().getHeaders().get("x-death");
+        if (xDeath instanceof java.util.List) {
+            java.util.List<Object> deathList = (java.util.List<Object>)xDeath;
+            int count = 0;
+            for (Object death : deathList) {
+                if (death instanceof java.util.Map) {
+                    java.util.Map<String, Object> deathInfo = (java.util.Map<String, Object>)death;
+                    Object countObj = deathInfo.get("count");
+                    if (countObj instanceof Number) {
+                        count += ((Number)countObj).intValue();
+                    }
+                }
+            }
+            return count;
+        }
+        return 0;
     }
 
     /**
@@ -147,10 +184,6 @@ public abstract class AbstractRabbaitMqSupport<T> extends AbstractDistributedSup
 
     /**
      * 获取节点ID
-     * <p>
-     * 实现IDistributedBusSupport接口的nodeId方法
-     * 从配置属性中获取节点ID
-     * </p>
      *
      * @return 节点ID
      */

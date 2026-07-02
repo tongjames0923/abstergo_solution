@@ -11,11 +11,13 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.amqp.support.converter.SerializerMessageConverter;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * TBS RabbitMQ配置类
@@ -39,8 +41,7 @@ public class TbsRabbitMqConfig {
     /**
      * 创建RabbitMQ连接工厂
      * <p>
-     * 配置RabbitMQ连接信息，包括主机、端口、用户名、密码和虚拟主机
-     * 启用连接缓存和发布确认机制
+     * 作为Spring Boot自动配置的备选方案，当容器中不存在ConnectionFactory时生效
      * </p>
      *
      * @return ConnectionFactory实例
@@ -50,7 +51,6 @@ public class TbsRabbitMqConfig {
     public ConnectionFactory connectionFactory() {
         CachingConnectionFactory connectionFactory = new CachingConnectionFactory();
 
-        // 从Spring Boot配置中获取RabbitMQ连接信息
         if (rabbitProperties.getHost() != null) {
             connectionFactory.setHost(rabbitProperties.getHost());
         } else {
@@ -74,7 +74,6 @@ public class TbsRabbitMqConfig {
         }
 
         connectionFactory.setPublisherConfirmType(CachingConnectionFactory.ConfirmType.CORRELATED);
-        // 增加重试机制
         connectionFactory.setCloseTimeout(10000);
         connectionFactory.setConnectionTimeout(10000);
         return connectionFactory;
@@ -82,9 +81,6 @@ public class TbsRabbitMqConfig {
 
     /**
      * 创建RabbitTemplate用于发送消息
-     * <p>
-     * 配置消息发送模板，设置消息转换器和确认回调
-     * </p>
      *
      * @param connectionFactory 连接工厂
      * @param messageConverter  消息转换器
@@ -97,7 +93,7 @@ public class TbsRabbitMqConfig {
         template.setMessageConverter(messageConverter);
         template.setConfirmCallback((correlationData, ack, cause) -> {
             if (!ack) {
-                System.err.println("消息发送失败: " + cause);
+                log.error("RabbitMQ消息发送失败: {}", cause);
             }
         });
         return template;
@@ -117,9 +113,6 @@ public class TbsRabbitMqConfig {
 
     /**
      * 创建序列化消息转换器
-     * <p>
-     * 创建SerializerMessageConverter实例，用于消息的序列化和反序列化
-     * </p>
      *
      * @return SerializerMessageConverter实例
      */
@@ -139,52 +132,75 @@ public class TbsRabbitMqConfig {
     }
 
     /**
+     * 创建死信交换机（仅当配置了deadLetterExchange时生效）
+     *
+     * @return DirectExchange实例
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.rabbitmq", name = "dead-letter-exchange")
+    public DirectExchange deadLetterExchange() {
+        return new DirectExchange(rabbitMqProperty.getDeadLetterExchange(), true, false);
+    }
+
+    /**
+     * 创建死信队列（仅当配置了deadLetterQueue时生效）
+     *
+     * @return Queue实例
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.rabbitmq", name = "dead-letter-queue")
+    public Queue deadLetterQueue() {
+        return QueueBuilder.durable(rabbitMqProperty.getDeadLetterQueue()).build();
+    }
+
+    /**
+     * 绑定死信队列到死信交换机（仅当死信交换机和死信队列均已配置时生效）
+     *
+     * @param deadLetterExchange 死信交换机
+     * @param deadLetterQueue    死信队列
+     * @return Binding实例
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.rabbitmq", name = {"dead-letter-exchange", "dead-letter-queue"})
+    public Binding deadLetterBinding(DirectExchange deadLetterExchange, Queue deadLetterQueue) {
+        return BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with(rabbitMqProperty.getRoutingKey());
+    }
+
+    /**
      * 创建广播队列
+     * <p>
+     * 配置消息TTL、高可用策略，以及可选的死信交换机
+     * </p>
      *
      * @return Queue实例
      */
     @Bean
     public Queue broadcastQueue() {
-        // 使用更宽松的队列声明方式，避免声明冲突
-        return QueueBuilder.durable(rabbitMqProperty.getQueueName()).withArgument("x-message-ttl", 60000) // 设置消息TTL为60秒
-            .withArgument("x-ha-policy", "all") // 启用高可用策略
-            .build();
-    }
+        Map<String, Object> args = new HashMap<>();
+        args.put("x-message-ttl", rabbitMqProperty.getMessageTtl());
+        args.put("x-ha-policy", "all");
 
-    /**
-     * 在RabbitMQ中声明队列，确保其存在
-     * <p>
-     * 创建一个初始化对象，在应用启动时声明队列
-     * 如果队列已存在，记录信息；如果声明失败，记录错误
-     * </p>
-     *
-     * @param amqpAdmin AMQP管理器
-     * @param queue     要声明的队列
-     * @return 初始化对象
-     */
-    @Bean
-    public Object declareQueue(AmqpAdmin amqpAdmin, Queue queue) {
-        return new Object() {
-            @PostConstruct
-            public void initialize() {
-                try {
-                    amqpAdmin.declareQueue(queue);
-                    log.info("队列已存在: " + queue.getName());
-                } catch (Exception e) {
-                    log.error("队列声明失败: " + e.getMessage());
-                }
-            }
-        };
+        String dlxName = rabbitMqProperty.getDeadLetterExchange();
+        if (dlxName != null && !dlxName.isBlank()) {
+            args.put("x-dead-letter-exchange", dlxName);
+            args.put("x-dead-letter-routing-key", rabbitMqProperty.getRoutingKey());
+        }
+
+        return QueueBuilder.durable(rabbitMqProperty.getQueueName())
+            .withArguments(args)
+            .build();
     }
 
     /**
      * 绑定队列到交换机
      *
+     * @param broadcastQueue    广播队列
+     * @param broadcastExchange 广播交换机
      * @return Binding实例
      */
     @Bean
-    public Binding broadcastBinding() {
-        return BindingBuilder.bind(broadcastQueue()).to(broadcastExchange()).with(rabbitMqProperty.getRoutingKey());
+    public Binding broadcastBinding(Queue broadcastQueue, DirectExchange broadcastExchange) {
+        return BindingBuilder.bind(broadcastQueue).to(broadcastExchange).with(rabbitMqProperty.getRoutingKey());
     }
 
 }

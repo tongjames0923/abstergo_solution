@@ -37,4 +37,29 @@ public class RabbitMqProperty {
 	 */
 	private String nodeId;
 
+	/**
+	 * 消息TTL（毫秒），默认60秒
+	 */
+	private long messageTtl = 60000;
+
+	/**
+	 * 消费者最大重试次数，超过后消息将被丢弃或路由到死信队列
+	 */
+	private int maxRetryCount = 3;
+
+	/**
+	 * 消费者并发度，格式："min-max"，如 "1-5"，默认 "1-1"
+	 */
+	private String consumerConcurrency = "1-1";
+
+	/**
+	 * 死信交换机名称，为空则不启用死信队列
+	 */
+	private String deadLetterExchange;
+
+	/**
+	 * 死信队列名称
+	 */
+	private String deadLetterQueue;
+
 }
