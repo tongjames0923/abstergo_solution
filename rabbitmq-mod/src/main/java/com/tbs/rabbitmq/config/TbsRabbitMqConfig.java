@@ -2,7 +2,7 @@ package com.tbs.rabbitmq.config;
 
 import com.tbs.rabbitmq.property.RabbitMqProperty;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -11,13 +11,10 @@ import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.amqp.support.converter.SerializerMessageConverter;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * TBS RabbitMQ配置类
@@ -119,88 +116,6 @@ public class TbsRabbitMqConfig {
     @Bean
     public MessageConverter jsonMessageConverter() {
         return new SerializerMessageConverter();
-    }
-
-    /**
-     * 创建广播交换机
-     *
-     * @return DirectExchange实例
-     */
-    @Bean
-    public DirectExchange broadcastExchange() {
-        return new DirectExchange(rabbitMqProperty.getExchangeName(), true, false);
-    }
-
-    /**
-     * 创建死信交换机（仅当配置了deadLetterExchange时生效）
-     *
-     * @return DirectExchange实例
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.rabbitmq", name = "dead-letter-exchange")
-    public DirectExchange deadLetterExchange() {
-        return new DirectExchange(rabbitMqProperty.getDeadLetterExchange(), true, false);
-    }
-
-    /**
-     * 创建死信队列（仅当配置了deadLetterQueue时生效）
-     *
-     * @return Queue实例
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.rabbitmq", name = "dead-letter-queue")
-    public Queue deadLetterQueue() {
-        return QueueBuilder.durable(rabbitMqProperty.getDeadLetterQueue()).build();
-    }
-
-    /**
-     * 绑定死信队列到死信交换机（仅当死信交换机和死信队列均已配置时生效）
-     *
-     * @param deadLetterExchange 死信交换机
-     * @param deadLetterQueue    死信队列
-     * @return Binding实例
-     */
-    @Bean
-    @ConditionalOnProperty(prefix = "tbs.rabbitmq", name = {"dead-letter-exchange", "dead-letter-queue"})
-    public Binding deadLetterBinding(DirectExchange deadLetterExchange, Queue deadLetterQueue) {
-        return BindingBuilder.bind(deadLetterQueue).to(deadLetterExchange).with(rabbitMqProperty.getRoutingKey());
-    }
-
-    /**
-     * 创建广播队列
-     * <p>
-     * 配置消息TTL、高可用策略，以及可选的死信交换机
-     * </p>
-     *
-     * @return Queue实例
-     */
-    @Bean
-    public Queue broadcastQueue() {
-        Map<String, Object> args = new HashMap<>();
-        args.put("x-message-ttl", rabbitMqProperty.getMessageTtl());
-        args.put("x-ha-policy", "all");
-
-        String dlxName = rabbitMqProperty.getDeadLetterExchange();
-        if (dlxName != null && !dlxName.isBlank()) {
-            args.put("x-dead-letter-exchange", dlxName);
-            args.put("x-dead-letter-routing-key", rabbitMqProperty.getRoutingKey());
-        }
-
-        return QueueBuilder.durable(rabbitMqProperty.getQueueName())
-            .withArguments(args)
-            .build();
-    }
-
-    /**
-     * 绑定队列到交换机
-     *
-     * @param broadcastQueue    广播队列
-     * @param broadcastExchange 广播交换机
-     * @return Binding实例
-     */
-    @Bean
-    public Binding broadcastBinding(Queue broadcastQueue, DirectExchange broadcastExchange) {
-        return BindingBuilder.bind(broadcastQueue).to(broadcastExchange).with(rabbitMqProperty.getRoutingKey());
     }
 
 }
