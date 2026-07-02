@@ -6,10 +6,11 @@ import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.interfaces.log.ISystemOperateLogViewService;
-import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
-import org.apache.dubbo.config.annotation.DubboReference;
+import com.tbs.logging.core.ILogExtractor;
+import com.tbs.logging.form.LoggingRecordExtractForm;
+import com.tbs.logging.vo.LogRecordVO;
 
+import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -17,9 +18,8 @@ import java.util.stream.Collectors;
 
 public class SimpleSystemLogServiceImpl implements ISystemLogService {
 
-    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.NoViewLogServiceImpl",
-    check = false)
-    private ISystemOperateLogViewService systemOperateLog;
+    @Resource
+    private ILogExtractor extractor;
 
     private String suitTypeName(String type) {
         //com.tbs.app.controller.privates.PrivateUserController.info
@@ -45,7 +45,8 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     public List<LogOperateTypeView> getLogOperateTypeList(int lastDay) {
         Date today = new Date();
         Date lastDayStart = DateUtil.offsetDay(today, -lastDay).toJdkDate();
-        var data = systemOperateLog.listSystemOperateRecords(lastDayStart, today);
+        var data = extractor.extract(new LoggingRecordExtractForm(null, lastDayStart, today));
+
         Map<String, LogOperateTypeView> dataMap = new HashMap<>();
         Map<String, Set<String>> userMap = new HashMap<>(); // 记录每个操作类型的用户数
         Map<String, Set<String>> ipMap = new HashMap<>();   // 记录每个操作类型的IP数
@@ -53,10 +54,11 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
         if (CollUtil.isEmpty(data)) {
             return new ArrayList<>();
         }
-        for (SystemOperateRecordEntity operateRecordEntity : data) {
+        for (LogRecordVO operateRecordEntity : data) {
             String operateType = operateRecordEntity.getOperateType();
-            Long costTime = operateRecordEntity.getCostTime();
-            String userName = operateRecordEntity.getOperateUserName();
+            Long costTime =
+                operateRecordEntity.getOperateFinishTime().getTime() - operateRecordEntity.getOperateTime().getTime();
+            String userName = operateRecordEntity.getOperateUser();
             String ip = operateRecordEntity.getOperateIp();
 
             // 收集用户数和IP数
@@ -70,9 +72,9 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
             if (logOperateTypeView == null) {
                 logOperateTypeView = new LogOperateTypeView();
                 logOperateTypeView.setOperateCount(BigDecimal.ONE);
-                var costTimeDecimal = BigDecimal.valueOf(operateRecordEntity.getCostTime());
+                var costTimeDecimal = BigDecimal.valueOf(costTime);
                 logOperateTypeView.setOperateTime(new BigDecimal(costTimeDecimal.toString()));
-                if (StrUtil.isNotEmpty(operateRecordEntity.getOperateError())) {
+                if (StrUtil.isNotEmpty(operateRecordEntity.getErrorMessage())) {
                     logOperateTypeView.setErrorCount(BigDecimal.ONE);
                 } else {
                     logOperateTypeView.setErrorCount(BigDecimal.ZERO);
@@ -85,14 +87,14 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
             } else {
                 logOperateTypeView.setOperateCount(logOperateTypeView.getOperateCount().add(BigDecimal.ONE));
                 logOperateTypeView.setOperateTime(
-                    logOperateTypeView.getOperateTime().add(BigDecimal.valueOf(operateRecordEntity.getCostTime())));
+                    logOperateTypeView.getOperateTime().add(BigDecimal.valueOf(costTime)));
                 if (!isIgnoreError(operateRecordEntity)) {
                     logOperateTypeView.setErrorCount(logOperateTypeView.getErrorCount().add(BigDecimal.ONE));
                 }
                 logOperateTypeView.setOperateTimeMax(
-                    BigDecimal.valueOf(operateRecordEntity.getCostTime()).max(logOperateTypeView.getOperateTimeMax()));
+                    BigDecimal.valueOf(costTime).max(logOperateTypeView.getOperateTimeMax()));
                 logOperateTypeView.setOperateTimeMin(
-                    BigDecimal.valueOf(operateRecordEntity.getCostTime()).min(logOperateTypeView.getOperateTimeMin()));
+                    BigDecimal.valueOf(costTime).min(logOperateTypeView.getOperateTimeMin()));
                 dataMap.put(operateRecordEntity.getOperateType(), logOperateTypeView);
             }
         }
@@ -226,9 +228,9 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
 
     }
 
-    private static boolean isIgnoreError(SystemOperateRecordEntity operateRecordEntity) {
-        return StrUtil.isEmpty(operateRecordEntity.getOperateError()) ||
-            (operateRecordEntity.getOperateErrorLevel() != null &&
-                operateRecordEntity.getOperateErrorLevel() < ErrorLevelEnum.DATA_ACCESS_ERROR.getCode());
+    private static boolean isIgnoreError(LogRecordVO operateRecordEntity) {
+        return StrUtil.isEmpty(operateRecordEntity.getErrorMessage()) ||
+            (operateRecordEntity.getErrorCode() != null &&
+                operateRecordEntity.getErrorCode() < ErrorLevelEnum.DATA_ACCESS_ERROR.getCode());
     }
 }

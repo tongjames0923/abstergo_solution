@@ -51,4 +51,16 @@ public class RabbitMqLoggingRecorder implements ILogRecorder {
         }
 
     }
+
+    @Override
+    public void flush() {
+        LoggingRecordForm recordForm = new LoggingRecordForm();
+        try {
+            recordForm.setFlushFlag(1);
+            rabbitTemplate.convertAndSend(getExchangeName(), getRoutingKey(), recordForm);
+        } catch (Exception e) {
+            log.error("RabbitMQ记录日志失败: {},日志内容:{}", e.getMessage(), recordForm);
+            log.error("异常详情-------", e);
+        }
+    }
 }

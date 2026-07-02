@@ -2,10 +2,9 @@ package com.tbs.app.service;
 
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
-import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
+import com.tbs.logging.core.ILogRecorder;
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -22,8 +21,8 @@ import javax.annotation.Resource;
 @Component
 public class AppExecutor {
 
-    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.SimpleLoggerSender", check = false)
-    private ISystemOperateLogSender systemOperateLog;
+    @Resource
+    private ILogRecorder systemOperateLog;
 
     @Resource
     CompanyTreeStructService companyTreeStructService;

@@ -5,7 +5,8 @@ import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.BeanUtil;
-import com.tbs.shared.interfaces.log.ISystemOperateLogSender;
+import com.tbs.logging.core.ILogRecorder;
+import com.tbs.logging.form.LoggingRecordForm;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
@@ -13,7 +14,6 @@ import com.tbs.web.uitl.AuthUtil;
 import com.tbs.web.uitl.NetUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.DubboReference;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -35,8 +35,8 @@ import java.util.Date;
 @Slf4j
 public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 
-    @DubboReference(mock = "com.tbs.shared.interfaces.log.impl.SimpleLoggerSender", check = false)
-    ISystemOperateLogSender systemOperateLog;
+    @Resource
+    ILogRecorder systemOperateLog;
 
     /**
      * 系统操作上下文类
@@ -56,7 +56,7 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
          *
          * @see SystemOperateRecordEntity 系统操作记录实体类
          */
-        private SystemOperateRecordEntity operateRecord;
+        private LoggingRecordForm operateRecord;
     }
 
     /**
@@ -94,19 +94,19 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
         SystemOperContext operateContext = new SystemOperContext();
         BeanUtil.copyProperties(context, operateContext, true);
         BaseController baseController = context.getTarget();
-        SystemOperateRecordEntity record = new SystemOperateRecordEntity();
+        LoggingRecordForm record = new LoggingRecordForm();
         record.setOperateType(context.getTarget().getClass().getTypeName() + "." + context.getMethod().getName());
         record.setOperateIp(NetUtil.getIp(request));
         record.setMethod(request.getMethod());
         record.setOperateUrl(request.getRequestURI());
         record.setOperateTime(new Date());
-        record.setOperateContent(baseController.getBusinessName());
+        record.setOperateDesc(baseController.getBusinessName());
         if (AuthUtil.getInstance().isUserLoggedIn()) {
-            record.setOperateUserName(AuthUtil.getInstance().getCurrentUser().getUsername());
+            record.setOperateUser(AuthUtil.getInstance().getCurrentUser().getUsername());
         } else {
-            record.setOperateUserName("NULL USERNAME:" + NetUtil.getIp(request));
+            record.setOperateUser("NULL USERNAME:" + NetUtil.getIp(request));
         }
-        record.setOperateParamJson(JSON.toJSONString(context.getArgs()));
+        record.setOperateParam(JSON.toJSONString(context.getArgs()));
         operateContext.setOperateRecord(record);
         return operateContext;
     }
@@ -132,12 +132,10 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 
         if (context instanceof SystemOperContext) {
             SystemOperContext operateContext = (SystemOperContext)context;
-            operateContext.getOperateRecord()
-                .setCostTime(System.currentTimeMillis() - operateContext.getOperateRecord().getOperateTime().getTime());
-            result.get()
-                .ifPresent(val -> operateContext.getOperateRecord().setOperateResultJson(JSON.toJSONString(val)));
+            operateContext.getOperateRecord().setOperateFinishTime(new Date());
+            result.get().ifPresent(val -> operateContext.getOperateRecord().setOperateResult(JSON.toJSONString(val)));
             try {
-                systemOperateLog.log(operateContext.getOperateRecord());
+                systemOperateLog.record(operateContext.getOperateRecord());
             } catch (Throwable e) {
                 log.error("record log error", e);
             }
@@ -165,21 +163,20 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 
         if (context instanceof SystemOperContext) {
             SystemOperContext operateContext = (SystemOperContext)context;
-            operateContext.getOperateRecord()
-                .setCostTime(System.currentTimeMillis() - operateContext.getOperateRecord().getOperateTime().getTime());
+            operateContext.getOperateRecord().setOperateFinishTime(new Date());
             var baos = new ByteArrayOutputStream();
             e.printStackTrace(new PrintStream(baos));
 
             operateContext.getOperateRecord()
-                .setOperateError(String.format("%s:%s", e.getClass().getName(), new String(baos.toByteArray())));
+                .setErrorMessage(String.format("%s:%s", e.getClass().getName(), new String(baos.toByteArray())));
             if (e instanceof IExceptionLevel) {
-                operateContext.getOperateRecord().setOperateErrorLevel(((IExceptionLevel)e).getLevel().getCode());
+                operateContext.getOperateRecord().setErrorCode(((IExceptionLevel)e).getLevel().getCode());
             } else {
-                operateContext.getOperateRecord().setOperateErrorLevel(ErrorLevelEnum.SYSTEM_ERROR.getCode());
+                operateContext.getOperateRecord().setErrorCode(ErrorLevelEnum.SYSTEM_ERROR.getCode());
             }
 
             try {
-                systemOperateLog.log(operateContext.getOperateRecord());
+                systemOperateLog.record(operateContext.getOperateRecord());
             } catch (Throwable ex) {
                 log.error("record log error", ex);
             }
