@@ -5,8 +5,9 @@ import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.function.EnumUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.mapper.SystemTokenMapper;
 import com.tbs.shared.pojo.criteria.CommonTokenQueryCriteria;
@@ -39,9 +40,12 @@ public class DefaultSystemTokenService
 
     @Override
     protected SystemTokenEntity insertNew(SystemTokenEntity entity) {
-        AssertUtil.hasText(entity.getUserName(), "用户名不能为空");
-        AssertUtil.hasText(entity.getToken(), "token不能为空");
-        AssertUtil.isTrue(entity.getTokenType() == null, "令牌类型不能为空");
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getUserName())).message("用户名不能为空")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getToken())).message("token不能为空")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(entity.getTokenType() == null).message("令牌类型不能为空")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(TokenStatusEnum.ACTIVE.getCode());
         entity.setCreateTime(new Date());
         getMapper().insert(entity);
@@ -64,11 +68,9 @@ public class DefaultSystemTokenService
     @Override
     protected SystemTokenEntity compareAndUpdateValue(SystemTokenEntity newOne, SystemTokenEntity oldOne) {
         if (newOne.getFlag() != null) {
-            if (EnumUtil.isValidCode(TokenStatusEnum.class, newOne.getFlag())) {
-                oldOne.setFlag(newOne.getFlag());
-            } else {
-                AssertUtil.isTrue(false, "无效的令牌状态");
-            }
+            AssertUtil.isTrue(!EnumUtil.isValidCode(TokenStatusEnum.class, newOne.getFlag()))
+                .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("令牌状态无效").throwIt();
+            oldOne.setFlag(newOne.getFlag());
         }
         if (newOne.getExpireTime() != null) {
             oldOne.setExpireTime(newOne.getExpireTime());

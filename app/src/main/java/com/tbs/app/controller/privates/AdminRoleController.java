@@ -4,6 +4,7 @@ import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
@@ -138,7 +139,7 @@ public class AdminRoleController extends BaseController {
     public AjaxResult activiteAccount(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
         userService.save(user);
         relationService.enableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
@@ -159,7 +160,7 @@ public class AdminRoleController extends BaseController {
     public AjaxResult disableAccount(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         user.setFlag(SystemUserStatusEnum.DISABLED.getCode());
         userService.save(user);
         relationService.disableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);

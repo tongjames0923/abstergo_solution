@@ -8,6 +8,7 @@ import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -115,8 +116,8 @@ public class PrivateUserController extends BaseController {
         userInfoVO.setUserName(AuthUtil.getInstance().getCurrentUser().getUsername());
         Optional<SystemUserEntity> user =
             userService.queryByUserName(AuthUtil.getInstance().getCurrentUser().getUsername()).stream().findFirst();
-        AssertUtil.isTrue(!user.isPresent(), () -> new FormattedRuntimeException("用户{} 不存在",
-            AuthUtil.getInstance().getCurrentUser().getUsername()));
+        AssertUtil.isTrue(!user.isPresent()).message("用户{} 不存在",
+            AuthUtil.getInstance().getCurrentUser().getUsername()).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         userInfoVO.setNickName(user.get().getNickName());
         userInfoVO.setAvatar(user.get().getAvatar());
         userInfoVO.setAvaliableRoles(relationService.queryRoles(user.get().getId()));
@@ -158,23 +159,23 @@ public class PrivateUserController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult setCurrentDepartment(@PathVariable Long departmentId) {
         var auth = AuthUtil.getInstance().getAuthentication();
-        AssertUtil.isTrue(auth.isEmpty(), () -> new NoLoginException("登录信息不存在"));
+        AssertUtil.isTrue(auth.isEmpty()).message("登录信息不存在").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         var authentication = auth.get();
         var userDetails = authentication.getUserDetails();
-        AssertUtil.isTrue(userDetails == null, () -> new NoLoginException("用户信息不存在"));
-        AssertUtil.isTrue(!(userDetails instanceof ISystemUserDetails),
-            () -> new FormattedRuntimeException("用户{}的用户信息数据不兼容，请联系后端开发查看用户登录信息配置。",
-                userDetails.getUsername()));
+        AssertUtil.isTrue(userDetails == null).message("用户信息不存在").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        AssertUtil.isTrue(!(userDetails instanceof ISystemUserDetails))
+            .message("用户{}的用户信息数据不兼容，请联系后端开发查看用户登录信息配置。",
+                userDetails.getUsername()).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
 
         var ud = (ISystemUserDetails)userDetails;
-        AssertUtil.isTrue(CollUtil.isEmpty(ud.getDepartments()), () -> {
-            return new FormattedRuntimeException("用户{}未设置部门", ud.getUsername());
-        });
+        AssertUtil.isTrue(CollUtil.isEmpty(ud.getDepartments()))
+            .message("用户{}未设置部门", ud.getUsername())
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(
             !ud.getDepartments().stream().map(DepartmentInfoVO::getDepartmentId).collect(Collectors.toSet())
-                .contains(departmentId), () -> {
-                return new FormattedRuntimeException("用户{}未加入部门{}", ud.getUsername(), departmentId);
-            });
+                .contains(departmentId))
+            .message("用户{}未加入部门{}", ud.getUsername(), departmentId)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         ((ISystemUserDetails)userDetails).setCurrentDepartment(departmentId);
         userLoginInfoService.replaceUserDetails(ud, authentication.getTokenModel());
         return successResult(null);

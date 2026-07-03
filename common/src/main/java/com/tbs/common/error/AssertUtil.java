@@ -77,6 +77,19 @@ public class AssertUtil implements IStartup {
         }
 
         /**
+         * 设置错误消息
+         *
+         * @param message 错误消息
+         * @return 当前构建器实例
+         */
+        public AssertBuilder message(String message, Object... params) {
+            this.message = message;
+            this.params = CollUtil.newArrayList(params);
+            return this;
+        }
+
+
+        /**
          * 设置错误消息参数
          *
          * @param params 错误消息参数列表

@@ -5,6 +5,7 @@ import com.tbs.app.form.DicItemSearchForm;
 import com.tbs.app.form.DicSaveForm;
 import com.tbs.app.form.DicSearchForm;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.dic.entity.SystemDataDicEntity;
@@ -108,8 +109,8 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult enableDic(
         @Parameter(name = "form", description = "字典编码信息", required = true)
         @RequestBody DicSearchForm form) {
-        AssertUtil.notNull(form, "字典编号不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
+        AssertUtil.isTrue(form == null).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         dataDicService.enableDataDic(form.getDicCode());
         return successResult(null);
     }
@@ -129,8 +130,8 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult disableDic(
         @Parameter(name = "form", description = "字典编码信息", required = true)
         @RequestBody DicSearchForm form) {
-        AssertUtil.notNull(form, "字典编号不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
+        AssertUtil.isTrue(form == null).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         dataDicService.disableDataDic(form.getDicCode());
         return successResult(null);
     }
@@ -150,9 +151,9 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult enableDicItem(
         @Parameter(name = "form", description = "字典项查询条件", required = true)
         @RequestBody DicItemSearchForm form) {
-        AssertUtil.notNull(form, "字典编号不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
-        AssertUtil.hasText(form.getLabel(), "字典项不能为空");
+        AssertUtil.isTrue(form == null).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getLabel())).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         dataDicService.enableDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
@@ -172,9 +173,9 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult disableDicItem(
         @Parameter(name = "form", description = "字典项查询条件", required = true)
         @RequestBody DicItemSearchForm form) {
-        AssertUtil.notNull(form, "字典编号不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
-        AssertUtil.hasText(form.getLabel(), "字典项不能为空");
+        AssertUtil.isTrue(form == null).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getLabel())).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         dataDicService.disableDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
@@ -194,8 +195,8 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult deleteDic(
         @Parameter(name = "form", description = "字典编码信息", required = true)
         @RequestBody DicSearchForm form) {
-        AssertUtil.notNull(form, "字典编号不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
+        AssertUtil.isTrue(form == null).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         dataDicService.deleteDataDic(form.getDicCode());
         return successResult(null);
     }
@@ -215,9 +216,9 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult deleteDicItem(
         @Parameter(name = "form", description = "字典项查询条件", required = true)
         @RequestBody DicItemSearchForm form) {
-        AssertUtil.notNull(form, "字典编号不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
-        AssertUtil.hasText(form.getLabel(), "字典项不能为空");
+        AssertUtil.isTrue(form == null).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getLabel())).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         dataDicService.deleteDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
@@ -240,9 +241,9 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult saveDic(
         @Parameter(name = "form", description = "字典保存信息", required = true)
         @RequestBody DicSaveForm form) {
-        AssertUtil.notNull(form, "字典不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
-        AssertUtil.hasText(form.getDicName(), "字典名称不能为空");
+        AssertUtil.isTrue(form == null).message("字典不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicName())).message("字典名称不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDataDicEntity dic = new SystemDataDicEntity();
         dic.setDataDicCode(form.getDicCode());
         dic.setDataDicName(form.getDicName());
@@ -270,10 +271,10 @@ public class SystemDataDicController extends BaseController {
     public AjaxResult saveDicItem(
         @Parameter(name = "form", description = "字典项保存信息", required = true)
         @RequestBody DicItemSaveForm form) {
-        AssertUtil.notNull(form, "字典项不能为空");
-        AssertUtil.hasText(form.getDicCode(), "字典编号不能为空");
-        AssertUtil.hasText(form.getDicItemLabel(), "字典项不能为空");
-        AssertUtil.hasText(form.getDicItemValue(), "字典项值不能为空");
+        AssertUtil.isTrue(form == null).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).message("字典编号不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicItemLabel())).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicItemValue())).message("字典项值不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDataDicItemEntity item = new SystemDataDicItemEntity();
         item.setDicCode(form.getDicCode());
         item.setLabel(form.getDicItemLabel());

@@ -2,7 +2,7 @@ package com.tbs.app.service.impl.view;
 
 import com.tbs.app.service.view.IViewService;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.constant.CommonConstant;
@@ -47,11 +47,12 @@ public class ViewServiceImpl implements IViewService {
     @Cacheable(cacheNames = "view_form_cache", key = "#id")
     @Override
     public FormConfig getForm(Long id) {
-        AssertUtil.notNull(id, "表单ID不能为空");
+        AssertUtil.isTrue(id == null).message("表单ID不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity =
             QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
                 .equal(DynamicFormConfigrationEntity::getId, id).pour().fetchOne();
-        AssertUtil.notNull(dynamicFormConfigrationEntity, "表单配置不存在");
+        AssertUtil.isTrue(dynamicFormConfigrationEntity == null).message("表单配置不存在")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         FormConfig formConfig = new FormConfig();
         IPropertyValueTransformer transformer = SpringUtil.getBean(IPropertyValueTransformer.class);
         formConfig.setSpan(dynamicFormConfigrationEntity.getSpan());
@@ -73,7 +74,8 @@ public class ViewServiceImpl implements IViewService {
                     try {
                         return transformer.reverseTransformStr(v.getValue(), Class.forName(v.getValueClass()));
                     } catch (ClassNotFoundException e) {
-                        AssertUtil.throwError(() -> new FormattedRuntimeException("属性值转换失败: {}", v.getValue()));
+                        AssertUtil.isTrue(true).message("属性值转换失败: {}", v.getValue())
+                            .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
                     }
                     return null;
                 })));
@@ -106,8 +108,8 @@ public class ViewServiceImpl implements IViewService {
                                     return transformer.reverseTransformStr(v1.getValue(),
                                         Class.forName(v1.getValueClass()));
                                 } catch (ClassNotFoundException e) {
-                                    AssertUtil.throwError(
-                                        () -> new FormattedRuntimeException("属性值转换失败: {}", v1.getValue()));
+                                    AssertUtil.isTrue(true).message("属性值转换失败: {}", v1.getValue())
+                                        .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
                                 }
                                 return null;
                             })));
@@ -122,7 +124,8 @@ public class ViewServiceImpl implements IViewService {
     @Transactional(rollbackOn = RuntimeException.class)
     @Override
     public DynamicFormConfigrationEntity saveForm(@NotNull FormConfig formConfig) {
-        AssertUtil.notNull(formConfig, "表单配置不能为空");
+        AssertUtil.isTrue(formConfig == null).message("表单配置不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity = createDynamicFormEntity(formConfig);
         formConfigMapper.insert(dynamicFormConfigrationEntity);
         IPropertyValueTransformer transformer = SpringUtil.getBean(IPropertyValueTransformer.class);
@@ -201,15 +204,18 @@ public class ViewServiceImpl implements IViewService {
     @Transactional(rollbackOn = RuntimeException.class)
     @CacheEvict(cacheNames = "view_form_cache", key = "#formConfigId")
     public DynamicFormConfigrationEntity updateForm(Long formConfigId, @NotNull FormConfig formConfig) {
-        AssertUtil.notNull(formConfigId, "表单配置ID不能为空");
-        AssertUtil.notNull(formConfig, "表单配置不能为空");
+        AssertUtil.isTrue(formConfigId == null).message("表单配置ID不能为空")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(formConfig == null).message("表单配置不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
 
         // 获取现有的表单配置实体
         DynamicFormConfigrationEntity existingEntity =
             QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
                 .equal(DynamicFormConfigrationEntity::getId, formConfigId).pour().fetchOne();
 
-        AssertUtil.notNull(existingEntity, "表单配置不存在");
+        AssertUtil.isTrue(existingEntity == null).message("表单配置不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
 
         // 更新基本属性
         existingEntity.setTitle(formConfig.getTitle());
@@ -339,7 +345,8 @@ public class ViewServiceImpl implements IViewService {
     @Override
     @CacheEvict(cacheNames = "view_form_cache", key = "#formConfigId")
     public DynamicFormConfigrationEntity deleteForm(Long formConfigId) {
-        AssertUtil.notNull(formConfigId, "表单配置ID不能为空");
+        AssertUtil.isTrue(formConfigId == null).message("表单配置ID不能为空")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         DynamicFormConfigrationEntity form =
             QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
                 .equal(DynamicFormConfigrationEntity::getId, formConfigId).pour().fetchOne();

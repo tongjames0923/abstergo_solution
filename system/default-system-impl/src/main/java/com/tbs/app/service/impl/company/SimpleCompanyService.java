@@ -56,10 +56,10 @@ public class SimpleCompanyService
         CommonSystemDepartmentQueryCriteria criteria = new CommonSystemDepartmentQueryCriteria();
         criteria.setEqualsCompanyId(id);
         var ls = departmentService.query(criteria, null);
-        AssertUtil.isTrue(CollUtil.isNotEmpty(ls), "公司下有部门，请先删除部门");
+        AssertUtil.isTrueBusinessError(CollUtil.isNotEmpty(ls)).message("公司下有部门，请先删除部门").throwIt();
         var entity = super.deleteById(id);
         boolean deleted = companyTreeStructService.deleteLeaf(id);
-        AssertUtil.isTrue(!deleted, "公司删除失败,可能存在子部门情况");
+        AssertUtil.isTrueBusinessError(!deleted).message("公司删除失败,可能存在子部门情况").throwIt();
         return entity;
     }
 
@@ -95,7 +95,7 @@ public class SimpleCompanyService
             SystemCompanyEntity that =
                 getQueryWrapper().query().where().equal(SystemCompanyEntity::getTaxNumber, newOne.getTaxNumber()).pour()
                     .fetchOne();
-            AssertUtil.isTrue(that != null, "公司税号已存在");
+            AssertUtil.isTrueBusinessError(that != null).message("公司税号已存在").throwIt();
             oldOne.setTaxNumber(newOne.getTaxNumber());
         }
         if (StrUtil.isNotEmpty(newOne.getDescription())) {
@@ -105,7 +105,8 @@ public class SimpleCompanyService
             oldOne.setLogoImage(newOne.getLogoImage());
         }
         if (newOne.getFlag() != null) {
-            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemCompanyFlagEnum.class, newOne.getFlag()), "无效标志");
+            AssertUtil.isTrueUserInputError(!EnumUtil.isValidCode(SystemCompanyFlagEnum.class, newOne.getFlag()))
+                .message("无效标志").throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 

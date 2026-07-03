@@ -4,6 +4,7 @@ import com.tbs.app.form.DisableTokenForm;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
@@ -143,7 +144,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     public List<LoginSessionVO> getUserSessions(
         @Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         var user = getService().queryById(id);
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         return loginInfoService.listUserSessions(user.getUserName());
     }
 

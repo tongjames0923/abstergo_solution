@@ -1,5 +1,6 @@
 package com.tbs.app.service.impl.department;
 
+import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
@@ -46,6 +47,10 @@ public class SimpleDepartmentService
     @Lazy
     IDepartmentUserRelationService departmentUserRelationService;
 
+    @Resource
+    @Lazy
+    private ISystemCompanyService companyService;
+
 
     @Override
     public SystemDepartmentEntity deleteById(Long id) {
@@ -85,6 +90,8 @@ public class SimpleDepartmentService
             oldOne.setDepartmentCode(newOne.getDepartmentCode());
         }
         if (newOne.getCompanyId() != null) {
+            var newComp = companyService.queryById(newOne.getCompanyId());
+            AssertUtil.isTrueUserInputError(newComp == null).message("无效公司").throwIt();
             oldOne.setCompanyId(newOne.getCompanyId());
         }
         if (StrUtil.isNotEmpty(newOne.getManager())) {
@@ -94,10 +101,13 @@ public class SimpleDepartmentService
             oldOne.setDescription(newOne.getDescription());
         }
         if (newOne.getParentId() != null) {
+            var newParent = queryById(newOne.getParentId());
+            AssertUtil.isTrueUserInputError(newParent == null).message("无效部门").throwIt();
             oldOne.setParentId(newOne.getParentId());
         }
         if (newOne.getFlag() != null) {
-            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemDepartmentFlagEnum.class, newOne.getFlag()), "无效标志");
+            AssertUtil.isTrueUserInputError(!EnumUtil.isValidCode(SystemDepartmentFlagEnum.class, newOne.getFlag()))
+                .message("无效标志").throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 

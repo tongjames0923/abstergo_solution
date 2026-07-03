@@ -5,6 +5,7 @@ import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.mapper.SystemUserDepartmentRelationMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
@@ -36,14 +37,14 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Override
     public List<SystemDepartmentEntity> queryUserDepartments(@NotNull Long userId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         return departmentRelationMapper.queryUserDepartments(userId);
     }
 
     @Override
     public List<SystemUserEntity> queryDepartmentUsers(@NotNull Long departmentId) {
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
-        AssertUtil.notNull(department, "部门不存在");
+        AssertUtil.isTrue(department == null).message("部门不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         return departmentRelationMapper.queryDepartmentUsers(departmentId);
     }
 
@@ -51,11 +52,12 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Override
     public void addUserToDepartment(@NotNull Long userId, @NotNull Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
-        AssertUtil.notNull(department, "部门不存在");
+        AssertUtil.isTrue(department == null).message("部门不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var relations = departmentRelationMapper.queryUserDepartmentRelation(userId, departmentId);
-        AssertUtil.isTrue(!CollUtil.isEmpty(relations), "用户已加入 {} ", department.getDepartmentName());
+        AssertUtil.isTrue(CollUtil.isNotEmpty(relations)).message("用户已加入 {}", department.getDepartmentName())
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         SystemUserDepartmentRelationEntity relation = new SystemUserDepartmentRelationEntity();
         relation.setUserId(userId);
         relation.setDepartmentId(departmentId);
@@ -66,11 +68,12 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Override
     public void deleteUserFromDepartment(@NotNull Long userId, @NotNull Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
-        AssertUtil.notNull(department, "部门不存在");
+        AssertUtil.isTrue(department == null).message("部门不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var relations = departmentRelationMapper.queryUserDepartmentRelation(userId, departmentId);
-        AssertUtil.isTrue(!CollUtil.isNotEmpty(relations), "用户未加入 {}", department.getDepartmentName());
+        AssertUtil.isTrue(CollUtil.isEmpty(relations)).message("用户未加入 {}", department.getDepartmentName())
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         departmentRelationMapper.deleteByPrimaryKey(relations.get(0).getId());
     }
 }

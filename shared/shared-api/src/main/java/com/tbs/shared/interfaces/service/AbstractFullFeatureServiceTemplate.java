@@ -3,6 +3,7 @@ package com.tbs.shared.interfaces.service;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.model.PageVO;
@@ -74,7 +75,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public T deleteById(K id) {
-        AssertUtil.notNull(id, "空Id无法被删除");
+        AssertUtil.isTrue(id == null).message("空Id无法被删除").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var entity = getInstance().queryById(id);
         if (getInstance().isDeleted(entity)) {
             return null;
@@ -103,7 +104,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<T> save(T entity) {
-        AssertUtil.notNull(entity, "空对象无法被保存");
+        AssertUtil.isTrue(entity == null).message("空对象无法被保存").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var r = ValueWrapper.of(entity);
         if (entity.getId() == null) {
             auditFunction(r, CREATE);
@@ -121,7 +122,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
         } else {
             r.set(getInstance().queryById(entity.getId()));
-            AssertUtil.notNull(r.get().isEmpty(), "实体数据不存在，无法更新");
+            AssertUtil.isTrue(r.get().isEmpty()).message("实体数据不存在，无法更新").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             r.set(getInstance().compareAndUpdateValue(entity, r.get().get()));
             auditFunction(r, UPDATE);
             if (r.get().isEmpty()) {
