@@ -34,11 +34,6 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
      */
     private static final int BATCH_SIZE = 100;
 
-    /**
-     * 批量写入的超时时间（毫秒）
-     */
-    private static final long FLUSH_INTERVAL_MS = 5000;
-
     @Resource
     private SystemOperateMapper mapper;
 
@@ -49,7 +44,7 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
 
     @Override
     protected MqConsumerProperties getProperties() {
-        return MqConsumerProperties.builder("tbs.log.queue").exchange("tbs.log.queue").routingKey("systemLog")
+        return MqConsumerProperties.builder("systemLog").exchange("tbs.log.queue").routingKey("systemLog")
             .prefetchCount(250).retryEnabled(false).build();
     }
 

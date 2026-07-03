@@ -45,7 +45,7 @@ import java.lang.reflect.Field;
  * UserQuery query = new UserQuery();
  * query.setStatus(1);
  * WhereCompose whereCompose = ConditionBuilder.buildConditions(query);
- * 
+ *
  * // 构建SQL上下文
  * ImportedSqlBuildContext context = ConditionBuilder.buildSqlContext(query);
  * }</pre>
@@ -108,7 +108,7 @@ public class ConditionBuilder<T> {
     }
 
     public static <QO extends IQueryCriteria> ImportedSqlBuildContext buildSqlContext(QO queryObject) {
-        if (queryObject == null) throw new FormattedRuntimeException("QO 不能为空");
+        AssertUtil.isTrue(queryObject != null, "queryObject cannot be null");
         var context = new ImportedSqlBuildContext(() -> queryObject);
         context.rebuild();
         return context;

@@ -1,13 +1,7 @@
 package com.tbs.rabbitmq.support;
 
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.DirectExchange;
-import org.springframework.amqp.core.FanoutExchange;
-import org.springframework.amqp.core.HeadersExchange;
-import org.springframework.amqp.core.Queue;
-import org.springframework.amqp.core.TopicExchange;
+import org.springframework.amqp.core.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -85,17 +79,17 @@ public class MqResourceDeclarer {
         org.springframework.amqp.core.Exchange exchange;
         switch (props.getExchangeType()) {
             case FANOUT:
-                exchange = new FanoutExchange(exchangeName, true, false);
+                exchange = new FanoutExchange(exchangeName, props.isDurable(), props.isAutoDelete());
                 break;
             case TOPIC:
-                exchange = new TopicExchange(exchangeName, true, false);
+                exchange = new TopicExchange(exchangeName, props.isDurable(), props.isAutoDelete());
                 break;
             case HEADERS:
-                exchange = new HeadersExchange(exchangeName, true, false);
+                exchange = new HeadersExchange(exchangeName, props.isDurable(), props.isAutoDelete());
                 break;
             case DIRECT:
             default:
-                exchange = new DirectExchange(exchangeName, true, false);
+                exchange = new DirectExchange(exchangeName, props.isDurable(), props.isAutoDelete());
                 break;
         }
         admin.declareExchange(exchange);

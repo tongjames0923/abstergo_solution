@@ -1,6 +1,8 @@
 package com.tbs.rabbitmq.support;
 
 import com.rabbitmq.client.Channel;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.error.IExceptionLevel;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.amqp.core.AmqpAdmin;
@@ -205,6 +207,14 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
     protected void handleError(Message message, Channel channel, long deliveryTag, Exception error) {
         invokeFailureCallback(message, error);
 
+        // 业务异常直接ACK，不重试（重试无法解决问题）
+        if (isBusinessException(error)) {
+            log.warn("业务异常，丢弃消息, deliveryTag={}, queue={}, error={}",
+                deliveryTag, getProperties().getQueueName(), error.getMessage());
+            ackSilently(channel, deliveryTag);
+            return;
+        }
+
         MqConsumerProperties props = getProperties();
         if (!props.isRetryEnabled()) {
             ackSilently(channel, deliveryTag);
@@ -239,6 +249,25 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
         } catch (Exception callbackEx) {
             log.error("错误处理回调执行失败, queue={}", getProperties().getQueueName(), callbackEx);
         }
+    }
+
+    /**
+     * 判断是否为业务异常
+     * <p>
+     * 业务异常（用户输入错误、业务逻辑错误）不应重试，因为重试无法解决问题。
+     * 系统异常（网络、数据库等临时故障）应启用重试机制。
+     * </p>
+     *
+     * @param error 异常信息
+     * @return true表示业务异常，false表示系统异常
+     */
+    protected boolean isBusinessException(Exception error) {
+        if (error instanceof IExceptionLevel) {
+            ErrorLevelEnum level = ((IExceptionLevel) error).getLevel();
+            return level == ErrorLevelEnum.USER_INPUT_ERROR
+                || level == ErrorLevelEnum.BUSINESS_LOGIC_ERROR;
+        }
+        return false;
     }
 
     /**
