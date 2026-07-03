@@ -14,6 +14,10 @@ public class NoLoginException extends AuthenticationException implements IExcept
         super(message);
     }
 
+    public NoLoginException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     @Override
     public ErrorLevelEnum getLevel() {
         return ErrorLevelEnum.BUSINESS_LOGIC_ERROR;

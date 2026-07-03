@@ -15,5 +15,8 @@ public class InvalidTokenException extends ReLoginRequestException  {
         super(msg);
     }
 
+    public InvalidTokenException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
 
 }

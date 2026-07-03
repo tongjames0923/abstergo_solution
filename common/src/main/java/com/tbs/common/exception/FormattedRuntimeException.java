@@ -91,4 +91,66 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
         this.level = errorLevel;
         return this;
     }
+
+    // ======================== 静态工厂方法 ========================
+
+    /**
+     * 创建用户输入错误异常
+     *
+     * @param message 错误消息模板
+     * @param params  消息参数
+     * @return 用户输入错误级别的异常
+     */
+    public static FormattedRuntimeException userInputError(String message, Object... params) {
+        return new FormattedRuntimeException(message, params)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR);
+    }
+
+    /**
+     * 创建业务逻辑错误异常
+     *
+     * @param message 错误消息模板
+     * @param params  消息参数
+     * @return 业务逻辑错误级别的异常
+     */
+    public static FormattedRuntimeException businessError(String message, Object... params) {
+        return new FormattedRuntimeException(message, params)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR);
+    }
+
+    /**
+     * 创建数据访问错误异常
+     *
+     * @param message 错误消息模板
+     * @param params  消息参数
+     * @return 数据访问错误级别的异常
+     */
+    public static FormattedRuntimeException dataAccessError(String message, Object... params) {
+        return new FormattedRuntimeException(message, params)
+            .errorLevel(ErrorLevelEnum.DATA_ACCESS_ERROR);
+    }
+
+    /**
+     * 创建系统错误异常
+     *
+     * @param message 错误消息模板
+     * @param params  消息参数
+     * @return 系统错误级别的异常
+     */
+    public static FormattedRuntimeException systemError(String message, Object... params) {
+        return new FormattedRuntimeException(message, params)
+            .errorLevel(ErrorLevelEnum.SYSTEM_ERROR);
+    }
+
+    /**
+     * 创建严重系统错误异常
+     *
+     * @param message 错误消息模板
+     * @param params  消息参数
+     * @return 严重系统错误级别的异常
+     */
+    public static FormattedRuntimeException criticalSystemError(String message, Object... params) {
+        return new FormattedRuntimeException(message, params)
+            .errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR);
+    }
 }

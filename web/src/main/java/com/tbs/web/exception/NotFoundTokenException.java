@@ -11,4 +11,8 @@ public class NotFoundTokenException extends ReLoginRequestException {
         super(msg);
     }
 
+    public NotFoundTokenException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
+
 }

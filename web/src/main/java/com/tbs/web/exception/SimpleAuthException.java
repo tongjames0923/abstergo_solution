@@ -12,6 +12,10 @@ public class SimpleAuthException extends AuthenticationException implements IExc
         super(msg);
     }
 
+    public SimpleAuthException(String msg, Throwable cause) {
+        super(msg, cause);
+    }
+
     @Override
     public ErrorLevelEnum getLevel() {
         return ErrorLevelEnum.USER_INPUT_ERROR;

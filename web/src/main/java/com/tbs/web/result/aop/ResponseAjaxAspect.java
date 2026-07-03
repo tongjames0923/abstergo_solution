@@ -1,6 +1,8 @@
 package com.tbs.web.result.aop;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -49,8 +51,22 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
         if (response.isCommitted()) {
             return null;
         }
-        log.error("处理异常", e);
-        return AjaxUtil.getInstance().createAjaxResultOnError(AssertUtil.toFormattedRuntimeException(e).orElse(e));
+
+        Throwable cause = AssertUtil.toFormattedRuntimeException(e).orElse(e);
+
+        // 根据异常级别选择日志级别，降低业务异常的告警噪音
+        if (cause instanceof IExceptionLevel) {
+            ErrorLevelEnum level = ((IExceptionLevel) cause).getLevel();
+            if (level == ErrorLevelEnum.USER_INPUT_ERROR || level == ErrorLevelEnum.BUSINESS_LOGIC_ERROR) {
+                log.warn("业务异常: {}", cause.getMessage());
+            } else {
+                log.error("系统异常", cause);
+            }
+        } else {
+            log.error("未知异常", cause);
+        }
+
+        return AjaxUtil.getInstance().createAjaxResultOnError(cause);
     }
 
     private static final Map<String, Boolean> methodCache = new ConcurrentHashMap<>();

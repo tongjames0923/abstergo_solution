@@ -14,6 +14,10 @@ public abstract class ReLoginRequestException extends AuthenticationException im
         super(message);
     }
 
+    public ReLoginRequestException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
     @Override
     public ErrorLevelEnum getLevel() {
         return ErrorLevelEnum.BUSINESS_LOGIC_ERROR;
