@@ -108,7 +108,7 @@ public class ConditionBuilder<T> {
     }
 
     public static <QO extends IQueryCriteria> ImportedSqlBuildContext buildSqlContext(QO queryObject) {
-        AssertUtil.isTrue(queryObject != null, "queryObject cannot be null");
+        AssertUtil.isTrue(queryObject == null, "queryObject cannot be null");
         var context = new ImportedSqlBuildContext(() -> queryObject);
         context.rebuild();
         return context;
