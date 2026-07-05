@@ -30,7 +30,7 @@ public class SpringManagedTraceContext extends AbstractTraceContext {
 
 
     @Override
-    protected IMethodInvokeTreeProvider getMethodInvokeTreeProvider() {
+    public IMethodInvokeTreeProvider getMethodInvokeTreeProvider() {
         return methodInvokeTreeProvider;
     }
 

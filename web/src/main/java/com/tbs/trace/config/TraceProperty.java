@@ -38,4 +38,14 @@ public class TraceProperty {
      * 函数链路追踪提供者
      */
     private Class<? extends IMethodInvokeTreeProvider> methodInvokeTreeProvider = SimpleMethodInvokeTreeProvider.class;
+
+    /**
+     * 是否启用Dubbo链路追踪
+     */
+    private boolean dubboTraceEnabled = true;
+
+    /**
+     * 是否启用分布式链路追踪（需要RabbitMQ和Redis支持）
+     */
+    private boolean distributedTraceEnabled = true;
 }

@@ -30,7 +30,7 @@ public abstract class AbstractTraceContext implements IContext {
      *
      * @return 方法调用树提供者实例
      */
-    protected abstract IMethodInvokeTreeProvider getMethodInvokeTreeProvider();
+    public abstract IMethodInvokeTreeProvider getMethodInvokeTreeProvider();
 
     private TraceObject getRootObject() {
         return getMethodInvokeTreeProvider().getTree().getRoot() == null ? null
