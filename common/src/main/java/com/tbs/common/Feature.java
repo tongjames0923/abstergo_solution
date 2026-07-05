@@ -29,67 +29,73 @@ public class Feature {
     /**
      * 通用功能 - 基础通用组件
      */
-    public static final Feature COMMON = new Feature("common", "通用功能");
+    public static final Feature COMMON = new Feature("com.tbs.common", "通用功能");
 
     /**
      * Redis缓存功能
      */
-    public static final Feature REDIS = new Feature("redis", "Redis缓存");
+    public static final Feature REDIS = new Feature("com.tbs.redis", "Redis缓存");
 
     /**
      * RabbitMQ消息队列功能
      */
-    public static final Feature RABBITMQ = new Feature("rabbitmq", "RabbitMQ消息队列");
+    public static final Feature RABBITMQ = new Feature("com.tbs.rabbitmq", "RabbitMQ消息队列");
 
     /**
      * 缓存管理功能
      */
-    public static final Feature CACHE = new Feature("cache", "缓存管理");
+    public static final Feature CACHE = new Feature("com.tbs.cache", "缓存管理");
 
     /**
      * 异步处理功能
      */
-    public static final Feature ASYNC = new Feature("async", "异步处理");
+    public static final Feature ASYNC = new Feature("com.tbs.async", "异步处理");
 
     /**
      * 脚本引擎功能
      */
-    public static final Feature SCRIPT = new Feature("script", "脚本引擎");
+    public static final Feature SCRIPT = new Feature("com.tbs.script", "脚本引擎");
 
     /**
      * 动态视图路由功能
      */
-    public static final Feature VIEW_ROUTE = new Feature("view-route", "动态视图路由");
+    public static final Feature VIEW_ROUTE = new Feature("com.tbs.view-route", "动态视图路由");
 
     /**
      * Web基础组件功能
      */
-    public static final Feature WEB = new Feature("web", "Web基础组件");
+    public static final Feature WEB = new Feature("com.tbs.web", "Web基础组件");
 
     /**
      * 共享业务库功能
      */
-    public static final Feature SHARED = new Feature("shared", "共享业务库");
+    public static final Feature SHARED = new Feature("com.tbs.shared", "共享业务库");
 
     /**
      * 闭包表树形结构功能
      */
-    public static final Feature CLOSURE_TABLE = new Feature("closure-table", "闭包表树形结构");
+    public static final Feature CLOSURE_TABLE = new Feature("com.tbs.closure-table", "闭包表树形结构");
 
     /**
      * API文档功能
      */
-    public static final Feature KNIFE4J = new Feature("knife4j", "API文档");
+    public static final Feature KNIFE4J = new Feature("com.tbs.knife4j", "API文档");
 
     /**
      * 分布式任务调度功能
      */
-    public static final Feature XXL_JOB = new Feature("xxl-job", "分布式任务调度");
+    public static final Feature XXL_JOB = new Feature("com.tbs.xxl-job", "分布式任务调度");
 
     /**
      * 日志管理功能
      */
-    public static final Feature LOGGING = new Feature("logging", "日志管理");
+    public static final Feature LOGGING = new Feature("com.tbs.logging", "日志管理");
+
+    /**
+     * 链路追踪功能
+     */
+    public static final Feature TRACE = Feature.create("com.tbs.trace", "链路追踪");
+
 
     // ==================== 实例字段 ====================
 

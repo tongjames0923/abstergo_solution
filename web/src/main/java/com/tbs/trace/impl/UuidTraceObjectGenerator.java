@@ -1,8 +1,8 @@
-package com.tbs.web.trace.impl;
+package com.tbs.trace.impl;
 
 import com.tbs.common.util.framework.UuidUtil;
-import com.tbs.web.trace.core.ITraceIdObjectGenerator;
-import com.tbs.web.trace.core.TraceObject;
+import com.tbs.trace.core.ITraceIdObjectGenerator;
+import com.tbs.trace.core.TraceObject;
 
 /**
  * UUID生成的TraceObject

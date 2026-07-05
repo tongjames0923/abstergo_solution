@@ -1,8 +1,8 @@
-package com.tbs.web.trace.impl;
+package com.tbs.trace.impl;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.web.trace.core.AbstractTraceContext;
-import com.tbs.web.trace.core.AbstractTraceInterceptor;
+import com.tbs.trace.core.AbstractTraceContext;
+import com.tbs.trace.core.AbstractTraceInterceptor;
 
 /**
  * 导入的Trace拦截器

@@ -60,6 +60,7 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
         SystemOperateRecordEntity entity = convertToEntity(message);
         if (entity != null) {
             entity.setSystemLogFlag(1);
+            entity.setTraceId(message.getTraceId());
             boolean offered = bufferQueue.offer(entity);
             if (!offered) {
                 log.warn("日志缓冲队列已满，强制刷新");

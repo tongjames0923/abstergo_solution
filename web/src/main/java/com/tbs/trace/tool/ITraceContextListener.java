@@ -1,8 +1,8 @@
-package com.tbs.web.trace.tool;
+package com.tbs.trace.tool;
 
-import com.tbs.web.trace.core.AbstractTraceContext;
-import com.tbs.web.trace.core.IMethodInvokeTreeProvider;
-import com.tbs.web.trace.core.TraceObject;
+import com.tbs.trace.core.AbstractTraceContext;
+import com.tbs.trace.core.IMethodInvokeTreeProvider;
+import com.tbs.trace.core.TraceObject;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;

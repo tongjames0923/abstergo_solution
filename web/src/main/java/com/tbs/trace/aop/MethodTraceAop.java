@@ -1,6 +1,6 @@
-package com.tbs.web.trace.aop;
+package com.tbs.trace.aop;
 
-import com.tbs.web.trace.core.AbstractTraceContext;
+import com.tbs.trace.core.AbstractTraceContext;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -19,7 +19,7 @@ public class MethodTraceAop {
     @Resource
     private AbstractTraceContext traceContext;
 
-    @Around("@annotation(com.tbs.web.trace.annotation.Traced)")
+    @Around("@annotation(com.tbs.trace.annotation.Traced)")
     public Object traceAround(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature signature = (MethodSignature)joinPoint.getSignature();
         String parentTraceId = traceContext.getCurrentMethodTraceObject().getTraceId();

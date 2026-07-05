@@ -1,9 +1,9 @@
-package com.tbs.web.trace.core;
+package com.tbs.trace.core;
 
 import com.tbs.common.context.IContext;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.UuidUtil;
-import com.tbs.web.trace.tool.ITraceContextListener;
+import com.tbs.trace.tool.ITraceContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

@@ -1,13 +1,14 @@
-package com.tbs.web.trace.config;
+package com.tbs.trace.config;
 
-import com.tbs.web.trace.core.AbstractTraceContext;
-import com.tbs.web.trace.core.IMethodInvokeTreeProvider;
-import com.tbs.web.trace.core.ITraceIdObjectGenerator;
-import com.tbs.web.trace.impl.SimpleMethodInvokeTreeProvider;
-import com.tbs.web.trace.impl.SpringManagedTraceContext;
-import com.tbs.web.trace.impl.UuidTraceObjectGenerator;
+import com.tbs.trace.core.AbstractTraceContext;
+import com.tbs.trace.core.IMethodInvokeTreeProvider;
+import com.tbs.trace.core.ITraceIdObjectGenerator;
+import com.tbs.trace.impl.SimpleMethodInvokeTreeProvider;
+import com.tbs.trace.impl.SpringManagedTraceContext;
+import com.tbs.trace.impl.UuidTraceObjectGenerator;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.stereotype.Component;
 
 /**
  * 链路追踪属性
@@ -16,6 +17,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @Data
 @ConfigurationProperties(prefix = "tbs.trace")
+@Component
 public class TraceProperty {
     /**
      * 链路追踪对象生成器

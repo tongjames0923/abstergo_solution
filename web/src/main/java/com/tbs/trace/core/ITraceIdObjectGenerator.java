@@ -1,4 +1,4 @@
-package com.tbs.web.trace.core;
+package com.tbs.trace.core;
 
 /**
  * traceObject的生成器

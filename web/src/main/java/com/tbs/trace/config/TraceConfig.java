@@ -1,25 +1,23 @@
-package com.tbs.web.trace.config;
+package com.tbs.trace.config;
 
 import com.tbs.common.util.base.BeanUtil;
-import com.tbs.web.trace.aop.MethodTraceAop;
-import com.tbs.web.trace.core.*;
-import com.tbs.web.trace.impl.ImportedTraceInterceptor;
-import com.tbs.web.trace.impl.SimpleMethodInvokeTreeProvider;
-import com.tbs.web.trace.impl.SpringManagedTraceContext;
-import com.tbs.web.trace.impl.UuidTraceObjectGenerator;
+import com.tbs.trace.aop.MethodTraceAop;
+import com.tbs.trace.core.*;
+import com.tbs.trace.core.*;
+import com.tbs.trace.impl.ImportedTraceInterceptor;
+import com.tbs.trace.impl.SimpleMethodInvokeTreeProvider;
+import com.tbs.trace.impl.SpringManagedTraceContext;
+import com.tbs.trace.impl.UuidTraceObjectGenerator;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
-import org.springframework.context.annotation.Scope;
+import org.springframework.context.annotation.*;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import javax.annotation.Resource;
 
-
+@Configuration
 public class TraceConfig implements WebMvcConfigurer {
 
     @Resource

@@ -12,11 +12,7 @@ import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -135,7 +131,11 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
                 scanAnnotations.stream().filter(annotation -> annotation != null)
                     .forEach(scanAnnotation -> scanner.addIncludeFilter(new AnnotationTypeFilter(scanAnnotation)));
             }
-            var count = scanner.scan(getScanningPackages());
+            var packages = getScanningPackages();
+            if (com.tbs.common.util.base.CollUtil.isEmpty(packages)) {
+                return true;
+            }
+            var count = scanner.scan(packages);
             end(count);
 
             // 注册功能模块

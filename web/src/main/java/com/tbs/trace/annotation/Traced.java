@@ -1,4 +1,4 @@
-package com.tbs.web.trace.annotation;
+package com.tbs.trace.annotation;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

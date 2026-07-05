@@ -1,12 +1,12 @@
-package com.tbs.web.trace.impl;
+package com.tbs.trace.impl;
 
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.struct.tree.api.ITree;
 import com.tbs.struct.tree.api.ITreeNode;
 import com.tbs.struct.tree.model.MultiwayTree;
 import com.tbs.struct.tree.model.SimpleTreeNode;
-import com.tbs.web.trace.core.IMethodInvokeTreeProvider;
-import com.tbs.web.trace.core.TraceObject;
+import com.tbs.trace.core.IMethodInvokeTreeProvider;
+import com.tbs.trace.core.TraceObject;
 
 import java.util.Date;
 
