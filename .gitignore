@@ -39,3 +39,8 @@ build/
 /.idea/
 /.mvn/
 /spy.log
+
+### 环境变量文件 ###
+.env
+.env.local
+.env.*.local
