@@ -97,6 +97,16 @@ develop:
           roles:
             - "开发员"
             - "超级管理员"
+      - path: trace
+        name: 链路追踪
+        component: "/admin/trace/index.vue"
+        meta:
+          routeGroup: default
+          title: 链路追踪
+          icon: el-icon-connection
+          roles:
+            - "开发员"
+            - "超级管理员"
 #  fallback:
 #    - path: "*"
 #      redirect: /404

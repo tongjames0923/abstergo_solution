@@ -33,4 +33,11 @@ public interface ITraceStorage {
      * @param maxAgeMs 最大存活时间（毫秒）
      */
     void cleanup(long maxAgeMs);
+
+    /**
+     * 获取所有已存储的rootTraceId列表
+     *
+     * @return 所有rootTraceId，不可用时返回空列表
+     */
+    List<String> listTraceIds();
 }

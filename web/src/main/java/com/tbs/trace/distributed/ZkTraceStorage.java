@@ -199,4 +199,21 @@ public class ZkTraceStorage implements ITraceStorage {
     private String buildNodePath(String rootTraceId, String serviceName) {
         return TRACE_BASE_PATH + "/" + rootTraceId + "/" + serviceName + "_" + System.currentTimeMillis();
     }
+
+    @Override
+    public List<String> listTraceIds() {
+        if (!isAvailable()) {
+            return java.util.Collections.emptyList();
+        }
+        try {
+            if (curatorFramework.checkExists().forPath(TRACE_BASE_PATH) == null) {
+                return java.util.Collections.emptyList();
+            }
+            List<String> children = curatorFramework.getChildren().forPath(TRACE_BASE_PATH);
+            return children != null ? children : java.util.Collections.emptyList();
+        } catch (Exception e) {
+            log.debug("从ZK列出traceId失败: {}", e.getMessage());
+            return java.util.Collections.emptyList();
+        }
+    }
 }

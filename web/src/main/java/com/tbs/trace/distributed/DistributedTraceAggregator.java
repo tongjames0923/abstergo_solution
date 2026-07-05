@@ -118,6 +118,15 @@ public class DistributedTraceAggregator {
         return Optional.empty();
     }
 
+    /**
+     * 获取所有rootTraceId列表（合并本地缓冲 + 存储）
+     */
+    public List<String> listTraceIds() {
+        Set<String> ids = new LinkedHashSet<>(fragmentBuffer.keySet());
+        ids.addAll(storage.listTraceIds());
+        return new ArrayList<>(ids);
+    }
+
     // ======================== 后台线程逻辑 ========================
 
     /**
@@ -248,11 +257,27 @@ public class DistributedTraceAggregator {
         }
 
         TraceNode copy = new TraceNode(source.getTraceId(), source.getParentTraceId());
-        copy.setMethodSignature(source.getMethodSignature());
+        copy.setServiceName(source.getServiceName());
         copy.setInterfaceName(source.getInterfaceName());
+        copy.setClassName(source.getClassName());
+        copy.setMethodSignature(source.getMethodSignature());
+        copy.setParamTypes(source.getParamTypes());
+        copy.setArgsDescription(source.getArgsDescription());
+        copy.setDubboCall(source.isDubboCall());
+        copy.setThreadName(source.getThreadName());
+        copy.setThreadId(source.getThreadId());
+        copy.setContextId(source.getContextId());
+        copy.setHttpMethod(source.getHttpMethod());
+        copy.setHttpUrl(source.getHttpUrl());
+        copy.setHttpStatus(source.getHttpStatus());
+        copy.setRemoteAddr(source.getRemoteAddr());
+        copy.setUserAgent(source.getUserAgent());
+        copy.setContentType(source.getContentType());
+        copy.setQueryString(source.getQueryString());
+        copy.setExceptionMessage(source.getExceptionMessage());
+        copy.setExceptionType(source.getExceptionType());
         copy.setAvailableTime(source.getAvailableTime());
         copy.setDisposeTime(source.getDisposeTime());
-        copy.setDubboCall(source.isDubboCall());
 
         if (source.getChildren() != null) {
             for (TraceNode child : source.getChildren()) {

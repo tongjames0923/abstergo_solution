@@ -1,5 +1,6 @@
 package com.tbs.trace.distributed;
 
+import com.alibaba.fastjson2.JSON;
 import com.tbs.trace.config.TraceProperty;
 import com.tbs.trace.core.AbstractTraceContext;
 import com.tbs.trace.core.IMethodInvokeTreeProvider;
@@ -11,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.util.List;
 
 /**
@@ -24,6 +26,8 @@ import java.util.List;
  */
 @Slf4j
 public class DistributedTraceListener implements ITraceContextListener {
+
+    private static final int MAX_ARGS_DESCRIPTION_LENGTH = 500;
 
     private final DistributedTraceAggregator distributedTraceAggregator;
     private final TraceProperty traceProperty;
@@ -43,7 +47,7 @@ public class DistributedTraceListener implements ITraceContextListener {
             return;
         }
 
-        if (!traceProperty.isDubboTraceEnabled()) {
+        if (!traceProperty.isDistributedTraceEnabled()) {
             return;
         }
 
@@ -53,9 +57,25 @@ public class DistributedTraceListener implements ITraceContextListener {
         }
 
         try {
-            TraceNode rootNode = extractTraceTree(traceContext);
+            TraceNode rootNode = extractTraceTree(traceContext, request);
             if (rootNode == null) {
                 return;
+            }
+
+            // 根节点注入HTTP信息
+            if (request != null) {
+                rootNode.setHttpMethod(request.getMethod());
+                rootNode.setHttpUrl(request.getRequestURI());
+                rootNode.setRemoteAddr(getClientIp(request));
+                rootNode.setUserAgent(request.getHeader("User-Agent"));
+                rootNode.setContentType(request.getContentType());
+                rootNode.setQueryString(request.getQueryString());
+                rootNode.setThreadName(Thread.currentThread().getName());
+                rootNode.setThreadId(Thread.currentThread().getId());
+            }
+            rootNode.setServiceName(serviceName);
+            if (response != null) {
+                rootNode.setHttpStatus(response.getStatus());
             }
 
             String parentTraceId = rootTrace.getParentTraceId();
@@ -76,7 +96,7 @@ public class DistributedTraceListener implements ITraceContextListener {
     public void onMethodInvokeEnd(TraceObject traceObject, IMethodInvokeTreeProvider provider) {
     }
 
-    private TraceNode extractTraceTree(AbstractTraceContext traceContext) {
+    private TraceNode extractTraceTree(AbstractTraceContext traceContext, HttpServletRequest request) {
         TraceObject rootTrace = traceContext.getRootTrace();
         if (rootTrace == null) {
             return null;
@@ -92,6 +112,7 @@ public class DistributedTraceListener implements ITraceContextListener {
         TraceNode node = new TraceNode(traceObject.getTraceId(), traceObject.getParentTraceId());
         node.setAvailableTime(traceObject.getAvailableTime());
         node.setDisposeTime(traceObject.getDisposeTime());
+        node.setContextId(traceObject.getContextId());
 
         if (traceObject instanceof MethodTraceObject) {
             MethodTraceObject methodTrace = (MethodTraceObject) traceObject;
@@ -99,10 +120,54 @@ public class DistributedTraceListener implements ITraceContextListener {
             if (method != null) {
                 node.setMethodSignature(method.getName());
                 node.setInterfaceName(method.getDeclaringClass().getSimpleName());
+
+                // 实现类名（target的真实类型）
+                Object target = methodTrace.getTarget();
+                if (target != null) {
+                    String implClass = target.getClass().getSimpleName();
+                    // 如果实现类和接口不同，记录实现类
+                    if (!implClass.equals(method.getDeclaringClass().getSimpleName())) {
+                        node.setClassName(implClass);
+                    }
+                }
+
+                // 参数类型
+                Parameter[] parameters = method.getParameters();
+                if (parameters != null && parameters.length > 0) {
+                    StringBuilder paramTypesSb = new StringBuilder();
+                    for (int i = 0; i < parameters.length; i++) {
+                        if (i > 0) {
+                            paramTypesSb.append(", ");
+                        }
+                        paramTypesSb.append(parameters[i].getType().getSimpleName())
+                            .append(" ").append(parameters[i].getName());
+                    }
+                    node.setParamTypes(paramTypesSb.toString());
+                }
+
+                // 参数值摘要（安全序列化，截断过长内容）
+                Object[] args = methodTrace.getArgs();
+                if (args != null && args.length > 0) {
+                    try {
+                        String argsJson = JSON.toJSONString(args);
+                        if (argsJson.length() > MAX_ARGS_DESCRIPTION_LENGTH) {
+                            argsJson = argsJson.substring(0, MAX_ARGS_DESCRIPTION_LENGTH) + "...";
+                        }
+                        node.setArgsDescription(argsJson);
+                    } catch (Exception e) {
+                        node.setArgsDescription("[序列化失败]");
+                    }
+                }
+
                 node.setDubboCall(methodTrace.isDubboCall());
             }
         }
 
+        // 线程信息
+        node.setThreadName(Thread.currentThread().getName());
+        node.setThreadId(Thread.currentThread().getId());
+
+        // 递归构建子节点
         IMethodInvokeTreeProvider treeProvider = traceContext.getMethodInvokeTreeProvider();
         var treeNodeOpt = treeProvider.getTree().find(traceObject.getTraceId());
         if (treeNodeOpt.isPresent()) {
@@ -119,5 +184,19 @@ public class DistributedTraceListener implements ITraceContextListener {
         }
 
         return node;
+    }
+
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        if (ip != null && ip.contains(",")) {
+            ip = ip.substring(0, ip.indexOf(",")).trim();
+        }
+        return ip;
     }
 }
