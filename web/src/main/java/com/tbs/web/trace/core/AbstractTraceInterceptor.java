@@ -21,14 +21,14 @@ public abstract class AbstractTraceInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
         throws Exception {
-        getTraceContext().makeContextAvaliable(request, response);
+        getTraceContext().makeContextAvailable(request, response);
         return HandlerInterceptor.super.preHandle(request, response, handler);
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex)
         throws Exception {
-        getTraceContext().makeContextUnavaliable(request, response);
+        getTraceContext().makeContextUnavailable(request, response);
         HandlerInterceptor.super.afterCompletion(request, response, handler, ex);
     }
 }

@@ -21,15 +21,15 @@ public class MethodTraceAop {
 
     @Around("@annotation(com.tbs.web.trace.annotation.Traced)")
     public Object traceAround(ProceedingJoinPoint joinPoint) throws Throwable {
-        Object res = null;
         MethodSignature signature = (MethodSignature)joinPoint.getSignature();
-        traceContext.beginMethod(traceContext.getCurrentMethodTraceObject().getTraceId(), signature.getMethod(),
+        String parentTraceId = traceContext.getCurrentMethodTraceObject().getTraceId();
+        traceContext.beginMethod(parentTraceId, signature.getMethod(),
             joinPoint.getArgs(), joinPoint.getTarget());
         try {
-            res = joinPoint.proceed();
+            return joinPoint.proceed();
         } finally {
-            traceContext.endMethod(traceContext.getCurrentMethodTraceObject().getTraceId());
+            String currentTraceId = traceContext.getCurrentMethodTraceObject().getTraceId();
+            traceContext.endMethod(currentTraceId);
         }
-        return res;
     }
 }

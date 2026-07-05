@@ -105,4 +105,16 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
     @Column(name = "operate_error_level")
     private Integer operateErrorLevel;
 
+    /**
+     * 链路追踪id
+     */
+    @Column(name = "trace_id", length = 64)
+    private String traceId;
+
+    /**
+     * 系统日志标志
+     */
+    @Column(name = "system_log_flag")
+    private Integer systemLogFlag;
+
 }

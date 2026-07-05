@@ -1,6 +1,7 @@
 package com.tbs.redis.config;
 
 import com.tbs.common.AbstractAutoBeanRegister;
+import com.tbs.common.Feature;
 
 /**
  * Redis组件自动注册类
@@ -23,6 +24,16 @@ public class RedisPackAutoRegister extends AbstractAutoBeanRegister {
     @Override
     protected String getPackName() {
         return "Redis Pack";
+    }
+
+    /**
+     * 获取当前注册器对应的功能模块
+     *
+     * @return Redis功能模块
+     */
+    @Override
+    protected Feature getFeature() {
+        return Feature.REDIS;
     }
 
     /**

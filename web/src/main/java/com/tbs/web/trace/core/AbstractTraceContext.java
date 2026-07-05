@@ -3,7 +3,7 @@ package com.tbs.web.trace.core;
 import com.tbs.common.context.IContext;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.UuidUtil;
-import com.tbs.web.trace.tool.ITraceContextListenner;
+import com.tbs.web.trace.tool.ITraceContextListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +13,7 @@ import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 /**
  * 抽象的TraceContext
@@ -27,7 +28,7 @@ public abstract class AbstractTraceContext implements IContext {
     /**
      * 获取方法调用树提供者
      *
-     * @return
+     * @return 方法调用树提供者实例
      */
     protected abstract IMethodInvokeTreeProvider getMethodInvokeTreeProvider();
 
@@ -39,21 +40,21 @@ public abstract class AbstractTraceContext implements IContext {
     /**
      * 获取当前TraceObject
      *
-     * @return
+     * @return 当前监听器集合
      */
-    protected abstract Collection<ITraceContextListenner> getContextListenners();
+    protected abstract Collection<ITraceContextListener> getContextListeners();
 
     /**
      * 获取TraceIdObjectFounder
      *
-     * @return
+     * @return TraceIdObjectFounder集合
      */
     protected abstract Collection<ITraceIdObjectFounder> getTraceIdObjectFounders();
 
     /**
      * 获取TraceIdObjectGenerator
      *
-     * @return
+     * @return TraceIdObjectGenerator实例
      */
     protected abstract ITraceIdObjectGenerator getTraceIdObjectGenerator();
 
@@ -75,14 +76,14 @@ public abstract class AbstractTraceContext implements IContext {
         validate = true;
         if (getRootObject() != null) {
             getRootObject().setValid(true);
-            getRootObject().setAvaliableTime(new Date());
+            getRootObject().setAvailableTime(new Date());
         }
     }
 
     /**
      * 设置根对象
      *
-     * @param rootObject
+     * @param rootObject 根TraceObject
      */
     private void setRootObject(TraceObject rootObject) {
         getMethodInvokeTreeProvider().setMethodRoot(rootObject);
@@ -97,12 +98,8 @@ public abstract class AbstractTraceContext implements IContext {
     public void rebuild() {
         if (isValid()) {
             log.debug("链路跟踪对象尚未失效时被重建");
-            if (CollUtil.isNotEmpty(getContextListenners())) {
-                for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
-                    iTraceContextListenner.onTraceContextChanged(
-                        ITraceContextListenner.CONTEXT_CHANGE_TYPE_CONTEXT_DROPED, this, null, null);
-                }
-            }
+            notifyListeners((listener, ctx) ->
+                listener.onTraceContextChanged(ITraceContextListener.CONTEXT_CHANGE_TYPE_CONTEXT_DROPPED, ctx, null, null));
         }
         Collection<ITraceIdObjectFounder> traceIdObjectFounders = getTraceIdObjectFounders();
         if (CollUtil.isNotEmpty(traceIdObjectFounders)) {
@@ -123,7 +120,7 @@ public abstract class AbstractTraceContext implements IContext {
     /**
      * 请求开始处理
      *
-     * @param traceObject
+     * @param traceObject 根TraceObject
      * @param request
      * @param response
      */
@@ -133,7 +130,7 @@ public abstract class AbstractTraceContext implements IContext {
     /**
      * 请求结束处理
      *
-     * @param traceObject
+     * @param traceObject 根TraceObject
      * @param request
      * @param response
      */
@@ -141,43 +138,35 @@ public abstract class AbstractTraceContext implements IContext {
         HttpServletResponse response);
 
     /**
-     * 创建上下文可用，会优先直接调用rebuildContext
+     * 创建上下文可用，会优先直接调用rebuild
      *
      * @param request
      * @param response
      */
-    public void makeContextAvaliable(HttpServletRequest request, HttpServletResponse response) {
+    public void makeContextAvailable(HttpServletRequest request, HttpServletResponse response) {
         rebuild();
         handleRequestStart(getRootTrace(), request, response);
-        if (CollUtil.isNotEmpty(getContextListenners())) {
-            for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
-                iTraceContextListenner.onTraceContextChanged(ITraceContextListenner.CONTEXT_CHANGE_TYPE_CONTEXT_CREATED,
-                    this, request, response);
-            }
-        }
+        notifyListeners((listener, ctx) ->
+            listener.onTraceContextChanged(ITraceContextListener.CONTEXT_CHANGE_TYPE_CONTEXT_CREATED, ctx, request, response));
     }
 
     /**
-     * 使得上下文不可用，会最后调用直接调用markInvalid
+     * 使得上下文不可用，会最后调用destroy
      *
      * @param request
      * @param response
      */
-    public void makeContextUnavaliable(HttpServletRequest request, HttpServletResponse response) {
+    public void makeContextUnavailable(HttpServletRequest request, HttpServletResponse response) {
         handleRequestEnd(getRootTrace(), request, response);
         destroy();
-        if (CollUtil.isNotEmpty(getContextListenners())) {
-            for (ITraceContextListenner iTraceContextListenner : getContextListenners()) {
-                iTraceContextListenner.onTraceContextChanged(
-                    ITraceContextListenner.CONTEXT_CHANGE_TYPE_CONTEXT_DESTROYED, this, request, response);
-            }
-        }
+        notifyListeners((listener, ctx) ->
+            listener.onTraceContextChanged(ITraceContextListener.CONTEXT_CHANGE_TYPE_CONTEXT_DESTROYED, ctx, request, response));
     }
 
     /**
-     * 获取TraceObject
+     * 获取根TraceObject
      *
-     * @return
+     * @return 根TraceObject实例
      */
     public TraceObject getRootTrace() {
         return getRootObject();
@@ -186,7 +175,7 @@ public abstract class AbstractTraceContext implements IContext {
     /**
      * 获取当前方法调用的TraceObject
      *
-     * @return
+     * @return 当前方法的TraceObject实例
      */
     public TraceObject getCurrentMethodTraceObject() {
         return getMethodInvokeTreeProvider().getCurrentTraceObject();
@@ -195,32 +184,39 @@ public abstract class AbstractTraceContext implements IContext {
     /**
      * 方法调用开始
      *
-     * @param traceId
-     * @param method
-     * @param args
-     * @param target
+     * @param traceId 父级traceId
+     * @param method 被调用的方法
+     * @param args 方法参数
+     * @param target 调用对象
      */
     public void beginMethod(String traceId, Method method, Object[] args, Object target) {
         MethodTraceObject traceObject =
             new MethodTraceObject(UuidUtil.getInstance().getUuidString(), method, args, target);
         getMethodInvokeTreeProvider().beginMethodFrom(traceId, traceObject);
-        if (CollUtil.isNotEmpty(getContextListenners())) {
-            for (ITraceContextListenner listenner : getContextListenners()) {
-                listenner.onMethodInvokeBegin(traceObject, getMethodInvokeTreeProvider());
-            }
-        }
+        notifyListeners((listener, ctx) ->
+            listener.onMethodInvokeBegin(traceObject, getMethodInvokeTreeProvider()));
     }
 
     /**
      * 方法调用结束
      *
-     * @param traceId
+     * @param traceId 当前方法的traceId
      */
     public void endMethod(String traceId) {
         TraceObject traceObject = getMethodInvokeTreeProvider().endMethod(traceId);
-        if (CollUtil.isNotEmpty(getContextListenners())) {
-            for (ITraceContextListenner listenner : getContextListenners()) {
-                listenner.onMethodInvokeEnd(traceObject, getMethodInvokeTreeProvider());
+        notifyListeners((listener, ctx) ->
+            listener.onMethodInvokeEnd(traceObject, getMethodInvokeTreeProvider()));
+    }
+
+    /**
+     * 通知所有监听器
+     *
+     * @param action 监听器执行动作
+     */
+    private void notifyListeners(BiConsumer<ITraceContextListener, AbstractTraceContext> action) {
+        if (CollUtil.isNotEmpty(getContextListeners())) {
+            for (ITraceContextListener listener : getContextListeners()) {
+                action.accept(listener, this);
             }
         }
     }

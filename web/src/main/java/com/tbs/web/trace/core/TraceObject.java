@@ -31,7 +31,7 @@ public class TraceObject implements Serializable {
     /**
      * 链路追踪ID对应的上下文ID对应的生效时间
      */
-    private Date avaliableTime;
+    private Date availableTime;
 
     /**
      * 链路追踪ID对应的上下文ID对应的失效时间
@@ -62,8 +62,8 @@ public class TraceObject implements Serializable {
         return this;
     }
 
-    public TraceObject setAvaliableTime(Date avaliableTime) {
-        this.avaliableTime = avaliableTime;
+    public TraceObject setAvailableTime(Date availableTime) {
+        this.availableTime = availableTime;
         return this;
     }
 
@@ -88,8 +88,8 @@ public class TraceObject implements Serializable {
             ", contextId='" +
             contextId +
             '\'' +
-            ", avaliableTime=" +
-            avaliableTime +
+            ", availableTime=" +
+            availableTime +
             ", disposeTime=" +
             disposeTime +
             ", parentTraceId='" +

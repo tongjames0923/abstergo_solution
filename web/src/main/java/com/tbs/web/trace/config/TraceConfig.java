@@ -1,7 +1,5 @@
 package com.tbs.web.trace.config;
 
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.web.trace.aop.MethodTraceAop;
 import com.tbs.web.trace.core.*;
@@ -14,6 +12,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.Scope;
+import org.springframework.web.context.WebApplicationContext;
+import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -27,6 +27,7 @@ public class TraceConfig implements WebMvcConfigurer {
 
     @Lazy
     @Bean
+    @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
     AbstractTraceContext traceContext() {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new SpringManagedTraceContext();
@@ -55,17 +56,11 @@ public class TraceConfig implements WebMvcConfigurer {
 
     @Bean
     @ConditionalOnMissingBean(IMethodInvokeTreeProvider.class)
+    @Scope(value = WebApplicationContext.SCOPE_REQUEST, proxyMode = ScopedProxyMode.TARGET_CLASS)
     IMethodInvokeTreeProvider methodInvokeTreeProvider() {
         return BeanUtil.buildBeanFromProperties(() -> {
             return new SimpleMethodInvokeTreeProvider();
-        }, traceProperty.getMethodInvokeTreeProvider(), (c) -> {
-            try {
-                return c.getConstructor().newInstance();
-            } catch (Exception e) {
-                AssertUtil.throwError(() -> new FormattedRuntimeException(e, "构建MethodInvokeTreeProvider失败"));
-            }
-            return null;
-        });
+        }, traceProperty.getMethodInvokeTreeProvider(), BeanUtil::buildByEmptyArgs);
     }
 
     @Bean

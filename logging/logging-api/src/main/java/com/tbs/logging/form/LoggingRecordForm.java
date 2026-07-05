@@ -76,4 +76,10 @@ public class LoggingRecordForm implements Serializable {
      * 刷新标志
      */
     private Integer flushFlag;
+
+    /**
+     * 链路追踪ID
+     */
+    private String traceId;
+
 }

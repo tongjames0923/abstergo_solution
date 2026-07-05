@@ -2,8 +2,9 @@ package com.tbs.web.trace.impl;
 
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.trace.core.*;
-import com.tbs.web.trace.tool.ITraceContextListenner;
+import com.tbs.web.trace.tool.ITraceContextListener;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -19,7 +20,7 @@ import java.util.Map;
  */
 public class SpringManagedTraceContext extends AbstractTraceContext {
 
-    private static final Logger log = org.slf4j.LoggerFactory.getLogger(SpringManagedTraceContext.class);
+    private static final Logger log = LoggerFactory.getLogger(SpringManagedTraceContext.class);
 
     @Resource
     private ITraceIdObjectGenerator traceIdObjectGenerator;
@@ -34,13 +35,13 @@ public class SpringManagedTraceContext extends AbstractTraceContext {
     }
 
     @Override
-    protected Collection<ITraceContextListenner> getContextListenners() {
+    protected Collection<ITraceContextListener> getContextListeners() {
         try {
-            Map<String, ITraceContextListenner> traceIdObjectFounderMap =
-                SpringUtil.getBeansOfType(ITraceContextListenner.class);
-            return traceIdObjectFounderMap.values();
+            Map<String, ITraceContextListener> listenerMap =
+                SpringUtil.getBeansOfType(ITraceContextListener.class);
+            return listenerMap.values();
         } catch (Exception e) {
-            log.debug("getTraceIdObjectFounders error", e);
+            log.debug("getContextListeners error", e);
             return Collections.emptyList();
         }
     }
@@ -48,9 +49,9 @@ public class SpringManagedTraceContext extends AbstractTraceContext {
     @Override
     protected Collection<ITraceIdObjectFounder> getTraceIdObjectFounders() {
         try {
-            Map<String, ITraceIdObjectFounder> traceIdObjectFounderMap =
+            Map<String, ITraceIdObjectFounder> founderMap =
                 SpringUtil.getBeansOfType(ITraceIdObjectFounder.class);
-            return traceIdObjectFounderMap.values();
+            return founderMap.values();
         } catch (Exception e) {
             log.debug("getTraceIdObjectFounders error", e);
             return Collections.emptyList();

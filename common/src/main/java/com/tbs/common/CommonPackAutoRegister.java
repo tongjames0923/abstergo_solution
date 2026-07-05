@@ -22,6 +22,16 @@ public class CommonPackAutoRegister extends AbstractAutoBeanRegister {
     }
 
     /**
+     * 获取当前注册器对应的功能模块
+     *
+     * @return 通用功能模块
+     */
+    @Override
+    protected Feature getFeature() {
+        return Feature.COMMON;
+    }
+
+    /**
      * 获取需要扫描的基础包路径
      *
      * @return 需要扫描的基础包路径数组

@@ -1,6 +1,7 @@
 package com.tbs.rabbitmq.config;
 
 import com.tbs.common.AbstractAutoBeanRegister;
+import com.tbs.common.Feature;
 
 /**
  * RabbitMQ自动组件注册类
@@ -23,6 +24,16 @@ public class RabbitMqAutoRegister extends AbstractAutoBeanRegister {
     @Override
     protected String getPackName() {
         return "RabbitMQ Pack";
+    }
+
+    /**
+     * 获取当前注册器对应的功能模块
+     *
+     * @return RabbitMQ功能模块
+     */
+    @Override
+    protected Feature getFeature() {
+        return Feature.RABBITMQ;
     }
 
     /**

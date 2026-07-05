@@ -59,6 +59,7 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
         // 转换为实体并加入缓冲队列
         SystemOperateRecordEntity entity = convertToEntity(message);
         if (entity != null) {
+            entity.setSystemLogFlag(1);
             boolean offered = bufferQueue.offer(entity);
             if (!offered) {
                 log.warn("日志缓冲队列已满，强制刷新");
@@ -122,6 +123,7 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
         entity.setOperateErrorLevel(form.getErrorCode());
         entity.setOperateUrl(form.getOperateUrl());
         entity.setMethod(form.getMethod());
+        entity.setTraceId(form.getTraceId());
 
         // 计算耗时
         if (form.getOperateTime() != null && form.getOperateFinishTime() != null) {

@@ -12,20 +12,20 @@ import javax.servlet.http.HttpServletResponse;
  *
  * @author abstergo
  */
-public interface ITraceContextListenner {
+public interface ITraceContextListener {
 
     /**
      * 链路跟踪环境被创建
      */
-    public static final int CONTEXT_CHANGE_TYPE_CONTEXT_CREATED = 1;
+    int CONTEXT_CHANGE_TYPE_CONTEXT_CREATED = 1;
     /**
      * 链路跟踪环境被销毁,通常是通过正确的方式销毁
      */
-    public static final int CONTEXT_CHANGE_TYPE_CONTEXT_DESTROYED = 2;
+    int CONTEXT_CHANGE_TYPE_CONTEXT_DESTROYED = 2;
     /**
      * 链路跟踪环境被丢弃，通常是被错误方式销毁，如当请求处于有效的时候，却被重新构建环境
      */
-    public static final int CONTEXT_CHANGE_TYPE_CONTEXT_DROPED = 3;
+    int CONTEXT_CHANGE_TYPE_CONTEXT_DROPPED = 3;
 
     /**
      * 链路跟踪环境变化

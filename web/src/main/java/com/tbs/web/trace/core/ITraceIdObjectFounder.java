@@ -11,8 +11,7 @@ public interface ITraceIdObjectFounder {
     /**
      * 查找现有的TraceObject
      *
-     * @param request
-     * @return
+     * @return 如果找到则返回TraceObject，否则返回空
      */
     Optional<TraceObject> findTraceObject();
 }

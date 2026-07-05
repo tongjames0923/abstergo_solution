@@ -18,11 +18,13 @@ public class MethodTraceObject extends TraceObject {
      * @param traceId
      * @param method
      * @param args
+     * @param target 调用对象
      */
     public MethodTraceObject(String traceId, Method method, Object[] args, Object target) {
         super(traceId);
         this.method = method;
         this.args = args;
+        this.target = target;
     }
 
     /**

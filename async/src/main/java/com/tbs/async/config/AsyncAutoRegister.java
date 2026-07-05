@@ -2,6 +2,7 @@ package com.tbs.async.config;
 
 import com.tbs.async.annotation.EnableTbsAsyncPack;
 import com.tbs.common.AbstractAutoBeanRegister;
+import com.tbs.common.Feature;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanNameGenerator;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
@@ -32,6 +33,16 @@ public class AsyncAutoRegister extends AbstractAutoBeanRegister {
     @Override
     protected String getPackName() {
         return "Async Package";
+    }
+
+    /**
+     * 获取当前注册器对应的功能模块
+     *
+     * @return 异步处理功能模块
+     */
+    @Override
+    protected Feature getFeature() {
+        return Feature.ASYNC;
     }
 
     private String[] m_packages = new String[] {"com.tbs.async", "com.tbs.lock", "com.tbs.thread"};
