@@ -29,6 +29,9 @@ public class DistributedTraceConfig {
     @Resource
     private TraceProperty traceProperty;
 
+    @org.springframework.beans.factory.annotation.Value("${spring.application.name:unknown}")
+    private String serviceName;
+
     /**
      * 分布式trace存储实现
      * <p>
@@ -57,7 +60,7 @@ public class DistributedTraceConfig {
      * 分布式trace监听器
      */
     @Bean
-    public DistributedTraceListener distributedTraceListener() {
-        return new DistributedTraceListener();
+    public DistributedTraceListener distributedTraceListener(DistributedTraceAggregator distributedTraceAggregator) {
+        return new DistributedTraceListener(distributedTraceAggregator, traceProperty, serviceName);
     }
 }

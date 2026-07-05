@@ -41,6 +41,11 @@ public class MethodTraceObject extends TraceObject {
      */
     private Object target;
 
+    /**
+     * 是否为Dubbo远程调用
+     */
+    private boolean dubboCall;
+
     public MethodTraceObject setMethod(Method method) {
         this.method = method;
         return this;
@@ -53,6 +58,11 @@ public class MethodTraceObject extends TraceObject {
 
     public MethodTraceObject setTarget(Object target) {
         this.target = target;
+        return this;
+    }
+
+    public MethodTraceObject setDubboCall(boolean dubboCall) {
+        this.dubboCall = dubboCall;
         return this;
     }
 

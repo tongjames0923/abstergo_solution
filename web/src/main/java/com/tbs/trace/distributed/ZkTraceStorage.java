@@ -17,13 +17,7 @@ import java.util.List;
 /**
  * 基于ZooKeeper的trace存储实现
  * <p>
- * 自管理CuratorFramework连接，通过 {@link #create(String)} 工厂方法创建。
- * ZNode结构：
- * <pre>
- * /tbs/trace/
- *   {rootTraceId}/
- *     {serviceName}_{timestamp}  →  TraceTreeFragment JSON
- * </pre>
+ * 所有ZK操作均有超时保护，不会阻塞业务线程。初始化失败仅记录日志，不影响应用启动。
  * </p>
  *
  * @author abstergo
@@ -33,7 +27,10 @@ public class ZkTraceStorage implements ITraceStorage {
 
     private static final String TRACE_BASE_PATH = "/tbs/trace";
 
-    private CuratorFramework curatorFramework;
+    /** 单次ZK操作超时（毫秒） */
+    private static final int OPERATION_TIMEOUT_MS = 3000;
+
+    private volatile CuratorFramework curatorFramework;
 
     @javax.annotation.Resource
     private TraceProperty traceProperty;
@@ -43,22 +40,23 @@ public class ZkTraceStorage implements ITraceStorage {
 
     @PostConstruct
     public void init() {
-        String zkAddress = normalizeAddress(traceProperty.getZkAddress());
-        this.curatorFramework = CuratorFrameworkFactory.builder()
-            .connectString(zkAddress)
-            .sessionTimeoutMs(30000)
-            .connectionTimeoutMs(15000)
-            .retryPolicy(new ExponentialBackoffRetry(1000, 3))
-            .build();
-        curatorFramework.start();
-        log.info("分布式trace ZooKeeper客户端已启动: {}", zkAddress);
+        try {
+            String zkAddress = normalizeAddress(traceProperty.getZkAddress());
+            this.curatorFramework = CuratorFrameworkFactory.builder().connectString(zkAddress).sessionTimeoutMs(10000)
+                .connectionTimeoutMs(3000).retryPolicy(new ExponentialBackoffRetry(1000, 1)).build();
+            curatorFramework.start();
+            log.info("分布式trace ZooKeeper客户端已启动: {}", zkAddress);
+        } catch (Exception e) {
+            // ZK不可达时不阻塞应用启动，仅记录警告
+            log.warn("分布式trace ZooKeeper客户端启动失败，trace存储功能降级: {}", e.getMessage());
+            this.curatorFramework = null;
+        }
     }
 
     private String normalizeAddress(String address) {
         if (address == null) {
             return "127.0.0.1:2181";
         }
-        // Curator connectString只接受 host:port，不接受 zookeeper:// 前缀
         if (address.startsWith("zookeeper://")) {
             return address.substring("zookeeper://".length());
         }
@@ -68,8 +66,19 @@ public class ZkTraceStorage implements ITraceStorage {
         return address;
     }
 
+    /**
+     * 检查ZK客户端是否可用
+     */
+    private boolean isAvailable() {
+        return curatorFramework != null && curatorFramework.getZookeeperClient().isConnected();
+    }
+
     @Override
     public void store(TraceTreeFragment fragment) {
+        if (!isAvailable()) {
+            return;
+        }
+
         String rootTraceId = fragment.getRootTraceId();
         String nodePath = buildNodePath(rootTraceId, fragment.getServiceName());
 
@@ -93,13 +102,16 @@ public class ZkTraceStorage implements ITraceStorage {
 
             log.debug("trace片段已写入ZK: rootTraceId={}, service={}", rootTraceId, fragment.getServiceName());
         } catch (Exception e) {
-            log.warn("trace片段写入ZK失败: rootTraceId={}, error={}", rootTraceId, e.getMessage());
-            throw new RuntimeException("trace存储失败", e);
+            log.debug("trace片段写入ZK失败: rootTraceId={}, error={}", rootTraceId, e.getMessage());
         }
     }
 
     @Override
     public List<TraceTreeFragment> load(String rootTraceId) {
+        if (!isAvailable()) {
+            return null;
+        }
+
         try {
             String tracePath = buildTracePath(rootTraceId);
             if (curatorFramework.checkExists().forPath(tracePath) == null) {
@@ -137,6 +149,10 @@ public class ZkTraceStorage implements ITraceStorage {
 
     @Override
     public void cleanup(long maxAgeMs) {
+        if (!isAvailable()) {
+            return;
+        }
+
         try {
             if (curatorFramework.checkExists().forPath(TRACE_BASE_PATH) == null) {
                 return;

@@ -138,6 +138,24 @@ public abstract class AbstractTraceContext implements IContext {
         HttpServletResponse response);
 
     /**
+     * 激活上下文（不依赖HTTP，Dubbo等非HTTP场景使用）
+     */
+    public void activate() {
+        rebuild();
+        notifyListeners((listener, ctx) ->
+            listener.onTraceContextChanged(ITraceContextListener.CONTEXT_CHANGE_TYPE_CONTEXT_CREATED, ctx, null, null));
+    }
+
+    /**
+     * 停用上下文（不依赖HTTP，Dubbo等非HTTP场景使用）
+     */
+    public void deactivate() {
+        destroy();
+        notifyListeners((listener, ctx) ->
+            listener.onTraceContextChanged(ITraceContextListener.CONTEXT_CHANGE_TYPE_CONTEXT_DESTROYED, ctx, null, null));
+    }
+
+    /**
      * 创建上下文可用，会优先直接调用rebuild
      *
      * @param request
@@ -190,8 +208,22 @@ public abstract class AbstractTraceContext implements IContext {
      * @param target 调用对象
      */
     public void beginMethod(String traceId, Method method, Object[] args, Object target) {
+        beginMethod(traceId, method, args, target, false);
+    }
+
+    /**
+     * 方法调用开始（支持标记Dubbo远程调用）
+     *
+     * @param traceId 父级traceId
+     * @param method 被调用的方法
+     * @param args 方法参数
+     * @param target 调用对象
+     * @param dubboCall 是否为Dubbo远程调用
+     */
+    public void beginMethod(String traceId, Method method, Object[] args, Object target, boolean dubboCall) {
         MethodTraceObject traceObject =
-            new MethodTraceObject(UuidUtil.getInstance().getUuidString(), method, args, target);
+            new MethodTraceObject(UuidUtil.getInstance().getUuidString(), method, args, target)
+                .setDubboCall(dubboCall);
         getMethodInvokeTreeProvider().beginMethodFrom(traceId, traceObject);
         notifyListeners((listener, ctx) ->
             listener.onMethodInvokeBegin(traceObject, getMethodInvokeTreeProvider()));

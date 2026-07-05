@@ -7,6 +7,7 @@ import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.shared.annotation.EnableSharedLibBean;
 import com.tbs.sql.annotation.core.EnableTbsSql;
 import com.tbs.sql.annotation.dialect.UseMysql;
+import com.tbs.trace.annotation.EnableTrace;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -33,6 +34,7 @@ import tk.mybatis.spring.annotation.MapperScan;
 @EnableDubbo
 @EnableRabbitMq
 @MapperScan("com.tbs.logging.mapper")
+@EnableTrace
 public class LoggingServiceApplication {
 
     public static void main(String[] args) {

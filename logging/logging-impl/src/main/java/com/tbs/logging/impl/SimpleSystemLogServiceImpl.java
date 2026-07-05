@@ -9,6 +9,7 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
+import com.tbs.trace.annotation.Traced;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -41,6 +42,7 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
         return sb.toString();
     }
 
+    @Traced
     @Override
     public List<LogOperateTypeView> getLogOperateTypeList(int lastDay) {
         Date today = new Date();

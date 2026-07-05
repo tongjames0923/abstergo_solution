@@ -26,7 +26,6 @@ public class DubboTraceConsumerFilter implements Filter {
     @Resource
     private AbstractTraceContext traceContext;
 
-    @Resource
     private TraceProperty traceProperty;
 
     /**
@@ -73,7 +72,7 @@ public class DubboTraceConsumerFilter implements Filter {
             Method method = invoker.getInterface().getMethod(
                 invocation.getMethodName(), invocation.getParameterTypes());
             traceContext.beginMethod(
-                currentTrace.getTraceId(), method, invocation.getArguments(), invoker.getInterface());
+                currentTrace.getTraceId(), method, invocation.getArguments(), invoker.getInterface(), true);
 
             Result result = invoker.invoke(invocation);
 
