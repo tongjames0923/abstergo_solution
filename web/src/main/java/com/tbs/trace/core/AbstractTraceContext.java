@@ -224,6 +224,7 @@ public abstract class AbstractTraceContext implements IContext {
         MethodTraceObject traceObject =
             new MethodTraceObject(UuidUtil.getInstance().getUuidString(), method, args, target)
                 .setDubboCall(dubboCall);
+        traceObject.setAvailableTime(new Date());
         getMethodInvokeTreeProvider().beginMethodFrom(traceId, traceObject);
         notifyListeners((listener, ctx) ->
             listener.onMethodInvokeBegin(traceObject, getMethodInvokeTreeProvider()));
