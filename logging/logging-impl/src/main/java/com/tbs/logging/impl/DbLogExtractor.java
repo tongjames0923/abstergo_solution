@@ -7,7 +7,6 @@ import com.tbs.logging.vo.LogRecordVO;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.sql.enums.OrderEnum;
 import com.tbs.sql.service.QueryEngine;
-import com.tbs.trace.annotation.Traced;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -16,7 +15,6 @@ import java.util.stream.Collectors;
 
 public class DbLogExtractor implements ILogExtractor {
 
-    @Traced
     @Override
     public List<LogRecordVO> extract(LoggingRecordExtractForm form) {
         if (form == null) {

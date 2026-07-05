@@ -1,19 +1,16 @@
 package com.tbs.app.intercept;
 
 import com.alibaba.fastjson2.JSON;
-import com.tbs.common.Feature;
 import com.tbs.common.FeatureManager;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.BeanUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordForm;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
-import com.tbs.trace.core.AbstractTraceContext;
 import com.tbs.web.uitl.AuthUtil;
 import com.tbs.web.uitl.NetUtil;
 import lombok.Data;
@@ -116,11 +113,6 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
             record.setOperateUser("NULL USERNAME:" + NetUtil.getIp(request));
         }
         record.setOperateParam(JSON.toJSONString(context.getArgs()));
-        if (featureManager.isAnySupported(Feature.TRACE)) {
-            SpringUtil.getBeanOptional(AbstractTraceContext.class).ifPresent(traceContext -> {
-                record.setTraceId(traceContext.getCurrentMethodTraceObject().getTraceId());
-            });
-        }
         operateContext.setOperateRecord(record);
         return operateContext;
     }

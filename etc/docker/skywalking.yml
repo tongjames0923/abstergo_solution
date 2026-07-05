@@ -1,0 +1,56 @@
+version: '3.8'
+services:
+  oap-server:
+    image: docker.1ms.run/apache/skywalking-oap-server:10.0.0
+    container_name: oap-server
+    ports:
+      - "11800:11800"
+      - "12800:12800"
+    environment:
+      - SW_STORAGE=elasticsearch
+      - SW_STORAGE_ES_CLUSTER_NODES=elasticsearch:9200
+      - TZ=Asia/Shanghai
+    depends_on:
+      - elasticsearch
+    restart: always
+    networks:
+      - skywalking
+  ui:
+    image: docker.1ms.run/apache/skywalking-ui:10.0.0
+    container_name: skywalking-ui
+    ports:
+      - "9275:8080"
+    environment:
+      - SW_OAP_ADDRESS=http://oap-server:12800
+      - TZ=Asia/Shanghai
+    depends_on:
+      - oap-server
+    restart: always
+    networks:
+      - skywalking
+  elasticsearch:
+    image: docker.1ms.run/elasticsearch:8.9.0
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+    restart: always
+    networks:
+      - skywalking
+
+networks:
+  skywalking:
+    driver: bridge
+
+volumes:
+  es_data:

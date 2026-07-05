@@ -12,7 +12,6 @@ import com.tbs.sql.annotation.dialect.UseMysql;
 import com.tbs.struct.tree.closure.annotation.UseClosureTableTree;
 import com.tbs.view.annotation.EnableViewControl;
 import com.tbs.web.annotation.EnableWebPack;
-import com.tbs.trace.annotation.EnableTrace;
 import com.tbs.xxl.annotation.UseXxlJob;
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.springframework.boot.SpringApplication;
@@ -44,7 +43,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableTbsRedis
 @EnableDubbo
 @EnableScriptEngine
-@EnableTrace
 public class AppApplication {
 
     public static void main(String[] args) {

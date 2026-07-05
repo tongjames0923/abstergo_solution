@@ -6,7 +6,6 @@ import com.tbs.logging.rabbitmq.AbstractRabbitMqLogRecordWriter;
 import com.tbs.rabbitmq.support.MqConsumerProperties;
 import com.tbs.shared.mapper.SystemOperateMapper;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
-import com.tbs.trace.annotation.Traced;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
@@ -49,7 +48,6 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
             .prefetchCount(250).retryEnabled(false).build();
     }
 
-    @Traced
     @Override
     protected void handleMessage(@NotNull LoggingRecordForm message) throws Exception {
         // 检查是否为刷新标志
