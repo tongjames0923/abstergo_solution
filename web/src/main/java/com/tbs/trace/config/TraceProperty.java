@@ -3,6 +3,8 @@ package com.tbs.trace.config;
 import com.tbs.trace.core.AbstractTraceContext;
 import com.tbs.trace.core.IMethodInvokeTreeProvider;
 import com.tbs.trace.core.ITraceIdObjectGenerator;
+import com.tbs.trace.distributed.ITraceStorage;
+import com.tbs.trace.distributed.ZkTraceStorage;
 import com.tbs.trace.impl.SimpleMethodInvokeTreeProvider;
 import com.tbs.trace.impl.SpringManagedTraceContext;
 import com.tbs.trace.impl.UuidTraceObjectGenerator;
@@ -45,7 +47,17 @@ public class TraceProperty {
     private boolean dubboTraceEnabled = true;
 
     /**
-     * 是否启用分布式链路追踪（需要RabbitMQ和Redis支持）
+     * 是否启用分布式链路追踪
      */
     private boolean distributedTraceEnabled = true;
+
+    /**
+     * 分布式链路追踪存储实现类
+     */
+    private Class<? extends ITraceStorage> traceStorage = ZkTraceStorage.class;
+
+    /**
+     * ZooKeeper连接地址（仅ZkTraceStorage使用）
+     */
+    private String zkAddress = "zookeeper://127.0.0.1:2181";
 }
