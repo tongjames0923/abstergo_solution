@@ -2,9 +2,13 @@ package com.tbs.sql.autoconfig;
 
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.extractor.CommonGroupExtractor;
+import com.tbs.sql.dialect.extractor.CommonOrderExtractor;
+import com.tbs.sql.dialect.extractor.CommonSelectExtractor;
+import com.tbs.sql.dialect.extractor.CommonWhereExtractor;
 import com.tbs.sql.dialect.oracle.OracleAssembler;
 import com.tbs.sql.dialect.oracle.OracleDialect;
-import com.tbs.sql.dialect.oracle.extractor.*;
+import com.tbs.sql.dialect.oracle.extractor.OracleLimitExtractor;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -36,7 +40,7 @@ public class OracleDialectAutoConfiguration {
 
     @Bean
     public IGroupExtractor groupExtractor() {
-        return new OracleGroupExtractor();
+        return new CommonGroupExtractor();
     }
 
     @Bean
@@ -46,17 +50,17 @@ public class OracleDialectAutoConfiguration {
 
     @Bean
     public ISelectExtractor selectExtractor() {
-        return new OracleSelectExtractor();
+        return new CommonSelectExtractor();
     }
 
     @Bean
     public IOrderExtractor orderExtractor() {
-        return new OracleOrderExtractor();
+        return new CommonOrderExtractor();
     }
 
     @Bean
     public IWhereExtractor whereExtractor() {
-        return new OracleWhereExtractor();
+        return new CommonWhereExtractor("Oracle");
     }
 
     @Bean

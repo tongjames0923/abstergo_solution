@@ -1,4 +1,4 @@
-package com.tbs.sql.dialect.mysql.extractor;
+package com.tbs.sql.dialect.extractor;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -21,20 +21,46 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 
+/**
+ * 通用WHERE语句提取器，适用于MySQL、PostgreSQL、SQL Server、Oracle等数据库。
+ *
+ * <p>所有主流关系型数据库的WHERE条件语法（比较运算符、LIKE、IN、IS NULL等）完全一致，
+ * 参数化绑定均通过MyBatis的 {@code #{_prs.p0}} 机制处理（与数据库无关），
+ * 因此使用单一公共实现，通过构造函数传入方言名称用于日志标识。</p>
+ *
+ * @author abstergo
+ * @since 2.0.0
+ * @see IWhereExtractor
+ * @see WhereCompose
+ */
 @Slf4j
-public class MysqlWhereExtractor implements IWhereExtractor {
+public class CommonWhereExtractor implements IWhereExtractor {
+
+    private final String dialectName;
+
     @Resource
     private SqlProperty sqlProperty;
+
     private List<IValueConverter> valueConverters;
+
+    /**
+     * 构造函数，指定方言名称用于日志输出。
+     *
+     * @param dialectName 方言名称，如 "MySQL"、"PostgreSQL"、"Oracle" 等
+     */
+    public CommonWhereExtractor(String dialectName) {
+        this.dialectName = dialectName;
+    }
 
     @PostConstruct
     void init() {
         if (sqlProperty.isUseRawValue()) {
-            log.warn("[TBS-SQL] useRawValue已启用，SQL参数将直接拼接，存在SQL注入风险！");
+            log.warn("[TBS-SQL-{}] useRawValue已启用，SQL参数将直接拼接，存在SQL注入风险！", dialectName);
         }
         try {
             valueConverters = SpringUtil.getBeansOfType(IValueConverter.class).values().stream()
-                .sorted(Comparator.comparingInt(IValueConverter::getPriority)).collect(java.util.stream.Collectors.toList());
+                .sorted(Comparator.comparingInt(IValueConverter::getPriority))
+                .collect(java.util.stream.Collectors.toList());
         } catch (Exception e) {
             valueConverters = new ArrayList<>();
         }
@@ -46,7 +72,8 @@ public class MysqlWhereExtractor implements IWhereExtractor {
         else if (ContrastEnum.LLIKE == contrastEnum) return placeholder + "%";
         else if (ContrastEnum.RLIKE == contrastEnum) return "%" + placeholder;
         else if (ContrastEnum.LIKE == contrastEnum) return "%" + placeholder + "%";
-        else if (ContrastEnum.IN == contrastEnum || ContrastEnum.NOT_IN == contrastEnum) return "(" + placeholder + ")";
+        else if (ContrastEnum.IN == contrastEnum || ContrastEnum.NOT_IN == contrastEnum)
+            return "(" + placeholder + ")";
         return placeholder;
     }
 
@@ -57,15 +84,17 @@ public class MysqlWhereExtractor implements IWhereExtractor {
             case GREATER: return " > ";
             case LESS_EQUAL: return " <= ";
             case GREATER_EQUAL: return " >= ";
-            case RLIKE: case LLIKE: case LIKE: return " like ";
-            case IN: return " in ";
-            case NOT_IN: return " not in ";
-            case NOT_LIKE: return " not like ";
-            case IS_NULL: return " is null ";
-            case IS_NOT_NULL: return " is not null ";
+            case RLIKE: case LLIKE: case LIKE: return " LIKE ";
+            case IN: return " IN ";
+            case NOT_IN: return " NOT IN ";
+            case NOT_LIKE: return " NOT LIKE ";
+            case IS_NULL: return " IS NULL ";
+            case IS_NOT_NULL: return " IS NOT NULL ";
             case NOT_EQUAL: return " <> ";
             default:
-                AssertUtil.throwError(() -> new FormattedRuntimeException("不支持的查询条件：{}", contrastEnum).errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR));
+                AssertUtil.throwError(
+                    () -> new FormattedRuntimeException("不支持的查询条件：{}", contrastEnum)
+                        .errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR));
         }
         return "";
     }
@@ -76,7 +105,8 @@ public class MysqlWhereExtractor implements IWhereExtractor {
         Object val = info.getFieldValue();
         if (StrUtil.isNotEmpty(info.getFieldValueStr())) val = info.getFieldValueStr();
 
-        if ((info.getContrast() == ContrastEnum.IN || info.getContrast() == ContrastEnum.NOT_IN) && val instanceof Collection) {
+        if ((info.getContrast() == ContrastEnum.IN || info.getContrast() == ContrastEnum.NOT_IN)
+            && val instanceof Collection) {
             Collection<?> collection = (Collection<?>) val;
             if (!collection.isEmpty()) {
                 if ((info.getUseSafe() != null && info.getUseSafe()) || !sqlProperty.isUseRawValue()) {
@@ -87,13 +117,17 @@ public class MysqlWhereExtractor implements IWhereExtractor {
                         placeholders.add("#{_prs." + itemKey + "}");
                         paramMap.put(itemKey, item);
                     }
-                    return String.format(" (%s %s %s) ", info.getFieldName(), contrast(info.getContrast()), "(" + String.join(",", placeholders) + ")");
+                    return String.format(" (%s %s %s) ", info.getFieldName(),
+                        contrast(info.getContrast()),
+                        "(" + String.join(",", placeholders) + ")");
                 } else {
                     List<String> values = new ArrayList<>();
                     for (Object item : collection) {
                         values.add("'" + escapeSqlString(convert(item)) + "'");
                     }
-                    return String.format(" (%s %s %s) ", info.getFieldName(), contrast(info.getContrast()), "(" + String.join(",", values) + ")");
+                    return String.format(" (%s %s %s) ", info.getFieldName(),
+                        contrast(info.getContrast()),
+                        "(" + String.join(",", values) + ")");
                 }
             } else {
                 return info.getContrast() == ContrastEnum.IN ? " (1 = 1) " : " (1 = 1) ";
@@ -123,11 +157,13 @@ public class MysqlWhereExtractor implements IWhereExtractor {
         for (WhereNode node : compose.getChildren()) {
             if (node.isWhereInfo()) {
                 WhereInfo info = (WhereInfo) node.getValue();
-                whereNode.add(new AbstractMap.SimpleEntry<>(node.getConnector(), singleWhereInfo(info, id[0]++, paramMap)));
+                whereNode.add(new AbstractMap.SimpleEntry<>(node.getConnector(),
+                    singleWhereInfo(info, id[0]++, paramMap)));
             }
             if (node.isCompose()) {
                 WhereCompose subCompose = (WhereCompose) node.getValue();
-                whereNode.add(new AbstractMap.SimpleEntry<>(node.getConnector(), extraWhereSql(subCompose, id, paramMap)));
+                whereNode.add(new AbstractMap.SimpleEntry<>(node.getConnector(),
+                    extraWhereSql(subCompose, id, paramMap)));
             }
         }
         if (CollUtil.isEmpty(whereNode)) return "";
@@ -136,7 +172,8 @@ public class MysqlWhereExtractor implements IWhereExtractor {
         for (Map.Entry<ConnectorEnum, String> entry : whereNode) {
             String value = entry.getValue();
             if (StrUtil.isEmpty(value)) continue;
-            if (!first) sb.append(entry.getKey() == null || entry.getKey() == ConnectorEnum.AND ? " AND " : " OR ");
+            if (!first) sb.append(
+                entry.getKey() == null || entry.getKey() == ConnectorEnum.AND ? " AND " : " OR ");
             sb.append(" ( ").append(value).append(" ) ");
             first = false;
         }
@@ -146,7 +183,7 @@ public class MysqlWhereExtractor implements IWhereExtractor {
     @Override
     public String extract(WhereCompose sqlWhereCompose, Map<String, Object> paramMap) {
         String where = extraWhereSql(sqlWhereCompose, new Long[]{0L}, paramMap).trim();
-        return StrUtil.isEmpty(where) ? "" : " where " + where;
+        return StrUtil.isEmpty(where) ? "" : " WHERE " + where;
     }
 
     static String escapeSqlString(String value) {
@@ -156,14 +193,21 @@ public class MysqlWhereExtractor implements IWhereExtractor {
 
     String convert(Object value) {
         for (IValueConverter converter : valueConverters) {
-            if (value == null) { if (converter.support(null, null)) return converter.convert(null, null); }
-            else { if (converter.support(value.getClass(), value)) return converter.convert(value.getClass(), value); }
+            if (value == null) {
+                if (converter.support(null, null)) return converter.convert(null, null);
+            } else {
+                if (converter.support(value.getClass(), value)) return converter.convert(value.getClass(), value);
+            }
         }
         return "";
     }
 
     @Override
-    public List<IValueConverter> getValueConverters() { return valueConverters; }
+    public List<IValueConverter> getValueConverters() {
+        return valueConverters;
+    }
 
-    String makeParamKey(Long id) { return String.format("p%d", id); }
+    String makeParamKey(Long id) {
+        return String.format("p%d", id);
+    }
 }

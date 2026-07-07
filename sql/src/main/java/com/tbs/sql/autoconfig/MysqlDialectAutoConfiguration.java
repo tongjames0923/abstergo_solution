@@ -3,8 +3,12 @@ package com.tbs.sql.autoconfig;
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.assembler.impl.DefaultSqlAssembler;
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.extractor.CommonGroupExtractor;
+import com.tbs.sql.dialect.extractor.CommonOrderExtractor;
+import com.tbs.sql.dialect.extractor.CommonSelectExtractor;
+import com.tbs.sql.dialect.extractor.CommonWhereExtractor;
 import com.tbs.sql.dialect.mysql.MysqlDialect;
-import com.tbs.sql.dialect.mysql.extractor.*;
+import com.tbs.sql.dialect.mysql.extractor.MysqlLimitExtractor;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -42,11 +46,11 @@ import org.springframework.context.annotation.Bean;
  * @see com.tbs.sql.dialect.mysql.MysqlDialect
  */
 public class MysqlDialectAutoConfiguration {
-    @Bean public IGroupExtractor groupExtractor() { return new MysqlGroupExtractor(); }
+    @Bean public IGroupExtractor groupExtractor() { return new CommonGroupExtractor(); }
     @Bean public ILimitExtractor limitExtractor() { return new MysqlLimitExtractor(); }
-    @Bean public ISelectExtractor selectExtractor() { return new MysqlSelectExtractor(); }
-    @Bean public IOrderExtractor orderExtractor() { return new MysqlOrderExtractor(); }
-    @Bean public IWhereExtractor whereExtractor() { return new MysqlWhereExtractor(); }
+    @Bean public ISelectExtractor selectExtractor() { return new CommonSelectExtractor(); }
+    @Bean public IOrderExtractor orderExtractor() { return new CommonOrderExtractor(); }
+    @Bean public IWhereExtractor whereExtractor() { return new CommonWhereExtractor("MySQL"); }
 
     @Bean
     public ISqlAssembler systemSqlAssembler() throws Throwable {

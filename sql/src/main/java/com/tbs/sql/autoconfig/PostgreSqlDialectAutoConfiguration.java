@@ -3,8 +3,12 @@ package com.tbs.sql.autoconfig;
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.assembler.impl.DefaultSqlAssembler;
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.extractor.CommonGroupExtractor;
+import com.tbs.sql.dialect.extractor.CommonOrderExtractor;
+import com.tbs.sql.dialect.extractor.CommonSelectExtractor;
+import com.tbs.sql.dialect.extractor.CommonWhereExtractor;
 import com.tbs.sql.dialect.postgresql.PostgreSqlDialect;
-import com.tbs.sql.dialect.postgresql.extractor.*;
+import com.tbs.sql.dialect.postgresql.extractor.PostgreSqlLimitExtractor;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -33,7 +37,7 @@ public class PostgreSqlDialectAutoConfiguration {
 
     @Bean
     public IGroupExtractor groupExtractor() {
-        return new PostgreSqlGroupExtractor();
+        return new CommonGroupExtractor();
     }
 
     @Bean
@@ -43,17 +47,17 @@ public class PostgreSqlDialectAutoConfiguration {
 
     @Bean
     public ISelectExtractor selectExtractor() {
-        return new PostgreSqlSelectExtractor();
+        return new CommonSelectExtractor();
     }
 
     @Bean
     public IOrderExtractor orderExtractor() {
-        return new PostgreSqlOrderExtractor();
+        return new CommonOrderExtractor();
     }
 
     @Bean
     public IWhereExtractor whereExtractor() {
-        return new PostgreSqlWhereExtractor();
+        return new CommonWhereExtractor("PostgreSQL");
     }
 
     @Bean

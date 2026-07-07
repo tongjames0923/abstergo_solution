@@ -1,4 +1,4 @@
-package com.tbs.sql.dialect.postgresql.extractor;
+package com.tbs.sql.dialect.extractor;
 
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.sql.dialect.IGroupExtractor;
@@ -7,17 +7,16 @@ import com.tbs.sql.model.group.GroupModel;
 import java.util.List;
 
 /**
- * PostgreSQL GROUP BY语句提取器。
+ * 通用GROUP BY语句提取器，适用于MySQL、PostgreSQL、SQL Server、Oracle等数据库。
  *
- * <p>该类实现了 {@link IGroupExtractor} 接口，提供了PostgreSQL特有的GROUP BY语句提取功能。
- * PostgreSQL的GROUP BY语法与MySQL/SQL Server一致，支持多字段分组。</p>
+ * <p>所有主流关系型数据库的GROUP BY语法完全一致，
+ * 因此使用单一公共实现，避免各方言重复定义。</p>
  *
  * @author abstergo
  * @since 2.0.0
  * @see IGroupExtractor
- * @see GroupModel
  */
-public class PostgreSqlGroupExtractor implements IGroupExtractor {
+public class CommonGroupExtractor implements IGroupExtractor {
 
     @Override
     public String extract(List<GroupModel> groupModels) {

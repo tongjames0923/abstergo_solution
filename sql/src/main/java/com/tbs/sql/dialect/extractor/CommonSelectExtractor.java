@@ -1,4 +1,4 @@
-package com.tbs.sql.dialect.postgresql.extractor;
+package com.tbs.sql.dialect.extractor;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
@@ -9,17 +9,16 @@ import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
 
 /**
- * PostgreSQL SELECT语句提取器。
+ * 通用SELECT语句提取器，适用于MySQL、PostgreSQL、SQL Server、Oracle等数据库。
  *
- * <p>该类实现了 {@link ISelectExtractor} 接口，提供了PostgreSQL特有的SELECT语句提取功能。
- * PostgreSQL的SELECT语法与MySQL/SQL Server基本一致，支持表名、字段列表、字段别名等。</p>
+ * <p>所有主流关系型数据库的SELECT语法（字段列表、别名、FROM子句）完全一致，
+ * 因此使用单一公共实现，避免各方言重复定义。</p>
  *
  * @author abstergo
  * @since 2.0.0
  * @see ISelectExtractor
- * @see SelectInfoModel
  */
-public class PostgreSqlSelectExtractor implements ISelectExtractor {
+public class CommonSelectExtractor implements ISelectExtractor {
 
     @Override
     public String extract(SelectInfoModel infoModel) {

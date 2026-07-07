@@ -2,9 +2,13 @@ package com.tbs.sql.autoconfig;
 
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.extractor.CommonGroupExtractor;
+import com.tbs.sql.dialect.extractor.CommonOrderExtractor;
+import com.tbs.sql.dialect.extractor.CommonSelectExtractor;
+import com.tbs.sql.dialect.extractor.CommonWhereExtractor;
 import com.tbs.sql.dialect.sqlserver.SqlServerDialect;
 import com.tbs.sql.dialect.sqlserver.SqlServerAssembler;
-import com.tbs.sql.dialect.sqlserver.extractor.*;
+import com.tbs.sql.dialect.sqlserver.extractor.SqlServerLimitExtractor;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -36,7 +40,7 @@ public class SqlServerDialectAutoConfiguration {
 
     @Bean
     public IGroupExtractor groupExtractor() {
-        return new SqlServerGroupExtractor();
+        return new CommonGroupExtractor();
     }
 
     @Bean
@@ -46,17 +50,17 @@ public class SqlServerDialectAutoConfiguration {
 
     @Bean
     public ISelectExtractor selectExtractor() {
-        return new SqlServerSelectExtractor();
+        return new CommonSelectExtractor();
     }
 
     @Bean
     public IOrderExtractor orderExtractor() {
-        return new SqlServerOrderExtractor();
+        return new CommonOrderExtractor();
     }
 
     @Bean
     public IWhereExtractor whereExtractor() {
-        return new SqlServerWhereExtractor();
+        return new CommonWhereExtractor("SQL Server");
     }
 
     @Bean
