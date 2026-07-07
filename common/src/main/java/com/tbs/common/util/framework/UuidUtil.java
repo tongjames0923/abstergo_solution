@@ -23,7 +23,21 @@ public class UuidUtil {
         instance = this;
     }
 
+    /**
+     * 获取UUID
+     *
+     * @return
+     */
     public String getUuidString() {
         return uuidGenerator.getUuidString(uuidProperty.getExceptLength());
+    }
+
+    /**
+     * 获取UUID
+     *
+     * @return
+     */
+    public Long getUuidLong() {
+        return uuidGenerator.getUuidLong();
     }
 }

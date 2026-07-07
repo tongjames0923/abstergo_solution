@@ -1,7 +1,7 @@
 package com.tbs.common.config.property;
 
 import com.tbs.common.uuid.IUuidGenerator;
-import com.tbs.common.uuid.impl.SimpleUUID;
+import com.tbs.common.uuid.impl.SnowFlakeUUID;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -18,7 +18,7 @@ public class UuidProperty {
     /**
      * UUID类型
      */
-    private Class<? extends IUuidGenerator> type = SimpleUUID.class;
+    private Class<? extends IUuidGenerator> type = SnowFlakeUUID.class;
     /**
      * 雪花算法参数,type=SnowFlake 时生效
      */
