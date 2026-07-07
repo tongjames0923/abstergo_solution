@@ -5,6 +5,7 @@ import com.tbs.common.uuid.IUuidGenerator;
 
 import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 雪花算法ID生成器 64位long结构： 1bit 符号位(恒0) | 41bit 时间戳差值 | 5bit 数据中心ID | 5bit 机器ID | 12bit 序列号 基准时间：2020-08-28 1598598185157
@@ -48,10 +49,10 @@ public class SnowFlakeUUID implements IUuidGenerator {
     private final long workerId;
     /** 数据中心ID 0~31 */
     private final long dataCenterId;
-    /** 毫秒内序列 0~4095 */
-    private long sequence = 0L;
-    /** 上一次生成ID的时间戳 */
-    private long lastTimestamp = -1L;
+    /**
+     * 将 lastTimestamp（52位）和 sequence（12位）打包为单个 AtomicLong，通过 CAS 无锁化 布局：[timestamp (52 bits)] [sequence (12 bits)]
+     */
+    private final AtomicLong tsSequence = new AtomicLong(0L);
 
     //==============================构造器=====================================
 
@@ -105,28 +106,46 @@ public class SnowFlakeUUID implements IUuidGenerator {
     // ===================== 核心生成方法 =====================
 
     /**
-     * 线程安全生成唯一雪花ID
+     * 无锁线程安全生成唯一雪花ID（基于 CAS 替代 synchronized）
      *
      * @return 正数long ID，溢出直接抛异常，不会返回负数
      */
-    public synchronized long nextId() {
-        long currentTs = System.currentTimeMillis();
+    public long nextId() {
+        long currentTs;
+        long packed;
+        long lastTs;
+        long seq;
 
-        // 时钟回退，拒绝生成ID
-        AssertUtil.isTrue(currentTs < lastTimestamp,
-            "SnowFlake 系统时钟回退，禁止生成ID！上次时间戳：{}，当前时间戳：{}，差值：{}ms", lastTimestamp, currentTs,
-            lastTimestamp - currentTs);
+        while (true) {
+            packed = tsSequence.get();
+            lastTs = packed >>> SEQUENCE_BITS;
+            seq = packed & SEQUENCE_MASK;
 
-        // 同一毫秒内，序列号自增
-        if (currentTs == lastTimestamp) {
-            sequence = (sequence + 1) & SEQUENCE_MASK;
-            // 序列号耗尽，阻塞等待下一毫秒
-            if (sequence == 0) {
-                currentTs = waitNextMillis(lastTimestamp);
+            currentTs = System.currentTimeMillis();
+
+            // 时钟回退，拒绝生成ID
+            AssertUtil.isTrue(currentTs < lastTs,
+                "SnowFlake 系统时钟回退，禁止生成ID！上次时间戳：{}，当前时间戳：{}，差值：{}ms", lastTs, currentTs,
+                lastTs - currentTs);
+
+            // 同一毫秒内，序列号自增
+            if (currentTs == lastTs) {
+                seq = (seq + 1) & SEQUENCE_MASK;
+                // 序列号耗尽，阻塞等待下一毫秒后重试
+                if (seq == 0) {
+                    waitNextMillis(lastTs);
+                    continue;
+                }
+            } else {
+                // 新毫秒，序列号重置为0
+                seq = 0L;
             }
-        } else {
-            // 新毫秒，序列号重置为0
-            sequence = 0L;
+
+            // CAS更新，失败则重试
+            long newPacked = (currentTs << SEQUENCE_BITS) | seq;
+            if (tsSequence.compareAndSet(packed, newPacked)) {
+                break;
+            }
         }
 
         // 计算时间差值，第一层拦截溢出
@@ -138,23 +157,20 @@ public class SnowFlakeUUID implements IUuidGenerator {
         // 拼装64位ID
         long id = (tsDiff << TIMESTAMP_LEFT_SHIFT) |
             (dataCenterId << DATA_CENTER_ID_SHIFT) |
-            (workerId << WORKER_ID_SHIFT) |
-            sequence;
+            (workerId << WORKER_ID_SHIFT) | seq;
 
         // 兜底二次校验：强制保证ID为正数，杜绝极端溢出场景漏判
         AssertUtil.isTrue(id < 0, "SnowFlake 生成负数ID，时间戳溢出！tsDiff={}, id={}", tsDiff, id);
 
-        lastTimestamp = currentTs;
         return id;
     }
 
-    /** 阻塞等待直到下一毫秒 */
-    private long waitNextMillis(long lastTs) {
-        long currentTs = System.currentTimeMillis();
-        while (currentTs <= lastTs) {
-            currentTs = System.currentTimeMillis();
+    /** 阻塞等待直到下一毫秒（仅在序列号耗尽时调用，极低频） */
+    private void waitNextMillis(long lastTs) {
+        long ts = System.currentTimeMillis();
+        while (ts <= lastTs) {
+            ts = System.currentTimeMillis();
         }
-        return currentTs;
     }
 
     // ===================== 实现 IUuidGenerator 接口 =====================
