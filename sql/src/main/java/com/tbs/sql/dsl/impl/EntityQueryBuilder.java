@@ -12,8 +12,8 @@ import com.tbs.sql.dsl.IOrderClause;
 import com.tbs.sql.dsl.IPageClause;
 import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.dsl.IWhereClause;
-import com.tbs.sql.model.group.GroupModel;
 import com.tbs.sql.mapper.impl.FetchMapper;
+import com.tbs.sql.model.group.GroupModel;
 import com.tbs.sql.util.SqlUtils;
 
 import java.lang.reflect.Field;
@@ -81,7 +81,9 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
 
     @Override
     public List<T> fetch() {
-        if (entity == null) return CollUtil.newArrayList();
+        if (entity == null) {
+            return CollUtil.newArrayList();
+        }
         EntitySqlDriver driver = createDriver();
         ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
         sqlContext.rebuild();
@@ -91,7 +93,9 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
 
     @Override
     public T fetchOne() {
-        if (entity == null) return null;
+        if (entity == null) {
+            return null;
+        }
         EntitySqlDriver driver = createDriver();
         ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
         sqlContext.rebuild();
@@ -101,8 +105,10 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
     }
 
     @Override
-    public Long count() {
-        if (entity == null) return 0L;
+    public Integer count() {
+        if (entity == null) {
+            return 0;
+        }
         EntitySqlDriver driver = createDriver();
         ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
         sqlContext.rebuild();

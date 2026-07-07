@@ -1,12 +1,11 @@
 package com.tbs.sql.mapper;
 
-import java.util.List;
-import java.util.Map;
-
+import com.tbs.sql.mapper.impl.RawSqlSelectProvider;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.SelectProvider;
 
-import com.tbs.sql.mapper.impl.RawSqlSelectProvider;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 原始SQL查询Mapper接口，提供直接执行SQL语句的能力。
@@ -33,7 +32,7 @@ import com.tbs.sql.mapper.impl.RawSqlSelectProvider;
  * String sql = "SELECT * FROM users WHERE status = :status";
  * Map<String, Object> params = Map.of("status", 1);
  * List<Map<String, Object>> results = mapper.fetch(sql, params);
- * 
+ *
  * // 执行SQL统计
  * Long count = mapper.count(sql, params);
  * }</pre>
@@ -55,5 +54,5 @@ public interface IRawSqlSelectMapper {
     List<Map<String, Object>> fetch(String sql, Map<String, Object> _prs);
 
     @SelectProvider(type = RawSqlSelectProvider.class, method = "dynamicCountSql")
-    Long count(String sql, Map<String, Object> _prs);
+    Integer count(String sql, Map<String, Object> _prs);
 }

@@ -17,7 +17,7 @@ public class PageVO<T> implements Serializable {
     /**
      * 总数
      */
-    private Long total;
+    private Integer total;
     /**
      * 数据
      */
@@ -29,7 +29,7 @@ public class PageVO<T> implements Serializable {
     //            .run(PageVO::setData, listSupplier).buildAndExecute();
     //    }
 
-    public PageVO<T> setTotal(Long total) {
+    public PageVO<T> setTotal(Integer total) {
         this.total = total;
         return this;
     }

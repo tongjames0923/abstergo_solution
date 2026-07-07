@@ -38,7 +38,7 @@ import java.util.Map;
  * // 执行查询
  * FetchMapper fetchMapper = new FetchMapper();
  * List<User> users = fetchMapper.fetch(context, driver, User.class);
- * 
+ *
  * // 执行统计
  * Long count = fetchMapper.count(context, driver);
  * }</pre>
@@ -72,7 +72,7 @@ public class FetchMapper {
         return new ArrayList<>();
     }
 
-    public <T> Long count(SqlBuildContext context, SqlDriver driver) {
+    public <T> Integer count(SqlBuildContext context, SqlDriver driver) {
         return mapper.count(QueryEngine.getInstance().driveSql(context, driver), context.getSqlParams());
     }
 }

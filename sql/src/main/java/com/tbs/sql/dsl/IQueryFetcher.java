@@ -30,14 +30,14 @@ import java.util.List;
  *     .equal(User::getStatus, 1)
  *     .pour()
  *     .fetch();
- * 
+ *
  * // 获取单个结果
  * User user = wrapper.query()
  *     .where()
  *     .equal(User::getId, 1L)
  *     .pour()
  *     .fetchOne();
- * 
+ *
  * // 获取总数
  * Long count = wrapper.query()
  *     .where()
@@ -77,5 +77,5 @@ public interface IQueryFetcher<T> {
      *
      * @return 查询结果总数
      */
-    Long count();
+    Integer count();
 }

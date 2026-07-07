@@ -52,7 +52,7 @@ import static com.tbs.sql.mapper.impl.ConditionBuilder.buildSqlContext;
  * @Mapper
  * public interface UserMapper extends IFrameworkMapper<User, Long> {
  * }
- * 
+ *
  * // 使用查询条件查询
  * UserQuery query = new UserQuery();
  * query.setStatus(1);
@@ -88,7 +88,7 @@ public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<
         return SpringUtil.getBean(FetchMapper.class).<T>fetch(sqlContext, driver, entityClass);
     }
 
-    default Long countByQO(IQueryCriteria qo, Class<?> entityClass) {
+    default Integer countByQO(IQueryCriteria qo, Class<?> entityClass) {
         ImportedSqlBuildContext sqlContext = buildSqlContext(qo);
         EntitySqlDriver driver = new EntitySqlDriver();
         driver.setWhereInfo(ConditionBuilder.buildConditions(qo));
