@@ -35,5 +35,7 @@ dubbo:
     name: tri
   shutdown:
     await-duration: 10000
+  consumer:
+    filter: -ContextHolderAuthenticationPrepareFilter
 server:
   port: 8081
