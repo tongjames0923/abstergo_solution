@@ -1,6 +1,8 @@
 package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.pojo.IIdentifiable;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -32,7 +34,7 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
      * 主键
      */
     @javax.persistence.Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
     /**
      * 操作类型
@@ -104,12 +106,6 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
      */
     @Column(name = "operate_error_level")
     private Integer operateErrorLevel;
-
-    /**
-     * 链路追踪id
-     */
-    @Column(name = "trace_id", length = 64)
-    private String traceId;
 
     /**
      * 系统日志标志

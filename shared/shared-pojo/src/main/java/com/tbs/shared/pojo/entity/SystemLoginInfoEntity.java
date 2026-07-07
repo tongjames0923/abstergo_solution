@@ -2,6 +2,8 @@ package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -29,9 +31,9 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long> {
      * 主键
      */
     @javax.persistence.Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
     @Getter
     @Setter
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
 
     /**

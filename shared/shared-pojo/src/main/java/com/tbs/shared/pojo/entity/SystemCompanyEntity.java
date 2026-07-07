@@ -2,6 +2,8 @@
 package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -26,7 +28,7 @@ import java.util.Date;
 	 * 公司ID
 	 */
 	@javax.persistence.Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@SqlAutoValue(insertOnly = true,value = IdAutoProvider.class)
 	private Long id;
 
 	/**

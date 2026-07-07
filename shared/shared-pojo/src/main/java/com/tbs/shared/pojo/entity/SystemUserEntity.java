@@ -1,15 +1,14 @@
 package com.tbs.shared.pojo.entity;
 
-import java.util.Date;
-import java.util.List;
-
-import javax.persistence.*;
-
 import com.tbs.shared.pojo.IBaseEntity;
-
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+
+import javax.persistence.*;
+import java.util.Date;
 
 /**
  * 系统用户
@@ -27,7 +26,7 @@ public class SystemUserEntity implements IBaseEntity<Long> {
 	private static final long serialVersionUID = 1L;
 	@Setter
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
 	private Long id;
 	/**
 	 * 用户名
@@ -71,11 +70,5 @@ public class SystemUserEntity implements IBaseEntity<Long> {
 	 */
 	@Column(name = "flag")
 	private Integer flag;
-
-	/**
-	 * 角色
-	 */
-	@Transient
-	private List<SystemRoleEntity> roles;
 
 }

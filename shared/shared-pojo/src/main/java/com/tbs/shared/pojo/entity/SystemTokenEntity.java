@@ -2,6 +2,8 @@ package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Data;
 import lombok.ToString;
 
@@ -28,7 +30,7 @@ public class SystemTokenEntity implements IBaseEntity<Long> {
      * 主键
      */
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
     /**
      * 令牌
