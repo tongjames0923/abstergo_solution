@@ -3,6 +3,7 @@ package com.tbs.common.uuid.impl;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.uuid.IUuidGenerator;
 
+import java.net.InetAddress;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -69,7 +70,36 @@ public class SnowFlakeUUID implements IUuidGenerator {
     }
 
     public SnowFlakeUUID() {
-        this(0, 0);
+        this(autoWorkerId(), autoDataCenterId());
+    }
+
+    /**
+     * 基于本机IP最后一段自动计算workerId，对32取模映射到 [0,31]
+     */
+    private static long autoWorkerId() {
+        try {
+            byte[] ip = InetAddress.getLocalHost().getAddress();
+            return (ip[3] & 0xFF) % (MAX_WORKER_ID + 1);
+        } catch (Exception e) {
+            return 0L;
+        }
+    }
+
+    /**
+     * 基于server.port自动计算dataCenterId，对32取模映射到 [0,31] 优先读取JVM系统属性（Spring Boot自动设置），其次读取环境变量
+     */
+    private static long autoDataCenterId() {
+        String port = System.getProperty("server.port");
+        if (port == null || port.isBlank()) {
+            port = System.getenv("SERVER_PORT");
+        }
+        if (port != null && !port.isBlank()) {
+            try {
+                return Long.parseLong(port.trim()) % (MAX_DATA_CENTER_ID + 1);
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        return 0L;
     }
 
     // ===================== 核心生成方法 =====================
