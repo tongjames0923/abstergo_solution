@@ -21,4 +21,11 @@ public interface IUuidGenerator {
      * @return
      */
     String getUuidString(int exceptLength);
+
+    /**
+     * 获取UUID长整型
+     *
+     * @return
+     */
+    Long getUuidLong();
 }

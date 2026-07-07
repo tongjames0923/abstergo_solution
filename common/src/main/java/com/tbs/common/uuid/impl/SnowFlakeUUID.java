@@ -149,9 +149,14 @@ public class SnowFlakeUUID implements IUuidGenerator {
         Long uuid = 0L;
         StringBuilder uuidBuilder = new StringBuilder();
         while (uuidBuilder.length() < exceptLength) {
-            uuid = nextId();
+            uuid = getUuidLong();
             uuidBuilder.append(Long.toHexString(uuid));
         }
         return uuidBuilder.substring(0, exceptLength);
+    }
+
+    @Override
+    public Long getUuidLong() {
+        return nextId();
     }
 }

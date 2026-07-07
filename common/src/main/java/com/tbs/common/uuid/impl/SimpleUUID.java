@@ -21,9 +21,14 @@ public class SimpleUUID implements IUuidGenerator {
         long uuid = 0L;
         StringBuilder stringBuilder = new StringBuilder();
         while (stringBuilder.length() < exceptLength) {
-            uuid = random.nextLong();
+            uuid = getUuidLong();
             stringBuilder.append(Long.toHexString(uuid));
         }
         return stringBuilder.substring(0, exceptLength);
+    }
+
+    @Override
+    public Long getUuidLong() {
+        return random.nextLong();
     }
 }
