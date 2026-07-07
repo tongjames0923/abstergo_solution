@@ -62,13 +62,6 @@ public class SqlProperty {
     private boolean enableLogInterceptor = false;
 
     /**
-     * 是否启用自动填充值拦截器。
-     * 启用后，SQL参数会自动填充默认值。
-     * 默认值为 {@code false}。
-     */
-    private boolean enableAutoFillValueInterceptor = false;
-
-    /**
      * SQL日志记录器类型。
      * 用于指定实现 {@link ISqlLogger} 接口的类，负责记录SQL执行日志。
      * 默认使用 {@link NoSqlLogger}，即不记录任何日志。

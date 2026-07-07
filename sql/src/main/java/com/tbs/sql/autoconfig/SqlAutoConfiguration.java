@@ -97,7 +97,6 @@ public class SqlAutoConfiguration {
     SqlLoggingInterceptor sqlLoggingInterceptor() { return new SqlLoggingInterceptor(); }
 
     @Bean
-    @ConditionalOnProperty(name = "tbs.sql.enable-auto-fill-value-interceptor", havingValue = "true")
     SqlAutoFillInterceptor autoFillInterceptor() { return new SqlAutoFillInterceptor(); }
 
     @Bean
