@@ -48,6 +48,8 @@ public class AssertUtil implements IStartup {
         private String message;
         private List<Object> params = CollUtil.newArrayList();
 
+        private Function<FormattedRuntimeException, RuntimeException> convertor;
+
         private ErrorLevelEnum errorLevel;
 
         private Throwable cause;
@@ -138,23 +140,40 @@ public class AssertUtil implements IStartup {
          *
          * @return 格式化运行时异常实例
          */
-        public FormattedRuntimeException build() {
-            FormattedRuntimeException e = null;
+        public RuntimeException build() {
+
             if (!this.isBuild) {
                 return null;
             }
+            FormattedRuntimeException e1;
             // 根据是否有异常原因创建不同的FormattedRuntimeException实例
             if (this.cause != null) {
-                e = new FormattedRuntimeException(this.cause, this.message, this.params.toArray());
+                e1 = new FormattedRuntimeException(this.cause, this.message, this.params.toArray());
             } else {
-                e = new FormattedRuntimeException(this.message, this.params.toArray());
+                e1 = new FormattedRuntimeException(this.message, this.params.toArray());
             }
             // 如果设置了错误等级，则设置异常的错误等级
             if (this.errorLevel != null) {
-                e.errorLevel(this.errorLevel);
+                e1.errorLevel(this.errorLevel);
+            }
+            RuntimeException e = null;
+            if (this.convertor != null) {
+                e = this.convertor.apply(e1);
             }
             return e;
         }
+
+        /**
+         * 设置异常转换器
+         *
+         * @param convertor 异常转换器
+         * @return 当前构建器实例
+         */
+        public <T extends RuntimeException> AssertBuilder as(Function<FormattedRuntimeException, T> convertor) {
+            this.convertor = (f) -> convertor.apply(f);
+            return this;
+        }
+
 
         /**
          * 抛出构建的异常

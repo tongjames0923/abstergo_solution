@@ -1,7 +1,7 @@
 package com.tbs.app.account;
 
+import com.tbs.app.account.exception.UnNormalAccountStatusException;
 import com.tbs.app.account.vo.AccountVO;
-import com.tbs.common.exception.FormattedRuntimeException;
 
 /**
  * 账户状态验证接口
@@ -19,5 +19,5 @@ public interface IAccountStatusValidator {
      * @param vo 账户信息
      * @return 账户状态验证结果
      */
-    public void validate(AccountVO vo) throws FormattedRuntimeException;
+    public void validate(AccountVO vo) throws UnNormalAccountStatusException;
 }

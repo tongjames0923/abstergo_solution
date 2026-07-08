@@ -3,6 +3,7 @@ package com.tbs.app.account.aop;
 import com.tbs.app.account.IAccountStatusValidator;
 import com.tbs.app.account.annotation.UserStatusCheck;
 import com.tbs.app.account.annotation.UserStatusChecks;
+import com.tbs.app.account.exception.UnNormalAccountStatusException;
 import com.tbs.app.account.vo.AccountVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -158,8 +159,14 @@ public class UserStatusCheckAOP {
             return;
         }
 
-        // 执行验证
-        validator.validate(accountVO);
+        try {
+            // 执行验证
+            validator.validate(accountVO);
+        } catch (UnNormalAccountStatusException e) {
+            AssertUtil.throwError(() -> e);
+        } catch (Exception e) {
+            log.warn("验证账户状态时发生异常", e);
+        }
     }
 
     /**

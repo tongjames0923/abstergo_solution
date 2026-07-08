@@ -62,6 +62,11 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
         super(causeByExceptionMessage(cause, message, params));
     }
 
+    public FormattedRuntimeException() {
+        super();
+    }
+
+
     /**
      * 获取异常级别
      * <p>
