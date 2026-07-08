@@ -8,6 +8,7 @@ import java.util.*;
 import java.util.function.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 /**
  * 集合包装器类，提供链式调用API以增强集合操作的易用性
@@ -59,6 +60,14 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
         }
         return new CollWrapper<>(() -> Arrays.stream(array), null);
     }
+
+    public static <T> CollWrapper<T> of(Iterable<T> array) {
+        if (array == null || !array.iterator().hasNext()) {
+            return empty();
+        }
+        return new CollWrapper<>(() -> StreamSupport.stream(array.spliterator(), false), null);
+    }
+
 
     /**
      * 基于Stream创建包装器（会立即物化缓存Stream数据，失去惰性特性）

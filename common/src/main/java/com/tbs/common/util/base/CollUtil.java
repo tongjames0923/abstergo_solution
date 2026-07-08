@@ -1,6 +1,5 @@
 package com.tbs.common.util.base;
 
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -93,7 +92,7 @@ public class CollUtil extends cn.hutool.core.collection.CollUtil {
      * @return 包含可迭代对象流的集合包装器实例
      */
     public static <T> CollWrapper<T> of(Iterable<T> iterable) {
-        return new CollWrapper<>(StreamSupport.stream(iterable.spliterator(), false));
+        return CollWrapper.of(iterable);
     }
 
     /**
@@ -104,7 +103,7 @@ public class CollUtil extends cn.hutool.core.collection.CollUtil {
      * @return 包含数组流的集合包装器实例
      */
     public static <T> CollWrapper<T> of(T... ts) {
-        return new CollWrapper<>(Arrays.stream(ts));
+        return CollWrapper.of(ts);
     }
 
     /**
@@ -114,7 +113,7 @@ public class CollUtil extends cn.hutool.core.collection.CollUtil {
      * @return 包含空流的集合包装器实例
      */
     public static <T> CollWrapper<T> of() {
-        return new CollWrapper<>(Stream.empty());
+        return CollWrapper.empty();
     }
 
 }
