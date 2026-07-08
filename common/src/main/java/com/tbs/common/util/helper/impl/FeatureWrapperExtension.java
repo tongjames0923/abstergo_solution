@@ -16,7 +16,7 @@ public class FeatureWrapperExtension implements IFeatureWrapperExtension {
     @Override
     public <T> T unwrap(@NotNull Object instance, @NotNull Class<T> feature) {
         // 防止无限递归的情况
-        Object original = ((IFeatureWrapper<?>)instance).getOrginal();
+        Object original = ((IFeatureWrapper<?>)instance).getOriginal();
         if (original == instance) {
             // 如果原始对象就是自身，避免无限递归
             return null;

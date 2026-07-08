@@ -22,34 +22,34 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
 
     @Override
     public ValueWrapper putIfAbsent(Object key, Object value) {
-        return getOrginal().putIfAbsent(key, value);
+        return getOriginal().putIfAbsent(key, value);
     }
 
     @Override
     public boolean evictIfPresent(Object key) {
-        return getOrginal().evictIfPresent(key);
+        return getOriginal().evictIfPresent(key);
     }
 
     @Override
     public boolean invalidate() {
-        return getOrginal().invalidate();
+        return getOriginal().invalidate();
     }
 
     @Override
     public String getName() {
-        return getOrginal().getName();
+        return getOriginal().getName();
     }
 
     @Override
     public Object getNativeCache() {
-        return getOrginal().getNativeCache();
+        return getOriginal().getNativeCache();
     }
 
 
 
     @Override
     public ValueWrapper get(Object key) {
-        var val = getOrginal().get(key);
+        var val = getOriginal().get(key);
         if (val != null && val.get() != null) {
             val = new SimpleValueWrapper(valueTransform(val.get(), TRANSFORM_READ));
         }
@@ -60,14 +60,14 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
     @Override
     public <T> T get(Object key, Class<T> type) {
 
-        var val = getOrginal().get(key, type);
+        var val = getOriginal().get(key, type);
         onGet(this, key, new SimpleValueWrapper(val));
         return val;
     }
 
     @Override
     public <T> T get(Object key, Callable<T> valueLoader) {
-        var val = getOrginal().get(key, valueLoader);
+        var val = getOriginal().get(key, valueLoader);
         onGet(this, key, new SimpleValueWrapper(val));
         return val;
     }
@@ -79,7 +79,7 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
         }
         var wrapper = com.tbs.common.data.ValueWrapper.of(value);
         onPut(this, key, wrapper);
-        getOrginal().put(key, wrapper.get().orElse(null));
+        getOriginal().put(key, wrapper.get().orElse(null));
         com.tbs.common.data.ValueWrapper<Boolean> allExpired = com.tbs.common.data.ValueWrapper.of(false);
         isCallToExpireAll().ifPresent((date) -> {
             expireAll(AbstractTtlCache.this, date);
@@ -95,13 +95,13 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
     @Override
     public void evict(Object key) {
         onEvict(this, key);
-        getOrginal().evict(key);
+        getOriginal().evict(key);
     }
 
     @Override
     public void clear() {
         onClear(this);
-        getOrginal().clear();
+        getOriginal().clear();
     }
 
     /**

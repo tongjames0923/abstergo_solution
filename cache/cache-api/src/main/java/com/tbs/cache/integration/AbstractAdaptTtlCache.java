@@ -134,7 +134,7 @@ public abstract class AbstractAdaptTtlCache extends AbstractTtlCache {
      * @return 原始Spring Cache实例
      */
     @Override
-    public Cache getOrginal() {
+    public Cache getOriginal() {
         return orginCache;
     }
 
@@ -144,7 +144,7 @@ public abstract class AbstractAdaptTtlCache extends AbstractTtlCache {
      * @param orginal 新的原始Spring Cache实例
      */
     @Override
-    public void setOrginal(Cache orginal) {
+    public void setOriginal(Cache orginal) {
         this.orginCache = orginal;
     }
 

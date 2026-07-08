@@ -154,12 +154,12 @@ public class TimingWheelStrategy implements ScheduleStrategy<IScheduleTask> {
         }
 
         @Override
-        public IScheduleTask getOrginal() {
+        public IScheduleTask getOriginal() {
             return orginal;
         }
 
         @Override
-        public void setOrginal(IScheduleTask orginal) {
+        public void setOriginal(IScheduleTask orginal) {
             this.orginal = orginal;
         }
     }

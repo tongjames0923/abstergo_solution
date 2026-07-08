@@ -48,10 +48,10 @@ public class CallerRunsDelegateTarget<T> implements IDelegateTarget<T> {
 	 * 实现IFeatureWrapper接口的方法，用于更新被代理的原始目标对象实例。
 	 *
 	 * @param targetObject 新的目标对象实例，可以为null
-	 * @see IFeatureWrapper#setOrginal(Object) 功能包装器设置原始对象方法
+	 * @see IFeatureWrapper#setOriginal(Object) 功能包装器设置原始对象方法
 	 */
 	@Override
-	public void setOrginal(T targetObject) {
+	public void setOriginal(T targetObject) {
 		this.targetObject = targetObject;
 	}
 
@@ -97,10 +97,10 @@ public class CallerRunsDelegateTarget<T> implements IDelegateTarget<T> {
 	 * 实现IFeatureWrapper接口的方法，返回被代理的原始目标对象实例。
 	 *
 	 * @return 被代理的原始目标对象实例
-	 * @see IFeatureWrapper#getOrginal() 功能包装器获取原始对象方法
+	 * @see IFeatureWrapper#getOriginal() 功能包装器获取原始对象方法
 	 */
 	@Override
-	public T getOrginal() {
+	public T getOriginal() {
 		return targetObject;
 	}
 }

@@ -19,7 +19,7 @@ public abstract class AbstractTtlAdaptCacheMananger extends AbstractCacheManager
 
     @Override
     protected Collection<? extends Cache> loadCaches() {
-        return getOrginal().getCacheNames().stream().map(this::getCache).collect(Collectors.toList());
+        return getOriginal().getCacheNames().stream().map(this::getCache).collect(Collectors.toList());
     }
 
     public static final String CACHE_NAME_PREFIX = "SYSTEM:CACHE:";
@@ -39,7 +39,7 @@ public abstract class AbstractTtlAdaptCacheMananger extends AbstractCacheManager
      * @return
      */
     protected Cache createCacheOnMissCache(String name) {
-        return getOrginal().getCache(name);
+        return getOriginal().getCache(name);
     }
 
     /**

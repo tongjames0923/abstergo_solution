@@ -21,7 +21,7 @@ public interface IFeatureWrapper<T> {
 	 *
 	 * @return 被包装的原始对象，可能为null
 	 */
-	T getOrginal();
+	T getOriginal();
 
 	/**
 	 * 设置包装的原始对象
@@ -30,7 +30,7 @@ public interface IFeatureWrapper<T> {
 	 *
 	 * @param orginal 要设置的原始对象，可以为null
 	 */
-	void setOrginal(T orginal);
+	void setOriginal(T orginal);
 
     /**
      * 获取包装的指定功能对象

@@ -60,12 +60,12 @@ public class LockAdapter implements IConditionLock, IFeatureWrapper<Lock> {
 	}
 
 	@Override
-	public Lock getOrginal() {
+	public Lock getOriginal() {
 		return lock;
 	}
 
 	@Override
-	public void setOrginal(Lock orginal) {
+	public void setOriginal(Lock orginal) {
 		this.lock = orginal;
 	}
 }

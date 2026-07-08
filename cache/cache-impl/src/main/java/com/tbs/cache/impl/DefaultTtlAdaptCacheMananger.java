@@ -52,7 +52,7 @@ public class DefaultTtlAdaptCacheMananger extends AbstractTtlAdaptCacheMananger 
      */
     @Override
     protected AbstractTtlCache decorateCacheToTtl(Cache cache) {
-        return SpringUtil.getBean(ITtlCacheDecorator.class).decorateCache(cache, getOrginal());
+        return SpringUtil.getBean(ITtlCacheDecorator.class).decorateCache(cache, getOriginal());
     }
 
     /**
@@ -65,7 +65,7 @@ public class DefaultTtlAdaptCacheMananger extends AbstractTtlAdaptCacheMananger 
      * @return 原始缓存管理器实例
      */
     @Override
-    public CacheManager getOrginal() {
+    public CacheManager getOriginal() {
         if (orginCacheManager == null) {
             synchronized (this) {
                 if (orginCacheManager == null) {
@@ -85,7 +85,7 @@ public class DefaultTtlAdaptCacheMananger extends AbstractTtlAdaptCacheMananger 
      * @param orginal 原始缓存管理器实例
      */
     @Override
-    public void setOrginal(CacheManager orginal) {
+    public void setOriginal(CacheManager orginal) {
         this.orginCacheManager = orginal;
     }
 }

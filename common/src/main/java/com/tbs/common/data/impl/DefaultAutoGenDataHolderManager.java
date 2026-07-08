@@ -139,7 +139,7 @@ public class DefaultAutoGenDataHolderManager extends AbstractAutoGenDataHolderMa
          */
         @Override
         public <T> Optional<T> get(String key) {
-            return getOrginal().get(keyGen(key));
+            return getOriginal().get(keyGen(key));
         }
 
         /**
@@ -152,7 +152,7 @@ public class DefaultAutoGenDataHolderManager extends AbstractAutoGenDataHolderMa
          */
         @Override
         public void remove(String key) {
-            getOrginal().remove(keyGen(key));
+            getOriginal().remove(keyGen(key));
         }
 
         /**
@@ -207,7 +207,7 @@ public class DefaultAutoGenDataHolderManager extends AbstractAutoGenDataHolderMa
          */
         @Override
         public boolean containsKey(String key) {
-            return getOrginal().containsKey(keyGen(key));
+            return getOriginal().containsKey(keyGen(key));
         }
 
         /**
@@ -261,11 +261,11 @@ public class DefaultAutoGenDataHolderManager extends AbstractAutoGenDataHolderMa
          * 实现IFeatureWrapper接口的获取原始对象方法。返回被当前包装器包装的原始数据持有者实例， 即全局数据持有者实例，用于直接访问原始数据存储结构。
          *
          * @return 被包装的原始数据持有者实例
-         * @see IFeatureWrapper#getOrginal() 功能包装器获取原始对象方法
+         * @see IFeatureWrapper#getOriginal() 功能包装器获取原始对象方法
          * @see IDataHolder 数据持有者接口
          */
         @Override
-        public IDataHolder getOrginal() {
+        public IDataHolder getOriginal() {
             return dataHolder;
         }
 
@@ -275,11 +275,11 @@ public class DefaultAutoGenDataHolderManager extends AbstractAutoGenDataHolderMa
          * 实现IFeatureWrapper接口的设置原始对象方法。更新当前包装器包装的原始数据持有者实例， 即更新全局数据持有者实例，用于替换原始数据存储结构。
          *
          * @param orginal 要设置的原始数据持有者实例，不能为null
-         * @see IFeatureWrapper#setOrginal(Object) 功能包装器设置原始对象方法
+         * @see IFeatureWrapper#setOriginal(Object) 功能包装器设置原始对象方法
          * @see IDataHolder 数据持有者接口
          */
         @Override
-        public void setOrginal(IDataHolder orginal) {
+        public void setOriginal(IDataHolder orginal) {
             this.dataHolder = orginal;
         }
 
