@@ -21,6 +21,7 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 用户状态检查切面
@@ -46,6 +47,8 @@ import java.util.List;
 @Component
 @Slf4j
 public class UserStatusCheckAOP {
+
+    private ConcurrentHashMap<String, IAccountStatusValidator> validators = new ConcurrentHashMap<>();
 
     /**
      * 环绕通知方法
@@ -131,7 +134,14 @@ public class UserStatusCheckAOP {
         IAccountStatusValidator validator = null;
 
         try {
-            validator = validatorClass.newInstance();
+            validator = validators.computeIfAbsent(validatorClass.getName(), (key) -> {
+                try {
+                    return validatorClass.newInstance();
+                } catch (Exception e) {
+                    log.warn("无法创建验证器实例: {}", validatorClass.getName(), e);
+                    return null;
+                }
+            });
         } catch (Exception e) {
             log.warn("无法创建验证器实例: {}", validatorClass.getName(), e);
         }
