@@ -187,7 +187,7 @@ export default {
         })
         .catch(error => {
           console.error('获取系统日志数据失败:', error)
-          this.$message.error('获取数据失败，请稍后重试')
+          // 消息提示由后端统一控制
           this.loading = false
         })
     },

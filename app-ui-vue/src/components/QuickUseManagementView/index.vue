@@ -452,7 +452,7 @@ export default {
 
       if (!handler || typeof handler !== 'function') {
         console.warn(`未提供 ${isAdd ? 'addHandler' : 'editHandler'} 方法`)
-        this.$message.warning(warningMsg)
+        // 消息提示由后端统一控制
         return
       }
 
@@ -493,7 +493,7 @@ export default {
           this.refresh()
         } else {
           console.warn('未提供 deleteHandler 方法')
-          this.$message.warning('未配置删除处理器')
+          // 消息提示由后端统一控制
         }
       }).catch(() => {
         // 用户取消删除

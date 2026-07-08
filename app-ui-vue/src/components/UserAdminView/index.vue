@@ -254,16 +254,16 @@ export default {
         }
 
         if (response.code === 200) {
-          this.$message.success(response.message || '操作成功')
+          // 消息提示由后端统一控制
           // 刷新数据
           this.$refs.userManagement.refresh()
         } else {
-          this.$message.error(response.message || '操作失败')
+          // 消息提示由后端统一控制
         }
       } catch (error) {
         if (error !== 'cancel') {
           console.error('操作失败:', error)
-          this.$message.error('操作失败')
+          // 消息提示由后端统一控制
         }
       }
     },
@@ -290,14 +290,14 @@ export default {
           try {
             const response = await saveUser(this.passwordForm)
             if (response.code === 200) {
-              this.$message.success('密码重置成功')
+              // 消息提示由后端统一控制
               this.resetPasswordDialogVisible = false
             } else {
-              this.$message.error(response.message || '密码重置失败')
+              // 消息提示由后端统一控制
             }
           } catch (error) {
             console.error('密码重置失败:', error)
-            this.$message.error('密码重置失败')
+            // 消息提示由后端统一控制
           }
         }
       })

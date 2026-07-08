@@ -65,13 +65,10 @@ export default {
   },
   methods: {
     onSubmit() {
-      this.$message('submit!')
+      // 消息提示由后端统一控制
     },
     onCancel() {
-      this.$message({
-        message: 'cancel!',
-        type: 'warning'
-      })
+      // 消息提示由后端统一控制
     }
   }
 }

@@ -3,7 +3,6 @@ import {Loading, Message, MessageBox, Notification} from 'element-ui'
 import store from '@/store'
 import {getToken} from '@/utils/auth'
 import settings from '@/settings'
-import router from '@/router'
 
 // create an axios instance
 const service = axios.create({
@@ -142,82 +141,75 @@ service.interceptors.response.use(
     if (!res.code) {
       return Promise.reject(new Error('返回配置错误，请检查网络设置'))
     }
+
+
+    // 成功响应处理
     if (res.code === settings.successCode) {
-      // 如果返回体中包含redirect字段，自动跳转到指定路径
-      if (res.redirect) {
-        router.push(res.redirect)
+      if (res.message && res.type) {
+        Message({
+          message: res.message,
+          type: res.type || 'success',
+          duration: res.duration || 3 * 1000
+        })
       }
+
       return res
-    } else {
-      if (settings.refreshTokenCode.includes(res.code)) {
-        // 当遇到需要重新登录的错误码(405)时，直接要求重新登录
+    }
+
+    // 错误响应处理
+    // 当遇到需要重新登录的错误码(405)时，直接要求重新登录
+    if (settings.refreshTokenCode.includes(res.code)) {
+      return await noLoginFunction(res)
+    }
+
+    // 当遇到刷新token失败的错误码(468)时，先尝试刷新token
+    if (settings.noLoginCode.includes(res.code)) {
+      try {
+        return await refreshTokenHandler(response)
+      } catch (err) {
         return await noLoginFunction(res)
-      } else if (settings.noLoginCode.includes(res.code)) {
-        // 当遇到刷新token失败的错误码(468)时，先尝试刷新token
-        try {
-          return await refreshTokenHandler(response)
-        } catch (err) {
-          return await noLoginFunction(res)
-        }
-      } else {
-        if (settings.debugCodes.includes(res.code)) {
-          console.log(res.message)
-          return Promise.reject(new Error(res.message || 'Error'))
-        } else if (settings.noticeCodes.includes(res.code)) {
-          Notification({
-            title: res.title || '提示',
-            type: res.type || 'info',
-            message: res.message || '提示',
-            duration: res.duration || 3 * 1000,
-            showClose: true
-          })
-        } else {
-          Message({
-            message: res.message || '错误',
-            type: res.type || 'error',
-            duration: res.duration || 3 * 1000
-          })
-        }
-        return Promise.reject(new Error(res.message || 'Error'))
       }
     }
+
+    // 其他错误码处理
+    if (settings.debugCodes.includes(res.code)) {
+      console.log(res.message)
+    } else if (settings.noticeCodes.includes(res.code)) {
+      Notification({
+        title: res.title || '提示',
+        type: res.type || 'info',
+        message: res.message || '提示',
+        duration: res.duration || 3 * 1000,
+        showClose: true
+      })
+    } else {
+      Message({
+        message: res.message || '错误',
+        type: res.type || 'error',
+        duration: res.duration || 3 * 1000
+      })
+    }
+
+    // 如果返回体中包含redirect字段，自动跳转到指定路径
+    if (res.redirect && window.vueInstance && window.vueInstance.$router) {
+      // 显示跳转提示信息
+      const redirectMsg = `即将跳转到: ${res.redirect}`
+      Notification({
+        title: '跳转提示',
+        message: redirectMsg,
+        type: 'info',
+        duration: 2000,
+        showClose: false
+      })
+      // 等待提示显示后再跳转
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      // 执行路由跳转
+      window.vueInstance.$router.push(res.redirect)
+    }
+
+    return Promise.reject(new Error(res.message || 'Error'))
   }, error => {
     console.error(error)
-    // 处理HTTP错误（如网络错误、超时等）
-    let message = '网络连接失败'
-
-    if (error.response) {
-      switch (error.response.status) {
-        case 401:
-          message = '未授权，请重新登录'
-          break
-        case 403:
-          message = '拒绝访问'
-          break
-        case 404:
-          message = '请求地址不存在'
-          break
-        case 500:
-          message = '服务器内部错误'
-          break
-        case 504:
-          message = '网关超时'
-          break
-        default:
-          message = error.response.data?.message || '请求失败'
-      }
-    } else if (error.code === 'ECONNABORTED') {
-      message = '请求超时'
-    } else if (error.message) {
-      message = error.message
-    }
-
-    Message({
-      message,
-      type: 'error',
-      duration: 5 * 1000
-    })
-
     return Promise.reject(error)
   }
 )

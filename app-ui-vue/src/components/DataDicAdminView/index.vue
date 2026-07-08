@@ -395,7 +395,7 @@ export default {
         this.dicList = res.data || []
       } catch (error) {
         console.error('加载字典列表失败:', error)
-        this.$message.error('加载字典列表失败')
+        // 消息提示由后端统一控制
       } finally {
         this.loadingDicList = false
       }
@@ -459,7 +459,7 @@ export default {
           dicName: this.dicForm.dicName,
           dicDesc: this.dicForm.dicDesc
         })
-        this.$message.success(this.dicFormType === 'add' ? '新增字典成功' : '编辑字典成功')
+        // 消息提示由后端统一控制
         this.dicDialogVisible = false
         await this.loadDicList()
         // 如果编辑的是当前选中的字典，更新选中状态
@@ -471,7 +471,7 @@ export default {
         }
       } catch (error) {
         console.error('保存字典失败:', error)
-        this.$message.error('保存字典失败')
+        // 消息提示由后端统一控制
       } finally {
         this.savingDic = false
       }
@@ -497,7 +497,7 @@ export default {
         } else {
           await disableDic(dic.dicCode)
         }
-        this.$message.success(`${action}字典成功`)
+        // 消息提示由后端统一控制
         await this.loadDicList()
         // 更新选中状态
         if (this.selectedDic && this.selectedDic.dicCode === dic.dicCode) {
@@ -507,7 +507,7 @@ export default {
       } catch (error) {
         if (error !== 'cancel') {
           console.error(`${action}字典失败:`, error)
-          this.$message.error(`${action}字典失败`)
+          // 消息提示由后端统一控制
         }
       }
     },
@@ -520,7 +520,7 @@ export default {
           { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'error' }
         )
         await deleteDic(dic.dicCode)
-        this.$message.success('删除字典成功')
+        // 消息提示由后端统一控制
         if (this.selectedDic && this.selectedDic.dicCode === dic.dicCode) {
           this.selectedDic = null
         }
@@ -528,7 +528,7 @@ export default {
       } catch (error) {
         if (error !== 'cancel') {
           console.error('删除字典失败:', error)
-          this.$message.error('删除字典失败')
+          // 消息提示由后端统一控制
         }
       }
     },
@@ -558,12 +558,12 @@ export default {
           dicItemValue: this.itemForm.dicItemValue,
           dicItemDesc: this.itemForm.dicItemDesc
         })
-        this.$message.success('新增字典项成功')
+        // 消息提示由后端统一控制
         this.itemDialogVisible = false
         await this.handleRefreshItems()
       } catch (error) {
         console.error('保存字典项失败:', error)
-        this.$message.error('保存字典项失败')
+        // 消息提示由后端统一控制
       } finally {
         this.savingItem = false
       }
@@ -589,12 +589,12 @@ export default {
         } else {
           await disableDicItem(this.selectedDic.dicCode, row.label)
         }
-        this.$message.success(`${action}字典项成功`)
+        // 消息提示由后端统一控制
         await this.handleRefreshItems()
       } catch (error) {
         if (error !== 'cancel') {
           console.error(`${action}字典项失败:`, error)
-          this.$message.error(`${action}字典项失败`)
+          // 消息提示由后端统一控制
         }
       }
     },
@@ -607,12 +607,12 @@ export default {
           { confirmButtonText: '确定删除', cancelButtonText: '取消', type: 'error' }
         )
         await deleteDicItem(this.selectedDic.dicCode, row.label)
-        this.$message.success('删除字典项成功')
+        // 消息提示由后端统一控制
         await this.handleRefreshItems()
       } catch (error) {
         if (error !== 'cancel') {
           console.error('删除字典项失败:', error)
-          this.$message.error('删除字典项失败')
+          // 消息提示由后端统一控制
         }
       }
     }

@@ -234,7 +234,7 @@ export default {
       ).then(() => {
         evictCache(name)
           .then(() => {
-            this.$message.success(`缓存「${name}」已清除`)
+            // 消息提示由后端统一控制
             if (this.selectedCacheName === name) {
               this.cacheKeys = []
               this.selectedCacheName = ''
@@ -303,7 +303,7 @@ export default {
       ).then(() => {
         evictCache(this.selectedCacheName, row.key)
           .then(() => {
-            this.$message.success('缓存键已删除')
+            // 消息提示由后端统一控制
             this.loadCacheKeys()
           })
           .catch(() => {})
@@ -314,7 +314,7 @@ export default {
       const valueStr = this.formatValue(this.valueDetail.value)
       if (navigator.clipboard) {
         navigator.clipboard.writeText(valueStr).then(() => {
-          this.$message.success('已复制到剪贴板')
+          // 消息提示由后端统一控制
         }).catch(() => {
           this.fallbackCopy(valueStr)
         })
@@ -332,9 +332,9 @@ export default {
       textarea.select()
       try {
         document.execCommand('copy')
-        this.$message.success('已复制到剪贴板')
+        // 消息提示由后端统一控制
       } catch (e) {
-        this.$message.error('复制失败')
+        // 消息提示由后端统一控制
       }
       document.body.removeChild(textarea)
     },

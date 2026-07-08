@@ -151,9 +151,9 @@ export default {
         this.formConfig = response.data
         // 清除本地存储的配置，避免冲突
         localStorage.removeItem('formCreatorConfig')
-        this.$message.success('表单加载成功')
+        // 消息提示由后端统一控制
       } catch (error) {
-        this.$message.error('加载表单失败: ' + error.message)
+        // 消息提示由后端统一控制
       } finally {
         this.loading = false
       }
@@ -176,22 +176,22 @@ export default {
         if (this.$route.query.id) {
           // 更新现有表单
           updateFormConfig(this.$route.query.id, data).then(response => {
-            this.$message.success('表单配置已更新')
+            // 消息提示由后端统一控制
           }).catch(error => {
-            this.$message.error('更新表单配置失败: ' + error.message)
+            // 消息提示由后端统一控制
           })
         } else {
           // 创建新表单
           saveFormConfig(data).then(response => {
-            this.$message.success('表单配置已保存到服务器')
+            // 消息提示由后端统一控制
             // 同时也保存到本地存储作为备份
             localStorage.setItem('formCreatorConfig', JSON.stringify(data))
           }).catch(error => {
-            this.$message.error('保存表单配置失败: ' + error.message)
+            // 消息提示由后端统一控制
           })
         }
       } catch (e) {
-        this.$message.error((this.$route.query.id ? '更新' : '保存') + '表单配置失败: ' + e.message)
+        // 消息提示由后端统一控制
       }
     },
 
@@ -210,19 +210,19 @@ export default {
           fields: []
         }
         localStorage.removeItem('formCreatorConfig')
-        this.$message.success('配置已重置')
+        // 消息提示由后端统一控制
       }).catch(() => {
         // 用户取消操作
       })
     },
 
     handleFormSubmit(data) {
-      this.$message.success('表单提交成功')
+      // 消息提示由后端统一控制
       console.log('表单提交数据:', data)
     },
 
     handleFormReset() {
-      this.$message.info('表单已重置')
+      // 消息提示由后端统一控制
       this.formData = {}
       this.collectedData = null
     },
@@ -230,7 +230,7 @@ export default {
     resetPreviewForm() {
       this.formData = {}
       this.collectedData = null
-      this.$message.info('预览表单已重置')
+      // 消息提示由后端统一控制
     },
 
     collectFormData() {
@@ -238,14 +238,14 @@ export default {
         const data = this.$refs.dynamicForm.getFormData()
         this.collectedData = JSON.stringify(data, null, 2)
         console.log('表单当前数据:', data)
-        this.$message.success('已获取表单数据')
+        // 消息提示由后端统一控制
       }
     },
 
     submitForm() {
       if (this.$refs.dynamicForm) {
         const data = this.$refs.dynamicForm.getFormData()
-        this.$message.success('表单提交成功')
+        // 消息提示由后端统一控制
         console.log('提交的表单数据:', data)
       }
     }

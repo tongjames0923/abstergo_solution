@@ -183,7 +183,7 @@ export default {
         this.userRoles = response.data || []
       } catch (error) {
         console.error('获取用户角色失败:', error)
-        this.$message.error('获取用户角色失败')
+        // 消息提示由后端统一控制
       } finally {
         this.loading = false
       }
@@ -203,7 +203,7 @@ export default {
         this.totalRoles = response.data?.total || 0
       } catch (error) {
         console.error('获取角色列表失败:', error)
-        this.$message.error('获取角色列表失败')
+        // 消息提示由后端统一控制
       } finally {
         this.loading = false
       }
@@ -230,10 +230,10 @@ export default {
         if (role) {
           this.userRoles.push({ ...role })
         }
-        this.$message.success('角色分配成功')
+        // 消息提示由后端统一控制
       } catch (error) {
         console.error('启用角色失败:', error)
-        this.$message.error('角色分配失败')
+        // 消息提示由后端统一控制
       }
     },
 
@@ -243,10 +243,10 @@ export default {
         await disableRoleForUser(this.userId, roleId)
         // 更新本地数据
         this.userRoles = this.userRoles.filter(role => role.id !== roleId)
-        this.$message.success('角色取消成功')
+        // 消息提示由后端统一控制
       } catch (error) {
         console.error('禁用角色失败:', error)
-        this.$message.error('角色取消失败')
+        // 消息提示由后端统一控制
       }
     },
 

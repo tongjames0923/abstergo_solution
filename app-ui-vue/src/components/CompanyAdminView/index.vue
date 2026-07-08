@@ -355,7 +355,7 @@ export default {
       }).then(async() => {
         try {
           await deleteCompany(row.id)
-          this.$message.success('删除成功')
+          // 消息提示由后端统一控制
           if (this.selectedCompany && this.selectedCompany.id === row.id) this.selectedCompany = null
           this.loadCompanyData()
         } catch (error) {
@@ -379,16 +379,16 @@ export default {
           if (this.dialogType === 'add' && this.editForm.parentId) {
             const res = await saveCompany({ companyName: this.editForm.companyName, taxNumber: this.editForm.taxNumber, description: this.editForm.description, flag: this.editForm.flag })
             if (res.data && res.data.id) await moveCompanyTo(this.editForm.parentId, res.data.id)
-            this.$message.success('新增子公司成功')
+            // 消息提示由后端统一控制
           } else {
             await saveCompany(this.editForm)
-            this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
+            // 消息提示由后端统一控制
           }
           this.dialogVisible = false
           this.loadCompanyData()
         } catch (error) {
           console.error('保存失败:', error)
-          this.$message.error('保存失败')
+          // 消息提示由后端统一控制
         } finally {
           this.dialogSaving = false
         }
@@ -425,7 +425,7 @@ export default {
     },
     onParentSelect(selectedId) {
       if (selectedId && selectedId === this.moveCompanyForm.companyId) {
-        this.$message.warning('不能将公司移动到自身')
+        // 消息提示由后端统一控制
         this.moveCompanyForm.targetParentId = undefined
       }
     },
@@ -446,12 +446,18 @@ export default {
       }
     },
     async handleMoveCompanyConfirm() {
-      if (!this.moveCompanyForm.targetParentId) { this.$message.warning('请选择目标父公司'); return }
-      if (this.moveCompanyForm.targetParentId === this.moveCompanyForm.companyId) { this.$message.warning('不能将公司移动到自身'); return }
+      if (!this.moveCompanyForm.targetParentId) {
+        // 消息提示由后端统一控制
+        return
+      }
+      if (this.moveCompanyForm.targetParentId === this.moveCompanyForm.companyId) {
+        // 消息提示由后端统一控制
+        return
+      }
       this.moveSaving = true
       try {
         await moveCompanyTo(this.moveCompanyForm.targetParentId, this.moveCompanyForm.companyId)
-        this.$message.success('移动公司成功')
+        // 消息提示由后端统一控制
         this.handleMoveCompanyDialogClose()
         this.loadCompanyData()
       } catch (error) {

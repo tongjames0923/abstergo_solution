@@ -253,7 +253,7 @@ export default {
     },
 
     handleEdit(item) {
-      this.$message.info(`编辑项目: ${item.title}`)
+      // 消息提示由后端统一控制
     },
 
     handleDelete(item) {
@@ -262,7 +262,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.$message.success('删除成功')
+        // 消息提示由后端统一控制
         // 实际项目中这里应该调用API删除数据并重新加载列表
       }).catch(() => {
         // 用户取消删除
@@ -270,11 +270,11 @@ export default {
     },
 
     handleCreate() {
-      this.$message.info('创建新项目')
+      // 消息提示由后端统一控制
     },
 
     handleExport() {
-      this.$message.success('正在导出数据...')
+      // 消息提示由后端统一控制
     },
 
     getTagType(category) {
@@ -297,7 +297,7 @@ export default {
 
     handleBatchDelete(selectedItems) {
       if (selectedItems.length === 0) {
-        this.$message.warning('请先选择要删除的项目')
+        // 消息提示由后端统一控制
         return
       }
 
@@ -306,7 +306,7 @@ export default {
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
-        this.$message.success('批量删除成功')
+        // 消息提示由后端统一控制
         this.clearSelection()
       }).catch(() => {
         // 用户取消删除
@@ -315,11 +315,11 @@ export default {
 
     handleBatchExport(selectedItems) {
       if (selectedItems.length === 0) {
-        this.$message.warning('请先选择要导出的项目')
+        // 消息提示由后端统一控制
         return
       }
 
-      this.$message.success(`正在导出 ${selectedItems.length} 个项目的数据...`)
+      // 消息提示由后端统一控制
     }
   }
 }

@@ -566,7 +566,7 @@ export default {
         this.treeData = treeData
       } catch (error) {
         console.error('加载部门数据失败:', error)
-        this.$message.error('加载部门数据失败')
+        // 消息提示由后端统一控制
       } finally {
         this.loading = false
       }
@@ -667,7 +667,7 @@ export default {
       }).then(async () => {
         try {
           await deleteDepartment(row.id)
-          this.$message.success('删除成功')
+          // 消息提示由后端统一控制
           this.loadDepartmentData()
         } catch (error) {
           console.error('删除失败:', error)
@@ -714,17 +714,17 @@ export default {
               })
               if (saveResponse.data && saveResponse.data.id) {
                 await moveDepartmentTo(this.editForm.parentId, saveResponse.data.id)
-                this.$message.success('新增子部门成功')
+                // 消息提示由后端统一控制
               }
             } else {
               await saveDepartment(this.editForm)
-              this.$message.success(this.dialogType === 'add' ? '新增成功' : '编辑成功')
+              // 消息提示由后端统一控制
             }
             this.dialogVisible = false
             this.loadDepartmentData()
           } catch (error) {
             console.error('保存失败:', error)
-            this.$message.error('保存失败')
+            // 消息提示由后端统一控制
           } finally {
             this.dialogSaving = false
           }
@@ -760,7 +760,7 @@ export default {
     onParentSelect(selectedId) {
       if (!selectedId) return
       if (selectedId === this.moveDepartmentForm.departmentId) {
-        this.$message.warning('不能将部门移动到自身')
+        // 消息提示由后端统一控制
         this.moveDepartmentForm.targetParentId = undefined
       }
     },
@@ -791,17 +791,17 @@ export default {
 
     async handleMoveDepartmentConfirm() {
       if (!this.moveDepartmentForm.targetParentId) {
-        this.$message.warning('请选择目标父部门')
+        // 消息提示由后端统一控制
         return
       }
       if (this.moveDepartmentForm.targetParentId === this.moveDepartmentForm.departmentId) {
-        this.$message.warning('不能将部门移动到自身')
+        // 消息提示由后端统一控制
         return
       }
       this.moveSaving = true
       try {
         await moveDepartmentTo(this.moveDepartmentForm.targetParentId, this.moveDepartmentForm.departmentId)
-        this.$message.success('移动部门成功')
+        // 消息提示由后端统一控制
         this.handleMoveDepartmentDialogClose()
         this.loadDepartmentData()
       } catch (error) {
@@ -826,7 +826,7 @@ export default {
         this.employees = response.data || []
       } catch (error) {
         console.error('加载员工列表失败:', error)
-        this.$message.error('加载员工列表失败')
+        // 消息提示由后端统一控制
       } finally {
         this.employeesLoading = false
       }
@@ -873,7 +873,7 @@ export default {
       this.addingUserId = user.id
       try {
         await applyUserToDepartment(user.id, this.selectedDepartment.id)
-        this.$message.success(`已将 ${user.nickName || user.userName} 添加到 ${this.selectedDepartment.departmentName}`)
+        // 消息提示由后端统一控制
         this.loadEmployees(this.selectedDepartment.id)
         this.searchUsers = this.searchUsers.filter(u => u.id !== user.id)
       } catch (error) {
@@ -892,7 +892,7 @@ export default {
       }).then(async () => {
         try {
           await removeUserFromDepartment(user.id, this.selectedDepartment.id)
-          this.$message.success(`已将 ${user.nickName || user.userName} 从部门中移除`)
+          // 消息提示由后端统一控制
           this.loadEmployees(this.selectedDepartment.id)
         } catch (error) {
           console.error('移除员工失败:', error)

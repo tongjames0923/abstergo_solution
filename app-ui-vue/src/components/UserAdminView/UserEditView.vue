@@ -206,7 +206,7 @@ export default {
           }
         } else {
           console.log('表单验证失败')
-          this.$message.warning('请填写正确的表单信息')
+          // 消息提示由后端统一控制
           return false
         }
       })

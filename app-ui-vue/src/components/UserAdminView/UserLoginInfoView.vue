@@ -267,7 +267,7 @@ export default {
         this.showTokens = false
       } catch (error) {
         console.error('获取登录信息失败:', error)
-        this.$message.error('获取登录信息失败')
+        // 消息提示由后端统一控制
       } finally {
         this.loadingSessions = false
       }
@@ -372,7 +372,7 @@ export default {
         this.showTokens = true
       } catch (error) {
         console.error('获取Token信息失败:', error)
-        this.$message.error('获取Token信息失败')
+        // 消息提示由后端统一控制
       } finally {
         this.loadingTokens = false
       }
@@ -395,7 +395,7 @@ export default {
         })
 
         await disableUserToken(row.token, this.userId)
-        this.$message.success('Token禁用成功')
+        // 消息提示由后端统一控制
 
         // 更新当前列表中的Token状态
         const tokenIndex = this.sessionTokens.findIndex(token => token.token === row.token)
@@ -405,7 +405,7 @@ export default {
       } catch (error) {
         if (error !== 'cancel') {
           console.error('禁用Token失败:', error)
-          this.$message.error('禁用Token失败: ' + (error.message || '未知错误'))
+          // 消息提示由后端统一控制
           this.backToSessions()
         }
       }

@@ -198,7 +198,7 @@ export default {
         this.previewFormTitle = row.title ? `预览表单: ${row.title}` : '预览表单'
         this.previewDialogVisible = true
       } catch (error) {
-        this.$message.error('获取表单配置失败: ' + error.message)
+        // 消息提示由后端统一控制
       }
     },
 
@@ -211,13 +211,13 @@ export default {
 
     // 预览表单提交
     handlePreviewSubmit(data) {
-      this.$message.success('预览表单提交成功')
+      // 消息提示由后端统一控制
       console.log('预览表单提交数据:', data)
     },
 
     // 预览表单重置
     handlePreviewReset() {
-      this.$message.info('预览表单已重置')
+      // 消息提示由后端统一控制
     },
 
     // 删除表单

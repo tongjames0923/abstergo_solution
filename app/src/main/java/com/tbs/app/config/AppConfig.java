@@ -1,20 +1,21 @@
 package com.tbs.app.config;
 
+import com.tbs.app.account.exception.UnNormalAccountStatusException;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
-import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.core.ILogRecorder;
-import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
-import com.tbs.logging.vo.LogRecordVO;
+import com.tbs.web.enums.WebMessageTypeEnum;
+import com.tbs.web.result.AjaxResult;
+import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
+import com.tbs.web.uitl.AjaxUtil;
 import com.tbs.xxl.api.IXXLJobsConfig;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import java.util.List;
 
 /**
  * 应用程序配置类
@@ -32,6 +33,25 @@ public class AppConfig {
     SimpleRabbitMqSupport rabbitMqSupport() {
         return new SimpleRabbitMqSupport();
     }
+
+    @Bean
+    IOnErrorAjaxProvider<UnNormalAccountStatusException> unNormalAccountStatusExceptionProvider() {
+        return new IOnErrorAjaxProvider<UnNormalAccountStatusException>() {
+            @Override
+            public AjaxResult onError(UnNormalAccountStatusException throwable) {
+                return AjaxUtil.builder().error("账号状态异常。").data(throwable.getMessage())
+                    .type(WebMessageTypeEnum.WARNING)
+                    .duration(3000)
+                    .redirect("/Welcome").build();
+            }
+
+            @Override
+            public boolean support(@NotNull Class<? extends Throwable> clazz) {
+                return clazz == UnNormalAccountStatusException.class;
+            }
+        };
+    }
+
 
     @Bean
     public ILogRecorder loggerRecoreder() {

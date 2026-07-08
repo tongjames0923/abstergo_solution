@@ -308,9 +308,9 @@ export default {
       this._switching = true
       try {
         await this.$store.dispatch('user/switchDepartment', dept.departmentId)
-        this.$message.success('已切换到 ' + dept.departmentName)
+        // 消息提示由后端统一控制
       } catch (e) {
-        this.$message.error('切换失败: ' + (e.message || '未知错误'))
+        // 消息提示由后端统一控制
       } finally {
         this._switching = false
       }
