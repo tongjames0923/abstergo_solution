@@ -15,7 +15,9 @@ const getDefaultState = () => {
     roles: [],
     departments: [],
     currentDepartment: null,
-    routes: [] // 存储动态路由
+    routes: [],
+    accountStatus: null,
+    accountStatusStr: ''
   }
 }
 
@@ -48,6 +50,12 @@ const mutations = {
   },
   SET_ROUTES: (state, routes) => {
     state.routes = routes
+  },
+  SET_ACCOUNT_STATUS: (state, status) => {
+    state.accountStatus = status
+  },
+  SET_ACCOUNT_STATUS_STR: (state, statusStr) => {
+    state.accountStatusStr = statusStr
   }
 }
 
@@ -77,7 +85,7 @@ const actions = {
         throw new Error('Verification failed, please Login again.')
       }
 
-      const { nickName, userName, avatar, avaliableRoles, avaliableDepartments } = data
+      const { nickName, userName, avatar, avaliableRoles, avaliableDepartments, accountStatus, accountStatusStr } = data
 
       commit('SET_NAME', nickName)
       commit('SET_USER_NAME', userName)
@@ -85,6 +93,8 @@ const actions = {
       commit('SET_ROLES', avaliableRoles)
       commit('SET_DEPARTMENTS', avaliableDepartments || [])
       commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
+      commit('SET_ACCOUNT_STATUS', accountStatus)
+      commit('SET_ACCOUNT_STATUS_STR', accountStatusStr || '')
       return data
     } catch (error) {
       throw error

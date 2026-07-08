@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.form.DicItemSaveForm;
 import com.tbs.app.form.DicItemSearchForm;
 import com.tbs.app.form.DicSaveForm;
@@ -70,6 +71,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功查询字典列表",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult listDicByDicNameLike(
         @Parameter(name = "form", description = "字典查询条件") @RequestBody DicSearchForm form) {
         if (form == null) {
@@ -106,6 +108,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功启用数据字典",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult enableDic(
         @Parameter(name = "form", description = "字典编码信息", required = true)
         @RequestBody DicSearchForm form) {
@@ -127,6 +130,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功禁用数据字典",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult disableDic(
         @Parameter(name = "form", description = "字典编码信息", required = true)
         @RequestBody DicSearchForm form) {
@@ -148,6 +152,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功启用数据字典项",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult enableDicItem(
         @Parameter(name = "form", description = "字典项查询条件", required = true)
         @RequestBody DicItemSearchForm form) {
@@ -170,6 +175,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功禁用数据字典项",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult disableDicItem(
         @Parameter(name = "form", description = "字典项查询条件", required = true)
         @RequestBody DicItemSearchForm form) {
@@ -192,6 +198,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功删除数据字典",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult deleteDic(
         @Parameter(name = "form", description = "字典编码信息", required = true)
         @RequestBody DicSearchForm form) {
@@ -213,6 +220,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功删除数据字典项",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult deleteDicItem(
         @Parameter(name = "form", description = "字典项查询条件", required = true)
         @RequestBody DicItemSearchForm form) {
@@ -238,6 +246,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功保存数据字典",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult saveDic(
         @Parameter(name = "form", description = "字典保存信息", required = true)
         @RequestBody DicSaveForm form) {
@@ -268,6 +277,7 @@ public class SystemDataDicController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功保存数据字典项",
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult saveDicItem(
         @Parameter(name = "form", description = "字典项保存信息", required = true)
         @RequestBody DicItemSaveForm form) {

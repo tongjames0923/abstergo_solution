@@ -45,4 +45,15 @@ public class UserInfoVO implements Serializable {
 	 * 用户当前选中的部门
 	 */
 	private DepartmentInfoVO currentDepartment;
+
+	/**
+	 * 用户状态文本描述
+	 */
+	private String accountStatusStr;
+
+	/**
+	 * 用户状态
+	 */
+	private Integer accountStatus;
+
 }

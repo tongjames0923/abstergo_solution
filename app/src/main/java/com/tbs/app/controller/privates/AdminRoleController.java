@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
@@ -59,6 +60,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "查询用户角色", description = "根据用户ID查询该用户拥有的所有角色")
     @ApiResponse(responseCode = "200", description = "成功查询用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult userRoles(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         return successResult(relationService.queryUserRoles(userId));
@@ -76,6 +78,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "启用用户角色", description = "为指定用户启用指定角色")
     @ApiResponse(responseCode = "200", description = "成功启用用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult enable(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
         @Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
@@ -95,6 +98,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "禁用用户角色", description = "为指定用户禁用指定角色")
     @ApiResponse(responseCode = "200", description = "成功禁用用户角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult disable(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
         @Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
@@ -115,6 +119,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询角色列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult query(
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,
         @Parameter(name = "page", description = "页码") @RequestParam(required = false) Long page,
@@ -136,6 +141,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "激活用户账户", description = "激活指定用户的账户")
     @ApiResponse(responseCode = "200", description = "成功激活用户账户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult activiteAccount(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);
@@ -157,6 +163,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "禁用用户账户", description = "禁用指定用户的账户")
     @ApiResponse(responseCode = "200", description = "成功禁用用户账户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult disableAccount(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);

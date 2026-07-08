@@ -43,7 +43,13 @@
         <div class="hero__right">
           <p class="hero__hi">{{ greeting }}</p>
           <h1 class="hero__name">{{ displayName }}</h1>
-          <p class="hero__at">@{{ userName }}</p>
+          <div class="hero__sub">
+            <span class="hero__at">@{{ userName }}</span>
+            <span v-if="accountStatusStr" class="statusBadge" :class="statusBadgeClass">
+              <span class="statusBadge__dot" />
+              {{ accountStatusStr }}
+            </span>
+          </div>
           <div v-if="roles.length" class="hero__tags">
             <span
               v-for="(r, i) in roles"
@@ -86,6 +92,16 @@
               {{ currentDepartment ? currentDepartment.departmentName : '未选择' }}
             </b>
             <span class="num__l">当前部门</span>
+          </div>
+        </div>
+        <div v-if="accountStatusStr" class="num__sep" />
+        <div v-if="accountStatusStr" class="num">
+          <div class="num__icon" :class="statusIconClass">
+            <i :class="statusIcon" />
+          </div>
+          <div class="num__info">
+            <b class="num__v" :class="statusValueClass">{{ accountStatusStr }}</b>
+            <span class="num__l">账户状态</span>
           </div>
         </div>
       </div>
@@ -154,6 +170,13 @@
             账户信息
           </h3>
           <ul class="pane__ul">
+            <li v-if="accountStatusStr" class="pane__li">
+              <span class="pane__dot" :style="{ background: statusColor }" />
+              <div class="pane__kv">
+                <small>账户状态</small>
+                <span :style="{ color: statusColor }">{{ accountStatusStr }}</span>
+              </div>
+            </li>
             <li class="pane__li">
               <span class="pane__dot" style="background:#D97706" />
               <div class="pane__kv">
@@ -210,12 +233,42 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['name', 'userName', 'avatar', 'roles', 'departments', 'currentDepartment']),
+    ...mapGetters(['name', 'userName', 'avatar', 'roles', 'departments', 'currentDepartment', 'accountStatus', 'accountStatusStr']),
     displayName() {
       return this.name || this.userName || '用户'
     },
     initials() {
       return this.displayName.charAt(0).toUpperCase()
+    },
+    // 账户状态对应的颜色
+    statusColor() {
+      if (this.accountStatus === 1) return '#059669'
+      if (this.accountStatus === 2) return '#D97706'
+      return '#DC2626'
+    },
+    // 状态徽章的 CSS class
+    statusBadgeClass() {
+      if (this.accountStatus === 1) return 'statusBadge--active'
+      if (this.accountStatus === 2) return 'statusBadge--locked'
+      return 'statusBadge--disabled'
+    },
+    // 统计行图标的 CSS class
+    statusIconClass() {
+      if (this.accountStatus === 1) return 'num__icon--green'
+      if (this.accountStatus === 2) return 'num__icon--amber'
+      return 'num__icon--red'
+    },
+    // 状态图标类名
+    statusIcon() {
+      if (this.accountStatus === 1) return 'el-icon-success'
+      if (this.accountStatus === 2) return 'el-icon-warning'
+      return 'el-icon-remove'
+    },
+    // 状态数值的 CSS class
+    statusValueClass() {
+      if (this.accountStatus === 1) return 'num__v--active'
+      if (this.accountStatus === 2) return 'num__v--locked'
+      return 'num__v--disabled'
     },
     greeting() {
       const h = new Date().getHours()
@@ -570,13 +623,73 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   background-clip: text;
 }
 
+.hero__sub {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 10px 0;
+  flex-wrap: wrap;
+}
+
 .hero__at {
   font-size: 13px;
   color: $text-3;
-  margin: 0 0 10px 0;
   font-family: $font-mono;
   letter-spacing: 0.2px;
   font-weight: 400;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: 1px solid;
+  transition: all 0.3s $ease;
+}
+
+.statusBadge__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.statusBadge--active {
+  background: $green-bg;
+  color: $green;
+  border-color: $green-bd;
+
+  .statusBadge__dot {
+    background: $green;
+    box-shadow: 0 0 0 2px rgba(48, 184, 121, 0.2);
+  }
+}
+
+.statusBadge--locked {
+  background: $amber-bg;
+  color: $amber;
+  border-color: $amber-bd;
+
+  .statusBadge__dot {
+    background: $amber;
+    box-shadow: 0 0 0 2px rgba(232, 150, 12, 0.2);
+  }
+}
+
+.statusBadge--disabled {
+  background: rgba(220, 38, 38, 0.06);
+  color: #DC2626;
+  border-color: rgba(220, 38, 38, 0.18);
+
+  .statusBadge__dot {
+    background: #DC2626;
+    box-shadow: 0 0 0 2px rgba(220, 38, 38, 0.2);
+  }
 }
 
 .hero__tags {
@@ -668,6 +781,11 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
     color: $primary;
     border: 1px solid rgba(10, 132, 255, 0.12);
   }
+  &--red {
+    background: rgba(220, 38, 38, 0.06);
+    color: #DC2626;
+    border: 1px solid rgba(220, 38, 38, 0.18);
+  }
 }
 
 .num__info {
@@ -689,6 +807,27 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
     font-size: 14px;
     font-weight: 700;
     color: $green;
+    letter-spacing: 0;
+  }
+
+  &--active {
+    font-size: 14px;
+    font-weight: 700;
+    color: $green;
+    letter-spacing: 0;
+  }
+
+  &--locked {
+    font-size: 14px;
+    font-weight: 700;
+    color: $amber;
+    letter-spacing: 0;
+  }
+
+  &--disabled {
+    font-size: 14px;
+    font-weight: 700;
+    color: #DC2626;
     letter-spacing: 0;
   }
 }

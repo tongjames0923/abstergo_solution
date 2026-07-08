@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.web.BaseController;
@@ -35,6 +36,7 @@ public class AdminSystemLogController extends BaseController {
      */
     @GetMapping("listWithOpType")
     @AjaxResponseType(Object.class)
+    @OnlyActiveAccountUse
     public AjaxResult listWithOpType() {
         return successResult(systemLogService.getLogOperateTypeList(28));
     }

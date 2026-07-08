@@ -1,11 +1,12 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.vo.DepartmentInfoVO;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -69,6 +70,7 @@ public class PrivateDepartmentController extends BaseController {
     @Operation(summary = "添加用户到部门", description = "将指定用户添加到指定部门")
     @ApiResponse(responseCode = "200", description = "成功添加用户到部门",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult addToDep(
         @Parameter(name = "depId", description = "部门ID", required = true) @PathVariable Long depId,
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
@@ -91,6 +93,7 @@ public class PrivateDepartmentController extends BaseController {
     @Operation(summary = "从部门移除用户", description = "将指定用户从指定部门移除")
     @ApiResponse(responseCode = "200", description = "成功从部门移除用户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult deleteFromDep(
         @Parameter(name = "depId", description = "部门ID", required = true) @PathVariable Long depId,
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {

@@ -12,7 +12,9 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.function.EnumUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
@@ -108,22 +110,22 @@ public class PrivateUserController extends BaseController {
     @GetMapping("/info")
     @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细信息，包括用户名、昵称、头像和可用角色列表")
     @ApiResponse(responseCode = "200", description = "成功获取用户信息",
-        content = @Content(mediaType = "application/json",
-            schema = @Schema(implementation = UserInfoVO.class)))
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserInfoVO.class)))
     public UserInfoVO info() {
         UserInfoVO userInfoVO = new UserInfoVO();
-        userInfoVO.setUserName(AuthUtil.getInstance().getCurrentUser().getUsername());
-        Optional<SystemUserEntity> user =
-            userService.queryByUserName(AuthUtil.getInstance().getCurrentUser().getUsername()).stream().findFirst();
-        AssertUtil.isTrue(!user.isPresent()).message("用户{} 不存在",
-            AuthUtil.getInstance().getCurrentUser().getUsername()).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        var userDetail = AuthUtil.getInstance().getCurrentUser();
+        userInfoVO.setUserName(userDetail.getUsername());
+        Optional<SystemUserEntity> user = userService.queryByUserName(userDetail.getUsername()).stream().findFirst();
+        AssertUtil.isTrue(!user.isPresent()).message("用户{} 不存在", userDetail.getUsername())
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         userInfoVO.setNickName(user.get().getNickName());
+        userInfoVO.setAccountStatus(user.get().getFlag());
+        userInfoVO.setAccountStatusStr(EnumUtil.valueOf(SystemUserStatusEnum.class, user.get().getFlag()).getValue());
         userInfoVO.setAvatar(user.get().getAvatar());
         userInfoVO.setAvaliableRoles(relationService.queryRoles(user.get().getId()));
-        var ud = AuthUtil.getInstance().getCurrentUser();
 
-        if (ud instanceof ISystemUserDetails) {
-            userInfoVO.setCurrentDepartment(((ISystemUserDetails)ud).getCurrentDepartment());
+        if (userDetail instanceof ISystemUserDetails) {
+            userInfoVO.setCurrentDepartment(((ISystemUserDetails)userDetail).getCurrentDepartment());
         }
 
         userInfoVO.setAvaliableDepartments(DepartmentInfoVO.convertToDepartmentVOs(

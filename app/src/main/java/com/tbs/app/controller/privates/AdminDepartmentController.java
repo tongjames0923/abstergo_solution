@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
@@ -84,6 +85,7 @@ public class AdminDepartmentController
     @Operation(summary = "保存部门信息", description = "创建或更新部门信息")
     @ApiResponse(responseCode = "200", description = "成功保存部门信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+	@OnlyActiveAccountUse
 	public AjaxResult save(@Parameter(name = "entity", description = "部门信息",
         required = true) @RequestBody SystemDepartmentEntity entity) {
 		return super.save(entity);
@@ -101,7 +103,8 @@ public class AdminDepartmentController
     @Operation(summary = "删除部门信息", description = "根据部门ID删除部门信息")
     @ApiResponse(responseCode = "200", description = "成功删除部门信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    public AjaxResult delete(@Parameter(name = "id", description = "部门ID", required = true) @PathVariable Long id) {
+	@OnlyActiveAccountUse
+	public AjaxResult delete(@Parameter(name = "id", description = "部门ID", required = true) @PathVariable Long id) {
 		return super.delete(id);
 	}
 
@@ -149,7 +152,8 @@ public class AdminDepartmentController
     @Operation(summary = "移动部门到指定父级", description = "将一个部门移动到另一个部门下作为其子级部门")
     @ApiResponse(responseCode = "200", description = "成功移动部门",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    public AjaxResult moveDepartmentTo(
+	@OnlyActiveAccountUse
+	public AjaxResult moveDepartmentTo(
         @Parameter(name = "parent", description = "父级部门ID", required = true) @RequestParam Long parent,
         @Parameter(name = "child", description = "子级部门ID", required = true) @RequestParam Long child) {
 		departmentTreeStructService.setToTree(child, parent);
