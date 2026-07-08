@@ -3,6 +3,7 @@ import {Loading, Message, MessageBox, Notification} from 'element-ui'
 import store from '@/store'
 import {getToken} from '@/utils/auth'
 import settings from '@/settings'
+import router from '@/router'
 
 // create an axios instance
 const service = axios.create({
@@ -142,6 +143,10 @@ service.interceptors.response.use(
       return Promise.reject(new Error('返回配置错误，请检查网络设置'))
     }
     if (res.code === settings.successCode) {
+      // 如果返回体中包含redirect字段，自动跳转到指定路径
+      if (res.redirect) {
+        router.push(res.redirect)
+      }
       return res
     } else {
       if (settings.refreshTokenCode.includes(res.code)) {

@@ -3,14 +3,10 @@ package com.tbs.web.uitl;
 import com.alibaba.fastjson2.JSON;
 import com.tbs.common.IStartup;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.Comparators;
 import com.tbs.web.enums.WebMessageTypeEnum;
-import com.tbs.web.result.AjaxResult;
-import com.tbs.web.result.IAjaxBuilderProvider;
-import com.tbs.web.result.IAjaxResultBuilder;
-import com.tbs.web.result.IOnErrorAjaxProvider;
+import com.tbs.web.result.*;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -100,8 +96,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult custom(int code, String msg, Object data) {
-        return createCustom().appendField(AjaxResult.MESSAGE_KEY, msg).appendField(AjaxResult.CODE_KEY, code)
-            .appendField(AjaxResult.DATA_KEY, data).next().build();
+        return builder().code(code).message(msg).data(data).build();
     }
 
     /**
@@ -114,6 +109,26 @@ public class AjaxUtil implements IStartup {
     }
 
     /**
+     * 创建流式构建器实例
+     * <p>
+     * 提供更直观的流式API来构建AjaxResult对象：
+     * <pre>
+     * AjaxResult result = AjaxUtil.builder()
+     *     .code(200)
+     *     .message("操作成功")
+     *     .data(entity)
+     *     .redirect("/admin/user")
+     *     .build();
+     * </pre>
+     * </p>
+     *
+     * @return AjaxResultFluentBuilder实例
+     */
+    public static AjaxResultFluentBuilder builder() {
+        return AjaxResultFluentBuilder.builder();
+    }
+
+    /**
      * 构建成功的Ajax响应结果，包含消息和数据
      *
      * @param msg  响应消息
@@ -121,7 +136,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult success(String msg, Object data) {
-        return getInstance().custom(AjaxResult.DEFAULT_SUCCESS_CODE, msg, data);
+        return builder().success(msg, data).build();
     }
 
     /**
@@ -134,7 +149,38 @@ public class AjaxUtil implements IStartup {
         return getInstance().success(AjaxResult.DEFAULT_SUCCESS_MESSAGE, data);
     }
 
+    /**
+     * 构建带重定向的成功Ajax响应结果
+     *
+     * @param redirect 重定向路径
+     * @return AjaxResult对象
+     */
+    public AjaxResult successWithRedirect(String redirect) {
+        return successWithRedirect(null, redirect);
+    }
 
+    /**
+     * 构建带重定向的成功Ajax响应结果，包含数据
+     *
+     * @param data     响应数据
+     * @param redirect 重定向路径
+     * @return AjaxResult对象
+     */
+    public AjaxResult successWithRedirect(Object data, String redirect) {
+        return successWithRedirect(AjaxResult.DEFAULT_SUCCESS_MESSAGE, data, redirect);
+    }
+
+    /**
+     * 构建带重定向的成功Ajax响应结果，包含消息和数据
+     *
+     * @param msg      响应消息
+     * @param data     响应数据
+     * @param redirect 重定向路径
+     * @return AjaxResult对象
+     */
+    public AjaxResult successWithRedirect(String msg, Object data, String redirect) {
+        return builder().success(msg, data).redirect(redirect).build();
+    }
 
     /**
      * 构建错误的Ajax响应结果，包含消息和数据
@@ -144,16 +190,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(String msg, Object data, WebMessageTypeEnum webMessageTypeEnum, Integer duration) {
-        var map = getInstance().custom(AjaxResult.DEFAULT_ERROR_CODE, msg, data).getMap();
-        if (webMessageTypeEnum != null) {
-            map.put("type", webMessageTypeEnum.getValue());
-        }
-        if (duration != null && duration > 0) {
-            map.put("duration", duration);
-        }
-        AjaxResult ajaxResult = new AjaxResult();
-        ajaxResult.setMap(map);
-        return ajaxResult;
+        return builder().error(msg, data).type(webMessageTypeEnum).duration(duration).build();
     }
 
     /**
@@ -164,7 +201,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(String msg, Object data) {
-        return getInstance().error(msg, data, WebMessageTypeEnum.ERROR, 10 * 1000);
+        return builder().error(msg, data).build();
     }
 
     /**
@@ -175,7 +212,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult debugError(String msg, Object data) {
-        return getInstance().custom(AjaxResult.DEBUG_ERROR_CODE, msg, data);
+        return builder().debugError(msg, data).build();
     }
 
     /**
@@ -186,7 +223,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult debugError(String msg) {
-        return getInstance().custom(AjaxResult.DEBUG_ERROR_CODE, msg, null);
+        return builder().debugError(msg).build();
     }
 
     /**
@@ -198,19 +235,7 @@ public class AjaxUtil implements IStartup {
      */
     public AjaxResult noticeError(String msg, Object data, WebMessageTypeEnum webNoticeType, Integer duration,
         String title) {
-        var map = getInstance().custom(AjaxResult.NOTICE_CODE, msg, data).getMap();
-        if (webNoticeType != null) {
-            map.put("type", webNoticeType.getValue());
-        }
-        if (duration != null && duration > 0) {
-            map.put("duration", duration);
-        }
-        if (StrUtil.isNotEmpty(title)) {
-            map.put("title", title);
-        }
-        AjaxResult ajaxResult = new AjaxResult();
-        ajaxResult.setMap(map);
-        return ajaxResult;
+        return builder().notice(title, msg, webNoticeType).duration(duration).data(data).build();
     }
 
     /**
@@ -245,7 +270,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(Object data) {
-        return getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data, WebMessageTypeEnum.ERROR, 10 * 1000);
+        return builder().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data).build();
     }
 
     @Override

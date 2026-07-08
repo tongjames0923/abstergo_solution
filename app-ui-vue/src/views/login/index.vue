@@ -177,12 +177,12 @@ export default {
               await updateRouter()
               // 确保路由更新完成后才跳转
               await this.$nextTick()
-              // 跳转到首页或重定向页面
-              this.$router.push({ path: this.redirect || '/' })
+              // 登录后始终跳转到dashboard
+              this.$router.push({ path: '/Welcome' })
             } catch (error) {
               console.error('路由更新失败:', error)
-              // 即使路由更新失败，也允许跳转，让路由守卫处理
-              this.$router.push({ path: this.redirect || '/' })
+              // 即使路由更新失败，也允许跳转到dashboard
+              this.$router.push({ path: '/Welcome' })
             }
             this.loading = false
           }).catch(() => {
