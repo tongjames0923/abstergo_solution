@@ -4,6 +4,7 @@ import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.BaseController;
+import com.tbs.web.enums.WebMessageTypeEnum;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
 
@@ -43,7 +44,8 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
      * @return 包含保存结果的AjaxResult
      */
     public AjaxResult save(T entity) {
-        return AjaxUtil.getInstance().success(getService().save(entity));
+        return AjaxUtil.builder().success(getService().save(entity)).type(WebMessageTypeEnum.SUCCESS)
+            .message("保存成功").build();
     }
 
     /**
@@ -53,7 +55,8 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
      * @return 包含删除结果的AjaxResult
      */
     public AjaxResult delete(K id) {
-        return AjaxUtil.getInstance().success(getService().deleteById(id));
+        return AjaxUtil.builder().success(getService().deleteById(id)).type(WebMessageTypeEnum.SUCCESS)
+            .message("删除成功").build();
     }
 
     /**

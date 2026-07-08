@@ -11,8 +11,8 @@
       :edit-form-config-name="userEditFormKey()"
       :edit-handler="(formData) => saveUser(formData)"
       :query-transformer="rangeQueryTransform"
-      @add-success="(data)=>$message.success(' 新增用户成功！ ')"
-      @edit-success="(data)=>$message.success(' 修改用户成功！ ')"
+      @add-success="(data)=>{}"
+      @edit-success="(data)=>{}"
     >
       <template #actions-dropdown="{ row, index }">
         <el-dropdown-item command="toggleStatus" @click.native="handleToggleStatus(row)">

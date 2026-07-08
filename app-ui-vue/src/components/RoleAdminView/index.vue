@@ -12,9 +12,9 @@
       :delete-confirm-text="deleteConfirmText"
       :editable="(row) => row.flag !== 2"
       :deleteable="(row) => row.flag !== 2"
-      @add-success="() => $message.success('新增角色成功！')"
-      @edit-success="() => $message.success('修改角色成功！')"
-      @delete-success="() => $message.success('删除角色成功！')"
+      @add-success="() => {}"
+      @edit-success="() => {}"
+      @delete-success="() => {}"
     >
       <template #actions-dropdown="{ row, index }">
         <el-dropdown-item

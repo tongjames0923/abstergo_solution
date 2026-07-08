@@ -102,6 +102,8 @@ public class SimpleSystemRoleServiceImpl
     @CacheEvict(cacheNames = "system_role", key = "#id")
     @Override
     public SystemRoleEntity deleteById(Long id) {
+        //TODO 需要验证角色是否被用户使用
+
         return super.deleteById(id);
     }
 
