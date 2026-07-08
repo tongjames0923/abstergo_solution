@@ -15,6 +15,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.tbs.app.vo.DepartmentInfoVO.convertToDepartmentVOs;
@@ -43,8 +44,17 @@ public class DefaultUserInfoService implements IUserInfoService {
         var user = CollUtil.of(users).findFirstOrNull();
 
         var builder = DefaultSystemUserDetails.builder().userName(user.getUserName()).password(user.getPassword())
-            .accountNonLocked(!SystemUserStatusEnum.LOCKED.getCode().equals(user.getFlag())).accountNonExpired(true)
-            .credentialsNonExpired(true).enabled(SystemUserStatusEnum.ACTIVITE.getCode().equals(user.getFlag()));
+            .accountNonExpired(true).credentialsNonExpired(true);
+        if (Objects.equals(SystemUserStatusEnum.ACTIVE.getCode(), user.getFlag())) {
+            builder.accountNonLocked(true).enabled(true);
+        } else if (Objects.equals(SystemUserStatusEnum.LOCKED.getCode(), user.getFlag())) {
+            builder.accountNonLocked(false).enabled(true);
+        } else if (Objects.equals(SystemUserStatusEnum.INACTIVE.getCode(), user.getFlag())) {
+            builder.accountNonLocked(true).enabled(false);
+        }
+
+
+
         var roles = userRoleRelationService.queryUserRoles(user.getId());
         if (CollUtil.isNotEmpty(roles)) {
             builder.authorities(roles.stream().map(role -> {

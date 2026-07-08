@@ -139,8 +139,8 @@ public class AuthUtil {
             .throwIt();
         AssertUtil.isTrue(!details.isAccountNonExpired()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
             .message("用户已过期").throwIt();
-        AssertUtil.isTrue(!details.isAccountNonLocked()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
-            .message("用户已锁定").throwIt();
+//        AssertUtil.isTrue(!details.isAccountNonLocked()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+//            .message("用户已锁定").throwIt();
         AssertUtil.isTrue(!details.isCredentialsNonExpired()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
             .message("用户凭证已过期").throwIt();
 

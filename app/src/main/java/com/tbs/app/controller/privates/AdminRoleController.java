@@ -140,7 +140,7 @@ public class AdminRoleController extends BaseController {
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);
         AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        user.setFlag(SystemUserStatusEnum.ACTIVITE.getCode());
+        user.setFlag(SystemUserStatusEnum.ACTIVE.getCode());
         userService.save(user);
         relationService.enableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
         return AjaxUtil.getInstance().success("激活成功", null);
@@ -161,7 +161,7 @@ public class AdminRoleController extends BaseController {
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);
         AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        user.setFlag(SystemUserStatusEnum.DISABLED.getCode());
+        user.setFlag(SystemUserStatusEnum.INACTIVE.getCode());
         userService.save(user);
         relationService.disableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
         return AjaxUtil.getInstance().success("禁用成功", null);

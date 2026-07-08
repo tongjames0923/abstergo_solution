@@ -13,15 +13,15 @@ public enum SystemUserStatusEnum implements BaseEnum<String> {
 	/**
 	 * 激活的
 	 */
-	ACTIVITE("激活的", CommonConstant.FLAG_ON),
+	ACTIVE("激活", CommonConstant.FLAG_ON),
 	/**
 	 * 被锁定的，锁定账户可登录但是无法使用需激活功能
 	 */
-	LOCKED("被锁定的", 2),
+	LOCKED("锁定", 2),
 	/**
 	 * 禁用的
 	 */
-	DISABLED("禁用的", CommonConstant.FLAG_OFF);
+	INACTIVE("禁用", CommonConstant.FLAG_OFF);
 
 	private String value;
 	private Integer code;

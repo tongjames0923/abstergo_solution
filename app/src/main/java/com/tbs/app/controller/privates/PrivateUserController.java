@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.role.IUserRoleRelationService;
@@ -9,12 +10,11 @@ import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.BaseController;
-import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
@@ -22,7 +22,6 @@ import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.uitl.AjaxUtil;
 import com.tbs.web.uitl.AuthUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -157,6 +156,7 @@ public class PrivateUserController extends BaseController {
     @Operation(summary = "设置当前部门", description = "设置当前登录用户所选部门")
     @ApiResponse(responseCode = "200", description = "成功设置当前部门",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @OnlyActiveAccountUse
     public AjaxResult setCurrentDepartment(@PathVariable Long departmentId) {
         var auth = AuthUtil.getInstance().getAuthentication();
         AssertUtil.isTrue(auth.isEmpty()).message("登录信息不存在").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
