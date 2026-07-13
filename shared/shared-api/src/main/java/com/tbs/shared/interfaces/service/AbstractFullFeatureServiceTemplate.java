@@ -4,13 +4,14 @@ import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.shared.util.PageUtil;
-import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.criteria.IPage;
 import com.tbs.sql.criteria.IQueryCriteria;
+import com.tbs.sql.mapper.IFrameworkMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,6 +40,15 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
      * @return
      */
     protected abstract Class<? extends IDelegateInvoker> pageVoBuildType();
+
+    /**
+     * 删除逻辑处理前的准备
+     *
+     * @throws FormattedRuntimeException
+     */
+    protected void deletePending(T entity) throws FormattedRuntimeException {
+
+    }
 
     /**
      * 删除逻辑处理
@@ -80,6 +90,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         if (getInstance().isDeleted(entity)) {
             return null;
         }
+        getInstance().deletePending(entity);
         var value = ValueWrapper.of(entity);
         this.auditFunction(value, DELETE);
         entity = getInstance().handleDelete(id);
