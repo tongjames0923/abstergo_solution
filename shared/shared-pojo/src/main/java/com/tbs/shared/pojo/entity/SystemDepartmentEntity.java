@@ -2,6 +2,8 @@
 package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICommonCreateAuditable;
+import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.AllArgsConstructor;
@@ -25,8 +27,8 @@ import java.util.Date;
 @NoArgsConstructor
 /**
  * 系统部门实体类 用于表示系统中的部门信息，包含部门基本信息、状态及创建更新时间等字段
- */
-public class SystemDepartmentEntity implements IBaseEntity<Long> {
+ */ public class SystemDepartmentEntity
+	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
 	/**
 	 * 部门ID
@@ -85,6 +87,7 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
 	@Column(name = "flag")
 	private Integer flag;
 
+
 	/**
      * 是否是树根节点
      */
@@ -103,5 +106,17 @@ public class SystemDepartmentEntity implements IBaseEntity<Long> {
      */
     @Transient
     private Long childrenCount;
+
+	/**
+	 * 创建者
+	 */
+	@Column(name = "create_by")
+	private Long createBy;
+
+	/**
+	 * 更新者
+	 */
+	@Column(name = "update_by")
+	private Long updateBy;
 
 }

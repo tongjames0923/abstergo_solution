@@ -40,20 +40,11 @@ public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K
     protected abstract E newEntity();
 
     /**
-     * 获取时间审计服务支持
+     * 获取审计服务支持
      *
      * @return
      */
-    protected Optional<ITimeAuditService<E, K>> getTimeAuditServiceSupport() {
-        return Optional.empty();
-    }
-
-    /**
-     * 获取操作人审计服务支持
-     *
-     * @return
-     */
-    protected Optional<IOperatorAuditService<E, K>> getOperatorAuditServiceSupport() {
+    protected Optional<IAuditService<E, K, ?>> getAuditServiceSupport() {
         return Optional.empty();
     }
 

@@ -2,6 +2,8 @@ package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICreateTimeAuditable;
+import com.tbs.shared.pojo.IUpdateTimeAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Getter;
@@ -25,7 +27,7 @@ import java.util.Date;
     @Index(name = "idx_user_id", columnList = "user_id"), @Index(name = "idx_token", columnList = "token")})
 @Slf4j
 @LogicDeleteEntity
-public class SystemLoginInfoEntity implements IBaseEntity<Long> {
+public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAuditable, IUpdateTimeAuditable {
 
     /**
      * 主键

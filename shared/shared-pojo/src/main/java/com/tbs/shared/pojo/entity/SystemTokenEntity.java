@@ -2,6 +2,8 @@ package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICreateTimeAuditable;
+import com.tbs.shared.pojo.IUpdateTimeAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Data;
@@ -24,7 +26,7 @@ import java.util.Date;
 @ToString
 @Data
 @LogicDeleteEntity(activeFlagValues = {1, -1, -2, -3}, filedName = "flag")
-public class SystemTokenEntity implements IBaseEntity<Long> {
+public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditable, IUpdateTimeAuditable {
     private static final long serialVersionUID = 1L;
     /**
      * 主键

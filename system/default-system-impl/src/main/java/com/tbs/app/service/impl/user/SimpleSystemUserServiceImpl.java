@@ -2,6 +2,7 @@ package com.tbs.app.service.impl.user;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.constant.UserServiceFeatureFlagConstants;
+import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
@@ -17,8 +18,7 @@ import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
-import com.tbs.shared.interfaces.service.ITimeAuditService;
-import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
+import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.security.user.IPasswordEncrypt;
@@ -178,8 +178,10 @@ public class SimpleSystemUserServiceImpl
         return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
     }
 
+    private static final IAuditService<SystemUserEntity, Long, Long> auditService = new DefaultAuditService<>();
+
     @Override
-    protected Optional<ITimeAuditService<SystemUserEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(new SimpleTimeAuditServiceImpl<SystemUserEntity>());
+    protected Optional<IAuditService<SystemUserEntity, Long, ?>> getAuditServiceSupport() {
+        return Optional.of(auditService);
     }
 }

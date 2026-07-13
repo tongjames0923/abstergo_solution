@@ -1,6 +1,7 @@
 package com.tbs.app.service.impl.role;
 
 import com.tbs.app.config.AppSettingProperty;
+import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.cache.expire.annotation.ExpireOn;
@@ -14,8 +15,7 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
-import com.tbs.shared.interfaces.service.ITimeAuditService;
-import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
+import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemRoleMapper;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -152,9 +152,10 @@ public class SimpleSystemRoleServiceImpl
         }
     }
 
-    @Override
-    protected Optional<ITimeAuditService<SystemRoleEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(new SimpleTimeAuditServiceImpl());
-    }
+    private static final IAuditService<SystemRoleEntity, Long, Long> auditService = new DefaultAuditService<>();
 
+    @Override
+    protected Optional<IAuditService<SystemRoleEntity, Long, ?>> getAuditServiceSupport() {
+        return Optional.of(auditService);
+    }
 }

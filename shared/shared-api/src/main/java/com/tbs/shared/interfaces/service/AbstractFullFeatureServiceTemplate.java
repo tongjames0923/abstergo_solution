@@ -151,7 +151,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     private static final int DELETE = 2;
 
     private void auditFunction(ValueWrapper<T> r, int flag) {
-        getTimeAuditServiceSupport().ifPresent((s) -> {
+        getAuditServiceSupport().ifPresent((s) -> {
             if (r.get().isPresent()) {
                 if (flag == UPDATE) {
                     r.set(s.onUpdate(r.get().get()));
@@ -162,22 +162,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
                     r.set(s.onDelete(r.get().get()));
                 }
             } else {
-                log.warn("实体数据不存在，无法处理时间审计");
-            }
-        });
-        getOperatorAuditServiceSupport().ifPresent((s) -> {
-            if (r.get().isPresent()) {
-                if (flag == UPDATE) {
-                    r.set(s.onUpdate(r.get().get()));
-                } else if (flag == CREATE) {
-                    r.set(s.onCreate(r.get().get()));
-                }
-                if (flag == DELETE) {
-                    r.set(s.onDelete(r.get().get()));
-                }
-
-            } else {
-                log.warn("实体数据不存在，无法处理操作人审计");
+                log.warn("实体数据不存在，无法处理审计");
             }
         });
     }

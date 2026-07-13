@@ -1,5 +1,6 @@
 package com.tbs.app.service.impl.token;
 
+import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.cache.expire.annotation.ExpireOn;
@@ -9,6 +10,7 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemTokenMapper;
 import com.tbs.shared.pojo.criteria.CommonTokenQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
@@ -19,6 +21,7 @@ import org.springframework.cache.annotation.Cacheable;
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
 public class DefaultSystemTokenService
@@ -99,5 +102,12 @@ public class DefaultSystemTokenService
     @Override
     public List<SystemTokenEntity> queryByToken(String token) {
         return getInstance().query(new CommonTokenQueryCriteria().setTokenEquals(token), null);
+    }
+
+    private static final DefaultAuditService<SystemTokenEntity, Long> auditService = new DefaultAuditService<>();
+
+    @Override
+    protected Optional<IAuditService<SystemTokenEntity, Long, ?>> getAuditServiceSupport() {
+        return Optional.of(auditService);
     }
 }

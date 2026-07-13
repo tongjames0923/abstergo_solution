@@ -1,6 +1,8 @@
 package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICommonCreateAuditable;
+import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Getter;
@@ -22,7 +24,7 @@ import java.util.Date;
 @Getter
 @Setter
 @ToString
-public class SystemUserEntity implements IBaseEntity<Long> {
+public class SystemUserEntity implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;
 	@Setter
 	@Id
@@ -70,5 +72,17 @@ public class SystemUserEntity implements IBaseEntity<Long> {
 	 */
 	@Column(name = "flag")
 	private Integer flag;
+
+	/**
+	 * 创建者
+	 */
+	@Column(name = "create_by")
+	private Long createBy;
+
+	/**
+	 * 更新者
+	 */
+	@Column(name = "update_by")
+	private Long updateBy;
 
 }

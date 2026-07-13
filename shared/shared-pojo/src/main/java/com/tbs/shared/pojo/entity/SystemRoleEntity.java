@@ -2,6 +2,8 @@ package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICommonCreateAuditable;
+import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.*;
@@ -22,7 +24,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, 2, 0})
-public class SystemRoleEntity implements IBaseEntity<Long> {
+public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;
 
 	/**
@@ -60,4 +62,16 @@ public class SystemRoleEntity implements IBaseEntity<Long> {
 	 */
 	@Column(name = "flag")
 	private Integer flag;
+
+	/**
+	 * 创建者
+	 */
+	@Column(name = "create_by")
+	private Long createBy;
+
+	/**
+	 * 更新者
+	 */
+	@Column(name = "update_by")
+	private Long updateBy;
 }

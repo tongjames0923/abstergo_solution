@@ -8,6 +8,6 @@ import java.io.Serializable;
  * @param <K>
  * @author tongj
  */
-public interface IBaseEntity<K> extends IIdentifiable<K>, IFlagable, ICommonTimeAuditable, Serializable {
+public interface IBaseEntity<K> extends IIdentifiable<K>, IFlagable, Serializable {
 
 }

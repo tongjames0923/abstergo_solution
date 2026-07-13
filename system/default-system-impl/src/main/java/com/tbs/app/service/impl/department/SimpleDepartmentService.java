@@ -1,5 +1,6 @@
 package com.tbs.app.service.impl.department;
 
+import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
@@ -12,8 +13,7 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemDepartmentFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
-import com.tbs.shared.interfaces.service.ITimeAuditService;
-import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
+import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import lombok.extern.slf4j.Slf4j;
@@ -154,8 +154,10 @@ public class SimpleDepartmentService
         }
     }
 
+    private static final IAuditService<SystemDepartmentEntity, Long, Long> auditService = new DefaultAuditService<>();
+
     @Override
-    protected Optional<ITimeAuditService<SystemDepartmentEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(new SimpleTimeAuditServiceImpl<>());
+    protected Optional<IAuditService<SystemDepartmentEntity, Long, ?>> getAuditServiceSupport() {
+        return Optional.of(auditService);
     }
 }

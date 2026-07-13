@@ -7,7 +7,14 @@ package com.tbs.shared.interfaces.service;
  * @param <K>
  * @author abstergo
  */
-public interface IAuditService<E, K> {
+public interface IAuditService<E, K, UK> {
+
+    /**
+     * 获取当前用户ID
+     *
+     * @return
+     */
+    UK getCurrentUserId();
 
     /**
      * 创建前

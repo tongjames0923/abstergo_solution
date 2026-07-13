@@ -2,6 +2,8 @@
 package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICommonCreateAuditable;
+import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.AllArgsConstructor;
@@ -12,6 +14,11 @@ import lombok.ToString;
 import javax.persistence.*;
 import java.util.Date;
 
+/**
+ * 公司信息
+ *
+ * @author abstergo
+ */
 @Data
 @Entity
 @Table(name = "sys_company", indexes = { @Index(name = "idx_company_name", columnList = "company_name"),
@@ -20,9 +27,8 @@ import java.util.Date;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-/**
- * 系统公司实体类 用于表示系统中的公司信息，包含公司基本信息、状态及创建更新时间等字段
- */ public class SystemCompanyEntity implements IBaseEntity<Long> {
+public class SystemCompanyEntity
+	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
 	/**
 	 * 公司ID
@@ -82,5 +88,17 @@ import java.util.Date;
      */
     @Transient
     private Long childrenCount;
+
+	/**
+	 * 创建者
+	 */
+	@Column(name = "create_by")
+	private Long createBy;
+
+	/**
+	 * 更新者
+	 */
+	@Column(name = "update_by")
+	private Long updateBy;
 
 }

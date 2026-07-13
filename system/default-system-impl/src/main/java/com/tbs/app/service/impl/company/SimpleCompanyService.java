@@ -1,6 +1,7 @@
 package com.tbs.app.service.impl.company;
 
 import com.tbs.app.account.annotation.OnlyActiveAccountUse;
+import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
@@ -12,8 +13,7 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
-import com.tbs.shared.interfaces.service.ITimeAuditService;
-import com.tbs.shared.interfaces.service.SimpleTimeAuditServiceImpl;
+import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
@@ -44,7 +44,7 @@ public class SimpleCompanyService
      */
     public static final SystemCompanyEntity SYSTEM_COMPANY =
         new SystemCompanyEntity(1L, "系统公司", "系统公司", "系统公司", null, null, null,
-            SystemCompanyFlagEnum.SYSTEMED.getCode(), 0L);
+            SystemCompanyFlagEnum.SYSTEMED.getCode(), 0L, null, null);
 
     @Resource
     private SystemCompanyMapper mapper;
@@ -138,8 +138,10 @@ public class SimpleCompanyService
         return true;
     }
 
+    private static final IAuditService<SystemCompanyEntity, Long, Long> auditService = new DefaultAuditService<>();
+
     @Override
-    protected Optional<ITimeAuditService<SystemCompanyEntity, Long>> getTimeAuditServiceSupport() {
-        return Optional.of(new SimpleTimeAuditServiceImpl<SystemCompanyEntity>());
+    protected Optional<IAuditService<SystemCompanyEntity, Long, ?>> getAuditServiceSupport() {
+        return Optional.of(auditService);
     }
 }

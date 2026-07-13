@@ -1,15 +1,14 @@
 package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICommonCreateAuditable;
+import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Data;
 import lombok.ToString;
 
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -27,7 +26,8 @@ import java.util.Date;
 @Entity
 @Data
 @ToString
-public class UserRoleRelationEntity implements IBaseEntity<Long> {
+public class UserRoleRelationEntity
+	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;
 	@javax.persistence.Id
 	@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
@@ -60,4 +60,16 @@ public class UserRoleRelationEntity implements IBaseEntity<Long> {
 	 * 状态标记位，用于标识该关系记录的有效性或逻辑删除状态
 	 */
 	private Integer flag;
+
+	/**
+	 * 创建者
+	 */
+	@Column(name = "create_by")
+	private Long createBy;
+
+	/**
+	 * 更新者
+	 */
+	@Column(name = "update_by")
+	private Long updateBy;
 }
