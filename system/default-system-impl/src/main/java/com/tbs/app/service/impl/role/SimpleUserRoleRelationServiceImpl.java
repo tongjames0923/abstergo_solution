@@ -114,4 +114,19 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
                 CollUtil.isIn(role.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(),
                     SystemRoleFlagEnum.SYSTEMED.getCode())).map(role -> role.getRole()).collect(Collectors.toList());
     }
+
+    @Override
+    public List<SystemUserEntity> queryUsersByRole(@NotNull Long roleId) {
+        return wrapper.query().where().equal(UserRoleRelationEntity::getRoleId, roleId)
+            .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetch().stream()
+            .map(relation -> systemUserService.queryById(relation.getUserId())).filter(user -> user != null)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean isRoleInUsed(@NotNull Long roleId) {
+        var p = wrapper.query().where().equal(UserRoleRelationEntity::getRoleId, roleId)
+            .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetchOne();
+        return p != null;
+    }
 }

@@ -2,10 +2,13 @@ package com.tbs.app.service.impl.role;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.role.ISystemRoleService;
+import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.constant.RoleConstants;
@@ -18,6 +21,7 @@ import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -34,6 +38,10 @@ public class SimpleSystemRoleServiceImpl
 
     @Resource
     SystemRoleMapper systemRoleMapper;
+
+    @Resource
+    @Lazy
+    private IUserRoleRelationService userRoleRelationService;
 
     @Resource
     private AppSettingProperty property;
@@ -99,11 +107,16 @@ public class SimpleSystemRoleServiceImpl
         return oldOne;
     }
 
+    @Override
+    protected void deletePending(SystemRoleEntity entity) throws FormattedRuntimeException {
+        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(entity.getFlag()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("系统角色不允许删除").throwIt();
+        AssertUtil.isTrue(userRoleRelationService.isRoleInUsed(entity.getId()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("角色正在被用户使用，不允许删除").throwIt();
+    }
     @CacheEvict(cacheNames = "system_role", key = "#id")
     @Override
     public SystemRoleEntity deleteById(Long id) {
-        //TODO 需要验证角色是否被用户使用
-
         return super.deleteById(id);
     }
 

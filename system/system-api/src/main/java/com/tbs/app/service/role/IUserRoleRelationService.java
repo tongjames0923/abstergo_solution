@@ -1,6 +1,7 @@
 package com.tbs.app.service.role;
 
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
+import com.tbs.shared.pojo.entity.SystemUserEntity;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
@@ -43,4 +44,21 @@ public interface IUserRoleRelationService {
 	 * @return
 	 */
 	List<String> queryRoles(@NotNull Long userId);
+
+	/**
+	 * 查询角色用户
+	 *
+	 * @param roleId
+	 * @return
+	 */
+	List<SystemUserEntity> queryUsersByRole(@NotNull Long roleId);
+
+	/**
+	 * 判断角色是否被使用
+	 *
+	 * @param roleId
+	 * @return
+	 */
+	boolean isRoleInUsed(@NotNull Long roleId);
+
 }
