@@ -17,6 +17,8 @@ import com.tbs.sql.model.where.WhereNode;
 import com.tbs.sql.util.SqlUtils;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * WHERE子句实现类，采用组合模式实现。
@@ -34,6 +36,7 @@ public class EntityWhereClause<T> implements IWhereClause<T> {
     private final WhereCompose currentCompose = new WhereCompose();
     private final Class<? extends T> targetType;
     private ConnectorEnum currentConnector = ConnectorEnum.AND;
+    private final Map<String, Object> subQueryParams = new HashMap<>();
 
     // 子句实例（懒加载）
     private IComparisonClause<T> comparisonClause;
@@ -41,6 +44,7 @@ public class EntityWhereClause<T> implements IWhereClause<T> {
     private IInClause<T> inClause;
     private INullableClause<T> nullableClause;
     private ISubConditionClause<T> subConditionClause;
+    private ISubQueryClause<T> subQueryClause;
     private ILogicClause<T> logicClause;
 
     /**
@@ -103,6 +107,14 @@ public class EntityWhereClause<T> implements IWhereClause<T> {
         return logicClause;
     }
 
+    @Override
+    public ISubQueryClause<T> subQuery() {
+        if (subQueryClause == null) {
+            subQueryClause = new EntitySubQueryClause<>(this);
+        }
+        return subQueryClause;
+    }
+
     // ============ 核心方法 ============
 
     @Override
@@ -133,6 +145,26 @@ public class EntityWhereClause<T> implements IWhereClause<T> {
      */
     public WhereCompose getCurrentCompose() {
         return currentCompose;
+    }
+
+    /**
+     * 获取子查询参数Map。
+     *
+     * @return 子查询参数Map
+     */
+    public Map<String, Object> getSubQueryParams() {
+        return subQueryParams;
+    }
+
+    /**
+     * 添加子查询参数。
+     *
+     * @param params 子查询参数Map
+     */
+    public void addSubQueryParams(Map<String, Object> params) {
+        if (params != null) {
+            subQueryParams.putAll(params);
+        }
     }
 
     /**

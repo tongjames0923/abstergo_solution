@@ -8,12 +8,14 @@ import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.LambdaUtil;
 import com.tbs.sql.builder.EntitySqlDriver;
 import com.tbs.sql.builder.ImportedSqlBuildContext;
+import com.tbs.sql.builder.SqlWithParams;
 import com.tbs.sql.dsl.IOrderClause;
 import com.tbs.sql.dsl.IPageClause;
 import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.dsl.IWhereClause;
 import com.tbs.sql.mapper.impl.FetchMapper;
 import com.tbs.sql.model.group.GroupModel;
+import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.SqlUtils;
 
 import java.lang.reflect.Field;
@@ -88,6 +90,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
         ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
+        mergeSubQueryParams(sqlContext);
         return getFetchMapper().<T>fetch(sqlContext, driver, (Class<T>) entity.getClass());
     }
 
@@ -100,6 +103,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
         ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
+        mergeSubQueryParams(sqlContext);
         driver.setLimit(topOne(this).getLimit());
         return CollUtil.of(getFetchMapper().<T>fetch(sqlContext, driver, (Class<T>) entity.getClass())).findFirstOrNull();
     }
@@ -113,6 +117,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
         ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
+        mergeSubQueryParams(sqlContext);
         return getFetchMapper().count(sqlContext, driver);
     }
 
@@ -123,5 +128,44 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
         driver.setWhereInfo(whereProvider != null ? whereProvider.getCompose() : null);
         driver.setLimit(pageProvider != null ? pageProvider.getLimit() : null);
         driver.setOrders(orderProvider != null ? orderProvider.getSqlOrders() : null);
+    }
+
+    @Override
+    public String toSql() {
+        if (entity == null) {
+            return "SELECT 1 WHERE 1=0";
+        }
+        EntitySqlDriver driver = createDriver();
+        ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
+        sqlContext.rebuild();
+        configureDriver(driver);
+        mergeSubQueryParams(sqlContext);
+        return QueryEngine.getInstance().driveSql(sqlContext, driver);
+    }
+
+    @Override
+    public SqlWithParams toSqlWithParams() {
+        if (entity == null) {
+            return new SqlWithParams("SELECT 1 WHERE 1=0", new java.util.HashMap<>());
+        }
+        EntitySqlDriver driver = createDriver();
+        ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
+        sqlContext.rebuild();
+        configureDriver(driver);
+        mergeSubQueryParams(sqlContext);
+        String sql = QueryEngine.getInstance().driveSql(sqlContext, driver);
+        return new SqlWithParams(sql, sqlContext.getSqlParams());
+    }
+
+    /**
+     * 合并子查询参数到SQL上下文。
+     *
+     * @param sqlContext SQL构建上下文
+     */
+    private void mergeSubQueryParams(ImportedSqlBuildContext sqlContext) {
+        if (whereProvider instanceof EntityWhereClause) {
+            EntityWhereClause<?> whereClause = (EntityWhereClause<?>) whereProvider;
+            sqlContext.getSqlParams().putAll(whereClause.getSubQueryParams());
+        }
     }
 }

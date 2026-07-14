@@ -72,5 +72,9 @@ public enum ContrastEnum {
     NOT_LIKE,
     IN,
     NOT_IN,
-    LIKE
+    LIKE,
+    EXISTS,
+    NOT_EXISTS,
+    IN_SUBQUERY,
+    NOT_IN_SUBQUERY
 }
