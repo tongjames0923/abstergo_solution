@@ -21,6 +21,7 @@ import com.tbs.sql.model.where.WhereCompose;
  *   <li>{@link IInClause} - 集合条件（IN、NOT IN）</li>
  *   <li>{@link INullableClause} - 空值判断条件</li>
  *   <li>{@link ISubConditionClause} - 子条件组合</li>
+ *   <li>{@link ISubQueryClause} - 子查询条件（EXISTS、IN子查询）</li>
  *   <li>{@link ILogicClause} - 逻辑连接符</li>
  * </ul>
  *
@@ -90,6 +91,7 @@ import com.tbs.sql.model.where.WhereCompose;
  * @see IInClause
  * @see INullableClause
  * @see ISubConditionClause
+ * @see ISubQueryClause
  * @see ILogicClause
  */
 public interface IWhereClause<T> extends IFeatureProviderPour<T> {
@@ -137,6 +139,13 @@ public interface IWhereClause<T> extends IFeatureProviderPour<T> {
      * @return 逻辑连接子句实例
      */
     ILogicClause<T> logic();
+
+    /**
+     * 获取子查询条件子句。
+     *
+     * @return 子查询条件子句实例
+     */
+    ISubQueryClause<T> subQuery();
 
     // ============ 核心方法 ============
 
@@ -362,6 +371,52 @@ public interface IWhereClause<T> extends IFeatureProviderPour<T> {
      */
     default <P> IWhereClause<T> notIn(SFunction<T, P> acc, P values) {
         return in().notIn(acc, values);
+    }
+
+    // ============ 子查询默认方法 ============
+
+    /**
+     * EXISTS子查询，判断子查询是否返回结果。
+     *
+     * @param subQuery 子查询构建器
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default IWhereClause<T> exists(IQueryBuilder<?> subQuery) {
+        return subQuery().exists(subQuery);
+    }
+
+    /**
+     * NOT EXISTS子查询，判断子查询是否不返回结果。
+     *
+     * @param subQuery 子查询构建器
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default IWhereClause<T> notExists(IQueryBuilder<?> subQuery) {
+        return subQuery().notExists(subQuery);
+    }
+
+    /**
+     * IN子查询，判断字段值是否在子查询结果中。
+     *
+     * @param acc      字段引用函数
+     * @param subQuery 子查询构建器
+     * @param <P>      字段类型
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default <P> IWhereClause<T> inSubQuery(SFunction<T, P> acc, IQueryBuilder<?> subQuery) {
+        return subQuery().in(acc, subQuery);
+    }
+
+    /**
+     * NOT IN子查询，判断字段值是否不在子查询结果中。
+     *
+     * @param acc      字段引用函数
+     * @param subQuery 子查询构建器
+     * @param <P>      字段类型
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default <P> IWhereClause<T> notInSubQuery(SFunction<T, P> acc, IQueryBuilder<?> subQuery) {
+        return subQuery().notIn(acc, subQuery);
     }
 
     // ============ 兼容旧枚举名的连接器枚举 ============

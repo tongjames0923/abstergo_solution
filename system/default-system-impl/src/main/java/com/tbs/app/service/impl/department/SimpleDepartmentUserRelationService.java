@@ -11,6 +11,7 @@ import com.tbs.shared.mapper.SystemUserDepartmentRelationMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.entity.SystemUserDepartmentRelationEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
+import com.tbs.sql.service.QueryEngine;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -38,7 +39,10 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     public List<SystemDepartmentEntity> queryUserDepartments(@NotNull Long userId) {
         SystemUserEntity user = userService.queryById(userId);
         AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        return departmentRelationMapper.queryUserDepartments(userId);
+
+        return QueryEngine.getEntityQueryWrapper(new SystemDepartmentEntity()).query().where().subQuery().exists(
+            QueryEngine.getEntityQueryWrapper(new SystemUserDepartmentRelationEntity()).query().where()
+                .equal(SystemUserDepartmentRelationEntity::getUserId, userId).pour()).pour().fetch();
     }
 
     @Override

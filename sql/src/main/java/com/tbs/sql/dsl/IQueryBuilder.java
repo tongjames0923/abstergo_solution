@@ -3,6 +3,7 @@ package com.tbs.sql.dsl;
 import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
+import com.tbs.sql.builder.SqlWithParams;
 
 import java.util.Optional;
 
@@ -125,4 +126,24 @@ public interface IQueryBuilder<T> extends IQueryFetcher<T> {
      * @return 当前查询构建器实例，支持链式调用
      */
     <P> IQueryBuilder<T> groupBy(SFunction<T, P> accessor);
+
+    /**
+     * 将当前查询构建器转换为SQL字符串（用于子查询）。
+     *
+     * <p>该方法将当前查询条件生成为SELECT SQL字符串，可用于子查询场景。
+     * 生成的SQL不包含分页和排序信息，仅包含SELECT和WHERE部分。</p>
+     *
+     * @return SQL字符串
+     */
+    String toSql();
+
+    /**
+     * 将当前查询构建器转换为SQL字符串及其参数（用于子查询）。
+     *
+     * <p>该方法将当前查询条件生成为SELECT SQL字符串及其参数映射，
+     * 可用于子查询场景，支持参数传递到父查询。</p>
+     *
+     * @return SQL语句及其参数的封装对象
+     */
+    SqlWithParams toSqlWithParams();
 }
