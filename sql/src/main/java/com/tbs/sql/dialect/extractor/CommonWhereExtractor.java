@@ -8,8 +8,8 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.converter.IValueConverter;
 import com.tbs.sql.dialect.IWhereExtractor;
-import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.enums.ConnectorEnum;
+import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.model.where.WhereCompose;
 import com.tbs.sql.model.where.WhereInfo;
 import com.tbs.sql.model.where.WhereNode;
@@ -131,7 +131,7 @@ public class CommonWhereExtractor implements IWhereExtractor {
                         "(" + String.join(",", values) + ")");
                 }
             } else {
-                return info.getContrast() == ContrastEnum.IN ? " (1 = 0) " : " (1 = 1) ";
+                return "(1=1)";
             }
         }
 
