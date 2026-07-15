@@ -17,7 +17,6 @@ import com.tbs.sql.properties.SqlProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 
@@ -41,7 +40,7 @@ public class CommonWhereExtractor implements IWhereExtractor {
     @Resource
     private SqlProperty sqlProperty;
 
-    private List<IValueConverter> valueConverters;
+    private volatile List<IValueConverter> valueConverters;
 
     /**
      * 构造函数，指定方言名称用于日志输出。
@@ -50,20 +49,6 @@ public class CommonWhereExtractor implements IWhereExtractor {
      */
     public CommonWhereExtractor(String dialectName) {
         this.dialectName = dialectName;
-    }
-
-    @PostConstruct
-    void init() {
-        if (sqlProperty.isUseRawValue()) {
-            log.warn("[TBS-SQL-{}] useRawValue已启用，SQL参数将直接拼接，存在SQL注入风险！", dialectName);
-        }
-        try {
-            valueConverters = SpringUtil.getBeansOfType(IValueConverter.class).values().stream()
-                .sorted(Comparator.comparingInt(IValueConverter::getPriority))
-                .collect(java.util.stream.Collectors.toList());
-        } catch (Exception e) {
-            valueConverters = new ArrayList<>();
-        }
     }
 
     @Nullable
@@ -205,6 +190,21 @@ public class CommonWhereExtractor implements IWhereExtractor {
 
     @Override
     public List<IValueConverter> getValueConverters() {
+        if (valueConverters != null) {
+            return valueConverters;
+        }
+        synchronized (this) {
+            if (valueConverters != null) {
+                return valueConverters;
+            }
+            try {
+                valueConverters = SpringUtil.getBeansOfType(IValueConverter.class).values().stream()
+                    .sorted(Comparator.comparingInt(IValueConverter::getPriority))
+                    .collect(java.util.stream.Collectors.toList());
+            } catch (Exception e) {
+                valueConverters = new ArrayList<>();
+            }
+        }
         return valueConverters;
     }
 
