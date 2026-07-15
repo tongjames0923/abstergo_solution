@@ -54,7 +54,6 @@ import java.util.List;
  * @see com.tbs.sql.metadata.EntityMetadataExtractor
  */
 @Data
-@AllArgsConstructor
 @NoArgsConstructor
 public class SelectInfoModel implements Serializable {
     private static final long serialVersionUID = 1L;
@@ -62,20 +61,34 @@ public class SelectInfoModel implements Serializable {
     private String rawSql;
     /** 表名 */
     private String tableName;
+    /** 表别名 */
+    private String tableAlias;
     /** 字段列表 */
     List<SelectItemModel> fieldList;
     /** 实体类 */
     private Class<?> entityClass;
 
+    public SelectInfoModel(String rawSql, String tableName, String tableAlias, List<SelectItemModel> fieldList, Class<?> entityClass) {
+        this.rawSql = rawSql;
+        this.tableName = tableName;
+        this.tableAlias = tableAlias;
+        this.fieldList = fieldList;
+        this.entityClass = entityClass;
+    }
+
     public static SelectInfoModel rawSql(String sql) {
-        return new SelectInfoModel(sql, null, null, null);
+        return new SelectInfoModel(sql, null, null, null, null);
     }
 
     public static SelectInfoModel tableName(String tableName) {
-        return new SelectInfoModel(null, tableName, null, null);
+        return new SelectInfoModel(null, tableName, null, null, null);
+    }
+
+    public static SelectInfoModel tableNameWithAlias(String tableName, String tableAlias) {
+        return new SelectInfoModel(null, tableName, tableAlias, null, null);
     }
 
     public static SelectInfoModel custom(String tableName, List<SelectItemModel> fieldList) {
-        return new SelectInfoModel(null, tableName, fieldList, null);
+        return new SelectInfoModel(null, tableName, null, fieldList, null);
     }
 }

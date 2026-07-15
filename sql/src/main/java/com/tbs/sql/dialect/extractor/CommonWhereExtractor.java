@@ -104,6 +104,7 @@ public class CommonWhereExtractor implements IWhereExtractor {
         String key = makeParamKey(id);
         Object val = info.getFieldValue();
         if (StrUtil.isNotEmpty(info.getFieldValueStr())) val = info.getFieldValueStr();
+        String fieldName = info.getFieldName();
 
         if ((info.getContrast() == ContrastEnum.IN || info.getContrast() == ContrastEnum.NOT_IN)
             && val instanceof Collection) {
@@ -117,7 +118,7 @@ public class CommonWhereExtractor implements IWhereExtractor {
                         placeholders.add("#{_prs." + itemKey + "}");
                         paramMap.put(itemKey, item);
                     }
-                    return String.format(" (%s %s %s) ", info.getFieldName(),
+                    return String.format(" (%s %s %s) ", fieldName,
                         contrast(info.getContrast()),
                         "(" + String.join(",", placeholders) + ")");
                 } else {
@@ -125,17 +126,17 @@ public class CommonWhereExtractor implements IWhereExtractor {
                     for (Object item : collection) {
                         values.add("'" + escapeSqlString(convert(item)) + "'");
                     }
-                    return String.format(" (%s %s %s) ", info.getFieldName(),
+                    return String.format(" (%s %s %s) ", fieldName,
                         contrast(info.getContrast()),
                         "(" + String.join(",", values) + ")");
                 }
             } else {
-                return info.getContrast() == ContrastEnum.IN ? " (1 = 1) " : " (1 = 1) ";
+                return info.getContrast() == ContrastEnum.IN ? " (1 = 0) " : " (1 = 1) ";
             }
         }
 
         if (info.getContrast() == ContrastEnum.IS_NULL || info.getContrast() == ContrastEnum.IS_NOT_NULL) {
-            return String.format(" (%s %s) ", info.getFieldName(), contrast(info.getContrast()));
+            return String.format(" (%s %s) ", fieldName, contrast(info.getContrast()));
         }
 
         String valStr;
@@ -148,7 +149,7 @@ public class CommonWhereExtractor implements IWhereExtractor {
             valStr = contrastStrSet(info.getContrast(), valStr);
             paramMap.put(key, valStr);
         }
-        return String.format(" (%s %s %s) ", info.getFieldName(), contrast(info.getContrast()), valStr);
+        return String.format(" (%s %s %s) ", fieldName, contrast(info.getContrast()), valStr);
     }
 
     private String extraWhereSql(WhereCompose compose, Long[] id, Map<String, Object> paramMap) {
@@ -208,6 +209,6 @@ public class CommonWhereExtractor implements IWhereExtractor {
     }
 
     String makeParamKey(Long id) {
-        return String.format("p%d", id);
+        return String.format("param_%d", id);
     }
 }

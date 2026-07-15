@@ -26,7 +26,12 @@ public class CommonSelectExtractor implements ISelectExtractor {
         if (StrUtil.isNotEmpty(infoModel.getRawSql())) return infoModel.getRawSql();
         AssertUtil.isTrue(StrUtil.isEmpty(infoModel.getTableName()),
             () -> new SqlExtractionException("tableName can not be null", this));
-        if (CollUtil.isEmpty(infoModel.getFieldList())) return "SELECT * FROM " + infoModel.getTableName();
+        
+        String tableName = infoModel.getTableName();
+        String tableAlias = infoModel.getTableAlias();
+        String fromClause = buildFromClause(tableName, tableAlias);
+        
+        if (CollUtil.isEmpty(infoModel.getFieldList())) return "SELECT * FROM " + fromClause;
         StringBuilder sb = new StringBuilder("SELECT ");
         for (SelectItemModel item : infoModel.getFieldList()) {
             AssertUtil.notNull(item, () -> new SqlExtractionException("SelectItemModel can not be null", this));
@@ -37,6 +42,20 @@ public class CommonSelectExtractor implements ISelectExtractor {
             sb.append(",");
         }
         String sql = sb.substring(0, sb.length() - 1);
-        return String.format("%s FROM %s", sql, infoModel.getTableName());
+        return String.format("%s FROM %s", sql, fromClause);
+    }
+
+    /**
+     * 构建FROM子句，支持表别名。
+     *
+     * @param tableName 表名
+     * @param tableAlias 表别名，可以为null
+     * @return FROM子句
+     */
+    private String buildFromClause(String tableName, String tableAlias) {
+        if (StrUtil.isNotEmpty(tableAlias)) {
+            return tableName + " AS " + tableAlias;
+        }
+        return tableName;
     }
 }

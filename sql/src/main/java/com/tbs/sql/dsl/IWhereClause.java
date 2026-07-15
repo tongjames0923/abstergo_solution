@@ -419,6 +419,50 @@ public interface IWhereClause<T> extends IFeatureProviderPour<T> {
         return subQuery().notIn(acc, subQuery);
     }
 
+    /**
+     * EXISTS子查询（带关联条件），判断子查询是否返回结果。
+     *
+     * @param subQuery      子查询构建器
+     * @param joinCondition 关联条件
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default IWhereClause<T> exists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?> joinCondition) {
+        return subQuery().exists(subQuery, joinCondition);
+    }
+
+    /**
+     * EXISTS子查询（带多个关联条件），判断子查询是否返回结果。
+     *
+     * @param subQuery       子查询构建器
+     * @param joinConditions 关联条件数组
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default IWhereClause<T> exists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?>... joinConditions) {
+        return subQuery().exists(subQuery, joinConditions);
+    }
+
+    /**
+     * NOT EXISTS子查询（带关联条件），判断子查询是否不返回结果。
+     *
+     * @param subQuery      子查询构建器
+     * @param joinCondition 关联条件
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default IWhereClause<T> notExists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?> joinCondition) {
+        return subQuery().notExists(subQuery, joinCondition);
+    }
+
+    /**
+     * NOT EXISTS子查询（带多个关联条件），判断子查询是否不返回结果。
+     *
+     * @param subQuery       子查询构建器
+     * @param joinConditions 关联条件数组
+     * @return 当前WHERE子句实例，支持链式调用
+     */
+    default IWhereClause<T> notExists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?>... joinConditions) {
+        return subQuery().notExists(subQuery, joinConditions);
+    }
+
     // ============ 兼容旧枚举名的连接器枚举 ============
 
     /**

@@ -11,6 +11,7 @@ import com.tbs.shared.mapper.SystemUserDepartmentRelationMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.entity.SystemUserDepartmentRelationEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
+import com.tbs.sql.dsl.clause.JoinCondition;
 import com.tbs.sql.service.QueryEngine;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
@@ -42,7 +43,9 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
 
         return QueryEngine.getEntityQueryWrapper(new SystemDepartmentEntity()).query().where().subQuery().exists(
             QueryEngine.getEntityQueryWrapper(new SystemUserDepartmentRelationEntity()).query().where()
-                .equal(SystemUserDepartmentRelationEntity::getUserId, userId).pour()).pour().fetch();
+                .equal(SystemUserDepartmentRelationEntity::getUserId, userId).pour(),
+                JoinCondition.of(SystemUserDepartmentRelationEntity::getDepartmentId, SystemDepartmentEntity::getId)).pour()
+            .fetch();
     }
 
     @Override

@@ -37,6 +37,7 @@ public class EntityWhereClause<T> implements IWhereClause<T> {
     private final Class<? extends T> targetType;
     private ConnectorEnum currentConnector = ConnectorEnum.AND;
     private final Map<String, Object> subQueryParams = new HashMap<>();
+    private int subQueryCounter = 0;
 
     // 子句实例（懒加载）
     private IComparisonClause<T> comparisonClause;
@@ -165,6 +166,15 @@ public class EntityWhereClause<T> implements IWhereClause<T> {
         if (params != null) {
             subQueryParams.putAll(params);
         }
+    }
+
+    /**
+     * 获取并递增子查询计数器。
+     *
+     * @return 当前子查询索引
+     */
+    public int nextSubQueryIndex() {
+        return subQueryCounter++;
     }
 
     /**

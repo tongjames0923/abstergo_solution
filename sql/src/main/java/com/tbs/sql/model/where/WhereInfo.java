@@ -29,6 +29,8 @@ public class WhereInfo implements Serializable {
     private ContrastEnum contrast;
     /** 字段所属表名 */
     private String tableName;
+    /** 字段所属表别名 */
+    private String tableAlias;
     /** 原始SQL（若存在则直接使用） */
     private String rawSql;
     /** 是否使用安全模式 */

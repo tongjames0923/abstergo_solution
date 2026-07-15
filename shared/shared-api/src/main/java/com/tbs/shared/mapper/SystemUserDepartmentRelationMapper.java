@@ -17,16 +17,6 @@ import java.util.List;
 public interface SystemUserDepartmentRelationMapper extends IFrameworkMapper<SystemUserDepartmentRelationEntity, Long> {
 
     /**
-     * 查询用户部门
-     *
-     * @param userId 用户ID
-     * @return 部门列表
-     */
-    @Select(
-        "SELECT sd.* FROM sys_department sd INNER JOIN system_user_department_relation sudr ON sudr.user_id=#{userId} AND sudr.department_id=sd.id WHERE sd.id IS NOT NULL;")
-    List<SystemDepartmentEntity> queryUserDepartments(@NotNull Long userId);
-
-    /**
      * 查询部门用户
      *
      * @param departmentId 部门ID

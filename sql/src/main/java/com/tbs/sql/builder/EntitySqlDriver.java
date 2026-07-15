@@ -1,6 +1,7 @@
 package com.tbs.sql.builder;
 
 import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.model.group.GroupModel;
@@ -8,6 +9,7 @@ import com.tbs.sql.model.limit.LimitModel;
 import com.tbs.sql.model.order.OrderInfo;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.where.WhereCompose;
+import com.tbs.sql.util.SqlUtils;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -62,10 +64,13 @@ public class EntitySqlDriver extends AbstractSqlDriver {
     private WhereCompose compose = new WhereCompose();
     private LimitModel limit = new LimitModel();
     private List<OrderInfo> orders = new ArrayList<>();
+    /** 是否为主查询（主查询使用main_别名，子查询不使用） */
+    private boolean mainQuery = true;
 
     public EntitySqlDriver setWhereInfo(WhereCompose compose) { this.compose = compose; return this; }
     public EntitySqlDriver setLimit(LimitModel limit) { this.limit = limit; return this; }
     public EntitySqlDriver setOrders(List<OrderInfo> orders) { this.orders = orders; return this; }
+    public EntitySqlDriver setMainQuery(boolean mainQuery) { this.mainQuery = mainQuery; return this; }
 
     @Override
     protected SelectInfoModel getSelectInfo(SqlBuildContext context) {
@@ -73,7 +78,15 @@ public class EntitySqlDriver extends AbstractSqlDriver {
         if (BeanUtil.isBaseFrom(context.getEntityClass(), IQueryCriteria.class)) {
             selectInfoModel = ((IQueryCriteria) context.getSqlEntity()).getSelectSQLInfo();
         } else {
-            selectInfoModel = EntityMetadataExtractor.pullFromClass(context.getEntityClass());
+            // 创建副本，避免修改缓存中的对象
+            SelectInfoModel cached = EntityMetadataExtractor.pullFromClass(context.getEntityClass());
+            selectInfoModel = new SelectInfoModel(
+                cached.getRawSql(),
+                cached.getTableName(),
+                cached.getTableAlias(),
+                cached.getFieldList(),
+                cached.getEntityClass()
+            );
         }
         selectInfoModel.setEntityClass(context.getEntityClass());
         return selectInfoModel;

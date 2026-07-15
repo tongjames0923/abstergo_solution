@@ -149,6 +149,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
             return new SqlWithParams("SELECT 1 WHERE 1=0", new java.util.HashMap<>());
         }
         EntitySqlDriver driver = createDriver();
+        driver.setMainQuery(false); // 子查询不使用main_别名
         ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
@@ -159,6 +160,9 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
 
     /**
      * 合并子查询参数到SQL上下文。
+     *
+     * <p>子查询和父查询都有独立的参数计数器，参数键可能冲突（如都是p0）。
+     * 因此在合并时，需要重新映射子查询的参数键，使其与SQL中的占位符一致。</p>
      *
      * @param sqlContext SQL构建上下文
      */

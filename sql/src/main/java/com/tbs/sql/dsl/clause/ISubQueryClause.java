@@ -103,4 +103,48 @@ public interface ISubQueryClause<T> {
      * @return WHERE子句实例，支持链式调用
      */
     <P> IWhereClause<T> notIn(SFunction<T, P> acc, IQueryBuilder<?> subQuery);
+
+    /**
+     * EXISTS子查询（带关联条件），判断子查询是否返回结果。
+     *
+     * <p>生成SQL: EXISTS (SELECT ... FROM ... WHERE ... AND sub.field = main.field)</p>
+     *
+     * @param subQuery      子查询构建器
+     * @param joinCondition 关联条件
+     * @return WHERE子句实例，支持链式调用
+     */
+    IWhereClause<T> exists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?> joinCondition);
+
+    /**
+     * EXISTS子查询（带多个关联条件），判断子查询是否返回结果。
+     *
+     * <p>生成SQL: EXISTS (SELECT ... FROM ... WHERE ... AND sub.field1 = main.field1 AND sub.field2 = main.field2)</p>
+     *
+     * @param subQuery       子查询构建器
+     * @param joinConditions 关联条件数组
+     * @return WHERE子句实例，支持链式调用
+     */
+    IWhereClause<T> exists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?>... joinConditions);
+
+    /**
+     * NOT EXISTS子查询（带关联条件），判断子查询是否不返回结果。
+     *
+     * <p>生成SQL: NOT EXISTS (SELECT ... FROM ... WHERE ... AND sub.field = main.field)</p>
+     *
+     * @param subQuery      子查询构建器
+     * @param joinCondition 关联条件
+     * @return WHERE子句实例，支持链式调用
+     */
+    IWhereClause<T> notExists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?> joinCondition);
+
+    /**
+     * NOT EXISTS子查询（带多个关联条件），判断子查询是否不返回结果。
+     *
+     * <p>生成SQL: NOT EXISTS (SELECT ... FROM ... WHERE ... AND sub.field1 = main.field1 AND sub.field2 = main.field2)</p>
+     *
+     * @param subQuery       子查询构建器
+     * @param joinConditions 关联条件数组
+     * @return WHERE子句实例，支持链式调用
+     */
+    IWhereClause<T> notExists(IQueryBuilder<?> subQuery, JoinCondition<?, ?, ?>... joinConditions);
 }
