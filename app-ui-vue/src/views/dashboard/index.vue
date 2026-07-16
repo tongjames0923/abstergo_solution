@@ -358,7 +358,7 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 /* ── Base ── */
 .welcome {
   position: relative;
-  min-height: 100%;
+  min-height: calc(100vh - 44px);
   background: $bg;
   font-family: $font-body;
   color: $text-1;
@@ -430,16 +430,16 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 .inner {
   position: relative;
   z-index: 1;
-  max-width: 1180px;
-  margin: 0 auto;
-  padding: 24px 32px 28px;
+  max-width: 100%;
+  margin: 0;
+  padding: 16px 20px 20px;
   display: flex;
   flex-direction: column;
   min-height: 100%;
   box-sizing: border-box;
 
   @media (max-width: 768px) {
-    padding: 16px 16px 24px;
+    padding: 12px 12px 16px;
   }
 }
 

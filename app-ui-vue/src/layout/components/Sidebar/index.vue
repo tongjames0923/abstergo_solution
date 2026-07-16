@@ -86,53 +86,50 @@ export default {
 <style lang="scss" scoped>
 @import "~@/styles/variables.scss";
 .sidebar-container-macos {
-  background-color: $menuBg;
-  border-radius: $sidebarBorderRadius;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  margin: 8px;
-  padding: $sidebarPadding;
-  height: calc(100vh - 16px);
+  background-color: #ffffff;
+  border-radius: 0;
+  box-shadow: none;
+  margin: 0;
+  padding: 0;
+  height: 100vh;
   overflow: hidden;
+  border-right: 1px solid #eaeaea;
 }
 
 .sidebar-menu-macos {
   background-color: transparent !important;
   border-right: none !important;
-  border-radius: $sidebarBorderRadius;
+  border-radius: 0;
   padding: 4px 0;
 
   .el-menu-item,
   .el-submenu__title {
-    height: 36px;
-    line-height: 36px;
-    margin: 2px 8px;
-    border-radius: 12px;
-    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-
-    // 默认状态下轻微的玻璃效果
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
-    background: rgba(255, 255, 255, 0.4);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    height: 32px;
+    line-height: 32px;
+    margin: 1px 8px;
+    border-radius: 6px;
+    transition: all 0.15s ease;
+    font-size: 13px;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: transparent;
+    box-shadow: none;
+    border: none;
+    color: #666;
 
     &:hover {
-      background: rgba(255, 255, 255, 0.7) !important;
-      color: $menuText !important;
-
-      // 增强的玻璃效果和光影
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-
-      // 添加发光效果
-      transform: translateY(-1px);
+      background: #f5f5f5 !important;
+      color: #333 !important;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      box-shadow: none;
+      border: none;
+      transform: none;
     }
 
     &.is-active {
-      background-color: $menuHover !important;
-      color: $menuActiveText !important;
+      background-color: #f0f0f0 !important;
+      color: #000 !important;
       font-weight: 500;
     }
   }
@@ -140,26 +137,26 @@ export default {
   .el-submenu {
     .el-submenu__title {
       &:hover {
-        background-color: $menuHover !important;
+        background-color: #f5f5f5 !important;
       }
     }
 
     .el-menu {
       background-color: transparent !important;
-      border-radius: 8px;
-      margin: 0 8px;
+      border-radius: 0;
+      margin: 0;
       padding: 4px 0;
 
       .el-menu-item {
         padding-left: 48px !important;
-        margin: 2px 0;
-        border-radius: 10px;
+        margin: 1px 8px;
+        border-radius: 6px;
       }
     }
   }
 
   .el-scrollbar {
-    height: calc(100% - 50px);
+    height: calc(100% - 44px);
   }
 }
 </style>

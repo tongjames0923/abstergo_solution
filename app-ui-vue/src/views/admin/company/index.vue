@@ -19,9 +19,9 @@ export default {
 @import '~@/styles/variables.scss';
 
 .company-page {
-  min-height: calc(100vh - 66px);
+  min-height: calc(100vh - 44px);
   background: linear-gradient(135deg, #f5f5f7 0%, #e8e8ed 50%, #f0f0f3 100%);
-  padding: 20px;
+  padding: 12px;
   position: relative;
   overflow: hidden;
 
@@ -67,7 +67,7 @@ export default {
   ::v-deep .company-admin {
     background: transparent;
     min-height: auto;
-    padding: 24px;
+    padding: 16px;
 
     // 更新设计令牌以匹配整体风格
     --ca-primary: #0071e3;

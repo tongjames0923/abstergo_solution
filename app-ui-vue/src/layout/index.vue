@@ -3,7 +3,7 @@
     <div v-if="device==='mobile'&&sidebar.opened" class="drawer-bg" @click="handleClickOutside" />
     <sidebar class="sidebar-container" />
     <div class="main-container">
-      <div :class="{'fixed-header':fixedHeader}" style="margin-left: 10px">
+      <div :class="{'fixed-header':fixedHeader}">
         <navbar />
       </div>
       <app-main />
@@ -82,13 +82,13 @@ export default {
   top: 0;
   right: 0;
   z-index: 9;
-  width: calc(100% - #{$sideBarWidth} - 16px);
+  width: calc(100% - #{$sideBarWidth});
   transition: width 0.28s;
-  padding: 8px 8px 0 8px;
+  padding: 0;
 }
 
 .hideSidebar .fixed-header {
-  width: calc(100% - 54px - 16px)
+  width: calc(100% - 54px)
 }
 
 .mobile .fixed-header {

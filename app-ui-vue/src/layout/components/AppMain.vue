@@ -19,16 +19,29 @@ export default {
 
 <style scoped>
 .app-main {
-  /*50 = navbar  */
-  min-height: calc(100vh - 50px);
+  /*44 = navbar height */
+  min-height: calc(100vh - 44px);
   width: 100%;
   position: relative;
   overflow: hidden;
-  padding: 8px;
+  padding: 0;
+  background: transparent;
 }
 
 .fixed-header + .app-main {
-  padding-top: 50px;
+  padding-top: 44px; /* navbar height */
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .app-main {
+    padding: 0;
+    min-height: calc(100vh - 44px);
+  }
+
+  .fixed-header + .app-main {
+    padding-top: 44px;
+  }
 }
 </style>
 

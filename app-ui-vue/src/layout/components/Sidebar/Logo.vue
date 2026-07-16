@@ -48,35 +48,38 @@ export default {
 .sidebar-logo-container {
   position: relative;
   width: 100%;
-  height: 50px;
-  line-height: 50px;
-  background-color: rgba(255, 255, 255, 0.7);
+  height: 44px;
+  line-height: 44px;
+  background-color: #ffffff;
   text-align: center;
   overflow: hidden;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid #eaeaea;
 
   & .sidebar-logo-link {
     height: 100%;
     width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
 
     & .sidebar-logo {
-      width: 32px;
-      height: 32px;
+      width: 24px;
+      height: 24px;
       vertical-align: middle;
-      margin-right: 12px;
-      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      transition: all 0.2s ease;
     }
 
     & .sidebar-title {
       display: inline-block;
       margin: 0;
-      color: #303133;
+      color: #000;
       font-weight: 600;
-      line-height: 50px;
-      font-size: 14px;
-      font-family: Avenir, Helvetica Neue, Arial, Helvetica, sans-serif;
+      line-height: 44px;
+      font-size: 13px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
       vertical-align: middle;
-      transition: all 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+      transition: all 0.2s ease;
     }
   }
 
