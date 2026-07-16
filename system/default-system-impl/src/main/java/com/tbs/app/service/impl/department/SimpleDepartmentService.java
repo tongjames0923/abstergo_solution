@@ -8,6 +8,8 @@ import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
@@ -51,11 +53,17 @@ public class SimpleDepartmentService
     @Lazy
     private ISystemCompanyService companyService;
 
+    @Override
+    protected void deletePending(SystemDepartmentEntity entity) throws FormattedRuntimeException {
+        AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(entity.getId())),
+            "部门存在用户,不能删除");
+        AssertUtil.isTrue(!departmentTreeStructService.isLeaf(entity.getId())).message("部门存在子部门,不能删除")
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        super.deletePending(entity);
+    }
 
     @Override
     public SystemDepartmentEntity deleteById(Long id) {
-        AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(id)),
-            "部门存在用户,不能删除");
         var entity = super.deleteById(id);
         boolean deleted = departmentTreeStructService.deleteLeaf(id);
         AssertUtil.isTrue(!deleted, "部门删除失败,可能存在子部门情况");
@@ -143,7 +151,7 @@ public class SimpleDepartmentService
     @Override
     public List<SystemDepartmentEntity> getChildrenDepartments(Long id) {
         return departmentTreeStructService.getChildren(id).stream()
-            .map(it -> queryById(it.getEntityId()))
+            .map(it -> getInstance().queryById(it.getEntityId()))
             .collect(Collectors.toList());
     }
 
