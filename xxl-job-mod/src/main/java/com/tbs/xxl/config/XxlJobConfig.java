@@ -3,18 +3,75 @@ package com.tbs.xxl.config;
 import cn.hutool.core.util.StrUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.xxl.api.IXXLJobsConfig;
+import com.tbs.xxl.config.property.XxlJobProperty;
 import com.tbs.xxl.executor.JsonJobExecutor;
 import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
+
+import javax.annotation.Resource;
 
 @Slf4j
 
-@Component
+@Configuration
 public class XxlJobConfig {
+
+    @Resource
+    private XxlJobProperty property;
+
+    @Bean
+    @ConditionalOnMissingBean(IXXLJobsConfig.class)
+    @ConditionalOnProperty(value = "tbs.xxl-job.enable", havingValue = "true", matchIfMissing = false)
+    public IXXLJobsConfig xxlJobsConfig() {
+        return new IXXLJobsConfig() {
+            @Override
+            public String adminAddress() {
+                return property.getConfig().getAdminAddress();
+            }
+
+            @Override
+            public String appName() {
+                return property.getConfig().getAppName();
+            }
+
+            @Override
+            public String address() {
+                return property.getConfig().getAddress();
+            }
+
+            @Override
+            public String ip() {
+                return property.getConfig().getIp();
+            }
+
+            @Override
+            public Integer port() {
+                return property.getConfig().getPort();
+            }
+
+            @Override
+            public String accessToken() {
+                return property.getConfig().getAccessToken();
+            }
+
+            @Override
+            public String logPath() {
+                return property.getConfig().getLogPath();
+            }
+
+            @Override
+            public Integer logRetentionsDays() {
+                return property.getConfig().getLogRetentionsDays();
+            }
+        };
+    }
+
+
+
     @Bean
     @ConditionalOnBean(IXXLJobsConfig.class)
     @ConditionalOnProperty(value = "tbs.xxl-job.enable", havingValue = "true", matchIfMissing = false)

@@ -39,6 +39,11 @@ tbs:
   xxl-job:
     enable: true
     enable-json-job-executor: true
+    config:
+      admin-address: ${XXL_JOB_ADMIN_ADDRESS:http://127.0.0.1:9898/xxl-job-admin}
+      app-name: mainSystemApplication
+      access-token: ${XXL_JOB_ACCESS_TOKEN:123456789}
+      log-retentions-days: 3
   knife4j:
     enable: true
     show-url: true

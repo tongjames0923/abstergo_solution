@@ -18,4 +18,9 @@ public class XxlJobProperty {
      * 是否启用json任务执行器
      */
     boolean enableJsonJobExecutor;
+
+    /**
+     * xxl-job配置
+     */
+    XxlJobConfigForm config;
 }

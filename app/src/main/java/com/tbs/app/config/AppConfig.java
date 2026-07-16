@@ -12,7 +12,6 @@ import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.uitl.AjaxUtil;
-import com.tbs.xxl.api.IXXLJobsConfig;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -83,60 +82,6 @@ public class AppConfig {
     @Bean
     IRefreshTokenService refreshTokenService() {
         return new CookieRefreshTokenService();
-    }
-
-
-    /**
-     * XXL-Job配置
-     * <p>
-     * 配置XXL-Job分布式任务调度中心的连接信息
-     * </p>
-     *
-     * @return XXL-Job配置实例
-     */
-    @Bean
-    IXXLJobsConfig xxlJobsConfig() {
-        return new IXXLJobsConfig() {
-            @Override
-            public String adminAddress() {
-                return "http://127.0.0.1:9898/xxl-job-admin";
-            }
-
-            @Override
-            public String appName() {
-                return "mainSystemApplication";
-            }
-
-            @Override
-            public String address() {
-                return "";
-            }
-
-            @Override
-            public String ip() {
-                return "";
-            }
-
-            @Override
-            public Integer port() {
-                return null;
-            }
-
-            @Override
-            public String accessToken() {
-                return "123456789";
-            }
-
-            @Override
-            public String logPath() {
-                return "";
-            }
-
-            @Override
-            public Integer logRetentionsDays() {
-                return 0;
-            }
-        };
     }
 
 }
