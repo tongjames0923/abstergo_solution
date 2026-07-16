@@ -270,12 +270,14 @@ public class EntitySubQueryClause<T> implements ISubQueryClause<T> {
                 
                 Field mainFieldObj = LambdaUtil.getField(jc.getMainField());
                 String mainFieldName = SqlUtils.getFieldNameWithMapping(mainFieldObj);
+                // 获取主表表名，用于关联条件中明确指定主表字段
+                String mainTableName = SqlUtils.getTableName(mainFieldObj.getDeclaringClass());
                 
                 if (i > 0) {
                     joinConditionBuilder.append(" AND ");
                 }
                 joinConditionBuilder.append(subAlias).append(".").append(subFieldName)
-                    .append(" = ").append(mainFieldName);
+                    .append(" = ").append(mainTableName).append(".").append(mainFieldName);
             }
             
             String joinCondition = joinConditionBuilder.toString();
