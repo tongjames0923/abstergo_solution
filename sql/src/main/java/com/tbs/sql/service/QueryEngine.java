@@ -161,6 +161,9 @@ public class QueryEngine implements IStartup {
      */
     public String driveSql(SqlDialect dialect, ISqlAssembler assembler, SqlBuildContext context, SqlDriver queryDriver) {
         AssertUtil.notNull(queryDriver, "查询驱动器不可为空");
+//        var uuid = UUID.randomUUID().toString();
+//
+//        Date date = new Date();
         SqlDriver.SqlQueryData data = queryDriver.getSqlQueryData(context);
         String selectSql = dialect.getSelectExtractor().extract(data.getSelectInfo());
         String whereSql = dialect.getWhereExtractor().extract(
@@ -168,7 +171,10 @@ public class QueryEngine implements IStartup {
         String orderSql = dialect.getOrderExtractor().extract(data.getSqlOrders());
         String groupSql = dialect.getGroupExtractor().extract(data.getSqlGroups());
         String limitSql = dialect.getLimitExtractor().extract(data.getSqlLimit());
-        return assembler.assembleSelectSql(selectSql, whereSql, orderSql, groupSql, limitSql);
+        var sql = assembler.assembleSelectSql(selectSql, whereSql, orderSql, groupSql, limitSql);
+//        Date date1 = new Date();
+//        log.info("SQL组装完成 {} {} 总耗时：{}ms", uuid, sql, date1.getTime() - date.getTime());
+        return sql;
     }
 
     // ==================== 内部方法 ====================
@@ -245,7 +251,7 @@ public class QueryEngine implements IStartup {
         List<OrderInfo> orderInfos = new ArrayList<>(metadataList.size());
         for (OrderFieldMetadata metadata : metadataList) {
             Field field = metadata.field;
-            
+
             // 优化反射访问：使用缓存的可访问性
             boolean originalAccessible = field.isAccessible();
             field.setAccessible(true);
@@ -271,7 +277,7 @@ public class QueryEngine implements IStartup {
 
     /**
      * 获取排序策略Bean（带缓存）。
-     * 
+     *
      * @param beanName Bean名称
      * @return 排序策略Bean实例，如果获取失败则返回null
      */
