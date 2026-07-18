@@ -5,6 +5,9 @@
     <breadcrumb class="breadcrumb-container" />
 
     <div class="right-menu">
+      <!-- 语言切换 -->
+      <lang-select class="lang-select-container" />
+
       <!-- 用户信息 -->
       <div class="user-info">
         <el-tooltip v-if="currentDepartment" effect="light" placement="bottom" popper-class="user-tooltip">
@@ -62,11 +65,11 @@
           </div>
           <el-dropdown-item divided>
             <router-link to="/">
-              <span style="display:block;">主页</span>
+              <span style="display:block;">{{ $t('nav.home') }}</span>
             </router-link>
           </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
-            <span style="display:block;">登出</span>
+            <span style="display:block;">{{ $t('login.logout') }}</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
@@ -78,13 +81,15 @@
 import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
+import LangSelect from '@/components/LangSelect'
 import sidebar from '@/layout/components/Sidebar/index.vue'
 
 export default {
   name: 'Navbar',
   components: {
     Breadcrumb,
-    Hamburger
+    Hamburger,
+    LangSelect
   },
   computed: {
     sidebar() {
@@ -166,6 +171,18 @@ export default {
 
     &:focus {
       outline: none;
+    }
+
+    .lang-select-container {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+      cursor: pointer;
+      color: #666;
+
+      &:hover {
+        color: #333;
+      }
     }
 
     .user-info {

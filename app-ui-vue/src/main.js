@@ -8,6 +8,7 @@ import 'element-ui/lib/theme-chalk/index.css'
 import '@/styles/index.scss' // global css
 import App from './App'
 import store from './store'
+import i18n from './i18n'
 
 import '@/icons' // icon
 import '@/permission'
@@ -28,7 +29,9 @@ if (process.env.NODE_ENV === 'production') {
 // set ElementUI lang to EN
 // Vue.use(ElementUI, { locale })
 // 如果想要中文版 element-ui，按如下方式声明
-Vue.use(ElementUI)
+Vue.use(ElementUI, {
+  i18n: (key, value) => i18n.t(key, value)
+})
 
 Vue.config.productionTip = false
 
@@ -40,6 +43,7 @@ async function bootstrap() {
     el: '#app',
     router: router,
     store,
+    i18n,
     render: (h) => h(App)
   })
 

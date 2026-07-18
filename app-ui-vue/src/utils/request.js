@@ -3,6 +3,7 @@ import {Loading, Message, MessageBox, Notification} from 'element-ui'
 import store from '@/store'
 import {getToken} from '@/utils/auth'
 import settings from '@/settings'
+import i18n from '@/i18n'
 
 // create an axios instance
 const service = axios.create({
@@ -10,6 +11,27 @@ const service = axios.create({
   withCredentials: true // send cookies when cross-domain requests
   // timeout: 3000 // request timeout
 })
+
+// 在请求头中添加语言设置
+service.interceptors.request.use(
+  config => {
+    // do something before request is sent
+    if (store.getters.token) {
+      // let each request carry token
+      // ['X-Token'] is a custom headers key
+      // please modify it according to the actual situation
+      config.headers[settings.tokenHeader] = getToken()
+    }
+    // 添加语言头
+    config.headers['Accept-Language'] = i18n.locale === 'en' ? 'en_US' : 'zh_CN'
+    return config
+  },
+  error => {
+    // do something with request error
+    console.log(error) // for debug
+    return Promise.reject(error)
+  }
+)
 
 // Token刷新相关状态
 let isRefreshing = false
@@ -27,25 +49,6 @@ const processQueue = (error, token = null) => {
 
   failedQueue = []
 }
-
-// request interceptor
-service.interceptors.request.use(
-  config => {
-    // do something before request is sent
-    if (store.getters.token) {
-      // let each request carry token
-      // ['X-Token'] is a custom headers key
-      // please modify it according to the actual situation
-      config.headers[settings.tokenHeader] = getToken()
-    }
-    return config
-  },
-  error => {
-    // do something with request error
-    console.log(error) // for debug
-    return Promise.reject(error)
-  }
-)
 
 // 响应拦截器中处理token刷新的逻辑
 const refreshTokenHandler = async(response) => {
@@ -77,7 +80,7 @@ const refreshTokenHandler = async(response) => {
   // 显示刷新Token的加载提示，提升用户体验
   refreshLoadingInstance = Loading.service({
     lock: true,
-    text: '登录状态即将过期，正在自动续期...',
+    text: i18n.t('login.tokenRefreshing'),
     spinner: 'el-icon-loading',
     background: 'rgba(0, 0, 0, 0.7)'
   })
@@ -111,14 +114,18 @@ const refreshTokenHandler = async(response) => {
 
 async function noLoginFunction(res) {
   // 刷新token失败，要求重新登录
-  await MessageBox.confirm('登录已过期，请重新登录。详情：' + res.message, '提示', {
-    confirmButtonText: '重新登录',
-    showCancelButton: false,
-    type: 'warning'
-  })
+  await MessageBox.confirm(
+    i18n.t('login.sessionExpiredDetail') + res.message,
+    i18n.t('common.tip'),
+    {
+      confirmButtonText: i18n.t('login.relogin'),
+      showCancelButton: false,
+      type: 'warning'
+    }
+  )
   await store.dispatch('user/resetToken')
   location.reload()
-  return Promise.reject(new Error(res.message || '登录已过期，请重新登录'))
+  return Promise.reject(new Error(res.message || i18n.t('login.sessionExpired')))
 }
 
 // response interceptor
@@ -135,11 +142,11 @@ service.interceptors.response.use(
    */
   async response => {
     if (!response) {
-      return Promise.reject(new Error('网络连接失败，请检查网络设置'))
+      return Promise.reject(new Error(i18n.t('request.networkError')))
     }
     const res = response.data
     if (!res.code) {
-      return Promise.reject(new Error('返回配置错误，请检查网络设置'))
+      return Promise.reject(new Error(i18n.t('request.configError')))
     }
 
 
@@ -176,15 +183,15 @@ service.interceptors.response.use(
       console.log(res.message)
     } else if (settings.noticeCodes.includes(res.code)) {
       Notification({
-        title: res.title || '提示',
+        title: res.title || i18n.t('common.tip'),
         type: res.type || 'info',
-        message: res.message || '提示',
+        message: res.message || i18n.t('common.tip'),
         duration: res.duration || 3 * 1000,
         showClose: true
       })
     } else {
       Message({
-        message: res.message || '错误',
+        message: res.message || i18n.t('common.error'),
         type: res.type || 'error',
         duration: res.duration || 3 * 1000
       })
@@ -193,9 +200,9 @@ service.interceptors.response.use(
     // 如果返回体中包含redirect字段，自动跳转到指定路径
     if (res.redirect && window.vueInstance && window.vueInstance.$router) {
       // 显示跳转提示信息
-      const redirectMsg = `即将跳转到: ${res.redirect}`
+      const redirectMsg = i18n.t('request.redirectMessage', { path: res.redirect })
       Notification({
-        title: '跳转提示',
+        title: i18n.t('request.redirectTip'),
         message: redirectMsg,
         type: 'info',
         duration: 2000,

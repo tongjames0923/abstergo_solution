@@ -2,9 +2,14 @@
   <div class="login-container">
     <div class="login-box" :class="{ 'fade-in': isLoaded }">
       <div class="login-form-container">
+        <!-- 语言切换按钮 -->
+        <div class="login-lang-switch">
+          <lang-select />
+        </div>
+
         <div class="login-header">
           <h2 class="login-title">{{ systemTitle }}</h2>
-          <p class="login-subtitle">欢迎使用{{ systemTitle }}</p>
+          <p class="login-subtitle">{{ $t('login.title') }}</p>
         </div>
 
         <el-form
@@ -20,7 +25,7 @@
             <el-input
               ref="username"
               v-model="loginForm.username"
-              placeholder="请输入用户名"
+              :placeholder="$t('login.username')"
               name="username"
               type="text"
               tabindex="1"
@@ -39,7 +44,7 @@
               ref="password"
               v-model="loginForm.password"
               :type="passwordType"
-              placeholder="请输入密码"
+              :placeholder="$t('login.password')"
               name="password"
               tabindex="2"
               auto-complete="on"
@@ -56,16 +61,15 @@
           </el-form-item>
 
           <div class="login-options">
-            <el-checkbox v-model="loginForm.rememberMe">记住我</el-checkbox>
-            <!--            <a href="javascript:void(0)" class="forgot-password">忘记密码？</a>-->
+            <el-checkbox v-model="loginForm.rememberMe">{{ $t('login.rememberMe') || '记住我' }}</el-checkbox>
           </div>
 
           <el-button :loading="loading" type="primary" class="login-button" @click.native.prevent="handleLogin">
-            {{ loading ? '登录中...' : '登录' }}
+            {{ loading ? ($t('login.loggingIn') || '登录中...') : $t('login.login') }}
           </el-button>
 
           <div class="login-footer">
-            <p>© 2025 {{ systemTitle }}. 保留所有权利.</p>
+            <p>© 2025 {{ systemTitle }}. {{ $t('login.copyright') || '保留所有权利.' }}</p>
           </div>
         </el-form>
       </div>
@@ -88,20 +92,24 @@ import { validUsername } from '@/utils/validate'
 import { getRememberMe } from '@/utils/auth'
 import settings from '@/settings'
 import { updateRouter } from '@/router'
+import LangSelect from '@/components/LangSelect'
 
 export default {
   name: 'Login',
+  components: {
+    LangSelect
+  },
   data() {
     const validateUsername = (rule, value, callback) => {
       if (!validUsername(value)) {
-        callback(new Error('请输入正确的用户名'))
+        callback(new Error(this.$t('login.usernameRequired')))
       } else {
         callback()
       }
     }
     const validatePassword = (rule, value, callback) => {
       if (value.length < 6) {
-        callback(new Error('密码不能少于6位'))
+        callback(new Error(this.$t('login.passwordRequired')))
       } else {
         callback()
       }
@@ -233,6 +241,14 @@ export default {
   padding: 50px 40px;
   display: flex;
   flex-direction: column;
+  position: relative;
+}
+
+.login-lang-switch {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
 }
 
 .login-header {
