@@ -6,10 +6,11 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
-import com.tbs.sql.builder.*;
+import com.tbs.sql.builder.SqlBuildContext;
+import com.tbs.sql.builder.SqlDriver;
 import com.tbs.sql.criteria.IQueryCriteria;
-import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dialect.SqlDialect;
+import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.interceptor.SqlComposeInterceptor;
 import com.tbs.sql.model.order.OrderInfo;
 import com.tbs.sql.model.where.WhereCompose;
@@ -36,7 +37,23 @@ public class QueryEngine implements IStartup {
     private final SqlDialect dialect;
     private final SqlProperty sqlProperty;
     private final ISqlAssembler sqlAssembler;
-    private final Map<Class<?>, List<Field>> fieldCache = new ConcurrentHashMap<>(16);
+    private final Map<Class<?>, List<OrderFieldMetadata>> orderFieldCache = new ConcurrentHashMap<>(16);
+    private static final Map<String, com.tbs.sql.order.IQueryOrderBy> ORDER_BEAN_CACHE = new ConcurrentHashMap<>(8);
+
+    /**
+     * 排序字段元数据，缓存注解信息避免重复反射。
+     */
+    private static class OrderFieldMetadata {
+        final Field field;
+        final String orderBeanName;
+        final String mappedName;
+
+        OrderFieldMetadata(Field field, String orderBeanName, String mappedName) {
+            this.field = field;
+            this.orderBeanName = orderBeanName;
+            this.mappedName = mappedName;
+        }
+    }
     private List<SqlComposeInterceptor> interceptors;
 
     /**
@@ -147,7 +164,7 @@ public class QueryEngine implements IStartup {
         SqlDriver.SqlQueryData data = queryDriver.getSqlQueryData(context);
         String selectSql = dialect.getSelectExtractor().extract(data.getSelectInfo());
         String whereSql = dialect.getWhereExtractor().extract(
-            instance.intercept(data.getSqlWhereInfo(), context.getEntityClass()), context.getSqlParams());
+            getInstance().intercept(data.getSqlWhereInfo(), context.getEntityClass()), context.getSqlParams());
         String orderSql = dialect.getOrderExtractor().extract(data.getSqlOrders());
         String groupSql = dialect.getGroupExtractor().extract(data.getSqlGroups());
         String limitSql = dialect.getLimitExtractor().extract(data.getSqlLimit());
@@ -171,24 +188,13 @@ public class QueryEngine implements IStartup {
     }
 
     /**
-     * 收集查询对象中带注解的字段。
+     * 收集查询对象中带注解的字段（复用 FieldMetadataCache 缓存）。
      *
      * @param queryObject 查询对象
      * @return 带注解的字段列表
      */
     private List<Field> collectFields(IQueryCriteria queryObject) {
-        Class<?> clazz = queryObject.getClass();
-        List<Field> cachedFields = fieldCache.get(clazz);
-        if (cachedFields != null) return cachedFields;
-        List<Field> fields = Arrays.stream(clazz.getDeclaredFields())
-            .filter(field -> field.isAnnotationPresent(com.tbs.sql.annotation.condition.QueryIndex.class) ||
-                field.isAnnotationPresent(com.tbs.sql.annotation.condition.QueryField.class) ||
-                field.isAnnotationPresent(com.tbs.sql.annotation.order.QueryOrderField.class) ||
-                org.springframework.core.annotation.AnnotatedElementUtils.hasAnnotation(field, com.tbs.sql.annotation.condition.QueryFields.class))
-            .sorted(Comparator.comparingInt(this::getFieldIndex))
-            .collect(java.util.stream.Collectors.toList());
-        fieldCache.put(clazz, fields);
-        return fields;
+        return com.tbs.sql.metadata.FieldMetadataCache.collectAnnotatedFields(queryObject.getClass());
     }
 
     /**
@@ -203,43 +209,80 @@ public class QueryEngine implements IStartup {
     }
 
     /**
+     * 收集查询对象中带排序注解的字段元数据（带缓存）。
+     *
+     * @param queryObject 查询对象
+     * @return 带排序注解的字段元数据列表
+     */
+    private List<OrderFieldMetadata> collectOrderFields(IQueryCriteria queryObject) {
+        Class<?> clazz = queryObject.getClass();
+        return orderFieldCache.computeIfAbsent(clazz, (cla) -> Arrays.stream(cla.getDeclaredFields())
+            .filter(field -> field.isAnnotationPresent(com.tbs.sql.annotation.order.QueryOrderField.class))
+            .sorted(Comparator.comparingInt(this::getFieldIndex))
+            .map(field -> {
+                com.tbs.sql.annotation.order.QueryOrderField annotation = field.getDeclaredAnnotation(com.tbs.sql.annotation.order.QueryOrderField.class);
+                if (annotation == null || com.tbs.common.util.base.StrUtil.isEmpty(annotation.order()) || com.tbs.common.util.base.StrUtil.isEmpty(annotation.mappedName())) {
+                    return null;
+                }
+                return new OrderFieldMetadata(field, annotation.order(), annotation.mappedName());
+            })
+            .filter(java.util.Objects::nonNull)
+            .collect(java.util.stream.Collectors.toList()));
+    }
+
+    /**
      * 收集查询对象中的排序信息。
      *
      * @param queryObject 查询对象
      * @return 排序信息列表
      */
     public static List<OrderInfo> collectOrderInfos(IQueryCriteria queryObject) {
-        if (instance == null) {
+        if (getInstance() == null) {
             throw new FormattedRuntimeException("QueryEngine尚未初始化，请确保@EnableTbsSql已启用且应用已启动");
         }
-        List<Field> fields = instance.collectFields(queryObject);
-        List<OrderInfo> orderInfos = new ArrayList<>(fields.size() / 2);
-        for (Field field : fields) {
-            if (org.springframework.core.annotation.AnnotatedElementUtils.hasAnnotation(field, com.tbs.sql.annotation.order.QueryOrderField.class)) {
-                com.tbs.sql.annotation.order.QueryOrderField queryOrderField = field.getDeclaredAnnotation(com.tbs.sql.annotation.order.QueryOrderField.class);
-                if (queryOrderField == null) continue;
-                if (com.tbs.common.util.base.StrUtil.isEmpty(queryOrderField.order())) { log.warn("排序字段 {} 未指定排序方式，跳过", field.getName()); continue; }
-                if (com.tbs.common.util.base.StrUtil.isEmpty(queryOrderField.mappedName())) { log.warn("排序字段 {} 未指定映射字段，跳过", field.getName()); continue; }
-                boolean originalAccessible = field.isAccessible();
-                field.setAccessible(true);
-                Object val = null;
-                try { val = field.get(queryObject); } catch (IllegalAccessException e) { val = null; log.warn("Error accessing field: {}", field.getName(), e); } finally { field.setAccessible(originalAccessible); }
-                if (val == null) { log.debug("排序字段 {} 值为null，跳过", field.getName()); continue; }
+        // 使用缓存的排序字段元数据，避免重复反射和注解检查
+        List<OrderFieldMetadata> metadataList = getInstance().collectOrderFields(queryObject);
+        List<OrderInfo> orderInfos = new ArrayList<>(metadataList.size());
+        for (OrderFieldMetadata metadata : metadataList) {
+            Field field = metadata.field;
+            
+            // 优化反射访问：使用缓存的可访问性
+            boolean originalAccessible = field.isAccessible();
+            field.setAccessible(true);
+            Object val = null;
+            try { val = field.get(queryObject); } catch (IllegalAccessException e) { val = null; log.warn("Error accessing field: {}", field.getName(), e); } finally { field.setAccessible(originalAccessible); }
+            if (val == null) { log.debug("排序字段 {} 值为null，跳过", field.getName()); continue; }
 
-                OrderInfo info = new OrderInfo();
-                com.tbs.sql.order.IQueryOrderBy order = null;
-                try { order = SpringUtil.getBean(queryOrderField.order(), com.tbs.sql.order.IQueryOrderBy.class); } catch (Exception e) { log.warn("Error getting order: {}", field.getName(), e); continue; }
-                if (order == null) { log.debug("排序Bean为空，跳过 {}", field.getName()); continue; }
+            OrderInfo info = new OrderInfo();
+            // 使用缓存的Bean查找
+            com.tbs.sql.order.IQueryOrderBy order = getOrderByBean(metadata.orderBeanName);
+            if (order == null) { log.debug("排序Bean为空，跳过 {}", field.getName()); continue; }
 
-                com.tbs.sql.enums.OrderEnum orderEnum = null;
-                try { orderEnum = order.orderBy(queryObject, field, queryOrderField.mappedName()); } catch (Exception e) { log.warn("Error getting order enum: {}", field.getName(), e); continue; }
-                if (orderEnum == null) { log.debug("排序方向为null，跳过 {}", field.getName()); continue; }
+            com.tbs.sql.enums.OrderEnum orderEnum = null;
+            try { orderEnum = order.orderBy(queryObject, field, metadata.mappedName); } catch (Exception e) { log.warn("Error getting order enum: {}", field.getName(), e); continue; }
+            if (orderEnum == null) { log.debug("排序方向为null，跳过 {}", field.getName()); continue; }
 
-                info.setFieldName(com.tbs.common.util.base.StrUtil.isEmpty(queryOrderField.mappedName()) ? field.getName() : queryOrderField.mappedName());
-                info.setOrder(orderEnum);
-                orderInfos.add(info);
-            }
+            info.setFieldName(metadata.mappedName);
+            info.setOrder(orderEnum);
+            orderInfos.add(info);
         }
         return orderInfos;
+    }
+
+    /**
+     * 获取排序策略Bean（带缓存）。
+     * 
+     * @param beanName Bean名称
+     * @return 排序策略Bean实例，如果获取失败则返回null
+     */
+    private static com.tbs.sql.order.IQueryOrderBy getOrderByBean(String beanName) {
+        return ORDER_BEAN_CACHE.computeIfAbsent(beanName, name -> {
+            try {
+                return SpringUtil.getBean(name, com.tbs.sql.order.IQueryOrderBy.class);
+            } catch (Exception e) {
+                log.warn("Error getting order bean: {}", name, e);
+                return null;
+            }
+        });
     }
 }

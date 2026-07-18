@@ -56,6 +56,8 @@ import com.tbs.sql.annotation.mapping.QueryMapping;
  */
 public class SqlUtils {
     private static final Map<Class<?>, String> tableNames = new ConcurrentHashMap<>();
+    private static final Map<Field, String> fieldNameCache = new ConcurrentHashMap<>(256);
+    private static final Map<Field, Boolean> skipFieldCache = new ConcurrentHashMap<>(256);
 
     /**
      * 获取字段名，支持从@Column和@QueryMapping注解中获取映射名称。
@@ -68,15 +70,17 @@ public class SqlUtils {
         if (field == null) {
             return null;
         }
-        Column column = field.getDeclaredAnnotation(Column.class);
-        if (column != null && StrUtil.isNotEmpty(column.name())) {
-            return column.name();
-        }
-        QueryMapping queryMapping = field.getDeclaredAnnotation(QueryMapping.class);
-        if (queryMapping != null && StrUtil.isNotEmpty(queryMapping.value())) {
-            return queryMapping.value();
-        }
-        return field.getName();
+        return fieldNameCache.computeIfAbsent(field, f -> {
+            Column column = f.getDeclaredAnnotation(Column.class);
+            if (column != null && StrUtil.isNotEmpty(column.name())) {
+                return column.name();
+            }
+            QueryMapping queryMapping = f.getDeclaredAnnotation(QueryMapping.class);
+            if (queryMapping != null && StrUtil.isNotEmpty(queryMapping.value())) {
+                return queryMapping.value();
+            }
+            return f.getName();
+        });
     }
 
     /**
@@ -86,8 +90,12 @@ public class SqlUtils {
      * @return 如果应该跳过返回true，否则返回false
      */
     public static boolean isSkipField(Field field) {
-        return field == null || ReflectUtil.isStaticOrFinal(field)
-                || field.isAnnotationPresent(javax.persistence.Transient.class);
+        if (field == null) {
+            return true;
+        }
+        return skipFieldCache.computeIfAbsent(field, f -> 
+            ReflectUtil.isStaticOrFinal(f) || f.isAnnotationPresent(javax.persistence.Transient.class)
+        );
     }
 
     /**
