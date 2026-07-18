@@ -17,7 +17,7 @@ public class ReLoginErrorAjaxProvider implements IOnErrorAjaxProvider<ReLoginReq
     @Override
     public AjaxResult onError(ReLoginRequestException throwable) {
         return AjaxUtil.getInstance().custom(AjaxResult.RELOGIN_CODE,
-            StrUtil.emptyToDefault(throwable.getLocalizedMessage(), AjaxResult.DEFAULT_RELOGIN_MESSAGE), null);
+            StrUtil.emptyToDefault(throwable.getLocalizedMessage(), AjaxResult.getDefaultReLoginMessage()), null);
     }
 
     @Override

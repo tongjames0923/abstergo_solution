@@ -1,6 +1,7 @@
 package com.tbs.web.security.impl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.web.security.authentication.center.IAuthenticationCenter;
 import com.tbs.web.security.authentication.model.DefaultTokenAuthentication;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;
@@ -17,7 +18,7 @@ public class TokenAuthenticationProvider implements org.springframework.security
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        AssertUtil.notNull(authentication, "未获取到有效的Authentication");
+        AssertUtil.notNull(authentication, I18nUtil.get("auth.invalid.authentication"));
         ITokenAuthentication tokenAuthentication = (ITokenAuthentication)authentication;
         AssertUtil.isTrue(tokenAuthentication.getAuthException() != null, new Supplier<RuntimeException>() {
             @Override

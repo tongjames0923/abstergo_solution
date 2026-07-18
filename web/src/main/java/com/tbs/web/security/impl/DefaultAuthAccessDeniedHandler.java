@@ -26,14 +26,14 @@ public class DefaultAuthAccessDeniedHandler implements AccessDeniedHandler {
                     public AjaxResult apply(ITokenAuthentication authentication) {
                         return AjaxUtil.getInstance().custom(
                                 AjaxResult.DEFAULT_FORBIDDEN_CODE,
-                                AjaxResult.DEFAULT_FORBIDDEN_MESSAGE,
+                                AjaxResult.getDefaultForbiddenMessage(),
                                 authentication.getAuthException()
                         );
                     }
                 }).orElse(
                         AjaxUtil.getInstance().custom(
                                 AjaxResult.DEFAULT_FORBIDDEN_CODE,
-                                "无权限访问", null
+                                AjaxResult.getDefaultForbiddenMessage(), null
                         )
                 );
         AjaxUtil.writeInfoResp(response, res);

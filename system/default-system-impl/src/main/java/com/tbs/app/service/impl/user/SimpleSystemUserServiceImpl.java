@@ -11,6 +11,7 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
@@ -73,9 +74,9 @@ public class SimpleSystemUserServiceImpl
         if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
             UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
             AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUserName()))
-                .message("用户名格式错误").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .message(I18nUtil.get("user.name.invalid")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()))
-                .message("密码格式错误").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .message(I18nUtil.get("user.password.invalid")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         }
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
@@ -105,7 +106,7 @@ public class SimpleSystemUserServiceImpl
             if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
                 UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
                 AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()))
-                    .message("密码格式错误").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                    .message(I18nUtil.get("user.password.invalid")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             }
 
             if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
@@ -115,13 +116,13 @@ public class SimpleSystemUserServiceImpl
         }
         if (StrUtil.isNotEmpty(systemUserEntity.getUserName()) &&
             !Objects.equals(oldSystemUserEntity.getUserName(), systemUserEntity.getUserName())) {
-            throw FormattedRuntimeException.userInputError("不支持修改用户名，此为用户唯一标识");
+            throw FormattedRuntimeException.userInputError(I18nUtil.get("user.name.not.changeable"));
         }
 
         if (systemUserEntity.getFlag() != null) {
             if (!Objects.equals(systemUserEntity.getFlag(), oldSystemUserEntity.getFlag())) {
                 AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()))
-                    .message("用户状态值异常，不存在{}值", systemUserEntity.getFlag())
+                    .message(I18nUtil.get("user.status.invalid", systemUserEntity.getFlag()))
                     .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
                 oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
                 AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());

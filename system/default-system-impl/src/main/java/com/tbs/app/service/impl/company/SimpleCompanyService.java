@@ -8,6 +8,7 @@ import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
@@ -58,10 +59,10 @@ public class SimpleCompanyService
         CommonSystemDepartmentQueryCriteria criteria = new CommonSystemDepartmentQueryCriteria();
         criteria.setEqualsCompanyId(id);
         var ls = departmentService.query(criteria, null);
-        AssertUtil.isTrueBusinessError(CollUtil.isNotEmpty(ls)).message("公司下有部门，请先删除部门").throwIt();
+        AssertUtil.isTrueBusinessError(CollUtil.isNotEmpty(ls)).message(I18nUtil.get("company.has.departments.not.delete")).throwIt();
         var entity = super.deleteById(id);
         boolean deleted = companyTreeStructService.deleteLeaf(id);
-        AssertUtil.isTrueBusinessError(!deleted).message("公司删除失败,可能存在子部门情况").throwIt();
+        AssertUtil.isTrueBusinessError(!deleted).message(I18nUtil.get("company.delete.failed")).throwIt();
         return entity;
     }
 
@@ -97,7 +98,7 @@ public class SimpleCompanyService
             SystemCompanyEntity that =
                 getQueryWrapper().query().where().equal(SystemCompanyEntity::getTaxNumber, newOne.getTaxNumber()).pour()
                     .fetchOne();
-            AssertUtil.isTrueBusinessError(that != null).message("公司税号已存在").throwIt();
+            AssertUtil.isTrueBusinessError(that != null).message(I18nUtil.get("company.tax.number.exists")).throwIt();
             oldOne.setTaxNumber(newOne.getTaxNumber());
         }
         if (StrUtil.isNotEmpty(newOne.getDescription())) {
@@ -108,7 +109,7 @@ public class SimpleCompanyService
         }
         if (newOne.getFlag() != null) {
             AssertUtil.isTrueUserInputError(!EnumUtil.isValidCode(SystemCompanyFlagEnum.class, newOne.getFlag()))
-                .message("无效标志").throwIt();
+                .message(I18nUtil.get("invalid.flag")).throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 

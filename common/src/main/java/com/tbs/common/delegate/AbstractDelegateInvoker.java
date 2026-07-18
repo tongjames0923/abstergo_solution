@@ -6,6 +6,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.tbs.common.delegate.provider.IDelegateFlagProvider;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.function.SBiConsumer;
 import com.tbs.common.function.SConsumer;
 import com.tbs.common.function.SFunction;
@@ -50,7 +51,7 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	 */
 	@Override
 	public void setTarget(IDelegateTarget<T> delegateTarget) {
-		AssertUtil.notNull(delegateTarget, "delegateTarget can not be null");
+		AssertUtil.notNull(delegateTarget, I18nUtil.get("delegate.target.required"));
 		this.delegateTarget = delegateTarget;
 	}
 
@@ -158,8 +159,8 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	 */
 	@Override
 	public <P> IDelegateInvoker<T> takeIn(SBiConsumer<T, P> method, SSupplier<P> p) {
-		AssertUtil.notNull(method, "method can not be null");
-		AssertUtil.notNull(p, "val provider can not be null");
+		AssertUtil.notNull(method, I18nUtil.get("delegate.method.required"));
+		AssertUtil.notNull(p, I18nUtil.get("delegate.provider.required"));
 		tasks.add(new InvokeTask<>(method, p, index.addAndGet(1), true));
 		return this;
 	}
@@ -182,8 +183,8 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	 */
 	@Override
 	public <P> IDelegateInvoker<T> takeOut(SFunction<T, P> method, SConsumer<P> consumer) {
-		AssertUtil.notNull(method, "method can not be null");
-		AssertUtil.notNull(consumer, "consumer can not be null");
+		AssertUtil.notNull(method, I18nUtil.get("delegate.method.required"));
+		AssertUtil.notNull(consumer, I18nUtil.get("delegate.consumer.required"));
 		tasks.add(new InvokeTask<>(method, consumer, index.addAndGet(1), false));
 		return this;
 	}

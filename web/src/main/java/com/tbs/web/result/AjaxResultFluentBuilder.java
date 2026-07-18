@@ -166,7 +166,7 @@ public class AjaxResultFluentBuilder {
      * @return 当前构建器实例
      */
     public AjaxResultFluentBuilder success() {
-        return code(AjaxResult.DEFAULT_SUCCESS_CODE).message(AjaxResult.DEFAULT_SUCCESS_MESSAGE);
+        return code(AjaxResult.DEFAULT_SUCCESS_CODE).message(AjaxResult.getDefaultSuccessMessage());
     }
 
     /**

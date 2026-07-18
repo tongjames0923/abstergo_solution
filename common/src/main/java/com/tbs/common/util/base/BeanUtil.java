@@ -2,6 +2,7 @@ package com.tbs.common.util.base;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import org.jetbrains.annotations.NotNull;
 
 import java.lang.reflect.InvocationTargetException;
@@ -96,11 +97,11 @@ public class BeanUtil extends cn.hutool.core.bean.BeanUtil {
         try {
             return c.getConstructor(null).newInstance();
         } catch (NoSuchMethodException e) {
-            AssertUtil.throwError(() -> new FormattedRuntimeException(e, "没有无参构造函数"));
+            AssertUtil.throwError(() -> new FormattedRuntimeException(e, I18nUtil.get("bean.no.default.constructor")));
         } catch (InstantiationException | IllegalAccessException e) {
-            AssertUtil.throwError(() -> new FormattedRuntimeException(e, "构建bean失败"));
+            AssertUtil.throwError(() -> new FormattedRuntimeException(e, I18nUtil.get("bean.build.failed")));
         } catch (InvocationTargetException e) {
-            AssertUtil.throwError(() -> new FormattedRuntimeException(e, "构建bean失败"));
+            AssertUtil.throwError(() -> new FormattedRuntimeException(e, I18nUtil.get("bean.build.failed")));
         }
         return null;
     }

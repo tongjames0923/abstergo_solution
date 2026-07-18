@@ -1,4 +1,14 @@
 tbs:
+  i18n:
+    enabled: true
+    # basename 会自动通过 IMessageSourceProvider Bean 注册
+    # 如需添加额外的 basename，可在此配置
+    # basenames:
+    #   - messages-app
+    encoding: UTF-8
+    default-locale: zh_CN
+    cache-seconds: 3600
+    use-code-as-default-message: true
   web:
     permit-all-paths:
       - /public/**

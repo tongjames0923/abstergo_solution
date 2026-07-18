@@ -2,6 +2,7 @@ package com.tbs.common.error;
 
 import com.tbs.common.IStartup;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -46,6 +47,7 @@ public class AssertUtil implements IStartup {
 
         private boolean isBuild = false;
         private String message;
+        private String i18nKey;
         private List<Object> params = CollUtil.newArrayList();
 
         private Function<FormattedRuntimeException, RuntimeException> convertor;
@@ -86,6 +88,30 @@ public class AssertUtil implements IStartup {
          */
         public AssertBuilder message(String message, Object... params) {
             this.message = message;
+            this.params = CollUtil.newArrayList(params);
+            return this;
+        }
+
+        /**
+         * 设置i18n消息key
+         *
+         * @param i18nKey i18n消息key
+         * @return 当前构建器实例
+         */
+        public AssertBuilder i18n(String i18nKey) {
+            this.i18nKey = i18nKey;
+            return this;
+        }
+
+        /**
+         * 设置i18n消息key和参数
+         *
+         * @param i18nKey i18n消息key
+         * @param params  消息参数
+         * @return 当前构建器实例
+         */
+        public AssertBuilder i18n(String i18nKey, Object... params) {
+            this.i18nKey = i18nKey;
             this.params = CollUtil.newArrayList(params);
             return this;
         }
@@ -146,11 +172,21 @@ public class AssertUtil implements IStartup {
                 return null;
             }
             FormattedRuntimeException e1;
+            // 确定最终的消息内容
+            String finalMessage;
+            if (this.i18nKey != null) {
+                // 优先使用i18n key
+                finalMessage = I18nUtil.get(this.i18nKey, this.params.toArray());
+            } else if (this.message != null) {
+                finalMessage = this.message;
+            } else {
+                finalMessage = "";
+            }
             // 根据是否有异常原因创建不同的FormattedRuntimeException实例
             if (this.cause != null) {
-                e1 = new FormattedRuntimeException(this.cause, this.message, this.params.toArray());
+                e1 = new FormattedRuntimeException(this.cause, finalMessage, this.params.toArray());
             } else {
-                e1 = new FormattedRuntimeException(this.message, this.params.toArray());
+                e1 = new FormattedRuntimeException(finalMessage, this.params.toArray());
             }
             // 如果设置了错误等级，则设置异常的错误等级
             if (this.errorLevel != null) {

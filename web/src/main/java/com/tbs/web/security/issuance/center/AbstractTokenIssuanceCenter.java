@@ -1,6 +1,7 @@
 package com.tbs.web.security.issuance.center;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.enums.TokenStatusEnum;
@@ -65,9 +66,9 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @param model 令牌模型，不能为空
      */
     protected void saveModel(@NotNull ITokenModel model) {
-        AssertUtil.hasText(model.getToken(), "令牌不能为空");
-        AssertUtil.hasText(model.getUserName(), "用户名不能为空");
-        AssertUtil.isTrue(model.getTokenType() == null, "令牌类型不能为空");
+        AssertUtil.hasText(model.getToken(), I18nUtil.get("token.required"));
+        AssertUtil.hasText(model.getUserName(), I18nUtil.get("user.name.required"));
+        AssertUtil.isTrue(model.getTokenType() == null, I18nUtil.get("token.type.required"));
         center.saveManageInfo(model.getUserName(), model.getTokenType().getCode(), model.getToken());
         center.saveToken(model);
     }
@@ -153,12 +154,12 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      */
     @Override
     public ITokenModel issueToken(TokenRequestForm form) {
-        AssertUtil.notNull(form, "令牌请求参数不能为空");
-        AssertUtil.notNull(form.getUserDetails(), "用户信息不能为空");
-        AssertUtil.hasText(form.getUserDetails().getUsername(), "用户名不能为空");
-        AssertUtil.isTrue(form.getTokenType() == null, "令牌类型不能为空");
-        AssertUtil.isTrue(form.getTokenCreateType() == null, "令牌创建类型不能为空");
-        AssertUtil.hasText(form.getSessionId(), "会话ID不能为空");
+        AssertUtil.notNull(form, I18nUtil.get("token.request.required"));
+        AssertUtil.notNull(form.getUserDetails(), I18nUtil.get("user.info.required"));
+        AssertUtil.hasText(form.getUserDetails().getUsername(), I18nUtil.get("user.name.required"));
+        AssertUtil.isTrue(form.getTokenType() == null, I18nUtil.get("token.type.required"));
+        AssertUtil.isTrue(form.getTokenCreateType() == null, I18nUtil.get("token.create.type.required"));
+        AssertUtil.hasText(form.getSessionId(), I18nUtil.get("token.session.id.required"));
         ITokenModel model = createModel(form);
         center.saveModel(model);
         return model;
@@ -175,7 +176,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      */
     @Override
     public ITokenModel getTokenByToken(@NotNull String token) {
-        AssertUtil.hasText(token, "令牌不能为空");
+        AssertUtil.hasText(token, I18nUtil.get("token.required"));
         ITokenModel model = center.getModel(token);
         if (model == null) {
             return model;
@@ -214,7 +215,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
     @Override
     public void setTokenStatus(@NotNull String token, @NotNull TokenStatusEnum status) {
         ITokenModel oldModel = center.getModel(token);
-        AssertUtil.notNull(oldModel, "令牌不存在");
+        AssertUtil.notNull(oldModel, I18nUtil.get("token.not.found"));
         oldModel.setStatus(status);
         center.saveModel(oldModel);
     }

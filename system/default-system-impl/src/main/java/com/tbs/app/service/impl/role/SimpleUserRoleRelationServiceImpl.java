@@ -5,6 +5,7 @@ import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
@@ -58,13 +59,13 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     }
 
     private void setRole(@NotNull Long userId, @NotNull Long role, @NotNull Integer flag) {
-        AssertUtil.notNull(role, "角色不能为空");
+        AssertUtil.notNull(role, I18nUtil.get("role.not.empty"));
         SystemUserEntity user = systemUserService.queryById(userId);
-        AssertUtil.notNull(user, "用户不存在");
+        AssertUtil.notNull(user, I18nUtil.get("user.not.found"));
         SystemRoleEntity roleEntity = systemRoleService.queryById(role);
-        AssertUtil.notNull(roleEntity, "角色不存在");
+        AssertUtil.notNull(roleEntity, I18nUtil.get("role.not.found"));
         AssertUtil.isTrue(CollUtil.isIn(roleEntity.getFlag(), SystemRoleFlagEnum.DISABLE.getCode(),
-            SystemRoleFlagEnum.DELETE.getCode()), "角色 {} 已失效", role);
+            SystemRoleFlagEnum.DELETE.getCode()), I18nUtil.get("role.disabled", role));
         UserRoleRelationEntity relation = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
             .equal(UserRoleRelationEntity::getRoleId, roleEntity.getId()).pour().fetchOne();
         if (relation == null) {

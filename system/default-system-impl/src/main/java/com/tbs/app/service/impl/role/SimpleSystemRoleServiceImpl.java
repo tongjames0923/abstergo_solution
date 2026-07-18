@@ -10,6 +10,7 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.constant.RoleConstants;
@@ -87,12 +88,12 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     protected SystemRoleEntity compareAndUpdateValue(SystemRoleEntity newOne, SystemRoleEntity oldOne) {
-        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag()), "系统角色不允许修改");
+        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag()), I18nUtil.get("role.system.not.modify"));
         if (newOne.getFlag() != null) {
             AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode()),
-                "不允许接口设置角色属性到系统角色");
+                I18nUtil.get("role.system.not.set.by.api"));
             AssertUtil.isTrue(!CollUtil.isIn(newOne.getRole(), SystemRoleFlagEnum.ACTIVE.getCode(),
-                SystemRoleFlagEnum.DISABLE.getCode()), "角色状态错误");
+                SystemRoleFlagEnum.DISABLE.getCode()), I18nUtil.get("role.status.invalid"));
             if (newOne.getFlag().equals(SystemRoleFlagEnum.ACTIVE.getCode()) ||
                 newOne.getFlag().equals(SystemRoleFlagEnum.DISABLE.getCode())) {
                 oldOne.setFlag(newOne.getFlag());
@@ -110,9 +111,9 @@ public class SimpleSystemRoleServiceImpl
     @Override
     protected void deletePending(SystemRoleEntity entity) throws FormattedRuntimeException {
         AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(entity.getFlag()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("系统角色不允许删除").throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("role.system.not.delete")).throwIt();
         AssertUtil.isTrue(userRoleRelationService.isRoleInUsed(entity.getId()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("角色正在被用户使用，不允许删除").throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("role.in.use.not.delete")).throwIt();
     }
     @CacheEvict(cacheNames = "system_role", key = "#id")
     @Override

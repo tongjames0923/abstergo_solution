@@ -74,7 +74,7 @@ public class AjaxUtil implements IStartup {
      */
     public final <T extends Throwable> AjaxResult createAjaxResultOnError(T e) {
         if (e == null) {
-            return error(AjaxResult.DEFAULT_ERROR_MESSAGE, null);
+            return error(AjaxResult.getDefaultErrorMessage(), null);
         }
         Collection<IOnErrorAjaxProvider> providers = onErrorAjaxProviders;
         if (CollUtil.isNotEmpty(providers)) {
@@ -146,7 +146,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult success(Object data) {
-        return getInstance().success(AjaxResult.DEFAULT_SUCCESS_MESSAGE, data);
+        return getInstance().success(AjaxResult.getDefaultSuccessMessage(), data);
     }
 
     /**
@@ -167,7 +167,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult successWithRedirect(Object data, String redirect) {
-        return successWithRedirect(AjaxResult.DEFAULT_SUCCESS_MESSAGE, data, redirect);
+        return successWithRedirect(AjaxResult.getDefaultSuccessMessage(), data, redirect);
     }
 
     /**
@@ -270,7 +270,7 @@ public class AjaxUtil implements IStartup {
      * @return AjaxResult对象
      */
     public AjaxResult error(Object data) {
-        return builder().error(AjaxResult.DEFAULT_ERROR_MESSAGE, data).build();
+        return builder().error(AjaxResult.getDefaultErrorMessage(), data).build();
     }
 
     @Override

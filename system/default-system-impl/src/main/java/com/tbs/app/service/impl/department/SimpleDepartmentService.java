@@ -10,6 +10,7 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
@@ -56,8 +57,8 @@ public class SimpleDepartmentService
     @Override
     protected void deletePending(SystemDepartmentEntity entity) throws FormattedRuntimeException {
         AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(entity.getId())),
-            "部门存在用户,不能删除");
-        AssertUtil.isTrue(!departmentTreeStructService.isLeaf(entity.getId())).message("部门存在子部门,不能删除")
+            I18nUtil.get("department.has.users.not.delete"));
+        AssertUtil.isTrue(!departmentTreeStructService.isLeaf(entity.getId())).message(I18nUtil.get("department.has.children.not.delete"))
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         super.deletePending(entity);
     }
@@ -66,7 +67,7 @@ public class SimpleDepartmentService
     public SystemDepartmentEntity deleteById(Long id) {
         var entity = super.deleteById(id);
         boolean deleted = departmentTreeStructService.deleteLeaf(id);
-        AssertUtil.isTrue(!deleted, "部门删除失败,可能存在子部门情况");
+        AssertUtil.isTrue(!deleted, I18nUtil.get("department.delete.failed"));
         return entity;
     }
 
@@ -99,7 +100,7 @@ public class SimpleDepartmentService
         }
         if (newOne.getCompanyId() != null) {
             var newComp = companyService.queryById(newOne.getCompanyId());
-            AssertUtil.isTrueUserInputError(newComp == null).message("无效公司").throwIt();
+            AssertUtil.isTrueUserInputError(newComp == null).message(I18nUtil.get("invalid.company")).throwIt();
             oldOne.setCompanyId(newOne.getCompanyId());
         }
         if (StrUtil.isNotEmpty(newOne.getManager())) {
@@ -110,12 +111,12 @@ public class SimpleDepartmentService
         }
         if (newOne.getParentId() != null) {
             var newParent = queryById(newOne.getParentId());
-            AssertUtil.isTrueUserInputError(newParent == null).message("无效部门").throwIt();
+            AssertUtil.isTrueUserInputError(newParent == null).message(I18nUtil.get("invalid.department")).throwIt();
             oldOne.setParentId(newOne.getParentId());
         }
         if (newOne.getFlag() != null) {
             AssertUtil.isTrueUserInputError(!EnumUtil.isValidCode(SystemDepartmentFlagEnum.class, newOne.getFlag()))
-                .message("无效标志").throwIt();
+                .message(I18nUtil.get("invalid.flag")).throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 

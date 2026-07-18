@@ -2,6 +2,7 @@ package com.tbs.common.delegate;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 
 /**
  * 代理执行标记接口
@@ -91,7 +92,7 @@ public interface IDelegateFlag<T> {
 	 */
 	default IDelegateFlag<T> exceptionThenThrow() throws FormattedRuntimeException {
 		if (getException() != null) {
-			AssertUtil.throwError(() -> new FormattedRuntimeException(getException(), "delegate error"));
+			AssertUtil.throwError(() -> new FormattedRuntimeException(getException(), I18nUtil.get("delegate.error")));
 		}
 		return this;
 	}

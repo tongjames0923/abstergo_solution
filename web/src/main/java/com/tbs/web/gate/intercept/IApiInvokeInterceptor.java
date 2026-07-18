@@ -1,13 +1,12 @@
 package com.tbs.web.gate.intercept;
 
-import java.lang.reflect.Method;
-
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.web.BaseController;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.lang.reflect.Method;
 
 /**
  * API调用拦截器接口

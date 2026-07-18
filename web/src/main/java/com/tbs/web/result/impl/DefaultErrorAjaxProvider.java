@@ -15,7 +15,7 @@ public class DefaultErrorAjaxProvider implements IOnErrorAjaxProvider<Throwable>
     @Override
     public AjaxResult onError(Throwable throwable) {
         return AjaxUtil.getInstance()
-            .error(StrUtil.emptyToDefault(throwable.getLocalizedMessage(), AjaxResult.DEFAULT_ERROR_MESSAGE), null);
+            .error(StrUtil.emptyToDefault(throwable.getLocalizedMessage(), AjaxResult.getDefaultErrorMessage()), null);
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.tbs.web.security.authentication.center.impl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.web.exception.SimpleAuthException;
 import com.tbs.web.security.authentication.center.AbstractAuthenticationCenter;
@@ -33,16 +34,16 @@ public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
 
     @Override
     public ITokenAuthentication authenticate(ITokenAuthentication authentication) throws AuthenticationException {
-        AssertUtil.isTrue(authentication == null, () -> new SimpleAuthException("认证信息为空"));
-        AssertUtil.isTrue(authentication.getTokenModel() == null, () -> new SimpleAuthException("令牌信息为空"));
-        AssertUtil.isTrue(authentication.getUserDetails() == null, () -> new SimpleAuthException("用户信息为空"));
+        AssertUtil.isTrue(authentication == null, () -> new SimpleAuthException(I18nUtil.get("auth.info.empty")));
+        AssertUtil.isTrue(authentication.getTokenModel() == null, () -> new SimpleAuthException(I18nUtil.get("auth.token.empty")));
+        AssertUtil.isTrue(authentication.getUserDetails() == null, () -> new SimpleAuthException(I18nUtil.get("auth.user.empty")));
         try {
             AuthUtil.checkUserDetails(authentication.getUserDetails());
             authentication.setAuthenticated(true);
         } catch (Exception e) {
             authentication.setAuthenticated(false);
             AssertUtil.throwError(
-                () -> new SimpleAuthException(StrUtil.format("用户信息验证失败。详情:{}", e.getLocalizedMessage())));
+                () -> new SimpleAuthException(StrUtil.format(I18nUtil.get("auth.user.verify.fail.detail"), e.getLocalizedMessage())));
         }
         return authentication;
     }

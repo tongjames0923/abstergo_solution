@@ -23,7 +23,7 @@ public class DefaultAuthEntryPoint implements AuthenticationEntryPoint {
                     response, AjaxUtil.getInstance().custom(
                             AjaxResult.RELOGIN_CODE,
                             StrUtil.isEmpty(authException.getLocalizedMessage()) ?
-                                    AjaxResult.DEFAULT_RELOGIN_MESSAGE :
+                                    AjaxResult.getDefaultReLoginMessage() :
                                     authException.getLocalizedMessage(), authException
                     )
             );

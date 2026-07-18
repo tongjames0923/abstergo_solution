@@ -6,6 +6,7 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.service.user.model.impl.DefaultSystemUserDetails;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.mapper.SystemCompanyMapper;
@@ -40,7 +41,7 @@ public class DefaultUserInfoService implements IUserInfoService {
     @Override
     public UserDetails loadUserInfoByUniqueKey(@NotNull String uniqueKey) {
         var users = systemUserService.queryByUserName(uniqueKey);
-        AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException("用户不存在"));
+        AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException(I18nUtil.get("user.not.found")));
         var user = CollUtil.of(users).findFirstOrNull();
 
         var builder = DefaultSystemUserDetails.builder().userName(user.getUserName()).password(user.getPassword())

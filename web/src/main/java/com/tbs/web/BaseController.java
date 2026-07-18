@@ -1,5 +1,6 @@
 package com.tbs.web;
 
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
 import lombok.Getter;
@@ -26,7 +27,7 @@ public abstract class BaseController {
      * @return
      */
     public AjaxResult successResult(Object val) {
-        return AjaxUtil.getInstance().success("操作成功", val);
+        return AjaxUtil.getInstance().success(I18nUtil.get("common.success"), val);
     }
 
     /**
@@ -36,7 +37,7 @@ public abstract class BaseController {
      * @return
      */
     public AjaxResult errorResult(Throwable e) {
-        return AjaxUtil.getInstance().error(AjaxResult.DEFAULT_ERROR_MESSAGE + "。" + e.getMessage(), e);
+        return AjaxUtil.getInstance().error(AjaxResult.getDefaultErrorMessage() + "。" + e.getMessage(), e);
     }
 
 }

@@ -1,6 +1,7 @@
 package com.tbs.web.security.issuance.impl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
@@ -17,7 +18,7 @@ import java.util.List;
 public class NoImplTokenIssuanceCenter implements ITokenIssuanceCenter {
 
 	public NoImplTokenIssuanceCenter() {
-		AssertUtil.throwError(() -> new UnsupportedOperationException("请实现一个Token签发中心"));
+		AssertUtil.throwError(() -> new UnsupportedOperationException(I18nUtil.get("token.issuance.not.implemented")));
 	}
 
 	@Override

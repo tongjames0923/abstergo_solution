@@ -1,6 +1,7 @@
 package com.tbs.web.security.user.access.impl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenTypeEnum;
@@ -32,17 +33,17 @@ public class DefaultUserPasswordAccessTokenProvider extends AbstractAccessTokenP
 
     @Override
     protected void validateForm(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm) {
-        AssertUtil.hasText(iUsernameAndPasswordForm.getUsername(), "用户名不能为空");
-        AssertUtil.hasText(iUsernameAndPasswordForm.getPassword(), "密码不能为空");
+        AssertUtil.hasText(iUsernameAndPasswordForm.getUsername(), I18nUtil.get("user.name.required"));
+        AssertUtil.hasText(iUsernameAndPasswordForm.getPassword(), I18nUtil.get("user.password.required"));
     }
 
     @Override
     protected UserDetails pullUserDetails(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm) {
         UserDetails details = userInfoService.loadUserInfoByUniqueKey(iUsernameAndPasswordForm.getUsername());
-        AssertUtil.notNull(details, "用户 {} 不存在", iUsernameAndPasswordForm.getUsername());
+        AssertUtil.notNull(details, I18nUtil.get("user.not.found.with.username", iUsernameAndPasswordForm.getUsername()));
         AssertUtil.isTrue(
             !Objects.equals(encrypt.encrypt(iUsernameAndPasswordForm.getPassword()), details.getPassword()),
-            "用户 {} 密码错误", iUsernameAndPasswordForm.getUsername());
+            I18nUtil.get("user.password.error.with.username", iUsernameAndPasswordForm.getUsername()));
         return details;
     }
 

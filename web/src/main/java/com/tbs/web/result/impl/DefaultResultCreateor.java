@@ -14,7 +14,7 @@ public class DefaultResultCreateor implements IResultCreator {
     @Override
     public IAjaxResultBuilder.IAjaxResult2Step create(IAjaxResultBuilder builder, Object val) {
         return builder.create().appendField(AjaxResult.CODE_KEY, AjaxResult.DEFAULT_SUCCESS_CODE)
-            .appendField(AjaxResult.MESSAGE_KEY, AjaxResult.DEFAULT_SUCCESS_MESSAGE)
+            .appendField(AjaxResult.MESSAGE_KEY, AjaxResult.getDefaultSuccessMessage())
             .appendField(AjaxResult.DATA_KEY, val).next();
     }
 }
