@@ -6,6 +6,7 @@ import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * 令牌发放中心接口
@@ -70,5 +71,18 @@ public interface ITokenIssuanceCenter {
      * @return SessionId对应的令牌集合
      */
     Collection<ITokenModel> getTokensBySessionId(String sessionId);
+
+    /**
+     * 列出指定用户在指定时间段内的SessionId
+     * <p>
+     * 列出指定用户在指定时间段内的SessionId，用于SessionId对应的令牌管理。
+     * </p>
+     *
+     * @param userName 用户名
+     * @param beg      开始时间
+     * @param end      结束时间
+     * @return SessionId列表
+     */
+    Collection<ITokenModel> listSessions(String userName, Date beg, Date end);
 
 }

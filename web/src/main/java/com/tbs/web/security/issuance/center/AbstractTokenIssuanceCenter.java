@@ -1,5 +1,6 @@
 package com.tbs.web.security.issuance.center;
 
+import cn.hutool.core.date.DateUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -114,6 +115,17 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @return
      */
     protected abstract Collection<ITokenModel> getTokensWithSessionId(String sessionId);
+
+    /**
+     * 列出会话
+     *
+     * @param userName
+     * @param beg
+     * @param end
+     * @return
+     */
+    protected abstract Collection<ITokenModel> listSessionsByUserName(String userName, Date beg, Date end);
+
 
     /**
      * 创建令牌模型
@@ -246,5 +258,17 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
     @Override
     public Collection<ITokenModel> getTokensBySessionId(String sessionId) {
         return center.getTokensWithSessionId(sessionId);
+    }
+
+    @Override
+    public Collection<ITokenModel> listSessions(String userName, Date beg, Date end) {
+        AssertUtil.hasText(userName, I18nUtil.get("user.name.required"));
+        if (beg == null) {
+            beg = DateUtil.offsetDay(new Date(), -(28*6));
+        }
+        if (end == null) {
+            end = new Date();
+        }
+        return listSessionsByUserName(userName, beg, end);
     }
 }

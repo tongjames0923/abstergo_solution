@@ -1,9 +1,9 @@
 package com.tbs.web.security.user;
 
 import com.tbs.web.security.token.ITokenModel;
+import com.tbs.web.security.user.vo.LoginSessionVO;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.Serializable;
 import java.util.List;
 
 /**

@@ -158,12 +158,22 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
 
     @Override
     protected Collection<ITokenModel> getTokensWithSessionId(String sessionId) {
+        // 直接查询并转换，避免N+1查询
         return tokenService.query(new CommonTokenQueryCriteria().setSessionIdEquals(sessionId)
             .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
             .setCreateTimeOrdered(new OrderedModel(OrderEnum.DESC))
-            .setExpireTimeOrdered(new OrderedModel(OrderEnum.DESC)), null).stream().map((v) -> {
-            return getInstance().getTokenByToken(v.getToken());
-        }).collect(Collectors.toList());
+            .setExpireTimeOrdered(new OrderedModel(OrderEnum.DESC)), null).stream()
+            .map(this::toModel)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    protected Collection<ITokenModel> listSessionsByUserName(String userName, Date beg, Date end) {
+        return tokenService.query(
+                new CommonTokenQueryCriteria().setUserNameEquals(userName).setCreateTimeAfter(beg).setCreateTimeBefore(end)
+                    .setCreateTimeOrdered(new OrderedModel(OrderEnum.DESC))
+                    .setExpireTimeOrdered(new OrderedModel(OrderEnum.DESC)), null).stream().map(this::toModel)
+            .collect(Collectors.toList());
     }
 
     @Override

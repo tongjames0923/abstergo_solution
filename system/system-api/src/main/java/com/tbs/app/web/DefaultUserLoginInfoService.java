@@ -4,14 +4,12 @@ import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson2.JSON;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.user.serial.DefaultSystemUserDetailsDto;
-import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.cache.serialize.utils.ValueTransformUtils;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
@@ -23,7 +21,7 @@ import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserLoginInfoService;
-import com.tbs.web.security.user.LoginSessionVO;
+import com.tbs.web.security.user.vo.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -159,109 +157,101 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     }
 
     @Override
+    @Cacheable(cacheNames = "user_sessions_cache", key = "#username")
+    @ExpireOn(cacheNames = "user_sessions_cache", value = 2, timeUnit = TimeUnit.MINUTES)
     public List<LoginSessionVO> listUserSessions(String username) {
-        SystemUserEntity user = CollUtil.of(systemUserService.queryByUserName(username)).findFirstOrNull();
-        AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
-        var query = getAvailableTokensQuery();
-        query.where().equal(SystemLoginInfoEntity::getUserId, user.getId())
-            .isNotNull(SystemLoginInfoEntity::getSessionId);
-        var loginInfo = query.fetch();
-        if (CollUtil.isEmpty(loginInfo)) {
+        // 使用 listSessions 方法一次性获取用户的所有会话令牌，避免多次查询
+        Collection<ITokenModel> allTokens = tokenIssuanceCenter.listSessions(username, null, null);
+        if (CollUtil.isEmpty(allTokens)) {
             return Collections.emptyList();
         }
 
-        // 按sessionId分组
-        return loginInfo.stream().collect(Collectors.groupingBy(SystemLoginInfoEntity::getSessionId)).entrySet()
-            .stream().map(entry -> {
-                String sessionId = entry.getKey();
-                List<SystemLoginInfoEntity> sessionTokens = entry.getValue();
+        // 按 sessionId 分组
+        Map<String, List<ITokenModel>> sessionGroups = allTokens.stream()
+            .filter(token -> StrUtil.isNotEmpty(token.getSessionId()))
+            .collect(Collectors.groupingBy(ITokenModel::getSessionId));
 
-                LoginSessionVO vo = new LoginSessionVO();
-                vo.setSessionId(sessionId);
-                // 获取最早创建时间作为会话创建时间
-                Date createTime =
-                    sessionTokens.stream().filter(Objects::nonNull).map(SystemLoginInfoEntity::getCreateTime)
-                        .filter(Objects::nonNull).min(Date::compareTo).orElse(null);
-                vo.setCreateTime(createTime);
+        return sessionGroups.entrySet().stream().map(entry -> {
+            String sessionId = entry.getKey();
+            List<ITokenModel> sessionTokens = entry.getValue();
 
-                // 获取该会话的所有令牌
-                List<String> tokensStr =
-                    sessionTokens.stream().filter(Objects::nonNull).map(SystemLoginInfoEntity::getToken)
-                        .filter(StrUtil::isNotEmpty).collect(Collectors.toList());
+            LoginSessionVO vo = new LoginSessionVO();
+            vo.setSessionId(sessionId);
 
-                ITokenModel[] tokenModels = new ITokenModel[tokensStr.size()];
-                var invoker =
-                    DelegateUtil.getInstance().delegateWithTarget(tokenModels).build(AsyncDelegateInvoker.class);
-                for (int i = 0; i < tokensStr.size(); i++) {
-                    var finalI = i;
-                    invoker.takeIn((obj, token) -> {
-                        obj[finalI] = token;
-                    }, () -> {
-                        return tokenIssuanceCenter.getTokenByToken(tokensStr.get(finalI));
-                    });
+            // 获取最早创建时间作为会话创建时间
+            Date createTime = sessionTokens.stream()
+                .filter(Objects::nonNull)
+                .map(ITokenModel::getCreateTime)
+                .filter(Objects::nonNull)
+                .min(Date::compareTo)
+                .orElse(null);
+            vo.setCreateTime(createTime);
+
+            // 获取访问令牌（access tokens）
+            List<ITokenModel> accessTokens = sessionTokens.stream()
+                .filter(token -> token.getTokenType() == TokenTypeEnum.WEB_ACCESS_TOKEN || 
+                                 token.getTokenType() == TokenTypeEnum.APPLICATION_ACCESS_TOKEN)
+                .collect(Collectors.toList());
+            vo.setAccessTokens(accessTokens);
+
+            // 设置额外信息
+            vo.setTokenCount(accessTokens.size());
+
+            // 计算有效的刷新令牌数量
+            long activeRefreshTokens = sessionTokens.stream()
+                .filter(token -> token.getTokenType() == TokenTypeEnum.REFRESH_TOKEN)
+                .filter(token -> token.getStatus() == TokenStatusEnum.ACTIVE)
+                .count();
+            vo.setActiveRefreshTokenCount((int) activeRefreshTokens);
+
+            // 判断是否在线（至少有一个有效的刷新令牌）
+            vo.setOnline(activeRefreshTokens > 0);
+
+            // 获取最后活跃时间（使用最新的令牌创建时间）
+            Date lastActiveTime = accessTokens.stream()
+                .filter(Objects::nonNull)
+                .map(ITokenModel::getCreateTime)
+                .filter(Objects::nonNull)
+                .max(Date::compareTo)
+                .orElse(null);
+            vo.setLastActiveTime(lastActiveTime);
+
+            return vo;
+        }).sorted((vo1, vo2) -> {
+            // 优先按创建时间排序，若创建时间在同一天，则按最后活动时间排序
+            Date createTime1 = vo1.getCreateTime();
+            Date createTime2 = vo2.getCreateTime();
+
+            // 如果创建时间都存在
+            if (createTime1 != null && createTime2 != null) {
+                // 比较创建日期（年月日）
+                Date date1 = DateUtil.beginOfDay(createTime1);
+                Date date2 = DateUtil.beginOfDay(createTime2);
+
+                int dateCompare = date2.compareTo(date1); // 按创建日期降序排序
+                if (dateCompare != 0) {
+                    return dateCompare;
                 }
-                invoker.executeAll().forEach(iDelegateFlag -> {
-                    iDelegateFlag.waitUntilFinished();
-                });
 
-                var tokens = Arrays.stream(tokenModels).filter(Objects::nonNull).collect(Collectors.toList());
-                vo.setAccessTokens(tokens);
+                // 如果创建时间在同一天，按最后活动时间排序
+                Date lastActiveTime1 = vo1.getLastActiveTime();
+                Date lastActiveTime2 = vo2.getLastActiveTime();
 
-                // 设置额外信息
-                vo.setTokenCount(tokens.size());
-
-                // 计算有效的刷新令牌数量
-                long activeRefreshTokens = tokenIssuanceCenter.getTokensBySessionId(sessionId).stream()
-                    .filter(token -> token.getTokenType() == TokenTypeEnum.REFRESH_TOKEN)
-                    .filter(token -> token.getStatus() == TokenStatusEnum.ACTIVE).count();
-                vo.setActiveRefreshTokenCount((int)activeRefreshTokens);
-
-                // 判断是否在线（至少有一个有效的刷新令牌）
-                vo.setOnline(activeRefreshTokens > 0);
-
-                // 获取最后活跃时间（使用最新的令牌创建时间）
-                Date lastActiveTime =
-                    tokens.stream().filter(Objects::nonNull).map(ITokenModel::getCreateTime).filter(Objects::nonNull)
-                        .max(Date::compareTo).orElse(null);
-                vo.setLastActiveTime(lastActiveTime);
-
-                return vo;
-            }).sorted((vo1, vo2) -> {
-                //优先按创建时间排序，若创建时间在同一天，则按最后活动时间排序
-                Date createTime1 = vo1.getCreateTime();
-                Date createTime2 = vo2.getCreateTime();
-
-                // 如果创建时间都存在
-                if (createTime1 != null && createTime2 != null) {
-                    // 比较创建日期（年月日）
-                    Date date1 = DateUtil.beginOfDay(createTime1);
-                    Date date2 = DateUtil.beginOfDay(createTime2);
-
-                    int dateCompare = date2.compareTo(date1); // 按创建日期降序排序
-                    if (dateCompare != 0) {
-                        return dateCompare;
-                    }
-
-                    // 如果创建时间在同一天，按最后活动时间排序
-                    Date lastActiveTime1 = vo1.getLastActiveTime();
-                    Date lastActiveTime2 = vo2.getLastActiveTime();
-
-                    if (lastActiveTime1 != null && lastActiveTime2 != null) {
-                        return lastActiveTime2.compareTo(lastActiveTime1); // 按最后活动时间降序排序
-                    } else if (lastActiveTime1 != null) {
-                        return -1;
-                    } else if (lastActiveTime2 != null) {
-                        return 1;
-                    }
-                } else if (createTime1 != null) {
+                if (lastActiveTime1 != null && lastActiveTime2 != null) {
+                    return lastActiveTime2.compareTo(lastActiveTime1); // 按最后活动时间降序排序
+                } else if (lastActiveTime1 != null) {
                     return -1;
-                } else if (createTime2 != null) {
+                } else if (lastActiveTime2 != null) {
                     return 1;
                 }
+            } else if (createTime1 != null) {
+                return -1;
+            } else if (createTime2 != null) {
+                return 1;
+            }
 
-                return 0;
-            }).collect(Collectors.toList());
-
+            return 0;
+        }).collect(Collectors.toList());
     }
 
     @CacheEvict(cacheNames = "user_login_info_cache", key = "#token",condition =

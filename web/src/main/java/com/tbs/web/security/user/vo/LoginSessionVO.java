@@ -1,4 +1,4 @@
-package com.tbs.web.security.user;
+package com.tbs.web.security.user.vo;
 
 import com.tbs.web.security.token.ITokenModel;
 import lombok.AllArgsConstructor;

@@ -9,6 +9,7 @@ import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -43,6 +44,11 @@ public class NoImplTokenIssuanceCenter implements ITokenIssuanceCenter {
 
     @Override
     public Collection<ITokenModel> getTokensBySessionId(String sessionId) {
+        return List.of();
+    }
+
+    @Override
+    public Collection<ITokenModel> listSessions(String userName, Date beg, Date end) {
         return List.of();
     }
 

@@ -1,18 +1,13 @@
 package com.tbs.shared.pojo.criteria;
 
-import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
-import com.tbs.shared.serialize.OrderedModelDeserializer;
-import com.tbs.shared.serialize.OrderedModelSerializer;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.annotation.order.QueryOrderField;
 import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.criteria.impl.DefaultEntityCriteria;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.order.impl.OrderedModel;
-import com.tbs.sql.criteria.impl.DefaultEntityCriteria;
 import lombok.Getter;
 
 import java.util.Date;
@@ -69,15 +64,22 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
      * 创建时间范围查询的起始时间字段 对应数据库中的create_time字段，使用GREATER_EQUAL比较条件
      */
     @QueryMapping("create_time")
-    
+
     @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
     private Date createTimeAfter;
+
+    /**
+     * 创建时间范围查询的起始时间字段 对应数据库中的create_time字段，使用GREATER_EQUAL比较条件
+     */
+    @QueryMapping("create_time")
+    @QueryField(contrast = ContrastEnum.LESS_EQUAL)
+    private Date createTimeBefore;
 
     /**
      * 过期时间范围查询的起始时间字段 对应数据库中的expire_time字段，使用GREATER_EQUAL比较条件
      */
     @QueryMapping("expire_time")
-    
+
     @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
     private Date expireTimeAfter;
 
@@ -85,7 +87,7 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
      * 过期时间范围查询的结束时间字段 对应数据库中的expire_time字段，使用LESS_EQUAL比较条件
      */
     @QueryMapping("expire_time")
-    
+
     @QueryField(contrast = ContrastEnum.LESS_EQUAL)
     private Date expireTimeBefore;
 
@@ -215,6 +217,11 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
 
     public CommonTokenQueryCriteria setSessionIdEquals(String sessionIdEquals) {
         this.sessionIdEquals = sessionIdEquals;
+        return this;
+    }
+
+    public CommonTokenQueryCriteria setCreateTimeBefore(Date createTimeBefore) {
+        this.createTimeBefore = createTimeBefore;
         return this;
     }
 }
