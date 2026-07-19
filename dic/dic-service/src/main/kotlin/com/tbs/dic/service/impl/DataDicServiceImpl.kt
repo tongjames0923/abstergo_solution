@@ -17,6 +17,7 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import java.util.*
 import javax.annotation.Resource
+import kotlin.streams.toList
 
 
 @DubboService
@@ -37,7 +38,7 @@ open class DataDicServiceImpl : IDataDicService {
                 SystemDataDicEntity::getFlag, DataDicFlagEnum.ENABLE.code
             ).pour().fetch().stream().map {
                 it.dataDicCode
-            }.toList();
+            }.toList()
     }
 
     override fun getDicCodesByNamesLike(name: String): List<String> {

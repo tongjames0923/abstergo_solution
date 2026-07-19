@@ -1,8 +1,37 @@
 tbs:
+  i18n:
+    enabled: true
+    # basename 会自动通过 IMessageSourceProvider Bean 注册
+    # 如需添加额外的 basename，可在此配置
+    # basenames:
+    #   - messages-app
+    encoding: UTF-8
+    default-locale: zh_CN
+    cache-seconds: 3600
+    use-code-as-default-message: true
+  web:
+    permit-all-paths:
+      - /public/**
+    secured-paths:
+      - /private/**
+    auth:
+      enable: true
+      token-expire-time: 1800
+      token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
+      refresh-token-expire-time: 168
+      application-token-expire-time: 168
+    enable-cors: true
+  system:
+    main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
+    enable: true
+    enable-operate-log: true
+    remote:
+      enable: true
+      tree-store-impl: com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl
   cache:
     cache-manager-impl: org.redisson.spring.cache.RedissonSpringCacheManager
     ttl-cache-decorator: com.tbs.cache.redis.RedissonTtlCacheDecorator
-  boardcast:
+  broadcast:
     event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
   lock:
     lock-provider-type: com.tbs.lock.redis.RedissonLockProvider
@@ -17,3 +46,14 @@ tbs:
       eviction-mode: lru
   start-up:
     optional-execute: false
+  xxl-job:
+    enable: true
+    enable-json-job-executor: true
+    config:
+      admin-address: ${XXL_JOB_ADMIN_ADDRESS:http://127.0.0.1:9898/xxl-job-admin}
+      app-name: dataDicApplication
+      access-token: ${XXL_JOB_ACCESS_TOKEN:123456789}
+      log-retentions-days: 3
+  knife4j:
+    enable: true
+    show-url: true

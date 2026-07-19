@@ -1,9 +1,9 @@
-#spring:
-#  rabbitmq:
-#    host: 127.0.0.1
-#    port: 5672
-#    username: admin
-#    password: admin123
-#    listener:
-#      direct:
-#        acknowledge-mode: manual
+spring:
+  rabbitmq:
+    host: ${RABBITMQ_HOST:192.168.80.32}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:admin}
+    password: ${RABBITMQ_PASSWORD:admin123}
+    listener:
+      direct:
+        acknowledge-mode: manual
