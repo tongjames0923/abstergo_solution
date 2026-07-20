@@ -4,6 +4,7 @@ import com.tbs.app.account.exception.UnNormalAccountStatusException;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
+import com.tbs.common.i18n.AbstractMessageSourceProvider;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
 import com.tbs.web.enums.WebMessageTypeEnum;
@@ -27,6 +28,16 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class AppConfig {
+
+    @Bean
+    public AbstractMessageSourceProvider appMessageSourceProvider() {
+        return new AbstractMessageSourceProvider() {
+            @Override
+            public @NotNull String getBasename() {
+                return "i18n/messages-app";
+            }
+        };
+    }
 
     @Bean
     SimpleRabbitMqSupport rabbitMqSupport() {

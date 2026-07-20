@@ -1,98 +1,98 @@
 admin:
   - path: /admin
     component: Layout
-    name: admin
+    name: view.menu.admin.title
     redirect: /admin/user
     meta:
       routeGroup: default
-      title: 管理员操作
+      title: view.menu.admin.title
       icon: el-icon-s-help
       roles:
         - "超级管理员"
     children:
       - path: user
-        name: 用户管理
+        name: view.menu.admin.user
         component: "/admin/user/index.vue"
         meta:
           routeGroup: default
-          title: 用户管理
+          title: view.menu.admin.user
           icon: table
           roles:
             - "超级管理员"
       - path: role
-        name: 角色管理
+        name: view.menu.admin.role
         component: "/admin/role/index.vue"
         meta:
           routeGroup: default
-          title: 角色管理
+          title: view.menu.admin.role
           icon: eye
           roles:
             - "超级管理员"
       - path: company
-        name: 公司管理
+        name: view.menu.admin.company
         component: "/admin/company/index.vue"
         meta:
           routeGroup: default
-          title: 公司管理
+          title: view.menu.admin.company
           icon: el-icon-s-custom
           roles:
             - "超级管理员"
 develop:
   - path: /develop
     component: Layout
-    name: develop
+    name: view.menu.develop
     redirect: /develop/form-manager
     meta:
       routeGroup: default
-      title: 开发者操作
+      title: view.menu.develop.title
       icon: el-icon-s-help
       roles:
         - "开发员"
         - "超级管理员"
     children:
       - path: cache
-        name: 缓存管理
+        name: view.menu.develop.cache
         component: "/cache/index.vue"
         meta:
           routeGroup: default
-          title: 缓存管理
+          title: view.menu.develop.cache
           icon: el-icon-s-data
           roles:
               - "开发员"
       - path: form-manager
-        name: 表单管理
+        name: view.menu.develop.form.manager
         component: "/form/FormManager.vue"
         meta:
           routeGroup: default
-          title: 表单管理
+          title: view.menu.develop.form.manager
           icon: el-icon-s-order
           roles:
             - "开发员"
       - path: form
-        name: 表单创建
+        name: view.menu.develop.form.create
         component: "/form/FormCreator.vue"
         meta:
           routeGroup: default
-          title: 表单创建
+          title: view.menu.develop.form.create
           icon: el-icon-s-custom
           roles:
             - "开发员"
       - path: systemlog
-        name: 系统运行报表
+        name: view.menu.develop.systemlog
         component: "/admin/systemlog/index.vue"
         meta:
           routeGroup: default
-          title: 系统运行报表
+          title: view.menu.develop.systemlog
           icon: el-icon-s-data
           roles:
             - "开发员"
             - "超级管理员"
       - path: dic
-        name: 数据字典
+        name: view.menu.develop.dic
         component: "/admin/dic/index.vue"
         meta:
           routeGroup: default
-          title: 数据字典
+          title: view.menu.develop.dic
           icon: el-icon-notebook-2
           roles:
             - "开发员"

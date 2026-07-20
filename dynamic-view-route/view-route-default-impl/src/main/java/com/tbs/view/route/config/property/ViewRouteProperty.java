@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 @Data
 public class ViewRouteProperty {
     /**
-     * 视图路由服务类，默认为YmlViewServiceImpl
+     * 视图路由服务类，默认为I18nYmlViewServiceImpl
      */
     private Class<? extends IViewRouteService> viewRouteServiceClass = YmlViewServiceImpl.class;
 }

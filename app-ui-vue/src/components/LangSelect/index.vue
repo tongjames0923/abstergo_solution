@@ -15,6 +15,8 @@
 </template>
 
 <script>
+import { refreshRoutes } from '@/router'
+
 export default {
   computed: {
     language() {
@@ -25,6 +27,8 @@ export default {
     handleSetLanguage(lang) {
       this.$i18n.locale = lang
       this.$store.dispatch('app/setLanguage', lang)
+      // 切换语言后重新获取路由数据，让后端返回对应语言的菜单标题
+      refreshRoutes()
       this.$message({
         message: lang === 'zh' ? '切换语言成功' : 'Switch Language Success',
         type: 'success'

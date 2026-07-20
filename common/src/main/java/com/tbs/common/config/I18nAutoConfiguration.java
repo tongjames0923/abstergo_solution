@@ -5,7 +5,6 @@ import com.tbs.common.i18n.I18nContextHolder;
 import com.tbs.common.i18n.IMessageSourceProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.MessageSource;
 import org.springframework.context.annotation.Bean;
@@ -83,7 +82,6 @@ public class I18nAutoConfiguration {
      * @return MessageSource 实例
      */
     @Bean
-    @ConditionalOnMissingBean(MessageSource.class)
     public MessageSource messageSource() {
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
 

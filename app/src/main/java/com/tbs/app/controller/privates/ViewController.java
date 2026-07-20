@@ -2,14 +2,16 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.view.IViewService;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.view.route.api.IViewRouteService;
+import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AuthUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -21,10 +23,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -163,10 +162,12 @@ public class ViewController extends BaseController {
             .collect(Collectors.toSet());
         for (String group : viewRouteService.getAllViewRouteGroups()) {
             var viewRoutes = viewRouteService.getViewRoutesByGroup(group);
-            result.addAll(removeWithRole(roles, viewRoutes));
+            var filtered = removeWithRoleAndTranslate(roles, viewRoutes);
+            result.addAll(filtered);
         }
         return successResult(result);
     }
+
 
     /**
      * 根据用户角色过滤视图路由列表
@@ -185,39 +186,86 @@ public class ViewController extends BaseController {
      * @param viewRoutes 待过滤的视图路由列表
      * @return 过滤后的视图路由列表
      */
-    List<ViewRouteModel> removeWithRole(Set<String> roles, List<ViewRouteModel> viewRoutes) {
+    List<ViewRouteModel> removeWithRoleAndTranslate(Set<String> roles, List<ViewRouteModel> viewRoutes) {
         if (CollUtil.isEmpty(roles)) {
             return List.of();
         }
         if (CollUtil.isEmpty(viewRoutes)) {
             return List.of();
         }
-        Iterator<ViewRouteModel> iterator = viewRoutes.iterator();
-        while (iterator.hasNext()) {
-            ViewRouteModel viewRoute = iterator.next();
-            if (viewRoute.getMeta() == null) {
-                continue;
-            }
-            if (CollUtil.isEmpty(viewRoute.getMeta().getRoles())) {
-                continue;
-            }
+        List<ViewRouteModel> result = new ArrayList<>();
+        for (ViewRouteModel viewRoute : viewRoutes) {
+            // 深拷贝对象，避免翻译操作污染原始缓存数据
+            ViewRouteModel copy = copyRouteModel(viewRoute);
             var flag = false;
-            for (String role : viewRoute.getMeta().getRoles()) {
-                if (roles.contains(role)) {
+            if (copy.getMeta() != null) {
+                if (CollUtil.isNotEmpty(copy.getMeta().getRoles())) {
+                    for (String role : copy.getMeta().getRoles()) {
+                        if (roles.contains(role)) {
+                            flag = true;
+                            break;
+                        }
+                    }
+                } else {
                     flag = true;
-                    break;
                 }
             }
-            if (!flag) {
-                iterator.remove();
-            } else {
-                if (CollUtil.isNotEmpty(viewRoute.getChildren())) {
-                    viewRoute.setChildren(
-                        removeWithRole(roles, viewRoute.getChildren().stream().collect(Collectors.toList())));
+            if (flag) {
+                // 角色校验通过后才进行翻译
+                copy.setName(I18nUtil.get(copy.getName()));
+                if (copy.getMeta() != null) {
+                    copy.getMeta().setTitle(I18nUtil.get(copy.getMeta().getTitle()));
                 }
+                if (CollUtil.isNotEmpty(copy.getChildren())) {
+                    copy.setChildren(removeWithRoleAndTranslate(roles, copy.getChildren().stream()
+                        .collect(Collectors.toList())));
+                }
+                result.add(copy);
             }
         }
-        return viewRoutes;
+        return result;
+    }
+
+    /**
+     * 深拷贝路由模型对象
+     * <p>
+     * 复制路由及其子路由、元数据的所有字段，确保翻译操作不会影响原始数据
+     * </p>
+     *
+     * @param source 源路由模型
+     * @return 深拷贝后的路由模型
+     */
+    private ViewRouteModel copyRouteModel(ViewRouteModel source) {
+        ViewRouteModel copy = new ViewRouteModel();
+        copy.setPath(source.getPath());
+        copy.setComponent(source.getComponent());
+        copy.setName(source.getName());
+        copy.setRedirect(source.getRedirect());
+        copy.setHidden(source.getHidden());
+        copy.setAlwaysShow(source.getAlwaysShow());
+
+        // 拷贝元数据
+        if (source.getMeta() != null) {
+            ViewRouteMetaModel metaCopy = new ViewRouteMetaModel();
+            metaCopy.setRouteGroup(source.getMeta().getRouteGroup());
+            metaCopy.setTitle(source.getMeta().getTitle());
+            metaCopy.setIcon(source.getMeta().getIcon());
+            metaCopy.setRoles(source.getMeta().getRoles() != null
+                ? new java.util.ArrayList<>(source.getMeta().getRoles()) : null);
+            metaCopy.setBreadcrumb(source.getMeta().getBreadcrumb());
+            metaCopy.setActiveMenu(source.getMeta().getActiveMenu());
+            copy.setMeta(metaCopy);
+        }
+
+        // 递归拷贝子路由
+        if (CollUtil.isNotEmpty(source.getChildren())) {
+            List<ViewRouteModel> childrenCopy = source.getChildren().stream()
+                .map(this::copyRouteModel)
+                .collect(Collectors.toList());
+            copy.setChildren(childrenCopy);
+        }
+
+        return copy;
     }
 
     /**
