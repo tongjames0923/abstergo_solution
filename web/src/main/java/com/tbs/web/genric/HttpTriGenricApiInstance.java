@@ -1,8 +1,10 @@
 package com.tbs.web.genric;
 
+import com.alibaba.fastjson2.JSON;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
 import lombok.extern.slf4j.Slf4j;
@@ -13,6 +15,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -68,7 +72,39 @@ public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializ
             HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == 200) {
                 String value = response.body();
-                resultVo.setExecuteResult(value);
+
+                try {
+                    // 首先尝试直接解析为数组
+                    var r = JSON.parseArray(value, HashMap.class);
+                    if (CollUtil.isEmpty(r)) {
+                        // 如果解析为空，尝试加上括号解析（原逻辑）
+                        String jsonArray = "[" + value + "]";
+                        var r2 = JSON.parseArray(jsonArray, HashMap.class);
+                        if (CollUtil.isEmpty(r2)) {
+                            resultVo.setExecuteResult(value);
+                        } else {
+                            ArrayList<HashMap> list = new ArrayList<>();
+                            list.addAll(r2);
+                            resultVo.setExecuteResult((Serializable) list);
+                        }
+                    } else {
+                        // 直接使用解析结果
+                        resultVo.setExecuteResult((Serializable) r);
+                    }
+                } catch (Exception e) {
+                    try {
+                        // 如果解析为数组失败，尝试解析为对象
+                        var obj = JSON.parseObject(value, HashMap.class);
+                        if (obj != null) {
+                            resultVo.setExecuteResult((Serializable) obj);
+                        } else {
+                            resultVo.setExecuteResult(value);
+                        }
+                    } catch (Exception ex) {
+                        resultVo.setExecuteResult(value);
+                    }
+                }
+
             } else {
                 log.warn("Triple HTTP调用失败, url={}, status={}, body={}", url, response.statusCode(),
                     response.body());

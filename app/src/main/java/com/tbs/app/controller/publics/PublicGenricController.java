@@ -65,7 +65,7 @@ public class PublicGenricController extends AbstractNoAuthGenricApiController {
         List<AbstractGenricApiInstance> instances = new ArrayList<>();
         for (var service : services) {
             String baseUrl = service.getHost() + ":" + service.getPort();
-            instances.add(new HttpTriGenricApiInstance(id, null, true, baseUrl, interfaceName, methodName));
+            instances.add(new HttpTriGenricApiInstance(id, null, false, baseUrl, interfaceName, methodName));
         }
         return instances;
     }
