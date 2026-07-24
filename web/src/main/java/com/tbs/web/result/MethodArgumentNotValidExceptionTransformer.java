@@ -16,8 +16,9 @@ public class MethodArgumentNotValidExceptionTransformer implements IErrorTransfo
     @Override
     public FormattedRuntimeException toFormattedRuntimeException(Throwable throwable) {
         MethodArgumentNotValidException e = (MethodArgumentNotValidException)throwable;
-        return new FormattedRuntimeException(e.getBindingResult().getFieldError().getDefaultMessage()).errorLevel(
-            ErrorLevelEnum.USER_INPUT_ERROR);
+        var fieldError = e.getBindingResult().getFieldError();
+        String message = fieldError != null ? fieldError.getDefaultMessage() : e.getMessage();
+        return new FormattedRuntimeException(message).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR);
     }
 
     @Override
