@@ -184,7 +184,12 @@ public class AssertUtil implements IStartup {
             }
             // 根据是否有异常原因创建不同的FormattedRuntimeException实例
             if (this.cause != null) {
-                e1 = new FormattedRuntimeException(this.cause, finalMessage, this.params.toArray());
+                if (this.cause instanceof FormattedRuntimeException) {
+                    e1 = new FormattedRuntimeException(this.cause, cause.getMessage()).errorLevel(
+                        ((FormattedRuntimeException)this.cause).getLevel());
+                } else {
+                    e1 = new FormattedRuntimeException(this.cause, finalMessage, this.params.toArray());
+                }
             } else {
                 e1 = new FormattedRuntimeException(finalMessage, this.params.toArray());
             }
@@ -192,11 +197,8 @@ public class AssertUtil implements IStartup {
             if (this.errorLevel != null) {
                 e1.errorLevel(this.errorLevel);
             }
-            RuntimeException e = null;
-            if (this.convertor != null) {
-                e = this.convertor.apply(e1);
-            }
-            return e;
+
+            return e1;
         }
 
         /**

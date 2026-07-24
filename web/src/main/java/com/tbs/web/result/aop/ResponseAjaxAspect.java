@@ -3,6 +3,7 @@ package com.tbs.web.result.aop;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -51,8 +52,12 @@ public class ResponseAjaxAspect implements ResponseBodyAdvice {
         if (response.isCommitted()) {
             return null;
         }
+        if (e == null) {
+            e = new RuntimeException("Unknown error");
+        }
 
-        Throwable cause = AssertUtil.toFormattedRuntimeException(e).orElse(e);
+        Throwable cause =
+            AssertUtil.toFormattedRuntimeException(e).orElse(new FormattedRuntimeException(e, e.getMessage()));
 
         // 根据异常级别选择日志级别，降低业务异常的告警噪音
         if (cause instanceof IExceptionLevel) {

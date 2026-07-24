@@ -20,6 +20,9 @@ public class DefaultErrorTransformer implements IErrorTransformer {
 
     @Override
     public FormattedRuntimeException toFormattedRuntimeException(Throwable throwable) {
+        if (throwable == null) {
+            return new FormattedRuntimeException("Unknown error");
+        }
         if (throwable instanceof FormattedRuntimeException) {
             return (FormattedRuntimeException)throwable;
         }
