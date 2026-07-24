@@ -1,5 +1,6 @@
 package com.tbs.app.config;
 
+import com.alibaba.dubbo.common.URL;
 import com.tbs.app.account.exception.UnNormalAccountStatusException;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
@@ -13,7 +14,11 @@ import com.tbs.web.result.IOnErrorAjaxProvider;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.uitl.AjaxUtil;
+import org.apache.dubbo.registry.client.ServiceDiscovery;
+import org.apache.dubbo.registry.client.ServiceDiscoveryFactory;
+import org.apache.dubbo.rpc.model.ApplicationModel;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -28,6 +33,15 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 public class AppConfig {
+
+    @Bean
+    ServiceDiscovery dubboServiceDiscovery(@Value("${dubbo.registry.address}") String registryAddress) {
+        ApplicationModel applicationModel = ApplicationModel.defaultModel();
+        ServiceDiscoveryFactory factory =
+            applicationModel.getExtensionLoader(ServiceDiscoveryFactory.class).getExtension("zookeeper");
+        ServiceDiscovery serviceDiscovery = factory.getServiceDiscovery(URL.valueOf(registryAddress));
+        return serviceDiscovery;
+    }
 
     @Bean
     public AbstractMessageSourceProvider appMessageSourceProvider() {
