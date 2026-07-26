@@ -92,7 +92,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
      * @return 对应的令牌模型，如果不存在则返回null
      */
     @Override
-    protected ITokenModel getModel(@NotNull String token) {
+    protected ITokenModel getModel( String token) {
         var vals = tokenService.queryByToken(token);
         if (CollUtil.isEmpty(vals)) {
             return null;
@@ -147,7 +147,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
      * @return 用户名和令牌类型对应的令牌模型集合
      */
     @Override
-    protected Collection<ITokenModel> getUserNameAndTokenType(@NotNull String userName, int tokenType) {
+    protected Collection<ITokenModel> getUserNameAndTokenType( String userName, int tokenType) {
         return tokenService.query(
                 new CommonTokenQueryCriteria().setUserNameEquals(userName).setTokenTypeEquals(tokenType)
                     .setCreateTimeAfter(new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(28)))
@@ -177,7 +177,7 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     }
 
     @Override
-    protected ITokenModel createModel(@NotNull TokenRequestForm form) {
+    protected ITokenModel createModel( TokenRequestForm form) {
         Date now = new Date();
         return new SimpleTokenModel(UuidUtil.getInstance().getUuidString(), form.getUserDetails().getUsername(),
             TokenStatusEnum.ACTIVE, EnumUtil.valueOf(TokenTypeEnum.class, form.getTokenType()),
@@ -195,13 +195,13 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     @Cacheable(cacheNames = "tokenCache", key = "#token", condition = "#token!=null && #token.length()>0")
     @ExpireOn(cacheNames = "tokenCache", value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
-    public ITokenModel getTokenByToken(@NotNull String token) {
+    public ITokenModel getTokenByToken( String token) {
         return super.getTokenByToken(token);
     }
 
     @CacheEvict(cacheNames = "tokenCache", key = "#token", condition = "#token!=null && #token.length()>0")
     @Override
-    public void setTokenStatus(@NotNull String token, @NotNull TokenStatusEnum status) {
+    public void setTokenStatus( String token,  TokenStatusEnum status) {
         super.setTokenStatus(token, status);
     }
 }

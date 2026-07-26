@@ -48,7 +48,7 @@ public class DefaultMultiLayerThreadPoolManager extends AbstractThreadPoolManage
 
     private ExecutorInfo defaultExecutorInfo;
 
-    public DefaultMultiLayerThreadPoolManager(@NotNull ExecutorInfo defaultExecutorInfo,
+    public DefaultMultiLayerThreadPoolManager( ExecutorInfo defaultExecutorInfo,
         ExecutorInfo... executorInfos) {
         this.defaultExecutorInfo = defaultExecutorInfo;
         executorMap.put(defaultExecutorInfo.getName(), defaultExecutorInfo);

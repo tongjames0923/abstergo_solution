@@ -21,7 +21,7 @@ public interface IViewService {
      * @param formConfig
      * @return
      */
-    DynamicFormConfigrationEntity saveForm(@NotNull FormConfig formConfig);
+    DynamicFormConfigrationEntity saveForm( FormConfig formConfig);
 
 
     /**
@@ -31,7 +31,7 @@ public interface IViewService {
      * @param formConfig 表单配置
      * @return
      */
-    DynamicFormConfigrationEntity updateForm(Long formConfigId, @NotNull FormConfig formConfig);
+    DynamicFormConfigrationEntity updateForm(Long formConfigId,  FormConfig formConfig);
 
     /**
      * 删除表单配置

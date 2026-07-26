@@ -123,7 +123,7 @@ public class ViewServiceImpl implements IViewService {
 
     @Transactional(rollbackOn = RuntimeException.class)
     @Override
-    public DynamicFormConfigrationEntity saveForm(@NotNull FormConfig formConfig) {
+    public DynamicFormConfigrationEntity saveForm( FormConfig formConfig) {
         AssertUtil.isTrue(formConfig == null).message("表单配置不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .throwIt();
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity = createDynamicFormEntity(formConfig);
@@ -203,7 +203,7 @@ public class ViewServiceImpl implements IViewService {
     @Override
     @Transactional(rollbackOn = RuntimeException.class)
     @CacheEvict(cacheNames = "view_form_cache", key = "#formConfigId")
-    public DynamicFormConfigrationEntity updateForm(Long formConfigId, @NotNull FormConfig formConfig) {
+    public DynamicFormConfigrationEntity updateForm(Long formConfigId,  FormConfig formConfig) {
         AssertUtil.isTrue(formConfigId == null).message("表单配置ID不能为空")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(formConfig == null).message("表单配置不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
@@ -379,7 +379,7 @@ public class ViewServiceImpl implements IViewService {
         }).collect(Collectors.toList());
     }
 
-    private static @NotNull DynamicFormConfigrationEntity createDynamicFormEntity(@NotNull FormConfig formConfig) {
+    private static  DynamicFormConfigrationEntity createDynamicFormEntity( FormConfig formConfig) {
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity = new DynamicFormConfigrationEntity();
         dynamicFormConfigrationEntity.setTitle(formConfig.getTitle());
         dynamicFormConfigrationEntity.setExpanded(

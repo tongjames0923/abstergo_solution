@@ -17,6 +17,6 @@ public interface IUserAccessTokenProvider<FORM extends Serializable> {
      * @param form
      * @return
      */
-    ITokenModel requestToken(@NotNull FORM form);
+    ITokenModel requestToken( FORM form);
 
 }

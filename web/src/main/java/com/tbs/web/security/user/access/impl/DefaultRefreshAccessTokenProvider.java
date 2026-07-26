@@ -35,7 +35,7 @@ public class DefaultRefreshAccessTokenProvider extends AbstractAccessTokenProvid
     IUserLoginInfoService loginInfoService;
 
     @Override
-    protected void validateForm(@NotNull IRefreshTokenForm iRefreshTokenForm) {
+    protected void validateForm( IRefreshTokenForm iRefreshTokenForm) {
         ITokenModel refreshToken = iRefreshTokenForm.getRefreshToken();
         AssertUtil.notNull(refreshToken, "刷新令牌为空");
         AssertUtil.hasText(refreshToken.getToken(), "刷新令牌内容为空");
@@ -45,7 +45,7 @@ public class DefaultRefreshAccessTokenProvider extends AbstractAccessTokenProvid
     }
 
     @Override
-    protected UserDetails pullUserDetails(@NotNull IRefreshTokenForm iRefreshTokenForm) {
+    protected UserDetails pullUserDetails( IRefreshTokenForm iRefreshTokenForm) {
         ITokenModel refreshToken = iRefreshTokenForm.getRefreshToken();
         UserDetails details = null;
         try {
@@ -60,7 +60,7 @@ public class DefaultRefreshAccessTokenProvider extends AbstractAccessTokenProvid
     }
 
     @Override
-    protected TokenRequestForm createTokenRequestForm(@NotNull IRefreshTokenForm iRefreshTokenForm,
+    protected TokenRequestForm createTokenRequestForm( IRefreshTokenForm iRefreshTokenForm,
         UserDetails details) {
         return new TokenRequestForm(iRefreshTokenForm.getRefreshToken().getSessionId(), details,
             TokenTypeEnum.WEB_ACCESS_TOKEN.getCode(), TokenCreateTypeEnum.REFRESH.getCode());

@@ -27,7 +27,7 @@ public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
     IUserInfoService userInfoService;
 
     @Override
-    protected ITokenAuthentication createAuth(@NotNull ITokenModel model) {
+    protected ITokenAuthentication createAuth( ITokenModel model) {
         DefaultTokenAuthentication tokenAuthentication = new DefaultTokenAuthentication(model, null);
         return tokenAuthentication;
     }

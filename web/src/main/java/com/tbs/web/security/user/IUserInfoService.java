@@ -16,5 +16,5 @@ public interface IUserInfoService {
      * @param uniqueKey
      * @return
      */
-    UserDetails loadUserInfoByUniqueKey(@NotNull String uniqueKey);
+    UserDetails loadUserInfoByUniqueKey( String uniqueKey);
 }

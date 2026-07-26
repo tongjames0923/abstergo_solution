@@ -58,11 +58,11 @@ import org.jetbrains.annotations.NotNull;
  * @see EntitySqlDriver
  */
 public abstract class AbstractSqlDriver implements SqlDriver {
-    protected abstract @NotNull SelectInfoModel getSelectInfo(SqlBuildContext context);
-    protected abstract @NotNull WhereCompose getWhereInfo(SqlBuildContext context);
-    protected abstract @NotNull List<GroupModel> getGroups(SqlBuildContext context);
-    protected abstract @NotNull LimitModel getLimit(SqlBuildContext context);
-    protected abstract @NotNull List<OrderInfo> getOrders(SqlBuildContext context);
+    protected abstract  SelectInfoModel getSelectInfo(SqlBuildContext context);
+    protected abstract  WhereCompose getWhereInfo(SqlBuildContext context);
+    protected abstract  List<GroupModel> getGroups(SqlBuildContext context);
+    protected abstract  LimitModel getLimit(SqlBuildContext context);
+    protected abstract  List<OrderInfo> getOrders(SqlBuildContext context);
 
     protected boolean supportContext(SqlBuildContext context) { return true; }
 

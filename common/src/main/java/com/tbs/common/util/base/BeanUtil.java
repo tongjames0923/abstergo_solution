@@ -46,7 +46,7 @@ public class BeanUtil extends cn.hutool.core.bean.BeanUtil {
      * @param base  基类或接口类型
      * @return 如果是指定类型的实例则返回转换后的对象，否则返回null
      */
-    public static <T> T getIfBase(@NotNull Object value, @NotNull Class<T> base) {
+    public static <T> T getIfBase( Object value,  Class<T> base) {
         return isBaseFrom(value.getClass(), base) ? (T)value : null;
     }
 
@@ -60,7 +60,7 @@ public class BeanUtil extends cn.hutool.core.bean.BeanUtil {
      * @param base   基类或接口
      * @return 如果target是base的子类或实现类返回true，否则返回false
      */
-    public static final boolean isBaseFrom(@NotNull Class<?> target, @NotNull Class<?> base) {
+    public static final boolean isBaseFrom( Class<?> target,  Class<?> base) {
         return base.isAssignableFrom(target);
     }
 

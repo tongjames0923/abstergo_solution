@@ -66,7 +66,7 @@ public abstract class AbstractRabbitMqSupport<T> extends AbstractMqConsumer<T>
      * @throws Exception 处理消息时可能发生的异常
      */
     @Override
-    protected void handleMessage(@NotNull T message) throws Exception {
+    protected void handleMessage( T message) throws Exception {
         this.receiveEvent(message);
     }
 

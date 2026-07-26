@@ -22,5 +22,5 @@ public interface ITokenPicker {
      * @throws NotFoundTokenException 找不到Token
      * @throws InvalidTokenException  过期Token
      */
-    String pick(@NotNull HttpServletRequest request) throws NotFoundTokenException;
+    String pick( HttpServletRequest request) throws NotFoundTokenException;
 }

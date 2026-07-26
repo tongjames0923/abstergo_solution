@@ -40,8 +40,8 @@ public class ScriptCompilerSpec {
      * @param compilerMeta   脚本编译器元数据
      * @param contextFactory 脚本上下文工厂
      */
-    public ScriptCompilerSpec(@NotNull IScriptCompiler compiler, @NotNull IScriptCompilerMeta compilerMeta,
-        @NotNull IScriptContextFactory contextFactory) {
+    public ScriptCompilerSpec( IScriptCompiler compiler,  IScriptCompilerMeta compilerMeta,
+         IScriptContextFactory contextFactory) {
         this.compiler = Objects.requireNonNull(compiler, "compiler cannot be null");
         this.compilerMeta = Objects.requireNonNull(compilerMeta, "compilerMeta cannot be null");
         this.contextFactory = Objects.requireNonNull(contextFactory, "contextFactory cannot be null");

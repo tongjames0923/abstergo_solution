@@ -49,7 +49,7 @@ public final class I18nContextHolder {
      *
      * @return 当前语言区域
      */
-    @NotNull
+    
     public static Locale getLocale() {
         Locale locale = LOCALE_HOLDER.get();
         return locale != null ? locale : defaultLocale;
@@ -76,7 +76,7 @@ public final class I18nContextHolder {
      *
      * @param locale 默认语言区域
      */
-    public static void setDefaultLocale(@NotNull Locale locale) {
+    public static void setDefaultLocale( Locale locale) {
         defaultLocale = locale;
     }
 
@@ -85,7 +85,7 @@ public final class I18nContextHolder {
      *
      * @return 默认语言区域
      */
-    @NotNull
+    
     public static Locale getDefaultLocale() {
         return defaultLocale;
     }

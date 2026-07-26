@@ -54,11 +54,11 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 
     @Override
     @CacheEvict(cacheNames = "user_role", key = "#userId")
-    public void enableRole(@NotNull Long userId, @NotNull Long role) {
+    public void enableRole( Long userId,  Long role) {
         setRole(userId, role, SystemRoleFlagEnum.ACTIVE.getCode());
     }
 
-    private void setRole(@NotNull Long userId, @NotNull Long role, @NotNull Integer flag) {
+    private void setRole( Long userId,  Long role,  Integer flag) {
         AssertUtil.notNull(role, I18nUtil.get("role.not.empty"));
         SystemUserEntity user = systemUserService.queryById(userId);
         AssertUtil.notNull(user, I18nUtil.get("user.not.found"));
@@ -85,12 +85,12 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
 
     @Override
     @CacheEvict(cacheNames = "user_role", key = "#userId")
-    public void disableRole(@NotNull Long userId, @NotNull Long roleId) {
+    public void disableRole( Long userId,  Long roleId) {
         setRole(userId, roleId, SystemRoleFlagEnum.DISABLE.getCode());
     }
 
     @Override
-    public List<SystemRoleEntity> queryUserRoles(@NotNull Long userId) {
+    public List<SystemRoleEntity> queryUserRoles( Long userId) {
         List<UserRoleRelationEntity> relations =
             wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
                 .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetch();
@@ -107,7 +107,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     @Cacheable(cacheNames = "user_role", key = "#userId")
     @ExpireOn(cacheNames = "user_role", value = 15, timeUnit = TimeUnit.MINUTES)
     @Override
-    public List<String> queryRoles(@NotNull Long userId) {
+    public List<String> queryRoles( Long userId) {
         return wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
             .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetch().stream()
             .map(relation -> systemRoleService.queryById(relation.getRoleId())).filter(role -> role != null &&
@@ -117,7 +117,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     }
 
     @Override
-    public List<SystemUserEntity> queryUsersByRole(@NotNull Long roleId) {
+    public List<SystemUserEntity> queryUsersByRole( Long roleId) {
         return wrapper.query().where().equal(UserRoleRelationEntity::getRoleId, roleId)
             .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetch().stream()
             .map(relation -> systemUserService.queryById(relation.getUserId())).filter(user -> user != null)
@@ -125,7 +125,7 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     }
 
     @Override
-    public boolean isRoleInUsed(@NotNull Long roleId) {
+    public boolean isRoleInUsed( Long roleId) {
         var p = wrapper.query().where().equal(UserRoleRelationEntity::getRoleId, roleId)
             .equal(UserRoleRelationEntity::getFlag, CommonConstant.FLAG_ON).pour().fetchOne();
         return p != null;

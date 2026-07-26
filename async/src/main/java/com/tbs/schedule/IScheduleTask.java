@@ -15,21 +15,21 @@ public interface IScheduleTask {
      *
      * @return
      */
-    @NotNull Duration getRemain();
+     Duration getRemain();
 
     /**
      * 运行任务
      *
      * @return
      */
-    @NotNull Runnable getRunnable();
+     Runnable getRunnable();
 
     /**
      * 获取定时器
      *
      * @return
      */
-    @NotNull ISchedule getSchedule();
+     ISchedule getSchedule();
 
     /**
      * 是否在计划表中

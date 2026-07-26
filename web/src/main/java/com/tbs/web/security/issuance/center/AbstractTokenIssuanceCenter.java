@@ -33,7 +33,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @param token 令牌字符串，不能为空
      * @return 对应的令牌模型，如果不存在则返回null
      */
-    protected abstract ITokenModel getModel(@NotNull String token);
+    protected abstract ITokenModel getModel( String token);
 
     /**
      * 推荐令牌到期时间
@@ -66,7 +66,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      *
      * @param model 令牌模型，不能为空
      */
-    protected void saveModel(@NotNull ITokenModel model) {
+    protected void saveModel( ITokenModel model) {
         AssertUtil.hasText(model.getToken(), I18nUtil.get("token.required"));
         AssertUtil.hasText(model.getUserName(), I18nUtil.get("user.name.required"));
         AssertUtil.isTrue(model.getTokenType() == null, I18nUtil.get("token.type.required"));
@@ -106,7 +106,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @param tokenType 令牌类型
      * @return 用户名和令牌类型对应的令牌模型集合
      */
-    protected abstract Collection<ITokenModel> getUserNameAndTokenType(@NotNull String userName, int tokenType);
+    protected abstract Collection<ITokenModel> getUserNameAndTokenType( String userName, int tokenType);
 
     /**
      * 根据会话ID获取令牌集合
@@ -138,7 +138,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @param tokenCreateType 令牌创建类型
      * @return 新创建的令牌模型
      */
-    protected abstract ITokenModel createModel(@NotNull TokenRequestForm form);
+    protected abstract ITokenModel createModel( TokenRequestForm form);
 
     /**
      * 指向当前实例的引用，用于在构造函数中初始化
@@ -187,7 +187,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @return 对应的令牌模型，如果令牌不存在则返回null
      */
     @Override
-    public ITokenModel getTokenByToken(@NotNull String token) {
+    public ITokenModel getTokenByToken( String token) {
         AssertUtil.hasText(token, I18nUtil.get("token.required"));
         ITokenModel model = center.getModel(token);
         if (model == null) {
@@ -225,7 +225,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @param status 新的令牌状态，不能为空
      */
     @Override
-    public void setTokenStatus(@NotNull String token, @NotNull TokenStatusEnum status) {
+    public void setTokenStatus( String token,  TokenStatusEnum status) {
         ITokenModel oldModel = center.getModel(token);
         AssertUtil.notNull(oldModel, I18nUtil.get("token.not.found"));
         oldModel.setStatus(status);

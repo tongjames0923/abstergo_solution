@@ -103,7 +103,7 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
 		 * @return Builder实例
 		 * @throws IllegalArgumentException 如果eventHandler为null或subscriberId为空时抛出
 		 */
-		public static Builder newBuilder(String subscriberId, @NotNull IReceiveHandler eventHandler) {
+		public static Builder newBuilder(String subscriberId,  IReceiveHandler eventHandler) {
 			AssertUtil.notNull(eventHandler, "eventHandler can not be null");
 			AssertUtil.isTrue(StrUtil.isEmpty(subscriberId), "subscriberId can not be empty");
 			Builder builder = new Builder();
@@ -120,7 +120,7 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
 		 * @param eventIds 支持的事件ID集合
 		 * @return Builder实例，用于链式调用
 		 */
-		public Builder supportEventIds(@NotNull Collection<String> eventIds) {
+		public Builder supportEventIds( Collection<String> eventIds) {
 			if (CollUtil.isNotEmpty(eventIds)) {
 				this.supportAnyEventId = false;
 				this.supportEventIds = eventIds.stream().collect(Collectors.toSet());
@@ -137,7 +137,7 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
 		 * @param eventNames 支持的事件名称集合
 		 * @return Builder实例，用于链式调用
 		 */
-		public Builder supportEventNames(@NotNull Collection<String> eventNames) {
+		public Builder supportEventNames( Collection<String> eventNames) {
 			if (CollUtil.isNotEmpty(eventNames)) {
 				this.supportAnyEventName = false;
 				this.supportEventNames = eventNames.stream().collect(Collectors.toSet());
@@ -167,9 +167,9 @@ public class SimpleUseSubscriber extends AbstractSubscriber implements IStartup 
 	 * @param supportAnyEventId   是否支持任意事件ID
 	 * @param subscriberId        订阅者ID，不能为空
 	 */
-	protected SimpleUseSubscriber(@NotNull IReceiveHandler eventHandler, Set<String> supportEventNames,
+	protected SimpleUseSubscriber( IReceiveHandler eventHandler, Set<String> supportEventNames,
 			Set<String> supportEventIds, boolean supportAnyEventName, boolean supportAnyEventId,
-			@NotNull String subscriberId) {
+			 String subscriberId) {
 		this.eventHandler = eventHandler;
 		this.subscriberId = subscriberId;
 

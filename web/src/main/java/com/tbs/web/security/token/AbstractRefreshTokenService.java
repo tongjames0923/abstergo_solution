@@ -45,7 +45,7 @@ public abstract class AbstractRefreshTokenService implements IRefreshTokenServic
      *
      * @param refreshToken
      */
-    protected abstract void pushRefreshToken(@NotNull ITokenModel refreshToken);
+    protected abstract void pushRefreshToken( ITokenModel refreshToken);
 
     /**
      * 创建刷新令牌表单
@@ -53,7 +53,7 @@ public abstract class AbstractRefreshTokenService implements IRefreshTokenServic
      * @param refreshToken
      * @return
      */
-    protected abstract IRefreshTokenForm createRefreshTokenForm(@NotNull ITokenModel refreshToken);
+    protected abstract IRefreshTokenForm createRefreshTokenForm( ITokenModel refreshToken);
 
     /**
      * 获取刷新令牌验证器

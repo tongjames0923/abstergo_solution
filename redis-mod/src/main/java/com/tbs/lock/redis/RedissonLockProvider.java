@@ -140,7 +140,7 @@ public class RedissonLockProvider implements ILockProvider {
 		 * @throws InterruptedException 如果当前线程被中断
 		 */
 		@Override
-		public boolean awaitUntil(@NotNull Date deadline) throws InterruptedException {
+		public boolean awaitUntil( Date deadline) throws InterruptedException {
 			RCountDownLatch latch = redissonClient.getCountDownLatch(conditionKey);
 			latch.trySetCount(1);
 			long timeout = deadline.getTime() - System.currentTimeMillis();

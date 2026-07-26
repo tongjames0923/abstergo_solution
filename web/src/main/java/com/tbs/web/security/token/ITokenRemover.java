@@ -9,12 +9,12 @@ public interface ITokenRemover {
      *
      * @param token
      */
-    void inactiveToken(@NotNull ITokenModel token);
+    void inactiveToken( ITokenModel token);
 
     /**
      * 撤销访问令牌
      *
      * @param token
      */
-    void revokeToken(@NotNull ITokenModel token);
+    void revokeToken( ITokenModel token);
 }

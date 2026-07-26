@@ -18,5 +18,5 @@ public interface IExpiredActuator<RAW> {
      * @param expireTime
      * @return
      */
-    boolean expire(@NotNull RAW cache, Object key, @NotNull Date expireTime);
+    boolean expire( RAW cache, Object key,  Date expireTime);
 }

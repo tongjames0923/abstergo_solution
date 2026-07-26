@@ -129,17 +129,17 @@ public class TimingWheelStrategy implements ScheduleStrategy<IScheduleTask> {
         }
 
         @Override
-        public @NotNull Duration getRemain() {
+        public  Duration getRemain() {
             return orginal.getRemain();
         }
 
         @Override
-        public @NotNull Runnable getRunnable() {
+        public  Runnable getRunnable() {
             return orginal.getRunnable();
         }
 
         @Override
-        public @NotNull com.tbs.schedule.ISchedule getSchedule() {
+        public  com.tbs.schedule.ISchedule getSchedule() {
             return orginal.getSchedule();
         }
 

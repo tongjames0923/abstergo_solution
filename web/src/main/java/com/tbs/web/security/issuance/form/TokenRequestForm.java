@@ -18,17 +18,17 @@ public class TokenRequestForm implements Serializable {
     /**
      * sessionId
      */
-    private @NotNull String sessionId;
+    private  String sessionId;
     /**
      * 用户信息
      */
-    private @NotNull UserDetails userDetails;
+    private  UserDetails userDetails;
     /**
      * token类型
      */
-    private @NotNull Integer tokenType;
+    private  Integer tokenType;
     /**
      * token创建方式
      */
-    private @NotNull Integer tokenCreateType;
+    private  Integer tokenCreateType;
 }

@@ -37,7 +37,7 @@ public abstract class AbstractThreadPoolManager implements IThreadPoolManager {
     protected abstract Optional<Executor> getExecutorByCostAndPriority(int costTime, int priority);
 
     @Override
-    public void submit(@NotNull IThreadRequest request, IOnThreadError onThreadError) {
+    public void submit( IThreadRequest request, IOnThreadError onThreadError) {
         Executor executor = getExecutorByName(request.getExpectedExecutorServiceName()).orElseGet(() -> {
             return getExecutorByCostAndPriority(request.getExpectedCostTime(), request.getPriority()).orElseGet(
                 this::getDefaultExecutor);

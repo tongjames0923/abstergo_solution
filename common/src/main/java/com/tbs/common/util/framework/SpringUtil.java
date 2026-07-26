@@ -24,7 +24,7 @@ public class SpringUtil extends cn.hutool.extra.spring.SpringUtil {
 	 * @param <T>
 	 * @return
 	 */
-    public static <T> T getBeanSafe(@NotNull Class<T> clazz, @NotNull Consumer<Throwable> throwableConsumer) {
+    public static <T> T getBeanSafe( Class<T> clazz,  Consumer<Throwable> throwableConsumer) {
 		try {
 			return getBean(clazz);
 		} catch (Throwable e) {
@@ -41,7 +41,7 @@ public class SpringUtil extends cn.hutool.extra.spring.SpringUtil {
 	 * @param <T>
 	 * @return
 	 */
-    public static <T> Optional<T> getBeanOptional(@NotNull Class<T> tClass) {
+    public static <T> Optional<T> getBeanOptional( Class<T> tClass) {
 		try {
 			return Optional.of(getBean(tClass));
 		} catch (Exception e) {
@@ -57,7 +57,7 @@ public class SpringUtil extends cn.hutool.extra.spring.SpringUtil {
      * @param <T>
      * @return
      */
-    public static <T> Collection<T> getBeansByTypeSafe(@NotNull Class<T> clazz) {
+    public static <T> Collection<T> getBeansByTypeSafe( Class<T> clazz) {
         try {
             return SpringUtil.getBeansOfType(clazz).values();
         } catch (Exception e) {

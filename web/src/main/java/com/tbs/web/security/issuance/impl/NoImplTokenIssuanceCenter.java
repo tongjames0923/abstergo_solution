@@ -28,12 +28,12 @@ public class NoImplTokenIssuanceCenter implements ITokenIssuanceCenter {
 	}
 
     @Override
-	public ITokenModel getTokenByToken(@NotNull String token) {
+	public ITokenModel getTokenByToken( String token) {
 		return null;
 	}
 
     @Override
-    public void setTokenStatus(@NotNull String token, @NotNull TokenStatusEnum status) {
+    public void setTokenStatus( String token,  TokenStatusEnum status) {
 
     }
 

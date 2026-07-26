@@ -20,8 +20,8 @@ public interface IMessageSource {
      * @param code 消息代码
      * @return 消息内容，如果找不到则返回代码本身
      */
-    @NotNull
-    String getMessage(@NotNull String code);
+    
+    String getMessage( String code);
 
     /**
      * 获取国际化消息
@@ -30,8 +30,8 @@ public interface IMessageSource {
      * @param args   消息参数，用于替换占位符 {0}, {1} 等
      * @return 消息内容，如果找不到则返回代码本身
      */
-    @NotNull
-    String getMessage(@NotNull String code, @Nullable Object[] args);
+    
+    String getMessage( String code, @Nullable Object[] args);
 
     /**
      * 获取国际化消息
@@ -41,8 +41,8 @@ public interface IMessageSource {
      * @param defaultMessage 默认消息，如果找不到消息时返回
      * @return 消息内容
      */
-    @NotNull
-    String getMessage(@NotNull String code, @Nullable Object[] args, @Nullable String defaultMessage);
+    
+    String getMessage( String code, @Nullable Object[] args, @Nullable String defaultMessage);
 
     /**
      * 获取国际化消息
@@ -52,8 +52,8 @@ public interface IMessageSource {
      * @param locale 指定的语言区域
      * @return 消息内容，如果找不到则返回代码本身
      */
-    @NotNull
-    String getMessage(@NotNull String code, @Nullable Object[] args, @NotNull Locale locale);
+    
+    String getMessage( String code, @Nullable Object[] args,  Locale locale);
 
     /**
      * 获取国际化消息
@@ -64,8 +64,8 @@ public interface IMessageSource {
      * @param locale         指定的语言区域
      * @return 消息内容
      */
-    @NotNull
-    String getMessage(@NotNull String code, @Nullable Object[] args, @Nullable String defaultMessage, @NotNull Locale locale);
+    
+    String getMessage( String code, @Nullable Object[] args, @Nullable String defaultMessage,  Locale locale);
 
     /**
      * 判断是否存在指定代码的消息
@@ -73,7 +73,7 @@ public interface IMessageSource {
      * @param code 消息代码
      * @return 是否存在
      */
-    boolean hasMessage(@NotNull String code);
+    boolean hasMessage( String code);
 
     /**
      * 判断是否存在指定代码的消息
@@ -82,5 +82,5 @@ public interface IMessageSource {
      * @param locale 指定的语言区域
      * @return 是否存在
      */
-    boolean hasMessage(@NotNull String code, @NotNull Locale locale);
+    boolean hasMessage( String code,  Locale locale);
 }

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class CommonMessageSourceProvider extends AbstractMessageSourceProvider {
 
     @Override
-    @NotNull
+    
     public String getBasename() {
         return "messages-common";
     }

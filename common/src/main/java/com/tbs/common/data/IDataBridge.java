@@ -24,7 +24,7 @@ public interface IDataBridge<T, E> {
 	 * @throws IllegalArgumentException 当obj为null时抛出
 	 * @see NotNull 非空注解
 	 */
-	T bridge(@NotNull E obj);
+	T bridge( E obj);
 
 	/**
 	 * 反桥接方法（反序列化）
@@ -36,5 +36,5 @@ public interface IDataBridge<T, E> {
 	 * @throws IllegalArgumentException 当obj为null时抛出
 	 * @see NotNull 非空注解
 	 */
-	E unbridge(@NotNull T obj);
+	E unbridge( T obj);
 }

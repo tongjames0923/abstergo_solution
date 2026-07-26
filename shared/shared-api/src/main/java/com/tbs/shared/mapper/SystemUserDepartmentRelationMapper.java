@@ -24,7 +24,7 @@ public interface SystemUserDepartmentRelationMapper extends IFrameworkMapper<Sys
      */
     @Select(
         "SELECT su.* FROM sys_user su INNER JOIN system_user_department_relation sudr ON sudr.department_id=#{departmentId} AND sudr.user_id=su.id WHERE su.id IS NOT NULL;")
-    List<SystemUserEntity> queryDepartmentUsers(@NotNull Long departmentId);
+    List<SystemUserEntity> queryDepartmentUsers( Long departmentId);
 
     /**
      * 查询用户部门关系
@@ -34,5 +34,5 @@ public interface SystemUserDepartmentRelationMapper extends IFrameworkMapper<Sys
      * @return 部门关系列表
      */
     @Select("SELECT * FROM system_user_department_relation WHERE user_id=#{userId} AND department_id=#{departmentId}")
-    List<SystemUserDepartmentRelationEntity> queryUserDepartmentRelation(@NotNull Long userId, @NotNull Long departmentId);
+    List<SystemUserDepartmentRelationEntity> queryUserDepartmentRelation( Long userId,  Long departmentId);
 }

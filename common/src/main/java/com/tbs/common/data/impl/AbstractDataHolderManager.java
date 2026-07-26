@@ -47,7 +47,7 @@ public abstract class AbstractDataHolderManager implements IDataHolderManager {
      * @see Map 映射接口
      * @see IDataHolder 数据持有者接口
      */
-    protected abstract @NotNull Map<String, IDataHolder> getDataHolderMap();
+    protected abstract  Map<String, IDataHolder> getDataHolderMap();
 
     /**
      * 根据名称获取数据持有者

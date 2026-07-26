@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class WebMessageSourceProvider extends AbstractMessageSourceProvider {
 
     @Override
-    @NotNull
+    
     public String getBasename() {
         return "messages-web";
     }

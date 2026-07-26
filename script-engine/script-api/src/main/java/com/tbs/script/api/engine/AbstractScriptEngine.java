@@ -61,8 +61,8 @@ public abstract class AbstractScriptEngine implements IScriptEngine, IStartup {
     }
 
     @Override
-    public void registerCompilerSpec(@NotNull IScriptCompilerMeta meta, @NotNull IScriptCompiler compiler,
-        @NotNull IScriptContextFactory contextFactory) {
+    public void registerCompilerSpec( IScriptCompilerMeta meta,  IScriptCompiler compiler,
+         IScriptContextFactory contextFactory) {
         AssertUtil.notNull(meta, "compilerSpec can not be null");
         AssertUtil.notNull(compiler, "compiler can not be null");
         if (contextFactory == null) {

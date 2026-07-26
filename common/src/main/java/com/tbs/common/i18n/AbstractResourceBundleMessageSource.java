@@ -39,7 +39,7 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      *
      * @return 基础名称数组
      */
-    @NotNull
+    
     protected abstract String[] getBasenames();
 
     /**
@@ -47,7 +47,7 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      *
      * @return 默认Locale
      */
-    @NotNull
+    
     protected abstract Locale getDefaultLocale();
 
     /**
@@ -59,33 +59,33 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      */
     protected abstract boolean isUseCodeAsDefaultMessage();
 
-    @NotNull
+    
     @Override
-    public String getMessage(@NotNull String code) {
+    public String getMessage( String code) {
         return getMessage(code, null);
     }
 
-    @NotNull
+    
     @Override
-    public String getMessage(@NotNull String code, @Nullable Object[] args) {
+    public String getMessage( String code, @Nullable Object[] args) {
         return getMessage(code, args, (String) null);
     }
 
-    @NotNull
+    
     @Override
-    public String getMessage(@NotNull String code, @Nullable Object[] args, @Nullable String defaultMessage) {
+    public String getMessage( String code, @Nullable Object[] args, @Nullable String defaultMessage) {
         return getMessage(code, args, defaultMessage, getDefaultLocale());
     }
 
-    @NotNull
+    
     @Override
-    public String getMessage(@NotNull String code, @Nullable Object[] args, @NotNull Locale locale) {
+    public String getMessage( String code, @Nullable Object[] args,  Locale locale) {
         return getMessage(code, args, null, locale);
     }
 
-    @NotNull
+    
     @Override
-    public String getMessage(@NotNull String code, @Nullable Object[] args, @Nullable String defaultMessage, @NotNull Locale locale) {
+    public String getMessage( String code, @Nullable Object[] args, @Nullable String defaultMessage,  Locale locale) {
         // 尝试从缓存获取
         String cacheKey = code + "_" + locale.toString();
         if (args == null || args.length == 0) {
@@ -118,12 +118,12 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
     }
 
     @Override
-    public boolean hasMessage(@NotNull String code) {
+    public boolean hasMessage( String code) {
         return hasMessage(code, getDefaultLocale());
     }
 
     @Override
-    public boolean hasMessage(@NotNull String code, @NotNull Locale locale) {
+    public boolean hasMessage( String code,  Locale locale) {
         return resolveMessage(code, locale) != null;
     }
 
@@ -135,7 +135,7 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      * @return 消息模式，如果找不到返回null
      */
     @Nullable
-    protected String resolveMessage(@NotNull String code, @NotNull Locale locale) {
+    protected String resolveMessage( String code,  Locale locale) {
         for (String basename : getBasenames()) {
             ResourceBundle bundle = getResourceBundle(basename, locale);
             if (bundle != null) {
@@ -157,7 +157,7 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      * @return ResourceBundle实例，如果找不到返回null
      */
     @Nullable
-    protected ResourceBundle getResourceBundle(@NotNull String basename, @NotNull Locale locale) {
+    protected ResourceBundle getResourceBundle( String basename,  Locale locale) {
         String cacheKey = basename + "_" + locale.toString();
         return bundleCache.computeIfAbsent(cacheKey, k -> loadResourceBundle(basename, locale));
     }
@@ -170,7 +170,7 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      * @return ResourceBundle实例，如果找不到返回null
      */
     @Nullable
-    protected ResourceBundle loadResourceBundle(@NotNull String basename, @NotNull Locale locale) {
+    protected ResourceBundle loadResourceBundle( String basename,  Locale locale) {
         String resourceName = getResourceName(basename, locale);
         try {
             InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream(resourceName);
@@ -208,8 +208,8 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      * @param locale   语言区域
      * @return 资源文件名
      */
-    @NotNull
-    protected String getResourceName(@NotNull String basename, @NotNull Locale locale) {
+    
+    protected String getResourceName( String basename,  Locale locale) {
         StringBuilder sb = new StringBuilder(basename.replace('.', '/'));
         if (!locale.getLanguage().isEmpty()) {
             sb.append('_').append(locale.getLanguage());
@@ -228,8 +228,8 @@ public abstract class AbstractResourceBundleMessageSource implements IMessageSou
      * @param args    参数
      * @return 格式化后的消息
      */
-    @NotNull
-    protected String formatMessage(@NotNull String pattern, @Nullable Object[] args) {
+    
+    protected String formatMessage( String pattern, @Nullable Object[] args) {
         if (args == null || args.length == 0) {
             return pattern;
         }

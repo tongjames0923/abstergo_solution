@@ -32,7 +32,7 @@ public class FeatureWrapperHelper implements IStartup {
      * @param <F>      特征类型
      * @return 解包后的特征对象Optional
      */
-    public static <F> Optional<F> unwrap(@NotNull Object instance, @NotNull Class<F> feature) {
+    public static <F> Optional<F> unwrap( Object instance,  Class<F> feature) {
         AssertUtil.notNull(feature, "目标类型不能为空");
         if (instance == null) {
             return Optional.empty();

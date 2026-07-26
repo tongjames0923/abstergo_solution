@@ -60,7 +60,7 @@ public abstract class AbstractEventDispatcher implements IEventDispatcher, IStar
 	 * @throws IllegalArgumentException 当subscriber为null时抛出
 	 */
 	@Override
-	public void register(@NotNull AbstractSubscriber subscriber) {
+	public void register( AbstractSubscriber subscriber) {
 		AssertUtil.notNull(subscriber, "订阅者不能为空");
 		subscribersHolder.put(subscriber.getSubscriberId(), subscriber);
 	}

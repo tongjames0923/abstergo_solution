@@ -23,7 +23,7 @@ public class DefaultTokenRemover implements ITokenRemover {
      *
      * @param token 令牌
      */
-    protected void validateToken(@NotNull ITokenIssuanceCenter tokenIssuanceCenter, @NotNull ITokenModel token) {
+    protected void validateToken( ITokenIssuanceCenter tokenIssuanceCenter,  ITokenModel token) {
         AssertUtil.notNull(token, "令牌不能为空");
         AssertUtil.hasText(token.getUserName(), "用户名不能为空");
         AssertUtil.hasText(token.getToken(), "令牌内容不能为空");
@@ -31,13 +31,13 @@ public class DefaultTokenRemover implements ITokenRemover {
     }
 
     @Override
-    public void inactiveToken(@NotNull ITokenModel token) {
+    public void inactiveToken( ITokenModel token) {
         validateToken(tokenIssuanceCenter, token);
         tokenIssuanceCenter.setTokenStatus(token.getToken(), TokenStatusEnum.INACTIVE);
     }
 
     @Override
-    public void revokeToken(@NotNull ITokenModel token) {
+    public void revokeToken( ITokenModel token) {
         validateToken(tokenIssuanceCenter, token);
         tokenIssuanceCenter.setTokenStatus(token.getToken(), TokenStatusEnum.REVOKE);
     }

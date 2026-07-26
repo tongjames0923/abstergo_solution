@@ -12,12 +12,12 @@ import org.springframework.stereotype.Component;
 public class DirectCastWrapperExtension implements IFeatureWrapperExtension {
 
     @Override
-    public <T> boolean support(@NotNull Object instance, @NotNull Class<T> feature) {
+    public <T> boolean support( Object instance,  Class<T> feature) {
         return feature.isInstance(instance);
     }
 
     @Override
-    public <T> T unwrap(@NotNull Object instance, @NotNull Class<T> feature) {
+    public <T> T unwrap( Object instance,  Class<T> feature) {
         return (T)instance;
     }
 

@@ -21,7 +21,7 @@ public class ReLoginErrorAjaxProvider implements IOnErrorAjaxProvider<ReLoginReq
     }
 
     @Override
-    public boolean support(@NotNull Class<? extends Throwable> clazz) {
+    public boolean support( Class<? extends Throwable> clazz) {
         return BeanUtil.isBaseFrom(clazz, ReLoginRequestException.class);
     }
 

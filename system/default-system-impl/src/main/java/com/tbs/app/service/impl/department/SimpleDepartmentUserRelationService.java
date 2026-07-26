@@ -38,7 +38,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Cacheable(cacheNames = "user_departments", key = "#userId")
     @ExpireOn(value = 3, timeUnit = TimeUnit.MINUTES)
     @Override
-    public List<SystemDepartmentEntity> queryUserDepartments(@NotNull Long userId) {
+    public List<SystemDepartmentEntity> queryUserDepartments( Long userId) {
         SystemUserEntity user = userService.queryById(userId);
         AssertUtil.isTrue(user == null).i18n("user.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
@@ -50,7 +50,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     }
 
     @Override
-    public List<SystemUserEntity> queryDepartmentUsers(@NotNull Long departmentId) {
+    public List<SystemUserEntity> queryDepartmentUsers( Long departmentId) {
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
         AssertUtil.isTrue(department == null).i18n("department.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .throwIt();
@@ -59,7 +59,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
 
     @CacheEvict(cacheNames = "user_departments", key = "#userId")
     @Override
-    public void addUserToDepartment(@NotNull Long userId, @NotNull Long departmentId) {
+    public void addUserToDepartment( Long userId,  Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);
         AssertUtil.isTrue(user == null).i18n("user.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
@@ -77,7 +77,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
 
     @CacheEvict(cacheNames = "user_departments", key = "#userId")
     @Override
-    public void deleteUserFromDepartment(@NotNull Long userId, @NotNull Long departmentId) {
+    public void deleteUserFromDepartment( Long userId,  Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);
         AssertUtil.isTrue(user == null).i18n("user.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDepartmentEntity department = departmentService.queryById(departmentId);

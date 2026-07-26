@@ -80,7 +80,7 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
      * @return 如果调度任务成功添加则返回true，否则返回false
      */
     @Override
-    public boolean expire(@NotNull Cache cache, Object key, @NotNull Date expireTime) {
+    public boolean expire( Cache cache, Object key,  Date expireTime) {
         try {
             return getSchedule().pin(() -> {
                 cache.evict(key);

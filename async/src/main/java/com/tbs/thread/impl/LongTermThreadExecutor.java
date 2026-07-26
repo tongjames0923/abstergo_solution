@@ -16,7 +16,7 @@ public class LongTermThreadExecutor implements Executor, DisposableBean {
     List<Thread> threads = new CopyOnWriteArrayList<>();
 
     @Override
-    public void execute(@NotNull Runnable command) {
+    public void execute( Runnable command) {
         Thread thread = new Thread(command);
         threads.add(thread);
         thread.start();

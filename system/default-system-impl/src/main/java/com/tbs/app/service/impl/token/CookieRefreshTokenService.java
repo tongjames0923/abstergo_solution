@@ -46,7 +46,7 @@ public class CookieRefreshTokenService extends AbstractRefreshTokenService imple
     }
 
     @Override
-    protected IRefreshTokenForm createRefreshTokenForm(@NotNull ITokenModel refreshToken) {
+    protected IRefreshTokenForm createRefreshTokenForm( ITokenModel refreshToken) {
         return new SimpleRefreshTokenForm(refreshToken);
     }
 

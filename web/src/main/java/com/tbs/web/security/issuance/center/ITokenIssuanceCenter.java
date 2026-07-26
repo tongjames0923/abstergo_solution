@@ -25,7 +25,7 @@ public interface ITokenIssuanceCenter {
      *
      * @param form@return 生成的令牌模型，包含令牌的详细信息
      */
-    ITokenModel issueToken(@NotNull TokenRequestForm form);
+    ITokenModel issueToken(TokenRequestForm form);
 
     /**
      * 根据令牌字符串获取令牌模型
@@ -36,7 +36,7 @@ public interface ITokenIssuanceCenter {
      * @param token 令牌字符串，不能为空
      * @return 对应的令牌模型，如果令牌不存在或已失效则可能返回null
      */
-    ITokenModel getTokenByToken(@NotNull String token);
+    ITokenModel getTokenByToken(String token);
 
     /**
      * 设置令牌状态
@@ -47,7 +47,7 @@ public interface ITokenIssuanceCenter {
      * @param token  令牌字符串，不能为空
      * @param status 新的令牌状态，不能为空
      */
-    void setTokenStatus(@NotNull String token, @NotNull TokenStatusEnum status);
+    void setTokenStatus(String token, TokenStatusEnum status);
 
     /**
      * 根据用户名和令牌类型获取用户令牌集合

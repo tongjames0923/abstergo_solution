@@ -394,8 +394,8 @@ public class AssertUtil implements IStartup {
      * @param message           错误消息模板
      * @param params            错误消息参数
      */
-    public static void isTrue(@NotNull boolean expression,
-        @NotNull Function<String, ? extends RuntimeException> exceptionSupplier, @NotNull String message,
+    public static void isTrue( boolean expression,
+         Function<String, ? extends RuntimeException> exceptionSupplier,  String message,
         Object... params) {
         // 如果表达式为true，则抛出异常
         if (expression) {
@@ -411,8 +411,8 @@ public class AssertUtil implements IStartup {
      * @param message           错误消息模板
      * @param params            错误消息参数
      */
-    public static void isTrue(@NotNull Supplier<@NotNull Boolean> expression,
-        @NotNull Function<String, ? extends RuntimeException> exceptionSupplier, @NotNull String message,
+    public static void isTrue( Supplier< Boolean> expression,
+         Function<String, ? extends RuntimeException> exceptionSupplier,  String message,
         Object... params) {
         // 获取表达式的值，如果为true则抛出异常
         if (expression.get()) {
@@ -448,7 +448,7 @@ public class AssertUtil implements IStartup {
      * @param message    错误消息模板
      * @param params     错误消息参数
      */
-    public static void isTrue(@NotNull Supplier<@NotNull Boolean> expression, String message, Object... params) {
+    public static void isTrue( Supplier< Boolean> expression, String message, Object... params) {
         isTrue(expression.get(), FormattedRuntimeException::new, message, params);
     }
 
@@ -461,7 +461,7 @@ public class AssertUtil implements IStartup {
      * @param params            错误消息参数
      */
     public static void notNull(@Nullable Object object,
-        @NotNull Function<String, ? extends RuntimeException> exceptionSupplier, @NotNull String message,
+         Function<String, ? extends RuntimeException> exceptionSupplier,  String message,
         Object... params) {
         // 如果对象为null，则抛出异常
         isTrue(object == null, exceptionSupplier, message, params);
@@ -474,7 +474,7 @@ public class AssertUtil implements IStartup {
      * @param exceptionSupplier 异常提供者
      */
     public static void notNull(@Nullable Object object,
-        @NotNull Supplier<? extends RuntimeException> exceptionSupplier) {
+         Supplier<? extends RuntimeException> exceptionSupplier) {
         notNull(object, (val) -> {
             return exceptionSupplier.get();
         }, "");

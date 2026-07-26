@@ -38,7 +38,7 @@ public interface IMessageSourceProvider {
      *
      * @return basename
      */
-    @NotNull
+    
     String getBasename();
 
     /**

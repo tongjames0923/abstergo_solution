@@ -68,12 +68,12 @@ public class DelayQueueStrategy implements ScheduleStrategy<IScheduleTask> {
         }
 
         @Override
-        public long getDelay(@NotNull TimeUnit unit) {
+        public long getDelay( TimeUnit unit) {
             return unit.convert(delegate.getRemain());
         }
 
         @Override
-        public int compareTo(@NotNull Delayed o) {
+        public int compareTo( Delayed o) {
             return Long.compare(this.getDelay(TimeUnit.MILLISECONDS), o.getDelay(TimeUnit.MILLISECONDS));
         }
     }

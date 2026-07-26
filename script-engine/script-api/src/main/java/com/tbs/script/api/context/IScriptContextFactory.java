@@ -16,5 +16,5 @@ public interface IScriptContextFactory {
      * @param meta 脚本编译器元数据
      * @return 脚本上下文
      */
-    IScriptContext createContextForCompiler(@NotNull IScriptCompilerMeta meta);
+    IScriptContext createContextForCompiler( IScriptCompilerMeta meta);
 }

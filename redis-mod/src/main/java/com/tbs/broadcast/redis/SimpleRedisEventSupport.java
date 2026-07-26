@@ -80,7 +80,7 @@ public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleDis
 	 * @return SimpleDistributedAcceptedPublishResult实例
 	 */
 	@Override
-	public SimpleDistributedAcceptedPublishResult bridge(@NotNull IPublishResult obj) {
+	public SimpleDistributedAcceptedPublishResult bridge( IPublishResult obj) {
 		return simpleDataBridge.bridge(obj);
 	}
 
@@ -94,7 +94,7 @@ public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleDis
 	 * @return IPublishResult实例
 	 */
 	@Override
-	public IPublishResult unbridge(@NotNull SimpleDistributedAcceptedPublishResult obj) {
+	public IPublishResult unbridge( SimpleDistributedAcceptedPublishResult obj) {
 		return simpleDataBridge.unbridge(obj);
 	}
 
@@ -127,7 +127,7 @@ public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleDis
 		 * @return SimpleDistributedAcceptedPublishResult实例
 		 */
 		@Override
-		public SimpleDistributedAcceptedPublishResult bridge(@NotNull IPublishResult obj) {
+		public SimpleDistributedAcceptedPublishResult bridge( IPublishResult obj) {
 			return new SimpleDistributedAcceptedPublishResult(obj.getEvent(), obj.getPublisher().getPushlisherId(),
 				obj.getHandleMode());
 		}
@@ -139,7 +139,7 @@ public class SimpleRedisEventSupport extends AbstractRedisEventSupport<SimpleDis
 		 * @return IPublishResult实例
 		 */
 		@Override
-		public IPublishResult unbridge(@NotNull SimpleDistributedAcceptedPublishResult obj) {
+		public IPublishResult unbridge( SimpleDistributedAcceptedPublishResult obj) {
 			return new SpringManagedListenablePublishResult(obj.getEvent(), obj.getPublisher(), obj.getHandleMode());
 		}
 	}

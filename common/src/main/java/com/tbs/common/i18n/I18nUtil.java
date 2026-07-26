@@ -53,8 +53,8 @@ public final class I18nUtil {
      * @param code 消息代码
      * @return 消息内容
      */
-    @NotNull
-    public static String get(@NotNull String code) {
+    
+    public static String get( String code) {
         return get(code, (Object[])null);
     }
 
@@ -65,8 +65,8 @@ public final class I18nUtil {
      * @param args 消息参数
      * @return 消息内容
      */
-    @NotNull
-    public static String get(@NotNull String code, @Nullable Object... args) {
+    
+    public static String get( String code, @Nullable Object... args) {
         return get(code, args, I18nContextHolder.getLocale());
     }
 
@@ -77,8 +77,8 @@ public final class I18nUtil {
      * @param locale 语言区域
      * @return 消息内容
      */
-    @NotNull
-    public static String get(@NotNull String code, @NotNull Locale locale) {
+    
+    public static String get( String code,  Locale locale) {
         return get(code, null, locale);
     }
 
@@ -90,8 +90,8 @@ public final class I18nUtil {
      * @param locale 语言区域
      * @return 消息内容
      */
-    @NotNull
-    public static String get(@NotNull String code, @Nullable Object[] args, @NotNull Locale locale) {
+    
+    public static String get( String code, @Nullable Object[] args,  Locale locale) {
         // 优先使用自定义消息源
         IMessageSource custom = customMessageSource;
         if (custom != null) {
@@ -117,8 +117,8 @@ public final class I18nUtil {
      * @param defaultMessage 默认消息
      * @return 消息内容
      */
-    @NotNull
-    public static String get(@NotNull String code, @Nullable Object[] args, @Nullable String defaultMessage) {
+    
+    public static String get( String code, @Nullable Object[] args, @Nullable String defaultMessage) {
         // 优先使用自定义消息源
         IMessageSource custom = customMessageSource;
         if (custom != null) {
@@ -141,7 +141,7 @@ public final class I18nUtil {
      * @param code 消息代码
      * @return 是否存在
      */
-    public static boolean has(@NotNull String code) {
+    public static boolean has( String code) {
         IMessageSource custom = customMessageSource;
         if (custom != null) {
             return custom.hasMessage(code, I18nContextHolder.getLocale());
@@ -183,7 +183,7 @@ public final class I18nUtil {
      *
      * @param messageSource 自定义消息源
      */
-    public static void setCustomMessageSource(@NotNull IMessageSource messageSource) {
+    public static void setCustomMessageSource( IMessageSource messageSource) {
         customMessageSource = messageSource;
         log.info("设置自定义MessageSource: {}", messageSource.getClass().getName());
     }
@@ -193,7 +193,7 @@ public final class I18nUtil {
      *
      * @return 自定义消息源，如果未设置返回Optional.empty()
      */
-    @NotNull
+    
     public static Optional<IMessageSource> getCustomMessageSource() {
         return Optional.ofNullable(customMessageSource);
     }
@@ -212,7 +212,7 @@ public final class I18nUtil {
      *
      * @return 当前Locale
      */
-    @NotNull
+    
     public static Locale getCurrentLocale() {
         return I18nContextHolder.getLocale();
     }
@@ -222,7 +222,7 @@ public final class I18nUtil {
      *
      * @param locale 语言区域
      */
-    public static void setCurrentLocale(@NotNull Locale locale) {
+    public static void setCurrentLocale( Locale locale) {
         I18nContextHolder.setLocale(locale);
     }
 }

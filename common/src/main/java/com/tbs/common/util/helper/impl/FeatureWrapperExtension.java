@@ -9,12 +9,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class FeatureWrapperExtension implements IFeatureWrapperExtension {
     @Override
-    public <T> boolean support(@NotNull Object instance, @NotNull Class<T> feature) {
+    public <T> boolean support( Object instance,  Class<T> feature) {
         return instance instanceof IFeatureWrapper;
     }
 
     @Override
-    public <T> T unwrap(@NotNull Object instance, @NotNull Class<T> feature) {
+    public <T> T unwrap( Object instance,  Class<T> feature) {
         // 防止无限递归的情况
         Object original = ((IFeatureWrapper<?>)instance).getOriginal();
         if (original == instance) {

@@ -103,7 +103,7 @@ public class SimpleEvent implements IEvent {
 	 * @param data 要设置的事件数据对象，不能为null
 	 * @param <T>  事件数据的类型
 	 */
-	public <T> void setDataForSerialization(@NotNull T data) {
+	public <T> void setDataForSerialization( T data) {
 		setEventData(SerializationUtils.serialize(data), data.getClass());
 	}
 

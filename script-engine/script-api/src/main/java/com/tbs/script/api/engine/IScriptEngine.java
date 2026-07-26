@@ -40,7 +40,7 @@ public interface IScriptEngine {
      * @param compiler       脚本编译器
      * @param contextFactory 脚本上下文工厂
      */
-    void registerCompilerSpec(@NotNull IScriptCompilerMeta meta, @NotNull IScriptCompiler compiler,
+    void registerCompilerSpec( IScriptCompilerMeta meta,  IScriptCompiler compiler,
         IScriptContextFactory contextFactory);
 
 }

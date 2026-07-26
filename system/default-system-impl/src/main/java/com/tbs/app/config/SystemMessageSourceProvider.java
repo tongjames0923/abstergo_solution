@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 public class SystemMessageSourceProvider extends AbstractMessageSourceProvider {
 
     @Override
-    @NotNull
+    
     public String getBasename() {
         return "messages-system";
     }

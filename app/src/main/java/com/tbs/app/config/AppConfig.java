@@ -38,7 +38,7 @@ public class AppConfig {
     public AbstractMessageSourceProvider appMessageSourceProvider() {
         return new AbstractMessageSourceProvider() {
             @Override
-            public @NotNull String getBasename() {
+            public  String getBasename() {
                 return "i18n/messages-app";
             }
         };
@@ -61,7 +61,7 @@ public class AppConfig {
             }
 
             @Override
-            public boolean support(@NotNull Class<? extends Throwable> clazz) {
+            public boolean support( Class<? extends Throwable> clazz) {
                 return clazz == UnNormalAccountStatusException.class;
             }
         };

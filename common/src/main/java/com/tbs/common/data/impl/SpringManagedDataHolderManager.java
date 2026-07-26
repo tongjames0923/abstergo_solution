@@ -44,7 +44,7 @@ public class SpringManagedDataHolderManager extends AbstractDataHolderManager {
      * @see NotNull 非空注解
      */
     @Override
-    protected @NotNull Map<String, IDataHolder> getDataHolderMap() {
+    protected  Map<String, IDataHolder> getDataHolderMap() {
         return dataHolderMap;
     }
 }

@@ -39,7 +39,7 @@ public class DisableTokenForm implements Serializable {
      * 关联的用户ID
      * </p>
      */
-    @NotNull
+    
     @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED)
     private Long userId;
 }

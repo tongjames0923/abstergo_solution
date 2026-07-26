@@ -28,7 +28,7 @@ public class SimpleThreadRequest implements IThreadRequest {
         private Builder() {
         }
 
-        public static final Builder create(@NotNull String name, @NotNull IThreadCall threadCall) {
+        public static final Builder create( String name,  IThreadCall threadCall) {
             AssertUtil.hasText(name, "name can not be null or empty");
             AssertUtil.notNull(threadCall, "threadCall can not be null");
             Builder builder = new Builder();
@@ -37,7 +37,7 @@ public class SimpleThreadRequest implements IThreadRequest {
             return builder;
         }
 
-        public static final Builder create(@NotNull String name, @NotNull Runnable threadCall) {
+        public static final Builder create( String name,  Runnable threadCall) {
             AssertUtil.hasText(name, "name can not be null or empty");
             AssertUtil.notNull(threadCall, "threadCall can not be null");
             Builder builder = new Builder();
@@ -66,7 +66,7 @@ public class SimpleThreadRequest implements IThreadRequest {
         }
     }
 
-    public SimpleThreadRequest(@NotNull String name, @NotNull IThreadCall threadCall, Integer priority,
+    public SimpleThreadRequest( String name,  IThreadCall threadCall, Integer priority,
         Integer expectedCostTime, String expectedExecutorServiceName) {
         this.threadCall = threadCall;
         this.name = name;

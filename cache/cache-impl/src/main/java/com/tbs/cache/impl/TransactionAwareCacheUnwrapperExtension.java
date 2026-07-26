@@ -30,7 +30,7 @@ public class TransactionAwareCacheUnwrapperExtension implements IFeatureWrapperE
      * @return 如果支持返回true，否则返回false
      */
     @Override
-    public <T> boolean support(@NotNull Object instance, @NotNull Class<T> feature) {
+    public <T> boolean support( Object instance,  Class<T> feature) {
         return instance instanceof TransactionAwareCacheDecorator;
     }
 
@@ -46,7 +46,7 @@ public class TransactionAwareCacheUnwrapperExtension implements IFeatureWrapperE
      * @return 特性实例，如果不存在则返回null
      */
     @Override
-    public <T> T unwrap(@NotNull Object instance, @NotNull Class<T> feature) {
+    public <T> T unwrap( Object instance,  Class<T> feature) {
         var cache = (TransactionAwareCacheDecorator)instance;
         return FeatureWrapperHelper.unwrap(cache.getTargetCache(), feature).orElse(null);
     }

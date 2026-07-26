@@ -38,7 +38,7 @@ public class I18nInterceptor implements IApiInvokeInterceptor {
     private static final String X_LOCALE_HEADER = "X-Locale";
     private static final String ACCEPT_LANGUAGE_HEADER = "Accept-Language";
 
-    @NotNull
+    
     @Override
     public ApiInvokeContext beforeInvoke(ApiInvokeContext context) {
         // 如果Filter已经设置了Locale，则不需要再次设置
@@ -73,7 +73,7 @@ public class I18nInterceptor implements IApiInvokeInterceptor {
         // 不在这里清理，由I18nFilter统一清理
     }
 
-    protected Locale resolveLocale(@NotNull HttpServletRequest request) {
+    protected Locale resolveLocale( HttpServletRequest request) {
         Locale locale = resolveFromParams(request);
         if (locale != null) {
             return locale;
@@ -92,7 +92,7 @@ public class I18nInterceptor implements IApiInvokeInterceptor {
         return null;
     }
 
-    protected Locale resolveFromParams(@NotNull HttpServletRequest request) {
+    protected Locale resolveFromParams( HttpServletRequest request) {
         String lang = request.getParameter(LANG_PARAM);
         if (StrUtil.isNotEmpty(lang)) {
             return parseLocale(lang);
@@ -106,7 +106,7 @@ public class I18nInterceptor implements IApiInvokeInterceptor {
         return null;
     }
 
-    protected Locale resolveFromAcceptLanguage(@NotNull HttpServletRequest request) {
+    protected Locale resolveFromAcceptLanguage( HttpServletRequest request) {
         String acceptLanguage = request.getHeader(ACCEPT_LANGUAGE_HEADER);
         if (StrUtil.isEmpty(acceptLanguage)) {
             return null;
@@ -121,7 +121,7 @@ public class I18nInterceptor implements IApiInvokeInterceptor {
         return null;
     }
 
-    protected Locale resolveFromCustomHeaders(@NotNull HttpServletRequest request) {
+    protected Locale resolveFromCustomHeaders( HttpServletRequest request) {
         String xLang = request.getHeader(X_LANG_HEADER);
         if (StrUtil.isNotEmpty(xLang)) {
             return parseLocale(xLang);

@@ -32,13 +32,13 @@ public class DefaultUserPasswordAccessTokenProvider extends AbstractAccessTokenP
     IPasswordEncrypt encrypt;
 
     @Override
-    protected void validateForm(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm) {
+    protected void validateForm( IUsernameAndPasswordForm iUsernameAndPasswordForm) {
         AssertUtil.hasText(iUsernameAndPasswordForm.getUsername(), I18nUtil.get("user.name.required"));
         AssertUtil.hasText(iUsernameAndPasswordForm.getPassword(), I18nUtil.get("user.password.required"));
     }
 
     @Override
-    protected UserDetails pullUserDetails(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm) {
+    protected UserDetails pullUserDetails( IUsernameAndPasswordForm iUsernameAndPasswordForm) {
         UserDetails details = userInfoService.loadUserInfoByUniqueKey(iUsernameAndPasswordForm.getUsername());
         AssertUtil.notNull(details, I18nUtil.get("user.not.found.with.username", iUsernameAndPasswordForm.getUsername()));
         AssertUtil.isTrue(
@@ -48,7 +48,7 @@ public class DefaultUserPasswordAccessTokenProvider extends AbstractAccessTokenP
     }
 
     @Override
-    protected TokenRequestForm createTokenRequestForm(@NotNull IUsernameAndPasswordForm iUsernameAndPasswordForm,
+    protected TokenRequestForm createTokenRequestForm( IUsernameAndPasswordForm iUsernameAndPasswordForm,
         UserDetails details) {
         return new TokenRequestForm(UuidUtil.getInstance().getUuidString(), details,
             Objects.equals(1, iUsernameAndPasswordForm.getLoginType())

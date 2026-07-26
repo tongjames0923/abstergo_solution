@@ -30,7 +30,7 @@ public class ValueTransformUtils {
      * @param mode  转换模式，TRANSFORM_READ表示读取缓存值，TRANSFORM_WRITE表示写入缓存值
      * @return 转换后的缓存值
      */
-    public static Object valueTransform(@NotNull Object value, int mode) {
+    public static Object valueTransform( Object value, int mode) {
         Class<?> clazz = value.getClass();
         var info = CacheUtils.getInstance().computeIfAbsent("CACHE_TRANSFORM_INFO" + clazz.getName(), () -> {
             if (!clazz.isAnnotationPresent(com.tbs.cache.serialize.annotation.CacheTransform.class)) {

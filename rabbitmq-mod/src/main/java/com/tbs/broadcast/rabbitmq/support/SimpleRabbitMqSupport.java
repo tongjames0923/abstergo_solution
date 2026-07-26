@@ -26,7 +26,7 @@ public class SimpleRabbitMqSupport extends AbstractRabbitMqSupport<SimpleDistrib
 	 * @return 转换后的SimpleDistributedAcceptedPublishResult对象
 	 */
 	@Override
-	public SimpleDistributedAcceptedPublishResult bridge(@NotNull IPublishResult obj) {
+	public SimpleDistributedAcceptedPublishResult bridge( IPublishResult obj) {
 		return new SimpleDistributedAcceptedPublishResult(obj.getEvent(), obj.getPublisher().getPushlisherId(),
 				obj.getHandleMode());
 	}
@@ -41,7 +41,7 @@ public class SimpleRabbitMqSupport extends AbstractRabbitMqSupport<SimpleDistrib
 	 * @return 转换后的IPublishResult对象
 	 */
 	@Override
-	public IPublishResult unbridge(@NotNull SimpleDistributedAcceptedPublishResult obj) {
+	public IPublishResult unbridge( SimpleDistributedAcceptedPublishResult obj) {
 		return new SpringManagedListenablePublishResult(obj.getEvent(), obj.getPublisher(), obj.getHandleMode());
 	}
 }

@@ -19,7 +19,7 @@ public interface IUserRoleRelationService {
 	 * @param userId
 	 * @param roleId
 	 */
-	void enableRole(@NotNull Long userId, @NotNull Long roleId);
+	void enableRole( Long userId,  Long roleId);
 
 	/**
 	 * 禁用角色
@@ -27,7 +27,7 @@ public interface IUserRoleRelationService {
 	 * @param userId
 	 * @param roleId
 	 */
-	void disableRole(@NotNull Long userId, @NotNull Long roleId);
+	void disableRole( Long userId,  Long roleId);
 
 	/**
 	 * 查询用户角色
@@ -35,7 +35,7 @@ public interface IUserRoleRelationService {
 	 * @param userId
 	 * @return
 	 */
-	List<SystemRoleEntity> queryUserRoles(@NotNull Long userId);
+	List<SystemRoleEntity> queryUserRoles( Long userId);
 
 	/**
 	 * 查询用户角色名称,直接用于权限处理
@@ -43,7 +43,7 @@ public interface IUserRoleRelationService {
 	 * @param userId
 	 * @return
 	 */
-	List<String> queryRoles(@NotNull Long userId);
+	List<String> queryRoles( Long userId);
 
 	/**
 	 * 查询角色用户
@@ -51,7 +51,7 @@ public interface IUserRoleRelationService {
 	 * @param roleId
 	 * @return
 	 */
-	List<SystemUserEntity> queryUsersByRole(@NotNull Long roleId);
+	List<SystemUserEntity> queryUsersByRole( Long roleId);
 
 	/**
 	 * 判断角色是否被使用
@@ -59,6 +59,6 @@ public interface IUserRoleRelationService {
 	 * @param roleId
 	 * @return
 	 */
-	boolean isRoleInUsed(@NotNull Long roleId);
+	boolean isRoleInUsed( Long roleId);
 
 }

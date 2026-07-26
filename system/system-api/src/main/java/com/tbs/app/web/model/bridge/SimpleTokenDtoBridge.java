@@ -13,12 +13,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class SimpleTokenDtoBridge implements IDataBridge<TokenModelDto, SimpleTokenModel> {
     @Override
-    public TokenModelDto bridge(@NotNull SimpleTokenModel obj) {
+    public TokenModelDto bridge( SimpleTokenModel obj) {
         return new TokenModelDto(obj);
     }
 
     @Override
-    public SimpleTokenModel unbridge(@NotNull TokenModelDto obj) {
+    public SimpleTokenModel unbridge( TokenModelDto obj) {
         return new SimpleTokenModel(obj.getToken(), obj.getUserName(),
             obj.getStatus() != null ? EnumUtil.valueOf(TokenStatusEnum.class, obj.getStatus()) : null,
             obj.getTokenType() == null ? null : EnumUtil.valueOf(TokenTypeEnum.class, obj.getTokenType()),

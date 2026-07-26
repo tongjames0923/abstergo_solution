@@ -28,7 +28,7 @@ public abstract class AbstractAuthenticationCenter implements IAuthenticationCen
 	 * @throws AuthenticationException
 	 *             认证异常
 	 */
-	protected abstract ITokenAuthentication createAuth(@NotNull ITokenModel model);
+	protected abstract ITokenAuthentication createAuth( ITokenModel model);
 
 	@Override
 	public ITokenAuthentication createAuthenticationByTokenModel(ITokenModel model)

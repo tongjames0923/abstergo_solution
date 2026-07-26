@@ -80,7 +80,7 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
      * @param message 消息体
      * @throws Exception 处理消息时可能发生的异常
      */
-    protected abstract void handleMessage(@NotNull T message) throws Exception;
+    protected abstract void handleMessage( T message) throws Exception;
 
     // ======================== 可选扩展 ========================
 
@@ -93,7 +93,7 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
      * @param message 处理失败的消息体
      * @param error   异常信息
      */
-    protected void handleMessageFailure(@NotNull T message, @NotNull Throwable error) {
+    protected void handleMessageFailure( T message,  Throwable error) {
         log.error("消息处理失败, queue={}", getProperties().getQueueName(), error);
     }
 
@@ -344,7 +344,7 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
      *
      * @param message 要发送的消息体
      */
-    public void send(@NotNull T message) {
+    public void send( T message) {
         MqConsumerProperties props = getProperties();
         amqpTemplate.convertAndSend(props.getExchangeName(), props.getRoutingKey(), message);
     }
@@ -356,7 +356,7 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
      * @param routingKey   路由键
      * @param message      要发送的消息体
      */
-    public void send(@NotNull String exchangeName, @NotNull String routingKey, @NotNull T message) {
+    public void send( String exchangeName,  String routingKey,  T message) {
         amqpTemplate.convertAndSend(exchangeName, routingKey, message);
     }
 

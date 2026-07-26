@@ -25,7 +25,7 @@ public interface IEventDispatcher {
 	 *
 	 * @param subscriber 要注册的订阅者实例，不能为null
 	 */
-	void register(@NotNull AbstractSubscriber subscriber);
+	void register( AbstractSubscriber subscriber);
 
 	/**
 	 * 注销订阅者

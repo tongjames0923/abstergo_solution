@@ -14,7 +14,7 @@ import java.util.stream.Collectors;
 public class DefaultSystemUserDetailsBridge
     implements IDataBridge<DefaultSystemUserDetailsDto, DefaultSystemUserDetails> {
     @Override
-    public DefaultSystemUserDetailsDto bridge(@NotNull DefaultSystemUserDetails obj) {
+    public DefaultSystemUserDetailsDto bridge( DefaultSystemUserDetails obj) {
         return new DefaultSystemUserDetailsDto(obj.getDepartments(), obj.getCurrentDepartment(), obj.getUsername(),
             obj.getPassword(), obj.isAccountNonExpired(), obj.isAccountNonLocked(), obj.isCredentialsNonExpired(),
             obj.isEnabled(), CollUtil.isEmpty(obj.getAuthorities()) ? null
@@ -22,7 +22,7 @@ public class DefaultSystemUserDetailsBridge
     }
 
     @Override
-    public DefaultSystemUserDetails unbridge(@NotNull DefaultSystemUserDetailsDto obj) {
+    public DefaultSystemUserDetails unbridge( DefaultSystemUserDetailsDto obj) {
         return new DefaultSystemUserDetails(obj.getDepartments(), obj.getCurrentDepartment(), obj.getUsername(),
             obj.getPassword(), obj.isAccountNonExpired(), obj.isAccountNonLocked(), obj.isCredentialsNonExpired(),
             obj.isEnabled(), CollUtil.isEmpty(obj.getAuthorities()) ? null : obj.getAuthorities().stream().map((s) -> {

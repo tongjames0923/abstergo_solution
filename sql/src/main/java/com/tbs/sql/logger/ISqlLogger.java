@@ -54,5 +54,5 @@ public interface ISqlLogger {
      *
      * @param sqlRuntimeStatus SQL运行时状态，包含SQL语句、执行时间、参数、结果等信息
      */
-    void log(@NotNull SqlRuntimeStatus sqlRuntimeStatus);
+    void log( SqlRuntimeStatus sqlRuntimeStatus);
 }

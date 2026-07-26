@@ -17,7 +17,7 @@ public interface IOnErrorAjaxProvider<T extends Throwable> extends Ordered {
      */
     AjaxResult onError(T throwable);
 
-    default boolean support(@NotNull Class<? extends Throwable> clazz) {
+    default boolean support( Class<? extends Throwable> clazz) {
         return true;
     }
 

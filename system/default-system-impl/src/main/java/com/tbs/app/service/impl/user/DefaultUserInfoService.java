@@ -39,7 +39,7 @@ public class DefaultUserInfoService implements IUserInfoService {
     private SystemCompanyMapper companyMapper;
 
     @Override
-    public UserDetails loadUserInfoByUniqueKey(@NotNull String uniqueKey) {
+    public UserDetails loadUserInfoByUniqueKey( String uniqueKey) {
         var users = systemUserService.queryByUserName(uniqueKey);
         AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException(I18nUtil.get("user.not.found")));
         var user = CollUtil.of(users).findFirstOrNull();

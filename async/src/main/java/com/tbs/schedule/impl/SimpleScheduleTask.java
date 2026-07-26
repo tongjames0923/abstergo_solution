@@ -20,7 +20,7 @@ public class SimpleScheduleTask implements IScheduleTask {
     private boolean pin = false;
 
     @Override
-    public @NotNull Duration getRemain() {
+    public  Duration getRemain() {
         if (shouldRunTime == null) {
             return Duration.ZERO;
         }
@@ -29,12 +29,12 @@ public class SimpleScheduleTask implements IScheduleTask {
     }
 
     @Override
-    public @NotNull Runnable getRunnable() {
+    public  Runnable getRunnable() {
         return runnable;
     }
 
     @Override
-    public @NotNull ISchedule getSchedule() {
+    public  ISchedule getSchedule() {
         return schedule;
     }
 

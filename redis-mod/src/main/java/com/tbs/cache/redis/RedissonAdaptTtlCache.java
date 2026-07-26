@@ -40,7 +40,7 @@ public class RedissonAdaptTtlCache extends AbstractAdaptTtlCache {
     }
 
     @Override
-    public boolean expire(@NotNull Cache cache, Object key, @NotNull Date expireTime) {
+    public boolean expire( Cache cache, Object key,  Date expireTime) {
         var redissonCache = FeatureWrapperHelper.unwrap(cache, RedissonCache.class);
         if (redissonCache.isPresent()) {
             var nativeCache = redissonCache.get().getNativeCache();

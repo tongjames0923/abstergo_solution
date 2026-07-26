@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
  */
 public class EmptySimpleScriptContextFactory implements IScriptContextFactory {
     @Override
-    public IScriptContext createContextForCompiler(@NotNull IScriptCompilerMeta meta) {
+    public IScriptContext createContextForCompiler( IScriptCompilerMeta meta) {
         return new SimpleLocalMapSciptContext();
     }
 }

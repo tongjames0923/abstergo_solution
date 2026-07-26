@@ -14,7 +14,7 @@ public interface IFeatureWrapperExtension extends Ordered {
      * @param instance
      * @return
      */
-    <T> boolean support(@NotNull Object instance, @NotNull Class<T> feature);
+    <T> boolean support( Object instance,  Class<T> feature);
 
     /**
      * 解包
@@ -24,6 +24,6 @@ public interface IFeatureWrapperExtension extends Ordered {
      * @param <T>
      * @return
      */
-    <T> T unwrap(@NotNull Object instance, @NotNull Class<T> feature);
+    <T> T unwrap( Object instance,  Class<T> feature);
 
 }

@@ -14,7 +14,7 @@ public interface IDepartmentUserRelationService {
      * @param userId
      * @return
      */
-    List<SystemDepartmentEntity> queryUserDepartments(@NotNull Long userId);
+    List<SystemDepartmentEntity> queryUserDepartments( Long userId);
 
     /**
      * 查询部门所属用户
@@ -22,7 +22,7 @@ public interface IDepartmentUserRelationService {
      * @param departmentId
      * @return
      */
-    List<SystemUserEntity> queryDepartmentUsers(@NotNull Long departmentId);
+    List<SystemUserEntity> queryDepartmentUsers( Long departmentId);
 
     /**
      * 添加用户到部门
@@ -30,7 +30,7 @@ public interface IDepartmentUserRelationService {
      * @param userId
      * @param departmentId
      */
-    void addUserToDepartment(@NotNull Long userId, @NotNull Long departmentId);
+    void addUserToDepartment( Long userId,  Long departmentId);
 
     /**
      * 删除用户从部门
@@ -38,5 +38,5 @@ public interface IDepartmentUserRelationService {
      * @param userId
      * @param departmentId
      */
-    void deleteUserFromDepartment(@NotNull Long userId, @NotNull Long departmentId);
+    void deleteUserFromDepartment( Long userId,  Long departmentId);
 }

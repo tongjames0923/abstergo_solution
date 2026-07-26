@@ -29,14 +29,14 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
      *
      * @param form 表单
      */
-    protected abstract void validateForm(@NotNull FORM form);
+    protected abstract void validateForm( FORM form);
 
     /**
      * 验证用户信息
      *
      * @param userDetails 用户信息
      */
-    protected void validateUser(@NotNull UserDetails userDetails) {
+    protected void validateUser( UserDetails userDetails) {
         AuthUtil.checkUserDetails(userDetails);
         var validators = getUserValidators();
         if (CollUtil.isEmpty(validators)) {
@@ -51,7 +51,7 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
      * @param form 表单
      * @return 用户信息
      */
-    protected abstract UserDetails pullUserDetails(@NotNull FORM form);
+    protected abstract UserDetails pullUserDetails( FORM form);
 
     /**
      * 用户验证器
@@ -74,7 +74,7 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
      * @param details 用户信息
      * @return 令牌请求表单
      */
-    protected abstract TokenRequestForm createTokenRequestForm(@NotNull FORM form, UserDetails details);
+    protected abstract TokenRequestForm createTokenRequestForm( FORM form, UserDetails details);
 
     @Resource
     private IUserLoginInfoService userLoginInfoService;
@@ -87,7 +87,7 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
     private ITokenIssuanceCenter tokenIssuanceCenter;
 
     @Override
-    public ITokenModel requestToken(@NotNull FORM form) {
+    public ITokenModel requestToken( FORM form) {
         validateForm(form);
         UserDetails userDetails = pullUserDetails(form);
         validateUser(userDetails);

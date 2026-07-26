@@ -49,7 +49,7 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
     }
 
     @Override
-    protected void handleMessage(@NotNull LoggingRecordForm message) throws Exception {
+    protected void handleMessage( LoggingRecordForm message) throws Exception {
         // 检查是否为刷新标志
         if (message.getFlushFlag() != null && message.getFlushFlag() == 1) {
             flushBuffer();

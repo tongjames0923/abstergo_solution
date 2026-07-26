@@ -40,7 +40,7 @@ public interface IFeatureWrapper<T> {
      * @param featureClass 功能对象类型
      * @return 指定功能对象，可能为null
      */
-    default <F> Optional<F> getFeatureIfExsit(@NotNull Class<F> featureClass) {
+    default <F> Optional<F> getFeatureIfExsit( Class<F> featureClass) {
         return FeatureWrapperHelper.unwrap(this, featureClass);
     }
 

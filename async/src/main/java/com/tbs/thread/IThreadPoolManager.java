@@ -14,5 +14,5 @@ public interface IThreadPoolManager {
      * @param request
      * @param onThreadError
      */
-    void submit(@NotNull IThreadRequest request, IOnThreadError onThreadError);
+    void submit( IThreadRequest request, IOnThreadError onThreadError);
 }
