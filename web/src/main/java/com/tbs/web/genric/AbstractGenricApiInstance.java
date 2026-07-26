@@ -3,10 +3,10 @@ package com.tbs.web.genric;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -19,43 +19,47 @@ import java.util.*;
  * @author abstergo
  */
 
+@Getter
 @Slf4j
 public abstract class AbstractGenricApiInstance<R extends Serializable> {
+    /**
+     * -- GETTER -- 获取接口唯一标识
+     *
+     * @return
+     */
     private String apiId;
+    /**
+     * -- GETTER -- 获取接口版本号
+     *
+     * @return
+     */
     private Integer apiVersion;
+    /**
+     * -- GETTER -- 是否需要认证
+     *
+     * @return
+     */
     private boolean needAuth;
 
-    public AbstractGenricApiInstance(String apiId, Integer apiVersion, boolean needAuth) {
+    private List<IApiInstancePreAuth> preAuths;
+
+    public AbstractGenricApiInstance(String apiId, Integer apiVersion, boolean needAuth, IApiInstancePreAuth... auths) {
         this.apiId = apiId;
         this.apiVersion = apiVersion;
         this.needAuth = needAuth;
+        if (CollUtil.isNotEmpty(auths)) {
+            this.preAuths = Arrays.asList(auths);
+        } else {
+            this.preAuths = new ArrayList<>(4);
+        }
     }
 
-    /**
-     * 获取接口唯一标识
-     *
-     * @return
-     */
-    public String getApiId() {
-        return apiId;
+    public List<IApiInstancePreAuth> getPreAuths() {
+        return preAuths;
     }
 
-    /**
-     * 获取接口版本号
-     *
-     * @return
-     */
-    public Integer getApiVersion() {
-        return apiVersion;
-    }
-
-    /**
-     * 是否需要认证
-     *
-     * @return
-     */
-    public boolean isNeedAuth() {
-        return needAuth;
+    public void setPreAuths(List<IApiInstancePreAuth> preAuths) {
+        this.preAuths = preAuths;
     }
 
     /**
@@ -72,6 +76,19 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
         ApiInvokeResultVo<R> resultVo = new ApiInvokeResultVo<>();
         AssertUtil.isTrue(isNeedAuth() && u == null).i18n("GENERIC.API.NOT_LOGIN")
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        // 执行预认证
+        if (CollUtil.isNotEmpty(getPreAuths())) {
+            for (IApiInstancePreAuth preAuth : getPreAuths()) {
+                try {
+                    preAuth.preAuth(u, null, this);
+                } catch (Exception e) {
+                    log.warn("预认证失败: {}", e.getMessage());
+                    AssertUtil.isTrue(true).i18n("generic.api.pre.auth.failed").params(preAuth.getPreAuthId())
+                        .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                }
+            }
+        }
+
         if (CollUtil.isEmpty(parameterForms)) {
             invoke(paramMap, resultVo, Optional.ofNullable(u));
             return resultVo;

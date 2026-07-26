@@ -5,6 +5,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
 import lombok.extern.slf4j.Slf4j;
@@ -15,10 +16,9 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.time.Duration;
+import java.util.*;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -32,7 +32,9 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializable> {
 
-    private static final HttpClient HTTP_CLIENT = HttpClient.newHttpClient();
+    private static final HttpClient HTTP_CLIENT =
+        HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).executor(Executors.newFixedThreadPool(4))
+            .build();
 
     /**
      * 服务实例地址 (host:port)
@@ -49,12 +51,35 @@ public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializ
      */
     private final String methodName;
 
+
     public HttpTriGenricApiInstance(String apiId, Integer apiVersion, boolean needAuth, String baseUrl,
-        String interfaceName, String methodName) {
+        String interfaceName, String methodName, String... preAuthBeanNames) {
         super(apiId, apiVersion, needAuth);
         this.baseUrl = baseUrl;
         this.interfaceName = interfaceName;
         this.methodName = methodName;
+
+        // 获取所有可用的预认证实现
+        Collection<IApiInstancePreAuth> allPreAuths = SpringUtil.getBeansOfType(IApiInstancePreAuth.class).values();
+        Map<String, IApiInstancePreAuth> preAuthMap =
+            allPreAuths.stream().collect(Collectors.toMap(IApiInstancePreAuth::getPreAuthId, preAuth -> preAuth));
+
+        // 从预认证ID列表中获取预认证实例
+        if (CollUtil.isNotEmpty(preAuthBeanNames)) {
+            var preAuthIdsSet = new HashSet<>(Arrays.asList(preAuthBeanNames));
+            for (var preAuthId : preAuthIdsSet) {
+                try {
+                    var preAuth = preAuthMap.get(preAuthId);
+                    if (preAuth != null) {
+                        this.getPreAuths().add(preAuth);
+                    } else {
+                        log.warn("预认证ID不存在: {}", preAuthId);
+                    }
+                } catch (Exception e) {
+                    log.warn("获取预验证失败: {}", preAuthId, e);
+                }
+            }
+        }
     }
 
     @Override

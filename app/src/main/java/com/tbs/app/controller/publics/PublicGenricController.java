@@ -57,8 +57,17 @@ public class PublicGenricController extends AbstractNoAuthGenricApiController {
         List<AbstractGenricApiInstance> instances = new ArrayList<>();
         for (var service : services) {
             String baseUrl = service.getHost() + ":" + service.getPort();
+            // 从预认证Bean名称字符串解析为数组
+            String[] preAuthBeanNames = null;
+            if (apiConfig.getPreAuthBeans() != null && !apiConfig.getPreAuthBeans().trim().isEmpty()) {
+                preAuthBeanNames = apiConfig.getPreAuthBeans().split(",");
+                // 去除每个Bean名称的前后空格
+                for (int i = 0; i < preAuthBeanNames.length; i++) {
+                    preAuthBeanNames[i] = preAuthBeanNames[i].trim();
+                }
+            }
             instances.add(new HttpTriGenricApiInstance(id, apiConfig.getVersion(), apiConfig.getNeedAuth(), baseUrl,
-                apiConfig.getInterfaceName(), apiConfig.getMethodName()));
+                apiConfig.getInterfaceName(), apiConfig.getMethodName(), preAuthBeanNames));
         }
         return instances;
     }

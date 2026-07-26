@@ -5,7 +5,6 @@ import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.dic.enums.DataDicFlagEnum;
 import com.tbs.knife4j.annotation.AjaxResponseType;
@@ -187,6 +186,16 @@ public class GenericApiController
         @Parameter(name = "apiId", description = "API ID", required = true) @PathVariable String apiId) {
         genericApiService.disableApi(apiId);
         return successResult(null);
+    }
+
+    /**
+     * 获取所有可用的预授权列表
+     *
+     * @return 预授权列表
+     */
+    @GetMapping("allPreAuth")
+    public AjaxResult getAllPreAuth() {
+        return successResult(genericApiService.getAllAvaliablePreAuthList());
     }
 
     @Override

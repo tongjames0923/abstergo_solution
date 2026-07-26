@@ -80,3 +80,14 @@ export function disableGenericApi(apiId) {
     method: 'post'
   })
 }
+
+/**
+ * 获取所有可用的预认证实现列表
+ * @returns {Promise} 预认证实现列表
+ */
+export function getAvailablePreAuths() {
+  return request({
+    url: '/private/admin/generic-api/allPreAuth',
+    method: 'get'
+  })
+}

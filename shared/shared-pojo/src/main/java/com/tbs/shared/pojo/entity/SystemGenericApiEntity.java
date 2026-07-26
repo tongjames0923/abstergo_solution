@@ -101,6 +101,12 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
     private String description;
 
     /**
+     * 预认证Bean列表,以逗号分隔
+     */
+    @Column(name = "pre_auth_beans")
+    private String preAuthBeans;
+
+    /**
      * 创建时间
      */
     @Column(name = "create_time")

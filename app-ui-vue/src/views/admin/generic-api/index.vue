@@ -277,6 +277,21 @@
               />
             </el-form-item>
           </div>
+          <el-form-item :label="$t('genericApi.preAuthBeans')">
+            <el-select
+              v-model="apiForm.preAuthBeans"
+              multiple
+              :placeholder="$t('genericApi.preAuthBeansPlaceholder')"
+              style="width: 100%;"
+            >
+              <el-option
+                v-for="item in preAuthOptions"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              />
+            </el-select>
+          </el-form-item>
           <el-form-item :label="$t('genericApi.description')">
             <el-input
               v-model="apiForm.description"
@@ -389,7 +404,8 @@ import {
   saveGenericApi,
   deleteGenericApi,
   enableGenericApi,
-  disableGenericApi
+  disableGenericApi,
+  getAvailablePreAuths
 } from '@/api/generic-api'
 import request from "@/utils/request";
 
@@ -448,8 +464,9 @@ export default {
     }
   },
   mounted() {
-    this.loadData()
-  },
+    this.loadData();
+    this.loadPreAuthOptions();
+  },,
   data() {
     return {
       // 搜索
@@ -499,16 +516,32 @@ export default {
           { required: true, message: this.$t('genericApi.methodNameRequired'), trigger: 'blur' }
         ]
       },
+      // 预认证选项
+      preAuthOptions: []
 
       // API测试对话框
       testDialogVisible: false,
       currentApi: {},
-      requestBody: '{\n  \"param1\": \"value1\",\n  \"param2\": \"value2\"\n}',
+      requestBody: '{\n  "param1": "value1",\n  "param2": "value2"\n}',
       testResult: '',
       testLoading: false
     }
   },
+  mounted() {
+    this.loadData();
+    this.loadPreAuthOptions();
+  },
   methods: {
+    // 加载预认证选项
+    async loadPreAuthOptions() {
+      try {
+        const response = await getAvailablePreAuths();
+        this.preAuthOptions = response.data || [];
+      } catch (error) {
+        console.error('加载预认证选项失败:', error);
+        this.preAuthOptions = [];
+      }
+    },
     // ========== 数据加载 ==========
     async loadData() {
       this.loading = true
@@ -581,6 +614,7 @@ export default {
         methodName: '',
         version: '',
         needAuth: false,
+        preAuthBeans: [],
         description: ''
       }
       this.dialogVisible = true
@@ -600,6 +634,7 @@ export default {
         methodName: row.methodName,
         version: row.version || '',
         needAuth: row.needAuth || false,
+        preAuthBeans: row.preAuthBeans ? row.preAuthBeans.split(',') : [],
         description: row.description || ''
       }
       this.dialogVisible = true
@@ -617,7 +652,14 @@ export default {
 
       this.saving = true
       try {
-        await saveGenericApi({ ...this.apiForm })
+        // 将预认证Bean数组转换为逗号分隔的字符串
+        const apiFormData = { ...this.apiForm };
+        if (apiFormData.preAuthBeans && apiFormData.preAuthBeans.length > 0) {
+          apiFormData.preAuthBeans = apiFormData.preAuthBeans.join(',');
+        } else {
+          apiFormData.preAuthBeans = '';
+        }
+        await saveGenericApi(apiFormData);
         this.dialogVisible = false
         await this.loadData()
       } catch (error) {

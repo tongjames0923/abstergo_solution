@@ -228,6 +228,8 @@ export default {
     methodNamePlaceholder: '请输入调用方法名',
     methodNameRequired: '请输入方法名称',
     needAuth: '需要鉴权',
+    preAuthBeans: '预认证实现',
+    preAuthBeansPlaceholder: '请选择预认证实现',
     version: '版本',
     versionPlaceholder: '如 1.0.0',
     description: '描述',

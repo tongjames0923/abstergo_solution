@@ -228,6 +228,8 @@ export default {
     methodNamePlaceholder: 'Please enter method name',
     methodNameRequired: 'Please enter method name',
     needAuth: 'Auth Required',
+    preAuthBeans: 'Pre-auth Implementations',
+    preAuthBeansPlaceholder: 'Select pre-auth implementations',
     version: 'Version',
     versionPlaceholder: 'e.g. 1.0.0',
     description: 'Description',
