@@ -45,6 +45,10 @@ public class PublicGenricController extends AbstractNoAuthGenricApiController {
         AssertUtil.isTrue(!Objects.equals(DataDicFlagEnum.ENABLE.getCode(), apiConfig.getFlag()))
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("generic.api.disabled").params(apiConfig.getApiName())
             .throwIt();
+
+        AssertUtil.isTrue(Objects.equals(DataDicFlagEnum.ENABLE.getCode(), apiConfig.getNeedAuth()))
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("generic.api.need.auth").params(apiConfig.getApiName())
+            .throwIt();
         // 通过服务发现获取实例地址
         var services = DubboUtils.getServiceInstance(apiConfig.getAppName());
         AssertUtil.isTrue(CollUtil.isEmpty(services)).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
