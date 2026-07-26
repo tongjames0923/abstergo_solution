@@ -243,6 +243,13 @@ export default {
     saving: '保存中...',
     confirmToggle: '确认要{action}API「{name}」吗？',
     confirmDelete: '确认要删除API「{name}」吗？此操作不可恢复。',
+    test: '测试',
+    testPrivate: '私有API测试',
+    testPublic: '公共API测试',
+    testDialogTitle: '测试API - {apiName}',
+    requestBody: '请求体',
+    executeTest: '执行测试',
+    responseResult: '响应结果',
     emptyTitle: '暂无API配置',
     emptyDesc: '点击「新增API」按钮创建第一个泛化API配置'
   },

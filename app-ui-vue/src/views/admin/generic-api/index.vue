@@ -12,6 +12,26 @@
         </div>
         <div class="header-right">
           <el-button
+            type="success"
+            icon="el-icon-position"
+            size="small"
+            class="test-btn"
+            @click="openTestUrl('private')"
+            style="margin-right: 8px;"
+          >
+            {{ $t('genericApi.testPrivate') }}
+          </el-button>
+          <el-button
+            type="info"
+            icon="el-icon-position"
+            size="small"
+            class="test-btn"
+            @click="openTestUrl('public')"
+            style="margin-right: 8px;"
+          >
+            {{ $t('genericApi.testPublic') }}
+          </el-button>
+          <el-button
             type="primary"
             icon="el-icon-plus"
             size="small"
@@ -80,93 +100,83 @@
         </div>
       </div>
 
-      <!-- 数据表格 -->
-      <div class="table-panel">
-        <el-table
-          v-loading="loading"
-          :data="tableData"
-          border
-          stripe
-          size="small"
-          class="api-table"
-          :header-cell-style="{ background: '#f8fafc', color: '#475569', fontWeight: '600', fontSize: '13px' }"
-          empty-text=" "
-        >
-          <el-table-column type="index" label="#" width="50" align="center" />
-          <el-table-column prop="apiId" :label="$t('genericApi.apiId')" min-width="140">
-            <template slot-scope="{ row }">
-              <code class="mono-text">{{ row.apiId }}</code>
-            </template>
-          </el-table-column>
-          <el-table-column prop="apiName" :label="$t('genericApi.apiName')" min-width="150" show-overflow-tooltip>
-            <template slot-scope="{ row }">
-              <span class="api-name-text">{{ row.apiName }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="appName" :label="$t('genericApi.appName')" min-width="120" show-overflow-tooltip>
-            <template slot-scope="{ row }">
-              <el-tag size="mini" effect="plain" type="info" class="app-tag">{{ row.appName }}</el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="interfaceName" :label="$t('genericApi.interfaceName')" min-width="200" show-overflow-tooltip>
-            <template slot-scope="{ row }">
-              <code class="mono-text mono-text--sm">{{ row.interfaceName }}</code>
-            </template>
-          </el-table-column>
-          <el-table-column prop="methodName" :label="$t('genericApi.methodName')" min-width="120" show-overflow-tooltip>
-            <template slot-scope="{ row }">
-              <code class="mono-text mono-text--method">{{ row.methodName }}</code>
-            </template>
-          </el-table-column>
-          <el-table-column prop="needAuth" :label="$t('genericApi.needAuth')" width="90" align="center">
-            <template slot-scope="{ row }">
-              <el-tag :type="row.needAuth ? 'warning' : 'info'" size="mini" effect="light">
-                {{ row.needAuth ? $t('common.yes') : $t('common.no') }}
-              </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="version" :label="$t('genericApi.version')" width="80" align="center">
-            <template slot-scope="{ row }">
-              <span class="version-text">{{ row.version || '-' }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="flag" :label="$t('genericApi.status')" width="90" align="center">
-            <template slot-scope="{ row }">
-              <div class="status-indicator">
-                <span class="status-dot" :class="row.flag === 1 ? 'status-dot--active' : 'status-dot--inactive'" />
-                <span class="status-text" :class="row.flag === 1 ? 'status-text--active' : 'status-text--inactive'">
-                  {{ row.flag === 1 ? $t('genericApi.enabled') : $t('genericApi.disabled') }}
-                </span>
+      <!-- 宫格卡片布局 -->
+      <div class="grid-panel">
+        <el-skeleton v-if="loading" :rows="6" animated />
+        <div v-else-if="tableData.length > 0" class="api-grid">
+          <div v-for="item in tableData" :key="item.id" class="api-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="el-icon-monitor card-icon"></i>
+                <h3 class="api-name">{{ item.apiName }}</h3>
               </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="updateTime" :label="$t('genericApi.updateTime')" width="160" align="center">
-            <template slot-scope="{ row }">
-              <span class="time-text">{{ formatTime(row.updateTime) }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column :label="$t('genericApi.operation')" width="200" align="center" fixed="right">
-            <template slot-scope="{ row }">
-              <el-button size="mini" type="text" class="edit-text" @click="handleEdit(row)">
-                {{ $t('common.edit') }}
+              <div class="card-status">
+                <el-tag :type="item.flag === 1 ? 'success' : 'info'" size="small">
+                  {{ item.flag === 1 ? $t('genericApi.enabled') : $t('genericApi.disabled') }}
+                </el-tag>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="card-section">
+                <div class="section-title">API信息</div>
+                <div class="info-item">
+                  <label>ID:</label>
+                  <span class="mono-text">{{ item.apiId }}</span>
+                </div>
+                <div class="info-item">
+                  <label>{{ $t('genericApi.appName') }}:</label>
+                  <el-tag size="mini" type="info">{{ item.appName }}</el-tag>
+                </div>
+                <div class="info-item">
+                  <label>{{ $t('genericApi.interfaceName') }}:</label>
+                  <code class="mono-text mono-text--sm">{{ item.interfaceName }}</code>
+                </div>
+                <div class="info-item">
+                  <label>{{ $t('genericApi.methodName') }}:</label>
+                  <code class="mono-text mono-text--method">{{ item.methodName }}</code>
+                </div>
+                <div class="info-item">
+                  <label>{{ $t('genericApi.version') }}:</label>
+                  <span>{{ item.version || '-' }}</span>
+                </div>
+                <div class="info-item">
+                  <label>{{ $t('genericApi.needAuth') }}:</label>
+                  <el-tag :type="item.needAuth ? 'warning' : 'info'" size="mini">
+                    {{ item.needAuth ? $t('common.yes') : $t('common.no') }}
+                  </el-tag>
+                </div>
+              </div>
+              <div class="card-section">
+                <div class="section-title">时间信息</div>
+                <div class="info-item">
+                  <label>{{ $t('genericApi.updateTime') }}:</label>
+                  <span>{{ formatTime(item.updateTime) }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="card-footer">
+              <el-button size="mini" type="text" class="test-api-btn" @click="openApiTestDialog(item)">
+                <i class="el-icon-caret-right"></i> {{ $t('genericApi.test') }}
+              </el-button>
+              <el-button size="mini" type="text" class="edit-text" @click="handleEdit(item)">
+                <i class="el-icon-edit-outline"></i> {{ $t('common.edit') }}
               </el-button>
               <el-button
                 size="mini"
                 type="text"
-                :class="row.flag === 1 ? 'warning-text' : 'success-text'"
-                @click="handleToggle(row)"
+                :class="item.flag === 1 ? 'warning-text' : 'success-text'"
+                @click="handleToggle(item)"
               >
-                {{ row.flag === 1 ? $t('genericApi.disable') : $t('genericApi.enable') }}
+                <i :class="item.flag === 1 ? 'el-icon-video-pause' : 'el-icon-video-play'"></i>
+                {{ item.flag === 1 ? $t('genericApi.disable') : $t('genericApi.enable') }}
               </el-button>
-              <el-button size="mini" type="text" class="danger-text" @click="handleDelete(row)">
-                {{ $t('common.delete') }}
+              <el-button size="mini" type="text" class="danger-text" @click="handleDelete(item)">
+                <i class="el-icon-delete"></i> {{ $t('common.delete') }}
               </el-button>
-            </template>
-          </el-table-column>
-        </el-table>
-
-        <!-- 空状态 -->
-        <div v-if="!loading && tableData.length === 0" class="empty-state">
+            </div>
+          </div>
+        </div>
+        <div v-else class="empty-state">
           <div class="empty-graphic">
             <svg width="100" height="100" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
               <rect x="15" y="25" width="70" height="50" rx="6" stroke="#cbd5e1" stroke-width="2" fill="none" />
@@ -285,6 +295,52 @@
           </el-button>
         </div>
       </el-dialog>
+
+      <!-- API测试对话框 -->
+      <el-dialog
+        :title="$t('genericApi.testDialogTitle', { apiName: currentApi.apiName })"
+        :visible.sync="testDialogVisible"
+        width="700px"
+        :close-on-click-modal="false"
+        @close="closeTestDialog"
+      >
+        <div class="test-dialog-content">
+          <div class="test-info">
+            <el-descriptions :column="2" size="small" border>
+              <el-descriptions-item :label="$t('genericApi.apiId')">{{ currentApi.apiId }}</el-descriptions-item>
+              <el-descriptions-item :label="$t('genericApi.needAuth')">
+                <el-tag :type="currentApi.needAuth ? 'warning' : 'info'" size="mini">
+                  {{ currentApi.needAuth ? $t('common.yes') : $t('common.no') }}
+                </el-tag>
+              </el-descriptions-item>
+              <el-descriptions-item :label="$t('genericApi.appName')">{{ currentApi.appName }}</el-descriptions-item>
+              <el-descriptions-item :label="$t('genericApi.interfaceName')">{{ currentApi.interfaceName }}</el-descriptions-item>
+              <el-descriptions-item :label="$t('genericApi.methodName')">{{ currentApi.methodName }}</el-descriptions-item>
+              <el-descriptions-item :label="$t('genericApi.version')">{{ currentApi.version || '-' }}</el-descriptions-item>
+            </el-descriptions>
+          </div>
+
+          <div class="request-section">
+            <div class="section-header">
+              <h4>{{ $t('genericApi.requestBody') }}</h4>
+              <el-button size="mini" type="primary" @click="executeApiTest" :loading="testLoading">
+                <i class="el-icon-caret-right"></i> {{ $t('genericApi.executeTest') }}
+              </el-button>
+            </div>
+            <el-input
+              v-model="requestBody"
+              type="textarea"
+              :rows="8"
+              placeholder="输入JSON格式的请求参数"
+            />
+          </div>
+
+          <div class="response-section" v-if="testResult">
+            <h4>{{ $t('genericApi.responseResult') }}</h4>
+            <pre class="response-result">{{ testResult }}</pre>
+          </div>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -297,6 +353,8 @@ import {
   enableGenericApi,
   disableGenericApi
 } from '@/api/generic-api'
+import request from "@/utils/request";
+
 
 export default {
   name: 'GenericApiAdmin',
@@ -353,6 +411,64 @@ export default {
   },
   mounted() {
     this.loadData()
+  },
+  data() {
+    return {
+      // 搜索
+      searchForm: {
+        apiNameLike: '',
+        appNameLike: '',
+        interfaceNameLike: '',
+        flag: null
+      },
+
+      // 表格
+      loading: false,
+      tableData: [],
+      total: 0,
+      pageNum: 1,
+      pageSize: 10,
+
+      // 弹窗
+      dialogVisible: false,
+      dialogType: 'add',
+      saving: false,
+      apiForm: {
+        id: null,
+        apiId: '',
+        apiName: '',
+        appName: '',
+        interfaceName: '',
+        methodName: '',
+        version: '',
+        needAuth: false,
+        description: ''
+      },
+      formRules: {
+        apiId: [
+          { required: true, message: this.$t('genericApi.apiIdRequired'), trigger: 'blur' }
+        ],
+        apiName: [
+          { required: true, message: this.$t('genericApi.apiNameRequired'), trigger: 'blur' }
+        ],
+        appName: [
+          { required: true, message: this.$t('genericApi.appNameRequired'), trigger: 'blur' }
+        ],
+        interfaceName: [
+          { required: true, message: this.$t('genericApi.interfaceNameRequired'), trigger: 'blur' }
+        ],
+        methodName: [
+          { required: true, message: this.$t('genericApi.methodNameRequired'), trigger: 'blur' }
+        ]
+      },
+
+      // API测试对话框
+      testDialogVisible: false,
+      currentApi: {},
+      requestBody: '{\n  \"param1\": \"value1\",\n  \"param2\": \"value2\"\n}',
+      testResult: '',
+      testLoading: false
+    }
   },
   methods: {
     // ========== 数据加载 ==========
@@ -523,6 +639,80 @@ export default {
       }
     },
 
+    // 打开API测试对话框
+    openApiTestDialog(api) {
+      this.currentApi = api;
+      this.requestBody = this.getDefaultRequestBody(api);
+      this.testDialogVisible = true;
+    },
+
+    // 获取默认请求体
+    getDefaultRequestBody(api) {
+      // 根据API信息生成符合后端规范的请求体
+      const defaultBody = {
+        id: api.apiId,
+        version: api.version ? parseInt(api.version) : null,
+        parameters: [
+          // 这里可以根据接口定义动态生成参数模板
+          {
+            parameterName: "param1",
+            exceptdClassName: "java.lang.String",
+            parameterValue: "value1"
+          },
+          {
+            parameterName: "param2",
+            exceptdClassName: "java.lang.String",
+            parameterValue: "value2"
+          }
+        ]
+      };
+      return JSON.stringify(defaultBody, null, 2);
+    },
+
+    // 执行API测试
+    async executeApiTest() {
+      this.testLoading = true;
+      try {
+        // 构建请求URL，根据是否需要认证选择不同的端点
+        const api = this.currentApi;
+        let url;
+        if (api.needAuth) {
+          // 需要认证的API使用私有端点
+          url = '/private/genric/invoke';
+        } else {
+          // 不需要认证的API使用公共端点
+          url = '/public/genric/invoke';
+        }
+
+        // 发送测试请求
+        const response = await request.post(url, JSON.parse(this.requestBody));
+
+        this.testResult = JSON.stringify(response.data, null, 2);
+      } catch (error) {
+        console.error('API测试失败:', error);
+        this.testResult = `错误: ${error.message || '请求失败'}`;
+      } finally {
+        this.testLoading = false;
+      }
+    },
+
+    // 关闭测试对话框
+    closeTestDialog() {
+      this.testDialogVisible = false;
+      this.testResult = '';
+    },
+
+    // 打开测试页面
+    openTestUrl(type) {
+      let url;
+      if (type === 'private') {
+        url = 'http://127.0.0.1:8080/doc.html#/default/genric-controller/invoke_1';
+      } else if (type === 'public') {
+        url = 'http://127.0.0.1:8080/doc.html#/default/public-genric-controller/invoke';
+      }
+      window.open(url, '_blank');
+    },
+
     // ========== 工具方法 ==========
     formatTime(time) {
       if (!time) return '-'
@@ -546,11 +736,17 @@ export default {
   justify-content: space-between;
   align-items: center;
   margin-bottom: 16px;
-  padding: 22px 26px 18px;
+  padding: 24px 30px 20px;
   background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
-  border-radius: 12px;
+  border-radius: 14px;
   border: 1px solid rgba(0, 0, 0, 0.04);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+}
+
+.page-header:hover {
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  transform: translateY(-2px);
 }
 
 .page-title {
@@ -574,6 +770,12 @@ export default {
   margin-top: 4px;
   font-size: 13px;
   color: #94a3b8;
+}
+
+.test-btn {
+  border-radius: 8px;
+  font-weight: 500;
+  padding: 9px 16px;
 }
 
 .add-btn {
@@ -645,13 +847,129 @@ export default {
   }
 }
 
-/* ========== 数据表格 ========== */
-.table-panel {
+/* ========== 宫格面板 ========== */
+.grid-panel {
   background: #fff;
   border-radius: 12px;
   border: 1px solid rgba(0, 0, 0, 0.04);
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
   overflow: hidden;
+  padding: 20px;
+}
+
+.api-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.api-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+  overflow: hidden;
+}
+
+.api-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-icon {
+  font-size: 18px;
+  color: #0ea5e9;
+}
+
+.api-name {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.card-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-body {
+  padding: 20px;
+}
+
+.card-section {
+  margin-bottom: 16px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 12px;
+  padding-bottom: 6px;
+  border-bottom: 1px dashed #e2e8f0;
+}
+
+.info-item {
+  display: flex;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.info-item label {
+  width: 100px;
+  color: #64748b;
+  font-weight: 500;
+  margin-right: 10px;
+  text-align: left;
+}
+
+.info-item span {
+  flex: 1;
+  color: #1e293b;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+}
+
+@media (max-width: 1200px) {
+  .api-grid {
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+}
+
+@media (max-width: 768px) {
+  .api-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .info-item label {
+    width: 80px;
+  }
 }
 
 .api-table {
@@ -772,11 +1090,74 @@ export default {
   }
 }
 
+.test-api-btn {
+  color: #10b981 !important;
+
+  &:hover {
+    color: #34d399 !important;
+  }
+}
+
+.test-api-btn {
+  color: #10b981 !important;
+
+  &:hover {
+    color: #34d399 !important;
+  }
+}
+
 .danger-text {
   color: #ef4444 !important;
 
   &:hover {
     color: #f87171 !important;
+  }
+}
+
+/* ========== 测试对话框 ========== */
+.test-dialog-content {
+  .test-info {
+    margin-bottom: 20px;
+  }
+
+  .request-section {
+    margin-bottom: 20px;
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+
+      h4 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        color: #334155;
+      }
+    }
+  }
+
+  .response-section {
+    h4 {
+      margin: 0 0 8px 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: #334155;
+    }
+
+    .response-result {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 12px;
+      font-size: 13px;
+      color: #334155;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+    }
   }
 }
 

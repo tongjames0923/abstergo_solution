@@ -243,6 +243,13 @@ export default {
     saving: 'Saving...',
     confirmToggle: 'Are you sure to {action} API "{name}"?',
     confirmDelete: 'Are you sure to delete API "{name}"? This action cannot be undone.',
+    test: 'Test',
+    testPrivate: 'Private API Test',
+    testPublic: 'Public API Test',
+    testDialogTitle: 'Test API - {apiName}',
+    requestBody: 'Request Body',
+    executeTest: 'Execute Test',
+    responseResult: 'Response Result',
     emptyTitle: 'No API Configurations',
     emptyDesc: 'Click "Add API" button to create your first generic API configuration'
   },
