@@ -56,9 +56,8 @@ public class SimpleDepartmentService
 
     @Override
     protected void deletePending(SystemDepartmentEntity entity) throws FormattedRuntimeException {
-        AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(entity.getId())),
-            I18nUtil.get("department.has.users.not.delete"));
-        AssertUtil.isTrue(!departmentTreeStructService.isLeaf(entity.getId())).message(I18nUtil.get("department.has.children.not.delete"))
+        AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(entity.getId()))).i18n("department.has.users.not.delete").throwIt();
+        AssertUtil.isTrue(!departmentTreeStructService.isLeaf(entity.getId())).i18n("department.has.children.not.delete")
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         super.deletePending(entity);
     }
@@ -67,7 +66,7 @@ public class SimpleDepartmentService
     public SystemDepartmentEntity deleteById(Long id) {
         var entity = super.deleteById(id);
         boolean deleted = departmentTreeStructService.deleteLeaf(id);
-        AssertUtil.isTrue(!deleted, I18nUtil.get("department.delete.failed"));
+        AssertUtil.isTrue(!deleted).i18n("department.delete.failed").throwIt();
         return entity;
     }
 
@@ -100,7 +99,7 @@ public class SimpleDepartmentService
         }
         if (newOne.getCompanyId() != null) {
             var newComp = companyService.queryById(newOne.getCompanyId());
-            AssertUtil.isTrueUserInputError(newComp == null).message(I18nUtil.get("invalid.company")).throwIt();
+            AssertUtil.isTrueUserInputError(newComp == null).i18n("invalid.company").throwIt();
             oldOne.setCompanyId(newOne.getCompanyId());
         }
         if (StrUtil.isNotEmpty(newOne.getManager())) {
@@ -111,12 +110,12 @@ public class SimpleDepartmentService
         }
         if (newOne.getParentId() != null) {
             var newParent = queryById(newOne.getParentId());
-            AssertUtil.isTrueUserInputError(newParent == null).message(I18nUtil.get("invalid.department")).throwIt();
+            AssertUtil.isTrueUserInputError(newParent == null).i18n("invalid.department").throwIt();
             oldOne.setParentId(newOne.getParentId());
         }
         if (newOne.getFlag() != null) {
             AssertUtil.isTrueUserInputError(!EnumUtil.isValidCode(SystemDepartmentFlagEnum.class, newOne.getFlag()))
-                .message(I18nUtil.get("invalid.flag")).throwIt();
+                .i18n("invalid.flag").throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 

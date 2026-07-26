@@ -158,7 +158,7 @@ public class SimpleSystemUserServiceImpl
     }
 
     @Override
-    protected Integer getFlagDisable() {
+    protected Integer getFlagDeleted() {
         return SystemUserStatusEnum.INACTIVE.getCode();
     }
 

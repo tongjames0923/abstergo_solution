@@ -3,11 +3,13 @@ package com.tbs.app.config;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
+import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
+import com.tbs.app.service.impl.genericapi.GenericApiServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.role.SimpleUserRoleRelationServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
@@ -129,6 +131,13 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemTokenService systemTokenService() {
         return new DefaultSystemTokenService();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IGenericApiService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IGenericApiService genericApiService() {
+        return new GenericApiServiceImpl();
     }
 
 }

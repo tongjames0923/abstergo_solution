@@ -6,7 +6,6 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.mapper.SystemUserDepartmentRelationMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
@@ -15,6 +14,8 @@ import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.sql.dsl.clause.JoinCondition;
 import com.tbs.sql.service.QueryEngine;
 import org.jetbrains.annotations.NotNull;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -23,7 +24,6 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-@Service
 public class SimpleDepartmentUserRelationService implements IDepartmentUserRelationService {
 
     @Resource
@@ -40,7 +40,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Override
     public List<SystemDepartmentEntity> queryUserDepartments(@NotNull Long userId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.isTrue(user == null).message(I18nUtil.get("user.not.found")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(user == null).i18n("user.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
         return QueryEngine.getEntityQueryWrapper(new SystemDepartmentEntity()).query().where().subQuery().exists(
             QueryEngine.getEntityQueryWrapper(new SystemUserDepartmentRelationEntity()).query().where()
@@ -52,7 +52,8 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Override
     public List<SystemUserEntity> queryDepartmentUsers(@NotNull Long departmentId) {
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
-        AssertUtil.isTrue(department == null).message(I18nUtil.get("department.not.found")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(department == null).i18n("department.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
         return departmentRelationMapper.queryDepartmentUsers(departmentId);
     }
 
@@ -60,11 +61,13 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Override
     public void addUserToDepartment(@NotNull Long userId, @NotNull Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.isTrue(user == null).message(I18nUtil.get("user.not.found")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(user == null).i18n("user.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
-        AssertUtil.isTrue(department == null).message(I18nUtil.get("department.not.found")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(department == null).i18n("department.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
         var relations = departmentRelationMapper.queryUserDepartmentRelation(userId, departmentId);
-        AssertUtil.isTrue(CollUtil.isNotEmpty(relations)).message(I18nUtil.get("user.already.in.department", department.getDepartmentName()))
+        AssertUtil.isTrue(CollUtil.isNotEmpty(relations)).i18n("user.already.in.department")
+            .params(department.getDepartmentName())
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         SystemUserDepartmentRelationEntity relation = new SystemUserDepartmentRelationEntity();
         relation.setUserId(userId);
@@ -76,11 +79,13 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Override
     public void deleteUserFromDepartment(@NotNull Long userId, @NotNull Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);
-        AssertUtil.isTrue(user == null).message(I18nUtil.get("user.not.found")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(user == null).i18n("user.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDepartmentEntity department = departmentService.queryById(departmentId);
-        AssertUtil.isTrue(department == null).message(I18nUtil.get("department.not.found")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(department == null).i18n("department.not.found").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
         var relations = departmentRelationMapper.queryUserDepartmentRelation(userId, departmentId);
-        AssertUtil.isTrue(CollUtil.isEmpty(relations)).message(I18nUtil.get("user.not.in.department", department.getDepartmentName()))
+        AssertUtil.isTrue(CollUtil.isEmpty(relations)).i18n("user.not.in.department")
+            .params(department.getDepartmentName())
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         departmentRelationMapper.deleteByPrimaryKey(relations.get(0).getId());
     }

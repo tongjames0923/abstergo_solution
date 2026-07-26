@@ -1,5 +1,6 @@
 package com.tbs.app.web;
 
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.model.query.QueryPageModel;
@@ -45,7 +46,7 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
      */
     public AjaxResult save(T entity) {
         return AjaxUtil.builder().success(getService().save(entity)).type(WebMessageTypeEnum.SUCCESS)
-            .message("保存成功").build();
+            .message(I18nUtil.get("crud.save.success")).build();
     }
 
     /**
@@ -56,7 +57,7 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
      */
     public AjaxResult delete(K id) {
         return AjaxUtil.builder().success(getService().deleteById(id)).type(WebMessageTypeEnum.SUCCESS)
-            .message("删除成功").build();
+            .message(I18nUtil.get("crud.delete.success")).build();
     }
 
     /**

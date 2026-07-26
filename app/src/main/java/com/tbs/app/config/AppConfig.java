@@ -35,15 +35,6 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
 
     @Bean
-    ServiceDiscovery dubboServiceDiscovery(@Value("${dubbo.registry.address}") String registryAddress) {
-        ApplicationModel applicationModel = ApplicationModel.defaultModel();
-        ServiceDiscoveryFactory factory =
-            applicationModel.getExtensionLoader(ServiceDiscoveryFactory.class).getExtension("zookeeper");
-        ServiceDiscovery serviceDiscovery = factory.getServiceDiscovery(URL.valueOf(registryAddress));
-        return serviceDiscovery;
-    }
-
-    @Bean
     public AbstractMessageSourceProvider appMessageSourceProvider() {
         return new AbstractMessageSourceProvider() {
             @Override

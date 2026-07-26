@@ -21,19 +21,19 @@ public abstract class AbstractLogicDeleteFullFeatureServiceTemplate<T extends II
      *
      * @return
      */
-    protected abstract Integer getFlagDisable();
+    protected abstract Integer getFlagDeleted();
 
     @Override
     protected T handleDelete(K entitys) {
         T disableEntitys = getInstance().queryById(entitys);
         AssertUtil.notNull(disableEntitys, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
-        disableEntitys.setFlag(getFlagDisable());
+        disableEntitys.setFlag(getFlagDeleted());
         getInstance().updateBy(disableEntitys);
         return disableEntitys;
     }
 
     @Override
     public boolean isDeleted(T entity) {
-        return entity != null && Objects.equals(entity.getFlag(), getFlagDisable());
+        return entity != null && Objects.equals(entity.getFlag(), getFlagDeleted());
     }
 }

@@ -70,7 +70,7 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
     public ApiInvokeResultVo<R> invokeApi(List<GenricParameterForm> parameterForms, UserDetails u) {
         var paramMap = new java.util.HashMap<String, GenricParameterForm>();
         ApiInvokeResultVo<R> resultVo = new ApiInvokeResultVo<>();
-        AssertUtil.isTrue(isNeedAuth() && u == null).message(I18nUtil.get("GENERIC.API.NOT_LOGIN"))
+        AssertUtil.isTrue(isNeedAuth() && u == null).i18n("GENERIC.API.NOT_LOGIN")
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         if (CollUtil.isEmpty(parameterForms)) {
             invoke(paramMap, resultVo, Optional.ofNullable(u));

@@ -97,6 +97,16 @@ develop:
           roles:
             - "开发员"
             - "超级管理员"
+      - path: generic-api
+        name: view.menu.develop.generic.api
+        component: "/admin/generic-api/index.vue"
+        meta:
+          routeGroup: default
+          title: view.menu.develop.generic.api
+          icon: el-icon-connection
+          roles:
+            - "开发员"
+            - "超级管理员"
 
 #  fallback:
 #    - path: "*"

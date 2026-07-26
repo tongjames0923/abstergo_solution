@@ -63,7 +63,7 @@ public class SimpleSystemRoleServiceImpl
     }
 
     @Override
-    protected Integer getFlagDisable() {
+    protected Integer getFlagDeleted() {
         return SystemRoleFlagEnum.DELETE.getCode();
     }
 

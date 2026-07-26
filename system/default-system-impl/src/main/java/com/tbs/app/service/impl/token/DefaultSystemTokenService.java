@@ -32,7 +32,7 @@ public class DefaultSystemTokenService
     private SystemTokenMapper systemTokenMapper;
 
     @Override
-    protected Integer getFlagDisable() {
+    protected Integer getFlagDeleted() {
         return 0;
     }
 

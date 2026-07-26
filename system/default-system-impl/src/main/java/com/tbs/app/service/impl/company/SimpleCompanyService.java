@@ -59,10 +59,10 @@ public class SimpleCompanyService
         CommonSystemDepartmentQueryCriteria criteria = new CommonSystemDepartmentQueryCriteria();
         criteria.setEqualsCompanyId(id);
         var ls = departmentService.query(criteria, null);
-        AssertUtil.isTrueBusinessError(CollUtil.isNotEmpty(ls)).message(I18nUtil.get("company.has.departments.not.delete")).throwIt();
+        AssertUtil.isTrueBusinessError(CollUtil.isNotEmpty(ls)).i18n("company.has.departments.not.delete").throwIt();
         var entity = super.deleteById(id);
         boolean deleted = companyTreeStructService.deleteLeaf(id);
-        AssertUtil.isTrueBusinessError(!deleted).message(I18nUtil.get("company.delete.failed")).throwIt();
+        AssertUtil.isTrueBusinessError(!deleted).i18n("company.delete.failed").throwIt();
         return entity;
     }
 
@@ -98,7 +98,7 @@ public class SimpleCompanyService
             SystemCompanyEntity that =
                 getQueryWrapper().query().where().equal(SystemCompanyEntity::getTaxNumber, newOne.getTaxNumber()).pour()
                     .fetchOne();
-            AssertUtil.isTrueBusinessError(that != null).message(I18nUtil.get("company.tax.number.exists")).throwIt();
+            AssertUtil.isTrueBusinessError(that != null).i18n("company.tax.number.exists").throwIt();
             oldOne.setTaxNumber(newOne.getTaxNumber());
         }
         if (StrUtil.isNotEmpty(newOne.getDescription())) {

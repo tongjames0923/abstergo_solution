@@ -16,7 +16,9 @@ export default {
     noData: '暂无数据',
     tip: '提示',
     warning: '警告',
-    info: '信息'
+    info: '信息',
+    yes: '是',
+    no: '否'
   },
 
   // 登录
@@ -65,7 +67,8 @@ export default {
     cache: '缓存管理',
     form: '表单管理',
     formCreator: '表单创建',
-    formManager: '表单管理'
+    formManager: '表单管理',
+    genericApi: '泛化API'
   },
 
   // 用户管理
@@ -197,6 +200,51 @@ export default {
     404: '抱歉，您访问的页面不存在',
     backHome: '返回首页',
     backPrev: '返回上一页'
+  },
+
+  // 泛化API管理
+  genericApi: {
+    title: '泛化API管理',
+    subtitle: '管理系统泛化API接口配置，支持动态服务调用',
+    add: '新增API',
+    addTitle: '新增泛化API配置',
+    editTitle: '编辑泛化API配置',
+    apiId: 'API标识',
+    apiIdPlaceholder: '搜索API标识',
+    apiIdRequired: '请输入API标识',
+    apiName: 'API名称',
+    apiNamePlaceholder: '搜索API名称',
+    apiNameInputPlaceholder: '请输入API名称',
+    apiNameRequired: '请输入API名称',
+    appName: '应用名称',
+    appNamePlaceholder: '搜索应用名称',
+    appNameInputPlaceholder: '请输入应用名称（服务名）',
+    appNameRequired: '请输入应用名称',
+    interfaceName: '接口名称',
+    interfaceNamePlaceholder: '搜索接口名称',
+    interfaceNameInputPlaceholder: '请输入完整接口类名',
+    interfaceNameRequired: '请输入接口名称',
+    methodName: '方法名称',
+    methodNamePlaceholder: '请输入调用方法名',
+    methodNameRequired: '请输入方法名称',
+    needAuth: '需要鉴权',
+    version: '版本',
+    versionPlaceholder: '如 1.0.0',
+    description: '描述',
+    descriptionPlaceholder: '请输入API描述信息（可选）',
+    status: '状态',
+    allStatus: '全部状态',
+    enabled: '启用',
+    disabled: '禁用',
+    enable: '启用',
+    disable: '禁用',
+    operation: '操作',
+    updateTime: '更新时间',
+    saving: '保存中...',
+    confirmToggle: '确认要{action}API「{name}」吗？',
+    confirmDelete: '确认要删除API「{name}」吗？此操作不可恢复。',
+    emptyTitle: '暂无API配置',
+    emptyDesc: '点击「新增API」按钮创建第一个泛化API配置'
   },
 
   // 网络请求

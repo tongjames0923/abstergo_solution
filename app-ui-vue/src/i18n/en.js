@@ -16,7 +16,9 @@ export default {
     noData: 'No data',
     tip: 'Tip',
     warning: 'Warning',
-    info: 'Info'
+    info: 'Info',
+    yes: 'Yes',
+    no: 'No'
   },
 
   // Login
@@ -65,7 +67,8 @@ export default {
     cache: 'Cache Management',
     form: 'Form Management',
     formCreator: 'Form Creator',
-    formManager: 'Form Manager'
+    formManager: 'Form Manager',
+    genericApi: 'Generic API'
   },
 
   // User Management
@@ -197,6 +200,51 @@ export default {
     404: 'Sorry, the page you visited does not exist',
     backHome: 'Back to Home',
     backPrev: 'Back to Previous'
+  },
+
+  // Generic API Management
+  genericApi: {
+    title: 'Generic API Management',
+    subtitle: 'Manage generic API configurations for dynamic service invocation',
+    add: 'Add API',
+    addTitle: 'Add Generic API Configuration',
+    editTitle: 'Edit Generic API Configuration',
+    apiId: 'API ID',
+    apiIdPlaceholder: 'Search API ID',
+    apiIdRequired: 'Please enter API ID',
+    apiName: 'API Name',
+    apiNamePlaceholder: 'Search API name',
+    apiNameInputPlaceholder: 'Please enter API name',
+    apiNameRequired: 'Please enter API name',
+    appName: 'App Name',
+    appNamePlaceholder: 'Search app name',
+    appNameInputPlaceholder: 'Please enter app name (service name)',
+    appNameRequired: 'Please enter app name',
+    interfaceName: 'Interface Name',
+    interfaceNamePlaceholder: 'Search interface name',
+    interfaceNameInputPlaceholder: 'Please enter full interface class name',
+    interfaceNameRequired: 'Please enter interface name',
+    methodName: 'Method Name',
+    methodNamePlaceholder: 'Please enter method name',
+    methodNameRequired: 'Please enter method name',
+    needAuth: 'Auth Required',
+    version: 'Version',
+    versionPlaceholder: 'e.g. 1.0.0',
+    description: 'Description',
+    descriptionPlaceholder: 'Please enter API description (optional)',
+    status: 'Status',
+    allStatus: 'All Status',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    enable: 'Enable',
+    disable: 'Disable',
+    operation: 'Operation',
+    updateTime: 'Update Time',
+    saving: 'Saving...',
+    confirmToggle: 'Are you sure to {action} API "{name}"?',
+    confirmDelete: 'Are you sure to delete API "{name}"? This action cannot be undone.',
+    emptyTitle: 'No API Configurations',
+    emptyDesc: 'Click "Add API" button to create your first generic API configuration'
   },
 
   // Network Request
