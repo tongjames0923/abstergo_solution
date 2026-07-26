@@ -12,26 +12,6 @@
         </div>
         <div class="header-right">
           <el-button
-            type="success"
-            icon="el-icon-position"
-            size="small"
-            class="test-btn"
-            @click="openTestUrl('private')"
-            style="margin-right: 8px;"
-          >
-            {{ $t('genericApi.testPrivate') }}
-          </el-button>
-          <el-button
-            type="info"
-            icon="el-icon-position"
-            size="small"
-            class="test-btn"
-            @click="openTestUrl('public')"
-            style="margin-right: 8px;"
-          >
-            {{ $t('genericApi.testPublic') }}
-          </el-button>
-          <el-button
             type="primary"
             icon="el-icon-plus"
             size="small"
@@ -286,9 +266,9 @@
             >
               <el-option
                 v-for="item in preAuthOptions"
-                :key="item.id"
-                :label="item.name"
-                :value="item.id"
+                :key="item"
+                :label="item"
+                :value="item"
               />
             </el-select>
           </el-form-item>
@@ -400,12 +380,12 @@
 
 <script>
 import {
-  queryGenericApis,
-  saveGenericApi,
   deleteGenericApi,
-  enableGenericApi,
   disableGenericApi,
-  getAvailablePreAuths
+  enableGenericApi,
+  getAvailablePreAuths,
+  queryGenericApis,
+  saveGenericApi
 } from '@/api/generic-api'
 import request from "@/utils/request";
 
@@ -460,64 +440,9 @@ export default {
         methodName: [
           { required: true, message: this.$t('genericApi.methodNameRequired'), trigger: 'blur' }
         ]
-      }
-    }
-  },
-  mounted() {
-    this.loadData();
-    this.loadPreAuthOptions();
-  },,
-  data() {
-    return {
-      // 搜索
-      searchForm: {
-        apiNameLike: '',
-        appNameLike: '',
-        interfaceNameLike: '',
-        flag: null
-      },
-
-      // 表格
-      loading: false,
-      tableData: [],
-      total: 0,
-      pageNum: 1,
-      pageSize: 10,
-
-      // 弹窗
-      dialogVisible: false,
-      dialogType: 'add',
-      saving: false,
-      apiForm: {
-        id: null,
-        apiId: '',
-        apiName: '',
-        appName: '',
-        interfaceName: '',
-        methodName: '',
-        version: '',
-        needAuth: false,
-        description: ''
-      },
-      formRules: {
-        apiId: [
-          { required: true, message: this.$t('genericApi.apiIdRequired'), trigger: 'blur' }
-        ],
-        apiName: [
-          { required: true, message: this.$t('genericApi.apiNameRequired'), trigger: 'blur' }
-        ],
-        appName: [
-          { required: true, message: this.$t('genericApi.appNameRequired'), trigger: 'blur' }
-        ],
-        interfaceName: [
-          { required: true, message: this.$t('genericApi.interfaceNameRequired'), trigger: 'blur' }
-        ],
-        methodName: [
-          { required: true, message: this.$t('genericApi.methodNameRequired'), trigger: 'blur' }
-        ]
       },
       // 预认证选项
-      preAuthOptions: []
+      preAuthOptions: [],
 
       // API测试对话框
       testDialogVisible: false,
@@ -528,20 +453,21 @@ export default {
     }
   },
   mounted() {
-    this.loadData();
     this.loadPreAuthOptions();
+    this.loadData();
   },
   methods: {
     // 加载预认证选项
     async loadPreAuthOptions() {
       try {
         const response = await getAvailablePreAuths();
-        this.preAuthOptions = response.data || [];
+        this.preAuthOptions = response.data || []
       } catch (error) {
         console.error('加载预认证选项失败:', error);
         this.preAuthOptions = [];
       }
     },
+
     // ========== 数据加载 ==========
     async loadData() {
       this.loading = true
@@ -782,16 +708,6 @@ export default {
       this.testResult = '';
     },
 
-    // 打开测试页面
-    openTestUrl(type) {
-      let url;
-      if (type === 'private') {
-        url = 'http://127.0.0.1:8080/doc.html#/default/genric-controller/invoke_1';
-      } else if (type === 'public') {
-        url = 'http://127.0.0.1:8080/doc.html#/default/public-genric-controller/invoke';
-      }
-      window.open(url, '_blank');
-    },
 
     // ========== 工具方法 ==========
     formatTime(time) {
@@ -803,7 +719,6 @@ export default {
   }
 }
 </script>
-
 <style lang="scss" scoped>
 .generic-api-admin {
   padding: 0;
@@ -1203,14 +1118,14 @@ export default {
     border-radius: 10px;
     border: 1px solid #e2e8f0;
   }
-  
+
   .info-item-block {
     margin-bottom: 16px;
-    
+
     &:last-child {
       margin-bottom: 0;
     }
-    
+
     .info-label {
       display: block;
       font-size: 13px;
@@ -1218,7 +1133,7 @@ export default {
       color: #64748b;
       margin-bottom: 6px;
     }
-    
+
     .info-value {
       font-size: 14px;
       color: #1e293b;
@@ -1226,13 +1141,13 @@ export default {
       background: #ffffff;
       border-radius: 6px;
       border: 1px solid #e2e8f0;
-      
+
       &.interface-value {
         font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
         font-size: 12px;
         word-break: break-all;
       }
-      
+
       &.method-value {
         font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
         font-size: 12px;
@@ -1242,20 +1157,20 @@ export default {
       }
     }
   }
-  
+
   .test-content {
     .request-section,
     .response-section {
       height: 100%;
     }
-    
+
     .request-section {
       .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 12px;
-        
+
         h4 {
           margin: 0;
           font-size: 15px;
@@ -1263,7 +1178,7 @@ export default {
           color: #1e293b;
         }
       }
-      
+
       .el-textarea {
         .el-textarea__inner {
           font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
@@ -1273,7 +1188,7 @@ export default {
           border: 1px solid #cbd5e1;
           transition: all 0.3s;
           height: calc(100% - 40px); /* 减去标题和按钮的高度 */
-          
+
           &:focus {
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
@@ -1281,7 +1196,7 @@ export default {
         }
       }
     }
-    
+
     .response-section {
       h4 {
         margin: 0 0 12px 0;
@@ -1289,7 +1204,7 @@ export default {
         font-weight: 600;
         color: #1e293b;
       }
-      
+
       .response-result {
         background: #f1f5f9;
         border: 1px solid #cbd5e1;
@@ -1304,21 +1219,21 @@ export default {
         height: calc(100% - 40px); /* 减去标题的高度 */
         max-height: 400px;
         overflow-y: auto;
-        
+
         &::-webkit-scrollbar {
           width: 6px;
         }
-        
+
         &::-webkit-scrollbar-track {
           background: #e2e8f0;
           border-radius: 3px;
         }
-        
+
         &::-webkit-scrollbar-thumb {
           background: #94a3b8;
           border-radius: 3px;
         }
-        
+
         &::-webkit-scrollbar-thumb:hover {
           background: #64748b;
         }

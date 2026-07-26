@@ -23,7 +23,7 @@ public class AccountActivePreAuth implements IApiInstancePreAuth {
     @Override
     public void preAuth(UserDetails userDetails, HttpInvokeForm request, AbstractGenricApiInstance apiInstance)
         throws AuthenticationException {
-        AssertUtil.isTrue(!userDetails.isEnabled()).i18n("auth.user.not.activated")
+        AssertUtil.isTrue(userDetails.isEnabled()&&!userDetails.isAccountNonLocked()).i18n("auth.user.not.activated")
             .as(e -> new AuthenticationException(e.getMessage()) {
             }).throwIt();
     }

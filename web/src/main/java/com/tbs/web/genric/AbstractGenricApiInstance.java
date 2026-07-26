@@ -79,13 +79,7 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
         // 执行预认证
         if (CollUtil.isNotEmpty(getPreAuths())) {
             for (IApiInstancePreAuth preAuth : getPreAuths()) {
-                try {
-                    preAuth.preAuth(u, null, this);
-                } catch (Exception e) {
-                    log.warn("预认证失败: {}", e.getMessage());
-                    AssertUtil.isTrue(true).i18n("generic.api.pre.auth.failed").params(preAuth.getPreAuthId())
-                        .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-                }
+                preAuth.preAuth(u, null, this);
             }
         }
 

@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.stream.Collectors;
 
 /**
  * 泛化API管理控制器
@@ -195,7 +196,9 @@ public class GenericApiController
      */
     @GetMapping("allPreAuth")
     public AjaxResult getAllPreAuth() {
-        return successResult(genericApiService.getAllAvaliablePreAuthList());
+        return successResult(
+            genericApiService.getAllAvaliablePreAuthList().stream().map(PreAuthorize -> PreAuthorize.getPreAuthId())
+                .collect(Collectors.toList()));
     }
 
     @Override

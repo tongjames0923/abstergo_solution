@@ -66,7 +66,7 @@ public class GenericApiServiceImpl
     protected SystemGenericApiEntity insertNew(SystemGenericApiEntity entity) {
         // 验证预认证Bean名称
         validatePreAuthBeanNames(entity.getPreAuthBeans());
-        
+
         // 设置默认值
         if (entity.getFlag() == null) {
             entity.setFlag(DataDicFlagEnum.ENABLE.getCode());
@@ -89,7 +89,7 @@ public class GenericApiServiceImpl
         SystemGenericApiEntity oldOne) {
         // 验证预认证Bean名称
         validatePreAuthBeanNames(newOne.getPreAuthBeans());
-        
+
         // 更新API名称
         if (StrUtil.isNotEmpty(newOne.getApiName())) {
             oldOne.setApiName(newOne.getApiName());
@@ -119,7 +119,7 @@ public class GenericApiServiceImpl
             oldOne.setDescription(newOne.getDescription());
         }
         // 更新预认证Bean配置
-        if (StrUtil.isNotEmpty(newOne.getPreAuthBeans())) {
+        if (newOne.getPreAuthBeans() != null) {
             oldOne.setPreAuthBeans(newOne.getPreAuthBeans());
         }
         // 更新状态
@@ -134,19 +134,18 @@ public class GenericApiServiceImpl
         // 删除前检查，可以在这里添加业务逻辑检查
     }
 
-    @CacheEvict(cacheNames = "generic_api", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
+    @CacheEvict(cacheNames = "generic_api", allEntries = true)
     @Override
     public List<SystemGenericApiEntity> save(SystemGenericApiEntity entity) {
         return super.save(entity);
     }
 
-    @CacheEvict(cacheNames = "generic_api", key = "#id")
+    @CacheEvict(cacheNames = "generic_api", allEntries = true)
     @Override
     public SystemGenericApiEntity deleteById(Long id) {
         return super.deleteById(id);
     }
 
-    @Cacheable(cacheNames = "generic_api", key = "#id", unless = "#result==null")
     @Override
     public SystemGenericApiEntity queryById(Long id) {
         return super.queryById(id);
@@ -164,7 +163,7 @@ public class GenericApiServiceImpl
             .equal(SystemGenericApiEntity::getApiId, apiId).pour().fetchOne();
     }
 
-    @CacheEvict(cacheNames = "generic_api", key = "#apiId")
+    @CacheEvict(cacheNames = "generic_api", allEntries = true)
     @Override
     public void enableApi(String apiId) {
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);
@@ -174,7 +173,7 @@ public class GenericApiServiceImpl
         getMapper().updateByPrimaryKey(entity);
     }
 
-    @CacheEvict(cacheNames = "generic_api", key = "#apiId")
+    @CacheEvict(cacheNames = "generic_api", allEntries = true)
     @Override
     public void disableApi(String apiId) {
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);
@@ -190,7 +189,7 @@ public class GenericApiServiceImpl
     protected Optional<IAuditService<SystemGenericApiEntity, Long, ?>> getAuditServiceSupport() {
         return Optional.of(auditService);
     }
-    
+
     /**
      * 验证预认证Bean名称是否合法
      *
@@ -200,20 +199,20 @@ public class GenericApiServiceImpl
         if (StrUtil.isEmpty(preAuthBeans)) {
             return; // 如果没有配置预认证，则无需验证
         }
-        
+
         String[] beanNames = preAuthBeans.split(",");
-        
+
         // 获取所有可用的预认证实现
         List<IApiInstancePreAuth> availablePreAuths = getAllAvaliablePreAuthList();
         Map<String, IApiInstancePreAuth> availablePreAuthMap = availablePreAuths.stream()
             .collect(Collectors.toMap(IApiInstancePreAuth::getPreAuthId, preAuth -> preAuth));
-        
+
         for (String beanName : beanNames) {
             String trimmedBeanName = beanName.trim();
             if (StrUtil.isEmpty(trimmedBeanName)) {
                 continue;
             }
-            
+
             // 检查Bean名称是否存在于Spring容器中
             IApiInstancePreAuth preAuth = null;
             try {
@@ -226,7 +225,7 @@ public class GenericApiServiceImpl
             } catch (Exception e) {
                 // Bean不存在
             }
-            
+
             AssertUtil.isTrue(preAuth == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
                 .i18n("generic.api.pre.auth.bean.not.exists").params(trimmedBeanName).throwIt();
         }
