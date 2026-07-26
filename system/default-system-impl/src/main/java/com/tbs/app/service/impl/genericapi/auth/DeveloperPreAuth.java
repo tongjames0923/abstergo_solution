@@ -22,7 +22,7 @@ public class DeveloperPreAuth implements IApiInstancePreAuth {
     @Override
     public void preAuth(UserDetails userDetails, HttpInvokeForm request, AbstractGenricApiInstance apiInstance)
         throws AuthenticationException {
-        AssertUtil.isTrue(userDetails.getAuthorities().stream()
+        AssertUtil.isTrue(!userDetails.getAuthorities().stream()
                 .anyMatch(authority -> RoleConstants.DEVELOPER_ROLE_NAME.equals(authority.getAuthority())))
             .i18n("generic.api.auth.developer.pre.auth.fail").params(apiInstance.getApiId())
             .as(e -> new AuthenticationException(e.getMessage()) {

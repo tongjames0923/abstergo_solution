@@ -20,7 +20,7 @@ public class SuperAdminPreAuth implements IApiInstancePreAuth {
     @Override
     public void preAuth(UserDetails userDetails, HttpInvokeForm request, AbstractGenricApiInstance apiInstance)
         throws AuthenticationException {
-        AssertUtil.isTrue(userDetails.getAuthorities().stream()
+        AssertUtil.isTrue(!userDetails.getAuthorities().stream()
                 .anyMatch(authority -> RoleConstants.SUPER_ADMIN_ROLE_NAME.equals(authority.getAuthority())))
             .i18n("generic.api.auth.superadmin.pre.auth.fail")
             .params(apiInstance.getApiId())
