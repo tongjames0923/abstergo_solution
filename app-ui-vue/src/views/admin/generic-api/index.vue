@@ -300,44 +300,82 @@
       <el-dialog
         :title="$t('genericApi.testDialogTitle', { apiName: currentApi.apiName })"
         :visible.sync="testDialogVisible"
-        width="700px"
+        width="800px"
+        top="5vh"
         :close-on-click-modal="false"
         @close="closeTestDialog"
       >
         <div class="test-dialog-content">
           <div class="test-info">
-            <el-descriptions :column="2" size="small" border>
-              <el-descriptions-item :label="$t('genericApi.apiId')">{{ currentApi.apiId }}</el-descriptions-item>
-              <el-descriptions-item :label="$t('genericApi.needAuth')">
-                <el-tag :type="currentApi.needAuth ? 'warning' : 'info'" size="mini">
-                  {{ currentApi.needAuth ? $t('common.yes') : $t('common.no') }}
-                </el-tag>
-              </el-descriptions-item>
-              <el-descriptions-item :label="$t('genericApi.appName')">{{ currentApi.appName }}</el-descriptions-item>
-              <el-descriptions-item :label="$t('genericApi.interfaceName')">{{ currentApi.interfaceName }}</el-descriptions-item>
-              <el-descriptions-item :label="$t('genericApi.methodName')">{{ currentApi.methodName }}</el-descriptions-item>
-              <el-descriptions-item :label="$t('genericApi.version')">{{ currentApi.version || '-' }}</el-descriptions-item>
-            </el-descriptions>
+            <el-row :gutter="16">
+              <el-col :span="12">
+                <div class="info-item-block">
+                  <label class="info-label">{{ $t('genericApi.apiId') }}</label>
+                  <div class="info-value">{{ currentApi.apiId }}</div>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="info-item-block">
+                  <label class="info-label">{{ $t('genericApi.needAuth') }}</label>
+                  <div class="info-value">
+                    <el-tag :type="currentApi.needAuth ? 'warning' : 'info'" size="small">
+                      {{ currentApi.needAuth ? $t('common.yes') : $t('common.no') }}
+                    </el-tag>
+                  </div>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="info-item-block">
+                  <label class="info-label">{{ $t('genericApi.appName') }}</label>
+                  <div class="info-value">{{ currentApi.appName }}</div>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="info-item-block">
+                  <label class="info-label">{{ $t('genericApi.version') }}</label>
+                  <div class="info-value">{{ currentApi.version || '-' }}</div>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="info-item-block">
+                  <label class="info-label">{{ $t('genericApi.interfaceName') }}</label>
+                  <div class="info-value interface-value">{{ currentApi.interfaceName }}</div>
+                </div>
+              </el-col>
+              <el-col :span="12">
+                <div class="info-item-block">
+                  <label class="info-label">{{ $t('genericApi.methodName') }}</label>
+                  <div class="info-value method-value">{{ currentApi.methodName }}</div>
+                </div>
+              </el-col>
+            </el-row>
           </div>
 
-          <div class="request-section">
-            <div class="section-header">
-              <h4>{{ $t('genericApi.requestBody') }}</h4>
-              <el-button size="mini" type="primary" @click="executeApiTest" :loading="testLoading">
-                <i class="el-icon-caret-right"></i> {{ $t('genericApi.executeTest') }}
-              </el-button>
-            </div>
-            <el-input
-              v-model="requestBody"
-              type="textarea"
-              :rows="8"
-              placeholder="输入JSON格式的请求参数"
-            />
-          </div>
-
-          <div class="response-section" v-if="testResult">
-            <h4>{{ $t('genericApi.responseResult') }}</h4>
-            <pre class="response-result">{{ testResult }}</pre>
+          <div class="test-content">
+            <el-row :gutter="20">
+              <el-col :span="12">
+                <div class="request-section">
+                  <div class="section-header">
+                    <h4>{{ $t('genericApi.requestBody') }}</h4>
+                    <el-button size="mini" type="primary" @click="executeApiTest" :loading="testLoading">
+                      <i class="el-icon-caret-right"></i> {{ $t('genericApi.executeTest') }}
+                    </el-button>
+                  </div>
+                  <el-input
+                    v-model="requestBody"
+                    type="textarea"
+                    :rows="15"
+                    placeholder="输入JSON格式的请求参数"
+                  />
+                </div>
+              </el-col>
+              <el-col :span="12" v-if="testResult">
+                <div class="response-section">
+                  <h4>{{ $t('genericApi.responseResult') }}</h4>
+                  <pre class="response-result">{{ testResult }}</pre>
+                </div>
+              </el-col>
+            </el-row>
           </div>
         </div>
       </el-dialog>
@@ -1117,46 +1155,132 @@ export default {
 /* ========== 测试对话框 ========== */
 .test-dialog-content {
   .test-info {
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
   }
-
-  .request-section {
-    margin-bottom: 20px;
-
-    .section-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 8px;
-
-      h4 {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-        color: #334155;
+  
+  .info-item-block {
+    margin-bottom: 16px;
+    
+    &:last-child {
+      margin-bottom: 0;
+    }
+    
+    .info-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 500;
+      color: #64748b;
+      margin-bottom: 6px;
+    }
+    
+    .info-value {
+      font-size: 14px;
+      color: #1e293b;
+      padding: 8px 12px;
+      background: #ffffff;
+      border-radius: 6px;
+      border: 1px solid #e2e8f0;
+      
+      &.interface-value {
+        font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        font-size: 12px;
+        word-break: break-all;
+      }
+      
+      &.method-value {
+        font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        font-size: 12px;
+        color: #059669;
+        background: #ecfdf5;
+        border-color: #a7f3d0;
       }
     }
   }
-
-  .response-section {
-    h4 {
-      margin: 0 0 8px 0;
-      font-size: 14px;
-      font-weight: 600;
-      color: #334155;
+  
+  .test-content {
+    .request-section,
+    .response-section {
+      height: 100%;
     }
-
-    .response-result {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 6px;
-      padding: 12px;
-      font-size: 13px;
-      color: #334155;
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      max-height: 200px;
-      overflow-y: auto;
+    
+    .request-section {
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 12px;
+        
+        h4 {
+          margin: 0;
+          font-size: 15px;
+          font-weight: 600;
+          color: #1e293b;
+        }
+      }
+      
+      .el-textarea {
+        .el-textarea__inner {
+          font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+          font-size: 13px;
+          line-height: 1.5;
+          border-radius: 8px;
+          border: 1px solid #cbd5e1;
+          transition: all 0.3s;
+          height: calc(100% - 40px); /* 减去标题和按钮的高度 */
+          
+          &:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+          }
+        }
+      }
+    }
+    
+    .response-section {
+      h4 {
+        margin: 0 0 12px 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+      
+      .response-result {
+        background: #f1f5f9;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 16px;
+        font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+        font-size: 13px;
+        color: #334155;
+        line-height: 1.5;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        height: calc(100% - 40px); /* 减去标题的高度 */
+        max-height: 400px;
+        overflow-y: auto;
+        
+        &::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        &::-webkit-scrollbar-track {
+          background: #e2e8f0;
+          border-radius: 3px;
+        }
+        
+        &::-webkit-scrollbar-thumb {
+          background: #94a3b8;
+          border-radius: 3px;
+        }
+        
+        &::-webkit-scrollbar-thumb:hover {
+          background: #64748b;
+        }
+      }
     }
   }
 }
