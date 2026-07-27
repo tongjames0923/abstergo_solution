@@ -23,6 +23,7 @@ import org.springframework.cache.annotation.Cacheable;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -64,8 +65,25 @@ public class GenericApiServiceImpl
 
     @Override
     protected SystemGenericApiEntity insertNew(SystemGenericApiEntity entity) {
+
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiId())).i18n("generic.api.id.required")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiName())).i18n("generic.api.name.required")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getAppName())).i18n("generic.api.app.name.required")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getInterfaceName())).i18n("generic.api.interface.name.required")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getMethodName())).i18n("generic.api.method.name.required")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+
         // 验证预认证Bean名称
         validatePreAuthBeanNames(entity.getPreAuthBeans());
+
+        var i = ((IGenericApiService)getInstance()).getByApiId(entity.getApiId());
+        AssertUtil.isTrue(i != null).i18n("generic.api.id.duplicate").params(entity.getApiId())
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+
 
         // 设置默认值
         if (entity.getFlag() == null) {
@@ -90,6 +108,11 @@ public class GenericApiServiceImpl
         // 验证预认证Bean名称
         validatePreAuthBeanNames(newOne.getPreAuthBeans());
 
+        if (StrUtil.isNotEmpty(newOne.getApiId()) && !Objects.equals(newOne.getApiId(), oldOne.getApiId())) {
+            var i = ((IGenericApiService)getInstance()).getByApiId(newOne.getApiId());
+            AssertUtil.isTrue(i != null).i18n("generic.api.id.duplicate").params(newOne.getApiId())
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        }
         // 更新API名称
         if (StrUtil.isNotEmpty(newOne.getApiName())) {
             oldOne.setApiName(newOne.getApiName());

@@ -80,34 +80,6 @@ public class GenericApiController
     @OnlyActiveAccountUse
     public AjaxResult save(@Parameter(name = "entity", description = "API配置信息",
         required = true) @RequestBody SystemGenericApiEntity entity) {
-        // 验证必要字段
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiId())).i18n("generic.api.id.required")
-            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiName())).i18n("generic.api.name.required")
-            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getAppName())).i18n("generic.api.app.name.required")
-            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getInterfaceName()))
-            .i18n("generic.api.interface.name.required").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getMethodName()))
-            .i18n("generic.api.method.name.required").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .throwIt();
-
-        // 设置默认值
-        if (entity.getFlag() == null) {
-            entity.setFlag(DataDicFlagEnum.ENABLE.getCode());
-        }
-        if (entity.getNeedAuth() == null) {
-            entity.setNeedAuth(false);
-        }
-
-        // 设置时间戳
-        entity.setUpdateTime(new Date());
-        if (entity.getId() == null) {
-            entity.setCreateTime(new Date());
-        }
-
         return super.save(entity);
     }
 
