@@ -13,6 +13,15 @@
           >
             {{ addButtonText }}
           </el-button>
+          
+          <!-- 添加导出按钮 -->
+          <el-button
+            type="success"
+            icon="el-icon-download"
+            @click="handleExport"
+          >
+            导出Excel
+          </el-button>
         </div>
       </div>
     </div>
@@ -127,6 +136,7 @@
 <script>
 import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi'
 import DynamicTable from '@/components/DynamicTable'
+import { exportTableToExcel } from '@/utils/excel' // 导入Excel导出工具函数
 
 export default {
   name: 'QuickUseManagementView',
@@ -261,7 +271,8 @@ export default {
       dialogType: 'add',
       editFormData: {},
       internalColumns: [],
-      windowWidth: window.innerWidth
+      windowWidth: window.innerWidth,
+      originalData: [] // 存储原始数据
     }
   },
   computed: {
@@ -366,10 +377,15 @@ export default {
         let result = await this.searchHandler(bodyParams, requestParams)
         result = result.data
         // 确保返回的数据格式符合DynamicTable的要求
-        return {
+        const tableResult = {
           data: Array.isArray(result.data) ? result.data : [],
           total: result.total || 0
         }
+        
+        // 保存原始数据用于导出
+        this.originalData = Array.isArray(result.data) ? [...result.data] : []
+        
+        return tableResult
       } catch (error) {
         console.error('数据获取失败:', error)
         this.$emit('load-error', error)
@@ -512,6 +528,41 @@ export default {
       const cancelEvent = this.dialogType === 'add' ? 'add-cancel' : 'edit-cancel'
       this.$emit(cancelEvent)
       this.dialogVisible = false
+    },
+    
+    // 导出功能 - 使用原始数据
+    async handleExport() {
+      try {
+        if (!this.originalData || this.originalData.length === 0) {
+          this.$message.warning('当前没有可导出的数据');
+          return;
+        }
+        
+        // 数据量限制提醒
+        if (this.originalData.length > 5000) {
+          const confirm = await this.$confirm(
+            `当前数据量较大(${this.originalData.length}条)，导出可能需要较长时间，是否继续？`,
+            '提示',
+            { 
+              confirmButtonText: '继续导出',
+              cancelButtonText: '取消',
+              type: 'warning'
+            }
+          );
+          if (!confirm) return;
+        }
+        
+        // 准备列配置用于导出
+        const exportColumns = this.columns.filter(col => col.prop) // 只导出有prop的列
+        
+        // 调用导出函数，使用原始数据
+        exportTableToExcel(this.originalData, exportColumns, this.mainTitle + '查询数据')
+        
+        this.$message.success(`成功导出 ${this.originalData.length} 条数据`);
+      } catch (error) {
+        console.error('导出失败:', error)
+        this.$message.error('导出失败，请稍后重试')
+      }
     }
   }
 }
