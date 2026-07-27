@@ -9,9 +9,11 @@ import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
 import com.tbs.web.genric.AbstractAuthGenricApiController;
 import com.tbs.web.genric.AbstractGenricApiInstance;
-import com.tbs.web.genric.HttpTriGenricApiInstance;
+import com.tbs.web.genric.DubboGenricApiInstance;
 import com.tbs.web.uitl.DubboUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.config.ApplicationConfig;
+import org.apache.dubbo.config.RegistryConfig;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,6 +41,12 @@ public class GenricController extends AbstractAuthGenricApiController {
     @Resource
     IGenericApiService genericApiService;
 
+    @Resource
+    private ApplicationConfig applicationConfig;
+
+    @Resource
+    private RegistryConfig registryConfig;
+
     @Override
     public String getBusinessName() {
         return "泛化调用接口";
@@ -60,7 +68,6 @@ public class GenricController extends AbstractAuthGenricApiController {
 
         List<AbstractGenricApiInstance> instances = new ArrayList<>();
         for (var service : services) {
-            String baseUrl = service.getHost() + ":" + service.getPort();
             // 从预认证Bean名称字符串解析为数组
             String[] preAuthBeanNames = null;
             if (apiConfig.getPreAuthBeans() != null && !apiConfig.getPreAuthBeans().trim().isEmpty()) {
@@ -70,7 +77,8 @@ public class GenricController extends AbstractAuthGenricApiController {
                     preAuthBeanNames[i] = preAuthBeanNames[i].trim();
                 }
             }
-            instances.add(new HttpTriGenricApiInstance(id, apiConfig.getVersion(), apiConfig.getNeedAuth(), baseUrl,
+            instances.add(new DubboGenricApiInstance(applicationConfig, registryConfig, id, apiConfig.getVersion(),
+                apiConfig.getNeedAuth(),
                 apiConfig.getInterfaceName(), apiConfig.getMethodName(), preAuthBeanNames));
         }
         return instances;
