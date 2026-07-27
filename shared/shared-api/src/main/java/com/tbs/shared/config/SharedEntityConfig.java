@@ -1,6 +1,8 @@
 package com.tbs.shared.config;
 
+import com.tbs.common.i18n.AbstractMessageSourceProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import tk.mybatis.spring.annotation.MapperScan;
 
@@ -13,4 +15,14 @@ import tk.mybatis.spring.annotation.MapperScan;
 @MapperScan(basePackages = "com.tbs.shared.mapper")
 @EntityScan({"com.tbs.shared.pojo.entity", "com.tbs.shared.pojo.entity.view"})
 public class SharedEntityConfig {
+    @Bean
+    public AbstractMessageSourceProvider sharedMessageSourceProvider() {
+        return new AbstractMessageSourceProvider() {
+            @Override
+            public String getBasename() {
+                return "messages-shared";
+            }
+        };
+    }
+
 }

@@ -1,7 +1,7 @@
 package com.tbs.shared.interfaces.service;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.shared.pojo.IFlagable;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.mapper.IFrameworkMapper;
@@ -26,8 +26,8 @@ public abstract class AbstractLogicDeleteFullFeatureServiceTemplate<T extends II
     @Override
     protected T handleDelete(K entitys) {
         T disableEntitys = getInstance().queryById(entitys);
-        AssertUtil.notNull(disableEntitys, () -> new FormattedRuntimeException("待删除的ID{} 不存在", entitys));
-        disableEntitys.setFlag(getFlagDeleted());
+        AssertUtil.isTrue(disableEntitys == null).i18n("crud.delete.entity.not.exists").params(entitys)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         getInstance().updateBy(disableEntitys);
         return disableEntitys;
     }
