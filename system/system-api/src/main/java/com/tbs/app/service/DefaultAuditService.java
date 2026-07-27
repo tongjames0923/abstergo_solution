@@ -8,6 +8,9 @@ import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.interfaces.service.AbstractAuditService;
 import com.tbs.web.uitl.AuthUtil;
 
+/**
+ * @author abstergo
+ */
 public class DefaultAuditService<E, K> extends AbstractAuditService<E, K, Long> {
     @Override
     public Long getCurrentUserId() {
