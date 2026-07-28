@@ -342,6 +342,8 @@ export default {
 
     handleSubmit(data) {
       this.searchForm = data
+      // 重置分页到第一页
+      this.resetPagination()
       this.$refs.dynamicTable.refresh()
     },
     handleReset() {
@@ -528,6 +530,16 @@ export default {
       const cancelEvent = this.dialogType === 'add' ? 'add-cancel' : 'edit-cancel'
       this.$emit(cancelEvent)
       this.dialogVisible = false
+    },
+    
+    // 重置分页到第一页
+    resetPagination() {
+      if (this.$refs.dynamicTable) {
+        this.$refs.dynamicTable.pageParams.page = 1
+        // 同时触发页码变更事件，确保UI同步更新
+        this.$refs.dynamicTable.$emit('update:currentPage', 1)
+        this.$refs.dynamicTable.$emit('current-page-change', 1)
+      }
     },
     
     // 导出功能 - 使用原始数据

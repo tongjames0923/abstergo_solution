@@ -6,6 +6,11 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
+/**
+ * 参数校验异常转换器
+ *
+ * @author abstergo
+ */
 @Component
 public class MethodArgumentNotValidExceptionTransformer implements IErrorTransformer {
     @Override

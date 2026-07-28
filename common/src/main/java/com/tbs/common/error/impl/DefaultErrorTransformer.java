@@ -1,5 +1,6 @@
 package com.tbs.common.error.impl;
 
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IErrorTransformer;
 import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.exception.FormattedRuntimeException;
@@ -29,6 +30,12 @@ public class DefaultErrorTransformer implements IErrorTransformer {
         var formattedRuntimeException = new FormattedRuntimeException(throwable, "");
         if (throwable instanceof IExceptionLevel) {
             formattedRuntimeException.errorLevel(((IExceptionLevel)throwable).getLevel());
+        } else {
+            if (throwable instanceof RuntimeException) {
+                formattedRuntimeException.errorLevel(ErrorLevelEnum.SYSTEM_ERROR);
+            } else {
+                formattedRuntimeException.errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR);
+            }
         }
         return formattedRuntimeException;
     }

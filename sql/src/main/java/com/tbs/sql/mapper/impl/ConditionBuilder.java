@@ -1,18 +1,16 @@
 package com.tbs.sql.mapper.impl;
 
-import cn.hutool.core.collection.CollUtil;
 import cn.hutool.extra.spring.SpringUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.sql.annotation.condition.OrField;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.builder.ImportedSqlBuildContext;
+import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.metadata.FieldMetadataCache;
 import com.tbs.sql.model.where.WhereCompose;
 import com.tbs.sql.model.where.WhereInfo;
 import com.tbs.sql.model.where.WhereNode;
-import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.provider.ICustomWhereProvider;
 import com.tbs.sql.util.SqlUtils;
 
@@ -74,7 +72,9 @@ public class ConditionBuilder<T> {
             Field field = metadata.getField();
             try {
                 boolean accessible = field.isAccessible();
-                field.setAccessible(true);
+                if (!accessible) {
+                    field.setAccessible(true);
+                }
                 Object value = field.get(obj);
                 ConnectorEnum connectorEnum = metadata.getConnectorEnum();
 

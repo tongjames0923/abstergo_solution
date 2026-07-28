@@ -5,6 +5,11 @@ import com.tbs.web.security.authentication.AbstractAuthManager;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
+/**
+ * SpringSecurityContextHolderAuthManager
+ *
+ * @author abstergo
+ */
 public class SpringSecurityContextHolderAuthManager extends AbstractAuthManager {
     @Override
     public void setAuthentication(ITokenAuthentication authentication) {
