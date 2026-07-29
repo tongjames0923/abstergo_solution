@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
+
 import com.tbs.app.service.view.IViewService;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
@@ -57,7 +57,7 @@ public class ViewController extends BaseController {
     @Operation(summary = "获取表单配置", description = "根据配置ID获取表单配置")
     @ApiResponse(responseCode = "200", description = "成功获取表单配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = FormConfig.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public FormConfig getForm(@Parameter(name = "id", description = "配置ID", required = true) @PathVariable Long id) {
         return viewService.getForm(id);
     }
@@ -91,7 +91,7 @@ public class ViewController extends BaseController {
     @Operation(summary = "保存表单配置", description = "保存表单配置")
     @ApiResponse(responseCode = "200", description = "成功保存表单配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult saveForm(@Parameter(description = "表单配置") @RequestBody FormConfig formConfig) {
         return successResult(viewService.saveForm(formConfig));
     }
@@ -107,7 +107,7 @@ public class ViewController extends BaseController {
     @Operation(summary = "删除表单配置", description = "根据ID删除表单配置")
     @ApiResponse(responseCode = "200", description = "成功删除表单配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult deleteForm(
         @Parameter(name = "id", description = "配置ID", required = true) @PathVariable Long id) {
         return successResult(viewService.deleteForm(id));
@@ -125,7 +125,7 @@ public class ViewController extends BaseController {
     @Operation(summary = "更新表单配置", description = "更新表单配置")
     @ApiResponse(responseCode = "200", description = "成功更新表单配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult updateForm(
         @Parameter(description = "表单配置ID", required = true) @PathVariable("id") Long formConfigId,
         @Parameter(description = "表单配置") @RequestBody FormConfig formConfig) {

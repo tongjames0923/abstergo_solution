@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
+
 import com.tbs.app.form.DisableTokenForm;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
@@ -73,7 +73,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Operation(summary = "获取用户数据", description = "根据用户ID获取用户数据详细信息")
     @ApiResponse(responseCode = "200", description = "成功获取用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult get(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
@@ -90,7 +90,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Operation(summary = "保存用户数据", description = "创建或更新用户数据信息")
     @ApiResponse(responseCode = "200", description = "成功保存用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult save(
         @Parameter(name = "entity", description = "用户信息", required = true) @RequestBody SystemUserEntity entity) {
         return super.save(entity);
@@ -108,7 +108,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Operation(summary = "删除用户数据", description = "根据用户ID删除用户数据")
     @ApiResponse(responseCode = "200", description = "成功删除用户数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult delete(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         return super.delete(id);
     }
@@ -127,7 +127,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Operation(summary = "查询用户数据", description = "根据条件查询用户数据列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询用户数据列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult query(
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemUserQueryCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
@@ -145,7 +145,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Operation(summary = "获取用户登录会话列表", description = "根据用户ID获取用户登录会话列表")
     @ApiResponse(responseCode = "200", description = "成功获取用户登录会话列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = LoginSessionVO.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public List<LoginSessionVO> getUserSessions(
         @Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
         var user = getService().queryById(id);
@@ -163,7 +163,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @Operation(summary = "获取用户登录会话的Token数据", description = "根据会话ID获取用户登录会话的Token数据")
     @ApiResponse(responseCode = "200", description = "成功获取用户登录会话的Token数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = ITokenModel.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public List<ITokenModel> listTokensBySessionId(@Parameter(name = "sessionId", description = "用户登录会话ID",
         required = true) @PathVariable String sessionId) {
         return center.getTokensBySessionId(sessionId).stream().collect(Collectors.toList());
@@ -177,7 +177,7 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
      */
     @PostMapping("token/disable/")
     @AjaxResponseType(void.class)
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult tokenDisable(@RequestBody @Valid DisableTokenForm form) {
         var user = getService().queryById(form.getUserId());
         AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();

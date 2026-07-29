@@ -1,11 +1,12 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
+
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -36,7 +37,7 @@ public class AdminSystemLogController extends BaseController {
      */
     @GetMapping("listWithOpType")
     @AjaxResponseType(Object.class)
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult listWithOpType() {
         return successResult(systemLogService.getLogOperateTypeList(28));
     }

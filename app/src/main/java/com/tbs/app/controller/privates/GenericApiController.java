@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
+
 import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.common.error.AssertUtil;
@@ -60,7 +60,7 @@ public class GenericApiController
     @Operation(summary = "获取泛化API配置", description = "根据ID获取泛化API配置详情")
     @ApiResponse(responseCode = "200", description = "成功获取泛化API配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult get(@Parameter(name = "id", description = "API配置ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
@@ -77,7 +77,7 @@ public class GenericApiController
     @Operation(summary = "保存泛化API配置", description = "创建或更新泛化API配置")
     @ApiResponse(responseCode = "200", description = "成功保存泛化API配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult save(@Parameter(name = "entity", description = "API配置信息",
         required = true) @RequestBody SystemGenericApiEntity entity) {
         return super.save(entity);
@@ -95,7 +95,7 @@ public class GenericApiController
     @Operation(summary = "删除泛化API配置", description = "根据ID删除泛化API配置")
     @ApiResponse(responseCode = "200", description = "成功删除泛化API配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult delete(
         @Parameter(name = "id", description = "API配置ID", required = true) @PathVariable Long id) {
         return super.delete(id);
@@ -115,7 +115,7 @@ public class GenericApiController
     @Operation(summary = "查询泛化API配置列表", description = "分页查询泛化API配置列表")
     @ApiResponse(responseCode = "200", description = "成功查询泛化API配置列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult query(@Parameter(name = "criteria", description = "查询条件") @RequestBody(
             required = false) CommonGenericApiCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false,
@@ -136,7 +136,7 @@ public class GenericApiController
     @Operation(summary = "启用泛化API", description = "启用指定的泛化API")
     @ApiResponse(responseCode = "200", description = "成功启用泛化API",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult enable(
         @Parameter(name = "apiId", description = "API ID", required = true) @PathVariable String apiId) {
         genericApiService.enableApi(apiId);
@@ -154,7 +154,7 @@ public class GenericApiController
     @Operation(summary = "禁用泛化API", description = "禁用指定的泛化API")
     @ApiResponse(responseCode = "200", description = "成功禁用泛化API",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult disable(
         @Parameter(name = "apiId", description = "API ID", required = true) @PathVariable String apiId) {
         genericApiService.disableApi(apiId);

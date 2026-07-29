@@ -1,6 +1,5 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.web.AbstractCrudController;
@@ -86,7 +85,7 @@ public class AdminCompanyController
     @Operation(summary = "保存公司信息", description = "创建或更新公司信息")
     @ApiResponse(responseCode = "200", description = "成功保存公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult save(@Parameter(name = "entity", description = "公司信息",
         required = true) @RequestBody SystemCompanyEntity entity) {
 		return super.save(entity);
@@ -104,7 +103,7 @@ public class AdminCompanyController
     @Operation(summary = "删除公司信息", description = "根据公司ID删除公司信息")
     @ApiResponse(responseCode = "200", description = "成功删除公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult delete(@Parameter(name = "id", description = "公司ID", required = true) @PathVariable Long id) {
 		return super.delete(id);
 	}
@@ -153,7 +152,7 @@ public class AdminCompanyController
     @Operation(summary = "移动公司到指定父级", description = "将一个公司移动到另一个公司下作为其子级公司")
     @ApiResponse(responseCode = "200", description = "成功移动公司",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult moveCompanyTo(
         @Parameter(name = "parent", description = "父级公司ID", required = true) @RequestParam Long parent,
         @Parameter(name = "child", description = "子级公司ID", required = true) @RequestParam Long child) {

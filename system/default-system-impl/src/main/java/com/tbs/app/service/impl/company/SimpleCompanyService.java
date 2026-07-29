@@ -1,6 +1,5 @@
 package com.tbs.app.service.impl.company;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.ISystemDepartmentService;
@@ -54,7 +53,6 @@ public class SimpleCompanyService
     CompanyTreeStructService companyTreeStructService;
 
     @Override
-    @OnlyActiveAccountUse
     public SystemCompanyEntity deleteById(Long id) {
         CommonSystemDepartmentQueryCriteria criteria = new CommonSystemDepartmentQueryCriteria();
         criteria.setEqualsCompanyId(id);

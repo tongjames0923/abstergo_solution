@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
+
 import com.tbs.app.form.CacheForm;
 import com.tbs.app.service.CacheListenner;
 import com.tbs.common.error.AssertUtil;
@@ -53,7 +53,7 @@ public class CacheController extends BaseController {
     @Operation(summary = "获取缓存名称列表", description = "获取系统中所有缓存的名称")
     @ApiResponse(responseCode = "200", description = "成功获取缓存名称列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult getCacheNames() {
         var cacheNames = cacheListenner.getCacheNames();
         return successResult(cacheNames);
@@ -70,7 +70,7 @@ public class CacheController extends BaseController {
     @Operation(summary = "获取缓存键列表", description = "根据缓存名称获取缓存键列表")
     @ApiResponse(responseCode = "200", description = "成功获取缓存键列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult getCacheKeys(
         @Parameter(name = "form", description = "缓存查询表单", required = true) @RequestBody CacheForm form) {
         if (form == null) {
@@ -92,7 +92,7 @@ public class CacheController extends BaseController {
     @Operation(summary = "获取缓存值", description = "根据缓存名称和键获取对应的缓存值")
     @ApiResponse(responseCode = "200", description = "成功获取缓存值",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult getCache(@Parameter(name = "form", description = "缓存查询表单", required = true) @RequestBody CacheForm form) {
         if (form == null) {
             return successResult(null);
@@ -117,7 +117,7 @@ public class CacheController extends BaseController {
     @Operation(summary = "清除缓存", description = "根据缓存名称清除缓存，如果指定键则只清除该键对应的缓存")
     @ApiResponse(responseCode = "200", description = "成功清除缓存",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @OnlyActiveAccountUse
+    @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult evictCache(@Parameter(name = "form", description = "缓存清除表单", required = true) @RequestBody CacheForm form) {
         AssertUtil.isTrue(StrUtil.isEmpty(form.getCacheName()), () -> new NotFoundTokenException("未找到指定的缓存"));
         if (form.getKey() == null) {

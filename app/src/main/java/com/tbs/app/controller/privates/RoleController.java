@@ -1,17 +1,16 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.account.annotation.OnlyActiveAccountUse;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.web.AbstractCrudController;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
+import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.pojo.model.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -59,7 +58,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@ApiResponse(responseCode = "200", description = "成功获取角色信息",
 		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult get(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
 		return super.get(id);
 	}
@@ -77,7 +76,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@ApiResponse(responseCode = "200", description = "成功保存角色信息",
 		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult save(
 			@Parameter(name = "entity", description = "角色信息", required = true) @RequestBody SystemRoleEntity entity) {
 		return super.save(entity);
@@ -96,7 +95,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@ApiResponse(responseCode = "200", description = "成功删除角色",
 		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult delete(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
 		return super.delete(id);
 	}
@@ -128,7 +127,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@Operation(summary = "启用角色", description = "启用角色")
 	@ApiResponse(responseCode = "200", description = "成功启用角色",
 		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult enable(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
 		SystemRoleEntity entity = roleService.queryById(id);
 		if (entity == null) {
@@ -144,7 +143,7 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	@Operation(summary = "禁用角色", description = "禁用角色")
 	@ApiResponse(responseCode = "200", description = "成功禁用角色",
 		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@OnlyActiveAccountUse
+	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult disable(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
 		SystemRoleEntity entity = roleService.queryById(id);
 		if (entity == null) {

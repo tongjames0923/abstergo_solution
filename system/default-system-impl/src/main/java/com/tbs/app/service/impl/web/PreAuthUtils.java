@@ -15,15 +15,15 @@ public class PreAuthUtils {
 
     public boolean isAccountActived() {
         var vo = AuthUtil.getInstance().getCurrentUser();
-        AssertUtil.isTrue(vo == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("user.not.logined").throwIt();
+//        AssertUtil.isTrue().errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("user.not.logined").throwIt();
+//
+//        AssertUtil.isTrue(!).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("auth.user.not.enabled")
+//            .params(vo.getUsername()).throwIt();
+//
+//        AssertUtil.isTrue().errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+//            .i18n("auth.user.not.activated").params(vo.getUsername()).throwIt();
 
-        AssertUtil.isTrue(!vo.isEnabled()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("auth.user.not.enabled")
-            .params(vo.getUsername()).throwIt();
-
-        AssertUtil.isTrue(!vo.isAccountNonLocked()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
-            .i18n("auth.user.not.activated").params(vo.getUsername()).throwIt();
-
-        return true;
+        return vo != null&& vo.isEnabled()&&vo.isAccountNonLocked();
     }
 
 }

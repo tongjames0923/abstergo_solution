@@ -1,7 +1,6 @@
 package com.tbs.app.config;
 
 import com.alibaba.dubbo.common.URL;
-import com.tbs.app.account.exception.UnNormalAccountStatusException;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
@@ -49,23 +48,6 @@ public class AppConfig {
         return new SimpleRabbitMqSupport();
     }
 
-    @Bean
-    IOnErrorAjaxProvider<UnNormalAccountStatusException> unNormalAccountStatusExceptionProvider() {
-        return new IOnErrorAjaxProvider<UnNormalAccountStatusException>() {
-            @Override
-            public AjaxResult onError(UnNormalAccountStatusException throwable) {
-                return AjaxUtil.builder().error("账号状态异常。").data(throwable.getMessage())
-                    .type(WebMessageTypeEnum.WARNING)
-                    .duration(3000)
-                    .redirect("/Welcome").build();
-            }
-
-            @Override
-            public boolean support( Class<? extends Throwable> clazz) {
-                return clazz == UnNormalAccountStatusException.class;
-            }
-        };
-    }
 
 
     @Bean
