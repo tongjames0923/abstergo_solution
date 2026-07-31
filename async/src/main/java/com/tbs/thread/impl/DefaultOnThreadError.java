@@ -15,5 +15,6 @@ public class DefaultOnThreadError implements IOnThreadError {
     @Override
     public void onThreadError(Throwable throwable, Thread at) {
         log.error(String.format("线程 %s 异常。Msg:%s", at.getName(), throwable.getLocalizedMessage()), throwable);
+
     }
 }

@@ -1,7 +1,9 @@
 package com.tbs.common.config;
 
 import com.tbs.common.config.property.I18nProperty;
+import com.tbs.common.context.ContextPropagator;
 import com.tbs.common.i18n.I18nContextHolder;
+import com.tbs.common.i18n.I18nContextPropagator;
 import com.tbs.common.i18n.IMessageSourceProvider;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -74,6 +76,18 @@ public class I18nAutoConfiguration {
     @Autowired(required = false)
     public void setProviders(List<IMessageSourceProvider> providers) {
         this.providers = providers != null ? providers : new ArrayList<>();
+    }
+
+    /**
+     * 配置国际化上下文传播器
+     * <p>
+     * 用于在线程池异步任务中传播父线程的 Locale 设置
+     *
+     * @return 国际化上下文传播器
+     */
+    @Bean
+    public ContextPropagator i18nContextPropagator() {
+        return new I18nContextPropagator();
     }
 
     /**
