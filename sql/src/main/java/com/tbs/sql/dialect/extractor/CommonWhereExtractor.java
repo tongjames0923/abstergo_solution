@@ -85,7 +85,9 @@ public class CommonWhereExtractor implements IWhereExtractor {
     }
 
     String singleWhereInfo(WhereInfo info, Long id, Map<String, Object> paramMap) {
-        if (info.getRawSql() != null) return info.getRawSql();
+        if (StrUtil.isNotEmpty(info.getRawSql())) {
+            return info.getRawSql();
+        }
         String key = makeParamKey(id);
         Object val = info.getFieldValue();
         if (StrUtil.isNotEmpty(info.getFieldValueStr())) val = info.getFieldValueStr();
@@ -152,7 +154,9 @@ public class CommonWhereExtractor implements IWhereExtractor {
                     extraWhereSql(subCompose, id, paramMap)));
             }
         }
-        if (CollUtil.isEmpty(whereNode)) return "";
+        if (CollUtil.isEmpty(whereNode)) {
+            return "";
+        }
         StringBuilder sb = new StringBuilder();
         boolean first = true;
         for (Map.Entry<ConnectorEnum, String> entry : whereNode) {

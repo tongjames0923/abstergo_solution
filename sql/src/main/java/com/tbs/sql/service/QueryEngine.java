@@ -166,8 +166,8 @@ public class QueryEngine implements IStartup {
 //        Date date = new Date();
         SqlDriver.SqlQueryData data = queryDriver.getSqlQueryData(context);
         String selectSql = dialect.getSelectExtractor().extract(data.getSelectInfo());
-        String whereSql = dialect.getWhereExtractor().extract(
-            getInstance().intercept(data.getSqlWhereInfo(), context.getEntityClass()), context.getSqlParams());
+        String whereSql = dialect.getWhereExtractor().extract(getInstance().intercept(data.getSqlWhereInfo(), context),
+            context.getSqlParams());
         String orderSql = dialect.getOrderExtractor().extract(data.getSqlOrders());
         String groupSql = dialect.getGroupExtractor().extract(data.getSqlGroups());
         String limitSql = dialect.getLimitExtractor().extract(data.getSqlLimit());
@@ -186,9 +186,9 @@ public class QueryEngine implements IStartup {
      * @param entityClass 实体类类型
      * @return 处理后的WHERE条件组合
      */
-    private WhereCompose intercept(WhereCompose compose, Class<?> entityClass) {
+    private WhereCompose intercept(WhereCompose compose, SqlBuildContext context) {
         for (SqlComposeInterceptor interceptor : interceptors) {
-            compose = interceptor.intercept(compose, entityClass);
+            compose = interceptor.intercept(compose, context);
         }
         return compose;
     }

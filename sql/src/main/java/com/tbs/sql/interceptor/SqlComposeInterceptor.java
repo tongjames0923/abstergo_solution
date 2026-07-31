@@ -1,5 +1,6 @@
 package com.tbs.sql.interceptor;
 
+import com.tbs.sql.builder.SqlBuildContext;
 import com.tbs.sql.model.where.WhereCompose;
 import org.springframework.core.Ordered;
 
@@ -11,7 +12,7 @@ import org.springframework.core.Ordered;
  *
  * <h3>主要功能</h3>
  * <ul>
- *   <li>拦截并修改WHERE条件 {@link #intercept(WhereCompose, Class)}</li>
+ *   <li>拦截并修改WHERE条件 {@link #intercept(WhereCompose, SqlBuildContext)}</li>
  *   <li>控制拦截器执行顺序 {@link #getOrder()}</li>
  *   <li>支持多拦截器链式执行</li>
  * </ul>
@@ -34,7 +35,7 @@ import org.springframework.core.Ordered;
  *         compose.addWhere("tenant_id = ?", getCurrentTenantId());
  *         return compose;
  *     }
- *     
+ *
  *     @Override
  *     public int getOrder() {
  *         return 0;  // 最高优先级
@@ -59,10 +60,10 @@ public interface SqlComposeInterceptor extends Ordered {
      * 拦截并修改WHERE条件组合。
      *
      * @param compose 原始的WHERE条件组合对象
-     * @param entityClass 实体类类型
+     * @param context 实体类类型
      * @return 修改后的WHERE条件组合对象
      */
-    WhereCompose intercept(WhereCompose compose, Class<?> entityClass);
+    WhereCompose intercept(WhereCompose compose, SqlBuildContext context);
 
     /**
      * 获取拦截器执行顺序，值越小优先级越高。

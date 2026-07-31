@@ -7,6 +7,7 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
 import lombok.Getter;
+import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -41,6 +42,16 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
      */
     private boolean needAuth;
 
+    /**
+     * -- GETTER -- 获取预认证列表
+     *
+     *
+     * -- SETTER -- 设置预认证列表
+     *
+     * @return
+     * @param preAuths
+     */
+    @Setter
     private List<IApiInstancePreAuth> preAuths;
 
     public AbstractGenricApiInstance(String apiId, Integer apiVersion, boolean needAuth, IApiInstancePreAuth... auths) {
@@ -54,23 +65,23 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
         }
     }
 
-    public List<IApiInstancePreAuth> getPreAuths() {
-        return preAuths;
-    }
-
-    public void setPreAuths(List<IApiInstancePreAuth> preAuths) {
-        this.preAuths = preAuths;
-    }
-
     /**
      * 调用接口
      *
-     * @param parameterForms
+     * @param parameterForms 参数
      * @param resultVo       调用结果
+     * @param userDetails   当前用户
      */
     protected abstract void invoke(Map<String, GenricParameterForm> parameterForms, ApiInvokeResultVo<R> resultVo,
         Optional<UserDetails> userDetails);
 
+    /**
+     * 调用接口
+     *
+     * @param parameterForms 参数
+     * @param userDetails    当前用户
+     * @return
+     */
     public ApiInvokeResultVo<R> invokeApi(List<GenricParameterForm> parameterForms, UserDetails u) {
         var paramMap = new java.util.HashMap<String, GenricParameterForm>();
         ApiInvokeResultVo<R> resultVo = new ApiInvokeResultVo<>();

@@ -2,6 +2,9 @@ package com.tbs.web.config;
 
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
+import com.tbs.common.context.ContextPropagator;
+import com.tbs.web.context.RequestContextPropagator;
+import com.tbs.web.security.authentication.SecurityContextPropagator;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
 import com.tbs.web.gate.ITokenPicker;
@@ -97,6 +100,16 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     //        setSecurity(http);
     //        return http.build();
     //    }
+
+    @Bean
+    ContextPropagator requestContextPropagator() {
+        return new RequestContextPropagator();
+    }
+
+    @Bean
+    ContextPropagator securityContextPropagator() {
+        return new SecurityContextPropagator();
+    }
 
     @Bean
     LoginGateWayCenter loginSecurityManager(@Qualifier(WebBeanNameConstant.LOGIN_TOKEN_PICKER) ITokenPicker picker) {

@@ -1,2 +1,1 @@
-traceConsumer=com.tbs.trace.dubbo.DubboTraceConsumerFilter
-traceProvider=com.tbs.trace.dubbo.DubboTraceProviderFilter
+requestContext=com.tbs.web.context.propagator.DubboRequestContextFilter
