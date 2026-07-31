@@ -1,3 +1,25 @@
+common:
+  - path: /common
+    component: Layout
+    name: view.menu.common
+    redirect: /common/user
+    meta:
+      routeGroup: default
+      title: view.menu.common
+      icon: el-icon-s-help
+      roles:
+        - "普通用户"
+    children:
+      - path: user
+        name: view.menu.common.user
+        component: "/user/index.vue"
+        meta:
+          routeGroup: default
+          title: view.menu.common.user
+          icon: el-icon-user
+          roles:
+            - "普通用户"
+
 admin:
   - path: /admin
     component: Layout
