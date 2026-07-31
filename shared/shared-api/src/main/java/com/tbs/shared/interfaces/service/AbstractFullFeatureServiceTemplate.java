@@ -31,8 +31,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 @Slf4j
 public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable<K>, K, M extends IFrameworkMapper<T, K>>
-    extends AbstractService<T, K, M>
-    implements ISearchableService<T, K>, ISaveableService<T, K>, IDeleteableService<T, K> {
+    extends AbstractService<T, K, M> implements IServiceTemplate<T, K> {
 
     /**
      * 获取PageVO构建类
@@ -169,9 +168,21 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
     @Override
     public PageVO<T> queryAndPage(IQueryCriteria qo, IPage page) {
+        if (this.useDataScope()) {
+            this.inUseDataScope();
+        }
         Class<T> entityClass = (Class<T>)getEntity().getClass();
         return PageUtil.build(pageVoBuildType(), () -> getMapper().queryByQO(qo, page, entityClass),
             () -> getMapper().countByQO(qo, entityClass));
+    }
+
+    /**
+     * 使用数据权限操作
+     *
+     * @return
+     */
+    protected void inUseDataScope() {
+
     }
 
     @Override

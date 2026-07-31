@@ -1,5 +1,6 @@
 package com.tbs.shared.constant;
 
+import com.tbs.shared.enums.SystemDataScopeEnum;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 
@@ -28,7 +29,7 @@ public class RoleConstants {
 	 */
 	public static final SystemRoleEntity SUPER_ADMIN_ROLE =
 		new SystemRoleEntity(SUPER_ADMIN_ROLE_ID, SUPER_ADMIN_ROLE_NAME, "开放数据后台管理和系统日志查看功能。", null,
-			null, SystemRoleFlagEnum.SYSTEMED.getCode(), null, null);
+			null, SystemRoleFlagEnum.SYSTEMED.getCode(), null, null, SystemDataScopeEnum.ALL.getCode());
 
 	/**
 	 * 普通用户角色ID
@@ -48,7 +49,7 @@ public class RoleConstants {
 	 */
 	public static final SystemRoleEntity NORMAL_USER_ROLE =
 		new SystemRoleEntity(NORMAL_USER_ROLE_ID, NORMAL_USER_ROLE_NAME, "基础登录权限，若无此权限，用户将无法登录", null,
-			null, SystemRoleFlagEnum.SYSTEMED.getCode(), null, null);
+			null, SystemRoleFlagEnum.SYSTEMED.getCode(), null, null, SystemDataScopeEnum.SELF.getCode());
 
 	/**
 	 * 开发者角色ID
@@ -66,5 +67,5 @@ public class RoleConstants {
 	 */
 	public static final SystemRoleEntity DEVELOPER_ROLE =
 		new SystemRoleEntity(DEVELOPER_ROLE_ID, DEVELOPER_ROLE_NAME, "开放表单管理和日志功能。", null, null,
-			SystemRoleFlagEnum.SYSTEMED.getCode(), null, null);
+			SystemRoleFlagEnum.SYSTEMED.getCode(), null, null, SystemDataScopeEnum.ALL.getCode());
 }

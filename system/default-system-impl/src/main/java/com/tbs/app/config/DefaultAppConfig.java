@@ -1,5 +1,6 @@
 package com.tbs.app.config;
 
+import com.tbs.app.intercept.DataPermissionIntercepter;
 import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.service.impl.FeatureFlagServiceImpl;
@@ -118,6 +119,19 @@ public class DefaultAppConfig {
     @Bean
     public SqlLogicDeleteIntercepter sqlLogicDeleteIntercepter() {
         return new SqlLogicDeleteIntercepter();
+    }
+
+    /**
+     * 数据权限拦截器配置
+     * <p>
+     * 配置数据权限功能，用于处理数据库记录的权限控制
+     * </p>
+     *
+     * @return 数据权限拦截器实例
+     */
+    @Bean
+    public DataPermissionIntercepter dataPermissionIntercepter() {
+        return new DataPermissionIntercepter();
     }
 
 }

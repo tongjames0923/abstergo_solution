@@ -9,4 +9,14 @@ package com.tbs.shared.interfaces.service;
  */
 public interface IServiceTemplate<E, K>
 		extends ISaveableService<E, K>, IDeleteableService<E, K>, ISearchableService<E, K> {
+	/**
+	 * 是否使用数据权限
+	 *
+	 * @return
+	 */
+	public default boolean useDataScope() {
+		return false;
+	}
+
+
 }

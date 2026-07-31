@@ -2,6 +2,7 @@ package com.tbs.app.service.impl.user;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.constant.UserServiceFeatureFlagConstants;
+import com.tbs.app.intercept.DataPermissionIntercepter;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.service.role.IUserRoleRelationService;
@@ -138,6 +139,16 @@ public class SimpleSystemUserServiceImpl
             oldSystemUserEntity.setNickName(systemUserEntity.getNickName());
         }
         return oldSystemUserEntity;
+    }
+
+    @Override
+    protected void inUseDataScope() {
+        DataPermissionIntercepter.setEnableFlag(true);
+    }
+
+    @Override
+    public boolean useDataScope() {
+        return true;
     }
 
     @Cacheable(value = "system_user", key = "#id")

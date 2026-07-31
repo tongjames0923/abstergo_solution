@@ -74,4 +74,11 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 */
 	@Column(name = "update_by")
 	private Long updateBy;
+
+
+	/**
+	 * 数据权限
+	 */
+	private Integer dataScope;
+
 }

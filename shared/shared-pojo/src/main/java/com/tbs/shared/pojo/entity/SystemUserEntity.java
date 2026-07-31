@@ -3,6 +3,7 @@ package com.tbs.shared.pojo.entity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
+import com.tbs.shared.pojo.IDeptBelongEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Getter;
@@ -24,7 +25,8 @@ import java.util.Date;
 @Getter
 @Setter
 @ToString
-public class SystemUserEntity implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
+public class SystemUserEntity
+	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>, IDeptBelongEntity<Long> {
 	private static final long serialVersionUID = 1L;
 	@Setter
 	@Id
@@ -84,5 +86,23 @@ public class SystemUserEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 */
 	@Column(name = "update_by")
 	private Long updateBy;
+
+	/**
+	 * 主要部门Id
+	 */
+	@Column(name = "dept_id")
+	private Long deptId;
+
+//	/**
+//	 * 自定义数据权限范围类型
+//	 */
+//	@Column(name = "data_scope_type")
+//	private String dataScopeType;
+//
+//	/**
+//	 * 自定义数据权限范围值
+//	 */
+//	@Column(name = "data_scope_value")
+//	private String dataScopeValue;
 
 }
