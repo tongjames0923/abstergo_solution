@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 import com.tbs.sql.order.impl.OrderedModel;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
@@ -11,6 +12,7 @@ import java.io.IOException;
  * OrderedModel 序列化器
  * @author tongj
  */
+@Component
 public class OrderedModelSerializer extends JsonSerializer<OrderedModel> {
     @Override
     public void serialize(OrderedModel value, JsonGenerator gen, SerializerProvider serializers) throws IOException {
