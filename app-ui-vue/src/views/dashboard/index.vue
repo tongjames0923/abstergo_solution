@@ -69,7 +69,7 @@
           </div>
           <div class="num__info">
             <b class="num__v">{{ roles.length }}</b>
-            <span class="num__l">个角色</span>
+            <span class="num__l">个权限</span>
           </div>
         </div>
         <div class="num__sep" />
@@ -114,7 +114,7 @@
             <span class="pane__ic pane__ic--amber">
               <i class="el-icon-s-check" />
             </span>
-            角色权限
+            权限列表
           </h3>
           <ul v-if="roles.length" class="pane__ul">
             <li v-for="(r, i) in roles" :key="i" class="pane__li">
@@ -124,7 +124,7 @@
           </ul>
           <p v-else class="pane__emp">
             <i class="el-icon-lock" />
-            暂无角色
+            暂无权限
           </p>
         </div>
 
@@ -194,7 +194,7 @@
             <li class="pane__li">
               <span class="pane__dot" style="background:#0071e3" />
               <div class="pane__kv">
-                <small>角色数</small>
+                <small>权限数</small>
                 <span>{{ roles.length }} 个</span>
               </div>
             </li>

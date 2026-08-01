@@ -2,7 +2,7 @@
   <div class="role-management">
     <quick-use-management-view
       ref="roleManagement"
-      main-title="角色管理"
+      main-title="权限管理"
       :config-name="roleSearchFormKey()"
       :search-handler="searchHandler"
       :columns="columns"
@@ -41,8 +41,8 @@ export default {
     return {
       columns: [
         { prop: 'id', label: 'ID', width: 80 },
-        { prop: 'role', label: '角色名称', width: 150 },
-        { prop: 'description', label: '角色描述', minWidth: 200 },
+        { prop: 'role', label: '权限名称', width: 150 },
+        { prop: 'description', label: '权限描述', minWidth: 200 },
         {
           prop: 'flag',
           label: '状态',
@@ -85,30 +85,30 @@ export default {
       )
     },
 
-    // 保存角色（新增/编辑）
+    // 保存权限（新增/编辑）
     async handleSaveRole(formData) {
       return await saveRole(formData)
     },
 
-    // 删除角色
+    // 删除权限
     async handleDeleteRole(row) {
       return await deleteRole(row.id)
     },
 
     // 删除确认文本
     deleteConfirmText(row, index) {
-      return `确认要删除角色"${row.role}"吗？`
+      return `确认要删除权限"${row.role}"吗？`
     },
 
     /**
-     * 切换角色状态
+     * 切换权限状态
      */
     async handleToggleStatus(row) {
       try {
         let response
         if (row.flag === 1) {
           // 当前是激活状态，点击后应该禁用
-          await this.$confirm('确认要禁用该角色吗？', '提示', {
+          await this.$confirm('确认要禁用该权限吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'
@@ -116,7 +116,7 @@ export default {
           response = await disableRole(row.id)
         } else if (row.flag === 0) {
           // 当前是失效状态，点击后应该激活
-          await this.$confirm('确认要激活该角色吗？', '提示', {
+          await this.$confirm('确认要激活该权限吗？', '提示', {
             confirmButtonText: '确定',
             cancelButtonText: '取消',
             type: 'warning'

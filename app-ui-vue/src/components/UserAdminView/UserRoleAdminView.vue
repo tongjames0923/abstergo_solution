@@ -3,7 +3,7 @@
     <div class="role-content">
       <div class="assigned-roles-section">
         <div class="section-title">
-          <h4>已分配角色</h4>
+          <h4>已分配权限</h4>
           <span class="role-count">({{ userRoles.length }})</span>
         </div>
         <div class="role-tags">
@@ -19,7 +19,7 @@
           </el-tag>
           <div v-if="userRoles.length === 0" class="no-roles">
             <i class="el-icon-info" />
-            该用户暂无角色
+            该用户暂无权限
           </div>
         </div>
       </div>
@@ -27,14 +27,14 @@
       <div class="available-roles-section">
         <div class="section-header">
           <div class="section-title">
-            <h4>可分配角色</h4>
+            <h4>可分配权限</h4>
             <span class="role-count">({{ totalRoles }})</span>
           </div>
           <div class="search-box">
             <el-input
               v-model="searchKeyword"
               clearable
-              placeholder="搜索角色名称"
+              placeholder="搜索权限名称"
               prefix-icon="el-icon-search"
               @clear="handleSearch"
               @keyup.enter.native="handleSearch"
@@ -42,7 +42,7 @@
           </div>
         </div>
 
-        <!-- 使用CardList组件展示角色 -->
+        <!-- 使用CardList组件展示权限 -->
         <CardList
           :columns="2"
           :current-page="currentPage"
@@ -98,7 +98,7 @@
           <!-- 自定义空状态 -->
           <template #empty>
             <div class="empty-role-state">
-              <el-empty :image-size="80" description="暂无角色数据">
+              <el-empty :image-size="80" description="暂无权限数据">
                 <el-button
                   v-if="!searchKeyword"
                   icon="el-icon-refresh"
@@ -173,7 +173,7 @@ export default {
     }
   },
   methods: {
-    // 获取用户角色
+    // 获取用户权限
     async fetchUserRoles() {
       if (this.userId === undefined) return
 
@@ -182,27 +182,27 @@ export default {
         const response = await getRolesByUserIdAdmin(this.userId)
         this.userRoles = response.data || []
       } catch (error) {
-        console.error('获取用户角色失败:', error)
+        console.error('获取用户权限失败:', error)
         // 消息提示由后端统一控制
       } finally {
         this.loading = false
       }
     },
 
-    // 获取所有可用角色
+    // 获取所有可用权限
     async fetchAllRoles() {
       this.loading = true
       try {
         const response = await queryRoles({
           roleLike: this.searchKeyword || undefined,
-          flagEquals: [1, 2], // 只获取启用的角色
+          flagEquals: [1, 2], // 只获取启用的权限
           pageNum: this.currentPage,
           pageSize: this.pageSize
         })
         this.availableRoles = response.data?.data || []
         this.totalRoles = response.data?.total || 0
       } catch (error) {
-        console.error('获取角色列表失败:', error)
+        console.error('获取权限列表失败:', error)
         // 消息提示由后端统一控制
       } finally {
         this.loading = false
@@ -221,7 +221,7 @@ export default {
       this.fetchAllRoles()
     },
 
-    // 启用角色
+    // 启用权限
     async enableRole(roleId) {
       try {
         await enableRoleForUser(this.userId, roleId)
@@ -232,12 +232,12 @@ export default {
         }
         // 消息提示由后端统一控制
       } catch (error) {
-        console.error('启用角色失败:', error)
+        console.error('启用权限失败:', error)
         // 消息提示由后端统一控制
       }
     },
 
-    // 禁用角色
+    // 禁用权限
     async disableRole(roleId) {
       try {
         await disableRoleForUser(this.userId, roleId)
@@ -245,17 +245,17 @@ export default {
         this.userRoles = this.userRoles.filter(role => role.id !== roleId)
         // 消息提示由后端统一控制
       } catch (error) {
-        console.error('禁用角色失败:', error)
+        console.error('禁用权限失败:', error)
         // 消息提示由后端统一控制
       }
     },
 
-    // 判断角色是否已分配给用户
+    // 判断权限是否已分配给用户
     hasRole(roleId) {
       return this.userRoles.some(role => role.id === roleId)
     },
 
-    // 获取角色标签类型
+    // 获取权限标签类型
     getRoleType(roleName) {
       const typeMap = {
         '管理员': 'danger',

@@ -34,13 +34,13 @@
             <span>{{ roles[0] }}</span>
             <span v-if="roles.length > 1" class="role-count">+{{ roles.length - 1 }}</span>
           </div>
-          <div slot="content" class="tooltip-content">
-            <div class="tooltip-title">角色权限 ({{ roles.length }})</div>
-            <div v-for="(role, index) in roles" :key="index" class="tooltip-item">
-              <span class="tooltip-dot" :style="{ background: getRoleColor(index) }"></span>
-              <span class="tooltip-value">{{ role }}</span>
-            </div>
-          </div>
+<!--          <div slot="content" class="tooltip-content">-->
+<!--            <div class="tooltip-title">权限列表 ({{ roles.length }})</div>-->
+<!--            <div v-for="(role, index) in roles" :key="index" class="tooltip-item">-->
+<!--              <span class="tooltip-dot" :style="{ background: getRoleColor(index) }"></span>-->
+<!--              <span class="tooltip-value">{{ role }}</span>-->
+<!--            </div>-->
+<!--          </div>-->
         </el-tooltip>
       </div>
 

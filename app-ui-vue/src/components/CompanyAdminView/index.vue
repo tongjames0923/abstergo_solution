@@ -69,68 +69,87 @@
     <!-- Master-Detail Layout -->
     <div class="ca-layout">
       <!-- Left: Company Tree -->
-      <div class="ca-panel ca-panel-left">
-        <div class="ca-panel-header">
-          <span class="ca-panel-label">公司列表</span>
-          <span class="ca-panel-count">{{ total }} 家</span>
-        </div>
-        <div v-loading="loading" class="ca-tree-wrap">
-          <el-tree
-            ref="companyTree"
-            :data="treeData"
-            :props="treeProps"
-            node-key="id"
-            lazy
-            :load="loadNode"
-            :highlight-current="true"
-            :expand-on-click-node="false"
-            @node-click="handleNodeClick"
-          >
-            <span slot-scope="{ node, data }" class="ca-tree-row">
-              <span class="ca-tree-main">
-                <span class="ca-tree-name" v-html="highlight(data.companyName)" />
-                <span v-if="data.flag" class="ca-status-badge" :class="'ca-status-' + data.flag">
-                  {{ getCompanyStatusLabel(data.flag) }}
+      <transition name="slide-fade">
+        <div class="ca-panel ca-panel-left" v-show="!isCollapsed">
+          <div class="ca-panel-header">
+            <span class="ca-panel-label">公司列表</span>
+            <span class="ca-panel-count">{{ total }} 家</span>
+            <button class="ca-collapse-btn" @click="toggleCollapse" title="收起">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"/>
+              </svg>
+            </button>
+          </div>
+          <div v-loading="loading" class="ca-tree-wrap">
+            <el-tree
+              ref="companyTree"
+              :data="treeData"
+              :props="treeProps"
+              node-key="id"
+              lazy
+              :load="loadNode"
+              :highlight-current="true"
+              :expand-on-click-node="false"
+              @node-click="handleNodeClick"
+            >
+              <span slot-scope="{ node, data }" class="ca-tree-row">
+                <span class="ca-tree-main">
+                  <span class="ca-tree-name" v-html="highlight(data.companyName)" />
+                  <span v-if="data.flag" class="ca-status-badge" :class="'ca-status-' + data.flag">
+                    {{ getCompanyStatusLabel(data.flag) }}
+                  </span>
+                  <span v-if="data.childrenCount > 0" class="ca-count-badge">
+                    {{ data.childrenCount }} 子
+                  </span>
                 </span>
-                <span v-if="data.childrenCount > 0" class="ca-count-badge">
-                  {{ data.childrenCount }} 子
-                </span>
-              </span>
-              <span class="ca-tree-actions" @click.stop>
-                <button class="ca-action-btn" title="编辑" @click="handleEdit(data)" v-if="data.id!==1 && data.flag!==5">
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </button>
-                <el-dropdown size="small" @command="handleMoreActions" trigger="click"
-                             v-if="data.id!==1 && data.flag!==5">
-                  <button class="ca-action-btn ca-action-more" title="更多">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                <span class="ca-tree-actions" @click.stop>
+                  <button class="ca-action-btn" title="编辑" @click="handleEdit(data)" v-if="data.id!==1 && data.flag!==5">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                   </button>
-                  <el-dropdown-menu slot="dropdown">
-                    <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">管理部门</el-dropdown-item>
-                    <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'move', row: data}" icon="el-icon-sort">移动到其他公司</el-dropdown-item>
-                    <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'delete', row: data}" divided icon="el-icon-delete">删除</el-dropdown-item>
-                  </el-dropdown-menu>
-                </el-dropdown>
+                  <el-dropdown size="small" @command="handleMoreActions" trigger="click"
+                               v-if="data.id!==1 && data.flag!==5">
+                    <button class="ca-action-btn ca-action-more" title="更多">
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                    </button>
+                    <el-dropdown-menu slot="dropdown">
+                      <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">管理部门</el-dropdown-item>
+                      <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'move', row: data}" icon="el-icon-sort">移动到其他公司</el-dropdown-item>
+                      <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'delete', row: data}" divided icon="el-icon-delete">删除</el-dropdown-item>
+                    </el-dropdown-menu>
+                  </el-dropdown>
+                </span>
               </span>
-            </span>
-          </el-tree>
-          <div v-if="!loading && (!treeData || treeData.length === 0)" class="ca-empty">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.25"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/></svg>
-            <p>暂无公司数据</p>
+            </el-tree>
+            <div v-if="!loading && (!treeData || treeData.length === 0)" class="ca-empty">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.25"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/></svg>
+              <p>暂无公司数据</p>
+            </div>
+          </div>
+          <div class="ca-pagination">
+            <el-pagination
+              :current-page="currentPage"
+              :page-sizes="[10, 20, 50, 100]"
+              :page-size="pageSize"
+              :total="total"
+              layout="total, sizes, prev, pager, next"
+              @size-change="handleSizeChange"
+              @current-change="handlePageChange"
+            />
           </div>
         </div>
-        <div class="ca-pagination">
-          <el-pagination
-            :current-page="currentPage"
-            :page-sizes="[10, 20, 50, 100]"
-            :page-size="pageSize"
-            :total="total"
-            layout="total, sizes, prev, pager, next"
-            @size-change="handleSizeChange"
-            @current-change="handlePageChange"
-          />
-        </div>
-      </div>
+      </transition>
+
+      <!-- 收起状态的浮动触发按钮 -->
+      <transition name="fade">
+        <button v-if="isCollapsed" class="ca-float-trigger" @click="toggleCollapse" title="展开公司列表">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+            <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+            <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+          </svg>
+          <span class="ca-float-trigger-text">公司</span>
+        </button>
+      </transition>
 
       <!-- Right: Department Panel -->
       <div class="ca-panel ca-panel-right">
@@ -236,6 +255,7 @@ export default {
   components: { DepartmentTreeView },
   data() {
     return {
+      isCollapsed: false,
       loading: false,
       dialogSaving: false,
       moveSaving: false,
@@ -281,6 +301,9 @@ export default {
     clearTimeout(this.searchDebounceTimer)
   },
   methods: {
+    toggleCollapse() {
+      this.isCollapsed = !this.isCollapsed
+    },
     escapeHtml(str = '') {
       return String(str).replace(/[&<>"'\/]/g, function(s) {
         const entityMap = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;', '/': '&#x2F;' }
@@ -491,14 +514,14 @@ export default {
   --ca-warning: #D97706;
   --ca-danger: #DC2626;
   --ca-danger-bg: #FEF2F2;
-  --ca-radius: 12px;
-  --ca-radius-sm: 8px;
+  --ca-radius: 10px;
+  --ca-radius-sm: 6px;
   --ca-transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
   color: var(--ca-text);
   background: var(--ca-bg);
-  padding: 28px 32px;
+  padding: 20px 24px;
   min-height: calc(100vh - 84px);
 }
 
@@ -507,19 +530,19 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
 .ca-header-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
 }
 
 .ca-header-icon {
-  width: 52px;
-  height: 52px;
-  border-radius: var(--ca-radius);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--ca-radius-sm);
   background: var(--ca-primary-bg);
   border: 1px solid var(--ca-primary-border);
   display: flex;
@@ -530,18 +553,18 @@ export default {
 }
 
 .ca-title {
-  font-size: 26px;
+  font-size: 20px;
   font-weight: 700;
   color: var(--ca-text);
-  margin: 0 0 2px 0;
-  letter-spacing: -0.5px;
+  margin: 0;
+  letter-spacing: -0.3px;
   line-height: 1.2;
 }
 
 .ca-subtitle {
-  font-size: 14px;
+  font-size: 12px;
   color: var(--ca-text-muted);
-  margin: 0;
+  margin: 2px 0 0;
   font-weight: 400;
 }
 
@@ -549,11 +572,11 @@ export default {
 .ca-btn {
   display: inline-flex;
   align-items: center;
-  gap: 7px;
-  padding: 10px 22px;
+  gap: 6px;
+  padding: 8px 16px;
   border: none;
-  border-radius: var(--ca-radius-sm);
-  font-size: 14px;
+  border-radius: 6px;
+  font-size: 13px;
   font-weight: 600;
   font-family: inherit;
   cursor: pointer;
@@ -582,9 +605,9 @@ export default {
 }
 
 .ca-btn-sm {
-  padding: 8px 16px;
-  font-size: 13px;
-  border-radius: 6px;
+  padding: 6px 12px;
+  font-size: 12px;
+  border-radius: 5px;
 }
 
 /* ==================== Search ==================== */
@@ -592,8 +615,8 @@ export default {
   background: var(--ca-surface);
   border-radius: var(--ca-radius);
   border: 1px solid var(--ca-border);
-  padding: 16px 20px;
-  margin-bottom: 20px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
   transition: border-color var(--ca-transition);
   &:focus-within { border-color: var(--ca-primary-border); }
 }
@@ -624,8 +647,8 @@ export default {
 
 .ca-input {
   width: 100%;
-  height: 40px;
-  padding: 0 14px;
+  height: 36px;
+  padding: 0 12px;
   border: 1px solid var(--ca-border);
   border-radius: var(--ca-radius-sm);
   font-size: 13px;
@@ -654,8 +677,9 @@ export default {
 /* ==================== Master-Detail Layout ==================== */
 .ca-layout {
   display: flex;
-  gap: 20px;
-  min-height: 500px;
+  gap: 16px;
+  min-height: 480px;
+  position: relative;
 }
 
 .ca-panel {
@@ -666,7 +690,7 @@ export default {
 }
 
 .ca-panel-left {
-  width: 420px;
+  width: 320px;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
@@ -677,16 +701,75 @@ export default {
   min-width: 0;
 }
 
+/* ==================== Float Trigger Button ==================== */
+.ca-float-trigger {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px;
+  background: var(--ca-surface);
+  border: 1px solid var(--ca-border);
+  border-left: none;
+  border-radius: 0 var(--ca-radius-sm) var(--ca-radius-sm) 0;
+  color: var(--ca-text-secondary);
+  cursor: pointer;
+  transition: all var(--ca-transition);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.05);
+
+  &:hover {
+    background: var(--ca-primary-bg);
+    color: var(--ca-primary);
+    border-color: var(--ca-primary-border);
+    padding-right: 14px;
+    box-shadow: 4px 0 16px rgba(217, 119, 6, 0.15);
+  }
+}
+
+.ca-float-trigger-text {
+  font-size: 11px;
+  font-weight: 600;
+  writing-mode: vertical-rl;
+  letter-spacing: 2px;
+}
+
+/* ==================== Transitions ==================== */
+.slide-fade-enter-active {
+  transition: all 0.3s ease-out;
+}
+.slide-fade-leave-active {
+  transition: all 0.2s ease-in;
+}
+.slide-fade-enter,
+.slide-fade-leave-to {
+  transform: translateX(-20px);
+  opacity: 0;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter,
+.fade-leave-to {
+  opacity: 0;
+}
+
 .ca-panel-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 16px 20px;
+  padding: 12px 16px;
   border-bottom: 1px solid var(--ca-border-light);
 }
 
 .ca-panel-label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   color: var(--ca-text);
   letter-spacing: -0.1px;
@@ -700,6 +783,35 @@ export default {
   padding: 3px 10px;
   border-radius: 10px;
   border: 1px solid var(--ca-border);
+}
+
+/* ==================== Collapse Button ==================== */
+.ca-collapse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ca-border);
+  border-radius: 8px;
+  background: var(--ca-surface);
+  color: var(--ca-text-secondary);
+  cursor: pointer;
+  transition: all var(--ca-transition);
+  padding: 0;
+  margin-left: auto;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: var(--ca-primary);
+    color: var(--ca-primary);
+    background: var(--ca-primary-bg);
+    transform: scale(1.05);
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
 }
 
 /* ==================== Tree ==================== */
@@ -845,6 +957,84 @@ export default {
   border-top: 1px solid var(--ca-border-light);
   display: flex;
   justify-content: flex-end;
+  overflow-x: auto;
+  white-space: nowrap;
+}
+
+/* Pagination Element Overrides */
+::v-deep .ca-pagination .el-pagination {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  font-size: 12px;
+  padding: 0;
+}
+
+::v-deep .ca-pagination .el-pagination__total {
+  font-size: 12px;
+  color: var(--ca-text-muted);
+  margin-right: 12px;
+}
+
+::v-deep .ca-pagination .el-pagination__sizes {
+  margin-right: 12px;
+}
+
+::v-deep .ca-pagination .el-pagination .el-select .el-input {
+  width: 100px;
+}
+
+::v-deep .ca-pagination .el-pagination .el-select .el-input__inner {
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  border-radius: var(--ca-radius-sm);
+}
+
+::v-deep .ca-pagination .el-pager {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+::v-deep .ca-pagination .el-pager li {
+  min-width: 28px;
+  height: 28px;
+  line-height: 28px;
+  font-size: 12px;
+  border-radius: var(--ca-radius-sm);
+  background: transparent;
+  color: var(--ca-text-secondary);
+
+  &:hover {
+    color: var(--ca-primary);
+    background: var(--ca-primary-bg);
+  }
+
+  &.active {
+    background: var(--ca-primary);
+    color: #fff;
+  }
+}
+
+::v-deep .ca-pagination .btn-prev,
+::v-deep .ca-pagination .btn-next {
+  width: 28px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: var(--ca-radius-sm);
+  background: transparent;
+  color: var(--ca-text-secondary);
+
+  &:hover {
+    color: var(--ca-primary);
+    background: var(--ca-primary-bg);
+  }
+
+  &:disabled {
+    color: var(--ca-text-muted);
+    opacity: 0.5;
+  }
 }
 
 /* ==================== Right Panel: Department Host ==================== */
@@ -925,8 +1115,8 @@ export default {
 
 /* Search Select */
 ::v-deep .ca-search-field-select .el-input__inner {
-  height: 40px;
-  line-height: 40px;
+  height: 36px;
+  line-height: 36px;
   border-radius: var(--ca-radius-sm);
   border-color: var(--ca-border);
   background: var(--ca-bg);
@@ -1021,6 +1211,21 @@ export default {
   }
   .ca-panel-left {
     width: 100%;
+  }
+  .ca-float-trigger {
+    left: 50%;
+    top: auto;
+    bottom: 0;
+    transform: translateX(-50%);
+    flex-direction: row;
+    border-radius: var(--ca-radius-sm) var(--ca-radius-sm) 0 0;
+    border: 1px solid var(--ca-border);
+    border-bottom: none;
+    padding: 10px 14px;
+  }
+  .ca-float-trigger-text {
+    writing-mode: horizontal-tb;
+    letter-spacing: 1px;
   }
 }
 @media (max-width: 768px) {
