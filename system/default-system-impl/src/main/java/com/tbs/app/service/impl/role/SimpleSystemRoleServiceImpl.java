@@ -15,6 +15,7 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
+import com.tbs.shared.enums.SystemRoleTypeEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemRoleMapper;
@@ -22,10 +23,12 @@ import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -69,6 +72,22 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     protected SystemRoleEntity insertNew(SystemRoleEntity entity) {
+
+        AssertUtil.isTrue(entity.getType() == null).i18n("permission.type.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
+
+        AssertUtil.isTrue(!CollUtil.isIn(entity.getType(), SystemRoleTypeEnum.CHARACTER_ROLE.getCode(),
+                SystemRoleTypeEnum.DATA_ROLE.getCode(), SystemRoleTypeEnum.MENU_ROLE.getCode())).i18n("permission.type.invalid")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getRole())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .i18n("permission.code.empty").throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getName())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .i18n("permission.name.empty").throwIt();
+
+        var old = ((ISystemRoleService)getInstance()).queryByRole(entity.getRole());
+        AssertUtil.isTrue(old != null).i18n("permission.code.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+
+
         entity.setFlag(SystemRoleFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
         return entity;
@@ -80,7 +99,9 @@ public class SimpleSystemRoleServiceImpl
         return List.of(entity);
     }
 
-    @CacheEvict(cacheNames = "system_role", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null")
+    @Caching(evict = {
+        @CacheEvict(cacheNames = "system_role", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
+        @CacheEvict(cacheNames = "system_role_name", allEntries = true)})
     @Override
     public List<SystemRoleEntity> save(SystemRoleEntity entity) {
         return super.save(entity);
@@ -88,22 +109,27 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     protected SystemRoleEntity compareAndUpdateValue(SystemRoleEntity newOne, SystemRoleEntity oldOne) {
-        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag()), I18nUtil.get("role.system.not.modify"));
+        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag()), I18nUtil.get("permission.system.not.modify"));
         if (newOne.getFlag() != null) {
             AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode()),
-                I18nUtil.get("role.system.not.set.by.api"));
+                I18nUtil.get("permission.system.not.set.by.api"));
             AssertUtil.isTrue(!CollUtil.isIn(newOne.getRole(), SystemRoleFlagEnum.ACTIVE.getCode(),
-                SystemRoleFlagEnum.DISABLE.getCode()), I18nUtil.get("role.status.invalid"));
+                SystemRoleFlagEnum.DISABLE.getCode()), I18nUtil.get("permission.status.invalid"));
             if (newOne.getFlag().equals(SystemRoleFlagEnum.ACTIVE.getCode()) ||
                 newOne.getFlag().equals(SystemRoleFlagEnum.DISABLE.getCode())) {
                 oldOne.setFlag(newOne.getFlag());
             }
         }
+        if (StrUtil.isNotEmpty(newOne.getName())) {
+            oldOne.setName(newOne.getName());
+        }
         if (StrUtil.isNotEmpty(newOne.getDescription())) {
             oldOne.setDescription(newOne.getDescription());
         }
-        if (StrUtil.isNotEmpty(newOne.getRole())) {
-            oldOne.setRole(newOne.getRole());
+        if (StrUtil.isNotEmpty(newOne.getRole()) && !Objects.equals(newOne.getRole(), oldOne.getRole())) {
+            var old = ((ISystemRoleService)getInstance()).queryByRole(newOne.getRole());
+            AssertUtil.isTrue(old != null).i18n("permission.code.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+                .throwIt();
         }
         return oldOne;
     }
@@ -111,11 +137,14 @@ public class SimpleSystemRoleServiceImpl
     @Override
     protected void deletePending(SystemRoleEntity entity) throws FormattedRuntimeException {
         AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(entity.getFlag()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("role.system.not.delete")).throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("permission.system.not.delete")).throwIt();
         AssertUtil.isTrue(userRoleRelationService.isRoleInUsed(entity.getId()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("role.in.use.not.delete")).throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("permission.in.use.not.delete")).throwIt();
     }
-    @CacheEvict(cacheNames = "system_role", key = "#id")
+
+    @Caching(evict = {@CacheEvict(cacheNames = "system_role", key = "#id"),
+        @CacheEvict(cacheNames = "system_role_name", allEntries = true)})
+
     @Override
     public SystemRoleEntity deleteById(Long id) {
         return super.deleteById(id);
@@ -128,6 +157,14 @@ public class SimpleSystemRoleServiceImpl
         return super.queryById(id);
     }
 
+    @Cacheable(cacheNames = "system_role_name", key = "#role", unless = "#result==null")
+    @ExpireOn(cacheNames = "system_role_name", value = 10, timeUnit = java.util.concurrent.TimeUnit.MINUTES)
+    @Override
+    public SystemRoleEntity queryByRole(String role) {
+        return getQueryWrapper().query().where().equal(SystemRoleEntity::getRole, role)
+            .equal(SystemRoleEntity::getFlag, SystemRoleFlagEnum.ACTIVE.getCode()).pour().fetchOne();
+    }
+
     @Override
     public boolean isOptional() {
         return true;
@@ -135,22 +172,23 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     public void startUp() throws RuntimeException {
-        SystemRoleEntity commonUser = getMapper().selectByPrimaryKey(RoleConstants.NORMAL_USER_ROLE_ID);
-        if (commonUser == null) {
-            log.info("系统角色不存在，默认插入...");
-            getMapper().insert(RoleConstants.NORMAL_USER_ROLE);
-        } else {
-            log.info("系统角色已存在...");
-            getMapper().updateByPrimaryKey(RoleConstants.NORMAL_USER_ROLE);
-        }
-        SystemRoleEntity admin = getMapper().selectByPrimaryKey(RoleConstants.SUPER_ADMIN_ROLE_ID);
-        if (admin == null) {
-            log.info("系统角色不存在，默认插入...");
-            getMapper().insert(RoleConstants.SUPER_ADMIN_ROLE);
-        } else {
-            log.info("系统角色已存在...");
-            getMapper().updateByPrimaryKey(RoleConstants.SUPER_ADMIN_ROLE);
-        }
+        //FIXME 自带默认角色插入。
+//        SystemRoleEntity commonUser = getMapper().selectByPrimaryKey(RoleConstants.NORMAL_USER_ROLE_ID);
+//        if (commonUser == null) {
+//            log.info("系统角色不存在，默认插入...");
+//            getMapper().insert(RoleConstants.NORMAL_USER_ROLE);
+//        } else {
+//            log.info("系统角色已存在...");
+//            getMapper().updateByPrimaryKey(RoleConstants.NORMAL_USER_ROLE);
+//        }
+//        SystemRoleEntity admin = getMapper().selectByPrimaryKey(RoleConstants.SUPER_ADMIN_ROLE_ID);
+//        if (admin == null) {
+//            log.info("系统角色不存在，默认插入...");
+//            getMapper().insert(RoleConstants.SUPER_ADMIN_ROLE);
+//        } else {
+//            log.info("系统角色已存在...");
+//            getMapper().updateByPrimaryKey(RoleConstants.SUPER_ADMIN_ROLE);
+//        }
     }
 
     private static final IAuditService<SystemRoleEntity, Long, Long> auditService = new DefaultAuditService<>();

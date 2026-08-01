@@ -28,7 +28,7 @@ import javax.annotation.Resource;
 import java.util.List;
 
 /**
- * 管理员角色管理控制器,用于管理用户使用的角色权限。
+ * 管理员权限管理控制器,用于管理用户使用的权限。
  * <p>
  * 该控制器用于控制用户与权限的绑定关系
  * </p>
@@ -39,7 +39,7 @@ import java.util.List;
 @RequestMapping("/private/admin/roles")
 @RestController
 @PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
-@Tag(name = "用户角色管理接口", description = "用户角色管理接口")
+@Tag(name = "用户权限管理接口", description = "用户权限管理接口")
 public class AdminRoleController extends BaseController {
 
     @Resource
@@ -49,15 +49,15 @@ public class AdminRoleController extends BaseController {
     private ISystemRoleService roleService;
 
     /**
-     * 查询用户角色列表
+     * 查询用户权限列表
      *
      * @param userId 用户ID
-     * @return 用户角色列表
+     * @return 用户权限列表
      */
     @GetMapping("/{userId}")
     @AjaxResponseType(value = List.class)
-    @Operation(summary = "查询用户角色", description = "根据用户ID查询该用户拥有的所有角色")
-    @ApiResponse(responseCode = "200", description = "成功查询用户角色",
+    @Operation(summary = "查询用户权限", description = "根据用户ID查询该用户拥有的所有权限")
+    @ApiResponse(responseCode = "200", description = "成功查询用户权限",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult userRoles(
@@ -66,57 +66,57 @@ public class AdminRoleController extends BaseController {
     }
 
     /**
-     * 启用用户角色
+     * 启用用户权限
      *
      * @param userId 用户ID
-     * @param role   角色名称
+     * @param role   权限ID
      * @return 操作结果
      */
     @GetMapping("/enable/{userId}")
     @AjaxResponseType(void.class)
-    @Operation(summary = "启用用户角色", description = "为指定用户启用指定角色")
-    @ApiResponse(responseCode = "200", description = "成功启用用户角色",
+    @Operation(summary = "启用用户权限", description = "为指定用户启用指定权限")
+    @ApiResponse(responseCode = "200", description = "成功启用用户权限",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult enable(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
-        @Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
+        @Parameter(name = "role", description = "权限ID", required = true) @RequestParam Long role) {
         relationService.enableRole(userId, role);
         return AjaxUtil.getInstance().success("授权成功", null);
     }
 
     /**
-     * 禁用用户角色
+     * 禁用用户权限
      *
      * @param userId 用户ID
-     * @param role   角色名称
+     * @param role   权限ID
      * @return 操作结果
      */
     @GetMapping("/disable/{userId}")
     @AjaxResponseType(void.class)
-    @Operation(summary = "禁用用户角色", description = "为指定用户禁用指定角色")
-    @ApiResponse(responseCode = "200", description = "成功禁用用户角色",
+    @Operation(summary = "禁用用户权限", description = "为指定用户禁用指定权限")
+    @ApiResponse(responseCode = "200", description = "成功禁用用户权限",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult disable(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
-        @Parameter(name = "role", description = "角色名称", required = true) @RequestParam Long role) {
+        @Parameter(name = "role", description = "权限ID", required = true) @RequestParam Long role) {
         relationService.disableRole(userId, role);
         return AjaxUtil.getInstance().success("取消授权成功", null);
     }
 
     /**
-     * 查询角色列表
+     * 查询权限列表
      *
      * @param criteria 查询条件
      * @param page     页码
      * @param num      每页数量
-     * @return 角色列表
+     * @return 权限列表
      */
     @PostMapping("/query")
     @AjaxResponseType(PageVO.class)
-    @Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
-    @ApiResponse(responseCode = "200", description = "成功查询角色列表",
+    @Operation(summary = "查询权限列表", description = "根据条件查询权限列表，支持分页")
+    @ApiResponse(responseCode = "200", description = "成功查询权限列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult query(
@@ -175,6 +175,6 @@ public class AdminRoleController extends BaseController {
 
     @Override
     public String getBusinessName() {
-        return "管理员角色管理";
+        return "管理员权限管理";
     }
 }

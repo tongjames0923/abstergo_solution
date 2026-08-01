@@ -59,13 +59,13 @@ public class SimpleUserRoleRelationServiceImpl implements IUserRoleRelationServi
     }
 
     private void setRole( Long userId,  Long role,  Integer flag) {
-        AssertUtil.notNull(role, I18nUtil.get("role.not.empty"));
+        AssertUtil.notNull(role, I18nUtil.get("permission.not.empty"));
         SystemUserEntity user = systemUserService.queryById(userId);
         AssertUtil.notNull(user, I18nUtil.get("user.not.found"));
         SystemRoleEntity roleEntity = systemRoleService.queryById(role);
-        AssertUtil.notNull(roleEntity, I18nUtil.get("role.not.found"));
+        AssertUtil.notNull(roleEntity, I18nUtil.get("permission.not.found"));
         AssertUtil.isTrue(CollUtil.isIn(roleEntity.getFlag(), SystemRoleFlagEnum.DISABLE.getCode(),
-            SystemRoleFlagEnum.DELETE.getCode()), I18nUtil.get("role.disabled", role));
+            SystemRoleFlagEnum.DELETE.getCode()), I18nUtil.get("permission.disabled", role));
         UserRoleRelationEntity relation = wrapper.query().where().equal(UserRoleRelationEntity::getUserId, userId)
             .equal(UserRoleRelationEntity::getRoleId, roleEntity.getId()).pour().fetchOne();
         if (relation == null) {

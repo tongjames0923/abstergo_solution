@@ -105,10 +105,10 @@ public class PrivateUserController extends BaseController {
     /**
      * 获取当前登录用户信息
      *
-     * @return 用户信息VO对象，包含用户名、昵称、头像和可用角色列表
+     * @return 用户信息VO对象，包含用户名、昵称、头像和可用权限列表
      */
     @GetMapping("/info")
-    @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细信息，包括用户名、昵称、头像和可用角色列表")
+    @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细信息，包括用户名、昵称、头像和可用权限列表")
     @ApiResponse(responseCode = "200", description = "成功获取用户信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = UserInfoVO.class)))
     public UserInfoVO info() {

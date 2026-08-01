@@ -23,9 +23,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 
 /**
- * 角色管理控制器
+ * 权限管理控制器
  * <p>
- * 该控制器用于管理系统角色，提供角色的基本增删改查操作
+ * 该控制器用于管理系统权限，提供权限的基本增删改查操作
  * </p>
  *
  * @author tongj
@@ -34,7 +34,7 @@ import javax.annotation.Resource;
 @RestController
 @RequestMapping("private/admin/role")
 @PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
-@Tag(name = "角色管理接口", description = "角色管理接口")
+@Tag(name = "权限管理接口", description = "权限管理接口")
 public class RoleController extends AbstractCrudController<SystemRoleEntity, Long, CommonSystemRoleQueryCriteria> {
 
 	@Resource
@@ -46,73 +46,73 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 	}
 
 	/**
-	 * 根据ID获取角色信息
+	 * 根据ID获取权限信息
 	 *
-	 * @param id 角色ID
-	 * @return 角色信息
+	 * @param id 权限ID
+	 * @return 权限信息
 	 */
 	@Override
 	@GetMapping("get/{id}")
 	@AjaxResponseType(SystemRoleEntity.class)
-	@Operation(summary = "获取角色信息", description = "根据角色ID获取角色详细信息")
-	@ApiResponse(responseCode = "200", description = "成功获取角色信息",
+	@Operation(summary = "获取权限信息", description = "根据权限ID获取权限详细信息")
+	@ApiResponse(responseCode = "200", description = "成功获取权限信息",
 		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	@PreAuthorize("@preAuthUtils.accountActived")
-	public AjaxResult get(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
+	public AjaxResult get(@Parameter(name = "id", description = "权限ID", required = true) @PathVariable Long id) {
 		return super.get(id);
 	}
 
 	/**
-	 * 保存角色信息
+	 * 保存权限信息
 	 *
-	 * @param entity 角色实体对象
-	 * @return 保存后的角色信息
+	 * @param entity 权限实体对象
+	 * @return 保存后的权限信息
 	 */
 	@Override
 	@PostMapping("save")
 	@AjaxResponseType(SystemRoleEntity.class)
-	@Operation(summary = "保存角色信息", description = "创建或更新角色信息")
-	@ApiResponse(responseCode = "200", description = "成功保存角色信息",
+	@Operation(summary = "保存权限信息", description = "创建或更新权限信息")
+	@ApiResponse(responseCode = "200", description = "成功保存权限信息",
 		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	@PreAuthorize("@preAuthUtils.accountActived")
 	public AjaxResult save(
-			@Parameter(name = "entity", description = "角色信息", required = true) @RequestBody SystemRoleEntity entity) {
+			@Parameter(name = "entity", description = "权限信息", required = true) @RequestBody SystemRoleEntity entity) {
 		return super.save(entity);
 	}
 
 	/**
-	 * 删除角色
+	 * 删除权限
 	 *
-	 * @param id 角色ID
+	 * @param id 权限ID
 	 * @return 删除结果
 	 */
 	@Override
 	@PostMapping("delete/{id}")
 	@AjaxResponseType(void.class)
-	@Operation(summary = "删除角色", description = "根据角色ID删除角色")
-	@ApiResponse(responseCode = "200", description = "成功删除角色",
+	@Operation(summary = "删除权限", description = "根据权限ID删除权限")
+	@ApiResponse(responseCode = "200", description = "成功删除权限",
 		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	@PreAuthorize("@preAuthUtils.accountActived")
-	public AjaxResult delete(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
+	public AjaxResult delete(@Parameter(name = "id", description = "权限ID", required = true) @PathVariable Long id) {
 		return super.delete(id);
 	}
 
 	/**
-	 * 查询角色列表
+	 * 查询权限列表
 	 *
 	 * @param criteria 查询条件
 	 * @param pageNum  页码
 	 * @param pageSize 每页大小
-	 * @return 角色列表分页结果
+	 * @return 权限列表分页结果
 	 */
 	@Override
 	@PostMapping("query")
 	@AjaxResponseType(PageVO.class)
-	@Operation(summary = "查询角色列表", description = "根据条件查询角色列表，支持分页")
-	@ApiResponse(responseCode = "200", description = "成功查询角色列表",
+	@Operation(summary = "查询权限列表", description = "根据条件查询权限列表，支持分页")
+	@ApiResponse(responseCode = "200", description = "成功查询权限列表",
 		content = @Content(mediaType = "application/json",
 			schema = @Schema(implementation = AjaxResult.class)))
 	public AjaxResult query(
@@ -124,14 +124,14 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 
 	@GetMapping("/enable/{id}")
 	@AjaxResponseType(void.class)
-	@Operation(summary = "启用角色", description = "启用角色")
-	@ApiResponse(responseCode = "200", description = "成功启用角色",
+	@Operation(summary = "启用权限", description = "启用权限")
+	@ApiResponse(responseCode = "200", description = "成功启用权限",
 		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
 	@PreAuthorize("@preAuthUtils.accountActived")
-	public AjaxResult enable(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
+	public AjaxResult enable(@Parameter(name = "id", description = "权限ID", required = true) @PathVariable Long id) {
 		SystemRoleEntity entity = roleService.queryById(id);
 		if (entity == null) {
-			return AjaxUtil.getInstance().error("角色不存在");
+			return AjaxUtil.getInstance().error("权限不存在");
 		}
 		entity.setFlag(SystemRoleFlagEnum.ACTIVE.getCode());
 		roleService.save(entity);
@@ -140,14 +140,14 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 
 	@GetMapping("/disable/{id}")
 	@AjaxResponseType(void.class)
-	@Operation(summary = "禁用角色", description = "禁用角色")
-	@ApiResponse(responseCode = "200", description = "成功禁用角色",
+	@Operation(summary = "禁用权限", description = "禁用权限")
+	@ApiResponse(responseCode = "200", description = "成功禁用权限",
 		content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
 	@PreAuthorize("@preAuthUtils.accountActived")
-	public AjaxResult disable(@Parameter(name = "id", description = "角色ID", required = true) @PathVariable Long id) {
+	public AjaxResult disable(@Parameter(name = "id", description = "权限ID", required = true) @PathVariable Long id) {
 		SystemRoleEntity entity = roleService.queryById(id);
 		if (entity == null) {
-			return AjaxUtil.getInstance().error("角色不存在");
+			return AjaxUtil.getInstance().error("权限不存在");
 		}
 		entity.setFlag(SystemRoleFlagEnum.DISABLE.getCode());
 		roleService.save(entity);
@@ -157,6 +157,6 @@ public class RoleController extends AbstractCrudController<SystemRoleEntity, Lon
 
 	@Override
 	public String getBusinessName() {
-		return "角色管理";
+		return "权限管理";
 	}
 }
