@@ -79,7 +79,7 @@ public class DataPermissionIntercepter implements SqlComposeInterceptor {
 
         boolean customBelongEntity = BeanUtil.isBaseFrom(entityClass, ICustomDataScopeEntity.class);
 
-        if (!depBelongEntity && !customBelongEntity) {
+        if (!depBelongEntity && !customBelongEntity && !createByEntity) {
             log.debug("数据权限拦截器: 不是部门关联实体类也不是自定义数据权限处理实体，不处理");
             return compose;
         }
