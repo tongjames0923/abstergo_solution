@@ -87,9 +87,8 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
 
     /**
      * 状态
-     * 1-启用，0-禁用，-1-已删除
      *
-     * @see com.tbs.dic.enums.DataDicFlagEnum
+     * @see com.tbs.shared.enums.CommonFlagEnum
      */
     @Column(name = "flag")
     private Integer flag;

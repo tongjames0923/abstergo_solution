@@ -10,6 +10,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.dic.enums.DataDicFlagEnum;
+import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemGenericApiMapper;
@@ -192,7 +193,7 @@ public class GenericApiServiceImpl
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);
         AssertUtil.isTrue(entity == null).i18n("generic.api.not.found").params(apiId)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        entity.setFlag(DataDicFlagEnum.ENABLE.getCode());
+        entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().updateByPrimaryKey(entity);
     }
 
@@ -202,7 +203,7 @@ public class GenericApiServiceImpl
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);
         AssertUtil.isTrue(entity == null).i18n("generic.api.not.found").params(apiId)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        entity.setFlag(DataDicFlagEnum.DISABLE.getCode());
+        entity.setFlag(CommonFlagEnum.INACTIVE.getCode());
         getMapper().updateByPrimaryKey(entity);
     }
 

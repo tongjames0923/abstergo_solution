@@ -4,8 +4,8 @@ import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.dic.enums.DataDicFlagEnum;
 import com.tbs.shared.constant.RoleConstants;
+import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
 import com.tbs.web.genric.AbstractAuthGenricApiController;
 import com.tbs.web.genric.AbstractGenricApiInstance;
@@ -58,7 +58,7 @@ public class GenricController extends AbstractAuthGenricApiController {
         SystemGenericApiEntity apiConfig = genericApiService.getByApiId(id);
         AssertUtil.isTrue(apiConfig == null).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
             .i18n("generic.api.not.exists").params(id).throwIt();
-        AssertUtil.isTrue(!Objects.equals(DataDicFlagEnum.ENABLE.getCode(), apiConfig.getFlag()))
+        AssertUtil.isTrue(!Objects.equals(CommonFlagEnum.ACTIVE.getCode(), apiConfig.getFlag()))
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("generic.api.disabled").params(apiConfig.getApiName())
             .throwIt();
         // 通过服务发现获取实例地址

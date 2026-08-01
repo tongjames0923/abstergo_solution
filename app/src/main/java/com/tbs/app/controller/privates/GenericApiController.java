@@ -1,12 +1,7 @@
 package com.tbs.app.controller.privates;
 
-
 import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.web.AbstractCrudController;
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.util.base.StrUtil;
-import com.tbs.dic.enums.DataDicFlagEnum;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.pojo.criteria.CommonGenericApiCriteria;
@@ -22,7 +17,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
-import java.util.Date;
 import java.util.stream.Collectors;
 
 /**
