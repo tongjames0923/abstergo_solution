@@ -1,8 +1,7 @@
 package com.tbs.app.service.impl.web;
 
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.web.uitl.AuthUtil;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 /**
@@ -12,6 +11,11 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PreAuthUtils {
+
+    public static final boolean isAccountActived(UserDetails d) {
+        return d != null && d.isEnabled() && d.isAccountNonLocked();
+    }
+
 
     public boolean isAccountActived() {
         var vo = AuthUtil.getInstance().getCurrentUser();
@@ -23,7 +27,7 @@ public class PreAuthUtils {
 //        AssertUtil.isTrue().errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
 //            .i18n("auth.user.not.activated").params(vo.getUsername()).throwIt();
 
-        return vo != null&& vo.isEnabled()&&vo.isAccountNonLocked();
+        return isAccountActived(vo);
     }
 
 }

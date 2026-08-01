@@ -1,6 +1,7 @@
 package com.tbs.app.intercept;
 
 import com.tbs.app.service.department.IDepartmentUserRelationService;
+import com.tbs.app.service.impl.web.PreAuthUtils;
 import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.util.base.BeanUtil;
@@ -27,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
@@ -36,6 +38,12 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class DataPermissionIntercepter implements SqlComposeInterceptor {
+
+    /**
+     * 字段缓存，避免重复反射获取字段
+     */
+    private static final ConcurrentHashMap<Class<?>, Field> DEPT_FIELD_CACHE = new ConcurrentHashMap<>();
+    private static final ConcurrentHashMap<Class<?>, Field> CREATE_BY_FIELD_CACHE = new ConcurrentHashMap<>();
 
     public static final String DATA_PERMISSION_ENABLE_FLAG_KEY = "dataPermissionEnableFlag";
 
@@ -64,13 +72,13 @@ public class DataPermissionIntercepter implements SqlComposeInterceptor {
             log.debug("数据权限拦截器: 禁用");
             return compose;
         }
-        var entityClass = sqlContext.getEntityClass();
         Object entity = sqlContext.getSqlEntity();
-        if (BeanUtil.isBaseFrom(entityClass, IQueryCriteria.class)) {
-            entityClass = ((IQueryCriteria)entity).getSelectSQLInfo().getEntityClass();
-        }
         if (entity == null) {
             return compose;
+        }
+        var entityClass = sqlContext.getEntityClass();
+        if (BeanUtil.isBaseFrom(entityClass, IQueryCriteria.class)) {
+            entityClass = ((IQueryCriteria)entity).getSelectSQLInfo().getEntityClass();
         }
 
         boolean createByEntity = BeanUtil.isBaseFrom(entityClass, ICommonCreateAuditable.class);
@@ -84,9 +92,24 @@ public class DataPermissionIntercepter implements SqlComposeInterceptor {
             return compose;
         }
         var user = AuthUtil.getInstance().getCurrentUser();
-        var u = CollUtil.getFirst(SpringUtil.getBean(ISystemUserService.class).queryByUserName(user.getUsername()));
+
+        if (!PreAuthUtils.isAccountActived(user)) {
+            log.debug("数据权限拦截器: 账户未激活");
+            compose.getChildren()
+                .add(WhereNode.createInfoNode(ConnectorEnum.AND, WhereInfo.builder().rawSql("1=0").build()));
+            return compose;
+        }
+
+        var u = CollUtil.of(SpringUtil.getBean(ISystemUserService.class).queryByUserName(user.getUsername()))
+            .findFirstOrNull();
+        if (u == null) {
+            log.warn("数据权限拦截器: 用户不存在 {}", user.getUsername());
+            compose.getChildren()
+                .add(WhereNode.createInfoNode(ConnectorEnum.AND, WhereInfo.builder().rawSql("1=0").build()));
+            return compose;
+        }
         var roles = SpringUtil.getBean(IUserRoleRelationService.class).queryUserRoles(u.getId());
-        if (roles.isEmpty()) {
+        if (CollUtil.isEmpty(roles)) {
             compose.getChildren()
                 .add(WhereNode.createInfoNode(ConnectorEnum.AND, WhereInfo.builder().rawSql("1=0").build()));
             return compose;
@@ -126,12 +149,19 @@ public class DataPermissionIntercepter implements SqlComposeInterceptor {
             log.warn("数据权限拦截器: 非部门关联实体类，不处理");
             return true;
         }
-        Field f = null;
-        try {
-            f = entityClass.getDeclaredField("deptId");
-        } catch (Exception e) {
-            log.error("数据权限拦截器: 获取部门字段失败", e);
+        if (CollUtil.isEmpty(userDepts)) {
+            log.warn("数据权限拦截器: 部门为空");
+            compose.getChildren()
+                .add(WhereNode.createInfoNode(ConnectorEnum.AND, WhereInfo.builder().rawSql("1=0").build()));
         }
+        Field f = DEPT_FIELD_CACHE.computeIfAbsent(entityClass, clazz -> {
+            try {
+                return clazz.getDeclaredField("deptId");
+            } catch (Exception e) {
+                log.error("数据权限拦截器: 获取部门字段失败", e);
+                return null;
+            }
+        });
         if (f == null) {
             log.error("数据权限拦截器: 获取部门字段失败");
             return true;
@@ -149,12 +179,14 @@ public class DataPermissionIntercepter implements SqlComposeInterceptor {
             log.warn("数据权限拦截器: 非创建人关联实体类，不处理");
             return true;
         }
-        Field f1 = null;
-        try {
-            f1 = entityClass.getDeclaredField("createBy");
-        } catch (Exception e) {
-            log.error("数据权限拦截器: 获取创建人字段失败", e);
-        }
+        Field f1 = CREATE_BY_FIELD_CACHE.computeIfAbsent(entityClass, clazz -> {
+            try {
+                return clazz.getDeclaredField("createBy");
+            } catch (Exception e) {
+                log.error("数据权限拦截器: 获取创建人字段失败", e);
+                return null;
+            }
+        });
         if (f1 == null) {
             log.error("数据权限拦截器: 获取创建人字段失败");
             return true;
