@@ -15,9 +15,9 @@ import java.util.Date;
  * @author tongj
  */
 @Entity
-@Table(name = "sys_role", indexes = {@Index(name = "idx_role", columnList = "role"),
+@Table(name = "sys_role", indexes = {@Index(name = "idx_role_type", columnList = "role,type"),
 		@Index(name = "idx_flag", columnList = "flag"),
-		@Index(name = "idx_time", columnList = "create_time,update_time") })
+	@Index(name = "idx_time", columnList = "create_time,update_time"), @Index(name = "idx_name", columnList = "name")})
 @Getter
 @Setter
 @ToString
@@ -35,10 +35,25 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	private Long id;
 
 	/**
-	 * 角色
+	 * 权限编码
 	 */
 	@Column(name = "role", length = 128, nullable = false)
 	private String role;
+
+	/**
+	 * 名称
+	 */
+	@Column(name = "name")
+	private String name;
+
+	/**
+	 * 类型
+	 *
+	 * @see com.tbs.shared.enums.SystemRoleTypeEnum
+	 */
+	@Column(name = "type")
+	private Integer type;
+
 	/**
 	 * 描述
 	 */
@@ -75,10 +90,11 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	@Column(name = "update_by")
 	private Long updateBy;
 
-
 	/**
 	 * 数据权限
+	 * @see com.tbs.shared.enums.SystemDataScopeEnum
 	 */
+	@Column(name = "data_scope")
 	private Integer dataScope;
 
 }
