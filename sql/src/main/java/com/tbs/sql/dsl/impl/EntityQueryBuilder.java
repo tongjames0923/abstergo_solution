@@ -7,7 +7,7 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.LambdaUtil;
 import com.tbs.sql.builder.EntitySqlDriver;
-import com.tbs.sql.builder.ImportedSqlBuildContext;
+import com.tbs.sql.builder.ImportedISqlBuildContext;
 import com.tbs.sql.builder.SqlWithParams;
 import com.tbs.sql.dsl.IOrderClause;
 import com.tbs.sql.dsl.IPageClause;
@@ -87,7 +87,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
             return CollUtil.newArrayList();
         }
         EntitySqlDriver driver = createDriver();
-        ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
+        ImportedISqlBuildContext sqlContext = new ImportedISqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
         mergeSubQueryParams(sqlContext);
@@ -100,7 +100,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
             return null;
         }
         EntitySqlDriver driver = createDriver();
-        ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
+        ImportedISqlBuildContext sqlContext = new ImportedISqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
         mergeSubQueryParams(sqlContext);
@@ -114,7 +114,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
             return 0;
         }
         EntitySqlDriver driver = createDriver();
-        ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
+        ImportedISqlBuildContext sqlContext = new ImportedISqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
         mergeSubQueryParams(sqlContext);
@@ -136,7 +136,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
             return "SELECT 1 WHERE 1=0";
         }
         EntitySqlDriver driver = createDriver();
-        ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
+        ImportedISqlBuildContext sqlContext = new ImportedISqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
         mergeSubQueryParams(sqlContext);
@@ -150,7 +150,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
         }
         EntitySqlDriver driver = createDriver();
         driver.setMainQuery(false); // 子查询不使用main_别名
-        ImportedSqlBuildContext sqlContext = new ImportedSqlBuildContext(() -> entity);
+        ImportedISqlBuildContext sqlContext = new ImportedISqlBuildContext(() -> entity);
         sqlContext.rebuild();
         configureDriver(driver);
         mergeSubQueryParams(sqlContext);
@@ -166,7 +166,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
      *
      * @param sqlContext SQL构建上下文
      */
-    private void mergeSubQueryParams(ImportedSqlBuildContext sqlContext) {
+    private void mergeSubQueryParams(ImportedISqlBuildContext sqlContext) {
         if (whereProvider instanceof EntityWhereClause) {
             EntityWhereClause<?> whereClause = (EntityWhereClause<?>) whereProvider;
             sqlContext.getSqlParams().putAll(whereClause.getSubQueryParams());

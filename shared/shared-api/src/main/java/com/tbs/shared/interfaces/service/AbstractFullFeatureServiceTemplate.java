@@ -9,9 +9,12 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.shared.util.PageUtil;
+import com.tbs.sql.builder.ISqlBuildContext;
+import com.tbs.sql.builder.ImportedISqlBuildContext;
 import com.tbs.sql.criteria.IPage;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.mapper.IFrameworkMapper;
+import com.tbs.sql.mapper.impl.ConditionBuilder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.aop.framework.AopContext;
 import org.springframework.transaction.annotation.Transactional;
@@ -168,12 +171,14 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
     @Override
     public PageVO<T> queryAndPage(IQueryCriteria qo, IPage page) {
+        ImportedISqlBuildContext context = ConditionBuilder.buildSqlContext(qo);
+
         if (this.useDataScope()) {
-            this.inUseDataScope();
+            this.inUseDataScope(context);
         }
         Class<T> entityClass = (Class<T>)getEntity().getClass();
-        return PageUtil.build(pageVoBuildType(), () -> getMapper().queryByQO(qo, page, entityClass),
-            () -> getMapper().countByQO(qo, entityClass));
+        return PageUtil.build(pageVoBuildType(), () -> getMapper().queryByQO(context, qo, page, entityClass),
+            () -> getMapper().countByQO(context, qo, entityClass));
     }
 
     /**
@@ -181,7 +186,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
      *
      * @return
      */
-    protected void inUseDataScope() {
+    protected void inUseDataScope(ISqlBuildContext context) {
 
     }
 

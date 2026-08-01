@@ -6,7 +6,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
-import com.tbs.sql.builder.SqlBuildContext;
+import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.sql.builder.SqlDriver;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.dialect.SqlDialect;
@@ -143,7 +143,7 @@ public class QueryEngine implements IStartup {
      * @param driver SQL驱动器
      * @return 生成的SQL语句
      */
-    public String driveSql(SqlBuildContext context, SqlDriver driver) {
+    public String driveSql(ISqlBuildContext context, SqlDriver driver) {
         AssertUtil.notNull(driver, "查询驱动器不可为空");
         SqlDialect d = this.dialect;
         ISqlAssembler a = this.sqlAssembler;
@@ -159,7 +159,7 @@ public class QueryEngine implements IStartup {
      * @param queryDriver SQL驱动器
      * @return 生成的SQL语句
      */
-    public String driveSql(SqlDialect dialect, ISqlAssembler assembler, SqlBuildContext context, SqlDriver queryDriver) {
+    public String driveSql(SqlDialect dialect, ISqlAssembler assembler, ISqlBuildContext context, SqlDriver queryDriver) {
         AssertUtil.notNull(queryDriver, "查询驱动器不可为空");
 //        var uuid = UUID.randomUUID().toString();
 //
@@ -186,7 +186,7 @@ public class QueryEngine implements IStartup {
      * @param entityClass 实体类类型
      * @return 处理后的WHERE条件组合
      */
-    private WhereCompose intercept(WhereCompose compose, SqlBuildContext context) {
+    private WhereCompose intercept(WhereCompose compose, ISqlBuildContext context) {
         for (SqlComposeInterceptor interceptor : interceptors) {
             compose = interceptor.intercept(compose, context);
         }

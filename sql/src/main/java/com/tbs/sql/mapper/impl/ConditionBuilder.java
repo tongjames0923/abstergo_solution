@@ -4,7 +4,7 @@ import cn.hutool.extra.spring.SpringUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.sql.annotation.condition.QueryField;
-import com.tbs.sql.builder.ImportedSqlBuildContext;
+import com.tbs.sql.builder.ImportedISqlBuildContext;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.metadata.FieldMetadataCache;
@@ -59,7 +59,7 @@ import java.lang.reflect.Field;
  * @since 2.0.0
  * @see IQueryCriteria
  * @see WhereCompose
- * @see ImportedSqlBuildContext
+ * @see ImportedISqlBuildContext
  */
 public class ConditionBuilder<T> {
 
@@ -107,9 +107,15 @@ public class ConditionBuilder<T> {
         return compose;
     }
 
-    public static <QO extends IQueryCriteria> ImportedSqlBuildContext buildSqlContext(QO queryObject) {
+    /**
+     * 构建SQL构建上下文
+     *
+     * @param queryObject 查询条件对象
+     * @return SQL构建上下文
+     */
+    public static <QO extends IQueryCriteria> ImportedISqlBuildContext buildSqlContext(QO queryObject) {
         AssertUtil.isTrue(queryObject == null, "queryObject cannot be null");
-        var context = new ImportedSqlBuildContext(() -> queryObject);
+        var context = new ImportedISqlBuildContext(() -> queryObject);
         context.rebuild();
         return context;
     }

@@ -1,6 +1,5 @@
 package com.tbs.sql.builder;
 
-import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -28,10 +27,10 @@ import java.util.Map;
  * <pre>{@code
  * // 获取上下文中的实体类
  * Class<?> entityClass = context.getEntityClass();
- * 
+ *
  * // 获取SQL参数
  * Map<String, Object> params = context.getSqlParams();
- * 
+ *
  * // 销毁上下文，释放资源
  * context.destroy();
  * }</pre>
@@ -44,10 +43,10 @@ import java.util.Map;
  *
  * @author abstergo
  * @since 2.0.0
- * @see AbstractSqlBuildContext
- * @see ImportedSqlBuildContext
+ * @see AbstractISqlBuildContext
+ * @see ImportedISqlBuildContext
  */
-public interface SqlBuildContext {
+public interface ISqlBuildContext {
     /**
      * 获取实体类类型。
      *
@@ -68,6 +67,14 @@ public interface SqlBuildContext {
      * @return SQL参数映射，键为参数名，值为参数值
      */
     Map<String, Object> getSqlParams();
+
+    /**
+     * 获取上下文参数映射。
+     *
+     * @return 上下文参数映射，键为参数名，值为参数值
+     */
+    Map<String, Object> getContextParams();
+
 
     /**
      * 判断上下文是否有效。

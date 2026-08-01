@@ -3,7 +3,7 @@ package com.tbs.sql.mapper.impl;
 import cn.hutool.core.bean.copier.CopyOptions;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.sql.builder.SqlBuildContext;
+import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.sql.builder.SqlDriver;
 import com.tbs.sql.mapper.IRawSqlSelectMapper;
 import com.tbs.sql.service.QueryEngine;
@@ -53,14 +53,14 @@ import java.util.Map;
  * @author abstergo
  * @since 2.0.0
  * @see IRawSqlSelectMapper
- * @see SqlBuildContext
+ * @see ISqlBuildContext
  * @see SqlDriver
  */
 public class FetchMapper {
     @Resource
     private IRawSqlSelectMapper mapper;
 
-    public <T> List<T> fetch(SqlBuildContext context, SqlDriver driver, Class<T> tClass) {
+    public <T> List<T> fetch(ISqlBuildContext context, SqlDriver driver, Class<T> tClass) {
         List<Map<String, Object>> val = mapper.fetch(QueryEngine.getInstance().driveSql(context, driver), context.getSqlParams());
         if (CollUtil.isNotEmpty(val)) {
             List<T> list = new ArrayList<>(val.size());
@@ -72,7 +72,7 @@ public class FetchMapper {
         return new ArrayList<>();
     }
 
-    public <T> Integer count(SqlBuildContext context, SqlDriver driver) {
+    public <T> Integer count(ISqlBuildContext context, SqlDriver driver) {
         return mapper.count(QueryEngine.getInstance().driveSql(context, driver), context.getSqlParams());
     }
 }

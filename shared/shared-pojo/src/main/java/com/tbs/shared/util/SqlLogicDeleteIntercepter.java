@@ -4,7 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.annotations.LogicDeleteEntity;
-import com.tbs.sql.builder.SqlBuildContext;
+import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.interceptor.SqlComposeInterceptor;
@@ -24,7 +24,7 @@ public class SqlLogicDeleteIntercepter implements SqlComposeInterceptor {
     private Map<Class<?>, Optional<WhereInfo>> flagWhereInfoMap = new ConcurrentHashMap<>(8);
 
     @Override
-    public WhereCompose intercept(WhereCompose compose, SqlBuildContext context) {
+    public WhereCompose intercept(WhereCompose compose, ISqlBuildContext context) {
         var sqlWhereInfo = flagWhereInfoMap.computeIfAbsent(context.getEntityClass(), (k) -> {
             //确认entityClass是否是逻辑删除实体,是否被LogicDeleteEntity注解
             if (!k.isAnnotationPresent(LogicDeleteEntity.class)) {

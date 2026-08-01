@@ -38,10 +38,10 @@ import com.tbs.sql.model.where.WhereCompose;
  * <pre>{@code
  * // 创建SQL驱动
  * SqlDriver driver = new EntitySqlDriver();
- * 
+ *
  * // 从上下文中提取SQL查询数据
  * SqlDriver.SqlQueryData data = driver.getSqlQueryData(context);
- * 
+ *
  * // 使用提取的数据
  * SelectInfoModel selectInfo = data.getSelectInfo();
  * WhereCompose whereInfo = data.getSqlWhereInfo();
@@ -55,7 +55,7 @@ import com.tbs.sql.model.where.WhereCompose;
  *
  * @author abstergo
  * @since 2.0.0
- * @see SqlBuildContext
+ * @see ISqlBuildContext
  * @see AbstractSqlDriver
  * @see EntitySqlDriver
  */
@@ -64,7 +64,7 @@ public interface SqlDriver {
     @AllArgsConstructor
     @NoArgsConstructor
     final class SqlQueryData {
-        private SqlBuildContext context;
+        private ISqlBuildContext context;
         private SelectInfoModel selectInfo;
         private List<GroupModel> sqlGroups;
         private LimitModel sqlLimit;
@@ -78,5 +78,5 @@ public interface SqlDriver {
      * @param context SQL构建上下文，包含实体类、参数等信息
      * @return SQL查询数据，包含SELECT、WHERE、ORDER BY、GROUP BY、LIMIT等信息
      */
-    SqlQueryData getSqlQueryData(SqlBuildContext context);
+    SqlQueryData getSqlQueryData(ISqlBuildContext context);
 }

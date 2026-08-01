@@ -1,7 +1,6 @@
 package com.tbs.sql.builder;
 
 import com.tbs.common.util.base.BeanUtil;
-import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.model.group.GroupModel;
@@ -9,7 +8,6 @@ import com.tbs.sql.model.limit.LimitModel;
 import com.tbs.sql.model.order.OrderInfo;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.where.WhereCompose;
-import com.tbs.sql.util.SqlUtils;
 import lombok.Setter;
 
 import java.util.ArrayList;
@@ -42,7 +40,7 @@ import java.util.List;
  * driver.setWhereInfo(whereCompose);
  * driver.setOrders(orderInfos);
  * driver.setLimit(limitModel);
- * 
+ *
  * // 从上下文中提取SQL查询数据
  * SqlDriver.SqlQueryData data = driver.getSqlQueryData(context);
  * }</pre>
@@ -73,7 +71,7 @@ public class EntitySqlDriver extends AbstractSqlDriver {
     public EntitySqlDriver setMainQuery(boolean mainQuery) { this.mainQuery = mainQuery; return this; }
 
     @Override
-    protected SelectInfoModel getSelectInfo(SqlBuildContext context) {
+    protected SelectInfoModel getSelectInfo(ISqlBuildContext context) {
         SelectInfoModel selectInfoModel;
         if (BeanUtil.isBaseFrom(context.getEntityClass(), IQueryCriteria.class)) {
             selectInfoModel = ((IQueryCriteria) context.getSqlEntity()).getSelectSQLInfo();
@@ -92,8 +90,8 @@ public class EntitySqlDriver extends AbstractSqlDriver {
         return selectInfoModel;
     }
 
-    @Override protected WhereCompose getWhereInfo(SqlBuildContext context) { return compose; }
-    @Override protected List<GroupModel> getGroups(SqlBuildContext context) { return this.sqlGroups; }
-    @Override protected LimitModel getLimit(SqlBuildContext context) { return limit; }
-    @Override protected List<OrderInfo> getOrders(SqlBuildContext context) { return orders; }
+    @Override protected WhereCompose getWhereInfo(ISqlBuildContext context) { return compose; }
+    @Override protected List<GroupModel> getGroups(ISqlBuildContext context) { return this.sqlGroups; }
+    @Override protected LimitModel getLimit(ISqlBuildContext context) { return limit; }
+    @Override protected List<OrderInfo> getOrders(ISqlBuildContext context) { return orders; }
 }

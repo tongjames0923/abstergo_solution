@@ -6,7 +6,7 @@ import java.util.Map;
 /**
  * SQL构建上下文抽象实现类，提供上下文接口的通用实现。
  *
- * <p>该类实现了 {@link SqlBuildContext} 接口，提供了SQL参数管理、上下文状态控制、
+ * <p>该类实现了 {@link ISqlBuildContext} 接口，提供了SQL参数管理、上下文状态控制、
  * 实体对象管理等通用功能。子类只需要提供实体对象的创建逻辑。</p>
  *
  * <h3>主要功能</h3>
@@ -42,18 +42,24 @@ import java.util.Map;
  *
  * @author abstergo
  * @since 2.0.0
- * @see SqlBuildContext
- * @see ImportedSqlBuildContext
+ * @see ISqlBuildContext
+ * @see ImportedISqlBuildContext
  */
-public abstract class AbstractSqlBuildContext implements SqlBuildContext {
+public abstract class AbstractISqlBuildContext implements ISqlBuildContext {
     private Map<String, Object> sqlParams = new HashMap<>(4);
     private boolean valid = true;
     private Object sqlEntity;
     private Class<?> sqlEntityClass;
+    private Map<String, Object> context = new HashMap<>(4);
 
     @Override
     public Class<?> getEntityClass() { return sqlEntityClass; }
 
+    /**
+     * 提供实体对象
+     *
+     * @return 实体对象
+     */
     protected abstract Object provideSqlEntity();
 
     protected void clearEntity() { sqlEntity = null; sqlEntityClass = null; }
@@ -70,16 +76,23 @@ public abstract class AbstractSqlBuildContext implements SqlBuildContext {
         sqlEntity = null;
         sqlEntityClass = null;
         valid = false;
+        sqlParams.clear();
+        context.clear();
     }
 
     @Override
     public void rebuild() {
-        valid = true;
-        sqlParams.clear();
+        destroy();
         sqlEntity = provideSqlEntity();
         sqlEntityClass = sqlEntity.getClass();
+        valid = true;
     }
 
     @Override
     public boolean isValid() { return valid; }
+
+    @Override
+    public Map<String, Object> getContextParams() {
+        return context;
+    }
 }

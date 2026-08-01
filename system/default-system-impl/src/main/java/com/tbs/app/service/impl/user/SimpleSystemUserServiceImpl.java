@@ -23,6 +23,7 @@ import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTe
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemUserMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
+import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -142,8 +143,8 @@ public class SimpleSystemUserServiceImpl
     }
 
     @Override
-    protected void inUseDataScope() {
-        DataPermissionIntercepter.setEnableFlag(true);
+    protected void inUseDataScope(ISqlBuildContext context) {
+        DataPermissionIntercepter.setEnableFlag(context, true);
     }
 
     @Override

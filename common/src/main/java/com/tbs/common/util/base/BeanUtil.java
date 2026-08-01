@@ -61,6 +61,9 @@ public class BeanUtil extends cn.hutool.core.bean.BeanUtil {
      * @return 如果target是base的子类或实现类返回true，否则返回false
      */
     public static final boolean isBaseFrom( Class<?> target,  Class<?> base) {
+        if (target == null || base == null) {
+            return false;
+        }
         return base.isAssignableFrom(target);
     }
 
