@@ -253,7 +253,24 @@ export default {
     executeTest: '执行测试',
     responseResult: '响应结果',
     emptyTitle: '暂无API配置',
-    emptyDesc: '点击「新增API」按钮创建第一个泛化API配置'
+    emptyDesc: '点击「新增API」按钮创建第一个泛化API配置',
+    parameters: '请求参数',
+    addParameter: '添加参数',
+    noParameters: '暂无参数，请添加',
+    addFirstParameter: '添加第一个参数',
+    parameterNamePlaceholder: '参数名',
+    parameterTypePlaceholder: '参数类型',
+    parameterValuePlaceholder: '参数值',
+    parameterValueJsonPlaceholder: '输入JSON数组或对象，如 ["a","b"]',
+    jsonPreview: 'JSON预览',
+    copyJson: '复制JSON',
+    copySuccess: '已复制到剪贴板',
+    noParametersWarning: '请至少添加一个参数',
+    parameterNameRequired: '第{index}个参数的参数名不能为空',
+    errorPrefix: '错误: ',
+    requestFailed: '请求失败',
+    testSuccess: '测试成功',
+    testFailed: '测试失败'
   },
 
   // 网络请求

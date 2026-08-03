@@ -98,7 +98,9 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
             invoke(paramMap, resultVo, Optional.ofNullable(u));
             return resultVo;
         }
+        int i = 0;
         for (GenricParameterForm parameterForm : parameterForms) {
+            parameterForm.setSort(i++);
             paramMap.put(parameterForm.getParameterName(), parameterForm);
         }
         Date beg = new Date();

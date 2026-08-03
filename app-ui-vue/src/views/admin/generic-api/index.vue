@@ -295,7 +295,7 @@
       <el-dialog
         :title="$t('genericApi.testDialogTitle', { apiName: currentApi.apiName })"
         :visible.sync="testDialogVisible"
-        width="800px"
+        width="900px"
         top="5vh"
         :close-on-click-modal="false"
         @close="closeTestDialog"
@@ -347,30 +347,90 @@
           </div>
 
           <div class="test-content">
-            <el-row :gutter="20">
-              <el-col :span="12">
-                <div class="request-section">
-                  <div class="section-header">
-                    <h4>{{ $t('genericApi.requestBody') }}</h4>
-                    <el-button size="mini" type="primary" @click="executeApiTest" :loading="testLoading">
-                      <i class="el-icon-caret-right"></i> {{ $t('genericApi.executeTest') }}
-                    </el-button>
+            <div class="request-section">
+              <div class="section-header">
+                <h4>{{ $t('genericApi.parameters') }}</h4>
+                <div class="section-actions">
+                  <el-button size="mini" type="success" @click="addTestParameter">
+                    <i class="el-icon-plus"></i> {{ $t('genericApi.addParameter') }}
+                  </el-button>
+                  <el-button size="mini" type="primary" @click="executeApiTest" :loading="testLoading">
+                    <i class="el-icon-caret-right"></i> {{ $t('genericApi.executeTest') }}
+                  </el-button>
+                </div>
+              </div>
+
+              <!-- 参数列表 -->
+              <div class="parameter-list">
+                <div v-if="testParameters.length === 0" class="empty-parameters">
+                  <p>{{ $t('genericApi.noParameters') }}</p>
+                  <el-button size="small" type="primary" plain @click="addTestParameter">
+                    {{ $t('genericApi.addFirstParameter') }}
+                  </el-button>
+                </div>
+                <div v-for="(param, index) in testParameters" :key="index" class="parameter-item">
+                  <div class="parameter-index">{{ index + 1 }}</div>
+                  <div class="parameter-fields">
+                    <el-input
+                      v-model="param.parameterName"
+                      :placeholder="$t('genericApi.parameterNamePlaceholder')"
+                      size="small"
+                      class="param-field param-name"
+                    />
+                    <el-select
+                      v-model="param.exceptdClassName"
+                      :placeholder="$t('genericApi.parameterTypePlaceholder')"
+                      size="small"
+                      filterable
+                      allow-create
+                      class="param-field param-type"
+                    >
+                      <el-option
+                        v-for="type in javaTypes"
+                        :key="type.value"
+                        :label="type.label"
+                        :value="type.value"
+                      />
+                    </el-select>
+                    <el-input
+                      v-model="param.parameterValue"
+                      :placeholder="getValuePlaceholder(param.exceptdClassName)"
+                      size="small"
+                      class="param-field param-value"
+                    />
                   </div>
-                  <el-input
-                    v-model="requestBody"
-                    type="textarea"
-                    :rows="15"
-                    placeholder="输入JSON格式的请求参数"
+                  <el-button
+                    size="mini"
+                    type="danger"
+                    icon="el-icon-delete"
+                    circle
+                    @click="removeTestParameter(index)"
                   />
                 </div>
-              </el-col>
-              <el-col :span="12" v-if="testResult">
-                <div class="response-section">
-                  <h4>{{ $t('genericApi.responseResult') }}</h4>
-                  <pre class="response-result">{{ testResult }}</pre>
-                </div>
-              </el-col>
-            </el-row>
+              </div>
+            </div>
+
+            <!-- JSON预览 -->
+            <div class="json-preview-section">
+              <div class="section-header">
+                <h4>{{ $t('genericApi.jsonPreview') }}</h4>
+                <el-button size="mini" type="text" @click="copyJsonBody">
+                  <i class="el-icon-document-copy"></i> {{ $t('genericApi.copyJson') }}
+                </el-button>
+              </div>
+              <pre class="json-preview">{{ formattedRequestBody }}</pre>
+            </div>
+
+            <!-- 响应结果 -->
+            <div v-if="testResult" class="response-section">
+              <div class="section-header">
+                <h4>{{ $t('genericApi.responseResult') }}</h4>
+                <el-tag :type="testResult.includes('错误') ? 'danger' : 'success'" size="small">
+                  {{ testResult.includes('错误') ? $t('genericApi.testFailed') : $t('genericApi.testSuccess') }}
+                </el-tag>
+              </div>
+              <pre class="response-result">{{ testResult }}</pre>
+            </div>
           </div>
         </div>
       </el-dialog>
@@ -447,9 +507,37 @@ export default {
       // API测试对话框
       testDialogVisible: false,
       currentApi: {},
-      requestBody: '{\n  "param1": "value1",\n  "param2": "value2"\n}',
+      testParameters: [],
+      javaTypes: [
+        // 基本类型
+        { value: 'java.lang.String', label: 'String' },
+        { value: 'java.lang.Integer', label: 'Integer' },
+        { value: 'java.lang.Long', label: 'Long' },
+        { value: 'java.lang.Double', label: 'Double' },
+        { value: 'java.lang.Boolean', label: 'Boolean' },
+        { value: 'java.lang.Float', label: 'Float' },
+        { value: 'java.lang.Byte', label: 'Byte' },
+        { value: 'java.lang.Short', label: 'Short' },
+        { value: 'java.util.Date', label: 'Date' },
+        { value: 'java.math.BigDecimal', label: 'BigDecimal' },
+        // 集合类型（不带泛型）
+        { value: 'java.util.List', label: 'List' },
+        { value: 'java.util.Set', label: 'Set' },
+        { value: 'java.util.Map', label: 'Map' },
+        { value: 'java.util.Collection', label: 'Collection' },
+        // 数组类型
+        { value: 'java.lang.String[]', label: 'String[]' },
+        { value: 'java.lang.Integer[]', label: 'Integer[]' },
+        { value: 'int[]', label: 'int[]' },
+        { value: 'long[]', label: 'long[]' }
+      ],
       testResult: '',
       testLoading: false
+    }
+  },
+  computed: {
+    formattedRequestBody() {
+      return JSON.stringify(this.buildRequestBody(), null, 2);
     }
   },
   mounted() {
@@ -648,55 +736,160 @@ export default {
     // 打开API测试对话框
     openApiTestDialog(api) {
       this.currentApi = api;
-      this.requestBody = this.getDefaultRequestBody(api);
+      this.testParameters = [];
+      this.testResult = '';
       this.testDialogVisible = true;
     },
 
-    // 获取默认请求体
-    getDefaultRequestBody(api) {
-      // 根据API信息生成符合后端规范的请求体
-      const defaultBody = {
+    // 添加测试参数
+    addTestParameter() {
+      this.testParameters.push({
+        parameterName: '',
+        exceptdClassName: 'java.lang.String',
+        parameterValue: ''
+      });
+    },
+
+    // 删除测试参数
+    removeTestParameter(index) {
+      this.testParameters.splice(index, 1);
+    },
+
+    // 根据类型返回不同的 placeholder
+    getValuePlaceholder(className) {
+      if (!className) return this.$t('genericApi.parameterValuePlaceholder');
+
+      // 集合和数组类型需要JSON输入
+      if (this.isCollectionOrArray(className)) {
+        return this.$t('genericApi.parameterValueJsonPlaceholder');
+      }
+
+      return this.$t('genericApi.parameterValuePlaceholder');
+    },
+
+    // 判断是否为集合或数组类型
+    isCollectionOrArray(className) {
+      if (!className) return false;
+      // 集合类型
+      const collectionPrefixes = ['java.util.List', 'java.util.Set', 'java.util.Map', 'java.util.Collection', 'java.lang.Iterable'];
+      if (collectionPrefixes.some(prefix => className.startsWith(prefix))) {
+        return true;
+      }
+      // 数组类型
+      if (className.endsWith('[]')) {
+        return true;
+      }
+      return false;
+    },
+
+    // 构建请求体
+    buildRequestBody() {
+      const api = this.currentApi;
+      return {
         id: api.apiId,
         version: api.version ? parseInt(api.version) : null,
-        parameters: [
-          // 这里可以根据接口定义动态生成参数模板
-          {
-            parameterName: "param1",
-            exceptdClassName: "java.lang.String",
-            parameterValue: "value1"
-          },
-          {
-            parameterName: "param2",
-            exceptdClassName: "java.lang.String",
-            parameterValue: "value2"
-          }
-        ]
+        parameters: this.testParameters.map(param => {
+          const value = this.parseParameterValue(param.exceptdClassName, param.parameterValue);
+          return {
+            parameterName: param.parameterName,
+            exceptdClassName: param.exceptdClassName,
+            parameterValue: value
+          };
+        })
       };
-      return JSON.stringify(defaultBody, null, 2);
+    },
+
+    // 解析参数值 - 根据类型决定是否需要JSON解析
+    parseParameterValue(className, value) {
+      if (!value && value !== 0 && value !== false) return null;
+
+      // 集合和数组类型需要解析JSON
+      if (this.isCollectionOrArray(className)) {
+        try {
+          return JSON.parse(value);
+        } catch (e) {
+          console.warn('JSON解析失败，使用原始值:', value);
+          return value;
+        }
+      }
+
+      // 数值类型
+      if (className === 'java.lang.Integer' || className === 'int') {
+        return parseInt(value, 10);
+      }
+      if (className === 'java.lang.Long' || className === 'long') {
+        return parseInt(value, 10);
+      }
+      if (className === 'java.lang.Double' || className === 'double') {
+        return parseFloat(value);
+      }
+      if (className === 'java.lang.Float' || className === 'float') {
+        return parseFloat(value);
+      }
+      if (className === 'java.lang.Boolean' || className === 'boolean') {
+        return value === 'true' || value === true;
+      }
+
+      // BigDecimal 作为字符串传递
+      if (className === 'java.math.BigDecimal') {
+        return value;
+      }
+
+      // 默认返回字符串
+      return value;
+    },
+
+    // 复制JSON到剪贴板
+    async copyJsonBody() {
+      try {
+        await navigator.clipboard.writeText(this.formattedRequestBody);
+        this.$message.success(this.$t('genericApi.copySuccess'));
+      } catch (error) {
+        // 降级方案
+        const textarea = document.createElement('textarea');
+        textarea.value = this.formattedRequestBody;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        this.$message.success(this.$t('genericApi.copySuccess'));
+      }
     },
 
     // 执行API测试
     async executeApiTest() {
+      // 验证参数
+      if (this.testParameters.length === 0) {
+        this.$message.warning(this.$t('genericApi.noParametersWarning'));
+        return;
+      }
+      for (let i = 0; i < this.testParameters.length; i++) {
+        const param = this.testParameters[i];
+        if (!param.parameterName) {
+          this.$message.warning(this.$t('genericApi.parameterNameRequired', { index: i + 1 }));
+          return;
+        }
+      }
+
       this.testLoading = true;
       try {
         // 构建请求URL，根据是否需要认证选择不同的端点
         const api = this.currentApi;
         let url;
         if (api.needAuth) {
-          // 需要认证的API使用私有端点
           url = '/private/genric/invoke';
         } else {
-          // 不需要认证的API使用公共端点
           url = '/public/genric/invoke';
         }
 
         // 发送测试请求
-        const response = await request.post(url, JSON.parse(this.requestBody));
+        const requestBody = this.buildRequestBody();
+        const response = await request.post(url, requestBody);
 
         this.testResult = JSON.stringify(response.data, null, 2);
       } catch (error) {
         console.error('API测试失败:', error);
-        this.testResult = `错误: ${error.message || '请求失败'}`;
+        this.testResult = `${this.$t('genericApi.errorPrefix')}${error.message || this.$t('genericApi.requestFailed')}`;
       } finally {
         this.testLoading = false;
       }
@@ -706,6 +899,7 @@ export default {
     closeTestDialog() {
       this.testDialogVisible = false;
       this.testResult = '';
+      this.testParameters = [];
     },
 
 
@@ -1093,14 +1287,6 @@ export default {
   }
 }
 
-.test-api-btn {
-  color: #10b981 !important;
-
-  &:hover {
-    color: #34d399 !important;
-  }
-}
-
 .danger-text {
   color: #ef4444 !important;
 
@@ -1159,50 +1345,143 @@ export default {
   }
 
   .test-content {
-    .request-section,
-    .response-section {
-      height: 100%;
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+
+      h4 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        color: #1e293b;
+      }
+
+      .section-actions {
+        display: flex;
+        gap: 8px;
+      }
     }
 
     .request-section {
+      margin-bottom: 20px;
+    }
+
+    .parameter-list {
+      min-height: 120px;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f8fafc;
+    }
+
+    .empty-parameters {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      color: #94a3b8;
+
+      p {
+        margin: 0 0 12px 0;
+        font-size: 14px;
+      }
+    }
+
+    .parameter-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      margin-bottom: 12px;
+      background: #ffffff;
+      border-radius: 8px;
+      border: 1px solid #e2e8f0;
+      transition: all 0.2s;
+
+      &:hover {
+        border-color: #94a3b8;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+      }
+
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+
+    .parameter-index {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #e2e8f0;
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 600;
+      color: #64748b;
+      flex-shrink: 0;
+    }
+
+    .parameter-fields {
+      display: flex;
+      gap: 10px;
+      flex: 1;
+
+      .param-field {
+        &.param-name {
+          width: 140px;
+        }
+
+        &.param-type {
+          width: 160px;
+        }
+
+        &.param-value {
+          flex: 1;
+        }
+      }
+    }
+
+    .json-preview-section {
+      margin-bottom: 20px;
+    }
+
+    .json-preview {
+      background: #1e293b;
+      color: #e2e8f0;
+      border-radius: 8px;
+      padding: 16px;
+      font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      max-height: 200px;
+      overflow-y: auto;
+
+      &::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      &::-webkit-scrollbar-track {
+        background: #334155;
+        border-radius: 3px;
+      }
+
+      &::-webkit-scrollbar-thumb {
+        background: #64748b;
+        border-radius: 3px;
+      }
+    }
+
+    .response-section {
       .section-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 12px;
-
-        h4 {
-          margin: 0;
-          font-size: 15px;
-          font-weight: 600;
-          color: #1e293b;
-        }
-      }
-
-      .el-textarea {
-        .el-textarea__inner {
-          font-family: 'JetBrains Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
-          font-size: 13px;
-          line-height: 1.5;
-          border-radius: 8px;
-          border: 1px solid #cbd5e1;
-          transition: all 0.3s;
-          height: calc(100% - 40px); /* 减去标题和按钮的高度 */
-
-          &:focus {
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-          }
-        }
-      }
-    }
-
-    .response-section {
-      h4 {
-        margin: 0 0 12px 0;
-        font-size: 15px;
-        font-weight: 600;
-        color: #1e293b;
       }
 
       .response-result {
@@ -1216,8 +1495,7 @@ export default {
         line-height: 1.5;
         white-space: pre-wrap;
         word-wrap: break-word;
-        height: calc(100% - 40px); /* 减去标题的高度 */
-        max-height: 400px;
+        max-height: 300px;
         overflow-y: auto;
 
         &::-webkit-scrollbar {
@@ -1363,6 +1641,37 @@ export default {
   .form-row {
     flex-direction: column;
     gap: 0;
+  }
+
+  // 测试对话框响应式
+  .test-dialog-content {
+    .parameter-item {
+      flex-wrap: wrap;
+    }
+
+    .parameter-fields {
+      flex-wrap: wrap;
+      width: calc(100% - 48px);
+
+      .param-field {
+        &.param-name,
+        &.param-type {
+          width: 100%;
+        }
+
+        &.param-value {
+          width: 100%;
+        }
+      }
+    }
+  }
+}
+
+// 测试对话框宽度响应式
+@media (max-width: 960px) {
+  ::v-deep .test-dialog {
+    width: 95% !important;
+    margin: 0 auto;
   }
 }
 </style>

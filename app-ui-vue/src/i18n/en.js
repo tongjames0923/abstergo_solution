@@ -253,7 +253,24 @@ export default {
     executeTest: 'Execute Test',
     responseResult: 'Response Result',
     emptyTitle: 'No API Configurations',
-    emptyDesc: 'Click "Add API" button to create your first generic API configuration'
+    emptyDesc: 'Click "Add API" button to create your first generic API configuration',
+    parameters: 'Request Parameters',
+    addParameter: 'Add Parameter',
+    noParameters: 'No parameters yet, please add one',
+    addFirstParameter: 'Add First Parameter',
+    parameterNamePlaceholder: 'Parameter Name',
+    parameterTypePlaceholder: 'Parameter Type',
+    parameterValuePlaceholder: 'Parameter Value',
+    parameterValueJsonPlaceholder: 'Enter JSON array or object, e.g. ["a","b"]',
+    jsonPreview: 'JSON Preview',
+    copyJson: 'Copy JSON',
+    copySuccess: 'Copied to clipboard',
+    noParametersWarning: 'Please add at least one parameter',
+    parameterNameRequired: 'Parameter name cannot be empty for parameter {index}',
+    errorPrefix: 'Error: ',
+    requestFailed: 'Request failed',
+    testSuccess: 'Test Success',
+    testFailed: 'Test Failed'
   },
 
   // Network Request

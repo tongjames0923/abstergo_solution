@@ -4,6 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
@@ -106,13 +107,17 @@ public class DubboGenricApiInstance extends AbstractGenricApiInstance<Serializab
                 resultVo.setExecuteResult((Serializable)result);
             } else {
                 // 将参数按顺序整理
-                List<GenricParameterForm> sortedParams = new ArrayList<>(parameterForms.values());
+                List<GenricParameterForm> sortedParams =
+                    parameterForms.values().stream().sorted(Comparator.comparingInt(GenricParameterForm::getSort))
+                        .collect(Collectors.toList());
                 Object[] args = sortedParams.stream().map(GenricParameterForm::getParameterValue).toArray();
 
                 // 获取参数类型
                 String[] paramTypes = new String[args.length];
                 for (int i = 0; i < args.length; i++) {
-                    if (args[i] != null) {
+                    if (StrUtil.isNotEmpty(sortedParams.get(i).getExceptdClassName())) {
+                        paramTypes[i] = sortedParams.get(i).getExceptdClassName();
+                    } else if (args[i] != null) {
                         paramTypes[i] = args[i].getClass().getName();
                     } else {
                         paramTypes[i] = "java.lang.Object"; // 使用Object作为默认类型

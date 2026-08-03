@@ -31,7 +31,9 @@ public class GenricParameterForm implements Serializable {
      */
     private Serializable parameterValue;
 
-
-
+    /**
+     * 排序
+     */
+    private Integer sort;
 
 }
