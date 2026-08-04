@@ -103,6 +103,11 @@ public class XxlJobConfig {
         }
         if (!StrUtil.isEmpty(config.logPath())) {
             log.info("log path: {}", config.logPath());
+            // 确保日志目录存在,避免XxlJobFileAppender.appendLog抛出IOException
+            java.io.File logDir = new java.io.File(config.logPath());
+            if (!logDir.exists()) {
+                logDir.mkdirs();
+            }
             xxlJobSpringExecutor.setLogPath(config.logPath());
         }
         if (null != config.logRetentionsDays()) {
