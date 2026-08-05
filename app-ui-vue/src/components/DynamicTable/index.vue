@@ -652,20 +652,32 @@ export default {
 <style lang="scss" scoped>
 .dynamic-table {
   width: 100%;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 
   &__toolbar {
-    margin-bottom: 10px;
+    flex: 0 0 auto;
+    margin-bottom: 8px;
   }
 
   &__pagination {
-    margin-top: 20px;
+    flex: 0 0 auto;
+    margin-top: 10px;
     text-align: right;
+  }
+
+  // 表格撑满 toolbar 与分页之间的剩余空间
+  ::v-deep .el-table {
+    flex: 1;
+    min-height: 0;
   }
 
   .action-buttons-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 8px;
+    gap: 6px;
     justify-content: center;
   }
 }

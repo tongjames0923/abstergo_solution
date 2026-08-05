@@ -471,9 +471,9 @@ export default {
 .dynamic-form-card {
   margin-bottom: var(--dynamic-form-margin);
   background: var(--dynamic-form-bg);
-  border-radius: 12px;
+  border-radius: 8px;
   border: 1px solid rgba(0, 0, 0, 0.05);
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
 }
@@ -487,7 +487,7 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 18px 24px;
+  padding: 10px 16px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.9) 100%);
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
   backdrop-filter: blur(10px);
@@ -495,11 +495,11 @@ export default {
 
 .card-title {
   font-weight: 600;
-  font-size: 16px;
+  font-size: 14px;
   color: #1a1a2e;
   letter-spacing: -0.01em;
   position: relative;
-  padding-left: 12px;
+  padding-left: 10px;
 }
 
 .card-title::before {
@@ -508,8 +508,8 @@ export default {
   left: 0;
   top: 50%;
   transform: translateY(-50%);
-  width: 4px;
-  height: 18px;
+  width: 3px;
+  height: 14px;
   background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 2px;
 }
@@ -517,18 +517,18 @@ export default {
 .expand-button {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 4px;
   border: 1px solid rgba(59, 130, 246, 0.2);
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   background: rgba(59, 130, 246, 0.05);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.1);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
   color: #3b82f6;
   font-weight: 500;
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
 }
 
@@ -558,15 +558,17 @@ export default {
 
 .form-actions {
   text-align: center;
-  padding: 24px 0 8px;
-  margin-top: 16px;
+  padding: 12px 0 6px;
+  margin-top: 8px;
   border-top: 1px solid rgba(0, 0, 0, 0.04);
   background: linear-gradient(180deg, transparent 0%, rgba(248, 250, 252, 0.5) 100%);
 }
 
 .form-actions .el-button {
-  min-width: 100px;
+  min-width: 80px;
+  padding: 6px 12px;
   font-weight: 500;
+  font-size: 12px;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -593,15 +595,15 @@ export default {
 }
 
 .dynamic-form-row {
-  margin-left: -10px;
-  margin-right: -10px;
-  padding: 16px 0;
+  margin-left: -8px;
+  margin-right: -8px;
+  padding: 8px 0;
 }
 
 .dynamic-form-col {
-  padding-left: 10px;
-  padding-right: 10px;
-  margin-bottom: 16px;
+  padding-left: 8px;
+  padding-right: 8px;
+  margin-bottom: 10px;
 }
 
 .dynamic-form-item {
@@ -615,8 +617,9 @@ export default {
 
 .dynamic-form-item ::v-deep .el-form-item__label {
   font-weight: 500;
+  font-size: 13px;
   color: #374151;
-  padding-right: 12px;
+  padding-right: 8px;
 }
 
 .dynamic-form-item ::v-deep .el-form-item__content {
@@ -705,28 +708,29 @@ export default {
 /* 小屏幕适配 */
 @media (max-width: 768px) {
   .card-header {
-    padding: 14px 16px;
+    padding: 8px 12px;
   }
 
   .card-title {
-    font-size: 15px;
+    font-size: 13px;
   }
 
   .form-actions {
-    padding: 16px 0 4px;
+    padding: 8px 0 4px;
   }
 
   .form-actions .el-button {
-    min-width: 80px;
-    padding: 10px 16px;
+    min-width: 70px;
+    padding: 6px 12px;
+    font-size: 12px;
   }
 
   .dynamic-form-row {
-    padding: 8px 0;
+    padding: 4px 0;
   }
 
   .dynamic-form-col {
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   ::v-deep .date-range-picker-popper .el-picker-panel {

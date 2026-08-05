@@ -351,9 +351,13 @@ export default {
 }
 
 .user-management {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   padding: 20px;
   background-color: #f5f7fa;
-  min-height: calc(100vh - 84px);
+  overflow: hidden;
 
   .password-dialog,
   .role-dialog {

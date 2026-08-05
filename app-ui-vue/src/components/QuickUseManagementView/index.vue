@@ -1,6 +1,6 @@
 <template>
   <div class="quick-use-management-view">
-    <div class="header-section">
+    <div ref="headerSection" class="header-section">
       <div class="header-content">
         <h2 class="main-title">{{ mainTitle }}</h2>
         <div class="header-actions">
@@ -13,7 +13,7 @@
           >
             {{ addButtonText }}
           </el-button>
-          
+
           <!-- 添加导出按钮 -->
           <el-button
             type="success"
@@ -27,7 +27,7 @@
       </div>
     </div>
 
-    <el-card class="search-card" shadow="never">
+    <el-card ref="searchCard" class="search-card" shadow="never">
       <DynamicFormWithApi
         ref="dynamicForm"
         :title="searchFormTitle"
@@ -87,15 +87,15 @@
               {{ deleteActionButtonText }}
             </el-button>
             <!-- 兼容旧版actions插槽 -->
-            <slot name="actions" :row="row" :index="$index" />
+            <slot name="actions" :row="row" :index="$index"/>
             <!-- 更多功能按钮 -->
             <template v-if="$scopedSlots['actions-dropdown']">
               <el-dropdown @command="handleActionCommand($event, row, $index)">
                 <el-button size="mini" type="primary" plain>
-                  {{ $t('common.moreActions') }}<i class="el-icon-arrow-down el-icon--right" />
+                  {{ $t('common.moreActions') }}<i class="el-icon-arrow-down el-icon--right"/>
                 </el-button>
                 <el-dropdown-menu>
-                  <slot name="actions-dropdown" :row="row" :index="$index" />
+                  <slot name="actions-dropdown" :row="row" :index="$index"/>
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -137,7 +137,7 @@
 <script>
 import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi'
 import DynamicTable from '@/components/DynamicTable'
-import { exportTableToExcel } from '@/utils/excel' // 导入Excel导出工具函数
+import {exportTableToExcel} from '@/utils/excel' // 导入Excel导出工具函数
 
 export default {
   name: 'QuickUseManagementView',
@@ -311,11 +311,9 @@ export default {
     }
   },
   mounted() {
-    // 监听窗口大小变化，以动态调整弹窗尺寸
     window.addEventListener('resize', this.handleResize)
   },
   beforeDestroy() {
-    // 组件销毁前移除事件监听器
     window.removeEventListener('resize', this.handleResize)
   },
   methods: {
@@ -331,7 +329,6 @@ export default {
 
     // 处理窗口大小变化
     handleResize() {
-      // 通过触发计算属性更新来响应窗口大小变化
       this.windowWidth = window.innerWidth
     },
 
@@ -384,10 +381,10 @@ export default {
           data: Array.isArray(result.data) ? result.data : [],
           total: result.total || 0
         }
-        
+
         // 保存原始数据用于导出
         this.originalData = Array.isArray(result.data) ? [...result.data] : []
-        
+
         return tableResult
       } catch (error) {
         console.error('数据获取失败:', error)
@@ -489,7 +486,7 @@ export default {
     // 显示编辑弹窗
     showEditDialog(rowData) {
       this.dialogType = 'edit'
-      this.editFormData = { ...rowData }
+      this.editFormData = {...rowData}
       this.dialogVisible = true
     },
 
@@ -503,7 +500,7 @@ export default {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
-      }).then(async() => {
+      }).then(async () => {
         // 如果提供了删除处理器，则调用它
         if (this.deleteHandler && typeof this.deleteHandler === 'function') {
           await this.deleteHandler(row)
@@ -522,7 +519,7 @@ export default {
 
     // 处理操作命令
     handleActionCommand(command, row, index) {
-      this.$emit('action-command', { command, row, index })
+      this.$emit('action-command', {command, row, index})
     },
 
     // 处理弹窗关闭
@@ -532,7 +529,7 @@ export default {
       this.$emit(cancelEvent)
       this.dialogVisible = false
     },
-    
+
     // 重置分页到第一页
     resetPagination() {
       if (this.$refs.dynamicTable) {
@@ -542,7 +539,7 @@ export default {
         this.$refs.dynamicTable.$emit('current-page-change', 1)
       }
     },
-    
+
     // 导出功能 - 使用原始数据
     async handleExport() {
       try {
@@ -550,13 +547,13 @@ export default {
           this.$message.warning(this.$t('common.noExportData'));
           return;
         }
-        
+
         // 数据量限制提醒
         if (this.originalData.length > 5000) {
           const confirm = await this.$confirm(
-            this.$t('common.largeDataConfirm', { count: this.originalData.length }),
+            this.$t('common.largeDataConfirm', {count: this.originalData.length}),
             this.$t('common.tip'),
-            { 
+            {
               confirmButtonText: this.$t('common.continueExport'),
               cancelButtonText: this.$t('common.cancel'),
               type: 'warning'
@@ -564,14 +561,14 @@ export default {
           );
           if (!confirm) return;
         }
-        
+
         // 准备列配置用于导出
         const exportColumns = this.columns.filter(col => col.prop) // 只导出有prop的列
-        
+
         // 调用导出函数，使用原始数据
         exportTableToExcel(this.originalData, exportColumns, this.mainTitle + this.$t('common.queryData'))
-        
-        this.$message.success(this.$t('common.exportSuccess', { count: this.originalData.length }));
+
+        this.$message.success(this.$t('common.exportSuccess', {count: this.originalData.length}));
       } catch (error) {
         console.error('导出失败:', error)
         this.$message.error(this.$t('common.exportFailed'))
@@ -583,10 +580,17 @@ export default {
 
 <style lang="scss" scoped>
 .quick-use-management-view {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
   padding: 12px;
+  box-sizing: border-box;
+  overflow: hidden;
 
   .header-section {
-    margin-bottom: 12px;
+    flex: 0 0 auto;
+    margin-bottom: 10px;
 
     .header-content {
       display: flex;
@@ -595,7 +599,7 @@ export default {
       flex-wrap: wrap;
 
       .main-title {
-        font-size: 22px;
+        font-size: 20px;
         font-weight: 600;
         margin: 0;
         color: #303133;
@@ -609,8 +613,8 @@ export default {
 
         .add-button,
         .export-button {
-          height: 32px;
-          padding: 0 14px;
+          height: 30px;
+          padding: 0 12px;
           font-size: 13px;
           border-radius: 4px;
         }
@@ -619,29 +623,112 @@ export default {
   }
 
   .search-card {
-    margin-bottom: 12px;
+    flex: 0 0 auto;
+    margin-bottom: 10px;
     border-radius: 6px;
     box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.03);
+    overflow-y: auto;
 
     ::v-deep .el-card__body {
-      padding: 12px 16px;
+      padding: 0 12px 6px;
+    }
+
+    // 覆盖DynamicForm组件的紧凑样式
+    ::v-deep .dynamic-form-card {
+      margin-bottom: 0;
+      background: transparent;
+      border-radius: 0;
+      border: none;
+      box-shadow: none;
+    }
+
+    ::v-deep .card-header {
+      padding: 2px 0 0;
+      background: transparent;
+      border-bottom: none;
+    }
+
+    ::v-deep .card-title {
+      font-size: 13px;
+      padding-left: 8px;
+    }
+
+    ::v-deep .card-title::before {
+      height: 12px;
+    }
+
+    ::v-deep .expand-button {
+      padding: 4px 8px;
+      font-size: 12px;
+      border-radius: 4px;
+    }
+
+    ::v-deep .dynamic-form-row {
+      margin-left: -5px;
+      margin-right: -5px;
+      padding: 2px 0;
+    }
+
+    ::v-deep .dynamic-form-col {
+      padding-left: 5px;
+      padding-right: 5px;
+      margin-bottom: 4px;
+    }
+
+    ::v-deep .dynamic-form-item .el-form-item__label {
+      font-size: 13px;
+      padding-right: 8px;
+    }
+
+    ::v-deep .form-actions {
+      padding: 4px 0 0;
+      margin-top: 2px;
+      border-top: 1px solid rgba(0, 0, 0, 0.04);
+    }
+
+    ::v-deep .form-actions .el-button {
+      min-width: 60px;
+      padding: 5px 10px;
+      font-size: 12px;
     }
   }
 
   .table-card {
+    flex: 1;
+    min-height: 0;
     border-radius: 6px;
     box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.03);
+    display: flex;
+    flex-direction: column;
+
+    ::v-deep .el-card {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    ::v-deep .el-card__header {
+      flex: 0 0 auto;
+      padding: 8px 16px;
+      border-bottom: 1px solid #ebeef5;
+    }
 
     ::v-deep .el-card__body {
-      padding: 10px 8px;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
     }
 
     .table-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 0 8px;
-      margin-bottom: 8px;
+      padding: 0;
+      margin-bottom: 0;
 
       .table-header-title {
         font-weight: 600;
@@ -658,7 +745,7 @@ export default {
 
   .table-actions {
     display: flex;
-    gap: 6px;
+    gap: 4px;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -676,7 +763,7 @@ export default {
     padding: 8px;
 
     .header-section {
-      margin-bottom: 10px;
+      margin-bottom: 8px;
 
       .header-content {
         .main-title {
@@ -687,13 +774,33 @@ export default {
 
     .search-card, .table-card {
       ::v-deep .el-card__body {
-        padding: 10px;
+        padding: 8px;
+      }
+    }
+
+    .search-card {
+      ::v-deep .dynamic-form-row {
+        margin-left: -3px;
+        margin-right: -3px;
+        padding: 2px 0;
+      }
+
+      ::v-deep .dynamic-form-col {
+        padding-left: 3px;
+        padding-right: 3px;
+        margin-bottom: 4px;
+      }
+
+      ::v-deep .form-actions .el-button {
+        min-width: 60px;
+        padding: 5px 10px;
+        font-size: 12px;
       }
     }
 
     .table-card {
       ::v-deep .el-card__body {
-        padding: 8px 4px;
+        padding: 6px 4px;
       }
     }
 
