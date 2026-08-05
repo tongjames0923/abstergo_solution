@@ -2,7 +2,7 @@
   <div class="user-management">
     <quick-use-management-view
       ref="userManagement"
-      main-title="用户管理"
+      :main-title="$t('user.title')"
       :config-name="userSearchFormKey()"
       :search-handler="searchHandler"
       :columns="columns"
@@ -16,23 +16,23 @@
     >
       <template #actions-dropdown="{ row, index }">
         <el-dropdown-item command="toggleStatus" @click.native="handleToggleStatus(row)">
-          {{ row.flag === 1 ? '禁用' : '启用' }}
+          {{ row.flag === 1 ? $t('user.disable') : $t('user.enable') }}
         </el-dropdown-item>
         <el-dropdown-item command="showLoginInfo" @click.native="handleShowLoginInfo(row)">
-          登录信息
+          {{ $t('user.loginInfo') }}
         </el-dropdown-item>
         <el-dropdown-item command="resetPassword" @click.native="handleResetPassword(row)">
-          重置密码
+          {{ $t('user.resetPassword') }}
         </el-dropdown-item>
         <el-dropdown-item command="manageRoles" @click.native="handleManageRoles(row)">
-          权限管理
+          {{ $t('role.title') }}
         </el-dropdown-item>
       </template>
     </quick-use-management-view>
 
     <!-- 重置密码弹窗 -->
     <el-dialog
-      title="重置密码"
+      :title="$t('user.resetPasswordTitle')"
       :visible.sync="resetPasswordDialogVisible"
       width="450px"
       :modal-append-to-body="false"
@@ -41,41 +41,41 @@
       @close="handleResetPasswordDialogClose"
     >
       <el-form ref="passwordForm" :model="passwordForm" :rules="passwordRules" label-width="80px">
-        <el-form-item label="用户名" prop="userName">
+        <el-form-item :label="$t('user.usernameLabel')" prop="userName">
           <el-input
             v-model="passwordForm.userName"
             disabled
             prefix-icon="el-icon-user"
           />
         </el-form-item>
-        <el-form-item label="新密码" prop="password">
+        <el-form-item :label="$t('user.newPasswordLabel')" prop="password">
           <el-input
             v-model="passwordForm.password"
             type="password"
             show-password
             prefix-icon="el-icon-lock"
-            placeholder="请输入新密码"
+            :placeholder="$t('user.inputNewPassword')"
           />
         </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
+        <el-form-item :label="$t('user.confirmPasswordLabel')" prop="confirmPassword">
           <el-input
             v-model="passwordForm.confirmPassword"
             type="password"
             show-password
             prefix-icon="el-icon-lock"
-            placeholder="请再次输入密码"
+            :placeholder="$t('user.inputConfirmPassword')"
           />
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
-        <el-button @click="resetPasswordDialogVisible = false">取 消</el-button>
-        <el-button type="primary" @click="handlePasswordSubmit">确 定</el-button>
+        <el-button @click="resetPasswordDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="handlePasswordSubmit">{{ $t('common.confirm') }}</el-button>
       </div>
     </el-dialog>
 
     <!-- 登录信息弹窗 -->
     <el-dialog
-      title="用户登录信息"
+      :title="$t('user.loginInfoTitle')"
       :visible.sync="loginInfoDialogVisible"
       width="90%"
       :modal="false"
@@ -87,13 +87,13 @@
         :user-id="currentUserId"
       />
       <div slot="footer" class="dialog-footer">
-        <el-button @click="loginInfoDialogVisible = false">关 闭</el-button>
+        <el-button @click="loginInfoDialogVisible = false">{{ $t('common.cancel') }}</el-button>
       </div>
     </el-dialog>
 
     <!-- 权限管理弹窗 -->
     <el-dialog
-      title="权限管理"
+      :title="$t('role.title')"
       :visible.sync="roleManagementDialogVisible"
       width="90%"
       :modal-append-to-body="false"
@@ -130,9 +130,9 @@ export default {
     // 确认密码验证规则
     const validateConfirmPassword = (rule, value, callback) => {
       if (value === '') {
-        callback(new Error('请再次输入密码'))
+        callback(new Error(this.$t('user.confirmPasswordRequired')))
       } else if (value !== this.passwordForm.password) {
-        callback(new Error('两次输入密码不一致!'))
+        callback(new Error(this.$t('user.confirmPasswordMismatch')))
       } else {
         callback()
       }
@@ -162,7 +162,7 @@ export default {
         { prop: 'id', label: 'ID', width: 80 },
         {
           prop: 'avatar',
-          label: '头像',
+          label: this.$t('user.avatar'),
           width: 120,
           render: (h, scope) => {
             return <el-avatar fit='fill' src={scope.row.avatar}>
@@ -170,27 +170,27 @@ export default {
             </el-avatar>
           }
         },
-        { prop: 'userName', label: '用户名', width: 180 },
-        { prop: 'nickName', label: '昵称', width: 180 },
-        { prop: 'remark', label: '备注', minWidth: 200 },
+        { prop: 'userName', label: this.$t('user.username'), width: 180 },
+        { prop: 'nickName', label: this.$t('user.nickname'), width: 180 },
+        { prop: 'remark', label: this.$t('user.remark'), minWidth: 200 },
         {
           prop: 'flag',
-          label: '状态',
+          label: this.$t('user.status'),
           width: 100,
           render: (h, scope) => {
             if (scope.row.flag === 1) {
-              return <el-tag type='success'>正常</el-tag>
+              return <el-tag type='success'>{this.$t('common.normal')}</el-tag>
             } else if (scope.row.flag === 0) {
-              return <el-tag type='danger'>禁用</el-tag>
+              return <el-tag type='danger'>{this.$t('user.disable')}</el-tag>
             } else if (scope.row.flag === 2) {
-              return <el-tag type='warning'>锁定</el-tag>
+              return <el-tag type='warning'>{this.$t('user.lock')}</el-tag>
             } else {
-              return <el-tag>未知</el-tag>
+              return <el-tag>{this.$t('common.error')}</el-tag>
             }
           }
         },
-        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
-        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
+        { prop: 'createTime', label: this.$t('user.createTime'), width: 180, sortable: true },
+        { prop: 'updateTime', label: this.$t('user.updateTime'), width: 180, sortable: true }
       ]
     }
   },
@@ -237,17 +237,17 @@ export default {
         let response
         if (row.flag === 1) {
           // 当前是正常状态，点击后应该禁用
-          await this.$confirm('确认要禁用该用户吗？', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
+          await this.$confirm(this.$t('user.confirmDisable'), this.$t('common.tip'), {
+            confirmButtonText: this.$t('common.confirm'),
+            cancelButtonText: this.$t('common.cancel'),
             type: 'warning'
           })
           response = await disableUser(row.id)
         } else {
           // 当前是禁用或锁定状态，点击后应该激活
-          await this.$confirm('确认要激活该用户吗？', '提示', {
-            confirmButtonText: '确定',
-            cancelButtonText: '取消',
+          await this.$confirm(this.$t('user.confirmEnable'), this.$t('common.tip'), {
+            confirmButtonText: this.$t('common.confirm'),
+            cancelButtonText: this.$t('common.cancel'),
             type: 'warning'
           })
           response = await activateUser(row.id)

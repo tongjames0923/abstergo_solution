@@ -11,7 +11,7 @@
             class="add-button"
             @click="showAddDialog"
           >
-            {{ addButtonText }}
+            {{ addButtonText || $t('common.add') }}
           </el-button>
 
           <!-- 添加导出按钮 -->
@@ -73,7 +73,7 @@
               :disabled="isEditDisabled(row, $index)"
               @click="handleEdit(row, $index)"
             >
-              {{ editActionButtonText }}
+              {{ editActionButtonText || $t('common.edit') }}
             </el-button>
 
             <el-button
@@ -84,7 +84,7 @@
               :disabled="isDeleteDisabled(row, $index)"
               @click="handleDelete(row, $index)"
             >
-              {{ deleteActionButtonText }}
+              {{ deleteActionButtonText || $t('common.delete') }}
             </el-button>
             <!-- 兼容旧版actions插槽 -->
             <slot name="actions" :row="row" :index="$index"/>
@@ -247,7 +247,7 @@ export default {
     // 删除确认文本生成函数
     deleteConfirmText: {
       type: Function,
-      default: (row, index) => `确定要删除第${index + 1}项吗？`
+      default: null
     },
     // 查询参数转换器
     queryTransformer: {
@@ -496,9 +496,12 @@ export default {
     },
 
     handleDelete(row, index) {
-      this.$confirm(this.deleteConfirmText(row, index), '提示', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
+      const confirmText = this.deleteConfirmText
+        ? this.deleteConfirmText(row, index)
+        : this.$t('user.confirmDelete')
+      this.$confirm(confirmText, this.$t('common.tip'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       }).then(async () => {
         // 如果提供了删除处理器，则调用它

@@ -10,7 +10,7 @@
       ref="table"
       v-loading="loading"
       :data="tableData"
-      :element-loading-text="loadingText"
+      :element-loading-text="computedLoadingText"
       :border="border"
       :stripe="stripe"
       :height="height"
@@ -93,7 +93,7 @@
 
       <!-- 操作列 -->
       <el-table-column
-        :label="actionsLabel"
+        :label="computedActionsLabel"
         :width="actionsWidth"
         :fixed="actionsFixed"
         :align="actionsAlign || 'center'"
@@ -184,7 +184,7 @@ export default {
     // 加载提示文本
     loadingText: {
       type: String,
-      default: '加载中...'
+      default: ''
     },
     // 是否显示边框
     border: {
@@ -288,7 +288,7 @@ export default {
     // 操作列标签
     actionsLabel: {
       type: String,
-      default: '操作'
+      default: ''
     },
     // 操作列宽度
     actionsWidth: {
@@ -343,6 +343,14 @@ export default {
     // 计算总条数，优先使用外部传入的total，否则使用内部的internalTotal
     computedTotal() {
       return this.total || this.internalTotal
+    },
+    // 加载提示文本（支持 i18n 回退）
+    computedLoadingText() {
+      return this.loadingText || this.$t('common.loading')
+    },
+    // 操作列标签（支持 i18n 回退）
+    computedActionsLabel() {
+      return this.actionsLabel || this.$t('common.operation')
     }
   },
   watch: {

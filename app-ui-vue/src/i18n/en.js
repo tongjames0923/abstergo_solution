@@ -28,7 +28,9 @@ export default {
     continueExport: 'Continue Export',
     queryData: 'Query Data',
     exportSuccess: 'Successfully exported {count} records',
-    exportFailed: 'Export failed, please try again later'
+    exportFailed: 'Export failed, please try again later',
+    operation: 'Operation',
+    normal: 'Active'
   },
 
   // Login
@@ -87,6 +89,7 @@ export default {
     username: 'Username',
     nickname: 'Nickname',
     avatar: 'Avatar',
+    remark: 'Remark',
     status: 'Status',
     createTime: 'Create Time',
     updateTime: 'Update Time',
@@ -123,7 +126,19 @@ export default {
     permissionAssigned: 'Permission assigned',
     permissionCancelled: 'Permission cancelled',
     confirmAssign: 'Are you sure to assign this permission?',
-    confirmCancel: 'Are you sure to cancel this permission?'
+    confirmCancel: 'Are you sure to cancel this permission?',
+    // User Management View
+    confirmDisable: 'Are you sure to disable this user?',
+    confirmEnable: 'Are you sure to enable this user?',
+    resetPasswordTitle: 'Reset Password',
+    loginInfoTitle: 'User Login Info',
+    usernameLabel: 'Username',
+    newPasswordLabel: 'New Password',
+    confirmPasswordLabel: 'Confirm Password',
+    inputNewPassword: 'Please enter new password',
+    inputConfirmPassword: 'Please enter password again',
+    confirmPasswordRequired: 'Please enter password again',
+    confirmPasswordMismatch: 'Passwords do not match!'
   },
 
   // Role Management

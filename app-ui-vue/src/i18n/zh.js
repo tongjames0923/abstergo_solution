@@ -28,7 +28,9 @@ export default {
     continueExport: '继续导出',
     queryData: '查询数据',
     exportSuccess: '成功导出 {count} 条数据',
-    exportFailed: '导出失败，请稍后重试'
+    exportFailed: '导出失败，请稍后重试',
+    operation: '操作',
+    normal: '正常'
   },
 
   // 登录
@@ -87,6 +89,7 @@ export default {
     username: '用户名',
     nickname: '昵称',
     avatar: '头像',
+    remark: '备注',
     status: '状态',
     createTime: '创建时间',
     updateTime: '更新时间',
@@ -123,7 +126,19 @@ export default {
     permissionAssigned: '权限已分配',
     permissionCancelled: '权限已取消',
     confirmAssign: '确认要分配该权限吗？',
-    confirmCancel: '确认要取消该权限吗？'
+    confirmCancel: '确认要取消该权限吗？',
+    // 用户管理界面
+    confirmDisable: '确认要禁用该用户吗？',
+    confirmEnable: '确认要激活该用户吗？',
+    resetPasswordTitle: '重置密码',
+    loginInfoTitle: '用户登录信息',
+    usernameLabel: '用户名',
+    newPasswordLabel: '新密码',
+    confirmPasswordLabel: '确认密码',
+    inputNewPassword: '请输入新密码',
+    inputConfirmPassword: '请再次输入密码',
+    confirmPasswordRequired: '请再次输入密码',
+    confirmPasswordMismatch: '两次输入密码不一致!'
   },
 
   // 权限管理
