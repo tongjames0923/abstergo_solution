@@ -18,7 +18,17 @@ export default {
     warning: 'Warning',
     info: 'Info',
     yes: 'Yes',
-    no: 'No'
+    no: 'No',
+    exportExcel: 'Export Excel',
+    dataList: 'Data List',
+    refreshData: 'Refresh Data',
+    moreActions: 'More Actions',
+    noExportData: 'No data available for export',
+    largeDataConfirm: 'Large data volume ({count} records), export may take a while. Continue?',
+    continueExport: 'Continue Export',
+    queryData: 'Query Data',
+    exportSuccess: 'Successfully exported {count} records',
+    exportFailed: 'Export failed, please try again later'
   },
 
   // Login

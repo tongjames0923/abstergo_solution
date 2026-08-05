@@ -18,7 +18,17 @@ export default {
     warning: '警告',
     info: '信息',
     yes: '是',
-    no: '否'
+    no: '否',
+    exportExcel: '导出Excel',
+    dataList: '数据列表',
+    refreshData: '刷新数据',
+    moreActions: '更多功能',
+    noExportData: '当前没有可导出的数据',
+    largeDataConfirm: '当前数据量较大({count}条)，导出可能需要较长时间，是否继续？',
+    continueExport: '继续导出',
+    queryData: '查询数据',
+    exportSuccess: '成功导出 {count} 条数据',
+    exportFailed: '导出失败，请稍后重试'
   },
 
   // 登录

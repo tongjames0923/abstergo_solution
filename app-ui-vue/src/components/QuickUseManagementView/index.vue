@@ -18,9 +18,10 @@
           <el-button
             type="success"
             icon="el-icon-download"
+            class="export-button"
             @click="handleExport"
           >
-            导出Excel
+            {{ $t('common.exportExcel') }}
           </el-button>
         </div>
       </div>
@@ -38,13 +39,13 @@
 
     <el-card class="table-card" shadow="never">
       <div slot="header" class="table-header">
-        <span class="table-header-title">数据列表</span>
+        <span class="table-header-title">{{ $t('common.dataList') }}</span>
         <div class="table-header-actions">
           <el-button
             icon="el-icon-refresh"
             circle
             size="mini"
-            title="刷新数据"
+            :title="$t('common.refreshData')"
             @click="refresh"
           />
         </div>
@@ -91,7 +92,7 @@
             <template v-if="$scopedSlots['actions-dropdown']">
               <el-dropdown @command="handleActionCommand($event, row, $index)">
                 <el-button size="mini" type="primary" plain>
-                  更多功能<i class="el-icon-arrow-down el-icon--right" />
+                  {{ $t('common.moreActions') }}<i class="el-icon-arrow-down el-icon--right" />
                 </el-button>
                 <el-dropdown-menu>
                   <slot name="actions-dropdown" :row="row" :index="$index" />
@@ -124,8 +125,8 @@
       >
         <template #actions="{formData ,submit,cancel}">
           <div class="dialog-actions">
-            <el-button @click="handleDialogClose">取消</el-button>
-            <el-button type="primary" @click="handleDialogSubmit(formData)">保存</el-button>
+            <el-button @click="handleDialogClose">{{ $t('common.cancel') }}</el-button>
+            <el-button type="primary" @click="handleDialogSubmit(formData)">{{ $t('common.save') }}</el-button>
           </div>
         </template>
       </DynamicFormWithApi>
@@ -546,18 +547,18 @@ export default {
     async handleExport() {
       try {
         if (!this.originalData || this.originalData.length === 0) {
-          this.$message.warning('当前没有可导出的数据');
+          this.$message.warning(this.$t('common.noExportData'));
           return;
         }
         
         // 数据量限制提醒
         if (this.originalData.length > 5000) {
           const confirm = await this.$confirm(
-            `当前数据量较大(${this.originalData.length}条)，导出可能需要较长时间，是否继续？`,
-            '提示',
+            this.$t('common.largeDataConfirm', { count: this.originalData.length }),
+            this.$t('common.tip'),
             { 
-              confirmButtonText: '继续导出',
-              cancelButtonText: '取消',
+              confirmButtonText: this.$t('common.continueExport'),
+              cancelButtonText: this.$t('common.cancel'),
               type: 'warning'
             }
           );
@@ -568,12 +569,12 @@ export default {
         const exportColumns = this.columns.filter(col => col.prop) // 只导出有prop的列
         
         // 调用导出函数，使用原始数据
-        exportTableToExcel(this.originalData, exportColumns, this.mainTitle + '查询数据')
+        exportTableToExcel(this.originalData, exportColumns, this.mainTitle + this.$t('common.queryData'))
         
-        this.$message.success(`成功导出 ${this.originalData.length} 条数据`);
+        this.$message.success(this.$t('common.exportSuccess', { count: this.originalData.length }));
       } catch (error) {
         console.error('导出失败:', error)
-        this.$message.error('导出失败，请稍后重试')
+        this.$message.error(this.$t('common.exportFailed'))
       }
     }
   }
@@ -582,10 +583,10 @@ export default {
 
 <style lang="scss" scoped>
 .quick-use-management-view {
-  padding: 20px;
+  padding: 12px;
 
   .header-section {
-    margin-bottom: 20px;
+    margin-bottom: 12px;
 
     .header-content {
       display: flex;
@@ -594,58 +595,70 @@ export default {
       flex-wrap: wrap;
 
       .main-title {
-        font-size: 24px;
+        font-size: 22px;
         font-weight: 600;
         margin: 0;
         color: #303133;
+        line-height: 1.2;
       }
 
       .header-actions {
-        .add-button {
-          height: 36px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+
+        .add-button,
+        .export-button {
+          height: 32px;
+          padding: 0 14px;
+          font-size: 13px;
+          border-radius: 4px;
         }
       }
     }
   }
 
   .search-card {
-    margin-bottom: 20px;
-    border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
+    margin-bottom: 12px;
+    border-radius: 6px;
+    box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.03);
 
     ::v-deep .el-card__body {
-      padding: 20px;
+      padding: 12px 16px;
     }
   }
 
   .table-card {
-    border-radius: 8px;
-    box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.03);
+    border-radius: 6px;
+    box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.03);
 
     ::v-deep .el-card__body {
-      padding: 20px 10px;
+      padding: 10px 8px;
     }
 
     .table-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      padding: 0 8px;
+      margin-bottom: 8px;
 
       .table-header-title {
         font-weight: 600;
         color: #303133;
+        font-size: 14px;
       }
 
       .table-header-actions {
         display: flex;
-        gap: 8px;
+        gap: 6px;
       }
     }
   }
 
   .table-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     flex-wrap: wrap;
     justify-content: center;
   }
@@ -653,49 +666,49 @@ export default {
   .dialog-actions {
     display: flex;
     justify-content: flex-end;
-    gap: 12px;
-    padding: 0 20px 20px;
+    gap: 10px;
+    padding: 0 16px 16px;
   }
 
 
   // 移动端适配
   @media (max-width: 768px) {
-    padding: 10px;
+    padding: 8px;
 
     .header-section {
-      margin-bottom: 15px;
+      margin-bottom: 10px;
 
       .header-content {
         .main-title {
-          font-size: 20px;
+          font-size: 18px;
         }
       }
     }
 
     .search-card, .table-card {
       ::v-deep .el-card__body {
-        padding: 15px;
+        padding: 10px;
       }
     }
 
     .table-card {
       ::v-deep .el-card__body {
-        padding: 15px 5px;
+        padding: 8px 4px;
       }
     }
 
     .table-actions {
-      gap: 6px;
+      gap: 4px;
 
       ::v-deep .el-button {
-        padding: 8px 12px;
+        padding: 6px 10px;
         font-size: 12px;
       }
     }
 
     .form-dialog {
       ::v-deep .el-dialog__body {
-        padding: 15px 20px;
+        padding: 12px 16px;
       }
     }
   }
