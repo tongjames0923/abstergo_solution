@@ -1,11 +1,13 @@
 import request from '@/utils/request'
 
 /**
- * 查询角色列表
+ * 查询权限列表
  * @param {Object} data - 查询条件
  * @param {number} [data.idEquals] - 根据ID精确查询
- * @param {string} [data.roleEquals] - 根据角色名精确查询
- * @param {number} [data.flagEquals] - 根据标志位精确查询
+ * @param {string} [data.roleEquals] - 根据权限编码精确查询
+ * @param {string} [data.nameLike] - 根据权限名称模糊查询
+ * @param {number[]} [data.typeEquals] - 根据权限类型精确查询
+ * @param {number[]} [data.flagEquals] - 根据标志位精确查询
  * @param {Object} [data.createTimeOrder] - 创建时间排序
  * @param {Object} [data.updateTimeOrder] - 更新时间排序
  * @param {number} [pageNum] - 页码
@@ -25,9 +27,9 @@ export function queryRoles(data, pageNum, pageSize) {
 }
 
 /**
- * 根据ID获取角色信息
- * @param {number} id - 角色ID
- * @returns {Promise} 角色信息
+ * 根据ID获取权限信息
+ * @param {number} id - 权限ID
+ * @returns {Promise} 权限信息
  */
 export function getRoleById(id) {
   return request({
@@ -37,12 +39,15 @@ export function getRoleById(id) {
 }
 
 /**
- * 保存角色信息（新增或更新）
- * @param {Object} data - 角色信息
- * @param {number} [data.id] - 角色ID，有ID为更新，无ID为新增
- * @param {string} data.role - 角色名
+ * 保存权限信息（新增或更新）
+ * @param {Object} data - 权限信息
+ * @param {number} [data.id] - 权限ID，有ID为更新，无ID为新增
+ * @param {string} data.role - 权限编码
+ * @param {string} data.name - 权限名称
+ * @param {number} data.type - 权限类型
  * @param {string} data.description - 描述
  * @param {number} data.flag - 状态
+ * @param {number} data.dataScope - 数据范围
  * @returns {Promise} 保存结果
  */
 export function saveRole(data) {
@@ -54,8 +59,8 @@ export function saveRole(data) {
 }
 
 /**
- * 删除角色
- * @param {number} id - 角色ID
+ * 删除权限
+ * @param {number} id - 权限ID
  * @returns {Promise} 删除结果
  */
 export function deleteRole(id) {
@@ -66,8 +71,8 @@ export function deleteRole(id) {
 }
 
 /**
- * 激活角色
- * @param {number} id - 角色ID
+ * 激活权限
+ * @param {number} id - 权限ID
  * @returns {Promise} 操作结果
  */
 export function activateRole(id) {
@@ -78,8 +83,8 @@ export function activateRole(id) {
 }
 
 /**
- * 禁用角色
- * @param {number} id - 角色ID
+ * 禁用权限
+ * @param {number} id - 权限ID
  * @returns {Promise} 操作结果
  */
 export function disableRole(id) {

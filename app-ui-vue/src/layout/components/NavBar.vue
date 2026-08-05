@@ -1,3 +1,4 @@
+
 <template>
   <div class="navbar-macos">
     <hamburger :is-active="sidebar.opened" class="hamburger-container" @toggleClick="toggleSideBar" />
@@ -28,19 +29,21 @@
           </div>
         </el-tooltip>
 
-        <el-tooltip v-if="roles.length > 0" effect="light" placement="bottom" popper-class="user-tooltip">
+        <el-tooltip v-if="allRoles.length > 0" effect="light" placement="bottom" popper-class="user-tooltip">
           <div class="user-role">
             <i class="el-icon-s-check" />
-            <span>{{ roles[0] }}</span>
-            <span v-if="roles.length > 1" class="role-count">+{{ roles.length - 1 }}</span>
+            <span class="role-tag" :class="getRoleTypeClass(allRoles[0].type)">
+              {{ allRoles[0].roleName }}
+            </span>
+            <span v-if="allRoles.length > 1" class="role-count">+{{ allRoles.length - 1 }}</span>
           </div>
-<!--          <div slot="content" class="tooltip-content">-->
-<!--            <div class="tooltip-title">权限列表 ({{ roles.length }})</div>-->
-<!--            <div v-for="(role, index) in roles" :key="index" class="tooltip-item">-->
-<!--              <span class="tooltip-dot" :style="{ background: getRoleColor(index) }"></span>-->
-<!--              <span class="tooltip-value">{{ role }}</span>-->
-<!--            </div>-->
-<!--          </div>-->
+          <div slot="content" class="tooltip-content">
+            <div class="tooltip-title">权限列表 ({{ allRoles.length }})</div>
+            <div v-for="(role, index) in allRoles" :key="index" class="tooltip-item">
+              <span class="role-badge" :class="getRoleTypeClass(role.type)">{{ getRoleTypeLabel(role.type) }}</span>
+              <span class="tooltip-value">{{ role.roleName }}</span>
+            </div>
+          </div>
         </el-tooltip>
       </div>
 
@@ -78,7 +81,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import {mapGetters} from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import LangSelect from '@/components/LangSelect'
@@ -103,12 +106,16 @@ export default {
       if (this.accountStatus === 2) return 'status-locked'
       return 'status-disabled'
     },
+    // 获取菜单权限（用于导航栏显示）
+    allRoles() {
+      const roles = this.$store.state.user.roles || []
+      return roles.filter(role => role.type === 1)
+    },
     ...mapGetters([
       'sidebar',
       'avatar',
       'name',
       'userName',
-      'roles',
       'currentDepartment',
       'accountStatus',
       'accountStatusStr'
@@ -125,6 +132,24 @@ export default {
     getRoleColor(index) {
       const colors = ['#0071e3', '#34c759', '#ff9500', '#5856d6', '#ff3b30', '#af52de']
       return colors[index % colors.length]
+    },
+    // 获取权限类型对应的样式类
+    getRoleTypeClass(type) {
+      const typeMap = {
+        1: 'role-type-menu',
+        2: 'role-type-data',
+        3: 'role-type-api'
+      }
+      return typeMap[type] || 'role-type-default'
+    },
+    // 获取权限类型标签
+    getRoleTypeLabel(type) {
+      const typeMap = {
+        1: '菜单',
+        2: '数据',
+        3: 'API'
+      }
+      return typeMap[type] || '未知'
     }
   }
 }
@@ -207,6 +232,13 @@ export default {
         font-size: 12px;
         color: #999;
       }
+    }
+
+    .role-tag {
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 11px;
+      font-weight: 500;
     }
 
     .role-count {
@@ -365,5 +397,35 @@ export default {
     border-radius: 50%;
     flex-shrink: 0;
   }
+}
+
+/* 权限类型样式 */
+.role-type-menu {
+  background: rgba(0, 113, 227, 0.1);
+  color: #0071e3;
+}
+
+.role-type-data {
+  background: rgba(52, 199, 89, 0.1);
+  color: #34c759;
+}
+
+.role-type-api {
+  background: rgba(255, 149, 0, 0.1);
+  color: #ff9500;
+}
+
+.role-type-default {
+  background: rgba(142, 142, 147, 0.1);
+  color: #8e8e93;
+}
+
+.role-badge {
+  display: inline-block;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1.4;
 }
 </style>

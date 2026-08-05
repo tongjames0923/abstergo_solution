@@ -32,7 +32,7 @@ public enum SystemRoleTypeEnum implements BaseEnum<String> {
     /**
      * 角色权限，传统角色概念
      */
-    CHARACTER_ROLE("API权限", 3);
+    API_ROLE("API权限", 3);
 
     /**
      * 权限类型描述

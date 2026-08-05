@@ -110,7 +110,7 @@ public class SimpleSystemRoleServiceImpl
         AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag())).i18n("permission.system.not.modify").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         if (newOne.getFlag() != null) {
             AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode())).i18n("permission.system.not.set.by.api").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
-            AssertUtil.isTrue(!CollUtil.isIn(newOne.getRole(), SystemRoleFlagEnum.ACTIVE.getCode(),
+            AssertUtil.isTrue(!CollUtil.isIn(newOne.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(),
                 SystemRoleFlagEnum.DISABLE.getCode())).i18n("permission.status.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             if (newOne.getFlag().equals(SystemRoleFlagEnum.ACTIVE.getCode()) ||
                 newOne.getFlag().equals(SystemRoleFlagEnum.DISABLE.getCode())) {

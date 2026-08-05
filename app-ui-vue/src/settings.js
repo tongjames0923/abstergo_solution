@@ -6,6 +6,7 @@ module.exports = {
   userEditFormKey: '3',
   roleSearchFormKey: '6',
   roleAddFormKey: '12',
+  roleEditFormKey: '13',
 
   /**
    * @type {boolean} true | false

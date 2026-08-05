@@ -50,13 +50,12 @@
               {{ accountStatusStr }}
             </span>
           </div>
-          <div v-if="roles.length" class="hero__tags">
+          <div v-if="menuRoles.length" class="hero__tags">
             <span
-              v-for="(r, i) in roles"
+              v-for="(r, i) in menuRoles"
               :key="i"
               class="tag"
-              :style="tagStyle(i)"
-            >{{ r }}</span>
+            >{{ r.roleName }}</span>
           </div>
         </div>
       </section>
@@ -68,8 +67,8 @@
             <i class="el-icon-s-check" />
           </div>
           <div class="num__info">
-            <b class="num__v">{{ roles.length }}</b>
-            <span class="num__l">个权限</span>
+            <b class="num__v">{{ menuRoles.length }}</b>
+            <span class="num__l">个菜单权限</span>
           </div>
         </div>
         <div class="num__sep" />
@@ -116,10 +115,9 @@
             </span>
             权限列表
           </h3>
-          <ul v-if="roles.length" class="pane__ul">
-            <li v-for="(r, i) in roles" :key="i" class="pane__li">
-              <span class="pane__dot" :style="{ background: PAL[i % PAL.length] }" />
-              <span class="pane__txt">{{ r }}</span>
+          <ul v-if="menuRoles.length" class="pane__ul">
+            <li v-for="(r, i) in menuRoles" :key="i" class="pane__li">
+              <span class="pane__txt">{{ r.roleName }}</span>
             </li>
           </ul>
           <p v-else class="pane__emp">
@@ -234,6 +232,10 @@ export default {
   },
   computed: {
     ...mapGetters(['name', 'userName', 'avatar', 'roles', 'departments', 'currentDepartment', 'accountStatus', 'accountStatusStr']),
+    // 只获取菜单权限用于显示
+    menuRoles() {
+      return (this.roles || []).filter(role => role.type === 1)
+    },
     displayName() {
       return this.name || this.userName || '用户'
     },
@@ -711,6 +713,9 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   border: 1px solid;
   transition: all 0.3s $ease;
   cursor: default;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
 
   &:hover {
     transform: translateY(-2px);

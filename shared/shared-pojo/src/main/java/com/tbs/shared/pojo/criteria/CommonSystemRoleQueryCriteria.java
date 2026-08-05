@@ -32,8 +32,22 @@ public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<System
 	 * 按角色名精确查询条件
 	 */
 	@QueryMapping(value = "role")
-	@QueryField(contrast = ContrastEnum.EQUAL)
+	@QueryField(contrast = ContrastEnum.LLIKE)
 	private String roleEquals;
+
+	/**
+	 * 按角色名模糊查询条件
+	 */
+	@QueryMapping(value = "name")
+	@QueryField(contrast = ContrastEnum.LLIKE)
+	private String nameLike;
+
+	/**
+	 * 按角色类型精确查询条件
+	 */
+	@QueryMapping(value = "type")
+	@QueryField(contrast = ContrastEnum.IN)
+	private List<Integer> typeEquals;
 
 	/**
 	 * 按标志位IN查询条件

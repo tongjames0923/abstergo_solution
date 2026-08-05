@@ -9,6 +9,7 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemDataScopeEnum;
+import com.tbs.shared.enums.SystemRoleTypeEnum;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICustomDataScopeEntity;
 import com.tbs.shared.pojo.IDeptBelongEntity;
@@ -114,6 +115,8 @@ public class DataPermissionIntercepter implements SqlComposeInterceptor {
                 .add(WhereNode.createInfoNode(ConnectorEnum.AND, WhereInfo.builder().rawSql("1=0").build()));
             return compose;
         }
+        roles = roles.stream().filter(r -> SystemRoleTypeEnum.DATA_ROLE.getCode().equals(r.getType()))
+            .collect(Collectors.toList());
 
         var userDepts =
             SpringUtil.getBean(IDepartmentUserRelationService.class).queryUserDepartments(u.getId()).stream()
