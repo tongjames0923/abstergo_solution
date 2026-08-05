@@ -5,6 +5,7 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.model.PageVO;
@@ -87,7 +88,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public T deleteById(K id) {
-        AssertUtil.isTrue(id == null).message("空Id无法被删除").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(id == null).i18n("crud.delete.id.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var entity = getInstance().queryById(id);
         if (getInstance().isDeleted(entity)) {
             return null;
@@ -117,17 +118,17 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<T> save(T entity) {
-        AssertUtil.isTrue(entity == null).message("空对象无法被保存").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(entity == null).i18n("crud.save.entity.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var r = ValueWrapper.of(entity);
         if (entity.getId() == null) {
             auditFunction(r, CREATE);
             if (r.get().isPresent()) {
                 r.set(getInstance().insertNew(r.get().get()));
             } else {
-                log.warn("实体数据不存在，无法保存");
+                log.warn(I18nUtil.get("crud.save.entity.not.exists"));
             }
             if (r.get().isEmpty()) {
-                log.warn("实体数据不存在，无法保存");
+                log.warn(I18nUtil.get("crud.save.entity.not.exists"));
                 return Collections.EMPTY_LIST;
             } else {
                 return List.of(r.get().orElse(null));
@@ -135,11 +136,11 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
         } else {
             r.set(getInstance().queryById(entity.getId()));
-            AssertUtil.isTrue(r.get().isEmpty()).message("实体数据不存在，无法更新").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+            AssertUtil.isTrue(r.get().isEmpty()).i18n("crud.update.entity.not.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             r.set(getInstance().compareAndUpdateValue(entity, r.get().get()));
             auditFunction(r, UPDATE);
             if (r.get().isEmpty()) {
-                log.warn("实体数据不存在，无法保存");
+                log.warn(I18nUtil.get("crud.save.entity.not.exists"));
                 return Collections.EMPTY_LIST;
             } else {
                 r.set(CollUtil.of(getInstance().updateBy(r.get().get())).findFirstOrNull());
@@ -164,7 +165,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
                     r.set(s.onDelete(r.get().get()));
                 }
             } else {
-                log.warn("实体数据不存在，无法处理审计");
+                log.warn(I18nUtil.get("crud.audit.entity.not.exists"));
             }
         });
     }

@@ -6,7 +6,7 @@ common:
     meta:
       routeGroup: default
       title: view.menu.common
-      icon: el-icon-s-help
+      icon: el-icon-user
       roles:
         - "普通用户"
     children:
@@ -28,7 +28,7 @@ admin:
     meta:
       routeGroup: default
       title: view.menu.admin.title
-      icon: el-icon-s-help
+      icon: el-icon-setting
       roles:
         - "超级管理员"
     children:
@@ -38,7 +38,7 @@ admin:
         meta:
           routeGroup: default
           title: view.menu.admin.user
-          icon: table
+          icon: el-icon-user
           roles:
             - "超级管理员"
       - path: role
@@ -47,7 +47,7 @@ admin:
         meta:
           routeGroup: default
           title: view.menu.admin.role
-          icon: eye
+          icon: el-icon-lock
           roles:
             - "超级管理员"
       - path: company
@@ -56,8 +56,18 @@ admin:
         meta:
           routeGroup: default
           title: view.menu.admin.company
-          icon: el-icon-s-custom
+          icon: el-icon-office-building
           roles:
+            - "超级管理员"
+      - path: role-group
+        name: view.menu.admin.role.group
+        component: "/admin/role_group/index.vue"
+        meta:
+          routeGroup: default
+          title: view.menu.admin.role.group
+          icon: el-icon-s-management
+          roles:
+            - "开发员"
             - "超级管理员"
 develop:
   - path: /develop
@@ -67,27 +77,18 @@ develop:
     meta:
       routeGroup: default
       title: view.menu.develop.title
-      icon: el-icon-s-help
+      icon: el-icon-s-tools
       roles:
         - "开发员"
         - "超级管理员"
     children:
-      - path: cache
-        name: view.menu.develop.cache
-        component: "/cache/index.vue"
-        meta:
-          routeGroup: default
-          title: view.menu.develop.cache
-          icon: el-icon-s-data
-          roles:
-              - "开发员"
       - path: form-manager
         name: view.menu.develop.form.manager
         component: "/form/FormManager.vue"
         meta:
           routeGroup: default
           title: view.menu.develop.form.manager
-          icon: el-icon-s-order
+          icon: el-icon-document
           roles:
             - "开发员"
       - path: form
@@ -96,19 +97,9 @@ develop:
         meta:
           routeGroup: default
           title: view.menu.develop.form.create
-          icon: el-icon-s-custom
+          icon: el-icon-edit
           roles:
             - "开发员"
-      - path: systemlog
-        name: view.menu.develop.systemlog
-        component: "/admin/systemlog/index.vue"
-        meta:
-          routeGroup: default
-          title: view.menu.develop.systemlog
-          icon: el-icon-s-data
-          roles:
-            - "开发员"
-            - "超级管理员"
       - path: dic
         name: view.menu.develop.dic
         component: "/admin/dic/index.vue"
@@ -129,6 +120,25 @@ develop:
           roles:
             - "开发员"
             - "超级管理员"
+      - path: systemlog
+        name: view.menu.develop.systemlog
+        component: "/admin/systemlog/index.vue"
+        meta:
+          routeGroup: default
+          title: view.menu.develop.systemlog
+          icon: el-icon-data-line
+          roles:
+            - "开发员"
+            - "超级管理员"
+      - path: cache
+        name: view.menu.develop.cache
+        component: "/cache/index.vue"
+        meta:
+          routeGroup: default
+          title: view.menu.develop.cache
+          icon: el-icon-s-data
+          roles:
+            - "开发员"
 
 #  fallback:
 #    - path: "*"

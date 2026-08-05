@@ -1,7 +1,6 @@
 package com.tbs.shared.pojo.entity;
 
 import com.tbs.shared.pojo.ICommonCreateAuditable;
-import com.tbs.shared.pojo.ICommonDeleteAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
@@ -34,8 +33,7 @@ import java.util.Date;
 @Table(name = "sys_role_group_relation")
 @AllArgsConstructor
 @NoArgsConstructor
-public class SystemRoleGroupRelationEntity
-    implements IIdentifiable<Long>, ICommonDeleteAuditable<Long>, ICommonCreateAuditable<Long>,
+public class SystemRoleGroupRelationEntity implements IIdentifiable<Long>, ICommonCreateAuditable<Long>,
     ICommonUpdateAuditable<Long>, Serializable {
 
     private static final long serialVersionUID = 1L;
@@ -72,12 +70,6 @@ public class SystemRoleGroupRelationEntity
     private Date updateTime;
 
     /**
-     * 删除时间（逻辑删除）
-     */
-    @Column(name = "delete_time")
-    private Date deleteTime;
-
-    /**
      * 创建者ID
      */
     @Column(name = "create_by")
@@ -89,9 +81,4 @@ public class SystemRoleGroupRelationEntity
     @Column(name = "update_by")
     private Long updateBy;
 
-    /**
-     * 删除者ID
-     */
-    @Column(name = "delete_by")
-    private Long deleteBy;
 }

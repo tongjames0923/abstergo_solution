@@ -12,6 +12,7 @@ import javax.persistence.*;
 import java.util.Date;
 
 /**
+ * 权限表
  * @author tongj
  */
 @Entity
