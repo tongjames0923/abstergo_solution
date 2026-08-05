@@ -10,10 +10,10 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.constant.RoleConstants;
+import com.tbs.common.util.function.EnumUtil;
+import com.tbs.shared.enums.SystemDataScopeEnum;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.enums.SystemRoleTypeEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
@@ -76,8 +76,8 @@ public class SimpleSystemRoleServiceImpl
         AssertUtil.isTrue(entity.getType() == null).i18n("permission.type.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .throwIt();
 
-        AssertUtil.isTrue(!CollUtil.isIn(entity.getType(), SystemRoleTypeEnum.CHARACTER_ROLE.getCode(),
-                SystemRoleTypeEnum.DATA_ROLE.getCode(), SystemRoleTypeEnum.MENU_ROLE.getCode())).i18n("permission.type.invalid")
+        AssertUtil.isTrue(!EnumUtil.isValidCode(SystemRoleTypeEnum.class, entity.getType()))
+            .i18n("permission.type.invalid")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(StrUtil.isEmpty(entity.getRole())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .i18n("permission.code.empty").throwIt();
@@ -86,8 +86,6 @@ public class SimpleSystemRoleServiceImpl
 
         var old = ((ISystemRoleService)getInstance()).queryByRole(entity.getRole());
         AssertUtil.isTrue(old != null).i18n("permission.code.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-
-
         entity.setFlag(SystemRoleFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
         return entity;
@@ -109,12 +107,11 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     protected SystemRoleEntity compareAndUpdateValue(SystemRoleEntity newOne, SystemRoleEntity oldOne) {
-        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag()), I18nUtil.get("permission.system.not.modify"));
+        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag())).i18n("permission.system.not.modify").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         if (newOne.getFlag() != null) {
-            AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode()),
-                I18nUtil.get("permission.system.not.set.by.api"));
+            AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode())).i18n("permission.system.not.set.by.api").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
             AssertUtil.isTrue(!CollUtil.isIn(newOne.getRole(), SystemRoleFlagEnum.ACTIVE.getCode(),
-                SystemRoleFlagEnum.DISABLE.getCode()), I18nUtil.get("permission.status.invalid"));
+                SystemRoleFlagEnum.DISABLE.getCode())).i18n("permission.status.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             if (newOne.getFlag().equals(SystemRoleFlagEnum.ACTIVE.getCode()) ||
                 newOne.getFlag().equals(SystemRoleFlagEnum.DISABLE.getCode())) {
                 oldOne.setFlag(newOne.getFlag());
@@ -131,15 +128,25 @@ public class SimpleSystemRoleServiceImpl
             AssertUtil.isTrue(old != null).i18n("permission.code.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
                 .throwIt();
         }
+        if (newOne.getType() != null) {
+            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemRoleTypeEnum.class, newOne.getType()))
+                .i18n("permission.type.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+            oldOne.setType(newOne.getType());
+        }
+        if (newOne.getDataScope() != null) {
+            AssertUtil.isTrue(!EnumUtil.isValidCode(SystemDataScopeEnum.class, newOne.getDataScope()))
+                .i18n("permission.data.scope.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+            oldOne.setDataScope(newOne.getDataScope());
+        }
         return oldOne;
     }
 
     @Override
     protected void deletePending(SystemRoleEntity entity) throws FormattedRuntimeException {
         AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(entity.getFlag()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("permission.system.not.delete")).throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.system.not.delete").throwIt();
         AssertUtil.isTrue(userRoleRelationService.isRoleInUsed(entity.getId()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message(I18nUtil.get("permission.in.use.not.delete")).throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.in.use.not.delete").throwIt();
     }
 
     @Caching(evict = {@CacheEvict(cacheNames = "system_role", key = "#id"),
