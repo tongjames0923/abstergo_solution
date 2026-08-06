@@ -29,8 +29,8 @@ admin:
       routeGroup: default
       title: view.menu.admin.title
       icon: el-icon-setting
-#      roles:
-#        - "超级管理员"
+      roles:
+        - "MENU.ADMIN"
     children:
       - path: user
         name: view.menu.admin.user
@@ -78,6 +78,8 @@ develop:
       routeGroup: default
       title: view.menu.develop.title
       icon: el-icon-s-tools
+      roles:
+        - "MENU.DEV"
 #      roles:
 #        - "开发员"
 #        - "超级管理员"
@@ -89,8 +91,8 @@ develop:
           routeGroup: default
           title: view.menu.develop.form.manager
           icon: el-icon-document
-          roles:
-            - "开发员"
+#          roles:
+#            - "开发员"
       - path: form
         name: view.menu.develop.form.create
         component: "/form/FormCreator.vue"

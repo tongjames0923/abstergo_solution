@@ -193,6 +193,7 @@ public class ViewController extends BaseController {
                 }
             } else {
                 // 兼容旧模式：直接使用 authority 字符串
+                log.warn("使用旧模式权限：{}", authority.getAuthority());
                 result.add(authority.getAuthority());
             }
         }
