@@ -1,10 +1,11 @@
 package com.tbs.app.controller.privates;
 
-
+import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.shared.enums.SystemRoleTypeEnum;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.model.ViewRouteMetaModel;
@@ -18,6 +19,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
@@ -35,6 +37,7 @@ import java.util.stream.Collectors;
  * @author abstergo
  * @since 1.0.0
  */
+@Slf4j
 @RestController
 @RequestMapping("/private/view")
 @Tag(name = "视图控制器", description = "视图控制器")
@@ -154,18 +157,46 @@ public class ViewController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult getViewRoutes() {
         var result = new LinkedList<ViewRouteModel>();
-        var authorities = AuthUtil.getInstance().getCurrentUser().getAuthorities();
-        if (authorities == null) {
-            authorities = new LinkedList<>();
-        }
-        var roles = authorities.stream().map(GrantedAuthority::getAuthority)
-            .collect(Collectors.toSet());
+        // 适配新权限架构：从权限组中提取菜单权限编码用于路由过滤
+        var menuPermissionCodes = extractMenuPermissionCodes();
+        log.debug("当前用户菜单权限编码: {}", menuPermissionCodes);
         for (String group : viewRouteService.getAllViewRouteGroups()) {
             var viewRoutes = viewRouteService.getViewRoutesByGroup(group);
-            var filtered = removeWithRoleAndTranslate(roles, viewRoutes);
+            var filtered = removeWithRoleAndTranslate(menuPermissionCodes, viewRoutes);
             result.addAll(filtered);
         }
         return successResult(result);
+    }
+
+    /**
+     * 从当前用户的权限组中提取菜单权限（type=1）的编码集合
+     * <p>
+     * 新权限架构下，用户关联的是权限组，每个权限组包含多个权限项。 菜单路由过滤应仅使用 type=MENU_ROLE 的权限项编码进行匹配。
+     * </p>
+     *
+     * @return 菜单权限编码集合
+     */
+    private Set<String> extractMenuPermissionCodes() {
+        var authorities = AuthUtil.getInstance().getCurrentUser().getAuthorities();
+        if (CollUtil.isEmpty(authorities)) {
+            return Set.of();
+        }
+        var result = new HashSet<String>();
+        for (GrantedAuthority authority : authorities) {
+            if (authority instanceof DefaultGrantedAuthority) {
+                var grantedAuthority = (DefaultGrantedAuthority)authority;
+                var roleGroup = grantedAuthority.getRoleGroup();
+                if (roleGroup != null && CollUtil.isNotEmpty(roleGroup.getPermissions())) {
+                    roleGroup.getPermissions().stream()
+                        .filter(p -> Objects.equals(p.getType(), SystemRoleTypeEnum.MENU_ROLE.getCode()))
+                        .forEach(p -> result.add(p.getRole()));
+                }
+            } else {
+                // 兼容旧模式：直接使用 authority 字符串
+                result.add(authority.getAuthority());
+            }
+        }
+        return result;
     }
 
 
@@ -187,11 +218,11 @@ public class ViewController extends BaseController {
      * @return 过滤后的视图路由列表
      */
     List<ViewRouteModel> removeWithRoleAndTranslate(Set<String> roles, List<ViewRouteModel> viewRoutes) {
-        if (CollUtil.isEmpty(roles)) {
-            return List.of();
-        }
         if (CollUtil.isEmpty(viewRoutes)) {
             return List.of();
+        }
+        if (roles == null) {
+            roles = Set.of();
         }
         List<ViewRouteModel> result = new ArrayList<>();
         for (ViewRouteModel viewRoute : viewRoutes) {

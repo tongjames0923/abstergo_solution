@@ -102,3 +102,77 @@ export function removeRoleFromGroup(groupId, roleId) {
     method: 'delete'
   })
 }
+
+/**
+ * 分配用户到角色组
+ * @param {number} groupId - 角色组ID
+ * @param {number} userId - 用户ID
+ * @returns {Promise} 操作结果
+ */
+export function appendUserToGroup(groupId, userId) {
+  return request({
+    url: `/private/role/group/users/${groupId}/${userId}`,
+    method: 'post'
+  })
+}
+
+/**
+ * 移除用户从角色组
+ * @param {number} groupId - 角色组ID
+ * @param {number} userId - 用户ID
+ * @returns {Promise} 操作结果
+ */
+export function removeUserFromGroup(groupId, userId) {
+  return request({
+    url: `/private/role/group/users/${groupId}/${userId}`,
+    method: 'delete'
+  })
+}
+
+/**
+ * 获取角色组下的用户列表
+ * @param {number} groupId - 角色组ID
+ * @returns {Promise} 用户列表
+ */
+export function getUserListByGroupId(groupId) {
+  return request({
+    url: `/private/role/group/users/${groupId}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 获取用户的角色组列表
+ * @param {number} userId - 用户ID
+ * @returns {Promise} 用户角色组列表
+ */
+export function getUserRoleGroupVOList(userId) {
+  return request({
+    url: `/private/role/group/user/${userId}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 检查权限是否存在于任意角色组
+ * @param {number} roleId - 权限ID
+ * @returns {Promise} 检查结果
+ */
+export function isRoleInAnyGroup(roleId) {
+  return request({
+    url: `/private/role/group/check/role/${roleId}`,
+    method: 'get'
+  })
+}
+
+/**
+ * 检查用户是否在任意角色组
+ * @param {number} userId - 用户ID
+ * @returns {Promise} 检查结果
+ */
+export function isUserInAnyGroup(userId) {
+  return request({
+    url: `/private/role/group/check/user/${userId}`,
+    method: 'get'
+  })
+}

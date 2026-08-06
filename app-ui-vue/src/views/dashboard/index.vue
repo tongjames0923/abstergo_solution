@@ -50,12 +50,12 @@
               {{ accountStatusStr }}
             </span>
           </div>
-          <div v-if="menuRoles.length" class="hero__tags">
+          <div v-if="roleGroups.length" class="hero__tags">
             <span
-              v-for="(r, i) in menuRoles"
+              v-for="(vg, i) in roleGroups"
               :key="i"
               class="tag"
-            >{{ r.roleName }}</span>
+            >{{ vg.group.roleGroupName }}</span>
           </div>
         </div>
       </section>
@@ -67,8 +67,18 @@
             <i class="el-icon-s-check" />
           </div>
           <div class="num__info">
-            <b class="num__v">{{ menuRoles.length }}</b>
-            <span class="num__l">个菜单权限</span>
+            <b class="num__v">{{ roleGroups.length }}</b>
+            <span class="num__l">个权限组</span>
+          </div>
+        </div>
+        <div class="num__sep" />
+        <div class="num">
+          <div class="num__icon num__icon--green">
+            <i class="el-icon-key" />
+          </div>
+          <div class="num__info">
+            <b class="num__v">{{ roles.length }}</b>
+            <span class="num__l">个权限项</span>
           </div>
         </div>
         <div class="num__sep" />
@@ -113,11 +123,15 @@
             <span class="pane__ic pane__ic--amber">
               <i class="el-icon-s-check" />
             </span>
-            权限列表
+            权限组
           </h3>
-          <ul v-if="menuRoles.length" class="pane__ul">
-            <li v-for="(r, i) in menuRoles" :key="i" class="pane__li">
-              <span class="pane__txt">{{ r.roleName }}</span>
+          <ul v-if="roleGroups.length" class="pane__ul">
+            <li v-for="(vg, i) in roleGroups" :key="i" class="pane__li">
+              <span class="pane__dot" :style="{ background: PAL[i % PAL.length] }" />
+              <div class="pane__dept">
+                <span class="pane__txt">{{ vg.group.roleGroupName }}</span>
+                <small>{{ vg.permissions.length }} 个权限</small>
+              </div>
             </li>
           </ul>
           <p v-else class="pane__emp">
@@ -192,8 +206,8 @@
             <li class="pane__li">
               <span class="pane__dot" style="background:#0071e3" />
               <div class="pane__kv">
-                <small>权限数</small>
-                <span>{{ roles.length }} 个</span>
+                <small>权限组</small>
+                <span>{{ roleGroups.length }} 个</span>
               </div>
             </li>
             <li class="pane__li">
@@ -231,11 +245,7 @@ export default {
     }
   },
   computed: {
-    ...mapGetters(['name', 'userName', 'avatar', 'roles', 'departments', 'currentDepartment', 'accountStatus', 'accountStatusStr']),
-    // 只获取菜单权限用于显示
-    menuRoles() {
-      return (this.roles || []).filter(role => role.type === 1)
-    },
+    ...mapGetters(['name', 'userName', 'avatar', 'roles', 'roleGroups', 'departments', 'currentDepartment', 'accountStatus', 'accountStatusStr']),
     displayName() {
       return this.name || this.userName || '用户'
     },

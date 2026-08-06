@@ -7,6 +7,7 @@ const getters = {
   name: state => state.user.name,
   userName: state => state.user.userName,
   roles: state => state.user.roles,
+  roleGroups: state => state.user.roleGroups,
   departments: state => state.user.departments,
   currentDepartment: state => state.user.currentDepartment,
   accountStatus: state => state.user.accountStatus,

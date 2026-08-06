@@ -13,6 +13,7 @@ const getDefaultState = () => {
     userName: '',
     avatar: '',
     roles: [],
+    roleGroups: [],
     departments: [],
     currentDepartment: null,
     routes: [],
@@ -41,6 +42,9 @@ const mutations = {
   },
   SET_ROLES: (state, roles) => {
     state.roles = roles
+  },
+  SET_ROLE_GROUPS: (state, roleGroups) => {
+    state.roleGroups = roleGroups
   },
   SET_DEPARTMENTS: (state, departments) => {
     state.departments = departments
@@ -87,10 +91,20 @@ const actions = {
 
       const { nickName, userName, avatar, avaliableRoles, avaliableDepartments, accountStatus, accountStatusStr } = data
 
+      // 后端返回 List<SystemRoleGroupVO>，需拆分为权限组列表和展平的权限项列表
+      const roleGroups = avaliableRoles || []
+      const flatPermissions = []
+      roleGroups.forEach(vo => {
+        if (vo.permissions && Array.isArray(vo.permissions)) {
+          vo.permissions.forEach(perm => flatPermissions.push(perm))
+        }
+      })
+
       commit('SET_NAME', nickName)
       commit('SET_USER_NAME', userName)
       commit('SET_AVATAR', avatar)
-      commit('SET_ROLES', avaliableRoles)
+      commit('SET_ROLES', flatPermissions)
+      commit('SET_ROLE_GROUPS', roleGroups)
       commit('SET_DEPARTMENTS', avaliableDepartments || [])
       commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
       commit('SET_ACCOUNT_STATUS', accountStatus)
@@ -109,8 +123,17 @@ const actions = {
       const response = await getInfo()
       const { data } = response
       if (data) {
+        const roleGroups = data.avaliableRoles || []
+        const flatPermissions = []
+        roleGroups.forEach(vo => {
+          if (vo.permissions && Array.isArray(vo.permissions)) {
+            vo.permissions.forEach(perm => flatPermissions.push(perm))
+          }
+        })
         commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
         commit('SET_DEPARTMENTS', data.avaliableDepartments || [])
+        commit('SET_ROLES', flatPermissions)
+        commit('SET_ROLE_GROUPS', roleGroups)
       }
     } catch (error) {
       throw error

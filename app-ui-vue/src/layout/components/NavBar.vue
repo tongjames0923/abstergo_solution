@@ -29,19 +29,19 @@
           </div>
         </el-tooltip>
 
-        <el-tooltip v-if="allRoles.length > 0" effect="light" placement="bottom" popper-class="user-tooltip">
+        <el-tooltip v-if="allRoleGroups.length > 0" effect="light" placement="bottom" popper-class="user-tooltip">
           <div class="user-role">
             <i class="el-icon-s-check" />
-            <span class="role-tag" :class="getRoleTypeClass(allRoles[0].type)">
-              {{ allRoles[0].roleName }}
+            <span class="role-tag">
+              {{ allRoleGroups[0].group.roleGroupName }}
             </span>
-            <span v-if="allRoles.length > 1" class="role-count">+{{ allRoles.length - 1 }}</span>
+            <span v-if="allRoleGroups.length > 1" class="role-count">+{{ allRoleGroups.length - 1 }}</span>
           </div>
           <div slot="content" class="tooltip-content">
-            <div class="tooltip-title">权限列表 ({{ allRoles.length }})</div>
-            <div v-for="(role, index) in allRoles" :key="index" class="tooltip-item">
-              <span class="role-badge" :class="getRoleTypeClass(role.type)">{{ getRoleTypeLabel(role.type) }}</span>
-              <span class="tooltip-value">{{ role.roleName }}</span>
+            <div class="tooltip-title">权限组 ({{ allRoleGroups.length }})</div>
+            <div v-for="(vg, index) in allRoleGroups" :key="index" class="tooltip-item">
+              <span class="tooltip-value">{{ vg.group.roleGroupName }}</span>
+              <span class="tooltip-label" style="min-width:auto;color:#999">({{ vg.permissions.length }} 个权限)</span>
             </div>
           </div>
         </el-tooltip>
@@ -106,10 +106,9 @@ export default {
       if (this.accountStatus === 2) return 'status-locked'
       return 'status-disabled'
     },
-    // 获取菜单权限（用于导航栏显示）
-    allRoles() {
-      const roles = this.$store.state.user.roles || []
-      return roles.filter(role => role.type === 1)
+    // 获取权限组列表（用于导航栏显示）
+    allRoleGroups() {
+      return this.$store.state.user.roleGroups || []
     },
     ...mapGetters([
       'sidebar',

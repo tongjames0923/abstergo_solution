@@ -18,6 +18,9 @@
         <el-dropdown-item command="manageRoles" @click.native="handleManageRoles(row)">
           管理权限
         </el-dropdown-item>
+        <el-dropdown-item command="manageUsers" @click.native="handleManageUsers(row)">
+          管理用户
+        </el-dropdown-item>
       </template>
     </quick-use-management-view>
 
@@ -37,12 +40,30 @@
         @close="handleRoleManagementDialogClose"
       />
     </el-dialog>
+
+    <!-- 用户管理弹窗 -->
+    <el-dialog
+      title="用户管理"
+      :visible.sync="userManagementDialogVisible"
+      width="90%"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+      class="user-dialog"
+      @close="handleUserManagementDialogClose"
+    >
+      <RoleGroupUserAdminView
+        v-if="userManagementDialogVisible"
+        :group-id="currentGroupId"
+        @close="handleUserManagementDialogClose"
+      />
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import RoleGroupRoleAdminView from '@/components/RoleGroupAdminView/RoleGroupRoleAdminView.vue'
+import RoleGroupUserAdminView from '@/components/RoleGroupAdminView/RoleGroupUserAdminView.vue'
 import { queryRoleGroups, saveRoleGroup } from '@/api/role_group'
 import { rangeQueryTransform } from '@/utils/query-help'
 import { roleGroupAddFormKey, roleGroupEditFormKey, roleGroupSearchFormKey } from '@/settings'
@@ -51,11 +72,13 @@ export default {
   name: 'RoleGroupAdminView',
   components: {
     QuickUseManagementView,
-    RoleGroupRoleAdminView
+    RoleGroupRoleAdminView,
+    RoleGroupUserAdminView
   },
   data() {
     return {
       roleManagementDialogVisible: false,
+      userManagementDialogVisible: false,
       currentGroupId: null,
       columns: [
         { prop: 'id', label: 'ID', width: 80 },
@@ -118,6 +141,22 @@ export default {
     handleRoleManagementDialogClose() {
       this.currentGroupId = null
       this.roleManagementDialogVisible = false
+    },
+
+    /**
+     * 处理用户管理按钮点击事件
+     */
+    handleManageUsers(row) {
+      this.currentGroupId = row.id
+      this.userManagementDialogVisible = true
+    },
+
+    /**
+     * 处理用户管理弹窗关闭事件
+     */
+    handleUserManagementDialogClose() {
+      this.currentGroupId = null
+      this.userManagementDialogVisible = false
     }
   }
 }
@@ -129,7 +168,7 @@ export default {
   background-color: #f5f7fa;
   min-height: calc(100vh - 84px);
 
-  .role-dialog {
+  .role-dialog, .user-dialog {
     ::v-deep .el-dialog__header {
       background-color: #f8f9fa;
       border-bottom: 1px solid #ebeef5;
