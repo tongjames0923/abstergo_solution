@@ -49,7 +49,7 @@
           <div v-else class="user-list">
             <div
               v-for="user in assignedUsers"
-              :key="user.id"
+              :key="user.userId"
               class="user-card assigned"
               @click="handleRemoveUser(user)"
             >
@@ -295,7 +295,7 @@ export default {
             confirmButtonClass: 'el-button--danger'
           }
         )
-        await removeUserFromGroup(this.groupId, user.id)
+        await removeUserFromGroup(this.groupId, user.userId)
         this.$message.success('已移除')
         await this.fetchAssignedUsers()
         if (this.showAddPanel) {

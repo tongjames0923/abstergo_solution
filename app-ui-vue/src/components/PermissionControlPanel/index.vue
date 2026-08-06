@@ -149,6 +149,10 @@
               <i class="fas fa-key" />
               <span>{{ permission.role }}</span>
             </div>
+            <div v-if="permission.type === 2 && permission.dataScope" class="permission-data-scope">
+              <i class="fas fa-database" />
+              <span>{{ getDataScopeLabel(permission.dataScope) }}</span>
+            </div>
             <p class="permission-description">
               {{ permission.description || $t('role.noDescription') }}
             </p>
@@ -254,6 +258,7 @@
             v-model="formData.type"
             :placeholder="$t('role.permissionType')"
             :disabled="isSystemPermission"
+            @change="handlePermissionTypeChange"
           >
             <el-option
               :label="$t('role.menuPermission')"
@@ -276,6 +281,33 @@
             :rows="3"
             :placeholder="$t('role.description')"
           />
+        </el-form-item>
+        <el-form-item
+          v-if="formData.type === 2"
+          :label="$t('role.dataScope')"
+          prop="dataScope"
+        >
+          <el-select
+            v-model="formData.dataScope"
+            :placeholder="$t('role.dataScope')"
+          >
+            <el-option
+              :label="$t('role.dataScopeAll')"
+              :value="1"
+            />
+            <el-option
+              :label="$t('role.dataScopeDept')"
+              :value="2"
+            />
+            <el-option
+              :label="$t('role.dataScopeSelf')"
+              :value="3"
+            />
+            <el-option
+              :label="$t('role.dataScopeCustom')"
+              :value="4"
+            />
+          </el-select>
         </el-form-item>
         <el-form-item :label="$t('role.status')" prop="flag">
           <el-select
@@ -328,7 +360,8 @@ export default {
         name: '',
         type: 1,
         description: '',
-        flag: 1
+        flag: 1,
+        dataScope: 1
       },
       formRules: {
         role: [
@@ -399,6 +432,15 @@ export default {
     handleTypeChange() {
       // Type filter is handled by computed property
     },
+    handlePermissionTypeChange(type) {
+      // When type changes from data permission to other types, reset dataScope
+      if (type !== 2) {
+        this.formData.dataScope = null
+      } else {
+        // Set default dataScope when switching to data permission
+        this.formData.dataScope = 1
+      }
+    },
     handleSearch() {
       // Search is handled by computed property
     },
@@ -411,7 +453,8 @@ export default {
         name: '',
         type: 1,
         description: '',
-        flag: 1
+        flag: 1,
+        dataScope: 1
       }
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -427,7 +470,8 @@ export default {
         name: permission.name,
         type: permission.type,
         description: permission.description,
-        flag: permission.flag
+        flag: permission.flag,
+        dataScope: permission.dataScope || 1
       }
       this.dialogVisible = true
       this.$nextTick(() => {
@@ -560,6 +604,15 @@ export default {
         'permission-card--inactive': permission.flag === 0,
         'permission-card--system': permission.flag === 2
       }
+    },
+    getDataScopeLabel(dataScope) {
+      const scopeMap = {
+        1: this.$t('role.dataScopeAll'),
+        2: this.$t('role.dataScopeDept'),
+        3: this.$t('role.dataScopeSelf'),
+        4: this.$t('role.dataScopeCustom')
+      }
+      return scopeMap[dataScope] || this.$t('role.unknownType')
     },
     formatDate(dateString) {
       if (!dateString) return ''
@@ -1120,6 +1173,23 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   i {
     font-size: 12px;
     opacity: 0.7;
+  }
+}
+
+.permission-data-scope {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: $green;
+  background: $green-bg;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 8px;
+  border: 1px solid $green-bd;
+
+  i {
+    font-size: 11px;
   }
 }
 

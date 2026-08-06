@@ -179,6 +179,10 @@ export default {
     createTime: '创建时间',
     updateTime: '更新时间',
     dataScope: '数据范围',
+    dataScopeAll: '全部数据',
+    dataScopeDept: '部门数据',
+    dataScopeSelf: '仅本人数据',
+    dataScopeCustom: '自定义权限',
     noDescription: '暂无描述',
     deleteConfirmText: '确认要删除权限"{name}"吗？'
   },

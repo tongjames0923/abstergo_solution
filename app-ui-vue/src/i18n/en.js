@@ -179,6 +179,10 @@ export default {
     createTime: 'Create Time',
     updateTime: 'Update Time',
     dataScope: 'Data Scope',
+    dataScopeAll: 'All Data',
+    dataScopeDept: 'Department Data',
+    dataScopeSelf: 'Self Data Only',
+    dataScopeCustom: 'Custom Scope',
     noDescription: 'No description',
     deleteConfirmText: 'Are you sure to delete permission "{name}"?'
   },
