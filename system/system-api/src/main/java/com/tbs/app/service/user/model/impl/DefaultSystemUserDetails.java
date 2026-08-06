@@ -22,11 +22,11 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
     private boolean accountNonLocked = true;
     private boolean credentialsNonExpired = true;
     private boolean enabled = true;
-    private List<? extends GrantedAuthority> authorities;
+    private List<DefaultGrantedAuthority> authorities;
 
     public DefaultSystemUserDetails(List<DepartmentInfoVO> departments, DepartmentInfoVO currentDepartment,
         String username, String password, boolean accountNonExpired, boolean accountNonLocked,
-        boolean credentialsNonExpired, boolean enabled, List<? extends GrantedAuthority> authorities) {
+        boolean credentialsNonExpired, boolean enabled, List<DefaultGrantedAuthority> authorities) {
         this.departments = departments;
         this.currentDepartment = currentDepartment;
         this.username = username;
@@ -107,7 +107,7 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
         private boolean accountNonLocked;
         private boolean credentialsNonExpired;
         private boolean enabled;
-        private List<? extends GrantedAuthority> authorities;
+        private List<DefaultGrantedAuthority> authorities;
 
         public Builder() {
         }
@@ -122,7 +122,7 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
             return this;
         }
 
-        public Builder authorities(List<? extends GrantedAuthority> authorities) {
+        public Builder authorities(List<DefaultGrantedAuthority> authorities) {
             this.authorities = authorities;
             return this;
         }

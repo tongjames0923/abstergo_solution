@@ -1,5 +1,6 @@
 package com.tbs.app.service.user.serial;
 
+import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.cache.serialize.annotation.CacheTransform;
 import lombok.AllArgsConstructor;
@@ -26,5 +27,5 @@ public class DefaultSystemUserDetailsDto implements Serializable {
     private boolean accountNonLocked = true;
     private boolean credentialsNonExpired = true;
     private boolean enabled = true;
-    private List<? extends String> authorities;
+    private List<DefaultGrantedAuthority> authorities;
 }
