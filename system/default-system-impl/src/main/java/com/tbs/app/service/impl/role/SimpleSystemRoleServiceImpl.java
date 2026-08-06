@@ -2,8 +2,8 @@ package com.tbs.app.service.impl.role;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
+import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
-import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
@@ -12,6 +12,7 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemDataScopeEnum;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
@@ -24,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.List;
@@ -42,10 +42,6 @@ public class SimpleSystemRoleServiceImpl
 
     @Resource
     SystemRoleMapper systemRoleMapper;
-
-    @Resource
-    @Lazy
-    private IUserRoleRelationService userRoleRelationService;
 
     @Resource
     private AppSettingProperty property;
@@ -145,7 +141,7 @@ public class SimpleSystemRoleServiceImpl
     protected void deletePending(SystemRoleEntity entity) throws FormattedRuntimeException {
         AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(entity.getFlag()))
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.system.not.delete").throwIt();
-        AssertUtil.isTrue(userRoleRelationService.isRoleInUsed(entity.getId()))
+        AssertUtil.isTrue(SpringUtil.getBean(ISystemRoleGroupService.class).isRoleInGroupAnyGroup(entity.getId()))
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.in.use.not.delete").throwIt();
     }
 

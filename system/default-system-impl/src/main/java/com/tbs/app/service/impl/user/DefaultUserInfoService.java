@@ -1,14 +1,13 @@
 package com.tbs.app.service.impl.user;
 
 import com.tbs.app.service.department.IDepartmentUserRelationService;
-import com.tbs.app.service.role.IUserRoleRelationService;
+import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.service.user.model.impl.DefaultSystemUserDetails;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.shared.enums.SystemRoleTypeEnum;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.web.exception.SimpleAuthException;
@@ -30,7 +29,7 @@ public class DefaultUserInfoService implements IUserInfoService {
     @Resource
     private ISystemUserService systemUserService;
     @Resource
-    private IUserRoleRelationService userRoleRelationService;
+    private ISystemRoleGroupService userRoleRelationService;
     @Resource
     private IDepartmentUserRelationService companyUserRelationService;
     @Resource
@@ -54,12 +53,10 @@ public class DefaultUserInfoService implements IUserInfoService {
             builder.accountNonLocked(true).enabled(false);
         }
 
-        var roles = userRoleRelationService.queryUserRoles(user.getId()).stream()
-            .filter(role -> !Objects.equals(role.getType(), SystemRoleTypeEnum.API_ROLE.getCode()))
-            .collect(Collectors.toList());
+        var roles = userRoleRelationService.getUserRoleGroupVOList(user.getId());
         if (CollUtil.isNotEmpty(roles)) {
             builder.authorities(roles.stream().map(role -> {
-                return new DefaultGrantedAuthority(role.getRole());
+                return new DefaultGrantedAuthority(role);
             }).collect(Collectors.toList()));
         }
         var departments = departmentUserRelationService.queryUserDepartments(user.getId());

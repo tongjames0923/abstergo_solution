@@ -7,8 +7,8 @@ common:
       routeGroup: default
       title: view.menu.common
       icon: el-icon-user
-      roles:
-        - "普通用户"
+#      roles:
+#        - "普通用户"
     children:
       - path: user
         name: view.menu.common.user
@@ -17,8 +17,8 @@ common:
           routeGroup: default
           title: view.menu.common.user
           icon: el-icon-user
-          roles:
-            - "普通用户"
+#          roles:
+#            - "普通用户"
 
 admin:
   - path: /admin
@@ -29,8 +29,8 @@ admin:
       routeGroup: default
       title: view.menu.admin.title
       icon: el-icon-setting
-      roles:
-        - "超级管理员"
+#      roles:
+#        - "超级管理员"
     children:
       - path: user
         name: view.menu.admin.user
@@ -39,8 +39,8 @@ admin:
           routeGroup: default
           title: view.menu.admin.user
           icon: el-icon-user
-          roles:
-            - "超级管理员"
+#          roles:
+#            - "超级管理员"
       - path: role
         name: view.menu.admin.role
         component: "/admin/role/index.vue"
@@ -48,8 +48,8 @@ admin:
           routeGroup: default
           title: view.menu.admin.role
           icon: el-icon-lock
-          roles:
-            - "超级管理员"
+#          roles:
+#            - "超级管理员"
       - path: company
         name: view.menu.admin.company
         component: "/admin/company/index.vue"
@@ -57,8 +57,8 @@ admin:
           routeGroup: default
           title: view.menu.admin.company
           icon: el-icon-office-building
-          roles:
-            - "超级管理员"
+#          roles:
+#            - "超级管理员"
       - path: role-group
         name: view.menu.admin.role.group
         component: "/admin/role_group/index.vue"
@@ -66,9 +66,9 @@ admin:
           routeGroup: default
           title: view.menu.admin.role.group
           icon: el-icon-s-management
-          roles:
-            - "开发员"
-            - "超级管理员"
+#          roles:
+#            - "开发员"
+#            - "超级管理员"
 develop:
   - path: /develop
     component: Layout
@@ -78,9 +78,9 @@ develop:
       routeGroup: default
       title: view.menu.develop.title
       icon: el-icon-s-tools
-      roles:
-        - "开发员"
-        - "超级管理员"
+#      roles:
+#        - "开发员"
+#        - "超级管理员"
     children:
       - path: form-manager
         name: view.menu.develop.form.manager
@@ -98,8 +98,8 @@ develop:
           routeGroup: default
           title: view.menu.develop.form.create
           icon: el-icon-edit
-          roles:
-            - "开发员"
+#          roles:
+#            - "开发员"
       - path: dic
         name: view.menu.develop.dic
         component: "/admin/dic/index.vue"
@@ -107,9 +107,9 @@ develop:
           routeGroup: default
           title: view.menu.develop.dic
           icon: el-icon-notebook-2
-          roles:
-            - "开发员"
-            - "超级管理员"
+#          roles:
+#            - "开发员"
+#            - "超级管理员"
       - path: generic-api
         name: view.menu.develop.generic.api
         component: "/admin/generic-api/index.vue"
@@ -117,9 +117,9 @@ develop:
           routeGroup: default
           title: view.menu.develop.generic.api
           icon: el-icon-connection
-          roles:
-            - "开发员"
-            - "超级管理员"
+#          roles:
+#            - "开发员"
+#            - "超级管理员"
       - path: systemlog
         name: view.menu.develop.systemlog
         component: "/admin/systemlog/index.vue"
@@ -127,9 +127,9 @@ develop:
           routeGroup: default
           title: view.menu.develop.systemlog
           icon: el-icon-data-line
-          roles:
-            - "开发员"
-            - "超级管理员"
+#          roles:
+#            - "开发员"
+#            - "超级管理员"
       - path: cache
         name: view.menu.develop.cache
         component: "/cache/index.vue"
@@ -137,8 +137,8 @@ develop:
           routeGroup: default
           title: view.menu.develop.cache
           icon: el-icon-s-data
-          roles:
-            - "开发员"
+#          roles:
+#            - "开发员"
 
 #  fallback:
 #    - path: "*"

@@ -2,7 +2,7 @@ package com.tbs.app.intercept;
 
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.impl.web.PreAuthUtils;
-import com.tbs.app.service.role.IUserRoleRelationService;
+import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.base.CollUtil;
@@ -28,7 +28,9 @@ import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Field;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -109,14 +111,21 @@ public class DataPermissionIntercepter implements SqlComposeInterceptor {
                 .add(WhereNode.createInfoNode(ConnectorEnum.AND, WhereInfo.builder().rawSql("1=0").build()));
             return compose;
         }
-        var roles = SpringUtil.getBean(IUserRoleRelationService.class).queryUserRoles(u.getId());
-        if (CollUtil.isEmpty(roles)) {
+        var roleVOs = SpringUtil.getBean(ISystemRoleGroupService.class).getUserRoleGroupVOList(u.getId());
+        if (CollUtil.isEmpty(roleVOs)) {
             compose.getChildren()
                 .add(WhereNode.createInfoNode(ConnectorEnum.AND, WhereInfo.builder().rawSql("1=0").build()));
             return compose;
         }
-        roles = roles.stream().filter(r -> SystemRoleTypeEnum.DATA_ROLE.getCode().equals(r.getType()))
-            .collect(Collectors.toList());
+        List<SystemRoleEntity> roles = new LinkedList<>();
+        for (var roleVO : roleVOs) {
+            if (CollUtil.isEmpty(roleVO.getPermissions())) {
+                continue;
+            }
+            roles.addAll(roleVO.getPermissions().stream()
+                .filter(permission -> Objects.equals(permission.getType(), SystemRoleTypeEnum.DATA_ROLE.getCode()))
+                .collect(Collectors.toList()));
+        }
 
         var userDepts =
             SpringUtil.getBean(IDepartmentUserRelationService.class).queryUserDepartments(u.getId()).stream()

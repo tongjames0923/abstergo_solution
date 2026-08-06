@@ -1,20 +1,20 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
-import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
+import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.pojo.model.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,12 +38,11 @@ import java.util.List;
  */
 @RequestMapping("/private/admin/roles")
 @RestController
-@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
 @Tag(name = "用户权限管理接口", description = "用户权限管理接口")
 public class AdminRoleController extends BaseController {
 
     @Resource
-    private IUserRoleRelationService relationService;
+    private ISystemRoleGroupService roleGroupService;
 
     @Resource
     private ISystemRoleService roleService;
@@ -56,53 +55,13 @@ public class AdminRoleController extends BaseController {
      */
     @GetMapping("/{userId}")
     @AjaxResponseType(value = List.class)
-    @Operation(summary = "查询用户权限", description = "根据用户ID查询该用户拥有的所有权限")
+    @Operation(summary = "查询用户权限组", description = "根据用户ID查询该用户拥有的所有权限")
     @ApiResponse(responseCode = "200", description = "成功查询用户权限",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult userRoles(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
-        return successResult(relationService.queryUserRoles(userId));
-    }
-
-    /**
-     * 启用用户权限
-     *
-     * @param userId 用户ID
-     * @param role   权限ID
-     * @return 操作结果
-     */
-    @GetMapping("/enable/{userId}")
-    @AjaxResponseType(void.class)
-    @Operation(summary = "启用用户权限", description = "为指定用户启用指定权限")
-    @ApiResponse(responseCode = "200", description = "成功启用用户权限",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult enable(
-        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
-        @Parameter(name = "role", description = "权限ID", required = true) @RequestParam Long role) {
-        relationService.enableRole(userId, role);
-        return AjaxUtil.getInstance().success("授权成功", null);
-    }
-
-    /**
-     * 禁用用户权限
-     *
-     * @param userId 用户ID
-     * @param role   权限ID
-     * @return 操作结果
-     */
-    @GetMapping("/disable/{userId}")
-    @AjaxResponseType(void.class)
-    @Operation(summary = "禁用用户权限", description = "为指定用户禁用指定权限")
-    @ApiResponse(responseCode = "200", description = "成功禁用用户权限",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult disable(
-        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId,
-        @Parameter(name = "role", description = "权限ID", required = true) @RequestParam Long role) {
-        relationService.disableRole(userId, role);
-        return AjaxUtil.getInstance().success("取消授权成功", null);
+        return successResult(roleGroupService.getUserRoleGroupVOList(userId));
     }
 
     /**
@@ -147,7 +106,6 @@ public class AdminRoleController extends BaseController {
         AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         user.setFlag(SystemUserStatusEnum.ACTIVE.getCode());
         userService.save(user);
-        relationService.enableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
         return AjaxUtil.getInstance().success("激活成功", null);
     }
 
@@ -169,7 +127,6 @@ public class AdminRoleController extends BaseController {
         AssertUtil.isTrue(user == null).message("用户不存在").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         user.setFlag(SystemUserStatusEnum.INACTIVE.getCode());
         userService.save(user);
-        relationService.disableRole(userId, RoleConstants.NORMAL_USER_ROLE_ID);
         return AjaxUtil.getInstance().success("禁用成功", null);
     }
 

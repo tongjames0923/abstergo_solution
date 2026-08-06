@@ -1,5 +1,6 @@
 package com.tbs.app.service.user.model.impl;
 
+import com.tbs.app.vo.SystemRoleGroupVO;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 
@@ -12,8 +13,11 @@ public class DefaultGrantedAuthority implements GrantedAuthority {
     private static final long serialVersionUID = 1L;
     private String authority;
 
-    public DefaultGrantedAuthority(String authority) {
-        this.authority = authority;
+    private SystemRoleGroupVO roleGroup;
+
+    public DefaultGrantedAuthority(SystemRoleGroupVO roleGroup) {
+        this.authority = roleGroup.getGroup().getRoleGroupName();
+        this.roleGroup = roleGroup;
     }
 
     public DefaultGrantedAuthority() {

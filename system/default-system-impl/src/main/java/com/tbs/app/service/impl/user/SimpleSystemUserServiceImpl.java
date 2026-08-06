@@ -5,7 +5,6 @@ import com.tbs.app.constant.UserServiceFeatureFlagConstants;
 import com.tbs.app.intercept.DataPermissionIntercepter;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.IFeatureFlagService;
-import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
@@ -16,7 +15,6 @@ import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
@@ -30,7 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.ArrayList;
@@ -61,9 +58,6 @@ public class SimpleSystemUserServiceImpl
     private IFeatureFlagService featureFlagService;
 
     @Resource
-    @Lazy
-    private IUserRoleRelationService relationService;
-    @Resource
     private AppSettingProperty property;
 
     @Override
@@ -83,7 +77,6 @@ public class SimpleSystemUserServiceImpl
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
         getMapper().insert(entity);
-        relationService.enableRole(entity.getId(), RoleConstants.NORMAL_USER_ROLE_ID);
         return entity;
     }
 

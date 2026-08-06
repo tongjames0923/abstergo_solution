@@ -33,7 +33,6 @@ import javax.annotation.Resource;
  */
 @RestController
 @RequestMapping("private/cache")
-@PreAuthorize("hasAuthority('" + RoleConstants.DEVELOPER_ROLE_NAME + "')")
 @Tag(name = "缓存管理接口", description = "缓存管理相关操作接口")
 public class CacheController extends BaseController {
 

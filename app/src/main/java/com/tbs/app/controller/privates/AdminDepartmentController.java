@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/private/admin/department")
-@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
 @Tag(name = "管理员部门管理接口", description = "管理员部门管理接口")
 public class AdminDepartmentController
 		extends AbstractCrudController<SystemDepartmentEntity, Long, CommonSystemDepartmentQueryCriteria> {

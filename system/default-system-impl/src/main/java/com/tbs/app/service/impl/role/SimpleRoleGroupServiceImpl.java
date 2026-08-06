@@ -4,6 +4,10 @@ import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
+import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.vo.RemoteUserInfoVO;
+import com.tbs.app.vo.SystemRoleGroupVO;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -16,17 +20,21 @@ import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTe
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemRoleGroupMapper;
 import com.tbs.shared.mapper.SystemRoleGroupRelationMapper;
-import com.tbs.shared.pojo.entity.SystemRoleEntity;
-import com.tbs.shared.pojo.entity.SystemRoleGroupEntity;
-import com.tbs.shared.pojo.entity.SystemRoleGroupRelationEntity;
+import com.tbs.shared.mapper.view.RoleGroupUserRelationMapper;
+import com.tbs.shared.pojo.entity.*;
 import com.tbs.sql.dsl.clause.JoinCondition;
 import com.tbs.sql.service.QueryEngine;
+import com.tbs.web.uitl.AuthUtil;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * 角色组服务实现类
@@ -44,6 +52,9 @@ public class SimpleRoleGroupServiceImpl
     private SystemRoleGroupRelationMapper relationMapper;
 
     @Resource
+    private RoleGroupUserRelationMapper roleGroupUserRelationMapper;
+
+    @Resource
     private AppSettingProperty property;
 
     /**
@@ -53,6 +64,8 @@ public class SimpleRoleGroupServiceImpl
      * @return 权限列表
      */
     @Override
+    @Cacheable(value = "roleGroup", key = "#groupId")
+    @ExpireOn(cacheNames = "roleGroup", value = 10, timeUnit = TimeUnit.MINUTES)
     public List<SystemRoleEntity> getRoleList(Long groupId) {
         return QueryEngine.getEntityQueryWrapper(new SystemRoleEntity()).query().where().in(SystemRoleEntity::getFlag,
             Arrays.asList(SystemRoleFlagEnum.SYSTEMED.getCode(), SystemRoleFlagEnum.ACTIVE.getCode())).exists(
@@ -62,12 +75,27 @@ public class SimpleRoleGroupServiceImpl
     }
 
     /**
+     * 获取角色组VO
+     *
+     * @param groupId
+     * @return
+     */
+    @Override
+    public SystemRoleGroupVO getRoleGroupVO(Long groupId) {
+        var group = getInstance().queryById(groupId);
+        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.not.exists")
+            .throwIt();
+        return new SystemRoleGroupVO(group, ((ISystemRoleGroupService)getInstance()).getRoleList(groupId));
+    }
+
+    /**
      * 添加角色到角色组
      *
      * @param groupId
      * @param roleId
      */
     @Override
+    @CacheEvict(value = "roleGroup", key = "#groupId")
     public void appendRole(Long groupId, Long roleId) {
 
         var group = getInstance().queryById(groupId);
@@ -98,6 +126,7 @@ public class SimpleRoleGroupServiceImpl
      * @param roleId
      */
     @Override
+    @CacheEvict(value = "roleGroup", key = "#groupId")
     public void removeRole(Long groupId, Long roleId) {
         var relation = new SystemRoleGroupRelationEntity();
         relation.setRoleId(roleId);
@@ -106,6 +135,122 @@ public class SimpleRoleGroupServiceImpl
         AssertUtil.isTrue(old == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .i18n("permission.group.role.not.exists").throwIt();
         relationMapper.delete(relation);
+    }
+
+    /**
+     * 添加用户到角色组
+     *
+     * @param groupId
+     * @param userId
+     */
+    @Override
+    public void applyGroup(Long groupId, Long userId) {
+        var group = getInstance().queryById(groupId);
+        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.not.exists")
+            .throwIt();
+        AssertUtil.isTrue(!Objects.equals(group.getFlag(), CommonFlagEnum.ACTIVE.getCode()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.group.not.active").throwIt();
+        var user = SpringUtil.getBean(ISystemUserService.class).queryById(userId);
+        AssertUtil.isTrue(user == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("user.not.exists").throwIt();
+
+        SystemRoleGroupUserRelationEntity relation = new SystemRoleGroupUserRelationEntity();
+        relation.setUserId(userId);
+        relation.setRoleGroupId(groupId);
+        var ls = roleGroupUserRelationMapper.select(relation);
+        AssertUtil.isTrue(CollUtil.isNotEmpty(ls)).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .i18n("permission.group.user.exists").throwIt();
+        roleGroupUserRelationMapper.insert(relation);
+        AuthUtil.getInstance().notifyUserAuthStatusChanged(user.getUserName());
+    }
+
+    /**
+     * 移除用户从角色组
+     *
+     * @param groupId
+     * @param userId
+     */
+    @Override
+    public void removeGroup(Long groupId, Long userId) {
+
+        SystemUserEntity user = SpringUtil.getBean(ISystemUserService.class).queryById(userId);
+        AssertUtil.isTrue(user == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("user.not.exists").throwIt();
+        var relation = new SystemRoleGroupUserRelationEntity();
+        relation.setUserId(userId);
+        relation.setRoleGroupId(groupId);
+        var ls = roleGroupUserRelationMapper.select(relation);
+        AssertUtil.isTrue(CollUtil.isEmpty(ls)).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .i18n("permission.group.user.not.exists").throwIt();
+        roleGroupUserRelationMapper.delete(relation);
+        AuthUtil.getInstance().notifyUserAuthStatusChanged(user.getUserName());
+    }
+
+    /**
+     * 获取用户角色组VO列表
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public List<SystemRoleGroupVO> getUserRoleGroupVOList(Long userId) {
+        var relation = new SystemRoleGroupUserRelationEntity();
+        relation.setUserId(userId);
+        return roleGroupUserRelationMapper.select(relation).stream().map(res -> {
+            var group = getInstance().queryById(res.getRoleGroupId());
+            if (group == null) {
+                return null;
+            }
+            return new SystemRoleGroupVO(group,
+                ((ISystemRoleGroupService)getInstance()).getRoleList(res.getRoleGroupId()));
+        }).filter(val -> val.getGroup() != null).collect(Collectors.toList());
+
+    }
+
+    /**
+     * 获取角色组下的用户列表
+     *
+     * @param groupId
+     * @return
+     */
+    @Override
+    public List<RemoteUserInfoVO> getUserList(Long groupId) {
+        var relations = new SystemRoleGroupUserRelationEntity();
+        relations.setRoleGroupId(groupId);
+
+        return roleGroupUserRelationMapper.select(relations).stream().map(res -> {
+            var user = SpringUtil.getBean(ISystemUserService.class).queryById(res.getUserId());
+            if (user == null) {
+                return null;
+            }
+            return new RemoteUserInfoVO(user.getUserName(), user.getNickName(), user.getAvatar(), user.getRemark(),
+                user.getFlag(), user.getId());
+
+        }).filter(val -> val != null).collect(Collectors.toList());
+    }
+
+    /**
+     * 判断权限是否存在于任意角色组中
+     *
+     * @param roleId
+     * @return
+     */
+    @Override
+    public boolean isRoleInGroupAnyGroup(Long roleId) {
+        SystemRoleGroupRelationEntity relation = new SystemRoleGroupRelationEntity();
+        relation.setRoleId(roleId);
+        return CollUtil.isNotEmpty(relationMapper.select(relation));
+    }
+
+    /**
+     * 判断用户是否在任意角色组下
+     *
+     * @param userId
+     * @return
+     */
+    @Override
+    public boolean isUserInGroupAnyGroup(Long userId) {
+        SystemRoleGroupUserRelationEntity relation = new SystemRoleGroupUserRelationEntity();
+        relation.setUserId(userId);
+        return CollUtil.isNotEmpty(roleGroupUserRelationMapper.select(relation));
     }
 
     /**

@@ -1,5 +1,7 @@
 package com.tbs.app.service.role;
 
+import com.tbs.app.vo.RemoteUserInfoVO;
+import com.tbs.app.vo.SystemRoleGroupVO;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
 import com.tbs.shared.pojo.entity.SystemRoleGroupEntity;
@@ -21,6 +23,14 @@ public interface ISystemRoleGroupService extends IServiceTemplate<SystemRoleGrou
     List<SystemRoleEntity> getRoleList(Long groupId);
 
     /**
+     * 获取角色组VO
+     *
+     * @param groupId
+     * @return
+     */
+    SystemRoleGroupVO getRoleGroupVO(Long groupId);
+
+    /**
      * 添加角色到角色组
      *
      * @param groupId
@@ -35,5 +45,56 @@ public interface ISystemRoleGroupService extends IServiceTemplate<SystemRoleGrou
      * @param roleId
      */
     void removeRole(Long groupId, Long roleId);
+
+    /**
+     * 添加用户到角色组
+     *
+     * @param groupId
+     * @param userId
+     */
+    void applyGroup(Long groupId, Long userId);
+
+    /**
+     * 移除用户从角色组
+     *
+     * @param groupId
+     * @param userId
+     */
+    void removeGroup(Long groupId, Long userId);
+
+    /**
+     * 获取用户角色组VO列表
+     *
+     * @param userId
+     * @return
+     */
+    List<SystemRoleGroupVO> getUserRoleGroupVOList(Long userId);
+
+    /**
+     * 获取角色组下的用户列表
+     *
+     * @param groupId
+     * @return
+     */
+    List<RemoteUserInfoVO> getUserList(Long groupId);
+
+    /**
+     * 判断权限是否存在于任意角色组中
+     *
+     * @param roleId
+     * @param groupId
+     * @return
+     */
+    boolean isRoleInGroupAnyGroup(Long roleId);
+
+    /**
+     * 判断用户是否在任意角色组下
+     *
+     * @param userId
+     * @param groupId
+     * @return
+     */
+    boolean isUserInGroupAnyGroup(Long userId);
+
 
 }

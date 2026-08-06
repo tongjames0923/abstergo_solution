@@ -34,7 +34,7 @@ public class UserInfoVO implements Serializable {
 	/**
 	 * 用户可用角色列表
 	 */
-	private Collection<RoleVO> avaliableRoles;
+	private Collection<SystemRoleGroupVO> avaliableRoles;
 
 	/**
 	 * 用户可用部门列表

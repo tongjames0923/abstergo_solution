@@ -1,9 +1,10 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.role.ISystemRoleGroupService;
+import com.tbs.app.vo.RemoteUserInfoVO;
+import com.tbs.app.vo.SystemRoleGroupVO;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleGroupCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleGroupEntity;
@@ -31,7 +32,6 @@ import javax.annotation.Resource;
  */
 @RestController
 @RequestMapping("/private/role/group")
-@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
 @Tag(name = "管理员管理角色组数据接口", description = "管理员管理角色组数据接口")
 public class AdminRoleGroupController
     extends AbstractCrudController<SystemRoleGroupEntity, Long, CommonSystemRoleGroupCriteria> {
@@ -187,5 +187,130 @@ public class AdminRoleGroupController
         @Parameter(name = "roleId", description = "角色ID", required = true) @PathVariable Long roleId) {
         groupService.removeRole(groupId, roleId);
         return successResult(null);
+    }
+
+    /**
+     * 分配用户到角色组
+     *
+     * @param groupId 角色组ID
+     * @param userId  用户ID
+     * @return 操作结果
+     */
+    @PostMapping("users/{groupId}/{userId}")
+    @AjaxResponseType(void.class)
+    @Operation(summary = "分配用户到角色组", description = "将指定用户添加到指定角色组中")
+    @ApiResponse(responseCode = "200", description = "成功分配用户到角色组",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult applyGroup(
+        @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId,
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        groupService.applyGroup(groupId, userId);
+        return successResult(null);
+    }
+
+    /**
+     * 移除用户从角色组
+     *
+     * @param groupId 角色组ID
+     * @param userId  用户ID
+     * @return 操作结果
+     */
+    @DeleteMapping("users/{groupId}/{userId}")
+    @AjaxResponseType(void.class)
+    @Operation(summary = "移除用户从角色组", description = "从指定角色组中移除指定用户")
+    @ApiResponse(responseCode = "200", description = "成功移除用户从角色组",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult removeGroup(
+        @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId,
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        groupService.removeGroup(groupId, userId);
+        return successResult(null);
+    }
+
+    /**
+     * 获取角色组详情（包含权限列表）
+     *
+     * @param groupId 角色组ID
+     * @return 角色组详情
+     */
+    @GetMapping("detail/{groupId}")
+    @AjaxResponseType(SystemRoleGroupVO.class)
+    @Operation(summary = "获取角色组详情", description = "根据角色组ID获取角色组详情，包含权限列表")
+    @ApiResponse(responseCode = "200", description = "成功获取角色组详情",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult getRoleGroupVO(
+        @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId) {
+        return successResult(groupService.getRoleGroupVO(groupId));
+    }
+
+    /**
+     * 获取用户的角色组列表
+     *
+     * @param userId 用户ID
+     * @return 用户角色组列表
+     */
+    @GetMapping("user/{userId}")
+    @AjaxResponseType(SystemRoleGroupVO.class)
+    @Operation(summary = "获取用户的角色组列表", description = "根据用户ID获取该用户所属的所有角色组列表")
+    @ApiResponse(responseCode = "200", description = "成功获取用户角色组列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult getUserRoleGroupVOList(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        return successResult(groupService.getUserRoleGroupVOList(userId));
+    }
+
+    /**
+     * 获取角色组下的用户列表
+     *
+     * @param groupId 角色组ID
+     * @return 用户列表
+     */
+    @GetMapping("users/{groupId}")
+    @AjaxResponseType(RemoteUserInfoVO.class)
+    @Operation(summary = "获取角色组下的用户列表", description = "根据角色组ID获取该角色组下的所有用户列表")
+    @ApiResponse(responseCode = "200", description = "成功获取角色组下的用户列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult getUserList(
+        @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId) {
+        return successResult(groupService.getUserList(groupId));
+    }
+
+    /**
+     * 检查权限是否存在于任意角色组中
+     *
+     * @param roleId 权限ID
+     * @return 检查结果
+     */
+    @GetMapping("check/role/{roleId}")
+    @AjaxResponseType(Boolean.class)
+    @Operation(summary = "检查权限是否存在于任意角色组", description = "检查指定权限是否被分配到任意角色组中")
+    @ApiResponse(responseCode = "200", description = "成功获取检查结果",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult isRoleInGroupAnyGroup(
+        @Parameter(name = "roleId", description = "权限ID", required = true) @PathVariable Long roleId) {
+        return successResult(groupService.isRoleInGroupAnyGroup(roleId));
+    }
+
+    /**
+     * 检查用户是否在任意角色组下
+     *
+     * @param userId 用户ID
+     * @return 检查结果
+     */
+    @GetMapping("check/user/{userId}")
+    @AjaxResponseType(Boolean.class)
+    @Operation(summary = "检查用户是否在任意角色组", description = "检查指定用户是否属于任意角色组")
+    @ApiResponse(responseCode = "200", description = "成功获取检查结果",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult isUserInGroupAnyGroup(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        return successResult(groupService.isUserInGroupAnyGroup(userId));
     }
 }

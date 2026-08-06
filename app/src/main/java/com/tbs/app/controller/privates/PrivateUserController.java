@@ -1,13 +1,11 @@
 package com.tbs.app.controller.privates;
 
-
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
-import com.tbs.app.service.role.IUserRoleRelationService;
+import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.app.vo.DepartmentInfoVO;
-import com.tbs.app.vo.RoleVO;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -55,7 +53,7 @@ import java.util.stream.Collectors;
 public class PrivateUserController extends BaseController {
 
     @Resource
-    private IUserRoleRelationService relationService;
+    private ISystemRoleGroupService groupService;
 
     @Resource
     private ISystemUserService userService;
@@ -123,9 +121,7 @@ public class PrivateUserController extends BaseController {
         userInfoVO.setAccountStatus(user.get().getFlag());
         userInfoVO.setAccountStatusStr(EnumUtil.valueOf(SystemUserStatusEnum.class, user.get().getFlag()).getValue());
         userInfoVO.setAvatar(user.get().getAvatar());
-        userInfoVO.setAvaliableRoles(relationService.queryUserRoles(user.get().getId()).stream()
-            .map(role -> new RoleVO(role.getId(), role.getRole(), role.getName(), role.getType(), role.getFlag()))
-            .collect(Collectors.toList()));
+        userInfoVO.setAvaliableRoles(groupService.getUserRoleGroupVOList(user.get().getId()));
         if (userDetail instanceof ISystemUserDetails) {
             userInfoVO.setCurrentDepartment(((ISystemUserDetails)userDetail).getCurrentDepartment());
         }

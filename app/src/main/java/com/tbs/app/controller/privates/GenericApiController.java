@@ -3,7 +3,6 @@ package com.tbs.app.controller.privates;
 import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.pojo.criteria.CommonGenericApiCriteria;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
 import com.tbs.web.result.AjaxResult;
@@ -29,7 +28,6 @@ import java.util.stream.Collectors;
  */
 @RestController
 @RequestMapping("/private/admin/generic-api")
-@PreAuthorize("hasAuthority('" + RoleConstants.SUPER_ADMIN_ROLE_NAME + "')")
 @Tag(name = "泛化API管理接口", description = "泛化API配置管理相关操作接口")
 public class GenericApiController
     extends AbstractCrudController<SystemGenericApiEntity, Long, CommonGenericApiCriteria> {

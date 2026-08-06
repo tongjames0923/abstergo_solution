@@ -12,13 +12,11 @@ import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
 import com.tbs.app.service.impl.genericapi.GenericApiServiceImpl;
 import com.tbs.app.service.impl.role.SimpleRoleGroupServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
-import com.tbs.app.service.impl.role.SimpleUserRoleRelationServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
 import com.tbs.app.service.impl.user.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.impl.view.ViewServiceImpl;
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
-import com.tbs.app.service.role.IUserRoleRelationService;
 import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.view.IViewService;
@@ -52,13 +50,6 @@ public class BuisnessBeanConfig {
     public IErrorThrowEvent errorThrowEvent() {
         return BeanUtil.buildBeanFromProperties(SimpleErrorThrowEvent::new, systemAppProperty.getErrorThrowEventImpl(),
             BeanUtil::buildByEmptyArgs);
-    }
-
-    @Bean
-    @ConditionalOnMissingBean(IUserRoleRelationService.class)
-    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
-    public IUserRoleRelationService userRoleRelationService() {
-        return new SimpleUserRoleRelationServiceImpl();
     }
 
     @Bean
