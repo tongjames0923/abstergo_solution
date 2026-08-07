@@ -21,7 +21,13 @@ public enum SystemUserStatusEnum implements BaseEnum<String> {
 	/**
 	 * 禁用的
 	 */
-	INACTIVE("禁用", CommonConstant.FLAG_OFF);
+	INACTIVE("禁用", CommonConstant.FLAG_OFF),
+
+	/**
+	 * 删除的
+	 */
+	DELETE("删除", -1),
+	;
 
 	private String value;
 	private Integer code;

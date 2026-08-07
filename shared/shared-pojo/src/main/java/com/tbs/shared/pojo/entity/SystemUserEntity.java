@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.entity;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
@@ -25,6 +26,7 @@ import java.util.Date;
 @Getter
 @Setter
 @ToString
+@LogicDeleteEntity(activeFlagValues = {1, 2, 0})
 public class SystemUserEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>, IDeptBelongEntity<Long> {
 	private static final long serialVersionUID = 1L;
@@ -35,7 +37,7 @@ public class SystemUserEntity
 	/**
 	 * 用户名
 	 */
-	@Column(name = "user_name", length = 72, unique = true, nullable = false)
+	@Column(name = "user_name", length = 72, nullable = false)
 	private String userName;
 	/**
 	 * 密码
@@ -71,6 +73,7 @@ public class SystemUserEntity
 	private Date updateTime;
 	/**
 	 * 状态
+	 * @see com.tbs.shared.enums.SystemUserStatusEnum
 	 */
 	@Column(name = "flag")
 	private Integer flag;

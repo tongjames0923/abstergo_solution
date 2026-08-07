@@ -1,6 +1,7 @@
 
 package com.tbs.shared.pojo.entity;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
@@ -14,6 +15,9 @@ import lombok.ToString;
 import javax.persistence.*;
 import java.util.Date;
 
+/**
+ * 系统部门实体类 用于表示系统中的部门信息，包含部门基本信息、状态及创建更新时间等字段
+ */
 @Data
 @Entity
 @Table(name = "sys_department",
@@ -25,9 +29,8 @@ import java.util.Date;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
-/**
- * 系统部门实体类 用于表示系统中的部门信息，包含部门基本信息、状态及创建更新时间等字段
- */ public class SystemDepartmentEntity
+@LogicDeleteEntity(activeFlagValues = {1, 2})
+public class SystemDepartmentEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
 	/**

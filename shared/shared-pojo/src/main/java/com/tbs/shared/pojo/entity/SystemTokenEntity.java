@@ -56,10 +56,9 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
 
     @Column(name = "update_time")
     private Date updateTime;
+
     /**
      * 标记
-     *
-     * @see TokenStatusEnum
      */
     private Integer flag;
     /**
@@ -81,11 +80,6 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
     @Column(name = "ip_address", length = 64)
     private String ipAddress;
 
-    /**
-     * 创建方式
-     *
-     * @see TokenCreateTypeEnum
-     */
     @Column(name = "create_type")
     private Integer createType;
 

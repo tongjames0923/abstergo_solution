@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.criteria;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.condition.QueryField;
@@ -21,6 +22,7 @@ import java.util.List;
  * @author abstergo
  */
 @Getter
+@LogicDeleteEntity(activeFlagValues = {1, 2, 0})
 public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<SystemUserEntity> {
     /**
      * 根据ID精确查询

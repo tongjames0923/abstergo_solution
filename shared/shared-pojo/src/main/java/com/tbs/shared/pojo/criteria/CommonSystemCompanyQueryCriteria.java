@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.criteria;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.condition.QueryField;
@@ -19,6 +20,7 @@ import java.util.List;
  * @author tongj
  */
 @Data
+@LogicDeleteEntity(activeFlagValues = {1, 2, 5})
 public class CommonSystemCompanyQueryCriteria extends ClassBaseQueryCriteria<SystemCompanyEntity> {
     /**
      * 按ID精确查询

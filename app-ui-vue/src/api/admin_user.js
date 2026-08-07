@@ -80,7 +80,7 @@ export function saveUser(data) {
 export function deleteUser(userId) {
   return request({
     url: `/private/admin/user/delete/${userId}`,
-    method: 'get'
+    method: 'post'
   })
 }
 

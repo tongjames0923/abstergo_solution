@@ -4,6 +4,7 @@ import com.tbs.common.BaseEnum;
 
 /**
  * 访问令牌标识枚举
+ * @author abstergo
  */
 public enum TokenStatusEnum implements BaseEnum<String> {
 

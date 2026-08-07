@@ -24,6 +24,9 @@
         <el-dropdown-item command="resetPassword" @click.native="handleResetPassword(row)">
           {{ $t('user.resetPassword') }}
         </el-dropdown-item>
+        <el-dropdown-item command="deleteUser" divided @click.native="handleDeleteUser(row)">
+          {{ $t('user.delete') }}
+        </el-dropdown-item>
       </template>
     </quick-use-management-view>
 
@@ -286,6 +289,31 @@ export default {
      */
     handleResetPasswordDialogClose() {
       this.$refs.passwordForm.resetFields()
+    },
+
+    /**
+     * 删除用户
+     */
+    async handleDeleteUser(row) {
+      const confirmText = this.$t('user.confirmDelete')
+      this.$confirm(confirmText, this.$t('common.tip'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
+        type: 'warning'
+      }).then(async () => {
+        try {
+          await deleteUser(row.id)
+          // 消息提示由后端统一控制
+          this.$refs.userManagement.refresh()
+        } catch (error) {
+          if (error !== 'cancel') {
+            console.error('删除用户失败:', error)
+            // 消息提示由后端统一控制
+          }
+        }
+      }).catch(() => {
+        // 用户取消删除
+      })
     }
   }
 }

@@ -1,6 +1,7 @@
 
 package com.tbs.shared.pojo.entity;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
@@ -27,6 +28,7 @@ import java.util.Date;
 @ToString
 @AllArgsConstructor
 @NoArgsConstructor
+@LogicDeleteEntity(activeFlagValues = {1, 2, 5})
 public class SystemCompanyEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
@@ -52,7 +54,7 @@ public class SystemCompanyEntity
 	/**
 	 * 公司税号
 	 */
-	@Column(name = "tax_number", length = 64, unique = true, nullable = false)
+	@Column(name = "tax_number", length = 64, nullable = false)
 	private String taxNumber;
 
 	/**

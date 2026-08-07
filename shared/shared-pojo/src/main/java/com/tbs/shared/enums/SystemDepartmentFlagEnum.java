@@ -10,7 +10,7 @@ public enum SystemDepartmentFlagEnum implements BaseEnum<String> {
 	/** 已激活状态 */
 	ACTIVITED("已激活", 1),
 	/** 禁用状态 */
-	DISABLED("禁用", 2);
+	DISABLED("禁用", 2), DELETED("已删除", 0);
 
 	private String val;
 

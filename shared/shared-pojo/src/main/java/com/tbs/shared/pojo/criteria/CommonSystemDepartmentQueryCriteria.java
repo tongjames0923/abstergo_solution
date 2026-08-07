@@ -1,13 +1,12 @@
 package com.tbs.shared.pojo.criteria;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
-import com.tbs.sql.annotation.condition.OrField;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.annotation.order.QueryOrderField;
 import com.tbs.sql.constants.OrderConstants;
-import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Data;
@@ -21,6 +20,7 @@ import java.util.List;
  * @author abstergo
  */
 @Data
+@LogicDeleteEntity(activeFlagValues = {1, 2})
 public class CommonSystemDepartmentQueryCriteria extends ClassBaseQueryCriteria<SystemDepartmentEntity> {
     /**
      * 按ID精确查询
