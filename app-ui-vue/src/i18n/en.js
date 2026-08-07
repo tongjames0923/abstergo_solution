@@ -55,6 +55,7 @@ export default {
     relogin: 'Relogin',
     rememberMe: 'Remember me',
     loggingIn: 'Logging in...',
+    secureHint: 'Protected by an encrypted connection',
     copyright: 'All rights reserved.'
   },
 

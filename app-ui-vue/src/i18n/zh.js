@@ -55,6 +55,7 @@ export default {
     relogin: '重新登录',
     rememberMe: '记住我',
     loggingIn: '登录中...',
+    secureHint: '已通过加密连接保护',
     copyright: '保留所有权利.'
   },
 

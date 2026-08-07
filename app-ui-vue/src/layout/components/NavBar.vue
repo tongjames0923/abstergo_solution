@@ -159,7 +159,10 @@ export default {
   height: 44px;
   overflow: hidden;
   position: relative;
-  background: #ffffff;
+  /* macOS 毛玻璃质感：半透明白底 + 模糊 */
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: saturate(180%) blur(12px);
+  -webkit-backdrop-filter: saturate(180%) blur(12px);
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.06);
   margin: 0;
   border-radius: 0;

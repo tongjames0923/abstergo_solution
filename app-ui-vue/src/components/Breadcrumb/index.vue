@@ -59,8 +59,35 @@ export default {
   line-height: 44px;
   margin-left: 4px;
 
+  ::v-deep .el-breadcrumb__inner {
+    color: #8e8e93;
+    font-weight: 400;
+    transition: color 0.2s ease;
+
+    a {
+      color: #8e8e93;
+      font-weight: 400;
+
+      &:hover {
+        color: #0071e3;
+      }
+    }
+  }
+
+  ::v-deep .el-breadcrumb__separator {
+    color: #c7c7cc;
+    margin: 0 6px;
+  }
+
+  /* 当前层级：深色加粗，明确位置感 */
+  ::v-deep .el-breadcrumb__item:last-child .el-breadcrumb__inner {
+    color: #333;
+    font-weight: 500;
+  }
+
   .no-redirect {
-    color: #999;
+    color: #333;
+    font-weight: 500;
     cursor: text;
   }
 }

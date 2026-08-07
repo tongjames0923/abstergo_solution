@@ -108,7 +108,7 @@ export default {
     line-height: 32px;
     margin: 1px 8px;
     border-radius: 6px;
-    transition: all 0.15s ease;
+    transition: background-color 0.15s ease, color 0.15s ease;
     font-size: 13px;
     backdrop-filter: none;
     -webkit-backdrop-filter: none;
@@ -118,7 +118,7 @@ export default {
     color: #666;
 
     &:hover {
-      background: #f5f5f5 !important;
+      background: #f5f5f7 !important;
       color: #333 !important;
       backdrop-filter: none;
       -webkit-backdrop-filter: none;
@@ -127,9 +127,10 @@ export default {
       transform: none;
     }
 
+    // 选中态：蓝色调浅色背景，与系统主色 #0071e3 呼应（macOS App Store 风格）
     &.is-active {
-      background-color: #f0f0f0 !important;
-      color: #000 !important;
+      background-color: rgba(0, 113, 227, 0.1) !important;
+      color: #0071e3 !important;
       font-weight: 500;
     }
   }
@@ -137,26 +138,81 @@ export default {
   .el-submenu {
     .el-submenu__title {
       &:hover {
-        background-color: #f5f5f5 !important;
+        background-color: #f5f5f7 !important;
       }
+    }
+
+    // 展开中的父级菜单保持轻量强调
+    &.is-opened > .el-submenu__title {
+      color: #333;
+    }
+
+    .el-submenu__icon-arrow {
+      font-size: 12px;
+      color: #999;
     }
 
     .el-menu {
       background-color: transparent !important;
       border-radius: 0;
       margin: 0;
-      padding: 4px 0;
+      padding: 2px 0;
 
       .el-menu-item {
-        padding-left: 48px !important;
+        padding-left: 44px !important;
         margin: 1px 8px;
         border-radius: 6px;
+        position: relative;
+        /* 覆盖全局 sidebar.scss 中子菜单 $subMenuBg 灰底，保持与一级菜单一致的透明底 */
+        background-color: transparent !important;
+
+        // 子菜单项左侧层级指示线
+        &::before {
+          content: '';
+          position: absolute;
+          left: 30px;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background: #d1d1d6;
+          transition: background-color 0.15s ease;
+        }
+
+        &.is-active::before {
+          background: #0071e3;
+        }
       }
     }
   }
 
   .el-scrollbar {
     height: calc(100% - 44px);
+  }
+}
+
+/* 覆盖全局 sidebar.scss 中子菜单灰底规则（.app-wrapper .sidebar-container .el-submenu .el-menu-item），
+   提升选择器优先级，保持子菜单项与一级菜单一致的透明底 */
+.sidebar-container-macos .sidebar-menu-macos .el-submenu .el-menu .el-menu-item {
+  background-color: transparent !important;
+  min-width: 0 !important;
+}
+
+/* macOS 风格细滚动条 */
+.sidebar-container-macos {
+  ::v-deep .el-scrollbar__bar.is-vertical {
+    width: 4px;
+  }
+
+  ::v-deep .el-scrollbar__thumb {
+    background-color: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+    opacity: 0.6;
+
+    &:hover {
+      opacity: 1;
+    }
   }
 }
 </style>

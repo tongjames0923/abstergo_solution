@@ -1,88 +1,98 @@
 <template>
   <div class="login-container">
-    <div class="login-box" :class="{ 'fade-in': isLoaded }">
-      <div class="login-form-container">
-        <!-- 语言切换按钮 -->
-        <div class="login-lang-switch">
-          <lang-select />
+    <!-- 背景氛围层：Apple 风格流动极光 -->
+    <div class="bg-aurora" aria-hidden="true">
+      <div class="aurora-blob aurora-blob--blue" />
+      <div class="aurora-blob aurora-blob--indigo" />
+      <div class="aurora-blob aurora-blob--cyan" />
+    </div>
+
+    <!-- 语言切换：固定在页面右上角 -->
+    <div class="page-lang-switch">
+      <lang-select />
+    </div>
+
+    <div class="login-card" :class="{ 'is-visible': isLoaded }">
+      <!-- macOS 风格应用图标 -->
+      <div class="app-icon anim-stagger" style="--stagger-delay: 0.05s">
+        <i class="el-icon-office-building" />
+      </div>
+
+      <div class="login-header">
+        <h2 class="login-title anim-stagger" style="--stagger-delay: 0.12s">{{ systemTitle }}</h2>
+        <p class="login-subtitle anim-stagger" style="--stagger-delay: 0.18s">{{ $t('login.title') }}</p>
+      </div>
+
+      <el-form
+        ref="loginForm"
+        :model="loginForm"
+        :rules="loginRules"
+        class="login-form"
+        auto-complete="on"
+        label-position="left"
+      >
+        <el-form-item prop="username" class="anim-stagger" style="--stagger-delay: 0.24s">
+          <el-input
+            ref="username"
+            v-model="loginForm.username"
+            :placeholder="$t('login.username')"
+            name="username"
+            type="text"
+            tabindex="1"
+            auto-complete="on"
+            prefix-icon="el-icon-user"
+            size="medium"
+            class="login-input"
+            @focus="handleInputFocus"
+            @blur="handleInputBlur"
+          />
+        </el-form-item>
+
+        <el-form-item prop="password" class="anim-stagger" style="--stagger-delay: 0.3s">
+          <el-input
+            :key="passwordType"
+            ref="password"
+            v-model="loginForm.password"
+            :type="passwordType"
+            :placeholder="$t('login.password')"
+            name="password"
+            tabindex="2"
+            auto-complete="on"
+            prefix-icon="el-icon-lock"
+            size="medium"
+            class="login-input"
+            @keyup.enter.native="handleLogin"
+            @focus="handleInputFocus"
+            @blur="handleInputBlur"
+          />
+          <span class="show-pwd" @click="showPwd">
+            <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'" />
+          </span>
+        </el-form-item>
+
+        <div class="login-options anim-stagger" style="--stagger-delay: 0.36s">
+          <el-checkbox v-model="loginForm.rememberMe">{{ $t('login.rememberMe') || '记住我' }}</el-checkbox>
         </div>
 
-        <div class="login-header">
-          <h2 class="login-title">{{ systemTitle }}</h2>
-          <p class="login-subtitle">{{ $t('login.title') }}</p>
-        </div>
-
-        <el-form
-          ref="loginForm"
-          :model="loginForm"
-          :rules="loginRules"
-          class="login-form"
-          auto-complete="on"
-          label-position="left"
+        <el-button
+          :loading="loading"
+          type="primary"
+          class="login-button anim-stagger"
+          style="--stagger-delay: 0.42s"
+          @click.native.prevent="handleLogin"
         >
+          {{ loading ? ($t('login.loggingIn') || '登录中...') : $t('login.login') }}
+        </el-button>
 
-          <el-form-item prop="username">
-            <el-input
-              ref="username"
-              v-model="loginForm.username"
-              :placeholder="$t('login.username')"
-              name="username"
-              type="text"
-              tabindex="1"
-              auto-complete="on"
-              prefix-icon="el-icon-user"
-              size="medium"
-              class="login-input"
-              @focus="handleInputFocus"
-              @blur="handleInputBlur"
-            />
-          </el-form-item>
-
-          <el-form-item prop="password">
-            <el-input
-              :key="passwordType"
-              ref="password"
-              v-model="loginForm.password"
-              :type="passwordType"
-              :placeholder="$t('login.password')"
-              name="password"
-              tabindex="2"
-              auto-complete="on"
-              prefix-icon="el-icon-lock"
-              size="medium"
-              class="login-input"
-              @keyup.enter.native="handleLogin"
-              @focus="handleInputFocus"
-              @blur="handleInputBlur"
-            />
-            <span class="show-pwd" @click="showPwd">
-              <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'" />
-            </span>
-          </el-form-item>
-
-          <div class="login-options">
-            <el-checkbox v-model="loginForm.rememberMe">{{ $t('login.rememberMe') || '记住我' }}</el-checkbox>
-          </div>
-
-          <el-button :loading="loading" type="primary" class="login-button" @click.native.prevent="handleLogin">
-            {{ loading ? ($t('login.loggingIn') || '登录中...') : $t('login.login') }}
-          </el-button>
-
-          <div class="login-footer">
-            <p>© 2025 {{ systemTitle }}. {{ $t('login.copyright') || '保留所有权利.' }}</p>
-          </div>
-        </el-form>
-      </div>
-
-      <div class="login-decoration">
-        <div class="decoration-content">
-          <div class="decoration-icon">
-            <i class="el-icon-office-building float-animation" />
-          </div>
-          <!--          <h3>高效企业管理</h3>-->
-          <!--          <p>一站式解决方案，提升企业运营效率</p>-->
+        <div class="secure-hint anim-stagger" style="--stagger-delay: 0.48s">
+          <i class="el-icon-lock" />
+          <span>{{ $t('login.secureHint') }}</span>
         </div>
-      </div>
+
+        <div class="login-footer anim-stagger" style="--stagger-delay: 0.54s">
+          <p>© 2025 {{ systemTitle }}. {{ $t('login.copyright') || '保留所有权利.' }}</p>
+        </div>
+      </el-form>
     </div>
   </div>
 </template>
@@ -207,118 +217,292 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* ===== Apple 风格登录页：浅灰底 + 流动极光 + 白色卡片 + 蓝色强调 ===== */
 .login-container {
   min-height: 100vh;
   width: 100%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px;
   box-sizing: border-box;
+  overflow: hidden;
+  position: relative;
+  background-color: #f5f5f7;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'PingFang SC', 'Helvetica Neue', sans-serif;
 }
 
-.login-box {
-  display: flex;
-  width: 900px;
-  height: 500px;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+/* 流动极光背景：大尺寸模糊光斑缓慢漂移，营造 macOS 壁纸氛围 */
+.bg-aurora {
+  position: absolute;
+  inset: 0;
   overflow: hidden;
-  opacity: 0;
-  transform: translateY(20px);
-  transition: all 0.5s ease-out;
+  pointer-events: none;
+  z-index: 0;
 
-  &.fade-in {
-    opacity: 1;
-    transform: translateY(0);
+  /* 顶部提亮，避免光斑让整体发灰 */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 38%);
   }
 }
 
-.login-form-container {
-  flex: 1;
-  padding: 50px 40px;
-  display: flex;
-  flex-direction: column;
-  position: relative;
+.aurora-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+  will-change: transform;
 }
 
-.login-lang-switch {
-  position: absolute;
-  top: 16px;
-  right: 16px;
+.aurora-blob--blue {
+  width: 52vw;
+  height: 52vw;
+  min-width: 480px;
+  min-height: 480px;
+  left: -12vw;
+  top: -18vh;
+  background: radial-gradient(circle at 30% 30%, rgba(0, 113, 227, 0.5), rgba(0, 113, 227, 0) 65%);
+  animation: aurora-drift-a 18s ease-in-out infinite;
+}
+
+.aurora-blob--indigo {
+  width: 46vw;
+  height: 46vw;
+  min-width: 420px;
+  min-height: 420px;
+  right: -14vw;
+  bottom: -20vh;
+  background: radial-gradient(circle at 60% 40%, rgba(94, 92, 230, 0.42), rgba(94, 92, 230, 0) 65%);
+  animation: aurora-drift-b 23s ease-in-out infinite;
+}
+
+.aurora-blob--cyan {
+  width: 34vw;
+  height: 34vw;
+  min-width: 320px;
+  min-height: 320px;
+  right: 12vw;
+  top: -12vh;
+  background: radial-gradient(circle at 50% 50%, rgba(100, 210, 255, 0.35), rgba(100, 210, 255, 0) 65%);
+  animation: aurora-drift-c 15s ease-in-out infinite;
+}
+
+/* 多关键帧环绕流动：位移 + 旋转（让偏心光斑的亮核绕行）+ 呼吸缩放 + 透明度脉动 */
+@keyframes aurora-drift-a {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 0.55;
+  }
+  33% {
+    transform: translate(12vw, 9vh) rotate(50deg) scale(1.18);
+    opacity: 0.7;
+  }
+  66% {
+    transform: translate(5vw, 16vh) rotate(110deg) scale(0.96);
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1);
+    opacity: 0.55;
+  }
+}
+
+@keyframes aurora-drift-b {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(1.05);
+    opacity: 0.55;
+  }
+  40% {
+    transform: translate(-10vw, -9vh) rotate(-60deg) scale(0.9);
+    opacity: 0.68;
+  }
+  70% {
+    transform: translate(-16vw, -3vh) rotate(-130deg) scale(1.15);
+    opacity: 0.48;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(1.05);
+    opacity: 0.55;
+  }
+}
+
+@keyframes aurora-drift-c {
+  0% {
+    transform: translate(0, 0) rotate(0deg) scale(0.95);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate(-14vw, 10vh) rotate(90deg) scale(1.2);
+    opacity: 0.72;
+  }
+  100% {
+    transform: translate(0, 0) rotate(0deg) scale(0.95);
+    opacity: 0.55;
+  }
+}
+
+/* 语言切换：右上角胶囊按钮 */
+.page-lang-switch {
+  position: fixed;
+  top: 20px;
+  right: 24px;
   z-index: 10;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  transition: all 0.25s ease;
+
+  &:hover {
+    background: #fff;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+  }
+
+  ::v-deep i {
+    color: #6e6e73;
+    font-size: 16px !important;
+  }
+}
+
+/* 登录卡片 */
+.login-card {
+  position: relative;
+  z-index: 1;
+  width: 396px;
+  max-width: 100%;
+  /* 半透明白 + 毛玻璃，透出背景极光色彩 */
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(24px) saturate(180%);
+  -webkit-backdrop-filter: blur(24px) saturate(180%);
+  border-radius: 20px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(0, 0, 0, 0.04);
+  padding: 36px 36px 20px;
+  box-sizing: border-box;
+  opacity: 0;
+  transform: translateY(12px) scale(0.985);
+  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+
+  &.is-visible {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* 应用图标：macOS squircle 风格 */
+.app-icon {
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 16px;
+  border-radius: 15px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 16px rgba(29, 78, 216, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+
+  i {
+    font-size: 30px;
+    color: #fff;
+  }
 }
 
 .login-header {
-  margin-bottom: 40px;
+  margin-bottom: 24px;
   text-align: center;
 
   .login-title {
-    font-size: 28px;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 10px;
-    animation: title-pop-in 0.8s ease-out;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: #1d1d1f;
+    margin: 0 0 4px;
   }
 
   .login-subtitle {
-    font-size: 14px;
-    color: #666;
-    animation: subtitle-fade-in 1s ease-out;
+    font-size: 13px;
+    color: #86868b;
+    margin: 0;
   }
-}
-
-.login-form {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
 }
 
 ::v-deep .el-form-item {
-  margin-bottom: 24px;
-  transition: transform 0.3s ease;
+  margin-bottom: 18px;
+  position: relative;
 
-  &.input-focused {
-    transform: translateX(5px);
+  .el-form-item__error {
+    padding-top: 2px;
+    font-size: 12px;
   }
 }
 
+/* 填充式输入框：灰底无边框，聚焦时白底 + 蓝色描边光环 */
 .login-input {
   ::v-deep .el-input__inner {
     height: 46px;
     line-height: 46px;
-    padding-left: 40px;
-    border-radius: 6px;
-    border: 1px solid #dcdfe6;
-    transition: all 0.3s ease;
+    padding-left: 42px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background-color: #f5f5f7;
+    font-size: 14px;
+    color: #1d1d1f;
+    transition: background-color 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+
+    &::placeholder {
+      color: #9a9aa0;
+    }
+
+    &:hover {
+      background-color: #f0f0f2;
+    }
 
     &:focus {
-      border-color: #409eff;
-      box-shadow: 0 0 0 2px rgba(64, 158, 255, 0.2);
+      background-color: #fff;
+      border-color: #0071e3;
+      box-shadow: 0 0 0 4px rgba(0, 113, 227, 0.12);
     }
+  }
+
+  ::v-deep .el-input__prefix {
+    left: 14px;
+    color: #86868b;
+    transition: color 0.25s ease;
+  }
+
+  ::v-deep .el-input__icon {
+    line-height: 46px;
+    font-size: 16px;
   }
 }
 
-::v-deep .el-input--medium .el-input__icon {
-  line-height: 46px;
-  width: 40px;
+::v-deep .el-form-item.is-focus .login-input .el-input__prefix,
+::v-deep .el-form-item.input-focused .login-input .el-input__prefix {
+  color: #0071e3;
 }
 
 .show-pwd {
   position: absolute;
-  right: 12px;
-  top: 50%;
+  right: 14px;
+  top: 23px;
   transform: translateY(-50%);
   cursor: pointer;
-  color: #909399;
+  color: #9a9aa0;
   font-size: 16px;
-  transition: all 0.3s ease;
+  line-height: 1;
+  transition: color 0.2s ease;
 
   &:hover {
-    color: #409eff;
-    transform: translateY(-50%) scale(1.1);
+    color: #0071e3;
   }
 }
 
@@ -326,171 +510,112 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 30px;
+  margin: 0 0 18px;
 
   ::v-deep .el-checkbox__label {
-    color: #666;
-    font-size: 14px;
+    color: #515154;
+    font-size: 13px;
   }
 
-  .forgot-password {
-    color: #409eff;
-    font-size: 14px;
-    text-decoration: none;
+  ::v-deep .el-checkbox__inner {
+    border-radius: 5px;
+    border-color: #c7c7cc;
+  }
 
-    &:hover {
-      color: #66b1ff;
-      text-decoration: underline;
-    }
+  ::v-deep .el-checkbox__input.is-checked .el-checkbox__inner {
+    background-color: #0071e3;
+    border-color: #0071e3;
+  }
+
+  ::v-deep .el-checkbox__input.is-focus .el-checkbox__inner {
+    border-color: #0071e3;
   }
 }
 
+/* 主按钮：Apple 蓝 */
 .login-button {
+  width: 100%;
   height: 46px;
-  font-size: 16px;
-  border-radius: 6px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 12px;
+  background-color: #0071e3;
   border: none;
-  letter-spacing: 1px;
-  margin-bottom: 30px;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+  transition: background-color 0.25s ease, box-shadow 0.25s ease, transform 0.15s ease;
 
-  &:hover {
-    opacity: 0.9;
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
-    transform: translateY(-2px);
+  &:hover,
+  &:focus {
+    background-color: #0077ed;
+    border: none;
+    box-shadow: 0 4px 14px rgba(0, 113, 227, 0.32);
   }
 
   &:active {
-    transform: translateY(1px);
+    transform: scale(0.985);
+    background-color: #006edb;
   }
 
-  &::after {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 5px;
-    height: 5px;
-    background: rgba(255, 255, 255, 0.5);
-    opacity: 0;
-    border-radius: 100%;
-    transform: scale(1, 1) translate(-50%);
-    transform-origin: 50% 50%;
+  &.is-loading {
+    background-color: #0071e3;
+    opacity: 0.85;
   }
+}
 
-  &:focus:not(:active)::after {
-    animation: ripple 0.6s ease-out;
+/* 安全提示：充实按钮下方空间，传递信任感 */
+.secure-hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 16px;
+  font-size: 11px;
+  color: #9a9aa0;
+
+  i {
+    font-size: 11px;
+    color: #34c759;
   }
 }
 
 .login-footer {
   text-align: center;
-  margin-top: auto;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid #f2f2f4;
 
   p {
-    font-size: 12px;
-    color: #909399;
+    font-size: 11px;
+    color: #9a9aa0;
     margin: 0;
   }
 }
 
-.login-decoration {
-  width: 40%;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-  padding: 30px;
-  box-sizing: border-box;
+/* 分层入场动画 */
+.anim-stagger {
+  opacity: 0;
+  animation: rise-in 0.55s cubic-bezier(0.25, 0.1, 0.25, 1) forwards;
+  animation-delay: var(--stagger-delay, 0s);
 }
 
-.decoration-content {
-  text-align: center;
-}
-
-.decoration-icon {
-  font-size: 64px;
-  margin-bottom: 20px;
-}
-
-.decoration-content h3 {
-  font-size: 24px;
-  font-weight: 500;
-  margin-bottom: 15px;
-}
-
-.decoration-content p {
-  font-size: 14px;
-  line-height: 1.6;
-  opacity: 0.9;
-}
-
-.float-animation {
-  animation: float 3s ease-in-out infinite;
-  display: inline-block;
-}
-
-@media (max-width: 768px) {
-  .login-box {
-    flex-direction: column;
-    height: auto;
-    width: 90%;
-  }
-
-  .login-decoration {
-    width: 100%;
-    padding: 30px 20px;
-  }
-
-  .login-form-container {
-    padding: 30px 20px;
-  }
-}
-
-@keyframes float {
-  0% {
-    transform: translateY(0px);
-  }
-  50% {
-    transform: translateY(-15px);
-  }
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-@keyframes title-pop-in {
-  0% {
+@keyframes rise-in {
+  from {
     opacity: 0;
-    transform: translateY(-20px);
+    transform: translateY(10px);
   }
-  100% {
+  to {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-@keyframes subtitle-fade-in {
-  0% {
-    opacity: 0;
+@media (max-width: 480px) {
+  .login-container {
+    padding: 16px;
   }
-  100% {
-    opacity: 1;
-  }
-}
 
-@keyframes ripple {
-  0% {
-    transform: scale(0, 0);
-    opacity: 0.5;
-  }
-  100% {
-    transform: scale(50, 50);
-    opacity: 0;
+  .login-card {
+    padding: 36px 24px 24px;
   }
 }
 </style>
