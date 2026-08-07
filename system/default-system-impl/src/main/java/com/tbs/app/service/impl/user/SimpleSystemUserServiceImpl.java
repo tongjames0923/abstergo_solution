@@ -10,10 +10,10 @@ import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
@@ -74,6 +74,10 @@ public class SimpleSystemUserServiceImpl
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()))
                 .message(I18nUtil.get("user.password.invalid")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         }
+        AssertUtil.isTrue(
+                !CollUtil.isEmpty(SpringUtil.getBean(ISystemUserService.class).queryByUserName(entity.getUserName())))
+            .message(I18nUtil.get("user.name.already.exists", entity.getUserName()))
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
         getMapper().insert(entity);
@@ -86,9 +90,12 @@ public class SimpleSystemUserServiceImpl
         return List.of(entity);
     }
 
-    @Caching(evict = {@CacheEvict(value = "system_user", key = "#entity.userName",
-        condition = "#entity!=null&&#entity.userName!=null")})
-
+    @Caching(
+        evict = {@CacheEvict(value = "system_user", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
+            @CacheEvict(value = "user_name_id_map", key = "#entity.userName",
+                condition = "#entity!=null&&#entity.userName!=null"),
+            @CacheEvict(value = "user_name_to_id", key = "#entity.userName",
+                condition = "#entity!=null&&#entity.userName!=null")})
     @Override
     public List<SystemUserEntity> save(SystemUserEntity entity) {
         return super.save(entity);
@@ -109,11 +116,6 @@ public class SimpleSystemUserServiceImpl
                 AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
             }
         }
-        if (StrUtil.isNotEmpty(systemUserEntity.getUserName()) &&
-            !Objects.equals(oldSystemUserEntity.getUserName(), systemUserEntity.getUserName())) {
-            throw FormattedRuntimeException.userInputError(I18nUtil.get("user.name.not.changeable"));
-        }
-
         if (systemUserEntity.getFlag() != null) {
             if (!Objects.equals(systemUserEntity.getFlag(), oldSystemUserEntity.getFlag())) {
                 AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()))
@@ -152,6 +154,23 @@ public class SimpleSystemUserServiceImpl
         return super.queryById(id);
     }
 
+    /**
+     * 根据用户名查询单个用户ID（用于唯一性校验）
+     *
+     * @param username 用户名
+     * @return 用户ID，不存在返回null
+     */
+    @Cacheable(cacheNames = "user_name_to_id", key = "#username", unless = "#result==null")
+    @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+    public Long getUserIdByUserName(String username) {
+        var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username)
+            .equal(SystemUserEntity::getFlag, SystemUserStatusEnum.ACTIVE.getCode()).pour().fetch();
+        if (CollUtil.isEmpty(users)) {
+            return null;
+        }
+        return users.get(0).getId();
+    }
+
     @Override
     protected SystemUserMapper getMapper() {
         return mapper;
@@ -167,10 +186,41 @@ public class SimpleSystemUserServiceImpl
         return SystemUserStatusEnum.INACTIVE.getCode();
     }
 
+    /**
+     * 删除用户（逻辑删除），同时清除相关缓存
+     *
+     * @param id 用户ID
+     * @return 被删除的用户实体
+     */
+    @Caching(evict = {@CacheEvict(value = "system_user", key = "#id"),
+        @CacheEvict(value = "user_name_id_map", allEntries = true),
+        @CacheEvict(value = "user_name_to_id", allEntries = true)})
+    @Override
+    public SystemUserEntity deleteById(Long id) {
+        return super.deleteById(id);
+    }
+
+    /**
+     * 批量删除用户（逻辑删除），同时清除相关缓存
+     *
+     * @param ids 用户ID集合
+     * @return 删除的用户数量
+     */
+    @Caching(evict = {@CacheEvict(value = "system_user", allEntries = true),
+        @CacheEvict(value = "user_name_id_map", allEntries = true),
+        @CacheEvict(value = "user_name_to_id", allEntries = true)})
+    @Override
+    public int deleteByIds(java.util.Collection<Long> ids) {
+        return super.deleteByIds(ids);
+    }
+
     @Override
     public List<SystemUserEntity> queryByUserName(String username) {
-        return ((ISystemUserService)getInstance()).queryUserIdsByUserName(username).stream().map(this::queryById)
-            .collect(Collectors.toList());
+        var userIds = ((ISystemUserService)getInstance()).queryUserIdsByUserName(username);
+        if (CollUtil.isEmpty(userIds)) {
+            return new ArrayList<>();
+        }
+        return userIds.stream().map(getInstance()::queryById).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     @Cacheable(cacheNames = "user_name_id_map", key = "#username")

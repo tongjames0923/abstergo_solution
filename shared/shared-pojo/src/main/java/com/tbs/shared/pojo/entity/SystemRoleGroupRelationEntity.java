@@ -9,10 +9,7 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -30,7 +27,9 @@ import java.util.Date;
  */
 @Data
 @Entity
-@Table(name = "sys_role_group_relation")
+@Table(name = "sys_role_group_relation",
+    indexes = {@Index(name = "idx_role_group_relation_role_id", columnList = "role_id"),
+        @Index(name = "idx_role_group_relation_group_id", columnList = "group_id")})
 @AllArgsConstructor
 @NoArgsConstructor
 public class SystemRoleGroupRelationEntity implements IIdentifiable<Long>, ICommonCreateAuditable<Long>,

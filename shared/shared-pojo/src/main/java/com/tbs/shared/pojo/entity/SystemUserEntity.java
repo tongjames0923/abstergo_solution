@@ -93,16 +93,4 @@ public class SystemUserEntity
 	@Column(name = "dept_id")
 	private Long deptId;
 
-//	/**
-//	 * 自定义数据权限范围类型
-//	 */
-//	@Column(name = "data_scope_type")
-//	private String dataScopeType;
-//
-//	/**
-//	 * 自定义数据权限范围值
-//	 */
-//	@Column(name = "data_scope_value")
-//	private String dataScopeValue;
-
 }
