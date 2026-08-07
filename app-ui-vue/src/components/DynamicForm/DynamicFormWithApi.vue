@@ -267,17 +267,17 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  min-height: 200px;
+  padding: 36px 20px;
+  min-height: 120px;
 }
 
 .loading-spinner {
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .spinner {
-  width: 40px;
-  height: 40px;
+  width: 30px;
+  height: 30px;
   border: 3px solid rgba(59, 130, 246, 0.1);
   border-top-color: #3b82f6;
   border-radius: 50%;
@@ -298,13 +298,13 @@ export default {
 }
 
 .loading-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #1a1a2e;
 }
 
 .loading-subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
 }
 
@@ -321,23 +321,23 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  min-height: 200px;
+  padding: 36px 20px;
+  min-height: 120px;
 }
 
 .error-icon {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(239, 68, 68, 0.1);
   border-radius: 50%;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .error-icon i {
-  font-size: 32px;
+  font-size: 26px;
   color: #ef4444;
 }
 
@@ -349,13 +349,13 @@ export default {
 }
 
 .error-title {
-  font-size: 18px;
+  font-size: 15px;
   font-weight: 600;
   color: #1a1a2e;
 }
 
 .error-message {
-  font-size: 14px;
+  font-size: 13px;
   color: #6b7280;
   text-align: center;
   max-width: 300px;
@@ -363,8 +363,8 @@ export default {
 }
 
 .retry-button {
-  margin-top: 16px;
-  padding: 10px 24px;
+  margin-top: 12px;
+  padding: 8px 20px;
   border-radius: 8px;
   font-weight: 500;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -392,23 +392,23 @@ export default {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 60px 20px;
-  min-height: 200px;
+  padding: 36px 20px;
+  min-height: 120px;
 }
 
 .empty-icon {
-  width: 80px;
-  height: 80px;
+  width: 56px;
+  height: 56px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(147, 197, 253, 0.1) 100%);
   border-radius: 50%;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .empty-icon i {
-  font-size: 36px;
+  font-size: 28px;
   color: #3b82f6;
 }
 
@@ -420,13 +420,13 @@ export default {
 }
 
 .empty-title {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #1a1a2e;
 }
 
 .empty-subtitle {
-  font-size: 13px;
+  font-size: 12px;
   color: #6b7280;
 }
 

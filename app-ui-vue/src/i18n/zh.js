@@ -30,7 +30,11 @@ export default {
     exportSuccess: '成功导出 {count} 条数据',
     exportFailed: '导出失败，请稍后重试',
     operation: '操作',
-    normal: '正常'
+    normal: '正常',
+    query: '查询',
+    collapse: '收起',
+    expand: '展开',
+    filledConditions: '已填 {count} 项'
   },
 
   // 登录

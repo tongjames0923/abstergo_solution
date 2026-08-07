@@ -25,7 +25,8 @@ export default {
   position: relative;
   overflow: hidden;
   padding: 0;
-  background: transparent;
+  /* 浅灰底色使白色卡片具备层次感，与侧边栏 #f0f0f0 同系 */
+  background: #f5f5f7;
 }
 
 .fixed-header + .app-main {

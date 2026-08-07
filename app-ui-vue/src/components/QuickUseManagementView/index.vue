@@ -59,6 +59,7 @@
         :auto-load="autoLoad"
         actions-fixed="right"
         actions-width="160px"
+        size="small"
         border
         stripe
       >
@@ -593,7 +594,7 @@ export default {
 
   .header-section {
     flex: 0 0 auto;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
 
     .header-content {
       display: flex;
@@ -602,11 +603,26 @@ export default {
       flex-wrap: wrap;
 
       .main-title {
-        font-size: 20px;
+        font-size: 17px;
         font-weight: 600;
         margin: 0;
         color: #303133;
         line-height: 1.2;
+        letter-spacing: -0.01em;
+        position: relative;
+        padding-left: 10px;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 15px;
+          background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+          border-radius: 2px;
+        }
       }
 
       .header-actions {
@@ -616,7 +632,7 @@ export default {
 
         .add-button,
         .export-button {
-          height: 30px;
+          height: 28px;
           padding: 0 12px;
           font-size: 13px;
           border-radius: 4px;
@@ -627,13 +643,13 @@ export default {
 
   .search-card {
     flex: 0 0 auto;
-    margin-bottom: 10px;
+    margin-bottom: 8px;
     border-radius: 6px;
     box-shadow: 0 1px 8px 0 rgba(0, 0, 0, 0.03);
     overflow-y: auto;
 
     ::v-deep .el-card__body {
-      padding: 0 12px 6px;
+      padding: 0 12px 4px;
     }
 
     // 覆盖DynamicForm组件的紧凑样式
@@ -645,8 +661,16 @@ export default {
       box-shadow: none;
     }
 
+    ::v-deep .dynamic-form-card .el-card__header {
+      padding: 0;
+    }
+
+    ::v-deep .dynamic-form-card .el-card__body {
+      padding: 0;
+    }
+
     ::v-deep .card-header {
-      padding: 2px 0 0;
+      padding: 2px 0 4px;
       background: transparent;
       border-bottom: none;
     }
@@ -661,9 +685,8 @@ export default {
     }
 
     ::v-deep .expand-button {
-      padding: 4px 8px;
-      font-size: 12px;
-      border-radius: 4px;
+      width: 22px;
+      height: 22px;
     }
 
     ::v-deep .dynamic-form-row {
@@ -675,7 +698,9 @@ export default {
     ::v-deep .dynamic-form-col {
       padding-left: 5px;
       padding-right: 5px;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
+      animation: none;
+      opacity: 1;
     }
 
     ::v-deep .dynamic-form-item .el-form-item__label {
@@ -684,14 +709,40 @@ export default {
     }
 
     ::v-deep .form-actions {
-      padding: 4px 0 0;
-      margin-top: 2px;
-      border-top: 1px solid rgba(0, 0, 0, 0.04);
+      padding: 2px 0 2px;
+      margin-top: 0;
+      border-top: none;
     }
 
     ::v-deep .form-actions .el-button {
       min-width: 60px;
       padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    ::v-deep .dynamic-form-component {
+      border-radius: 4px !important;
+    }
+
+    ::v-deep .el-input__inner {
+      height: 30px;
+      line-height: 30px;
+    }
+
+    ::v-deep .el-input__icon {
+      line-height: 30px;
+    }
+
+    ::v-deep .el-range-editor--medium.el-input__inner {
+      height: 30px;
+      padding: 0 8px;
+    }
+
+    ::v-deep .el-range-editor .el-range-input {
+      font-size: 13px;
+    }
+
+    ::v-deep .el-range-editor--small .el-range-input {
       font-size: 12px;
     }
   }
@@ -713,7 +764,7 @@ export default {
 
     ::v-deep .el-card__header {
       flex: 0 0 auto;
-      padding: 8px 16px;
+      padding: 6px 12px;
       border-bottom: 1px solid #ebeef5;
     }
 
@@ -721,7 +772,7 @@ export default {
       flex: 1;
       min-height: 0;
       overflow: hidden;
-      padding: 8px;
+      padding: 6px 8px;
       display: flex;
       flex-direction: column;
     }
@@ -736,7 +787,21 @@ export default {
       .table-header-title {
         font-weight: 600;
         color: #303133;
-        font-size: 14px;
+        font-size: 13px;
+        position: relative;
+        padding-left: 8px;
+
+        &::before {
+          content: '';
+          position: absolute;
+          left: 0;
+          top: 50%;
+          transform: translateY(-50%);
+          width: 3px;
+          height: 12px;
+          background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
+          border-radius: 2px;
+        }
       }
 
       .table-header-actions {
@@ -751,6 +816,16 @@ export default {
     gap: 4px;
     flex-wrap: wrap;
     justify-content: center;
+    align-items: center;
+
+    ::v-deep .el-button + .el-button {
+      margin-left: 0;
+    }
+
+    ::v-deep .el-button--mini {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
   }
 
   .dialog-actions {
@@ -758,6 +833,47 @@ export default {
     justify-content: flex-end;
     gap: 10px;
     padding: 0 16px 16px;
+  }
+
+  // 弹窗紧凑化：保持现有色调，压缩纵向空间
+  .form-dialog {
+    ::v-deep .el-dialog {
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    ::v-deep .el-dialog__header {
+      padding: 12px 16px;
+      border-bottom: 1px solid #f0f0f0;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.9) 100%);
+
+      .el-dialog__title {
+        font-size: 14px;
+        font-weight: 600;
+        color: #1a1a2e;
+      }
+    }
+
+    ::v-deep .el-dialog__body {
+      padding: 12px 16px 4px;
+    }
+
+    // 弹窗内表单同样紧凑
+    ::v-deep .dynamic-form-card {
+      margin-bottom: 0;
+      border: none;
+      box-shadow: none;
+    }
+
+    ::v-deep .card-header {
+      display: none;
+    }
+
+    ::v-deep .dynamic-form-col {
+      margin-bottom: 8px;
+      animation: none;
+      opacity: 1;
+    }
   }
 
 

@@ -191,7 +191,7 @@ export default {
     height: 100%;
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 10px;
 
     &:focus {
       outline: none;
@@ -212,7 +212,7 @@ export default {
     .user-info {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       height: 100%;
     }
 
@@ -223,13 +223,22 @@ export default {
       gap: 4px;
       font-size: 12px;
       color: #666;
-      padding: 4px 8px;
+      padding: 3px 8px;
       background: #f5f5f5;
       border-radius: 4px;
+      white-space: nowrap;
+      max-width: 160px;
+      overflow: hidden;
+
+      span {
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
 
       i {
         font-size: 12px;
         color: #999;
+        flex-shrink: 0;
       }
     }
 
@@ -257,7 +266,7 @@ export default {
         align-items: center;
         gap: 8px;
         cursor: pointer;
-        padding: 4px 8px;
+        padding: 3px 8px;
         border-radius: 6px;
         transition: background .2s;
 
@@ -360,15 +369,15 @@ export default {
   max-width: 280px !important;
 
   .tooltip-content {
-    padding: 12px 16px;
+    padding: 10px 14px;
   }
 
   .tooltip-title {
     font-size: 13px;
     font-weight: 600;
     color: #333;
-    margin-bottom: 8px;
-    padding-bottom: 8px;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
     border-bottom: 1px solid #eaeaea;
   }
 
@@ -376,7 +385,7 @@ export default {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 4px 0;
+    padding: 3px 0;
     font-size: 12px;
   }
 

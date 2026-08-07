@@ -6,6 +6,8 @@
     :disabled="disabled || dictLoading"
     :loading=" dictLoading"
     :multiple="multiple"
+    :size="size"
+    :filterable="filterable"
     @change="handleChange"
   >
     <el-option
@@ -51,6 +53,16 @@ export default {
     },
     // 是否多选
     multiple: {
+      type: Boolean,
+      default: false
+    },
+    // 尺寸（medium / small / mini），默认继承全局尺寸
+    size: {
+      type: String,
+      default: ''
+    },
+    // 是否可搜索
+    filterable: {
       type: Boolean,
       default: false
     },

@@ -667,26 +667,129 @@ export default {
 
   &__toolbar {
     flex: 0 0 auto;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   &__pagination {
     flex: 0 0 auto;
-    margin-top: 10px;
-    text-align: right;
+    margin-top: 6px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+
+    ::v-deep .el-pagination {
+      font-weight: 400;
+
+      .btn-prev,
+      .btn-next,
+      .el-pager li {
+        min-width: 26px;
+        height: 26px;
+        line-height: 26px;
+        font-size: 12px;
+      }
+
+      .el-pagination__total,
+      .el-pagination__jump {
+        font-size: 12px;
+        color: #909399;
+      }
+
+      .el-select .el-input__inner {
+        height: 26px;
+        line-height: 26px;
+        font-size: 12px;
+      }
+    }
   }
 
-  // 表格撑满 toolbar 与分页之间的剩余空间
+  // 表格撑满 toolbar 与分页之间的剩余空间（内部完整 flex 链路，避免底部留白）
   ::v-deep .el-table {
     flex: 1;
     min-height: 0;
+    display: flex;
+    flex-direction: column;
+    font-size: 13px;
+
+    .el-table__header-wrapper {
+      flex: 0 0 auto;
+    }
+
+    .el-table__body-wrapper {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+    }
+
+    // 紧凑表头
+    th.el-table__cell {
+      padding: 6px 0;
+      background-color: #fafbfc;
+      color: #606266;
+      font-weight: 600;
+      font-size: 12px;
+
+      .cell {
+        padding-left: 8px;
+        padding-right: 8px;
+        line-height: 1.4;
+      }
+    }
+
+    // 紧凑单元格
+    td.el-table__cell {
+      padding: 4px 0;
+
+      .cell {
+        padding-left: 8px;
+        padding-right: 8px;
+        line-height: 1.45;
+      }
+    }
+
+    // 斑马纹与悬停：保持现有色调，仅做轻微蓝调提亮
+    &--striped .el-table__body tr.el-table__row--striped td {
+      background: #fafbfd;
+    }
+
+    .el-table__body tr {
+      &:hover > td {
+        background-color: #f2f7fe;
+      }
+
+      &.current-row > td {
+        background-color: #eaf3fe;
+      }
+    }
+
+    // 空数据状态紧凑化
+    .el-table__empty-block {
+      min-height: 96px;
+
+      .el-table__empty-text {
+        font-size: 13px;
+        color: #909399;
+        line-height: 96px;
+      }
+    }
+
+    // 行内按钮整体收紧
+    .el-button--mini {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
   }
 
   .action-buttons-container {
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
     justify-content: center;
+    align-items: center;
+
+    ::v-deep .el-button + .el-button {
+      margin-left: 0;
+    }
   }
 }
 </style>

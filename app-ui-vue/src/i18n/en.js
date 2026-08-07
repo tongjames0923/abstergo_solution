@@ -30,7 +30,11 @@ export default {
     exportSuccess: 'Successfully exported {count} records',
     exportFailed: 'Export failed, please try again later',
     operation: 'Operation',
-    normal: 'Active'
+    normal: 'Active',
+    query: 'Query',
+    collapse: 'Collapse',
+    expand: 'Expand',
+    filledConditions: '{count} filled'
   },
 
   // Login

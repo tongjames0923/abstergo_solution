@@ -1,31 +1,55 @@
 <template>
   <el-card class="dynamic-form-card" shadow="never">
-    <!-- 头部区域 -->
-    <div slot="header" class="clearfix card-header">
+    <!-- 头部控制条：整体可点击折叠/展开，右侧为图标化开关 -->
+    <div
+      v-if="showHeader"
+      slot="header"
+      class="clearfix card-header"
+      :class="{ 'is-clickable': expandable }"
+      @click="expandable && toggleExpand()"
+    >
       <slot name="header">
-        <span class="card-title">{{ finalTitle }}</span>
-        <el-button
-          v-if="config && config.expandable !== false"
+        <div class="header-left">
+          <span class="card-title">{{ finalTitle }}</span>
+          <transition name="df-fade">
+            <span v-if="!isExpanded && filledCount > 0" class="filled-summary">
+              {{ $t('common.filledConditions', { count: filledCount }) }}
+            </span>
+          </transition>
+        </div>
+        <button
+          v-if="expandable"
           class="expand-button"
           :class="{ 'is-expanded': isExpanded }"
-          @click="toggleExpand"
+          type="button"
+          :aria-expanded="String(isExpanded)"
+          :title="isExpanded ? $t('common.collapse') : $t('common.expand')"
+          @click.stop="toggleExpand"
         >
-          {{ isExpanded ? '收起' : '展开' }}
-          <i :class="isExpanded ? 'el-icon-arrow-up' : 'el-icon-arrow-down'" />
-        </el-button>
+          <i class="el-icon-arrow-down" />
+        </button>
       </slot>
     </div>
 
-    <!-- 表单主体 -->
-    <el-form
-      v-show="isExpanded"
-      ref="form"
-      :label-width="finalLabelWidth"
-      :model="formData"
-      class="dynamic-form"
-      v-bind="formProps"
-      v-on="formListeners"
+    <!-- 表单主体（带高度过渡的折叠容器） -->
+    <transition
+      name="df-collapse"
+      @before-enter="beforeCollapseEnter"
+      @enter="onCollapseEnter"
+      @after-enter="afterCollapseEnter"
+      @before-leave="beforeCollapseLeave"
+      @leave="onCollapseLeave"
+      @after-leave="afterCollapseLeave"
     >
+      <el-form
+        v-show="isExpanded"
+        ref="form"
+        :label-width="finalLabelWidth"
+        :model="formData"
+        class="dynamic-form"
+        v-bind="formProps"
+        v-on="formListeners"
+      >
       <!-- 表单前内容 -->
       <slot name="before-form" />
 
@@ -139,20 +163,21 @@
       <!-- 表单后内容 -->
       <slot name="after-form" />
 
-      <!-- 操作按钮 -->
-      <div class="form-actions">
-        <slot
-          :form="form"
-          :formData="formData"
-          :reset="resetForm"
-          :submit="submitForm"
-          name="actions"
-        >
-          <el-button icon="el-icon-search" type="primary" @click="submitForm">查询</el-button>
-          <el-button icon="el-icon-refresh" @click="resetForm">重置</el-button>
-        </slot>
-      </div>
-    </el-form>
+        <!-- 操作按钮 -->
+        <div class="form-actions">
+          <slot
+            :form="form"
+            :formData="formData"
+            :reset="resetForm"
+            :submit="submitForm"
+            name="actions"
+          >
+            <el-button icon="el-icon-refresh" @click="resetForm">{{ $t('common.reset') }}</el-button>
+            <el-button icon="el-icon-search" type="primary" @click="submitForm">{{ $t('common.query') }}</el-button>
+          </slot>
+        </div>
+      </el-form>
+    </transition>
   </el-card>
 </template>
 
@@ -250,7 +275,7 @@ export default {
       }
 
       // 默认值
-      return 20
+      return 16
     },
 
     // 计算默认span
@@ -267,6 +292,27 @@ export default {
 
       // 默认值
       return 8
+    },
+
+    // 是否可折叠（默认可以，config.expandable === false 时关闭）
+    expandable() {
+      return !(this.config && this.config.expandable === false)
+    },
+
+    // 头部仅在存在标题、自定义头部插槽或可折叠时显示
+    showHeader() {
+      return Boolean(this.finalTitle) || Boolean(this.$slots.header) || this.expandable
+    },
+
+    // 折叠状态下已填写的条件数量摘要
+    filledCount() {
+      if (!this.formData || typeof this.formData !== 'object') return 0
+      return Object.keys(this.formData).filter(key => {
+        const value = this.formData[key]
+        if (value === undefined || value === null || value === '') return false
+        if (Array.isArray(value)) return value.length > 0
+        return true
+      }).length
     },
 
     // 表单事件监听器
@@ -359,6 +405,31 @@ export default {
 
     toggleExpand() {
       this.isExpanded = !this.isExpanded
+      this.$emit('expand-change', this.isExpanded)
+    },
+
+    /* 折叠高度过渡钩子 */
+    beforeCollapseEnter(el) {
+      el.style.height = '0'
+      el.style.overflow = 'hidden'
+    },
+    onCollapseEnter(el) {
+      el.style.height = el.scrollHeight + 'px'
+    },
+    afterCollapseEnter(el) {
+      el.style.height = ''
+      el.style.overflow = ''
+    },
+    beforeCollapseLeave(el) {
+      el.style.height = el.scrollHeight + 'px'
+      el.style.overflow = 'hidden'
+    },
+    onCollapseLeave(el) {
+      el.style.height = '0'
+    },
+    afterCollapseLeave(el) {
+      el.style.height = ''
+      el.style.overflow = ''
     },
 
     setFieldValue(prop, value) {
@@ -478,6 +549,15 @@ export default {
   overflow: hidden;
 }
 
+/* 容器内边距由控制条与主体自行控制，避免双重留白 */
+.dynamic-form-card ::v-deep .el-card__header {
+  padding: 0;
+}
+
+.dynamic-form-card ::v-deep .el-card__body {
+  padding: 12px 16px;
+}
+
 .dynamic-form-card:hover {
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06), 0 2px 4px rgba(0, 0, 0, 0.03);
   transform: translateY(-1px);
@@ -487,19 +567,39 @@ export default {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 10px 16px;
-  background: linear-gradient(135deg, rgba(255, 255, 255, 0.8) 0%, rgba(248, 250, 252, 0.9) 100%);
+  gap: 12px;
+  padding: 7px 14px;
+  background: transparent;
   border-bottom: 1px solid rgba(0, 0, 0, 0.04);
-  backdrop-filter: blur(10px);
+  user-select: none;
+  transition: background 0.2s ease;
+}
+
+.card-header.is-clickable {
+  cursor: pointer;
+}
+
+.card-header.is-clickable:hover {
+  background: rgba(59, 130, 246, 0.04);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
 }
 
 .card-title {
   font-weight: 600;
-  font-size: 14px;
+  font-size: 13px;
   color: #1a1a2e;
   letter-spacing: -0.01em;
   position: relative;
   padding-left: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .card-title::before {
@@ -509,63 +609,85 @@ export default {
   top: 50%;
   transform: translateY(-50%);
   width: 3px;
-  height: 14px;
+  height: 13px;
   background: linear-gradient(180deg, #3b82f6 0%, #1d4ed8 100%);
   border-radius: 2px;
 }
 
+/* 折叠状态下的已填条件摘要 */
+.filled-summary {
+  flex: 0 0 auto;
+  font-size: 11px;
+  font-weight: 500;
+  line-height: 1;
+  color: #1d4ed8;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.16);
+  white-space: nowrap;
+}
+
+.df-fade-enter-active,
+.df-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+
+.df-fade-enter,
+.df-fade-leave-to {
+  opacity: 0;
+}
+
+/* 图标化折叠开关 */
 .expand-button {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  border: 1px solid rgba(59, 130, 246, 0.2);
-  padding: 4px 10px;
-  border-radius: 4px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: rgba(59, 130, 246, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-  font-weight: 500;
-  font-size: 12px;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 6px;
+  background: transparent;
+  color: #9ca3af;
   cursor: pointer;
+  outline: none;
+  transition: background 0.2s ease, color 0.2s ease;
 }
 
 .expand-button:hover {
   background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.3);
-  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.15);
-  transform: translateY(-1px);
+  color: #3b82f6;
 }
 
 .expand-button:active {
-  transform: translateY(0);
-}
-
-.expand-button.is-expanded {
-  background: rgba(59, 130, 246, 0.1);
-  border-color: rgba(59, 130, 246, 0.25);
+  background: rgba(59, 130, 246, 0.16);
 }
 
 .expand-button i {
+  font-size: 12px;
   transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* 展开状态箭头朝上 */
 .expand-button.is-expanded i {
   transform: rotate(180deg);
 }
 
 .form-actions {
-  text-align: center;
-  padding: 12px 0 6px;
-  margin-top: 8px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 0 2px;
+  margin-top: 2px;
   border-top: 1px solid rgba(0, 0, 0, 0.04);
-  background: linear-gradient(180deg, transparent 0%, rgba(248, 250, 252, 0.5) 100%);
 }
 
 .form-actions .el-button {
-  min-width: 80px;
+  min-width: 68px;
+  margin-left: 0;
   padding: 6px 12px;
   font-weight: 500;
   font-size: 12px;
@@ -597,29 +719,25 @@ export default {
 .dynamic-form-row {
   margin-left: -8px;
   margin-right: -8px;
-  padding: 8px 0;
+  padding: 6px 0;
 }
 
 .dynamic-form-col {
   padding-left: 8px;
   padding-right: 8px;
-  margin-bottom: 10px;
+  margin-bottom: 8px;
 }
 
 .dynamic-form-item {
   margin-bottom: 0;
-  transition: all 0.3s ease;
-}
-
-.dynamic-form-item:hover {
-  transform: translateX(2px);
 }
 
 .dynamic-form-item ::v-deep .el-form-item__label {
   font-weight: 500;
-  font-size: 13px;
+  font-size: 12px;
   color: #374151;
   padding-right: 8px;
+  line-height: 32px;
 }
 
 .dynamic-form-item ::v-deep .el-form-item__content {
@@ -630,7 +748,36 @@ export default {
 .dynamic-form-component {
   width: 100%;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  border-radius: 8px !important;
+  border-radius: 6px !important;
+}
+
+/* 统一收紧表单控件高度，提升信息密度 */
+.dynamic-form-item ::v-deep .el-input__inner {
+  height: 32px;
+  line-height: 32px;
+}
+
+.dynamic-form-item ::v-deep .el-input__icon {
+  line-height: 32px;
+}
+
+.dynamic-form-item ::v-deep .el-input--small .el-input__suffix,
+.dynamic-form-item ::v-deep .el-input__prefix {
+  display: flex;
+  align-items: center;
+}
+
+.dynamic-form-item ::v-deep .el-range-editor--medium.el-input__inner {
+  height: 32px;
+  padding: 0 8px;
+}
+
+.dynamic-form-item ::v-deep .el-range-editor .el-range-input {
+  font-size: 13px;
+}
+
+.dynamic-form-item ::v-deep .el-textarea__inner {
+  font-size: 13px;
 }
 
 .dynamic-form-component:hover {
@@ -708,7 +855,7 @@ export default {
 /* 小屏幕适配 */
 @media (max-width: 768px) {
   .card-header {
-    padding: 8px 12px;
+    padding: 6px 12px;
   }
 
   .card-title {
@@ -716,7 +863,7 @@ export default {
   }
 
   .form-actions {
-    padding: 8px 0 4px;
+    padding: 8px 0 2px;
   }
 
   .form-actions .el-button {
@@ -774,16 +921,16 @@ export default {
 
 /* 表单项出现动画 */
 .dynamic-form-col {
-  animation: fadeIn 0.3s ease forwards;
+  animation: fadeIn 0.25s ease forwards;
   opacity: 0;
 }
 
-.dynamic-form-col:nth-child(1) { animation-delay: 0.05s; }
-.dynamic-form-col:nth-child(2) { animation-delay: 0.1s; }
-.dynamic-form-col:nth-child(3) { animation-delay: 0.15s; }
-.dynamic-form-col:nth-child(4) { animation-delay: 0.2s; }
-.dynamic-form-col:nth-child(5) { animation-delay: 0.25s; }
-.dynamic-form-col:nth-child(6) { animation-delay: 0.3s; }
-.dynamic-form-col:nth-child(7) { animation-delay: 0.35s; }
-.dynamic-form-col:nth-child(8) { animation-delay: 0.4s; }
+.dynamic-form-col:nth-child(1) { animation-delay: 0.02s; }
+.dynamic-form-col:nth-child(2) { animation-delay: 0.04s; }
+.dynamic-form-col:nth-child(3) { animation-delay: 0.06s; }
+.dynamic-form-col:nth-child(4) { animation-delay: 0.08s; }
+.dynamic-form-col:nth-child(5) { animation-delay: 0.1s; }
+.dynamic-form-col:nth-child(6) { animation-delay: 0.12s; }
+.dynamic-form-col:nth-child(7) { animation-delay: 0.14s; }
+.dynamic-form-col:nth-child(8) { animation-delay: 0.16s; }
 </style>
