@@ -24,9 +24,6 @@
         <el-dropdown-item command="resetPassword" @click.native="handleResetPassword(row)">
           {{ $t('user.resetPassword') }}
         </el-dropdown-item>
-        <el-dropdown-item command="manageRoles" @click.native="handleManageRoles(row)">
-          {{ $t('role.title') }}
-        </el-dropdown-item>
       </template>
     </quick-use-management-view>
 
@@ -90,28 +87,11 @@
         <el-button @click="loginInfoDialogVisible = false">{{ $t('common.cancel') }}</el-button>
       </div>
     </el-dialog>
-
-    <!-- 权限管理弹窗 -->
-    <el-dialog
-      :title="$t('role.title')"
-      :visible.sync="roleManagementDialogVisible"
-      width="90%"
-      :modal-append-to-body="false"
-      :close-on-click-modal="false"
-      class="role-dialog"
-      @close="handleRoleManagementDialogClose"
-    >
-      <UserRoleAdminView
-        v-if="roleManagementDialogVisible"
-        :user-id="currentUserId"
-      />
-    </el-dialog>
   </div>
 </template>
 
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
-import UserRoleAdminView from '@/components/UserAdminView/UserRoleAdminView.vue'
 import UserLoginInfoView from '@/components/UserAdminView/UserLoginInfoView.vue'
 import DynamicTable from '@/components/DynamicTable/index.vue'
 import { activateUser, adminQueryUser, deleteUser, disableUser, saveUser } from '@/api/admin_user'
@@ -122,7 +102,6 @@ export default {
   name: 'UserAdminView',
   components: {
     QuickUseManagementView,
-    UserRoleAdminView,
     UserLoginInfoView,
     DynamicTable
   },
@@ -140,7 +119,6 @@ export default {
 
     return {
       resetPasswordDialogVisible: false,
-      roleManagementDialogVisible: false,
       loginInfoDialogVisible: false,
       currentUserId: null,
       passwordForm: {
@@ -308,22 +286,6 @@ export default {
      */
     handleResetPasswordDialogClose() {
       this.$refs.passwordForm.resetFields()
-    },
-
-    /**
-     * 处理权限管理按钮点击事件
-     */
-    handleManageRoles(row) {
-      this.currentUserId = row.id
-      this.roleManagementDialogVisible = true
-    },
-
-    /**
-     * 处理权限管理弹窗关闭事件
-     */
-    handleRoleManagementDialogClose() {
-      this.currentUserId = null
-      this.roleManagementDialogVisible = false
     }
   }
 }
@@ -359,8 +321,7 @@ export default {
   background-color: #f5f7fa;
   overflow: hidden;
 
-  .password-dialog,
-  .role-dialog {
+  .password-dialog {
     ::v-deep .el-dialog__header {
       background-color: #f8f9fa;
       border-bottom: 1px solid #ebeef5;

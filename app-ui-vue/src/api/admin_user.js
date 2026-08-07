@@ -72,48 +72,6 @@ export function saveUser(data) {
   })
 }
 
-export function getRolesByUserIdAdmin(userId) {
-  return request({
-    url: `/private/admin/roles/${userId}`,
-    method: 'get'
-  })
-}
-
-/**
- * 为用户启用角色
- * @param {number} userId - 用户ID
- * @param {string} role - 角色名称
- * @returns {Promise} 操作结果
- */
-export function enableRoleForUser(userId, role) {
-  return request({
-    url: `/private/admin/roles/enable/${userId}`,
-    method: 'get',
-    params: { role }
-  })
-}
-
-export function disableRoleForUser(userId, role) {
-  return request({
-    url: `/private/admin/roles/disable/${userId}`,
-    method: 'get',
-    params: { role }
-  })
-}
-
-/**
- * 查询所有角色
- * @param {Object} data - 查询条件
- * @returns {Promise} 查询结果
- */
-export function queryRoles(data) {
-  return request({
-    url: '/private/admin/roles/query',
-    method: 'post',
-    data
-  })
-}
-
 /**
  * 删除用户
  * @param userId
