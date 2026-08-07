@@ -7,7 +7,6 @@ import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.delegate.IDelegateFlag;
 import com.tbs.common.util.framework.DelegateUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
@@ -65,7 +64,7 @@ public class AdminCompanyController
     @Operation(summary = "获取公司信息", description = "根据公司ID获取公司详细信息")
     @ApiResponse(responseCode = "200", description = "成功获取公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-
+	@PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.DEPT')")
 	public AjaxResult get(@Parameter(name = "id", description = "公司ID", required = true) @PathVariable Long id) {
         SystemCompanyEntity entity = getService().queryById(id);
 		entity.setChildrenCount((long)companyTreeStructService.getChildren(entity.getId()).size());
@@ -84,7 +83,7 @@ public class AdminCompanyController
     @Operation(summary = "保存公司信息", description = "创建或更新公司信息")
     @ApiResponse(responseCode = "200", description = "成功保存公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@PreAuthorize("@preAuthUtils.accountActived")
+	@PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.DEPT')")
 	public AjaxResult save(@Parameter(name = "entity", description = "公司信息",
         required = true) @RequestBody SystemCompanyEntity entity) {
 		return super.save(entity);
@@ -102,7 +101,7 @@ public class AdminCompanyController
     @Operation(summary = "删除公司信息", description = "根据公司ID删除公司信息")
     @ApiResponse(responseCode = "200", description = "成功删除公司信息",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@PreAuthorize("@preAuthUtils.accountActived")
+	@PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.DEPT')")
 	public AjaxResult delete(@Parameter(name = "id", description = "公司ID", required = true) @PathVariable Long id) {
 		return super.delete(id);
 	}
@@ -121,6 +120,7 @@ public class AdminCompanyController
     @Operation(summary = "查询公司列表", description = "根据条件查询公司列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询公司列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+	@PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.DEPT')")
 	public AjaxResult query(
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemCompanyQueryCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
@@ -151,7 +151,7 @@ public class AdminCompanyController
     @Operation(summary = "移动公司到指定父级", description = "将一个公司移动到另一个公司下作为其子级公司")
     @ApiResponse(responseCode = "200", description = "成功移动公司",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-	@PreAuthorize("@preAuthUtils.accountActived")
+	@PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.DEPT')")
 	public AjaxResult moveCompanyTo(
         @Parameter(name = "parent", description = "父级公司ID", required = true) @RequestParam Long parent,
         @Parameter(name = "child", description = "子级公司ID", required = true) @RequestParam Long child) {
@@ -170,7 +170,8 @@ public class AdminCompanyController
     @Operation(summary = "获取子级公司列表", description = "获取指定公司的所有直接子级公司列表")
     @ApiResponse(responseCode = "200", description = "成功获取子级公司列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    public AjaxResult listChildren(
+	@PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.DEPT')")
+	public AjaxResult listChildren(
         @Parameter(name = "parent", description = "父级公司ID", required = true) @PathVariable Long parent) {
 		var data = companyTreeStructService.getChildren(parent).stream().map((p) -> {
 			return companyService.queryById(p.getEntityId());
