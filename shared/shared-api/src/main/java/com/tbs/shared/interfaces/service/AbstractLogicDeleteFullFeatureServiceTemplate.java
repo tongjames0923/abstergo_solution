@@ -28,6 +28,7 @@ public abstract class AbstractLogicDeleteFullFeatureServiceTemplate<T extends II
         T disableEntitys = getInstance().queryById(entitys);
         AssertUtil.isTrue(disableEntitys == null).i18n("crud.delete.entity.not.exists").params(entitys)
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        disableEntitys.setFlag(getFlagDeleted());
         getInstance().updateBy(disableEntitys);
         return disableEntitys;
     }

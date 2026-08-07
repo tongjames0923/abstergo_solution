@@ -10,12 +10,12 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemDepartmentFlagEnum;
-import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemDepartmentMapper;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 public class SimpleDepartmentService
-    extends AbstractPhysicDeleteFullFeatureServiceTemplate<SystemDepartmentEntity, Long, SystemDepartmentMapper>
+    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemDepartmentEntity, Long, SystemDepartmentMapper>
     implements ISystemDepartmentService, IStartup {
 
     @Resource
@@ -77,6 +77,16 @@ public class SimpleDepartmentService
 
     @Override
     protected SystemDepartmentEntity insertNew(SystemDepartmentEntity entity) {
+
+        AssertUtil.isTrueUserInputError(entity == null).i18n("department.empty").throwIt();
+        AssertUtil.isTrueUserInputError(StrUtil.isEmpty(entity.getDepartmentName())).i18n("department.name.empty")
+            .throwIt();
+        AssertUtil.isTrueUserInputError(StrUtil.isEmpty(entity.getDepartmentCode())).i18n("department.code.empty")
+            .throwIt();
+        AssertUtil.isTrueUserInputError(entity.getCompanyId() == null).i18n("department.company.empty").throwIt();
+        var company = SpringUtil.getBean(ISystemCompanyService.class).queryById(entity.getCompanyId());
+        AssertUtil.isTrueUserInputError(company == null).i18n("invalid.company").throwIt();
+
         entity.setFlag(SystemDepartmentFlagEnum.DISABLED.getCode());
         getMapper().insert(entity);
         departmentTreeStructService.setToTree(entity.getId(), null);
@@ -127,20 +137,20 @@ public class SimpleDepartmentService
         return mapper;
     }
 
+    /**
+     * 获取禁用的标志
+     *
+     * @return
+     */
+    @Override
+    protected Integer getFlagDeleted() {
+        return SystemDepartmentFlagEnum.DELETED.getCode();
+    }
+
     @Override
     protected SystemDepartmentEntity newEntity() {
         return new SystemDepartmentEntity();
     }
-
-    private static final String createTreeGroupName(SystemDepartmentEntity entity) {
-        return DEPARTMENT_TREE_GROUP + entity.getId();
-    }
-
-    private static final String createTreeNodeId(SystemDepartmentEntity entity) {
-        return DEPARTMENT_TREE_GROUP + entity.getId().toString();
-    }
-
-    private static final String DEPARTMENT_TREE_GROUP = "DET:";
 
     @Override
     @Transactional(rollbackFor = RuntimeException.class)

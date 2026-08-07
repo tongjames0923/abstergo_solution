@@ -7,12 +7,12 @@ import com.tbs.async.delegate.AsyncDelegateInvoker;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.i18n.I18nUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.shared.enums.SystemCompanyFlagEnum;
-import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
@@ -32,7 +32,7 @@ import java.util.Optional;
  */
 @Slf4j
 public class SimpleCompanyService
-    extends AbstractPhysicDeleteFullFeatureServiceTemplate<SystemCompanyEntity, Long, SystemCompanyMapper>
+    extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemCompanyEntity, Long, SystemCompanyMapper>
     implements ISystemCompanyService, IStartup {
 
     @Resource
@@ -71,6 +71,14 @@ public class SimpleCompanyService
 
     @Override
     protected SystemCompanyEntity insertNew(SystemCompanyEntity entity) {
+        AssertUtil.isTrue(entity == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("company.empty").throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getCompanyName())).i18n("company.name.empty").throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getTaxNumber())).i18n("company.tax.number.empty").throwIt();
+        var oldOne =
+            getQueryWrapper().query().where().equal(SystemCompanyEntity::getTaxNumber, entity.getTaxNumber()).pour()
+                .fetchOne();
+        AssertUtil.isTrue(oldOne != null).i18n("company.tax.number.exists").throwIt();
+
         entity.setFlag(SystemCompanyFlagEnum.DISABLED.getCode());
         getMapper().insert(entity);
         companyTreeStructService.setToTree(entity.getId(), null);
@@ -106,8 +114,9 @@ public class SimpleCompanyService
             oldOne.setLogoImage(newOne.getLogoImage());
         }
         if (newOne.getFlag() != null) {
-            AssertUtil.isTrueUserInputError(!EnumUtil.isValidCode(SystemCompanyFlagEnum.class, newOne.getFlag()))
-                .message(I18nUtil.get("invalid.flag")).throwIt();
+            AssertUtil.isTrueUserInputError(SystemCompanyFlagEnum.DELETED.getCode().equals(newOne.getFlag()) ||
+                    !EnumUtil.isValidCode(SystemCompanyFlagEnum.class, newOne.getFlag()))
+                .i18n("invalid.flag").throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 
@@ -142,5 +151,15 @@ public class SimpleCompanyService
     @Override
     protected Optional<IAuditService<SystemCompanyEntity, Long, ?>> getAuditServiceSupport() {
         return Optional.of(auditService);
+    }
+
+    /**
+     * 获取禁用的标志
+     *
+     * @return
+     */
+    @Override
+    protected Integer getFlagDeleted() {
+        return SystemCompanyFlagEnum.DELETED.getCode();
     }
 }
