@@ -17,7 +17,6 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import java.util.*
 import javax.annotation.Resource
-import kotlin.streams.toList
 
 
 @DubboService
@@ -57,22 +56,14 @@ open class DataDicServiceImpl : IDataDicService {
         insertItem: Boolean
     ): List<DicModel> {
         val QW = QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
-            .equal(SystemDataDicEntity::getDataDicCode, code).`in`(
-                SystemDataDicEntity::getFlag, Arrays.asList(
-                    DataDicFlagEnum.ENABLE.code,
-                    DataDicFlagEnum.DISABLE.code
-                )
+            .equal(
+                SystemDataDicEntity::getDataDicCode, code
             ).pour().fetchOne();
         if (QW == null) {
             return emptyList();
         }
         val items = QueryEngine.getEntityQueryWrapper(dicItemEntity).query().where().equal(
             SystemDataDicItemEntity::getDicCode, code
-        ).`in`(
-            SystemDataDicItemEntity::getFlag, Arrays.asList(
-                DataDicFlagEnum.ENABLE.code,
-                DataDicFlagEnum.DISABLE.code
-            )
         ).pour().fetch().stream()
             .filter { e -> e != null }
             .sorted { entity, entity1 ->
@@ -82,7 +73,7 @@ open class DataDicServiceImpl : IDataDicService {
             }.map {
                 DicItemModel(it.id, it.label, it.value, it.remark, it.flag)
             }.toList();
-        return listOf(DicModel(QW.dataDicCode, QW.dataDicName, QW.remark, QW.flag, items))
+        return listOf(DicModel(QW.id, QW.dataDicCode, QW.dataDicName, QW.remark, QW.flag, items))
     }
 
     @CacheEvict(
@@ -93,15 +84,8 @@ open class DataDicServiceImpl : IDataDicService {
     override fun saveDataDic(dic: SystemDataDicEntity): SystemDataDicEntity? {
         val old = QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
             .equal(SystemDataDicEntity::getDataDicCode, dic.dataDicCode)
-            .`in`(
-                SystemDataDicEntity::getFlag, Arrays.asList(
-                    DataDicFlagEnum.ENABLE.code,
-                    DataDicFlagEnum.DISABLE.code
-                )
-            )
             .pour().fetchOne();
-        if (dic.id == null) {
-            AssertUtil.isTrue(old != null, "数据字典[${dic.dataDicCode}]已存在")
+        if (old == null) {
             val dic = SystemDataDicEntity(
                 null, dic.dataDicName, dic.dataDicCode, DataDicFlagEnum.ENABLE.code,
                 dic.remark, Date(), null,
@@ -109,9 +93,7 @@ open class DataDicServiceImpl : IDataDicService {
             dataDicDao.insert(dic)
             return dic;
         } else {
-            val e = dataDicDao.selectByPrimaryKey(dic.id);
-            AssertUtil.isTrue(e == null, "数据字典ID[${dic.id}]不存在")
-            AssertUtil.isTrue(old.id != e.id, "数据字典[${dic.dataDicCode}]已存在")
+            var e = old;
             if (StrUtil.isNotEmpty(dic.remark)) {
                 e.remark = dic.remark;
             }
@@ -119,7 +101,7 @@ open class DataDicServiceImpl : IDataDicService {
                 e.dataDicName = dic.dataDicName;
             }
             e.updateTime = Date();
-            dataDicDao.updateByPrimaryKey(dic)
+            dataDicDao.updateByPrimaryKey(e)
             return dic;
         }
 
@@ -135,12 +117,6 @@ open class DataDicServiceImpl : IDataDicService {
 
         val old = QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
             .equal(SystemDataDicEntity::getDataDicCode, dicCode)
-            .`in`(
-                SystemDataDicEntity::getFlag, Arrays.asList(
-                    DataDicFlagEnum.ENABLE.code,
-                    DataDicFlagEnum.DISABLE.code
-                )
-            )
             .pour().fetchOne();
         AssertUtil.isTrue(old == null, "数据字典[${dicCode}]不存在")
 
@@ -148,11 +124,6 @@ open class DataDicServiceImpl : IDataDicService {
             SystemDataDicItemEntity::getLabel, item.label
         ).equal(
             SystemDataDicItemEntity::getDicCode, dicCode
-        ).`in`(
-            SystemDataDicItemEntity::getFlag, Arrays.asList(
-                DataDicFlagEnum.ENABLE.code,
-                DataDicFlagEnum.DISABLE.code
-            )
         ).pour().fetchOne();
         if (item.id == null) {
             AssertUtil.isTrue(oi != null, "数据字典项[${item.label}]已存在")
@@ -189,11 +160,6 @@ open class DataDicServiceImpl : IDataDicService {
             SystemDataDicItemEntity::getDicCode, dicCode
         ).equal(
             SystemDataDicItemEntity::getLabel, label
-        ).`in`(
-            SystemDataDicItemEntity::getFlag, Arrays.asList(
-                DataDicFlagEnum.ENABLE.code,
-                DataDicFlagEnum.DISABLE.code
-            )
         ).pour().fetchOne();
         AssertUtil.isTrue(QW == null, "数据字典项[${label}]不存在")
         QW.flag = flagEnum.code
@@ -205,11 +171,6 @@ open class DataDicServiceImpl : IDataDicService {
     private fun setDicFlag(dicCode: String, flagEnum: DataDicFlagEnum) {
         val QW = QueryEngine.getEntityQueryWrapper(dicEntity).query().where().equal(
             SystemDataDicEntity::getDataDicCode, dicCode
-        ).`in`(
-            SystemDataDicEntity::getFlag, Arrays.asList(
-                DataDicFlagEnum.ENABLE.code,
-                DataDicFlagEnum.DISABLE.code
-            )
         ).pour().fetchOne();
         AssertUtil.isTrue(QW == null, "数据字典[${dicCode}]不存在")
 

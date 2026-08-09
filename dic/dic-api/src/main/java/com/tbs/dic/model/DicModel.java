@@ -17,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 public class DicModel implements Serializable {
     private static final long serialVersionUID = 1L;
+    private Long id;
     private String dicCode;
     private String dicName;
     private String remark;

@@ -1,5 +1,6 @@
 package com.tbs.dic.entity;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -15,6 +16,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@LogicDeleteEntity(filedName = "flag", activeFlagValues = {1, -1})
 public class SystemDataDicEntity implements IBaseEntity<Long> {
 
     private static final long serialVersionUID = 1L;

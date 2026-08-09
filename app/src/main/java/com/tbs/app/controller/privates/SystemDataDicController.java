@@ -43,9 +43,6 @@ import java.util.List;
  * @since 1.0.0
  */
 @RestController
-@PreAuthorize("@authUtil.userLoggedIn and hasAnyAuthority(" + "'" +
-    RoleConstants.SUPER_ADMIN_ROLE_NAME + "', '" +
-    RoleConstants.DEVELOPER_ROLE_NAME + "')")
 @RequestMapping("private/admin/dic")
 @Tag(name = "数据字典管理接口", description = "数据字典管理相关操作接口")
 public class SystemDataDicController extends BaseController {
@@ -286,6 +283,7 @@ public class SystemDataDicController extends BaseController {
         AssertUtil.isTrue(StrUtil.isEmpty(form.getDicItemLabel())).message("字典项不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(StrUtil.isEmpty(form.getDicItemValue())).message("字典项值不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         SystemDataDicItemEntity item = new SystemDataDicItemEntity();
+        item.setId(form.getId());
         item.setDicCode(form.getDicCode());
         item.setLabel(form.getDicItemLabel());
         item.setValue(form.getDicItemValue());

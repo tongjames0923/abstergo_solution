@@ -7,6 +7,11 @@ import com.tbs.dic.model.DicModel;
 
 import java.util.List;
 
+/**
+ * 数据字典服务类
+ *
+ * @author abstergo
+ */
 public interface IDataDicService {
 
     /**

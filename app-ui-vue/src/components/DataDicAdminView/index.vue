@@ -182,8 +182,15 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="180" align="center" fixed="right">
+            <el-table-column label="操作" width="240" align="center" fixed="right">
               <template slot-scope="{ row }">
+                <el-button
+                  size="mini"
+                  type="text"
+                  @click="handleEditDicItem(row)"
+                >
+                  编辑
+                </el-button>
                 <el-button
                   size="mini"
                   type="text"
@@ -258,9 +265,9 @@
       </div>
     </el-dialog>
 
-    <!-- 新增字典项弹窗 -->
+    <!-- 新增/编辑字典项弹窗 -->
     <el-dialog
-      title="新增字典项"
+      :title="itemDialogTitle"
       :visible.sync="itemDialogVisible"
       width="480px"
       :close-on-click-modal="false"
@@ -355,7 +362,8 @@ export default {
 
       // 字典项表单
       itemDialogVisible: false,
-      itemForm: { dicItemLabel: '', dicItemValue: '', dicItemDesc: '' },
+      itemFormType: 'add', // 'add' | 'edit'
+      itemForm: { id: null, dicItemLabel: '', dicItemValue: '', dicItemDesc: '' },
       itemFormRules: {
         dicItemLabel: [
           { required: true, message: '请输入字典项标签', trigger: 'blur' }
@@ -380,6 +388,9 @@ export default {
     },
     dicDialogTitle() {
       return this.dicFormType === 'add' ? '新增数据字典' : '编辑数据字典'
+    },
+    itemDialogTitle() {
+      return this.itemFormType === 'add' ? '新增字典项' : '编辑字典项'
     }
   },
   mounted() {
@@ -536,7 +547,17 @@ export default {
     // ========== 字典项操作 ==========
 
     handleAddDicItem() {
-      this.itemForm = { dicItemLabel: '', dicItemValue: '', dicItemDesc: '' }
+      this.itemFormType = 'add'
+      this.itemForm = { id: null, dicItemLabel: '', dicItemValue: '', dicItemDesc: '' }
+      this.itemDialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.itemForm && this.$refs.itemForm.clearValidate()
+      })
+    },
+
+    handleEditDicItem(row) {
+      this.itemFormType = 'edit'
+      this.itemForm = { id: row.id || null, dicItemLabel: row.label, dicItemValue: row.value, dicItemDesc: row.remark || '' }
       this.itemDialogVisible = true
       this.$nextTick(() => {
         this.$refs.itemForm && this.$refs.itemForm.clearValidate()
@@ -553,6 +574,7 @@ export default {
       this.savingItem = true
       try {
         await saveDicItem({
+          id: this.itemForm.id || null,
           dicCode: this.selectedDic.dicCode,
           dicItemLabel: this.itemForm.dicItemLabel,
           dicItemValue: this.itemForm.dicItemValue,

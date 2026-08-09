@@ -20,6 +20,12 @@ public class DicItemSaveForm implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
+     * 字典项ID（编辑时传入，新增时为空）
+     */
+    @Schema(description = "字典项ID（编辑时传入，新增时为空）")
+    private Long id;
+
+    /**
      * 字典编码
      */
     @Schema(description = "字典编码", requiredMode = Schema.RequiredMode.REQUIRED)
