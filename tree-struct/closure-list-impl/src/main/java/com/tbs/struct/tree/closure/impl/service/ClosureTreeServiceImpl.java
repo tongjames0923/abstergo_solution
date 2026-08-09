@@ -4,6 +4,7 @@ import com.tbs.cache.CacheUtils;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.CollWrapper;
 import com.tbs.common.util.base.StrUtil;
@@ -20,9 +21,12 @@ import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import javax.annotation.Resource;
 import java.util.*;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 /**
@@ -367,13 +371,21 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
     @CacheEvict(cacheNames = "tree_node_entity", allEntries = true)
     public void tryRebuildStructure(String groupName) {
         rebuildTreeClosureCheck();
-        CacheUtils.getInstance().cacheableSet(REBUILD_TREE_CLOSURE_LOCK, true);
+        // 先抢占JVM本地锁，缩小检查与加锁之间的竞态窗口；抢锁失败（坏条件）时抛异常
+        AssertUtil.toAssert(!REBUILD_LOCAL_LOCK.tryLock()).message("正在重建树结构闭包表关系，请稍后再试")
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        boolean lockHandedOver = false;
         try {
-            // 删除所有关系
-            treeRelationMapper.deleteAllRelations();
-            //查询所有的节点
+            CacheUtils.getInstance().cacheableSet(REBUILD_TREE_CLOSURE_LOCK, true);
+            // 仅删除目标树组的关系，避免误删其他树组的闭包关系；组为空时才全量重建
+            if (StrUtil.isEmpty(groupName)) {
+                treeRelationMapper.deleteAllRelations();
+            } else {
+                treeRelationMapper.deleteRelationsByGroup(groupName);
+            }
+            //查询节点
             TreeNodeEntity search = new TreeNodeEntity();
-            search.setGroupName(groupName);
+            search.setGroupName(StrUtil.isEmpty(groupName) ? null : groupName);
             List<TreeNodeEntity> allNodes = treeNodeMapper.select(search);
             //根据所有节点的entity的父节点ID来插入关系，符合闭包表关系
 
@@ -383,7 +395,10 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
 
             // 创建一个Map来存储节点ID到TreeNodeEntity的映射，便于快速查找
             Map<String, TreeNodeEntity> nodeMap =
-                allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getNodeId, node -> node));
+                allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getNodeId, node -> node, (a, b) -> {
+                    throw new FormattedRuntimeException("树组[{}]中存在重复的节点ID：{}", a.getGroupName(),
+                        a.getNodeId());
+                }));
 
             List<TreeRelationEntity> relations = new ArrayList<>(allNodes.size() * 2);
             for (var node : allNodes) {
@@ -391,8 +406,20 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
             }
             CollUtil.of(relations).partition(50).map(CollWrapper::toList).forEach(treeRelationMapper::insertList);
 
+            // 事务提交/回滚完成后再释放锁，避免提交阶段其他写操作趁虚而入
+            if (TransactionSynchronizationManager.isSynchronizationActive()) {
+                TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                    @Override
+                    public void afterCompletion(int status) {
+                        releaseRebuildLock();
+                    }
+                });
+                lockHandedOver = true;
+            }
         } finally {
-            CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
+            if (!lockHandedOver) {
+                releaseRebuildLock();
+            }
         }
 
     }
@@ -405,11 +432,19 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
         }
 
         relations.add(createSelfRelation(current.getNodeId(), current.getGroupName()));
+        // 记录已上溯过的节点，防止父指针成环导致死循环
+        Set<String> visited = new HashSet<>();
+        visited.add(current.getNodeId());
         var temp = current;
         int dep = 1;
         while (StrUtil.isNotEmpty(temp.getParentId())) {
-            temp = nodeMap.get(temp.getParentId());
-            AssertUtil.notNull(temp, "无法找到节点：{}", temp.getNodeId());
+            String parentId = temp.getParentId();
+            temp = nodeMap.get(parentId);
+            AssertUtil.notNull(temp, "无法找到节点：{}", parentId);
+            // visited.add 返回false表示节点已上溯过，即存在环（坏条件），此时抛异常
+            AssertUtil.toAssert(!visited.add(temp.getNodeId()))
+                .message("树结构存在环，无法重建闭包关系，节点：{}", temp.getNodeId())
+                .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
             relations.add(createRelation(temp.getNodeId(), current.getNodeId(), dep++, temp.getGroupName()));
         }
         return relations;
@@ -419,10 +454,23 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
 
     private static final String REBUILD_TREE_CLOSURE_LOCK = "rebuildTreeLock";
 
+    /**
+     * JVM本地重建锁，防止同一进程内并发线程同时通过锁检查进入重建流程
+     */
+    private static final ReentrantLock REBUILD_LOCAL_LOCK = new ReentrantLock();
+
     private static void rebuildTreeClosureCheck() {
         var val = CacheUtils.getInstance().cacheableGet(REBUILD_TREE_CLOSURE_LOCK);
         AssertUtil.toAssert(val != null).message("正在重建树结构闭包表关系，请稍后再试")
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+    }
+
+    /**
+     * 释放重建锁（缓存锁 + JVM本地锁）
+     */
+    private static void releaseRebuildLock() {
+        CacheUtils.getInstance().cacheableEvict(REBUILD_TREE_CLOSURE_LOCK);
+        REBUILD_LOCAL_LOCK.unlock();
     }
 
     @Override

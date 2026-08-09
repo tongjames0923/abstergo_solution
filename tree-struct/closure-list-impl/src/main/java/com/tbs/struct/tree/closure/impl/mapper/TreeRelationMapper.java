@@ -90,4 +90,12 @@ public interface TreeRelationMapper extends IFrameworkMapper<TreeRelationEntity,
      */
     @Delete("DELETE FROM tree_closure")
     void deleteAllRelations();
+
+    /**
+     * 删除指定树组的所有关系
+     *
+     * @param groupName 树组名
+     */
+    @Delete("DELETE FROM tree_closure WHERE group_name = #{groupName}")
+    void deleteRelationsByGroup(String groupName);
 }
