@@ -85,6 +85,8 @@
                     <execution>
                         <goals>
                             <goal>repackage</goal>
+                            <!-- 生成 META-INF/build-info.properties，供网关版本接口读取构建版本/时间 -->
+                            <goal>build-info</goal>
                         </goals>
                     </execution>
                 </executions>

@@ -56,7 +56,8 @@ export default {
     rememberMe: 'Remember me',
     loggingIn: 'Logging in...',
     secureHint: 'Protected by an encrypted connection',
-    copyright: 'All rights reserved.'
+    copyright: 'All rights reserved.',
+    version: 'Version'
   },
 
   // Navigation
@@ -68,7 +69,18 @@ export default {
     fullscreen: 'Fullscreen',
     language: 'Language',
     chinese: '中文',
-    english: 'English'
+    english: 'English',
+    about: 'About'
+  },
+
+  // About System
+  about: {
+    title: 'About System',
+    version: 'Version',
+    artifact: 'Artifact',
+    buildTime: 'Build Time',
+    instancePort: 'Instance Port',
+    fetchFailed: 'Failed to fetch version info'
   },
 
   // Sidebar

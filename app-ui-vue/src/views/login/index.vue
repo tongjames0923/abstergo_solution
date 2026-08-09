@@ -91,6 +91,7 @@
 
         <div class="login-footer anim-stagger" style="--stagger-delay: 0.54s">
           <p>© 2025 {{ systemTitle }}. {{ $t('login.copyright') || '保留所有权利.' }}</p>
+          <p v-if="gatewayVersion" class="footer-version">{{ $t('login.version') }} {{ gatewayVersion }}</p>
         </div>
       </el-form>
     </div>
@@ -103,6 +104,7 @@ import { getRememberMe } from '@/utils/auth'
 import settings from '@/settings'
 import { updateRouter } from '@/router'
 import LangSelect from '@/components/LangSelect'
+import { getGatewayVersion } from '@/api/system'
 
 export default {
   name: 'Login',
@@ -137,7 +139,9 @@ export default {
       },
       loading: false,
       passwordType: 'password',
-      redirect: undefined
+      redirect: undefined,
+      // 后端网关版本号（接口无需认证，登录前即可展示）
+      gatewayVersion: ''
     }
   },
   computed: {
@@ -155,6 +159,7 @@ export default {
   },
   mounted() {
     this.loginForm.rememberMe = getRememberMe()
+    this.loadGatewayVersion()
     // 添加淡入动画
     this.$nextTick(() => {
       setTimeout(() => {
@@ -163,6 +168,17 @@ export default {
     })
   },
   methods: {
+    // 拉取后端网关版本信息，失败时静默降级不影响登录页
+    async loadGatewayVersion() {
+      try {
+        const res = await getGatewayVersion()
+        if (res && res.data && res.data.version && res.data.version !== 'unknown') {
+          this.gatewayVersion = res.data.version
+        }
+      } catch (e) {
+        // 忽略：后端不可用时不展示版本信息
+      }
+    },
     handleInputFocus(event) {
       event.target.closest('.el-form-item').classList.add('input-focused')
     },
@@ -588,6 +604,13 @@ export default {
     font-size: 11px;
     color: #9a9aa0;
     margin: 0;
+  }
+
+  .footer-version {
+    margin-top: 4px;
+    font-size: 10px;
+    color: #b8b8be;
+    letter-spacing: 0.3px;
   }
 }
 

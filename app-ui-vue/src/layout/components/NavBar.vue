@@ -71,21 +71,59 @@
               <span style="display:block;">{{ $t('nav.home') }}</span>
             </router-link>
           </el-dropdown-item>
+          <el-dropdown-item divided @click.native="showAbout">
+            <span style="display:block;">{{ $t('nav.about') }}</span>
+          </el-dropdown-item>
           <el-dropdown-item divided @click.native="logout">
             <span style="display:block;">{{ $t('login.logout') }}</span>
           </el-dropdown-item>
         </el-dropdown-menu>
       </el-dropdown>
     </div>
+
+    <!-- 关于系统：展示后端网关构建信息 -->
+    <el-dialog
+      :title="$t('about.title')"
+      :visible.sync="aboutVisible"
+      width="360px"
+      custom-class="about-dialog"
+      append-to-body
+    >
+      <div v-loading="aboutLoading" class="about-content">
+        <div class="about-logo">
+          <span class="about-monogram">A</span>
+          <span class="about-name">{{ systemTitle }}</span>
+          <span v-if="versionInfo.version" class="about-version-badge">v{{ versionInfo.version }}</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">{{ $t('about.version') }}</span>
+          <span class="about-value">{{ versionInfo.version || '-' }}</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">{{ $t('about.artifact') }}</span>
+          <span class="about-value">{{ versionInfo.artifact || '-' }}</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">{{ $t('about.buildTime') }}</span>
+          <span class="about-value">{{ formattedBuildTime }}</span>
+        </div>
+        <div class="about-row">
+          <span class="about-label">{{ $t('about.instancePort') }}</span>
+          <span class="about-value">{{ versionInfo.instancePort || '-' }}</span>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
-import {mapGetters} from 'vuex'
+import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import LangSelect from '@/components/LangSelect'
 import sidebar from '@/layout/components/Sidebar/index.vue'
+import { getGatewayVersion } from '@/api/system'
+import settings from '@/settings'
 
 export default {
   name: 'Navbar',
@@ -94,7 +132,30 @@ export default {
     Hamburger,
     LangSelect
   },
+  data() {
+    return {
+      // 关于系统弹窗状态与后端版本信息
+      aboutVisible: false,
+      aboutLoading: false,
+      versionInfo: {}
+    }
+  },
   computed: {
+    systemTitle() {
+      return settings.title || ''
+    },
+    // 构建时间可能为 unknown 或 ISO 格式，统一展示为本地时间或原始值
+    formattedBuildTime() {
+      const raw = this.versionInfo.buildTime
+      if (!raw || raw === 'unknown') {
+        return '-'
+      }
+      const date = new Date(raw)
+      if (isNaN(date.getTime())) {
+        return raw
+      }
+      return date.toLocaleString()
+    },
     sidebar() {
       return sidebar
     },
@@ -123,6 +184,20 @@ export default {
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
+    },
+    // 打开关于系统弹窗，拉取后端网关版本信息
+    async showAbout() {
+      this.aboutVisible = true
+      this.aboutLoading = true
+      try {
+        const res = await getGatewayVersion()
+        this.versionInfo = (res && res.data) || {}
+      } catch (e) {
+        this.versionInfo = {}
+        this.$message.error(this.$t('about.fetchFailed'))
+      } finally {
+        this.aboutLoading = false
+      }
     },
     async logout() {
       await this.$store.dispatch('user/logout')
@@ -438,5 +513,86 @@ export default {
   font-size: 10px;
   font-weight: 600;
   line-height: 1.4;
+}
+
+/* 关于系统弹窗：macOS 风格简洁卡片 */
+.about-dialog {
+  border-radius: 12px;
+  overflow: hidden;
+
+  .el-dialog__header {
+    padding: 16px 20px 8px;
+
+    .el-dialog__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #333;
+    }
+  }
+
+  .el-dialog__body {
+    padding: 8px 20px 20px;
+  }
+
+  .about-content {
+    min-height: 120px;
+  }
+
+  .about-logo {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 14px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #eaeaea;
+
+    .about-monogram {
+      width: 28px;
+      height: 28px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 7px;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .about-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .about-version-badge {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 500;
+      color: #0071e3;
+      background: rgba(0, 113, 227, 0.1);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+  }
+
+  .about-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+
+    .about-label {
+      width: 90px;
+      flex-shrink: 0;
+      color: #999;
+    }
+
+    .about-value {
+      color: #333;
+      font-weight: 500;
+      word-break: break-all;
+    }
+  }
 }
 </style>

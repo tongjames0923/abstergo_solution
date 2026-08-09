@@ -56,7 +56,8 @@ export default {
     rememberMe: '记住我',
     loggingIn: '登录中...',
     secureHint: '已通过加密连接保护',
-    copyright: '保留所有权利.'
+    copyright: '保留所有权利.',
+    version: '版本'
   },
 
   // 导航
@@ -68,7 +69,18 @@ export default {
     fullscreen: '全屏',
     language: '语言',
     chinese: '中文',
-    english: 'English'
+    english: 'English',
+    about: '关于系统'
+  },
+
+  // 关于系统
+  about: {
+    title: '关于系统',
+    version: '系统版本',
+    artifact: '构件名称',
+    buildTime: '构建时间',
+    instancePort: '实例端口',
+    fetchFailed: '获取版本信息失败'
   },
 
   // 侧边栏

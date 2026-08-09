@@ -9,7 +9,7 @@ module.exports = {
   roleEditFormKey: '13',
   roleGroupSearchFormKey: '14',
   roleGroupAddFormKey: '15',
-  roleGroupEditFormKey: '16',
+  roleGroupEditFormKey: '15',
 
   /**
    * @type {boolean} true | false
