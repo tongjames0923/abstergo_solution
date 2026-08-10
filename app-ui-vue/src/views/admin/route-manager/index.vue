@@ -101,11 +101,19 @@
                   {{ $t('routeManager.addRoute') }}
                 </el-button>
                 <el-button
+                  size="small"
+                  icon="el-icon-time"
+                  :disabled="!activeGroup"
+                  @click="handleOpenVersions"
+                >
+                  {{ $t('routeManager.versionHistory') }}
+                </el-button>
+                <el-button
                   type="primary"
                   size="small"
                   icon="el-icon-check"
                   :loading="saving"
-                  :disabled="!activeGroup"
+                  :disabled="!activeGroup || !dirty"
                   @click="handleSaveRoutes"
                 >
                   {{ $t('routeManager.saveConfig') }}
@@ -317,6 +325,80 @@
         <el-button type="primary" @click="handleDialogConfirm">{{ $t('common.confirm') }}</el-button>
       </span>
     </el-dialog>
+
+    <!-- Save description dialog -->
+    <el-dialog
+      :title="$t('routeManager.saveConfigTitle')"
+      :visible.sync="saveDialogVisible"
+      width="480px"
+      custom-class="route-dialog"
+    >
+      <el-form label-width="96px">
+        <el-form-item :label="$t('routeManager.routeGroup')">
+          <span class="mono">{{ activeGroup }}</span>
+        </el-form-item>
+        <el-form-item :label="$t('routeManager.versionNote')">
+          <el-input
+            v-model="saveDescription"
+            type="textarea"
+            :rows="3"
+            maxlength="500"
+            show-word-limit
+            :placeholder="$t('routeManager.versionNotePlaceholder')"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="saveDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="saving" @click="handleSaveConfirm">{{ $t('common.confirm') }}</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- Version history drawer -->
+    <el-drawer
+      :title="versionDrawerTitle"
+      :visible.sync="versionDrawerVisible"
+      direction="rtl"
+      size="460px"
+    >
+      <div v-loading="loadingVersions" class="drawer-body">
+        <el-timeline v-if="versionList.length">
+          <el-timeline-item
+            v-for="(v, idx) in versionList"
+            :key="v.id"
+            :type="idx === 0 ? 'primary' : ''"
+            :timestamp="formatTime(v.createTime)"
+            placement="top"
+          >
+            <div class="version-card" :class="{ 'version-card--current': idx === 0 }">
+              <div class="version-card__head">
+                <span class="version-no">v{{ v.versionNo }}</span>
+                <el-tag v-if="idx === 0" size="mini" type="success" effect="dark">
+                  {{ $t('routeManager.currentVersion') }}
+                </el-tag>
+                <el-button
+                  v-else
+                  size="mini"
+                  type="text"
+                  class="rollback-btn"
+                  :loading="rollingBackId === v.id"
+                  @click="handleRollback(v)"
+                >
+                  <i v-if="rollingBackId !== v.id" class="fas fa-history" />
+                  {{ $t('routeManager.rollbackTo') }}
+                </el-button>
+              </div>
+              <p v-if="v.description" class="version-desc">{{ v.description }}</p>
+              <p v-else class="version-desc dim">{{ $t('routeManager.noDescription') }}</p>
+            </div>
+          </el-timeline-item>
+        </el-timeline>
+        <div v-else class="drawer-empty">
+          <i class="fas fa-inbox" />
+          <p>{{ $t('routeManager.noVersions') }}</p>
+        </div>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
@@ -326,7 +408,9 @@ import {
   getRouteConfigsByGroup,
   saveRouteConfigs,
   deleteRouteConfigs,
-  refreshRouteCache
+  refreshRouteCache,
+  getRouteVersions,
+  rollbackRouteVersion
 } from '@/api/view'
 import { queryRoles } from '@/api/role'
 
@@ -353,7 +437,15 @@ export default {
         component: [{ required: true, message: this.$t('routeManager.inputComponent'), trigger: 'change' }]
       },
       availableRoles: [],
-      viewComponents: []
+      viewComponents: [],
+      // 保存说明对话框
+      saveDialogVisible: false,
+      saveDescription: '',
+      // 版本历史抽屉
+      versionDrawerVisible: false,
+      loadingVersions: false,
+      versionList: [],
+      rollingBackId: null
     }
   },
   computed: {
@@ -367,6 +459,11 @@ export default {
     },
     routeCount() {
       return this.countRoutes(this.currentRoutes)
+    },
+    versionDrawerTitle() {
+      return this.activeGroup
+        ? `${this.$t('routeManager.versionHistory')} · ${this.activeGroup}`
+        : this.$t('routeManager.versionHistory')
     }
   },
   created() {
@@ -444,6 +541,18 @@ export default {
 
     async handleGroupSelect(group) {
       if (group === this.activeGroup) return
+      // 有未保存更改时先确认是否放弃
+      if (this.dirty) {
+        try {
+          await this.$confirm(this.$t('routeManager.discardChangesConfirm'), this.$t('common.tip'), {
+            confirmButtonText: this.$t('common.confirm'),
+            cancelButtonText: this.$t('common.cancel'),
+            type: 'warning'
+          })
+        } catch (e) {
+          return
+        }
+      }
       this.activeGroup = group
       await this.loadRouteConfigs(group)
     },
@@ -522,8 +631,8 @@ export default {
       return !container || container.indexOf(route) >= container.length - 1
     },
 
-    // 上移 / 下移（direction: -1 上移, 1 下移），移动后立即保存到后端
-    async handleMove(route, direction) {
+    // 上移 / 下移（direction: -1 上移, 1 下移），仅修改本地状态并标记未保存，点“保存配置”后才落库并产生新版本
+    handleMove(route, direction) {
       const container = this.findContainer(this.currentRoutes, route)
       if (!container) return
       const index = container.indexOf(route)
@@ -535,37 +644,97 @@ export default {
       this.reassignSortOrder(this.currentRoutes)
       // 强制树表格重建，确保新顺序立即可见
       this.tableVersion++
-      await this.persistToBackend()
+      this.dirty = true
     },
 
-    // 静默保存（排序等即时操作使用，不弹成功提示避免干扰）
-    async persistToBackend() {
-      this.saving = true
-      try {
-        await saveRouteConfigs(this.activeGroup, this.currentRoutes)
-        this.dirty = false
-      } catch (error) {
-        console.error('保存路由配置失败:', error)
-        this.dirty = true
-        this.$message.error(this.$t('routeManager.saveRoutesFailed'))
-      } finally {
-        this.saving = false
+    // 打开保存说明对话框，确认后再真正保存
+    handleSaveRoutes() {
+      if (this.currentRoutes.length === 0) {
+        this.$message.warning(this.$t('routeManager.emptyGroupTip'))
+        return
       }
-    },
-
-    async handleSaveRoutes() {
       this.reassignSortOrder(this.currentRoutes)
+      this.saveDescription = ''
+      this.saveDialogVisible = true
+    },
+
+    async handleSaveConfirm() {
       this.saving = true
       try {
-        await saveRouteConfigs(this.activeGroup, this.currentRoutes)
+        const response = await saveRouteConfigs(this.activeGroup, this.currentRoutes, this.saveDescription)
         this.dirty = false
-        this.$message.success(this.$t('routeManager.routeSaveSuccess'))
+        this.saveDialogVisible = false
+        const version = response && response.data ? response.data : null
+        if (version && version.versionNo) {
+          this.$message.success(this.$t('routeManager.saveAsSuccess', { version: version.versionNo }))
+        } else {
+          this.$message.success(this.$t('routeManager.routeSaveSuccess'))
+        }
+        // 若版本抽屉已打开，刷新版本列表
+        if (this.versionDrawerVisible) {
+          this.loadVersionHistory()
+        }
       } catch (error) {
         console.error('保存路由配置失败:', error)
         this.$message.error(this.$t('routeManager.saveRoutesFailed'))
       } finally {
         this.saving = false
       }
+    },
+
+    // ── 版本历史 ──
+    async handleOpenVersions() {
+      if (!this.activeGroup) return
+      this.versionDrawerVisible = true
+      await this.loadVersionHistory()
+    },
+
+    async loadVersionHistory() {
+      this.loadingVersions = true
+      try {
+        const response = await getRouteVersions(this.activeGroup)
+        this.versionList = response.data || []
+      } catch (error) {
+        console.error('获取版本历史失败:', error)
+        this.$message.error(this.$t('routeManager.fetchVersionsFailed'))
+      } finally {
+        this.loadingVersions = false
+      }
+    },
+
+    handleRollback(version) {
+      this.$confirm(
+        this.$t('routeManager.rollbackConfirm', { version: version.versionNo }),
+        this.$t('common.tip'),
+        {
+          confirmButtonText: this.$t('common.confirm'),
+          cancelButtonText: this.$t('common.cancel'),
+          type: 'warning'
+        }
+      ).then(async () => {
+        this.rollingBackId = version.id
+        try {
+          const response = await rollbackRouteVersion(this.activeGroup, version.id)
+          const newVersion = response && response.data ? response.data : null
+          this.$message.success(this.$t('routeManager.rollbackSuccess', {
+            version: newVersion && newVersion.versionNo ? newVersion.versionNo : ''
+          }))
+          await Promise.all([this.loadVersionHistory(), this.loadRouteConfigs(this.activeGroup)])
+        } catch (error) {
+          console.error('回滚失败:', error)
+          this.$message.error(this.$t('routeManager.rollbackFailed'))
+        } finally {
+          this.rollingBackId = null
+        }
+      }).catch(() => {})
+    },
+
+    formatTime(time) {
+      if (!time) return ''
+      const d = new Date(time)
+      if (isNaN(d.getTime())) return time
+      const pad = n => String(n).padStart(2, '0')
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
     },
 
     async handleRefresh() {
@@ -663,12 +832,11 @@ export default {
         confirmButtonText: this.$t('common.confirm'),
         cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
-      }).then(async () => {
+      }).then(() => {
         this.removeRouteFromTree(this.currentRoutes, route)
         this.reassignSortOrder(this.currentRoutes)
         this.tableVersion++
-        this.$message.success(this.$t('routeManager.routeDeleteSuccess'))
-        await this.persistToBackend()
+        this.dirty = true
       }).catch(() => {})
     },
 
@@ -723,8 +891,7 @@ export default {
         this.reassignSortOrder(this.currentRoutes)
         this.tableVersion++
         this.dialogVisible = false
-        this.$message.success(this.$t('routeManager.routeUpdateSuccess'))
-        this.persistToBackend()
+        this.dirty = true
       })
     },
 
@@ -1401,5 +1568,80 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 .fade-enter,
 .fade-leave-to {
   opacity: 0;
+}
+
+/* ── Version history drawer ── */
+.drawer-body {
+  padding: 4px 24px 24px;
+  min-height: 200px;
+}
+
+.version-card {
+  background: $surface-h;
+  border: 1px solid $border;
+  border-radius: $radius-sm;
+  padding: 12px 14px;
+  transition: all 0.25s $ease;
+
+  &:hover {
+    border-color: rgba(30, 64, 175, 0.22);
+    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.08);
+  }
+
+  &--current {
+    border-color: rgba(16, 185, 129, 0.35);
+    background: rgba(16, 185, 129, 0.045);
+  }
+}
+
+.version-card__head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.version-no {
+  font-family: $font-mono;
+  font-weight: 700;
+  font-size: 14px;
+  color: $primary;
+}
+
+.rollback-btn {
+  margin-left: auto;
+  padding: 0;
+  color: $text-2;
+  font-weight: 600;
+
+  &:hover {
+    color: $amber;
+  }
+}
+
+.version-desc {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: $text-2;
+  line-height: 1.55;
+  word-break: break-all;
+
+  &.dim {
+    color: $text-3;
+  }
+}
+
+.drawer-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 48px 0;
+  color: $text-3;
+  font-size: 26px;
+
+  p {
+    margin: 0;
+    font-size: 13px;
+  }
 }
 </style>

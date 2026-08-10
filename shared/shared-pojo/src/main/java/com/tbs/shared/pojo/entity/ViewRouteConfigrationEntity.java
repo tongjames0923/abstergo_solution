@@ -97,6 +97,12 @@ public class ViewRouteConfigrationEntity implements IBaseEntity<Long> {
     private Integer sortOrder;
 
     /**
+     * 所属版本ID（援引 view_route_version.id）
+     */
+    @Column(name = "version")
+    private Long version;
+
+    /**
      * 状态标志（0:禁用，1:启用）
      */
     @Column(name = "flag")

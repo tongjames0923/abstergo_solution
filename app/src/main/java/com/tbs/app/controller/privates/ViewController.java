@@ -11,6 +11,7 @@ import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.impl.DatabaseViewRouteServiceImpl;
 import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
+import com.tbs.view.route.model.ViewRouteVersionModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AuthUtil;
@@ -317,24 +318,25 @@ public class ViewController extends BaseController {
     /**
      * 保存路由配置
      * <p>
-     * 保存指定分组的路由配置信息，支持动态编辑路由
+     * 保存指定分组的路由配置信息，支持动态编辑路由。保存会产生一条新的版本记录，历史版本不可变。
      * </p>
      *
      * @param group           路由分组名称
+     * @param description     版本说明，可为空
      * @param viewRouteModels 路由配置列表
-     * @return 保存结果
+     * @return 保存结果（含新产生的版本记录）
      */
     @PostMapping("/routes/{group}")
-    @AjaxResponseType(void.class)
-    @Operation(summary = "保存路由配置", description = "保存指定分组的路由配置")
+    @AjaxResponseType(ViewRouteVersionModel.class)
+    @Operation(summary = "保存路由配置", description = "保存指定分组的路由配置，产生新版本记录")
     @ApiResponse(responseCode = "200", description = "成功保存路由配置",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult saveViewRoutes(
         @Parameter(name = "group", description = "路由分组名称", required = true) @PathVariable String group,
+        @Parameter(name = "description", description = "版本说明") @RequestParam(required = false) String description,
         @Parameter(description = "路由配置列表") @RequestBody List<ViewRouteModel> viewRouteModels) {
-        viewRouteService.saveViewRoute(group, viewRouteModels);
-        return successResult(null);
+        return successResult(viewRouteService.saveViewRoute(group, viewRouteModels, description));
     }
 
     /**
@@ -414,5 +416,46 @@ public class ViewController extends BaseController {
             ((DatabaseViewRouteServiceImpl)viewRouteService).refreshCache();
         }
         return successResult();
+    }
+
+    /**
+     * 获取指定分组的版本历史
+     * <p>
+     * 按版本序号倒序返回该分组的全部版本记录，含版本说明、创建人与创建时间
+     * </p>
+     *
+     * @param group 路由分组名称
+     * @return 版本记录列表（最新版本在前）
+     */
+    @GetMapping("/routes/{group}/versions")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {ViewRouteVersionModel.class})
+    @Operation(summary = "获取分组版本历史", description = "按版本序号倒序返回该分组的版本记录")
+    @ApiResponse(responseCode = "200", description = "成功获取版本历史",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult getRouteVersions(
+        @Parameter(name = "group", description = "路由分组名称", required = true) @PathVariable String group) {
+        return successResult(viewRouteService.getVersionHistory(group));
+    }
+
+    /**
+     * 回滚到指定版本
+     * <p>
+     * 复制目标历史版本的路由数据并产生一条新的版本记录，历史依然不可变
+     * </p>
+     *
+     * @param group     路由分组名称
+     * @param versionId 目标版本ID
+     * @return 回滚结果（含新产生的版本记录）
+     */
+    @PostMapping("/routes/{group}/rollback/{versionId}")
+    @AjaxResponseType(ViewRouteVersionModel.class)
+    @Operation(summary = "回滚到指定版本", description = "复制目标版本的路由数据并产生新版本记录")
+    @ApiResponse(responseCode = "200", description = "成功回滚",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult rollbackRouteVersion(
+        @Parameter(name = "group", description = "路由分组名称", required = true) @PathVariable String group,
+        @Parameter(name = "versionId", description = "目标版本ID", required = true) @PathVariable Long versionId) {
+        return successResult(viewRouteService.rollbackToVersion(group, versionId));
     }
 }

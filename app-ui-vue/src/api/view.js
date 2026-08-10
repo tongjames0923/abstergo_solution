@@ -53,15 +53,17 @@ export function getRoutes() {
 }
 
 /**
- * 保存路由配置
+ * 保存路由配置（产生新版本记录）
  * @param {string} group 路由分组名称
  * @param {Array} routeConfigs 路由配置列表
+ * @param {string} description 版本说明，可为空
  * @returns {Promise}
  */
-export function saveRouteConfigs(group, routeConfigs) {
+export function saveRouteConfigs(group, routeConfigs, description) {
   return request({
     url: `/private/view/routes/${group}`,
     method: 'post',
+    params: description ? { description } : {},
     data: routeConfigs
   })
 }
@@ -108,6 +110,31 @@ export function getRouteConfigsByGroup(group) {
 export function refreshRouteCache() {
   return request({
     url: '/private/view/routes/refresh',
+    method: 'post'
+  })
+}
+
+/**
+ * 获取指定分组的版本历史（最新版本在前）
+ * @param {string} group 路由分组名称
+ * @returns {Promise}
+ */
+export function getRouteVersions(group) {
+  return request({
+    url: `/private/view/routes/${group}/versions`,
+    method: 'get'
+  })
+}
+
+/**
+ * 回滚到指定版本（复制目标版本数据并产生新版本）
+ * @param {string} group 路由分组名称
+ * @param {number} versionId 目标版本ID
+ * @returns {Promise}
+ */
+export function rollbackRouteVersion(group, versionId) {
+  return request({
+    url: `/private/view/routes/${group}/rollback/${versionId}`,
     method: 'post'
   })
 }

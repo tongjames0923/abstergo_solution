@@ -1,17 +1,24 @@
 package com.tbs.view.route.impl;
 
+import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.mapper.ViewRouteConfigrationMapper;
 import com.tbs.shared.mapper.ViewRouteMetaMapper;
 import com.tbs.shared.mapper.ViewRouteRoleMapper;
+import com.tbs.shared.mapper.ViewRouteVersionMapper;
 import com.tbs.shared.pojo.entity.ViewRouteConfigrationEntity;
 import com.tbs.shared.pojo.entity.ViewRouteMetaEntity;
 import com.tbs.shared.pojo.entity.ViewRouteRoleEntity;
+import com.tbs.shared.pojo.entity.ViewRouteVersionEntity;
 import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
+import com.tbs.view.route.model.ViewRouteVersionModel;
+import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -23,7 +30,10 @@ import java.util.stream.Collectors;
 /**
  * 基于数据库的视图路由服务实现类
  * <p>
- * 该实现从数据库加载路由配置，支持动态编辑和热更新
+ * 该实现从数据库加载路由配置，支持动态编辑、热更新与版本控制。
+ * 版本控制语义：版本表为唯一事实来源，路由行挂靠版本ID，历史不可变，
+ * 一切变更（保存/回滚/清空分组）都产生新的版本记录（append-only）。
+ * 某分组的当前版本即该组 MAX(id) 的版本记录，全局视图版本号即版本表 MAX(id)。
  * </p>
  *
  * @author abstergo
@@ -41,15 +51,13 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
     @Autowired
     private ViewRouteRoleMapper viewRouteRoleMapper;
 
-    /**
-     * 路由配置缓存，按分组存储
-     */
-    private Map<String, List<ViewRouteModel>> routeCache = new HashMap<>(16);
+    @Autowired
+    private ViewRouteVersionMapper viewRouteVersionMapper;
 
     /**
-     * 路由配置版本号，用于热更新检测
+     * 路由配置缓存，按分组存储（仅缓存每组当前版本的路由）
      */
-    private volatile long configVersion = 0;
+    private Map<String, List<ViewRouteModel>> routeCache = new HashMap<>(16);
 
     @Override
     public List<String> getAllViewRouteGroups() {
@@ -63,30 +71,33 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void saveViewRoute(String group, List<ViewRouteModel> viewRouteModels) {
+    public ViewRouteVersionModel saveViewRoute(String group, List<ViewRouteModel> viewRouteModels,
+        String description) {
         AssertUtil.isTrue(viewRouteModels == null || viewRouteModels.isEmpty()).message("路由配置不能为空")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
         try {
-            // 1. 删除该分组下的所有现有路由配置
-            deleteViewRoute(group);
+            Long userId = getCurrentUserId();
 
-            // 2. 保存新的路由配置
+            // 1. 产生新的版本记录
+            ViewRouteVersionEntity versionEntity = createVersionRecord(group, description, userId);
+
+            // 2. 保存新的路由配置，全部挂靠新版本
             for (ViewRouteModel routeModel : viewRouteModels) {
-                saveRouteModel(routeModel, null, group);
+                saveRouteModel(routeModel, null, group, versionEntity.getId(), userId);
             }
 
-            // 3. 更新缓存
+            // 3. 重建该分组缓存
             routeCache.put(group, viewRouteModels);
 
-            // 4. 更新版本号，触发热更新
-            configVersion++;
-
-            log.info("成功保存路由分组: {}，包含 {} 个路由", group, viewRouteModels.size());
+            log.info("成功保存路由分组: {}，包含 {} 个路由，版本: v{}", group, viewRouteModels.size(),
+                versionEntity.getVersionNo());
+            return toVersionModel(versionEntity);
         } catch (Exception e) {
             log.error("保存路由配置失败: {}", group, e);
             AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("保存路由配置失败")
                 .throwIt();
+            return null;
         }
     }
 
@@ -94,46 +105,74 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
     @Transactional(rollbackFor = Exception.class)
     public void deleteViewRoute(String group) {
         try {
-            // 1. 查询该分组下的所有路由ID
-            List<ViewRouteConfigrationEntity> existingRoutes = viewRouteConfigrationMapper.findByRouteGroup(group);
-            if (existingRoutes.isEmpty()) {
+            // 若分组不存在或当前版本已是空版本，无需重复清空
+            Long latestVersionId = findLatestVersionId(group);
+            if (latestVersionId == null) {
+                return;
+            }
+            if (viewRouteConfigrationMapper.findByVersionId(latestVersionId).isEmpty()) {
                 return;
             }
 
-            List<Long> routeIds =
-                existingRoutes.stream().map(ViewRouteConfigrationEntity::getId).collect(Collectors.toList());
+            // 插入一条不含任何路由行的版本记录（清空分组），历史数据原样保留
+            createVersionRecord(group, "清空分组", getCurrentUserId());
 
-            // 2. 删除路由权限关联
-            for (Long routeId : routeIds) {
-                ViewRouteRoleEntity roleQuery = new ViewRouteRoleEntity();
-                roleQuery.setRouteId(routeId);
-                viewRouteRoleMapper.delete(roleQuery);
-            }
-
-            // 3. 删除路由元数据
-            for (Long routeId : routeIds) {
-                ViewRouteMetaEntity metaQuery = new ViewRouteMetaEntity();
-                metaQuery.setRouteId(routeId);
-                viewRouteMetaMapper.delete(metaQuery);
-            }
-
-            // 4. 删除路由配置
-            for (ViewRouteConfigrationEntity route : existingRoutes) {
-                viewRouteConfigrationMapper.delete(route);
-            }
-
-            // 5. 清除缓存
+            // 清除缓存，该分组从列表中消失
             routeCache.remove(group);
 
-            // 6. 更新版本号
-            configVersion++;
-
-            log.info("成功删除路由分组: {}", group);
+            log.info("成功清空路由分组: {}", group);
         } catch (Exception e) {
             log.error("删除路由配置失败: {}", group, e);
             AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("删除路由配置失败")
                 .throwIt();
         }
+    }
+
+    @Override
+    public List<ViewRouteVersionModel> getVersionHistory(String group) {
+        return viewRouteVersionMapper.findByGroupOrderByVersionNoDesc(group)
+            .stream()
+            .map(this::toVersionModel)
+            .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ViewRouteVersionModel rollbackToVersion(String group, Long versionId) {
+        try {
+            // 1. 校验目标版本存在且属于该分组
+            ViewRouteVersionEntity targetVersion = viewRouteVersionMapper.selectByPrimaryKey(versionId);
+            AssertUtil.isTrue(targetVersion == null || !group.equals(targetVersion.getRouteGroup()))
+                .message("目标版本不存在或不属于该分组").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+
+            Long userId = getCurrentUserId();
+
+            // 2. 产生新的版本记录（说明自动填"回滚自 vN"）
+            ViewRouteVersionEntity newVersion =
+                createVersionRecord(group, "回滚自 v" + targetVersion.getVersionNo(), userId);
+
+            // 3. 复制目标版本的路由数据到新版本（含元数据与权限）
+            List<ViewRouteConfigrationEntity> oldRoutes = viewRouteConfigrationMapper.findByVersionId(versionId);
+            copyRouteTree(oldRoutes, null, null, newVersion.getId(), userId);
+
+            // 4. 从数据库重建该分组缓存
+            rebuildGroupCache(group);
+
+            log.info("路由分组 {} 已回滚自 v{}，生成新版本 v{}", group, targetVersion.getVersionNo(),
+                newVersion.getVersionNo());
+            return toVersionModel(newVersion);
+        } catch (Exception e) {
+            log.error("回滚路由配置失败: {} -> {}", group, versionId, e);
+            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("回滚路由配置失败")
+                .throwIt();
+            return null;
+        }
+    }
+
+    @Override
+    public long getViewVersion() {
+        Long maxId = viewRouteVersionMapper.findMaxId();
+        return maxId == null ? 0L : maxId;
     }
 
     @Override
@@ -151,26 +190,148 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
 
     /**
      * 从数据库加载所有路由配置
+     * <p>
+     * 两段式加载：先取每个分组的最新版本ID，再按版本查询路由行并构建树
+     * </p>
      */
     private void loadAllRoutesFromDatabase() {
         // 清空缓存
         routeCache.clear();
 
-        // 查询所有启用的路由配置
-        List<ViewRouteConfigrationEntity> allRoutes = viewRouteConfigrationMapper.findAllEnabled();
+        // 1. 计算每个分组的当前版本（按ID倒序遍历，每组第一条即最新版本）
+        Map<String, Long> latestVersionByGroup = new LinkedHashMap<>();
+        for (ViewRouteVersionEntity version : viewRouteVersionMapper.findAllOrderByIdDesc()) {
+            latestVersionByGroup.putIfAbsent(version.getRouteGroup(), version.getId());
+        }
 
-        // 按分组分组
-        Map<String, List<ViewRouteConfigrationEntity>> groupedRoutes =
-            allRoutes.stream().collect(Collectors.groupingBy(ViewRouteConfigrationEntity::getRouteGroup));
-
-        // 转换为ViewRouteModel
-        for (Map.Entry<String, List<ViewRouteConfigrationEntity>> entry : groupedRoutes.entrySet()) {
+        // 2. 按最新版本加载路由并构建树
+        for (Map.Entry<String, Long> entry : latestVersionByGroup.entrySet()) {
             String group = entry.getKey();
-            List<ViewRouteConfigrationEntity> routeEntities = entry.getValue();
+            List<ViewRouteConfigrationEntity> routeEntities =
+                viewRouteConfigrationMapper.findByVersionId(entry.getValue());
+            if (!routeEntities.isEmpty()) {
+                routeCache.put(group, buildRouteTree(routeEntities, null));
+            }
+        }
+    }
 
-            // 构建路由树
-            List<ViewRouteModel> routeModels = buildRouteTree(routeEntities, null);
-            routeCache.put(group, routeModels);
+    /**
+     * 重建指定分组的缓存
+     *
+     * @param group 分组名称
+     */
+    private void rebuildGroupCache(String group) {
+        Long latestVersionId = findLatestVersionId(group);
+        if (latestVersionId == null) {
+            routeCache.remove(group);
+            return;
+        }
+        List<ViewRouteConfigrationEntity> routeEntities = viewRouteConfigrationMapper.findByVersionId(latestVersionId);
+        if (routeEntities.isEmpty()) {
+            routeCache.remove(group);
+        } else {
+            routeCache.put(group, buildRouteTree(routeEntities, null));
+        }
+    }
+
+    /**
+     * 查询指定分组的最新版本ID
+     *
+     * @param group 分组名称
+     * @return 最新版本ID，分组不存在时返回null
+     */
+    private Long findLatestVersionId(String group) {
+        List<ViewRouteVersionEntity> versions = viewRouteVersionMapper.findByGroupOrderByVersionNoDesc(group);
+        return versions.isEmpty() ? null : versions.get(0).getId();
+    }
+
+    /**
+     * 创建一条新的版本记录
+     *
+     * @param group       分组名称
+     * @param description 版本说明
+     * @param userId      操作人ID，可为null
+     * @return 插入后的版本实体（含ID）
+     */
+    private ViewRouteVersionEntity createVersionRecord(String group, String description, Long userId) {
+        ViewRouteVersionEntity versionEntity = new ViewRouteVersionEntity();
+        versionEntity.setRouteGroup(group);
+        versionEntity.setVersionNo(viewRouteVersionMapper.countByGroup(group) + 1);
+        versionEntity.setDescription(description);
+        versionEntity.setFlag(1);
+        versionEntity.setCreateBy(userId);
+        versionEntity.setCreateTime(new Date());
+        viewRouteVersionMapper.insert(versionEntity);
+        return versionEntity;
+    }
+
+    /**
+     * 递归复制路由树（回滚用）
+     * <p>
+     * 将旧版本指定层级下的路由行复制为新版本的新行，并同步复制元数据与权限角色
+     * </p>
+     *
+     * @param oldRoutes   旧版本的全部路由行
+     * @param oldParentId 旧父路由ID（顶层为null）
+     * @param newParentId 新父路由ID（顶层为null）
+     * @param newVersionId 新版本ID
+     * @param userId      操作人ID，可为null
+     */
+    private void copyRouteTree(List<ViewRouteConfigrationEntity> oldRoutes, Long oldParentId, Long newParentId,
+        Long newVersionId, Long userId) {
+        // 筛选出当前层级的旧路由行，按排序值排序
+        List<ViewRouteConfigrationEntity> currentLevel = oldRoutes.stream().filter(route -> {
+            if (oldParentId == null) {
+                return route.getParentId() == null;
+            }
+            return oldParentId.equals(route.getParentId());
+        }).sorted(Comparator.comparingInt(r -> r.getSortOrder() == null ? 0 : r.getSortOrder()))
+            .collect(Collectors.toList());
+
+        for (ViewRouteConfigrationEntity oldRoute : currentLevel) {
+            // 复制路由配置行
+            ViewRouteConfigrationEntity newRoute = new ViewRouteConfigrationEntity();
+            newRoute.setRouteGroup(oldRoute.getRouteGroup());
+            newRoute.setPath(oldRoute.getPath());
+            newRoute.setComponent(oldRoute.getComponent());
+            newRoute.setName(oldRoute.getName());
+            newRoute.setRedirect(oldRoute.getRedirect());
+            newRoute.setHidden(oldRoute.getHidden());
+            newRoute.setAlwaysShow(oldRoute.getAlwaysShow());
+            newRoute.setParentId(newParentId);
+            newRoute.setSortOrder(oldRoute.getSortOrder());
+            newRoute.setVersion(newVersionId);
+            newRoute.setFlag(1);
+            newRoute.setCreateTime(new Date());
+            newRoute.setCreateBy(userId);
+            viewRouteConfigrationMapper.insert(newRoute);
+
+            // 复制元数据
+            ViewRouteMetaEntity oldMeta = viewRouteMetaMapper.findByRouteId(oldRoute.getId());
+            if (oldMeta != null) {
+                ViewRouteMetaEntity newMeta = new ViewRouteMetaEntity();
+                newMeta.setRouteId(newRoute.getId());
+                newMeta.setRouteGroup(oldMeta.getRouteGroup());
+                newMeta.setTitle(oldMeta.getTitle());
+                newMeta.setIcon(oldMeta.getIcon());
+                newMeta.setBreadcrumb(oldMeta.getBreadcrumb());
+                newMeta.setActiveMenu(oldMeta.getActiveMenu());
+                newMeta.setFlag(1);
+                viewRouteMetaMapper.insert(newMeta);
+            }
+
+            // 复制权限角色
+            List<ViewRouteRoleEntity> oldRoles = viewRouteRoleMapper.findByRouteId(oldRoute.getId());
+            for (ViewRouteRoleEntity oldRole : oldRoles) {
+                ViewRouteRoleEntity newRole = new ViewRouteRoleEntity();
+                newRole.setRouteId(newRoute.getId());
+                newRole.setRoleCode(oldRole.getRoleCode());
+                newRole.setFlag(1);
+                viewRouteRoleMapper.insert(newRole);
+            }
+
+            // 递归复制子路由
+            copyRouteTree(oldRoutes, oldRoute.getId(), newRoute.getId(), newVersionId, userId);
         }
     }
 
@@ -191,7 +352,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             } else {
                 return parentId.equals(route.getParentId());
             }
-        }).sorted(Comparator.comparingInt(ViewRouteConfigrationEntity::getSortOrder)).collect(Collectors.toList());
+        }).sorted(Comparator.comparingInt(r -> r.getSortOrder() == null ? 0 : r.getSortOrder()))
+            .collect(Collectors.toList());
 
         for (ViewRouteConfigrationEntity routeEntity : currentLevelRoutes) {
             ViewRouteModel routeModel = convertToRouteModel(routeEntity);
@@ -269,8 +431,11 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
      * @param routeModel 路由模型
      * @param parentId   父路由ID
      * @param routeGroup 路由分组
+     * @param versionId  所属版本ID
+     * @param userId     操作人ID，可为null
      */
-    private void saveRouteModel(ViewRouteModel routeModel, Long parentId, String routeGroup) {
+    private void saveRouteModel(ViewRouteModel routeModel, Long parentId, String routeGroup, Long versionId,
+        Long userId) {
         // 1. 保存路由配置
         ViewRouteConfigrationEntity routeEntity = new ViewRouteConfigrationEntity();
         routeEntity.setRouteGroup(routeGroup);
@@ -282,7 +447,10 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
         routeEntity.setAlwaysShow(routeModel.getAlwaysShow() != null && routeModel.getAlwaysShow() ? 1 : 0);
         routeEntity.setParentId(parentId);
         routeEntity.setSortOrder(routeModel.getSortOrder() != null ? routeModel.getSortOrder() : 0); // 使用前端传入的排序值，默认为0
+        routeEntity.setVersion(versionId);
         routeEntity.setFlag(1); // 启用状态
+        routeEntity.setCreateTime(new Date());
+        routeEntity.setCreateBy(userId);
 
         viewRouteConfigrationMapper.insert(routeEntity);
 
@@ -316,18 +484,51 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
         // 4. 递归保存子路由
         if (routeModel.getChildren() != null && !routeModel.getChildren().isEmpty()) {
             for (ViewRouteModel child : routeModel.getChildren()) {
-                saveRouteModel(child, routeEntity.getId(), routeGroup);
+                saveRouteModel(child, routeEntity.getId(), routeGroup, versionId, userId);
             }
         }
     }
 
     /**
-     * 获取配置版本号，用于热更新检测
+     * 获取当前登录用户ID（审计用）
+     * <p>
+     * 沿用 AuthUtil + ISystemUserService 模式，取不到时返回 null 不阻断业务
+     * </p>
      *
-     * @return 配置版本号
+     * @return 当前用户ID，无法获取时返回null
      */
-    public long getConfigVersion() {
-        return configVersion;
+    private Long getCurrentUserId() {
+        try {
+            var systemUserService = SpringUtil.getBeanOptional(ISystemUserService.class);
+            if (systemUserService.isEmpty()) {
+                return null;
+            }
+            var currentUser = AuthUtil.getInstance().getCurrentUser();
+            if (currentUser == null || currentUser.getUsername() == null) {
+                return null;
+            }
+            return CollUtil.getFirst(systemUserService.get().queryUserIdsByUserName(currentUser.getUsername()));
+        } catch (Exception e) {
+            log.warn("获取当前登录用户ID失败，审计信息留空: {}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 将版本实体转换为版本模型
+     *
+     * @param entity 版本实体
+     * @return 版本模型
+     */
+    private ViewRouteVersionModel toVersionModel(ViewRouteVersionEntity entity) {
+        ViewRouteVersionModel model = new ViewRouteVersionModel();
+        model.setId(entity.getId());
+        model.setRouteGroup(entity.getRouteGroup());
+        model.setVersionNo(entity.getVersionNo());
+        model.setDescription(entity.getDescription());
+        model.setCreateBy(entity.getCreateBy());
+        model.setCreateTime(entity.getCreateTime());
+        return model;
     }
 
     /**
@@ -338,7 +539,6 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
      */
     public void refreshCache() {
         loadAllRoutesFromDatabase();
-        configVersion++;
-        log.info("路由缓存已刷新，当前版本: {}", configVersion);
+        log.info("路由缓存已刷新，当前视图版本: {}", getViewVersion());
     }
 }

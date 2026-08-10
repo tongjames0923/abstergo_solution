@@ -1,5 +1,6 @@
 package com.tbs.app.controller.publics;
 
+import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.v3.oas.annotations.Operation;
@@ -62,6 +63,12 @@ public class PublicGatewayVersionController {
     private String serverPort;
 
     /**
+     * 视图路由服务（可选注入，YAML实现时视图版本返回0）
+     */
+    @Resource
+    private ObjectProvider<IViewRouteService> viewRouteServiceProvider;
+
+    /**
      * 查询网关版本信息
      * <p>
      * 返回构建版本、构件名称、构建时间以及当前实例端口。 蓝绿切换验证示例：
@@ -72,7 +79,7 @@ public class PublicGatewayVersionController {
      * @return 版本信息
      */
     @GetMapping("/version")
-    @Operation(summary = "查询网关版本", description = "返回网关构建版本、构建时间与实例端口，无需认证")
+    @Operation(summary = "查询网关版本", description = "返回网关构建版本、构建时间、实例端口与视图路由配置版本，无需认证")
     public AjaxResult version() {
         Map<String, String> info = new LinkedHashMap<>();
         BuildProperties buildProperties = buildPropertiesProvider.getIfAvailable();
@@ -81,6 +88,9 @@ public class PublicGatewayVersionController {
         // 构建时间仅 Maven 打包后存在（来自 build-info）；IDE 运行时无该信息，返回 unknown
         info.put("buildTime", buildProperties != null ? String.valueOf(buildProperties.getTime()) : UNKNOWN);
         info.put("instancePort", serverPort);
+        // 视图路由配置版本（版本表MAX(id)），前端据此与本地版本比对判断菜单是否需要更新
+        IViewRouteService viewRouteService = viewRouteServiceProvider.getIfAvailable();
+        info.put("viewVersion", viewRouteService != null ? String.valueOf(viewRouteService.getViewVersion()) : "0");
         return AjaxUtil.getInstance().success(info);
     }
 

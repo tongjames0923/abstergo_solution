@@ -4,6 +4,7 @@ import store from '@/store'
 /* Layout */
 import Layout from '@/layout'
 import {getRoutes} from '@/api/view'
+import {getGatewayVersion} from '@/api/system'
 import {setUpRouterPermissions} from '@/permission'
 import {getToken} from '@/utils/auth'
 import routeCacheService from '@/utils/route-cache'
@@ -153,6 +154,16 @@ async function generateRoutesFromServer() {
 
           // 将获取到的路由数据缓存起来
           routeCacheService.cacheRoutes(res)
+
+          // 实际拉取路由后，记录服务端视图版本号供后续比对（失败不阻断路由加载）
+          try {
+            const versionRes = await getGatewayVersion()
+            if (versionRes && versionRes.data && versionRes.data.viewVersion) {
+              routeCacheService.setLocalVersion(versionRes.data.viewVersion)
+            }
+          } catch (e) {
+            console.warn('获取视图版本号失败:', e)
+          }
         }
 
         // 映射 component 字段为实际组件路径

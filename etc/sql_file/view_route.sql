@@ -5,6 +5,22 @@ SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
+-- Table structure for view_route_version
+-- ----------------------------
+DROP TABLE IF EXISTS `view_route_version`;
+CREATE TABLE `view_route_version`  (
+  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '版本ID',
+  `route_group` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '路由分组',
+  `version_no` int NOT NULL COMMENT '组内版本序号（v1、v2...）',
+  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NULL DEFAULT NULL COMMENT '版本说明',
+  `flag` int NULL DEFAULT 1 COMMENT '状态标志（0:禁用，1:启用）',
+  `create_by` bigint NULL DEFAULT NULL COMMENT '创建人',
+  `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  INDEX `idx_group`(`route_group` ASC) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '视图路由版本表' ROW_FORMAT = DYNAMIC;
+
+-- ----------------------------
 -- Table structure for view_route_configration
 -- ----------------------------
 DROP TABLE IF EXISTS `view_route_configration`;
@@ -19,6 +35,7 @@ CREATE TABLE `view_route_configration`  (
   `always_show` tinyint(1) NULL DEFAULT 0 COMMENT '是否始终显示（0:否，1:是）',
   `parent_id` bigint NULL DEFAULT NULL COMMENT '父路由ID（用于构建树形结构）',
   `sort_order` int NULL DEFAULT 0 COMMENT '排序顺序',
+  `version` bigint NULL DEFAULT NULL COMMENT '所属版本ID（援引 view_route_version.id）',
   `flag` int NULL DEFAULT 1 COMMENT '状态标志（0:禁用，1:启用）',
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
@@ -29,7 +46,8 @@ CREATE TABLE `view_route_configration`  (
   INDEX `idx_parent_id`(`parent_id` ASC) USING BTREE,
   INDEX `idx_flag`(`flag` ASC) USING BTREE,
   INDEX `idx_sort_order`(`sort_order` ASC) USING BTREE,
-  UNIQUE KEY `uk_group_path_parent`(`route_group`, `path`, `parent_id`) USING BTREE
+  INDEX `idx_version`(`version` ASC) USING BTREE,
+  UNIQUE KEY `uk_group_version_path_parent`(`route_group`, `version`, `path`, `parent_id`) USING BTREE
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_bin COMMENT = '视图路由配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
@@ -77,11 +95,16 @@ CREATE TABLE `view_route_role`  (
 TRUNCATE TABLE `view_route_role`;
 TRUNCATE TABLE `view_route_meta`;
 TRUNCATE TABLE `view_route_configration`;
+TRUNCATE TABLE `view_route_version`;
+
+-- 插入初始版本记录（所有初始化路由挂靠该版本）
+INSERT INTO `view_route_version` (`route_group`, `version_no`, `description`) VALUES
+('default', 1, '初始化导入');
 
 -- 插入 common 分组路由
-INSERT INTO `view_route_configration` (`route_group`, `path`, `component`, `name`, `redirect`, `hidden`, `always_show`, `parent_id`, `sort_order`, `flag`) VALUES
-('default', '/common', 'Layout', 'view.menu.common', '/common/user', 0, 0, NULL, 1, 1),
-('default', 'user', '/user/index.vue', 'view.menu.common.user', NULL, 0, 0, 1, 1, 1);
+INSERT INTO `view_route_configration` (`route_group`, `path`, `component`, `name`, `redirect`, `hidden`, `always_show`, `parent_id`, `sort_order`, `version`, `flag`) VALUES
+('default', '/common', 'Layout', 'view.menu.common', '/common/user', 0, 0, NULL, 1, 1, 1),
+('default', 'user', '/user/index.vue', 'view.menu.common.user', NULL, 0, 0, 1, 1, 1, 1);
 
 -- 插入 common 分组路由元数据
 INSERT INTO `view_route_meta` (`route_id`, `route_group`, `title`, `icon`, `breadcrumb`, `active_menu`) VALUES
@@ -89,12 +112,12 @@ INSERT INTO `view_route_meta` (`route_id`, `route_group`, `title`, `icon`, `brea
 (2, 'default', 'view.menu.common.user', 'el-icon-user', 1, NULL);
 
 -- 插入 admin 分组路由
-INSERT INTO `view_route_configration` (`route_group`, `path`, `component`, `name`, `redirect`, `hidden`, `always_show`, `parent_id`, `sort_order`, `flag`) VALUES
-('default', '/admin', 'Layout', 'view.menu.admin.title', '/admin/user', 0, 0, NULL, 2, 1),
-('default', 'user', '/admin/user/index.vue', 'view.menu.admin.user', NULL, 0, 0, 3, 1, 1),
-('default', 'role', '/admin/role/index.vue', 'view.menu.admin.role', NULL, 0, 0, 3, 2, 1),
-('default', 'company', '/admin/company/index.vue', 'view.menu.admin.company', NULL, 0, 0, 3, 3, 1),
-('default', 'role-group', '/admin/role_group/index.vue', 'view.menu.admin.role.group', NULL, 0, 0, 3, 4, 1);
+INSERT INTO `view_route_configration` (`route_group`, `path`, `component`, `name`, `redirect`, `hidden`, `always_show`, `parent_id`, `sort_order`, `version`, `flag`) VALUES
+('default', '/admin', 'Layout', 'view.menu.admin.title', '/admin/user', 0, 0, NULL, 2, 1, 1),
+('default', 'user', '/admin/user/index.vue', 'view.menu.admin.user', NULL, 0, 0, 3, 1, 1, 1),
+('default', 'role', '/admin/role/index.vue', 'view.menu.admin.role', NULL, 0, 0, 3, 2, 1, 1),
+('default', 'company', '/admin/company/index.vue', 'view.menu.admin.company', NULL, 0, 0, 3, 3, 1, 1),
+('default', 'role-group', '/admin/role_group/index.vue', 'view.menu.admin.role.group', NULL, 0, 0, 3, 4, 1, 1);
 
 -- 插入 admin 分组路由元数据
 INSERT INTO `view_route_meta` (`route_id`, `route_group`, `title`, `icon`, `breadcrumb`, `active_menu`) VALUES
@@ -109,14 +132,14 @@ INSERT INTO `view_route_role` (`route_id`, `role_code`, `flag`) VALUES
 (3, 'MENU.ADMIN', 1);
 
 -- 插入 develop 分组路由
-INSERT INTO `view_route_configration` (`route_group`, `path`, `component`, `name`, `redirect`, `hidden`, `always_show`, `parent_id`, `sort_order`, `flag`) VALUES
-('default', '/develop', 'Layout', 'view.menu.develop', '/develop/form-manager', 0, 0, NULL, 3, 1),
-('default', 'form-manager', '/form/FormManager.vue', 'view.menu.develop.form.manager', NULL, 0, 0, 8, 1, 1),
-('default', 'form', '/form/FormCreator.vue', 'view.menu.develop.form.create', NULL, 0, 0, 8, 2, 1),
-('default', 'dic', '/admin/dic/index.vue', 'view.menu.develop.dic', NULL, 0, 0, 8, 3, 1),
-('default', 'generic-api', '/admin/generic-api/index.vue', 'view.menu.develop.generic.api', NULL, 0, 0, 8, 4, 1),
-('default', 'systemlog', '/admin/systemlog/index.vue', 'view.menu.develop.systemlog', NULL, 0, 0, 8, 5, 1),
-('default', 'cache', '/cache/index.vue', 'view.menu.develop.cache', NULL, 0, 0, 8, 6, 1);
+INSERT INTO `view_route_configration` (`route_group`, `path`, `component`, `name`, `redirect`, `hidden`, `always_show`, `parent_id`, `sort_order`, `version`, `flag`) VALUES
+('default', '/develop', 'Layout', 'view.menu.develop', '/develop/form-manager', 0, 0, NULL, 3, 1, 1),
+('default', 'form-manager', '/form/FormManager.vue', 'view.menu.develop.form.manager', NULL, 0, 0, 8, 1, 1, 1),
+('default', 'form', '/form/FormCreator.vue', 'view.menu.develop.form.create', NULL, 0, 0, 8, 2, 1, 1),
+('default', 'dic', '/admin/dic/index.vue', 'view.menu.develop.dic', NULL, 0, 0, 8, 3, 1, 1),
+('default', 'generic-api', '/admin/generic-api/index.vue', 'view.menu.develop.generic.api', NULL, 0, 0, 8, 4, 1, 1),
+('default', 'systemlog', '/admin/systemlog/index.vue', 'view.menu.develop.systemlog', NULL, 0, 0, 8, 5, 1, 1),
+('default', 'cache', '/cache/index.vue', 'view.menu.develop.cache', NULL, 0, 0, 8, 6, 1, 1);
 
 -- 插入 develop 分组路由元数据
 INSERT INTO `view_route_meta` (`route_id`, `route_group`, `title`, `icon`, `breadcrumb`, `active_menu`) VALUES

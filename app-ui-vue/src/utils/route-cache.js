@@ -5,7 +5,8 @@
 
 const ROUTE_CACHE_KEY = 'dynamic_routes_cache'
 const ROUTE_CACHE_TIMESTAMP_KEY = 'dynamic_routes_timestamp'
-const DEFAULT_CACHE_DURATION = 30 * 60 * 1000 // 默认缓存30分钟
+const ROUTE_VERSION_KEY = 'dynamic_routes_version'
+const DEFAULT_CACHE_DURATION = 15 * 60 * 1000 // 默认缓存15分钟
 
 class RouteCacheService {
   constructor() {
@@ -65,7 +66,7 @@ class RouteCacheService {
   }
 
   /**
-   * 清除缓存
+   * 清除缓存（不清除本地版本号，版本号仅在实际拉取路由后更新）
    */
   clearCache() {
     try {
@@ -74,6 +75,33 @@ class RouteCacheService {
       console.log('路由缓存已清除')
     } catch (error) {
       console.error('清除路由缓存失败:', error)
+    }
+  }
+
+  /**
+   * 获取本地记录的视图版本号
+   * @returns {string|null} 本地版本号或null
+   */
+  getLocalVersion() {
+    try {
+      return localStorage.getItem(ROUTE_VERSION_KEY)
+    } catch (error) {
+      console.error('获取本地视图版本失败:', error)
+      return null
+    }
+  }
+
+  /**
+   * 记录本地视图版本号（实际从后端拉取路由后调用）
+   * @param {string|number} version - 视图版本号
+   */
+  setLocalVersion(version) {
+    try {
+      if (version !== null && version !== undefined && String(version) !== '0') {
+        localStorage.setItem(ROUTE_VERSION_KEY, String(version))
+      }
+    } catch (error) {
+      console.error('记录本地视图版本失败:', error)
     }
   }
 

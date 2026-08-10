@@ -6,6 +6,7 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
+import com.tbs.view.route.model.ViewRouteVersionModel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.yaml.snakeyaml.Yaml;
@@ -33,13 +34,31 @@ public class YmlViewServiceImpl implements IViewRouteService, IStartup {
     }
 
     @Override
-    public void saveViewRoute(String group, List<ViewRouteModel> viewRouteModel) {
+    public ViewRouteVersionModel saveViewRoute(String group, List<ViewRouteModel> viewRouteModel,
+        String description) {
         AssertUtil.isTrue(true, "功能尚未实现");
+        return null;
     }
 
     @Override
     public void deleteViewRoute(String group) {
         AssertUtil.isTrue(true, "功能尚未实现");
+    }
+
+    @Override
+    public List<ViewRouteVersionModel> getVersionHistory(String group) {
+        return Collections.emptyList();
+    }
+
+    @Override
+    public ViewRouteVersionModel rollbackToVersion(String group, Long versionId) {
+        AssertUtil.isTrue(true, "功能尚未实现");
+        return null;
+    }
+
+    @Override
+    public long getViewVersion() {
+        return 0;
     }
 
     @Override

@@ -42,4 +42,13 @@ public interface ViewRouteConfigrationMapper extends IFrameworkMapper<ViewRouteC
      */
     @Select("SELECT * FROM view_route_configration WHERE flag = 1 ORDER BY route_group, sort_order")
     List<ViewRouteConfigrationEntity> findAllEnabled();
+
+    /**
+     * 根据版本ID查询该版本下的所有路由配置
+     *
+     * @param versionId 版本ID
+     * @return 路由配置列表
+     */
+    @Select("SELECT * FROM view_route_configration WHERE version = #{versionId} AND flag = 1 ORDER BY sort_order")
+    List<ViewRouteConfigrationEntity> findByVersionId(@Param("versionId") Long versionId);
 }
