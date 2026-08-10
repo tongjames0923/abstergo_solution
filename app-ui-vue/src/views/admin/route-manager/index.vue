@@ -137,7 +137,20 @@
           <el-input v-model="routeForm.path" :placeholder="$t('routeManager.inputPath')"></el-input>
         </el-form-item>
         <el-form-item :label="$t('routeManager.component')" prop="component">
-          <el-input v-model="routeForm.component" :placeholder="$t('routeManager.inputComponent')"></el-input>
+          <el-select
+            v-model="routeForm.component"
+            filterable
+            allow-create
+            :placeholder="$t('routeManager.inputComponent')"
+            style="width: 100%"
+          >
+            <el-option
+              v-for="item in viewComponents"
+              :key="item"
+              :label="item"
+              :value="item"
+            ></el-option>
+          </el-select>
         </el-form-item>
         <el-form-item :label="$t('routeManager.name')" prop="name">
           <el-input v-model="routeForm.name" :placeholder="$t('routeManager.inputName')"></el-input>
@@ -170,10 +183,10 @@
             :placeholder="$t('routeManager.selectRoles')"
           >
             <el-option
-              v-for="role in availableRoles"
-              :key="role"
-              :label="role"
-              :value="role"
+              v-for="item in availableRoles"
+              :key="item.role"
+              :label="item.name"
+              :value="item.role"
             ></el-option>
           </el-select>
         </el-form-item>
@@ -200,6 +213,7 @@ import {
   deleteRouteConfigs,
   refreshRouteCache
 } from '@/api/view'
+import { queryRoles } from '@/api/role'
 
 export default {
   name: 'RouteManager',
@@ -230,11 +244,8 @@ export default {
         path: [{ required: true, message: this.$t('routeManager.inputPath'), trigger: 'blur' }],
         component: [{ required: true, message: this.$t('routeManager.inputComponent'), trigger: 'blur' }]
       },
-      availableRoles: [
-        'MENU.ADMIN',
-        'MENU.DEV',
-        '普通用户'
-      ]
+      availableRoles: [],
+      viewComponents: []
     }
   },
   computed: {
@@ -249,6 +260,8 @@ export default {
   },
   created() {
     this.loadRouteGroups()
+    this.loadViewComponents()
+    this.loadMenuRoles()
   },
   methods: {
     async loadRouteGroups() {
@@ -258,6 +271,42 @@ export default {
       } catch (error) {
         console.error('获取路由分组失败:', error)
         this.$message.error(this.$t('routeManager.fetchGroupsFailed'))
+      }
+    },
+
+    loadViewComponents() {
+      // 通过 require.context 读取 views 目录下所有 .vue 文件
+      const requireContext = require.context('@/views', true, /\.vue$/)
+      const components = requireContext.keys()
+        .map(key => {
+          // key 形如 './admin/user/index.vue'
+          // 转换为路由组件路径 '/admin/user/index.vue'
+          return '/' + key.replace(/^\.\//, '')
+        })
+        .filter(path => {
+          // 排除 403、404 和登录页
+          return !path.includes('403') && !path.includes('404') && !path.includes('login')
+        })
+        .sort()
+      
+      // 添加 Layout 组件选项
+      components.unshift('Layout')
+      
+      this.viewComponents = components
+    },
+
+    async loadMenuRoles() {
+      try {
+        // 查询所有菜单类型的权限（type=1），状态为激活（flag=1）
+        const response = await queryRoles({ typeEquals: [1], flagEquals: [1] }, 1, 1000)
+        const roles = response.data?.data || []
+        // 存储完整的权限对象，包含编码和名称
+        this.availableRoles = roles.map(r => ({
+          role: r.role,
+          name: r.name
+        }))
+      } catch (error) {
+        console.error('获取菜单权限失败:', error)
       }
     },
 
