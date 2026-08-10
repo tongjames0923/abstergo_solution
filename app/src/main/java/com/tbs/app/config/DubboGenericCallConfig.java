@@ -12,7 +12,7 @@ public class DubboGenericCallConfig {
     @Value("${dubbo.application.name:generic-call-app}")
     private String applicationName;
 
-    @Value("${dubbo.registry.address:zookeeper://127.0.0.1:2181}")
+    @Value("${dubbo.registry.address:nacos://127.0.0.1:8848}")
     private String registryAddress;
 
     @Bean

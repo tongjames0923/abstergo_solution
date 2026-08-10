@@ -14,7 +14,7 @@ public class DubboConfig {
     ServiceDiscovery dubboServiceDiscovery(@Value("${dubbo.registry.address}") String registryAddress) {
         ApplicationModel applicationModel = ApplicationModel.defaultModel();
         ServiceDiscoveryFactory factory =
-            applicationModel.getExtensionLoader(ServiceDiscoveryFactory.class).getExtension("zookeeper");
+            applicationModel.getExtensionLoader(ServiceDiscoveryFactory.class).getExtension("nacos");
         ServiceDiscovery serviceDiscovery = factory.getServiceDiscovery(URL.valueOf(registryAddress));
         return serviceDiscovery;
     }
