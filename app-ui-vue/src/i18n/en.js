@@ -97,7 +97,19 @@ export default {
     form: 'Form Management',
     formCreator: 'Form Creator',
     formManager: 'Form Manager',
-    genericApi: 'Generic API'
+    genericApi: 'Generic API',
+    route: 'Route Management',
+    routeManager: 'Route Config'
+  },
+
+  // Route Menu i18n
+  view: {
+    menu: {
+      route: {
+        title: 'Route Management',
+        manager: 'Route Config'
+      }
+    }
   },
 
   // User Management
@@ -266,6 +278,61 @@ export default {
     delete: 'Delete Form',
     preview: 'Preview',
     confirmDelete: 'Are you sure to delete this form?'
+  },
+
+  // Route Management
+  routeManager: {
+    title: 'Route Management',
+    refreshCache: 'Refresh Cache',
+    routeGroup: 'Route Group',
+    addGroup: 'Add Group',
+    deleteGroup: 'Delete Group',
+    routeConfig: 'Route Config',
+    saveConfig: 'Save Config',
+    addRoute: 'Add Route',
+    editRoute: 'Edit Route',
+    addChildRoute: 'Add Child Route',
+    deleteRoute: 'Delete Route',
+    selectGroup: 'Please select a group to view route config',
+    path: 'Path',
+    component: 'Component',
+    name: 'Name',
+    redirect: 'Redirect',
+    hidden: 'Hidden',
+    alwaysShow: 'Always Show',
+    yes: 'Yes',
+    no: 'No',
+    metaConfig: 'Meta Config',
+    title: 'Title',
+    icon: 'Icon',
+    roles: 'Roles',
+    breadcrumb: 'Breadcrumb',
+    activeMenu: 'Active Menu',
+    inputPath: 'Please enter route path',
+    inputComponent: 'Please enter component path',
+    inputName: 'Please enter route name',
+    inputRedirect: 'Please enter redirect path',
+    inputTitle: 'Please enter route title',
+    inputIcon: 'Please enter icon class name',
+    selectRoles: 'Please select or enter roles',
+    inputActiveMenu: 'Please enter active menu path',
+    groupNameInput: 'Please enter group name',
+    addGroupTitle: 'Add Group',
+    groupNamePattern: 'Group name can only contain letters, numbers, underscores and hyphens',
+    groupAddSuccess: 'Group added successfully',
+    groupExists: 'Group already exists',
+    deleteGroupConfirm: 'Are you sure to delete group "{group}"?',
+    groupDeleteSuccess: 'Group deleted successfully',
+    deleteRouteConfirm: 'Are you sure to delete route "{path}"?',
+    routeDeleteSuccess: 'Route deleted successfully',
+    routeUpdateSuccess: 'Route config updated successfully',
+    routeSaveSuccess: 'Route config saved successfully',
+    cacheRefreshSuccess: 'Route cache refreshed successfully',
+    fetchGroupsFailed: 'Failed to fetch route groups',
+    fetchRoutesFailed: 'Failed to fetch route configs',
+    saveRoutesFailed: 'Failed to save route configs',
+    refreshCacheFailed: 'Failed to refresh route cache',
+    deleteGroupFailed: 'Failed to delete group'
   },
 
   // Error Pages

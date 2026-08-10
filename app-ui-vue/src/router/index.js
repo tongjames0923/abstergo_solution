@@ -70,6 +70,29 @@ export const constantRoutes = [
       meta: {title: 'Table', icon: 'el-icon-star-on'}
     }
     ]
+  },
+
+  // 路由管理页面（独立静态路由，权限写死为MENU.ROUTE）
+  {
+    path: '/route',
+    component: Layout,
+    name: 'view.menu.route.title',
+    redirect: '/route/manager',
+    meta: {
+      title: 'view.menu.route.title',
+      icon: 'el-icon-guide',
+    },
+    children: [
+      {
+        path: 'manager',
+        name: 'view.menu.route.manager',
+        component: () => import('@/views/admin/route-manager/index.vue'),
+        meta: {
+          title: 'view.menu.route.manager',
+          icon: 'el-icon-s-operation',
+        }
+      }
+    ]
   }
 ]
 

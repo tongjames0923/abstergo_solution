@@ -8,6 +8,7 @@ import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.enums.SystemRoleTypeEnum;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.view.route.api.IViewRouteService;
+import com.tbs.view.route.impl.DatabaseViewRouteServiceImpl;
 import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.web.BaseController;
@@ -311,5 +312,107 @@ public class ViewController extends BaseController {
     @Override
     public String getBusinessName() {
         return "视图控制器";
+    }
+
+    /**
+     * 保存路由配置
+     * <p>
+     * 保存指定分组的路由配置信息，支持动态编辑路由
+     * </p>
+     *
+     * @param group           路由分组名称
+     * @param viewRouteModels 路由配置列表
+     * @return 保存结果
+     */
+    @PostMapping("/routes/{group}")
+    @AjaxResponseType(void.class)
+    @Operation(summary = "保存路由配置", description = "保存指定分组的路由配置")
+    @ApiResponse(responseCode = "200", description = "成功保存路由配置",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult saveViewRoutes(
+        @Parameter(name = "group", description = "路由分组名称", required = true) @PathVariable String group,
+        @Parameter(description = "路由配置列表") @RequestBody List<ViewRouteModel> viewRouteModels) {
+        viewRouteService.saveViewRoute(group, viewRouteModels);
+        return successResult(null);
+    }
+
+    /**
+     * 删除路由配置
+     * <p>
+     * 删除指定分组的路由配置
+     * </p>
+     *
+     * @param group 路由分组名称
+     * @return 删除结果
+     */
+    @DeleteMapping("/routes/{group}")
+    @AjaxResponseType(void.class)
+    @Operation(summary = "删除路由配置", description = "删除指定分组的路由配置")
+    @ApiResponse(responseCode = "200", description = "成功删除路由配置",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult deleteViewRoutes(
+        @Parameter(name = "group", description = "路由分组名称", required = true) @PathVariable String group) {
+        viewRouteService.deleteViewRoute(group);
+        return successResult(null);
+    }
+
+    /**
+     * 获取所有路由分组
+     * <p>
+     * 获取系统中所有的路由分组名称
+     * </p>
+     *
+     * @return 路由分组列表
+     */
+    @GetMapping("/route-groups")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {String.class})
+    @Operation(summary = "获取所有路由分组", description = "获取所有路由分组")
+    @ApiResponse(responseCode = "200", description = "成功获取所有路由分组",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult getViewRouteGroups() {
+        return successResult(viewRouteService.getAllViewRouteGroups());
+    }
+
+    /**
+     * 获取指定分组的路由配置
+     * <p>
+     * 获取指定分组下的所有路由配置信息
+     * </p>
+     *
+     * @param group 路由分组名称
+     * @return 路由配置列表
+     */
+    @GetMapping("/routes/{group}")
+    @AjaxResponseType(value = java.util.List.class, genericArgs = {ViewRouteModel.class})
+    @Operation(summary = "获取指定分组的路由配置", description = "获取指定分组的路由配置")
+    @ApiResponse(responseCode = "200", description = "成功获取指定分组的路由配置",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult getViewRoutesByGroup(
+        @Parameter(name = "group", description = "路由分组名称", required = true) @PathVariable String group) {
+        return successResult(viewRouteService.getViewRoutesByGroup(group));
+    }
+
+    /**
+     * 刷新路由缓存
+     * <p>
+     * 强制刷新路由缓存，从数据库重新加载路由配置
+     * </p>
+     *
+     * @return 刷新结果
+     */
+    @PostMapping("/routes/refresh")
+    @AjaxResponseType(void.class)
+    @Operation(summary = "刷新路由缓存", description = "强制刷新路由缓存")
+    @ApiResponse(responseCode = "200", description = "成功刷新路由缓存",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult refreshRouteCache() {
+        // 如果是DatabaseViewRouteServiceImpl，则刷新缓存
+        if (viewRouteService instanceof DatabaseViewRouteServiceImpl) {
+            ((DatabaseViewRouteServiceImpl)viewRouteService).refreshCache();
+        }
+        return successResult();
     }
 }

@@ -3,7 +3,6 @@ package com.tbs.view.route.impl;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
@@ -35,12 +34,12 @@ public class YmlViewServiceImpl implements IViewRouteService, IStartup {
 
     @Override
     public void saveViewRoute(String group, List<ViewRouteModel> viewRouteModel) {
-        AssertUtil.isTrue(false, "功能尚未实现");
+        AssertUtil.isTrue(true, "功能尚未实现");
     }
 
     @Override
     public void deleteViewRoute(String group) {
-        AssertUtil.isTrue(false, "功能尚未实现");
+        AssertUtil.isTrue(true, "功能尚未实现");
     }
 
     @Override

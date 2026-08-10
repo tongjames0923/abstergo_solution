@@ -97,7 +97,19 @@ export default {
     form: '表单管理',
     formCreator: '表单创建',
     formManager: '表单管理',
-    genericApi: '泛化API'
+    genericApi: '泛化API',
+    route: '路由管理',
+    routeManager: '路由配置'
+  },
+
+  // 路由菜单国际化
+  view: {
+    menu: {
+      route: {
+        title: '路由管理',
+        manager: '路由配置'
+      }
+    }
   },
 
   // 用户管理
@@ -266,6 +278,61 @@ export default {
     delete: '删除表单',
     preview: '预览',
     confirmDelete: '确定要删除该表单吗？'
+  },
+
+  // 路由管理
+  routeManager: {
+    title: '路由管理',
+    refreshCache: '刷新缓存',
+    routeGroup: '路由分组',
+    addGroup: '新增分组',
+    deleteGroup: '删除分组',
+    routeConfig: '路由配置',
+    saveConfig: '保存配置',
+    addRoute: '添加路由',
+    editRoute: '编辑路由',
+    addChildRoute: '添加子路由',
+    deleteRoute: '删除路由',
+    selectGroup: '请选择左侧分组查看路由配置',
+    path: '路径',
+    component: '组件',
+    name: '名称',
+    redirect: '重定向',
+    hidden: '隐藏',
+    alwaysShow: '始终显示',
+    yes: '是',
+    no: '否',
+    metaConfig: '元数据配置',
+    title: '标题',
+    icon: '图标',
+    roles: '权限角色',
+    breadcrumb: '显示面包屑',
+    activeMenu: '激活菜单',
+    inputPath: '请输入路由路径',
+    inputComponent: '请输入组件路径',
+    inputName: '请输入路由名称',
+    inputRedirect: '请输入重定向路径',
+    inputTitle: '请输入路由标题',
+    inputIcon: '请输入图标类名',
+    selectRoles: '请选择或输入权限角色',
+    inputActiveMenu: '请输入激活菜单路径',
+    groupNameInput: '请输入分组名称',
+    addGroupTitle: '新增分组',
+    groupNamePattern: '分组名称只能包含字母、数字、下划线和连字符',
+    groupAddSuccess: '分组添加成功',
+    groupExists: '分组已存在',
+    deleteGroupConfirm: '确定要删除分组 "{group}" 吗？',
+    groupDeleteSuccess: '分组删除成功',
+    deleteRouteConfirm: '确定要删除路由 "{path}" 吗？',
+    routeDeleteSuccess: '路由删除成功',
+    routeUpdateSuccess: '路由配置更新成功',
+    routeSaveSuccess: '路由配置保存成功',
+    cacheRefreshSuccess: '路由缓存刷新成功',
+    fetchGroupsFailed: '获取路由分组失败',
+    fetchRoutesFailed: '获取路由配置失败',
+    saveRoutesFailed: '保存路由配置失败',
+    refreshCacheFailed: '刷新路由缓存失败',
+    deleteGroupFailed: '删除分组失败'
   },
 
   // 错误页面
