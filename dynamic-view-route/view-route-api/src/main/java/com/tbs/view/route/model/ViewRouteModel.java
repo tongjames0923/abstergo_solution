@@ -57,4 +57,9 @@ public class ViewRouteModel implements Serializable {
      * 路由元数据
      */
     private ViewRouteMetaModel meta;
+
+    /**
+     * 排序顺序
+     */
+    private Integer sortOrder;
 }

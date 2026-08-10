@@ -80,7 +80,15 @@ export default {
     artifact: 'Artifact',
     buildTime: 'Build Time',
     instancePort: 'Instance Port',
-    fetchFailed: 'Failed to fetch version info'
+    fetchFailed: 'Failed to fetch version info',
+    viewVersion: 'View Route Version',
+    serverVersion: 'Server Version',
+    localVersion: 'Local Version',
+    latest: 'Up to date',
+    hasUpdate: 'Update available',
+    updateView: 'Update View',
+    updateViewSuccess: 'View updated',
+    updateViewFailed: 'Failed to update view'
   },
 
   // Sidebar
@@ -97,7 +105,19 @@ export default {
     form: 'Form Management',
     formCreator: 'Form Creator',
     formManager: 'Form Manager',
-    genericApi: 'Generic API'
+    genericApi: 'Generic API',
+    route: 'Route Management',
+    routeManager: 'Route Config'
+  },
+
+  // Route Menu i18n
+  view: {
+    menu: {
+      route: {
+        title: 'Route Management',
+        manager: 'Route Config'
+      }
+    }
   },
 
   // User Management
@@ -266,6 +286,84 @@ export default {
     delete: 'Delete Form',
     preview: 'Preview',
     confirmDelete: 'Are you sure to delete this form?'
+  },
+
+  // Route Management
+  routeManager: {
+    title: 'Route Management',
+    subtitle: 'Visually orchestrate dynamic frontend routes with grouping, sorting and hot-reload',
+    noGroups: 'No groups yet, add one from the top-right button',
+    noRoutes: 'No routes in this group, click "Add Route" to start',
+    routesUnit: 'routes',
+    unsavedTip: 'Unsaved changes, take effect after "Save Config"',
+    discardChangesConfirm: 'You have unsaved changes. Switching group will discard them. Continue?',
+    refreshCache: 'Refresh Cache',
+    routeGroup: 'Route Group',
+    addGroup: 'Add Group',
+    deleteGroup: 'Delete Group',
+    routeConfig: 'Route Config',
+    saveConfig: 'Save Config',
+    addRoute: 'Add Route',
+    editRoute: 'Edit Route',
+    addChildRoute: 'Add Child Route',
+    deleteRoute: 'Delete Route',
+    selectGroup: 'Please select a group to view route config',
+    path: 'Path',
+    component: 'Component',
+    name: 'Name',
+    redirect: 'Redirect',
+    hidden: 'Hidden',
+    alwaysShow: 'Always Show',
+    yes: 'Yes',
+    no: 'No',
+    metaConfig: 'Meta Config',
+    icon: 'Icon',
+    roles: 'Roles',
+    breadcrumb: 'Breadcrumb',
+    activeMenu: 'Active Menu',
+    inputPath: 'Please enter route path',
+    inputComponent: 'Please enter component path',
+    inputName: 'Please enter route name',
+    inputRedirect: 'Please enter redirect path',
+    inputTitle: 'Please enter route title',
+    inputIcon: 'Please enter icon class name',
+    selectRoles: 'Please select or enter roles',
+    inputActiveMenu: 'Please enter active menu path',
+    groupNameInput: 'Please enter group name',
+    addGroupTitle: 'Add Group',
+    groupNamePattern: 'Group name can only contain letters, numbers, underscores and hyphens',
+    groupAddSuccess: 'Group added successfully',
+    groupExists: 'Group already exists',
+    deleteGroupConfirm: 'Are you sure to delete group "{group}"? All routes in this group will be cleared and a new version record will be created.',
+    groupDeleteSuccess: 'Group deleted successfully',
+    deleteRouteConfirm: 'Are you sure to delete route "{path}"?',
+    routeDeleteSuccess: 'Route deleted successfully',
+    routeUpdateSuccess: 'Route config updated successfully',
+    routeSaveSuccess: 'Route config saved successfully',
+    saveConfigTitle: 'Save Route Config',
+    emptyGroupTip: 'This group has no routes to save. To clear a group, use the delete button on the left',
+    versionNote: 'Version Note',
+    versionNotePlaceholder: 'Enter version note (optional)',
+    saveAsSuccess: 'Saved as v{version}',
+    versionHistory: 'Version History',
+    currentVersion: 'Current',
+    noVersions: 'No version records yet',
+    noDescription: 'No version note',
+    rollbackTo: 'Rollback to this version',
+    rollbackConfirm: 'Are you sure to rollback to v{version}? Rollback copies this version and creates a new version.',
+    rollbackSuccess: 'Rolled back, new version v{version} created',
+    rollbackFailed: 'Rollback failed',
+    fetchVersionsFailed: 'Failed to fetch version history',
+    cacheRefreshSuccess: 'Route cache refreshed successfully',
+    fetchGroupsFailed: 'Failed to fetch route groups',
+    fetchRoutesFailed: 'Failed to fetch route configs',
+    saveRoutesFailed: 'Failed to save route configs',
+    refreshCacheFailed: 'Failed to refresh route cache',
+    deleteGroupFailed: 'Failed to delete group',
+    sortOrder: 'Sort Order',
+    moveUp: 'Move Up',
+    moveDown: 'Move Down',
+    sortSuccess: 'Sort order updated successfully'
   },
 
   // Error Pages

@@ -111,6 +111,42 @@
           <span class="about-label">{{ $t('about.instancePort') }}</span>
           <span class="about-value">{{ versionInfo.instancePort || '-' }}</span>
         </div>
+
+        <!-- 视图路由版本区块 -->
+        <div class="view-version-block">
+          <div class="view-version-head">
+            <span class="view-version-title">
+              <i class="el-icon-view" /> {{ $t('about.viewVersion') }}
+            </span>
+            <el-tag
+              v-if="hasViewVersionInfo"
+              size="mini"
+              :type="viewUpToDate ? 'success' : 'warning'"
+              effect="plain"
+            >
+              {{ viewUpToDate ? $t('about.latest') : $t('about.hasUpdate') }}
+            </el-tag>
+          </div>
+          <div class="about-row">
+            <span class="about-label">{{ $t('about.serverVersion') }}</span>
+            <span class="about-value">{{ serverViewVersion || '-' }}</span>
+          </div>
+          <div class="about-row">
+            <span class="about-label">{{ $t('about.localVersion') }}</span>
+            <span class="about-value">{{ localViewVersion || '-' }}</span>
+          </div>
+          <el-button
+            v-if="!viewUpToDate && hasViewVersionInfo"
+            class="update-view-btn"
+            size="mini"
+            type="primary"
+            plain
+            :loading="updatingView"
+            @click="handleUpdateView"
+          >
+            <i v-if="!updatingView" class="el-icon-refresh" /> {{ $t('about.updateView') }}
+          </el-button>
+        </div>
       </div>
     </el-dialog>
   </div>
@@ -123,6 +159,8 @@ import Hamburger from '@/components/Hamburger'
 import LangSelect from '@/components/LangSelect'
 import sidebar from '@/layout/components/Sidebar/index.vue'
 import { getGatewayVersion } from '@/api/system'
+import routeCacheService from '@/utils/route-cache'
+import { refreshRoutes } from '@/router'
 import settings from '@/settings'
 
 export default {
@@ -137,7 +175,8 @@ export default {
       // 关于系统弹窗状态与后端版本信息
       aboutVisible: false,
       aboutLoading: false,
-      versionInfo: {}
+      versionInfo: {},
+      updatingView: false
     }
   },
   computed: {
@@ -155,6 +194,22 @@ export default {
         return raw
       }
       return date.toLocaleString()
+    },
+    // 服务端视图版本
+    serverViewVersion() {
+      return this.versionInfo.viewVersion || ''
+    },
+    // 本地缓存的视图版本（实际拉取路由时记录）
+    localViewVersion() {
+      return routeCacheService.getLocalVersion() || ''
+    },
+    // 两端版本信息是否齐备（任一缺失时不展示比对状态）
+    hasViewVersionInfo() {
+      return !!this.serverViewVersion && this.serverViewVersion !== '0' && !!this.localViewVersion
+    },
+    // 版本号不相等即视为有更新
+    viewUpToDate() {
+      return this.serverViewVersion === this.localViewVersion
     },
     sidebar() {
       return sidebar
@@ -197,6 +252,21 @@ export default {
         this.$message.error(this.$t('about.fetchFailed'))
       } finally {
         this.aboutLoading = false
+      }
+    },
+    // 更新视图：清除本地路由缓存并重新拉取路由（同时刷新本地版本号）
+    async handleUpdateView() {
+      this.updatingView = true
+      try {
+        await refreshRoutes()
+        const res = await getGatewayVersion()
+        this.versionInfo = (res && res.data) || this.versionInfo
+        this.$message.success(this.$t('about.updateViewSuccess'))
+      } catch (e) {
+        console.error('更新视图失败:', e)
+        this.$message.error(this.$t('about.updateViewFailed'))
+      } finally {
+        this.updatingView = false
       }
     },
     async logout() {
@@ -592,6 +662,41 @@ export default {
       color: #333;
       font-weight: 500;
       word-break: break-all;
+    }
+  }
+
+  .view-version-block {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid #eaeaea;
+    border-radius: 10px;
+    background: rgba(0, 113, 227, 0.03);
+
+    .view-version-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2px;
+    }
+
+    .view-version-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: #555;
+
+      i {
+        color: #0071e3;
+      }
+    }
+
+    .about-row {
+      padding: 3px 0;
+      font-size: 12px;
+    }
+
+    .update-view-btn {
+      margin-top: 6px;
+      width: 100%;
     }
   }
 }

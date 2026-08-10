@@ -80,7 +80,15 @@ export default {
     artifact: '构件名称',
     buildTime: '构建时间',
     instancePort: '实例端口',
-    fetchFailed: '获取版本信息失败'
+    fetchFailed: '获取版本信息失败',
+    viewVersion: '视图路由版本',
+    serverVersion: '服务端版本',
+    localVersion: '本地版本',
+    latest: '已是最新',
+    hasUpdate: '有更新',
+    updateView: '更新视图',
+    updateViewSuccess: '视图已更新',
+    updateViewFailed: '更新视图失败'
   },
 
   // 侧边栏
@@ -97,7 +105,19 @@ export default {
     form: '表单管理',
     formCreator: '表单创建',
     formManager: '表单管理',
-    genericApi: '泛化API'
+    genericApi: '泛化API',
+    route: '路由管理',
+    routeManager: '路由配置'
+  },
+
+  // 路由菜单国际化
+  view: {
+    menu: {
+      route: {
+        title: '路由管理',
+        manager: '路由配置'
+      }
+    }
   },
 
   // 用户管理
@@ -266,6 +286,84 @@ export default {
     delete: '删除表单',
     preview: '预览',
     confirmDelete: '确定要删除该表单吗？'
+  },
+
+  // 路由管理
+  routeManager: {
+    title: '路由管理',
+    subtitle: '可视化编排前端动态路由，支持分组管理、排序与热更新',
+    noGroups: '暂无分组，点击右上角新增',
+    noRoutes: '当前分组暂无路由，点击「添加路由」开始配置',
+    routesUnit: '条路由',
+    unsavedTip: '有未保存的更改，点“保存配置”后生效',
+    discardChangesConfirm: '当前有未保存的更改，切换分组将丢弃这些更改。确定切换吗？',
+    refreshCache: '刷新缓存',
+    routeGroup: '路由分组',
+    addGroup: '新增分组',
+    deleteGroup: '删除分组',
+    routeConfig: '路由配置',
+    saveConfig: '保存配置',
+    addRoute: '添加路由',
+    editRoute: '编辑路由',
+    addChildRoute: '添加子路由',
+    deleteRoute: '删除路由',
+    selectGroup: '请选择左侧分组查看路由配置',
+    path: '路径',
+    component: '组件',
+    name: '名称',
+    redirect: '重定向',
+    hidden: '隐藏',
+    alwaysShow: '始终显示',
+    yes: '是',
+    no: '否',
+    metaConfig: '元数据配置',
+    icon: '图标',
+    roles: '权限角色',
+    breadcrumb: '显示面包屑',
+    activeMenu: '激活菜单',
+    inputPath: '请输入路由路径',
+    inputComponent: '请输入组件路径',
+    inputName: '请输入路由名称',
+    inputRedirect: '请输入重定向路径',
+    inputTitle: '请输入路由标题',
+    inputIcon: '请输入图标类名',
+    selectRoles: '请选择或输入权限角色',
+    inputActiveMenu: '请输入激活菜单路径',
+    groupNameInput: '请输入分组名称',
+    addGroupTitle: '新增分组',
+    groupNamePattern: '分组名称只能包含字母、数字、下划线和连字符',
+    groupAddSuccess: '分组添加成功',
+    groupExists: '分组已存在',
+    deleteGroupConfirm: '确定要删除分组 "{group}" 吗？将清空该分组全部路由，并产生一条新的版本记录。',
+    groupDeleteSuccess: '分组删除成功',
+    deleteRouteConfirm: '确定要删除路由 "{path}" 吗？',
+    routeDeleteSuccess: '路由删除成功',
+    routeUpdateSuccess: '路由配置更新成功',
+    routeSaveSuccess: '路由配置保存成功',
+    saveConfigTitle: '保存路由配置',
+    emptyGroupTip: '当前分组没有路由，无法保存。如需清空分组请使用左侧删除按钮',
+    versionNote: '版本说明',
+    versionNotePlaceholder: '请输入版本说明（可选）',
+    saveAsSuccess: '已保存为 v{version}',
+    versionHistory: '版本记录',
+    currentVersion: '当前版本',
+    noVersions: '暂无版本记录',
+    noDescription: '无版本说明',
+    rollbackTo: '回滚到此版本',
+    rollbackConfirm: '确定要回滚到 v{version} 吗？回滚将复制该版本数据并产生一个新版本。',
+    rollbackSuccess: '已回滚，生成新版本 v{version}',
+    rollbackFailed: '回滚失败',
+    fetchVersionsFailed: '获取版本历史失败',
+    cacheRefreshSuccess: '路由缓存刷新成功',
+    fetchGroupsFailed: '获取路由分组失败',
+    fetchRoutesFailed: '获取路由配置失败',
+    saveRoutesFailed: '保存路由配置失败',
+    refreshCacheFailed: '刷新路由缓存失败',
+    deleteGroupFailed: '删除分组失败',
+    sortOrder: '排序',
+    moveUp: '上移',
+    moveDown: '下移',
+    sortSuccess: '排序更新成功'
   },
 
   // 错误页面

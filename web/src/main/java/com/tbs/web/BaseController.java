@@ -31,6 +31,16 @@ public abstract class BaseController {
     }
 
     /**
+     * 默认执行的操作成功返回值
+     *
+     * @param val
+     * @return
+     */
+    public AjaxResult successResult() {
+        return AjaxUtil.getInstance().success(I18nUtil.get("common.success"), null);
+    }
+
+    /**
      * 默认执行的操作失败返回值
      *
      * @param e
