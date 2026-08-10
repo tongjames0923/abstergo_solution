@@ -57,6 +57,3 @@ tbs:
   knife4j:
     enable: true
     show-url: true
-  view:
-    route:
-      enable-database-route: true

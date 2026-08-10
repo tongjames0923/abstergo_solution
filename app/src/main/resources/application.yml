@@ -2,12 +2,20 @@
 spring:
   profiles:
     include:
-      - redis
-      - db
       - tbs
-      - mq
   application:
     name: app-service
+  # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
+  config:
+    import:
+      - optional:nacos:RABBITMQ.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:CoreAppDb.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:REDIS.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
+  cloud:
+    nacos:
+      config:
+        server-addr: ${NACOS_ADDRESS:127.0.0.1:8848}
   lifecycle:
     timeout-per-shutdown-phase: 30s
   jackson:
@@ -23,20 +31,4 @@ app:
     # @project.version@ 由Maven资源过滤注入pom版本号（spring-boot-starter-parent默认对application*.yml开启过滤，IDE编译同样生效）
     # 可用启动参数覆盖，如：-DAPP_GATEWAY_VERSION=1.2.3-hotfix
     version: ${APP_GATEWAY_VERSION:@project.version@}
-
-dubbo:
-  application:
-    name: dubbo-app-system-service
-    logger: slf4j
-    check-serializable: false
-    serialize-check-status: DISABLE
-  registry:
-    address: nacos://${NACOS_ADDRESS:127.0.0.1:8848}
-  protocol:
-    port: ${DUBBO_PORT:20777}
-    name: tri
-  shutdown:
-    await-duration: 10000
-  consumer:
-    filter: -ContextHolderAuthenticationPrepareFilter
 
