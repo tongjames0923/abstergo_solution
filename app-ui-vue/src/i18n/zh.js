@@ -283,6 +283,11 @@ export default {
   // 路由管理
   routeManager: {
     title: '路由管理',
+    subtitle: '可视化编排前端动态路由，支持分组管理、排序与热更新',
+    noGroups: '暂无分组，点击右上角新增',
+    noRoutes: '当前分组暂无路由，点击「添加路由」开始配置',
+    routesUnit: '条路由',
+    unsavedTip: '有未保存的更改',
     refreshCache: '刷新缓存',
     routeGroup: '路由分组',
     addGroup: '新增分组',
@@ -303,7 +308,6 @@ export default {
     yes: '是',
     no: '否',
     metaConfig: '元数据配置',
-    title: '标题',
     icon: '图标',
     roles: '权限角色',
     breadcrumb: '显示面包屑',
@@ -332,7 +336,11 @@ export default {
     fetchRoutesFailed: '获取路由配置失败',
     saveRoutesFailed: '保存路由配置失败',
     refreshCacheFailed: '刷新路由缓存失败',
-    deleteGroupFailed: '删除分组失败'
+    deleteGroupFailed: '删除分组失败',
+    sortOrder: '排序',
+    moveUp: '上移',
+    moveDown: '下移',
+    sortSuccess: '排序更新成功'
   },
 
   // 错误页面

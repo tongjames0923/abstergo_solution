@@ -283,6 +283,11 @@ export default {
   // Route Management
   routeManager: {
     title: 'Route Management',
+    subtitle: 'Visually orchestrate dynamic frontend routes with grouping, sorting and hot-reload',
+    noGroups: 'No groups yet, add one from the top-right button',
+    noRoutes: 'No routes in this group, click "Add Route" to start',
+    routesUnit: 'routes',
+    unsavedTip: 'Unsaved changes',
     refreshCache: 'Refresh Cache',
     routeGroup: 'Route Group',
     addGroup: 'Add Group',
@@ -303,7 +308,6 @@ export default {
     yes: 'Yes',
     no: 'No',
     metaConfig: 'Meta Config',
-    title: 'Title',
     icon: 'Icon',
     roles: 'Roles',
     breadcrumb: 'Breadcrumb',
@@ -332,7 +336,11 @@ export default {
     fetchRoutesFailed: 'Failed to fetch route configs',
     saveRoutesFailed: 'Failed to save route configs',
     refreshCacheFailed: 'Failed to refresh route cache',
-    deleteGroupFailed: 'Failed to delete group'
+    deleteGroupFailed: 'Failed to delete group',
+    sortOrder: 'Sort Order',
+    moveUp: 'Move Up',
+    moveDown: 'Move Down',
+    sortSuccess: 'Sort order updated successfully'
   },
 
   // Error Pages

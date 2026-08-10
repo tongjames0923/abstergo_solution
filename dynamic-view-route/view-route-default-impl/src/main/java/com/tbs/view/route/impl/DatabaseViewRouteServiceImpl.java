@@ -231,6 +231,9 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             routeModel.setAlwaysShow(routeEntity.getAlwaysShow() == 1);
         }
 
+        // 设置排序顺序
+        routeModel.setSortOrder(routeEntity.getSortOrder());
+
         // 获取元数据
         ViewRouteMetaEntity metaEntity = viewRouteMetaMapper.findByRouteId(routeEntity.getId());
         if (metaEntity != null) {
@@ -278,7 +281,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
         routeEntity.setHidden(routeModel.getHidden() != null && routeModel.getHidden() ? 1 : 0);
         routeEntity.setAlwaysShow(routeModel.getAlwaysShow() != null && routeModel.getAlwaysShow() ? 1 : 0);
         routeEntity.setParentId(parentId);
-        routeEntity.setSortOrder(0); // 默认排序
+        routeEntity.setSortOrder(routeModel.getSortOrder() != null ? routeModel.getSortOrder() : 0); // 使用前端传入的排序值，默认为0
         routeEntity.setFlag(1); // 启用状态
 
         viewRouteConfigrationMapper.insert(routeEntity);
