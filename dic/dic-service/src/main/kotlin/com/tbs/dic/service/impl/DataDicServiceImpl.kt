@@ -1,6 +1,7 @@
 package com.tbs.dic.service.impl
 
 import com.tbs.common.error.AssertUtil
+import com.tbs.common.error.ErrorLevelEnum
 import com.tbs.common.util.base.StrUtil
 import com.tbs.dic.entity.SystemDataDicEntity
 import com.tbs.dic.entity.SystemDataDicItemEntity
@@ -82,6 +83,9 @@ open class DataDicServiceImpl : IDataDicService {
         condition = "#dic!=null&&#dic.dataDicCode!=null"
     )
     override fun saveDataDic(dic: SystemDataDicEntity): SystemDataDicEntity? {
+        AssertUtil.isTrue(StrUtil.isEmpty(dic.dataDicCode)).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
+        AssertUtil.isTrue(StrUtil.isEmpty(dic.dataDicName)).i18n("dic.name.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
+
         val old = QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
             .equal(SystemDataDicEntity::getDataDicCode, dic.dataDicCode)
             .pour().fetchOne();
@@ -112,13 +116,22 @@ open class DataDicServiceImpl : IDataDicService {
         key = "#dicCode"
     )
     override fun saveDataDicItem(dicCode: String, item: SystemDataDicItemEntity) {
-        AssertUtil.hasText(item.label, "数据字典项[${item.label}]不能为空")
-        AssertUtil.hasText(item.value, "数据字典项[${item.value}]不能为空")
+
+        AssertUtil.isTrue(StrUtil.isEmpty(dicCode))
+            .i18n("dic.code.empty")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt()
+
+        AssertUtil.isTrue(StrUtil.isEmpty(item.label)).i18n("dic.item.label.empty").params(item.label)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
+        AssertUtil.isTrue(StrUtil.isEmpty(item.value)).i18n("dic.item.value.param.empty").params(item.value)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
 
         val old = QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
             .equal(SystemDataDicEntity::getDataDicCode, dicCode)
             .pour().fetchOne();
-        AssertUtil.isTrue(old == null, "数据字典[${dicCode}]不存在")
+        AssertUtil.isTrue(old == null).i18n("dic.not.exists").params(dicCode)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
 
         val oi = QueryEngine.getEntityQueryWrapper(dicItemEntity).query().where().equal(
             SystemDataDicItemEntity::getLabel, item.label
@@ -126,7 +139,8 @@ open class DataDicServiceImpl : IDataDicService {
             SystemDataDicItemEntity::getDicCode, dicCode
         ).pour().fetchOne();
         if (item.id == null) {
-            AssertUtil.isTrue(oi != null, "数据字典项[${item.label}]已存在")
+            AssertUtil.isTrue(oi != null).i18n("dic.item.label.exists").params(item.label)
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
             val dic = SystemDataDicItemEntity(
                 null, dicCode, item.label, item.value, item.remark, item.sort,
                 Date(), null, DataDicFlagEnum.ENABLE.code
@@ -134,8 +148,10 @@ open class DataDicServiceImpl : IDataDicService {
             dataDicItemDao.insert(dic);
         } else {
             val e = dataDicItemDao.selectByPrimaryKey(item.id);
-            AssertUtil.isTrue(e == null, "数据字典项ID[${item.id}]不存在")
-            AssertUtil.isTrue(oi.id != e.id, "数据字典项[${item.label}]已存在")
+            AssertUtil.isTrue(e == null).i18n("dic.item.id.not.exists").params(item.id)
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
+            AssertUtil.isTrue(oi.id != e.id).i18n("dic.item.label.exists").params(item.label)
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
             if (StrUtil.isNotEmpty(item.value)) {
                 e.value = item.value
             }
@@ -161,7 +177,8 @@ open class DataDicServiceImpl : IDataDicService {
         ).equal(
             SystemDataDicItemEntity::getLabel, label
         ).pour().fetchOne();
-        AssertUtil.isTrue(QW == null, "数据字典项[${label}]不存在")
+        AssertUtil.isTrue(QW == null).i18n("dic.item.label.not.exists").params(label)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
         QW.flag = flagEnum.code
         QW.updateTime = Date()
         dataDicItemDao.updateByPrimaryKey(QW)
@@ -172,7 +189,8 @@ open class DataDicServiceImpl : IDataDicService {
         val QW = QueryEngine.getEntityQueryWrapper(dicEntity).query().where().equal(
             SystemDataDicEntity::getDataDicCode, dicCode
         ).pour().fetchOne();
-        AssertUtil.isTrue(QW == null, "数据字典[${dicCode}]不存在")
+        AssertUtil.isTrue(QW == null).i18n("dic.not.exists").params(dicCode).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt()
 
         if (Objects.equals(flagEnum.code, DataDicFlagEnum.DELETE.code)) {
             val item = QueryEngine.getEntityQueryWrapper(dicItemEntity)
@@ -183,7 +201,8 @@ open class DataDicServiceImpl : IDataDicService {
                         DataDicFlagEnum.ENABLE.code, DataDicFlagEnum.DISABLE.code
                     )
                 ).pour().fetchOne();
-            AssertUtil.isTrue(item != null, "数据字典[${dicCode}]有未删除的项")
+            AssertUtil.isTrue(item != null).i18n("dic.has.undeleted.items").params(dicCode)
+                .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt()
         }
 
         QW.flag = flagEnum.code

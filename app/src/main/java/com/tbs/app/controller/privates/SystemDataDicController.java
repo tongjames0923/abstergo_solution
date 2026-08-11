@@ -1,13 +1,9 @@
 package com.tbs.app.controller.privates;
 
-
 import com.tbs.app.form.DicItemSaveForm;
 import com.tbs.app.form.DicItemSearchForm;
 import com.tbs.app.form.DicSaveForm;
 import com.tbs.app.form.DicSearchForm;
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.dic.entity.SystemDataDicEntity;
@@ -15,7 +11,6 @@ import com.tbs.dic.entity.SystemDataDicItemEntity;
 import com.tbs.dic.model.DicModel;
 import com.tbs.dic.service.IDataDicService;
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -31,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.constraints.NotNull;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -71,7 +67,7 @@ public class SystemDataDicController extends BaseController {
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult listDicByDicNameLike(
-        @Parameter(name = "form", description = "字典查询条件") @RequestBody DicSearchForm form) {
+        @Parameter(name = "form", description = "字典查询条件") @RequestBody @NotNull DicSearchForm form) {
         if (form == null) {
             form = new DicSearchForm();
         }
@@ -107,11 +103,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult enableDic(
-        @Parameter(name = "form", description = "字典编码信息", required = true)
-        @RequestBody DicSearchForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult enableDic(@Parameter(name = "form", description = "字典编码信息",
+        required = true) @RequestBody @NotNull DicSearchForm form) {
         dataDicService.enableDataDic(form.getDicCode());
         return successResult(null);
     }
@@ -129,11 +122,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult disableDic(
-        @Parameter(name = "form", description = "字典编码信息", required = true)
-        @RequestBody DicSearchForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult disableDic(@Parameter(name = "form", description = "字典编码信息",
+        required = true) @RequestBody @NotNull DicSearchForm form) {
         dataDicService.disableDataDic(form.getDicCode());
         return successResult(null);
     }
@@ -151,12 +141,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult enableDicItem(
-        @Parameter(name = "form", description = "字典项查询条件", required = true)
-        @RequestBody DicItemSearchForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getLabel())).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult enableDicItem(@Parameter(name = "form", description = "字典项查询条件",
+        required = true) @RequestBody @NotNull DicItemSearchForm form) {
         dataDicService.enableDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
@@ -174,12 +160,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult disableDicItem(
-        @Parameter(name = "form", description = "字典项查询条件", required = true)
-        @RequestBody DicItemSearchForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getLabel())).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult disableDicItem(@Parameter(name = "form", description = "字典项查询条件",
+        required = true) @RequestBody @NotNull DicItemSearchForm form) {
         dataDicService.disableDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
@@ -197,11 +179,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult deleteDic(
-        @Parameter(name = "form", description = "字典编码信息", required = true)
-        @RequestBody DicSearchForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult deleteDic(@Parameter(name = "form", description = "字典编码信息",
+        required = true) @RequestBody @NotNull DicSearchForm form) {
         dataDicService.deleteDataDic(form.getDicCode());
         return successResult(null);
     }
@@ -219,12 +198,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult deleteDicItem(
-        @Parameter(name = "form", description = "字典项查询条件", required = true)
-        @RequestBody DicItemSearchForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getLabel())).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult deleteDicItem(@Parameter(name = "form", description = "字典项查询条件",
+        required = true) @RequestBody @NotNull DicItemSearchForm form) {
         dataDicService.deleteDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
@@ -245,12 +220,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult saveDic(
-        @Parameter(name = "form", description = "字典保存信息", required = true)
-        @RequestBody DicSaveForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicName())).i18n("dic.name.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult saveDic(@Parameter(name = "form", description = "字典保存信息",
+        required = true) @RequestBody @NotNull DicSaveForm form) {
         SystemDataDicEntity dic = new SystemDataDicEntity();
         dic.setDataDicCode(form.getDicCode());
         dic.setDataDicName(form.getDicName());
@@ -276,13 +247,8 @@ public class SystemDataDicController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult saveDicItem(
-        @Parameter(name = "form", description = "字典项保存信息", required = true)
-        @RequestBody DicItemSaveForm form) {
-        AssertUtil.isTrue(form == null).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicCode())).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicItemLabel())).i18n("dic.item.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(form.getDicItemValue())).i18n("dic.item.value.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+    public AjaxResult saveDicItem(@Parameter(name = "form", description = "字典项保存信息",
+        required = true) @RequestBody @NotNull DicItemSaveForm form) {
         SystemDataDicItemEntity item = new SystemDataDicItemEntity();
         item.setId(form.getId());
         item.setDicCode(form.getDicCode());
@@ -298,6 +264,6 @@ public class SystemDataDicController extends BaseController {
 
     @Override
     public String getBusinessName() {
-        return I18nUtil.get("dic.business.name");
+        return "数据字典服务";
     }
 }
