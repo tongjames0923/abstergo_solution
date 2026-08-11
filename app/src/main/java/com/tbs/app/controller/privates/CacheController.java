@@ -5,7 +5,6 @@ import com.tbs.app.form.CacheForm;
 import com.tbs.app.service.CacheListenner;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.web.BaseController;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.result.AjaxResult;

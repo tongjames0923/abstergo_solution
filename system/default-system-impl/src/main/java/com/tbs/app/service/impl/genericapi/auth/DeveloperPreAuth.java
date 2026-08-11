@@ -1,7 +1,6 @@
 package com.tbs.app.service.impl.genericapi.auth;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.web.genric.AbstractGenricApiInstance;
 import com.tbs.web.genric.IApiInstancePreAuth;
 import com.tbs.web.genric.form.HttpInvokeForm;
@@ -23,7 +22,7 @@ public class DeveloperPreAuth implements IApiInstancePreAuth {
     public void preAuth(UserDetails userDetails, HttpInvokeForm request, AbstractGenricApiInstance apiInstance)
         throws AuthenticationException {
         AssertUtil.isTrue(!userDetails.getAuthorities().stream()
-                .anyMatch(authority -> RoleConstants.DEVELOPER_ROLE_NAME.equals(authority.getAuthority())))
+                .anyMatch(authority -> "开发者".equals(authority.getAuthority())))
             .i18n("generic.api.auth.developer.pre.auth.fail").params(apiInstance.getApiId())
             .as(e -> new AuthenticationException(e.getMessage()) {
             }).throwIt();

@@ -3,7 +3,6 @@ package com.tbs.app.controller.privates;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;

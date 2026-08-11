@@ -4,7 +4,6 @@ import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.shared.constant.RoleConstants;
 import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
 import com.tbs.web.genric.AbstractAuthGenricApiController;
@@ -35,7 +34,7 @@ import java.util.Objects;
 @Slf4j
 @RestController
 @RequestMapping("/private/genric")
-@PreAuthorize("hasAnyAuthority('" + RoleConstants.NORMAL_USER_ROLE_NAME + "')")
+@PreAuthorize("@preAuthUtils.accountActived")
 public class GenricController extends AbstractAuthGenricApiController {
 
     @Resource
