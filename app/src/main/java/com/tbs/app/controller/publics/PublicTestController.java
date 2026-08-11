@@ -1,14 +1,14 @@
 package com.tbs.app.controller.publics;
 
+import com.alibaba.nacos.api.config.ConfigService;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.script.api.compiler.impl.SpelCompiler;
 import com.tbs.script.api.engine.IScriptEngine;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
-import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -36,6 +36,9 @@ public class PublicTestController extends BaseController {
 
     @DubboReference
     private ITreeStore store;
+
+    @Resource
+    private ConfigService configService;
 
     public static final String TEST_GROUP = "Test Tree Group";
 

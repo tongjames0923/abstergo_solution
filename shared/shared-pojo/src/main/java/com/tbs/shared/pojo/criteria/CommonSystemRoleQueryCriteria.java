@@ -2,11 +2,11 @@ package com.tbs.shared.pojo.criteria;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
-import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.annotation.order.QueryOrderField;
 import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.criteria.impl.DefaultEntityCriteria;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Data;
@@ -20,7 +20,7 @@ import java.util.List;
  */
 @LogicDeleteEntity(activeFlagValues = {1, 2, 0}, filedName = "flag")
 @Data
-public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<SystemRoleEntity> {
+public class CommonSystemRoleQueryCriteria extends DefaultEntityCriteria {
 	/**
 	 * 按ID精确查询条件
 	 */
@@ -67,4 +67,8 @@ public class CommonSystemRoleQueryCriteria extends ClassBaseQueryCriteria<System
 	 */
 	@QueryOrderField(mappedName = "update_time", order = OrderConstants.ORDERED_MODEL)
 	private OrderedModel updateTimeOrder;
+
+	public CommonSystemRoleQueryCriteria() {
+		super(SystemRoleEntity.class);
+	}
 }

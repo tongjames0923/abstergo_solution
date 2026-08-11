@@ -2,11 +2,11 @@ package com.tbs.shared.pojo.criteria;
 
 import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.shared.pojo.model.ClassBaseQueryCriteria;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.annotation.order.QueryOrderField;
 import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.criteria.impl.DefaultEntityCriteria;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Getter;
@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Getter
 @LogicDeleteEntity(activeFlagValues = {1, 2, 0})
-public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<SystemUserEntity> {
+public class CommonSystemUserQueryCriteria extends DefaultEntityCriteria {
     /**
      * 根据ID精确查询
      */
@@ -94,6 +94,10 @@ public class CommonSystemUserQueryCriteria extends ClassBaseQueryCriteria<System
      */
     @QueryOrderField(mappedName = "update_time", order = OrderConstants.ORDERED_MODEL)
     private OrderedModel updateTimeOrder;
+
+    public CommonSystemUserQueryCriteria() {
+        super(SystemUserEntity.class);
+    }
 
     /**
      * 设置ID精确查询条件
