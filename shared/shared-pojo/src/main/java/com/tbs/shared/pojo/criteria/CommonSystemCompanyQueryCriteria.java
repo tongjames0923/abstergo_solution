@@ -101,6 +101,48 @@ public class CommonSystemCompanyQueryCriteria extends NacosConfigQueryCriteria {
     @QueryField(contrast = ContrastEnum.EQUAL)
     private Integer treeRootFlag;
 
+    /**
+     * 按ID集合IN查询
+     */
+    @QueryMapping("id")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<Long> idIn;
+
+    /**
+     * 按公司名称精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "company_name")
+    private String equalsName;
+
+    /**
+     * 按税号模糊查询（左模糊）
+     */
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    @QueryMapping(value = "tax_number")
+    private String likeTaxNumber;
+
+    /**
+     * 按公司描述模糊查询（左模糊）
+     */
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    @QueryMapping(value = "description")
+    private String likeDescription;
+
+    /**
+     * 按创建者ID精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "create_by")
+    private Long equalsCreateBy;
+
+    /**
+     * 按更新者ID精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "update_by")
+    private Long equalsUpdateBy;
+
     public CommonSystemCompanyQueryCriteria() {
         super("com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria");
     }

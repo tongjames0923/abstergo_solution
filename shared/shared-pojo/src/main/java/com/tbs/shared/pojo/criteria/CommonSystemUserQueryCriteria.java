@@ -53,6 +53,62 @@ public class CommonSystemUserQueryCriteria extends DefaultEntityCriteria {
     private List<Integer> flagEquals;
 
     /**
+     * 根据ID集合IN查询
+     */
+    @QueryMapping(value = "id")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<Long> idIn;
+
+    /**
+     * 根据用户名左模糊查询
+     */
+    @QueryMapping(value = "user_name")
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    private String userNameLike;
+
+    /**
+     * 根据昵称精确查询
+     */
+    @QueryMapping(value = "nick_name")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private String nickNameEquals;
+
+    /**
+     * 根据备注左模糊查询
+     */
+    @QueryMapping(value = "remark")
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    private String remarkLike;
+
+    /**
+     * 根据主部门ID精确查询
+     */
+    @QueryMapping(value = "dept_id")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Long deptIdEquals;
+
+    /**
+     * 根据主部门ID集合IN查询
+     */
+    @QueryMapping(value = "dept_id")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<Long> deptIdIn;
+
+    /**
+     * 根据创建者ID精确查询
+     */
+    @QueryMapping(value = "create_by")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Long createByEquals;
+
+    /**
+     * 根据更新者ID精确查询
+     */
+    @QueryMapping(value = "update_by")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Long updateByEquals;
+
+    /**
      * 根据创建时间大于查询
      */
     @QueryMapping(value = "create_time")
@@ -206,6 +262,94 @@ public class CommonSystemUserQueryCriteria extends DefaultEntityCriteria {
      */
     public CommonSystemUserQueryCriteria setUpdateTimeOrder(OrderedModel updateTimeOrder) {
         this.updateTimeOrder = updateTimeOrder;
+        return this;
+    }
+
+    /**
+     * 设置ID集合IN查询条件
+     *
+     * @param idIn ID集合
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setIdIn(List<Long> idIn) {
+        this.idIn = idIn;
+        return this;
+    }
+
+    /**
+     * 设置用户名左模糊查询条件
+     *
+     * @param userNameLike 用户名
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setUserNameLike(String userNameLike) {
+        this.userNameLike = userNameLike;
+        return this;
+    }
+
+    /**
+     * 设置昵称精确查询条件
+     *
+     * @param nickNameEquals 昵称
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setNickNameEquals(String nickNameEquals) {
+        this.nickNameEquals = nickNameEquals;
+        return this;
+    }
+
+    /**
+     * 设置备注左模糊查询条件
+     *
+     * @param remarkLike 备注
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setRemarkLike(String remarkLike) {
+        this.remarkLike = remarkLike;
+        return this;
+    }
+
+    /**
+     * 设置主部门ID精确查询条件
+     *
+     * @param deptIdEquals 主部门ID
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setDeptIdEquals(Long deptIdEquals) {
+        this.deptIdEquals = deptIdEquals;
+        return this;
+    }
+
+    /**
+     * 设置主部门ID集合IN查询条件
+     *
+     * @param deptIdIn 主部门ID集合
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setDeptIdIn(List<Long> deptIdIn) {
+        this.deptIdIn = deptIdIn;
+        return this;
+    }
+
+    /**
+     * 设置创建者ID精确查询条件
+     *
+     * @param createByEquals 创建者ID
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setCreateByEquals(Long createByEquals) {
+        this.createByEquals = createByEquals;
+        return this;
+    }
+
+    /**
+     * 设置更新者ID精确查询条件
+     *
+     * @param updateByEquals 更新者ID
+     * @return 当前查询条件对象，用于链式调用
+     */
+    public CommonSystemUserQueryCriteria setUpdateByEquals(Long updateByEquals) {
+        this.updateByEquals = updateByEquals;
         return this;
     }
 

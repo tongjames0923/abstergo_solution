@@ -1,6 +1,5 @@
 package com.tbs.shared.pojo.criteria;
 
-import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
@@ -91,6 +90,83 @@ public class CommonGenericApiCriteria extends DefaultEntityCriteria {
     @QueryMapping(value = "flag")
     @QueryField(contrast = ContrastEnum.IN)
     private List<Integer> flagIn;
+
+    /**
+     * 按ID集合IN查询条件
+     */
+    @QueryMapping(value = "id")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<Long> idIn;
+
+    /**
+     * 按API ID模糊查询条件
+     */
+    @QueryMapping(value = "api_id")
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    private String apiIdLike;
+
+    /**
+     * 按API ID集合IN查询条件
+     */
+    @QueryMapping(value = "api_id")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<String> apiIdIn;
+
+    /**
+     * 按API名称精确查询条件
+     */
+    @QueryMapping(value = "api_name")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private String apiNameEquals;
+
+    /**
+     * 按接口全限定名精确查询条件
+     */
+    @QueryMapping(value = "interface_name")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private String interfaceNameEquals;
+
+    /**
+     * 按方法名模糊查询条件
+     */
+    @QueryMapping(value = "method_name")
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    private String methodNameLike;
+
+    /**
+     * 按API版本精确查询条件
+     */
+    @QueryMapping(value = "version")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Integer versionEquals;
+
+    /**
+     * 按描述信息模糊查询条件
+     */
+    @QueryMapping(value = "description")
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    private String descriptionLike;
+
+    /**
+     * 按预认证Bean模糊查询条件
+     */
+    @QueryMapping(value = "pre_auth_beans")
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    private String preAuthBeansLike;
+
+    /**
+     * 按创建者ID精确查询条件
+     */
+    @QueryMapping(value = "create_by")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Long createByEquals;
+
+    /**
+     * 按更新者ID精确查询条件
+     */
+    @QueryMapping(value = "update_by")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Long updateByEquals;
 
     /**
      * 按创建时间大于查询条件

@@ -103,6 +103,83 @@ public class CommonSystemDepartmentQueryCriteria extends NacosConfigQueryCriteri
     @QueryField(contrast = ContrastEnum.EQUAL)
     private Integer treeRootFlag;
 
+    /**
+     * 按ID集合IN查询
+     */
+    @QueryMapping("id")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<Long> idIn;
+
+    /**
+     * 按部门名称精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "department_name")
+    private String equalsName;
+
+    /**
+     * 按部门编码模糊查询（左模糊）
+     */
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    @QueryMapping(value = "department_code")
+    private String likeDepartmentCode;
+
+    /**
+     * 按公司ID集合IN查询
+     */
+    @QueryField(contrast = ContrastEnum.IN)
+    @QueryMapping(value = "company_id")
+    private List<Long> companyIdIn;
+
+    /**
+     * 按部门负责人精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "manager")
+    private String equalsManager;
+
+    /**
+     * 按部门负责人模糊查询（左模糊）
+     */
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    @QueryMapping(value = "manager")
+    private String likeManager;
+
+    /**
+     * 按部门描述模糊查询（左模糊）
+     */
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    @QueryMapping(value = "description")
+    private String likeDescription;
+
+    /**
+     * 按父部门ID精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "parent_id")
+    private Long equalsParentId;
+
+    /**
+     * 按父部门ID集合IN查询
+     */
+    @QueryField(contrast = ContrastEnum.IN)
+    @QueryMapping(value = "parent_id")
+    private List<Long> parentIdIn;
+
+    /**
+     * 按创建者ID精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "create_by")
+    private Long equalsCreateBy;
+
+    /**
+     * 按更新者ID精确查询
+     */
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    @QueryMapping(value = "update_by")
+    private Long equalsUpdateBy;
+
     public CommonSystemDepartmentQueryCriteria() {
         super("com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria");
     }

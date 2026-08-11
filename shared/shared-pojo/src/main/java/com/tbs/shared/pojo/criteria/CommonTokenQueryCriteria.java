@@ -11,6 +11,7 @@ import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Getter;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * 通用令牌查询条件类
@@ -59,6 +60,69 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
     @QueryMapping(value = "session_id")
     @QueryField(contrast = ContrastEnum.EQUAL)
     private String sessionIdEquals;
+
+    /**
+     * 等值匹配的主键ID字段 对应数据库中的id字段，使用EQUAL比较条件
+     */
+    @QueryMapping(value = "id")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Long idEquals;
+
+    /**
+     * 标识集合IN查询字段 对应数据库中的flag字段，使用IN比较条件
+     */
+    @QueryMapping(value = "flag")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<Integer> flagIn;
+
+    /**
+     * 令牌类型集合IN查询字段 对应数据库中的token_type字段，使用IN比较条件
+     */
+    @QueryMapping(value = "token_type")
+    @QueryField(contrast = ContrastEnum.IN)
+    private List<Integer> tokenTypeIn;
+
+    /**
+     * 等值匹配的登录设备MAC地址字段 对应数据库中的mac_address字段，使用EQUAL比较条件
+     */
+    @QueryMapping(value = "mac_address")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private String macAddressEquals;
+
+    /**
+     * 等值匹配的登录设备IP地址字段 对应数据库中的ip_address字段，使用EQUAL比较条件
+     */
+    @QueryMapping(value = "ip_address")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private String ipAddressEquals;
+
+    /**
+     * 左模糊匹配的登录设备IP地址字段 对应数据库中的ip_address字段，使用LLIKE比较条件
+     */
+    @QueryMapping(value = "ip_address")
+    @QueryField(contrast = ContrastEnum.LLIKE)
+    private String ipAddressLike;
+
+    /**
+     * 等值匹配的创建来源字段 对应数据库中的create_type字段，使用EQUAL比较条件
+     */
+    @QueryMapping(value = "create_type")
+    @QueryField(contrast = ContrastEnum.EQUAL)
+    private Integer createTypeEquals;
+
+    /**
+     * 更新时间范围查询的起始时间字段 对应数据库中的update_time字段，使用GREATER_EQUAL比较条件
+     */
+    @QueryMapping("update_time")
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
+    private Date updateTimeAfter;
+
+    /**
+     * 更新时间范围查询的结束时间字段 对应数据库中的update_time字段，使用LESS_EQUAL比较条件
+     */
+    @QueryMapping("update_time")
+    @QueryField(contrast = ContrastEnum.LESS_EQUAL)
+    private Date updateTimeBefore;
 
     /**
      * 创建时间范围查询的起始时间字段 对应数据库中的create_time字段，使用GREATER_EQUAL比较条件
@@ -222,6 +286,105 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
 
     public CommonTokenQueryCriteria setCreateTimeBefore(Date createTimeBefore) {
         this.createTimeBefore = createTimeBefore;
+        return this;
+    }
+
+    /**
+     * 设置等值匹配的主键ID字段
+     *
+     * @param idEquals 用于等值匹配的主键ID值
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setIdEquals(Long idEquals) {
+        this.idEquals = idEquals;
+        return this;
+    }
+
+    /**
+     * 设置标识集合IN查询字段
+     *
+     * @param flagIn 用于IN查询的标识集合
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setFlagIn(List<Integer> flagIn) {
+        this.flagIn = flagIn;
+        return this;
+    }
+
+    /**
+     * 设置令牌类型集合IN查询字段
+     *
+     * @param tokenTypeIn 用于IN查询的令牌类型集合
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setTokenTypeIn(List<Integer> tokenTypeIn) {
+        this.tokenTypeIn = tokenTypeIn;
+        return this;
+    }
+
+    /**
+     * 设置等值匹配的登录设备MAC地址字段
+     *
+     * @param macAddressEquals 用于等值匹配的MAC地址值
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setMacAddressEquals(String macAddressEquals) {
+        this.macAddressEquals = macAddressEquals;
+        return this;
+    }
+
+    /**
+     * 设置等值匹配的登录设备IP地址字段
+     *
+     * @param ipAddressEquals 用于等值匹配的IP地址值
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setIpAddressEquals(String ipAddressEquals) {
+        this.ipAddressEquals = ipAddressEquals;
+        return this;
+    }
+
+    /**
+     * 设置左模糊匹配的登录设备IP地址字段
+     *
+     * @param ipAddressLike 用于左模糊匹配的IP地址值
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setIpAddressLike(String ipAddressLike) {
+        this.ipAddressLike = ipAddressLike;
+        return this;
+    }
+
+    /**
+     * 设置等值匹配的创建来源字段
+     *
+     * @param createTypeEquals 用于等值匹配的创建来源值
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setCreateTypeEquals(Integer createTypeEquals) {
+        this.createTypeEquals = createTypeEquals;
+        return this;
+    }
+
+    /**
+     * 设置更新时间范围查询的起始时间字段
+     *
+     * @param updateTimeAfter 更新时间的最小值
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setUpdateTimeAfter(Date updateTimeAfter) {
+        this.updateTimeAfter = updateTimeAfter;
+        return this;
+    }
+
+    /**
+     * 设置更新时间范围查询的结束时间字段
+     *
+     * @param updateTimeBefore 更新时间的最大值
+     * @return 当前查询条件实例，支持链式调用
+     */
+    public CommonTokenQueryCriteria setUpdateTimeBefore(Date updateTimeBefore) {
+        this.updateTimeBefore = updateTimeBefore;
         return this;
     }
 }

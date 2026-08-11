@@ -11,6 +11,7 @@ import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Data;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -55,6 +56,97 @@ public class CommonSystemRoleQueryCriteria extends DefaultEntityCriteria {
 	@QueryMapping(value = "flag")
 	@QueryField(contrast = ContrastEnum.IN)
 	private List<Integer> flagEquals;
+
+	/**
+	 * 按ID集合IN查询条件
+	 */
+	@QueryMapping(value = "id")
+	@QueryField(contrast = ContrastEnum.IN)
+	private List<Long> idIn;
+
+	/**
+	 * 按权限编码集合IN查询条件
+	 */
+	@QueryMapping(value = "role")
+	@QueryField(contrast = ContrastEnum.IN)
+	private List<String> roleIn;
+
+	/**
+	 * 按名称精确查询条件
+	 */
+	@QueryMapping(value = "name")
+	@QueryField(contrast = ContrastEnum.EQUAL)
+	private String nameEquals;
+
+	/**
+	 * 按类型精确查询条件
+	 */
+	@QueryMapping(value = "type")
+	@QueryField(contrast = ContrastEnum.EQUAL)
+	private Integer typeEqual;
+
+	/**
+	 * 按描述模糊查询条件
+	 */
+	@QueryMapping(value = "description")
+	@QueryField(contrast = ContrastEnum.LLIKE)
+	private String descriptionLike;
+
+	/**
+	 * 按数据权限精确查询条件
+	 */
+	@QueryMapping(value = "data_scope")
+	@QueryField(contrast = ContrastEnum.EQUAL)
+	private Integer dataScopeEquals;
+
+	/**
+	 * 按数据权限集合IN查询条件
+	 */
+	@QueryMapping(value = "data_scope")
+	@QueryField(contrast = ContrastEnum.IN)
+	private List<Integer> dataScopeIn;
+
+	/**
+	 * 按创建者ID精确查询条件
+	 */
+	@QueryMapping(value = "create_by")
+	@QueryField(contrast = ContrastEnum.EQUAL)
+	private Long createByEquals;
+
+	/**
+	 * 按更新者ID精确查询条件
+	 */
+	@QueryMapping(value = "update_by")
+	@QueryField(contrast = ContrastEnum.EQUAL)
+	private Long updateByEquals;
+
+	/**
+	 * 按创建时间范围查询（起始时间 >=）
+	 */
+	@QueryMapping("create_time")
+	@QueryField(contrast = ContrastEnum.GREATER_EQUAL)
+	private Date createTimeStart;
+
+	/**
+	 * 按创建时间范围查询（结束时间 <=）
+	 */
+	@QueryMapping("create_time")
+	@QueryField(contrast = ContrastEnum.LESS_EQUAL)
+	private Date createTimeEnd;
+
+	/**
+	 * 按更新时间范围查询（起始时间 >=）
+	 */
+	@QueryMapping("update_time")
+	@QueryField(contrast = ContrastEnum.GREATER_EQUAL)
+	private Date updateTimeStart;
+
+	/**
+	 * 按更新时间范围查询（结束时间 <=）
+	 */
+	@QueryMapping("update_time")
+	@QueryField(contrast = ContrastEnum.LESS_EQUAL)
+	private Date updateTimeEnd;
 
 	/**
 	 * 按创建时间排序条件
