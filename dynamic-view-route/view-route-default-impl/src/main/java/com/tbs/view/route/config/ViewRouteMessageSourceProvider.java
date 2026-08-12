@@ -15,9 +15,9 @@ import org.springframework.stereotype.Component;
 public class ViewRouteMessageSourceProvider extends AbstractMessageSourceProvider {
 
     @Override
-    
+
     public String getBasename() {
-        return "messages-view-route";
+        return "i18n/messages-view-route";
     }
 
     @Override
