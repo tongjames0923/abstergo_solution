@@ -25,10 +25,15 @@ logging:
   level:
     com.alibaba: warn
     org.apache: warn
+
+# 应用自定义配置
 app:
   gateway:
     # 网关版本标识（/public/gateway/version 接口返回）
     # @project.version@ 由Maven资源过滤注入pom版本号（spring-boot-starter-parent默认对application*.yml开启过滤，IDE编译同样生效）
     # 可用启动参数覆盖，如：-DAPP_GATEWAY_VERSION=1.2.3-hotfix
     version: ${APP_GATEWAY_VERSION:@project.version@}
+    # 视图路由分组配置（PublicGatewayVersionController使用）
+    route-groups:
+      - default
 

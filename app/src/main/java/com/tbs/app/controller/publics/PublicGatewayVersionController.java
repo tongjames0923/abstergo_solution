@@ -1,5 +1,6 @@
 package com.tbs.app.controller.publics;
 
+import com.tbs.app.config.property.GatewayProperty;
 import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -45,16 +47,16 @@ import java.util.Map;
 public class PublicGatewayVersionController {
 
     /**
+     * 网关配置属性
+     */
+    @Resource
+    private GatewayProperty gatewayProperty;
+
+    /**
      * 构建信息（由 build-info goal 生成，IDE 运行时可能不存在）
      */
     @Resource
     private ObjectProvider<BuildProperties> buildPropertiesProvider;
-
-    /**
-     * 配置化版本标识：优先取启动参数 APP_GATEWAY_VERSION， 否则为 Maven 资源过滤注入的 pom 版本号（IDE/Maven构建均可用）
-     */
-    @Value("${app.gateway.version:}")
-    private String configuredVersion;
 
     /**
      * 当前实例服务端口（蓝绿部署时用于区分请求落在哪个实例）
@@ -105,8 +107,9 @@ public class PublicGatewayVersionController {
      */
     private String resolveVersion(BuildProperties buildProperties) {
         // 1. 配置化版本：启动参数覆盖或资源过滤注入的pom版本（IDE运行时也有效）
-        if (configuredVersion != null && !configuredVersion.isEmpty() && !configuredVersion.contains("@")) {
-            return configuredVersion;
+        String version = gatewayProperty.getVersion();
+        if (version != null && !version.isEmpty() && !version.contains("@")) {
+            return version;
         }
         // 2. Maven打包生成的build-info
         if (buildProperties != null) {

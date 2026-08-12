@@ -1,5 +1,6 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.config.property.GatewayProperty;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.common.i18n.I18nUtil;
@@ -51,6 +52,12 @@ public class ViewController extends BaseController {
 
     @Resource
     private IViewRouteService viewRouteService;
+
+    /**
+     * 网关配置属性
+     */
+    @Resource
+    private GatewayProperty gatewayProperty;
 
     /**
      * 根据key获取表单配置
@@ -162,7 +169,8 @@ public class ViewController extends BaseController {
         // 适配新权限架构：从权限组中提取菜单权限编码用于路由过滤
         var menuPermissionCodes = extractMenuPermissionCodes();
         log.debug("当前用户菜单权限编码: {}", menuPermissionCodes);
-        for (String group : viewRouteService.getAllViewRouteGroups()) {
+        for (String group : CollUtil.isEmpty(gatewayProperty.getRouteGroups()) ? List.of("default")
+            : gatewayProperty.getRouteGroups()) {
             var viewRoutes = viewRouteService.getViewRoutesByGroup(group);
             var filtered = removeWithRoleAndTranslate(menuPermissionCodes, viewRoutes);
             result.addAll(filtered);
