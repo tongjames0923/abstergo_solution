@@ -29,7 +29,6 @@ public class PropertyRelationEntity implements IIdentifiable<Long>, Serializable
     /**
      * 关联类型， 1-字段， 2-表单
      *
-     * @see com.tbs.shared.constant.ViewConstants
      */
     @Column(name = "relation_type")
     private Integer relationType;

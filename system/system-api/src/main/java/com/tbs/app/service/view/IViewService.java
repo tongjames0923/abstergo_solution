@@ -2,10 +2,14 @@ package com.tbs.app.service.view;
 
 import com.tbs.shared.pojo.entity.view.DynamicFormConfigrationEntity;
 import com.tbs.shared.pojo.model.view.FormConfig;
-import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 
+/**
+ * 视图服务
+ *
+ * @author abstergo
+ */
 public interface IViewService {
     /**
      * 获取表单配置

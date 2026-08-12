@@ -64,9 +64,11 @@
             {{ scope.row.fields ? scope.row.fields.length : 0 }}
           </template>
         </el-table-column>
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="280" fixed="right">
           <template slot-scope="scope">
             <el-button size="mini" type="primary" @click="handleEdit(scope.row)">编辑</el-button>
+            <el-button size="mini" type="info" @click="handlePreview(scope.row)">预览</el-button>
+            <el-button size="mini" type="danger" @click="handleDelete(scope.row)">删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -121,7 +123,8 @@ export default {
       searchForm: {
         title: ''
       },
-      formList: [],
+      allFormList: [], // 存储全部数据
+      formList: [], // 当前页显示的数据
       loading: false,
       pagination: {
         currentPage: 1,
@@ -135,22 +138,19 @@ export default {
     }
   },
   created() {
-    this.fetchFormList()
+    this.fetchAllFormList()
   },
   methods: {
-    // 获取表单列表
-    async fetchFormList() {
+    // 获取全部表单列表（用于搜索和分页）
+    async fetchAllFormList() {
       this.loading = true
       try {
-        const response = await listForms(
-          this.pagination.currentPage,
-          this.pagination.pageSize
-        )
-
-        // 处理后端返回的数据
-        this.formList = response.data || []
-        // 如果后端支持分页，应该返回总记录数
-        this.pagination.total = response.data ? response.data.length : 0
+        // 获取全部数据，使用较大的pageSize
+        const response = await listForms(1, 10000)
+        this.allFormList = response.data || []
+        this.pagination.total = this.allFormList.length
+        // 应用搜索过滤并更新当前页数据
+        this.applyFilter()
       } catch (error) {
         console.error('获取表单列表失败:', error)
       } finally {
@@ -158,10 +158,31 @@ export default {
       }
     },
 
+    // 应用搜索过滤并更新分页数据
+    applyFilter() {
+      let filtered = [...this.allFormList]
+      
+      // 按标题过滤
+      if (this.searchForm.title && this.searchForm.title.trim()) {
+        const keyword = this.searchForm.title.trim().toLowerCase()
+        filtered = filtered.filter(item => 
+          item.title && item.title.toLowerCase().includes(keyword)
+        )
+      }
+      
+      // 更新总数
+      this.pagination.total = filtered.length
+      
+      // 计算当前页数据
+      const startIndex = (this.pagination.currentPage - 1) * this.pagination.pageSize
+      const endIndex = startIndex + this.pagination.pageSize
+      this.formList = filtered.slice(startIndex, endIndex)
+    },
+
     // 搜索
     handleSearch() {
       this.pagination.currentPage = 1
-      this.fetchFormList()
+      this.applyFilter()
     },
 
     // 重置搜索
@@ -170,7 +191,7 @@ export default {
         title: ''
       }
       this.pagination.currentPage = 1
-      this.fetchFormList()
+      this.applyFilter()
     },
 
     // 新建表单
@@ -229,7 +250,8 @@ export default {
       }).then(async() => {
         try {
           await deleteFormConfig(row.id)
-          this.fetchFormList()
+          // 重新获取全部数据
+          this.fetchAllFormList()
         } catch (error) {
         }
       }).catch(() => {
@@ -241,13 +263,13 @@ export default {
     handleSizeChange(val) {
       this.pagination.pageSize = val
       this.pagination.currentPage = 1
-      this.fetchFormList()
+      this.applyFilter()
     },
 
     // 当前页改变
     handleCurrentChange(val) {
       this.pagination.currentPage = val
-      this.fetchFormList()
+      this.applyFilter()
     }
   }
 }

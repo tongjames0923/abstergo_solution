@@ -15,7 +15,6 @@ import com.tbs.sql.service.QueryEngine;
 import com.tbs.view.IPropertyValueTransformer;
 import com.tbs.view.constant.ViewConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
@@ -50,7 +49,9 @@ public class ViewServiceImpl implements IViewService {
         AssertUtil.isTrue(id == null).message("表单ID不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         DynamicFormConfigrationEntity dynamicFormConfigrationEntity =
             QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query().where()
-                .equal(DynamicFormConfigrationEntity::getId, id).pour().fetchOne();
+                .equal(DynamicFormConfigrationEntity::getId, id)
+                .equal(DynamicFormConfigrationEntity::getFlag, DynamicFormConfigFlagEnum.ACTIVITED.getCode()).pour()
+                .fetchOne();
         AssertUtil.isTrue(dynamicFormConfigrationEntity == null).message("表单配置不存在")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         FormConfig formConfig = new FormConfig();
@@ -65,6 +66,7 @@ public class ViewServiceImpl implements IViewService {
         PropertyRelationEntity formSelection = new PropertyRelationEntity();
         formSelection.setRelationType(ViewConstants.PROPERTY_FORM_TYPE_RELATION);
         formSelection.setRelationId(dynamicFormConfigrationEntity.getId());
+
         var formPropsRelations = propertyRelationMapper.select(formSelection);
         if (CollUtil.isNotEmpty(formPropsRelations)) {
             var propertyValueEntities = propertyValueMapper.selectByIdList(
@@ -389,7 +391,7 @@ public class ViewServiceImpl implements IViewService {
         dynamicFormConfigrationEntity.setGutter(formConfig.getGutter());
         dynamicFormConfigrationEntity.setLabelWidth(formConfig.getLabelWidth());
         dynamicFormConfigrationEntity.setSpan(formConfig.getSpan());
-        dynamicFormConfigrationEntity.setFlag(DynamicFormConfigFlagEnum.INACTIVITED.getCode());
+        dynamicFormConfigrationEntity.setFlag(DynamicFormConfigFlagEnum.ACTIVITED.getCode());
         return dynamicFormConfigrationEntity;
     }
 }

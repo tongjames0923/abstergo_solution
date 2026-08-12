@@ -21,14 +21,16 @@ public class FormFieldRelationEntity implements IIdentifiable<Long>, Serializabl
     @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "form_id")
     /**
      * 表单ID
-     */ private Long formId;
+     */
+    @Column(name = "form_id")
+    private Long formId;
 
-    @Column(name = "field_id")
     /**
      * 表单域Id
-     */ private Long fieldId;
+     */
+    @Column(name = "field_id")
+    private Long fieldId;
 
 }
