@@ -4,6 +4,7 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.mapper.ViewRouteConfigrationMapper;
@@ -73,7 +74,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
     @Transactional(rollbackFor = Exception.class)
     public ViewRouteVersionModel saveViewRoute(String group, List<ViewRouteModel> viewRouteModels,
         String description) {
-        AssertUtil.isTrue(viewRouteModels == null || viewRouteModels.isEmpty()).message("路由配置不能为空")
+        AssertUtil.isTrue(viewRouteModels == null || viewRouteModels.isEmpty())
+            .message(I18nUtil.get("view.route.config.cannot.be.empty"))
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
         try {
@@ -95,7 +97,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             return toVersionModel(versionEntity);
         } catch (Exception e) {
             log.error("保存路由配置失败: {}", group, e);
-            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("保存路由配置失败")
+            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
+                .message(I18nUtil.get("view.route.save.failed"))
                 .throwIt();
             return null;
         }
@@ -115,7 +118,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             }
 
             // 插入一条不含任何路由行的版本记录（清空分组），历史数据原样保留
-            createVersionRecord(group, "清空分组", getCurrentUserId());
+            createVersionRecord(group, I18nUtil.get("view.route.clear.group"), getCurrentUserId());
 
             // 清除缓存，该分组从列表中消失
             routeCache.remove(group);
@@ -123,7 +126,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             log.info("成功清空路由分组: {}", group);
         } catch (Exception e) {
             log.error("删除路由配置失败: {}", group, e);
-            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("删除路由配置失败")
+            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
+                .message(I18nUtil.get("view.route.delete.failed"))
                 .throwIt();
         }
     }
@@ -143,13 +147,15 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             // 1. 校验目标版本存在且属于该分组
             ViewRouteVersionEntity targetVersion = viewRouteVersionMapper.selectByPrimaryKey(versionId);
             AssertUtil.isTrue(targetVersion == null || !group.equals(targetVersion.getRouteGroup()))
-                .message("目标版本不存在或不属于该分组").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .message(I18nUtil.get("view.route.version.not.found.or.not.in.group"))
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
             Long userId = getCurrentUserId();
 
             // 2. 产生新的版本记录（说明自动填"回滚自 vN"）
             ViewRouteVersionEntity newVersion =
-                createVersionRecord(group, "回滚自 v" + targetVersion.getVersionNo(), userId);
+                createVersionRecord(group, I18nUtil.get("view.route.rollback.from", targetVersion.getVersionNo()),
+                    userId);
 
             // 3. 复制目标版本的路由数据到新版本（含元数据与权限）
             List<ViewRouteConfigrationEntity> oldRoutes = viewRouteConfigrationMapper.findByVersionId(versionId);
@@ -163,7 +169,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             return toVersionModel(newVersion);
         } catch (Exception e) {
             log.error("回滚路由配置失败: {} -> {}", group, versionId, e);
-            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("回滚路由配置失败")
+            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
+                .message(I18nUtil.get("view.route.rollback.failed"))
                 .throwIt();
             return null;
         }
@@ -183,7 +190,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             log.info("从数据库加载路由配置完成，共加载 {} 个分组", routeCache.size());
         } catch (Exception e) {
             log.error("从数据库加载路由配置失败", e);
-            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("从数据库加载路由配置失败")
+            AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
+                .message(I18nUtil.get("view.route.load.failed"))
                 .throwIt();
         }
     }
