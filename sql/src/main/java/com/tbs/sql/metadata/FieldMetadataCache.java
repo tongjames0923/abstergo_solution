@@ -95,6 +95,9 @@ public class FieldMetadataCache {
                     com.tbs.sql.annotation.condition.OrField.class)
                 ? ConnectorEnum.AND
                 : ConnectorEnum.OR;
+            // 缓存的Field对象会被多线程并发读取，在构建缓存时一次性设置为可访问且不再重置，
+            // 避免并发场景下反复setAccessible(true/false)导致的IllegalAccessException竞态问题
+            field.setAccessible(true);
             metadataList.add(new FieldMetadataEntry(field, queryFields, connectorEnum));
         }
         return metadataList;

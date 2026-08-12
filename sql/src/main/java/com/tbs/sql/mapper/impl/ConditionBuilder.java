@@ -51,7 +51,7 @@ import java.lang.reflect.Field;
  * <h3>注意事项</h3>
  * <ul>
  *   <li>查询条件对象需要正确配置注解</li>
- *   <li>字段访问会暂时设置为可访问</li>
+ *   <li>字段可访问性由 FieldMetadataCache 在缓存构建时统一处理</li>
  *   <li>支持忽略空值和忽略大小写</li>
  * </ul>
  *
@@ -71,10 +71,8 @@ public class ConditionBuilder<T> {
         for (FieldMetadataCache.FieldMetadataEntry metadata : fieldMetadataList) {
             Field field = metadata.getField();
             try {
-                boolean accessible = field.isAccessible();
-                if (!accessible) {
-                    field.setAccessible(true);
-                }
+                // 缓存中的Field已在FieldMetadataCache构建时设置为可访问，此处直接读取，
+                // 不在多线程环境下反复修改共享Field的可访问状态
                 Object value = field.get(obj);
                 ConnectorEnum connectorEnum = metadata.getConnectorEnum();
 
@@ -99,7 +97,6 @@ public class ConditionBuilder<T> {
                 if (!swc.getChildren().isEmpty()) {
                     compose.getChildren().add(new WhereNode<>(connectorEnum, swc));
                 }
-                field.setAccessible(accessible);
             } catch (IllegalAccessException e) {
                 AssertUtil.throwError(() -> new FormattedRuntimeException(e, "Error accessing field: " + field.getName()));
             }

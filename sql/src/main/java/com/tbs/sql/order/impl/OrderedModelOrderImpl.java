@@ -52,6 +52,7 @@ public class OrderedModelOrderImpl implements IQueryOrderBy {
     public OrderEnum orderBy(Object target, Field field, String mappedName) {
         OrderEnum result = null;
         if (IQueryOrderedModel.class.isAssignableFrom(field.getType())) {
+            // 共享Field的可访问状态在多线程下反复切换会引发竞态，此处只保证可访问，不再重置
             field.setAccessible(true);
             try {
                 IQueryOrderedModel orderedModel = (IQueryOrderedModel) field.get(target);
@@ -61,8 +62,6 @@ public class OrderedModelOrderImpl implements IQueryOrderBy {
                 result = orderedModel.getOrdered();
             } catch (Exception e) {
                 AssertUtil.throwError(() -> new FormattedRuntimeException(e, "获取OrderedModel失败"));
-            } finally {
-                field.setAccessible(false);
             }
         } else {
             AssertUtil.throwError(

@@ -230,6 +230,8 @@ public class QueryEngine implements IStartup {
                 if (annotation == null || com.tbs.common.util.base.StrUtil.isEmpty(annotation.order()) || com.tbs.common.util.base.StrUtil.isEmpty(annotation.mappedName())) {
                     return null;
                 }
+                // 缓存的Field会被多线程并发读取，在构建缓存时一次性设置为可访问且不再重置，避免竞态
+                field.setAccessible(true);
                 return new OrderFieldMetadata(field, annotation.order(), annotation.mappedName());
             })
             .filter(java.util.Objects::nonNull)
@@ -252,11 +254,9 @@ public class QueryEngine implements IStartup {
         for (OrderFieldMetadata metadata : metadataList) {
             Field field = metadata.field;
 
-            // 优化反射访问：使用缓存的可访问性
-            boolean originalAccessible = field.isAccessible();
-            field.setAccessible(true);
+            // 缓存中的Field已在构建缓存时设置为可访问，此处直接读取，避免并发切换可访问状态引发竞态
             Object val = null;
-            try { val = field.get(queryObject); } catch (IllegalAccessException e) { val = null; log.warn("Error accessing field: {}", field.getName(), e); } finally { field.setAccessible(originalAccessible); }
+            try { val = field.get(queryObject); } catch (IllegalAccessException e) { val = null; log.warn("Error accessing field: {}", field.getName(), e); }
             if (val == null) { log.debug("排序字段 {} 值为null，跳过", field.getName()); continue; }
 
             OrderInfo info = new OrderInfo();
