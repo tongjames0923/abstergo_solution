@@ -105,8 +105,10 @@
       position: relative;
 
       .el-tooltip {
+        /* Element UI 折叠时给该 div 设置了内联样式 display: inline-block，
+           必须用 !important 才能让单级菜单图标居中 */
         padding: 0 !important;
-        display: flex;
+        display: flex !important;
         align-items: center;
         justify-content: center;
         width: 100%;
