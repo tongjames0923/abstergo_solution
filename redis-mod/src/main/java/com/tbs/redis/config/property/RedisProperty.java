@@ -5,13 +5,13 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
-import org.springframework.stereotype.Component;
 
 /**
  * Redis配置属性类
  * <p>
  * 通过@ConfigurationProperties注解绑定tbs.redis前缀的配置属性
- * 用于配置Redis相关功能的开关和序列化器
+ * 用于配置Redis相关功能的开关和序列化器。
+ * 不再使用@Component注册，改由Redis配置类显式声明Bean，避免重复导入时重复注册
  * </p>
  *
  * @author abstergo
@@ -19,7 +19,6 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @ConfigurationProperties("tbs.redis")
-@Component
 public class RedisProperty {
 
     /**

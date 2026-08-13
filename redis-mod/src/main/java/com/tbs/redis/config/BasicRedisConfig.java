@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
@@ -30,6 +31,7 @@ import javax.annotation.Resource;
  * @since 1.0.0
  */
 @Configuration
+@EnableConfigurationProperties(RedisProperty.class)
 public class BasicRedisConfig {
 
     @Value("${spring.redis.host:localhost}")
@@ -55,6 +57,7 @@ public class BasicRedisConfig {
      * @return Redisson客户端实例
      */
     @Bean(destroyMethod = "shutdown")
+    @ConditionalOnMissingBean(RedissonClient.class)
     @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
     public RedissonClient redissonClient(
         @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer serializer) {

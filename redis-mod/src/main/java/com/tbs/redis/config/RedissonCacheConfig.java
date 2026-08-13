@@ -5,6 +5,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.spring.cache.CacheConfig;
 import org.redisson.spring.cache.RedissonSpringCacheManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -20,6 +21,7 @@ import javax.annotation.Resource;
  * @since 1.0.0
  */
 @Configuration
+@EnableConfigurationProperties(RedissonCacheProperty.class)
 public class RedissonCacheConfig {
     @Resource
     private RedissonCacheProperty property;
