@@ -1,7 +1,10 @@
 package com.tbs.rabbitmq.support;
 
+import com.tbs.mq.api.retry.IRetryDelayPolicy;
 import lombok.Data;
 import org.springframework.amqp.core.AcknowledgeMode;
+
+import java.time.Duration;
 
 /**
  * MQ消费者配置属性
@@ -85,18 +88,62 @@ public class MqConsumerProperties {
 
     /**
      * 是否启用重试机制
+     * <p>
+     * 开启后消费失败的消息将持久化到失败存储，由重投递调度器到期重新投递；
+     * 不再使用Broker原生requeue，避免消息在队首反复阻塞。
+     * </p>
      */
     private boolean retryEnabled = true;
 
     /**
-     * 最大重试次数，超过后丢弃消息（或路由到死信队列）
+     * 最大重试次数，超过后消息进入死信留痕
      */
     private int maxRetryCount = 3;
+
+    /**
+     * 重试延迟策略，为null时使用容器默认的档位策略（30秒→2分钟→10分钟）
+     */
+    private IRetryDelayPolicy retryDelayPolicy;
+
+    // ======================== 幂等控制 ========================
+
+    /**
+     * 是否启用消费幂等
+     * <p>
+     * 开启后依赖容器中的IIdempotentStore实现（如redis-mod提供的Redis实现），
+     * 未提供实现时自动降级为不启用。默认关闭，存量消费者行为不受影响。
+     * </p>
+     */
+    private boolean idempotentEnabled = false;
+
+    /**
+     * 幂等键有效期，为null时默认取最大重试窗口（各档位延迟之和）的3倍
+     */
+    private Duration idempotentTtl;
 
     // ======================== 死信与TTL ========================
 
     /**
-     * 死信交换机名称，为null则不配置死信
+     * 是否启用死信留痕
+     * <p>
+     * 开启后自动声明死信交换机与死信队列（默认命名为“队列名.dlx/队列名.dlq”），
+     * 消费失败且不再重试的消息将转入死信队列留痕。
+     * </p>
+     */
+    private boolean deadLetterEnabled = false;
+
+    /**
+     * 业务性失败（不重试）是否同样转入死信留痕，false则直接丢弃
+     */
+    private boolean deadLetterOnBusinessError = true;
+
+    /**
+     * 死信队列名称，为null时默认为“队列名.dlq”
+     */
+    private String deadLetterQueue;
+
+    /**
+     * 死信交换机名称，为null且deadLetterEnabled开启时默认为“队列名.dlx”
      */
     private String deadLetterExchange;
 
@@ -248,6 +295,72 @@ public class MqConsumerProperties {
          */
         public Builder maxRetryCount(int maxRetryCount) {
             props.setMaxRetryCount(maxRetryCount);
+            return this;
+        }
+
+        /**
+         * 设置重试延迟策略
+         *
+         * @param retryDelayPolicy 重试延迟策略
+         * @return 当前Builder实例
+         */
+        public Builder retryDelayPolicy(IRetryDelayPolicy retryDelayPolicy) {
+            props.setRetryDelayPolicy(retryDelayPolicy);
+            return this;
+        }
+
+        /**
+         * 设置是否启用消费幂等
+         *
+         * @param idempotentEnabled 是否启用
+         * @return 当前Builder实例
+         */
+        public Builder idempotentEnabled(boolean idempotentEnabled) {
+            props.setIdempotentEnabled(idempotentEnabled);
+            return this;
+        }
+
+        /**
+         * 设置幂等键有效期
+         *
+         * @param idempotentTtl 幂等键有效期
+         * @return 当前Builder实例
+         */
+        public Builder idempotentTtl(Duration idempotentTtl) {
+            props.setIdempotentTtl(idempotentTtl);
+            return this;
+        }
+
+        /**
+         * 设置是否启用死信留痕
+         *
+         * @param deadLetterEnabled 是否启用
+         * @return 当前Builder实例
+         */
+        public Builder deadLetterEnabled(boolean deadLetterEnabled) {
+            props.setDeadLetterEnabled(deadLetterEnabled);
+            return this;
+        }
+
+        /**
+         * 设置业务性失败是否转入死信
+         *
+         * @param deadLetterOnBusinessError 是否转入死信
+         * @return 当前Builder实例
+         */
+        public Builder deadLetterOnBusinessError(boolean deadLetterOnBusinessError) {
+            props.setDeadLetterOnBusinessError(deadLetterOnBusinessError);
+            return this;
+        }
+
+        /**
+         * 设置死信队列名称
+         *
+         * @param deadLetterQueue 死信队列名称
+         * @return 当前Builder实例
+         */
+        public Builder deadLetterQueue(String deadLetterQueue) {
+            props.setDeadLetterQueue(deadLetterQueue);
             return this;
         }
 

@@ -114,12 +114,14 @@ public class TbsRabbitMqConfig {
     /**
      * 创建序列化消息转换器
      * <p>
-     * 配置允许反序列化的类名模式，解决Spring AMQP 2.4+的反序列化安全限制
+     * 配置允许反序列化的类名模式，解决Spring AMQP 2.4+的反序列化安全限制。
+     * 容器中已存在MessageConverter时不重复注册。
      * </p>
      *
      * @return SerializerMessageConverter实例
      */
     @Bean
+    @ConditionalOnMissingBean(MessageConverter.class)
     public MessageConverter jsonMessageConverter() {
         SerializerMessageConverter converter = new SerializerMessageConverter();
         converter.setAllowedListPatterns(TRUSTED_PACKAGES);

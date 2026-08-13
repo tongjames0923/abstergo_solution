@@ -6,6 +6,7 @@ import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.publisher.IPublishResult;
 import com.tbs.common.data.IDataBridge;
 import com.tbs.broadcast.rabbitmq.property.RabbitMqProperty;
+import com.tbs.mq.api.producer.IMqProducer;
 import com.tbs.rabbitmq.support.AbstractMqConsumer;
 import com.tbs.rabbitmq.support.MqConsumerProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +34,9 @@ public abstract class AbstractRabbitMqSupport<T> extends AbstractMqConsumer<T>
 
     @Resource
     protected RabbitMqProperty property;
+
+    @Resource
+    private IMqProducer mqProducer;
 
     @Resource
     @Lazy
@@ -86,14 +90,15 @@ public abstract class AbstractRabbitMqSupport<T> extends AbstractMqConsumer<T>
     /**
      * 广播事件
      * <p>
-     * 使用AMQP模板将事件对象发送到指定的交换机和路由键。
+     * 经统一发送出口{@link IMqProducer}将事件对象发送到指定的交换机和路由键，
+     * 由框架自动补齐messageId。
      * </p>
      *
      * @param result 要广播的事件对象
      */
     @Override
     public void broadcastEvent(T result) {
-        amqpTemplate.convertAndSend(property.getExchangeName(), property.getRoutingKey(), result);
+        mqProducer.send(property.getExchangeName(), property.getRoutingKey(), result);
     }
 
     /**

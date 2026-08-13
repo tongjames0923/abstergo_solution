@@ -11,10 +11,9 @@
 
     <artifactId>rabbitmq</artifactId>
     <packaging>pom</packaging>
-    <description>RabbitMQ能力聚合模块：api抽象层、快速使用实现、广播支持、日志支持</description>
+    <description>RabbitMQ能力聚合模块：快速使用实现、广播支持、日志支持（契约层见mq-mod/mq-api）</description>
 
     <modules>
-        <module>rabbitmq-api</module>
         <module>rabbitmq-impl</module>
         <module>rabbitmq-broadcast</module>
         <module>rabbitmq-logging</module>

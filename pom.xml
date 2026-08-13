@@ -20,6 +20,7 @@
         <module>sql</module>
         <module>system</module>
         <module>redis-mod</module>
+        <module>mq-mod</module>
         <module>rabbitmq-mod</module>
         <module>shared</module>
         <module>tree-struct</module>
@@ -171,7 +172,7 @@
             </dependency>
             <dependency>
                 <groupId>com.tbs</groupId>
-                <artifactId>rabbitmq-api</artifactId>
+                <artifactId>mq-api</artifactId>
                 <version>${tbs.version}</version>
             </dependency>
             <dependency>
