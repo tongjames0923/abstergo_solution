@@ -26,6 +26,10 @@
             <groupId>com.tbs</groupId>
             <artifactId>common</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>mq-api</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

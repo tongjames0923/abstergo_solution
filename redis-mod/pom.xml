@@ -32,5 +32,9 @@
             <artifactId>redisson-spring-boot-starter</artifactId>
             <version>${redisson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>mq-api</artifactId>
+        </dependency>
     </dependencies>
 </project>
