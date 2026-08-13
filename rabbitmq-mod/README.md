@@ -1,5 +1,14 @@
 # RabbitMQ 模块 - 分布式消息广播解决方案
 
+## 模块结构
+
+| 子模块 | 坐标 | 职责 |
+|---|---|---|
+| rabbitmq-api | `com.tbs:rabbitmq-api` | 纯抽象层：发送、幂等、失败重试存储等契约接口，不依赖Spring AMQP |
+| rabbitmq-impl | `com.tbs:rabbitmq-impl` | 快速使用实现：消费者基类、资源声明、自动装配 |
+| rabbitmq-broadcast | `com.tbs:rabbitmq-broadcast` | 分布式事件广播支持 |
+| rabbitmq-logging | `com.tbs:rabbitmq-logging` | 操作日志记录与写入支持 |
+
 ## 模块概述
 - **自动配置**：基于 Spring Boot 自动配置 RabbitMQ 连接工厂、模板和管理器
 - **组件自动声明**：应用启动时自动创建交换机、队列和绑定关系
@@ -25,12 +34,27 @@
 
 ### 1. 添加依赖
 
-在项目的 `pom.xml` 中添加 RabbitMQ 模块依赖：
+在项目的 `pom.xml` 中按需添加 RabbitMQ 子模块依赖：
 
 ```xml
+<!-- 快速使用实现包（必选） -->
 <dependency>
     <groupId>com.tbs</groupId>
-    <artifactId>rabbitmq</artifactId>
+    <artifactId>rabbitmq-impl</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+
+<!-- 广播支持（按需） -->
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>rabbitmq-broadcast</artifactId>
+    <version>1.0-SNAPSHOT</version>
+</dependency>
+
+<!-- 日志支持（按需） -->
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>rabbitmq-logging</artifactId>
     <version>1.0-SNAPSHOT</version>
 </dependency>
 ```

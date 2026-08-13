@@ -4,7 +4,6 @@ import com.rabbitmq.client.Channel;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.core.Message;
@@ -80,7 +79,7 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
      * @param message 消息体
      * @throws Exception 处理消息时可能发生的异常
      */
-    protected abstract void handleMessage( T message) throws Exception;
+    protected abstract void handleMessage(T message) throws Exception;
 
     // ======================== 可选扩展 ========================
 
@@ -93,7 +92,7 @@ public abstract class AbstractMqConsumer<T> implements ChannelAwareMessageListen
      * @param message 处理失败的消息体
      * @param error   异常信息
      */
-    protected void handleMessageFailure( T message,  Throwable error) {
+    protected void handleMessageFailure(T message, Throwable error) {
         log.error("消息处理失败, queue={}", getProperties().getQueueName(), error);
     }
 

@@ -171,7 +171,22 @@
             </dependency>
             <dependency>
                 <groupId>com.tbs</groupId>
-                <artifactId>rabbitmq</artifactId>
+                <artifactId>rabbitmq-api</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>rabbitmq-impl</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>rabbitmq-broadcast</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>rabbitmq-logging</artifactId>
                 <version>${tbs.version}</version>
             </dependency>
             <dependency>

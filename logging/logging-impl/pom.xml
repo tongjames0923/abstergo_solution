@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>
-            <artifactId>rabbitmq</artifactId>
+            <artifactId>rabbitmq-logging</artifactId>
         </dependency>
         <dependency>
             <groupId>me.paulschwarz</groupId>

@@ -55,7 +55,11 @@
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>
-            <artifactId>rabbitmq</artifactId>
+            <artifactId>rabbitmq-broadcast</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>rabbitmq-logging</artifactId>
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>

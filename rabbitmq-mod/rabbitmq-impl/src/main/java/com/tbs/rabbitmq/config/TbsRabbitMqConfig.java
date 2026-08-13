@@ -1,6 +1,5 @@
 package com.tbs.rabbitmq.config;
 
-import com.tbs.rabbitmq.property.RabbitMqProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
@@ -30,9 +29,6 @@ import java.util.List;
 @Slf4j
 @Configuration
 public class TbsRabbitMqConfig {
-
-    @Resource
-    private RabbitMqProperty rabbitMqProperty;
 
     @Resource
     private RabbitProperties rabbitProperties;

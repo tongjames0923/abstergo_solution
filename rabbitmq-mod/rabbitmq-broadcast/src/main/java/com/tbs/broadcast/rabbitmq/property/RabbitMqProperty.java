@@ -1,4 +1,4 @@
-package com.tbs.rabbitmq.property;
+package com.tbs.broadcast.rabbitmq.property;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

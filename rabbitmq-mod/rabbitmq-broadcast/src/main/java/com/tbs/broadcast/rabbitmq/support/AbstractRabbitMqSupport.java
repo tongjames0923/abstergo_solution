@@ -5,7 +5,7 @@ import com.tbs.broadcast.dispatcher.IDistributedDispatcherSupport;
 import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.publisher.IPublishResult;
 import com.tbs.common.data.IDataBridge;
-import com.tbs.rabbitmq.property.RabbitMqProperty;
+import com.tbs.broadcast.rabbitmq.property.RabbitMqProperty;
 import com.tbs.rabbitmq.support.AbstractMqConsumer;
 import com.tbs.rabbitmq.support.MqConsumerProperties;
 import lombok.extern.slf4j.Slf4j;
