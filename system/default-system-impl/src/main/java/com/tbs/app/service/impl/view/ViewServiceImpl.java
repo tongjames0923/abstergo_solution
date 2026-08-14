@@ -334,7 +334,6 @@ public class ViewServiceImpl implements IViewService {
         int finalPageSize = pageSize;
         var query = QueryEngine.getEntityQueryWrapper(DynamicFormConfigrationEntity.class).query()
             .where()
-            .equal(DynamicFormConfigrationEntity::getFlag, DynamicFormConfigFlagEnum.ACTIVITED.getCode())
             .pour();
         query.getPageLimitSupport().ifPresentOrElse(pageLimit -> {
             pageLimit.pageOf((long)finalPageNum, (long)finalPageSize);
