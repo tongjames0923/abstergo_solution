@@ -1,0 +1,54 @@
+# Abstergo Solution 开发 Guideline
+
+> 本文档是 Abstergo Solution 项目的**开发总纲与入口**，面向人类开发者与 AI 编程助手。
+> 任何新增代码、代码评审（Code Review）、AI 辅助开发，都应以本 Guideline 为准。
+> 当 Guideline 与存量代码冲突时，以 Guideline 为准（存量代码视为历史遗留，逐步治理）。
+
+## 文档索引
+
+| 文档 | 内容 | 适用角色 |
+|------|------|----------|
+| [01-项目总览](docs/guideline/01-项目总览.md) | 架构、模块地图、技术栈、目录结构、环境与配置中心 | 所有人 |
+| [02-中间件模块开发规范](docs/guideline/02-中间件模块开发规范.md) | 工具/中间件模块的 api/impl 拆分、自动装配、配置体系、模块化 i18n | 中间件开发者 |
+| [03-功能模块开发规范](docs/guideline/03-功能模块开发规范.md) | 实体、Mapper、Service、Controller、Form/VO、断言与异常、Dubbo 服务 | 业务开发者 |
+| [04-接口设计与上线规范](docs/guideline/04-接口设计与上线规范.md) | URL 规范、统一响应、错误码、OpenAPI 文档、权限、前后端对接流程 | 前后端开发者 |
+| [05-前端开发规范](docs/guideline/05-前端开发规范.md) | Vue 2 工程规范、API 封装、国际化、动态路由、组件开发约定 | 前端开发者 |
+| [06-部署与运维规范](docs/guideline/06-部署与运维规范.md) | Jenkins 流水线、Nginx 部署、Nacos 配置发布、Docker 基础设施 | 运维/全栈 |
+| [07-Code Review 检查清单](docs/guideline/07-Code-Review检查清单.md) | 后端/前端逐项检查清单（必须/建议/禁止三级），可直接用于人工与 AI 评审 | 评审者/AI |
+
+## 全局铁律（任何场景都必须遵守）
+
+以下规则是本项目不可妥协的底线，详细说明见各分册：
+
+1. **语言策略**：后端新代码**统一使用 Java**。存量 Kotlin 代码（如 dic-service）视为历史遗留，仅做维护，不再新增 Kotlin 代码。
+2. **注释规范**：类与函数必须使用块注释（含 `@param`/`@return`）；重要代码块加总结性块注释；**禁止行尾注释**；简单代码不加注释。
+3. **断言与异常**：抛异常必须走 `AssertUtil` 链式断言：
+   `AssertUtil.isTrue(条件).i18n("resource.key").params(...).errorLevel(...).throwIt()`。
+   **禁止** `.message(...)`、禁止直接 `throw new FormattedRuntimeException(...)`。
+4. **国际化（i18n）**：所有面向用户的文案（错误提示、业务名称、界面文案）禁止硬编码（魔法值），
+   后端走 i18n 资源 key，前端走 `$t()`；资源文件按 `messages-{module}.properties` / `messages-{module}_en_US.properties` 命名。
+5. **配置管理**：配置项统一收拢到 `@ConfigurationProperties` 的 Property 类，**禁止**散落的 `@Value` 注入；
+   模块必须提供 `tbs.{module}.enable` 总开关。
+6. **职责分离**：Controller 只做 HTTP 接入、参数组装、调用服务层；**所有业务校验与规则判断在 Service 层**。
+7. **模块拆分**：技术型模块必须拆分 `api`（契约，不含实现依赖）与 `impl`（实现）两个 Maven 子模块。
+8. **统一响应**：所有 HTTP 接口返回 `AjaxResult`（code/message/data），错误码语义全局统一（200/401/403/405/468/500 等），禁止自定义结构。
+9. **接口分区**：`/public/**` 免认证，`/private/**` 必须认证；私有管理接口统一放在 `controller/privates` 包下。
+10. **评审前置**：任何 MR/提交在合并前必须通过 [07-Code Review 检查清单](docs/guideline/07-Code-Review检查清单.md) 的检查。
+
+## AI 辅助开发使用说明
+
+AI 助手在本项目中工作时：
+
+1. **先读规范**：按任务类型先阅读对应分册（如写中间件先读 02，写业务先读 03，写前端先读 05）。
+2. **再读存量**：修改既有模块前，先阅读该模块 README 与相邻同类实现，保持风格一致。
+3. **生成代码自查**：产出代码后，逐项对照 07 检查清单自检，尤其是断言写法、i18n、注释格式三项高频违规点。
+4. **不确定即询问**：涉及架构决策（新模块拆分方式、新中间件引入、接口契约变更）时，必须先向用户确认，不得擅自决定。
+
+## 维护约定
+
+- Guideline 与代码同步演进：新增重要约定时，先更新本文档再落地代码。
+- 各分册末尾附"变更记录"，记录约定变更的原因与时间。
+
+---
+
+**版本**: 1.0.0　**最后更新**: 2026-08　**维护人**: abstergo

@@ -1,4 +1,4 @@
-package com.tbs.rabbitmq.retry;
+package com.tbs.mq.impl;
 
 import com.tbs.mq.api.retry.IFailedMessageStore;
 import com.tbs.mq.model.FailedMessage;

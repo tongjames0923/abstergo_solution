@@ -3,6 +3,9 @@ spring:
   profiles:
     include:
       - tbs
+      - db
+      - redis
+      - mq
   application:
     name: app-service
   # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
@@ -37,3 +40,15 @@ app:
     route-groups:
       - default
 
+dubbo:
+  application:
+    name: dubbo-app-system-service
+    logger: slf4j
+    check-serializable: false
+    serialize-check-status: DISABLE
+  registry:
+    address: nacos://${NACOS_ADDRESS:127.0.0.1:8848}
+  shutdown:
+    await-duration: 10000
+  consumer:
+    filter: -ContextHolderAuthenticationPrepareFilter

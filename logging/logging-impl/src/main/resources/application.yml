@@ -8,14 +8,14 @@ spring:
       - mq
   application:
     name: logging-service
-#  # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
-#  config:
-#    import:
-#      - optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
-#  cloud:
-#    nacos:
-#      config:
-#        server-addr: ${NACOS_ADDRESS:127.0.0.1:8848}
+  # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
+  config:
+    import:
+      - optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
+  cloud:
+    nacos:
+      config:
+        server-addr: ${NACOS_ADDRESS:127.0.0.1:8848}
   lifecycle:
     timeout-per-shutdown-phase: 30s
   # 资源信息

@@ -57,3 +57,7 @@ tbs:
   knife4j:
     enable: true
     show-url: true
+  mq:
+    retry:
+      scheduler: job
+      enable: true

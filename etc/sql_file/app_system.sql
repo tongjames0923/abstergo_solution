@@ -40,14 +40,14 @@ CREATE TABLE `dynamic_form_configration` (
 -- Records of dynamic_form_configration
 -- ----------------------------
 BEGIN;
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (1, 1, 1, 40, '80px', 8, '用户查询表单', 1);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (2, 0, 1, 40, '80px', 5, '用户新增表单', 1);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (3, 0, 1, 24, '80px', 20, '用户编辑表单', 1);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (6, 1, 1, 20, '100px', 8, '权限搜索表单', 0);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (12, 1, 1, 20, '100px', 8, '权限新增表单', 0);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (13, 1, 1, 20, '100px', 8, '权限编辑表单', 0);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (14, 1, 1, 20, '100px', 8, '权限组查询表单', 0);
-INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (15, 1, 1, 20, '100px', 8, '权限组新增表单', 0);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (1, 1, 1, 40, '80px', 8, '用户查询表单', 1);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (2, 0, 1, 40, '80px', 5, '用户新增表单', 1);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (3, 0, 1, 24, '80px', 20, '用户编辑表单', 1);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (6, 1, 1, 20, '100px', 8, '权限搜索表单', 1);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (12, 1, 1, 20, '100px', 8, '权限新增表单', 1);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (13, 1, 1, 20, '100px', 8, '权限编辑表单', 1);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (14, 1, 1, 20, '100px', 8, '权限组查询表单', 1);
+INSERT INTO `app_system`.`dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (15, 1, 1, 20, '100px', 8, '权限组新增表单', 1);
 COMMIT;
 
 -- ----------------------------

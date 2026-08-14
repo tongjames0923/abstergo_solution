@@ -39,13 +39,14 @@ public class RabbitMqAutoRegister extends AbstractAutoBeanRegister {
     /**
      * 获取基础扫描包路径
      * <p>
-     * 返回需要扫描的RabbitMQ相关组件的包路径数组
+     * 除RabbitMQ实现包外，同时扫描MQ抽象层包（com.tbs.mq），
+     * 使@EnableRabbitMq一步完成厂商实现与抽象层默认装配的快速启动。
      * </p>
      *
      * @return 基础扫描包路径数组
      */
     @Override
     protected String[] getScanningPackages() {
-        return new String[] {"com.tbs.rabbitmq"};
+        return new String[] {"com.tbs.rabbitmq", "com.tbs.mq"};
     }
 }

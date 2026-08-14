@@ -14,7 +14,7 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
   nacos:
-    image: docker.1ms.run/nacos/nacos-server:v2.5.3
+    image: c7l2hmalrte697hztn.xuanyuan.run/nacos/nacos-server:v2.5.3
     container_name: abstergo_nacos
     ports:
       - "8848:8848"
