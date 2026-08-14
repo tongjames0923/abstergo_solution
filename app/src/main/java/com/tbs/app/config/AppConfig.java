@@ -1,23 +1,16 @@
 package com.tbs.app.config;
 
-import com.alibaba.dubbo.common.URL;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
 import com.tbs.common.i18n.AbstractMessageSourceProvider;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
-import com.tbs.web.enums.WebMessageTypeEnum;
-import com.tbs.web.result.AjaxResult;
-import com.tbs.web.result.IOnErrorAjaxProvider;
+import com.tbs.mq.RedisFaildMessageStore;
+import com.tbs.mq.api.retry.IFailedMessageStore;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
-import com.tbs.web.uitl.AjaxUtil;
-import org.apache.dubbo.registry.client.ServiceDiscovery;
-import org.apache.dubbo.registry.client.ServiceDiscoveryFactory;
-import org.apache.dubbo.rpc.model.ApplicationModel;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Value;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -48,7 +41,10 @@ public class AppConfig {
         return new SimpleRabbitMqSupport();
     }
 
-
+    @Bean
+    public IFailedMessageStore systemFailedMessageStore(RedissonClient client) {
+        return new RedisFaildMessageStore(client);
+    }
 
     @Bean
     public ILogRecorder loggerRecoreder() {
