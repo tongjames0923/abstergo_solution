@@ -1,0 +1,1775 @@
+2026-08-14 15:38:12.197 INFO  [] [background-preinit] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 6.2.5.Final
+2026-08-14 15:38:12.279 INFO  [] [main] com.tbs.app.AppApplication - Starting AppApplication using Java 21.0.11 on abstergos-MacBook-Pro.local with PID 86675 (/Users/abstergo/IdeaProjects/abstergo_solution_p/app/target/classes started by abstergo in /Users/abstergo/IdeaProjects/abstergo_solution_p)
+2026-08-14 15:38:12.280 INFO  [] [main] com.tbs.app.AppApplication - The following 5 profiles are active: "tbs", "db", "redis", "mq", "prod"
+2026-08-14 15:38:12.936 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Common Package
+2026-08-14 15:38:12.956 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Common Package 完成, 共扫描到 20 个 Bean
+2026-08-14 15:38:12.956 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [通用功能] 已注册
+2026-08-14 15:38:12.978 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: WEB PACK
+2026-08-14 15:38:12.995 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: WEB PACK 完成, 共扫描到 18 个 Bean
+2026-08-14 15:38:12.995 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [Web基础组件] 已注册
+2026-08-14 15:38:13.167 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Async Package 完成, 共扫描到 12 个 Bean
+2026-08-14 15:38:13.168 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [异步处理] 已注册
+2026-08-14 15:38:13.198 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Cache Package
+2026-08-14 15:38:13.205 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Cache Package 完成, 共扫描到 5 个 Bean
+2026-08-14 15:38:13.206 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [缓存管理] 已注册
+2026-08-14 15:38:13.233 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: RabbitMQ Pack
+2026-08-14 15:38:13.246 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: RabbitMQ Pack 完成, 共扫描到 4 个 Bean
+2026-08-14 15:38:13.247 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [RabbitMQ消息队列] 已注册
+2026-08-14 15:38:13.274 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Xxl Pack
+2026-08-14 15:38:13.278 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Xxl Pack 完成, 共扫描到 2 个 Bean
+2026-08-14 15:38:13.278 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [分布式任务调度] 已注册
+2026-08-14 15:38:13.302 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Knife4j Package
+2026-08-14 15:38:13.303 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Knife4j Package 完成, 共扫描到 4 个 Bean
+2026-08-14 15:38:13.303 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [API文档] 已注册
+2026-08-14 15:38:13.329 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: View Package
+2026-08-14 15:38:13.333 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: View Package 完成, 共扫描到 5 个 Bean
+2026-08-14 15:38:13.333 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [动态视图路由] 已注册
+2026-08-14 15:38:13.357 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Shared Lib Package
+2026-08-14 15:38:13.377 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Shared Lib Package 完成, 共扫描到 2 个 Bean
+2026-08-14 15:38:13.377 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [共享业务库] 已注册
+2026-08-14 15:38:13.400 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Closure Table Package
+2026-08-14 15:38:13.404 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Closure Table Package 完成, 共扫描到 1 个 Bean
+2026-08-14 15:38:13.404 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [闭包表树形结构] 已注册
+2026-08-14 15:38:13.438 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Redis Pack
+2026-08-14 15:38:13.442 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Redis Pack 完成, 共扫描到 2 个 Bean
+2026-08-14 15:38:13.442 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [Redis缓存] 已注册
+2026-08-14 15:38:13.734 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Script Pack
+2026-08-14 15:38:13.739 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Script Pack 完成, 共扫描到 1 个 Bean
+2026-08-14 15:38:13.739 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [脚本引擎] 已注册
+2026-08-14 15:38:14.324 WARN  [] [main] o.a.d.c.s.b.f.a.ServiceAnnotationPostProcessor -  [DUBBO] No class annotated by Dubbo @DubboService or @Service was found under package [com.tbs.app], ignore re-scanned classes: 0, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-28. This may be caused by No annotations were found on the class, go to https://dubbo.apache.org/faq/5/28 to find instructions. 
+2026-08-14 15:38:14.510 WARN  [] [main] o.a.d.c.s.b.f.a.ReferenceAnnotationBeanPostProcessor -  [DUBBO] Already exists another bean definition with the same bean name [treeStore], rename dubbo reference bean to [treeStore#2]. It is recommended to modify the name of one of the beans to avoid injection problems. prev: treeStore[null], new: treeStore#2[ReferenceBean:com.tbs.struct.tree.api.persistence.ITreeStore()]. Please check private com.tbs.struct.tree.api.persistence.ITreeStore com.tbs.app.service.impl.company.CompanyTreeStructService.treeStore, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-39. This may be caused by , go to https://dubbo.apache.org/faq/5/39 to find instructions. 
+2026-08-14 15:38:15.330 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 设置默认语言: zh_CN
+2026-08-14 15:38:15.358 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 配置国际化消息源，basenames: [messages-common, i18n/messages-view-route, messages-system, i18n/messages-mq, messages-web, i18n/messages-app, messages-shared]
+2026-08-14 15:38:16.646 INFO  [] [main] org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-14 15:38:16.681 INFO  [] [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 5.6.15.Final
+2026-08-14 15:38:16.800 INFO  [] [main] org.hibernate.annotations.common.Version - HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2026-08-14 15:38:17.092 INFO  [] [main] p6spy - 
+---[ Execution Time: 6 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:38:17.106 INFO  [] [main] org.hibernate.dialect.Dialect - HHH000400: Using dialect: org.hibernate.dialect.MySQL57Dialect
+2026-08-14 15:38:17.652 INFO  [] [main] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:38:17.708 INFO  [] [main] o.h.e.t.jta.platform.internal.JtaPlatformInitiator - HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2026-08-14 15:38:18.056 INFO  [] [main] com.tbs.app.config.DefaultAppConfig - 初始化内置默认系统配置...
+2026-08-14 15:38:19.383 INFO  [] [main] com.tbs.rabbitmq.config.TbsRabbitMqConfig - RabbitMQ消息转换器已配置，允许反序列化的包: [*]
+2026-08-14 15:38:19.680 INFO  [] [main] com.tbs.rabbitmq.support.MqResourceDeclarer - RabbitMQ资源自动声明完成, queue=tbs.broadcast.queue, exchange=tbs.broadcast.exchange, routingKey=tbs.broadcast.routing.key
+2026-08-14 15:38:19.703 INFO  [] [main] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已启动, queue=tbs.broadcast.queue, concurrency=1-1
+2026-08-14 15:38:19.725 INFO  [] [main] com.tbs.rabbitmq.support.MqResourceDeclarer - RabbitMQ资源自动声明完成, queue=test.queue, exchange=test.exchange, routingKey=test.routing.key
+2026-08-14 15:38:19.727 INFO  [] [main] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已启动, queue=test.queue, concurrency=1-1
+2026-08-14 15:38:19.805 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 设置默认语言: zh_CN
+2026-08-14 15:38:19.889 WARN  [] [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-14 15:38:20.483 INFO  [] [main] com.tbs.knife4j.config.Knife4jConfig - visit: http://127.0.0.1:8080/doc.html
+2026-08-14 15:38:20.484 INFO  [] [main] com.tbs.knife4j.config.Knife4jConfig - or visit: http://127.0.0.1:8080/swagger-ui/index.html
+2026-08-14 15:38:20.986 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.util.MsUtil CLASS_CACHE cache.
+2026-08-14 15:38:20.986 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.genid.GenIdUtil CACHE cache.
+2026-08-14 15:38:20.987 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.version.VersionUtil CACHE cache.
+2026-08-14 15:38:20.987 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear EntityHelper entityTableMap cache.
+2026-08-14 15:38:21.286 INFO  [] [main] com.tbs.web.security.impl.DefaultLoginTokenPicker - DefaultLoginTokenPicker init: fieldName=Authorization, tokenSource=HEADER, expireTime=1800
+2026-08-14 15:38:21.322 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - xxl job config start
+2026-08-14 15:38:21.322 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - xxl job admin server: http://127.0.0.1:9898/xxl-job-admin
+2026-08-14 15:38:21.322 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - app name: mainSystemApplication
+2026-08-14 15:38:21.322 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - access token: 123456789
+2026-08-14 15:38:21.322 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - log path: logs/xxl-job/jobhandler
+2026-08-14 15:38:21.322 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - logRetentionsDays: 3
+2026-08-14 15:38:22.431 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:22.562 WARN  [] [main] org.apache.dubbo.config.ServiceConfig -  [DUBBO] Use random available port(20881) for protocol dubbo, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-8. This may be caused by , go to https://dubbo.apache.org/faq/5/8 to find instructions. 
+2026-08-14 15:38:22.825 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:23.064 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:23.300 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:24.555 INFO  [] [main] com.tbs.app.AppApplication - Started AppApplication in 13.435 seconds (JVM running for 14.309)
+2026-08-14 15:38:24.559 INFO  [] [main] com.tbs.common.config.StartUpConfig - startup async
+2026-08-14 15:38:24.559 INFO  [] [main] com.tbs.common.config.StartUpConfig - startup totally completed
+2026-08-14 15:38:24.560 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting CookieRefreshTokenService
+2026-08-14 15:38:24.560 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup CookieRefreshTokenService completed
+2026-08-14 15:38:24.566 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - skip optional startup SimpleCompanyService$$EnhancerBySpringCGLIB$$92a81dcf
+2026-08-14 15:38:24.569 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - skip optional startup SimpleSystemRoleServiceImpl$$EnhancerBySpringCGLIB$$611f131c
+2026-08-14 15:38:24.571 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleDepartmentService$$EnhancerBySpringCGLIB$$1287837d
+2026-08-14 15:38:24.571 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleDepartmentService$$EnhancerBySpringCGLIB$$1287837d completed
+2026-08-14 15:38:24.573 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting ClosureTreeServiceImpl$$EnhancerBySpringCGLIB$$6dd2d047
+2026-08-14 15:38:24.573 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup ClosureTreeServiceImpl$$EnhancerBySpringCGLIB$$6dd2d047 completed
+2026-08-14 15:38:24.573 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting QueryEngine
+2026-08-14 15:38:24.574 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup QueryEngine completed
+2026-08-14 15:38:24.574 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting AssertUtil
+2026-08-14 15:38:24.576 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup AssertUtil completed
+2026-08-14 15:38:24.576 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting FeatureWrapperHelper
+2026-08-14 15:38:24.577 INFO  [] [Thread-48] com.tbs.common.util.helper.FeatureWrapperHelper - 加载功能包装器完成 [com.tbs.common.util.helper.impl.DirectCastWrapperExtension@f35f81d, com.tbs.common.util.helper.impl.FeatureWrapperExtension@73a347e8, com.tbs.cache.impl.TransactionAwareCacheUnwrapperExtension@fff7d5f]
+2026-08-14 15:38:24.577 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup FeatureWrapperHelper completed
+2026-08-14 15:38:24.577 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting ApiInvokeAop
+2026-08-14 15:38:24.578 INFO  [] [Thread-48] com.tbs.web.aop.ApiInvokeAop - 接口访问器初始化完成，使用3个拦截器
+2026-08-14 15:38:24.578 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup ApiInvokeAop completed
+2026-08-14 15:38:24.578 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting AjaxUtil
+2026-08-14 15:38:24.578 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup AjaxUtil completed
+2026-08-14 15:38:24.580 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting CacheUtils$$EnhancerBySpringCGLIB$$7d6d2e7d
+2026-08-14 15:38:24.580 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup CacheUtils$$EnhancerBySpringCGLIB$$7d6d2e7d completed
+2026-08-14 15:38:24.581 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting DatabaseViewRouteServiceImpl$$EnhancerBySpringCGLIB$$eb56424e
+2026-08-14 15:38:24.598 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:38:24.607 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT * FROM view_route_version ORDER BY id DESC ]---
+2026-08-14 15:38:24.619 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT * FROM view_route_configration WHERE version = 741903476560232448 AND flag = 1 ORDER BY sort_order ]---
+2026-08-14 15:38:24.626 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903476816084992 AND flag = 1 ]---
+2026-08-14 15:38:24.630 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:38:24.632 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903476816084992 AND flag = 1 ]---
+2026-08-14 15:38:24.635 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903476874805248 AND flag = 1 ]---
+2026-08-14 15:38:24.635 INFO  [] [RMI TCP Connection(6)-127.0.0.1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:38:24.636 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903476874805248 AND flag = 1 ]---
+2026-08-14 15:38:24.643 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 5 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903476941914112 AND flag = 1 ]---
+2026-08-14 15:38:24.646 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903476941914112 AND flag = 1 ]---
+2026-08-14 15:38:24.648 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477076131840 AND flag = 1 ]---
+2026-08-14 15:38:24.650 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477076131840 AND flag = 1 ]---
+2026-08-14 15:38:24.652 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477130657792 AND flag = 1 ]---
+2026-08-14 15:38:24.654 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477130657792 AND flag = 1 ]---
+2026-08-14 15:38:24.656 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477218738176 AND flag = 1 ]---
+2026-08-14 15:38:24.658 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477218738176 AND flag = 1 ]---
+2026-08-14 15:38:24.661 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477277458432 AND flag = 1 ]---
+2026-08-14 15:38:24.663 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477277458432 AND flag = 1 ]---
+2026-08-14 15:38:24.665 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477344567296 AND flag = 1 ]---
+2026-08-14 15:38:24.667 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477344567296 AND flag = 1 ]---
+2026-08-14 15:38:24.669 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477432647680 AND flag = 1 ]---
+2026-08-14 15:38:24.671 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477432647680 AND flag = 1 ]---
+2026-08-14 15:38:24.672 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477529116672 AND flag = 1 ]---
+2026-08-14 15:38:24.674 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477529116672 AND flag = 1 ]---
+2026-08-14 15:38:24.675 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477646557184 AND flag = 1 ]---
+2026-08-14 15:38:24.677 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477646557184 AND flag = 1 ]---
+2026-08-14 15:38:24.679 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477717860352 AND flag = 1 ]---
+2026-08-14 15:38:24.680 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477717860352 AND flag = 1 ]---
+2026-08-14 15:38:24.681 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477797552128 AND flag = 1 ]---
+2026-08-14 15:38:24.683 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477797552128 AND flag = 1 ]---
+2026-08-14 15:38:24.684 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477847883776 AND flag = 1 ]---
+2026-08-14 15:38:24.689 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477847883776 AND flag = 1 ]---
+2026-08-14 15:38:24.691 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477961129984 AND flag = 1 ]---
+2026-08-14 15:38:24.692 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477961129984 AND flag = 1 ]---
+2026-08-14 15:38:24.694 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903478053404672 AND flag = 1 ]---
+2026-08-14 15:38:24.695 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903478053404672 AND flag = 1 ]---
+2026-08-14 15:38:24.696 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903478116319232 AND flag = 1 ]---
+2026-08-14 15:38:24.698 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903478116319232 AND flag = 1 ]---
+2026-08-14 15:38:24.699 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903478191816704 AND flag = 1 ]---
+2026-08-14 15:38:24.700 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903478191816704 AND flag = 1 ]---
+2026-08-14 15:38:24.701 INFO  [] [Thread-48] c.tbs.view.route.impl.DatabaseViewRouteServiceImpl - 从数据库加载路由配置完成，共加载 1 个分组
+2026-08-14 15:38:24.701 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup DatabaseViewRouteServiceImpl$$EnhancerBySpringCGLIB$$eb56424e completed
+2026-08-14 15:38:24.701 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting TokenHandleFilter
+2026-08-14 15:38:24.702 INFO  [] [Thread-48] com.tbs.web.gate.TokenHandleFilter - security manager size: 1
+2026-08-14 15:38:24.702 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup TokenHandleFilter completed
+2026-08-14 15:38:24.702 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleEventBus
+2026-08-14 15:38:24.705 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleEventBus completed
+2026-08-14 15:38:24.706 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleEventDispatcher$$EnhancerBySpringCGLIB$$39520681
+2026-08-14 15:38:24.712 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleEventDispatcher$$EnhancerBySpringCGLIB$$39520681 completed
+2026-08-14 15:38:24.712 INFO  [] [com.tbs.broadcast.dispatcher.AbstractEventDispatcher-startUp] c.tbs.broadcast.dispatcher.AbstractEventDispatcher - 开始处理事件
+2026-08-14 15:38:24.713 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting DefaultSchedule$$EnhancerBySpringCGLIB$$e2fcb8b7
+2026-08-14 15:38:24.714 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup DefaultSchedule$$EnhancerBySpringCGLIB$$e2fcb8b7 completed
+2026-08-14 15:38:24.714 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting JsonJobExecutor
+2026-08-14 15:38:24.714 INFO  [] [Thread-48] com.tbs.xxl.executor.JsonJobExecutor - json job executor start up
+2026-08-14 15:38:24.715 INFO  [] [Thread-48] com.tbs.xxl.executor.JsonJobExecutor - json job handler size: 0
+2026-08-14 15:38:24.715 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup JsonJobExecutor completed
+2026-08-14 15:38:24.715 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SpelScriptEngine
+2026-08-14 15:38:24.720 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SpelScriptEngine completed
+2026-08-14 15:38:24.720 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting LoginGateWayCenter
+2026-08-14 15:38:24.720 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup LoginGateWayCenter completed
+2026-08-14 15:38:25.033 WARN  [] [Dubbo-framework-registry-notification-0-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:25.133 WARN  [] [Dubbo-framework-registry-notification-1-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:25.135 WARN  [] [Dubbo-framework-registry-notification-2-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:25.136 WARN  [] [Dubbo-framework-registry-notification-3-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:38:42.771 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 7 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:38:42.773 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,user_name,password,nick_name,avatar,remark,create_time,update_time,flag,create_by,update_by,dept_id  FROM sys_user  WHERE  id = 1 ]---
+2026-08-14 15:38:42.799 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,role_group_id,user_id  FROM system_role_group_user_relation  WHERE  user_id = 1 ]---
+2026-08-14 15:38:42.805 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id,flag,role_group_name,description,create_time,update_time,delete_time,create_by,update_by,delete_by  FROM sys_role_group  WHERE  id = 740491594708287488 ]---
+2026-08-14 15:38:42.827 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT id AS id,role AS role,name AS name,type AS type,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,data_scope AS dataScope FROM sys_role  WHERE (  (flag  IN  (2,1))  )  AND  ( EXISTS (SELECT id AS id,role_id AS roleId,group_id AS groupId,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_role_group_relation AS sq0_sys_role_group_relation  WHERE sq0_sys_role_group_relation.role_id = sys_role.id AND  (  (sq0_sys_role_group_relation.group_id  =  740491594708287488)  )) )  AND  (  (flag  IN  (1,2,0))  ) ]---
+2026-08-14 15:38:42.846 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,flag,role_group_name,description,create_time,update_time,delete_time,create_by,update_by,delete_by  FROM sys_role_group  WHERE  id = 740721847200382976 ]---
+2026-08-14 15:38:42.850 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,role AS role,name AS name,type AS type,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,data_scope AS dataScope FROM sys_role  WHERE (  (flag  IN  (2,1))  )  AND  ( EXISTS (SELECT id AS id,role_id AS roleId,group_id AS groupId,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_role_group_relation AS sq0_sys_role_group_relation  WHERE sq0_sys_role_group_relation.role_id = sys_role.id AND  (  (sq0_sys_role_group_relation.group_id  =  740721847200382976)  )) )  AND  (  (flag  IN  (1,2,0))  ) ]---
+2026-08-14 15:38:42.871 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,department_name AS departmentName,department_code AS departmentCode,company_id AS companyId,manager AS manager,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,parent_id AS parentId,create_by AS createBy,update_by AS updateBy FROM sys_department  WHERE ( EXISTS (SELECT id AS id,user_id AS userId,department_id AS departmentId FROM system_user_department_relation AS sq0_system_user_department_relation  WHERE sq0_system_user_department_relation.department_id = sys_department.id AND  (  (sq0_system_user_department_relation.user_id  =  1)  )) )  AND  (  (flag  IN  (1,2))  ) ]---
+2026-08-14 15:38:42.884 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,company_name,logo_image,tax_number,description,create_time,update_time,flag,create_by,update_by  FROM sys_company  WHERE  id = 2 ]---
+2026-08-14 15:41:14.143 WARN  [] [Thread-6] com.alibaba.nacos.common.notify.NotifyCenter - [NotifyCenter] Start destroying Publisher
+2026-08-14 15:41:14.144 WARN  [] [Thread-1] com.alibaba.nacos.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Start destroying common HttpClient
+2026-08-14 15:41:14.145 WARN  [] [Thread-6] com.alibaba.nacos.common.notify.NotifyCenter - [NotifyCenter] Destruction of the end
+2026-08-14 15:41:14.148 WARN  [] [Thread-1] com.alibaba.nacos.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Destruction of the end
+2026-08-14 15:41:14.333 WARN  [] [NettyServerWorker-10-1] org.apache.dubbo.remoting.transport.AbstractServer -  [DUBBO] All clients has disconnected from /192.168.10.48:20880. You can graceful shutdown now., dubbo version: 3.3.0, current host: 192.168.10.48, error code: 99-0. This may be caused by unknown error in remoting module, go to https://dubbo.apache.org/faq/99/0 to find instructions. 
+2026-08-14 15:41:19.128 INFO  [] [SpringApplicationShutdownHook] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已停止, queue=test.queue
+2026-08-14 15:41:19.159 INFO  [] [SpringApplicationShutdownHook] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已停止, queue=tbs.broadcast.queue
+2026-08-14 15:41:22.547 INFO  [] [background-preinit] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 6.2.5.Final
+2026-08-14 15:41:22.644 INFO  [] [main] com.tbs.app.AppApplication - Starting AppApplication using Java 21.0.11 on abstergos-MacBook-Pro.local with PID 86956 (/Users/abstergo/IdeaProjects/abstergo_solution_p/app/target/classes started by abstergo in /Users/abstergo/IdeaProjects/abstergo_solution_p)
+2026-08-14 15:41:22.644 INFO  [] [main] com.tbs.app.AppApplication - The following 5 profiles are active: "tbs", "db", "redis", "mq", "prod"
+2026-08-14 15:41:23.325 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Common Package
+2026-08-14 15:41:23.345 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Common Package 完成, 共扫描到 20 个 Bean
+2026-08-14 15:41:23.346 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [通用功能] 已注册
+2026-08-14 15:41:23.367 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: WEB PACK
+2026-08-14 15:41:23.388 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: WEB PACK 完成, 共扫描到 18 个 Bean
+2026-08-14 15:41:23.388 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [Web基础组件] 已注册
+2026-08-14 15:41:23.434 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Async Package 完成, 共扫描到 12 个 Bean
+2026-08-14 15:41:23.434 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [异步处理] 已注册
+2026-08-14 15:41:23.459 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Cache Package
+2026-08-14 15:41:23.466 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Cache Package 完成, 共扫描到 5 个 Bean
+2026-08-14 15:41:23.466 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [缓存管理] 已注册
+2026-08-14 15:41:23.488 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: RabbitMQ Pack
+2026-08-14 15:41:23.498 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: RabbitMQ Pack 完成, 共扫描到 4 个 Bean
+2026-08-14 15:41:23.498 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [RabbitMQ消息队列] 已注册
+2026-08-14 15:41:23.519 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Xxl Pack
+2026-08-14 15:41:23.522 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Xxl Pack 完成, 共扫描到 2 个 Bean
+2026-08-14 15:41:23.522 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [分布式任务调度] 已注册
+2026-08-14 15:41:23.545 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Knife4j Package
+2026-08-14 15:41:23.548 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Knife4j Package 完成, 共扫描到 4 个 Bean
+2026-08-14 15:41:23.548 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [API文档] 已注册
+2026-08-14 15:41:23.575 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: View Package
+2026-08-14 15:41:23.580 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: View Package 完成, 共扫描到 5 个 Bean
+2026-08-14 15:41:23.580 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [动态视图路由] 已注册
+2026-08-14 15:41:23.605 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Shared Lib Package
+2026-08-14 15:41:23.628 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Shared Lib Package 完成, 共扫描到 2 个 Bean
+2026-08-14 15:41:23.629 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [共享业务库] 已注册
+2026-08-14 15:41:23.655 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Closure Table Package
+2026-08-14 15:41:23.659 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Closure Table Package 完成, 共扫描到 1 个 Bean
+2026-08-14 15:41:23.660 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [闭包表树形结构] 已注册
+2026-08-14 15:41:23.683 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Redis Pack
+2026-08-14 15:41:23.685 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Redis Pack 完成, 共扫描到 2 个 Bean
+2026-08-14 15:41:23.685 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [Redis缓存] 已注册
+2026-08-14 15:41:23.952 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Script Pack
+2026-08-14 15:41:23.958 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Script Pack 完成, 共扫描到 1 个 Bean
+2026-08-14 15:41:23.958 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [脚本引擎] 已注册
+2026-08-14 15:41:24.572 WARN  [] [main] o.a.d.c.s.b.f.a.ServiceAnnotationPostProcessor -  [DUBBO] No class annotated by Dubbo @DubboService or @Service was found under package [com.tbs.app], ignore re-scanned classes: 0, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-28. This may be caused by No annotations were found on the class, go to https://dubbo.apache.org/faq/5/28 to find instructions. 
+2026-08-14 15:41:24.758 WARN  [] [main] o.a.d.c.s.b.f.a.ReferenceAnnotationBeanPostProcessor -  [DUBBO] Already exists another bean definition with the same bean name [treeStore], rename dubbo reference bean to [treeStore#2]. It is recommended to modify the name of one of the beans to avoid injection problems. prev: treeStore[null], new: treeStore#2[ReferenceBean:com.tbs.struct.tree.api.persistence.ITreeStore()]. Please check private com.tbs.struct.tree.api.persistence.ITreeStore com.tbs.app.service.impl.company.CompanyTreeStructService.treeStore, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-39. This may be caused by , go to https://dubbo.apache.org/faq/5/39 to find instructions. 
+2026-08-14 15:41:25.552 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 设置默认语言: zh_CN
+2026-08-14 15:41:25.584 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 配置国际化消息源，basenames: [messages-common, i18n/messages-view-route, messages-system, i18n/messages-mq, messages-web, i18n/messages-app, messages-shared]
+2026-08-14 15:41:26.960 INFO  [] [main] org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-14 15:41:26.993 INFO  [] [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 5.6.15.Final
+2026-08-14 15:41:27.106 INFO  [] [main] org.hibernate.annotations.common.Version - HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2026-08-14 15:41:27.406 INFO  [] [main] p6spy - 
+---[ Execution Time: 5 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:41:27.422 INFO  [] [main] org.hibernate.dialect.Dialect - HHH000400: Using dialect: org.hibernate.dialect.MySQL57Dialect
+2026-08-14 15:41:28.043 INFO  [] [main] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:41:28.117 INFO  [] [main] o.h.e.t.jta.platform.internal.JtaPlatformInitiator - HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2026-08-14 15:41:28.509 INFO  [] [main] com.tbs.app.config.DefaultAppConfig - 初始化内置默认系统配置...
+2026-08-14 15:41:29.653 INFO  [] [main] com.tbs.rabbitmq.config.TbsRabbitMqConfig - RabbitMQ消息转换器已配置，允许反序列化的包: [*]
+2026-08-14 15:41:29.957 INFO  [] [main] com.tbs.rabbitmq.support.MqResourceDeclarer - RabbitMQ资源自动声明完成, queue=tbs.broadcast.queue, exchange=tbs.broadcast.exchange, routingKey=tbs.broadcast.routing.key
+2026-08-14 15:41:29.980 INFO  [] [main] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已启动, queue=tbs.broadcast.queue, concurrency=1-1
+2026-08-14 15:41:30.003 INFO  [] [main] com.tbs.rabbitmq.support.MqResourceDeclarer - RabbitMQ资源自动声明完成, queue=test.queue, exchange=test.exchange, routingKey=test.routing.key
+2026-08-14 15:41:30.005 INFO  [] [main] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已启动, queue=test.queue, concurrency=1-1
+2026-08-14 15:41:30.089 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 设置默认语言: zh_CN
+2026-08-14 15:41:30.163 WARN  [] [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-14 15:41:30.741 INFO  [] [main] com.tbs.knife4j.config.Knife4jConfig - visit: http://127.0.0.1:8080/doc.html
+2026-08-14 15:41:30.741 INFO  [] [main] com.tbs.knife4j.config.Knife4jConfig - or visit: http://127.0.0.1:8080/swagger-ui/index.html
+2026-08-14 15:41:31.264 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.util.MsUtil CLASS_CACHE cache.
+2026-08-14 15:41:31.264 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.genid.GenIdUtil CACHE cache.
+2026-08-14 15:41:31.265 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.version.VersionUtil CACHE cache.
+2026-08-14 15:41:31.265 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear EntityHelper entityTableMap cache.
+2026-08-14 15:41:31.674 INFO  [] [main] com.tbs.web.security.impl.DefaultLoginTokenPicker - DefaultLoginTokenPicker init: fieldName=Authorization, tokenSource=HEADER, expireTime=1800
+2026-08-14 15:41:31.716 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - xxl job config start
+2026-08-14 15:41:31.716 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - xxl job admin server: http://127.0.0.1:9898/xxl-job-admin
+2026-08-14 15:41:31.716 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - app name: mainSystemApplication
+2026-08-14 15:41:31.716 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - access token: 123456789
+2026-08-14 15:41:31.716 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - log path: logs/xxl-job/jobhandler
+2026-08-14 15:41:31.716 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - logRetentionsDays: 3
+2026-08-14 15:41:33.046 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:41:33.094 WARN  [] [main] org.apache.dubbo.config.ServiceConfig -  [DUBBO] Use random available port(20881) for protocol dubbo, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-8. This may be caused by , go to https://dubbo.apache.org/faq/5/8 to find instructions. 
+2026-08-14 15:41:33.412 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:41:33.667 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:41:34.018 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:41:35.458 INFO  [] [main] com.tbs.app.AppApplication - Started AppApplication in 14.036 seconds (JVM running for 14.893)
+2026-08-14 15:41:35.463 INFO  [] [main] com.tbs.common.config.StartUpConfig - startup async
+2026-08-14 15:41:35.464 INFO  [] [main] com.tbs.common.config.StartUpConfig - startup totally completed
+2026-08-14 15:41:35.464 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting CookieRefreshTokenService
+2026-08-14 15:41:35.465 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup CookieRefreshTokenService completed
+2026-08-14 15:41:35.471 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - skip optional startup SimpleCompanyService$$EnhancerBySpringCGLIB$$370afe02
+2026-08-14 15:41:35.476 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - skip optional startup SimpleSystemRoleServiceImpl$$EnhancerBySpringCGLIB$$9b55567f
+2026-08-14 15:41:35.480 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleDepartmentService$$EnhancerBySpringCGLIB$$b6ea63b0
+2026-08-14 15:41:35.482 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleDepartmentService$$EnhancerBySpringCGLIB$$b6ea63b0 completed
+2026-08-14 15:41:35.484 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting ClosureTreeServiceImpl$$EnhancerBySpringCGLIB$$848971e6
+2026-08-14 15:41:35.485 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup ClosureTreeServiceImpl$$EnhancerBySpringCGLIB$$848971e6 completed
+2026-08-14 15:41:35.485 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting QueryEngine
+2026-08-14 15:41:35.486 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup QueryEngine completed
+2026-08-14 15:41:35.486 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting AssertUtil
+2026-08-14 15:41:35.488 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup AssertUtil completed
+2026-08-14 15:41:35.488 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting FeatureWrapperHelper
+2026-08-14 15:41:35.488 INFO  [] [Thread-48] com.tbs.common.util.helper.FeatureWrapperHelper - 加载功能包装器完成 [com.tbs.common.util.helper.impl.DirectCastWrapperExtension@4fb54ca0, com.tbs.common.util.helper.impl.FeatureWrapperExtension@6a53c14a, com.tbs.cache.impl.TransactionAwareCacheUnwrapperExtension@314f929]
+2026-08-14 15:41:35.488 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup FeatureWrapperHelper completed
+2026-08-14 15:41:35.488 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting ApiInvokeAop
+2026-08-14 15:41:35.489 INFO  [] [Thread-48] com.tbs.web.aop.ApiInvokeAop - 接口访问器初始化完成，使用3个拦截器
+2026-08-14 15:41:35.489 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup ApiInvokeAop completed
+2026-08-14 15:41:35.489 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting AjaxUtil
+2026-08-14 15:41:35.490 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup AjaxUtil completed
+2026-08-14 15:41:35.493 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting CacheUtils$$EnhancerBySpringCGLIB$$3b1e6d85
+2026-08-14 15:41:35.494 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup CacheUtils$$EnhancerBySpringCGLIB$$3b1e6d85 completed
+2026-08-14 15:41:35.496 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting DatabaseViewRouteServiceImpl$$EnhancerBySpringCGLIB$$8fb92281
+2026-08-14 15:41:35.512 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:41:35.517 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_version ORDER BY id DESC ]---
+2026-08-14 15:41:35.526 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT * FROM view_route_configration WHERE version = 741903476560232448 AND flag = 1 ORDER BY sort_order ]---
+2026-08-14 15:41:35.532 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903476816084992 AND flag = 1 ]---
+2026-08-14 15:41:35.535 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903476816084992 AND flag = 1 ]---
+2026-08-14 15:41:35.536 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903476874805248 AND flag = 1 ]---
+2026-08-14 15:41:35.538 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903476874805248 AND flag = 1 ]---
+2026-08-14 15:41:35.539 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903476941914112 AND flag = 1 ]---
+2026-08-14 15:41:35.540 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903476941914112 AND flag = 1 ]---
+2026-08-14 15:41:35.541 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477076131840 AND flag = 1 ]---
+2026-08-14 15:41:35.543 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477076131840 AND flag = 1 ]---
+2026-08-14 15:41:35.544 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477130657792 AND flag = 1 ]---
+2026-08-14 15:41:35.545 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477130657792 AND flag = 1 ]---
+2026-08-14 15:41:35.546 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477218738176 AND flag = 1 ]---
+2026-08-14 15:41:35.547 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477218738176 AND flag = 1 ]---
+2026-08-14 15:41:35.549 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477277458432 AND flag = 1 ]---
+2026-08-14 15:41:35.550 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477277458432 AND flag = 1 ]---
+2026-08-14 15:41:35.551 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477344567296 AND flag = 1 ]---
+2026-08-14 15:41:35.552 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477344567296 AND flag = 1 ]---
+2026-08-14 15:41:35.553 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477432647680 AND flag = 1 ]---
+2026-08-14 15:41:35.555 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477432647680 AND flag = 1 ]---
+2026-08-14 15:41:35.556 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477529116672 AND flag = 1 ]---
+2026-08-14 15:41:35.557 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477529116672 AND flag = 1 ]---
+2026-08-14 15:41:35.558 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477646557184 AND flag = 1 ]---
+2026-08-14 15:41:35.559 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477646557184 AND flag = 1 ]---
+2026-08-14 15:41:35.560 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477717860352 AND flag = 1 ]---
+2026-08-14 15:41:35.562 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477717860352 AND flag = 1 ]---
+2026-08-14 15:41:35.563 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477797552128 AND flag = 1 ]---
+2026-08-14 15:41:35.565 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477797552128 AND flag = 1 ]---
+2026-08-14 15:41:35.568 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477847883776 AND flag = 1 ]---
+2026-08-14 15:41:35.570 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477847883776 AND flag = 1 ]---
+2026-08-14 15:41:35.571 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903477961129984 AND flag = 1 ]---
+2026-08-14 15:41:35.572 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903477961129984 AND flag = 1 ]---
+2026-08-14 15:41:35.573 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903478053404672 AND flag = 1 ]---
+2026-08-14 15:41:35.574 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903478053404672 AND flag = 1 ]---
+2026-08-14 15:41:35.576 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903478116319232 AND flag = 1 ]---
+2026-08-14 15:41:35.577 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903478116319232 AND flag = 1 ]---
+2026-08-14 15:41:35.578 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 741903478191816704 AND flag = 1 ]---
+2026-08-14 15:41:35.580 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 741903478191816704 AND flag = 1 ]---
+2026-08-14 15:41:35.580 INFO  [] [Thread-48] c.tbs.view.route.impl.DatabaseViewRouteServiceImpl - 从数据库加载路由配置完成，共加载 1 个分组
+2026-08-14 15:41:35.580 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup DatabaseViewRouteServiceImpl$$EnhancerBySpringCGLIB$$8fb92281 completed
+2026-08-14 15:41:35.580 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting TokenHandleFilter
+2026-08-14 15:41:35.581 INFO  [] [Thread-48] com.tbs.web.gate.TokenHandleFilter - security manager size: 1
+2026-08-14 15:41:35.581 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup TokenHandleFilter completed
+2026-08-14 15:41:35.581 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleEventBus
+2026-08-14 15:41:35.585 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleEventBus completed
+2026-08-14 15:41:35.585 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleEventDispatcher$$EnhancerBySpringCGLIB$$162bcf1
+2026-08-14 15:41:35.591 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleEventDispatcher$$EnhancerBySpringCGLIB$$162bcf1 completed
+2026-08-14 15:41:35.591 INFO  [] [com.tbs.broadcast.dispatcher.AbstractEventDispatcher-startUp] c.tbs.broadcast.dispatcher.AbstractEventDispatcher - 开始处理事件
+2026-08-14 15:41:35.593 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting DefaultSchedule$$EnhancerBySpringCGLIB$$ab0d6f27
+2026-08-14 15:41:35.593 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup DefaultSchedule$$EnhancerBySpringCGLIB$$ab0d6f27 completed
+2026-08-14 15:41:35.593 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting JsonJobExecutor
+2026-08-14 15:41:35.593 INFO  [] [Thread-48] com.tbs.xxl.executor.JsonJobExecutor - json job executor start up
+2026-08-14 15:41:35.595 INFO  [] [Thread-48] com.tbs.xxl.executor.JsonJobExecutor - json job handler size: 0
+2026-08-14 15:41:35.595 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup JsonJobExecutor completed
+2026-08-14 15:41:35.595 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SpelScriptEngine
+2026-08-14 15:41:35.599 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SpelScriptEngine completed
+2026-08-14 15:41:35.599 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting LoginGateWayCenter
+2026-08-14 15:41:35.600 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup LoginGateWayCenter completed
+2026-08-14 15:41:35.890 WARN  [] [Dubbo-framework-registry-notification-0-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:41:35.925 INFO  [] [RMI TCP Connection(8)-127.0.0.1] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:41:35.996 WARN  [] [Dubbo-framework-registry-notification-1-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:41:35.999 WARN  [] [Dubbo-framework-registry-notification-3-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:41:36.008 WARN  [] [Dubbo-framework-registry-notification-2-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:42:05.696 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:05.702 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:SELECT id AS id,user_id AS userId,token AS token,user_details AS userDetails,flag AS flag,create_time AS createTime,update_time AS updateTime,token_expire_time AS tokenExpireTime,session_id AS sessionId FROM sys_login_info  WHERE (  (create_time  >=  '2026-07-17T15:42:05.669+0800')  )  AND  (  (token  =  'a50fa9540400000a50fa9540800000a5')  )  AND  (  (flag  IN  (1))  )  ORDER BY create_time desc,update_time desc  LIMIT 0, 1 ]---
+2026-08-14 15:42:05.909 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:06.092 INFO  [] [http-nio-8080-exec-3] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,user_name AS userName,password AS password,nick_name AS nickName,avatar AS avatar,remark AS remark,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,dept_id AS deptId FROM sys_user  WHERE (  (user_name  =  '223344')  )  AND  (  (flag  IN  (1,2,0))  ) ]---
+2026-08-14 15:42:06.153 INFO  [] [http-nio-8080-exec-3] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,role_group_id,user_id  FROM system_role_group_user_relation  WHERE  user_id = 1 ]---
+2026-08-14 15:42:06.156 INFO  [] [http-nio-8080-exec-3] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,flag,role_group_name,description,create_time,update_time,delete_time,create_by,update_by,delete_by  FROM sys_role_group  WHERE  id = 740491594708287488 ]---
+2026-08-14 15:42:06.163 INFO  [] [http-nio-8080-exec-3] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,flag,role_group_name,description,create_time,update_time,delete_time,create_by,update_by,delete_by  FROM sys_role_group  WHERE  id = 740721847200382976 ]---
+2026-08-14 15:42:06.178 INFO  [] [http-nio-8080-exec-3] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,department_name AS departmentName,department_code AS departmentCode,company_id AS companyId,manager AS manager,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,parent_id AS parentId,create_by AS createBy,update_by AS updateBy FROM sys_department  WHERE ( EXISTS (SELECT id AS id,user_id AS userId,department_id AS departmentId FROM system_user_department_relation AS sq0_system_user_department_relation  WHERE sq0_system_user_department_relation.department_id = sys_department.id AND  (  (sq0_system_user_department_relation.user_id  =  1)  )) )  AND  (  (flag  IN  (1,2))  ) ]---
+2026-08-14 15:42:06.190 INFO  [] [http-nio-8080-exec-3] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,company_name,logo_image,tax_number,description,create_time,update_time,flag,create_by,update_by  FROM sys_company  WHERE  id = 2 ]---
+2026-08-14 15:42:10.821 INFO  [] [mainExecutorService-5] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:10.821 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:10.825 INFO  [] [mainExecutorService-5] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,role AS role,name AS name,type AS type,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,data_scope AS dataScope FROM sys_role  WHERE (  (  (type  IN  (1))  )  )  AND  (  (  (flag  IN  (1))  )  )  AND  (  (flag  IN  (1,2,0))  )) as t1 ]---
+2026-08-14 15:42:10.825 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id AS id,role AS role,name AS name,type AS type,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,data_scope AS dataScope FROM sys_role  WHERE (  (  (type  IN  (1))  )  )  AND  (  (  (flag  IN  (1))  )  )  AND  (  (flag  IN  (1,2,0))  )  LIMIT 0, 1000 ]---
+2026-08-14 15:42:26.097 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:26.124 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT COUNT(*) FROM view_route_version WHERE route_group = 'default' ]---
+2026-08-14 15:42:26.134 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:INSERT INTO view_route_version  ( id,route_group,version_no,description,flag,create_by,create_time ) VALUES( 743373888045449216,'default',12,'删除多余配置',1,1,'2026-08-14T15:42:26.124+0800' ) ]---
+2026-08-14 15:42:26.141 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888087392256,'default','/admin','Layout','view.menu.admin.title','/admin/user',0,0,NULL,0,743373888045449216,1,'2026-08-14T15:42:26.134+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.146 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888104169472,743373888087392256,'default','view.menu.admin.title','el-icon-setting',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.149 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_role  ( id,route_id,role_code,flag,create_time,update_time ) VALUES( 743373888120946688,743373888087392256,'MENU.ADMIN',1,NULL,NULL ) ]---
+2026-08-14 15:42:26.151 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888129335296,'default','user','/admin/user/index.vue','view.menu.admin.user',NULL,0,0,743373888087392256,0,743373888045449216,1,'2026-08-14T15:42:26.149+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.153 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888141918208,743373888129335296,'default','view.menu.admin.user','el-icon-user',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.156 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888150306816,'default','role','/admin/role/index.vue','view.menu.admin.role',NULL,0,0,743373888087392256,1,743373888045449216,1,'2026-08-14T15:42:26.154+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.163 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 5 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888162889728,743373888150306816,'default','view.menu.admin.role','el-icon-lock',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.165 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888188055552,'default','company','/admin/company/index.vue','view.menu.admin.company',NULL,0,0,743373888087392256,2,743373888045449216,1,'2026-08-14T15:42:26.163+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.168 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888200638464,743373888188055552,'default','view.menu.admin.company','el-icon-office-building',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.171 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888213221376,'default','role-group','/admin/role_group/index.vue','view.menu.admin.role.group',NULL,0,0,743373888087392256,3,743373888045449216,1,'2026-08-14T15:42:26.168+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.175 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888225804288,743373888213221376,'default','view.menu.admin.role.group','el-icon-s-management',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.178 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888242581504,'default','/route-manager','Layout','route-manager','',0,0,NULL,1,743373888045449216,1,'2026-08-14T15:42:26.175+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.181 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888255164416,743373888242581504,'default','路由管理','el-icon-folder-opened',1,'',1,NULL,NULL ) ]---
+2026-08-14 15:42:26.183 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_role  ( id,route_id,role_code,flag,create_time,update_time ) VALUES( 743373888267747328,743373888242581504,'MENU.ROUTE',1,NULL,NULL ) ]---
+2026-08-14 15:42:26.186 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888276135936,'default','index','/admin/route-manager/index.vue','routeManager','',0,0,743373888242581504,0,743373888045449216,1,'2026-08-14T15:42:26.183+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.189 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888284524544,743373888276135936,'default','路由管理','el-icon-document-add',1,'',1,NULL,NULL ) ]---
+2026-08-14 15:42:26.192 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888297107456,'default','/develop','Layout','view.menu.develop','/develop/form-manager',0,0,NULL,2,743373888045449216,1,'2026-08-14T15:42:26.189+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.198 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888309690368,743373888297107456,'default','view.menu.develop.title','el-icon-s-tools',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.200 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_role  ( id,route_id,role_code,flag,create_time,update_time ) VALUES( 743373888334856192,743373888297107456,'MENU.DEV',1,NULL,NULL ) ]---
+2026-08-14 15:42:26.203 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888347439104,'default','form-manager','/form/FormManager.vue','view.menu.develop.form.manager',NULL,0,0,743373888297107456,0,743373888045449216,1,'2026-08-14T15:42:26.200+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.206 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888355827712,743373888347439104,'default','view.menu.develop.form.manager','el-icon-document',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.208 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888368410624,'default','form','/form/FormCreator.vue','view.menu.develop.form.create',NULL,0,0,743373888297107456,1,743373888045449216,1,'2026-08-14T15:42:26.206+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.210 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888376799232,743373888368410624,'default','view.menu.develop.form.create','el-icon-edit',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.213 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888389382144,'default','dic','/admin/dic/index.vue','view.menu.develop.dic',NULL,0,0,743373888297107456,2,743373888045449216,1,'2026-08-14T15:42:26.210+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.215 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888397770752,743373888389382144,'default','view.menu.develop.dic','el-icon-notebook-2',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.217 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888410353664,'default','generic-api','/admin/generic-api/index.vue','view.menu.develop.generic.api',NULL,0,0,743373888297107456,3,743373888045449216,1,'2026-08-14T15:42:26.215+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.220 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888418742272,743373888410353664,'default','view.menu.develop.generic.api','el-icon-connection',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.222 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888427130880,'default','systemlog','/admin/systemlog/index.vue','view.menu.develop.systemlog',NULL,0,0,743373888297107456,4,743373888045449216,1,'2026-08-14T15:42:26.220+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.224 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888439713792,743373888427130880,'default','view.menu.develop.systemlog','el-icon-data-line',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.226 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888448102400,'default','cache','/cache/index.vue','view.menu.develop.cache',NULL,0,0,743373888297107456,5,743373888045449216,1,'2026-08-14T15:42:26.224+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.228 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888452296704,743373888448102400,'default','view.menu.develop.cache','el-icon-s-data',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.231 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888464879616,'default','/common','Layout','view.menu.common','/common/user',0,0,NULL,3,743373888045449216,1,'2026-08-14T15:42:26.228+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.233 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888477462528,743373888464879616,'default','view.menu.common','el-icon-user',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.239 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 5 ms ]---
+---[ SQL:INSERT INTO view_route_configration  ( id,route_group,path,component,name,redirect,hidden,always_show,parent_id,sort_order,version,flag,create_time,update_time,create_by,update_by ) VALUES( 743373888485851136,'default','user','/user/index.vue','view.menu.common.user',NULL,0,0,743373888464879616,0,743373888045449216,1,'2026-08-14T15:42:26.233+0800',NULL,1,NULL ) ]---
+2026-08-14 15:42:26.242 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:INSERT INTO view_route_meta  ( id,route_id,route_group,title,icon,breadcrumb,active_menu,flag,create_time,update_time ) VALUES( 743373888511016960,743373888485851136,'default','view.menu.common.user','el-icon-user',1,NULL,1,NULL,NULL ) ]---
+2026-08-14 15:42:26.242 INFO  [] [http-nio-8080-exec-7] c.tbs.view.route.impl.DatabaseViewRouteServiceImpl - 成功保存路由分组: default，包含 4 个路由，版本: v12
+2026-08-14 15:42:26.246 INFO  [] [http-nio-8080-exec-7] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL: ]---
+2026-08-14 15:42:28.487 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:28.488 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_version ORDER BY id DESC ]---
+2026-08-14 15:42:28.492 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT * FROM view_route_configration WHERE version = 743373888045449216 AND flag = 1 ORDER BY sort_order ]---
+2026-08-14 15:42:28.495 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888087392256 AND flag = 1 ]---
+2026-08-14 15:42:28.496 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888087392256 AND flag = 1 ]---
+2026-08-14 15:42:28.498 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888129335296 AND flag = 1 ]---
+2026-08-14 15:42:28.499 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888129335296 AND flag = 1 ]---
+2026-08-14 15:42:28.500 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888150306816 AND flag = 1 ]---
+2026-08-14 15:42:28.502 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888150306816 AND flag = 1 ]---
+2026-08-14 15:42:28.503 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888188055552 AND flag = 1 ]---
+2026-08-14 15:42:28.504 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888188055552 AND flag = 1 ]---
+2026-08-14 15:42:28.506 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888213221376 AND flag = 1 ]---
+2026-08-14 15:42:28.507 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888213221376 AND flag = 1 ]---
+2026-08-14 15:42:28.508 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888242581504 AND flag = 1 ]---
+2026-08-14 15:42:28.509 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888242581504 AND flag = 1 ]---
+2026-08-14 15:42:28.510 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888276135936 AND flag = 1 ]---
+2026-08-14 15:42:28.511 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888276135936 AND flag = 1 ]---
+2026-08-14 15:42:28.513 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888297107456 AND flag = 1 ]---
+2026-08-14 15:42:28.514 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888297107456 AND flag = 1 ]---
+2026-08-14 15:42:28.515 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888347439104 AND flag = 1 ]---
+2026-08-14 15:42:28.516 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888347439104 AND flag = 1 ]---
+2026-08-14 15:42:28.517 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888368410624 AND flag = 1 ]---
+2026-08-14 15:42:28.518 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888368410624 AND flag = 1 ]---
+2026-08-14 15:42:28.519 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888389382144 AND flag = 1 ]---
+2026-08-14 15:42:28.521 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888389382144 AND flag = 1 ]---
+2026-08-14 15:42:28.522 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888410353664 AND flag = 1 ]---
+2026-08-14 15:42:28.523 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888410353664 AND flag = 1 ]---
+2026-08-14 15:42:28.524 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888427130880 AND flag = 1 ]---
+2026-08-14 15:42:28.526 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888427130880 AND flag = 1 ]---
+2026-08-14 15:42:28.527 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888448102400 AND flag = 1 ]---
+2026-08-14 15:42:28.529 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888448102400 AND flag = 1 ]---
+2026-08-14 15:42:28.530 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888464879616 AND flag = 1 ]---
+2026-08-14 15:42:28.531 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888464879616 AND flag = 1 ]---
+2026-08-14 15:42:28.533 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888485851136 AND flag = 1 ]---
+2026-08-14 15:42:28.534 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888485851136 AND flag = 1 ]---
+2026-08-14 15:42:28.535 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:28.535 INFO  [] [http-nio-8080-exec-8] c.tbs.view.route.impl.DatabaseViewRouteServiceImpl - 路由缓存已刷新，当前视图版本: 743373888045449216
+2026-08-14 15:42:31.951 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:31.953 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:33.597 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:33.598 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:33.609 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:36.959 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:36.961 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:36.996 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 24 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:39.729 INFO  [] [http-nio-8080-exec-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:39.731 INFO  [] [http-nio-8080-exec-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,role_group_id,user_id  FROM system_role_group_user_relation  WHERE  user_id = 1 ]---
+2026-08-14 15:42:39.732 INFO  [] [http-nio-8080-exec-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,flag,role_group_name,description,create_time,update_time,delete_time,create_by,update_by,delete_by  FROM sys_role_group  WHERE  id = 740491594708287488 ]---
+2026-08-14 15:42:39.735 INFO  [] [http-nio-8080-exec-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,flag,role_group_name,description,create_time,update_time,delete_time,create_by,update_by,delete_by  FROM sys_role_group  WHERE  id = 740721847200382976 ]---
+2026-08-14 15:42:39.741 INFO  [] [http-nio-8080-exec-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,company_name,logo_image,tax_number,description,create_time,update_time,flag,create_by,update_by  FROM sys_company  WHERE  id = 2 ]---
+2026-08-14 15:42:39.827 INFO  [] [mainExecutorService-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:39.829 INFO  [] [mainExecutorService-6] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT id AS id,role AS role,name AS name,type AS type,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,data_scope AS dataScope FROM sys_role  WHERE (  (  (type  IN  (1))  )  )  AND  (  (  (flag  IN  (1))  )  )  AND  (  (flag  IN  (1,2,0))  )  LIMIT 0, 1000 ]---
+2026-08-14 15:42:39.830 INFO  [] [mainExecutorService-7] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,role AS role,name AS name,type AS type,description AS description,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,data_scope AS dataScope FROM sys_role  WHERE (  (  (type  IN  (1))  )  )  AND  (  (  (flag  IN  (1))  )  )  AND  (  (flag  IN  (1,2,0))  )) as t1 ]---
+2026-08-14 15:42:41.693 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:41.695 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT MAX(id) FROM view_route_version ]---
+2026-08-14 15:42:59.830 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:42:59.832 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (flag  IN  (0,1))  )  LIMIT 0, 10000 ]---
+2026-08-14 15:42:59.843 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  2)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:42:59.847 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 2 ]---
+2026-08-14 15:42:59.848 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 2 ]---
+2026-08-14 15:42:59.851 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (68,69,70,71,72) ]---
+2026-08-14 15:42:59.852 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 68 ]---
+2026-08-14 15:42:59.854 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (238,239,240,241) ]---
+2026-08-14 15:42:59.857 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 69 ]---
+2026-08-14 15:42:59.858 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (242,243,244,245) ]---
+2026-08-14 15:42:59.859 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 70 ]---
+2026-08-14 15:42:59.860 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (246,247,248,249,250,251) ]---
+2026-08-14 15:42:59.861 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 71 ]---
+2026-08-14 15:42:59.862 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (252,253,254,255) ]---
+2026-08-14 15:42:59.864 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 72 ]---
+2026-08-14 15:42:59.871 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  3)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:42:59.873 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 3 ]---
+2026-08-14 15:42:59.874 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 3 ]---
+2026-08-14 15:42:59.875 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (12,13,14,15) ]---
+2026-08-14 15:42:59.876 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 12 ]---
+2026-08-14 15:42:59.877 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (36,37,38,39) ]---
+2026-08-14 15:42:59.879 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 13 ]---
+2026-08-14 15:42:59.880 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (40,41,42,43) ]---
+2026-08-14 15:42:59.881 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 14 ]---
+2026-08-14 15:42:59.882 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (44,45,46,47) ]---
+2026-08-14 15:42:59.883 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 15 ]---
+2026-08-14 15:42:59.890 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  6)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:42:59.891 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 6 ]---
+2026-08-14 15:42:59.892 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 6 ]---
+2026-08-14 15:42:59.893 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (99,100,101,102,103) ]---
+2026-08-14 15:42:59.894 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 99 ]---
+2026-08-14 15:42:59.895 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (296) ]---
+2026-08-14 15:42:59.897 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 100 ]---
+2026-08-14 15:42:59.898 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 101 ]---
+2026-08-14 15:42:59.899 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 102 ]---
+2026-08-14 15:42:59.900 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (297,298) ]---
+2026-08-14 15:42:59.903 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 103 ]---
+2026-08-14 15:42:59.904 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (299,300) ]---
+2026-08-14 15:42:59.912 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  12)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:42:59.914 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 12 ]---
+2026-08-14 15:42:59.915 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 12 ]---
+2026-08-14 15:42:59.916 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (92,93) ]---
+2026-08-14 15:42:59.917 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 92 ]---
+2026-08-14 15:42:59.918 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 93 ]---
+2026-08-14 15:42:59.925 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  13)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:42:59.927 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 13 ]---
+2026-08-14 15:42:59.928 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 13 ]---
+2026-08-14 15:42:59.929 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (104,105,106) ]---
+2026-08-14 15:42:59.930 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 104 ]---
+2026-08-14 15:42:59.931 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (301) ]---
+2026-08-14 15:42:59.932 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 105 ]---
+2026-08-14 15:42:59.933 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 106 ]---
+2026-08-14 15:42:59.940 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  14)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:42:59.942 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 14 ]---
+2026-08-14 15:42:59.942 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 14 ]---
+2026-08-14 15:42:59.943 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (117,118,119) ]---
+2026-08-14 15:42:59.944 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 117 ]---
+2026-08-14 15:42:59.945 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 118 ]---
+2026-08-14 15:42:59.946 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 119 ]---
+2026-08-14 15:42:59.947 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (305,306) ]---
+2026-08-14 15:42:59.956 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  15)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:42:59.957 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 15 ]---
+2026-08-14 15:42:59.958 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 15 ]---
+2026-08-14 15:42:59.959 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (120,121) ]---
+2026-08-14 15:42:59.959 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 120 ]---
+2026-08-14 15:42:59.960 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (307) ]---
+2026-08-14 15:42:59.961 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 121 ]---
+2026-08-14 15:42:59.962 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (308,309,310,311) ]---
+2026-08-14 15:43:05.642 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:05.642 INFO  [] [mainExecutorService-9] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:05.645 INFO  [] [mainExecutorService-9] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:05.645 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:22.685 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:22.698 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739735764882948096 ]---
+2026-08-14 15:43:22.704 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'ERP.DOC.SCAN.DELETE.CONFIG',api_name = '删除单据扫描配置。同时删除相关的通知人配置',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.e10.service.IDocSaveService',method_name = 'deleteDocScanConfig',need_auth = true,version = NULL,flag = 0,description = '',pre_auth_beans = 'AccountActived',create_time = '2026-08-04T14:45:49.970+0800',update_time = NULL,create_by = 1,update_by = NULL WHERE  id = 739735764882948096 ]---
+2026-08-14 15:43:22.710 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:22.750 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:22.750 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:22.752 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:26.103 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:26.112 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739734309090361344 ]---
+2026-08-14 15:43:26.114 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'ERP.DOC.SCAN.DELETE.ROUTE',api_name = '删除单据通知人信息',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.e10.service.IDocSaveService',method_name = 'deleteDocSaveStatusRoute',need_auth = true,version = NULL,flag = 0,description = '',pre_auth_beans = 'AccountActived',create_time = '2026-08-04T14:40:02.881+0800',update_time = '2026-08-04T14:46:08.642+0800',create_by = 1,update_by = 1 WHERE  id = 739734309090361344 ]---
+2026-08-14 15:43:26.121 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:26.164 INFO  [] [mainExecutorService-3] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:26.164 INFO  [] [mainExecutorService-2] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:26.164 INFO  [] [mainExecutorService-3] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:28.238 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:28.244 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739734309090361344 ]---
+2026-08-14 15:43:28.249 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:28.283 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:28.283 INFO  [] [mainExecutorService-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:28.284 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:30.245 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:30.264 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739734309090361344 ]---
+2026-08-14 15:43:30.271 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:30.309 INFO  [] [mainExecutorService-7] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:30.309 INFO  [] [mainExecutorService-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:30.310 INFO  [] [mainExecutorService-7] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:32.758 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:32.767 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739734309090361344 ]---
+2026-08-14 15:43:32.771 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:32.807 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:32.807 INFO  [] [mainExecutorService-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:32.808 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:34.704 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:34.713 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739734309090361344 ]---
+2026-08-14 15:43:34.718 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:34.757 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:34.757 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:34.758 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:39.021 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:39.036 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739735764882948096 ]---
+2026-08-14 15:43:39.042 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:39.116 INFO  [] [mainExecutorService-3] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:39.116 INFO  [] [mainExecutorService-2] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:39.117 INFO  [] [mainExecutorService-3] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:43:41.284 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:41.290 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739734309090361344 ]---
+2026-08-14 15:43:41.295 INFO  [] [http-nio-8080-exec-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL: ]---
+2026-08-14 15:43:41.326 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:43:41.326 INFO  [] [mainExecutorService-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:43:41.327 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:44:30.957 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:44:30.960 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id AS id,token AS token,user_name AS userName,create_time AS createTime,update_time AS updateTime,flag AS flag,expire_time AS expireTime,mac_address AS macAddress,ip_address AS ipAddress,create_type AS createType,token_type AS tokenType,session_id AS sessionId FROM sys_token  WHERE (  (  (token  =  'a50fa9540400000a50fa9540800000a5')  )  ) ]---
+2026-08-14 15:44:31.019 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739734309090361344 ]---
+2026-08-14 15:44:36.480 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL: ]---
+2026-08-14 15:44:36.539 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:44:36.539 INFO  [] [mainExecutorService-9] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:44:36.540 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:45:44.471 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:45:44.471 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:45:44.475 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 3 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:45:44.475 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api) as t1 ]---
+2026-08-14 15:45:50.006 WARN  [] [Thread-6] com.alibaba.nacos.common.notify.NotifyCenter - [NotifyCenter] Start destroying Publisher
+2026-08-14 15:45:50.007 WARN  [] [Thread-6] com.alibaba.nacos.common.notify.NotifyCenter - [NotifyCenter] Destruction of the end
+2026-08-14 15:45:50.006 WARN  [] [Thread-1] com.alibaba.nacos.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Start destroying common HttpClient
+2026-08-14 15:45:50.012 WARN  [] [Thread-1] com.alibaba.nacos.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Destruction of the end
+2026-08-14 15:45:50.152 WARN  [] [NettyServerWorker-10-1] org.apache.dubbo.remoting.transport.AbstractServer -  [DUBBO] All clients has disconnected from /192.168.10.48:20880. You can graceful shutdown now., dubbo version: 3.3.0, current host: 192.168.10.48, error code: 99-0. This may be caused by unknown error in remoting module, go to https://dubbo.apache.org/faq/99/0 to find instructions. 
+2026-08-14 15:45:54.666 INFO  [] [SpringApplicationShutdownHook] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已停止, queue=test.queue
+2026-08-14 15:45:54.687 INFO  [] [SpringApplicationShutdownHook] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已停止, queue=tbs.broadcast.queue
+2026-08-14 15:45:58.151 INFO  [] [background-preinit] org.hibernate.validator.internal.util.Version - HV000001: Hibernate Validator 6.2.5.Final
+2026-08-14 15:45:58.243 INFO  [] [main] com.tbs.app.AppApplication - Starting AppApplication using Java 21.0.11 on abstergos-MacBook-Pro.local with PID 87314 (/Users/abstergo/IdeaProjects/abstergo_solution_p/app/target/classes started by abstergo in /Users/abstergo/IdeaProjects/abstergo_solution_p)
+2026-08-14 15:45:58.243 INFO  [] [main] com.tbs.app.AppApplication - The following 5 profiles are active: "tbs", "db", "redis", "mq", "prod"
+2026-08-14 15:45:58.935 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Common Package
+2026-08-14 15:45:58.963 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Common Package 完成, 共扫描到 20 个 Bean
+2026-08-14 15:45:58.963 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [通用功能] 已注册
+2026-08-14 15:45:58.989 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: WEB PACK
+2026-08-14 15:45:59.007 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: WEB PACK 完成, 共扫描到 18 个 Bean
+2026-08-14 15:45:59.007 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [Web基础组件] 已注册
+2026-08-14 15:45:59.058 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Async Package 完成, 共扫描到 12 个 Bean
+2026-08-14 15:45:59.058 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [异步处理] 已注册
+2026-08-14 15:45:59.082 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Cache Package
+2026-08-14 15:45:59.090 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Cache Package 完成, 共扫描到 5 个 Bean
+2026-08-14 15:45:59.090 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [缓存管理] 已注册
+2026-08-14 15:45:59.111 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: RabbitMQ Pack
+2026-08-14 15:45:59.123 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: RabbitMQ Pack 完成, 共扫描到 4 个 Bean
+2026-08-14 15:45:59.123 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [RabbitMQ消息队列] 已注册
+2026-08-14 15:45:59.146 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Xxl Pack
+2026-08-14 15:45:59.149 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Xxl Pack 完成, 共扫描到 2 个 Bean
+2026-08-14 15:45:59.149 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [分布式任务调度] 已注册
+2026-08-14 15:45:59.171 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Knife4j Package
+2026-08-14 15:45:59.173 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Knife4j Package 完成, 共扫描到 4 个 Bean
+2026-08-14 15:45:59.174 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [API文档] 已注册
+2026-08-14 15:45:59.198 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: View Package
+2026-08-14 15:45:59.203 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: View Package 完成, 共扫描到 5 个 Bean
+2026-08-14 15:45:59.203 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [动态视图路由] 已注册
+2026-08-14 15:45:59.227 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Shared Lib Package
+2026-08-14 15:45:59.245 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Shared Lib Package 完成, 共扫描到 2 个 Bean
+2026-08-14 15:45:59.246 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [共享业务库] 已注册
+2026-08-14 15:45:59.278 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Closure Table Package
+2026-08-14 15:45:59.283 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Closure Table Package 完成, 共扫描到 1 个 Bean
+2026-08-14 15:45:59.283 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [闭包表树形结构] 已注册
+2026-08-14 15:45:59.315 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Redis Pack
+2026-08-14 15:45:59.318 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Redis Pack 完成, 共扫描到 2 个 Bean
+2026-08-14 15:45:59.318 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [Redis缓存] 已注册
+2026-08-14 15:45:59.594 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 开始扫描包: Script Pack
+2026-08-14 15:45:59.599 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 扫描包: Script Pack 完成, 共扫描到 1 个 Bean
+2026-08-14 15:45:59.600 INFO  [] [main] com.tbs.common.AbstractAutoBeanRegister - 功能模块 [脚本引擎] 已注册
+2026-08-14 15:46:00.185 WARN  [] [main] o.a.d.c.s.b.f.a.ServiceAnnotationPostProcessor -  [DUBBO] No class annotated by Dubbo @DubboService or @Service was found under package [com.tbs.app], ignore re-scanned classes: 0, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-28. This may be caused by No annotations were found on the class, go to https://dubbo.apache.org/faq/5/28 to find instructions. 
+2026-08-14 15:46:00.366 WARN  [] [main] o.a.d.c.s.b.f.a.ReferenceAnnotationBeanPostProcessor -  [DUBBO] Already exists another bean definition with the same bean name [treeStore], rename dubbo reference bean to [treeStore#2]. It is recommended to modify the name of one of the beans to avoid injection problems. prev: treeStore[null], new: treeStore#2[ReferenceBean:com.tbs.struct.tree.api.persistence.ITreeStore()]. Please check private com.tbs.struct.tree.api.persistence.ITreeStore com.tbs.app.service.impl.company.CompanyTreeStructService.treeStore, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-39. This may be caused by , go to https://dubbo.apache.org/faq/5/39 to find instructions. 
+2026-08-14 15:46:01.146 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 设置默认语言: zh_CN
+2026-08-14 15:46:01.174 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 配置国际化消息源，basenames: [messages-common, i18n/messages-view-route, messages-system, i18n/messages-mq, messages-web, i18n/messages-app, messages-shared]
+2026-08-14 15:46:02.463 INFO  [] [main] org.hibernate.jpa.internal.util.LogHelper - HHH000204: Processing PersistenceUnitInfo [name: default]
+2026-08-14 15:46:02.496 INFO  [] [main] org.hibernate.Version - HHH000412: Hibernate ORM core version 5.6.15.Final
+2026-08-14 15:46:02.603 INFO  [] [main] org.hibernate.annotations.common.Version - HCANN000001: Hibernate Commons Annotations {5.1.2.Final}
+2026-08-14 15:46:02.893 INFO  [] [main] p6spy - 
+---[ Execution Time: 5 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:02.907 INFO  [] [main] org.hibernate.dialect.Dialect - HHH000400: Using dialect: org.hibernate.dialect.MySQL57Dialect
+2026-08-14 15:46:03.451 INFO  [] [main] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:03.514 INFO  [] [main] o.h.e.t.jta.platform.internal.JtaPlatformInitiator - HHH000490: Using JtaPlatform implementation: [org.hibernate.engine.transaction.jta.platform.internal.NoJtaPlatform]
+2026-08-14 15:46:03.849 INFO  [] [main] com.tbs.app.config.DefaultAppConfig - 初始化内置默认系统配置...
+2026-08-14 15:46:04.950 INFO  [] [main] com.tbs.rabbitmq.config.TbsRabbitMqConfig - RabbitMQ消息转换器已配置，允许反序列化的包: [*]
+2026-08-14 15:46:05.260 INFO  [] [main] com.tbs.rabbitmq.support.MqResourceDeclarer - RabbitMQ资源自动声明完成, queue=tbs.broadcast.queue, exchange=tbs.broadcast.exchange, routingKey=tbs.broadcast.routing.key
+2026-08-14 15:46:05.284 INFO  [] [main] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已启动, queue=tbs.broadcast.queue, concurrency=1-1
+2026-08-14 15:46:05.308 INFO  [] [main] com.tbs.rabbitmq.support.MqResourceDeclarer - RabbitMQ资源自动声明完成, queue=test.queue, exchange=test.exchange, routingKey=test.routing.key
+2026-08-14 15:46:05.311 INFO  [] [main] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已启动, queue=test.queue, concurrency=1-1
+2026-08-14 15:46:05.393 INFO  [] [main] com.tbs.common.config.I18nAutoConfiguration - 设置默认语言: zh_CN
+2026-08-14 15:46:05.470 WARN  [] [main] o.s.b.a.o.j.JpaBaseConfiguration$JpaWebConfiguration - spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2026-08-14 15:46:06.076 INFO  [] [main] com.tbs.knife4j.config.Knife4jConfig - visit: http://127.0.0.1:8080/doc.html
+2026-08-14 15:46:06.076 INFO  [] [main] com.tbs.knife4j.config.Knife4jConfig - or visit: http://127.0.0.1:8080/swagger-ui/index.html
+2026-08-14 15:46:06.586 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.util.MsUtil CLASS_CACHE cache.
+2026-08-14 15:46:06.592 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.genid.GenIdUtil CACHE cache.
+2026-08-14 15:46:06.593 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear tk.mybatis.mapper.version.VersionUtil CACHE cache.
+2026-08-14 15:46:06.593 INFO  [] [main] t.mybatis.mapper.autoconfigure.MapperCacheDisabler - Clear EntityHelper entityTableMap cache.
+2026-08-14 15:46:06.900 INFO  [] [main] com.tbs.web.security.impl.DefaultLoginTokenPicker - DefaultLoginTokenPicker init: fieldName=Authorization, tokenSource=HEADER, expireTime=1800
+2026-08-14 15:46:06.935 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - xxl job config start
+2026-08-14 15:46:06.935 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - xxl job admin server: http://127.0.0.1:9898/xxl-job-admin
+2026-08-14 15:46:06.936 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - app name: mainSystemApplication
+2026-08-14 15:46:06.936 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - access token: 123456789
+2026-08-14 15:46:06.936 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - log path: logs/xxl-job/jobhandler
+2026-08-14 15:46:06.936 INFO  [] [main] com.tbs.xxl.config.XxlJobConfig - logRetentionsDays: 3
+2026-08-14 15:46:07.957 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:08.019 WARN  [] [main] org.apache.dubbo.config.ServiceConfig -  [DUBBO] Use random available port(20881) for protocol dubbo, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 5-8. This may be caused by , go to https://dubbo.apache.org/faq/5/8 to find instructions. 
+2026-08-14 15:46:08.270 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:08.519 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:08.758 WARN  [] [main] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:10.026 INFO  [] [main] com.tbs.app.AppApplication - Started AppApplication in 12.961 seconds (JVM running for 13.852)
+2026-08-14 15:46:10.031 INFO  [] [main] com.tbs.common.config.StartUpConfig - startup async
+2026-08-14 15:46:10.031 INFO  [] [main] com.tbs.common.config.StartUpConfig - startup totally completed
+2026-08-14 15:46:10.032 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting CookieRefreshTokenService
+2026-08-14 15:46:10.033 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup CookieRefreshTokenService completed
+2026-08-14 15:46:10.036 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - skip optional startup SimpleCompanyService$$EnhancerBySpringCGLIB$$b75a86d0
+2026-08-14 15:46:10.039 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - skip optional startup SimpleSystemRoleServiceImpl$$EnhancerBySpringCGLIB$$babf335a
+2026-08-14 15:46:10.041 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleDepartmentService$$EnhancerBySpringCGLIB$$3739ec7e
+2026-08-14 15:46:10.042 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleDepartmentService$$EnhancerBySpringCGLIB$$3739ec7e completed
+2026-08-14 15:46:10.044 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting ClosureTreeServiceImpl$$EnhancerBySpringCGLIB$$3a69791d
+2026-08-14 15:46:10.044 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup ClosureTreeServiceImpl$$EnhancerBySpringCGLIB$$3a69791d completed
+2026-08-14 15:46:10.044 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting QueryEngine
+2026-08-14 15:46:10.045 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup QueryEngine completed
+2026-08-14 15:46:10.046 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting AssertUtil
+2026-08-14 15:46:10.047 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup AssertUtil completed
+2026-08-14 15:46:10.048 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting FeatureWrapperHelper
+2026-08-14 15:46:10.048 INFO  [] [Thread-48] com.tbs.common.util.helper.FeatureWrapperHelper - 加载功能包装器完成 [com.tbs.common.util.helper.impl.DirectCastWrapperExtension@7f3a9c11, com.tbs.common.util.helper.impl.FeatureWrapperExtension@7f888518, com.tbs.cache.impl.TransactionAwareCacheUnwrapperExtension@143ad42d]
+2026-08-14 15:46:10.048 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup FeatureWrapperHelper completed
+2026-08-14 15:46:10.048 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting ApiInvokeAop
+2026-08-14 15:46:10.049 INFO  [] [Thread-48] com.tbs.web.aop.ApiInvokeAop - 接口访问器初始化完成，使用3个拦截器
+2026-08-14 15:46:10.049 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup ApiInvokeAop completed
+2026-08-14 15:46:10.049 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting AjaxUtil
+2026-08-14 15:46:10.050 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup AjaxUtil completed
+2026-08-14 15:46:10.051 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting CacheUtils$$EnhancerBySpringCGLIB$$6cf48246
+2026-08-14 15:46:10.052 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup CacheUtils$$EnhancerBySpringCGLIB$$6cf48246 completed
+2026-08-14 15:46:10.053 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting DatabaseViewRouteServiceImpl$$EnhancerBySpringCGLIB$$1008ab4f
+2026-08-14 15:46:10.072 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 5 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:10.078 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT * FROM view_route_version ORDER BY id DESC ]---
+2026-08-14 15:46:10.089 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT * FROM view_route_configration WHERE version = 743373888045449216 AND flag = 1 ORDER BY sort_order ]---
+2026-08-14 15:46:10.093 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888087392256 AND flag = 1 ]---
+2026-08-14 15:46:10.096 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888087392256 AND flag = 1 ]---
+2026-08-14 15:46:10.098 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888129335296 AND flag = 1 ]---
+2026-08-14 15:46:10.100 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888129335296 AND flag = 1 ]---
+2026-08-14 15:46:10.101 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888150306816 AND flag = 1 ]---
+2026-08-14 15:46:10.102 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888150306816 AND flag = 1 ]---
+2026-08-14 15:46:10.104 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888188055552 AND flag = 1 ]---
+2026-08-14 15:46:10.105 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888188055552 AND flag = 1 ]---
+2026-08-14 15:46:10.107 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888213221376 AND flag = 1 ]---
+2026-08-14 15:46:10.108 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888213221376 AND flag = 1 ]---
+2026-08-14 15:46:10.110 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888242581504 AND flag = 1 ]---
+2026-08-14 15:46:10.112 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888242581504 AND flag = 1 ]---
+2026-08-14 15:46:10.114 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888276135936 AND flag = 1 ]---
+2026-08-14 15:46:10.115 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888276135936 AND flag = 1 ]---
+2026-08-14 15:46:10.117 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888297107456 AND flag = 1 ]---
+2026-08-14 15:46:10.118 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888297107456 AND flag = 1 ]---
+2026-08-14 15:46:10.119 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888347439104 AND flag = 1 ]---
+2026-08-14 15:46:10.121 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888347439104 AND flag = 1 ]---
+2026-08-14 15:46:10.122 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888368410624 AND flag = 1 ]---
+2026-08-14 15:46:10.123 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888368410624 AND flag = 1 ]---
+2026-08-14 15:46:10.124 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888389382144 AND flag = 1 ]---
+2026-08-14 15:46:10.126 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888389382144 AND flag = 1 ]---
+2026-08-14 15:46:10.127 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888410353664 AND flag = 1 ]---
+2026-08-14 15:46:10.128 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888410353664 AND flag = 1 ]---
+2026-08-14 15:46:10.130 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888427130880 AND flag = 1 ]---
+2026-08-14 15:46:10.131 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888427130880 AND flag = 1 ]---
+2026-08-14 15:46:10.132 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888448102400 AND flag = 1 ]---
+2026-08-14 15:46:10.133 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888448102400 AND flag = 1 ]---
+2026-08-14 15:46:10.134 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888464879616 AND flag = 1 ]---
+2026-08-14 15:46:10.135 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888464879616 AND flag = 1 ]---
+2026-08-14 15:46:10.137 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_meta WHERE route_id = 743373888485851136 AND flag = 1 ]---
+2026-08-14 15:46:10.138 INFO  [] [Thread-48] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT * FROM view_route_role WHERE route_id = 743373888485851136 AND flag = 1 ]---
+2026-08-14 15:46:10.138 INFO  [] [Thread-48] c.tbs.view.route.impl.DatabaseViewRouteServiceImpl - 从数据库加载路由配置完成，共加载 1 个分组
+2026-08-14 15:46:10.139 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup DatabaseViewRouteServiceImpl$$EnhancerBySpringCGLIB$$1008ab4f completed
+2026-08-14 15:46:10.139 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting TokenHandleFilter
+2026-08-14 15:46:10.139 INFO  [] [Thread-48] com.tbs.web.gate.TokenHandleFilter - security manager size: 1
+2026-08-14 15:46:10.140 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup TokenHandleFilter completed
+2026-08-14 15:46:10.140 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleEventBus
+2026-08-14 15:46:10.145 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleEventBus completed
+2026-08-14 15:46:10.145 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SimpleEventDispatcher$$EnhancerBySpringCGLIB$$79352469
+2026-08-14 15:46:10.152 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SimpleEventDispatcher$$EnhancerBySpringCGLIB$$79352469 completed
+2026-08-14 15:46:10.152 INFO  [] [com.tbs.broadcast.dispatcher.AbstractEventDispatcher-startUp] c.tbs.broadcast.dispatcher.AbstractEventDispatcher - 开始处理事件
+2026-08-14 15:46:10.153 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting DefaultSchedule$$EnhancerBySpringCGLIB$$22dfd69f
+2026-08-14 15:46:10.153 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup DefaultSchedule$$EnhancerBySpringCGLIB$$22dfd69f completed
+2026-08-14 15:46:10.154 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting JsonJobExecutor
+2026-08-14 15:46:10.154 INFO  [] [Thread-48] com.tbs.xxl.executor.JsonJobExecutor - json job executor start up
+2026-08-14 15:46:10.155 INFO  [] [Thread-48] com.tbs.xxl.executor.JsonJobExecutor - json job handler size: 0
+2026-08-14 15:46:10.155 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup JsonJobExecutor completed
+2026-08-14 15:46:10.155 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting SpelScriptEngine
+2026-08-14 15:46:10.159 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup SpelScriptEngine completed
+2026-08-14 15:46:10.159 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - starting LoginGateWayCenter
+2026-08-14 15:46:10.159 INFO  [] [Thread-48] com.tbs.common.config.StartUpConfig - startup LoginGateWayCenter completed
+2026-08-14 15:46:10.551 WARN  [] [Dubbo-framework-registry-notification-3-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:10.565 INFO  [] [RMI TCP Connection(4)-127.0.0.1] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:10.615 WARN  [] [Dubbo-framework-registry-notification-1-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:10.618 WARN  [] [Dubbo-framework-registry-notification-2-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:10.618 WARN  [] [Dubbo-framework-registry-notification-0-thread-1] org.apache.dubbo.registry.nacos.NacosRegistry -  [DUBBO] Received empty url address list and empty protection is disabled, will clear current available addresses, dubbo version: 3.3.0, current host: 192.168.10.48, error code: 1-37. This may be caused by , go to https://dubbo.apache.org/faq/1/37 to find instructions. 
+2026-08-14 15:46:15.381 INFO  [] [mainExecutorService-2] p6spy - 
+---[ Execution Time: 14 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:15.381 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 15 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:15.383 INFO  [] [mainExecutorService-2] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:15.383 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:20.611 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:20.641 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739730395020394496 ]---
+2026-08-14 15:46:20.651 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'ERP.SCAN.QUERY.SCAN_ROUTE',api_name = '获取单据保存后需要通知的用户工号',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.e10.service.IDocSaveService',method_name = 'getSaveStatusRoute',need_auth = false,version = NULL,flag = 0,description = '',pre_auth_beans = '',create_time = '2026-08-04T14:24:29.694+0800',update_time = NULL,create_by = 1,update_by = NULL WHERE  id = 739730395020394496 ]---
+2026-08-14 15:46:23.857 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 7 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:23.946 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:23.946 INFO  [] [mainExecutorService-3] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:23.948 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:27.200 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:27.205 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739727822427258880 ]---
+2026-08-14 15:46:27.208 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'ERP.DOC.SCAN.CONFIG.SAVE',api_name = '储存单据扫描配置',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.e10.service.IDocSaveService',method_name = 'saveDocScanConfig',need_auth = true,version = NULL,flag = 0,description = '',pre_auth_beans = 'AccountActived',create_time = '2026-08-04T14:14:16.337+0800',update_time = NULL,create_by = 1,update_by = NULL WHERE  id = 739727822427258880 ]---
+2026-08-14 15:46:27.215 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:27.284 INFO  [] [mainExecutorService-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:27.284 INFO  [] [mainExecutorService-5] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:27.285 INFO  [] [mainExecutorService-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:29.694 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:29.701 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 736388709422727168 ]---
+2026-08-14 15:46:29.704 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'MES.OUTSTATION.BARCODE',api_name = 'MES出站码查询',app_name = 'dubbo-xh-mes-service',interface_name = 'com.tbs.xh.mes.service.IMesQueryService',method_name = 'queryOutStationBarCodeInfos',need_auth = true,version = NULL,flag = 0,description = '',pre_auth_beans = '',create_time = '2026-07-26T09:05:49.737+0800',update_time = '2026-07-26T17:58:48.265+0800',create_by = 1,update_by = 1 WHERE  id = 736388709422727168 ]---
+2026-08-14 15:46:29.712 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:29.772 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:29.772 INFO  [] [mainExecutorService-7] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:29.773 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:31.972 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:31.977 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739732892111863808 ]---
+2026-08-14 15:46:31.980 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'ERP.DOC.SCAN.ADD.ROUTE',api_name = '新增单据通知人路由信息',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.e10.service.IDocSaveService',method_name = 'saveDocSaveStatusRoute',need_auth = true,version = NULL,flag = 0,description = '',pre_auth_beans = 'AccountActived',create_time = '2026-08-04T14:34:25.043+0800',update_time = '2026-08-04T14:45:59.297+0800',create_by = 1,update_by = 1 WHERE  id = 739732892111863808 ]---
+2026-08-14 15:46:31.986 INFO  [] [http-nio-8080-exec-8] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:32.018 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:32.019 INFO  [] [mainExecutorService-9] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:32.019 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:34.828 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:34.833 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739355309184647168 ]---
+2026-08-14 15:46:34.837 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'OA.MESSAGE.SEND',api_name = 'OA发送消息',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.eteams.IOAService',method_name = 'sendMsg',need_auth = true,version = NULL,flag = 0,description = '',pre_auth_beans = 'AccountActived',create_time = '2026-08-03T13:34:02.264+0800',update_time = '2026-08-03T13:34:02.262+0800',create_by = 1,update_by = NULL WHERE  id = 739355309184647168 ]---
+2026-08-14 15:46:34.843 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:34.875 INFO  [] [mainExecutorService-2] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:34.875 INFO  [] [mainExecutorService-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:34.876 INFO  [] [mainExecutorService-2] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:36.666 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:36.670 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739354793914400768 ]---
+2026-08-14 15:46:36.674 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'OA.QUERY.USER',api_name = '根据工号查询OA用户',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.eteams.IOAService',method_name = 'getUser',need_auth = false,version = NULL,flag = 0,description = '',pre_auth_beans = '',create_time = '2026-08-03T13:31:59.403+0800',update_time = '2026-08-03T13:31:59.401+0800',create_by = 1,update_by = NULL WHERE  id = 739354793914400768 ]---
+2026-08-14 15:46:36.680 INFO  [] [http-nio-8080-exec-2] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:36.713 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:36.713 INFO  [] [mainExecutorService-3] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:36.714 INFO  [] [mainExecutorService-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:38.534 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:38.539 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739720254627774464 ]---
+2026-08-14 15:46:38.542 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'ERP.SCAN.QUERY.TYPES',api_name = '获取所有已支持的表单类型',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.e10.service.IDocSaveService',method_name = 'getAllScanDocTypes',need_auth = false,version = NULL,flag = 0,description = '',pre_auth_beans = '',create_time = '2026-08-04T13:44:12.027+0800',update_time = NULL,create_by = 1,update_by = NULL WHERE  id = 739720254627774464 ]---
+2026-08-14 15:46:38.549 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:38.579 INFO  [] [mainExecutorService-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:38.579 INFO  [] [mainExecutorService-5] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:38.580 INFO  [] [mainExecutorService-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:41.234 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:41.239 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,api_id,api_name,app_name,interface_name,method_name,need_auth,version,flag,description,pre_auth_beans,create_time,update_time,create_by,update_by  FROM sys_generic_api  WHERE  id = 739724441906315264 ]---
+2026-08-14 15:46:41.241 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:UPDATE sys_generic_api  SET api_id = 'ERP.DOC.SCAN.DETAILS',api_name = '获取单据扫描配置详情',app_name = 'dubbo-xh-system-service',interface_name = 'com.tbs.xh.e10.service.IDocSaveService',method_name = 'getDocScanConfig',need_auth = false,version = NULL,flag = 0,description = '',pre_auth_beans = '',create_time = '2026-08-04T14:00:50.358+0800',update_time = NULL,create_by = 1,update_by = NULL WHERE  id = 739724441906315264 ]---
+2026-08-14 15:46:41.247 INFO  [] [http-nio-8080-exec-6] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL: ]---
+2026-08-14 15:46:41.278 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:41.278 INFO  [] [mainExecutorService-7] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:41.279 INFO  [] [mainExecutorService-8] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:42.315 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:42.315 INFO  [] [mainExecutorService-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:42.316 INFO  [] [mainExecutorService-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )  ORDER BY update_time desc  LIMIT 0, 10 ]---
+2026-08-14 15:46:42.316 INFO  [] [mainExecutorService-9] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,api_id AS apiId,api_name AS apiName,app_name AS appName,interface_name AS interfaceName,method_name AS methodName,need_auth AS needAuth,version AS version,flag AS flag,description AS description,pre_auth_beans AS preAuthBeans,create_time AS createTime,update_time AS updateTime,create_by AS createBy,update_by AS updateBy FROM sys_generic_api  WHERE (  (flag  IN  (1,-1))  )) as t1 ]---
+2026-08-14 15:46:50.277 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:50.279 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (flag  IN  (0,1))  )  LIMIT 0, 10000 ]---
+2026-08-14 15:46:50.291 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (id  =  1)  )  AND  (  (flag  =  1)  )  AND  (  (flag  IN  (0,1))  )  LIMIT 0, 1 ]---
+2026-08-14 15:46:50.312 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 1 AND relation_id = 1 ]---
+2026-08-14 15:46:50.314 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,form_id,field_id  FROM form_field_relation  WHERE  form_id = 1 ]---
+2026-08-14 15:46:50.316 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,type,prop,label  FROM form_field_configration  WHERE id in (73,74,75,76,77,78) ]---
+2026-08-14 15:46:50.318 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 73 ]---
+2026-08-14 15:46:50.319 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (256,257,258) ]---
+2026-08-14 15:46:50.321 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 74 ]---
+2026-08-14 15:46:50.322 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (259,260,261,262,263,264) ]---
+2026-08-14 15:46:50.325 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 75 ]---
+2026-08-14 15:46:50.326 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (265,266,267,268,269,270) ]---
+2026-08-14 15:46:50.328 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 76 ]---
+2026-08-14 15:46:50.329 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (271,272,273) ]---
+2026-08-14 15:46:50.331 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 77 ]---
+2026-08-14 15:46:50.333 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (274,275,276,277,278,279,280) ]---
+2026-08-14 15:46:50.334 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,property_id,relation_type,relation_id  FROM property_relation  WHERE  relation_type = 2 AND relation_id = 78 ]---
+2026-08-14 15:46:50.335 INFO  [] [http-nio-8080-exec-10] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id,prop_name,prop_value,transformer_type,value_class  FROM property_value  WHERE id in (281,282,283,284,285,286,287) ]---
+2026-08-14 15:46:57.576 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:46:57.577 INFO  [] [http-nio-8080-exec-1] p6spy - 
+---[ Execution Time: 0 ms ]---
+---[ SQL:SELECT id AS id,expanded AS expanded,expandable AS expandable,gutter AS gutter,label_width AS labelWidth,span AS span,title AS title,flag AS flag FROM dynamic_form_configration  WHERE (  (flag  IN  (0,1))  )  LIMIT 0, 10000 ]---
+2026-08-14 15:52:42.731 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:52:42.737 INFO  [] [http-nio-8080-exec-4] p6spy - 
+---[ Execution Time: 4 ms ]---
+---[ SQL:SELECT id AS id,user_id AS userId,token AS token,user_details AS userDetails,flag AS flag,create_time AS createTime,update_time AS updateTime,token_expire_time AS tokenExpireTime,session_id AS sessionId FROM sys_login_info  WHERE (  (create_time  >=  '2026-07-17T15:52:42.722+0800')  )  AND  (  (token  =  'a50fa9540400000a50fa9540800000a5')  )  AND  (  (flag  IN  (1))  )  ORDER BY create_time desc,update_time desc  LIMIT 0, 1 ]---
+2026-08-14 15:52:42.739 INFO  [] [http-nio-8080-exec-5] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT 1 ]---
+2026-08-14 15:52:42.742 INFO  [] [http-nio-8080-exec-5] p6spy - 
+---[ Execution Time: 2 ms ]---
+---[ SQL:SELECT id AS id,user_id AS userId,token AS token,user_details AS userDetails,flag AS flag,create_time AS createTime,update_time AS updateTime,token_expire_time AS tokenExpireTime,session_id AS sessionId FROM sys_login_info  WHERE (  (create_time  >=  '2026-07-17T15:52:42.738+0800')  )  AND  (  (token  =  'a50fa9540400000a50fa9540800000a5')  )  AND  (  (flag  IN  (1))  )  ORDER BY create_time desc,update_time desc  LIMIT 0, 1 ]---
+2026-08-14 15:52:42.811 INFO  [] [mainExecutorService-6] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:select count(*) from (SELECT id AS id,user_name AS userName,password AS password,nick_name AS nickName,avatar AS avatar,remark AS remark,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,dept_id AS deptId FROM sys_user  WHERE (  (flag  IN  (1,2,0))  )) as t1 ]---
+2026-08-14 15:52:42.812 INFO  [] [mainExecutorService-5] p6spy - 
+---[ Execution Time: 1 ms ]---
+---[ SQL:SELECT id AS id,user_name AS userName,password AS password,nick_name AS nickName,avatar AS avatar,remark AS remark,create_time AS createTime,update_time AS updateTime,flag AS flag,create_by AS createBy,update_by AS updateBy,dept_id AS deptId FROM sys_user  WHERE (  (flag  IN  (1,2,0))  )  LIMIT 0, 10 ]---
+2026-08-14 15:54:18.505 WARN  [] [Thread-6] com.alibaba.nacos.common.notify.NotifyCenter - [NotifyCenter] Start destroying Publisher
+2026-08-14 15:54:18.510 WARN  [] [Thread-6] com.alibaba.nacos.common.notify.NotifyCenter - [NotifyCenter] Destruction of the end
+2026-08-14 15:54:18.508 WARN  [] [Thread-1] com.alibaba.nacos.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Start destroying common HttpClient
+2026-08-14 15:54:18.517 WARN  [] [Thread-1] com.alibaba.nacos.common.http.HttpClientBeanHolder - [HttpClientBeanHolder] Destruction of the end
+2026-08-14 15:54:18.783 WARN  [] [NettyServerWorker-10-1] org.apache.dubbo.remoting.transport.AbstractServer -  [DUBBO] All clients has disconnected from /192.168.10.48:20880. You can graceful shutdown now., dubbo version: 3.3.0, current host: 192.168.10.48, error code: 99-0. This may be caused by unknown error in remoting module, go to https://dubbo.apache.org/faq/99/0 to find instructions. 
+2026-08-14 15:54:23.976 INFO  [] [SpringApplicationShutdownHook] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已停止, queue=test.queue
+2026-08-14 15:54:24.016 INFO  [] [SpringApplicationShutdownHook] com.tbs.rabbitmq.support.AbstractMqConsumer - RabbitMQ消费者已停止, queue=tbs.broadcast.queue

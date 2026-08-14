@@ -1,0 +1,5 @@
+2026-08-14 13:30:00 [com.xxl.job.core.thread.JobThread#run]-[133]-[xxl-job, JobThread-15-1786685400033] <br>----------- xxl-job job execute start -----------<br>----------- Param:
+2026-08-14 13:30:00 [com.tbs.app.service.AppExecutor#flushLogData]-[50]-[xxl-job, JobThread-15-1786685400033]  flush log data start
+2026-08-14 13:30:00 [com.tbs.app.service.AppExecutor#flushLogData]-[52]-[xxl-job, JobThread-15-1786685400033]  flush log data success
+2026-08-14 13:30:00 [com.xxl.job.core.thread.JobThread#run]-[179]-[xxl-job, JobThread-15-1786685400033] <br>----------- xxl-job job execute end(finish) -----------<br>----------- Result: handleCode=200, handleMsg = null
+2026-08-14 13:30:00 [com.xxl.job.core.thread.TriggerCallbackThread#callbackLog]-[197]-[xxl-job, executor TriggerCallbackThread] <br>----------- xxl-job job callback finish.
