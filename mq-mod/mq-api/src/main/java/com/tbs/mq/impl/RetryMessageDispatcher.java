@@ -72,6 +72,7 @@ public class RetryMessageDispatcher {
         }
         log.debug("本轮取出到期失败消息{}条", dueMessages.size());
         for (FailedMessage failedMessage : dueMessages) {
+            log.debug("重投递到期失败消息{}", failedMessage.getId());
             messageRepublisher.republish(failedMessage);
         }
     }

@@ -1,21 +1,18 @@
 package com.tbs.mq;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.util.base.CollUtil;
 import com.tbs.mq.api.retry.AbstractFailedMessageStore;
 import com.tbs.mq.model.FailedMessage;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RMap;
-import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.StringCodec;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 /**
  * Redis实现的失败消息存储
@@ -23,11 +20,22 @@ import java.util.List;
  * 仅承担存储职责（保存/取出到期记录/删除），不包含任何调度逻辑；
  * 到期消息的重投递调度由mq-api的调度驱动（内嵌调度器或后台任务桥接）统一完成。
  * </p>
+ * <p>
+ * 所有Redis操作均通过Lua脚本+StringCodec执行，确保key编码方式统一，
+ * 避免DefaultSystemCodec（GenericJackson2JsonRedisSerializer）对key添加JSON类型前缀导致的key不一致问题。
+ * FailedMessage对象的序列化/反序列化在Java侧用ObjectMapper完成，Lua脚本只负责传递和存储原始字符串。
+ * </p>
  *
  * @author abstergo
  */
 @Slf4j
 public class RedisFaildMessageStore extends AbstractFailedMessageStore {
+
+    private static final String INDEX_KEY = "failed:message:index";
+    private static final String STATUS_KEY = "failed:message:status";
+    private static final String MESSAGE_KEY_PREFIX = "failed:message:";
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
 
     @Setter
     private RedissonClient client;
@@ -46,30 +54,49 @@ public class RedisFaildMessageStore extends AbstractFailedMessageStore {
 
     /**
      * 实际的保存动作
+     * <p>
+     * 通过Lua脚本原子地写入消息内容和索引，使用StringCodec确保key编码一致。
+     * </p>
      *
      * @param message 校验通过的失败消息记录
      */
     @Override
     protected void doSave(FailedMessage message) {
         RedissonClient redisson = getClient();
+        String messageKey = MESSAGE_KEY_PREFIX + message.getId();
+        long score = message.getNextRetryTime().getTime();
 
-        // 1. 保存消息内容到 RMap
-        String messageKey = "failed:message:" + message.getId();
-        RMap<String, FailedMessage> messageMap = redisson.getMap(messageKey);
-        messageMap.put(message.getId(), message);
+        String jsonData;
+        try {
+            jsonData = objectMapper.writeValueAsString(message);
+        } catch (Exception e) {
+            log.error("[doSave] 消息序列化失败, id={}", message.getId(), e);
+            return;
+        }
 
-        // 2. 添加到到期时间索引
-        String indexKey = "failed:message:index";
-        RScoredSortedSet<String> indexSet = redisson.getScoredSortedSet(indexKey);
-        indexSet.add(message.getNextRetryTime().getTime(), message.getId());
+        // Lua脚本：原子地写入消息内容+索引
+        String script = "local messageKey = KEYS[1] " +
+            "local indexKey = KEYS[2] " +
+            "local messageId = ARGV[1] " +
+            "local jsonData = ARGV[2] " +
+            "local score = tonumber(ARGV[3]) " +
+            "redis.call('HSET', messageKey, messageId, jsonData) " +
+            "redis.call('ZADD', indexKey, score, messageId) " +
+            "return 'OK'";
 
-        log.debug("Saved failed message {} with next retry time {}", message.getId(), message.getNextRetryTime());
+        RScript rScript = redisson.getScript(StringCodec.INSTANCE);
+        rScript.eval(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE, Arrays.asList(messageKey, INDEX_KEY),
+            message.getId(), jsonData, String.valueOf(score));
+
+        log.debug("[doSave] 消息已保存, id={}, score={}, queue={}, indexKey={}", message.getId(), score,
+            message.getQueueName(), INDEX_KEY);
     }
 
     /**
      * 实际的取出到期记录动作
      * <p>
-     * 实现必须保证"取出即锁定"的原子语义。
+     * 通过Lua脚本原子地取出到期消息、标记为处理中、从索引移除，并返回消息ID列表（JSON数组）。
+     * 使用cjson.encode返回结果（与诊断脚本一致，避免table.concat的返回值被解码为null）。
      * </p>
      *
      * @param now   到期判定时间点
@@ -79,79 +106,112 @@ public class RedisFaildMessageStore extends AbstractFailedMessageStore {
     @Override
     protected List<FailedMessage> doFetchDue(Date now, int limit) {
         RedissonClient redisson = getClient();
-        String indexKey = "failed:message:index";
-        String statusKey = "failed:message:status";
+        long nowMillis = now.getTime();
 
-        // Lua脚本：原子地取出到期消息并标记为处理中
+        log.debug("[doFetchDue] 开始查询, now={}, limit={}", nowMillis, limit);
+
+        // Lua脚本：原子地取出到期消息并标记为处理中，用cjson.encode返回JSON数组
         String fetchScript = "local indexKey = KEYS[1] " +
             "local statusKey = KEYS[2] " +
             "local now = tonumber(ARGV[1]) " +
             "local limit = tonumber(ARGV[2]) " +
             "local result = {} " +
-            " " +
-            "-- 获取到期的消息ID " +
             "local messageIds = redis.call('ZRANGEBYSCORE', indexKey, '-inf', now, 'LIMIT', 0, limit) " +
-            " " +
             "for i, messageId in ipairs(messageIds) do " +
-            "    -- 标记为处理中 " +
             "    redis.call('HSET', statusKey, messageId, 'PROCESSING') " +
-            "    -- 从索引中移除 " +
             "    redis.call('ZREM', indexKey, messageId) " +
             "    table.insert(result, messageId) " +
-            "end " +
-            " " +
-            "return result";
+            "end " + "return cjson.encode(result)";
 
-        RScript script = redisson.getScript();
-        List<String> messageIds = script.eval(RScript.Mode.READ_WRITE, fetchScript, RScript.ReturnType.MULTI,
-            Arrays.asList(indexKey, statusKey), String.valueOf(now.getTime()), String.valueOf(limit));
+        RScript script = redisson.getScript(StringCodec.INSTANCE);
+        String evalResult = script.eval(RScript.Mode.READ_WRITE, fetchScript, RScript.ReturnType.VALUE,
+            Arrays.asList(INDEX_KEY, STATUS_KEY), String.valueOf(nowMillis), String.valueOf(limit));
 
-        List<FailedMessage> result = new ArrayList<>();
-        if (CollUtil.isEmpty(result)) {
+        log.debug("[doFetchDue] Lua脚本返回, evalResult={}", evalResult);
+
+        if (evalResult == null || evalResult.isEmpty() || "[]".equals(evalResult) || "{}".equals(evalResult)) {
+            log.debug("[doFetchDue] 无到期消息");
             return List.of();
         }
 
-        // 获取消息内容
+        List<String> messageIds;
+        try {
+            messageIds = objectMapper.readValue(evalResult, new TypeReference<List<String>>() {
+            });
+        } catch (Exception e) {
+            log.error("[doFetchDue] 解析Lua返回值失败, evalResult={}", evalResult, e);
+            return List.of();
+        }
+
+        log.debug("[doFetchDue] 取出{}条到期消息, ids={}", messageIds.size(), messageIds);
+
+        // 逐条读取消息内容
+        List<FailedMessage> result = new ArrayList<>();
         for (String messageId : messageIds) {
-            String messageKey = "failed:message:" + messageId;
-            RMap<String, FailedMessage> messageMap = redisson.getMap(messageKey);
-            FailedMessage message = messageMap.get(messageId);
-            if (message != null) {
-                result.add(message);
+            String messageKey = MESSAGE_KEY_PREFIX + messageId;
+            String json = hget(script, messageKey, messageId);
+            if (json != null && !json.isEmpty()) {
+                try {
+                    FailedMessage message = objectMapper.readValue(json, FailedMessage.class);
+                    result.add(message);
+                    log.debug("[doFetchDue] 消息读取成功, id={}, queue={}", messageId, message.getQueueName());
+                } catch (Exception e) {
+                    log.error("[doFetchDue] 消息反序列化失败, id={}", messageId, e);
+                }
             } else {
-                log.warn("Message {} found in index but not in message store", messageId);
-                // 清理状态
-                redisson.getMap(statusKey).remove(messageId);
+                log.warn("[doFetchDue] 消息内容不存在, id={}, 清理状态", messageId);
+                hdel(script, STATUS_KEY, messageId);
             }
         }
 
-        log.debug("Fetched {} due messages", result.size());
+        log.debug("[doFetchDue] 本轮共取出{}条到期消息", result.size());
         return result;
     }
 
     /**
      * 实际的删除动作
+     * <p>
+     * 通过Lua脚本原子地删除消息内容、状态记录和索引。
+     * </p>
      *
      * @param messageId 记录唯一标识
      */
     @Override
     protected void doRemove(String messageId) {
         RedissonClient redisson = getClient();
+        String messageKey = MESSAGE_KEY_PREFIX + messageId;
 
-        // 1. 删除消息内容
-        String messageKey = "failed:message:" + messageId;
-        RMap<String, FailedMessage> messageMap = redisson.getMap(messageKey);
-        messageMap.remove(messageId);
+        // Lua脚本：原子地删除消息内容+状态+索引
+        String script = "local messageKey = KEYS[1] " +
+            "local indexKey = KEYS[2] " +
+            "local statusKey = KEYS[3] " +
+            "local messageId = ARGV[1] " +
+            "redis.call('HDEL', messageKey, messageId) " +
+            "redis.call('HDEL', statusKey, messageId) " +
+            "redis.call('ZREM', indexKey, messageId) " +
+            "return 'OK'";
 
-        // 2. 删除状态记录
-        String statusKey = "failed:message:status";
-        redisson.getMap(statusKey).remove(messageId);
+        RScript rScript = redisson.getScript(StringCodec.INSTANCE);
+        rScript.eval(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE,
+            Arrays.asList(messageKey, INDEX_KEY, STATUS_KEY), messageId);
 
-        // 3. 删除索引（如果存在）
-        String indexKey = "failed:message:index";
-        RScoredSortedSet<String> indexSet = redisson.getScoredSortedSet(indexKey);
-        indexSet.remove(messageId);
+        log.debug("[doRemove] 消息已删除, id={}", messageId);
+    }
 
-        log.debug("Removed failed message {}", messageId);
+    /**
+     * 通过Lua脚本读取Hash字段值
+     */
+    private String hget(RScript script, String key, String field) {
+        String lua = "return redis.call('HGET', KEYS[1], ARGV[1])";
+        return script.eval(RScript.Mode.READ_ONLY, lua, RScript.ReturnType.VALUE, Collections.singletonList(key),
+            field);
+    }
+
+    /**
+     * 通过Lua脚本删除Hash字段
+     */
+    private void hdel(RScript script, String key, String field) {
+        String lua = "redis.call('HDEL', KEYS[1], ARGV[1]) return 'OK'";
+        script.eval(RScript.Mode.READ_WRITE, lua, RScript.ReturnType.VALUE, Collections.singletonList(key), field);
     }
 }
