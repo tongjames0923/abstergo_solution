@@ -1,11 +1,11 @@
 package com.tbs.app.intercept;
 
-import com.alibaba.fastjson2.JSON;
 import com.tbs.common.FeatureManager;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordForm;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
@@ -112,7 +112,7 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
         } else {
             record.setOperateUser("NULL USERNAME:" + NetUtil.getIp(request));
         }
-        record.setOperateParam(JSON.toJSONString(context.getArgs()));
+        record.setOperateParam(JsonUtils.toJSONString(context.getArgs()));
         operateContext.setOperateRecord(record);
         return operateContext;
     }
@@ -139,7 +139,7 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
         if (context instanceof SystemOperContext) {
             SystemOperContext operateContext = (SystemOperContext)context;
             operateContext.getOperateRecord().setOperateFinishTime(new Date());
-            result.get().ifPresent(val -> operateContext.getOperateRecord().setOperateResult(JSON.toJSONString(val)));
+            result.get().ifPresent(val -> operateContext.getOperateRecord().setOperateResult(JsonUtils.toJSONString(val)));
             try {
                 systemOperateLog.record(operateContext.getOperateRecord());
             } catch (Throwable e) {

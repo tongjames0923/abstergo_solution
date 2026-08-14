@@ -1,6 +1,6 @@
 package com.tbs.xxl.api;
 
-import com.alibaba.fastjson2.JSON;
+import com.tbs.common.util.base.JsonUtils;
 
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public interface IJsonJobHandler<T> {
      * @return
      */
     default T paramConvert(final Map mp) {
-        return JSON.to(this.classType(), JSON.toJSONString(mp));
+        return JsonUtils.parseObject(JsonUtils.toJSONString(mp), this.classType());
     }
 
     /**

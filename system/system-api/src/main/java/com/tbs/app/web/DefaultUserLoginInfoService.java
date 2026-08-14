@@ -9,6 +9,7 @@ import com.tbs.cache.serialize.utils.ValueTransformUtils;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
@@ -80,8 +81,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     SystemLoginInfoEntity setUserDetails(SystemLoginInfoEntity loginInfoEntity, UserDetails userDetails) {
         AssertUtil.notNull(userDetails, () -> new FormattedRuntimeException("用户详情不能为空"));
         AssertUtil.notNull(loginInfoEntity, () -> new FormattedRuntimeException("用户登陆信息不能为空"));
-        loginInfoEntity.setUserDetails(
-            JSON.toJSONBytes(ValueTransformUtils.valueTransform(userDetails, ValueTransformUtils.TRANSFORM_WRITE)));
+        loginInfoEntity.setUserDetails(JsonUtils.toJSONBytes(
+            ValueTransformUtils.valueTransform(userDetails, ValueTransformUtils.TRANSFORM_WRITE)));
         return loginInfoEntity;
     }
 
@@ -189,7 +190,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
             // 获取访问令牌（access tokens）
             List<ITokenModel> accessTokens = sessionTokens.stream()
-                .filter(token -> token.getTokenType() == TokenTypeEnum.WEB_ACCESS_TOKEN || 
+                .filter(token -> token.getTokenType() == TokenTypeEnum.WEB_ACCESS_TOKEN ||
                                  token.getTokenType() == TokenTypeEnum.APPLICATION_ACCESS_TOKEN)
                 .collect(Collectors.toList());
             vo.setAccessTokens(accessTokens);

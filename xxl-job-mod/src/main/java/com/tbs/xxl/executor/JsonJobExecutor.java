@@ -1,7 +1,7 @@
 package com.tbs.xxl.executor;
 
-import com.alibaba.fastjson2.JSON;
 import com.tbs.common.IStartup;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.xxl.api.IJsonJobHandler;
 import com.tbs.xxl.model.ExecuteInfo;
@@ -25,7 +25,7 @@ public class JsonJobExecutor implements IStartup {
     @XxlJob("jsonJobHandler")
     public void function() {
         try {
-            final ExecuteInfo executeInfo = JSON.parseObject(XxlJobHelper.getJobParam(), ExecuteInfo.class);
+            final ExecuteInfo executeInfo = JsonUtils.parseObject(XxlJobHelper.getJobParam(), ExecuteInfo.class);
             if (!this.jsonJobHandlerMap.containsKey(executeInfo.getMethod())) {
                 XxlJobHelper.handleFail("can not find any method name as " + executeInfo.getMethod());
             } else {
@@ -52,7 +52,7 @@ public class JsonJobExecutor implements IStartup {
             map.put("helpText", entry.getValue().help());
             ls.add(map);
         }
-        XxlJobHelper.handleSuccess(JSON.toJSONString(ls));
+        XxlJobHelper.handleSuccess(JsonUtils.toJSONString(ls));
     }
 
     @XxlJob("help_json")
@@ -63,7 +63,7 @@ public class JsonJobExecutor implements IStartup {
         m.put("intType", 1);
         m.put("stringType", "can be anything you need");
         executeInfo.setParams(m);
-        XxlJobHelper.handleSuccess(JSON.toJSONString(executeInfo));
+        XxlJobHelper.handleSuccess(JsonUtils.toJSONString(executeInfo));
     }
 
     @Override

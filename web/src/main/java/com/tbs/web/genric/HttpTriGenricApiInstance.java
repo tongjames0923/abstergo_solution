@@ -1,10 +1,10 @@
 package com.tbs.web.genric;
 
-import com.alibaba.fastjson2.JSON;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
@@ -100,11 +100,11 @@ public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializ
 
                 try {
                     // 首先尝试直接解析为数组
-                    var r = JSON.parseArray(value, HashMap.class);
+                    var r = JsonUtils.parseArray(value, HashMap.class);
                     if (CollUtil.isEmpty(r)) {
                         // 如果解析为空，尝试加上括号解析（原逻辑）
                         String jsonArray = "[" + value + "]";
-                        var r2 = JSON.parseArray(jsonArray, HashMap.class);
+                        var r2 = JsonUtils.parseArray(jsonArray, HashMap.class);
                         if (CollUtil.isEmpty(r2)) {
                             resultVo.setExecuteResult(value);
                         } else {
@@ -119,7 +119,7 @@ public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializ
                 } catch (Exception e) {
                     try {
                         // 如果解析为数组失败，尝试解析为对象
-                        var obj = JSON.parseObject(value, HashMap.class);
+                        var obj = JsonUtils.parseObject(value, HashMap.class);
                         if (obj != null) {
                             resultVo.setExecuteResult((Serializable) obj);
                         } else {

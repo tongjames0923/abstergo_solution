@@ -1,8 +1,8 @@
 package com.tbs.web.uitl;
 
-import com.alibaba.fastjson2.JSON;
 import com.tbs.common.IStartup;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.Comparators;
 import com.tbs.web.enums.WebMessageTypeEnum;
@@ -45,7 +45,7 @@ public class AjaxUtil implements IStartup {
         }
         httpResponse.setCharacterEncoding("UTF-8");
         httpResponse.setContentType("application/json");
-        String jsonResponse = JSON.toJSONString(ajaxResult.getMap());
+        String jsonResponse = JsonUtils.toJSONString(ajaxResult.getMap());
         try (PrintWriter writer = httpResponse.getWriter()) {
             writer.print(jsonResponse);
             writer.flush();

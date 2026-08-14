@@ -1,6 +1,6 @@
 package com.tbs.web.security.impl;
 
-import com.alibaba.fastjson2.JSON;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.web.enums.TokenSource;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.gate.ITokenPicker;
@@ -52,7 +52,7 @@ public class SimpleTokenPicker implements ITokenPicker {
         switch (tokenSource) {
             case BODY: {
                 String body = getBody(request);
-                Map map = JSON.parseObject(body, Map.class);
+                Map map = JsonUtils.parseObject(body, Map.class);
                 return map.get(fieldName).toString();
             }
             case COOKIE: {
