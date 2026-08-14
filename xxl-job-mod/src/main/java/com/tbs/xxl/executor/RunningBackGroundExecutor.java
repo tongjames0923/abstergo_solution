@@ -8,12 +8,6 @@ import com.xxl.job.core.handler.annotation.XxlJob;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.stereotype.Component;
 
-/**
- *
- * @author abstergo
- */
-@Component
-@ConditionalOnMissingBean(RunningBackGroundExecutor.class)
 public class RunningBackGroundExecutor {
 
     @XxlJob("runningBackGroundJobHandler")

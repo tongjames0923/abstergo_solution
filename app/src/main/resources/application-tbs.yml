@@ -54,6 +54,7 @@ tbs:
       app-name: mainSystemApplication
       access-token: ${XXL_JOB_ACCESS_TOKEN:123456789}
       log-retentions-days: 3
+      log-path: "logs/xxl-job/jobhandler"
   knife4j:
     enable: true
     show-url: true

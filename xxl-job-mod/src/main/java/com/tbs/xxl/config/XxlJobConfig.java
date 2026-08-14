@@ -5,6 +5,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.xxl.api.IXXLJobsConfig;
 import com.tbs.xxl.config.property.XxlJobProperty;
 import com.tbs.xxl.executor.JsonJobExecutor;
+import com.tbs.xxl.executor.RunningBackGroundExecutor;
 import com.xxl.job.core.executor.impl.XxlJobSpringExecutor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
@@ -12,6 +13,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 
@@ -115,6 +117,12 @@ public class XxlJobConfig {
             xxlJobSpringExecutor.setLogRetentionDays(config.logRetentionsDays());
         }
         return xxlJobSpringExecutor;
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(RunningBackGroundExecutor.class)
+    RunningBackGroundExecutor runningBackGroundExecutor() {
+        return new RunningBackGroundExecutor();
     }
 
     @Bean
