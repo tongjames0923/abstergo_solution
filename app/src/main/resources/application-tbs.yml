@@ -61,7 +61,6 @@ tbs:
   mq:
     retry:
       scheduler: job
-      enable: true
   oss:
     enable: ${OSS_ENABLE:false}
     type: ${OSS_TYPE:minio}

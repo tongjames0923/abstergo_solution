@@ -17,6 +17,7 @@ import org.apache.dubbo.config.annotation.DubboService
 import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import java.util.*
+import java.util.stream.Collectors
 import javax.annotation.Resource
 
 
@@ -38,7 +39,7 @@ open class DataDicServiceImpl : IDataDicService {
                 SystemDataDicEntity::getFlag, DataDicFlagEnum.ENABLE.code
             ).pour().fetch().stream().map {
                 it.dataDicCode
-            }.toList()
+            }.collect(Collectors.toList())
     }
 
     override fun getDicCodesByNamesLike(name: String): List<String> {
@@ -47,7 +48,7 @@ open class DataDicServiceImpl : IDataDicService {
                 SystemDataDicEntity::getFlag, DataDicFlagEnum.ENABLE.code
             ).pour().fetch().stream().map {
                 it.dataDicCode
-            }.toList();
+            }.collect(Collectors.toList());
     }
 
 
@@ -73,7 +74,7 @@ open class DataDicServiceImpl : IDataDicService {
                 return@sorted s1.compareTo(s2)
             }.map {
                 DicItemModel(it.id, it.label, it.value, it.remark, it.flag)
-            }.toList();
+            }.collect(Collectors.toList());
         return listOf(DicModel(QW.id, QW.dataDicCode, QW.dataDicName, QW.remark, QW.flag, items))
     }
 
@@ -83,8 +84,10 @@ open class DataDicServiceImpl : IDataDicService {
         condition = "#dic!=null&&#dic.dataDicCode!=null"
     )
     override fun saveDataDic(dic: SystemDataDicEntity): SystemDataDicEntity? {
-        AssertUtil.isTrue(StrUtil.isEmpty(dic.dataDicCode)).i18n("dic.code.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
-        AssertUtil.isTrue(StrUtil.isEmpty(dic.dataDicName)).i18n("dic.name.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
+        AssertUtil.isTrue(StrUtil.isEmpty(dic.dataDicCode)).i18n("dic.code.empty")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
+        AssertUtil.isTrue(StrUtil.isEmpty(dic.dataDicName)).i18n("dic.name.empty")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt()
 
         val old = QueryEngine.getEntityQueryWrapper(dicEntity).query().where()
             .equal(SystemDataDicEntity::getDataDicCode, dic.dataDicCode)
