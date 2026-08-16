@@ -100,7 +100,9 @@ public class ApiInvokeAop implements IStartup {
             IApiInvokeInterceptor.ApiInvokeContext context =
                 new IApiInvokeInterceptor.ApiInvokeContext((BaseController)joinPoint.getTarget(),
                     methodSignature.getMethod(), joinPoint.getArgs());
-            contexts.add(interceptor.beforeInvoke(context));
+            if (interceptor.supports(context)) {
+                contexts.add(interceptor.beforeInvoke(context));
+            }
         }
         ValueWrapper<Object> result = new ValueWrapper<>();
         try {

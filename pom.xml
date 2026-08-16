@@ -67,6 +67,8 @@
         <!-- 中间件 -->
         <redisson.version>3.52.0</redisson.version>
         <minio.version>8.5.7</minio.version>
+        <!-- MinIO SDK 8.5.x需要okhttp 4.x，覆盖spring-boot父BOM与dubbo-bom管控的3.14.9 -->
+        <okhttp3.version>4.12.0</okhttp3.version>
 
         <!-- 其他三方 -->
         <knife4j.version>4.4.0</knife4j.version>
@@ -341,6 +343,13 @@
                 <groupId>io.minio</groupId>
                 <artifactId>minio</artifactId>
                 <version>${minio.version}</version>
+            </dependency>
+            <!-- MinIO SDK 8.5.x需要okhttp 4.x：dubbo-bom将okhttp管控在3.14.9，
+                 且导入的BOM优先级高于spring-boot父POM，故必须在此显式声明覆盖 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>${okhttp3.version}</version>
             </dependency>
 
         </dependencies>

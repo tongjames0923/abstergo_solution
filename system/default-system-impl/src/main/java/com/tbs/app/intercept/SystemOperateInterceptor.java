@@ -1,5 +1,6 @@
 package com.tbs.app.intercept;
 
+import com.tbs.app.annotation.NoLog;
 import com.tbs.common.FeatureManager;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -38,6 +39,38 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
 
     @Resource
     ILogRecorder systemOperateLog;
+
+    /**
+     * 拦截器是否支持当前API调用
+     * <p>
+     * 根据API调用上下文信息判断拦截器是否需要处理该调用，返回true则表示支持并执行拦截逻辑，返回false则表示不支持并跳过拦截。
+     *
+     * @param context API调用上下文，包含目标对象、方法和参数等信息，可能为null
+     * @return boolean 拦截器是否支持当前API调用，true表示支持，false表示不支持
+     * @see ApiInvokeContext API调用上下文类
+     */
+    @Override
+    public boolean supports(ApiInvokeContext context) {
+        if (context == null) {
+            log.warn("context is null");
+            return false;
+        }
+        if (context.getMethod() == null) {
+            log.warn("context.getMethod() is null");
+            return false;
+        }
+        if (context.getTarget() == null) {
+            log.warn("context.getTarget() is null");
+            return false;
+        }
+
+        boolean mt = context.getMethod().isAnnotationPresent(NoLog.class);
+        boolean ty = context.getTarget().getClass().isAnnotationPresent(NoLog.class);
+        log.debug("method has no log: {}, class has no log: {}", mt, ty);
+        boolean r = !(mt || ty);
+        log.debug("system operate interceptor support: {}", r);
+        return r;
+    }
 
     /**
      * 系统操作上下文类
