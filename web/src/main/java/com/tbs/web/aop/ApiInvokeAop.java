@@ -96,21 +96,34 @@ public class ApiInvokeAop implements IStartup {
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         MethodSignature methodSignature = (MethodSignature)joinPoint.getSignature();
         List<IApiInvokeInterceptor.ApiInvokeContext> contexts = new ArrayList<>(interceptors.size());
-        for (IApiInvokeInterceptor interceptor : interceptors) {
+
+        log.debug("拦截器列表大小：{}", interceptors.size());
+        var iter = interceptors.iterator();
+        while (iter.hasNext()) {
+            IApiInvokeInterceptor interceptor = iter.next();
             IApiInvokeInterceptor.ApiInvokeContext context =
                 new IApiInvokeInterceptor.ApiInvokeContext((BaseController)joinPoint.getTarget(),
-                    methodSignature.getMethod(), joinPoint.getArgs());
-            if (interceptor.supports(context)) {
-                contexts.add(interceptor.beforeInvoke(context));
+                    methodSignature.getMethod(), joinPoint.getArgs(), false);
+            boolean support = interceptor.supports(context);
+            if (support) {
+                context.setSupported(true);
+                context = interceptor.beforeInvoke(context);
+            } else {
+                context.setSupported(false);
             }
+            contexts.add(context);
         }
         ValueWrapper<Object> result = new ValueWrapper<>();
         try {
             result.set(joinPoint.proceed());
         } catch (Throwable e) {
             for (int i = 0; i < contexts.size(); i++) {
+                var context = contexts.get(i);
+                if (!context.isSupported()) {
+                    continue;
+                }
                 try {
-                    interceptors.get(i).onException(contexts.get(i), e);
+                    interceptors.get(i).onException(context, e);
                 } catch (Exception e1) {
                     log.error("日志拦截器异常", e1);
                 }
@@ -119,6 +132,10 @@ public class ApiInvokeAop implements IStartup {
             throw e;
         }
         for (int i = 0; i < contexts.size(); i++) {
+            var context = contexts.get(i);
+            if (!context.isSupported()) {
+                continue;
+            }
             try {
                 interceptors.get(i).afterInvoke(contexts.get(i), result);
             } catch (Exception e) {

@@ -77,6 +77,13 @@ public interface IApiInvokeInterceptor {
 		 * 调用目标方法时传入的参数值数组，可能为null或空数组。
 		 */
 		private Object[] args;
+
+		/**
+		 * 拦截器是否支持当前API调用
+		 * <p>
+		 * 标记拦截器是否支持当前API调用，true表示支持，false表示不支持。
+		 */
+		private boolean supported;
 	}
 
 	/**
