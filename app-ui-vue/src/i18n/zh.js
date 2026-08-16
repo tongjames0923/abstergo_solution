@@ -271,6 +271,8 @@ export default {
     operateUser: '操作用户',
     operateIp: '操作IP',
     operateResult: '操作结果',
+    resultSuccess: '成功',
+    resultFail: '失败',
     operateDesc: '操作描述',
     requestUrl: '请求URL',
     requestMethod: '请求方法',

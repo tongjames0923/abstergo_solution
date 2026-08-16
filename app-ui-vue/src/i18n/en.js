@@ -271,6 +271,8 @@ export default {
     operateUser: 'User',
     operateIp: 'IP Address',
     operateResult: 'Result',
+    resultSuccess: 'Success',
+    resultFail: 'Failed',
     operateDesc: 'Description',
     requestUrl: 'Request URL',
     requestMethod: 'Request Method',
