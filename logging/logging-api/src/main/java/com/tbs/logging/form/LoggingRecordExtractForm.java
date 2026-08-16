@@ -21,6 +21,7 @@ public class LoggingRecordExtractForm implements Serializable {
 
     /**
      * 操作类型
+     *
      */
     private List<String> operateTypes;
 
@@ -34,4 +35,13 @@ public class LoggingRecordExtractForm implements Serializable {
      */
     private Date operateTimeEnd;
 
+    /**
+     * 页码
+     */
+    Integer pageNum;
+
+    /**
+     * 页大小
+     */
+    Integer pageSize;
 }

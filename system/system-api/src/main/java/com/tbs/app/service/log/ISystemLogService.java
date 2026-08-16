@@ -1,6 +1,9 @@
 package com.tbs.app.service.log;
 
 import com.tbs.app.service.log.model.LogOperateTypeView;
+import com.tbs.logging.form.LoggingRecordExtractForm;
+import com.tbs.logging.vo.LogRecordVO;
+import com.tbs.shared.pojo.model.PageVO;
 
 import java.util.List;
 
@@ -18,4 +21,20 @@ public interface ISystemLogService {
      * @return
      */
     List<LogOperateTypeView> getLogOperateTypeList(int lastDay);
+
+    /**
+     * 获取所有不重复的操作类型列表(用于下拉框搜索)
+     *
+     * @param keyword 关键词,支持模糊搜索(可选)
+     * @return 操作类型列表
+     */
+    List<String> getOperateTypeList(String keyword);
+
+    /**
+     * 获取操作日志分页列表
+     *
+     * @param form 查询条件
+     * @return 分页结果
+     */
+    PageVO<LogRecordVO> getLogRecordList(LoggingRecordExtractForm form);
 }

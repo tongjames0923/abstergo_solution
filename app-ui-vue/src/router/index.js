@@ -63,12 +63,6 @@ export const constantRoutes = [
       name: '欢迎',
       component: () => import('@/views/dashboard/index'),
       meta: {title: '欢迎页', icon: 'el-icon-star-on'}
-    },
-    {
-      path: 'table',
-      name: 'Table',
-      component: () => import('@/views/table/index'),
-      meta: {title: 'Table', icon: 'el-icon-star-on'}
     }
     ]
   }

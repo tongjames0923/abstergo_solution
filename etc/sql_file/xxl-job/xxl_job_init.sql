@@ -19,7 +19,7 @@ CREATE TABLE `xxl_job_group` (
 -- Records of xxl_job_group
 -- ----------------------------
 BEGIN;
-INSERT INTO `xxl_job_group` (`id`, `app_name`, `title`, `address_type`, `address_list`, `update_time`) VALUES (3, 'mainSystemApplication', '主系统任务', 0, 'http://192.168.80.32:9999/', '2026-08-11 17:12:38');
+INSERT INTO `xxl_job_group` (`id`, `app_name`, `title`, `address_type`, `address_list`, `update_time`) VALUES (3, 'mainSystemApplication', '主系统任务', 0, 'http://127.0.0.1:9999/', '2026-08-11 17:12:38');
 COMMIT;
 
 -- ----------------------------

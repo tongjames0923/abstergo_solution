@@ -21,6 +21,7 @@ export default {
     no: 'No',
     exportExcel: 'Export Excel',
     dataList: 'Data List',
+    refresh: 'Refresh',
     refreshData: 'Refresh Data',
     moreActions: 'More Actions',
     noExportData: 'No data available for export',
@@ -34,7 +35,9 @@ export default {
     query: 'Query',
     collapse: 'Collapse',
     expand: 'Expand',
-    filledConditions: '{count} filled'
+    filledConditions: '{count} filled',
+    metric: 'Metric',
+    value: 'Value'
   },
 
   // Login
@@ -253,7 +256,66 @@ export default {
 
   // System Log
   systemlog: {
-    title: 'System Log',
+    title: 'System Operations Report',
+    reportView: 'Report',
+    recordView: 'Log Records',
+    detailData: 'Detailed Data',
+    searchOperateType: 'Search operate type...',
+    searchConditions: 'Search Conditions',
+    recordList: 'Log Record List',
+    operateType: 'Operate Type',
+    selectOperateType: 'Select operate type',
+    operateTime: 'Operate Time',
+    startDate: 'Start Date',
+    endDate: 'End Date',
+    operateUser: 'User',
+    operateIp: 'IP Address',
+    operateResult: 'Result',
+    operateDesc: 'Description',
+    requestUrl: 'Request URL',
+    requestMethod: 'Request Method',
+    operateParam: 'Parameters',
+    errorMessage: 'Error Message',
+    refresh: 'Refresh Data',
+    // Alert messages
+    reportAlertTitle: 'System Operation Overview',
+    reportAlertDesc: 'The following data shows statistics of system operations over the past 28 days, including success rate, response time, stability index and other key metrics.',
+    recordAlertTitle: 'Log Record Query',
+    recordAlertDesc: 'Query and filter system operation log records, supporting filtering by operation type and time range.',
+    // Loading hints
+    loadingText: 'Loading data...',
+    // Report table columns
+    reportOperateType: 'Operation Type',
+    reportOperateCount: 'Operation Count',
+    reportSuccessRate: 'Success Rate',
+    reportTotalTime: 'Total Time (ms)',
+    reportResponseTime: 'Response Time (ms)',
+    reportStabilityIndex: 'Stability Index',
+    median: 'Median',
+    percentile90: '90th %ile',
+    stdDev: 'Std Dev',
+    // Log record table columns
+    logRecordType: 'Type',
+    logRecordDesc: 'Description',
+    logRecordUser: 'User',
+    logRecordIp: 'IP Address',
+    costTime: 'Duration',
+    detail: 'Detail',
+    anonymousUser: 'Anonymous',
+    // Detail sidebar
+    logDetail: 'Log Detail',
+    basicInfo: 'Basic Information',
+    requestInfo: 'Request Information',
+    responseInfo: 'Response Information',
+    operateInfo: 'Operation Information',
+    viewParamResult: 'View Parameters & Results',
+    paramResult: 'Parameters & Results',
+    result: 'Result',
+    // Pagination
+    totalRecords: 'records',
+    pages: 'pages',
+    itemsPerPage: '/page',
+    // Keep original fields
     level: 'Log Level',
     message: 'Log Message',
     timestamp: 'Timestamp',

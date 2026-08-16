@@ -33,7 +33,6 @@ export default {
   data() {
     return {
       columns: [
-        {prop: 'id', label: 'ID', width: 80},
         {
           prop: 'avatar',
           label: '头像',

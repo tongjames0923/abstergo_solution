@@ -9,6 +9,8 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
+import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.shared.util.PageUtil;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -45,7 +47,7 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     public List<LogOperateTypeView> getLogOperateTypeList(int lastDay) {
         Date today = new Date();
         Date lastDayStart = DateUtil.offsetDay(today, -lastDay).toJdkDate();
-        var data = extractor.extract(new LoggingRecordExtractForm(null, lastDayStart, today));
+        var data = extractor.extract(new LoggingRecordExtractForm(null, lastDayStart, today, null, null));
 
         Map<String, LogOperateTypeView> dataMap = new HashMap<>();
         Map<String, Set<String>> userMap = new HashMap<>(); // 记录每个操作类型的用户数
@@ -226,6 +228,35 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
             return v;
         }).collect(Collectors.toList());
 
+    }
+
+    /**
+     * 获取操作日志分页列表
+     *
+     * @param form 查询条件
+     * @return 分页结果
+     */
+    @Override
+    public PageVO<LogRecordVO> getLogRecordList(LoggingRecordExtractForm form) {
+        var data = extractor.extract(form);
+        int total = extractor.count(form);
+        return PageUtil.build(data, total);
+    }
+
+    /**
+     * 获取所有不重复的操作类型列表(用于下拉框搜索)
+     *
+     * @param keyword 关键词,支持模糊搜索(可选)
+     * @return 操作类型列表
+     */
+    @Override
+    public List<String> getOperateTypeList(String keyword) {
+        // 提取所有日志记录,获取不重复的操作类型
+        var operateTypes = extractor.getAllOperateTypes();
+        if (StrUtil.isNotEmpty(keyword) && CollUtil.isNotEmpty(operateTypes)) {
+            return operateTypes.stream().filter(t -> StrUtil.contains(t, keyword)).collect(Collectors.toList());
+        }
+        return CollUtil.newArrayList();
     }
 
     private static boolean isIgnoreError(LogRecordVO operateRecordEntity) {
