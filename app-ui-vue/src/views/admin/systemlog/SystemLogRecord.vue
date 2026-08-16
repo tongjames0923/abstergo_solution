@@ -42,8 +42,8 @@
         </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" @click="handleRecordSearch">{{
-              $t('common.search')
-            }}
+            $t('common.search')
+          }}
           </el-button>
           <el-button icon="el-icon-refresh-left" @click="handleReset">{{ $t('common.reset') }}</el-button>
         </el-form-item>
@@ -56,8 +56,8 @@
         <span>{{ $t('systemlog.recordList') }}</span>
         <div class="table-header-actions">
           <el-button type="primary" size="mini" icon="el-icon-refresh" @click="fetchRecordData">{{
-              $t('common.refresh')
-            }}
+            $t('common.refresh')
+          }}
           </el-button>
         </div>
       </div>
@@ -69,8 +69,13 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column :label="$t('systemlog.operateType')" min-width="200" show-overflow-tooltip sortable
-                         prop="operateType">
+        <el-table-column
+          :label="$t('systemlog.operateType')"
+          min-width="200"
+          show-overflow-tooltip
+          sortable
+          prop="operateType"
+        >
           <template slot-scope="scope">
             <div class="operate-type-cell">
               <span class="type-short">{{ formatOperateType(scope.row.operateType) }}</span>
@@ -91,8 +96,13 @@
             {{ formatOperateUser(scope.row.operateUser) }}
           </template>
         </el-table-column>
-        <el-table-column :label="$t('systemlog.costTime')" width="100" align="center" sortable
-                         :sort-method="sortByCostTime">
+        <el-table-column
+          :label="$t('systemlog.costTime')"
+          width="100"
+          align="center"
+          sortable
+          :sort-method="sortByCostTime"
+        >
           <template slot-scope="scope">
             <el-tag :type="getCostTimeTagType(scope.row)" size="small" effect="plain">
               {{ calcCostTime(scope.row) }}
@@ -120,8 +130,8 @@
         <el-table-column :label="$t('common.operation')" width="80" fixed="right" align="center">
           <template slot-scope="scope">
             <el-button type="text" icon="el-icon-view" @click="showLogDetail(scope.row)">{{
-                $t('systemlog.detail')
-              }}
+              $t('systemlog.detail')
+            }}
             </el-button>
           </template>
         </el-table-column>
@@ -153,7 +163,7 @@
         <!-- 基本信息 -->
         <el-card class="detail-section" shadow="never">
           <div slot="header" class="section-header">
-            <i class="el-icon-info"/>
+            <i class="el-icon-info" />
             <span>{{ $t('systemlog.basicInfo') }}</span>
           </div>
           <el-descriptions :column="2" border>
@@ -191,7 +201,7 @@
         <!-- 请求信息 -->
         <el-card class="detail-section" shadow="never">
           <div slot="header" class="section-header">
-            <i class="el-icon-download"/>
+            <i class="el-icon-download" />
             <span>{{ $t('systemlog.requestInfo') }}</span>
           </div>
           <el-descriptions :column="1" border>
@@ -209,7 +219,7 @@
         <!-- 参数与结果 -->
         <el-card class="detail-section" shadow="never">
           <div slot="header" class="section-header">
-            <i class="el-icon-document"/>
+            <i class="el-icon-document" />
             <span>{{ $t('systemlog.paramResult') }}</span>
           </div>
           <el-tabs type="border-card">
@@ -236,7 +246,7 @@
 </template>
 
 <script>
-import {getOperateTypeList, getSystemLogRecordList} from '@/api/systemlog'
+import { getOperateTypeList, getSystemLogRecordList } from '@/api/systemlog'
 
 export default {
   name: 'SystemLogRecord',
@@ -344,7 +354,7 @@ export default {
     },
     // ========== 日志详情侧边栏方法 ==========
     showLogDetail(row) {
-      this.currentLogDetail = {...row}  // 创建副本避免响应式问题
+      this.currentLogDetail = { ...row } // 创建副本避免响应式问题
       this.detailDrawerVisible = true
     },
     handleDetailDrawerClose() {

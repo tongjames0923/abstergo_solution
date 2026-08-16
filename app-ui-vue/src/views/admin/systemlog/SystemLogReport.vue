@@ -1,7 +1,7 @@
 <template>
   <div class="system-log-report">
     <!-- 图表组件 -->
-    <system-log-charts :chart-data="tableData"/>
+    <system-log-charts :chart-data="tableData" />
 
     <!-- 报表视图 - 详细数据表格 -->
     <el-card class="table-card">
@@ -16,7 +16,7 @@
             @clear="handleSearch"
             @keyup.enter.native="handleSearch"
           >
-            <i slot="prefix" class="el-input__icon el-icon-search"/>
+            <i slot="prefix" class="el-input__icon el-icon-search" />
           </el-input>
           <el-button icon="el-icon-search" type="primary" @click="handleSearch">{{ $t('common.search') }}</el-button>
         </div>
@@ -30,7 +30,7 @@
         stripe
         style="width: 100%"
       >
-        <el-table-column :label="$t('systemlog.reportOperateType')" min-width="150" prop="operateType" sortable/>
+        <el-table-column :label="$t('systemlog.reportOperateType')" min-width="150" prop="operateType" sortable />
         <el-table-column :label="$t('systemlog.reportOperateCount')" min-width="100" prop="operateCount" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.operateCount) }}
@@ -82,7 +82,7 @@
 </template>
 
 <script>
-import {getSystemLogOperateTypeList} from '@/api/systemlog'
+import { getSystemLogOperateTypeList } from '@/api/systemlog'
 import SystemLogCharts from '@/components/Chart/SystemLogCharts.vue'
 
 export default {

@@ -4,7 +4,7 @@
     <div class="ca-header">
       <div class="ca-header-left">
         <div class="ca-header-icon">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4" /><path d="M10 10h4" /><path d="M10 14h4" /><path d="M10 18h4" /></svg>
         </div>
         <div>
           <h1 class="ca-title">公司管理</h1>
@@ -12,7 +12,7 @@
         </div>
       </div>
       <button class="ca-btn ca-btn-primary" @click="handleAdd">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19" /><line x1="5" y1="12" x2="19" y2="12" /></svg>
         新增公司
       </button>
     </div>
@@ -21,7 +21,7 @@
     <div class="ca-search">
       <div class="ca-search-inner">
         <div class="ca-search-field">
-          <svg class="ca-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <svg class="ca-search-icon" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
           <input
             v-model="searchForm.likeName"
             type="text"
@@ -29,7 +29,7 @@
             placeholder="搜索公司名称..."
             @input="onSearchInput"
             @keyup.enter="handleSearch"
-          />
+          >
         </div>
         <div class="ca-search-field ca-search-field-sm">
           <input
@@ -39,7 +39,7 @@
             placeholder="税号"
             @input="onSearchInput"
             @keyup.enter="handleSearch"
-          />
+          >
         </div>
         <div class="ca-search-field ca-search-field-select">
           <el-select
@@ -55,11 +55,11 @@
         </div>
         <div class="ca-search-actions">
           <button class="ca-btn ca-btn-primary ca-btn-sm" @click="handleSearch">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8" /><line x1="21" y1="21" x2="16.65" y2="16.65" /></svg>
             搜索
           </button>
           <button class="ca-btn ca-btn-ghost" @click="handleReset">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="1 4 1 10 7 10" /><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" /></svg>
             重置
           </button>
         </div>
@@ -70,13 +70,13 @@
     <div class="ca-layout">
       <!-- Left: Company Tree -->
       <transition name="slide-fade">
-        <div class="ca-panel ca-panel-left" v-show="!isCollapsed">
+        <div v-show="!isCollapsed" class="ca-panel ca-panel-left">
           <div class="ca-panel-header">
             <span class="ca-panel-label">公司列表</span>
             <span class="ca-panel-count">{{ total }} 家</span>
-            <button class="ca-collapse-btn" @click="toggleCollapse" title="收起">
+            <button class="ca-collapse-btn" title="收起" @click="toggleCollapse">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="15 18 9 12 15 6"/>
+                <polyline points="15 18 9 12 15 6" />
               </svg>
             </button>
           </div>
@@ -103,13 +103,17 @@
                   </span>
                 </span>
                 <span class="ca-tree-actions" @click.stop>
-                  <button class="ca-action-btn" title="编辑" @click="handleEdit(data)" v-if="data.id!==1 && data.flag!==5">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  <button v-if="data.id!==1 && data.flag!==5" class="ca-action-btn" title="编辑" @click="handleEdit(data)">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></svg>
                   </button>
-                  <el-dropdown size="small" @command="handleMoreActions" trigger="click"
-                               v-if="data.id!==1 && data.flag!==5">
+                  <el-dropdown
+                    v-if="data.id!==1 && data.flag!==5"
+                    size="small"
+                    trigger="click"
+                    @command="handleMoreActions"
+                  >
                     <button class="ca-action-btn ca-action-more" title="更多">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="1" /><circle cx="19" cy="12" r="1" /><circle cx="5" cy="12" r="1" /></svg>
                     </button>
                     <el-dropdown-menu slot="dropdown">
                       <el-dropdown-item v-if="data.id!==1 && data.flag!==5" :command="{type: 'manageDept', row: data}" icon="el-icon-office-building">管理部门</el-dropdown-item>
@@ -121,7 +125,7 @@
               </span>
             </el-tree>
             <div v-if="!loading && (!treeData || treeData.length === 0)" class="ca-empty">
-              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.25"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/></svg>
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.25"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /></svg>
               <p>暂无公司数据</p>
             </div>
           </div>
@@ -141,11 +145,11 @@
 
       <!-- 收起状态的浮动触发按钮 -->
       <transition name="fade">
-        <button v-if="isCollapsed" class="ca-float-trigger" @click="toggleCollapse" title="展开公司列表">
+        <button v-if="isCollapsed" class="ca-float-trigger" title="展开公司列表" @click="toggleCollapse">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
-            <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
-            <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+            <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" />
+            <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" />
+            <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" />
           </svg>
           <span class="ca-float-trigger-text">公司</span>
         </button>
@@ -161,7 +165,7 @@
         </div>
         <div v-else class="ca-placeholder">
           <div class="ca-placeholder-icon">
-            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4"/><path d="M10 10h4"/><path d="M10 14h4"/><path d="M10 18h4"/></svg>
+            <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" opacity="0.2"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4" /><path d="M10 10h4" /><path d="M10 14h4" /><path d="M10 18h4" /></svg>
           </div>
           <p class="ca-placeholder-text">点击左侧公司查看部门</p>
           <p class="ca-placeholder-hint">选择一家公司，即可在此管理其下的部门架构</p>
@@ -180,24 +184,24 @@
     >
       <el-form ref="editForm" :model="editForm" :rules="formRules" label-width="90px" class="ca-form">
         <el-form-item label="公司名称" prop="companyName">
-          <el-input v-model="editForm.companyName" placeholder="请输入公司名称" size="medium"/>
+          <el-input v-model="editForm.companyName" placeholder="请输入公司名称" size="medium" />
         </el-form-item>
         <el-form-item label="税号" prop="taxNumber">
-          <el-input v-model="editForm.taxNumber" placeholder="请输入税号" size="medium"/>
+          <el-input v-model="editForm.taxNumber" placeholder="请输入税号" size="medium" />
         </el-form-item>
         <el-form-item label="描述" prop="description">
-          <el-input v-model="editForm.description" type="textarea" placeholder="请输入描述" :rows="3" resize="none"/>
+          <el-input v-model="editForm.description" type="textarea" placeholder="请输入描述" :rows="3" resize="none" />
         </el-form-item>
         <el-form-item label="状态" prop="flag">
           <el-select v-model="editForm.flag" placeholder="请选择状态" size="medium" style="width:100%">
-            <el-option v-for="item in statusOptions" :key="item.code" :label="item.label" :value="item.code"/>
+            <el-option v-for="item in statusOptions" :key="item.code" :label="item.label" :value="item.code" />
           </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="ca-dialog-footer">
         <button class="ca-btn ca-btn-ghost" @click="handleDialogClose">取消</button>
         <button class="ca-btn ca-btn-primary" :disabled="dialogSaving" @click="handleDialogConfirm">
-          <span v-if="dialogSaving" class="ca-spinner"></span>
+          <span v-if="dialogSaving" class="ca-spinner" />
           {{ dialogSaving ? '保存中...' : '确认' }}
         </button>
       </div>
@@ -215,7 +219,7 @@
       <el-form ref="moveCompanyForm" :model="moveCompanyForm" label-width="90px" class="ca-form">
         <el-form-item label="目标父公司">
           <div class="ca-move-hint">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10" /><line x1="12" y1="16" x2="12" y2="12" /><line x1="12" y1="8" x2="12.01" y2="8" /></svg>
             <span>支持模糊搜索；不能选择自身作为目标</span>
           </div>
           <el-select
@@ -230,15 +234,15 @@
             :popper-class="'ca-parent-select-popper'"
             @change="onParentSelect"
           >
-            <el-option v-for="item in parentCandidates" :key="item.id" :label="item.companyName + (item.taxNumber ? ' — ' + item.taxNumber : '')" :value="item.id"/>
-            <el-option v-if="!parentCandidates.length && !parentRemoteLoading" :key="'no-result'" label="无匹配结果" :value="null" disabled/>
+            <el-option v-for="item in parentCandidates" :key="item.id" :label="item.companyName + (item.taxNumber ? ' — ' + item.taxNumber : '')" :value="item.id" />
+            <el-option v-if="!parentCandidates.length && !parentRemoteLoading" :key="'no-result'" label="无匹配结果" :value="null" disabled />
           </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer" class="ca-dialog-footer">
         <button class="ca-btn ca-btn-ghost" @click="handleMoveCompanyDialogClose">取消</button>
         <button class="ca-btn ca-btn-primary" :disabled="moveSaving" @click="handleMoveCompanyConfirm">
-          <span v-if="moveSaving" class="ca-spinner"></span>
+          <span v-if="moveSaving" class="ca-spinner" />
           {{ moveSaving ? '移动中...' : '确认移动' }}
         </button>
       </div>
@@ -247,7 +251,7 @@
 </template>
 
 <script>
-import {adminQueryCompany, deleteCompany, listChildren, moveCompanyTo, saveCompany} from '@/api/company'
+import { adminQueryCompany, deleteCompany, listChildren, moveCompanyTo, saveCompany } from '@/api/company'
 import DepartmentTreeView from '@/components/DepartmentTreeView/index.vue'
 
 export default {

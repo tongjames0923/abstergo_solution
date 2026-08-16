@@ -20,7 +20,7 @@
     <el-card v-else-if="loading" shadow="never" class="loading-card">
       <div class="loading-placeholder">
         <div class="loading-spinner">
-          <div class="spinner"></div>
+          <div class="spinner" />
         </div>
         <div class="loading-content">
           <span class="loading-title">正在加载表单配置</span>
@@ -38,9 +38,9 @@
         <div class="error-content">
           <span class="error-title">加载失败</span>
           <span class="error-message">{{ error }}</span>
-          <el-button 
-            type="primary" 
-            size="small" 
+          <el-button
+            type="primary"
+            size="small"
             class="retry-button"
             @click="loadConfig"
           >

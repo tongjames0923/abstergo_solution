@@ -22,8 +22,8 @@
           circle
           size="small"
           class="refresh-btn"
-          @click="fetchAllData"
           :loading="loadingAssigned"
+          @click="fetchAllData"
         />
       </div>
     </div>
@@ -40,7 +40,7 @@
           <span class="panel-count">{{ assignedUsers.length }}</span>
         </div>
 
-        <div class="panel-body" v-loading="loadingAssigned">
+        <div v-loading="loadingAssigned" class="panel-body">
           <div v-if="assignedUsers.length === 0" class="empty-state">
             <i class="el-icon-user" />
             <p>暂未分配任何用户</p>
@@ -93,7 +93,7 @@
                 v-model="searchKeyword"
                 placeholder="搜索用户名或昵称..."
                 class="search-input"
-              />
+              >
               <i
                 v-if="searchKeyword"
                 class="el-icon-close clear-btn"
@@ -108,8 +108,8 @@
               size="mini"
               type="text"
               class="select-all-btn"
-              @click="handleSelectAll"
               :disabled="filteredAvailableUsers.length === 0"
+              @click="handleSelectAll"
             >
               <i class="el-icon-check" /> 全选当前筛选结果
             </el-button>
@@ -117,16 +117,16 @@
               size="mini"
               type="primary"
               class="batch-add-btn"
-              @click="handleBatchAdd"
               :disabled="selectedUserIds.length === 0"
               :loading="batchAdding"
+              @click="handleBatchAdd"
             >
               批量添加 ({{ selectedUserIds.length }})
             </el-button>
           </div>
 
           <!-- 可分配用户列表 -->
-          <div class="panel-body" v-loading="loadingAvailable">
+          <div v-loading="loadingAvailable" class="panel-body">
             <div v-if="filteredAvailableUsers.length === 0" class="empty-state">
               <i class="el-icon-search" />
               <p>{{ searchKeyword ? '未找到匹配的用户' : '没有可添加的用户' }}</p>

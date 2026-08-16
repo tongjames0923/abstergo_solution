@@ -30,10 +30,10 @@
     </el-card>
 
     <!-- 报表视图 -->
-    <system-log-report v-if="currentView === 'report'"/>
+    <system-log-report v-if="currentView === 'report'" />
 
     <!-- 日志记录视图 -->
-    <system-log-record v-else/>
+    <system-log-record v-else />
   </div>
 </template>
 

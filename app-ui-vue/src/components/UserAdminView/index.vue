@@ -300,7 +300,7 @@ export default {
         confirmButtonText: this.$t('common.confirm'),
         cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
-      }).then(async () => {
+      }).then(async() => {
         try {
           await deleteUser(row.id)
           // 消息提示由后端统一控制

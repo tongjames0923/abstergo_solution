@@ -3,10 +3,10 @@ import Router from 'vue-router'
 import store from '@/store'
 /* Layout */
 import Layout from '@/layout'
-import {getRoutes} from '@/api/view'
-import {getGatewayVersion} from '@/api/system'
-import {setUpRouterPermissions} from '@/permission'
-import {getToken} from '@/utils/auth'
+import { getRoutes } from '@/api/view'
+import { getGatewayVersion } from '@/api/system'
+import { setUpRouterPermissions } from '@/permission'
+import { getToken } from '@/utils/auth'
 import routeCacheService from '@/utils/route-cache'
 
 Vue.use(Router)
@@ -62,7 +62,7 @@ export const constantRoutes = [
       path: 'Welcome',
       name: '欢迎',
       component: () => import('@/views/dashboard/index'),
-      meta: {title: '欢迎页', icon: 'el-icon-star-on'}
+      meta: { title: '欢迎页', icon: 'el-icon-star-on' }
     }
     ]
   }

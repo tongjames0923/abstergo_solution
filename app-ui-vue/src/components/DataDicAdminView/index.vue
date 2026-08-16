@@ -41,7 +41,7 @@
         </div>
 
         <!-- 字典列表 -->
-        <div class="dic-list" v-loading="loadingDicList">
+        <div v-loading="loadingDicList" class="dic-list">
           <div
             v-if="filteredDicList.length === 0 && !loadingDicList"
             class="empty-list"

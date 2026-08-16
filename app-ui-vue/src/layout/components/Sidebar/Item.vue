@@ -24,7 +24,7 @@ export default {
       }
     } else {
       // 无图标时保留等宽占位，保证所有菜单项文字水平对齐
-      vnodes.push(<i class="menu-icon-placeholder" />)
+      vnodes.push(<i class='menu-icon-placeholder' />)
     }
 
     if (title) {

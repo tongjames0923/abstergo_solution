@@ -22,8 +22,8 @@
           circle
           size="small"
           class="refresh-btn"
-          @click="fetchAllData"
           :loading="loadingAssigned"
+          @click="fetchAllData"
         />
       </div>
     </div>
@@ -40,7 +40,7 @@
           <span class="panel-count">{{ assignedRoles.length }}</span>
         </div>
 
-        <div class="panel-body" v-loading="loadingAssigned">
+        <div v-loading="loadingAssigned" class="panel-body">
           <div v-if="assignedRoles.length === 0" class="empty-state">
             <i class="el-icon-folder-opened" />
             <p>暂未分配任何权限</p>
@@ -96,7 +96,7 @@
                 v-model="searchKeyword"
                 placeholder="搜索权限名称..."
                 class="search-input"
-              />
+              >
               <i
                 v-if="searchKeyword"
                 class="el-icon-close clear-btn"
@@ -129,8 +129,8 @@
               size="mini"
               type="text"
               class="select-all-btn"
-              @click="handleSelectAll"
               :disabled="filteredAvailableRoles.length === 0"
+              @click="handleSelectAll"
             >
               <i class="el-icon-check" /> 全选当前筛选结果
             </el-button>
@@ -138,16 +138,16 @@
               size="mini"
               type="primary"
               class="batch-add-btn"
-              @click="handleBatchAdd"
               :disabled="selectedPermIds.length === 0"
               :loading="batchAdding"
+              @click="handleBatchAdd"
             >
               批量添加 ({{ selectedPermIds.length }})
             </el-button>
           </div>
 
           <!-- 可分配权限列表 -->
-          <div class="panel-body" v-loading="loadingAvailable">
+          <div v-loading="loadingAvailable" class="panel-body">
             <div v-if="filteredAvailableRoles.length === 0" class="empty-state">
               <i class="el-icon-search" />
               <p>{{ searchKeyword ? '未找到匹配的权限' : '没有可添加的权限' }}</p>

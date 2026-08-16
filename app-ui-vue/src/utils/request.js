@@ -1,7 +1,7 @@
 import axios from 'axios'
-import {Loading, Message, MessageBox, Notification} from 'element-ui'
+import { Loading, Message, MessageBox, Notification } from 'element-ui'
 import store from '@/store'
-import {getToken} from '@/utils/auth'
+import { getToken } from '@/utils/auth'
 import settings from '@/settings'
 import i18n from '@/i18n'
 
@@ -63,7 +63,7 @@ const refreshTokenHandler = async(response) => {
       // 修复：确保不会重复添加baseURL
       if (config.baseURL && config.url.startsWith(config.baseURL)) {
         // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
-        const newConfig = {...config}
+        const newConfig = { ...config }
         newConfig.url = config.url.substring(config.baseURL.length)
         return service(newConfig)
       }
@@ -92,7 +92,7 @@ const refreshTokenHandler = async(response) => {
     // 修复：确保不会重复添加baseURL
     if (config.baseURL && config.url.startsWith(config.baseURL)) {
       // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
-      const newConfig = {...config}
+      const newConfig = { ...config }
       newConfig.url = config.url.substring(config.baseURL.length)
       return await service(newConfig)
     }
@@ -148,7 +148,6 @@ service.interceptors.response.use(
     if (!res.code) {
       return Promise.reject(new Error(i18n.t('request.configError')))
     }
-
 
     // 成功响应处理
     if (res.code === settings.successCode) {

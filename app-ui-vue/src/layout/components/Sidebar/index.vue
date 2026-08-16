@@ -66,7 +66,7 @@ export default {
       return routes.filter(route => {
         // 检查当前路由是否对用户可见
         const isVisible = isRouteVisible(route, this.roles)
-        
+
         // 如果有子路由，递归过滤子路由
         if (route.children && route.children.length > 0) {
           const filteredChildren = this.filterRoutes(route.children)
@@ -75,7 +75,7 @@ export default {
           // 如果过滤后没有子路由，则父路由也不显示
           return isVisible && filteredChildren.length > 0
         }
-        
+
         return isVisible
       })
     }

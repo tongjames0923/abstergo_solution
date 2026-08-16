@@ -239,9 +239,9 @@
       custom-class="route-dialog"
       @close="handleDialogClose"
     >
-      <el-form :model="routeForm" :rules="routeRules" ref="routeForm" label-width="104px">
+      <el-form ref="routeForm" :model="routeForm" :rules="routeRules" label-width="104px">
         <el-form-item :label="$t('routeManager.path')" prop="path">
-          <el-input v-model="routeForm.path" :placeholder="$t('routeManager.inputPath')"></el-input>
+          <el-input v-model="routeForm.path" :placeholder="$t('routeManager.inputPath')" />
         </el-form-item>
         <el-form-item :label="$t('routeManager.component')" prop="component">
           <el-select
@@ -257,24 +257,24 @@
               :key="item"
               :label="item"
               :value="item"
-            ></el-option>
+            />
           </el-select>
         </el-form-item>
         <el-form-item :label="$t('routeManager.name')" prop="name">
-          <el-input v-model="routeForm.name" :placeholder="$t('routeManager.inputName')"></el-input>
+          <el-input v-model="routeForm.name" :placeholder="$t('routeManager.inputName')" />
         </el-form-item>
         <el-form-item :label="$t('routeManager.redirect')" prop="redirect">
-          <el-input v-model="routeForm.redirect" :placeholder="$t('routeManager.inputRedirect')"></el-input>
+          <el-input v-model="routeForm.redirect" :placeholder="$t('routeManager.inputRedirect')" />
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item :label="$t('routeManager.hidden')">
-              <el-switch v-model="routeForm.hidden"></el-switch>
+              <el-switch v-model="routeForm.hidden" />
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item :label="$t('routeManager.alwaysShow')">
-              <el-switch v-model="routeForm.alwaysShow"></el-switch>
+              <el-switch v-model="routeForm.alwaysShow" />
             </el-form-item>
           </el-col>
         </el-row>
@@ -282,7 +282,7 @@
         <el-divider content-position="left">{{ $t('routeManager.metaConfig') }}</el-divider>
 
         <el-form-item label="title" prop="meta.title">
-          <el-input v-model="routeForm.meta.title" :placeholder="$t('routeManager.inputTitle')"></el-input>
+          <el-input v-model="routeForm.meta.title" :placeholder="$t('routeManager.inputTitle')" />
         </el-form-item>
         <el-form-item :label="$t('routeManager.icon')" prop="meta.icon">
           <el-input v-model="routeForm.meta.icon" :placeholder="$t('routeManager.inputIcon')">
@@ -306,18 +306,18 @@
               :key="item.role"
               :label="item.name"
               :value="item.role"
-            ></el-option>
+            />
           </el-select>
         </el-form-item>
         <el-row :gutter="16">
           <el-col :span="12">
             <el-form-item :label="$t('routeManager.breadcrumb')">
-              <el-switch v-model="routeForm.meta.breadcrumb"></el-switch>
+              <el-switch v-model="routeForm.meta.breadcrumb" />
             </el-form-item>
           </el-col>
         </el-row>
         <el-form-item :label="$t('routeManager.activeMenu')" prop="meta.activeMenu">
-          <el-input v-model="routeForm.meta.activeMenu" :placeholder="$t('routeManager.inputActiveMenu')"></el-input>
+          <el-input v-model="routeForm.meta.activeMenu" :placeholder="$t('routeManager.inputActiveMenu')" />
         </el-form-item>
       </el-form>
       <span slot="footer" class="dialog-footer">
@@ -711,7 +711,7 @@ export default {
           cancelButtonText: this.$t('common.cancel'),
           type: 'warning'
         }
-      ).then(async () => {
+      ).then(async() => {
         this.rollingBackId = version.id
         try {
           const response = await rollbackRouteVersion(this.activeGroup, version.id)
@@ -772,7 +772,7 @@ export default {
         confirmButtonText: this.$t('common.confirm'),
         cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
-      }).then(async () => {
+      }).then(async() => {
         try {
           await deleteRouteConfigs(group)
           this.routeGroups = this.routeGroups.filter(g => g !== group)
