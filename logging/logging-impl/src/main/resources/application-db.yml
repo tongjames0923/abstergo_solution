@@ -7,7 +7,7 @@ spring:
     database: mysql
   datasource:
     driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-    url: jdbc:p6spy:mysql://${DB_HOST:192.168.80.32}:${DB_PORT:3306}/${DB_NAME:app_system}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true
+    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:core_app}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:123456789}
     type: com.zaxxer.hikari.HikariDataSource

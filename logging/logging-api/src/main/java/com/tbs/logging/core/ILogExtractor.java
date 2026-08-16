@@ -18,4 +18,19 @@ public interface ILogExtractor {
      * @return 日志列表
      */
     List<LogRecordVO> extract(LoggingRecordExtractForm form);
+
+    /**
+     * 统计符合条件的日志总数
+     *
+     * @param form 日志提取参数
+     * @return 总数
+     */
+    int count(LoggingRecordExtractForm form);
+
+    /**
+     * 获取所有日志类型
+     *
+     * @return 日志类型列表
+     */
+    List<String> getAllOperateTypes();
 }

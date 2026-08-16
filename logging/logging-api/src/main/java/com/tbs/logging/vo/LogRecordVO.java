@@ -7,6 +7,9 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.Date;
 
+/**
+ * @author abstergo
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -65,4 +68,9 @@ public class LogRecordVO implements Serializable {
      * 请求方法
      */
     private String requestMethod;
+
+    /**
+     * 耗时(毫秒)
+     */
+    private Long costTime;
 }

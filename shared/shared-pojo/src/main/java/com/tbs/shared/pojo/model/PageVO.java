@@ -1,6 +1,6 @@
 package com.tbs.shared.pojo.model;
 
-import com.alibaba.fastjson2.JSON;
+import com.tbs.common.util.base.JsonUtils;
 import lombok.Getter;
 
 import java.io.Serializable;
@@ -41,6 +41,6 @@ public class PageVO<T> implements Serializable {
 
     @Override
     public String toString() {
-        return "PageVO{" + "total=" + total + ", data=" + JSON.toJSONString(data) + '}';
+        return "PageVO{" + "total=" + total + ", data=" + JsonUtils.toJSONString(data) + '}';
     }
 }

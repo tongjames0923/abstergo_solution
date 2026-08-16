@@ -1,39 +1,53 @@
 <template>
   <div class="system-log-container">
+    <!-- 页面标题 -->
     <el-card class="header-card">
       <div slot="header" class="card-header">
-        <span>系统运行报表</span>
-        <el-button style="float: right; padding: 3px 0" type="text" @click="refreshData">刷新数据</el-button>
+        <span>{{ $t('systemlog.title') }}</span>
+        <el-radio-group v-model="currentView" size="mini">
+          <el-radio-button label="report">{{ $t('systemlog.reportView') }}</el-radio-button>
+          <el-radio-button label="record">{{ $t('systemlog.recordView') }}</el-radio-button>
+        </el-radio-group>
       </div>
       <div class="header-content">
         <el-alert
+          v-if="currentView === 'report'"
           :closable="false"
-          description="以下数据展示了最近28天内系统各项操作的统计情况，包括成功率、响应时间、稳定性等关键指标。"
+          :description="$t('systemlog.reportAlertDesc')"
           show-icon
-          title="系统运行状态概览"
+          :title="$t('systemlog.reportAlertTitle')"
+          type="info"
+        />
+        <el-alert
+          v-else
+          :closable="false"
+          :description="$t('systemlog.recordAlertDesc')"
+          show-icon
+          :title="$t('systemlog.recordAlertTitle')"
           type="info"
         />
       </div>
     </el-card>
 
     <!-- 图表组件 -->
-    <system-log-charts :chart-data="tableData" />
+    <system-log-charts v-if="currentView === 'report'" :chart-data="tableData"/>
 
-    <el-card class="table-card">
+    <!-- 报表视图 - 详细数据表格 -->
+    <el-card v-if="currentView === 'report'" class="table-card">
       <div slot="header" class="card-header">
-        <span>详细数据</span>
+        <span>{{ $t('systemlog.detailData') }}</span>
         <div class="table-header-actions">
           <el-input
             v-model="searchKeyword"
             clearable
-            placeholder="搜索操作类型..."
+            :placeholder="$t('systemlog.searchOperateType')"
             style="width: 200px; margin-right: 10px;"
             @clear="handleSearch"
             @keyup.enter.native="handleSearch"
           >
-            <i slot="prefix" class="el-input__icon el-icon-search" />
+            <i slot="prefix" class="el-input__icon el-icon-search"/>
           </el-input>
-          <el-button icon="el-icon-search" type="primary" @click="handleSearch">搜索</el-button>
+          <el-button icon="el-icon-search" type="primary" @click="handleSearch">{{ $t('common.search') }}</el-button>
         </div>
       </div>
 
@@ -41,17 +55,17 @@
         v-loading="loading"
         :data="paginatedTableData"
         :default-sort="{prop: 'stabilityIndex', order: 'descending'}"
-        element-loading-text="数据加载中..."
+        :element-loading-text="$t('systemlog.loadingText')"
         stripe
         style="width: 100%"
       >
-        <el-table-column label="操作类型" min-width="150" prop="operateType" sortable />
-        <el-table-column label="操作次数" min-width="100" prop="operateCount" sortable>
+        <el-table-column :label="$t('systemlog.reportOperateType')" min-width="150" prop="operateType" sortable/>
+        <el-table-column :label="$t('systemlog.reportOperateCount')" min-width="100" prop="operateCount" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.operateCount) }}
           </template>
         </el-table-column>
-        <el-table-column label="成功率(%)" min-width="100" prop="successRate" sortable>
+        <el-table-column :label="$t('systemlog.reportSuccessRate')" min-width="100" prop="successRate" sortable>
           <template slot-scope="scope">
             <el-progress
               :percentage="parseFloat(formatNumber(scope.row.successRate))"
@@ -60,38 +74,23 @@
             <span>{{ formatNumber(scope.row.successRate) }}%</span>
           </template>
         </el-table-column>
-        <el-table-column label="总耗时(ms)" min-width="100" prop="operateTime" sortable>
+        <el-table-column :label="$t('systemlog.reportTotalTime')" min-width="100" prop="operateTime" sortable>
           <template slot-scope="scope">
             {{ formatNumber(scope.row.operateTime) }}
           </template>
         </el-table-column>
-        <el-table-column label="响应时间(ms)" min-width="150" prop="operateTimeMedian" sortable>
+        <el-table-column :label="$t('systemlog.reportResponseTime')" min-width="150" prop="operateTimeMedian" sortable>
           <template slot-scope="scope">
-            <div>中位数: {{ formatNumber(scope.row.operateTimeMedian) }}</div>
-            <div>90%: {{ formatNumber(scope.row.operateTime90Percentile) }}</div>
-            <div>标准差: {{ formatNumber(scope.row.operateTimeStdDev) }}</div>
+            <div>{{ $t('systemlog.median') }}: {{ formatNumber(scope.row.operateTimeMedian) }}</div>
+            <div>{{ $t('systemlog.percentile90') }}: {{ formatNumber(scope.row.operateTime90Percentile) }}</div>
+            <div>{{ $t('systemlog.stdDev') }}: {{ formatNumber(scope.row.operateTimeStdDev) }}</div>
           </template>
         </el-table-column>
-        <el-table-column label="稳定性指数" min-width="120" prop="stabilityIndex" sortable>
+        <el-table-column :label="$t('systemlog.reportStabilityIndex')" min-width="120" prop="stabilityIndex" sortable>
           <template slot-scope="scope">
             <el-tag :type="getStabilityTagType(scope.row.stabilityIndex)">
               {{ scope.row.stabilityIndex }}
             </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column label="用户数" min-width="80" prop="userCount" sortable>
-          <template slot-scope="scope">
-            {{ formatNumber(scope.row.userCount) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="IP数" min-width="80" prop="ipCount" sortable>
-          <template slot-scope="scope">
-            {{ formatNumber(scope.row.ipCount) }}
-          </template>
-        </el-table-column>
-        <el-table-column label="错误数" min-width="80" prop="errorCount" sortable>
-          <template slot-scope="scope">
-            {{ formatNumber(scope.row.errorCount) }}
           </template>
         </el-table-column>
       </el-table>
@@ -109,20 +108,234 @@
       </div>
     </el-card>
 
-    <el-dialog :visible.sync="dialogVisible" title="操作详情" width="60%">
-      <el-table :data="dialogTableData" border>
-        <el-table-column label="指标" prop="metric" width="200" />
-        <el-table-column label="数值" prop="value" />
+    <!-- 日志记录视图 - 搜索表单 -->
+    <el-card v-if="currentView === 'record'" class="search-card">
+      <div slot="header" class="card-header">
+        <span>{{ $t('systemlog.searchConditions') }}</span>
+      </div>
+      <el-form ref="searchForm" :model="searchForm" :inline="true" class="search-form">
+        <el-form-item :label="$t('systemlog.operateType')" prop="operateTypes">
+          <el-select
+            v-model="searchForm.operateTypes"
+            multiple
+            collapse-tags
+            filterable
+            remote
+            reserve-keyword
+            :placeholder="$t('systemlog.selectOperateType')"
+            :remote-method="handleOperateTypeSearch"
+            :loading="operateTypeLoading"
+            value-format="string"
+            style="width: 280px"
+          >
+            <el-option
+              v-for="item in operateTypeOptions"
+              :key="item"
+              :label="item"
+              :value="item"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item :label="$t('systemlog.operateTime')" prop="operateTime">
+          <el-date-picker
+            v-model="searchForm.operateTime"
+            :end-placeholder="$t('systemlog.endDate')"
+            :start-placeholder="$t('systemlog.startDate')"
+            type="daterange"
+            range-separator="→"
+            value-format="yyyy-MM-dd HH:mm:ss"
+            style="width: 360px"
+            @change="handleDateChange"
+          />
+        </el-form-item>
+        <el-form-item>
+          <el-button type="primary" icon="el-icon-search" @click="handleRecordSearch">{{
+              $t('common.search')
+            }}
+          </el-button>
+          <el-button icon="el-icon-refresh-left" @click="handleReset">{{ $t('common.reset') }}</el-button>
+        </el-form-item>
+      </el-form>
+    </el-card>
+
+    <!-- 日志记录视图 - 数据表格 -->
+    <el-card v-if="currentView === 'record'" class="table-card">
+      <div slot="header" class="card-header">
+        <span>{{ $t('systemlog.recordList') }}</span>
+        <div class="table-header-actions">
+          <el-button type="primary" size="mini" icon="el-icon-refresh" @click="fetchRecordData">{{
+              $t('common.refresh')
+            }}
+          </el-button>
+        </div>
+      </div>
+
+      <el-table
+        v-loading="recordLoading"
+        :data="recordData"
+        :element-loading-text="$t('systemlog.loadingText')"
+        stripe
+        style="width: 100%"
+      >
+        <el-table-column :label="$t('systemlog.operateType')" min-width="200" show-overflow-tooltip sortable
+                         prop="operateType">
+          <template slot-scope="scope">
+            <div class="operate-type-cell">
+              <span class="type-short">{{ formatOperateType(scope.row.operateType) }}</span>
+              <span class="type-desc">{{ scope.row.operateDesc }}</span>
+            </div>
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('systemlog.requestInfo')" min-width="220" show-overflow-tooltip>
+          <template slot-scope="scope">
+            <el-tag :type="getMethodTagType(scope.row.requestMethod)" size="mini" style="margin-right: 6px;">
+              {{ scope.row.requestMethod }}
+            </el-tag>
+            <code class="url-text">{{ scope.row.requestUrl }}</code>
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('systemlog.logRecordUser')" width="130" show-overflow-tooltip>
+          <template slot-scope="scope">
+            {{ formatOperateUser(scope.row.operateUser) }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('systemlog.costTime')" width="100" align="center" sortable
+                         :sort-method="sortByCostTime">
+          <template slot-scope="scope">
+            <el-tag :type="getCostTimeTagType(scope.row)" size="small" effect="plain">
+              {{ calcCostTime(scope.row) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('systemlog.operateTime')" width="160" prop="operateTime" sortable>
+          <template slot-scope="scope">
+            {{ formatDate(scope.row.operateTime) }}
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('systemlog.operateResult')" width="90" align="center">
+          <template slot-scope="scope">
+            <el-tag :type="getresultTagType(scope.row.operateResult)" size="small">
+              {{ parseOperateResult(scope.row.operateResult, scope.row.errorMessage) }}
+            </el-tag>
+          </template>
+        </el-table-column>
+        <el-table-column :label="$t('common.operation')" width="80" fixed="right" align="center">
+          <template slot-scope="scope">
+            <el-button type="text" icon="el-icon-view" @click="showLogDetail(scope.row)">{{
+                $t('systemlog.detail')
+              }}
+            </el-button>
+          </template>
+        </el-table-column>
       </el-table>
-      <span slot="footer" class="dialog-footer">
-        <el-button @click="dialogVisible = false">关闭</el-button>
-      </span>
-    </el-dialog>
+
+      <div class="pagination-container">
+        <el-pagination
+          v-show="recordTotal > 0"
+          :current-page="recordPageNum"
+          :page-size="recordPageSize"
+          :page-sizes="[10, 20, 50, 100]"
+          :total="recordTotal"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="handleRecordSizeChange"
+          @current-change="handleRecordPageChange"
+        />
+      </div>
+    </el-card>
+
+    <!-- 日志详情侧边栏 -->
+    <el-drawer
+      :visible.sync="detailDrawerVisible"
+      :title="$t('systemlog.logDetail')"
+      direction="rtl"
+      size="60%"
+      :before-close="handleDetailDrawerClose"
+    >
+      <div v-if="currentLogDetail" class="log-detail-content">
+        <!-- 基本信息 -->
+        <el-card class="detail-section" shadow="never">
+          <div slot="header" class="section-header">
+            <i class="el-icon-info"/>
+            <span>{{ $t('systemlog.basicInfo') }}</span>
+          </div>
+          <el-descriptions :column="2" border>
+            <el-descriptions-item :label="$t('systemlog.operateType')" :span="2">
+              <code>{{ currentLogDetail.operateType }}</code>
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('systemlog.operateDesc')">
+              {{ currentLogDetail.operateDesc }}
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('systemlog.operateResult')">
+              <el-tag :type="getresultTagType(currentLogDetail.operateResult)" size="small">
+                {{ parseOperateResult(currentLogDetail.operateResult, currentLogDetail.errorMessage) }}
+              </el-tag>
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('systemlog.operateUser')">
+              {{ formatOperateUser(currentLogDetail.operateUser) }}
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('systemlog.operateIp')">
+              {{ currentLogDetail.operateIp }}
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('systemlog.operateTime')">
+              {{ formatDate(currentLogDetail.operateTime) }}
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('systemlog.costTime')">
+              <el-tag :type="getCostTimeTagType(currentLogDetail)" size="small" effect="plain">
+                {{ calcCostTime(currentLogDetail) }}
+              </el-tag>
+            </el-descriptions-item>
+          </el-descriptions>
+        </el-card>
+
+        <!-- 请求信息 -->
+        <el-card class="detail-section" shadow="never">
+          <div slot="header" class="section-header">
+            <i class="el-icon-download"/>
+            <span>{{ $t('systemlog.requestInfo') }}</span>
+          </div>
+          <el-descriptions :column="1" border>
+            <el-descriptions-item :label="$t('systemlog.requestUrl')">
+              <code>{{ currentLogDetail.requestUrl }}</code>
+            </el-descriptions-item>
+            <el-descriptions-item :label="$t('systemlog.requestMethod')">
+              <el-tag :type="getMethodTagType(currentLogDetail.requestMethod)" size="small">
+                {{ currentLogDetail.requestMethod }}
+              </el-tag>
+            </el-descriptions-item>
+          </el-descriptions>
+        </el-card>
+
+        <!-- 参数与结果 -->
+        <el-card class="detail-section" shadow="never">
+          <div slot="header" class="section-header">
+            <i class="el-icon-document"/>
+            <span>{{ $t('systemlog.paramResult') }}</span>
+          </div>
+          <el-tabs type="border-card">
+            <el-tab-pane :label="$t('systemlog.operateParam')">
+              <div class="json-content">
+                <pre>{{ formatJson(currentLogDetail.operateParam) }}</pre>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane :label="$t('systemlog.responseInfo')">
+              <div class="json-content">
+                <pre>{{ formatJson(currentLogDetail.operateResult) }}</pre>
+              </div>
+            </el-tab-pane>
+            <el-tab-pane v-if="currentLogDetail.errorMessage" label="错误信息">
+              <div class="json-content error-content">
+                <pre>{{ currentLogDetail.errorMessage }}</pre>
+              </div>
+            </el-tab-pane>
+          </el-tabs>
+        </el-card>
+      </div>
+    </el-drawer>
   </div>
 </template>
 
 <script>
-import { getSystemLogOperateTypeList } from '@/api/systemlog'
+import {getOperateTypeList, getSystemLogOperateTypeList, getSystemLogRecordList} from '@/api/systemlog'
 import SystemLogCharts from '@/components/Chart/SystemLogCharts.vue'
 
 export default {
@@ -132,16 +345,36 @@ export default {
   },
   data() {
     return {
+      // 视图切换
+      currentView: 'report', // 'report' 或 'record'
+      // 报表视图数据
       loading: true,
       tableData: [],
       searchKeyword: '',
       currentPage: 1,
       pageSize: 10,
-      dialogVisible: false,
-      dialogTableData: []
+      // 日志记录视图数据
+      recordLoading: false,
+      recordData: [],
+      recordTotal: 0,
+      recordPageNum: 1,
+      recordPageSize: 10,
+      // 操作类型搜索相关
+      operateTypeLoading: false,
+      operateTypeOptions: [],
+      // 日志详情侧边栏
+      detailDrawerVisible: false,
+      currentLogDetail: null,
+      searchForm: {
+        operateTypes: [],
+        operateTime: null,
+        operateTimeBegin: null,
+        operateTimeEnd: null
+      }
     }
   },
   computed: {
+    // 报表视图计算属性
     totalCount() {
       return this.tableData.length
     },
@@ -178,6 +411,7 @@ export default {
     this.fetchData()
   },
   methods: {
+    // ========== 报表视图方法 ==========
     fetchData() {
       this.loading = true
       getSystemLogOperateTypeList()
@@ -197,12 +431,109 @@ export default {
     handleSearch() {
       this.currentPage = 1
     },
+    handleRecordSearch() {
+      this.recordPageNum = 1
+      this.fetchRecordData()
+    },
     handleSizeChange(val) {
       this.pageSize = val
       this.currentPage = 1
     },
     handleCurrentChange(val) {
       this.currentPage = val
+    },
+    // ========== 日志记录视图方法 ==========
+    async handleOperateTypeSearch(query) {
+      // 远程搜索:根据关键词调用后端接口获取操作类型
+      if (!query || query.trim() === '') {
+        // 空关键词不搜索,返回空数组(避免初始化时显示大量数据)
+        this.operateTypeOptions = []
+        return
+      }
+
+      this.operateTypeLoading = true
+      try {
+        const response = await getOperateTypeList(query)
+        this.operateTypeOptions = response.data || []
+      } catch (error) {
+        console.error('获取操作类型列表失败:', error)
+        this.operateTypeOptions = []
+      } finally {
+        this.operateTypeLoading = false
+      }
+    },
+    fetchRecordData() {
+      this.recordLoading = true
+      const form = {
+        operateTypes: this.searchForm.operateTypes,
+        operateTimeBegin: this.searchForm.operateTimeBegin,
+        operateTimeEnd: this.searchForm.operateTimeEnd,
+        pageNum: this.recordPageNum,
+        pageSize: this.recordPageSize
+      }
+      getSystemLogRecordList(form)
+        .then(response => {
+          if (response.data) {
+            this.recordData = response.data.data || []
+            this.recordTotal = response.data.total || 0
+          }
+          this.recordLoading = false
+        })
+        .catch(error => {
+          console.error('获取日志记录列表失败:', error)
+          this.recordLoading = false
+        })
+    },
+    handleDateChange(value) {
+      if (value && value.length === 2) {
+        this.searchForm.operateTimeBegin = value[0]
+        this.searchForm.operateTimeEnd = value[1]
+      } else {
+        this.searchForm.operateTimeBegin = null
+        this.searchForm.operateTimeEnd = null
+      }
+    },
+    handleRecordSizeChange(val) {
+      this.recordPageSize = val
+      this.recordPageNum = 1
+      this.fetchRecordData()
+    },
+    handleRecordPageChange(val) {
+      this.recordPageNum = val
+      this.fetchRecordData()
+    },
+    // ========== 公共方法 ==========
+    resetSearchForm() {
+      this.searchForm = {
+        operateTypes: [],
+        operateTime: null,
+        operateTimeBegin: null,
+        operateTimeEnd: null
+      }
+    },
+    handleReset() {
+      this.resetSearchForm()
+      this.recordPageNum = 1
+      this.fetchRecordData()
+    },
+    formatDate(date) {
+      if (!date) return '-'
+      const d = new Date(date)
+      const year = d.getFullYear()
+      const month = String(d.getMonth() + 1).padStart(2, '0')
+      const day = String(d.getDate()).padStart(2, '0')
+      const hours = String(d.getHours()).padStart(2, '0')
+      const minutes = String(d.getMinutes()).padStart(2, '0')
+      const seconds = String(d.getSeconds()).padStart(2, '0')
+      return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`
+    },
+    getresultTagType(result) {
+      if (!result) return 'danger'
+      if (typeof result !== 'string') return 'info'
+      // 支持解析后的状态字符串和原始JSON字符串
+      if (result.includes('失败') || result.includes('错误') || result.includes('异常')) return 'danger'
+      if (result.includes('成功')) return 'success'
+      return 'warning'
     },
     getProgressStatus(rate) {
       const value = parseFloat(rate)
@@ -220,21 +551,94 @@ export default {
       if (value === null || value === undefined) return '0.00'
       return parseFloat(value).toFixed(2)
     },
+    // ========== 日志详情侧边栏方法 ==========
+    showLogDetail(row) {
+      this.currentLogDetail = {...row}  // 创建副本避免响应式问题
+      this.detailDrawerVisible = true
+    },
+    handleDetailDrawerClose() {
+      this.detailDrawerVisible = false
+      this.currentLogDetail = null
+    },
+    formatJson(jsonStr) {
+      if (!jsonStr) return '-'
+      try {
+        // 尝试解析为JSON对象
+        const parsed = JSON.parse(jsonStr)
+        return JSON.stringify(parsed, null, 2)
+      } catch (e) {
+        // 如果不是有效的JSON,直接返回原字符串
+        return jsonStr
+      }
+    },
+    getMethodTagType(method) {
+      if (!method) return 'info'
+      const upper = method.toUpperCase()
+      if (upper === 'GET') return 'success'
+      if (upper === 'POST') return 'primary'
+      if (upper === 'PUT') return 'warning'
+      if (upper === 'DELETE') return 'danger'
+      return 'info'
+    },
+    parseOperateResult(resultStr, errorMessage) {
+      if (!resultStr) return errorMessage ? '失败' : '-'
+      try {
+        const result = JSON.parse(resultStr)
+        // 标准AjaxResult格式: {map: {code, message, data}}
+        if (result.map) {
+          return result.map.message || (result.map.code === 200 ? '操作成功' : '操作失败')
+        }
+        // 非标准格式(如直接返回token对象),无错误信息视为成功
+        return '操作成功'
+      } catch (e) {
+        return resultStr.length > 20 ? resultStr.substring(0, 20) + '...' : resultStr
+      }
+    },
+    formatOperateType(type) {
+      // 从完整类名提取短名: com.tbs.app.controller.publics.PublicUserController.login -> PublicUserController.login
+      if (!type) return '-'
+      const parts = type.split('.')
+      if (parts.length >= 2) {
+        return parts.slice(-2).join('.')
+      }
+      return type
+    },
+    formatOperateUser(user) {
+      if (!user) return '-'
+      if (user.startsWith('NULL USERNAME:')) {
+        return this.$t('systemlog.anonymousUser')
+      }
+      return user
+    },
+    calcCostTime(row) {
+      if (row.costTime == null) return '-'
+      return row.costTime + 'ms'
+    },
+    getCostTimeTagType(row) {
+      if (row.costTime == null) return 'info'
+      if (row.costTime <= 500) return 'success'
+      if (row.costTime <= 2000) return 'warning'
+      return 'danger'
+    },
+    sortByCostTime(a, b) {
+      return (a.costTime || 0) - (b.costTime || 0)
+    },
+    // ========== 报表视图方法 ==========
     showDetail(row) {
       this.dialogTableData = [
-        { metric: '操作类型', value: row.operateType },
-        { metric: '操作次数', value: this.formatNumber(row.operateCount) },
-        { metric: '操作总时间', value: this.formatNumber(row.operateTime) },
-        { metric: '最长执行时间', value: this.formatNumber(row.operateTimeMax) },
-        { metric: '最短执行时间', value: this.formatNumber(row.operateTimeMin) },
-        { metric: '错误次数', value: this.formatNumber(row.errorCount) },
-        { metric: '成功率', value: this.formatNumber(row.successRate) + '%' },
-        { metric: '90%分位数响应时间', value: this.formatNumber(row.operateTime90Percentile) },
-        { metric: '中位数响应时间', value: this.formatNumber(row.operateTimeMedian) },
-        { metric: '用户数', value: this.formatNumber(row.userCount) },
-        { metric: 'IP数', value: this.formatNumber(row.ipCount) },
-        { metric: '响应时间标准差', value: this.formatNumber(row.operateTimeStdDev) },
-        { metric: '稳定性指数', value: row.stabilityIndex }
+        {metric: this.$t('systemlog.reportOperateType'), value: row.operateType},
+        {metric: this.$t('systemlog.reportOperateCount'), value: this.formatNumber(row.operateCount)},
+        {metric: this.$t('systemlog.reportTotalTime'), value: this.formatNumber(row.operateTime)},
+        {metric: this.$t('genericApi.version'), value: this.formatNumber(row.operateTimeMax)},
+        {metric: this.$t('common.query'), value: this.formatNumber(row.operateTimeMin)},
+        {metric: this.$t('role.apiPermission'), value: this.formatNumber(row.errorCount)},
+        {metric: this.$t('systemlog.reportSuccessRate'), value: this.formatNumber(row.successRate) + '%'},
+        {metric: this.$t('systemlog.percentile90'), value: this.formatNumber(row.operateTime90Percentile)},
+        {metric: this.$t('systemlog.median'), value: this.formatNumber(row.operateTimeMedian)},
+        {metric: this.$t('systemlog.operateUser'), value: this.formatNumber(row.userCount)},
+        {metric: this.$t('systemlog.operateIp'), value: this.formatNumber(row.ipCount)},
+        {metric: this.$t('systemlog.stdDev'), value: this.formatNumber(row.operateTimeStdDev)},
+        {metric: this.$t('systemlog.reportStabilityIndex'), value: row.stabilityIndex}
       ]
       this.dialogVisible = true
     }
@@ -259,6 +663,23 @@ export default {
 
     .header-content {
       margin-top: 15px;
+    }
+  }
+
+  .search-card {
+    margin-bottom: 20px;
+
+    .card-header {
+      font-weight: 500;
+    }
+
+    .search-form {
+      padding: 5px 0;
+
+      ::v-deep .el-form-item {
+        margin-bottom: 16px;
+        margin-right: 20px;
+      }
     }
   }
 
@@ -309,13 +730,75 @@ export default {
     justify-content: center;
   }
 
-  ::v-deep .el-table .cell {
-    display: flex;
-    flex-direction: column;
-  }
-
   ::v-deep .el-table .cell > div:not(:last-child) {
     margin-bottom: 2px;
+  }
+
+  .operate-type-cell {
+    .type-short {
+      font-weight: 500;
+      color: #303133;
+      display: block;
+    }
+
+    .type-desc {
+      font-size: 12px;
+      color: #909399;
+      display: block;
+    }
+  }
+
+  .url-text {
+    font-size: 12px;
+    color: #606266;
+    background: #f5f7fa;
+    padding: 2px 4px;
+    border-radius: 3px;
+  }
+}
+
+.log-detail-content {
+  padding: 20px;
+
+  .detail-section {
+    margin-bottom: 20px;
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      font-weight: 500;
+
+      i {
+        margin-right: 8px;
+        font-size: 16px;
+      }
+    }
+  }
+
+  .json-content {
+    max-height: 400px;
+    overflow: auto;
+
+    pre {
+      background-color: #f5f7fa;
+      padding: 12px;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      margin: 0;
+    }
+  }
+
+  .error-content pre {
+    color: #f56c6c;
+    background-color: #fef0f0;
+  }
+
+  ::v-deep .el-descriptions-item__label {
+    font-weight: 500;
   }
 }
 </style>

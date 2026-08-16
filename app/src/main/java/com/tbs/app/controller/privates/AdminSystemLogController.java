@@ -1,15 +1,14 @@
 package com.tbs.app.controller.privates;
 
-
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.logging.form.LoggingRecordExtractForm;
+import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 系统日志管理控制器
@@ -30,7 +29,7 @@ public class AdminSystemLogController extends BaseController {
     /**
      * 获取日志操作类型列表
      * <p>
-     * 查询系统日志的操作类型列表，并统计每种类型的日志数量
+     * 查询系统日志的操作类型列表,并统计每种类型的日志数量
      * </p>
      *
      * @return 日志操作类型列表及统计结果
@@ -40,6 +39,38 @@ public class AdminSystemLogController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult listWithOpType() {
         return successResult(systemLogService.getLogOperateTypeList(28));
+    }
+    
+    /**
+     * 获取所有操作类型列表(用于下拉框搜索)
+     * <p>
+     * 返回不重复的操作类型,支持按关键词模糊搜索
+     * </p>
+     *
+     * @param keyword 关键词(可选)
+     * @return 操作类型列表
+     */
+    @GetMapping("operateTypes")
+    @AjaxResponseType(Object.class)
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult getOperateTypes(@RequestParam(required = false) String keyword) {
+        return successResult(systemLogService.getOperateTypeList(keyword));
+    }
+
+    /**
+     * 获取日志记录分页列表
+     * <p>
+     * 根据查询条件，获取系统日志记录分页列表
+     * </p>
+     *
+     * @param form 查询条件
+     * @return 日志记录分页列表
+     */
+    @PostMapping("listRecord")
+    @AjaxResponseType(PageVO.class)
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult listRecord(@RequestBody LoggingRecordExtractForm form) {
+        return successResult(systemLogService.getLogRecordList(form));
     }
 
     /**

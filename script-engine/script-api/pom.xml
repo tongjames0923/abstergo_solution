@@ -9,7 +9,7 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>scropt-engine-api</artifactId>
+    <artifactId>script-engine-api</artifactId>
 
     <properties>
         <maven.compiler.source>11</maven.compiler.source>

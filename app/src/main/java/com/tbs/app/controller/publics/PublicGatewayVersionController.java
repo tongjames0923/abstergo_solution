@@ -74,7 +74,7 @@ public class PublicGatewayVersionController {
      * 查询网关版本信息
      * <p>
      * 返回构建版本、构件名称、构建时间以及当前实例端口。 蓝绿切换验证示例：
-     * <pre>curl http://192.168.80.32:8082/public/gateway/version</pre>
+     * <pre>curl http://127.0.0.1:8082/public/gateway/version</pre>
      * 返回的版本号/构建时间与发布包一致即说明流量已到达新版本。
      * </p>
      *

@@ -31,7 +31,7 @@ tbs:
     enable: true
     enable-json-job-executor: true
     config:
-      admin-address: ${XXL_JOB_ADMIN_ADDRESS:http://192.168.80.32:9898/xxl-job-admin}
+      admin-address: ${XXL_JOB_ADMIN_ADDRESS:http://127.0.0.1:9898/xxl-job-admin}
       app-name: dataDicApplication
       access-token: ${XXL_JOB_ACCESS_TOKEN:123456789}
       log-retentions-days: 3

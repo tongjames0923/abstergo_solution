@@ -1,5 +1,6 @@
 package com.tbs.shared.pojo.criteria;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
@@ -22,6 +23,7 @@ import java.util.List;
  * @author abstergo
  */
 @Data
+@LogicDeleteEntity(activeFlagValues = {1, -1})
 public class CommonGenericApiCriteria extends DefaultEntityCriteria {
 
     public CommonGenericApiCriteria() {

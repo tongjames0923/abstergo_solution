@@ -21,6 +21,7 @@ export default {
     no: '否',
     exportExcel: '导出Excel',
     dataList: '数据列表',
+    refresh: '刷新',
     refreshData: '刷新数据',
     moreActions: '更多功能',
     noExportData: '当前没有可导出的数据',
@@ -34,7 +35,9 @@ export default {
     query: '查询',
     collapse: '收起',
     expand: '展开',
-    filledConditions: '已填 {count} 项'
+    filledConditions: '已填 {count} 项',
+    metric: '指标',
+    value: '数值'
   },
 
   // 登录
@@ -253,7 +256,66 @@ export default {
 
   // 系统日志
   systemlog: {
-    title: '系统日志',
+    title: '系统运行报表',
+    reportView: '报表视图',
+    recordView: '日志记录',
+    detailData: '详细数据',
+    searchOperateType: '搜索操作类型...',
+    searchConditions: '搜索条件',
+    recordList: '日志记录列表',
+    operateType: '操作类型',
+    selectOperateType: '选择操作类型',
+    operateTime: '操作时间',
+    startDate: '开始日期',
+    endDate: '结束日期',
+    operateUser: '操作用户',
+    operateIp: '操作IP',
+    operateResult: '操作结果',
+    operateDesc: '操作描述',
+    requestUrl: '请求URL',
+    requestMethod: '请求方法',
+    operateParam: '操作参数',
+    errorMessage: '错误信息',
+    refresh: '刷新数据',
+    // Alert提示
+    reportAlertTitle: '系统运行状态概览',
+    reportAlertDesc: '以下数据展示了最近28天内系统各项操作的统计情况，包括成功率、响应时间、稳定性等关键指标。',
+    recordAlertTitle: '日志记录查询',
+    recordAlertDesc: '查询和筛选系统操作日志记录，支持按操作类型和时间范围进行过滤。',
+    // 加载提示
+    loadingText: '数据加载中...',
+    // 报表表格列
+    reportOperateType: '操作类型',
+    reportOperateCount: '操作次数',
+    reportSuccessRate: '成功率',
+    reportTotalTime: '总耗时',
+    reportResponseTime: '响应时间',
+    reportStabilityIndex: '稳定性指数',
+    median: '中位数',
+    percentile90: '90%',
+    stdDev: '标准差',
+    // 日志记录表格列
+    logRecordType: '操作类型',
+    logRecordDesc: '操作描述',
+    logRecordUser: '操作用户',
+    logRecordIp: '操作IP',
+    costTime: '耗时',
+    detail: '详情',
+    anonymousUser: '匿名用户',
+    // 详情侧边栏
+    logDetail: '日志详情',
+    basicInfo: '基本信息',
+    requestInfo: '请求信息',
+    responseInfo: '响应信息',
+    operateInfo: '操作信息',
+    viewParamResult: '查看参数与结果',
+    paramResult: '参数与结果',
+    result: '结果',
+    // 分页
+    totalRecords: '条记录',
+    pages: '页',
+    itemsPerPage: '条/页',
+    // 保留原有字段
     level: '日志级别',
     message: '日志消息',
     timestamp: '时间',

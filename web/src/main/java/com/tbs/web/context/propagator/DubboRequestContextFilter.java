@@ -1,6 +1,6 @@
 package com.tbs.web.context.propagator;
 
-import com.alibaba.fastjson2.JSON;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.web.context.RequestDataContext;
 import com.tbs.web.context.RequestContextHolder;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +75,7 @@ public class DubboRequestContextFilter implements Filter {
             try {
                 // 序列化上下文并放入attachments
                 String serialized = Base64.getEncoder().encodeToString(
-                    JSON.toJSONString(ctx).getBytes(StandardCharsets.UTF_8));
+                    JsonUtils.toJSONString(ctx).getBytes(StandardCharsets.UTF_8));
                 rpcContext.setAttachment(CONTEXT_KEY, serialized);
                 // 轻量级traceId也单独放一份，方便下游快速获取
                 rpcContext.setAttachment(TRACE_ID_KEY, ctx.getTraceId());
@@ -106,7 +106,7 @@ public class DubboRequestContextFilter implements Filter {
             if (serialized != null && !serialized.isEmpty()) {
                 try {
                     byte[] bytes = Base64.getDecoder().decode(serialized);
-                    RequestDataContext ctx = JSON.parseObject(
+                    RequestDataContext ctx = JsonUtils.parseObject(
                         new String(bytes, StandardCharsets.UTF_8), RequestDataContext.class);
                     if (ctx != null) {
                         RequestContextHolder.set(ctx);
