@@ -39,7 +39,7 @@ services:
     restart: always
 
   rabbitmq:
-    image: c7l2hmalrte697hztn.xuanyuan.run/library/rabbitmq:3.10-management
+    image: c7l2hmalrte697hztn.xuanyuan.run/library/rabbitmq:4.3-management
     container_name: abstergo_rabbitmq
     ports:
       - "5672:5672"
@@ -51,7 +51,7 @@ services:
 
 
   minio:
-    image: c7l2hmalrte697hztn.xuanyuan.run/minio/minio:latest
+    image: c7l2hmalrte697hztn.xuanyuan.run/minio/minio:RELEASE.2025-09-07T16-13-09Z
     container_name: abstergo_minio
     ports:
       - "9000:9000"
