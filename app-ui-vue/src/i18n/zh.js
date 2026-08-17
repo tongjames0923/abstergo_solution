@@ -572,8 +572,8 @@ export default {
     tabPackages: '安装包',
     tabPolicies: '兼容策略',
     appKey: '应用标识',
-    appKeyPh: '请输入应用标识',
-    appKeyRequired: '请输入应用标识',
+    appKeyPh: '选择应用标识（可搜索）',
+    appKeyRequired: '请选择应用标识',
     versionCode: '版本号',
     versionCodeRequired: '请输入版本号',
     versionName: '版本名称',
@@ -680,7 +680,10 @@ export default {
     noNeedUpgrade: '当前版本已是最新',
     latestVersion: '最新版本号',
     executeCheck: '执行检查',
-    copySuccess: '已复制到剪贴板'
+    copySuccess: '已复制到剪贴板',
+    cloneVersion: '复制新建',
+    cloneFrom: '复制自 {name}',
+    selectApp: '选择应用'
   },
 
   // 网络请求

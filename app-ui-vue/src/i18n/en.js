@@ -572,8 +572,8 @@ export default {
     tabPackages: 'Packages',
     tabPolicies: 'Compat Policies',
     appKey: 'App Key',
-    appKeyPh: 'Enter app key',
-    appKeyRequired: 'Please enter app key',
+    appKeyPh: 'Select app key (searchable)',
+    appKeyRequired: 'Please select app key',
     versionCode: 'Version Code',
     versionCodeRequired: 'Please enter version code',
     versionName: 'Version Name',
@@ -680,7 +680,10 @@ export default {
     noNeedUpgrade: 'Already Up to Date',
     latestVersion: 'Latest Version Code',
     executeCheck: 'Check',
-    copySuccess: 'Copied to clipboard'
+    copySuccess: 'Copied to clipboard',
+    cloneVersion: 'Clone',
+    cloneFrom: 'Cloned from {name}',
+    selectApp: 'Select app'
   },
 
   // Network Request

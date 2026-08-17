@@ -15,7 +15,9 @@
         <el-tab-pane :label="$t('version.tabVersions')" name="versions">
           <div class="tab-toolbar">
             <div class="filter-row">
-              <el-input v-model="versionSearch.appKeyEquals" :placeholder="$t('version.appKey')" size="small" clearable prefix-icon="el-icon-search" style="width:160px" @keyup.enter.native="loadVersions" />
+              <el-select v-model="versionSearch.appKeyEquals" :placeholder="$t('version.appKey')" size="small" filterable clearable style="width:160px" @change="handleVersionSearch">
+                <el-option v-for="key in appKeys" :key="key" :label="key" :value="key" />
+              </el-select>
               <el-input v-model="versionSearch.versionNameLike" :placeholder="$t('version.versionName')" size="small" clearable style="width:160px" @keyup.enter.native="loadVersions" />
               <el-select v-model="versionSearch.platformEquals" :placeholder="$t('version.platform')" size="small" clearable style="width:130px">
                 <el-option label="Android" value="android" />
@@ -69,6 +71,7 @@
                 <el-button v-if="row.flag === 1" size="mini" type="text" class="warning-text" @click="handleLifecycle(row, 'rollback')"><i class="el-icon-refresh-left" /> {{ $t('version.rollback') }}</el-button>
                 <el-button v-if="row.flag === -1" size="mini" type="text" @click="handleLifecycle(row, 'archive')"><i class="el-icon-folder-checked" /> {{ $t('version.archive') }}</el-button>
                 <el-button v-if="row.flag === 0" size="mini" type="text" @click="handleEditVersion(row)"><i class="el-icon-edit-outline" /> {{ $t('common.edit') }}</el-button>
+                <el-button v-if="row.flag === 0 || row.flag === 1" size="mini" type="text" class="success-text" @click="handleCloneVersion(row)"><i class="el-icon-document-copy" /> {{ $t('version.cloneVersion') }}</el-button>
                 <el-button v-if="row.flag === 0" size="mini" type="text" class="danger-text" @click="handleDeleteVersion(row)"><i class="el-icon-delete" /> {{ $t('common.delete') }}</el-button>
               </template>
             </el-table-column>
@@ -187,7 +190,9 @@
       <el-dialog :title="versionForm.id ? $t('version.editVersion') : $t('version.addVersion')" :visible.sync="versionDialogVisible" width="600px" :close-on-click-modal="false" @close="resetVersionForm">
         <el-form ref="versionForm" :model="versionForm" :rules="versionRules" label-width="100px">
           <el-form-item :label="$t('version.appKey')" prop="appKey">
-            <el-input v-model="versionForm.appKey" :placeholder="$t('version.appKeyPh')" :disabled="!!versionForm.id" />
+            <el-select v-model="versionForm.appKey" filterable :placeholder="$t('version.appKeyPh')" :disabled="!!versionForm.id" style="width:100%">
+              <el-option v-for="key in appKeys" :key="key" :label="key" :value="key" />
+            </el-select>
           </el-form-item>
           <div class="form-row">
             <el-form-item :label="$t('version.versionCode')" prop="versionCode" class="form-row-item">
@@ -420,7 +425,7 @@ export default {
       versionDialogVisible: false, saving: false,
       versionForm: { id: null, appKey: '', versionCode: null, versionName: '', versionType: 1, platform: 'android', releaseNote: '', buildInfo: '' },
       versionRules: {
-        appKey: [{ required: true, message: this.$t('version.appKeyRequired'), trigger: 'blur' }],
+        appKey: [{ required: true, message: this.$t('version.appKeyRequired'), trigger: 'change' }],
         versionCode: [{ required: true, message: this.$t('version.versionCodeRequired'), trigger: 'blur' }],
         versionName: [{ required: true, message: this.$t('version.versionNameRequired'), trigger: 'blur' }],
         versionType: [{ required: true, message: this.$t('version.versionTypeRequired'), trigger: 'change' }],
@@ -454,6 +459,7 @@ export default {
     }
   },
   mounted() {
+    this.loadAppKeys()
     this.loadVersions()
   },
   computed: {
@@ -494,6 +500,24 @@ export default {
       this.versionForm = { id: null, appKey: '', versionCode: null, versionName: '', versionType: 1, platform: 'android', releaseNote: '', buildInfo: '' }
       this.versionDialogVisible = true
       this.$nextTick(() => this.$refs.versionForm && this.$refs.versionForm.clearValidate())
+    },
+    /** 基于现有版本快捷复制新建：预填 appKey/platform/versionType/releaseNote/buildInfo，清空 id/versionCode/versionName */
+    handleCloneVersion(row) {
+      this.versionForm = {
+        id: null,
+        appKey: row.appKey,
+        versionCode: null,
+        versionName: '',
+        versionType: row.versionType,
+        platform: row.platform,
+        releaseNote: row.releaseNote || '',
+        buildInfo: row.buildInfo || ''
+      }
+      this.versionDialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.versionForm && this.$refs.versionForm.clearValidate()
+        this.$message.info(this.$t('version.cloneFrom', { name: row.versionName }))
+      })
     },
     handleEditVersion(row) {
       this.versionForm = { id: row.id, appKey: row.appKey, versionCode: row.versionCode, versionName: row.versionName, versionType: row.versionType, platform: row.platform, releaseNote: row.releaseNote || '', buildInfo: row.buildInfo || '' }
