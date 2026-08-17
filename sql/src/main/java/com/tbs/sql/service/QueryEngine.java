@@ -34,6 +34,10 @@ public class QueryEngine implements IStartup {
     @Getter
     private static volatile QueryEngine instance;
 
+    /**
+     * 实体缓存，避免重复创建实体对象。
+     */
+    private static final Map<Class<?>, Object> entityCache = new ConcurrentHashMap<>(32);
     private final SqlDialect dialect;
     private final SqlProperty sqlProperty;
     private final ISqlAssembler sqlAssembler;
@@ -83,7 +87,7 @@ public class QueryEngine implements IStartup {
     public static final <T> IEntityQueryWrapper<T> getEntityQueryWrapper(Class<T> clazz, java.util.function.Supplier<T> entity) {
         try {
             IEntityQueryWrapper<T> entityWrapper = SpringUtil.getBean(IEntityQueryWrapper.class);
-            return entityWrapper.makeQueryable(entity.get());
+            return entityWrapper.makeQueryable((T)entityCache.computeIfAbsent(clazz, k -> entity.get()));
         } catch (Exception e) {
             AssertUtil.throwError(() -> new FormattedRuntimeException(e, "Failed to create entity wrapper for class: {}", clazz.getName()));
         }

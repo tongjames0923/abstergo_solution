@@ -14,11 +14,17 @@ import com.tbs.app.service.impl.role.SimpleRoleGroupServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
 import com.tbs.app.service.impl.user.SimpleSystemUserServiceImpl;
+import com.tbs.app.service.impl.version.AppPackageServiceImpl;
+import com.tbs.app.service.impl.version.AppVersionCompatibilityPolicyServiceImpl;
+import com.tbs.app.service.impl.version.AppVersionServiceImpl;
 import com.tbs.app.service.impl.view.ViewServiceImpl;
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.version.IAppPackageService;
+import com.tbs.app.service.version.IAppVersionCompatibilityPolicyService;
+import com.tbs.app.service.version.IAppVersionService;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.common.error.IErrorThrowEvent;
@@ -138,6 +144,27 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public ISystemRoleGroupService systemRoleGroupService() {
         return new SimpleRoleGroupServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IAppVersionService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IAppVersionService appVersionService() {
+        return new AppVersionServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IAppPackageService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IAppPackageService appPackageService() {
+        return new AppPackageServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IAppVersionCompatibilityPolicyService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IAppVersionCompatibilityPolicyService appVersionCompatibilityPolicyService() {
+        return new AppVersionCompatibilityPolicyServiceImpl();
     }
 
 }
