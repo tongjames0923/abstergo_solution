@@ -31,33 +31,12 @@ module.exports = {
   productionSourceMap: false,
   devServer: {
     port: port,
-    before: require('./mock/mock-server.js'),
     proxy: {
       '/api': {
         target: defaultSettings.backend,
         changeOrigin: true,
         pathRewrite: {
           '^/api': ''
-        },
-        onProxyReq: function(proxyReq, req, res, options) {
-          // body-parser（mock服务）对所有请求都会无条件设置 req.body = {}，
-          // 因此这里必须按原始 Content-Type 区分：只重写真正被解析过的 JSON / urlencoded 请求，
-          // multipart/form-data（文件上传）等保持原始流透传，
-          // 否则 Content-Type 会被改写为 application/json，导致后端报 "not a multipart request"
-          if (!req.body) {
-            return
-          }
-          if (req.is('application/json')) {
-            const bodyData = JSON.stringify(req.body)
-            proxyReq.setHeader('Content-Type', 'application/json')
-            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData))
-            proxyReq.write(bodyData)
-          } else if (req.is('application/x-www-form-urlencoded')) {
-            const bodyData = require('querystring').stringify(req.body)
-            proxyReq.setHeader('Content-Type', 'application/x-www-form-urlencoded')
-            proxyReq.setHeader('Content-Length', Buffer.byteLength(bodyData))
-            proxyReq.write(bodyData)
-          }
         }
       }
     }
