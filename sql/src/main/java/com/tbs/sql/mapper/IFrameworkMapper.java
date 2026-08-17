@@ -1,8 +1,10 @@
 package com.tbs.sql.mapper;
 
 import com.tbs.sql.criteria.IQueryCriteria;
+import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.mapper.impl.ConditionBuilder;
 import com.tbs.sql.mapper.impl.FetchMapper;
+import com.tbs.sql.service.QueryEngine;
 import tk.mybatis.mapper.additional.idlist.IdListMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateSelectiveMapper;
@@ -63,5 +65,16 @@ import tk.mybatis.mapper.common.special.InsertListMapper;
 @RegisterMapper
 public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<T>, BatchUpdateMapper<T>,
     BatchUpdateSelectiveMapper<T>, IdListMapper<T, K>, SmartQueryMapper {
+
+    /**
+     * 根据实体类类型获取查询构建器。
+     *
+     * @param entityClass 实体类类型
+     * @return 查询构建器
+     */
+    default IQueryBuilder<T> query(Class<T> entityClass) {
+        return QueryEngine.getEntityQueryWrapper(entityClass).query();
+    }
+
 
 }
