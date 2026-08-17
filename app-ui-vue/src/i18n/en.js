@@ -572,7 +572,7 @@ export default {
     tabPackages: 'Packages',
     tabPolicies: 'Compat Policies',
     appKey: 'App Key',
-    appKeyPh: 'Select app key (searchable)',
+    appKeyPh: 'Select or type a new app key (searchable, creatable)',
     appKeyRequired: 'Please select app key',
     versionCode: 'Version Code',
     versionCodeRequired: 'Please enter version code',
@@ -695,7 +695,7 @@ export default {
     helpStep4Desc: 'Switch to the "Compat Policies" tab, click "Add Policy", select source and target app/platform, set the minimum compatible version code and upgrade action (force / recommend / notify). Once enabled, the client upgrade-check API will return upgrade prompts according to the policy.',
     helpStep5Title: 'Clone & Upgrade Check',
     helpStep5Desc: 'The version list supports "Clone" — quickly create a new version based on an existing one without re-filling fields. The "Upgrade Check" in the compat policies tab lets you simulate a client query to verify that the policy triggers the expected upgrade prompt.',
-    helpTip: 'Tip: Most fields support searchable filtering; dropdown options come from registered app keys.'
+    helpTip: 'Tip: When creating a version you can type a brand-new app key directly; other dropdown options come from registered app keys and support searchable filtering.'
   },
 
   // Network Request

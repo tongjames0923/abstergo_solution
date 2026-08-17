@@ -191,7 +191,8 @@
       <el-dialog :title="versionForm.id ? $t('version.editVersion') : $t('version.addVersion')" :visible.sync="versionDialogVisible" width="600px" :close-on-click-modal="false" @close="resetVersionForm">
         <el-form ref="versionForm" :model="versionForm" :rules="versionRules" label-width="100px">
           <el-form-item :label="$t('version.appKey')" prop="appKey">
-            <el-select v-model="versionForm.appKey" filterable :placeholder="$t('version.appKeyPh')" :disabled="!!versionForm.id" style="width:100%">
+            <!-- allow-create 支持直接输入新的应用标识创建首个版本 -->
+            <el-select v-model="versionForm.appKey" filterable allow-create default-first-option :placeholder="$t('version.appKeyPh')" :disabled="!!versionForm.id" style="width:100%">
               <el-option v-for="key in appKeys" :key="key" :label="key" :value="key" />
             </el-select>
           </el-form-item>
