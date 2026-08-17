@@ -24,6 +24,11 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
+  servlet:
+    multipart:
+      # 上传大小限制（Spring Boot默认仅 max-file-size=1MB / max-request-size=10MB，大文件上传会被拒绝）
+      max-file-size: 1024MB
+      max-request-size: 2048MB
 logging:
   level:
     com.alibaba: warn

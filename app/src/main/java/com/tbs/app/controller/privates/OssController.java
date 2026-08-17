@@ -2,11 +2,14 @@ package com.tbs.app.controller.privates;
 
 import cn.hutool.core.date.DateUtil;
 import com.tbs.app.annotation.NoLog;
+import com.tbs.app.service.oss.UploadTaskProgressManager;
+import com.tbs.app.vo.UploadTaskProgressVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.oss.core.OssClient;
+import com.tbs.oss.core.ProgressListener;
 import com.tbs.oss.model.*;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
@@ -60,15 +63,20 @@ public class OssController extends BaseController {
     @Resource
     private OssClient ossClient;
 
+    @Resource
+    private UploadTaskProgressManager uploadTaskProgressManager;
+
     /**
      * 上传文件
      * <p>
-     * 未指定objectKey时自动生成“日期目录/UUID.扩展名”形式的存储路径， 避免直接暴露原始文件名
+     * 未指定objectKey时自动生成“日期目录/UUID.扩展名”形式的存储路径， 避免直接暴露原始文件名。
+     * 指定taskId时登记上传任务并采集写入对象存储的实时进度，前端可通过进度查询接口轮询
      * </p>
      *
      * @param file      上传的文件
      * @param objectKey 存储对象键（可选）
      * @param bucket    存储桶（可选，缺省使用默认桶）
+     * @param taskId    上传任务ID（可选，用于进度轮询）
      * @return 上传结果，包含对象键与访问地址
      */
     @PostMapping("upload")
@@ -82,18 +90,75 @@ public class OssController extends BaseController {
         @Parameter(name = "objectKey", description = "存储对象键，缺省自动生成") @RequestParam(value = "objectKey",
             required = false) String objectKey,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
-            required = false) String bucket) throws IOException {
+            required = false) String bucket,
+        @Parameter(name = "taskId", description = "上传任务ID，指定后可轮询上传进度") @RequestParam(value = "taskId",
+            required = false) String taskId) throws IOException {
         AssertUtil.isTrue(file == null || file.isEmpty()).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .i18n("oss.file.empty").throwIt();
         String key = StrUtil.isEmpty(objectKey) ? generateObjectKey(file.getOriginalFilename()) : objectKey;
+        boolean trackProgress = !StrUtil.isEmpty(taskId);
+        if (trackProgress) {
+            uploadTaskProgressManager.register(taskId, file.getSize());
+        }
         PutObjectRequest.Builder builder =
             PutObjectRequest.builder(key).inputStream(file.getInputStream()).contentLength(file.getSize())
                 .contentType(file.getContentType());
         if (!StrUtil.isEmpty(bucket)) {
             builder.bucketName(bucket);
         }
+        if (trackProgress) {
+            // 挂载进度监听器，采集写入对象存储的真实字节数（MinIO实现按64KiB步长驱动回调）
+            builder.progressListener(new ProgressListener.Adapter() {
+
+                @Override
+                public void onProgress(long transferredBytes, long totalBytes) {
+                    uploadTaskProgressManager.updateTransferred(taskId, transferredBytes);
+                }
+
+                @Override
+                public void onSuccess() {
+                    uploadTaskProgressManager.markSuccess(taskId);
+                }
+
+                @Override
+                public void onError(Exception e) {
+                    uploadTaskProgressManager.markFailed(taskId);
+                }
+            });
+        }
         PutObjectResult result = ossClient.putObject(builder.build());
         return successResult(result);
+    }
+
+    /**
+     * 查询上传任务进度
+     * <p>
+     * 供前端在上传请求执行期间轮询。任务不存在时返回RECEIVING状态，
+     * 表示请求体仍在接收中，尚未进入写入阶段
+     * </p>
+     *
+     * @param taskId 上传任务ID
+     * @return 任务进度信息
+     */
+    @GetMapping("upload/progress")
+    @AjaxResponseType(UploadTaskProgressVO.class)
+    @Operation(summary = "查询上传任务进度", description = "上传期间由前端轮询，获取服务端写入对象存储的实时进度")
+    @ApiResponse(responseCode = "200", description = "成功查询上传任务进度",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult uploadProgress(
+        @Parameter(name = "taskId", description = "上传任务ID", required = true) @RequestParam(
+            "taskId") String taskId) {
+        AssertUtil.isTrue(StrUtil.isEmpty(taskId)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .i18n("oss.task.id.empty").throwIt();
+        UploadTaskProgressVO progress = uploadTaskProgressManager.get(taskId);
+        if (progress == null) {
+            // 任务尚未登记：请求体仍在接收中，或进度条目已过期
+            progress = new UploadTaskProgressVO();
+            progress.setTaskId(taskId);
+            progress.setStatus(UploadTaskProgressVO.STATUS_RECEIVING);
+        }
+        return successResult(progress);
     }
 
     /**
