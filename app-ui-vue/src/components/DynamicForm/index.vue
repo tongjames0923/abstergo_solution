@@ -50,118 +50,118 @@
         v-bind="formProps"
         v-on="formListeners"
       >
-      <!-- 表单前内容 -->
-      <slot name="before-form" />
+        <!-- 表单前内容 -->
+        <slot name="before-form" />
 
-      <!-- 默认布局：根据配置自动生成 -->
-      <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
-        <el-row
-          :gutter="finalGutter"
-          class="dynamic-form-row"
-        >
-          <el-col
-            v-for="field in config.fields"
-            :key="field.prop || field.label || field.type"
-            :span="getFieldSpan(field)"
-            :xs="getFieldResponsiveSpan(field, 'xs')"
-            :sm="getFieldResponsiveSpan(field, 'sm')"
-            :md="getFieldResponsiveSpan(field, 'md')"
-            :lg="getFieldResponsiveSpan(field, 'lg')"
-            :xl="getFieldResponsiveSpan(field, 'xl')"
-            class="dynamic-form-col"
+        <!-- 默认布局：根据配置自动生成 -->
+        <template v-if="!$slots.default && config && config.fields && config.fields.length > 0">
+          <el-row
+            :gutter="finalGutter"
+            class="dynamic-form-row"
           >
-            <slot
-              :field="field"
-              :name="`form-item-${field && field.prop}`"
-              :set-value="val => setFieldValue((field && field.prop) || '', val)"
-              :value="formData[(field && field.prop) || '']"
+            <el-col
+              v-for="field in config.fields"
+              :key="field.prop || field.label || field.type"
+              :span="getFieldSpan(field)"
+              :xs="getFieldResponsiveSpan(field, 'xs')"
+              :sm="getFieldResponsiveSpan(field, 'sm')"
+              :md="getFieldResponsiveSpan(field, 'md')"
+              :lg="getFieldResponsiveSpan(field, 'lg')"
+              :xl="getFieldResponsiveSpan(field, 'xl')"
+              class="dynamic-form-col"
             >
-              <el-form-item
-                :label="(field && field.label) || ''"
-                :prop="(field && field.prop) || ''"
-                class="dynamic-form-item"
-                v-bind="getFieldItemProps(field)"
+              <slot
+                :field="field"
+                :name="`form-item-${field && field.prop}`"
+                :set-value="val => setFieldValue((field && field.prop) || '', val)"
+                :value="formData[(field && field.prop) || '']"
               >
-                <!-- 输入框 -->
-                <el-input
-                  v-if="field && field.type === 'input'"
-                  :value="formData[(field && field.prop) || '']"
-                  v-bind="field.props"
-                  class="dynamic-form-component"
-                  @input="val => setFieldValue((field && field.prop) || '', val)"
-                />
-
-                <!-- 选择器 -->
-                <el-select
-                  v-else-if="field && field.type === 'select'"
-                  :value="formData[(field && field.prop) || '']"
-                  v-bind="field.props"
-                  class="dynamic-form-component"
-                  @change="val => setFieldValue((field && field.prop) || '', val)"
+                <el-form-item
+                  :label="(field && field.label) || ''"
+                  :prop="(field && field.prop) || ''"
+                  class="dynamic-form-item"
+                  v-bind="getFieldItemProps(field)"
                 >
-                  <el-option
-                    v-for="option in (field.props && field.props.options || [])"
-                    :key="(option && option.value) || ''"
-                    :label="(option && option.label) || ''"
-                    :value="(option && option.value)"
+                  <!-- 输入框 -->
+                  <el-input
+                    v-if="field && field.type === 'input'"
+                    :value="formData[(field && field.prop) || '']"
+                    v-bind="field.props"
+                    class="dynamic-form-component"
+                    @input="val => setFieldValue((field && field.prop) || '', val)"
                   />
-                </el-select>
 
-                <!-- 日期范围 -->
-                <el-date-picker
-                  v-else-if="field && field.type === 'date-range'"
-                  :value="formData[(field && field.prop) || '']"
-                  type="daterange"
-                  v-bind="field.props"
-                  class="dynamic-form-component date-range-picker"
-                  :popper-class="`date-range-picker-popper ${field.prop || ''}`"
-                  start-placeholder="开始日期"
-                  end-placeholder="结束日期"
-                  @change="val => handleDateRangeChange((field && field.prop) || '', val)"
-                  @input="val => handleDateRangeChange((field && field.prop) || '', val)"
-                />
+                  <!-- 选择器 -->
+                  <el-select
+                    v-else-if="field && field.type === 'select'"
+                    :value="formData[(field && field.prop) || '']"
+                    v-bind="field.props"
+                    class="dynamic-form-component"
+                    @change="val => setFieldValue((field && field.prop) || '', val)"
+                  >
+                    <el-option
+                      v-for="option in (field.props && field.props.options || [])"
+                      :key="(option && option.value) || ''"
+                      :label="(option && option.label) || ''"
+                      :value="(option && option.value)"
+                    />
+                  </el-select>
 
-                <!-- 动态选项 -->
-                <DynamicOptions
-                  v-else-if="field && field.type === 'dynamic-options'"
-                  :value="formData[(field && field.prop) || '']"
-                  v-bind="field.props"
-                  class="dynamic-form-component"
-                  @change="val => setFieldValue((field && field.prop) || '', val)"
-                />
-                <url-image
-                  v-else-if="field && field.type === 'url-image'"
-                  :value="formData[(field && field.prop) || '']"
-                  v-bind="field.props"
-                  class="dynamic-form-component url-image-component"
-                  @change="val => setFieldValue((field && field.prop) || '', val)"
-                />
-                <!-- 其他自定义组件 -->
-                <component
-                  :is="customComponents[(field && field.type) || '']"
-                  v-else-if="field && field.type && customComponents[(field && field.type) || '']"
-                  :value="formData[(field && field.prop) || '']"
-                  v-bind="field.props"
-                  class="dynamic-form-component"
-                  @change="val => setFieldValue((field && field.prop) || '', val)"
-                  @input="val => setFieldValue((field && field.prop) || '', val)"
-                />
-              </el-form-item>
-            </slot>
-          </el-col>
-        </el-row>
-      </template>
+                  <!-- 日期范围 -->
+                  <el-date-picker
+                    v-else-if="field && field.type === 'date-range'"
+                    :value="formData[(field && field.prop) || '']"
+                    type="daterange"
+                    v-bind="field.props"
+                    class="dynamic-form-component date-range-picker"
+                    :popper-class="`date-range-picker-popper ${field.prop || ''}`"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                    @change="val => handleDateRangeChange((field && field.prop) || '', val)"
+                    @input="val => handleDateRangeChange((field && field.prop) || '', val)"
+                  />
 
-      <!-- 自定义布局 -->
-      <slot
-        v-else
-        :form="form"
-        :form-data="formData"
-        :set-value="setFieldValue"
-      />
+                  <!-- 动态选项 -->
+                  <DynamicOptions
+                    v-else-if="field && field.type === 'dynamic-options'"
+                    :value="formData[(field && field.prop) || '']"
+                    v-bind="field.props"
+                    class="dynamic-form-component"
+                    @change="val => setFieldValue((field && field.prop) || '', val)"
+                  />
+                  <url-image
+                    v-else-if="field && field.type === 'url-image'"
+                    :value="formData[(field && field.prop) || '']"
+                    v-bind="field.props"
+                    class="dynamic-form-component url-image-component"
+                    @change="val => setFieldValue((field && field.prop) || '', val)"
+                  />
+                  <!-- 其他自定义组件 -->
+                  <component
+                    :is="customComponents[(field && field.type) || '']"
+                    v-else-if="field && field.type && customComponents[(field && field.type) || '']"
+                    :value="formData[(field && field.prop) || '']"
+                    v-bind="field.props"
+                    class="dynamic-form-component"
+                    @change="val => setFieldValue((field && field.prop) || '', val)"
+                    @input="val => setFieldValue((field && field.prop) || '', val)"
+                  />
+                </el-form-item>
+              </slot>
+            </el-col>
+          </el-row>
+        </template>
 
-      <!-- 表单后内容 -->
-      <slot name="after-form" />
+        <!-- 自定义布局 -->
+        <slot
+          v-else
+          :form="form"
+          :form-data="formData"
+          :set-value="setFieldValue"
+        />
+
+        <!-- 表单后内容 -->
+        <slot name="after-form" />
 
         <!-- 操作按钮 -->
         <div class="form-actions">

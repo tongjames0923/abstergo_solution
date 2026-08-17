@@ -3,6 +3,7 @@ package com.tbs.app;
 import com.tbs.async.annotation.EnableTbsAsyncPack;
 import com.tbs.cache.annotation.EnableTbsCache;
 import com.tbs.knife4j.annotation.UseKnife4jPack;
+import com.tbs.oss.annotation.EnableTbsOss;
 import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.script.annotation.EnableScriptEngine;
@@ -41,6 +42,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @UseClosureTableTree
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableTbsRedis
+@EnableTbsOss
 @EnableDubbo
 @EnableScriptEngine
 public class AppApplication {

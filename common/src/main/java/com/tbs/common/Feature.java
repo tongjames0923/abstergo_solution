@@ -96,6 +96,11 @@ public class Feature {
      */
     public static final Feature TRACE = Feature.create("com.tbs.trace", "链路追踪");
 
+    /**
+     * 对象存储功能
+     */
+    public static final Feature OSS = Feature.create("com.tbs.oss", "对象存储");
+
 
     // ==================== 实例字段 ====================
 
@@ -200,7 +205,7 @@ public class Feature {
         }
         // 通过反射获取所有预定义的静态常量
         for (Feature feature : new Feature[]{COMMON, REDIS, RABBITMQ, CACHE, ASYNC, SCRIPT,
-                VIEW_ROUTE, WEB, SHARED, CLOSURE_TABLE, KNIFE4J, XXL_JOB, LOGGING}) {
+                VIEW_ROUTE, WEB, SHARED, CLOSURE_TABLE, KNIFE4J, XXL_JOB, LOGGING, OSS}) {
             if (feature.id.equalsIgnoreCase(id)) {
                 return feature;
             }

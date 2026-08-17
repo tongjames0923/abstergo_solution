@@ -494,7 +494,7 @@ export default {
      * @param {Number} options.page - 页码
      * @param {Number} options.size - 每页条数
      */
-    updatePagination({page, size}) {
+    updatePagination({ page, size }) {
       if (page !== undefined) {
         this.pageParams.page = page
         this.$emit('update:currentPage', page)
@@ -519,7 +519,7 @@ export default {
      * @param {Number} size - 新的分页大小
      */
     handleSizeChange(size) {
-      this.updatePagination({size})
+      this.updatePagination({ size })
     },
 
     /**
@@ -527,7 +527,7 @@ export default {
      * @param {Number} page - 新的当前页
      */
     handleCurrentPageChange(page) {
-      this.updatePagination({page})
+      this.updatePagination({ page })
     },
 
     /**

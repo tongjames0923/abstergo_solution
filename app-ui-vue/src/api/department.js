@@ -100,7 +100,6 @@ export function listChildren(parentId) {
   })
 }
 
-
 /**
  * 申请用户加入部门
  * @param userId
@@ -110,7 +109,7 @@ export function listChildren(parentId) {
 export function applyUserToDepartment(userId, departmentId) {
   return request({
     url: 'private/department/addEmp/' + departmentId + '/' + userId,
-    method: 'post',
+    method: 'post'
   })
 }
 
@@ -123,7 +122,7 @@ export function applyUserToDepartment(userId, departmentId) {
 export function removeUserFromDepartment(userId, departmentId) {
   return request({
     url: 'private/department/delEmp/' + departmentId + '/' + userId,
-    method: 'post',
+    method: 'post'
   })
 }
 

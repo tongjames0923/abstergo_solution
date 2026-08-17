@@ -20,9 +20,9 @@
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import DynamicTable from '@/components/DynamicTable/index.vue'
-import {adminQueryUser, saveUser} from '@/api/admin_user'
-import {rangeQueryTransform} from '@/utils/query-help'
-import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
+import { adminQueryUser, saveUser } from '@/api/admin_user'
+import { rangeQueryTransform } from '@/utils/query-help'
+import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
 
 export default {
   name: 'UserManagementView',
@@ -43,9 +43,9 @@ export default {
             </el-avatar>
           }
         },
-        {prop: 'userName', label: '用户名', width: 180},
-        {prop: 'nickName', label: '昵称', width: 180},
-        {prop: 'remark', label: '备注', minWidth: 200},
+        { prop: 'userName', label: '用户名', width: 180 },
+        { prop: 'nickName', label: '昵称', width: 180 },
+        { prop: 'remark', label: '备注', minWidth: 200 },
         {
           prop: 'flag',
           label: '状态',
@@ -62,8 +62,8 @@ export default {
             }
           }
         },
-        {prop: 'createTime', label: '创建时间', width: 180, sortable: true},
-        {prop: 'updateTime', label: '更新时间', width: 180, sortable: true}
+        { prop: 'createTime', label: '创建时间', width: 180, sortable: true },
+        { prop: 'updateTime', label: '更新时间', width: 180, sortable: true }
       ]
     }
   },

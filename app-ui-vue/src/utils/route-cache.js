@@ -29,7 +29,7 @@ class RouteCacheService {
     try {
       const cachedData = localStorage.getItem(ROUTE_CACHE_KEY)
       const timestamp = localStorage.getItem(ROUTE_CACHE_TIMESTAMP_KEY)
-      
+
       if (!cachedData || !timestamp) {
         return null
       }
@@ -37,7 +37,7 @@ class RouteCacheService {
       // 检查缓存是否过期
       const now = Date.now()
       const cacheTime = parseInt(timestamp, 10)
-      
+
       if (now - cacheTime > this.cacheDuration) {
         // 缓存已过期，清除缓存
         this.clearCache()

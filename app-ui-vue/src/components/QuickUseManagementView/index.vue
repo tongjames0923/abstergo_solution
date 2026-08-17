@@ -88,15 +88,15 @@
               {{ deleteActionButtonText || $t('common.delete') }}
             </el-button>
             <!-- 兼容旧版actions插槽 -->
-            <slot name="actions" :row="row" :index="$index"/>
+            <slot name="actions" :row="row" :index="$index" />
             <!-- 更多功能按钮 -->
             <template v-if="$scopedSlots['actions-dropdown']">
               <el-dropdown @command="handleActionCommand($event, row, $index)">
                 <el-button size="mini" type="primary" plain>
-                  {{ $t('common.moreActions') }}<i class="el-icon-arrow-down el-icon--right"/>
+                  {{ $t('common.moreActions') }}<i class="el-icon-arrow-down el-icon--right" />
                 </el-button>
                 <el-dropdown-menu>
-                  <slot name="actions-dropdown" :row="row" :index="$index"/>
+                  <slot name="actions-dropdown" :row="row" :index="$index" />
                 </el-dropdown-menu>
               </el-dropdown>
             </template>
@@ -138,7 +138,7 @@
 <script>
 import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi'
 import DynamicTable from '@/components/DynamicTable'
-import {exportTableToExcel} from '@/utils/excel' // 导入Excel导出工具函数
+import { exportTableToExcel } from '@/utils/excel' // 导入Excel导出工具函数
 
 export default {
   name: 'QuickUseManagementView',
@@ -487,7 +487,7 @@ export default {
     // 显示编辑弹窗
     showEditDialog(rowData) {
       this.dialogType = 'edit'
-      this.editFormData = {...rowData}
+      this.editFormData = { ...rowData }
       this.dialogVisible = true
     },
 
@@ -504,7 +504,7 @@ export default {
         confirmButtonText: this.$t('common.confirm'),
         cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
-      }).then(async () => {
+      }).then(async() => {
         // 如果提供了删除处理器，则调用它
         if (this.deleteHandler && typeof this.deleteHandler === 'function') {
           await this.deleteHandler(row)
@@ -523,7 +523,7 @@ export default {
 
     // 处理操作命令
     handleActionCommand(command, row, index) {
-      this.$emit('action-command', {command, row, index})
+      this.$emit('action-command', { command, row, index })
     },
 
     // 处理弹窗关闭
@@ -548,22 +548,22 @@ export default {
     async handleExport() {
       try {
         if (!this.originalData || this.originalData.length === 0) {
-          this.$message.warning(this.$t('common.noExportData'));
-          return;
+          this.$message.warning(this.$t('common.noExportData'))
+          return
         }
 
         // 数据量限制提醒
         if (this.originalData.length > 5000) {
           const confirm = await this.$confirm(
-            this.$t('common.largeDataConfirm', {count: this.originalData.length}),
+            this.$t('common.largeDataConfirm', { count: this.originalData.length }),
             this.$t('common.tip'),
             {
               confirmButtonText: this.$t('common.continueExport'),
               cancelButtonText: this.$t('common.cancel'),
               type: 'warning'
             }
-          );
-          if (!confirm) return;
+          )
+          if (!confirm) return
         }
 
         // 准备列配置用于导出
@@ -572,7 +572,7 @@ export default {
         // 调用导出函数，使用原始数据
         exportTableToExcel(this.originalData, exportColumns, this.mainTitle + this.$t('common.queryData'))
 
-        this.$message.success(this.$t('common.exportSuccess', {count: this.originalData.length}));
+        this.$message.success(this.$t('common.exportSuccess', { count: this.originalData.length }))
       } catch (error) {
         console.error('导出失败:', error)
         this.$message.error(this.$t('common.exportFailed'))
@@ -875,7 +875,6 @@ export default {
       opacity: 1;
     }
   }
-
 
   // 移动端适配
   @media (max-width: 768px) {

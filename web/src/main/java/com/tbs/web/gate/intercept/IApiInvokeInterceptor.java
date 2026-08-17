@@ -24,6 +24,19 @@ import java.lang.reflect.Method;
 public interface IApiInvokeInterceptor {
 
 	/**
+	 * 拦截器是否支持当前API调用
+	 * <p>
+	 * 根据API调用上下文信息判断拦截器是否需要处理该调用，返回true则表示支持并执行拦截逻辑，返回false则表示不支持并跳过拦截。
+	 *
+	 * @param context API调用上下文，包含目标对象、方法和参数等信息，可能为null
+	 * @return boolean 拦截器是否支持当前API调用，true表示支持，false表示不支持
+	 * @see ApiInvokeContext API调用上下文类
+	 */
+	public default boolean supports(ApiInvokeContext context) {
+		return true;
+	}
+
+	/**
 	 * API调用上下文类
 	 * <p>
 	 * 用于在拦截器各方法间传递调用相关信息的上下文对象，包含目标控制器、调用方法和参数等核心信息。
@@ -64,6 +77,13 @@ public interface IApiInvokeInterceptor {
 		 * 调用目标方法时传入的参数值数组，可能为null或空数组。
 		 */
 		private Object[] args;
+
+		/**
+		 * 拦截器是否支持当前API调用
+		 * <p>
+		 * 标记拦截器是否支持当前API调用，true表示支持，false表示不支持。
+		 */
+		private boolean supported;
 	}
 
 	/**

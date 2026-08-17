@@ -61,4 +61,11 @@ tbs:
   mq:
     retry:
       scheduler: job
-      enable: true
+  oss:
+    enable: ${OSS_ENABLE:false}
+    type: ${OSS_TYPE:minio}
+    endpoint: ${OSS_ENDPOINT:http://127.0.0.1:9000}
+    access-key-id: ${OSS_ACCESS_KEY_ID:minioadmin}
+    access-key-secret: ${OSS_ACCESS_KEY_SECRET:minioadmin}
+    default-bucket: ${OSS_DEFAULT_BUCKET:app-files}
+    path-style-access: true

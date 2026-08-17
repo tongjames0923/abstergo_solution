@@ -1,5 +1,5 @@
 <template>
-  <permission-control-panel/>
+  <permission-control-panel />
 </template>
 
 <script>

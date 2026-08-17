@@ -47,7 +47,7 @@ public class SystemDataDicController extends BaseController {
     /**
      * 数据字典服务
      */
-    @DubboReference(lazy = true)
+    @DubboReference(lazy = true, check = false)
     private IDataDicService dataDicService;
 
     /**

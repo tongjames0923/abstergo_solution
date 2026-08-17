@@ -111,7 +111,7 @@
 
 <script>
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import {deleteFormConfig, getFormById, listForms} from '@/api/view'
+import { deleteFormConfig, getFormById, listForms } from '@/api/view'
 
 export default {
   name: 'FormManager',
@@ -161,18 +161,18 @@ export default {
     // 应用搜索过滤并更新分页数据
     applyFilter() {
       let filtered = [...this.allFormList]
-      
+
       // 按标题过滤
       if (this.searchForm.title && this.searchForm.title.trim()) {
         const keyword = this.searchForm.title.trim().toLowerCase()
-        filtered = filtered.filter(item => 
+        filtered = filtered.filter(item =>
           item.title && item.title.toLowerCase().includes(keyword)
         )
       }
-      
+
       // 更新总数
       this.pagination.total = filtered.length
-      
+
       // 计算当前页数据
       const startIndex = (this.pagination.currentPage - 1) * this.pagination.pageSize
       const endIndex = startIndex + this.pagination.pageSize

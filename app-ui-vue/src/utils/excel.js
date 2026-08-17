@@ -13,18 +13,18 @@ export function exportTableToExcel(tableData, columns, fileName) {
       columns.forEach(column => {
         if (column.prop) {
           let value = row[column.prop]
-          
-            // 处理日期格式
+
+          // 处理日期格式
           if (column.prop.includes('Time') || column.prop.includes('Date')) {
             value = value ? new Date(value).toLocaleString() : ''
-          } 
+          }
           // 处理特殊值
           else if (value === null || value === undefined) {
             value = ''
           }
           // 处理状态列的特殊值转换
           else if (column.label === '状态' && typeof value === 'number') {
-            switch(value) {
+            switch (value) {
               case 1: value = '正常'; break
               case 0: value = '禁用'; break
               case 2: value = '锁定'; break
@@ -32,20 +32,20 @@ export function exportTableToExcel(tableData, columns, fileName) {
             }
           }
           // 对于其他值保持原样
-          
+
           newRow[column.label] = value
         }
       })
       return newRow
     })
-    
+
     // 创建工作表
     const ws = XLSX.utils.json_to_sheet(exportData)
-    
+
     // 创建工作簿并添加工作表
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
-    
+
     // 生成文件并下载
     XLSX.writeFile(wb, `${fileName}.xlsx`)
   })
@@ -68,11 +68,11 @@ export function exportJsonToExcel(jsonData, keyMap, fileName) {
       })
       return newRow
     }))
-    
+
     // 创建工作簿并添加工作表
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, 'Sheet1')
-    
+
     // 生成文件并下载
     XLSX.writeFile(wb, `${fileName}.xlsx`)
   })
@@ -89,12 +89,12 @@ export function readExcelFile(file, callback) {
     reader.onload = function(e) {
       const data = new Uint8Array(e.target.result)
       const workbook = XLSX.read(data, { type: 'array' })
-      
+
       // 默认读取第一个工作表
       const firstSheetName = workbook.SheetNames[0]
       const worksheet = workbook.Sheets[firstSheetName]
       const jsonData = XLSX.utils.sheet_to_json(worksheet)
-      
+
       callback(jsonData)
     }
     reader.readAsArrayBuffer(file)

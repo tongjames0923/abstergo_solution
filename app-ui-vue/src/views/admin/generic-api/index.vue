@@ -87,7 +87,7 @@
           <div v-for="item in tableData" :key="item.id" class="api-card">
             <div class="card-header">
               <div class="card-title">
-                <i class="el-icon-monitor card-icon"></i>
+                <i class="el-icon-monitor card-icon" />
                 <h3 class="api-name">{{ item.apiName }}</h3>
               </div>
               <div class="card-status">
@@ -136,10 +136,10 @@
             </div>
             <div class="card-footer">
               <el-button size="mini" type="text" class="test-api-btn" @click="openApiTestDialog(item)">
-                <i class="el-icon-caret-right"></i> {{ $t('genericApi.test') }}
+                <i class="el-icon-caret-right" /> {{ $t('genericApi.test') }}
               </el-button>
               <el-button size="mini" type="text" class="edit-text" @click="handleEdit(item)">
-                <i class="el-icon-edit-outline"></i> {{ $t('common.edit') }}
+                <i class="el-icon-edit-outline" /> {{ $t('common.edit') }}
               </el-button>
               <el-button
                 size="mini"
@@ -147,11 +147,11 @@
                 :class="item.flag === 1 ? 'warning-text' : 'success-text'"
                 @click="handleToggle(item)"
               >
-                <i :class="item.flag === 1 ? 'el-icon-video-pause' : 'el-icon-video-play'"></i>
+                <i :class="item.flag === 1 ? 'el-icon-video-pause' : 'el-icon-video-play'" />
                 {{ item.flag === 1 ? $t('genericApi.disable') : $t('genericApi.enable') }}
               </el-button>
               <el-button size="mini" type="text" class="danger-text" @click="handleDelete(item)">
-                <i class="el-icon-delete"></i> {{ $t('common.delete') }}
+                <i class="el-icon-delete" /> {{ $t('common.delete') }}
               </el-button>
             </div>
           </div>
@@ -352,10 +352,10 @@
                 <h4>{{ $t('genericApi.parameters') }}</h4>
                 <div class="section-actions">
                   <el-button size="mini" type="success" @click="addTestParameter">
-                    <i class="el-icon-plus"></i> {{ $t('genericApi.addParameter') }}
+                    <i class="el-icon-plus" /> {{ $t('genericApi.addParameter') }}
                   </el-button>
-                  <el-button size="mini" type="primary" @click="executeApiTest" :loading="testLoading">
-                    <i class="el-icon-caret-right"></i> {{ $t('genericApi.executeTest') }}
+                  <el-button size="mini" type="primary" :loading="testLoading" @click="executeApiTest">
+                    <i class="el-icon-caret-right" /> {{ $t('genericApi.executeTest') }}
                   </el-button>
                 </div>
               </div>
@@ -415,7 +415,7 @@
               <div class="section-header">
                 <h4>{{ $t('genericApi.jsonPreview') }}</h4>
                 <el-button size="mini" type="text" @click="copyJsonBody">
-                  <i class="el-icon-document-copy"></i> {{ $t('genericApi.copyJson') }}
+                  <i class="el-icon-document-copy" /> {{ $t('genericApi.copyJson') }}
                 </el-button>
               </div>
               <pre class="json-preview">{{ formattedRequestBody }}</pre>
@@ -447,8 +447,7 @@ import {
   queryGenericApis,
   saveGenericApi
 } from '@/api/generic-api'
-import request from "@/utils/request";
-
+import request from '@/utils/request'
 
 export default {
   name: 'GenericApiAdmin',
@@ -537,22 +536,22 @@ export default {
   },
   computed: {
     formattedRequestBody() {
-      return JSON.stringify(this.buildRequestBody(), null, 2);
+      return JSON.stringify(this.buildRequestBody(), null, 2)
     }
   },
   mounted() {
-    this.loadPreAuthOptions();
-    this.loadData();
+    this.loadPreAuthOptions()
+    this.loadData()
   },
   methods: {
     // 加载预认证选项
     async loadPreAuthOptions() {
       try {
-        const response = await getAvailablePreAuths();
+        const response = await getAvailablePreAuths()
         this.preAuthOptions = response.data || []
       } catch (error) {
-        console.error('加载预认证选项失败:', error);
-        this.preAuthOptions = [];
+        console.error('加载预认证选项失败:', error)
+        this.preAuthOptions = []
       }
     },
 
@@ -667,13 +666,13 @@ export default {
       this.saving = true
       try {
         // 将预认证Bean数组转换为逗号分隔的字符串
-        const apiFormData = { ...this.apiForm };
+        const apiFormData = { ...this.apiForm }
         if (apiFormData.preAuthBeans && apiFormData.preAuthBeans.length > 0) {
-          apiFormData.preAuthBeans = apiFormData.preAuthBeans.join(',');
+          apiFormData.preAuthBeans = apiFormData.preAuthBeans.join(',')
         } else {
-          apiFormData.preAuthBeans = '';
+          apiFormData.preAuthBeans = ''
         }
-        await saveGenericApi(apiFormData);
+        await saveGenericApi(apiFormData)
         this.dialogVisible = false
         await this.loadData()
       } catch (error) {
@@ -735,10 +734,10 @@ export default {
 
     // 打开API测试对话框
     openApiTestDialog(api) {
-      this.currentApi = api;
-      this.testParameters = [];
-      this.testResult = '';
-      this.testDialogVisible = true;
+      this.currentApi = api
+      this.testParameters = []
+      this.testResult = ''
+      this.testDialogVisible = true
     },
 
     // 添加测试参数
@@ -747,112 +746,112 @@ export default {
         parameterName: '',
         exceptdClassName: 'java.lang.String',
         parameterValue: ''
-      });
+      })
     },
 
     // 删除测试参数
     removeTestParameter(index) {
-      this.testParameters.splice(index, 1);
+      this.testParameters.splice(index, 1)
     },
 
     // 根据类型返回不同的 placeholder
     getValuePlaceholder(className) {
-      if (!className) return this.$t('genericApi.parameterValuePlaceholder');
+      if (!className) return this.$t('genericApi.parameterValuePlaceholder')
 
       // 集合和数组类型需要JSON输入
       if (this.isCollectionOrArray(className)) {
-        return this.$t('genericApi.parameterValueJsonPlaceholder');
+        return this.$t('genericApi.parameterValueJsonPlaceholder')
       }
 
-      return this.$t('genericApi.parameterValuePlaceholder');
+      return this.$t('genericApi.parameterValuePlaceholder')
     },
 
     // 判断是否为集合或数组类型
     isCollectionOrArray(className) {
-      if (!className) return false;
+      if (!className) return false
       // 集合类型
-      const collectionPrefixes = ['java.util.List', 'java.util.Set', 'java.util.Map', 'java.util.Collection', 'java.lang.Iterable'];
+      const collectionPrefixes = ['java.util.List', 'java.util.Set', 'java.util.Map', 'java.util.Collection', 'java.lang.Iterable']
       if (collectionPrefixes.some(prefix => className.startsWith(prefix))) {
-        return true;
+        return true
       }
       // 数组类型
       if (className.endsWith('[]')) {
-        return true;
+        return true
       }
-      return false;
+      return false
     },
 
     // 构建请求体
     buildRequestBody() {
-      const api = this.currentApi;
+      const api = this.currentApi
       return {
         id: api.apiId,
         version: api.version ? parseInt(api.version) : null,
         parameters: this.testParameters.map(param => {
-          const value = this.parseParameterValue(param.exceptdClassName, param.parameterValue);
+          const value = this.parseParameterValue(param.exceptdClassName, param.parameterValue)
           return {
             parameterName: param.parameterName,
             exceptdClassName: param.exceptdClassName,
             parameterValue: value
-          };
+          }
         })
-      };
+      }
     },
 
     // 解析参数值 - 根据类型决定是否需要JSON解析
     parseParameterValue(className, value) {
-      if (!value && value !== 0 && value !== false) return null;
+      if (!value && value !== 0 && value !== false) return null
 
       // 集合和数组类型需要解析JSON
       if (this.isCollectionOrArray(className)) {
         try {
-          return JSON.parse(value);
+          return JSON.parse(value)
         } catch (e) {
-          console.warn('JSON解析失败，使用原始值:', value);
-          return value;
+          console.warn('JSON解析失败，使用原始值:', value)
+          return value
         }
       }
 
       // 数值类型
       if (className === 'java.lang.Integer' || className === 'int') {
-        return parseInt(value, 10);
+        return parseInt(value, 10)
       }
       if (className === 'java.lang.Long' || className === 'long') {
-        return parseInt(value, 10);
+        return parseInt(value, 10)
       }
       if (className === 'java.lang.Double' || className === 'double') {
-        return parseFloat(value);
+        return parseFloat(value)
       }
       if (className === 'java.lang.Float' || className === 'float') {
-        return parseFloat(value);
+        return parseFloat(value)
       }
       if (className === 'java.lang.Boolean' || className === 'boolean') {
-        return value === 'true' || value === true;
+        return value === 'true' || value === true
       }
 
       // BigDecimal 作为字符串传递
       if (className === 'java.math.BigDecimal') {
-        return value;
+        return value
       }
 
       // 默认返回字符串
-      return value;
+      return value
     },
 
     // 复制JSON到剪贴板
     async copyJsonBody() {
       try {
-        await navigator.clipboard.writeText(this.formattedRequestBody);
-        this.$message.success(this.$t('genericApi.copySuccess'));
+        await navigator.clipboard.writeText(this.formattedRequestBody)
+        this.$message.success(this.$t('genericApi.copySuccess'))
       } catch (error) {
         // 降级方案
-        const textarea = document.createElement('textarea');
-        textarea.value = this.formattedRequestBody;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        this.$message.success(this.$t('genericApi.copySuccess'));
+        const textarea = document.createElement('textarea')
+        textarea.value = this.formattedRequestBody
+        document.body.appendChild(textarea)
+        textarea.select()
+        document.execCommand('copy')
+        document.body.removeChild(textarea)
+        this.$message.success(this.$t('genericApi.copySuccess'))
       }
     },
 
@@ -860,48 +859,47 @@ export default {
     async executeApiTest() {
       // 验证参数
       if (this.testParameters.length === 0) {
-        this.$message.warning(this.$t('genericApi.noParametersWarning'));
-        return;
+        this.$message.warning(this.$t('genericApi.noParametersWarning'))
+        return
       }
       for (let i = 0; i < this.testParameters.length; i++) {
-        const param = this.testParameters[i];
+        const param = this.testParameters[i]
         if (!param.parameterName) {
-          this.$message.warning(this.$t('genericApi.parameterNameRequired', { index: i + 1 }));
-          return;
+          this.$message.warning(this.$t('genericApi.parameterNameRequired', { index: i + 1 }))
+          return
         }
       }
 
-      this.testLoading = true;
+      this.testLoading = true
       try {
         // 构建请求URL，根据是否需要认证选择不同的端点
-        const api = this.currentApi;
-        let url;
+        const api = this.currentApi
+        let url
         if (api.needAuth) {
-          url = '/private/genric/invoke';
+          url = '/private/genric/invoke'
         } else {
-          url = '/public/genric/invoke';
+          url = '/public/genric/invoke'
         }
 
         // 发送测试请求
-        const requestBody = this.buildRequestBody();
-        const response = await request.post(url, requestBody);
+        const requestBody = this.buildRequestBody()
+        const response = await request.post(url, requestBody)
 
-        this.testResult = JSON.stringify(response.data, null, 2);
+        this.testResult = JSON.stringify(response.data, null, 2)
       } catch (error) {
-        console.error('API测试失败:', error);
-        this.testResult = `${this.$t('genericApi.errorPrefix')}${error.message || this.$t('genericApi.requestFailed')}`;
+        console.error('API测试失败:', error)
+        this.testResult = `${this.$t('genericApi.errorPrefix')}${error.message || this.$t('genericApi.requestFailed')}`
       } finally {
-        this.testLoading = false;
+        this.testLoading = false
       }
     },
 
     // 关闭测试对话框
     closeTestDialog() {
-      this.testDialogVisible = false;
-      this.testResult = '';
-      this.testParameters = [];
+      this.testDialogVisible = false
+      this.testResult = ''
+      this.testParameters = []
     },
-
 
     // ========== 工具方法 ==========
     formatTime(time) {
