@@ -7,6 +7,7 @@
           <h2 class="page-title"><i class="el-icon-box" /> {{ $t('version.title') }}</h2>
           <span class="page-subtitle">{{ $t('version.subtitle') }}</span>
         </div>
+        <el-button size="small" icon="el-icon-question" circle @click="helpDialogVisible = true" />
       </div>
 
       <!-- 主标签页 -->
@@ -399,6 +400,24 @@
           <el-button type="primary" :loading="checkLoading" @click="handleCheckUpgrade">{{ $t('version.executeCheck') }}</el-button>
         </div>
       </el-dialog>
+      <!-- ========== 使用帮助弹窗 ========== -->
+      <el-dialog :title="$t('version.helpTitle')" :visible.sync="helpDialogVisible" width="640px" :close-on-click-modal="true" class="help-dialog">
+        <div class="help-steps">
+          <div v-for="step in helpSteps" :key="step.num" class="help-step">
+            <div class="help-step-num">{{ step.num }}</div>
+            <div class="help-step-body">
+              <div class="help-step-title">{{ step.title }}</div>
+              <div class="help-step-desc">{{ step.desc }}</div>
+            </div>
+          </div>
+        </div>
+        <div class="help-tip">
+          <i class="el-icon-info" /> {{ $t('version.helpTip') }}
+        </div>
+        <div slot="footer">
+          <el-button type="primary" @click="helpDialogVisible = false">{{ $t('common.confirm') }}</el-button>
+        </div>
+      </el-dialog>
     </div>
   </div>
 </template>
@@ -453,6 +472,8 @@ export default {
         minCompatVersion: [{ required: true, message: this.$t('version.minCompatVersionRequired'), trigger: 'blur' }],
         action: [{ required: true, message: this.$t('version.actionRequired'), trigger: 'change' }]
       },
+      // --- 使用帮助 ---
+      helpDialogVisible: false,
       // --- 升级检查 ---
       checkDialogVisible: false, checkLoading: false, checkResult: null,
       checkForm: { appKey: '', platform: 'android', currentVersionCode: 1 }
@@ -463,6 +484,16 @@ export default {
     this.loadVersions()
   },
   computed: {
+    /** 使用帮助步骤数据 */
+    helpSteps() {
+      return [
+        { num: 1, title: this.$t('version.helpStep1Title'), desc: this.$t('version.helpStep1Desc') },
+        { num: 2, title: this.$t('version.helpStep2Title'), desc: this.$t('version.helpStep2Desc') },
+        { num: 3, title: this.$t('version.helpStep3Title'), desc: this.$t('version.helpStep3Desc') },
+        { num: 4, title: this.$t('version.helpStep4Title'), desc: this.$t('version.helpStep4Desc') },
+        { num: 5, title: this.$t('version.helpStep5Title'), desc: this.$t('version.helpStep5Desc') }
+      ]
+    },
     /** 弹窗底部实时预览规则语义，所见即所得 */
     policyPreview() {
       const f = this.policyForm
@@ -1024,6 +1055,65 @@ export default {
   .pkg-uploaded-md5 {
     font-size: 12px;
     color: #909399;
+  }
+}
+
+.help-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.help-step {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+
+  .help-step-num {
+    flex-shrink: 0;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #409eff, #66b1ff);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 8px rgba(64, 158, 255, 0.3);
+  }
+
+  .help-step-body {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .help-step-title {
+    font-weight: 600;
+    font-size: 14px;
+    color: #1e293b;
+    margin-bottom: 4px;
+  }
+
+  .help-step-desc {
+    font-size: 13px;
+    color: #64748b;
+    line-height: 1.6;
+  }
+}
+
+.help-tip {
+  margin-top: 18px;
+  padding: 10px 14px;
+  background: #ecf5ff;
+  border: 1px solid #d9ecff;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #409eff;
+
+  i {
+    margin-right: 4px;
   }
 }
 </style>

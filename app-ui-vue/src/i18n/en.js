@@ -683,7 +683,19 @@ export default {
     copySuccess: 'Copied to clipboard',
     cloneVersion: 'Clone',
     cloneFrom: 'Cloned from {name}',
-    selectApp: 'Select app'
+    selectApp: 'Select app',
+    helpTitle: 'User Guide',
+    helpStep1Title: 'Create Version',
+    helpStep1Desc: 'In the "Versions" tab, click "New Version", fill in app key, version code, version name, platform and type, then save. The version starts as "Draft" and can be edited or deleted.',
+    helpStep2Title: 'Submit → Release',
+    helpStep2Desc: 'Once the draft is ready, click "Submit" to enter pending review. After approval, click "Release" to make the version live — clients will then be able to detect the new version.',
+    helpStep3Title: 'Manage Packages',
+    helpStep3Desc: 'Switch to the "Packages" tab, click "Add Package", select the owning version, then drag-and-drop or click to upload. Files are uploaded directly to the unified OSS — no need to fill in bucket/object/MD5 manually. After upload you can copy the download URL.',
+    helpStep4Title: 'Set Compatibility Policy',
+    helpStep4Desc: 'Switch to the "Compat Policies" tab, click "Add Policy", select source and target app/platform, set the minimum compatible version code and upgrade action (force / recommend / notify). Once enabled, the client upgrade-check API will return upgrade prompts according to the policy.',
+    helpStep5Title: 'Clone & Upgrade Check',
+    helpStep5Desc: 'The version list supports "Clone" — quickly create a new version based on an existing one without re-filling fields. The "Upgrade Check" in the compat policies tab lets you simulate a client query to verify that the policy triggers the expected upgrade prompt.',
+    helpTip: 'Tip: Most fields support searchable filtering; dropdown options come from registered app keys.'
   },
 
   // Network Request

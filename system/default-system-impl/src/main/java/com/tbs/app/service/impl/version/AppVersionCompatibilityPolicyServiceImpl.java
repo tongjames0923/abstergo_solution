@@ -2,6 +2,7 @@ package com.tbs.app.service.impl.version;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
+import com.tbs.app.service.version.IAppPackageService;
 import com.tbs.app.service.version.IAppVersionCompatibilityPolicyService;
 import com.tbs.app.service.version.IAppVersionService;
 import com.tbs.app.vo.AppVersionUpdateCheckVO;
@@ -11,12 +12,13 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.EnumUtil;
+import com.tbs.oss.core.OssClient;
 import com.tbs.shared.enums.AppVersionCompatibilityActionEnum;
-import com.tbs.shared.enums.AppVersionFlagEnum;
 import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.version.AppVersionComptMapper;
+import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionCompatibilityPolicyEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionEntity;
 import com.tbs.sql.service.QueryEngine;
@@ -47,6 +49,12 @@ public class AppVersionCompatibilityPolicyServiceImpl
 
     @Resource
     private AppSettingProperty property;
+
+    @Resource
+    private OssClient ossClient;
+
+    @Resource
+    private IAppPackageService appPackageService;
 
     @Override
     protected Class<? extends IDelegateInvoker> pageVoBuildType() {
@@ -190,8 +198,37 @@ public class AppVersionCompatibilityPolicyServiceImpl
             vo.setLatestVersionCode(latest.getVersionCode());
             vo.setLatestVersionName(latest.getVersionName());
             vo.setReleaseNote(latest.getReleaseNote());
+            vo.setDownloadUrl(resolveDownloadUrl(latest.getId()));
         }
         return vo;
+    }
+
+    /**
+     * 解析版本安装包的下载地址
+     * <p>
+     * 优先使用外部托管的直接下载链接；若安装包存储于 OSS，则生成有效期 24 小时的预签名 URL； 无安装包或解析失败时返回 null
+     *
+     * @param versionId 应用版本ID
+     * @return 下载地址，无法解析时为 null
+     */
+    private String resolveDownloadUrl(Long versionId) {
+        if (versionId == null) {
+            return null;
+        }
+        List<AppPackageEntity> packages = appPackageService.listByVersionId(versionId);
+        for (AppPackageEntity pkg : packages) {
+            if (StrUtil.isNotEmpty(pkg.getDownloadUrl())) {
+                return pkg.getDownloadUrl();
+            }
+            if (StrUtil.isNotEmpty(pkg.getObjectName())) {
+                try {
+                    return ossClient.generatePresignedUrl(pkg.getObjectName(), 86400);
+                } catch (Exception e) {
+                    log.warn("生成安装包预签名URL失败，objectName={}: {}", pkg.getObjectName(), e.getMessage());
+                }
+            }
+        }
+        return null;
     }
 
     /**
