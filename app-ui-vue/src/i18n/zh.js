@@ -389,7 +389,8 @@ export default {
     close: '关闭',
     metadataTitle: '对象详情',
     contentType: '内容类型',
-    userMetadata: '自定义元数据'
+    userMetadata: '自定义元数据',
+    downloadFail: '下载失败，请重试'
   },
 
   // 表单管理

@@ -420,7 +420,10 @@ export default {
 
     // ===== 下载与删除 =====
     handleDownload(row) {
-      downloadObject(row.objectKey, this.bucketInput || undefined).catch(() => {})
+      downloadObject(row.objectKey, this.bucketInput || undefined)
+        .catch(() => {
+          this.$message.error(this.$t('oss.downloadFail'))
+        })
     },
 
     handleDelete(row) {

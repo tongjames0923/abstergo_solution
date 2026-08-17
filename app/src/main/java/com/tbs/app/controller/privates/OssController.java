@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -103,6 +104,11 @@ public class OssController extends BaseController {
         PutObjectRequest.Builder builder =
             PutObjectRequest.builder(key).inputStream(file.getInputStream()).contentLength(file.getSize())
                 .contentType(file.getContentType());
+        // 存储时携带附件头，浏览器直接访问对象（如预签名地址）时也会触发下载而非内联预览
+        String fileName = StrUtil.isEmpty(file.getOriginalFilename()) ? key
+            : file.getOriginalFilename();
+        builder.userMetadata(Collections.singletonMap("Content-Disposition",
+            "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()).replace("+", "%20")));
         if (!StrUtil.isEmpty(bucket)) {
             builder.bucketName(bucket);
         }

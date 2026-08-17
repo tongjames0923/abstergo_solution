@@ -47,10 +47,13 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -68,6 +71,10 @@ public class MinioOssClient implements OssClient {
 
     /** S3用户自定义元数据头前缀 */
     private static final String USER_METADATA_PREFIX = "x-amz-meta-";
+
+    /** 标准HTTP响应头白名单：按对象真实头存储，不添加用户元数据前缀 */
+    private static final Set<String> STANDARD_METADATA_HEADERS = new HashSet<>(Arrays.asList(
+        "content-disposition", "content-encoding", "content-language", "cache-control", "expires"));
 
     /** 未知内容长度时的分片大小（MinIO要求不小于5MiB） */
     private static final long DEFAULT_PART_SIZE = 5 * 1024 * 1024L;
@@ -480,7 +487,11 @@ public class MinioOssClient implements OssClient {
     }
 
     /**
-     * 将用户自定义元数据转换为S3协议要求的请求头（补充x-amz-meta-前缀）
+     * 将用户自定义元数据转换为S3协议要求的请求头
+     * <p>
+     * 标准HTTP响应头（如Content-Disposition）直接作为对象真实头存储，
+     * 浏览器直接访问对象时按其语义生效；其余补充x-amz-meta-前缀作为用户元数据
+     * </p>
      *
      * @param userMetadata 用户自定义元数据，可为null
      * @return 请求头映射
@@ -491,8 +502,13 @@ public class MinioOssClient implements OssClient {
             return headers;
         }
         userMetadata.forEach((name, value) -> {
-            String key = name.toLowerCase().startsWith(USER_METADATA_PREFIX) ? name : USER_METADATA_PREFIX + name;
-            headers.put(key, value);
+            String lower = name.toLowerCase();
+            if (STANDARD_METADATA_HEADERS.contains(lower)) {
+                headers.put(name, value);
+            } else {
+                String key = lower.startsWith(USER_METADATA_PREFIX) ? name : USER_METADATA_PREFIX + name;
+                headers.put(key, value);
+            }
         });
         return headers;
     }

@@ -389,7 +389,8 @@ export default {
     close: 'Close',
     metadataTitle: 'Object Details',
     contentType: 'Content Type',
-    userMetadata: 'User Metadata'
+    userMetadata: 'User Metadata',
+    downloadFail: 'Download failed, please try again'
   },
 
   // Form Management

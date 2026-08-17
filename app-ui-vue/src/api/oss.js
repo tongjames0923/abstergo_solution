@@ -134,12 +134,44 @@ export function deleteObjects(objectKeys, bucket) {
 }
 
 /**
- * 下载对象（携带鉴权头，以 Blob 方式触发浏览器下载）
+ * 下载对象
+ * <p>
+ * 优先通过预签名地址触发浏览器原生下载（由浏览器下载器接管进度展示），
+ * 预签名获取失败时回退为携带鉴权头的 Blob 下载
+ * </p>
  * @param {string} objectKey - 存储对象键
  * @param {string} [bucket] - 存储桶
  * @returns {Promise} 下载结果
  */
 export function downloadObject(objectKey, bucket) {
+  const params = { objectKey, type: 'DOWNLOAD', expirationSeconds: 300 }
+  if (bucket) {
+    params.bucket = bucket
+  }
+  return getPresignedUrl(params).then(res => {
+    const presignedUrl = res.data
+    if (!presignedUrl) {
+      return Promise.reject(new Error('presigned url empty'))
+    }
+    // 隐藏 iframe 加载预签名地址，浏览器识别为附件后直接接管下载；
+    // 相比 window.open 不会弹出空白新页，也不影响当前页面
+    const iframe = document.createElement('iframe')
+    iframe.style.display = 'none'
+    iframe.src = presignedUrl
+    document.body.appendChild(iframe)
+    setTimeout(() => {
+      document.body.removeChild(iframe)
+    }, 60000)
+  }).catch(() => downloadObjectViaBlob(objectKey, bucket))
+}
+
+/**
+ * 携带鉴权头以 Blob 方式下载对象（回退通道）
+ * @param {string} objectKey - 存储对象键
+ * @param {string} [bucket] - 存储桶
+ * @returns {Promise} 下载结果
+ */
+function downloadObjectViaBlob(objectKey, bucket) {
   return axios({
     url: process.env.VUE_APP_BASE_API + '/private/oss/download',
     method: 'get',
