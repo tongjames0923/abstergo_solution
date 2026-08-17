@@ -80,7 +80,7 @@
         <el-table-column :label="$t('oss.objectKey')" min-width="320" show-overflow-tooltip>
           <template slot-scope="scope">
             <span class="name-cell" @click="rowClick(scope.row)">
-              <i :class="row.isFolder ? 'el-icon-folder' : fileIcon(scope.row.displayName)" class="file-icon" />
+              <i :class="scope.row.isFolder ? 'el-icon-folder' : fileIcon(scope.row.displayName)" class="file-icon" />
               <span :class="['name-text', { 'folder-name': scope.row.isFolder }]">{{ scope.row.displayName }}</span>
             </span>
           </template>
@@ -97,7 +97,7 @@
             <span v-else>{{ formatTime(scope.row.lastModified) }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('oss.operation')" width="260" fixed="right">
+        <el-table-column :label="$t('oss.operation')" width="260" fixed="right" align="center">
           <template slot-scope="scope">
             <template v-if="scope.row.isFolder">
               <el-button icon="el-icon-folder-opened" size="mini" type="text" @click="enterFolder(scope.row)">{{ $t('oss.open') }}</el-button>
@@ -304,7 +304,7 @@ export default {
       const folders = (this.commonPrefixes || []).map(p => ({
         isFolder: true,
         objectKey: p,
-        displayName: this.trimPrefix(p)
+        displayName: this.trimPrefix(p).replace(/\/$/, '')
       }))
       const files = (this.objects || []).map(o => ({
         isFolder: false,

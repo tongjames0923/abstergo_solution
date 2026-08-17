@@ -269,8 +269,9 @@ public class OssController extends BaseController {
             required = false) String marker,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
-        ListObjectsRequest.Builder builder =
-            ListObjectsRequest.builder().prefix(prefix).marker(marker).maxKeys(DEFAULT_LIST_MAX_KEYS);
+        // delimiter固定为“/”，按目录层级列举（公共前缀即目录）；不传时底层会递归平铺全部对象
+        ListObjectsRequest.Builder builder = ListObjectsRequest.builder().prefix(prefix).marker(marker)
+            .maxKeys(DEFAULT_LIST_MAX_KEYS).delimiter("/");
         if (!StrUtil.isEmpty(bucket)) {
             builder.bucketName(bucket);
         }

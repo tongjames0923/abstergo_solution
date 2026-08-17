@@ -320,7 +320,14 @@ public class MinioOssClient implements OssClient {
 
             ObjectListing listing = new ObjectListing();
             List<ObjectInfo> objects = new ArrayList<>();
+            // 目录（公共前缀）与文件条目共同占用maxKeys额度，否则两者叠加会超出单页容量
+            int totalEntries = 0;
+            boolean truncated = false;
             for (Result<Item> result : client.listObjects(builder.build())) {
+                if (totalEntries >= maxKeys) {
+                    truncated = true;
+                    break;
+                }
                 Item item = result.get();
                 if (item.isDir()) {
                     listing.getCommonPrefixes().add(item.objectName());
@@ -335,15 +342,12 @@ public class MinioOssClient implements OssClient {
                     }
                     objects.add(info);
                 }
+                totalEntries++;
             }
 
-            boolean truncated = objects.size() > maxKeys;
-            if (truncated) {
-                objects = new ArrayList<>(objects.subList(0, maxKeys));
-            }
             listing.setObjects(objects);
             listing.setTruncated(truncated);
-            listing.setNextMarker(truncated ? objects.get(objects.size() - 1).getObjectKey() : null);
+            listing.setNextMarker(truncated ? nextMarkerOf(objects, listing.getCommonPrefixes()) : null);
             return listing;
         });
     }
@@ -438,6 +442,28 @@ public class MinioOssClient implements OssClient {
     }
 
     // ---------- 内部支撑 ----------
+
+    /**
+     * 计算下一页游标
+     * <p>
+     * 列举结果按对象键字典序返回，取本页最后一条文件与最后一个公共前缀中字典序较大者作为 startAfter 游标
+     * </p>
+     *
+     * @param objects        本页对象列表
+     * @param commonPrefixes 本页公共前缀列表
+     * @return 下一页游标，本页为空时返回null
+     */
+    private String nextMarkerOf(List<ObjectInfo> objects, List<String> commonPrefixes) {
+        String lastObject = objects.isEmpty() ? null : objects.get(objects.size() - 1).getObjectKey();
+        String lastPrefix = commonPrefixes.isEmpty() ? null : commonPrefixes.get(commonPrefixes.size() - 1);
+        if (lastObject == null) {
+            return lastPrefix;
+        }
+        if (lastPrefix == null) {
+            return lastObject;
+        }
+        return lastObject.compareTo(lastPrefix) >= 0 ? lastObject : lastPrefix;
+    }
 
     /**
      * 解析桶名，未指定时回退到配置的默认桶
