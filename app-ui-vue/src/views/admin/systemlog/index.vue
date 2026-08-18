@@ -40,12 +40,20 @@
 <script>
 import SystemLogReport from './SystemLogReport.vue'
 import SystemLogRecord from './SystemLogRecord.vue'
+import {flushLog} from "@/api/systemlog";
 
 export default {
   name: 'SystemLog',
   components: {
     SystemLogReport,
     SystemLogRecord
+  },
+  mounted() {
+    try {
+      flushLog();
+    } catch (e) {
+      console.error(e);
+    }
   },
   data() {
     return {

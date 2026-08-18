@@ -2,6 +2,7 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.web.BaseController;
@@ -9,6 +10,8 @@ import com.tbs.web.result.AjaxResult;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import javax.annotation.Resource;
 
 /**
  * 系统日志管理控制器
@@ -26,6 +29,9 @@ public class AdminSystemLogController extends BaseController {
     @DubboReference(check = false, lazy = true)
     private ISystemLogService systemLogService;
 
+    @Resource
+    private ILogRecorder recorder;
+
     /**
      * 获取日志操作类型列表
      * <p>
@@ -40,7 +46,7 @@ public class AdminSystemLogController extends BaseController {
     public AjaxResult listWithOpType() {
         return successResult(systemLogService.getLogOperateTypeList(28));
     }
-    
+
     /**
      * 获取所有操作类型列表(用于下拉框搜索)
      * <p>
@@ -72,6 +78,23 @@ public class AdminSystemLogController extends BaseController {
     public AjaxResult listRecord(@RequestBody LoggingRecordExtractForm form) {
         return successResult(systemLogService.getLogRecordList(form));
     }
+
+    /**
+     * 强制刷新日志记录
+     * <p>
+     * 强制刷新日志记录，使日志记录立即生效
+     * </p>
+     *
+     * @return 操作结果
+     */
+    @PostMapping("forceFlush")
+    @AjaxResponseType(Object.class)
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult forceFlush() {
+        recorder.flush();
+        return successResult();
+    }
+
 
     /**
      * 获取业务名称
