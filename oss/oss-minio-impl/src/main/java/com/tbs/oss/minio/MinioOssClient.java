@@ -83,9 +83,8 @@ public class MinioOssClient implements OssClient {
 
             InputStream uploadStream = listener != null ? new ProgressInputStream(source, size, listener) : source;
             PutObjectArgs.Builder builder = PutObjectArgs.builder()
-                .bucket(bucket)
-                .object(key)
-                .stream(uploadStream, size, size > 0 ? -1 : DEFAULT_PART_SIZE);
+                .bucket(bucket).object(key)
+                .stream(uploadStream, size, DEFAULT_PART_SIZE);
             if (request.getContentType() != null && !request.getContentType().isEmpty()) {
                 builder.contentType(request.getContentType());
             }
