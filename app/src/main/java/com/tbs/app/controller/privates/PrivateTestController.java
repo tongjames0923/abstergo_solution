@@ -1,19 +1,20 @@
 package com.tbs.app.controller.privates;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
+import com.tbs.app.config.condition.ConditionalOnTestControllerMode;
+import com.tbs.app.config.property.TestControllerMode;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 /**
  * 私有测试控制器
@@ -24,6 +25,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
  * @author abstergo
  * @since 1.0.0
  */
+
+@ConditionalOnTestControllerMode({TestControllerMode.ALL, TestControllerMode.PRI})
 @RestController
 @RequestMapping("/private")
 @Tag(name = "测试登录后功能控制器", description = "测试登录后功能控制器")

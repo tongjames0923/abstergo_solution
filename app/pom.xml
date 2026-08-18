@@ -80,6 +80,14 @@
         <!--            <groupId>org.apache.dubbo</groupId>-->
         <!--            <artifactId>dubbo-spring-boot-starter</artifactId>-->
         <!--        </dependency>-->
+
+        <!-- 配置属性元数据生成：编译期自动生成 spring-configuration-metadata.json，
+             使 IDE 在 application.yml 中对 app.gateway.* 属性提供自动补全和提示 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-configuration-processor</artifactId>
+            <optional>true</optional>
+        </dependency>
     </dependencies>
 
     <build>
