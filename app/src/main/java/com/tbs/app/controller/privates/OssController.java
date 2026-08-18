@@ -48,7 +48,6 @@ import java.util.UUID;
 @RestController
 @RequestMapping("private/oss")
 @Tag(name = "对象存储接口", description = "文件上传、下载、删除、列举及预签名地址等操作接口")
-@NoLog
 public class OssController extends BaseController {
 
     /**
@@ -86,6 +85,7 @@ public class OssController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功上传文件",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
+    @NoLog
     public AjaxResult upload(
         @Parameter(name = "file", description = "上传的文件", required = true) @RequestParam("file") MultipartFile file,
         @Parameter(name = "objectKey", description = "存储对象键，缺省自动生成") @RequestParam(value = "objectKey",
@@ -152,6 +152,7 @@ public class OssController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功查询上传任务进度",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")
+    @NoLog
     public AjaxResult uploadProgress(
         @Parameter(name = "taskId", description = "上传任务ID", required = true) @RequestParam(
             "taskId") String taskId) {
@@ -181,6 +182,7 @@ public class OssController extends BaseController {
     @Operation(summary = "下载文件", description = "以附件形式下载指定的存储对象")
     @ApiResponse(responseCode = "200", description = "成功下载文件")
     @PreAuthorize("@preAuthUtils.accountActived")
+    @NoLog
     public void download(@Parameter(name = "objectKey", description = "存储对象键", required = true) @RequestParam(
             "objectKey") String objectKey,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
