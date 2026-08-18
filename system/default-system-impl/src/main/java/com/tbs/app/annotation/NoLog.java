@@ -3,8 +3,8 @@ package com.tbs.app.annotation;
 import java.lang.annotation.*;
 
 /**
+ * 不进行日志记录注解
  * @author tbs
- * @date 2023/5/15
  */
 @Target({ElementType.METHOD, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)

@@ -1,6 +1,6 @@
 package com.tbs.shared.pojo.entity.version;
 
-import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICommonAuditableEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Data;
@@ -21,7 +21,7 @@ import java.util.Date;
         // 可选：唯一索引防止重复策略，但需要注意 source_version_code 为 NULL 时唯一约束的数据库兼容性
         // @Index(name = "uk_source_target", columnList = "source_app_key, source_version_code, source_platform, target_app_key, target_platform", unique = true)
     })
-public class AppVersionCompatibilityPolicyEntity implements IBaseEntity<Long> {
+public class AppVersionCompatibilityPolicyEntity implements ICommonAuditableEntity<Long> {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -68,7 +68,8 @@ public class AppVersionCompatibilityPolicyEntity implements IBaseEntity<Long> {
     private Long minCompatVersion;
 
     /**
-     * 动作类型 1=强制更新，2=推荐更新，3=仅提示 建议定义枚举 AppVersionCompatibilityActionEnum
+     * 动作类型
+     * @see  com.tbs.shared.enums.AppVersionCompatibilityActionEnum
      */
     @Column(name = "action", nullable = false)
     private Integer action;

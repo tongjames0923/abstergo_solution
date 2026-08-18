@@ -1,6 +1,9 @@
 package com.tbs.shared.pojo.entity.version;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.shared.pojo.ICommonAuditableEntity;
+import com.tbs.shared.pojo.ICommonCreateAuditable;
+import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Data;
@@ -18,7 +21,7 @@ import java.util.Date;
 @Table(name = "app_version_info",
     indexes = {@Index(columnList = "app_key,version_code"), @Index(columnList = "version_name"),
         @Index(columnList = "version_type,platform"), @Index(columnList = "flag")})
-public class AppVersionEntity implements IBaseEntity<Long> {
+public class AppVersionEntity implements ICommonAuditableEntity<Long> {
     private static final long serialVersionUID = 1L;
     /**
      * id
