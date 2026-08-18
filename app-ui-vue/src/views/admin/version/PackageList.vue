@@ -67,8 +67,8 @@
 </template>
 
 <script>
-import { queryVersions, savePackage, deletePackage, listPackagesByVersion } from '@/api/app-version'
-import { uploadObject, getUploadProgress, deleteObject, downloadObject } from '@/api/oss'
+import {deletePackage, listPackagesByVersion, savePackage} from '@/api/app-version'
+import {deleteObject, downloadObject, getUploadProgress, uploadObject} from '@/api/oss'
 
 export default {
   name: 'PackageList',
@@ -106,10 +106,9 @@ export default {
       this.uploading = false; this.uploadPercent = 0
       this.dialogVisible = true
     },
+    /** 重置文件选择并清理 OSS 中已上传的对象，避免孤儿文件残留 */
     resetFile() {
-      this.$set(this.form, 'bucketName', '')
-      this.$set(this.form, 'objectName', '')
-      this.$set(this.form, 'md5', '')
+      this.cleanupCurrentOssObject()
     },
     /** 选中文件后经统一 OSS 接口直传，成功后回填存储坐标与 MD5 */
     async handleUpload({ file }) {
@@ -168,7 +167,18 @@ export default {
         return
       }
       this.saving = true
-      try { await savePackage(this.form); this.dialogVisible = false; await this.loadPackages() } catch (e) { console.error(e) } finally { this.saving = false }
+      try {
+        await savePackage(this.form)
+        // 保存成功后清除 OSS 坐标，防止 @close 回调误删已持久化的文件
+        this.form.objectName = ''
+        this.form.bucketName = ''
+        this.dialogVisible = false
+        await this.loadPackages()
+      } catch (e) {
+        console.error(e)
+      } finally {
+        this.saving = false
+      }
     },
     async handleDelete(row) {
       try {
@@ -192,8 +202,22 @@ export default {
         window.open(row.downloadUrl, '_blank')
       }
     },
+    /** 弹窗关闭时清理未保存的 OSS 上传文件（取消/关闭弹窗触发，保存成功后 objectName 已清空不会误删） */
     handleDialogClose() {
+      this.cleanupCurrentOssObject()
       this.$refs.pkgForm && this.$refs.pkgForm.resetFields()
+    },
+    /** 清理当前表单中关联的 OSS 对象并重置文件字段 */
+    cleanupCurrentOssObject() {
+      const oldKey = this.form.objectName
+      const oldBucket = this.form.bucketName
+      this.$set(this.form, 'bucketName', '')
+      this.$set(this.form, 'objectName', '')
+      this.$set(this.form, 'md5', '')
+      if (oldKey) {
+        deleteObject(oldKey, oldBucket || undefined).catch(() => {
+        })
+      }
     }
   }
 }
