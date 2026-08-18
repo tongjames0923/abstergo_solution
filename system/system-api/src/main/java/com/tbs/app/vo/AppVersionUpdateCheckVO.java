@@ -5,6 +5,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.List;
 
 /**
  * 应用版本升级检查结果视图
@@ -50,5 +51,5 @@ public class AppVersionUpdateCheckVO implements Serializable {
     /**
      * 最新版本安装包的下载地址
      */
-    private String downloadUrl;
+    private List<String> downloadUrls;
 }

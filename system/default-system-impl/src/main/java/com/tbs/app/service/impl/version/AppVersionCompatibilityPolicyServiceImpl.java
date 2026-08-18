@@ -27,6 +27,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 
 import javax.annotation.Resource;
+import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -198,7 +200,7 @@ public class AppVersionCompatibilityPolicyServiceImpl
             vo.setLatestVersionCode(latest.getVersionCode());
             vo.setLatestVersionName(latest.getVersionName());
             vo.setReleaseNote(latest.getReleaseNote());
-            vo.setDownloadUrl(resolveDownloadUrl(latest.getId()));
+            vo.setDownloadUrls(resolveDownloadUrl(latest.getId()));
         }
         return vo;
     }
@@ -211,24 +213,25 @@ public class AppVersionCompatibilityPolicyServiceImpl
      * @param versionId 应用版本ID
      * @return 下载地址，无法解析时为 null
      */
-    private String resolveDownloadUrl(Long versionId) {
+    private List<String> resolveDownloadUrl(Long versionId) {
         if (versionId == null) {
-            return null;
+            return Collections.emptyList();
         }
         List<AppPackageEntity> packages = appPackageService.listByVersionId(versionId);
+        List<String> urls = new LinkedList<>();
         for (AppPackageEntity pkg : packages) {
             if (StrUtil.isNotEmpty(pkg.getDownloadUrl())) {
-                return pkg.getDownloadUrl();
+                urls.add(pkg.getDownloadUrl());
             }
             if (StrUtil.isNotEmpty(pkg.getObjectName())) {
                 try {
-                    return ossClient.generatePresignedUrl(pkg.getObjectName(), 86400);
+                    urls.add(ossClient.generatePresignedUrl(pkg.getObjectName(), 86400));
                 } catch (Exception e) {
                     log.warn("生成安装包预签名URL失败，objectName={}: {}", pkg.getObjectName(), e.getMessage());
                 }
             }
         }
-        return null;
+        return urls;
     }
 
     /**

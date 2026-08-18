@@ -156,8 +156,10 @@
             <el-tag :type="actionTagType(checkResult.action)" size="mini">{{ actionLabel(checkResult.action) }}</el-tag>
           </el-descriptions-item>
           <el-descriptions-item v-if="checkResult.releaseNote" :label="$t('version.releaseNote')">{{ checkResult.releaseNote }}</el-descriptions-item>
-          <el-descriptions-item v-if="checkResult.downloadUrl" :label="$t('version.downloadUrl')">
-            <el-button size="mini" type="text" @click="copyText(checkResult.downloadUrl)"><i class="el-icon-copy-document" /> {{ checkResult.downloadUrl }}</el-button>
+          <el-descriptions-item v-if="checkResult.downloadUrls && checkResult.downloadUrls.length" :label="$t('version.downloadUrl')">
+            <div v-for="(url, idx) in checkResult.downloadUrls" :key="idx" style="margin-bottom:4px">
+              <el-button size="mini" type="text" @click="copyText(url)"><i class="el-icon-copy-document" /> {{ url }}</el-button>
+            </div>
           </el-descriptions-item>
         </el-descriptions>
       </div>
