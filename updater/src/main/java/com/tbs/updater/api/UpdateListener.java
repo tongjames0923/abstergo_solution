@@ -87,13 +87,13 @@ public interface UpdateListener {
     }
 
     /**
-     * 部署脚本开始执行
+     * 部署脚本开始执行（脚本即将后台启动，不等待其结束）
      */
     default void onDeployStart() {
     }
 
     /**
-     * 部署脚本执行完成
+     * 部署脚本已启动（后台运行，不代表脚本已执行完毕）
      */
     default void onDeployComplete() {
     }

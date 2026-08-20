@@ -176,6 +176,11 @@ public class UpdaterGuiDemo extends JFrame {
     private volatile boolean installCompleted = false;
 
     /**
+     * 本次安装是否已弹出结果确认对话框（部署脚本启动即弹出，onSuccess 据此避免重复收尾）
+     */
+    private volatile boolean installConfirmShown = false;
+
+    /**
      * 当前待安装更新是否为服务端强制更新（强制更新不可跳过、不可退出）
      */
     private volatile boolean forceUpdate = false;
@@ -675,6 +680,7 @@ public class UpdaterGuiDemo extends JFrame {
         }
         updating = true;
         installCompleted = true;
+        installConfirmShown = false;
         downloadedFiles = new ArrayList<>();
         startButton.setEnabled(false);
         startButton.setText("更新中...");
@@ -699,6 +705,79 @@ public class UpdaterGuiDemo extends JFrame {
                 updating = false;
             }
         }, "updater-install-thread").start();
+    }
+
+    /**
+     * 弹出安装结果确认对话框
+     * <p>
+     * 部署脚本一启动即弹出（不等待脚本结束，脚本可能在后台常驻运行），
+     * 由用户确认应用是否更新成功：
+     * “已成功”将新版本号回写当前 appKey 配置文件，“未成功”保持原版本。
+     * </p>
+     */
+    private void showInstallResultConfirmDialog() {
+        Object[] options = {"已成功", "未成功"};
+        int result = JOptionPane.showOptionDialog(UpdaterGuiDemo.this,
+                "部署脚本已开始执行，请确认应用是否更新成功：\n\n"
+                + "• 已成功：将更新本地版本信息，下次启动不再提示更新\n"
+                + "• 未成功：保持当前版本信息，下次启动仍会提示更新",
+                "确认更新结果", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+                null, options, options[0]);
+
+        if (result == JOptionPane.YES_OPTION) {
+            /*
+             * 用户确认成功：获取新版本号并回写到配置文件
+             */
+            int newVersion = resolveInstallVersion();
+            if (newVersion > currentConfig.getCurrentVersionCode()) {
+                try {
+                    currentConfig = rebuildWithVersion(currentConfig, newVersion);
+                    updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
+                    saveCurrentConfig();
+                    appendLog("[成功] 用户确认成功，版本号已回写: " + newVersion);
+                } catch (UpdateException e) {
+                    appendLog("[成功] 版本同步失败: " + e.getMessage());
+                }
+            }
+            versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
+                    + "  |  最新版本: 已同步");
+            setStatus("更新完成", COLOR_SUCCESS);
+            progressBar.setIndeterminate(false);
+            progressBar.setValue(100);
+            progressBar.setString("完成");
+        } else {
+            /*
+             * 用户确认失败：不更新版本号，保持原样
+             */
+            appendLog("[失败] 用户确认更新未成功，保持原版本: " + currentConfig.getCurrentVersionCode());
+            versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
+                    + "  |  最新版本: 未同步");
+            setStatus("更新失败（用户确认）", COLOR_ERROR);
+            progressBar.setIndeterminate(false);
+            progressBar.setString("失败");
+        }
+        resetButtons();
+    }
+
+    /**
+     * 解析本次安装应回写的版本号
+     * <p>
+     * 优先取检查阶段的更新信息（确认对话框与部署脚本启动同时出现，
+     * 本地版本文件可能尚未写入），取不到时兜底读本地版本文件。
+     * </p>
+     *
+     * @return 待回写的版本号，无法获取时返回0
+     */
+    private int resolveInstallVersion() {
+        UpdateInfo info = pendingInfo;
+        if (info != null && info.getLatestVersionCode() != null) {
+            try {
+                return Integer.parseInt(info.getLatestVersionCode().trim());
+            } catch (NumberFormatException e) {
+                appendLog("[成功] 版本号格式异常: " + info.getLatestVersionCode() + "，改读本地版本文件");
+            }
+        }
+        return UpdaterConfig.readLocalVersion();
     }
 
     /**
@@ -1346,10 +1425,10 @@ public class UpdaterGuiDemo extends JFrame {
         @Override
         public void onDeployStart() {
             SwingUtilities.invokeLater(() -> {
-                setStatus("正在执行部署脚本...", COLOR_WORKING);
+                setStatus("部署脚本已开始执行，请确认结果", COLOR_WORKING);
                 progressBar.setIndeterminate(true);
-                progressBar.setString("执行中");
-                appendLog("[部署] 开始执行部署脚本");
+                progressBar.setString("待确认");
+                appendLog("[部署] 开始执行部署脚本（后台运行，不等待结束）");
                 if (downloadedFiles != null && !downloadedFiles.isEmpty()) {
                     appendLog("[部署] 传入文件: " + downloadedFiles.size() + "个");
                     for (int i = 0; i < downloadedFiles.size(); i++) {
@@ -1358,12 +1437,17 @@ public class UpdaterGuiDemo extends JFrame {
                 } else {
                     appendLog("[部署] 警告: downloadedFiles 为空");
                 }
+                /*
+                 * 脚本一启动即弹出确认对话框，不等待脚本结束
+                 */
+                installConfirmShown = true;
+                showInstallResultConfirmDialog();
             });
         }
 
         @Override
         public void onDeployComplete() {
-            SwingUtilities.invokeLater(() -> appendLog("[部署] 完成"));
+            SwingUtilities.invokeLater(() -> appendLog("[部署] 脚本已启动（后台运行）"));
         }
 
         @Override
@@ -1382,51 +1466,20 @@ public class UpdaterGuiDemo extends JFrame {
         @Override
         public void onSuccess() {
             SwingUtilities.invokeLater(() -> {
-                setStatus("部署脚本已执行，请确认结果", COLOR_WORKING);
+                appendLog("[成功] 更新流程执行完毕");
+                if (installConfirmShown) {
+                    /*
+                     * 确认对话框已在部署脚本启动时弹出，结果由用户确认驱动，此处不重复收尾
+                     */
+                    return;
+                }
+                /*
+                 * 未配置部署脚本的场景：直接完成收尾
+                 */
+                setStatus("更新完成", COLOR_SUCCESS);
                 progressBar.setIndeterminate(false);
                 progressBar.setValue(100);
-                progressBar.setString("待确认");
-                appendLog("[成功] 部署脚本已执行，等待用户确认更新结果");
-                /*
-                 * 弹出确认对话框，让用户判断更新是否真正成功
-                 */
-                Object[] options = {"已成功", "未成功"};
-                int result = JOptionPane.showOptionDialog(UpdaterGuiDemo.this,
-                        "部署脚本已执行完成，请确认应用是否更新成功：\n\n"
-                        + "• 已成功：将更新本地版本信息，下次启动不再提示更新\n"
-                        + "• 未成功：保持当前版本信息，下次启动仍会提示更新",
-                        "确认更新结果", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
-                        null, options, options[0]);
-                
-                if (result == JOptionPane.YES_OPTION) {
-                    /*
-                     * 用户确认成功：读取新版本号并回写到配置文件
-                     */
-                    int newVersion = UpdaterConfig.readLocalVersion();
-                    if (newVersion > currentConfig.getCurrentVersionCode()) {
-                        try {
-                            currentConfig = rebuildWithVersion(currentConfig, newVersion);
-                            updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
-                            saveCurrentConfig();
-                            appendLog("[成功] 用户确认成功，版本号已回写: " + newVersion);
-                        } catch (UpdateException e) {
-                            appendLog("[成功] 版本同步失败: " + e.getMessage());
-                        }
-                    }
-                    versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
-                            + "  |  最新版本: 已同步");
-                    setStatus("更新完成", COLOR_SUCCESS);
-                    progressBar.setString("完成");
-                } else {
-                    /*
-                     * 用户确认失败：不更新版本号，保持原样
-                     */
-                    appendLog("[失败] 用户确认更新未成功，保持原版本: " + currentConfig.getCurrentVersionCode());
-                    versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
-                            + "  |  最新版本: 未同步");
-                    setStatus("更新失败（用户确认）", COLOR_ERROR);
-                    progressBar.setString("失败");
-                }
+                progressBar.setString("完成");
                 resetButtons();
             });
         }

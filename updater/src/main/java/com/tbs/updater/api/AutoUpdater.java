@@ -137,7 +137,7 @@ public class AutoUpdater {
             List<File> downloadedFiles = downloadAllUpdates(info);
             executeDeployScript(downloadedFiles);
             /*
-             * 部署成功后立即持久化新版本号，防止启动脚本执行期间崩溃导致版本未记录
+             * 部署脚本启动后立即持久化新版本号，防止后续步骤崩溃导致版本未记录
              */
             persistLocalVersion(info.getLatestVersionCode());
             /*
@@ -267,10 +267,13 @@ public class AutoUpdater {
      * 将所有下载文件的绝对路径依次作为参数传递给脚本；
      * 脚本中 $1 为主文件，$2、$3... 为附加文件；
      * 未配置部署脚本时自动跳过本步骤。
+     * 脚本以后台方式启动，不等待其结束：部署脚本常会拉起常驻服务
+     * （如 Windows 的 start 命令），等待结束会永久阻塞更新流程，
+     * 部署是否成功由调用方（用户）确认。
      * </p>
      *
      * @param downloadedFiles 已下载的更新文件列表
-     * @throws UpdateException 脚本执行失败或退出码非0时抛出SCRIPT_ERROR
+     * @throws UpdateException 脚本不存在、不可执行或启动失败时抛出SCRIPT_ERROR
      */
     public void executeDeployScript(List<File> downloadedFiles) throws UpdateException {
         if (isBlank(config.getDeployScript())) {
@@ -297,11 +300,11 @@ public class AutoUpdater {
         }
         System.out.println("[deploy] 脚本: " + config.getDeployScript());
         System.out.println("[deploy] 参数(" + paths.length + "个): " + pathLog);
-        int exitCode = scriptExecutor.execute(config.getDeployScript(), paths);
-        if (exitCode != 0) {
-            throw new UpdateException(UpdateException.ErrorType.SCRIPT_ERROR,
-                    "部署脚本执行失败, 退出码: " + exitCode);
-        }
+        /*
+         * 后台启动不等待结束：部署脚本拉起的服务可能继承输出管道并常驻运行，
+         * 等待退出码会阻塞更新流程，部署结果改由调用方确认
+         */
+        scriptExecutor.executeAsync(config.getDeployScript(), paths);
         listener.onDeployComplete();
     }
 
