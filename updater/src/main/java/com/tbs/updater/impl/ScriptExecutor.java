@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * 外部脚本执行组件
  * <p>
- * 基于ProcessBuilder执行部署/启动脚本，工作目录为脚本所在目录，
+ * 基于ProcessBuilder执行部署脚本，工作目录为脚本所在目录，
  * 标准错误合并到标准输出并实时透传到控制台。
  * 无共享可变状态，可安全复用。
  * </p>

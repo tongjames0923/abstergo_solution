@@ -14,7 +14,7 @@ import java.util.Properties;
 /**
  * 更新器配置类
  * <p>
- * 持有检查更新接口地址、应用标识、下载目录、部署/启动脚本等全部配置项。
+ * 持有检查更新接口地址、应用标识、下载目录、部署脚本等全部配置项。
  * 支持Builder模式构建，也支持从Properties对象或properties文件加载（UTF-8编码）。
  * 实例一经构建即不可变。
  * </p>
@@ -73,11 +73,6 @@ public final class UpdaterConfig {
      * properties键名：部署脚本路径
      */
     public static final String KEY_LOCAL_DEPLOY_SCRIPT = "local.deployScript";
-
-    /**
-     * properties键名：启动脚本路径
-     */
-    public static final String KEY_LOCAL_START_SCRIPT = "local.startScript";
 
     /**
      * properties键名：网络超时时间（秒）
@@ -140,11 +135,6 @@ public final class UpdaterConfig {
     private final String deployScript;
 
     /**
-     * 启动脚本路径，可为空表示跳过启动步骤
-     */
-    private final String startScript;
-
-    /**
      * 网络超时时间（秒）
      */
     private final int timeoutSeconds;
@@ -168,7 +158,6 @@ public final class UpdaterConfig {
         this.currentVersionCode = builder.currentVersionCode;
         this.downloadDir = builder.downloadDir;
         this.deployScript = builder.deployScript;
-        this.startScript = builder.startScript;
         this.timeoutSeconds = builder.timeoutSeconds;
         this.tryAllUrls = builder.tryAllUrls;
     }
@@ -194,7 +183,6 @@ public final class UpdaterConfig {
                 .platform(trimToNull(props.getProperty(KEY_APP_PLATFORM)))
                 .currentVersionCode(parseIntProperty(props, KEY_APP_CURRENT_VERSION_CODE, 0))
                 .deployScript(trimToNull(props.getProperty(KEY_LOCAL_DEPLOY_SCRIPT)))
-                .startScript(trimToNull(props.getProperty(KEY_LOCAL_START_SCRIPT)))
                 .timeoutSeconds(parseIntProperty(props, KEY_UPDATE_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS));
         /*
          * downloadDir未配置时不覆盖Builder默认值（系统临时目录/updates）
@@ -367,10 +355,6 @@ public final class UpdaterConfig {
         return deployScript;
     }
 
-    public String getStartScript() {
-        return startScript;
-    }
-
     public int getTimeoutSeconds() {
         return timeoutSeconds;
     }
@@ -444,7 +428,6 @@ public final class UpdaterConfig {
         private int currentVersionCode;
         private String downloadDir = new File(System.getProperty("java.io.tmpdir"), "updates").getAbsolutePath();
         private String deployScript;
-        private String startScript;
         private int timeoutSeconds = DEFAULT_TIMEOUT_SECONDS;
         private boolean tryAllUrls = true;
 
@@ -487,11 +470,6 @@ public final class UpdaterConfig {
 
         public Builder deployScript(String deployScript) {
             this.deployScript = deployScript;
-            return this;
-        }
-
-        public Builder startScript(String startScript) {
-            this.startScript = startScript;
             return this;
         }
 

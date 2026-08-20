@@ -99,18 +99,6 @@ public interface UpdateListener {
     }
 
     /**
-     * 启动脚本开始执行
-     */
-    default void onStartScriptStart() {
-    }
-
-    /**
-     * 启动脚本执行完成
-     */
-    default void onStartScriptComplete() {
-    }
-
-    /**
      * 整个更新流程成功（含"已是最新版本"的直接成功）
      */
     default void onSuccess() {

@@ -29,7 +29,7 @@ import java.util.List;
  * 1. 启动时按 appKey 选择/新建应用配置（updater-{appKey}.properties）
  * 2. 版本检查与对比展示
  * 3. 下载进度与速度实时显示
- * 4. 部署/启动脚本执行状态
+ * 4. 部署脚本执行状态
  * 5. 运行时配置编辑（版本号独立回写各自配置文件）
  * 6. 下载完成后自动打开文件（可选）
  * 7. 带时间戳的操作日志
@@ -171,12 +171,8 @@ public class UpdaterGuiDemo extends JFrame {
     private volatile int lastLoggedMilestone = 0;
 
     /**
-     * 本次流程是否已进入安装阶段（用于区分“已是最新”与“安装完成”两种成功）
-     */
-    private volatile boolean installCompleted = false;
-
-    /**
-     * 本次安装是否已弹出结果确认对话框（部署脚本启动即弹出，onSuccess 据此避免重复收尾）
+     * 本次安装是否已弹出结果确认对话框（部署脚本启动或流程收尾时弹出，
+     * onSuccess/onError 据此避免重复收尾或推翻用户已确认的结果）
      */
     private volatile boolean installConfirmShown = false;
 
@@ -394,14 +390,13 @@ public class UpdaterGuiDemo extends JFrame {
         updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
         pendingInfo = null;
         forceUpdate = false;
-        resetButtons();
+        resetUi();
         appendLog("[初始化] 配置加载完成: " + configFile.getName());
         appendLog("[初始化] 服务端: " + currentConfig.buildCheckUrl());
         appendLog("[初始化] appKey: " + currentConfig.getAppKey());
         appendLog("[初始化] platform: " + currentConfig.getPlatform());
         appendLog("[初始化] 当前版本: " + currentConfig.getCurrentVersionCode());
         appendLog("[初始化] 部署脚本: " + (currentConfig.getDeployScript() != null ? currentConfig.getDeployScript() : "未配置（跳过）"));
-        appendLog("[初始化] 启动脚本: " + (currentConfig.getStartScript() != null ? currentConfig.getStartScript() : "未配置（跳过）"));
         versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
         setStatus("当前应用: " + currentConfig.getAppKey(), COLOR_SUCCESS);
     }
@@ -423,7 +418,6 @@ public class UpdaterGuiDemo extends JFrame {
                 .currentVersionCode(version)
                 .downloadDir(source.getDownloadDir())
                 .deployScript(source.getDeployScript())
-                .startScript(source.getStartScript())
                 .timeoutSeconds(source.getTimeoutSeconds())
                 .tryAllUrls(source.isTryAllUrls())
                 .build();
@@ -642,7 +636,6 @@ public class UpdaterGuiDemo extends JFrame {
             return;
         }
         updating = true;
-        installCompleted = false;
         pendingInfo = null;
         downloadedFiles = new ArrayList<>();
         startButton.setEnabled(false);
@@ -654,17 +647,20 @@ public class UpdaterGuiDemo extends JFrame {
         speedLabel.setText("");
         setStatus("正在检查更新...", COLOR_WORKING);
 
+        /*
+         * updating 的复位统一由各终态出口（resetUi / 稍后分支 / 进入安装）负责，
+         * 不在线程 finally 中提前复位，避免确认对话框未处理完就失去关窗拦截与重入保护
+         */
         new Thread(() -> {
             try {
                 updater.checkForUpdate();
             } catch (Exception e) {
                 SwingUtilities.invokeLater(() -> {
-                    setStatus("检查失败: " + e.getMessage(), COLOR_ERROR);
                     appendLog("[异常] " + e.getMessage());
-                    resetButtons();
+                    resetUi();
+                    setStatus("检查失败: " + e.getMessage(), COLOR_ERROR);
+                    progressBar.setString("失败");
                 });
-            } finally {
-                updating = false;
             }
         }, "updater-check-thread").start();
     }
@@ -679,7 +675,6 @@ public class UpdaterGuiDemo extends JFrame {
             return;
         }
         updating = true;
-        installCompleted = true;
         installConfirmShown = false;
         downloadedFiles = new ArrayList<>();
         startButton.setEnabled(false);
@@ -697,12 +692,11 @@ public class UpdaterGuiDemo extends JFrame {
                 updater.installUpdate(info);
             } catch (Exception e) {
                 SwingUtilities.invokeLater(() -> {
-                    setStatus("更新失败: " + e.getMessage(), COLOR_ERROR);
                     appendLog("[异常] " + e.getMessage());
-                    resetButtons();
+                    resetUi();
+                    setStatus("更新失败: " + e.getMessage(), COLOR_ERROR);
+                    progressBar.setString("失败");
                 });
-            } finally {
-                updating = false;
             }
         }, "updater-install-thread").start();
     }
@@ -710,15 +704,16 @@ public class UpdaterGuiDemo extends JFrame {
     /**
      * 弹出安装结果确认对话框
      * <p>
-     * 部署脚本一启动即弹出（不等待脚本结束，脚本可能在后台常驻运行），
-     * 由用户确认应用是否更新成功：
-     * “已成功”将新版本号回写当前 appKey 配置文件，“未成功”保持原版本。
+     * 部署脚本一启动即弹出（脚本后台运行不等待结束）；未配置部署脚本时
+     * 在流程收尾（onSuccess）时补弹。由用户确认应用是否更新成功：
+     * “已成功”将新版本号回写当前 appKey 配置文件；
+     * “未成功”保持原版本，强制更新时重新弹出安装确认要求重试。
      * </p>
      */
     private void showInstallResultConfirmDialog() {
         Object[] options = {"已成功", "未成功"};
         int result = JOptionPane.showOptionDialog(UpdaterGuiDemo.this,
-                "部署脚本已开始执行，请确认应用是否更新成功：\n\n"
+                "更新流程已执行完毕，请确认应用是否更新成功：\n\n"
                 + "• 已成功：将更新本地版本信息，下次启动不再提示更新\n"
                 + "• 未成功：保持当前版本信息，下次启动仍会提示更新",
                 "确认更新结果", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
@@ -739,24 +734,35 @@ public class UpdaterGuiDemo extends JFrame {
                     appendLog("[成功] 版本同步失败: " + e.getMessage());
                 }
             }
+            resetUi();
             versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
                     + "  |  最新版本: 已同步");
             setStatus("更新完成", COLOR_SUCCESS);
-            progressBar.setIndeterminate(false);
             progressBar.setValue(100);
             progressBar.setString("完成");
-        } else {
-            /*
-             * 用户确认失败：不更新版本号，保持原样
-             */
-            appendLog("[失败] 用户确认更新未成功，保持原版本: " + currentConfig.getCurrentVersionCode());
-            versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
-                    + "  |  最新版本: 未同步");
-            setStatus("更新失败（用户确认）", COLOR_ERROR);
-            progressBar.setIndeterminate(false);
-            progressBar.setString("失败");
+            return;
         }
-        resetButtons();
+        /*
+         * 用户确认失败：不更新版本号
+         */
+        appendLog("[失败] 用户确认更新未成功，保持原版本: " + currentConfig.getCurrentVersionCode());
+        if (forceUpdate) {
+            /*
+             * 强制更新不可跳过：确认失败后重新弹出更新确认要求重试
+             */
+            UpdateInfo info = pendingInfo;
+            resetUi();
+            pendingInfo = info;
+            forceUpdate = true;
+            appendLog("[检查] 强制更新未成功，重新弹出安装确认");
+            showUpdateConfirmDialog(info);
+            return;
+        }
+        resetUi();
+        versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
+                + "  |  最新版本: 未同步");
+        setStatus("更新失败（用户确认）", COLOR_ERROR);
+        progressBar.setString("失败");
     }
 
     /**
@@ -849,9 +855,12 @@ public class UpdaterGuiDemo extends JFrame {
                 continue;
             }
             appendLog("[检查] 用户选择稍后安装，可点击「立即更新」继续");
+            updating = false;
             startButton.setText("立即更新");
             startButton.setEnabled(true);
             configButton.setEnabled(true);
+            switchAppButton.setEnabled(true);
+            progressBar.setString("等待中");
             return;
         }
     }
@@ -928,7 +937,6 @@ public class UpdaterGuiDemo extends JFrame {
         JTextField versionField = new JTextField(currentConfig != null ? String.valueOf(currentConfig.getCurrentVersionCode()) : "0", 6);
         JTextField downloadDirField = new JTextField(currentConfig != null ? currentConfig.getDownloadDir() : "", 18);
         JTextField deployScriptField = new JTextField(currentConfig != null ? currentConfig.getDeployScript() : "", 18);
-        JTextField startScriptField = new JTextField(currentConfig != null ? currentConfig.getStartScript() : "", 18);
         JTextField timeoutField = new JTextField(currentConfig != null ? String.valueOf(currentConfig.getTimeoutSeconds()) : "30", 6);
         JCheckBox tryAllUrlsBox = new JCheckBox("", currentConfig == null || currentConfig.isTryAllUrls());
 
@@ -954,11 +962,9 @@ public class UpdaterGuiDemo extends JFrame {
                 createBrowseButton(downloadDirField, true, null));
         addPathRow(localGroup, 1, "部署脚本:", deployScriptField,
                 createBrowseButton(deployScriptField, false, "部署脚本"));
-        addPathRow(localGroup, 2, "启动脚本:", startScriptField,
-                createBrowseButton(startScriptField, false, "启动脚本"));
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
-        gbc.gridy = 3;
+        gbc.gridy = 2;
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(3, 0, 3, 8);
         localGroup.add(new JLabel("超时时间(秒):"), gbc);
@@ -967,7 +973,7 @@ public class UpdaterGuiDemo extends JFrame {
         gbc.fill = GridBagConstraints.HORIZONTAL;
         localGroup.add(timeoutField, gbc);
         gbc.gridx = 0;
-        gbc.gridy = 4;
+        gbc.gridy = 3;
         gbc.gridwidth = 1;
         gbc.fill = GridBagConstraints.NONE;
         localGroup.add(new JLabel("失败尝试其他地址:"), gbc);
@@ -999,7 +1005,6 @@ public class UpdaterGuiDemo extends JFrame {
                         .currentVersionCode(Integer.parseInt(versionField.getText().trim()))
                         .downloadDir(downloadDirText.isEmpty() ? null : downloadDirText)
                         .deployScript(deployScriptField.getText().trim().isEmpty() ? null : deployScriptField.getText().trim())
-                        .startScript(startScriptField.getText().trim().isEmpty() ? null : startScriptField.getText().trim())
                         .timeoutSeconds(Integer.parseInt(timeoutField.getText().trim()))
                         .tryAllUrls(tryAllUrlsBox.isSelected())
                         .build();
@@ -1010,15 +1015,10 @@ public class UpdaterGuiDemo extends JFrame {
                 } else {
                     appendLog("[配置] 部署脚本: 未配置（跳过）");
                 }
-                if (currentConfig.getStartScript() != null) {
-                    appendLog("[配置] 启动脚本: " + currentConfig.getStartScript());
-                } else {
-                    appendLog("[配置] 启动脚本: 未配置（跳过）");
-                }
                 versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
                 saveCurrentConfig();
                 setStatus("配置已更新", COLOR_IDLE);
-                resetButtons();
+                resetUi();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "配置无效: " + e.getMessage(),
                         "错误", JOptionPane.ERROR_MESSAGE);
@@ -1094,11 +1094,22 @@ public class UpdaterGuiDemo extends JFrame {
     }
 
     /**
-     * 恢复按钮状态并清理待安装更新暂存
+     * 界面复位到空闲状态的统一出口
+     * <p>
+     * 所有流程终态（已是最新/检查失败/更新失败/确认成功/确认失败/配置加载）均经此复位：
+     * 恢复按钮、清理暂存状态、复位进度条与速度显示、结束 updating 状态。
+     * 终态的个性化展示（如“完成/失败”字样）由调用方在本方法之后覆盖。
+     * </p>
      */
-    private void resetButtons() {
+    private void resetUi() {
+        updating = false;
         pendingInfo = null;
         forceUpdate = false;
+        downloadedFiles = new ArrayList<>();
+        progressBar.setIndeterminate(false);
+        progressBar.setValue(0);
+        progressBar.setString("等待中");
+        speedLabel.setText("");
         startButton.setEnabled(true);
         startButton.setText("检查更新");
         configButton.setEnabled(true);
@@ -1219,9 +1230,6 @@ public class UpdaterGuiDemo extends JFrame {
         if (config.getDeployScript() != null) {
             props.setProperty(UpdaterConfig.KEY_LOCAL_DEPLOY_SCRIPT, config.getDeployScript());
         }
-        if (config.getStartScript() != null) {
-            props.setProperty(UpdaterConfig.KEY_LOCAL_START_SCRIPT, config.getStartScript());
-        }
         try (OutputStreamWriter writer = new OutputStreamWriter(
                 new FileOutputStream(configFile), StandardCharsets.UTF_8)) {
             props.store(writer, "更新器配置（由 GUI 保存，请勿手动修改格式）");
@@ -1294,6 +1302,11 @@ public class UpdaterGuiDemo extends JFrame {
                         + "  |  最新版本: " + latestVer);
                 progressBar.setIndeterminate(false);
                 if (info.isNeedUpdate()) {
+                    /*
+                     * 检查阶段结束，进入用户决策阶段：先复位 updating，
+                     * 强制更新的不可跳过语义由 forceUpdate 标记继续保证
+                     */
+                    updating = false;
                     setStatus("发现新版本: " + latestVer, COLOR_WORKING);
                     appendLog("[检查] 发现新版本: " + latestVer + " (versionCode=" + info.getLatestVersionCode() + ")");
                     int fileCount = info.getFiles().size();
@@ -1313,7 +1326,7 @@ public class UpdaterGuiDemo extends JFrame {
                 } else {
                     setStatus("当前已是最新版本", COLOR_SUCCESS);
                     appendLog("[检查] 已是最新版本");
-                    resetButtons();
+                    resetUi();
                 }
             });
         }
@@ -1416,7 +1429,11 @@ public class UpdaterGuiDemo extends JFrame {
                     appendLog("[下载]   [" + (i + 1) + "] " + files.get(i).getAbsolutePath());
                 }
                 if (autoOpenCheckbox.isSelected() && !files.isEmpty()) {
-                    openFile(files.get(0));
+                    if (currentConfig != null && currentConfig.getDeployScript() != null) {
+                        appendLog("[打开] 已配置部署脚本，跳过自动打开下载文件，避免与部署冲突");
+                    } else {
+                        openFile(files.get(0));
+                    }
                 }
                 speedLabel.setText("");
             });
@@ -1451,19 +1468,6 @@ public class UpdaterGuiDemo extends JFrame {
         }
 
         @Override
-        public void onStartScriptStart() {
-            SwingUtilities.invokeLater(() -> {
-                setStatus("正在启动应用...", COLOR_WORKING);
-                appendLog("[启动] 开始执行启动脚本");
-            });
-        }
-
-        @Override
-        public void onStartScriptComplete() {
-            SwingUtilities.invokeLater(() -> appendLog("[启动] 完成"));
-        }
-
-        @Override
         public void onSuccess() {
             SwingUtilities.invokeLater(() -> {
                 appendLog("[成功] 更新流程执行完毕");
@@ -1474,24 +1478,27 @@ public class UpdaterGuiDemo extends JFrame {
                     return;
                 }
                 /*
-                 * 未配置部署脚本的场景：直接完成收尾
+                 * 未配置部署脚本的场景：确认对话框尚未弹出，补弹让用户确认结果（版本回写依赖该确认）
                  */
-                setStatus("更新完成", COLOR_SUCCESS);
-                progressBar.setIndeterminate(false);
-                progressBar.setValue(100);
-                progressBar.setString("完成");
-                resetButtons();
+                installConfirmShown = true;
+                showInstallResultConfirmDialog();
             });
         }
 
         @Override
         public void onError(String errMsg) {
             SwingUtilities.invokeLater(() -> {
-                setStatus("更新失败", COLOR_ERROR);
-                progressBar.setIndeterminate(false);
-                progressBar.setString("失败");
                 appendLog("[错误] " + errMsg);
-                resetButtons();
+                if (installConfirmShown) {
+                    /*
+                     * 确认对话框已弹出（部署脚本已后台启动），此后残余步骤的错误
+                     * 仅记录日志，不弹窗、不推翻用户已确认的更新结果
+                     */
+                    return;
+                }
+                resetUi();
+                setStatus("更新失败", COLOR_ERROR);
+                progressBar.setString("失败");
                 JOptionPane.showMessageDialog(UpdaterGuiDemo.this,
                         "更新失败:\n" + errMsg,
                         "错误", JOptionPane.ERROR_MESSAGE);

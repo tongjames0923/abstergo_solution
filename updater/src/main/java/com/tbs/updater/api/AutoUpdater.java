@@ -100,7 +100,7 @@ public class AutoUpdater {
     /**
      * 一键自动更新
      * <p>
-     * 按顺序执行检查、下载全部文件、部署脚本、启动脚本：
+     * 按顺序执行检查、下载全部文件、部署脚本：
      * 服务端判定无需更新时直接回调onSuccess；
      * 任一步骤失败时回调onError并终止流程。
      * 本方法不向外抛出异常，结果全部经监听器通知。
@@ -124,7 +124,7 @@ public class AutoUpdater {
     /**
      * 安装指定更新（跳过检查阶段）
      * <p>
-     * 按顺序执行下载全部文件、部署脚本、版本回写、启动脚本，
+     * 按顺序执行下载全部文件、部署脚本、版本回写，
      * 适用于调用方先自行检查并向用户确认后再安装的两段式场景。
      * 任一步骤失败时回调onError并终止流程。
      * 本方法不向外抛出异常，结果全部经监听器通知。
@@ -140,11 +140,6 @@ public class AutoUpdater {
              * 部署脚本启动后立即持久化新版本号，防止后续步骤崩溃导致版本未记录
              */
             persistLocalVersion(info.getLatestVersionCode());
-            /*
-             * 启动脚本传入主文件（第一个）路径
-             */
-            File primaryFile = downloadedFiles.isEmpty() ? null : downloadedFiles.get(0);
-            executeStartScript(primaryFile);
             listener.onSuccess();
         } catch (UpdateException e) {
             listener.onError("[" + e.getErrorType() + "] " + e.getMessage());
@@ -322,43 +317,6 @@ public class AutoUpdater {
             list.add(downloadedFile);
         }
         executeDeployScript(list);
-    }
-
-    /**
-     * 执行启动脚本
-     * <p>
-     * 将下载文件的绝对路径作为第一个参数传递给脚本；
-     * 未配置启动脚本时自动跳过本步骤。
-     * </p>
-     *
-     * @param downloadedFile 已下载的更新包文件，可为null表示无参数启动
-     * @throws UpdateException 脚本执行失败或退出码非0时抛出SCRIPT_ERROR
-     */
-    public void executeStartScript(File downloadedFile) throws UpdateException {
-        if (isBlank(config.getStartScript())) {
-            return;
-        }
-        listener.onStartScriptStart();
-        int exitCode;
-        if (downloadedFile != null && !isBlank(downloadedFile.getAbsolutePath())) {
-            exitCode = scriptExecutor.execute(config.getStartScript(), downloadedFile.getAbsolutePath());
-        } else {
-            exitCode = scriptExecutor.execute(config.getStartScript());
-        }
-        if (exitCode != 0) {
-            throw new UpdateException(UpdateException.ErrorType.SCRIPT_ERROR,
-                    "启动脚本执行失败, 退出码: " + exitCode);
-        }
-        listener.onStartScriptComplete();
-    }
-
-    /**
-     * 执行启动脚本（无参数）
-     *
-     * @throws UpdateException 脚本执行失败或退出码非0时抛出SCRIPT_ERROR
-     */
-    public void executeStartScript() throws UpdateException {
-        executeStartScript(null);
     }
 
     /**

@@ -6,8 +6,7 @@
 
 1. **检查更新**：POST 调用检查更新接口，提交 `appKey`、`platform`、`currentVersionCode`；
 2. **下载更新包**：从返回的 `downloadUrls` 下载到本地，支持进度回调与多地址容错；
-3. **执行部署脚本**：可选，将下载文件绝对路径作为第一个参数传入；
-4. **执行启动脚本**：可选，部署完成后拉起应用或服务。
+3. **执行部署脚本**：可选，将全部下载文件绝对路径依次作为参数传入；脚本以后台方式启动，不等待其结束。
 
 类库**不包含 main 方法**，以 API 形式供 GUI 程序、命令行工具、Web 服务等上层应用调用；
 流程中的状态、进度与错误通过 `UpdateListener` 回调通知调用方。
@@ -62,7 +61,6 @@ UpdaterConfig config = new UpdaterConfig.Builder()
         .currentVersionCode(0)
         .downloadDir("/tmp/updates")
         .deployScript("/opt/updater/deploy.sh")
-        .startScript("/opt/updater/start.sh")
         .build();
 
 AutoUpdater updater = new AutoUpdater(config, new UpdateListener() {
@@ -113,7 +111,6 @@ new Thread(() -> {
         if (info.isNeedUpdate()) {
             File file = updater.downloadUpdate(info);
             updater.executeDeployScript(file);
-            updater.executeStartScript();
         }
     } catch (UpdateException e) {
         // e.getErrorType() 区分错误类别，e.getMessage() 获取错误描述
@@ -134,8 +131,7 @@ new Thread(() -> {
 | `platform` | String | 无（必填） | 平台标识（如 `android`、`ios`） |
 | `currentVersionCode` | int | 0 | 当前应用版本号 |
 | `downloadDir` | String | 系统临时目录下 `updates` | 更新包下载目录 |
-| `deployScript` | String | 空（跳过部署） | 部署脚本路径 |
-| `startScript` | String | 空（跳过启动） | 启动脚本路径 |
+| `deployScript` | String | 空（跳过部署） | 部署脚本路径，后台启动不等待结束 |
 | `timeoutSeconds` | int | 30 | 检查更新接口的连接/读取超时（秒） |
 | `tryAllUrls` | boolean | true | 下载失败时是否依次尝试其余下载地址 |
 
@@ -152,7 +148,6 @@ app.platform=android
 app.currentVersionCode=0
 local.downloadDir=/tmp/updates
 local.deployScript=/opt/updater/deploy.sh
-local.startScript=/opt/updater/start.sh
 update.timeoutSeconds=30
 update.tryAllUrls=true
 ```
@@ -187,7 +182,7 @@ AutoUpdater updater = new AutoUpdater(config, listener);
 ## 最佳实践
 
 1. **后台线程执行**：`autoUpdate()` 与分步方法均为阻塞调用，GUI 场景务必放到后台线程，回调中更新 UI 需自行切换回 UI 线程。
-2. **启动脚本要守护化**：`executeStartScript()` 会等待脚本进程退出，启动常驻服务的脚本应使用 nohup、systemd 等方式守护化后立即返回。
+2. **部署脚本后台执行**：`executeDeployScript()` 以后台方式启动脚本、不等待其结束，脚本可直接用 `start`、`nohup` 等拉起常驻服务；部署是否成功由调用方（用户）确认。
 3. **下载目录预检**：确保运行用户对 `downloadDir` 有写权限；下载失败时类库会自动清理不完整文件。
 4. **可测试性**：`AutoUpdater` 提供五参构造函数，可注入自定义的 `UpdateChecker` / `Downloader` / `ScriptExecutor` 子类或 mock 进行测试。
 5. **线程安全**：类本身不持有共享可变状态，`autoUpdate()` 顺序执行适合单线程调用；并发调用多个流程时由调用方自行同步。
