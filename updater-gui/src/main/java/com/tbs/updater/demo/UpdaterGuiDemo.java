@@ -1382,38 +1382,52 @@ public class UpdaterGuiDemo extends JFrame {
         @Override
         public void onSuccess() {
             SwingUtilities.invokeLater(() -> {
-                setStatus("更新流程完成", COLOR_SUCCESS);
+                setStatus("部署脚本已执行，请确认结果", COLOR_WORKING);
                 progressBar.setIndeterminate(false);
                 progressBar.setValue(100);
-                progressBar.setString("完成");
-                appendLog("[成功] 更新流程完成");
+                progressBar.setString("待确认");
+                appendLog("[成功] 部署脚本已执行，等待用户确认更新结果");
                 /*
-                 * 更新成功后类库已将新版本号写入全局版本文件，
-                 * 读取后回写到当前 appKey 对应的配置文件，
-                 * 保证每个 appKey 独立记录版本且下次启动不重复检测更新
+                 * 弹出确认对话框，让用户判断更新是否真正成功
                  */
-                int newVersion = UpdaterConfig.readLocalVersion();
-                if (newVersion > currentConfig.getCurrentVersionCode()) {
-                    try {
-                        currentConfig = rebuildWithVersion(currentConfig, newVersion);
-                        updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
-                        saveCurrentConfig();
-                        appendLog("[成功] 版本号已回写配置文件: " + newVersion);
-                    } catch (UpdateException e) {
-                        appendLog("[成功] 版本同步失败: " + e.getMessage());
+                Object[] options = {"已成功", "未成功"};
+                int result = JOptionPane.showOptionDialog(UpdaterGuiDemo.this,
+                        "部署脚本已执行完成，请确认应用是否更新成功：\n\n"
+                        + "• 已成功：将更新本地版本信息，下次启动不再提示更新\n"
+                        + "• 未成功：保持当前版本信息，下次启动仍会提示更新",
+                        "确认更新结果", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE,
+                        null, options, options[0]);
+                
+                if (result == JOptionPane.YES_OPTION) {
+                    /*
+                     * 用户确认成功：读取新版本号并回写到配置文件
+                     */
+                    int newVersion = UpdaterConfig.readLocalVersion();
+                    if (newVersion > currentConfig.getCurrentVersionCode()) {
+                        try {
+                            currentConfig = rebuildWithVersion(currentConfig, newVersion);
+                            updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
+                            saveCurrentConfig();
+                            appendLog("[成功] 用户确认成功，版本号已回写: " + newVersion);
+                        } catch (UpdateException e) {
+                            appendLog("[成功] 版本同步失败: " + e.getMessage());
+                        }
                     }
+                    versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
+                            + "  |  最新版本: 已同步");
+                    setStatus("更新完成", COLOR_SUCCESS);
+                    progressBar.setString("完成");
+                } else {
+                    /*
+                     * 用户确认失败：不更新版本号，保持原样
+                     */
+                    appendLog("[失败] 用户确认更新未成功，保持原版本: " + currentConfig.getCurrentVersionCode());
+                    versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
+                            + "  |  最新版本: 未同步");
+                    setStatus("更新失败（用户确认）", COLOR_ERROR);
+                    progressBar.setString("失败");
                 }
-                versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
-                        + "  |  最新版本: 已同步");
                 resetButtons();
-                /*
-                 * 安装完成后给出明确反馈，避免用户仅凭状态栏无法确认结果
-                 */
-                if (installCompleted) {
-                    JOptionPane.showMessageDialog(UpdaterGuiDemo.this,
-                            "更新已完成，当前版本: " + currentConfig.getCurrentVersionCode(),
-                            "更新成功", JOptionPane.INFORMATION_MESSAGE);
-                }
             });
         }
 
