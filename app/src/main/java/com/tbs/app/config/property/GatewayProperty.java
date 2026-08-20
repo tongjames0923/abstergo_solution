@@ -22,6 +22,14 @@ import java.util.List;
 public class GatewayProperty {
 
     /**
+     * 测试控制器启用模式
+     * <p>
+     * 可选值：all（全部开启）、none（全部关闭）、pub（仅公开）、pri（仅私有），默认为none
+     * </p>
+     */
+    private TestControllerMode enableTestController = TestControllerMode.NONE;
+
+    /**
      * 网关版本标识
      * <p>
      * 优先取启动参数 APP_GATEWAY_VERSION，否则为 Maven 资源过滤注入的 pom 版本号 可用启动参数覆盖，如：-DAPP_GATEWAY_VERSION=1.2.3-hotfix

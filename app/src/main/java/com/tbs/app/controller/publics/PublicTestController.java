@@ -2,6 +2,8 @@ package com.tbs.app.controller.publics;
 
 import com.alibaba.nacos.api.config.ConfigService;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.app.config.condition.ConditionalOnTestControllerMode;
+import com.tbs.app.config.property.TestControllerMode;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.script.api.compiler.impl.SpelCompiler;
 import com.tbs.script.api.engine.IScriptEngine;
@@ -32,6 +34,7 @@ import java.io.Serializable;
 @RestController
 @RequestMapping("/public")
 @Tag(name = "公共测试控制器", description = "公共测试控制器")
+@ConditionalOnTestControllerMode({TestControllerMode.ALL, TestControllerMode.PUB})
 public class PublicTestController extends BaseController {
 
     @DubboReference

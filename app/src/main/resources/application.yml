@@ -44,6 +44,7 @@ app:
     # 视图路由分组配置（PublicGatewayVersionController使用）
     route-groups:
       - default
+    enable-test-controller: pri
 
 dubbo:
   application:

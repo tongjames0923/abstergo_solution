@@ -41,3 +41,15 @@ export function getOperateTypeList(keyword) {
     params: keyword ? { keyword } : {}
   })
 }
+
+
+/**
+ * 强制刷新日志记录
+ * @returns {Promise}
+ */
+export function flushLog() {
+  return request({
+    url: '/private/log/forceFlush',
+    method: 'post'
+  })
+}

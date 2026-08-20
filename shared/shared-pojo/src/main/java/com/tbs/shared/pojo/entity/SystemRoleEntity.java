@@ -6,6 +6,7 @@ import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
+import org.hibernate.annotations.Comment;
 import lombok.*;
 
 import javax.persistence.*;
@@ -31,6 +32,7 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	/**
 	 * 主键
 	 */
+	@Comment("主键ID")
 	@Id
 	@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
 	private Long id;
@@ -38,63 +40,76 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	/**
 	 * 权限编码
 	 */
+	@Comment("权限编码（唯一标识）")
 	@Column(name = "role", length = 128, nullable = false)
 	private String role;
 
 	/**
-	 * 名称
+	 * 权限名称
 	 */
+	@Comment("权限名称")
 	@Column(name = "name")
 	private String name;
 
 	/**
-	 * 类型
+	 * 权限类型
 	 *
 	 * @see com.tbs.shared.enums.SystemRoleTypeEnum
 	 */
+	@Comment("权限类型")
 	@Column(name = "type")
 	private Integer type;
 
 	/**
-	 * 描述
+	 * 描述信息
 	 */
+	@Comment("描述信息")
 	@Column(name = "description")
 	private String description;
+
 	/**
 	 * 创建时间
 	 */
-
+	@Comment("创建时间")
 	@Column(name = "create_time")
 	private Date createTime;
+
 	/**
 	 * 修改时间
 	 */
-
+	@Comment("修改时间")
 	@Column(name = "update_time")
 	private Date updateTime;
+
 	/**
-	 * 状态
+	 * 状态标识
+	 *
 	 * @see com.tbs.shared.enums.SystemRoleFlagEnum
 	 */
+	@Comment("状态标识")
 	@Column(name = "flag")
 	private Integer flag;
 
 	/**
-	 * 创建者
+	 * 创建者用户ID
 	 */
+	@Comment("创建者用户ID")
 	@Column(name = "create_by")
 	private Long createBy;
 
 	/**
-	 * 更新者
+	 * 更新者用户ID
 	 */
+	@Comment("更新者用户ID")
 	@Column(name = "update_by")
 	private Long updateBy;
 
 	/**
-	 * 数据权限
+	 * 数据权限范围
+	 *
 	 * @see com.tbs.shared.enums.SystemDataScopeEnum
 	 */
+	@Comment("数据权限范围")
 	@Column(name = "data_scope")
 	private Integer dataScope;
 
