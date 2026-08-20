@@ -6,7 +6,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.nio.charset.StandardCharsets;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -100,6 +100,8 @@ public class ScriptExecutor {
      * 逐行读取脚本输出并透传到控制台
      * <p>
      * 持续读取直到进程关闭输出流，避免输出缓冲区写满导致进程阻塞。
+     * 使用系统默认编码读取：Windows 上 cmd.exe 管道输出为 GBK，
+     * Linux/macOS 上 bash 输出为 UTF-8，与各自系统默认编码一致。
      * </p>
      *
      * @param process 脚本进程
@@ -107,7 +109,7 @@ public class ScriptExecutor {
      */
     private void drainOutput(Process process) throws IOException {
         try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                new InputStreamReader(process.getInputStream(), Charset.defaultCharset()))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 System.out.println(OUTPUT_PREFIX + line);

@@ -243,7 +243,10 @@ public class UpdaterGuiDemo extends JFrame {
 
         logArea = new JTextArea();
         logArea.setEditable(false);
-        logArea.setFont(new Font("Consolas", Font.PLAIN, 12));
+        /*
+         * 使用 Microsoft YaHei 确保中文正常显示（Consolas 对中文支持不好）
+         */
+        logArea.setFont(new Font("Microsoft YaHei", Font.PLAIN, 12));
         logArea.setLineWrap(true);
         logArea.setWrapStyleWord(true);
         DefaultCaret caret = (DefaultCaret) logArea.getCaret();
@@ -1496,6 +1499,15 @@ public class UpdaterGuiDemo extends JFrame {
      * @param args 命令行参数
      */
     public static void main(String[] args) {
+        /*
+         * 检查并提示编码设置：Windows 上默认编码为 GBK，可能导致中文乱码
+         */
+        String encoding = System.getProperty("file.encoding");
+        if (!"UTF-8".equalsIgnoreCase(encoding)) {
+            System.err.println("[警告] 当前 JVM 编码为 " + encoding + "，可能导致中文显示异常。");
+            System.err.println("[建议] 使用以下命令启动: java -Dfile.encoding=UTF-8 -jar updater-gui.jar");
+        }
+        
         if (!acquireInstanceLock()) {
             JOptionPane.showMessageDialog(null, "更新器已在运行中，请勿重复启动。", "提示", JOptionPane.WARNING_MESSAGE);
             return;

@@ -64,7 +64,13 @@
             <!--
                 打包可执行 fat JAR（包含 updater 类库及其 Jackson 依赖）
                 执行: mvn clean package -pl updater-gui -am
-                运行: java -jar updater-gui/target/updater-gui-1.0-SNAPSHOT-jar-with-dependencies.jar
+                
+                运行（Windows 必须加 -Dfile.encoding=UTF-8 避免中文乱码）:
+                  java -Dfile.encoding=UTF-8 -jar updater-gui/target/updater-gui-1.0-SNAPSHOT-jar-with-dependencies.jar
+                
+                Linux/macOS 可直接运行:
+                  java -jar updater-gui/target/updater-gui-1.0-SNAPSHOT-jar-with-dependencies.jar
+                
                 启动后需选择应用配置（updater-{appKey}.properties，位于 JAR 同目录）
                 Main-Class 由下方 archive 配置写入，不依赖 MANIFEST.MF 资源文件
             -->

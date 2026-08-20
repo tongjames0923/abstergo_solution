@@ -72,8 +72,9 @@ echo [deploy] 启动主JAR包: %JAR_FILE%
 echo [deploy] 执行命令: java -jar "%JAR_FILE%"
 
 rem 新窗口启动（可见控制台），日志同时输出到同目录下的 app.log
+rem -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 确保中文日志不乱码
 set "JAR_DIR=%~dp1"
-start "App-%APP_PORT%" java -jar "%JAR_FILE%" > "%JAR_DIR%app.log" 2>&1
+start "App-%APP_PORT%" java -Dfile.encoding=UTF-8 -Dsun.jnu.encoding=UTF-8 -jar "%JAR_FILE%" > "%JAR_DIR%app.log" 2>&1
 
 echo [deploy] 新服务已启动（控制台窗口已打开）
 echo [deploy] 日志文件: %JAR_DIR%app.log
