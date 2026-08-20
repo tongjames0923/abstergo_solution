@@ -26,12 +26,13 @@ import java.util.List;
  * 基于 Swing 的应用自动更新器 GUI
  * <p>
  * 功能：
- * 1. 版本检查与对比展示
- * 2. 下载进度与速度实时显示
- * 3. 部署/启动脚本执行状态
- * 4. 运行时配置编辑
- * 5. 下载完成后自动打开文件（可选）
- * 6. 带时间戳的操作日志
+ * 1. 启动时按 appKey 选择/新建应用配置（updater-{appKey}.properties）
+ * 2. 版本检查与对比展示
+ * 3. 下载进度与速度实时显示
+ * 4. 部署/启动脚本执行状态
+ * 5. 运行时配置编辑（版本号独立回写各自配置文件）
+ * 6. 下载完成后自动打开文件（可选）
+ * 7. 带时间戳的操作日志
  * </p>
  *
  * @author abstergo
@@ -40,27 +41,12 @@ import java.util.List;
 public class UpdaterGuiDemo extends JFrame {
 
     /**
-     * 配置文件路径系统属性键名
-     */
-    private static final String CONFIG_FILE_PROPERTY = "updater.config.file";
-
-    /**
-     * classpath 内默认配置文件名
-     */
-    private static final String CLASSPATH_CONFIG = "updater.properties";
-
-    /**
-     * 本地持久化配置文件名（位于 JAR 包所在目录）
-     */
-    private static final String LOCAL_CONFIG_FILE = "updater.properties";
-
-    /**
      * 单实例锁文件名（位于 JAR 包所在目录）
      */
     private static final String INSTANCE_LOCK_FILE = ".updater.lock";
 
     /**
-     * 配置档文件名前缀与后缀（位于 JAR 包所在目录，形如 updater-prod.properties）
+     * 配置文件命名前缀与后缀（形如 updater-{appKey}.properties）
      */
     private static final String PROFILE_FILE_PREFIX = "updater-";
     private static final String PROFILE_FILE_SUFFIX = ".properties";
@@ -130,9 +116,9 @@ public class UpdaterGuiDemo extends JFrame {
     private final JButton configButton;
 
     /**
-     * 配置档切换按钮
+     * 切换应用按钮（运行时切换到其他 appKey 配置）
      */
-    private final JButton profileButton;
+    private final JButton switchAppButton;
 
     /**
      * 下载完成后自动打开文件复选框
@@ -148,6 +134,11 @@ public class UpdaterGuiDemo extends JFrame {
      * 当前加载的配置
      */
     private UpdaterConfig currentConfig;
+
+    /**
+     * 当前配置对应的持久化文件（updater-{appKey}.properties）
+     */
+    private File currentConfigFile;
 
     /**
      * 下载开始时间（用于计算速度）
@@ -170,7 +161,7 @@ public class UpdaterGuiDemo extends JFrame {
     private volatile UpdateInfo pendingInfo;
 
     /**
-     * 速度估算：约1秒前的采样点（时间戳, 已下载字节数）
+     * 速度估算：约 1 秒前的采样点（时间戳，已下载字节数）
      */
     private final long[] speedSnapshot = new long[2];
 
@@ -280,11 +271,11 @@ public class UpdaterGuiDemo extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
 
-        profileButton = new JButton("配置档");
-        profileButton.setFont(UI_FONT);
-        profileButton.setPreferredSize(new Dimension(80, 32));
-        profileButton.addActionListener(e -> showProfileDialog());
-        buttonPanel.add(profileButton);
+        switchAppButton = new JButton("切换应用");
+        switchAppButton.setFont(UI_FONT);
+        switchAppButton.setPreferredSize(new Dimension(90, 32));
+        switchAppButton.addActionListener(e -> switchApp());
+        buttonPanel.add(switchAppButton);
 
         configButton = new JButton("配置");
         configButton.setFont(UI_FONT);
@@ -328,39 +319,83 @@ public class UpdaterGuiDemo extends JFrame {
 
     /**
      * 初始化更新器配置
+     * <p>
+     * 启动时必须确定一份应用配置文件（按 appKey 命名），
+     * 用户未选择或取消时退出程序。
+     * </p>
      */
     private void initUpdater() {
         try {
-            /*
-             * 首次运行（未指定外部配置且无本地持久化配置）时引导用户完成基础配置
-             */
-            UpdaterConfig wizardConfig = null;
-            if (isFirstRun()) {
-                wizardConfig = showFirstRunWizard();
+            File configFile = showAppSelectorDialog(false);
+            if (configFile == null) {
+                /*
+                 * 用户未选择任何配置（退出或关闭选择对话框），程序无法工作，直接退出
+                 */
+                dispose();
+                System.exit(0);
+                return;
             }
-            currentConfig = wizardConfig != null ? wizardConfig : loadConfig();
-            /*
-             * 检查本地已安装版本文件，若存在则覆盖 currentVersionCode
-             */
-            int localVersion = UpdaterConfig.readLocalVersion();
-            if (localVersion > currentConfig.getCurrentVersionCode()) {
-                appendLog("[初始化] 检测到本地版本记录: " + localVersion + "，覆盖配置文件中的版本号");
-                currentConfig = rebuildWithVersion(currentConfig, localVersion);
-            }
-            updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
-            appendLog("[初始化] 配置加载完成");
-            appendLog("[初始化] 服务端: " + currentConfig.buildCheckUrl());
-            appendLog("[初始化] appKey: " + currentConfig.getAppKey());
-            appendLog("[初始化] platform: " + currentConfig.getPlatform());
-            appendLog("[初始化] 当前版本: " + currentConfig.getCurrentVersionCode());
-            appendLog("[初始化] 部署脚本: " + (currentConfig.getDeployScript() != null ? currentConfig.getDeployScript() : "未配置（跳过）"));
-            appendLog("[初始化] 启动脚本: " + (currentConfig.getStartScript() != null ? currentConfig.getStartScript() : "未配置（跳过）"));
-            versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
+            applyConfigFile(configFile);
         } catch (Exception e) {
             appendLog("[初始化] 失败: " + e.getMessage());
             setStatus("配置加载失败: " + e.getMessage(), COLOR_ERROR);
             startButton.setEnabled(false);
         }
+    }
+
+    /**
+     * 运行时切换到其他应用配置
+     * <p>
+     * 复用启动时的选择对话框，用户取消时保持当前配置不变；
+     * 更新进行中禁止切换，避免中断下载或部署。
+     * </p>
+     */
+    private void switchApp() {
+        if (updating) {
+            return;
+        }
+        File configFile = showAppSelectorDialog(true);
+        if (configFile == null) {
+            return;
+        }
+        if (configFile.equals(currentConfigFile)) {
+            appendLog("[切换] 所选应用与当前一致，未执行切换");
+            return;
+        }
+        try {
+            applyConfigFile(configFile);
+        } catch (Exception e) {
+            appendLog("[切换] 失败: " + e.getMessage());
+            setStatus("切换失败: " + e.getMessage(), COLOR_ERROR);
+            JOptionPane.showMessageDialog(this, "配置加载失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    /**
+     * 加载指定配置文件并重建更新器
+     * <p>
+     * 启动与运行时切换共用：重置待安装暂存与强制更新状态，刷新界面展示。
+     * </p>
+     *
+     * @param configFile 待加载的配置文件
+     * @throws Exception 配置文件解析失败时抛出
+     */
+    private void applyConfigFile(File configFile) throws Exception {
+        currentConfigFile = configFile;
+        currentConfig = UpdaterConfig.fromFile(configFile.getAbsolutePath());
+        updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
+        pendingInfo = null;
+        forceUpdate = false;
+        resetButtons();
+        appendLog("[初始化] 配置加载完成: " + configFile.getName());
+        appendLog("[初始化] 服务端: " + currentConfig.buildCheckUrl());
+        appendLog("[初始化] appKey: " + currentConfig.getAppKey());
+        appendLog("[初始化] platform: " + currentConfig.getPlatform());
+        appendLog("[初始化] 当前版本: " + currentConfig.getCurrentVersionCode());
+        appendLog("[初始化] 部署脚本: " + (currentConfig.getDeployScript() != null ? currentConfig.getDeployScript() : "未配置（跳过）"));
+        appendLog("[初始化] 启动脚本: " + (currentConfig.getStartScript() != null ? currentConfig.getStartScript() : "未配置（跳过）"));
+        versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
+        setStatus("当前应用: " + currentConfig.getAppKey(), COLOR_SUCCESS);
     }
 
     /**
@@ -387,87 +422,91 @@ public class UpdaterGuiDemo extends JFrame {
     }
 
     /**
-     * 按优先级加载配置
+     * 应用配置选择对话框
+     * <p>
+     * 列出 JAR 目录下所有 updater-{appKey}.properties 配置文件，
+     * 用户选择其一，或新建一份配置。启动时（cancelable=false）取消返回 null
+     * 由调用方退出程序；运行时切换（cancelable=true）取消返回 null 保持当前配置。
+     * </p>
      *
-     * @return 更新器配置实例
-     * @throws Exception 所有加载途径均失败时抛出
+     * @param cancelable 是否可取消（运行时切换为true，首次选择为false）
+     * @return 选定或新建的配置文件，用户取消时返回null
      */
-    private UpdaterConfig loadConfig() throws Exception {
-        /*
-         * 优先级1：系统属性指定的外部配置文件
-         */
-        String externalPath = System.getProperty(CONFIG_FILE_PROPERTY);
-        if (externalPath != null && !externalPath.trim().isEmpty()) {
-            File externalFile = new File(externalPath.trim());
-            if (externalFile.exists() && externalFile.isFile()) {
-                appendLog("[配置] 从外部文件加载: " + externalFile.getAbsolutePath());
-                return UpdaterConfig.fromFile(externalFile.getAbsolutePath());
+    private File showAppSelectorDialog(boolean cancelable) {
+        while (true) {
+            DefaultListModel<String> model = new DefaultListModel<>();
+            for (String appKey : listAppConfigKeys()) {
+                model.addElement(appKey);
             }
-            appendLog("[配置] 外部文件不存在: " + externalPath);
-        }
-
-        /*
-         * 优先级2：JVM 工作目录下的持久化配置文件（UI 修改后的保存位置）
-         */
-        File localFile = resolveLocalConfigFile();
-        if (localFile.exists() && localFile.isFile()) {
-            appendLog("[配置] 从本地文件加载: " + localFile.getAbsolutePath());
-            return UpdaterConfig.fromFile(localFile.getAbsolutePath());
-        }
-
-        /*
-         * 优先级3：classpath 下的 updater.properties（JAR 内置默认配置）
-         */
-        try (InputStream in = getClass().getClassLoader().getResourceAsStream(CLASSPATH_CONFIG)) {
-            if (in != null) {
-                Properties props = new Properties();
-                props.load(new InputStreamReader(in, StandardCharsets.UTF_8));
-                appendLog("[配置] 从 classpath 加载: " + CLASSPATH_CONFIG);
-                return UpdaterConfig.fromProperties(props);
+            JList<String> appList = new JList<>(model);
+            appList.setFont(UI_FONT);
+            appList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            if (!model.isEmpty()) {
+                appList.setSelectedIndex(0);
             }
-        } catch (IOException e) {
-            appendLog("[配置] classpath 加载失败: " + e.getMessage());
-        }
+            JScrollPane listScroll = new JScrollPane(appList);
+            listScroll.setPreferredSize(new Dimension(360, 180));
 
-        /*
-         * 优先级4：硬编码默认值
-         */
-        appendLog("[配置] 使用内置默认值");
-        return new UpdaterConfig.Builder()
-                .serverHost("192.168.80.32")
-                .serverPort(8082)
-                .appKey("兴昊生产扫码入库App")
-                .platform("android")
-                .currentVersionCode(0)
-                .build();
+            JPanel panel = new JPanel(new BorderLayout(0, 8));
+            panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+            JLabel hint = new JLabel(
+                "<html>请选择要使用的应用配置（按 appKey 区分），<br>每个应用独立保存配置与版本号。</html>");
+            hint.setFont(UI_FONT);
+            panel.add(hint, BorderLayout.NORTH);
+            panel.add(listScroll, BorderLayout.CENTER);
+
+            Object[] options = cancelable
+                ? new Object[] {"打开", "新建", "删除", "取消"}
+                : new Object[] {"打开", "新建", "删除", "退出"};
+            int choice = JOptionPane.showOptionDialog(this, panel,
+                cancelable ? "切换应用" : "选择应用", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+            if (choice == 3 || choice == JOptionPane.CLOSED_OPTION) {
+                return null;
+            }
+            String selected = appList.getSelectedValue();
+            if (choice == 0) {
+                if (selected == null) {
+                    JOptionPane.showMessageDialog(this, "请先选择要打开的应用配置，或点击「新建」创建", "提示",
+                        JOptionPane.WARNING_MESSAGE);
+                    continue;
+                }
+                File configFile = resolveAppConfigFile(selected);
+                if (!configFile.exists()) {
+                    JOptionPane.showMessageDialog(this, "配置文件不存在: " + configFile.getName(), "错误",
+                        JOptionPane.ERROR_MESSAGE);
+                    continue;
+                }
+                return configFile;
+            }
+            if (choice == 1) {
+                File created = createNewAppConfig();
+                if (created != null) {
+                    return created;
+                }
+                continue;
+            }
+            if (choice == 2) {
+                if (selected == null) {
+                    JOptionPane.showMessageDialog(this, "请先选择要删除的应用配置", "提示", JOptionPane.WARNING_MESSAGE);
+                    continue;
+                }
+                deleteAppConfig(selected);
+            }
+        }
     }
 
     /**
-     * 判断是否为首次运行
+     * 新建应用配置向导
      * <p>
-     * 未通过系统属性指定外部配置文件，且工作目录下无持久化配置文件时视为首次运行。
+     * 引导用户填写服务端地址与应用标识，支持先「测试连接」验证再保存；
+     * 配置以 updater-{appKey}.properties 落盘。取消时返回 null，回到选择对话框。
      * </p>
      *
-     * @return true表示首次运行，需引导配置
+     * @return 新建并保存成功的配置文件，取消时返回null
      */
-    private boolean isFirstRun() {
-        String externalPath = System.getProperty(CONFIG_FILE_PROPERTY);
-        if (externalPath != null && !externalPath.trim().isEmpty()) {
-            return false;
-        }
-        return !resolveLocalConfigFile().exists();
-    }
-
-    /**
-     * 首次运行配置向导
-     * <p>
-     * 引导用户填写服务端地址与应用标识，支持先「测试连接」验证再保存。 取消向导时返回 null，由调用方回退到默认配置加载流程。
-     * </p>
-     *
-     * @return 用户确认保存的配置，取消时返回null
-     */
-    private UpdaterConfig showFirstRunWizard() {
-        appendLog("[初始化] 检测到首次运行，启动配置向导");
+    private File createNewAppConfig() {
+        appendLog("[初始化] 新建应用配置");
 
         JTextField hostField = new JTextField("192.168.80.32", 20);
         JTextField portField = new JTextField("8082", 6);
@@ -491,37 +530,57 @@ public class UpdaterGuiDemo extends JFrame {
         JPanel panel = new JPanel(new BorderLayout(0, 8));
         panel.setBorder(new EmptyBorder(10, 10, 10, 10));
         JLabel hint = new JLabel(
-            "<html>检测到首次运行，请先配置更新服务端与应用信息。<br>建议先点击「测试连接」验证服务端可达后再确定。</html>");
+            "<html>appKey 决定配置文件名（updater-{appKey}.properties），<br>同一 appKey 已存在时将覆盖。建议先「测试连接」验证。</html>");
         hint.setFont(UI_FONT);
         panel.add(hint, BorderLayout.NORTH);
         panel.add(form, BorderLayout.CENTER);
 
         Object[] options = {"测试连接", "确定", "取消"};
         while (true) {
-            int choice = JOptionPane.showOptionDialog(this, panel, "初始化配置", JOptionPane.DEFAULT_OPTION,
+            int choice = JOptionPane.showOptionDialog(this, panel, "新建应用配置", JOptionPane.DEFAULT_OPTION,
                 JOptionPane.PLAIN_MESSAGE, null, options, options[1]);
             if (choice == 2 || choice == JOptionPane.CLOSED_OPTION) {
-                appendLog("[初始化] 配置向导已取消，回退到默认配置");
                 return null;
             }
             UpdaterConfig config;
             try {
-                config = new UpdaterConfig.Builder().serverHost(hostField.getText().trim())
-                    .serverPort(Integer.parseInt(portField.getText().trim())).appKey(appKeyField.getText().trim())
+                config = new UpdaterConfig.Builder()
+                    .serverHost(hostField.getText().trim())
+                    .serverPort(Integer.parseInt(portField.getText().trim()))
+                    .appKey(appKeyField.getText().trim())
                     .platform(platformField.getText().trim())
-                    .currentVersionCode(Integer.parseInt(versionField.getText().trim())).build();
+                    .currentVersionCode(Integer.parseInt(versionField.getText().trim()))
+                    .build();
             } catch (Exception e) {
                 JOptionPane.showMessageDialog(this, "配置无效，请检查输入: " + e.getMessage(), "错误",
                     JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            String appKey = config.getAppKey();
+            if (appKey == null || appKey.trim().isEmpty()) {
+                JOptionPane.showMessageDialog(this, "appKey 不能为空", "错误", JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            if (appKey.contains("/") || appKey.contains("\\")) {
+                JOptionPane.showMessageDialog(this, "appKey 不能包含路径分隔符", "错误", JOptionPane.ERROR_MESSAGE);
                 continue;
             }
             if (choice == 0) {
                 testServerConnection(config);
                 continue;
             }
-            persistConfig(config);
-            appendLog("[初始化] 配置向导完成，服务端: " + config.buildCheckUrl());
-            return config;
+            File configFile = resolveAppConfigFile(appKey);
+            if (configFile.exists()) {
+                int overwrite = JOptionPane.showConfirmDialog(this,
+                    "应用「" + appKey + "」的配置已存在，是否覆盖？", "确认覆盖",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+                if (overwrite != JOptionPane.OK_OPTION) {
+                    continue;
+                }
+            }
+            writeConfigToFile(config, configFile);
+            appendLog("[初始化] 新配置已保存: " + configFile.getName());
+            return configFile;
         }
     }
 
@@ -581,7 +640,7 @@ public class UpdaterGuiDemo extends JFrame {
         startButton.setEnabled(false);
         startButton.setText("检查中...");
         configButton.setEnabled(false);
-        profileButton.setEnabled(false);
+        switchAppButton.setEnabled(false);
         progressBar.setIndeterminate(true);
         progressBar.setString("检查中");
         speedLabel.setText("");
@@ -617,7 +676,7 @@ public class UpdaterGuiDemo extends JFrame {
         startButton.setEnabled(false);
         startButton.setText("更新中...");
         configButton.setEnabled(false);
-        profileButton.setEnabled(false);
+        switchAppButton.setEnabled(false);
         progressBar.setIndeterminate(false);
         progressBar.setValue(0);
         progressBar.setString("0%");
@@ -711,7 +770,6 @@ public class UpdaterGuiDemo extends JFrame {
             startButton.setText("立即更新");
             startButton.setEnabled(true);
             configButton.setEnabled(true);
-            profileButton.setEnabled(true);
             return;
         }
     }
@@ -876,7 +934,7 @@ public class UpdaterGuiDemo extends JFrame {
                     appendLog("[配置] 启动脚本: 未配置（跳过）");
                 }
                 versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
-                persistConfig(currentConfig);
+                saveCurrentConfig();
                 setStatus("配置已更新", COLOR_IDLE);
                 resetButtons();
             } catch (Exception e) {
@@ -962,24 +1020,7 @@ public class UpdaterGuiDemo extends JFrame {
         startButton.setEnabled(true);
         startButton.setText("检查更新");
         configButton.setEnabled(true);
-        profileButton.setEnabled(true);
-    }
-
-    /**
-     * 解析配置持久化目标文件
-     * <p>
-     * 优先使用系统属性 updater.config.file 指定的外部文件，
-     * 否则使用 JAR 包所在目录下的 updater.properties。
-     * </p>
-     *
-     * @return 配置持久化目标文件
-     */
-    private File resolveLocalConfigFile() {
-        String externalPath = System.getProperty(CONFIG_FILE_PROPERTY);
-        if (externalPath != null && !externalPath.trim().isEmpty()) {
-            return new File(externalPath.trim());
-        }
-        return new File(resolveJarDir(), LOCAL_CONFIG_FILE);
+        switchAppButton.setEnabled(true);
     }
 
     /**
@@ -1008,16 +1049,70 @@ public class UpdaterGuiDemo extends JFrame {
     }
 
     /**
-     * 将当前配置持久化到本地生效配置文件
+     * 保存当前配置到其对应的持久化文件（updater-{appKey}.properties）
      * <p>
-     * 配置对话框保存、配置档切换后调用，确保重启后配置不丢失。
-     * 写入失败仅记录警告日志，不阻断主流程。
+     * 若 appKey 被修改则落盘到新 appKey 对应的文件，旧文件保留；写入失败仅记录日志不阻断主流程。
      * </p>
-     *
-     * @param config 待持久化的配置
      */
-    private void persistConfig(UpdaterConfig config) {
-        writeConfigToFile(config, resolveLocalConfigFile());
+    private void saveCurrentConfig() {
+        if (currentConfig == null) {
+            return;
+        }
+        File target = resolveAppConfigFile(currentConfig.getAppKey());
+        writeConfigToFile(currentConfig, target);
+        if (currentConfigFile != null && !target.equals(currentConfigFile)) {
+            appendLog("[配置] appKey 已变更，配置已保存到新文件: " + target.getName());
+        }
+        currentConfigFile = target;
+    }
+
+    /**
+     * 列出 JAR 目录下所有应用配置对应的 appKey（从 updater-{appKey}.properties 文件名提取）
+     *
+     * @return 按名称排序的 appKey 列表
+     */
+    private List<String> listAppConfigKeys() {
+        List<String> keys = new ArrayList<>();
+        File[] files = resolveJarDir().listFiles(
+            (dir, name) -> name.startsWith(PROFILE_FILE_PREFIX) && name.endsWith(PROFILE_FILE_SUFFIX));
+        if (files != null) {
+            for (File file : files) {
+                String name = file.getName();
+                keys.add(name.substring(PROFILE_FILE_PREFIX.length(), name.length() - PROFILE_FILE_SUFFIX.length()));
+            }
+        }
+        Collections.sort(keys);
+        return keys;
+    }
+
+    /**
+     * 解析指定 appKey 对应的配置文件
+     *
+     * @param appKey 应用标识
+     * @return 配置文件 updater-{appKey}.properties
+     */
+    private static File resolveAppConfigFile(String appKey) {
+        return new File(resolveJarDir(), PROFILE_FILE_PREFIX + appKey + PROFILE_FILE_SUFFIX);
+    }
+
+    /**
+     * 删除指定 appKey 的应用配置（需用户确认）
+     *
+     * @param appKey 应用标识
+     */
+    private void deleteAppConfig(String appKey) {
+        int confirm = JOptionPane.showConfirmDialog(this, "确定删除应用配置「" + appKey + "」吗？", "确认删除",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (confirm != JOptionPane.OK_OPTION) {
+            return;
+        }
+        File configFile = resolveAppConfigFile(appKey);
+        if (configFile.delete()) {
+            appendLog("[配置] 已删除: " + configFile.getName());
+        } else {
+            JOptionPane.showMessageDialog(this, "删除失败: " + configFile.getName(), "错误",
+                JOptionPane.ERROR_MESSAGE);
+        }
     }
 
     /**
@@ -1051,187 +1146,6 @@ public class UpdaterGuiDemo extends JFrame {
             appendLog("[配置] 已写入: " + configFile.getAbsolutePath());
         } catch (IOException e) {
             appendLog("[配置] 写入失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 配置档管理对话框
-     * <p>
-     * 支持在生产/测试等多套环境配置间快速切换：切换即以目标配置档
-     * 作为当前生效配置；也可将当前配置另存为新配置档或删除已有配置档。
-     * </p>
-     */
-    private void showProfileDialog() {
-        if (updating) {
-            return;
-        }
-        while (true) {
-            DefaultListModel<String> model = new DefaultListModel<>();
-            for (String name : listProfiles()) {
-                model.addElement(name);
-            }
-            JList<String> profileList = new JList<>(model);
-            profileList.setFont(UI_FONT);
-            profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-            if (!model.isEmpty()) {
-                profileList.setSelectedIndex(0);
-            }
-            JScrollPane listScroll = new JScrollPane(profileList);
-            listScroll.setPreferredSize(new Dimension(320, 160));
-
-            JPanel panel = new JPanel(new BorderLayout(0, 8));
-            panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-            JLabel hint = new JLabel(
-                "<html>配置档存于 JAR 目录（updater-名称.properties），<br>切换后所选配置档立即成为当前生效配置。</html>");
-            hint.setFont(UI_FONT);
-            panel.add(hint, BorderLayout.NORTH);
-            panel.add(listScroll, BorderLayout.CENTER);
-
-            Object[] options = {"切换", "另存当前为配置档", "删除", "关闭"};
-            int choice = JOptionPane.showOptionDialog(this, panel, "配置档管理", JOptionPane.DEFAULT_OPTION,
-                JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
-            if (choice == 3 || choice == JOptionPane.CLOSED_OPTION) {
-                return;
-            }
-            String selected = profileList.getSelectedValue();
-            if (choice == 0) {
-                if (selected == null) {
-                    JOptionPane.showMessageDialog(this, "请先选择要切换的配置档", "提示", JOptionPane.WARNING_MESSAGE);
-                    continue;
-                }
-                if (switchProfile(selected)) {
-                    return;
-                }
-                continue;
-            }
-            if (choice == 1) {
-                saveCurrentAsProfile();
-                continue;
-            }
-            if (choice == 2) {
-                if (selected == null) {
-                    JOptionPane.showMessageDialog(this, "请先选择要删除的配置档", "提示", JOptionPane.WARNING_MESSAGE);
-                    continue;
-                }
-                deleteProfile(selected);
-            }
-        }
-    }
-
-    /**
-     * 列出 JAR 目录下所有配置档名称（不含前后缀）
-     *
-     * @return 按名称排序的配置档名称列表
-     */
-    private List<String> listProfiles() {
-        List<String> names = new ArrayList<>();
-        File[] files = resolveJarDir().listFiles(
-            (dir, name) -> name.startsWith(PROFILE_FILE_PREFIX) && name.endsWith(PROFILE_FILE_SUFFIX));
-        if (files != null) {
-            for (File file : files) {
-                String name = file.getName();
-                names.add(name.substring(PROFILE_FILE_PREFIX.length(), name.length() - PROFILE_FILE_SUFFIX.length()));
-            }
-        }
-        Collections.sort(names);
-        return names;
-    }
-
-    /**
-     * 解析指定名称的配置档文件
-     *
-     * @param name 配置档名称（不含前后缀）
-     * @return 配置档文件
-     */
-    private File resolveProfileFile(String name) {
-        return new File(resolveJarDir(), PROFILE_FILE_PREFIX + name + PROFILE_FILE_SUFFIX);
-    }
-
-    /**
-     * 切换到指定配置档
-     * <p>
-     * 加载目标配置档并作为当前生效配置（同步写入生效配置文件）， 重建更新器实例；本地版本记录高于配置档版本号时沿用本地版本。
-     * </p>
-     *
-     * @param name 配置档名称
-     * @return true表示切换成功
-     */
-    private boolean switchProfile(String name) {
-        File profileFile = resolveProfileFile(name);
-        if (!profileFile.exists()) {
-            JOptionPane.showMessageDialog(this, "配置档文件不存在: " + profileFile.getName(), "错误",
-                JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-        try {
-            UpdaterConfig config = UpdaterConfig.fromFile(profileFile.getAbsolutePath());
-            int localVersion = UpdaterConfig.readLocalVersion();
-            if (localVersion > config.getCurrentVersionCode()) {
-                config = rebuildWithVersion(config, localVersion);
-            }
-            currentConfig = config;
-            updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
-            persistConfig(currentConfig);
-            pendingInfo = null;
-            forceUpdate = false;
-            resetButtons();
-            versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
-            appendLog("[配置档] 已切换到: " + name + "，服务端: " + currentConfig.buildCheckUrl());
-            setStatus("已切换到配置档: " + name, COLOR_SUCCESS);
-            return true;
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this, "配置档加载失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
-            return false;
-        }
-    }
-
-    /**
-     * 将当前生效配置另存为新配置档
-     * <p>
-     * 名称需合法且不含路径分隔符；同名配置档存在时需用户确认覆盖。
-     * </p>
-     */
-    private void saveCurrentAsProfile() {
-        String input = JOptionPane.showInputDialog(this, "请输入配置档名称（如 prod、test）:", "另存为配置档",
-            JOptionPane.PLAIN_MESSAGE);
-        if (input == null) {
-            return;
-        }
-        String name = input.trim();
-        if (name.isEmpty() || name.contains("/") || name.contains("\\")) {
-            JOptionPane.showMessageDialog(this, "配置档名称不能为空且不能包含路径分隔符", "错误",
-                JOptionPane.ERROR_MESSAGE);
-            return;
-        }
-        File target = resolveProfileFile(name);
-        if (target.exists()) {
-            int overwrite = JOptionPane.showConfirmDialog(this, "配置档「" + name + "」已存在，是否覆盖？", "确认覆盖",
-                JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-            if (overwrite != JOptionPane.OK_OPTION) {
-                return;
-            }
-        }
-        writeConfigToFile(currentConfig, target);
-        appendLog("[配置档] 已另存为: " + target.getName());
-    }
-
-    /**
-     * 删除指定配置档（需用户确认）
-     *
-     * @param name 配置档名称
-     */
-    private void deleteProfile(String name) {
-        int confirm = JOptionPane.showConfirmDialog(this, "确定删除配置档「" + name + "」吗？", "确认删除",
-            JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
-        if (confirm != JOptionPane.OK_OPTION) {
-            return;
-        }
-        File profileFile = resolveProfileFile(name);
-        if (profileFile.delete()) {
-            appendLog("[配置档] 已删除: " + profileFile.getName());
-        } else {
-            JOptionPane.showMessageDialog(this, "删除失败: " + profileFile.getName(), "错误",
-                JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -1471,14 +1385,17 @@ public class UpdaterGuiDemo extends JFrame {
                 progressBar.setString("完成");
                 appendLog("[成功] 更新流程完成");
                 /*
-                 * 更新成功后从本地版本文件同步版本号并刷新显示
+                 * 更新成功后类库已将新版本号写入全局版本文件，
+                 * 读取后回写到当前 appKey 对应的配置文件，
+                 * 保证每个 appKey 独立记录版本且下次启动不重复检测更新
                  */
-                int localVersion = UpdaterConfig.readLocalVersion();
-                if (localVersion > currentConfig.getCurrentVersionCode()) {
+                int newVersion = UpdaterConfig.readLocalVersion();
+                if (newVersion > currentConfig.getCurrentVersionCode()) {
                     try {
-                        currentConfig = rebuildWithVersion(currentConfig, localVersion);
+                        currentConfig = rebuildWithVersion(currentConfig, newVersion);
                         updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
-                        appendLog("[成功] 本地版本已同步: " + localVersion);
+                        saveCurrentConfig();
+                        appendLog("[成功] 版本号已回写配置文件: " + newVersion);
                     } catch (UpdateException e) {
                         appendLog("[成功] 版本同步失败: " + e.getMessage());
                     }
