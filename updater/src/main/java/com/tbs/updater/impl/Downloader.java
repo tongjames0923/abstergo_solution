@@ -64,11 +64,7 @@ public class Downloader {
     private static final int READ_TIMEOUT_MS = 60000;
 
     /**
-     * 下载文件到指定目录
-     * <p>
-     * 文件名取自URL路径最后一段（去掉查询参数并做URL解码），无法提取时使用
-     * update_时间戳.tmp。下载失败时清理不完整的临时文件。
-     * </p>
+     * 下载文件到指定目录（自动从URL提取文件名）
      *
      * @param fileUrl          文件下载地址（可携带签名等查询参数）
      * @param saveDir          保存目录，不存在时自动创建
@@ -77,6 +73,25 @@ public class Downloader {
      * @throws UpdateException 下载过程中的IO/HTTP异常统一抛出DOWNLOAD_ERROR
      */
     public File download(String fileUrl, String saveDir, ProgressListener progressListener) throws UpdateException {
+        return download(fileUrl, saveDir, null, progressListener);
+    }
+
+    /**
+     * 下载文件到指定目录并指定本地文件名
+     * <p>
+     * 指定fileName时本地文件以该名称保存，扩展名从原始URL提取以保持文件格式一致；
+     * fileName为null或空时回退为从URL提取文件名。
+     * </p>
+     *
+     * @param fileUrl          文件下载地址（可携带签名等查询参数）
+     * @param saveDir          保存目录，不存在时自动创建
+     * @param fileName         期望的本地文件名（不含路径），可为null表示从URL提取
+     * @param progressListener 进度回调，可为null表示不关心进度
+     * @return 下载完成的本地文件
+     * @throws UpdateException 下载过程中的IO/HTTP异常统一抛出DOWNLOAD_ERROR
+     */
+    public File download(String fileUrl, String saveDir, String fileName,
+                         ProgressListener progressListener) throws UpdateException {
         HttpURLConnection connection;
         try {
             connection = openWithRedirects(fileUrl);
@@ -97,7 +112,7 @@ public class Downloader {
                 throw new UpdateException(UpdateException.ErrorType.DOWNLOAD_ERROR,
                         "创建下载目录失败: " + saveDir, e);
             }
-            File target = dir.resolve(extractFileName(fileUrl)).toFile();
+            File target = dir.resolve(resolveFileName(fileName, fileUrl)).toFile();
             long total = connection.getContentLengthLong();
             writeToFile(connection, target, total, progressListener);
             return target;
@@ -193,6 +208,42 @@ public class Downloader {
         if (progressListener != null) {
             progressListener.onProgress(100);
         }
+    }
+
+    /**
+     * 解析最终本地文件名
+     * <p>
+     * 指定fileName时保留其主名称部分并拼接从URL提取的原始扩展名；
+     * 未指定时直接从URL提取文件名。
+     * </p>
+     *
+     * @param fileName 调用方指定的文件名，可为null
+     * @param fileUrl  下载地址（用于提取扩展名）
+     * @return 最终使用的本地文件名
+     */
+    private String resolveFileName(String fileName, String fileUrl) {
+        if (fileName == null || fileName.trim().isEmpty()) {
+            return extractFileName(fileUrl);
+        }
+        String extension = extractExtension(fileUrl);
+        String baseName = fileName;
+        int dotIndex = baseName.lastIndexOf('.');
+        if (dotIndex > 0) {
+            baseName = baseName.substring(0, dotIndex);
+        }
+        return baseName + extension;
+    }
+
+    /**
+     * 从下载地址提取文件扩展名（含点号）
+     *
+     * @param fileUrl 下载地址
+     * @return 扩展名（如 ".apk"），无法提取时返回空字符串
+     */
+    private String extractExtension(String fileUrl) {
+        String cleaned = extractFileName(fileUrl);
+        int dotIndex = cleaned.lastIndexOf('.');
+        return dotIndex > 0 ? cleaned.substring(dotIndex) : "";
     }
 
     /**

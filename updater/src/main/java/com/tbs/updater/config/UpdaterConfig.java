@@ -2,6 +2,7 @@ package com.tbs.updater.config;
 
 import com.tbs.updater.exception.UpdateException;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -87,6 +88,15 @@ public final class UpdaterConfig {
      * properties键名：下载失败时是否尝试其余地址
      */
     public static final String KEY_UPDATE_TRY_ALL_URLS = "update.tryAllUrls";
+
+    /**
+     * 本地已安装版本文件名
+     * <p>
+     * 更新成功后写入到下载目录下，内容为最新 versionCode。
+     * 下次启动时读取，作为 currentVersionCode 使用。
+     * </p>
+     */
+    public static final String LOCAL_VERSION_FILE = ".installed-version";
 
     /**
      * 服务端主机（IP或域名，可携带http/https协议头）
@@ -182,10 +192,16 @@ public final class UpdaterConfig {
                 .appKey(trimToNull(props.getProperty(KEY_APP_KEY)))
                 .platform(trimToNull(props.getProperty(KEY_APP_PLATFORM)))
                 .currentVersionCode(parseIntProperty(props, KEY_APP_CURRENT_VERSION_CODE, 0))
-                .downloadDir(trimToNull(props.getProperty(KEY_LOCAL_DOWNLOAD_DIR)))
                 .deployScript(trimToNull(props.getProperty(KEY_LOCAL_DEPLOY_SCRIPT)))
                 .startScript(trimToNull(props.getProperty(KEY_LOCAL_START_SCRIPT)))
                 .timeoutSeconds(parseIntProperty(props, KEY_UPDATE_TIMEOUT_SECONDS, DEFAULT_TIMEOUT_SECONDS));
+        /*
+         * downloadDir未配置时不覆盖Builder默认值（系统临时目录/updates）
+         */
+        String downloadDir = trimToNull(props.getProperty(KEY_LOCAL_DOWNLOAD_DIR));
+        if (downloadDir != null) {
+            builder.downloadDir(downloadDir);
+        }
         String checkPath = trimToNull(props.getProperty(KEY_SERVER_CHECK_PATH));
         if (checkPath != null) {
             builder.checkPath(checkPath);
@@ -242,6 +258,38 @@ public final class UpdaterConfig {
     }
 
     /**
+     * 读取本地已安装的版本号
+     * <p>
+     * 从指定下载目录下的 {@link #LOCAL_VERSION_FILE} 文件中读取上次更新成功写入的 versionCode。
+     * 文件不存在或内容非法时返回 -1，表示无本地版本记录。
+     * </p>
+     *
+     * @param downloadDir 下载目录路径
+     * @return 本地记录的版本号，无记录时返回 -1
+     */
+    public static int readLocalVersion(String downloadDir) {
+        if (downloadDir == null || downloadDir.trim().isEmpty()) {
+            return -1;
+        }
+        File versionFile = new File(downloadDir, LOCAL_VERSION_FILE);
+        if (!versionFile.exists() || !versionFile.isFile()) {
+            return -1;
+        }
+        try (BufferedReader reader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(versionFile), StandardCharsets.UTF_8))) {
+            String line = reader.readLine();
+            if (line != null && !line.trim().isEmpty()) {
+                return Integer.parseInt(line.trim());
+            }
+        } catch (IOException | NumberFormatException e) {
+            /*
+             * 文件损坏或内容非法，忽略并返回 -1
+             */
+        }
+        return -1;
+    }
+
+    /**
      * 校验必填配置项
      *
      * @throws UpdateException 必填项缺失时抛出CONFIG_ERROR
@@ -250,7 +298,6 @@ public final class UpdaterConfig {
         requireNonBlank(serverHost, KEY_SERVER_HOST);
         requireNonBlank(appKey, KEY_APP_KEY);
         requireNonBlank(platform, KEY_APP_PLATFORM);
-        requireNonBlank(downloadDir, KEY_LOCAL_DOWNLOAD_DIR);
     }
 
     public String getServerHost() {
@@ -397,7 +444,9 @@ public final class UpdaterConfig {
         }
 
         public Builder downloadDir(String downloadDir) {
-            this.downloadDir = downloadDir;
+            if (downloadDir != null) {
+                this.downloadDir = downloadDir;
+            }
             return this;
         }
 

@@ -3,6 +3,7 @@ package com.tbs.updater.api;
 import com.tbs.updater.model.UpdateInfo;
 
 import java.io.File;
+import java.util.List;
 
 /**
  * 更新流程回调监听接口
@@ -31,6 +32,16 @@ public interface UpdateListener {
     }
 
     /**
+     * 开始下载某个文件（多文件场景）
+     *
+     * @param fileIndex  当前文件索引（从0开始）
+     * @param totalFiles 文件总数
+     * @param url        当前尝试的下载地址
+     */
+    default void onDownloadFileStart(int fileIndex, int totalFiles, String url) {
+    }
+
+    /**
      * 开始从指定地址下载更新包
      *
      * @param url 当前尝试的下载地址
@@ -52,6 +63,14 @@ public interface UpdateListener {
      * @param downloadedFile 下载完成的本地文件
      */
     default void onDownloadComplete(File downloadedFile) {
+    }
+
+    /**
+     * 所有文件下载完成
+     *
+     * @param downloadedFiles 所有下载完成的本地文件列表
+     */
+    default void onAllDownloadsComplete(List<File> downloadedFiles) {
     }
 
     /**

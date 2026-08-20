@@ -202,3 +202,16 @@ AutoUpdater updater = new AutoUpdater(config, listener);
 | 响应 JSON 解析失败 | PARSE_ERROR | 确认接口返回标准 `{code, message, data}` 结构 |
 | 下载失败 | DOWNLOAD_ERROR | 下载地址签名是否过期、重定向 Location 是否完整、目录写权限 |
 | 脚本执行失败 | SCRIPT_ERROR | 脚本是否存在、是否 `chmod +x`、退出码是否为 0 |
+
+## GUI 演示
+
+类库自带一个基于 Swing 的图形化更新器演示，展示进度条、状态标签、更新日志等完整交互：
+
+```bash
+# 编译后运行
+mvn -pl updater clean compile
+java -cp updater/target/classes:$(mvn -pl updater dependency:build-classpath -q -DincludeScope=runtime -Dmdep.outputFile=/dev/stdout) \
+    com.tbs.updater.demo.UpdaterGuiDemo
+```
+
+源码位于 `com.tbs.updater.demo.UpdaterGuiDemo`，包含 `main` 方法，可直接运行。

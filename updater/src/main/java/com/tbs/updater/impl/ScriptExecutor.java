@@ -50,10 +50,24 @@ public class ScriptExecutor {
             throw new UpdateException(UpdateException.ErrorType.SCRIPT_ERROR, "脚本文件不可执行: " + scriptPath);
         }
         List<String> command = new ArrayList<>();
-        command.add(script.getAbsolutePath());
+        /*
+         * 根据脚本扩展名决定执行方式：
+         * .sh/.bash 脚本显式用 bash 执行，避免 macOS 等平台直接执行时参数丢失
+         * .bat/.cmd 脚本用 cmd /c 执行，确保 Windows 上参数正确传递
+         * 其他脚本直接执行（依赖 shebang 或 OS 关联）
+         */
+        String absolutePath = script.getAbsolutePath();
+        if (absolutePath.endsWith(".sh") || absolutePath.endsWith(".bash")) {
+            command.add("bash");
+        } else if (absolutePath.endsWith(".bat") || absolutePath.endsWith(".cmd")) {
+            command.add("cmd");
+            command.add("/c");
+        }
+        command.add(absolutePath);
         if (args != null) {
             Collections.addAll(command, args);
         }
+        System.out.println(OUTPUT_PREFIX + "执行命令: " + command);
         ProcessBuilder processBuilder = new ProcessBuilder(command);
         File parentDir = script.getParentFile();
         if (parentDir != null) {

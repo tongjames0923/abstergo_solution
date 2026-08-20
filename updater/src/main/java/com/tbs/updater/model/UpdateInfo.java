@@ -6,6 +6,7 @@ import com.tbs.updater.exception.UpdateException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 更新信息模型
@@ -45,9 +46,14 @@ public class UpdateInfo {
     private String releaseNote;
 
     /**
-     * 下载地址列表
+     * 下载地址列表（旧格式兼容，优先从files聚合）
      */
     private List<String> downloadUrls = Collections.emptyList();
+
+    /**
+     * 多文件下载列表（每个文件含独立名称与下载地址）
+     */
+    private List<DownloadFile> files = Collections.emptyList();
 
     /**
      * 从接口返回的data JSON节点解析更新信息
@@ -70,17 +76,53 @@ public class UpdateInfo {
         info.latestVersionCode = readText(dataNode, "latestVersionCode");
         info.latestVersionName = readText(dataNode, "latestVersionName");
         info.releaseNote = readText(dataNode, "releaseNote");
-        List<String> urls = new ArrayList<>();
-        JsonNode urlsNode = dataNode.path("downloadUrls");
-        if (urlsNode.isArray()) {
-            for (JsonNode urlNode : urlsNode) {
-                String url = urlNode.asText("");
-                if (!url.trim().isEmpty()) {
-                    urls.add(url.trim());
+        /*
+         * 优先解析 files 数组（新格式）：
+         * [{"name":"app.jar","downloadUrls":["http://..."]}, ...]
+         */
+        JsonNode filesNode = dataNode.path("files");
+        if (filesNode.isArray() && filesNode.size() > 0) {
+            List<DownloadFile> fileList = new ArrayList<>();
+            for (JsonNode fileNode : filesNode) {
+                DownloadFile df = DownloadFile.parseFromJson(fileNode);
+                if (df != null && !df.getDownloadUrls().isEmpty()) {
+                    fileList.add(df);
                 }
             }
+            info.files = fileList;
+            /*
+             * 从 files 聚合出 downloadUrls 供旧逻辑兼容
+             */
+            info.downloadUrls = fileList.stream()
+                    .flatMap(f -> f.getDownloadUrls().stream())
+                    .collect(Collectors.toList());
+        } else {
+            /*
+             * 兼容旧格式：顶层 downloadUrls 数组或 downloadUrl 单字符串
+             */
+            List<String> urls = new ArrayList<>();
+            JsonNode urlsNode = dataNode.path("downloadUrls");
+            if (urlsNode.isArray()) {
+                for (JsonNode urlNode : urlsNode) {
+                    String url = urlNode.asText("");
+                    if (!url.trim().isEmpty()) {
+                        urls.add(url.trim());
+                    }
+                }
+            } else {
+                String singleUrl = readText(dataNode, "downloadUrl");
+                if (singleUrl != null && !singleUrl.trim().isEmpty()) {
+                    urls.add(singleUrl.trim());
+                }
+            }
+            info.downloadUrls = urls;
+            /*
+             * 旧格式转为单个 DownloadFile，文件名由 appKey-versionCode 推导
+             */
+            if (!urls.isEmpty()) {
+                info.files = Collections.singletonList(DownloadFile.fromUrls(urls));
+            }
         }
-        info.downloadUrls = urls;
         return info;
     }
 
@@ -124,6 +166,15 @@ public class UpdateInfo {
     }
 
     /**
+     * 获取多文件下载列表
+     *
+     * @return 文件列表，可能为空
+     */
+    public List<DownloadFile> getFiles() {
+        return files;
+    }
+
+    /**
      * 输出更新信息摘要，便于日志排查
      *
      * @return 摘要字符串
@@ -134,6 +185,7 @@ public class UpdateInfo {
                 + ", action=" + action
                 + ", latestVersionCode=" + latestVersionCode
                 + ", latestVersionName=" + latestVersionName
+                + ", files=" + files.size() + "个"
                 + ", downloadUrls=" + downloadUrls.size() + "个}";
     }
 }
