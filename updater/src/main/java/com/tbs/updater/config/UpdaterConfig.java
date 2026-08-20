@@ -259,18 +259,42 @@ public final class UpdaterConfig {
     }
 
     /**
-     * 获取版本文件所在目录（JVM 工作目录，即 JAR 包启动目录）
+     * 版本文件目录覆盖值（null表示使用默认JVM工作目录）
+     */
+    private static volatile String localVersionDirOverride;
+
+    /**
+     * 设置版本文件所在目录
+     * <p>
+     * 默认为JVM工作目录；调用方可将目录锚定到JAR包所在目录等固定位置，
+     * 全局生效，同时影响readLocalVersion的读取与更新成功后的写入。
+     * </p>
+     *
+     * @param dir 版本文件目录的绝对路径，为空时恢复默认工作目录
+     */
+    public static void setLocalVersionDir(String dir) {
+        localVersionDirOverride = (dir == null || dir.trim().isEmpty()) ? null : dir.trim();
+    }
+
+    /**
+     * 获取版本文件所在目录
+     * <p>
+     * 优先返回setLocalVersionDir设置的目录，未设置时返回JVM工作目录。
+     * </p>
      *
      * @return 版本文件目录的绝对路径
      */
     public static String getLocalVersionDir() {
+        if (localVersionDirOverride != null) {
+            return localVersionDirOverride;
+        }
         return System.getProperty("user.dir");
     }
 
     /**
      * 读取本地已安装的版本号
      * <p>
-     * 从 JVM 工作目录（user.dir）下的 {@link #LOCAL_VERSION_FILE} 文件中
+     * 从 {@link #getLocalVersionDir()} 目录下的 {@link #LOCAL_VERSION_FILE} 文件中
      * 读取上次更新成功写入的 versionCode。
      * 文件不存在或内容非法时返回 -1，表示无本地版本记录。
      * </p>

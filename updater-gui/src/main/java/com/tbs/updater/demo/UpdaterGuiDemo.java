@@ -13,18 +13,14 @@ import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.net.URL;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
+import java.util.*;
 import java.util.List;
-import java.util.Properties;
 
 /**
  * 基于 Swing 的应用自动更新器 GUI
@@ -54,9 +50,30 @@ public class UpdaterGuiDemo extends JFrame {
     private static final String CLASSPATH_CONFIG = "updater.properties";
 
     /**
-     * 本地持久化配置文件名（位于 JVM 工作目录，即 JAR 包启动目录）
+     * 本地持久化配置文件名（位于 JAR 包所在目录）
      */
     private static final String LOCAL_CONFIG_FILE = "updater.properties";
+
+    /**
+     * 单实例锁文件名（位于 JAR 包所在目录）
+     */
+    private static final String INSTANCE_LOCK_FILE = ".updater.lock";
+
+    /**
+     * 配置档文件名前缀与后缀（位于 JAR 包所在目录，形如 updater-prod.properties）
+     */
+    private static final String PROFILE_FILE_PREFIX = "updater-";
+    private static final String PROFILE_FILE_SUFFIX = ".properties";
+
+    /**
+     * 单实例锁通道（静态引用防止被 GC 释放导致锁失效）
+     */
+    private static FileChannel instanceLockChannel;
+
+    /**
+     * 单实例文件锁
+     */
+    private static FileLock instanceLock;
 
     /**
      * 时间戳格式
@@ -113,6 +130,11 @@ public class UpdaterGuiDemo extends JFrame {
     private final JButton configButton;
 
     /**
+     * 配置档切换按钮
+     */
+    private final JButton profileButton;
+
+    /**
      * 下载完成后自动打开文件复选框
      */
     private final JCheckBox autoOpenCheckbox;
@@ -161,6 +183,11 @@ public class UpdaterGuiDemo extends JFrame {
      * 本次流程是否已进入安装阶段（用于区分“已是最新”与“安装完成”两种成功）
      */
     private volatile boolean installCompleted = false;
+
+    /**
+     * 当前待安装更新是否为服务端强制更新（强制更新不可跳过、不可退出）
+     */
+    private volatile boolean forceUpdate = false;
 
     /**
      * 构造更新器 GUI
@@ -253,6 +280,12 @@ public class UpdaterGuiDemo extends JFrame {
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
 
+        profileButton = new JButton("配置档");
+        profileButton.setFont(UI_FONT);
+        profileButton.setPreferredSize(new Dimension(80, 32));
+        profileButton.addActionListener(e -> showProfileDialog());
+        buttonPanel.add(profileButton);
+
         configButton = new JButton("配置");
         configButton.setFont(UI_FONT);
         configButton.setPreferredSize(new Dimension(80, 32));
@@ -276,6 +309,11 @@ public class UpdaterGuiDemo extends JFrame {
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                if (forceUpdate) {
+                    JOptionPane.showMessageDialog(UpdaterGuiDemo.this,
+                        "本次更新由服务端强制要求，无法退出，请先完成安装。", "无法退出", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
                 if (updating && !confirmCloseWhileUpdating()) {
                     return;
                 }
@@ -293,7 +331,14 @@ public class UpdaterGuiDemo extends JFrame {
      */
     private void initUpdater() {
         try {
-            currentConfig = loadConfig();
+            /*
+             * 首次运行（未指定外部配置且无本地持久化配置）时引导用户完成基础配置
+             */
+            UpdaterConfig wizardConfig = null;
+            if (isFirstRun()) {
+                wizardConfig = showFirstRunWizard();
+            }
+            currentConfig = wizardConfig != null ? wizardConfig : loadConfig();
             /*
              * 检查本地已安装版本文件，若存在则覆盖 currentVersionCode
              */
@@ -398,6 +443,117 @@ public class UpdaterGuiDemo extends JFrame {
     }
 
     /**
+     * 判断是否为首次运行
+     * <p>
+     * 未通过系统属性指定外部配置文件，且工作目录下无持久化配置文件时视为首次运行。
+     * </p>
+     *
+     * @return true表示首次运行，需引导配置
+     */
+    private boolean isFirstRun() {
+        String externalPath = System.getProperty(CONFIG_FILE_PROPERTY);
+        if (externalPath != null && !externalPath.trim().isEmpty()) {
+            return false;
+        }
+        return !resolveLocalConfigFile().exists();
+    }
+
+    /**
+     * 首次运行配置向导
+     * <p>
+     * 引导用户填写服务端地址与应用标识，支持先「测试连接」验证再保存。 取消向导时返回 null，由调用方回退到默认配置加载流程。
+     * </p>
+     *
+     * @return 用户确认保存的配置，取消时返回null
+     */
+    private UpdaterConfig showFirstRunWizard() {
+        appendLog("[初始化] 检测到首次运行，启动配置向导");
+
+        JTextField hostField = new JTextField("192.168.80.32", 20);
+        JTextField portField = new JTextField("8082", 6);
+        JTextField appKeyField = new JTextField("", 20);
+        JTextField platformField = new JTextField("android", 8);
+        JTextField versionField = new JTextField("0", 6);
+
+        JPanel form = new JPanel(new GridLayout(0, 2, 8, 6));
+        form.setBorder(BorderFactory.createTitledBorder("服务端与应用信息"));
+        form.add(new JLabel("服务端主机:"));
+        form.add(hostField);
+        form.add(new JLabel("端口:"));
+        form.add(portField);
+        form.add(new JLabel("应用标识(appKey):"));
+        form.add(appKeyField);
+        form.add(new JLabel("平台:"));
+        form.add(platformField);
+        form.add(new JLabel("当前版本号:"));
+        form.add(versionField);
+
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        JLabel hint = new JLabel(
+            "<html>检测到首次运行，请先配置更新服务端与应用信息。<br>建议先点击「测试连接」验证服务端可达后再确定。</html>");
+        hint.setFont(UI_FONT);
+        panel.add(hint, BorderLayout.NORTH);
+        panel.add(form, BorderLayout.CENTER);
+
+        Object[] options = {"测试连接", "确定", "取消"};
+        while (true) {
+            int choice = JOptionPane.showOptionDialog(this, panel, "初始化配置", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, options, options[1]);
+            if (choice == 2 || choice == JOptionPane.CLOSED_OPTION) {
+                appendLog("[初始化] 配置向导已取消，回退到默认配置");
+                return null;
+            }
+            UpdaterConfig config;
+            try {
+                config = new UpdaterConfig.Builder().serverHost(hostField.getText().trim())
+                    .serverPort(Integer.parseInt(portField.getText().trim())).appKey(appKeyField.getText().trim())
+                    .platform(platformField.getText().trim())
+                    .currentVersionCode(Integer.parseInt(versionField.getText().trim())).build();
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "配置无效，请检查输入: " + e.getMessage(), "错误",
+                    JOptionPane.ERROR_MESSAGE);
+                continue;
+            }
+            if (choice == 0) {
+                testServerConnection(config);
+                continue;
+            }
+            persistConfig(config);
+            appendLog("[初始化] 配置向导完成，服务端: " + config.buildCheckUrl());
+            return config;
+        }
+    }
+
+    /**
+     * 测试服务端连接
+     * <p>
+     * 复用类库的检查接口完整验证连通性与接口契约，结果以对话框反馈。
+     * </p>
+     *
+     * @param config 待验证的配置
+     */
+    private void testServerConnection(UpdaterConfig config) {
+        new Thread(() -> {
+            boolean ok;
+            String message;
+            try {
+                UpdateInfo info = new AutoUpdater(config, new UpdateListener() {
+                }).checkForUpdate();
+                ok = true;
+                message = "连接成功，服务端响应正常（最新版本: " + info.getLatestVersionCode() + "）";
+            } catch (Exception e) {
+                ok = false;
+                message = "连接失败: " + e.getMessage();
+            }
+            final boolean success = ok;
+            final String text = message;
+            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(UpdaterGuiDemo.this, text, "测试连接",
+                success ? JOptionPane.INFORMATION_MESSAGE : JOptionPane.ERROR_MESSAGE));
+        }, "updater-conn-test-thread").start();
+    }
+
+    /**
      * 主按钮点击入口
      * <p>
      * 已检查到待安装更新时直接进入安装，否则发起检查。
@@ -425,6 +581,7 @@ public class UpdaterGuiDemo extends JFrame {
         startButton.setEnabled(false);
         startButton.setText("检查中...");
         configButton.setEnabled(false);
+        profileButton.setEnabled(false);
         progressBar.setIndeterminate(true);
         progressBar.setString("检查中");
         speedLabel.setText("");
@@ -460,6 +617,7 @@ public class UpdaterGuiDemo extends JFrame {
         startButton.setEnabled(false);
         startButton.setText("更新中...");
         configButton.setEnabled(false);
+        profileButton.setEnabled(false);
         progressBar.setIndeterminate(false);
         progressBar.setValue(0);
         progressBar.setString("0%");
@@ -492,46 +650,115 @@ public class UpdaterGuiDemo extends JFrame {
     private void showUpdateConfirmDialog(UpdateInfo info) {
         String latestVer = info.getLatestVersionName() != null
                 ? info.getLatestVersionName() : info.getLatestVersionCode();
+        boolean force = isForceUpdate(info);
 
-        JPanel panel = new JPanel(new BorderLayout(0, 8));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        while (true) {
+            JPanel panel = new JPanel(new BorderLayout(0, 8));
+            panel.setBorder(new EmptyBorder(10, 10, 10, 10));
 
-        JLabel summary = new JLabel("<html>发现新版本 <b>" + latestVer
-                + "</b>（当前 " + currentConfig.getCurrentVersionCode() + "），共 "
-                + info.getFiles().size() + " 个文件待下载</html>");
-        summary.setFont(UI_FONT);
-        panel.add(summary, BorderLayout.NORTH);
+            JLabel summary = new JLabel("<html>发现新版本 <b>" +
+                latestVer +
+                "</b>（当前 " +
+                currentConfig.getCurrentVersionCode() +
+                "），共 " +
+                info.getFiles().size() +
+                " 个文件待下载</html>");
+            summary.setFont(UI_FONT);
+            panel.add(summary, BorderLayout.NORTH);
 
-        if (info.getReleaseNote() != null && !info.getReleaseNote().trim().isEmpty()) {
-            JTextArea noteArea = new JTextArea(info.getReleaseNote());
-            noteArea.setEditable(false);
-            noteArea.setLineWrap(true);
-            noteArea.setWrapStyleWord(true);
-            noteArea.setFont(UI_FONT);
-            JScrollPane noteScroll = new JScrollPane(noteArea);
-            noteScroll.setPreferredSize(new Dimension(400, 150));
-            noteScroll.setBorder(BorderFactory.createTitledBorder("发行说明"));
-            panel.add(noteScroll, BorderLayout.CENTER);
-        }
+            if (info.getReleaseNote() != null && !info.getReleaseNote().trim().isEmpty()) {
+                JTextArea noteArea = new JTextArea(info.getReleaseNote());
+                noteArea.setEditable(false);
+                noteArea.setLineWrap(true);
+                noteArea.setWrapStyleWord(true);
+                noteArea.setFont(UI_FONT);
+                JScrollPane noteScroll = new JScrollPane(noteArea);
+                noteScroll.setPreferredSize(new Dimension(400, 150));
+                noteScroll.setBorder(BorderFactory.createTitledBorder("发行说明"));
+                panel.add(noteScroll, BorderLayout.CENTER);
+            }
 
-        if (info.getAction() != null && !info.getAction().trim().isEmpty()) {
-            JLabel actionLabel = new JLabel("服务端动作: " + info.getAction());
-            actionLabel.setFont(SMALL_FONT);
-            actionLabel.setForeground(COLOR_WORKING);
-            panel.add(actionLabel, BorderLayout.SOUTH);
-        }
+            if (isForceUpdate(info)) {
+                JLabel forceLabel = new JLabel("本次更新由服务端强制要求，无法跳过");
+                forceLabel.setFont(SMALL_FONT);
+                forceLabel.setForeground(COLOR_ERROR);
+                panel.add(forceLabel, BorderLayout.SOUTH);
+            } else {
+                String actionText = formatAction(info.getAction());
+                if (actionText != null) {
+                    JLabel actionLabel = new JLabel("服务端动作: " + actionText);
+                    actionLabel.setFont(SMALL_FONT);
+                    actionLabel.setForeground(COLOR_WORKING);
+                    panel.add(actionLabel, BorderLayout.SOUTH);
+                }
+            }
 
-        Object[] options = {"立即安装", "稍后"};
-        int choice = JOptionPane.showOptionDialog(this, panel, "发现新版本",
-                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
-                null, options, options[0]);
-        if (choice == 0) {
-            startInstall(info);
-        } else {
+            Object[] options = force ? new Object[] {"立即安装"} : new Object[] {"立即安装", "稍后"};
+            int choice = JOptionPane.showOptionDialog(this, panel, "发现新版本", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE, null, options, options[0]);
+            if (choice == 0) {
+                startInstall(info);
+                return;
+            }
+            if (force) {
+                /*
+                 * 强制更新下关闭对话框或任何非安装操作都重新弹出确认，确保无法跳过
+                 */
+                appendLog("[检查] 强制更新不可跳过，重新弹出确认");
+                continue;
+            }
             appendLog("[检查] 用户选择稍后安装，可点击「立即更新」继续");
             startButton.setText("立即更新");
             startButton.setEnabled(true);
             configButton.setEnabled(true);
+            profileButton.setEnabled(true);
+            return;
+        }
+    }
+
+    /**
+     * 判断更新信息是否为服务端强制更新
+     * <p>
+     * 服务端契约：action为AppVersionCompatibilityActionEnum的编码（FORCE=1/RECOMMEND=2/NOTIFY=3），
+     * 未命中兼容策略时为null。此处同时兼容字符串标识形态，容错其他服务端实现。
+     * </p>
+     *
+     * @param info 服务端返回的更新信息
+     * @return true表示强制更新
+     */
+    private static boolean isForceUpdate(UpdateInfo info) {
+        if (info == null || info.getAction() == null || info.getAction().trim().isEmpty()) {
+            return false;
+        }
+        String action = info.getAction().trim();
+        return "1".equals(action) || "force".equalsIgnoreCase(action);
+    }
+
+    /**
+     * 将服务端动作编码转为用户可读文案
+     * <p>
+     * 对齐AppVersionCompatibilityActionEnum：1=强制更新，2=推荐更新，3=仅提示。
+     * </p>
+     *
+     * @param action 服务端返回的动作字段原文
+     * @return 可读文案，无法识别时返回原文，为空时返回null
+     */
+    private static String formatAction(String action) {
+        if (action == null || action.trim().isEmpty()) {
+            return null;
+        }
+        switch (action.trim()) {
+            case "1":
+            case "force":
+                return "强制更新";
+            case "2":
+            case "recommend":
+                return "推荐更新";
+            case "3":
+            case "notify":
+                return "仅提示";
+            default:
+                return action;
         }
     }
 
@@ -731,16 +958,18 @@ public class UpdaterGuiDemo extends JFrame {
      */
     private void resetButtons() {
         pendingInfo = null;
+        forceUpdate = false;
         startButton.setEnabled(true);
         startButton.setText("检查更新");
         configButton.setEnabled(true);
+        profileButton.setEnabled(true);
     }
 
     /**
      * 解析配置持久化目标文件
      * <p>
      * 优先使用系统属性 updater.config.file 指定的外部文件，
-     * 否则使用 JVM 工作目录（JAR 包启动目录）下的 updater.properties。
+     * 否则使用 JAR 包所在目录下的 updater.properties。
      * </p>
      *
      * @return 配置持久化目标文件
@@ -750,19 +979,54 @@ public class UpdaterGuiDemo extends JFrame {
         if (externalPath != null && !externalPath.trim().isEmpty()) {
             return new File(externalPath.trim());
         }
-        return new File(System.getProperty("user.dir"), LOCAL_CONFIG_FILE);
+        return new File(resolveJarDir(), LOCAL_CONFIG_FILE);
     }
 
     /**
-     * 将当前配置持久化到本地文件（UTF-8 编码，支持中文值）
+     * 解析 JAR 包所在目录
      * <p>
-     * 配置对话框保存后调用，确保重启后配置不丢失。
+     * 将配置文件、锁文件、版本文件等运行时文件统一锚定到 JAR 包目录，
+     * 避免双击启动或从其他目录启动时文件散落在不相关目录。
+     * IDE 开发环境（CodeSource 为 classes 目录）或解析失败时回退到 JVM 工作目录。
+     * </p>
+     *
+     * @return JAR 包所在目录，回退时为 JVM 工作目录
+     */
+    private static File resolveJarDir() {
+        try {
+            URL location = UpdaterGuiDemo.class.getProtectionDomain().getCodeSource().getLocation();
+            File file = new File(location.toURI());
+            if (file.isFile()) {
+                return file.getParentFile();
+            }
+        } catch (Exception e) {
+            /*
+             * CodeSource 解析失败时回退到 JVM 工作目录
+             */
+        }
+        return new File(System.getProperty("user.dir"));
+    }
+
+    /**
+     * 将当前配置持久化到本地生效配置文件
+     * <p>
+     * 配置对话框保存、配置档切换后调用，确保重启后配置不丢失。
      * 写入失败仅记录警告日志，不阻断主流程。
      * </p>
      *
      * @param config 待持久化的配置
      */
     private void persistConfig(UpdaterConfig config) {
+        writeConfigToFile(config, resolveLocalConfigFile());
+    }
+
+    /**
+     * 将配置写入指定文件（UTF-8 编码，支持中文值）
+     *
+     * @param config     待写入的配置
+     * @param configFile 目标文件
+     */
+    private void writeConfigToFile(UpdaterConfig config, File configFile) {
         Properties props = new Properties();
         props.setProperty(UpdaterConfig.KEY_SERVER_HOST, config.getServerHost());
         props.setProperty(UpdaterConfig.KEY_SERVER_PORT, String.valueOf(config.getServerPort()));
@@ -781,13 +1045,193 @@ public class UpdaterGuiDemo extends JFrame {
         if (config.getStartScript() != null) {
             props.setProperty(UpdaterConfig.KEY_LOCAL_START_SCRIPT, config.getStartScript());
         }
-        File configFile = resolveLocalConfigFile();
         try (OutputStreamWriter writer = new OutputStreamWriter(
                 new FileOutputStream(configFile), StandardCharsets.UTF_8)) {
             props.store(writer, "更新器配置（由 GUI 保存，请勿手动修改格式）");
-            appendLog("[配置] 已持久化到: " + configFile.getAbsolutePath());
+            appendLog("[配置] 已写入: " + configFile.getAbsolutePath());
         } catch (IOException e) {
-            appendLog("[配置] 持久化失败: " + e.getMessage());
+            appendLog("[配置] 写入失败: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 配置档管理对话框
+     * <p>
+     * 支持在生产/测试等多套环境配置间快速切换：切换即以目标配置档
+     * 作为当前生效配置；也可将当前配置另存为新配置档或删除已有配置档。
+     * </p>
+     */
+    private void showProfileDialog() {
+        if (updating) {
+            return;
+        }
+        while (true) {
+            DefaultListModel<String> model = new DefaultListModel<>();
+            for (String name : listProfiles()) {
+                model.addElement(name);
+            }
+            JList<String> profileList = new JList<>(model);
+            profileList.setFont(UI_FONT);
+            profileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+            if (!model.isEmpty()) {
+                profileList.setSelectedIndex(0);
+            }
+            JScrollPane listScroll = new JScrollPane(profileList);
+            listScroll.setPreferredSize(new Dimension(320, 160));
+
+            JPanel panel = new JPanel(new BorderLayout(0, 8));
+            panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+            JLabel hint = new JLabel(
+                "<html>配置档存于 JAR 目录（updater-名称.properties），<br>切换后所选配置档立即成为当前生效配置。</html>");
+            hint.setFont(UI_FONT);
+            panel.add(hint, BorderLayout.NORTH);
+            panel.add(listScroll, BorderLayout.CENTER);
+
+            Object[] options = {"切换", "另存当前为配置档", "删除", "关闭"};
+            int choice = JOptionPane.showOptionDialog(this, panel, "配置档管理", JOptionPane.DEFAULT_OPTION,
+                JOptionPane.PLAIN_MESSAGE, null, options, options[0]);
+            if (choice == 3 || choice == JOptionPane.CLOSED_OPTION) {
+                return;
+            }
+            String selected = profileList.getSelectedValue();
+            if (choice == 0) {
+                if (selected == null) {
+                    JOptionPane.showMessageDialog(this, "请先选择要切换的配置档", "提示", JOptionPane.WARNING_MESSAGE);
+                    continue;
+                }
+                if (switchProfile(selected)) {
+                    return;
+                }
+                continue;
+            }
+            if (choice == 1) {
+                saveCurrentAsProfile();
+                continue;
+            }
+            if (choice == 2) {
+                if (selected == null) {
+                    JOptionPane.showMessageDialog(this, "请先选择要删除的配置档", "提示", JOptionPane.WARNING_MESSAGE);
+                    continue;
+                }
+                deleteProfile(selected);
+            }
+        }
+    }
+
+    /**
+     * 列出 JAR 目录下所有配置档名称（不含前后缀）
+     *
+     * @return 按名称排序的配置档名称列表
+     */
+    private List<String> listProfiles() {
+        List<String> names = new ArrayList<>();
+        File[] files = resolveJarDir().listFiles(
+            (dir, name) -> name.startsWith(PROFILE_FILE_PREFIX) && name.endsWith(PROFILE_FILE_SUFFIX));
+        if (files != null) {
+            for (File file : files) {
+                String name = file.getName();
+                names.add(name.substring(PROFILE_FILE_PREFIX.length(), name.length() - PROFILE_FILE_SUFFIX.length()));
+            }
+        }
+        Collections.sort(names);
+        return names;
+    }
+
+    /**
+     * 解析指定名称的配置档文件
+     *
+     * @param name 配置档名称（不含前后缀）
+     * @return 配置档文件
+     */
+    private File resolveProfileFile(String name) {
+        return new File(resolveJarDir(), PROFILE_FILE_PREFIX + name + PROFILE_FILE_SUFFIX);
+    }
+
+    /**
+     * 切换到指定配置档
+     * <p>
+     * 加载目标配置档并作为当前生效配置（同步写入生效配置文件）， 重建更新器实例；本地版本记录高于配置档版本号时沿用本地版本。
+     * </p>
+     *
+     * @param name 配置档名称
+     * @return true表示切换成功
+     */
+    private boolean switchProfile(String name) {
+        File profileFile = resolveProfileFile(name);
+        if (!profileFile.exists()) {
+            JOptionPane.showMessageDialog(this, "配置档文件不存在: " + profileFile.getName(), "错误",
+                JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+        try {
+            UpdaterConfig config = UpdaterConfig.fromFile(profileFile.getAbsolutePath());
+            int localVersion = UpdaterConfig.readLocalVersion();
+            if (localVersion > config.getCurrentVersionCode()) {
+                config = rebuildWithVersion(config, localVersion);
+            }
+            currentConfig = config;
+            updater = new AutoUpdater(currentConfig, new GuiUpdateListener());
+            persistConfig(currentConfig);
+            pendingInfo = null;
+            forceUpdate = false;
+            resetButtons();
+            versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
+            appendLog("[配置档] 已切换到: " + name + "，服务端: " + currentConfig.buildCheckUrl());
+            setStatus("已切换到配置档: " + name, COLOR_SUCCESS);
+            return true;
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(this, "配置档加载失败: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+            return false;
+        }
+    }
+
+    /**
+     * 将当前生效配置另存为新配置档
+     * <p>
+     * 名称需合法且不含路径分隔符；同名配置档存在时需用户确认覆盖。
+     * </p>
+     */
+    private void saveCurrentAsProfile() {
+        String input = JOptionPane.showInputDialog(this, "请输入配置档名称（如 prod、test）:", "另存为配置档",
+            JOptionPane.PLAIN_MESSAGE);
+        if (input == null) {
+            return;
+        }
+        String name = input.trim();
+        if (name.isEmpty() || name.contains("/") || name.contains("\\")) {
+            JOptionPane.showMessageDialog(this, "配置档名称不能为空且不能包含路径分隔符", "错误",
+                JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+        File target = resolveProfileFile(name);
+        if (target.exists()) {
+            int overwrite = JOptionPane.showConfirmDialog(this, "配置档「" + name + "」已存在，是否覆盖？", "确认覆盖",
+                JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+            if (overwrite != JOptionPane.OK_OPTION) {
+                return;
+            }
+        }
+        writeConfigToFile(currentConfig, target);
+        appendLog("[配置档] 已另存为: " + target.getName());
+    }
+
+    /**
+     * 删除指定配置档（需用户确认）
+     *
+     * @param name 配置档名称
+     */
+    private void deleteProfile(String name) {
+        int confirm = JOptionPane.showConfirmDialog(this, "确定删除配置档「" + name + "」吗？", "确认删除",
+            JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        if (confirm != JOptionPane.OK_OPTION) {
+            return;
+        }
+        File profileFile = resolveProfileFile(name);
+        if (profileFile.delete()) {
+            appendLog("[配置档] 已删除: " + profileFile.getName());
+        } else {
+            JOptionPane.showMessageDialog(this, "删除失败: " + profileFile.getName(), "错误",
+                JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -865,6 +1309,10 @@ public class UpdaterGuiDemo extends JFrame {
                      * 两段式交互：暂存更新信息并弹出确认对话框，用户同意后才开始安装
                      */
                     pendingInfo = info;
+                    forceUpdate = isForceUpdate(info);
+                    if (forceUpdate) {
+                        appendLog("[检查] 服务端要求强制更新，本次不可跳过");
+                    }
                     showUpdateConfirmDialog(info);
                 } else {
                     setStatus("当前已是最新版本", COLOR_SUCCESS);
@@ -1131,6 +1579,14 @@ public class UpdaterGuiDemo extends JFrame {
      * @param args 命令行参数
      */
     public static void main(String[] args) {
+        if (!acquireInstanceLock()) {
+            JOptionPane.showMessageDialog(null, "更新器已在运行中，请勿重复启动。", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        /*
+         * 将本地版本文件锚定到 JAR 包所在目录，不再跟随启动时的工作目录
+         */
+        UpdaterConfig.setLocalVersionDir(resolveJarDir().getAbsolutePath());
         try {
             UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception e) {
@@ -1143,5 +1599,25 @@ public class UpdaterGuiDemo extends JFrame {
             UpdaterGuiDemo demo = new UpdaterGuiDemo();
             demo.setVisible(true);
         });
+    }
+
+    /**
+     * 获取单实例文件锁
+     * <p>
+     * 基于 JAR 包所在目录下的锁文件防止重复启动多个更新器实例，
+     * JVM 退出时锁自动释放。锁机制自身异常时不阻止启动。
+     * </p>
+     *
+     * @return true表示获取成功（当前为唯一实例），false表示已有实例在运行
+     */
+    private static boolean acquireInstanceLock() {
+        try {
+            File lockFile = new File(resolveJarDir(), INSTANCE_LOCK_FILE);
+            instanceLockChannel = new RandomAccessFile(lockFile, "rw").getChannel();
+            instanceLock = instanceLockChannel.tryLock();
+            return instanceLock != null;
+        } catch (Exception e) {
+            return true;
+        }
     }
 }

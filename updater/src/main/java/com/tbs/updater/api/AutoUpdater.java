@@ -380,8 +380,8 @@ public class AutoUpdater {
     /**
      * 将新版本号持久化到本地文件
      * <p>
-     * 写入到 JVM 工作目录（user.dir）下的 {@link UpdaterConfig#LOCAL_VERSION_FILE} 文件，
-     * 跟随 JAR 包所在目录，不受系统临时目录清理影响。
+     * 写入到 {@link UpdaterConfig#getLocalVersionDir()} 目录下的 {@link UpdaterConfig#LOCAL_VERSION_FILE} 文件，
+     * 默认跟随 JVM 工作目录，调用方可通过 {@link UpdaterConfig#setLocalVersionDir(String)} 锚定到 JAR 包目录。
      * 下次启动时通过 {@link UpdaterConfig#readLocalVersion()} 读取。
      * 写入失败仅记录警告不抛异常，不影响主流程。
      * </p>
