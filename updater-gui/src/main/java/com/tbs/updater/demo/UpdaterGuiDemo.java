@@ -8,14 +8,17 @@ import com.tbs.updater.model.UpdateInfo;
 
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.DefaultCaret;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -49,6 +52,11 @@ public class UpdaterGuiDemo extends JFrame {
      * classpath 内默认配置文件名
      */
     private static final String CLASSPATH_CONFIG = "updater.properties";
+
+    /**
+     * 本地持久化配置文件名（位于 JVM 工作目录，即 JAR 包启动目录）
+     */
+    private static final String LOCAL_CONFIG_FILE = "updater.properties";
 
     /**
      * 时间戳格式
@@ -135,6 +143,26 @@ public class UpdaterGuiDemo extends JFrame {
     private volatile boolean updating = false;
 
     /**
+     * 检查到待安装更新时暂存的更新信息，用户确认后用于安装
+     */
+    private volatile UpdateInfo pendingInfo;
+
+    /**
+     * 速度估算：约1秒前的采样点（时间戳, 已下载字节数）
+     */
+    private final long[] speedSnapshot = new long[2];
+
+    /**
+     * 日志里程碑：上次输出进度日志的百分比档位（25/50/75）
+     */
+    private volatile int lastLoggedMilestone = 0;
+
+    /**
+     * 本次流程是否已进入安装阶段（用于区分“已是最新”与“安装完成”两种成功）
+     */
+    private volatile boolean installCompleted = false;
+
+    /**
      * 构造更新器 GUI
      */
     public UpdaterGuiDemo() {
@@ -212,10 +240,15 @@ public class UpdaterGuiDemo extends JFrame {
          */
         JPanel controlPanel = new JPanel(new BorderLayout(10, 5));
 
-        JPanel optionsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 5, 0));
+        JPanel optionsPanel = new JPanel(new BorderLayout());
         autoOpenCheckbox = new JCheckBox("下载完成后自动打开文件");
         autoOpenCheckbox.setFont(SMALL_FONT);
-        optionsPanel.add(autoOpenCheckbox);
+        optionsPanel.add(autoOpenCheckbox, BorderLayout.WEST);
+
+        JButton clearLogButton = new JButton("清空日志");
+        clearLogButton.setFont(SMALL_FONT);
+        clearLogButton.addActionListener(e -> logArea.setText(""));
+        optionsPanel.add(clearLogButton, BorderLayout.EAST);
         controlPanel.add(optionsPanel, BorderLayout.NORTH);
 
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
@@ -229,7 +262,7 @@ public class UpdaterGuiDemo extends JFrame {
         startButton = new JButton("检查更新");
         startButton.setFont(UI_FONT);
         startButton.setPreferredSize(new Dimension(120, 32));
-        startButton.addActionListener(e -> startUpdate());
+        startButton.addActionListener(e -> onMainButtonClick());
         buttonPanel.add(startButton);
 
         controlPanel.add(buttonPanel, BorderLayout.SOUTH);
@@ -238,12 +271,17 @@ public class UpdaterGuiDemo extends JFrame {
         setContentPane(mainPanel);
 
         /*
-         * 窗口关闭时中断更新线程
+         * 窗口关闭时若正在更新需用户确认，避免误关中断部署
          */
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
+                if (updating && !confirmCloseWhileUpdating()) {
+                    return;
+                }
                 updating = false;
+                dispose();
+                System.exit(0);
             }
         });
 
@@ -259,7 +297,7 @@ public class UpdaterGuiDemo extends JFrame {
             /*
              * 检查本地已安装版本文件，若存在则覆盖 currentVersionCode
              */
-            int localVersion = UpdaterConfig.readLocalVersion(currentConfig.getDownloadDir());
+            int localVersion = UpdaterConfig.readLocalVersion();
             if (localVersion > currentConfig.getCurrentVersionCode()) {
                 appendLog("[初始化] 检测到本地版本记录: " + localVersion + "，覆盖配置文件中的版本号");
                 currentConfig = rebuildWithVersion(currentConfig, localVersion);
@@ -324,7 +362,16 @@ public class UpdaterGuiDemo extends JFrame {
         }
 
         /*
-         * 优先级2：classpath 下的 updater.properties
+         * 优先级2：JVM 工作目录下的持久化配置文件（UI 修改后的保存位置）
+         */
+        File localFile = resolveLocalConfigFile();
+        if (localFile.exists() && localFile.isFile()) {
+            appendLog("[配置] 从本地文件加载: " + localFile.getAbsolutePath());
+            return UpdaterConfig.fromFile(localFile.getAbsolutePath());
+        }
+
+        /*
+         * 优先级3：classpath 下的 updater.properties（JAR 内置默认配置）
          */
         try (InputStream in = getClass().getClassLoader().getResourceAsStream(CLASSPATH_CONFIG)) {
             if (in != null) {
@@ -338,7 +385,7 @@ public class UpdaterGuiDemo extends JFrame {
         }
 
         /*
-         * 优先级3：硬编码默认值
+         * 优先级4：硬编码默认值
          */
         appendLog("[配置] 使用内置默认值");
         return new UpdaterConfig.Builder()
@@ -351,13 +398,64 @@ public class UpdaterGuiDemo extends JFrame {
     }
 
     /**
-     * 开始更新流程
+     * 主按钮点击入口
+     * <p>
+     * 已检查到待安装更新时直接进入安装，否则发起检查。
+     * </p>
      */
-    private void startUpdate() {
+    private void onMainButtonClick() {
+        if (pendingInfo != null) {
+            showUpdateConfirmDialog(pendingInfo);
+        } else {
+            startCheck();
+        }
+    }
+
+    /**
+     * 检查阶段：仅向服务端查询最新版本，不自动下载安装
+     */
+    private void startCheck() {
         if (updating) {
             return;
         }
         updating = true;
+        installCompleted = false;
+        pendingInfo = null;
+        downloadedFiles = new ArrayList<>();
+        startButton.setEnabled(false);
+        startButton.setText("检查中...");
+        configButton.setEnabled(false);
+        progressBar.setIndeterminate(true);
+        progressBar.setString("检查中");
+        speedLabel.setText("");
+        setStatus("正在检查更新...", COLOR_WORKING);
+
+        new Thread(() -> {
+            try {
+                updater.checkForUpdate();
+            } catch (Exception e) {
+                SwingUtilities.invokeLater(() -> {
+                    setStatus("检查失败: " + e.getMessage(), COLOR_ERROR);
+                    appendLog("[异常] " + e.getMessage());
+                    resetButtons();
+                });
+            } finally {
+                updating = false;
+            }
+        }, "updater-check-thread").start();
+    }
+
+    /**
+     * 安装阶段：用户在确认对话框同意后执行下载、部署与启动
+     *
+     * @param info 检查阶段获得的更新信息
+     */
+    private void startInstall(UpdateInfo info) {
+        if (updating) {
+            return;
+        }
+        updating = true;
+        installCompleted = true;
         downloadedFiles = new ArrayList<>();
         startButton.setEnabled(false);
         startButton.setText("更新中...");
@@ -366,11 +464,11 @@ public class UpdaterGuiDemo extends JFrame {
         progressBar.setValue(0);
         progressBar.setString("0%");
         speedLabel.setText("");
-        setStatus("正在检查更新...", COLOR_WORKING);
+        setStatus("正在下载更新...", COLOR_WORKING);
 
         new Thread(() -> {
             try {
-                updater.autoUpdate();
+                updater.installUpdate(info);
             } catch (Exception e) {
                 SwingUtilities.invokeLater(() -> {
                     setStatus("更新失败: " + e.getMessage(), COLOR_ERROR);
@@ -380,47 +478,145 @@ public class UpdaterGuiDemo extends JFrame {
             } finally {
                 updating = false;
             }
-        }, "updater-thread").start();
+        }, "updater-install-thread").start();
+    }
+
+    /**
+     * 弹出更新确认对话框（Sparkle风格）
+     * <p>
+     * 展示新版本号、待下载文件数与发行说明，由用户决定是否立即安装。
+     * </p>
+     *
+     * @param info 检查阶段获得的更新信息
+     */
+    private void showUpdateConfirmDialog(UpdateInfo info) {
+        String latestVer = info.getLatestVersionName() != null
+                ? info.getLatestVersionName() : info.getLatestVersionCode();
+
+        JPanel panel = new JPanel(new BorderLayout(0, 8));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+
+        JLabel summary = new JLabel("<html>发现新版本 <b>" + latestVer
+                + "</b>（当前 " + currentConfig.getCurrentVersionCode() + "），共 "
+                + info.getFiles().size() + " 个文件待下载</html>");
+        summary.setFont(UI_FONT);
+        panel.add(summary, BorderLayout.NORTH);
+
+        if (info.getReleaseNote() != null && !info.getReleaseNote().trim().isEmpty()) {
+            JTextArea noteArea = new JTextArea(info.getReleaseNote());
+            noteArea.setEditable(false);
+            noteArea.setLineWrap(true);
+            noteArea.setWrapStyleWord(true);
+            noteArea.setFont(UI_FONT);
+            JScrollPane noteScroll = new JScrollPane(noteArea);
+            noteScroll.setPreferredSize(new Dimension(400, 150));
+            noteScroll.setBorder(BorderFactory.createTitledBorder("发行说明"));
+            panel.add(noteScroll, BorderLayout.CENTER);
+        }
+
+        if (info.getAction() != null && !info.getAction().trim().isEmpty()) {
+            JLabel actionLabel = new JLabel("服务端动作: " + info.getAction());
+            actionLabel.setFont(SMALL_FONT);
+            actionLabel.setForeground(COLOR_WORKING);
+            panel.add(actionLabel, BorderLayout.SOUTH);
+        }
+
+        Object[] options = {"立即安装", "稍后"};
+        int choice = JOptionPane.showOptionDialog(this, panel, "发现新版本",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, options, options[0]);
+        if (choice == 0) {
+            startInstall(info);
+        } else {
+            appendLog("[检查] 用户选择稍后安装，可点击「立即更新」继续");
+            startButton.setText("立即更新");
+            startButton.setEnabled(true);
+            configButton.setEnabled(true);
+        }
+    }
+
+    /**
+     * 更新进行中关闭窗口的确认提示
+     *
+     * @return true表示用户确认关闭，false表示取消
+     */
+    private boolean confirmCloseWhileUpdating() {
+        int choice = JOptionPane.showConfirmDialog(this,
+                "正在执行更新，关闭可能中断部署过程，确定关闭吗？",
+                "确认关闭", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+        return choice == JOptionPane.OK_OPTION;
     }
 
     /**
      * 显示配置编辑对话框
+     * <p>
+     * 按服务端/应用/本地三组分区展示，路径类字段提供文件浏览器选择，避免手工输入出错。
+     * </p>
      */
     private void showConfigDialog() {
-        JPanel panel = new JPanel(new GridLayout(0, 2, 8, 6));
-        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
-
-        JTextField hostField = new JTextField(currentConfig != null ? currentConfig.getServerHost() : "", 20);
+        JTextField hostField = new JTextField(currentConfig != null ? currentConfig.getServerHost() : "", 18);
         JTextField portField = new JTextField(currentConfig != null ? String.valueOf(currentConfig.getServerPort()) : "8082", 6);
-        JTextField appKeyField = new JTextField(currentConfig != null ? currentConfig.getAppKey() : "", 20);
-        JTextField platformField = new JTextField(currentConfig != null ? currentConfig.getPlatform() : "android", 10);
+        JTextField appKeyField = new JTextField(currentConfig != null ? currentConfig.getAppKey() : "", 18);
+        JTextField platformField = new JTextField(currentConfig != null ? currentConfig.getPlatform() : "android", 8);
         JTextField versionField = new JTextField(currentConfig != null ? String.valueOf(currentConfig.getCurrentVersionCode()) : "0", 6);
-        JTextField downloadDirField = new JTextField(currentConfig != null ? currentConfig.getDownloadDir() : "", 20);
-        JTextField deployScriptField = new JTextField(currentConfig != null ? currentConfig.getDeployScript() : "", 20);
-        JTextField startScriptField = new JTextField(currentConfig != null ? currentConfig.getStartScript() : "", 20);
+        JTextField downloadDirField = new JTextField(currentConfig != null ? currentConfig.getDownloadDir() : "", 18);
+        JTextField deployScriptField = new JTextField(currentConfig != null ? currentConfig.getDeployScript() : "", 18);
+        JTextField startScriptField = new JTextField(currentConfig != null ? currentConfig.getStartScript() : "", 18);
         JTextField timeoutField = new JTextField(currentConfig != null ? String.valueOf(currentConfig.getTimeoutSeconds()) : "30", 6);
         JCheckBox tryAllUrlsBox = new JCheckBox("", currentConfig == null || currentConfig.isTryAllUrls());
 
-        panel.add(new JLabel("服务端主机:"));
-        panel.add(hostField);
-        panel.add(new JLabel("服务端端口:"));
-        panel.add(portField);
-        panel.add(new JLabel("应用标识:"));
-        panel.add(appKeyField);
-        panel.add(new JLabel("平台:"));
-        panel.add(platformField);
-        panel.add(new JLabel("当前版本号:"));
-        panel.add(versionField);
-        panel.add(new JLabel("下载目录:"));
-        panel.add(downloadDirField);
-        panel.add(new JLabel("部署脚本路径:"));
-        panel.add(deployScriptField);
-        panel.add(new JLabel("启动脚本路径:"));
-        panel.add(startScriptField);
-        panel.add(new JLabel("超时时间(秒):"));
-        panel.add(timeoutField);
-        panel.add(new JLabel("失败尝试其他地址:"));
-        panel.add(tryAllUrlsBox);
+        JPanel serverGroup = new JPanel(new GridLayout(0, 2, 8, 6));
+        serverGroup.setBorder(BorderFactory.createTitledBorder("服务端"));
+        serverGroup.add(new JLabel("主机地址:"));
+        serverGroup.add(hostField);
+        serverGroup.add(new JLabel("端口:"));
+        serverGroup.add(portField);
+
+        JPanel appGroup = new JPanel(new GridLayout(0, 2, 8, 6));
+        appGroup.setBorder(BorderFactory.createTitledBorder("应用"));
+        appGroup.add(new JLabel("应用标识(appKey):"));
+        appGroup.add(appKeyField);
+        appGroup.add(new JLabel("平台:"));
+        appGroup.add(platformField);
+        appGroup.add(new JLabel("当前版本号:"));
+        appGroup.add(versionField);
+
+        JPanel localGroup = new JPanel(new GridBagLayout());
+        localGroup.setBorder(BorderFactory.createTitledBorder("本地环境"));
+        addPathRow(localGroup, 0, "下载目录:", downloadDirField,
+                createBrowseButton(downloadDirField, true, null));
+        addPathRow(localGroup, 1, "部署脚本:", deployScriptField,
+                createBrowseButton(deployScriptField, false, "部署脚本"));
+        addPathRow(localGroup, 2, "启动脚本:", startScriptField,
+                createBrowseButton(startScriptField, false, "启动脚本"));
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = 3;
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.insets = new Insets(3, 0, 3, 8);
+        localGroup.add(new JLabel("超时时间(秒):"), gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        localGroup.add(timeoutField, gbc);
+        gbc.gridx = 0;
+        gbc.gridy = 4;
+        gbc.gridwidth = 1;
+        gbc.fill = GridBagConstraints.NONE;
+        localGroup.add(new JLabel("失败尝试其他地址:"), gbc);
+        gbc.gridx = 1;
+        gbc.gridwidth = 2;
+        gbc.anchor = GridBagConstraints.WEST;
+        localGroup.add(tryAllUrlsBox, gbc);
+
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(new EmptyBorder(10, 10, 10, 10));
+        panel.add(serverGroup);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(appGroup);
+        panel.add(Box.createVerticalStrut(8));
+        panel.add(localGroup);
 
         int result = JOptionPane.showConfirmDialog(this, panel, "更新器配置",
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
@@ -453,6 +649,7 @@ public class UpdaterGuiDemo extends JFrame {
                     appendLog("[配置] 启动脚本: 未配置（跳过）");
                 }
                 versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode() + "  |  最新版本: 未检查");
+                persistConfig(currentConfig);
                 setStatus("配置已更新", COLOR_IDLE);
                 resetButtons();
             } catch (Exception e) {
@@ -463,12 +660,135 @@ public class UpdaterGuiDemo extends JFrame {
     }
 
     /**
-     * 恢复按钮状态
+     * 在GridBagLayout面板中添加一行路径字段（标签+输入框+浏览按钮）
+     *
+     * @param panel       目标面板
+     * @param row         行号
+     * @param label       字段标签文本
+     * @param field       路径输入框
+     * @param browseButton 浏览按钮
+     */
+    private void addPathRow(JPanel panel, int row, String label,
+                            JTextField field, JButton browseButton) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridy = row;
+        gbc.insets = new Insets(3, 0, 3, 8);
+        gbc.anchor = GridBagConstraints.WEST;
+        gbc.gridx = 0;
+        panel.add(new JLabel(label), gbc);
+        gbc.gridx = 1;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        panel.add(field, gbc);
+        gbc.gridx = 2;
+        gbc.fill = GridBagConstraints.NONE;
+        gbc.weightx = 0;
+        panel.add(browseButton, gbc);
+    }
+
+    /**
+     * 创建路径浏览按钮
+     * <p>
+     * directoryOnly为true时弹出目录选择器（用于下载目录），
+     * 否则弹出文件选择器并过滤脚本后缀（sh/bat/cmd）。
+     * </p>
+     *
+     * @param field         回填选择结果的路径输入框
+     * @param directoryOnly 是否仅选择目录
+     * @param description   文件过滤描述，仅文件模式使用
+     * @return 浏览按钮
+     */
+    private JButton createBrowseButton(JTextField field, boolean directoryOnly, String description) {
+        JButton button = new JButton("浏览...");
+        button.setFont(SMALL_FONT);
+        button.addActionListener(e -> {
+            JFileChooser chooser = new JFileChooser();
+            if (directoryOnly) {
+                chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+                chooser.setDialogTitle("选择下载目录");
+            } else {
+                chooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+                chooser.setFileFilter(new FileNameExtensionFilter(
+                        description + " (*.sh, *.bash, *.bat, *.cmd)", "sh", "bash", "bat", "cmd"));
+                chooser.setDialogTitle("选择" + description);
+            }
+            String current = field.getText().trim();
+            if (!current.isEmpty()) {
+                File currentFile = new File(current);
+                if (currentFile.exists()) {
+                    chooser.setSelectedFile(currentFile);
+                }
+            }
+            if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
+                field.setText(chooser.getSelectedFile().getAbsolutePath());
+            }
+        });
+        return button;
+    }
+
+    /**
+     * 恢复按钮状态并清理待安装更新暂存
      */
     private void resetButtons() {
+        pendingInfo = null;
         startButton.setEnabled(true);
         startButton.setText("检查更新");
         configButton.setEnabled(true);
+    }
+
+    /**
+     * 解析配置持久化目标文件
+     * <p>
+     * 优先使用系统属性 updater.config.file 指定的外部文件，
+     * 否则使用 JVM 工作目录（JAR 包启动目录）下的 updater.properties。
+     * </p>
+     *
+     * @return 配置持久化目标文件
+     */
+    private File resolveLocalConfigFile() {
+        String externalPath = System.getProperty(CONFIG_FILE_PROPERTY);
+        if (externalPath != null && !externalPath.trim().isEmpty()) {
+            return new File(externalPath.trim());
+        }
+        return new File(System.getProperty("user.dir"), LOCAL_CONFIG_FILE);
+    }
+
+    /**
+     * 将当前配置持久化到本地文件（UTF-8 编码，支持中文值）
+     * <p>
+     * 配置对话框保存后调用，确保重启后配置不丢失。
+     * 写入失败仅记录警告日志，不阻断主流程。
+     * </p>
+     *
+     * @param config 待持久化的配置
+     */
+    private void persistConfig(UpdaterConfig config) {
+        Properties props = new Properties();
+        props.setProperty(UpdaterConfig.KEY_SERVER_HOST, config.getServerHost());
+        props.setProperty(UpdaterConfig.KEY_SERVER_PORT, String.valueOf(config.getServerPort()));
+        props.setProperty(UpdaterConfig.KEY_SERVER_CHECK_PATH, config.getCheckPath());
+        props.setProperty(UpdaterConfig.KEY_APP_KEY, config.getAppKey());
+        props.setProperty(UpdaterConfig.KEY_APP_PLATFORM, config.getPlatform());
+        props.setProperty(UpdaterConfig.KEY_APP_CURRENT_VERSION_CODE, String.valueOf(config.getCurrentVersionCode()));
+        props.setProperty(UpdaterConfig.KEY_UPDATE_TIMEOUT_SECONDS, String.valueOf(config.getTimeoutSeconds()));
+        props.setProperty(UpdaterConfig.KEY_UPDATE_TRY_ALL_URLS, String.valueOf(config.isTryAllUrls()));
+        if (config.getDownloadDir() != null) {
+            props.setProperty(UpdaterConfig.KEY_LOCAL_DOWNLOAD_DIR, config.getDownloadDir());
+        }
+        if (config.getDeployScript() != null) {
+            props.setProperty(UpdaterConfig.KEY_LOCAL_DEPLOY_SCRIPT, config.getDeployScript());
+        }
+        if (config.getStartScript() != null) {
+            props.setProperty(UpdaterConfig.KEY_LOCAL_START_SCRIPT, config.getStartScript());
+        }
+        File configFile = resolveLocalConfigFile();
+        try (OutputStreamWriter writer = new OutputStreamWriter(
+                new FileOutputStream(configFile), StandardCharsets.UTF_8)) {
+            props.store(writer, "更新器配置（由 GUI 保存，请勿手动修改格式）");
+            appendLog("[配置] 已持久化到: " + configFile.getAbsolutePath());
+        } catch (IOException e) {
+            appendLog("[配置] 持久化失败: " + e.getMessage());
+        }
     }
 
     /**
@@ -532,23 +852,24 @@ public class UpdaterGuiDemo extends JFrame {
                 String latestVer = info.getLatestVersionName() != null ? info.getLatestVersionName() : info.getLatestVersionCode();
                 versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
                         + "  |  最新版本: " + latestVer);
+                progressBar.setIndeterminate(false);
                 if (info.isNeedUpdate()) {
                     setStatus("发现新版本: " + latestVer, COLOR_WORKING);
                     appendLog("[检查] 发现新版本: " + latestVer + " (versionCode=" + info.getLatestVersionCode() + ")");
-                    if (info.getReleaseNote() != null && !info.getReleaseNote().isEmpty()) {
-                        appendLog("[日志] " + info.getReleaseNote());
-                    }
-                    if (info.getAction() != null) {
-                        appendLog("[动作] " + info.getAction());
-                    }
                     int fileCount = info.getFiles().size();
                     appendLog("[检查] 待下载文件: " + fileCount + "个");
                     if (info.getDownloadUrls().isEmpty()) {
                         appendLog("[警告] 服务端未返回下载地址");
                     }
+                    /*
+                     * 两段式交互：暂存更新信息并弹出确认对话框，用户同意后才开始安装
+                     */
+                    pendingInfo = info;
+                    showUpdateConfirmDialog(info);
                 } else {
                     setStatus("当前已是最新版本", COLOR_SUCCESS);
                     appendLog("[检查] 已是最新版本");
+                    resetButtons();
                 }
             });
         }
@@ -563,6 +884,12 @@ public class UpdaterGuiDemo extends JFrame {
                 progressBar.setString("0%");
                 speedLabel.setText("");
                 downloadStartTime = System.currentTimeMillis();
+                /*
+                 * 重置速度采样点与日志里程碑，避免跨文件污染估算
+                 */
+                speedSnapshot[0] = 0;
+                speedSnapshot[1] = 0;
+                lastLoggedMilestone = 0;
                 appendLog("[下载] 文件 " + fileLabel);
             });
         }
@@ -580,12 +907,43 @@ public class UpdaterGuiDemo extends JFrame {
             SwingUtilities.invokeLater(() -> {
                 progressBar.setValue(progress);
                 progressBar.setString(progress + "%");
+            });
+        }
+
+        @Override
+        public void onDownloadProgressDetail(long downloadedBytes, long totalBytes, int percent) {
+            SwingUtilities.invokeLater(() -> {
+                progressBar.setValue(percent);
+                progressBar.setString(percent + "%");
                 /*
-                 * 估算下载速度
+                 * 基于约1秒前的采样点估算实时速度与剩余时间
                  */
-                long elapsed = System.currentTimeMillis() - downloadStartTime;
-                if (elapsed > 1000 && progress > 0) {
-                    appendLog("[下载] 进度: " + progress + "%");
+                long now = System.currentTimeMillis();
+                long prevTime = speedSnapshot[0];
+                long prevBytes = speedSnapshot[1];
+                if (prevTime <= 0) {
+                    speedSnapshot[0] = now;
+                    speedSnapshot[1] = downloadedBytes;
+                } else if (now - prevTime >= 800) {
+                    double bytesPerSecond = (downloadedBytes - prevBytes) * 1000.0 / (now - prevTime);
+                    speedSnapshot[0] = now;
+                    speedSnapshot[1] = downloadedBytes;
+                    if (bytesPerSecond > 0) {
+                        String speedText = formatSpeed((long) bytesPerSecond, 1000);
+                        if (totalBytes > 0 && downloadedBytes < totalBytes) {
+                            long remainSeconds = (long) ((totalBytes - downloadedBytes) / bytesPerSecond);
+                            speedText += " | 剩" + formatDuration(remainSeconds);
+                        }
+                        speedLabel.setText(speedText);
+                    }
+                }
+                /*
+                 * 日志降噪：仅在25/50/75里程碑输出，避免刷屏
+                 */
+                int milestone = percent / 25 * 25;
+                if (milestone > 0 && milestone < 100 && milestone > lastLoggedMilestone) {
+                    lastLoggedMilestone = milestone;
+                    appendLog("[下载] 进度: " + milestone + "%");
                 }
             });
         }
@@ -616,6 +974,7 @@ public class UpdaterGuiDemo extends JFrame {
                 if (autoOpenCheckbox.isSelected() && !files.isEmpty()) {
                     openFile(files.get(0));
                 }
+                speedLabel.setText("");
             });
         }
 
@@ -666,7 +1025,7 @@ public class UpdaterGuiDemo extends JFrame {
                 /*
                  * 更新成功后从本地版本文件同步版本号并刷新显示
                  */
-                int localVersion = UpdaterConfig.readLocalVersion(currentConfig.getDownloadDir());
+                int localVersion = UpdaterConfig.readLocalVersion();
                 if (localVersion > currentConfig.getCurrentVersionCode()) {
                     try {
                         currentConfig = rebuildWithVersion(currentConfig, localVersion);
@@ -679,6 +1038,14 @@ public class UpdaterGuiDemo extends JFrame {
                 versionLabel.setText("当前版本: " + currentConfig.getCurrentVersionCode()
                         + "  |  最新版本: 已同步");
                 resetButtons();
+                /*
+                 * 安装完成后给出明确反馈，避免用户仅凭状态栏无法确认结果
+                 */
+                if (installCompleted) {
+                    JOptionPane.showMessageDialog(UpdaterGuiDemo.this,
+                            "更新已完成，当前版本: " + currentConfig.getCurrentVersionCode(),
+                            "更新成功", JOptionPane.INFORMATION_MESSAGE);
+                }
             });
         }
 
@@ -735,6 +1102,27 @@ public class UpdaterGuiDemo extends JFrame {
         } else {
             return String.format("%.1f MB/s", bytesPerSecond / (1024 * 1024));
         }
+    }
+
+    /**
+     * 格式化剩余时间
+     *
+     * @param seconds 剩余秒数
+     * @return 可读的时长字符串（如 3秒、1分20秒）
+     */
+    private static String formatDuration(long seconds) {
+        if (seconds < 0) {
+            seconds = 0;
+        }
+        if (seconds < 60) {
+            return seconds + "秒";
+        }
+        long minutes = seconds / 60;
+        long remainSeconds = seconds % 60;
+        if (minutes < 60) {
+            return minutes + "分" + remainSeconds + "秒";
+        }
+        return minutes / 60 + "小时" + minutes % 60 + "分";
     }
 
     /**

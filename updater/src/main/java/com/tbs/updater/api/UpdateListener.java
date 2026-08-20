@@ -58,6 +58,19 @@ public interface UpdateListener {
     }
 
     /**
+     * 下载进度变化（含字节数，用于实时计算速度与剩余时间）
+     * <p>
+     * totalBytes为-1表示服务端未返回Content-Length，此时无法估算剩余时间。
+     * </p>
+     *
+     * @param downloadedBytes 已下载字节数
+     * @param totalBytes      总字节数，未知时为-1
+     * @param percent         进度百分比（0-100）
+     */
+    default void onDownloadProgressDetail(long downloadedBytes, long totalBytes, int percent) {
+    }
+
+    /**
      * 下载完成
      *
      * @param downloadedFile 下载完成的本地文件

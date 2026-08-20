@@ -33,6 +33,7 @@
         <module>logging</module>
         <module>oss</module>
         <module>updater</module>
+        <module>updater-gui</module>
     </modules>
 
     <groupId>com.tbs</groupId>
@@ -281,6 +282,11 @@
             <dependency>
                 <groupId>com.tbs</groupId>
                 <artifactId>updater</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>updater-gui</artifactId>
                 <version>${tbs.version}</version>
             </dependency>
 

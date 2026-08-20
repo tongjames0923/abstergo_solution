@@ -113,6 +113,27 @@ public class AutoUpdater {
                 listener.onSuccess();
                 return;
             }
+            installUpdate(info);
+        } catch (UpdateException e) {
+            listener.onError("[" + e.getErrorType() + "] " + e.getMessage());
+        } catch (Exception e) {
+            listener.onError("更新流程发生未知错误: " + e.getMessage());
+        }
+    }
+
+    /**
+     * 安装指定更新（跳过检查阶段）
+     * <p>
+     * 按顺序执行下载全部文件、部署脚本、版本回写、启动脚本，
+     * 适用于调用方先自行检查并向用户确认后再安装的两段式场景。
+     * 任一步骤失败时回调onError并终止流程。
+     * 本方法不向外抛出异常，结果全部经监听器通知。
+     * </p>
+     *
+     * @param info 检查更新得到的更新信息
+     */
+    public void installUpdate(UpdateInfo info) {
+        try {
             List<File> downloadedFiles = downloadAllUpdates(info);
             executeDeployScript(downloadedFiles);
             /*
@@ -196,7 +217,18 @@ public class AutoUpdater {
                 listener.onDownloadFileStart(fileIndex, totalFiles, url);
                 listener.onDownloadStart(url);
                 try {
-                    File file = downloader.download(url, config.getDownloadDir(), localFileName, listener::onDownloadProgress);
+                    File file = downloader.download(url, config.getDownloadDir(), localFileName,
+                            new Downloader.ProgressListener() {
+                                @Override
+                                public void onProgress(int progress) {
+                                    listener.onDownloadProgress(progress);
+                                }
+
+                                @Override
+                                public void onProgressDetail(long downloadedBytes, long totalBytes, int percent) {
+                                    listener.onDownloadProgressDetail(downloadedBytes, totalBytes, percent);
+                                }
+                            });
                     listener.onDownloadComplete(file);
                     result.add(file);
                     downloaded = true;
@@ -348,8 +380,9 @@ public class AutoUpdater {
     /**
      * 将新版本号持久化到本地文件
      * <p>
-     * 写入到下载目录下的 {@link UpdaterConfig#LOCAL_VERSION_FILE} 文件，
-     * 下次启动时通过 {@link UpdaterConfig#readLocalVersion(String)} 读取。
+     * 写入到 JVM 工作目录（user.dir）下的 {@link UpdaterConfig#LOCAL_VERSION_FILE} 文件，
+     * 跟随 JAR 包所在目录，不受系统临时目录清理影响。
+     * 下次启动时通过 {@link UpdaterConfig#readLocalVersion()} 读取。
      * 写入失败仅记录警告不抛异常，不影响主流程。
      * </p>
      *
@@ -359,7 +392,7 @@ public class AutoUpdater {
         if (isBlank(newVersionCode)) {
             return;
         }
-        File dir = new File(config.getDownloadDir());
+        File dir = new File(UpdaterConfig.getLocalVersionDir());
         if (!dir.exists()) {
             dir.mkdirs();
         }

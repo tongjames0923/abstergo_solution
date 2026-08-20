@@ -92,8 +92,9 @@ public final class UpdaterConfig {
     /**
      * 本地已安装版本文件名
      * <p>
-     * 更新成功后写入到下载目录下，内容为最新 versionCode。
+     * 更新成功后写入到 JVM 工作目录（user.dir）下，内容为最新 versionCode。
      * 下次启动时读取，作为 currentVersionCode 使用。
+     * 跟随 JAR 包所在目录，不受系统临时目录清理影响。
      * </p>
      */
     public static final String LOCAL_VERSION_FILE = ".installed-version";
@@ -258,20 +259,30 @@ public final class UpdaterConfig {
     }
 
     /**
+     * 获取版本文件所在目录（JVM 工作目录，即 JAR 包启动目录）
+     *
+     * @return 版本文件目录的绝对路径
+     */
+    public static String getLocalVersionDir() {
+        return System.getProperty("user.dir");
+    }
+
+    /**
      * 读取本地已安装的版本号
      * <p>
-     * 从指定下载目录下的 {@link #LOCAL_VERSION_FILE} 文件中读取上次更新成功写入的 versionCode。
+     * 从 JVM 工作目录（user.dir）下的 {@link #LOCAL_VERSION_FILE} 文件中
+     * 读取上次更新成功写入的 versionCode。
      * 文件不存在或内容非法时返回 -1，表示无本地版本记录。
      * </p>
      *
-     * @param downloadDir 下载目录路径
      * @return 本地记录的版本号，无记录时返回 -1
      */
-    public static int readLocalVersion(String downloadDir) {
-        if (downloadDir == null || downloadDir.trim().isEmpty()) {
+    public static int readLocalVersion() {
+        String dir = getLocalVersionDir();
+        if (dir == null || dir.trim().isEmpty()) {
             return -1;
         }
-        File versionFile = new File(downloadDir, LOCAL_VERSION_FILE);
+        File versionFile = new File(dir, LOCAL_VERSION_FILE);
         if (!versionFile.exists() || !versionFile.isFile()) {
             return -1;
         }

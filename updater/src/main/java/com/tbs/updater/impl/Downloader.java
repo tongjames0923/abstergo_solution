@@ -41,6 +41,20 @@ public class Downloader {
          * @param progress 下载进度百分比（0-100）
          */
         void onProgress(int progress);
+
+        /**
+         * 详细进度回调（含字节数，用于实时计算速度与剩余时间）
+         * <p>
+         * 默认实现为空，需要字节级进度的调用方按需覆盖。
+         * totalBytes为-1表示服务端未返回Content-Length，此时无法估算剩余时间。
+         * </p>
+         *
+         * @param downloadedBytes 已下载字节数
+         * @param totalBytes      总字节数，未知时为-1
+         * @param percent         进度百分比（0-100），总量未知时仅在开始与完成时为0和100
+         */
+        default void onProgressDetail(long downloadedBytes, long totalBytes, int percent) {
+        }
     }
 
     /**
@@ -177,6 +191,7 @@ public class Downloader {
              OutputStream out = new FileOutputStream(target)) {
             if (progressListener != null) {
                 progressListener.onProgress(0);
+                progressListener.onProgressDetail(0, total > 0 ? total : -1, 0);
             }
             byte[] buffer = new byte[BUFFER_SIZE];
             int len;
@@ -188,6 +203,7 @@ public class Downloader {
                     if (progress != lastProgress) {
                         lastProgress = progress;
                         progressListener.onProgress(progress);
+                        progressListener.onProgressDetail(downloaded, total, progress);
                     }
                 }
             }
@@ -207,6 +223,7 @@ public class Downloader {
          */
         if (progressListener != null) {
             progressListener.onProgress(100);
+            progressListener.onProgressDetail(downloaded, total > 0 ? total : -1, 100);
         }
     }
 
