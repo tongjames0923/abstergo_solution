@@ -5,6 +5,7 @@ import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
+import org.hibernate.annotations.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,6 +41,7 @@ public class SystemRoleGroupRelationEntity implements IIdentifiable<Long>, IComm
     /**
      * 主键ID
      */
+    @Comment("主键ID（雪花算法生成）")
     @Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
@@ -47,36 +49,42 @@ public class SystemRoleGroupRelationEntity implements IIdentifiable<Long>, IComm
     /**
      * 角色ID（权限项ID）
      */
+    @Comment("角色ID（援引 sys_role.id）")
     @Column(name = "role_id")
     private Long roleId;
 
     /**
      * 角色组ID（权限组ID）
      */
+    @Comment("角色组ID（援引 sys_role_group.id）")
     @Column(name = "group_id")
     private Long groupId;
 
     /**
      * 创建时间
      */
+    @Comment("创建时间")
     @Column(name = "create_time")
     private Date createTime;
 
     /**
      * 更新时间
      */
+    @Comment("更新时间")
     @Column(name = "update_time")
     private Date updateTime;
 
     /**
      * 创建者ID
      */
+    @Comment("创建者用户ID")
     @Column(name = "create_by")
     private Long createBy;
 
     /**
      * 更新者ID
      */
+    @Comment("更新者用户ID")
     @Column(name = "update_by")
     private Long updateBy;
 

@@ -6,6 +6,7 @@ import com.tbs.shared.pojo.ICreateTimeAuditable;
 import com.tbs.shared.pojo.IUpdateTimeAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
+import org.hibernate.annotations.Comment;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 主键
      */
+    @Comment("主键ID")
     @javax.persistence.Id
     @Getter
     @Setter
@@ -41,6 +43,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 用户ID
      */
+    @Comment("关联用户ID")
     @javax.persistence.Column(name = "user_id")
     @Getter
     @Setter
@@ -49,6 +52,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 登录令牌
      */
+    @Comment("登录令牌")
     @javax.persistence.Column(name = "token", length = 128)
     @Getter
     @Setter
@@ -57,6 +61,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 用户详情
      */
+    @Comment("用户详情（序列化字节数组）")
     @javax.persistence.Column(name = "user_details", columnDefinition = "MEDIUMBLOB")
     @Getter
     @Setter
@@ -65,6 +70,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 状态
      */
+    @Comment("登录状态标识")
     @javax.persistence.Column(name = "flag")
     @Getter
     @Setter
@@ -73,8 +79,8 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 创建时间
      */
+    @Comment("创建时间")
     @javax.persistence.Column(name = "create_time")
-
     @Getter
     @Setter
     private Date createTime;
@@ -82,8 +88,8 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 更新时间
      */
+    @Comment("更新时间")
     @javax.persistence.Column(name = "update_time")
-
     @Getter
     @Setter
     private Date updateTime;
@@ -91,8 +97,8 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 令牌过期时间
      */
+    @Comment("令牌过期时间")
     @Column(name = "token_expire_time")
-
     @Getter
     @Setter
     private Date tokenExpireTime;
@@ -100,6 +106,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * sessionId
      */
+    @Comment("会话ID")
     @Column(name = "session_id", length = 128)
     @Getter
     @Setter
