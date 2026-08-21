@@ -88,6 +88,9 @@ public class SimpleRoleGroupServiceImpl
         return new SystemRoleGroupVO(group, ((ISystemRoleGroupService)getInstance()).getRoleList(groupId));
     }
 
+    private static final IAuditService<SystemRoleGroupRelationEntity, Long, Long> audit =
+        new DefaultAuditService<SystemRoleGroupRelationEntity, Long>();
+
     /**
      * 添加角色到角色组
      *
@@ -113,6 +116,7 @@ public class SimpleRoleGroupServiceImpl
         SystemRoleGroupRelationEntity relation = new SystemRoleGroupRelationEntity();
         relation.setRoleId(roleId);
         relation.setGroupId(groupId);
+        audit.onCreate(relation);
         var old = CollUtil.getFirst(relationMapper.select(relation));
         AssertUtil.isTrue(old != null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.role.exists")
             .throwIt();
@@ -134,6 +138,7 @@ public class SimpleRoleGroupServiceImpl
         var old = CollUtil.getFirst(relationMapper.select(relation));
         AssertUtil.isTrue(old == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .i18n("permission.group.role.not.exists").throwIt();
+        audit.onDelete(relation);
         relationMapper.delete(relation);
     }
 
