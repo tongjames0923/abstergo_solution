@@ -113,14 +113,20 @@ public class SimpleRoleGroupServiceImpl
                 !CollUtil.isIn(role.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(), SystemRoleFlagEnum.SYSTEMED.getCode()))
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.not.active").throwIt();
 
-        SystemRoleGroupRelationEntity relation = new SystemRoleGroupRelationEntity();
-        relation.setRoleId(roleId);
-        relation.setGroupId(groupId);
-        audit.onCreate(relation);
-        var old = CollUtil.getFirst(relationMapper.select(relation));
-        AssertUtil.isTrue(old != null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.role.exists")
-            .throwIt();
-        relationMapper.insert(relation);
+        // 绕过逻辑删除拦截器查询，避免已删除记录无法被重新激活
+        var existing = relationMapper.selectByRoleIdAndGroupIdIncludeDeleted(roleId, groupId);
+        if (existing != null) {
+            existing.setFlag(CommonFlagEnum.ACTIVE.getCode());
+            audit.onUpdate(existing);
+            relationMapper.updateByPrimaryKey(existing);
+        } else {
+            var relation = new SystemRoleGroupRelationEntity();
+            relation.setFlag(CommonFlagEnum.ACTIVE.getCode());
+            relation.setRoleId(roleId);
+            relation.setGroupId(groupId);
+            audit.onCreate(relation);
+            relationMapper.insert(relation);
+        }
     }
 
     /**
@@ -132,14 +138,14 @@ public class SimpleRoleGroupServiceImpl
     @Override
     @CacheEvict(value = "roleGroup", key = "#groupId")
     public void removeRole(Long groupId, Long roleId) {
-        var relation = new SystemRoleGroupRelationEntity();
-        relation.setRoleId(roleId);
-        relation.setGroupId(groupId);
-        var old = CollUtil.getFirst(relationMapper.select(relation));
-        AssertUtil.isTrue(old == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+        // 绕过逻辑删除拦截器查询，确保能检测到已删除的记录并给出准确提示
+        var old = relationMapper.selectByRoleIdAndGroupIdIncludeDeleted(roleId, groupId);
+        AssertUtil.isTrue(old == null || Objects.equals(old.getFlag(), CommonFlagEnum.DELETED.getCode()))
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .i18n("permission.group.role.not.exists").throwIt();
-        audit.onDelete(relation);
-        relationMapper.delete(relation);
+        old.setFlag(CommonFlagEnum.DELETED.getCode());
+        audit.onDelete(old);
+        relationMapper.updateByPrimaryKey(old);
     }
 
     /**
@@ -240,9 +246,8 @@ public class SimpleRoleGroupServiceImpl
      */
     @Override
     public boolean isRoleInGroupAnyGroup(Long roleId) {
-        SystemRoleGroupRelationEntity relation = new SystemRoleGroupRelationEntity();
-        relation.setRoleId(roleId);
-        return CollUtil.isNotEmpty(relationMapper.select(relation));
+        return CollUtil.isNotEmpty(Arrays.asList(relationMapper.query(SystemRoleGroupRelationEntity.class).where()
+            .equal(SystemRoleGroupRelationEntity::getRoleId, roleId).pour().fetchOne()));
     }
 
     /**
