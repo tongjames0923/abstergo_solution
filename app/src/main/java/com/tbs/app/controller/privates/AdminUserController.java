@@ -16,7 +16,7 @@ import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.vo.LoginSessionVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

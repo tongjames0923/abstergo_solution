@@ -9,7 +9,7 @@ import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;

@@ -8,7 +8,7 @@ import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleGroupCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleGroupEntity;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

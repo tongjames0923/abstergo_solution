@@ -1,9 +1,9 @@
-package com.tbs.shared.util;
+package com.tbs.common.util;
 
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.function.SSupplier;
 import com.tbs.common.util.framework.DelegateUtil;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

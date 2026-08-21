@@ -1,10 +1,11 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.annotation.NoLog;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordExtractForm;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import org.apache.dubbo.config.annotation.DubboReference;
@@ -40,6 +41,7 @@ public class AdminSystemLogController extends BaseController {
      *
      * @return 日志操作类型列表及统计结果
      */
+    @NoLog
     @GetMapping("listWithOpType")
     @AjaxResponseType(Object.class)
     @PreAuthorize("@preAuthUtils.accountActived")
@@ -56,6 +58,7 @@ public class AdminSystemLogController extends BaseController {
      * @param keyword 关键词(可选)
      * @return 操作类型列表
      */
+    @NoLog
     @GetMapping("operateTypes")
     @AjaxResponseType(Object.class)
     @PreAuthorize("@preAuthUtils.accountActived")
@@ -72,6 +75,7 @@ public class AdminSystemLogController extends BaseController {
      * @param form 查询条件
      * @return 日志记录分页列表
      */
+    @NoLog
     @PostMapping("listRecord")
     @AjaxResponseType(PageVO.class)
     @PreAuthorize("@preAuthUtils.accountActived")

@@ -327,6 +327,23 @@ UserStatus status = EnumUtil.getByCode(UserStatus.class, 1);
 UserStatus status = EnumUtil.getByValue(UserStatus.class, "active");
 ```
 
+#### 分页工具
+
+**PageUtil - 分页构建工具**
+
+```java
+// 直接构建分页结果
+PageVO<User> page = PageUtil.build(userList, totalCount);
+
+// Lambda 延迟求值
+PageVO<User> page = PageUtil.build(() -> userList, () -> totalCount);
+
+// 异步并行构建（数据查询与计数并行执行）
+PageVO<User> page = PageUtil.build(
+    SimpleDelegateInvoker.class, () -> userList, () -> totalCount
+);
+```
+
 #### 框架工具
 
 **SpringUtil - Spring 上下文工具**
@@ -349,7 +366,69 @@ String uuid = UuidUtil.generate();
 String shortUuid = UuidUtil.generate(16);
 ```
 
-### 7. UUID 生成器
+### 7. 分页支持 (Page)
+
+#### PageVO - 分页实体基类
+
+通用的分页结果封装，包含数据列表和总记录数，支持流式链式调用：
+
+```java
+@Getter
+public class PageVO<T> implements Serializable {
+    private Integer total;   // 总记录数
+    private List<T> data;    // 当前页数据列表
+}
+```
+
+**特性：**
+- 泛型设计，支持任意数据类型
+- 链式 setter 调用，编码简洁
+- 实现 `Serializable`，支持序列化传输
+- `toString()` 自动 JSON 序列化数据部分
+
+#### PageUtil - 分页工具类
+
+提供多种分页结果构建方式，覆盖同步、Lambda 延迟求值、异步代理等场景：
+
+```java
+@Service
+public class UserService {
+    
+    // 方式1：直接构建 —— 已知数据和总数
+    public PageVO<User> getUsers(int page, int size) {
+        List<User> list = userRepository.findByPage(page, size);
+        Integer total = userRepository.countAll();
+        return PageUtil.build(list, total);
+    }
+    
+    // 方式2：Lambda 延迟求值 —— 数据和总数按需获取
+    public PageVO<User> getUsersLazy(int page, int size) {
+        return PageUtil.build(
+            () -> userRepository.findByPage(page, size),
+            () -> userRepository.countAll()
+        );
+    }
+    
+    // 方式3：异步代理 —— 数据查询和计数并行执行
+    public PageVO<User> getUsersAsync(int page, int size) {
+        return PageUtil.build(
+            SimpleDelegateInvoker.class,
+            () -> userRepository.findByPage(page, size),
+            () -> userRepository.countAll()
+        );
+    }
+}
+```
+
+**方法矩阵：**
+
+| 方法签名 | 场景 | 说明 |
+|----------|------|------|
+| `build(List<T>, Integer)` | 同步直接构建 | 数据与总数已知 |
+| `build(SSupplier<List<T>>, SSupplier<Integer>)` | Lambda 延迟求值 | 按需获取，简化调用 |
+| `build(Class<? extends IDelegateInvoker>, SSupplier, SSupplier)` | 异步并行构建 | 数据查询与计数并行执行，提升性能 |
+
+### 8. UUID 生成器
 
 #### 核心接口
 

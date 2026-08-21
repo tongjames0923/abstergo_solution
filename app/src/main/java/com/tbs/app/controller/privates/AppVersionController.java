@@ -9,7 +9,7 @@ import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.criteria.AppVersionCriteria;
 import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionEntity;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

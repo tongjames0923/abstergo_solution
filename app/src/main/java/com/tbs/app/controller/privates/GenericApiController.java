@@ -2,6 +2,7 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.web.AbstractCrudController;
+import com.tbs.common.data.PageVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.criteria.CommonGenericApiCriteria;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
@@ -103,7 +104,7 @@ public class GenericApiController
      */
     @Override
     @PostMapping("query")
-    @AjaxResponseType(value = com.tbs.shared.pojo.model.PageVO.class, genericArgs = {SystemGenericApiEntity.class})
+    @AjaxResponseType(value = PageVO.class, genericArgs = {SystemGenericApiEntity.class})
     @Operation(summary = "查询泛化API配置列表", description = "分页查询泛化API配置列表")
     @ApiResponse(responseCode = "200", description = "成功查询泛化API配置列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
