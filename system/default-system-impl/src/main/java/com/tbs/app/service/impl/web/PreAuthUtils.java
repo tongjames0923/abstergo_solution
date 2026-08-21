@@ -1,13 +1,16 @@
 package com.tbs.app.service.impl.web;
 
+import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.enums.SystemRoleTypeEnum;
 import com.tbs.web.uitl.AuthUtil;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.Resource;
 import java.util.Objects;
 
 /**
@@ -17,6 +20,9 @@ import java.util.Objects;
  */
 @Component
 public class PreAuthUtils {
+
+    @Resource
+    private AppSettingProperty appSettingProperty;
 
     public static final boolean isAccountActived(UserDetails d) {
         return d != null && d.isEnabled() && d.isAccountNonLocked();
@@ -29,6 +35,13 @@ public class PreAuthUtils {
      * @return
      */
     public static final boolean hasPermission(String permission) {
+        return SpringUtil.getBean(PreAuthUtils.class).hasApiPermission(permission);
+    }
+
+    public boolean hasApiPermission(String permission) {
+        if (!appSettingProperty.isEnableApiPermission()) {
+            return true;
+        }
         if (StrUtil.isEmpty(permission)) {
             return true;
         }

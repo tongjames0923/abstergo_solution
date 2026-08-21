@@ -56,5 +56,10 @@ public class AppSettingProperty {
      */
     Class<? extends IErrorThrowEvent> errorThrowEventImpl = SimpleErrorThrowEvent.class;
 
+    /**
+     * 是否启用API权限
+     */
+    private boolean enableApiPermission = true;
+
 
 }

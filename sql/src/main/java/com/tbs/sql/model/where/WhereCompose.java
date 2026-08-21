@@ -21,5 +21,5 @@ public class WhereCompose implements Serializable {
 
     @Getter
     @Setter
-    private List<WhereNode> children = new ArrayList<>(32);
+    private List<WhereNode> children = new ArrayList<>(4);
 }

@@ -36,7 +36,7 @@ import java.util.Date;
         @Index(name = "idx_flag", columnList = "flag")})
 @AllArgsConstructor
 @NoArgsConstructor
-@LogicDeleteEntity(activeFlagValues = {1, -1})
+@LogicDeleteEntity(activeFlagValues = {1, -1}, onNullIsDeleted = false)
 public class SystemRoleGroupRelationEntity
     implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>,
     ICommonDeleteAuditable<Long>, Serializable {
