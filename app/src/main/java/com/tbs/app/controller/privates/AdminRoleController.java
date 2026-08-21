@@ -3,13 +3,13 @@ package com.tbs.app.controller.privates;
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.common.data.PageVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.common.data.PageVO;
 import com.tbs.sql.model.query.QueryPageModel;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
@@ -76,7 +76,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "查询权限列表", description = "根据条件查询权限列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询权限列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLES')")
     public AjaxResult query(
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleQueryCriteria criteria,
         @Parameter(name = "page", description = "页码") @RequestParam(required = false) Long page,
@@ -98,7 +98,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "激活用户账户", description = "激活指定用户的账户")
     @ApiResponse(responseCode = "200", description = "成功激活用户账户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.ACTIVE.ACCOUNT')")
     public AjaxResult activiteAccount(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);
@@ -119,7 +119,7 @@ public class AdminRoleController extends BaseController {
     @Operation(summary = "禁用用户账户", description = "禁用指定用户的账户")
     @ApiResponse(responseCode = "200", description = "成功禁用用户账户",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.ACTIVE.ACCOUNT')")
     public AjaxResult disableAccount(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         SystemUserEntity user = userService.queryById(userId);
