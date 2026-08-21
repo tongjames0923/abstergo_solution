@@ -44,7 +44,7 @@ public class AdminSystemLogController extends BaseController {
     @NoLog
     @GetMapping("listWithOpType")
     @AjaxResponseType(Object.class)
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult listWithOpType() {
         return successResult(systemLogService.getLogOperateTypeList(28));
     }
@@ -61,7 +61,7 @@ public class AdminSystemLogController extends BaseController {
     @NoLog
     @GetMapping("operateTypes")
     @AjaxResponseType(Object.class)
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult getOperateTypes(@RequestParam(required = false) String keyword) {
         return successResult(systemLogService.getOperateTypeList(keyword));
     }
@@ -78,7 +78,7 @@ public class AdminSystemLogController extends BaseController {
     @NoLog
     @PostMapping("listRecord")
     @AjaxResponseType(PageVO.class)
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult listRecord(@RequestBody LoggingRecordExtractForm form) {
         return successResult(systemLogService.getLogRecordList(form));
     }
@@ -93,7 +93,7 @@ public class AdminSystemLogController extends BaseController {
      */
     @PostMapping("forceFlush")
     @AjaxResponseType(Object.class)
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.FLUSH')")
     public AjaxResult forceFlush() {
         recorder.flush();
         return successResult();

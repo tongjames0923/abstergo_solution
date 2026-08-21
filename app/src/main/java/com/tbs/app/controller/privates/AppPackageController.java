@@ -53,7 +53,7 @@ public class AppPackageController
     @Operation(summary = "获取安装包详情", description = "根据ID获取安装包详情")
     @ApiResponse(responseCode = "200", description = "成功获取安装包详情",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.PACKAGE.QUERY')")
     public AjaxResult get(@Parameter(name = "id", description = "安装包ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
@@ -70,7 +70,7 @@ public class AppPackageController
     @Operation(summary = "保存安装包", description = "新建或编辑安装包信息")
     @ApiResponse(responseCode = "200", description = "成功保存安装包",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.PACKAGE.SAVE')")
     public AjaxResult save(@Parameter(name = "entity", description = "安装包实体",
         required = true) @RequestBody AppPackageEntity entity) {
         return super.save(entity);
@@ -88,7 +88,7 @@ public class AppPackageController
     @Operation(summary = "删除安装包", description = "根据ID删除安装包")
     @ApiResponse(responseCode = "200", description = "成功删除安装包",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.PACKAGE.DELETE')")
     public AjaxResult delete(
         @Parameter(name = "id", description = "安装包ID", required = true) @PathVariable Long id) {
         return super.delete(id);
@@ -108,7 +108,7 @@ public class AppPackageController
     @Operation(summary = "查询安装包列表", description = "分页查询安装包列表")
     @ApiResponse(responseCode = "200", description = "成功查询安装包列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.PACKAGE.QUERY')")
     public AjaxResult query(@Parameter(name = "criteria", description = "查询条件") @RequestBody(
             required = false) AppPackageCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false,
@@ -129,7 +129,7 @@ public class AppPackageController
     @Operation(summary = "按版本查询安装包", description = "查询指定版本下的全部安装包")
     @ApiResponse(responseCode = "200", description = "成功查询版本下的安装包列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.PACKAGE.QUERY')")
     public AjaxResult listByVersion(
         @Parameter(name = "versionId", description = "版本ID", required = true) @PathVariable Long versionId) {
         return successResult(appPackageService.listByVersionId(versionId));
