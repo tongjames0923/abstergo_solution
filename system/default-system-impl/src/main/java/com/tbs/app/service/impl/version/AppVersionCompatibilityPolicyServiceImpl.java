@@ -15,7 +15,7 @@ import com.tbs.common.util.function.EnumUtil;
 import com.tbs.oss.core.OssClient;
 import com.tbs.shared.enums.AppVersionCompatibilityActionEnum;
 import com.tbs.shared.enums.CommonFlagEnum;
-import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.version.AppVersionComptMapper;
 import com.tbs.shared.pojo.entity.version.AppPackageEntity;
@@ -42,8 +42,8 @@ import java.util.Optional;
  * @author abstergo
  */
 @Slf4j
-public class AppVersionCompatibilityPolicyServiceImpl
-    extends AbstractLogicDeleteFullFeatureServiceTemplate<AppVersionCompatibilityPolicyEntity, Long, AppVersionComptMapper>
+public class AppVersionCompatibilityPolicyServiceImpl extends
+    AbstractPhysicDeleteFullFeatureServiceTemplate<AppVersionCompatibilityPolicyEntity, Long, AppVersionComptMapper>
     implements IAppVersionCompatibilityPolicyService {
 
     @Resource
@@ -71,11 +71,6 @@ public class AppVersionCompatibilityPolicyServiceImpl
     @Override
     protected AppVersionCompatibilityPolicyEntity newEntity() {
         return new AppVersionCompatibilityPolicyEntity();
-    }
-
-    @Override
-    protected Integer getFlagDeleted() {
-        return CommonFlagEnum.DELETED.getCode();
     }
 
     @Override
