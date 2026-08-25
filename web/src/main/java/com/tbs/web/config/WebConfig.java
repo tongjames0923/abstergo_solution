@@ -1,21 +1,17 @@
 package com.tbs.web.config;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.tbs.common.context.ContextPropagator;
-import com.tbs.web.context.RequestContextPropagator;
-import com.tbs.web.security.authentication.SecurityContextPropagator;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
+import com.tbs.web.context.RequestContextPropagator;
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.gate.center.impl.LoginGateWayCenter;
+import com.tbs.web.security.authentication.SecurityContextPropagator;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -69,37 +65,6 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
      */
     @Resource
     private WebProperty webProperty;
-
-    //    /**
-    //     * 安全配置
-    //     *
-    //     * 当配置项 tbs.web.auth.enable 为 true 时，启用认证模式，配置令牌认证过滤器、异常处理、用户详情服务和认证提供者 当配置项 tbs.web.auth.enable 为 false
-    //     * 或未配置时，使用无认证模式，仅配置异常处理
-    //     *
-    //     * @param http                      Security HTTP 安全对象
-    //     * @param tokenAuthenticationFilter 令牌认证过滤器
-    //     * @param authenticationEntryPoint  认证入口点
-    //     * @param accessDeniedHandler       访问拒绝处理器
-    //     * @param provider                  默认用户认证服务提供者
-    //     * @param userDetailsService        用户详情服务
-    //     * @param authPropertyEnabled       认证是否启用
-    //     * @return 安全过滤器链
-    //     * @throws Exception 配置异常
-    //     */
-    //    @Bean
-    //    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    //    public SecurityFilterChain webSecurityConfigurerAdapterWithAuth(HttpSecurity http,) throws Exception {
-    //
-    //        return http.build();
-    //
-    //    }
-    //
-    //    @Bean
-    //    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "false", matchIfMissing = true)
-    //    public SecurityFilterChain webSecurityConfigurerAdapterWithNoAuth(HttpSecurity http) throws Exception {
-    //        setSecurity(http);
-    //        return http.build();
-    //    }
 
     @Bean
     ContextPropagator requestContextPropagator() {

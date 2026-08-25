@@ -1,6 +1,6 @@
 package com.tbs.common.annotation;
 
-import com.tbs.common.CommonPackAutoRegister;
+import com.tbs.common.config.CommonPackAutoRegister;
 import org.springframework.context.annotation.Import;
 
 import java.lang.annotation.*;

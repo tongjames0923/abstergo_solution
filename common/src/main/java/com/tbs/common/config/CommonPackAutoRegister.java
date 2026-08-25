@@ -1,4 +1,7 @@
-package com.tbs.common;
+package com.tbs.common.config;
+
+import com.tbs.common.AbstractAutoBeanRegister;
+import com.tbs.common.Feature;
 
 /**
  * 通用包自动注册器

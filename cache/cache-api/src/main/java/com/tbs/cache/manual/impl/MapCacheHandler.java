@@ -33,6 +33,6 @@ public class MapCacheHandler implements IManualCacheHandler {
 
     @Override
     public Collection<String> keys() {
-        return List.of();
+        return List.copyOf(cache.keySet());
     }
 }
