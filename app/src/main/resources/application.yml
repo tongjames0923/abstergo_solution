@@ -33,7 +33,7 @@ logging:
   level:
     com.alibaba: warn
     org.apache: warn
-
+    com.tbs.cache: debug
 # 应用自定义配置
 app:
   gateway:

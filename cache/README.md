@@ -2,307 +2,518 @@
 
 ## 模块概述
 
-Cache模块是一个基于Spring Cache框架的增强缓存解决方案，提供了TTL（Time To Live）缓存、缓存操作监控、缓存限制等高级功能。该模块采用模块化设计，分为API接口层和实现层，支持灵活的配置和扩展。
+Cache 模块是基于 Spring Cache 的增强缓存框架，提供 **TTL 过期控制**、**多级缓存编排**、**`@ExpireOn` 主动过期**、**缓存监听**、**操作监控** 等能力。
 
-## 核心特性
+核心设计：
 
-### 1. TTL缓存支持
-- 支持基于时间的缓存过期机制
-- 可配置的过期时间管理
-- 支持单个缓存项和批量缓存项的过期控制
-
-### 2. 缓存操作监控
-- 完整的缓存操作记录（put/get/remove）
-- 操作次数统计和时间戳记录
-- 异步操作记录，不影响主业务流程
-
-### 3. 缓存限制器
-- 可配置的缓存执行限制
-- 防止缓存滥用和过度使用
-- 与操作记录器协同工作
-
-### 4. 手动缓存处理器
-- 提供手动缓存操作接口
-- 支持多种缓存存储后端（默认使用HashMap）
-- 线程安全的缓存操作
-
-### 5. 缓存监听器
-- 支持缓存事件的监听
-- 可扩展的监听器接口
-- 支持多种缓存操作事件
+- **装饰器链**：通过 `ITtlCacheDecorator`  SPI 将任意 Spring Cache 装饰为 TTL 缓存，按 `order` 匹配最优装饰器
+- **多级编排**：通过 `ILevelCacheProvider` SPI 组装 L1/L2/... 层级，读穿透、分层写、全层失效
+- **TTL 策略**：`ICacheTtlPolicy` 是 TTL 的唯一事实来源，支持全局默认 + per-cacheName 覆盖
+- **双场景接入**：常规单级（`DefaultTtlAdaptCacheMananger`）与多级（`MultiLevelTtlCacheMananger`）通过配置开关切换
 
 ## 模块结构
 
 ```
 cache/
-├── cache-api/          # API接口定义模块
-│   ├── src/main/java/com/tbs/cache/
-│   │   ├── ICacheListenner.java          # 缓存监听器接口
-│   │   ├── ITtlCacheDecorator.java       # TTL缓存装饰器接口
-│   │   ├── CacheUtils.java               # 缓存工具类
-│   │   ├── manual/                       # 手动缓存处理
-│   │   ├── limit/                        # 缓存限制相关
-│   │   ├── expire/                       # 过期处理
-│   │   └── integration/                  # 集成相关
-│   └── pom.xml
-├── cache-impl/         # 实现模块
-│   ├── src/main/java/com/tbs/cache/
-│   │   ├── impl/                         # 具体实现类
-│   │   └── config/                       # 配置类
-│   └── pom.xml
-└── pom.xml             # 主pom文件
+├── cache-api/                    # API 契约层（不含实现依赖）
+│   └── com.tbs.cache/
+│       ├── annotation/           # @EnableTbsCache 启用注解
+│       ├── config/               # CachePackAutoRegister 自动扫描注册
+│       ├── expire/               # @ExpireOn 主动过期（注解 + AOP + 过期管理）
+│       ├── integration/          # 核心集成抽象（装饰器链、多级编排、TTL 适配）
+│       ├── limit/                # 缓存操作限制器
+│       ├── manual/               # 手动缓存处理器
+│       ├── policy/               # TTL 策略（ICacheTtlPolicy + 默认实现）
+│       ├── serialize/            # @CacheTransform 值序列化转换
+│       ├── CacheUtils.java       # 手动缓存工具类
+│       ├── ICacheListenner.java  # 缓存监听器接口
+│       ├── IListenable.java      # 可监听标记接口
+│       └── ITtlCacheDecorator.java  # TTL 装饰器 SPI
+│
+├── cache-impl/                   # 核心实现层
+│   └── com.tbs.cache/
+│       ├── config/               # 装配层
+│       │   ├── TbsCacheConfig.java          # 主装配（开关切换单级/多级）
+│       │   ├── TbsCacheProperty.java        # tbs.cache.* 属性
+│       │   ├── MultiLevelCacheConfig.java   # 多级缓存装配
+│       │   └── MultiLevelCacheProperty.java # tbs.cache.multi-level.* 属性
+│       └── impl/
+│           ├── DefaultTtlAdaptCacheMananger.java   # 常规单级管理器
+│           ├── DefaultTtlCacheDecorator.java       # 默认装饰器（兜底）
+│           ├── AdaptScheduleExpireTtlCache.java    # 调度式过期适配器
+│           ├── MultiLevelTtlCacheMananger.java     # 多级管理器
+│           ├── MultiLevelTtlCacheDecorator.java    # 多层缓存装饰器
+│           ├── MultiLevelAdaptTtlCache.java        # 多层 TTL 适配
+│           └── TransactionAwareCacheUnwrapperExtension.java  # 事务感知解包
+│
+├── cache-caffeine-impl/          # Caffeine 引擎实现
+│   └── com.tbs.cache.caffeine/
+│       ├── config/               # 装配层
+│       │   ├── CaffeineCacheConfig.java       # 常规单级 CaffeineCacheManager
+│       │   ├── CaffeineLevelCacheConfig.java  # 多级 L1 装配
+│       │   └── property/
+│       │       └── CaffeineLevelCacheProperty.java  # tbs.cache.level.caffeine.*
+│       ├── level/
+│       │   └── CaffeineLevelCacheProvider.java  # L1 层级提供者（order=0）
+│       └── adapt/
+│           ├── CaffeineAdaptTtlCache.java       # 调度式过期适配器
+│           └── CaffeineTtlCacheDecorator.java   # TTL 装饰器（order=1000）
+│
+└── pom.xml                       # 父 POM（提供公共依赖）
 ```
 
-## 快速开始
+**redis-mod 中的缓存实现**（`com.tbs.cache.redis` 包）：
 
-### 1. 添加依赖
+| 类 | 职责 |
+|----|------|
+| `RedissonAdaptTtlCache` | Redisson TTL 适配器（原生条目级过期） |
+| `RedissonTtlCacheDecorator` | Redisson TTL 装饰器（order=1000） |
+| `RedissonLevelCacheProvider` | Redisson L2 层级提供者（order=1000） |
 
-```xml
-<dependency>
-    <groupId>com.tbs</groupId>
-    <artifactId>cache</artifactId>
-    <version>1.0-SNAPSHOT</version>
-</dependency>
+## 架构总览
+
+### 常规单级链路
+
+```
+应用层 @Cacheable / @CachePut
+    ↓
+AbstractTtlAdaptCacheMananger（SYSTEM:CACHE: 前缀管理）
+    ↓ getMissingCache → createCacheOnMissCache → decorateCache
+DefaultTtlAdaptCacheMananger
+    ↓ getOriginal() 按类型查找预配置 Bean
+CaffeineCacheManager / RedissonSpringCacheManager（业务预配置）
+    ↓ 创建原始 Cache
+ITtlCacheDecorator 装饰器链（按 order 匹配）
+    ↓ order=1000 优先
+CaffeineTtlCacheDecorator → CaffeineAdaptTtlCache（调度式过期）
+RedissonTtlCacheDecorator → RedissonAdaptTtlCache（原生条目过期）
+    ↓ order=LOWEST_PRECEDENCE 兜底
+DefaultTtlCacheDecorator → AdaptScheduleExpireTtlCache（调度式过期）
 ```
 
-### 2. 配置缓存
+### 多级缓存链路
 
-在Spring Boot配置文件中添加缓存配置：
+```
+应用层 @Cacheable / @CachePut
+    ↓
+MultiLevelTtlCacheMananger（自管创建，收集 ILevelCacheProvider）
+    ↓ createCacheOnMissCache() 绑定 per-cacheName TTL
+DefaultMultiLevelCache（编排层：读穿透、分层写、全层失效）
+    ├── L1 CaffeineCache（order=0，进程内最快）
+    └── L2 RedissonCache（order=1000，分布式共享）
+    ↑ 外层装饰
+MultiLevelTtlCacheDecorator（order=1000，识别 AbstractMultiLevelCache）
+    → MultiLevelAdaptTtlCache（将各层分别交给对应装饰器包装）
+```
+
+### 开关切换
 
 ```yaml
 tbs:
   cache:
-    cache-manager-impl: org.springframework.cache.concurrent.ConcurrentMapCacheManager
+    multi-level:
+      enabled: true   # true → MultiLevelTtlCacheMananger
+                      # false → DefaultTtlAdaptCacheMananger（常规单级）
+```
+
+`TbsCacheConfig.adaptCacheMananger()` 根据此开关创建唯一 `@Primary` 管理器。
+
+## 核心概念
+
+### 1. TTL 装饰器 SPI（ITtlCacheDecorator）
+
+```java
+public interface ITtlCacheDecorator extends Ordered {
+    boolean support(Cache cache, CacheManager manager);
+    AbstractTtlCache decorateCache(Cache cache, CacheManager manager);
+    default int getOrder() { return Ordered.LOWEST_PRECEDENCE; }
+}
+```
+
+管理器在 `decorateCacheToTtl()` 中按 `order` 升序遍历装饰器链，首个 `support()` 返回 `true` 的装饰器生效。
+
+**内置装饰器**：
+
+| 装饰器 | order | 匹配条件 | 适配器 |
+|--------|-------|----------|--------|
+| `CaffeineTtlCacheDecorator` | 1000 | `instanceof CaffeineCache` | `CaffeineAdaptTtlCache` |
+| `RedissonTtlCacheDecorator` | 1000 | `instanceof RedissonCache` | `RedissonAdaptTtlCache` |
+| `MultiLevelTtlCacheDecorator` | 1000 | `instanceof AbstractMultiLevelCache` | `MultiLevelAdaptTtlCache` |
+| `DefaultTtlCacheDecorator` | LOWEST_PRECEDENCE | 全部（兜底） | `AdaptScheduleExpireTtlCache` |
+
+### 2. 层级缓存 SPI（ILevelCacheProvider）
+
+```java
+public interface ILevelCacheProvider {
+    default int getOrder() { return 0; }
+    default boolean support(String cacheName) { return true; }
+    Cache getCache(String name);
+    default Cache getCache(String name, Duration ttl) { return getCache(name); }
+    default void configure(Map<String, Object> props) {}
+}
+```
+
+**内置实现**：
+
+| 提供者 | order | 引擎 | 过期能力 |
+|--------|-------|------|----------|
+| `CaffeineLevelCacheProvider` | 0 | Caffeine（进程内） | 缓存级 `expireAfterWrite`，TTL = min(全局, 业务) |
+| `RedissonLevelCacheProvider` | 1000 | Redisson RMapCache（分布式） | 条目级 `expireEntry()`，TTL = min(全局, 业务) |
+
+### 3. TTL 策略（ICacheTtlPolicy）
+
+```java
+public interface ICacheTtlPolicy {
+    Duration ttlOf(String cacheName);          // 获取 TTL（覆盖 > 默认）
+    Optional<Duration> findOverride(String cacheName);  // 仅查覆盖
+    Duration defaultTtl();                     // 全局默认
+}
+```
+
+默认实现 `DefaultCacheTtlPolicy`：全局默认 + per-cacheName 覆盖，由 `MultiLevelCacheConfig` 在多级启用时注册。
+
+### 4. @ExpireOn 主动过期
+
+```java
+@Retention(RUNTIME) @Target(METHOD)
+public @interface ExpireOn {
+    long value() default 0;              // 过期时长
+    TimeUnit timeUnit() default SECONDS; // 时间单位
+    String[] cacheNames() default {};    // 目标缓存名
+    boolean expireAll() default false;   // 是否全部过期
+}
+```
+
+需与 `@Cacheable` / `@CachePut` 组合使用。`ExpireAop` 切面在方法执行后异步提交过期任务，通过 `callToExpire` / `callToExpireAll` 写入过期请求，下次 `put` 时触发实际过期。
+
+### 5. 缓存监听器（ICacheListenner）
+
+```java
+public interface ICacheListenner {
+    boolean support(Cache cache);
+    void onGet(String cacheName, Object key, Object value);
+    void onPut(String cacheName, Object key, Object value);
+    void onEvict(String cacheName, Object key);
+    void onClear(String cacheName);
+    void calledExpire(String cacheName, Object key, Date expireTime);
+}
+```
+
+`AbstractTtlCache` 在 get/put/evict/clear/expire 时自动回调已注册的监听器。
+
+### 6. 值序列化转换（@CacheTransform）
+
+标注在实体类上，指定 `IDataBridge` 实现，`AbstractTtlCache` 在 `get` 时执行 `TRANSFORM_READ`、`put` 时执行 `TRANSFORM_WRITE`，实现缓存值的自动序列化/反序列化转换。
+
+## 配置参考
+
+### 常规缓存（tbs.cache）
+
+```yaml
+tbs:
+  cache:
+    # 常规单级 CacheManager 实现类（多级启用后此项闲置）
+    cache-manager-impl: org.springframework.cache.caffeine.CaffeineCacheManager
+    # 以下组件均有默认实现，通常无需覆盖
     ttl-cache-decorator: com.tbs.cache.impl.DefaultTtlCacheDecorator
     recorder: com.tbs.cache.limit.impl.SimpleCacheOperationRecorder
     manual-cache-handler: com.tbs.cache.manual.impl.MapCacheHandler
     cache-limiter: com.tbs.cache.limit.impl.SimpleCacheLimiter
 ```
 
-### 3. 启用缓存
+### 多级缓存（tbs.cache.multi-level）
 
-在配置类上添加注解：
+```yaml
+tbs:
+  cache:
+    multi-level:
+      enabled: true
+      ttl:
+        default-ttl: 1h           # 全局默认 TTL
+        overrides:                # per-cacheName 覆盖
+          userCache: 30m
+          dictCache: 24h
+```
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `enabled` | boolean | false | 多级缓存总开关 |
+| `ttl.default-ttl` | Duration | 1h | 未在 overrides 中声明的 cacheName 使用此值 |
+| `ttl.overrides` | Map<String, Duration> | {} | 按业务 cacheName（不带前缀）覆盖 TTL |
+
+### Caffeine 引擎（tbs.cache.level.caffeine）
+
+```yaml
+tbs:
+  cache:
+    level:
+      caffeine:
+        maximum-size: 10000       # 每实例最大条目数（LRU 淘汰）
+        expire-after-write: 60s   # 缓存级原生 TTL / L1 安全网上限
+        record-stats: false       # 启用统计（轻微性能开销）
+        allow-null-values: false  # 是否允许缓存 null
+```
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `maximum-size` | long | 10000 | 超出后 LRU 淘汰 |
+| `expire-after-write` | Duration | 60s | 常规场景作缓存级 TTL；多级场景作 L1 安全网（实际 TTL = min(此值, 业务TTL)） |
+| `record-stats` | boolean | false | 启用后 `cache.stats()` 可获取命中率 |
+| `allow-null-values` | boolean | false | true 时 `put(key, null)` 缓存 null 标记 |
+
+### Redisson 引擎（tbs.redission.cache）
+
+```yaml
+tbs:
+  redission:
+    cache:
+      cache-timeout: 3600     # 全局缓存超时（秒），也作 L2 安全网上限
+      max-idle-time: 1800     # 最大空闲时间（秒）
+      max-size: 2048          # 最大条目数
+      eviction-mode: LRU      # 驱逐模式
+      allow-null-values: false
+      transaction: false
+```
+
+## 快速开始
+
+### 1. 启用缓存
 
 ```java
 @Configuration
-@EnableCaching
-public class CacheConfig {
-    // 配置将自动生效
+@EnableTbsCache   // 导入 CachePackAutoRegister，自动扫描 com.tbs.cache 包
+public class AppConfig {
 }
 ```
 
-## 核心API使用
+### 2. 常规单级使用（Caffeine）
 
-### 缓存工具类 (CacheUtils)
+```yaml
+tbs:
+  cache:
+    cache-manager-impl: org.springframework.cache.caffeine.CaffeineCacheManager
+    level:
+      caffeine:
+        maximum-size: 10000
+        expire-after-write: 60s
+```
 
 ```java
-// 获取缓存实例
-CacheUtils cacheUtils = CacheUtils.getInstance();
+@Service
+public class UserService {
 
-// 放入缓存
-cacheUtils.put("user:1", user);
+    @Cacheable(cacheNames = "userCache", key = "#id")
+    public User findById(Long id) {
+        return userRepository.findById(id).orElse(null);
+    }
 
-// 获取缓存
-ValueWrapper<User> userWrapper = cacheUtils.get("user:1", User.class);
-if (userWrapper.isPresent()) {
-    User user = userWrapper.get();
+    @CachePut(cacheNames = "userCache", key = "#user.id")
+    public User update(User user) {
+        userRepository.save(user);
+        return user;
+    }
+
+    @CacheEvict(cacheNames = "userCache", key = "#id")
+    public void delete(Long id) {
+        userRepository.deleteById(id);
+    }
+}
+```
+
+### 3. @ExpireOn 主动过期
+
+```java
+@Cacheable(cacheNames = "orderCache", key = "#orderId")
+@ExpireOn(value = 30, timeUnit = TimeUnit.MINUTES, cacheNames = "orderCache")
+public Order getOrder(Long orderId) {
+    return orderRepository.findById(orderId).orElse(null);
 }
 
-// 计算并缓存（如果不存在）
-ValueWrapper<User> userWrapper = cacheUtils.computeIfAbsent(
-    "user:1", 
-    () -> userService.findById(1), 
-    User.class
-);
-
-// 删除缓存
-cacheUtils.remove("user:1");
+@CachePut(cacheNames = "reportCache", key = "#type")
+@ExpireOn(value = 1, timeUnit = TimeUnit.HOURS, cacheNames = "reportCache", expireAll = true)
+public Report generateReport(String type) {
+    // ...
+}
 ```
 
-### 手动缓存处理器 (IManualCacheHandler)
+### 4. 多级缓存
 
-```java
-@Autowired
-private IManualCacheHandler manualCacheHandler;
-
-// 基本缓存操作
-manualCacheHandler.put("key", "value");
-Object value = manualCacheHandler.get("key");
-boolean exists = manualCacheHandler.contains("key");
-manualCacheHandler.remove("key");
-Collection<String> keys = manualCacheHandler.keys();
+```yaml
+tbs:
+  cache:
+    multi-level:
+      enabled: true
+      ttl:
+        default-ttl: 1h
+        overrides:
+          userCache: 30m
+    level:
+      caffeine:
+        maximum-size: 10000
+        expire-after-write: 60s
+  redission:
+    cache:
+      cache-timeout: 3600
 ```
 
-### TTL缓存功能
+启用后自动组装：`L1 Caffeine（order=0）` → `L2 Redisson（order=1000）`。
 
-```java
-// 获取TTL缓存装饰器
-@Autowired
-private ITtlCacheDecorator ttlCacheDecorator;
+读取穿透：L1 miss → L2 命中 → 静默回填 L1。
+写入：自底向上（L2 → L1），远层失败快速失败。
+失效：全层尽力而为。
 
-// 装饰缓存为TTL缓存
-AbstractTtlCache ttlCache = ttlCacheDecorator.decorateCache(cache, cacheManager);
-
-// 设置缓存项过期时间
-ttlCache.callToExpire("key", new Date(System.currentTimeMillis() + 3600000)); // 1小时后过期
-
-// 设置所有缓存项过期时间
-ttlCache.callToExpireAll(new Date(System.currentTimeMillis() + 1800000)); // 30分钟后全部过期
-```
-
-## 高级功能
-
-### 缓存操作记录
-
-缓存操作记录器会记录每个缓存键的操作统计信息：
-
-```java
-@Autowired
-private ICacheOperationRecorder recorder;
-
-// 获取缓存操作视图
-ICacheOperationView operationView = recorder.getCacheOperationView(handler, "key");
-
-// 查看操作统计
-int putCount = operationView.getPutCount();      // 存入次数
-int getCount = operationView.getGetCount();      // 获取次数
-int removeCount = operationView.getRemoveCount(); // 删除次数
-Date lastPutTime = operationView.getLastPutTime(); // 最后存入时间
-```
-
-### 缓存监听器
-
-实现自定义缓存监听器来监听缓存事件：
+### 5. 缓存监听器
 
 ```java
 @Component
-public class CustomCacheListener implements ICacheListenner {
-    
+public class MetricsCacheListener implements ICacheListenner {
+
     @Override
     public boolean support(Cache cache) {
-        return cache.getName().startsWith("user");
+        return true; // 监听所有缓存
     }
-    
+
     @Override
     public void onGet(String cacheName, Object key, Object value) {
-        log.info("缓存获取: {} - {}", cacheName, key);
+        // 统计命中率
     }
-    
+
     @Override
-    public void onPut(String cacheName, Object key, Object value) {
-        log.info("缓存设置: {} - {}", cacheName, key);
-    }
-    
+    public void onPut(String cacheName, Object key, Object value) { }
+
     @Override
-    public void onEvict(String cacheName, Object key) {
-        log.info("缓存删除: {} - {}", cacheName, key);
-    }
-    
+    public void onEvict(String cacheName, Object key) { }
+
     @Override
-    public void onClear(String cacheName) {
-        log.info("缓存清空: {}", cacheName);
-    }
+    public void onClear(String cacheName) { }
+
+    @Override
+    public void calledExpire(String cacheName, Object key, Date expireTime) { }
 }
 ```
 
-### 缓存限制器
-
-缓存限制器可以防止缓存滥用：
+### 6. CacheUtils 手动缓存
 
 ```java
-@Autowired
-private ICacheLimiter cacheLimiter;
+@Resource
+private CacheUtils cacheUtils;
 
-// 限制器会在缓存操作时自动执行限制逻辑
-// 可自定义实现复杂的限制策略
+// 基本操作
+cacheUtils.put("key", value);
+ValueWrapper<User> wrapper = cacheUtils.get("key", User.class);
+cacheUtils.remove("key");
+
+// 不存在则计算
+ValueWrapper<User> wrapper = cacheUtils.computeIfAbsent("key",
+    () -> userService.findById(1), User.class);
+
+// 注解方式（走 Spring Cache 链路）
+cacheUtils.cacheableSet("key", value);
+Object val = cacheUtils.cacheableGet("key");
+cacheUtils.cacheableEvict("key");
+cacheUtils.cacheableEvictAll();
 ```
-
-## 配置选项
-
-### TbsCacheProperty 配置属性
-
-| 属性 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| cacheManagerImpl | Class | ConcurrentMapCacheManager | 缓存管理器实现类 |
-| ttlCacheDecorator | Class | DefaultTtlCacheDecorator | TTL缓存装饰器实现类 |
-| recorder | Class | SimpleCacheOperationRecorder | 缓存操作记录器实现类 |
-| manualCacheHandler | Class | MapCacheHandler | 手动缓存处理器实现类 |
-| cacheLimiter | Class | SimpleCacheLimiter | 缓存限制器实现类 |
 
 ## 扩展开发
 
-### 自定义缓存处理器
+### 自定义层级提供者
 
 ```java
-@Component
-public class CustomCacheHandler implements IManualCacheHandler {
-    private final Map<String, Object> cache = new ConcurrentHashMap<>();
-    
+public class HazelcastLevelCacheProvider implements ILevelCacheProvider {
+
     @Override
-    public void put(String key, Object value) {
-        cache.put(key, value);
-    }
-    
+    public int getOrder() { return 500; } // L1.5，位于 Caffeine(0) 和 Redisson(1000) 之间
+
     @Override
-    public Object get(String key) {
-        return cache.get(key);
+    public Cache getCache(String name, Duration ttl) {
+        // 创建 Hazelcast 缓存实例
     }
-    
-    // 实现其他接口方法...
 }
 ```
 
-### 自定义TTL缓存装饰器
+在配置类中注册为 Bean 即可被 `MultiLevelTtlCacheMananger` 自动收集。
+
+### 自定义 TTL 装饰器
 
 ```java
 @Component
 public class CustomTtlCacheDecorator implements ITtlCacheDecorator {
-    
+
+    @Override
+    public boolean support(Cache cache, CacheManager manager) {
+        return cache instanceof CustomCache;
+    }
+
     @Override
     public AbstractTtlCache decorateCache(Cache cache, CacheManager manager) {
-        return new CustomTtlCache(cache);
+        return new CustomAdaptTtlCache((CustomCache) cache);
     }
+
+    @Override
+    public int getOrder() { return 500; } // 先于默认兜底，后于 1000
+}
+```
+
+### 自定义 TTL 策略
+
+```java
+@Bean
+@Primary
+ICacheTtlPolicy customTtlPolicy() {
+    return new ICacheTtlPolicy() {
+        @Override
+        public Duration ttlOf(String cacheName) {
+            // 从数据库/配置中心动态获取
+        }
+        @Override
+        public Optional<Duration> findOverride(String cacheName) {
+            return Optional.ofNullable(ttlOf(cacheName));
+        }
+        @Override
+        public Duration defaultTtl() { return Duration.ofHours(1); }
+    };
 }
 ```
 
 ## 依赖关系
 
-- **Spring Boot Starter Cache**: 提供基础的缓存功能
-- **Common模块**: 提供通用工具和基础类
-- **Async模块**: 提供异步执行支持
-- **Spring Boot Starter AOP**: 提供AOP支持
+```
+cache-api ──────── common, async（ISchedule）, spring-boot-starter-cache, spring-boot-starter-aop
+cache-impl ─────── cache-api
+cache-caffeine-impl ── cache-api, caffeine, spring-context-support
+redis-mod（缓存部分）── cache-api, redisson
+```
 
 ## 最佳实践
 
-1. **合理设置TTL**: 根据业务需求设置合适的缓存过期时间
-2. **监控缓存命中率**: 使用操作记录器监控缓存使用情况
-3. **避免缓存穿透**: 使用computeIfAbsent方法防止缓存穿透
-4. **合理使用缓存监听器**: 用于业务监控和日志记录
-5. **配置缓存限制**: 防止缓存被过度使用
+1. **TTL 安全网**：各层引擎的全局 TTL 配置作为安全网上限，`effectiveTtl = min(全局, 业务TTL)`，确保缓存不会无限存活
+2. **L1 < L2 存活**：L1 的 `expireAfterWrite` 应小于 L2 的 `cacheTimeout`，避免读到过期数据
+3. **per-cacheName TTL**：通过 `tbs.cache.multi-level.ttl.overrides` 为高频变更的缓存设置较短 TTL
+4. **监控命中率**：启用 `record-stats: true` 配合 `ICacheListenner` 监控缓存健康度
+5. **空值防护**：`allow-null-values: false` 时注意 `@Cacheable` 返回 null 的异常处理
+6. **事务安全**：`TransactionAwareCacheUnwrapperExtension` 自动解包事务感知缓存，业务代码无需手动处理
 
 ## 故障排除
 
-### 常见问题
+| 问题 | 排查方向 |
+|------|----------|
+| 缓存不生效 | 检查 `@EnableTbsCache` 是否标注；检查 `tbs.cache.cache-manager-impl` 配置 |
+| TTL 未生效 | 确认对应引擎的装饰器 order < `DefaultTtlCacheDecorator`（LOWEST_PRECEDENCE） |
+| 多级未命中 | 检查 `tbs.cache.multi-level.enabled=true`；确认 `ILevelCacheProvider` Bean 已注册 |
+| @ExpireOn 不触发 | 必须与 `@Cacheable`/`@CachePut` 组合；检查 `value > 0` |
+| 装饰器未匹配 | 日志搜索 `No TTL cache decorator found`，检查引擎依赖是否引入 |
 
-1. **缓存不生效**: 检查是否启用了@EnableCaching注解
-2. **TTL功能无效**: 确认TTL缓存装饰器配置正确
-3. **操作记录为空**: 检查异步配置和线程池设置
-
-### 日志调试
-
-启用调试日志来查看缓存操作详情：
+启用调试日志：
 
 ```yaml
 logging:
   level:
     com.tbs.cache: DEBUG
+    com.tbs.cache.caffeine: DEBUG
+    com.tbs.cache.redis: DEBUG
 ```
-
-## 许可证
-
-本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
 
 ---
 
-**最后更新**: 2026年6月
+**最后更新**: 2026年8月
 **版本**: 1.0-SNAPSHOT
