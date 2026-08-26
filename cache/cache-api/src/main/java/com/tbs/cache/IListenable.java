@@ -3,6 +3,8 @@ package com.tbs.cache;
 import com.tbs.common.data.ValueWrapper;
 import org.springframework.cache.Cache;
 
+import java.util.Date;
+
 /**
  * 缓存可监听接口
  * <p>
@@ -59,4 +61,14 @@ public interface IListenable {
      */
     void onClear(Cache cache);
 
+    /**
+     * 缓存过期事件回调
+     * <p>
+     * 当缓存值过期时触发此方法
+     * </p>
+     *
+     * @param cache 缓存实例
+     * @param key   缓存键
+     */
+    void onExpire(Cache cache, Object key, Date e);
 }

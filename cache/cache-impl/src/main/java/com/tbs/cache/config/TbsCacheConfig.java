@@ -1,8 +1,8 @@
 package com.tbs.cache.config;
 
-import com.tbs.cache.ITtlCacheDecorator;
+import com.tbs.cache.expire.IExpireDetailsManager;
+import com.tbs.cache.expire.impl.LocalMapExpireDetailsManager;
 import com.tbs.cache.impl.DefaultTtlAdaptCacheMananger;
-import com.tbs.cache.impl.DefaultTtlCacheDecorator;
 import com.tbs.cache.integration.AbstractTtlAdaptCacheMananger;
 import com.tbs.cache.limit.ICacheLimiter;
 import com.tbs.cache.limit.ICacheOperationRecorder;
@@ -53,20 +53,11 @@ public class TbsCacheConfig {
         return new DefaultTtlAdaptCacheMananger(cacheProperty.getCacheManagerImpl());
     }
 
-    /**
-     * 创建并配置TTL缓存装饰器
-     * <p>
-     * 如果容器中不存在ITtlCacheDecorator实例，则创建默认的DefaultTtlCacheDecorator
-     * 使用TbsCacheProperty中的ttlCacheDecorator配置进行初始化
-     * </p>
-     *
-     * @return 配置好的TTL缓存装饰器
-     */
+
     @Bean
-    @ConditionalOnMissingBean(ITtlCacheDecorator.class)
-    ITtlCacheDecorator ttlCacheDecorator() {
-        return BeanUtil.buildBeanFromProperties(DefaultTtlCacheDecorator::new, cacheProperty.getTtlCacheDecorator(),
-            BeanUtil::buildByEmptyArgs);
+    @ConditionalOnMissingBean(IExpireDetailsManager.class)
+    IExpireDetailsManager expireDetailsManager() {
+        return new LocalMapExpireDetailsManager();
     }
 
     /**

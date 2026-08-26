@@ -4,7 +4,6 @@ import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.schedule.ISchedule;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.Cache;
 
 import java.time.Duration;
@@ -61,7 +60,8 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
         try {
             return getSchedule().pin(() -> {
                 cache.clear();
-            }, Duration.between(new Date().toInstant(), expireTime.toInstant())).isPin();
+            }, Duration.between(new Date().toInstant(), expireTime.toInstant())).isPin() &&
+                super.expireAll(cache, expireTime);
         } catch (Exception e) {
             log.error("expireAll error", e);
             return false;
@@ -84,7 +84,8 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
         try {
             return getSchedule().pin(() -> {
                 cache.evict(key);
-            }, Duration.between(new Date().toInstant(), expireTime.toInstant())).isPin();
+            }, Duration.between(new Date().toInstant(), expireTime.toInstant())).isPin() &&
+                super.expire(cache, key, expireTime);
         } catch (Exception e) {
             log.error("expireAll error", e);
             return false;

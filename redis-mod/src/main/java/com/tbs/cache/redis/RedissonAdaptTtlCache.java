@@ -3,7 +3,6 @@ package com.tbs.cache.redis;
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.common.util.helper.FeatureWrapperHelper;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.redisson.api.RMapCache;
 import org.redisson.spring.cache.RedissonCache;
 import org.springframework.cache.Cache;
@@ -33,9 +32,10 @@ public class RedissonAdaptTtlCache extends AbstractAdaptTtlCache {
         var redissonCache = FeatureWrapperHelper.unwrap(cache, RedissonCache.class);
         if (redissonCache.isPresent()) {
             return redissonCache.get().getNativeCache().expire(expireTime == null ? defaultExpireDuration
-                : Duration.between(new Date().toInstant(), expireTime.toInstant()));
+                : Duration.between(new Date().toInstant(), expireTime.toInstant())) &&
+                super.expireAll(cache, expireTime);
         }
-        log.warn("RedissonCache not support expireAll");
+        log.warn("this cache type {} not support expireAll by RedissonAdaptTtlCache", cache.getClass().getName());
         return false;
     }
 
@@ -47,13 +47,14 @@ public class RedissonAdaptTtlCache extends AbstractAdaptTtlCache {
             if (nativeCache instanceof RMapCache) {
                 var t = expireTime.getTime() - System.currentTimeMillis();
                 if (t <= 0) {
-                    return ((RMapCache)nativeCache).remove(key) != null;
+                    return ((RMapCache)nativeCache).remove(key) != null && super.expire(cache, key, expireTime);
                 }
-                return ((RMapCache)nativeCache).expireEntry(key, Duration.ofMillis(t), Duration.ZERO);
+                return ((RMapCache)nativeCache).expireEntry(key, Duration.ofMillis(t), Duration.ZERO) &&
+                    super.expire(cache, key, expireTime);
             }
 
         }
-        log.warn("RedissonCache not support expire");
+        log.warn("this cache type {} not support expire by RedissonAdaptTtlCache", cache.getClass().getName());
         return false;
     }
 

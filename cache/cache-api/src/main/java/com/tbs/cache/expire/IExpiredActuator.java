@@ -1,7 +1,5 @@
 package com.tbs.cache.expire;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Date;
 
 /**
@@ -18,5 +16,5 @@ public interface IExpiredActuator<RAW> {
      * @param expireTime
      * @return
      */
-    boolean expire( RAW cache, Object key,  Date expireTime);
+    boolean expire(RAW cache, Object key, Date expireTime);
 }
