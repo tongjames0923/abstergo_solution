@@ -2,7 +2,6 @@ package com.tbs.cache.integration;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
-import org.springframework.cache.support.SimpleValueWrapper;
 
 import java.util.ArrayList;
 import java.util.Collections;

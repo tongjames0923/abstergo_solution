@@ -3,14 +3,18 @@ package com.tbs.cache.config;
 import com.tbs.cache.expire.IExpireDetailsManager;
 import com.tbs.cache.expire.impl.LocalMapExpireDetailsManager;
 import com.tbs.cache.impl.DefaultTtlAdaptCacheMananger;
+import com.tbs.cache.impl.MultiLevelTtlCacheMananger;
 import com.tbs.cache.integration.AbstractTtlAdaptCacheMananger;
+import com.tbs.cache.integration.ILevelCacheProvider;
 import com.tbs.cache.limit.ICacheLimiter;
 import com.tbs.cache.limit.ICacheOperationRecorder;
 import com.tbs.cache.limit.impl.SimpleCacheLimiter;
 import com.tbs.cache.limit.impl.SimpleCacheOperationRecorder;
 import com.tbs.cache.manual.IManualCacheHandler;
 import com.tbs.cache.manual.impl.MapCacheHandler;
+import com.tbs.cache.policy.ICacheTtlPolicy;
 import com.tbs.common.util.base.BeanUtil;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -18,6 +22,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * Tbs缓存配置类
@@ -39,17 +44,33 @@ public class TbsCacheConfig {
     TbsCacheProperty cacheProperty;
 
     /**
+     * 多级缓存属性配置（由{@link MultiLevelCacheConfig}注册）
+     */
+    @Resource
+    MultiLevelCacheProperty multiLevelCacheProperty;
+
+    /**
      * 创建并配置TTL适配缓存管理器
      * <p>
-     * 使用TbsCacheProperty中的cacheManagerImpl配置创建默认的TTL适配缓存管理器
+     * 根据{@code tbs.cache.multi-level.enabled}开关切换实现：
+     * <ul>
+     *   <li>启用多级：使用{@link MultiLevelTtlCacheMananger}，自动收集容器内所有{@link ILevelCacheProvider} Bean</li>
+     *   <li>未启用：使用TbsCacheProperty中的cacheManagerImpl配置创建默认的TTL适配缓存管理器</li>
+     * </ul>
      * 标记为@Primary，表示这是主要的缓存管理器
      * </p>
      *
+     * @param providers       层级提供者列表（容器内无实现时为空集合）
+     * @param ttlPolicyProvider TTL策略（仅多级启用时由{@link MultiLevelCacheConfig}注册）
      * @return 配置好的TTL适配缓存管理器
      */
     @Bean
     @Primary
-    AbstractTtlAdaptCacheMananger adaptCacheMananger() {
+    AbstractTtlAdaptCacheMananger adaptCacheMananger(List<ILevelCacheProvider> providers,
+        ObjectProvider<ICacheTtlPolicy> ttlPolicyProvider) {
+        if (multiLevelCacheProperty.isEnabled()) {
+            return new MultiLevelTtlCacheMananger(providers, ttlPolicyProvider.getIfAvailable());
+        }
         return new DefaultTtlAdaptCacheMananger(cacheProperty.getCacheManagerImpl());
     }
 

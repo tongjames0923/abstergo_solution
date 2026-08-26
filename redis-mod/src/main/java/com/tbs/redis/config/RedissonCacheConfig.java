@@ -1,10 +1,12 @@
 package com.tbs.redis.config;
 
+import com.tbs.cache.redis.RedissonLevelCacheProvider;
 import com.tbs.redis.config.property.RedissonCacheProperty;
 import org.redisson.api.RedissonClient;
 import org.redisson.spring.cache.CacheConfig;
 import org.redisson.spring.cache.RedissonSpringCacheManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -62,6 +64,23 @@ public class RedissonCacheConfig {
         cacheManager.setAllowNullValues(property.isAllowNullValues());
         cacheManager.setTransactionAware(property.isTransaction());
         return cacheManager;
+    }
+
+    /**
+     * 创建 Redisson 层级缓存提供者（多级缓存 L2）
+     * <p>
+     * 仅在多级缓存启用（{@code tbs.cache.multi-level.enabled=true}）时注册，
+     * 供多级缓存管理器收集组装层级。
+     * </p>
+     *
+     * @param redissonClient Redisson 客户端实例
+     * @return Redisson 层级缓存提供者
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.cache.multi-level", name = "enabled", havingValue = "true")
+    @ConditionalOnMissingBean(RedissonLevelCacheProvider.class)
+    public RedissonLevelCacheProvider redissonLevelCacheProvider(RedissonClient redissonClient) {
+        return new RedissonLevelCacheProvider(redissonClient, property);
     }
 
 }
