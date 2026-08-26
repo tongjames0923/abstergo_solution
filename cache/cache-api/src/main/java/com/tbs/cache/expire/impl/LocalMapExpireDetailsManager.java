@@ -2,8 +2,6 @@ package com.tbs.cache.expire.impl;
 
 import com.tbs.cache.expire.IExpireDetailsManager;
 import com.tbs.cache.expire.vo.ExpireDetails;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.stereotype.Component;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

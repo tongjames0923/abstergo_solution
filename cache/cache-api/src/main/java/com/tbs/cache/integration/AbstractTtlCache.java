@@ -143,6 +143,7 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
     @Override
     public boolean expire(Cache cache, Object key, Date expireTime) {
         onExpire(cache, key, expireTime);
+        this.getExpireDetailsManager().getExpireDetailsAndRemove(cache.getName(), key);
         return true;
     }
 
@@ -156,6 +157,7 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
         onExpire(cache, null, expireTime);
+        this.getExpireDetailsManager().getExpireDetailsAndRemove(cache.getName(), null);
         return true;
     }
 
