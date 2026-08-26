@@ -1,5 +1,7 @@
 package com.tbs.cache.config;
 
+import com.tbs.cache.ITtlCacheDecorator;
+import com.tbs.cache.impl.MultiLevelTtlCacheDecorator;
 import com.tbs.cache.policy.DefaultCacheTtlPolicy;
 import com.tbs.cache.policy.ICacheTtlPolicy;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
@@ -38,5 +40,11 @@ public class MultiLevelCacheConfig {
     @ConditionalOnMissingBean(ICacheTtlPolicy.class)
     ICacheTtlPolicy cacheTtlPolicy(MultiLevelCacheProperty property) {
         return new DefaultCacheTtlPolicy(property.getTtl().getDefaultTtl(), property.getTtl().getOverrides());
+    }
+
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.cache.multi-level", name = "enabled", havingValue = "true")
+    ITtlCacheDecorator multiLevelTtlCacheDecorator() {
+        return new MultiLevelTtlCacheDecorator();
     }
 }
