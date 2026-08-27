@@ -27,7 +27,7 @@ public class LocalRunnableTaskExecutor implements TaskExecutor {
 
     @Override
     public void execute(TaskSubmission submission) {
-        AssertUtil.isTrue(submission.getPayload() instanceof LocalRunnablePayload)
+        AssertUtil.isFalse(submission.getPayload() instanceof LocalRunnablePayload)
             .i18n("schedule.executor.local.type.mismatch").params(submission.getTaskType()).throwIt();
         ((LocalRunnablePayload) submission.getPayload()).getRunnable().run();
     }
