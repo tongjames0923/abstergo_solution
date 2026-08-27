@@ -4,8 +4,10 @@ import com.tbs.cache.ICacheListenner;
 import com.tbs.cache.IListenable;
 import com.tbs.cache.expire.ICacheExpiredActuator;
 import com.tbs.cache.expire.IExpireDetailsManager;
+import com.tbs.cache.expire.ITtlIntercepter;
 import com.tbs.cache.expire.vo.ExpireDetails;
 import com.tbs.common.data.IFeatureWrapper;
+import com.tbs.common.util.framework.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.support.SimpleValueWrapper;
@@ -180,7 +182,12 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
      * @param expireTime
      */
     public void callToExpire(Object key, Date expireTime) {
-        getExpireDetailsManager().addExpireDetails(this.getName(), new ExpireDetails(expireTime, false, key));
+        var expireTimeWrapper = com.tbs.common.data.ValueWrapper.of(expireTime);
+        SpringUtil.getBeansByTypeSafe(ITtlIntercepter.class).forEach((intercepter) -> {
+            expireTimeWrapper.set(intercepter.onTtlExpired(this, key, expireTime));
+        });
+        getExpireDetailsManager().addExpireDetails(this.getName(),
+            new ExpireDetails(expireTimeWrapper.get().orElse(expireTime), false, key));
     }
 
     /**
@@ -189,7 +196,12 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
      * @param expireTime
      */
     public void callToExpireAll(Date expireTime) {
-        getExpireDetailsManager().addExpireDetails(this.getName(), new ExpireDetails(expireTime, true, null));
+        var expireTimeWrapper = com.tbs.common.data.ValueWrapper.of(expireTime);
+        SpringUtil.getBeansByTypeSafe(ITtlIntercepter.class).forEach((intercepter) -> {
+            expireTimeWrapper.set(intercepter.onTtlExpired(this, null, expireTime));
+        });
+        getExpireDetailsManager().addExpireDetails(this.getName(),
+            new ExpireDetails(expireTimeWrapper.get().orElse(expireTime), false, null));
     }
 
     /**

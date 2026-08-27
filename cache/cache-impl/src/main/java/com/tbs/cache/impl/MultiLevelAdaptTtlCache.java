@@ -4,8 +4,8 @@ import com.tbs.cache.ITtlCacheDecorator;
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.cache.integration.AbstractMultiLevelCache;
 import com.tbs.cache.integration.AbstractTtlCache;
-import com.tbs.cache.policy.ICacheTtlPolicy;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 
@@ -18,7 +18,20 @@ public class MultiLevelAdaptTtlCache extends AbstractAdaptTtlCache {
 
     private List<AbstractTtlCache> caches = null;
 
-    private ICacheTtlPolicy cacheTtlPolicy;
+    /**
+     * 多级缓存过期拦截器
+     */
+    public static interface IMultiLevelCacheTtlInterceptor {
+        /**
+         * 拦截缓存过期时间
+         *
+         * @param cache
+         * @param key
+         * @param expireTime
+         * @return
+         */
+        Date intercept(AbstractTtlCache cache, int level, Object key, Date expireTime);
+    }
 
     /**
      * 构造函数，初始化原始缓存
@@ -48,8 +61,10 @@ public class MultiLevelAdaptTtlCache extends AbstractAdaptTtlCache {
      */
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
+        int i = 0;
         for (AbstractTtlCache c : caches) {
-            c.expireAll(cache, expireTime);
+            Date o = SpringUtil.getBean(IMultiLevelCacheTtlInterceptor.class).intercept(c, ++i, null, expireTime);
+            c.expireAll(cache, o == null ? expireTime : o);
         }
         return super.expireAll(cache, expireTime);
     }
@@ -64,8 +79,10 @@ public class MultiLevelAdaptTtlCache extends AbstractAdaptTtlCache {
      */
     @Override
     public boolean expire(Cache cache, Object key, Date expireTime) {
+        int i = 0;
         for (AbstractTtlCache c : caches) {
-            c.expire(cache, key, expireTime);
+            Date o = SpringUtil.getBean(IMultiLevelCacheTtlInterceptor.class).intercept(c, ++i, key, expireTime);
+            c.expire(cache, key, o == null ? expireTime : o);
         }
         return super.expire(cache, key, expireTime);
     }
