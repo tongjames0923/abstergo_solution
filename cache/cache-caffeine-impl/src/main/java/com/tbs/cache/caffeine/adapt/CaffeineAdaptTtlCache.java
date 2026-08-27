@@ -2,7 +2,7 @@ package com.tbs.cache.caffeine.adapt;
 
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.schedule.ISchedule;
+import com.tbs.schedule.api.TaskScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.caffeine.CaffeineCache;
@@ -19,7 +19,7 @@ import java.util.Date;
  * <p>
  * 与 Redisson 不同，Caffeine 引擎本身不支持条目级到期时间设置
  * （仅支持缓存级 {@code expireAfterWrite}），因此采用调度式过期：
- * 通过 {@link ISchedule} 在指定时刻触发 {@code evict} / {@code clear}。
+ * 通过 {@link TaskScheduler} 在指定时刻触发 {@code evict} / {@code clear}。
  * 缓存级原生 TTL 由 {@code CaffeineCacheManager} 创建时的
  * {@code expireAfterWrite} 配置兜底，两者构成双保险。
  * </p>
@@ -53,13 +53,13 @@ public class CaffeineAdaptTtlCache extends AbstractAdaptTtlCache {
     /**
      * 获取调度器实例
      * <p>
-     * 从 Spring 容器懒加载获取 {@link ISchedule} 实例，避免构造期依赖容器就绪。
+     * 从 Spring 容器懒加载获取 {@link TaskScheduler} 实例，避免构造期依赖容器就绪。
      * </p>
      *
      * @return 调度器实例
      */
-    protected ISchedule getSchedule() {
-        return SpringUtil.getBean(ISchedule.class);
+    protected TaskScheduler getSchedule() {
+        return SpringUtil.getBean(TaskScheduler.class);
     }
 
     /**
@@ -75,8 +75,8 @@ public class CaffeineAdaptTtlCache extends AbstractAdaptTtlCache {
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
         try {
-            return getSchedule().pin(() -> cache.clear(), resolveDelay(expireTime)).isPin()
-                && super.expireAll(cache, expireTime);
+            getSchedule().schedule(() -> cache.clear(), resolveDelay(expireTime));
+            return super.expireAll(cache, expireTime);
         } catch (Exception e) {
             log.error("caffeine expireAll error, cache: {}", cache.getName(), e);
             return false;
@@ -97,8 +97,8 @@ public class CaffeineAdaptTtlCache extends AbstractAdaptTtlCache {
     @Override
     public boolean expire(Cache cache, Object key, Date expireTime) {
         try {
-            return getSchedule().pin(() -> cache.evict(key), resolveDelay(expireTime)).isPin()
-                && super.expire(cache, key, expireTime);
+            getSchedule().schedule(() -> cache.evict(key), resolveDelay(expireTime));
+            return super.expire(cache, key, expireTime);
         } catch (Exception e) {
             log.error("caffeine expire error, cache: {}, key: {}", cache.getName(), key, e);
             return false;

@@ -1,17 +1,13 @@
 package com.tbs.schedule.impl;
 
-import com.tbs.common.data.IFeatureWrapper;
-import com.tbs.schedule.IScheduleTask;
-import com.tbs.schedule.ScheduleStrategy;
+import com.tbs.schedule.api.ScheduleStrategy;
 import lombok.Getter;
 import lombok.Setter;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collection;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -19,22 +15,28 @@ import java.util.stream.Collectors;
 /**
  * 时间轮调度策略
  * <p>
- * 纯数据结构实现，不关心线程协调和任务创建。
- * 基于环形数组 + round 计数的高效延迟调度算法。
+ * 纯数据结构实现，不关心线程协调和任务创建。基于环形数组 + round 计数的高效延迟调度算法。
+ * 元素统一为 {@link ScheduleStrategy.Schedulable}，调度器内核内部 {@code ScheduledEntry} 实现该契约，
+ * 不再持有反向引用或生命周期状态，消除旧实现双层 {@code isPin} 的脆弱耦合。
  * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
 @Slf4j
-public class TimingWheelStrategy implements ScheduleStrategy<IScheduleTask> {
+public class TimingWheelStrategy implements ScheduleStrategy {
 
     private final long tickDuration;
+
     private final int wheelSize;
+
     private final int maxTicksPerPoll;
 
     @SuppressWarnings("unchecked")
     private final List<WheelTask>[] wheel;
+
     private long beginTime;
+
     private int currentTick = 0;
 
     /**
@@ -58,37 +60,31 @@ public class TimingWheelStrategy implements ScheduleStrategy<IScheduleTask> {
     }
 
     @Override
-    public void insert(IScheduleTask task) {
+    public void insert(Schedulable task) {
         long rem = task.getRemain().toMillis();
         long delayMs = rem + System.currentTimeMillis() - beginTime;
-        long perRound = tickDuration * wheelSize;
+        long perRound = (long) tickDuration * wheelSize;
         long round = delayMs / perRound;
         WheelTask wheelTask = new WheelTask(task, round);
         long tick = (currentTick + (delayMs / tickDuration)) % wheelSize;
         wheel[Math.toIntExact(tick)].add(wheelTask);
-        log.debug("任务添加成功。槽位={}, 轮数={}, 基准时间={}", tick, round, new Date(beginTime));
+        log.debug("任务添加成功。槽位={}, 轮数={}", tick, round);
     }
 
     @Override
-    public Collection<IScheduleTask> pollExpired() {
-        Collection<IScheduleTask> result = new LinkedList<>();
+    public Collection<Schedulable> pollExpired() {
+        Collection<Schedulable> result = new LinkedList<>();
         long currentTime = System.currentTimeMillis();
         int ticksAdvanced = 0;
-
         while (beginTime <= currentTime && ticksAdvanced < maxTicksPerPoll) {
             List<WheelTask> currentSlot = wheel[currentTick];
             var tasks = currentSlot.iterator();
             while (tasks.hasNext()) {
                 WheelTask wheelTask = tasks.next();
-                if (!wheelTask.isPin()) {
-                    log.debug("任务已取消，移除 {}", wheelTask);
-                    tasks.remove();
-                } else if (wheelTask.getRound() <= 0) {
-                    log.debug("任务已到期 {}", wheelTask);
-                    result.add(wheelTask.orginal);
+                if (wheelTask.getRound() <= 0) {
+                    result.add(wheelTask.original);
                     tasks.remove();
                 } else {
-                    log.debug("任务未到期 {}", wheelTask);
                     wheelTask.setRound(wheelTask.getRound() - 1);
                 }
             }
@@ -103,11 +99,10 @@ public class TimingWheelStrategy implements ScheduleStrategy<IScheduleTask> {
     }
 
     @Override
-    public Collection<IScheduleTask> dropAll() {
-        List<IScheduleTask> tasks = new LinkedList<>();
+    public Collection<Schedulable> dropAll() {
+        List<Schedulable> tasks = new LinkedList<>();
         for (int i = 0; i < wheelSize; i++) {
-            tasks.addAll(wheel[i].stream().filter(WheelTask::isPin).map(w -> w.orginal)
-                .collect(Collectors.toList()));
+            tasks.addAll(wheel[i].stream().map(w -> w.original).collect(Collectors.toList()));
             wheel[i].clear();
         }
         return tasks;
@@ -116,51 +111,17 @@ public class TimingWheelStrategy implements ScheduleStrategy<IScheduleTask> {
     /**
      * 时间轮内部任务包装，附加 round 计数
      */
-    @ToString
-    static final class WheelTask implements IScheduleTask, IFeatureWrapper<IScheduleTask> {
-        IScheduleTask orginal;
+    static final class WheelTask {
+
+        final Schedulable original;
+
         @Getter
         @Setter
         long round;
 
-        WheelTask(IScheduleTask orginal, long round) {
-            this.orginal = orginal;
+        WheelTask(Schedulable original, long round) {
+            this.original = original;
             this.round = round;
-        }
-
-        @Override
-        public  Duration getRemain() {
-            return orginal.getRemain();
-        }
-
-        @Override
-        public  Runnable getRunnable() {
-            return orginal.getRunnable();
-        }
-
-        @Override
-        public  com.tbs.schedule.ISchedule getSchedule() {
-            return orginal.getSchedule();
-        }
-
-        @Override
-        public boolean isPin() {
-            return orginal.isPin();
-        }
-
-        @Override
-        public void unPin() {
-            orginal.unPin();
-        }
-
-        @Override
-        public IScheduleTask getOriginal() {
-            return orginal;
-        }
-
-        @Override
-        public void setOriginal(IScheduleTask orginal) {
-            this.orginal = orginal;
         }
     }
 }
