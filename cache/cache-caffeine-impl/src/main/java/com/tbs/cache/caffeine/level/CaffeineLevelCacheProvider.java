@@ -115,7 +115,7 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
     /**
      * 计算有效 TTL
      * <p>
-     * 取全局 expireAfterWrite 和业务 TTL 的较小值。
+     * 优先取业务 TTL
      * 业务 TTL 为 null 时直接使用全局值。
      * </p>
      *
