@@ -4,8 +4,6 @@ import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * 多级缓存配置属性
@@ -44,30 +42,11 @@ public class MultiLevelCacheProperty {
     private boolean enabled = false;
 
     /**
-     * TTL 策略配置
+     * 全局默认 TTL
+     * <p>
+     * 未在 overrides 中声明的 cacheName 使用此值。
+     * </p>
      */
-    private TtlConfig ttl = new TtlConfig();
+    private Duration defaultTtl = Duration.ofHours(1);
 
-    /**
-     * TTL 策略配置
-     */
-    @Data
-    public static class TtlConfig {
-
-        /**
-         * 全局默认 TTL
-         * <p>
-         * 未在 overrides 中声明的 cacheName 使用此值。
-         * </p>
-         */
-        private Duration defaultTtl = Duration.ofHours(1);
-
-        /**
-         * 按 cacheName 的 TTL 覆盖
-         * <p>
-         * key 为业务声明的原始 cacheName（不带 SYSTEM:CACHE: 前缀）， value 为该缓存的 TTL。
-         * </p>
-         */
-        private Map<String, Duration> overrides = new HashMap<>();
-    }
 }

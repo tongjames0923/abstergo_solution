@@ -75,11 +75,11 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
         sorted.sort(Comparator.comparingInt(ILevelCacheProvider::getOrder));
         this.providers = Collections.unmodifiableList(sorted);
         this.ttlPolicy = ttlPolicy;
-        
+
         String providerDetails = providers.stream()
             .map(p -> p.getClass().getSimpleName() + "(order=" + p.getOrder() + ")")
             .collect(Collectors.joining(", "));
-        
+
         log.info("Multi-level cache manager initialized: providerCount={}, providers=[{}], ttlPolicy={}, defaultTtl={}",
             providers.size(),
             providerDetails,
@@ -143,13 +143,13 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
     protected Cache createCacheOnMissCache(String name) {
         String businessName = name.startsWith(CACHE_NAME_PREFIX) ? name.substring(CACHE_NAME_PREFIX.length()) : name;
         Duration businessTtl = resolveBusinessTtl(name);
-        
+
         log.info("Creating multi-level cache: internalName={}, businessName={}, ttl={}",
             name, businessName, formatDuration(businessTtl));
-        
+
         List<Cache> levels = new ArrayList<>();
         List<String> skippedProviders = new ArrayList<>();
-        
+
         for (ILevelCacheProvider provider : providers) {
             if (provider.support(name)) {
                 Cache cache = provider.getCache(name, businessTtl);
@@ -163,23 +163,23 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
                 skippedProviders.add(provider.getClass().getSimpleName());
             }
         }
-        
+
         if (levels.isEmpty()) {
             log.error("No level cache provider supports cacheName: internalName={}, businessName={}, availableProviders={}",
                 name, businessName,
                 providers.stream().map(p -> p.getClass().getSimpleName()).collect(Collectors.joining(", ")));
             throw new IllegalStateException("No level cache provider supports cacheName: " + name);
         }
-        
+
         if (!skippedProviders.isEmpty()) {
             log.debug("Skipped providers (not supporting cacheName={}): [{}]",
                 businessName, String.join(", ", skippedProviders));
         }
-        
+
         log.info("Created multi-level cache: internalName={}, businessName={}, ttl={}, levelCount={}, levels=[{}]",
             name, businessName, formatDuration(businessTtl), levels.size(),
             levels.stream().map(c -> c.getClass().getSimpleName()).collect(Collectors.joining(", ")));
-        
+
         return new DefaultMultiLevelCache(name, levels);
     }
 
@@ -203,15 +203,15 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
      */
     protected Duration resolveBusinessTtl(String name) {
         String businessName = name.startsWith(CACHE_NAME_PREFIX) ? name.substring(CACHE_NAME_PREFIX.length()) : name;
-        
+
         if (ttlPolicy == null) {
             log.debug("TTL policy absent, no business TTL for: businessName={}, internalName={}",
                 businessName, name);
             return null;
         }
-        
+
         Duration ttl = ttlPolicy.ttlOf(businessName);
-        
+
         if (ttlPolicy.findOverride(businessName).isPresent()) {
             log.info("TTL policy override hit: businessName={}, overrideTtl={}, policyClass={}",
                 businessName, formatDuration(ttl), ttlPolicy.getClass().getSimpleName());
@@ -219,10 +219,10 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
             log.debug("TTL policy default: businessName={}, defaultTtl={}, policyClass={}",
                 businessName, formatDuration(ttl), ttlPolicy.getClass().getSimpleName());
         }
-        
+
         return ttl;
     }
-    
+
     /**
      * 格式化 Duration 为人类可读字符串
      * <p>

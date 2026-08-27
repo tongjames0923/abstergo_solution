@@ -86,7 +86,7 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
     /**
      * 创建 Caffeine 缓存实例
      * <p>
-     * 有效 TTL = min(全局 expireAfterWrite, 业务 TTL)。
+     * 有效 TTL = 优先取业务 TTL，如果业务 TTL 为 null 则取全局值。
      * 全局值作为安全网上限，确保 L1 不会比 L2 存活更久。
      * </p>
      *
@@ -102,13 +102,13 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
             .expireAfterWrite(effectiveTtl);
 
         if (property.isRecordStats()) {
+            log.debug("recordStats is true, will record cache stats");
             builder.recordStats();
         }
 
         com.github.benmanes.caffeine.cache.Cache<Object, Object> caffeineCache = builder.build();
         log.info("Created Caffeine L1 cache: name={}, effectiveTtl={}, maximumSize={}, recordStats={}, allowNullValues={}",
             name, effectiveTtl, property.getMaximumSize(), property.isRecordStats(), property.isAllowNullValues());
-
         return new CaffeineCache(name, caffeineCache, property.isAllowNullValues());
     }
 
@@ -123,10 +123,9 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
      * @return 有效 TTL
      */
     private Duration resolveEffectiveTtl(Duration businessTtl) {
-        Duration globalTtl = property.getExpireAfterWrite();
         if (businessTtl == null) {
-            return globalTtl;
+            return property.getExpireAfterWrite();
         }
-        return businessTtl.compareTo(globalTtl) < 0 ? businessTtl : globalTtl;
+        return businessTtl;
     }
 }

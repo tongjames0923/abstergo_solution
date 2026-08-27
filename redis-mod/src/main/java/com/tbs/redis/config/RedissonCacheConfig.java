@@ -79,8 +79,8 @@ public class RedissonCacheConfig {
     @Bean
     @ConditionalOnProperty(prefix = "tbs.cache.multi-level", name = "enabled", havingValue = "true")
     @ConditionalOnMissingBean(RedissonLevelCacheProvider.class)
-    public RedissonLevelCacheProvider redissonLevelCacheProvider(RedissonClient redissonClient) {
-        return new RedissonLevelCacheProvider(redissonClient, property);
+    public RedissonLevelCacheProvider redissonLevelCacheProvider(RedissonSpringCacheManager cacheManager) {
+        return new RedissonLevelCacheProvider(cacheManager);
     }
 
 }

@@ -1,17 +1,14 @@
 package com.tbs.cache.redis;
 
 import com.tbs.cache.integration.ILevelCacheProvider;
-import com.tbs.redis.config.property.RedissonCacheProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RMapCache;
 import org.redisson.api.RedissonClient;
-import org.redisson.spring.cache.CacheConfig;
 import org.redisson.spring.cache.RedissonCache;
+import org.redisson.spring.cache.RedissonSpringCacheManager;
 import org.springframework.cache.Cache;
 
 import java.time.Duration;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 /**
  * Redisson 层级缓存提供者（多级缓存 L2）
@@ -32,20 +29,7 @@ import java.util.concurrent.ConcurrentMap;
 @Slf4j
 public class RedissonLevelCacheProvider implements ILevelCacheProvider {
 
-    /**
-     * Redisson 客户端
-     */
-    private final RedissonClient redissonClient;
-
-    /**
-     * Redisson 缓存配置属性
-     */
-    private final RedissonCacheProperty property;
-
-    /**
-     * cacheName → RedissonCache 实例缓存
-     */
-    private final ConcurrentMap<String, Cache> cacheMap = new ConcurrentHashMap<>(16);
+    private final RedissonSpringCacheManager springCacheManager;
 
     /**
      * 构造函数
@@ -53,9 +37,8 @@ public class RedissonLevelCacheProvider implements ILevelCacheProvider {
      * @param redissonClient Redisson 客户端实例
      * @param property       Redisson 缓存配置属性
      */
-    public RedissonLevelCacheProvider(RedissonClient redissonClient, RedissonCacheProperty property) {
-        this.redissonClient = redissonClient;
-        this.property = property;
+    public RedissonLevelCacheProvider(RedissonSpringCacheManager springCacheManager) {
+        this.springCacheManager = springCacheManager;
     }
 
     /**
@@ -95,46 +78,8 @@ public class RedissonLevelCacheProvider implements ILevelCacheProvider {
      */
     @Override
     public Cache getCache(String name, Duration ttl) {
-        return cacheMap.computeIfAbsent(name, n -> createRedissonCache(n, ttl));
+        log.warn("redisson level cache provider can not set ttl by businessTtl please use @ExpireOn");
+        return springCacheManager.getCache(name);
     }
 
-    /**
-     * 创建 Redisson 缓存实例
-     * <p>
-     * 使用 {@link RMapCache} 支持条目级原生 TTL，配置项（最大空闲时间、
-     * 最大数量、驱逐模式、空值支持）复用 {@link RedissonCacheProperty}。
-     * </p>
-     *
-     * @param name        缓存名称
-     * @param businessTtl 业务 TTL，可为 null
-     * @return RedissonCache 实例
-     */
-    private Cache createRedissonCache(String name, Duration businessTtl) {
-        long ttlMillis = resolveTtlMillis(businessTtl);
-        CacheConfig config = new CacheConfig(ttlMillis, property.getMaxIdleTime() * 1000);
-        config.setMaxSize(property.getMaxSize());
-        config.setEvictionMode(property.getEvictionMode());
-        RMapCache<Object, Object> mapCache = redissonClient.getMapCache(name);
-        log.info("Created redisson level cache: name={}, ttl={}ms, maxIdleTime={}s, maxSize={}",
-            name, ttlMillis, property.getMaxIdleTime(), property.getMaxSize());
-        return new RedissonCache(mapCache, config, property.isAllowNullValues());
-    }
-
-    /**
-     * 解析生效 TTL
-     * <p>
-     * L2 TTL 取业务 TTL 与全局 {@code cacheTimeout} 的较小值，
-     * 避免业务 TTL 超出全局配置导致缓存长期驻留。
-     * </p>
-     *
-     * @param businessTtl 业务 TTL，可为 null
-     * @return 生效 TTL（毫秒）
-     */
-    private long resolveTtlMillis(Duration businessTtl) {
-        long defaultMillis = property.getCacheTimeout() * 1000;
-        if (businessTtl == null) {
-            return defaultMillis;
-        }
-        return Math.min(businessTtl.toMillis(), defaultMillis);
-    }
 }

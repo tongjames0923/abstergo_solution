@@ -55,5 +55,5 @@ public class CaffeineLevelCacheProperty {
      * 而是缓存一个特殊的 null 标记。
      * </p>
      */
-    private boolean allowNullValues = false;
+    private boolean allowNullValues = true;
 }

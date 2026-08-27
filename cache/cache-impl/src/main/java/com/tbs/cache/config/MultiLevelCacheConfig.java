@@ -38,8 +38,8 @@ public class MultiLevelCacheConfig {
     @Bean
     @ConditionalOnProperty(prefix = "tbs.cache.multi-level", name = "enabled", havingValue = "true")
     @ConditionalOnMissingBean(ICacheTtlPolicy.class)
-    ICacheTtlPolicy cacheTtlPolicy(MultiLevelCacheProperty property) {
-        return new DefaultCacheTtlPolicy(property.getTtl().getDefaultTtl(), property.getTtl().getOverrides());
+    ICacheTtlPolicy cacheTtlPolicy(MultiLevelCacheProperty property, TbsCacheProperty tbsCacheProperty) {
+        return new DefaultCacheTtlPolicy(property.getDefaultTtl(), tbsCacheProperty.getTtl().getOverrides());
     }
 
     @Bean
