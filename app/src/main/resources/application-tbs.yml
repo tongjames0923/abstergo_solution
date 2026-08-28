@@ -34,6 +34,9 @@ tbs:
     ttl-cache-decorator: com.tbs.cache.redis.RedissonTtlCacheDecorator
     multi-level:
       enabled: true
+    ttl:
+      overrides:
+        user_name_id_map: 2h
   broadcast:
     event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
   lock:

@@ -210,12 +210,14 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
             return null;
         }
 
-        Duration ttl = ttlPolicy.ttlOf(businessName);
-
-        if (ttlPolicy.findOverride(businessName).isPresent()) {
+        var ttlO = ttlPolicy.findOverride(businessName);
+        Duration ttl = null;
+        if (ttlO.isPresent()) {
+            ttl = ttlO.get();
             log.info("TTL policy override hit: businessName={}, overrideTtl={}, policyClass={}",
                 businessName, formatDuration(ttl), ttlPolicy.getClass().getSimpleName());
         } else {
+            ttl = ttlPolicy.defaultTtl();
             log.debug("TTL policy default: businessName={}, defaultTtl={}, policyClass={}",
                 businessName, formatDuration(ttl), ttlPolicy.getClass().getSimpleName());
         }
