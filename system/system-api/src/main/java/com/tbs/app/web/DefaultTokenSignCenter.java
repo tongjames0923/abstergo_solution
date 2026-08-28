@@ -21,6 +21,8 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
+import static com.tbs.app.web.CacheNamesConstants.TOKEN_CACHE;
+
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
@@ -192,14 +194,14 @@ public class DefaultTokenSignCenter extends AbstractTokenIssuanceCenter {
     @Resource
     HttpServletRequest request;
 
-    @Cacheable(cacheNames = "tokenCache", key = "#token", condition = "#token!=null && #token.length()>0")
-    @ExpireOn(cacheNames = "tokenCache", value = 5, timeUnit = TimeUnit.MINUTES)
+    @Cacheable(cacheNames = TOKEN_CACHE, key = "#token", condition = "#token!=null && #token.length()>0")
+    @ExpireOn(cacheNames = TOKEN_CACHE, value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
     public ITokenModel getTokenByToken( String token) {
         return super.getTokenByToken(token);
     }
 
-    @CacheEvict(cacheNames = "tokenCache", key = "#token", condition = "#token!=null && #token.length()>0")
+    @CacheEvict(cacheNames = TOKEN_CACHE, key = "#token", condition = "#token!=null && #token.length()>0")
     @Override
     public void setTokenStatus( String token,  TokenStatusEnum status) {
         super.setTokenStatus(token, status);

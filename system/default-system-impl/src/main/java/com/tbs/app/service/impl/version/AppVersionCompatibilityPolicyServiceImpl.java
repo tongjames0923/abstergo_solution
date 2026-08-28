@@ -26,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.APP_VERSION_COMPATIBILITY;
+
 import javax.annotation.Resource;
 import java.util.Collections;
 import java.util.LinkedList;
@@ -130,7 +132,7 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
     }
 
     @Caching(evict = {
-        @CacheEvict(cacheNames = "app_version_compatibility", allEntries = true)
+        @CacheEvict(cacheNames = APP_VERSION_COMPATIBILITY, allEntries = true)
     })
     @Override
     public void enablePolicy(Long id) {
@@ -142,7 +144,7 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
     }
 
     @Caching(evict = {
-        @CacheEvict(cacheNames = "app_version_compatibility", allEntries = true)
+        @CacheEvict(cacheNames = APP_VERSION_COMPATIBILITY, allEntries = true)
     })
     @Override
     public void disablePolicy(Long id) {

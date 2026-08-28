@@ -14,6 +14,8 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
+import static com.tbs.cache.CacheNamesConstants.CACHE_UTILS_SET;
+
 import javax.annotation.Resource;
 
 /**
@@ -166,7 +168,7 @@ public class CacheUtils implements IStartup {
      * @param key   缓存的键
      * @param value 要缓存的对象值
      */
-    @CachePut(cacheNames = "CACHE_UTILS_SET", key = "#key")
+    @CachePut(cacheNames = CACHE_UTILS_SET, key = "#key")
     public Object cacheableSet(String key, Object value) {
         return value;
     }
@@ -176,14 +178,14 @@ public class CacheUtils implements IStartup {
      *
      * @param key 要清除的缓存键
      */
-    @CacheEvict(cacheNames = "CACHE_UTILS_SET", key = "#key")
+    @CacheEvict(cacheNames = CACHE_UTILS_SET, key = "#key")
     public void cacheableEvict(String key) {
     }
 
     /**
      * 清除所有缓存条目
      */
-    @CacheEvict(cacheNames = "CACHE_UTILS_SET", allEntries = true)
+    @CacheEvict(cacheNames = CACHE_UTILS_SET, allEntries = true)
     public void cacheableEvictAll() {
     }
 
@@ -193,7 +195,7 @@ public class CacheUtils implements IStartup {
      * @param key 缓存的键
      * @return 缓存中存储的对象，如果未找到则返回null
      */
-    @Cacheable(cacheNames = "CACHE_UTILS_SET", key = "#key")
+    @Cacheable(cacheNames = CACHE_UTILS_SET, key = "#key")
     public Object cacheableGet(String key) {
         return null;
     }

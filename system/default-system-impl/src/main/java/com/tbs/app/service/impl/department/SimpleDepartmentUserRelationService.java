@@ -20,6 +20,8 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.USER_DEPARTMENTS;
+
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -35,7 +37,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
     @Resource
     private ISystemUserService userService;
 
-    @Cacheable(cacheNames = "user_departments", key = "#userId")
+    @Cacheable(cacheNames = USER_DEPARTMENTS, key = "#userId")
     @ExpireOn(value = 3, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemDepartmentEntity> queryUserDepartments( Long userId) {
@@ -57,7 +59,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
         return departmentRelationMapper.queryDepartmentUsers(departmentId);
     }
 
-    @CacheEvict(cacheNames = "user_departments", key = "#userId")
+    @CacheEvict(cacheNames = USER_DEPARTMENTS, key = "#userId")
     @Override
     public void addUserToDepartment( Long userId,  Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);
@@ -75,7 +77,7 @@ public class SimpleDepartmentUserRelationService implements IDepartmentUserRelat
         departmentRelationMapper.insert(relation);
     }
 
-    @CacheEvict(cacheNames = "user_departments", key = "#userId")
+    @CacheEvict(cacheNames = USER_DEPARTMENTS, key = "#userId")
     @Override
     public void deleteUserFromDepartment( Long userId,  Long departmentId) {
         SystemUserEntity user = userService.queryById(userId);

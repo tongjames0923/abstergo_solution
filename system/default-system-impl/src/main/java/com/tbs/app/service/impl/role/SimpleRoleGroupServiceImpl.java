@@ -28,6 +28,8 @@ import com.tbs.web.uitl.AuthUtil;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.ROLE_GROUP;
+
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
@@ -64,8 +66,8 @@ public class SimpleRoleGroupServiceImpl
      * @return 权限列表
      */
     @Override
-    @Cacheable(value = "roleGroup", key = "#groupId")
-    @ExpireOn(cacheNames = "roleGroup", value = 10, timeUnit = TimeUnit.MINUTES)
+    @Cacheable(value = ROLE_GROUP, key = "#groupId")
+    @ExpireOn(cacheNames = ROLE_GROUP, value = 10, timeUnit = TimeUnit.MINUTES)
     public List<SystemRoleEntity> getRoleList(Long groupId) {
         return QueryEngine.getEntityQueryWrapper(new SystemRoleEntity()).query().where().in(SystemRoleEntity::getFlag,
             Arrays.asList(SystemRoleFlagEnum.SYSTEMED.getCode(), SystemRoleFlagEnum.ACTIVE.getCode())).exists(
@@ -98,7 +100,7 @@ public class SimpleRoleGroupServiceImpl
      * @param roleId
      */
     @Override
-    @CacheEvict(value = "roleGroup", key = "#groupId")
+    @CacheEvict(value = ROLE_GROUP, key = "#groupId")
     public void appendRole(Long groupId, Long roleId) {
 
         var group = getInstance().queryById(groupId);
@@ -136,7 +138,7 @@ public class SimpleRoleGroupServiceImpl
      * @param roleId
      */
     @Override
-    @CacheEvict(value = "roleGroup", key = "#groupId")
+    @CacheEvict(value = ROLE_GROUP, key = "#groupId")
     public void removeRole(Long groupId, Long roleId) {
         // 绕过逻辑删除拦截器查询，确保能检测到已删除的记录并给出准确提示
         var old = relationMapper.selectByRoleIdAndGroupIdIncludeDeleted(roleId, groupId);

@@ -26,6 +26,10 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.SYSTEM_ROLE;
+import static com.tbs.app.service.impl.CacheNamesConstants.SYSTEM_ROLE_NAME;
+import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_ID_MAP;
+
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
@@ -94,8 +98,8 @@ public class SimpleSystemRoleServiceImpl
     }
 
     @Caching(evict = {
-        @CacheEvict(cacheNames = "system_role", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
-        @CacheEvict(cacheNames = "system_role_name", allEntries = true)})
+        @CacheEvict(cacheNames = SYSTEM_ROLE, key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
+        @CacheEvict(cacheNames = SYSTEM_ROLE_NAME, allEntries = true)})
     @Override
     public List<SystemRoleEntity> save(SystemRoleEntity entity) {
         return super.save(entity);
@@ -145,23 +149,23 @@ public class SimpleSystemRoleServiceImpl
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.in.use.not.delete").throwIt();
     }
 
-    @Caching(evict = {@CacheEvict(cacheNames = "system_role", key = "#id"),
-        @CacheEvict(cacheNames = "system_role_name", allEntries = true)})
+    @Caching(evict = {@CacheEvict(cacheNames = SYSTEM_ROLE, key = "#id"),
+        @CacheEvict(cacheNames = SYSTEM_ROLE_NAME, allEntries = true)})
 
     @Override
     public SystemRoleEntity deleteById(Long id) {
         return super.deleteById(id);
     }
 
-    @Cacheable(cacheNames = "system_role", key = "#id", unless = "#result==null")
-    @ExpireOn(cacheNames = "system_role", value = 10, timeUnit = java.util.concurrent.TimeUnit.MINUTES)
+    @Cacheable(cacheNames = SYSTEM_ROLE, key = "#id", unless = "#result==null")
+    @ExpireOn(cacheNames = SYSTEM_ROLE, value = 10, timeUnit = java.util.concurrent.TimeUnit.MINUTES)
     @Override
     public SystemRoleEntity queryById(Long id) {
         return super.queryById(id);
     }
 
-    @Cacheable(cacheNames = "system_role_name", key = "#role", unless = "#result==null")
-    @ExpireOn(cacheNames = "system_role_name", value = 10, timeUnit = java.util.concurrent.TimeUnit.MINUTES)
+    @Cacheable(cacheNames = SYSTEM_ROLE_NAME, key = "#role", unless = "#result==null")
+    @ExpireOn(cacheNames = SYSTEM_ROLE_NAME, value = 10, timeUnit = java.util.concurrent.TimeUnit.MINUTES)
     @Override
     public SystemRoleEntity queryByRole(String role) {
         return getQueryWrapper().query().where().equal(SystemRoleEntity::getRole, role)

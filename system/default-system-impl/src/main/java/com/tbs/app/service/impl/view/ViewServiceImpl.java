@@ -18,6 +18,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.VIEW_FORM_CACHE;
+
 import javax.annotation.Resource;
 import javax.transaction.Transactional;
 import java.util.*;
@@ -154,7 +156,7 @@ public class ViewServiceImpl implements IViewService {
         }
     }
 
-    @Cacheable(cacheNames = "view_form_cache", key = "#id")
+    @Cacheable(cacheNames = VIEW_FORM_CACHE, key = "#id")
     @Override
     public FormConfig getForm(Long id) {
         AssertUtil.isTrue(id == null).message("表单ID不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
@@ -227,7 +229,7 @@ public class ViewServiceImpl implements IViewService {
 
     @Override
     @Transactional(rollbackOn = RuntimeException.class)
-    @CacheEvict(cacheNames = "view_form_cache", key = "#formConfigId")
+    @CacheEvict(cacheNames = VIEW_FORM_CACHE, key = "#formConfigId")
     public DynamicFormConfigrationEntity updateForm(Long formConfigId, FormConfig formConfig) {
         AssertUtil.isTrue(formConfigId == null).message("表单配置ID不能为空")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
@@ -307,7 +309,7 @@ public class ViewServiceImpl implements IViewService {
     }
 
     @Override
-    @CacheEvict(cacheNames = "view_form_cache", key = "#formConfigId")
+    @CacheEvict(cacheNames = VIEW_FORM_CACHE, key = "#formConfigId")
     public DynamicFormConfigrationEntity deleteForm(Long formConfigId) {
         AssertUtil.isTrue(formConfigId == null).message("表单配置ID不能为空")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();

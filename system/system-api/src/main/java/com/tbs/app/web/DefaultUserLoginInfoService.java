@@ -28,6 +28,9 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import static com.tbs.app.web.CacheNamesConstants.USER_LOGIN_INFO_CACHE;
+import static com.tbs.app.web.CacheNamesConstants.USER_SESSIONS_CACHE;
+
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -146,8 +149,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     }
 
     @Override
-    @Cacheable(cacheNames = "user_login_info_cache", key = "#token")
-    @ExpireOn(cacheNames = "user_login_info_cache", value = 5, timeUnit = TimeUnit.MINUTES)
+    @Cacheable(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token")
+    @ExpireOn(cacheNames = USER_LOGIN_INFO_CACHE, value = 5, timeUnit = TimeUnit.MINUTES)
     public UserDetails getUserDetails(String token) {
         return super.getUserDetails(token);
     }
@@ -158,8 +161,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     }
 
     @Override
-    @Cacheable(cacheNames = "user_sessions_cache", key = "#username")
-    @ExpireOn(cacheNames = "user_sessions_cache", value = 2, timeUnit = TimeUnit.MINUTES)
+    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#username")
+    @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 2, timeUnit = TimeUnit.MINUTES)
     public List<LoginSessionVO> listUserSessions(String username) {
         // 使用 listSessions 方法一次性获取用户的所有会话令牌，避免多次查询
         Collection<ITokenModel> allTokens = tokenIssuanceCenter.listSessions(username, null, null);
@@ -255,14 +258,14 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         }).collect(Collectors.toList());
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token",condition =
+    @CacheEvict(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token",condition =
     "#token!=null and #token.length()>0")
     @Override
     public void removeUserLoginInfo(String token) {
         super.removeUserLoginInfo(token);
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token.token",condition =
+    @CacheEvict(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token.token",condition =
     "#token!=null and #token.token!=null and #token.token.length()>0")
     @Override
     public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {

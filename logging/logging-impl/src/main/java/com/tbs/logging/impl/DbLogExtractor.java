@@ -13,6 +13,8 @@ import com.tbs.sql.service.QueryEngine;
 import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.cache.annotation.Cacheable;
 
+import static com.tbs.logging.impl.CacheNamesConstants.ALL_OPERATE_TYPES;
+
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -90,7 +92,7 @@ public class DbLogExtractor implements ILogExtractor {
      * @return 日志类型列表
      */
     @Override
-    @Cacheable(value = "allOperateTypes", key = "'allOperateTypes'")
+    @Cacheable(value = ALL_OPERATE_TYPES, key = "'allOperateTypes'")
     @ExpireOn(expireAll = true, value = 1, timeUnit = TimeUnit.HOURS)
     public List<String> getAllOperateTypes() {
         // 查询最近3个月的数据
