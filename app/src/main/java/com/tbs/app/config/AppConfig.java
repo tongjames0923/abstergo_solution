@@ -9,6 +9,8 @@ import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
 import com.tbs.mq.RedisFaildMessageStore;
 import com.tbs.mq.api.retry.IFailedMessageStore;
+import com.tbs.schedule.api.ScheduleTrigger;
+import com.tbs.schedule.xxl.XxlJobScheduleTrigger;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
@@ -178,4 +180,10 @@ public class AppConfig {
             }
         };
     }
+
+    @Bean
+    public ScheduleTrigger xxlJobTrigger() {
+        return new XxlJobScheduleTrigger();
+    }
+
 }
