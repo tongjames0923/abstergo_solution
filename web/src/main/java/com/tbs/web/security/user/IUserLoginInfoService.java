@@ -8,56 +8,79 @@ import java.util.List;
 
 /**
  * 用户登录信息处理服务
+ * <p>
+ * 负责维护「令牌 ↔ 用户登录详情」之间的映射关系，支撑认证链路中的用户详情获取与登出清理。
+ * 典型实现会结合缓存（详见各实现类上的 {@code @Cacheable}/{@code @CacheEvict}）降低回源开销。
+ * </p>
  *
  * @author abstergo
+ * @see ITokenModel 令牌模型
+ * @see LoginSessionVO 会话视图对象
  */
 public interface IUserLoginInfoService {
 
-
     /**
-     * 用户登录成功,处理登录成功后的用户数据
+     * 用户登录成功后写入登录信息
+     * <p>
+     * 将用户详情与令牌模型关联落库（及缓存），供后续 {@link #getUserDetails} 回源读取。
+     * 写入失败应抛出异常，避免产生「已登录但查无详情」的脏状态。
+     * </p>
      *
-     * @param userDetails
-     * @param tokenModel
+     * @param userDetails 用户详情，不能为空
+     * @param tokenModel  本次登录签发的令牌模型，不能为空
      */
     void insertUserLoginInfo(UserDetails userDetails, ITokenModel tokenModel);
 
     /**
      * 用户登出
+     * <p>
+     * 清除指定令牌对应的登录信息（置为失效并失效相关缓存），下次读取将回源得到空结果。
+     * </p>
      *
-     * @param token
+     * @param token 待登出的令牌串，不能为空
      */
     void removeUserLoginInfo(String token);
 
     /**
      * 替换用户数据
+     * <p>
+     * 在令牌不变的情况下更新关联的用户详情（如权限变更后刷新），并失效旧缓存。
+     * </p>
      *
-     * @param userDetails
-     * @param token
+     * @param userDetails 新的用户详情，不能为空
+     * @param token       关联的令牌模型，不能为空
      */
     void replaceUserDetails(UserDetails userDetails, ITokenModel token);
 
     /**
-     * 根据Token获取获取用户数据
+     * 根据令牌获取用户详情
      *
-     * @param token
-     * @return
+     * @param token 令牌串，不能为空
+     * @return 令牌对应的用户详情集合（同一令牌可能映射多个来源），无匹配时返回空集合
      */
     List<UserDetails> getUserDetails(String token);
 
     /**
-     * 获取用户可用的Token
+     * 获取用户可用的会话令牌
+     * <p>
+     * 返回指定用户名下当前有效的会话令牌串，用于会话维度的批量操作。
+     * </p>
      *
-     * @param username
-     * @return
+     * @param username 用户名，不能为空
+     * @return 可用会话令牌串列表，无可用会话时返回空集合
+     * @deprecated 建议使用 {@link #listUserSessions} 获取更丰富的会话视图
      */
+    @Deprecated
     List<String> getUserAvaliableSessionId(String username);
 
     /**
      * 获取用户的登录会话列表
+     * <p>
+     * 聚合该用户全部会话的令牌，按会话维度组织为 {@link LoginSessionVO} 列表，供前端展示与管理。
+     * </p>
      *
-     * @param username
-     * @return
+     * @param username 用户名，不能为空
+     * @return 登录会话视图列表，无会话时返回空集合
      */
     List<LoginSessionVO> listUserSessions(String username);
 }

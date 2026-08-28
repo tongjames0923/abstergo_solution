@@ -86,18 +86,13 @@ public class DubboGenricApiInstance extends AbstractGenricApiInstance<Serializab
         Optional<UserDetails> userDetails) {
         ReferenceConfig<GenericService> reference = new ReferenceConfig<>();
         try {
-            // 设置应用配置
+            // 组装 Dubbo 泛化引用：直连指定接口，开启 generic，超时 10s
             reference.setApplication(applicationConfig);
-            // 设置注册中心配置
             reference.setRegistry(registryConfig);
-            // 设置接口
             reference.setInterface(interfaceName);
-            // 设置泛化调用
             reference.setGeneric("true");
-            // 设置超时时间
             reference.setTimeout(10000);
 
-            // 获取泛化服务
             GenericService genericService = reference.get();
 
             // 准备参数

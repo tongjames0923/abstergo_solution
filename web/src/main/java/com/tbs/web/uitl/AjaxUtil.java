@@ -17,7 +17,12 @@ import java.util.Collection;
 import java.util.stream.Collectors;
 
 /**
- * Ajax工具类，用于构建统一的Ajax响应结果 提供了成功、失败和错误等不同情况下的响应结果构建方法
+ * Ajax 工具类
+ * <p>
+ * 构建与写出统一的 {@link AjaxResult} 响应：封装成功/失败/错误/通知/重定向等多形态结果，
+ * 以及异常到 {@link AjaxResult} 的统一转换（按 {@link IOnErrorAjaxProvider} 顺序匹配）。
+ * 同时负责将结果以 JSON 写入 {@link HttpServletResponse}。通过 {@code IStartup} 在启动时收集错误处理提供者。
+ * </p>
  *
  * @author tongj
  */

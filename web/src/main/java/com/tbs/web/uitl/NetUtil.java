@@ -5,7 +5,11 @@ import com.tbs.common.util.base.StrUtil;
 import javax.servlet.http.HttpServletRequest;
 
 /**
- * 网络工具类，提供获取客户端IP和MAC地址等网络相关功能 继承自hutool的NetUtil类，扩展了Web环境下的网络信息获取功能
+ * 网络工具类
+ * <p>
+ * 继承 hutool 的 {@code NetUtil}，扩展 Web 场景下的客户端信息提取：从反向代理/直连等多来源请求头中解析
+ * 客户端 IP 与 MAC，用于审计与风控。
+ * </p>
  */
 public class NetUtil extends cn.hutool.core.net.NetUtil {
     /**

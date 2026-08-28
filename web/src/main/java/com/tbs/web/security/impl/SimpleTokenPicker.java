@@ -10,6 +10,15 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * 简单令牌拾取器
+ * <p>
+ * 按配置的 {@code tokenSource}（header/cookie/param/body）与 {@code fieldName} 从请求中提取令牌串。
+ * 提取规则由子类（如 {@code DefaultLoginTokenPicker}）通过 {@code @PostConstruct} 注入。
+ * </p>
+ *
+ * @see ITokenPicker 令牌拾取契约
+ */
 public class SimpleTokenPicker implements ITokenPicker {
 
     protected String fieldName = "";
@@ -17,6 +26,7 @@ public class SimpleTokenPicker implements ITokenPicker {
     protected int expireTime = 0;
 
     private String getBody(HttpServletRequest request) {
+        // 读取请求体原文，供 BODY 来源解析 JSON 中的令牌字段
         StringBuilder sb = new StringBuilder();
         try {
             BufferedReader reader = request.getReader();

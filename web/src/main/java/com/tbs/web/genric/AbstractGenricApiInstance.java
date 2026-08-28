@@ -16,40 +16,41 @@ import java.util.*;
 
 /**
  * 泛化接口实例
+ * <p>
+ * 抽象一个「通过 id/version 标识、可选需认证、带预认证链」的远程调用单元。
+ * 具体调用协议（Dubbo 泛化 / Triple HTTP）由子类实现 {@link #invoke}。
+ * {@link #invokeApi} 统一编排：登录校验 → 预认证链 → 参数排序 → 执行（业务/系统异常均捕获并写入结果 VO，不向上抛）。
+ * </p>
  *
+ * @param <R> 调用返回结果的序列化类型
  * @author abstergo
  */
-
 @Getter
 @Slf4j
 public abstract class AbstractGenricApiInstance<R extends Serializable> {
     /**
-     * -- GETTER -- 获取接口唯一标识
+     * 接口唯一标识
      *
-     * @return
+     * @return API id
      */
     private String apiId;
     /**
-     * -- GETTER -- 获取接口版本号
+     * 接口版本号
      *
-     * @return
+     * @return 版本；为 {@code null} 表示不区分版本
      */
     private Integer apiVersion;
     /**
-     * -- GETTER -- 是否需要认证
+     * 是否需要认证
      *
-     * @return
+     * @return 需要认证返回 {@code true}
      */
     private boolean needAuth;
 
     /**
-     * -- GETTER -- 获取预认证列表
+     * 预认证处理器列表
      *
-     *
-     * -- SETTER -- 设置预认证列表
-     *
-     * @return
-     * @param preAuths
+     * @return 预认证实例集合
      */
     @Setter
     private List<IApiInstancePreAuth> preAuths;
@@ -66,28 +67,32 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
     }
 
     /**
-     * 调用接口
+     * 执行具体的远程调用
      *
-     * @param parameterForms 参数
-     * @param resultVo       调用结果
-     * @param userDetails   当前用户
+     * @param parameterForms 已按名索引的参数，不能为空
+     * @param resultVo       调用结果载体，由实现填充分执行结果/异常
+     * @param userDetails   当前用户（需要认证时不为空）
      */
     protected abstract void invoke(Map<String, GenricParameterForm> parameterForms, ApiInvokeResultVo<R> resultVo,
         Optional<UserDetails> userDetails);
 
     /**
-     * 调用接口
+     * 统一调用入口
+     * <p>
+     * 编排鉴权与预认证，整理参数后执行，并将执行耗时、成功标志、异常信息写入 {@link ApiInvokeResultVo}。
+     * 捕获所有异常（含 {@link FormattedRuntimeException}），以结果 VO 形式返回，绝不向上抛出。
+     * </p>
      *
-     * @param parameterForms 参数
-     * @param userDetails    当前用户
-     * @return
+     * @param parameterForms 调用参数列表，可以为空
+     * @param u 当前用户详情，需要认证时由控制器传入
+     * @return 调用结果视图
      */
     public ApiInvokeResultVo<R> invokeApi(List<GenricParameterForm> parameterForms, UserDetails u) {
         var paramMap = new java.util.HashMap<String, GenricParameterForm>();
         ApiInvokeResultVo<R> resultVo = new ApiInvokeResultVo<>();
         AssertUtil.isTrue(isNeedAuth() && u == null).i18n("GENERIC.API.NOT_LOGIN")
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
-        // 执行预认证
+        // 执行预认证链
         if (CollUtil.isNotEmpty(getPreAuths())) {
             for (IApiInstancePreAuth preAuth : getPreAuths()) {
                 preAuth.preAuth(u, null, this);
@@ -98,6 +103,7 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
             invoke(paramMap, resultVo, Optional.ofNullable(u));
             return resultVo;
         }
+        // 按请求顺序排序参数，保证与远程方法签名顺序一致
         int i = 0;
         for (GenricParameterForm parameterForm : parameterForms) {
             parameterForm.setSort(i++);

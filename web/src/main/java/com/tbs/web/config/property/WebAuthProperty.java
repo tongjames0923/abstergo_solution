@@ -14,7 +14,14 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
+ * 认证相关配置属性
+ * <p>
+ * 绑定前缀 {@code tbs.web.auth}，集中管控令牌来源/字段/有效期、各认证组件的实现类，
+ * 以及令牌数据源名称。实现类字段均带默认内置实现，可在配置中心覆盖。
+ * </p>
+ *
  * @author abstergo
+ * @see WebProperty Web 通用配置
  */
 @Data
 @Component

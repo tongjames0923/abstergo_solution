@@ -33,7 +33,17 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
- * 响应结果处理
+ * 响应结果处理切面
+ * <p>
+ * 兼具两类职责：
+ * <ul>
+ *     <li>全局异常处理（{@code @ExceptionHandler}）：将未捕获异常统一转换为 {@link AjaxResult}，
+ *     并按异常级别选择日志级别（业务/输入错误用 warn，系统错误用 error）；</li>
+ *     <li>响应体统一包装（{@code ResponseBodyAdvice}）：对 {@code BaseController} 方法或未显式
+ *     {@code @NoWrapped} 的返回值，按 {@code @Wrapped} 指定的 {@link IResultCreator} 包装为统一结构。</li>
+ * </ul>
+ * 方法级支持结果通过两个本地缓存避免重复反射解析。
+ * </p>
  *
  * @author tongj
  */

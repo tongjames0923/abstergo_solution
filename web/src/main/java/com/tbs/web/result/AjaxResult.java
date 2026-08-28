@@ -7,9 +7,15 @@ import java.io.Serializable;
 import java.util.Map;
 
 /**
- * ajax结果
+ * 统一 Ajax 响应结果
+ * <p>
+ * 作为 Web 层控制器与全局异常处理器的标准返回载体，内部以 {@code Map} 存放任意业务字段，
+ * 约定键名见 {@link #CODE_KEY}/{@link #MESSAGE_KEY}/{@link #DATA_KEY}。提供一组默认状态码与对应国际化消息常量，
+ * 由 {@code ResponseAjaxAspect} 在返回时统一包装。
+ * </p>
  *
  * @author tongj
+ * @see AjaxResultFluentBuilder 流式构建器
  */
 @Data
 public class AjaxResult implements Serializable {

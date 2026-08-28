@@ -8,7 +8,11 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * HTTP调用通用调用表单
+ * 泛化 API 调用表单
+ * <p>
+ * 作为 {@code POST /invoke} 的请求体：携带目标 apiId/version 与参数列表，由
+ * {@link com.tbs.web.genric.AbstractGenricApiController} 解析并路由到对应实例。
+ * </p>
  *
  * @author abstergo
  */

@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 
 /**
+ * Web 通用配置属性
+ * <p>
+ * 绑定前缀 {@code tbs.web}，驱动安全特性开关（CORS/CSRF/表单登录等）与路径黑白名单（{@code securedPaths}/{@code permitAllPaths}）。
+ * </p>
+ *
  * @author abstergo
  */
 @Component

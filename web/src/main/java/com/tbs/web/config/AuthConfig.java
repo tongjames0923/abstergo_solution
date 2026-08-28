@@ -20,8 +20,13 @@ import javax.annotation.Resource;
 
 /**
  * 认证配置
+ * <p>
+ * 装配认证链路核心 Bean：认证入口点、访问拒绝处理器、认证提供者、认证中心、认证管理器。
+ * 全部带 {@code @ConditionalOnMissingBean}，允许业务方覆盖；认证中心/管理器实现类可由 {@link WebAuthProperty} 动态指定。
+ * </p>
  *
  * @author abstergo
+ * @see WebAuthProperty 认证配置属性
  */
 @Configuration
 public class AuthConfig {

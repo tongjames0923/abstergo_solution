@@ -16,35 +16,34 @@ public abstract class BaseController {
     /**
      * 获取当前控制器的业务名称
      *
-     * @return
+     * @return 业务名称，用于日志/审计标识
      */
     public abstract String getBusinessName();
 
     /**
-     * 默认执行的操作成功返回值
+     * 默认操作成功响应（带业务数据）
      *
-     * @param val
-     * @return
+     * @param val 业务数据载荷，可为 {@code null}
+     * @return 统一成功响应
      */
     public AjaxResult successResult(Object val) {
         return AjaxUtil.getInstance().success(I18nUtil.get("common.success"), val);
     }
 
     /**
-     * 默认执行的操作成功返回值
+     * 默认操作成功响应（无数据）
      *
-     * @param val
-     * @return
+     * @return 统一成功响应
      */
     public AjaxResult successResult() {
         return AjaxUtil.getInstance().success(I18nUtil.get("common.success"), null);
     }
 
     /**
-     * 默认执行的操作失败返回值
+     * 默认操作失败响应
      *
-     * @param e
-     * @return
+     * @param e 异常，其消息会拼接到默认错误消息后以辅助排查
+     * @return 统一错误响应
      */
     public AjaxResult errorResult(Throwable e) {
         return AjaxUtil.getInstance().error(AjaxResult.getDefaultErrorMessage() + "。" + e.getMessage(), e);

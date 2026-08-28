@@ -30,10 +30,19 @@ import javax.annotation.Resource;
 
 /**
  * Web 配置类
- *
- * 主要负责以下功能配置： 1. Spring Security 安全配置 2. CORS 跨域配置 3. HTTP 安全特性配置（CSRF、HTTP Basic、表单登录等） 4. 请求结果构建器配置
+ * <p>
+ * 主要负责以下功能配置：
+ * <ol>
+ *     <li>Spring Security 安全配置（认证入口、访问拒绝、无状态会话、路径放行/受保护）</li>
+ *     <li>CORS 跨域配置</li>
+ *     <li>HTTP 安全特性（CSRF、HTTP Basic、表单登录、注销）开关</li>
+ *     <li>装配请求上下文传播器、登录网关中心等 Web 组件 Bean</li>
+ * </ol>
+ * 各项开关由 {@link WebProperty} 驱动。
+ * </p>
  *
  * @author tongj
+ * @see WebProperty Web 配置属性
  */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -103,14 +112,11 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     public CorsConfigurationSource corsFilter() {
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         final CorsConfiguration corsConfiguration = new CorsConfiguration();
-        // 1 设置访问源地址
+        // 放行全部来源/头/方法（演示默认配置，生产应按需收紧）
         corsConfiguration.addAllowedOrigin("*");
-        // 2 设置访问源请求头
         corsConfiguration.addAllowedHeader("*");
-        // 3 设置访问源请求方法
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.setMaxAge(24 * 60 * 60L);
-        // corsConfiguration.setAllowCredentials(true);
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
     }

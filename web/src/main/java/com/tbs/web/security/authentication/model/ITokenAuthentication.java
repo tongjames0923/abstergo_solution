@@ -7,51 +7,59 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * token认证接入接口
+ * <p>
+ * 在 Spring Security {@link Authentication} 契约之上扩展令牌载体能力，使认证对象可直接持有
+ * {@link ITokenModel} 与认证过程中的异常，便于拦截器与认证中心共享状态。
+ * </p>
  *
  * @author tongj
+ * @see Authentication Spring Security 认证契约
  */
 public interface ITokenAuthentication extends Authentication {
     /**
-     * 获取token
+     * 获取关联的令牌模型
      *
-     * @return
+     * @return 令牌模型；未绑定时为 {@code null}
      */
     ITokenModel getTokenModel();
 
     /**
-     * 设置token
+     * 设置关联的令牌模型
      *
-     * @param model
+     * @param model 待绑定的令牌模型，可以为 {@code null}
      */
     void setTokenModel(ITokenModel model);
 
     /**
-     * 是否有token
+     * 判断是否已绑定令牌
      *
-     * @return
+     * @return 已绑定令牌返回 {@code true}，否则 {@code false}
      */
     default boolean hasToken() {
         return getTokenModel() != null;
     }
 
     /**
-     * 获取用户信息
+     * 获取认证关联的用户详情
      *
-     * @return
+     * @return 用户详情，可能为 {@code null}（认证未完成时）
      */
     UserDetails getUserDetails();
 
     /**
-     * 获取认证异常
+     * 获取认证过程中产生的异常
      *
-     * @return
+     * @return 认证异常；无异常时为 {@code null}
      */
     AuthenticationException getAuthException();
 
     /**
-     * 设置认证异常
+     * 记录认证过程中的异常
+     * <p>
+     * 用于在认证链路中传递失败原因，供后续处理器转换为对应响应。
+     * </p>
      *
-     * @param e
+     * @param e 认证异常，可以为 {@code null}
      */
     void setAuthException(AuthenticationException e);
 }

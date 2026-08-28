@@ -11,6 +11,11 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
 /**
+ * 统一响应结果配置属性
+ * <p>
+ * 绑定前缀 {@code tbs.result}，用于在配置中心指定结果包装各组件的实现类（默认均为项目内置实现）。
+ * </p>
+ *
  * @author tongj
  */
 @Component
@@ -19,22 +24,22 @@ import org.springframework.stereotype.Component;
 public class ResultProperty {
 
     /**
-     * 是否启用
+     * 是否启用统一响应结果（默认 true）
      */
     private boolean enable = true;
 
     /**
-     * 创建结果对象
+     * 结果创建者实现类，默认 {@link DefaultResultCreateor}
      */
     private Class<? extends IResultCreator> resultCreator = DefaultResultCreateor.class;
 
     /**
-     * 返回结果构建器
+     * 结果构建器提供者实现类，默认 {@link SimpleBuilderProvider}
      */
     private Class<? extends IAjaxBuilderProvider> resultBuilderProvier = SimpleBuilderProvider.class;
 
     /**
-     * 错误结果构建器
+     * 默认错误结果构建器实现类，默认 {@link DefaultErrorAjaxProvider}
      */
     private Class<? extends IOnErrorAjaxProvider> errorResultBuilderProvier = DefaultErrorAjaxProvider.class;
 }

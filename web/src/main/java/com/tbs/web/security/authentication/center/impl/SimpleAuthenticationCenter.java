@@ -17,9 +17,13 @@ import javax.annotation.Resource;
 
 /**
  * 默认的认证中心
+ * <p>
+ * 基于 {@link IUserInfoService} 加载用户详情完成令牌认证：构造认证对象后校验其令牌模型、用户详情，
+ * 再对用户详情做有效性检查（如账号状态、绑定关系），全部通过则标记为已认证。
+ * </p>
  *
  * @author jiangnan
- *
+ * @see AbstractAuthenticationCenter 抽象基类
  */
 public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
 
@@ -28,6 +32,7 @@ public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
 
     @Override
     protected ITokenAuthentication createAuth( ITokenModel model) {
+        // 由令牌模型直接构造认证对象，异常信息暂置空，待 authenticate 阶段填充
         DefaultTokenAuthentication tokenAuthentication = new DefaultTokenAuthentication(model, null);
         return tokenAuthentication;
     }
@@ -38,6 +43,7 @@ public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
         AssertUtil.isTrue(authentication.getTokenModel() == null, () -> new SimpleAuthException(I18nUtil.get("auth.token.empty")));
         AssertUtil.isTrue(authentication.getUserDetails() == null, () -> new SimpleAuthException(I18nUtil.get("auth.user.empty")));
         try {
+            // 校验用户详情（状态、绑定等），通过则标记已认证
             AuthUtil.checkUserDetails(authentication.getUserDetails());
             authentication.setAuthenticated(true);
         } catch (Exception e) {

@@ -8,6 +8,10 @@ import java.io.Serializable;
 
 /**
  * 泛化接口参数表单
+ * <p>
+ * 描述单次泛化调用中一个入参：名称、期望类型（用于远程方法签名匹配）、值，以及
+ * {@code sort} 用于保证参数按声明顺序排列以匹配方法签名。
+ * </p>
  *
  * @author abstergo
  */

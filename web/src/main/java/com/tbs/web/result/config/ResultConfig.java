@@ -17,7 +17,11 @@ import org.springframework.context.annotation.Configuration;
 import javax.annotation.Resource;
 
 /**
- * 创建结果构建器提供者
+ * 统一响应结果自动配置
+ * <p>
+ * 在 {@code tbs.result.enable=true}（默认开启）时装配结果包装相关 Bean：构建器提供者、错误结果提供者、
+ * 结果创建者。均带 {@code @ConditionalOnMissingBean}，允许业务方自行覆盖；各实现类可由 {@link ResultProperty} 动态指定。
+ * </p>
  *
  * @author tongj
  */
@@ -29,9 +33,7 @@ public class ResultConfig {
     private ResultProperty resultProperty;
 
     /**
-     * 创建 AJAX 结果构建器提供者
-     *
-     * 使用 BeanUtil 根据配置构建结果构建器
+     * 创建 AJAX 结果构建器提供者（可被自定义实现覆盖）
      *
      * @return AJAX 结果构建器提供者
      */
@@ -44,11 +46,9 @@ public class ResultConfig {
     }
 
     /**
-     * 创建错误结果构建器提供者
+     * 创建默认错误结果构建器提供者（兜底，低优先级）
      *
-     * 使用 BeanUtil 根据配置构建错误结果构建器
-     *
-     * @return 错误结果构建器提供者
+     * @return 默认错误结果构建器提供者
      */
     @Bean
     @ConditionalOnMissingBean(IOnErrorAjaxProvider.class)
@@ -58,11 +58,21 @@ public class ResultConfig {
         }, resultProperty.getErrorResultBuilderProvier(), BeanUtil::buildByEmptyArgs);
     }
 
+    /**
+     * 注册「重新登录」错误结果提供者（固定存在，供 ReLoginRequestException 专用）
+     *
+     * @return 重新登录错误结果提供者
+     */
     @Bean
     public IOnErrorAjaxProvider reLoginErrorAjaxResultProvider() {
         return new ReLoginErrorAjaxProvider();
     }
 
+    /**
+     * 创建默认结果创建者（可被自定义实现覆盖）
+     *
+     * @return 结果创建者
+     */
     @Bean
     @ConditionalOnMissingBean(IResultCreator.class)
     public IResultCreator resultCreator() {

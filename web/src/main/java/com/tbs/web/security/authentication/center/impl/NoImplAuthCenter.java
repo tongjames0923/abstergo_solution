@@ -10,9 +10,12 @@ import com.tbs.web.security.token.ITokenModel;
 
 /**
  * 无实现认证中心
+ * <p>
+ * 占位实现：用于尚未接入具体认证中心的场景。构造即抛 {@link UnsupportedOperationException}，
+ * 提醒使用者必须提供真实的 {@link IAuthenticationCenter} 实现。
+ * </p>
  *
  * @author yin
- *
  */
 public class NoImplAuthCenter implements IAuthenticationCenter {
 

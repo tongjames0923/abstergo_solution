@@ -10,7 +10,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 默认的ajax结果构造器
+ * 默认的 ajax 结果构造器
+ * <p>
+ * 实现 {@link IAjaxResultBuilder} 的两步构建：第一步累加字段（仅首次写入，后续同名被忽略），
+ * 第二步将字段灌入 {@link AjaxResult} 并返回，支持构建前对底层字段 Map 做 {@code preHandle} 加工。
+ * </p>
  *
  * @author tongj
  */
@@ -21,15 +25,16 @@ public class SimpleAjaxResultBuilder implements IAjaxResultBuilder {
 
         @Override
         public <T> IAjaxResult1Step appendField(String feild, T value) {
+            // 仅首次写入，避免重复字段覆盖既有值
             map.putIfAbsent(feild, value);
             return this;
         }
 
         /**
-         * 添加msg
+         * 添加响应消息
          *
-         * @param msg
-         * @return
+         * @param msg 消息内容
+         * @return 当前步骤实例
          */
         public IAjaxResult1Step acceptMsg(String msg) {
             this.appendField(AjaxResult.MESSAGE_KEY, msg);
@@ -37,10 +42,10 @@ public class SimpleAjaxResultBuilder implements IAjaxResultBuilder {
         }
 
         /**
-         * 添加data
+         * 添加响应数据
          *
-         * @param data
-         * @return
+         * @param data 业务数据
+         * @return 当前步骤实例
          */
         public IAjaxResult1Step acceptData(Object data) {
             this.appendField(AjaxResult.DATA_KEY, data);
@@ -48,10 +53,10 @@ public class SimpleAjaxResultBuilder implements IAjaxResultBuilder {
         }
 
         /**
-         * 添加code
+         * 添加响应码
          *
-         * @param code
-         * @return
+         * @param code 状态码
+         * @return 当前步骤实例
          */
         public IAjaxResult1Step acceptCode(int code) {
             this.appendField(AjaxResult.CODE_KEY, code);
