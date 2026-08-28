@@ -43,7 +43,7 @@ public interface IUserLoginInfoService {
      * @param token
      * @return
      */
-    UserDetails getUserDetails(String token);
+    List<UserDetails> getUserDetails(String token);
 
     /**
      * 获取用户可用的Token

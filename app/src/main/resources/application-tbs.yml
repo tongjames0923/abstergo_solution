@@ -35,8 +35,10 @@ tbs:
     multi-level:
       enabled: true
     ttl:
+      # key 必须用 "[...]" 方括号记法：Spring Boot relaxed binding 会移除裸 key 中的 ":"、"_" 等字符
+      # key 为业务原始 cacheName（与 CacheNamesConstants 常量取值一致，不含 SYSTEM:CACHE: 前缀，也不含模块前缀）
       overrides:
-        user_name_id_map: 2h
+        "[app:user_name_id_map]": 2h
   broadcast:
     event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
   lock:
