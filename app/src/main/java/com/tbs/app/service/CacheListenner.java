@@ -22,7 +22,7 @@ public class CacheListenner implements ICacheListenner {
     private IDataHolder holder;
 
     public CacheListenner(IDataHolderManager holderManager) {
-        holder = holderManager.getDataHolder("CACHE_INFO_HOLDER")
+        holder = holderManager.getDataHolder(HOLDER_NAME)
             .orElseThrow(() -> new NotFoundTokenException("未获取有效的数据容器记录"));
     }
 
@@ -41,7 +41,11 @@ public class CacheListenner implements ICacheListenner {
             var map = holder.computeIfAbsent(HOLDER_NAME, (f) -> {
                 return new HashMap();
             });
-            var set = (Set)map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            var temp = map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            if (temp == null) {
+                return;
+            }
+            var set = (Set)temp;
             set.add(key);
             map.put(cacheName, set);
             holder.set(HOLDER_NAME, map, true);
@@ -55,7 +59,11 @@ public class CacheListenner implements ICacheListenner {
             var map = holder.computeIfAbsent(HOLDER_NAME, (f) -> {
                 return new HashMap();
             });
-            var set = (Set)map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            var temp = map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            if (temp == null) {
+                return;
+            }
+            var set = (Set)temp;
             set.remove(key);
             map.put(cacheName, set);
             holder.set(HOLDER_NAME, map, true);

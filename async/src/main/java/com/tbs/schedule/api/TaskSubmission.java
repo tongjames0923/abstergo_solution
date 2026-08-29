@@ -2,6 +2,7 @@ package com.tbs.schedule.api;
 
 import com.tbs.schedule.impl.LocalRunnablePayload;
 
+import java.io.Serializable;
 import java.time.Instant;
 import java.util.Date;
 import java.util.Optional;
@@ -19,7 +20,9 @@ import java.util.Optional;
  *     <li>{@code policyOverride}：可选的个性化执行策略，覆盖全局/按类型默认策略。</li>
  * </ul>
  * <p>
- * <b>持久化模型：</b>本对象本身不可变且字段可序列化，但其能否可靠持久化取决于 {@link #getPayload()}。
+ * <b>持久化模型：</b>本对象实现 {@link Serializable} 符合框架持久化规范，线格式由
+ * {@link com.tbs.schedule.impl.TaskSubmissionTransformer}（common 模块 {@code ITransformer} 数据转换 SPI 的实现）
+ * 以 JSON 快照承载（含载荷实现类信息，支持多态还原）。本对象不可变，其能否可靠持久化取决于 {@link #getPayload()}。
  * 若载荷为内存态（如 {@link LocalRunnablePayload} 持有的 {@link Runnable} 闭包），{@link #isPersistable()} 返回 {@code false}，
  * 内核在接入持久化存储时会跳过落盘，进程重启即丢失——适用于缓存 TTL 等无副作用场景。
  * 需要可靠持久化的任务请通过 {@link #of(String, TaskPayload, Instant)} 等入口提交可序列化载荷 + 对应执行器。
@@ -28,7 +31,12 @@ import java.util.Optional;
  * @author abstergo
  * @since 1.0.0
  */
-public class TaskSubmission {
+public class TaskSubmission implements Serializable {
+
+    /**
+     * 序列化版本号
+     */
+    private static final long serialVersionUID = 1L;
 
     /**
      * 任务唯一标识
@@ -126,8 +134,7 @@ public class TaskSubmission {
      * 便捷构建器：本地 Runnable 任务（延迟触发）
      * <p>
      * <b>非持久化入口：</b>底层载荷为 {@link LocalRunnablePayload}，持有 {@link Runnable} 闭包，无法序列化。
-     * 仅适用于进程内临时调度，接入持久化存储时内核跳过落盘，重启即丢失（无副作用场景适用）。
-     * 需可靠持久化请改用 {@link #of(String, TaskPayload, Date)}。
+     * 仅适用于进程内临时调度，接入持久化存储时内核跳过落盘，重启即丢失（无副作用场景适用）。 需可靠持久化请改用 {@link #of(String, TaskPayload, Date)}。
      * </p>
      *
      * @param runnable 可运行体
@@ -158,9 +165,8 @@ public class TaskSubmission {
     /**
      * 持久化主入口：基于任务类型 + 可序列化载荷构建任务
      * <p>
-     * 推荐用于需要可靠持久化的场景。载荷须为纯数据（可序列化 {@link TaskPayload} 实现），
-     * 内核按 {@code taskType} 路由到对应 {@link TaskExecutor}，进程重启后可由持久化存储恢复并重新执行。
-     * 自动生成任务标识，使用全局/按类型默认执行策略。
+     * 推荐用于需要可靠持久化的场景。载荷须为纯数据（可序列化 {@link TaskPayload} 实现）， 内核按 {@code taskType} 路由到对应
+     * {@link TaskExecutor}，进程重启后可由持久化存储恢复并重新执行。 自动生成任务标识，使用全局/按类型默认执行策略。
      * </p>
      *
      * @param taskType  任务类型（须有注册的执行器支持）

@@ -121,7 +121,7 @@ public class DefaultAutoGenDataHolderManager extends AbstractAutoGenDataHolderMa
          * @see IDataHolder#set(String, Object, boolean) 数据持有者存储方法
          */
         @Override
-        public boolean set(String key, Object value, boolean force) {
+        public <T> boolean set(String key, T value, boolean force) {
             return dataHolder.set(keyGen(key), value, force);
         }
 

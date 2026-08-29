@@ -1,6 +1,5 @@
 package com.tbs.redis.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.redis.codec.DefaultSystemCodec;
@@ -99,8 +98,8 @@ public class BasicRedisConfig {
     @Bean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
-    RedisSerializer valueSerializer(ObjectMapper mapper) throws Throwable {
-        return BeanUtil.buildBeanFromProperties(() -> new GenericJackson2JsonRedisSerializer(mapper),
+    RedisSerializer valueSerializer() throws Throwable {
+        return BeanUtil.buildBeanFromProperties(() -> new GenericJackson2JsonRedisSerializer(),
             property.getValueSerializer(),
             BeanUtil::buildByEmptyArgs);
     }

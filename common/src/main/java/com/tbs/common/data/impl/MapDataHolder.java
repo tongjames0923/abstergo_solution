@@ -68,7 +68,7 @@ public class MapDataHolder extends AbstractAntStyleMatchKeyFounder implements ID
      * @see Map#containsKey(Object) Map键检查方法
      */
     @Override
-    public boolean set(String key, Object value, boolean force) {
+    public <T> boolean set(String key, T value, boolean force) {
         if (force) {
             map.put(key, value);
             return true;

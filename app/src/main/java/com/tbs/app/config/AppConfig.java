@@ -17,6 +17,8 @@ import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
+import org.redisson.client.codec.Codec;
+import org.redisson.codec.Kryo5Codec;
 import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -190,6 +192,11 @@ public class AppConfig {
     @Bean
     TaskStore redisTaskStore() {
         return new RedisTaskStore();
+    }
+
+    @Bean
+    Codec redissonCodec() {
+        return new Kryo5Codec();
     }
 }
 

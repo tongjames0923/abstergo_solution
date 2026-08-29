@@ -83,8 +83,10 @@ public final class JsonUtils {
                 return springMapper;
             }
         } catch (Exception e) {
+            log.error("获取Spring容器中的ObjectMapper失败", e);
             // Spring容器未初始化或未配置ObjectMapper，使用默认实例
         }
+        log.warn("未找到Spring容器中的ObjectMapper，使用默认实例");
         return DEFAULT_MAPPER;
     }
 

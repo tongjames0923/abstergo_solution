@@ -88,7 +88,7 @@ public class UserEventHandler extends AbstractSubscriber {
 - `TaskExecutor` - 执行 SPI（按 taskType 匹配，`LocalRunnableTaskExecutor` 执行本地 Runnable）
 - `ExecutionPolicy` - 执行策略（超时/并发隔离/失败处理/优先级，三级覆盖）
 - `LifecycleListener` - 生命周期监听 SPI
-- `TaskStore` - 任务持久化 SPI（默认 `NoopTaskStore` 内存）
+- `TaskStore` - 任务持久化 SPI（默认 `NoopTaskStore` 内存；`TaskSubmission` 的 JSON 线格式转换见 `impl` 包 `TaskSubmissionTransformer`）
 
 **包结构（按职责子域分包，遵循开发规范铁律 12）：**
 ```
@@ -102,7 +102,7 @@ com.tbs.schedule/
 │   └── Tickable               # 可被单次驱动的内核视图（tick）
 ├── dispatcher/                # 派发实现：LocalTaskDispatcher（本地线程池）
 ├── executor/                  # 执行实现：LocalRunnableTaskExecutor / DefaultExecutionPolicy / ExecutionPolicyResolver
-├── impl/                      # 时序策略与兜底实现：TimingWheelStrategy / DelayQueueStrategy / SimpleLogErrorHandle / NoopTaskStore / LocalRunnablePayload
+├── impl/                      # 时序策略与兜底实现：TimingWheelStrategy / DelayQueueStrategy / SimpleLogErrorHandle / NoopTaskStore / LocalRunnablePayload / TaskSubmissionTransformer
 │   ├── LocalThreadScheduleTrigger  # 本地线程常驻轮询触发器（实现 IStartup，@LongTermAsync 自启循环）
 │   └── NoopScheduleTrigger        # 空触发器（外驱场景便利类，按需引用，不进入默认装配）
 ├── config/                    # 自动装配：EnableTbsSchedule / ScheduleAutoRegister / ScheduleConfig / ScheduleProperty
@@ -116,6 +116,7 @@ com.tbs.schedule/
 - 任务类型多样：新增 Payload + `TaskExecutor` 即扩展，无需改内核
 - 触发方式可扩展：手动/事件/外部 API 均通过 `submit` 入口提交（客户端，不进内核）
 - 多种时序策略可插拔
+- **任务持久化**：`TaskSubmission` 状态经 `TaskSubmissionTransformer`（实现 common 模块 `ITransformer` 数据转换 SPI）转为 JSON 快照——载荷携带实现类全限定名，支持任意扩展 Payload 的多态还原；由注册的 `TaskStore` 实现（如 redis-mod 的 `RedisTaskStore`）存取，进程重启后内核经 `loadUnfinished()` 恢复任务重新入队，单条损坏数据跳过不阻断整体恢复；策略覆盖（`policyOverride`）尽力持久化，还原失败降级为默认三级策略解析；内存态载荷（如 `LocalRunnablePayload`）不可持久化，内核自动跳过落盘
 - **触发机制解耦**：内核仅暴露无状态 `tick()`，由 `ScheduleTrigger` SPI 决定驱动方式；
   `tbs.schedule.embedded-trigger=true`（默认）由内置本地线程常驻轮询（信号量惰性唤醒）驱动；
   设为 `false` 时不装配内置触发器，由使用方注册自定义 `ScheduleTrigger` Bean 驱动内核 `tick()`（例如接入任意外部调度器时，在该调度器模块中提供调用 `SchedulerCore.tick()` 的触发器实现），async 模块对具体调度器零假设
