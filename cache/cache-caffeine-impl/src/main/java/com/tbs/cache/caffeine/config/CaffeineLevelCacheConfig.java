@@ -10,9 +10,7 @@ import org.springframework.context.annotation.Configuration;
 /**
  * Caffeine 多级缓存（L1）装配配置
  * <p>
- * 通过 {@code tbs.cache.level.caffeine.*} 配置属性，
- * 自动创建 {@link CaffeineLevelCacheProvider} Bean，
- * 供多级缓存管理器收集组装 L1 层级。
+ * 通过 {@code tbs.cache.level.caffeine.*} 配置属性， 自动创建 {@link CaffeineLevelCacheProvider} Bean， 供多级缓存管理器收集组装 L1 层级。
  * </p>
  * <p>
  * 配置示例：

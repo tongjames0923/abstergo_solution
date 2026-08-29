@@ -10,6 +10,11 @@ import java.util.UUID;
  * 将 {@link Runnable} 适配为 {@link TaskPayload}，作为"本地直接执行"这一默认任务类型（{@code type = local}）的载体。
  * 既支撑本地代码直接提交 {@link Runnable} 的轻量习惯，又使任务体在类型体系上与其它 Payload 保持一致。
  * </p>
+ * <p>
+ * <b>注意：本载荷为内存态，不可持久化。</b> {@link Runnable} 闭包无法序列化，进程重启后无法还原执行行为，
+ * 因此 {@link #isPersistable()} 返回 {@code false}，接入持久化存储时内核会跳过其落盘（重启即丢失，无副作用场景适用）。
+ * 需要可靠持久化的任务请改用可序列化 {@link TaskPayload} 实现 + 对应 {@link com.tbs.schedule.api.TaskExecutor}。
+ * </p>
  *
  * @author abstergo
  * @since 1.0.0
@@ -39,6 +44,16 @@ public class LocalRunnablePayload implements TaskPayload {
      */
     public Runnable getRunnable() {
         return runnable;
+    }
+
+    /**
+     * 内存态载荷：不可持久化（{@link Runnable} 闭包无法序列化，重启后无法还原）
+     *
+     * @return 始终返回 false
+     */
+    @Override
+    public boolean isPersistable() {
+        return false;
     }
 
     /**

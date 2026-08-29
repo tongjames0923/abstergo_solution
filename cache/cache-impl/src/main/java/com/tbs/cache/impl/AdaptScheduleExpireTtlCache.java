@@ -1,12 +1,12 @@
 package com.tbs.cache.impl;
 
+import com.tbs.cache.expire.impl.CacheExpireTaskExecutor;
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.schedule.api.TaskScheduler;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 
-import java.time.Duration;
 import java.util.Date;
 
 /**
@@ -58,8 +58,7 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
         try {
-            getSchedule().schedule(() -> cache.clear(),
-                Duration.between(new Date().toInstant(), expireTime.toInstant()));
+            getSchedule().submit(CacheExpireTaskExecutor.build(cache.getName(), null, expireTime));
             return super.expireAll(cache, expireTime);
         } catch (Exception e) {
             log.error("expireAll error", e);
@@ -81,8 +80,7 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
     @Override
     public boolean expire( Cache cache, Object key,  Date expireTime) {
         try {
-            getSchedule().schedule(() -> cache.evict(key),
-                Duration.between(new Date().toInstant(), expireTime.toInstant()));
+            getSchedule().submit(CacheExpireTaskExecutor.build(cache.getName(), key, expireTime));
             return super.expire(cache, key, expireTime);
         } catch (Exception e) {
             log.error("expireAll error", e);

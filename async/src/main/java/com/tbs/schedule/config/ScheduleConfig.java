@@ -75,7 +75,6 @@ public class ScheduleConfig {
      * @return 执行器
      */
     @Bean
-    @ConditionalOnMissingBean(TaskExecutor.class)
     public TaskExecutor localRunnableTaskExecutor() {
         return new LocalRunnableTaskExecutor();
     }

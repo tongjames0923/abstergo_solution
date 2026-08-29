@@ -14,4 +14,17 @@ import java.io.Serializable;
  * @since 1.0.0
  */
 public interface TaskPayload extends Serializable {
+
+    /**
+     * 声明该载荷是否可被持久化存储（落盘并在进程重启后恢复）
+     * <p>
+     * 默认 {@code true}：绝大多数载荷为纯数据（JSON / 二进制可序列化），支持可靠持久化。 内存态载荷（如持有 {@link Runnable} 闭包的本地任务）应覆写为 {@code false}，
+     * 内核在接入持久化存储时会跳过其落盘，避免序列化失败或重启后无法还原执行行为。
+     * </p>
+     *
+     * @return 可持久化返回 true
+     */
+    default boolean isPersistable() {
+        return true;
+    }
 }

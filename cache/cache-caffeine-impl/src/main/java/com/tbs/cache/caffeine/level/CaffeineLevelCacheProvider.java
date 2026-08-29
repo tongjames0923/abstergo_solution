@@ -14,8 +14,7 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * Caffeine L1 层级缓存提供者
  * <p>
- * 每个 cacheName 创建独立的 Caffeine 实例，支持 per-cacheName TTL 绑定。
- * L1 TTL = min(全局 expireAfterWrite, 业务 TTL)，确保 L1 不超过 L2 存活，
+ * 每个 cacheName 创建独立的 Caffeine 实例，支持 per-cacheName TTL 绑定。 L1 TTL = min(全局 expireAfterWrite, 业务 TTL)，确保 L1 不超过 L2 存活，
  * 保证最终一致性。
  * </p>
  * <p>
@@ -86,8 +85,7 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
     /**
      * 创建 Caffeine 缓存实例
      * <p>
-     * 有效 TTL = 优先取业务 TTL，如果业务 TTL 为 null 则取全局值。
-     * 全局值作为安全网上限，确保 L1 不会比 L2 存活更久。
+     * 有效 TTL = 优先取业务 TTL，如果业务 TTL 为 null 则取全局值。 全局值作为安全网上限，确保 L1 不会比 L2 存活更久。
      * </p>
      *
      * @param name        缓存名称
@@ -97,9 +95,8 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
     private Cache createCaffeineCache(String name, Duration businessTtl) {
         Duration effectiveTtl = resolveEffectiveTtl(businessTtl);
 
-        Caffeine<Object, Object> builder = Caffeine.newBuilder()
-            .maximumSize(property.getMaximumSize())
-            .expireAfterWrite(effectiveTtl);
+        Caffeine<Object, Object> builder =
+            Caffeine.newBuilder().maximumSize(property.getMaximumSize()).expireAfterWrite(effectiveTtl);
 
         if (property.isRecordStats()) {
             log.debug("recordStats is true, will record cache stats");
@@ -107,7 +104,8 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
         }
 
         com.github.benmanes.caffeine.cache.Cache<Object, Object> caffeineCache = builder.build();
-        log.info("Created Caffeine L1 cache: name={}, effectiveTtl={}, maximumSize={}, recordStats={}, allowNullValues={}",
+        log.info(
+            "Created Caffeine L1 cache: name={}, effectiveTtl={}, maximumSize={}, recordStats={}, allowNullValues={}",
             name, effectiveTtl, property.getMaximumSize(), property.isRecordStats(), property.isAllowNullValues());
         return new CaffeineCache(name, caffeineCache, property.isAllowNullValues());
     }
@@ -115,8 +113,7 @@ public class CaffeineLevelCacheProvider implements ILevelCacheProvider {
     /**
      * 计算有效 TTL
      * <p>
-     * 优先取业务 TTL
-     * 业务 TTL 为 null 时直接使用全局值。
+     * 优先取业务 TTL 业务 TTL 为 null 时直接使用全局值。
      * </p>
      *
      * @param businessTtl 业务 TTL，可为 null

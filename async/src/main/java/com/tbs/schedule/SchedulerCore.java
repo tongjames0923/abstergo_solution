@@ -83,7 +83,12 @@ public class SchedulerCore implements TaskScheduler, Tickable {
         AssertUtil.notNull(submission, "schedule.submission.null");
         AssertUtil.notNull(submission.getPayload(), "schedule.submission.payload.null");
         ScheduledEntry entry = new ScheduledEntry(submission);
-        taskStore.save(submission);
+        if (taskStore instanceof NoopTaskStore || submission.isPersistable()) {
+            taskStore.save(submission);
+        } else {
+            log.warn("任务不可持久化且接入了持久化存储，跳过落盘（重启将丢失）: taskId={}, taskType={}",
+                submission.getTaskId(), submission.getTaskType());
+        }
         LockUtil.getInstance().lockThen(this, () -> strategy.insert(entry));
         log.info("任务已提交: taskId={}, taskType={}, triggerAt={}", submission.getTaskId(), submission.getTaskType(),
             submission.getTriggerAt());
