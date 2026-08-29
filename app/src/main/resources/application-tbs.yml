@@ -50,8 +50,9 @@ tbs:
     enable: true
   redission:
     cache:
-      cache-timeout: 900
-      eviction-mode: lru
+      allow-null-values: true
+      max-idle-time: 7200
+      cache-timeout: 14400
   start-up:
     optional-execute: false
   xxl-job:

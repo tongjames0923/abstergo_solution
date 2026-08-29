@@ -14,9 +14,9 @@ import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
-import static com.tbs.cache.CacheNamesConstants.CACHE_UTILS_SET;
-
 import javax.annotation.Resource;
+
+import static com.tbs.cache.CacheNamesConstants.CACHE_UTILS_SET;
 
 /**
  * 缓存工具类
@@ -169,7 +169,7 @@ public class CacheUtils implements IStartup {
      * @param value 要缓存的对象值
      */
     @CachePut(cacheNames = CACHE_UTILS_SET, key = "#key")
-    public Object cacheableSet(String key, Object value) {
+    public <T> T cacheableSet(String key, T value) {
         return value;
     }
 
@@ -196,7 +196,7 @@ public class CacheUtils implements IStartup {
      * @return 缓存中存储的对象，如果未找到则返回null
      */
     @Cacheable(cacheNames = CACHE_UTILS_SET, key = "#key")
-    public Object cacheableGet(String key) {
+    public <T> T cacheableGet(String key) {
         return null;
     }
 

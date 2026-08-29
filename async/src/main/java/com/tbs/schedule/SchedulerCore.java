@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -76,6 +77,11 @@ public class SchedulerCore implements TaskScheduler, Tickable {
         this.taskStore = taskStore;
         this.listeners = listeners == null ? List.of() : listeners;
         this.trigger = trigger;
+        taskStore.loadUnfinished().forEach(submission -> {
+            log.info("任务已加载: taskId={}, taskType={}, triggerAt={}", submission.getTaskId(),
+                submission.getTaskType(), submission.getTriggerAt());
+            strategy.insert(new ScheduledEntry(submission));
+        });
     }
 
     @Override
@@ -203,13 +209,13 @@ public class SchedulerCore implements TaskScheduler, Tickable {
         }
 
         @Override
-        public Instant getTriggerAt() {
+        public Date getTriggerAt() {
             return submission.getTriggerAt();
         }
 
         @Override
         public Duration getRemain() {
-            long remain = Duration.between(Instant.now(), submission.getTriggerAt()).toMillis();
+            long remain = Duration.between(Instant.now(), submission.getTriggerAt().toInstant()).toMillis();
             return Duration.ofMillis(remain > 0 ? remain : 0);
         }
     }

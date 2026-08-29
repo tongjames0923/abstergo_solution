@@ -3,6 +3,7 @@ package com.tbs.schedule.api;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * 调度策略接口（时序引擎 SPI）
@@ -30,7 +31,7 @@ public interface ScheduleStrategy {
          *
          * @return 触发时刻
          */
-        Instant getTriggerAt();
+        Date getTriggerAt();
 
         /**
          * 获取剩余延迟

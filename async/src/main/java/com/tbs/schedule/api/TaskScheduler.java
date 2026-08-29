@@ -1,6 +1,7 @@
 package com.tbs.schedule.api;
 
 import java.time.Duration;
+import java.util.Date;
 
 /**
  * 任务调度门面（对外唯一稳定契约）
@@ -47,7 +48,7 @@ public interface TaskScheduler {
      * @param triggerAt 触发时刻，不可为 null
      * @return 任务调度句柄
      */
-    default ScheduleHandle scheduleAt(Runnable runnable, java.time.Instant triggerAt) {
+    default ScheduleHandle scheduleAt(Runnable runnable, Date triggerAt) {
         return submit(TaskSubmission.localAt(runnable, triggerAt));
     }
 }

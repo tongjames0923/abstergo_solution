@@ -29,7 +29,7 @@ public class CacheExpireTaskExecutor implements TaskExecutor {
             serializableKey = (Serializable)key;
         }
         return TaskSubmission.of(CacheExpireTaskPayload.TYPE,
-            new CacheExpireTaskPayload(cacheName, serializableKey, null), triggerAt.toInstant());
+            new CacheExpireTaskPayload(cacheName, serializableKey, null), triggerAt);
     }
 
     @Resource

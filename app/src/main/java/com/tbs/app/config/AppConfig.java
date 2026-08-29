@@ -9,7 +9,9 @@ import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
 import com.tbs.mq.RedisFaildMessageStore;
 import com.tbs.mq.api.retry.IFailedMessageStore;
+import com.tbs.schedule.RedisTaskStore;
 import com.tbs.schedule.api.ScheduleTrigger;
+import com.tbs.schedule.api.TaskStore;
 import com.tbs.schedule.xxl.XxlJobScheduleTrigger;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
@@ -38,7 +40,7 @@ public class AppConfig {
     public AbstractMessageSourceProvider appMessageSourceProvider() {
         return new AbstractMessageSourceProvider() {
             @Override
-            public  String getBasename() {
+            public String getBasename() {
                 return "i18n/messages-app";
             }
         };
@@ -58,7 +60,6 @@ public class AppConfig {
     public ILogRecorder loggerRecoreder() {
         return new RabbitMqLoggingRecorder("tbs.log.queue", "systemLog");
     }
-
 
     /**
      * 用户登录信息服务配置
@@ -186,4 +187,9 @@ public class AppConfig {
         return new XxlJobScheduleTrigger();
     }
 
+    @Bean
+    TaskStore redisTaskStore() {
+        return new RedisTaskStore();
+    }
 }
+

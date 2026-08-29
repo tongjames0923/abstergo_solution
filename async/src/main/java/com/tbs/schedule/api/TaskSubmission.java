@@ -3,6 +3,7 @@ package com.tbs.schedule.api;
 import com.tbs.schedule.impl.LocalRunnablePayload;
 
 import java.time.Instant;
+import java.util.Date;
 import java.util.Optional;
 
 /**
@@ -47,23 +48,14 @@ public class TaskSubmission {
     /**
      * 绝对触发时刻
      */
-    private final Instant triggerAt;
+    private final Date triggerAt;
 
     /**
      * 个性化执行策略覆盖（可空）
      */
     private final ExecutionPolicy policyOverride;
 
-    /**
-     * 构造任务提交描述
-     *
-     * @param taskId         任务唯一标识
-     * @param taskType       任务类型
-     * @param payload        任务载荷
-     * @param triggerAt      绝对触发时刻
-     * @param policyOverride 个性化执行策略（可为 null）
-     */
-    public TaskSubmission(String taskId, String taskType, TaskPayload payload, Instant triggerAt,
+    public TaskSubmission(String taskId, String taskType, TaskPayload payload, Date triggerAt,
         ExecutionPolicy policyOverride) {
         this.taskId = taskId;
         this.taskType = taskType;
@@ -117,7 +109,7 @@ public class TaskSubmission {
      *
      * @return 触发时刻
      */
-    public Instant getTriggerAt() {
+    public Date getTriggerAt() {
         return triggerAt;
     }
 
@@ -135,7 +127,7 @@ public class TaskSubmission {
      * <p>
      * <b>非持久化入口：</b>底层载荷为 {@link LocalRunnablePayload}，持有 {@link Runnable} 闭包，无法序列化。
      * 仅适用于进程内临时调度，接入持久化存储时内核跳过落盘，重启即丢失（无副作用场景适用）。
-     * 需可靠持久化请改用 {@link #of(String, TaskPayload, Instant)}。
+     * 需可靠持久化请改用 {@link #of(String, TaskPayload, Date)}。
      * </p>
      *
      * @param runnable 可运行体
@@ -143,7 +135,7 @@ public class TaskSubmission {
      * @return 任务提交描述
      */
     public static TaskSubmission local(Runnable runnable, java.time.Duration delay) {
-        Instant triggerAt = Instant.now().plus(delay == null ? java.time.Duration.ZERO : delay);
+        Date triggerAt = Date.from(Instant.now().plus(delay == null ? java.time.Duration.ZERO : delay));
         return new TaskSubmission(LocalRunnablePayload.nextTaskId(), LocalRunnablePayload.TYPE,
             LocalRunnablePayload.of(runnable), triggerAt, null);
     }
@@ -158,7 +150,7 @@ public class TaskSubmission {
      * @param triggerAt 触发时刻
      * @return 任务提交描述
      */
-    public static TaskSubmission localAt(Runnable runnable, Instant triggerAt) {
+    public static TaskSubmission localAt(Runnable runnable, Date triggerAt) {
         return new TaskSubmission(LocalRunnablePayload.nextTaskId(), LocalRunnablePayload.TYPE,
             LocalRunnablePayload.of(runnable), triggerAt, null);
     }
@@ -176,7 +168,7 @@ public class TaskSubmission {
      * @param triggerAt 绝对触发时刻
      * @return 任务提交描述
      */
-    public static TaskSubmission of(String taskType, TaskPayload payload, Instant triggerAt) {
+    public static TaskSubmission of(String taskType, TaskPayload payload, Date triggerAt) {
         return new TaskSubmission(nextTaskId(), taskType, payload, triggerAt, null);
     }
 
@@ -189,7 +181,7 @@ public class TaskSubmission {
      * @param policyOverride 个性化执行策略（可为 null）
      * @return 任务提交描述
      */
-    public static TaskSubmission of(String taskType, TaskPayload payload, Instant triggerAt,
+    public static TaskSubmission of(String taskType, TaskPayload payload, Date triggerAt,
         ExecutionPolicy policyOverride) {
         return new TaskSubmission(nextTaskId(), taskType, payload, triggerAt, policyOverride);
     }
