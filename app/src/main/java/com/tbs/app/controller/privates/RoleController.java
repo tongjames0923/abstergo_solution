@@ -7,7 +7,7 @@ import com.tbs.shared.enums.SystemRoleFlagEnum;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleEntity;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.v3.oas.annotations.Operation;

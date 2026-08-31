@@ -17,9 +17,14 @@ import org.springframework.core.annotation.Order;
 import javax.annotation.Resource;
 
 /**
- * token设置
+ * Token 设置
+ * <p>
+ * 在 {@code tbs.web.auth.enable=true} 时装配令牌处理相关 Bean：令牌拾取器、令牌颁发中心、令牌处理过滤器。
+ * 拾取器/颁发中心实现类可由 {@link WebAuthProperty} 动态指定，均允许缺省实现。
+ * </p>
  *
  * @author abstergo
+ * @see WebAuthProperty 认证配置属性
  */
 @Configuration
 public class TokenSetConfig {

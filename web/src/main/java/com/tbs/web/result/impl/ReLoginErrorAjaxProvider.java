@@ -9,7 +9,11 @@ import com.tbs.web.uitl.AjaxUtil;
 import org.jetbrains.annotations.NotNull;
 
 /**
- * 重新登录错误处理ajax结果提供者
+ * 重新登录错误处理 ajax 结果提供者
+ * <p>
+ * 专门处理 {@link ReLoginRequestException}：返回「需重新登录」语义码（{@link AjaxResult#RELOGIN_CODE}），
+ * 提示前端跳转登录页。仅对 {@code ReLoginRequestException} 及其子类生效。
+ * </p>
  *
  * @author tongj
  */

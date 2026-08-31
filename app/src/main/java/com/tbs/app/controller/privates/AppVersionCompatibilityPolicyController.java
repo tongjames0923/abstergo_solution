@@ -7,7 +7,7 @@ import com.tbs.app.web.AbstractCrudController;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.criteria.AppVersionCompatibilityPolicyCriteria;
 import com.tbs.shared.pojo.entity.version.AppVersionCompatibilityPolicyEntity;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -53,7 +53,7 @@ public class AppVersionCompatibilityPolicyController
     @Operation(summary = "获取策略详情", description = "根据ID获取兼容策略详情")
     @ApiResponse(responseCode = "200", description = "成功获取策略详情",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.POLICY.QUERY')")
     public AjaxResult get(@Parameter(name = "id", description = "策略ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
@@ -70,7 +70,7 @@ public class AppVersionCompatibilityPolicyController
     @Operation(summary = "保存策略", description = "新建或编辑兼容策略")
     @ApiResponse(responseCode = "200", description = "成功保存策略",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.POLICY.SAVE')")
     public AjaxResult save(@Parameter(name = "entity", description = "策略实体",
         required = true) @RequestBody AppVersionCompatibilityPolicyEntity entity) {
         return super.save(entity);
@@ -88,7 +88,7 @@ public class AppVersionCompatibilityPolicyController
     @Operation(summary = "删除策略", description = "根据ID删除兼容策略")
     @ApiResponse(responseCode = "200", description = "成功删除策略",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.POLICY.DELETE')")
     public AjaxResult delete(
         @Parameter(name = "id", description = "策略ID", required = true) @PathVariable Long id) {
         return super.delete(id);
@@ -108,7 +108,7 @@ public class AppVersionCompatibilityPolicyController
     @Operation(summary = "查询策略列表", description = "分页查询兼容策略列表")
     @ApiResponse(responseCode = "200", description = "成功查询策略列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.POLICY.QUERY')")
     public AjaxResult query(@Parameter(name = "criteria", description = "查询条件") @RequestBody(
             required = false) AppVersionCompatibilityPolicyCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false,
@@ -129,7 +129,7 @@ public class AppVersionCompatibilityPolicyController
     @Operation(summary = "启用策略", description = "启用指定的兼容策略")
     @ApiResponse(responseCode = "200", description = "成功启用策略",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.POLICY.SAVE')")
     public AjaxResult enable(
         @Parameter(name = "id", description = "策略ID", required = true) @PathVariable Long id) {
         policyService.enablePolicy(id);
@@ -147,7 +147,7 @@ public class AppVersionCompatibilityPolicyController
     @Operation(summary = "禁用策略", description = "禁用指定的兼容策略")
     @ApiResponse(responseCode = "200", description = "成功禁用策略",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.POLICY.SAVE')")
     public AjaxResult disable(
         @Parameter(name = "id", description = "策略ID", required = true) @PathVariable Long id) {
         policyService.disablePolicy(id);
@@ -167,7 +167,7 @@ public class AppVersionCompatibilityPolicyController
     @Operation(summary = "升级检查", description = "客户端上报版本信息，检查是否需要升级")
     @ApiResponse(responseCode = "200", description = "成功执行升级检查",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.POLICY.QUERY')")
     public AjaxResult checkUpgrade(@Parameter(name = "form", description = "升级检查入参",
         required = true) @RequestBody AppVersionCheckForm form) {
         return successResult(

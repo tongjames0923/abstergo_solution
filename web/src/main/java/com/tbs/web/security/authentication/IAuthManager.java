@@ -56,15 +56,15 @@ public interface IAuthManager {
     /**
      * 获取当前用户的认证信息
      *
-     * @return 当前用户的认证信息
+     * @return 当前线程/上下文关联的认证信息；未登录时返回 {@code null}
      */
     ITokenAuthentication getCurrentAuthentication();
 
     /**
      * 获取指定令牌对应的认证信息
      *
-     * @param token 令牌
-     * @return 对应的认证信息
+     * @param token 令牌串
+     * @return 该令牌对应的认证信息；令牌不存在或已失效时返回 {@code null}
      */
     ITokenAuthentication getAuthentication(String token);
 }

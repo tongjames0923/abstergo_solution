@@ -24,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import static com.tbs.struct.tree.closure.impl.service.CacheNamesConstants.TREE_NODE_ENTITY;
+
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
@@ -78,7 +80,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
      * @return 树节点
      */
 
-    @Cacheable(cacheNames = "tree_node_entity", key = "#treeGroup+':'+#nodeId")
+    @Cacheable(cacheNames = TREE_NODE_ENTITY, key = "#treeGroup+':'+#nodeId")
     public TreeNodeEntity getTreeNode(String nodeId, String treeGroup) {
         Long id = getInstance().getTreeNodeId(nodeId, treeGroup);
         if (id == null) {
@@ -308,7 +310,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
 
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
-    @CacheEvict(cacheNames = "tree_node_entity", key = "#treeGroup+':'+#nodeId")
+    @CacheEvict(cacheNames = TREE_NODE_ENTITY, key = "#treeGroup+':'+#nodeId")
     public void delete(String nodeId, String group) {
         if (StrUtil.isEmpty(nodeId)) {
             log.info("节点ID为空");
@@ -368,7 +370,7 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
      */
     @Transactional(rollbackFor = RuntimeException.class)
     @Override
-    @CacheEvict(cacheNames = "tree_node_entity", allEntries = true)
+    @CacheEvict(cacheNames = TREE_NODE_ENTITY, allEntries = true)
     public void tryRebuildStructure(String groupName) {
         rebuildTreeClosureCheck();
         // 先抢占JVM本地锁，缩小检查与加锁之间的竞态窗口；抢锁失败（坏条件）时抛异常

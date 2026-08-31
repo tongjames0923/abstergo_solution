@@ -1,80 +1,84 @@
 package com.tbs.schedule.impl;
 
-import com.tbs.schedule.IScheduleTask;
-import com.tbs.schedule.ScheduleStrategy;
-import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
+import com.tbs.schedule.api.ScheduleStrategy;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.DelayQueue;
 import java.util.concurrent.Delayed;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
- * DelayQueue 调度策略
+ * 延迟队列调度策略
  * <p>
- * 基于 JDK DelayQueue 的纯数据结构实现，不关心线程协调。
- * 适用于任务数量适中、对内存占用敏感的场景。
+ * 基于 {@link DelayQueue} 的纯数据结构实现，不关心线程协调与任务创建。适配底层元素为
+ * {@link ScheduleStrategy.Schedulable}，调度内核内部 {@code ScheduledEntry} 实现该契约。
+ * </p>
+ * <p>
+ * 修复项（相对旧实现）：
+ * <ul>
+ *     <li>{@code getDelay} 统一以毫秒换算，避免默认纳秒导致任务几乎立即到期、延迟失效；</li>
+ *     <li>{@code pollExpired} 使用 {@code drainTo} 取尽到期任务，避免批量 TTL 过期严重滞后。</li>
+ * </ul>
  * </p>
  *
  * @author abstergo
+ * @since 1.0.0
  */
-@Slf4j
-public class DelayQueueStrategy implements ScheduleStrategy<IScheduleTask> {
+public class DelayQueueStrategy implements ScheduleStrategy {
 
-    private final DelayQueue<DelayedTask> delayQueue = new DelayQueue<>();
+    private final DelayQueue<DelayTask> queue = new DelayQueue<>();
 
     @Override
-    public void insert(IScheduleTask task) {
-        delayQueue.put(new DelayedTask(task));
+    public void insert(Schedulable task) {
+        queue.add(new DelayTask(task));
     }
 
     @Override
-    public Collection<IScheduleTask> pollExpired() {
-        try {
-            DelayedTask task = delayQueue.poll();
-            if (task == null) {
-                return List.of();
-            }
-            return Arrays.asList(task.delegate);
-        } catch (Exception e) {
-            log.warn("DelayQueue poll error", e);
-            return List.of();
-        }
+    public Collection<Schedulable> pollExpired() {
+        Collection<DelayTask> expired = new ArrayList<>();
+        queue.drainTo(expired);
+        // DelayTask 仅包裹 Schedulable，回流时还原为委托的 Schedulable 元素
+        return expired.stream().map(t -> t.delegate).collect(Collectors.toList());
     }
 
     @Override
-    public Collection<IScheduleTask> dropAll() {
-        List<IScheduleTask> result = new ArrayList<>();
-        DelayedTask dt;
-        while ((dt = delayQueue.poll()) != null) {
-            result.add(dt.delegate);
-        }
-        return result;
+    public Collection<Schedulable> dropAll() {
+        Collection<DelayTask> all = new ArrayList<>();
+        queue.drainTo(all);
+        // DelayTask 仅包裹 Schedulable，回流时还原为委托的 Schedulable 元素
+        return all.stream().map(t -> t.delegate).collect(Collectors.toList());
     }
 
     /**
-     * 将 IScheduleTask 适配为 Delayed 接口，供 DelayQueue 使用
+     * 适配 DelayQueue 的元素包装
      */
-    private static class DelayedTask implements Delayed {
-        final IScheduleTask delegate;
+    static final class DelayTask implements Delayed {
 
-        DelayedTask(IScheduleTask delegate) {
+        private final Schedulable delegate;
+
+        DelayTask(Schedulable delegate) {
             this.delegate = delegate;
         }
 
         @Override
-        public long getDelay( TimeUnit unit) {
-            return unit.convert(delegate.getRemain());
+        public long getDelay(TimeUnit unit) {
+            Duration remain = delegate.getRemain();
+            return unit.convert(remain.toMillis(), TimeUnit.MILLISECONDS);
         }
 
         @Override
-        public int compareTo( Delayed o) {
+        public int compareTo(Delayed o) {
             return Long.compare(this.getDelay(TimeUnit.MILLISECONDS), o.getDelay(TimeUnit.MILLISECONDS));
+        }
+
+        @Override
+        public String toString() {
+            return delegate.toString();
         }
     }
 }

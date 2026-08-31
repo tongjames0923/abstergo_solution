@@ -9,7 +9,7 @@ Shared模块是Abstergo解决方案的核心共享组件库，提供了系统开
 - **实体模型**: 提供系统核心实体类（SystemUserEntity、SystemRoleEntity、SystemCompanyEntity等）
 - **基础接口**: 定义IBaseEntity、IIdentifiable、IFlagable等通用接口
 - **审计支持**: 实现时间审计(ITimeAuditable)和操作人审计(IOperatorAuditable)
-- **工具类**: 提供分页工具(PageUtil)、JSON序列化配置(JacksonConfig)等
+- **工具类**: 提供JSON序列化配置(JacksonConfig)等
 - **常量定义**: 包含系统常量、枚举类型和视图配置常量
 
 ### shared-api模块

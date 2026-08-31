@@ -3,6 +3,7 @@ package com.tbs.cache;
 import com.tbs.cache.integration.AbstractTtlCache;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+import org.springframework.core.Ordered;
 
 /**
  * TTL缓存装饰器接口
@@ -14,7 +15,22 @@ import org.springframework.cache.CacheManager;
  * @author tongj
  * @since 1.0.0
  */
-public interface ITtlCacheDecorator {
+public interface ITtlCacheDecorator extends Ordered {
+
+    /**
+     * 判断当前缓存是否支持TTL功能
+     * <p>
+     * 由于Spring Cache的限制，无法直接在Cache接口层面添加TTL功能 因此需要通过Cache的实现类或者CacheManager的实现类进行判断
+     * </p>
+     *
+     * @param cache   要判断的缓存实例
+     * @param manager 缓存管理器
+     * @return 如果当前缓存支持TTL功能则返回true，否则返回false
+     */
+    default boolean support(Cache cache, CacheManager manager) {
+        return false;
+    }
+
     /**
      * 将普通缓存装饰成TTL缓存
      * <p>
@@ -26,4 +42,8 @@ public interface ITtlCacheDecorator {
      * @return 装饰后的TTL缓存实例
      */
     AbstractTtlCache decorateCache(Cache cache, CacheManager manager);
+
+    default int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
 }

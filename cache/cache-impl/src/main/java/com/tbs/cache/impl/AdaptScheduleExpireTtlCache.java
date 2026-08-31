@@ -1,20 +1,19 @@
 package com.tbs.cache.impl;
 
+import com.tbs.cache.expire.impl.CacheExpireTaskExecutor;
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.schedule.ISchedule;
+import com.tbs.schedule.api.TaskScheduler;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.Cache;
 
-import java.time.Duration;
 import java.util.Date;
 
 /**
  * 基于调度器的TTL缓存适配器
  * <p>
  * 继承自AbstractAdaptTtlCache，通过调度器实现缓存的TTL（Time To Live）功能
- * 使用ISchedule接口实现缓存条目的定时过期
+ * 使用TaskScheduler接口实现缓存条目的定时过期
  * </p>
  *
  * @author tongj
@@ -37,13 +36,13 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
     /**
      * 获取调度器实例
      * <p>
-     * 从Spring容器中获取ISchedule实例
+     * 从Spring容器中获取TaskScheduler实例
      * </p>
      *
-     * @return ISchedule调度器实例
+     * @return TaskScheduler调度器实例
      */
-    protected ISchedule getSchedule() {
-        return SpringUtil.getBean(ISchedule.class);
+    protected TaskScheduler getSchedule() {
+        return SpringUtil.getBean(TaskScheduler.class);
     }
 
     /**
@@ -59,9 +58,8 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
     @Override
     public boolean expireAll(Cache cache, Date expireTime) {
         try {
-            return getSchedule().pin(() -> {
-                cache.clear();
-            }, Duration.between(new Date().toInstant(), expireTime.toInstant())).isPin();
+            getSchedule().submit(CacheExpireTaskExecutor.build(cache.getName(), null, expireTime));
+            return super.expireAll(cache, expireTime);
         } catch (Exception e) {
             log.error("expireAll error", e);
             return false;
@@ -82,9 +80,8 @@ public class AdaptScheduleExpireTtlCache extends AbstractAdaptTtlCache {
     @Override
     public boolean expire( Cache cache, Object key,  Date expireTime) {
         try {
-            return getSchedule().pin(() -> {
-                cache.evict(key);
-            }, Duration.between(new Date().toInstant(), expireTime.toInstant())).isPin();
+            getSchedule().submit(CacheExpireTaskExecutor.build(cache.getName(), key, expireTime));
+            return super.expire(cache, key, expireTime);
         } catch (Exception e) {
             log.error("expireAll error", e);
             return false;

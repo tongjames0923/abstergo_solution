@@ -1,14 +1,16 @@
 package com.tbs.shared.pojo.entity;
 
+import com.tbs.shared.annotations.LogicDeleteEntity;
+import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
+import com.tbs.shared.pojo.ICommonDeleteAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
-import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.Comment;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -30,11 +32,14 @@ import java.util.Date;
 @Entity
 @Table(name = "sys_role_group_relation",
     indexes = {@Index(name = "idx_role_group_relation_role_id", columnList = "role_id"),
-        @Index(name = "idx_role_group_relation_group_id", columnList = "group_id")})
+        @Index(name = "idx_role_group_relation_group_id", columnList = "group_id"),
+        @Index(name = "idx_flag", columnList = "flag")})
 @AllArgsConstructor
 @NoArgsConstructor
-public class SystemRoleGroupRelationEntity implements IIdentifiable<Long>, ICommonCreateAuditable<Long>,
-    ICommonUpdateAuditable<Long>, Serializable {
+@LogicDeleteEntity(activeFlagValues = {1, -1}, onNullIsDeleted = false)
+public class SystemRoleGroupRelationEntity
+    implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>,
+    ICommonDeleteAuditable<Long>, Serializable {
 
     private static final long serialVersionUID = 1L;
 
@@ -87,5 +92,28 @@ public class SystemRoleGroupRelationEntity implements IIdentifiable<Long>, IComm
     @Comment("更新者用户ID")
     @Column(name = "update_by")
     private Long updateBy;
+
+    /**
+     * 删除时间（逻辑删除）
+     */
+    @Comment("逻辑删除时间")
+    @Column(name = "delete_time")
+    private Date deleteTime;
+
+    /**
+     * 删除者ID
+     */
+    @Comment("删除者用户ID")
+    @Column(name = "delete_by")
+    private Long deleteBy;
+
+    /**
+     * 逻辑删除标志位
+     *
+     * @see com.tbs.shared.enums.CommonFlagEnum
+     */
+    @Comment("逻辑删除标志位")
+    @Column(name = "flag")
+    private Integer flag;
 
 }

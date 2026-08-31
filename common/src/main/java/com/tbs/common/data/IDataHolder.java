@@ -27,7 +27,7 @@ public interface IDataHolder {
 	 * @param force 是否强制存储，true表示强制覆盖，false表示仅在键不存在时存储
 	 * @return 存储成功返回true，否则返回false
 	 */
-	boolean set(String key, Object value, boolean force);
+	<T> boolean set(String key, T value, boolean force);
 
 	/**
 	 * 获取数据，如果不存在则计算并存储

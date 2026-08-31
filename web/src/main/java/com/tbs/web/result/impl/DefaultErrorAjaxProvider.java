@@ -7,7 +7,11 @@ import com.tbs.web.uitl.AjaxUtil;
 import org.springframework.core.Ordered;
 
 /**
- * 默认错误处理
+ * 默认错误处理 ajax 结果提供者
+ * <p>
+ * 兜底处理所有未被更具体 {@link IOnErrorAjaxProvider} 匹配的异常：以异常本地化消息（为空时回退到通用错误消息）构造错误响应。
+ * 由于 {@code getOrder} 为最低优先级，仅在其它专门 provider 不支持时生效。
+ * </p>
  *
  * @author tongj
  */

@@ -9,8 +9,8 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
-import com.tbs.shared.pojo.model.PageVO;
-import com.tbs.shared.util.PageUtil;
+import com.tbs.common.data.PageVO;
+import com.tbs.common.util.PageUtil;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;

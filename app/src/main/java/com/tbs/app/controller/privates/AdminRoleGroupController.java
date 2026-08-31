@@ -4,11 +4,11 @@ import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.vo.RemoteUserInfoVO;
 import com.tbs.app.vo.SystemRoleGroupVO;
 import com.tbs.app.web.AbstractCrudController;
+import com.tbs.common.data.PageVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemRoleGroupCriteria;
 import com.tbs.shared.pojo.entity.SystemRoleGroupEntity;
-import com.tbs.shared.pojo.model.PageVO;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -88,7 +88,7 @@ public class AdminRoleGroupController
     @Operation(summary = "保存角色组数据", description = "创建或更新角色组数据信息")
     @ApiResponse(responseCode = "200", description = "成功保存角色组数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.ROLEGROUP')")
     public AjaxResult save(@Parameter(name = "entity", description = "角色组信息",
         required = true) @RequestBody SystemRoleGroupEntity entity) {
         return super.save(entity);
@@ -106,7 +106,7 @@ public class AdminRoleGroupController
     @Operation(summary = "删除角色组数据", description = "根据角色组ID删除角色组数据")
     @ApiResponse(responseCode = "200", description = "成功删除角色组数据",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DELETE.ROLEGROUP')")
     public AjaxResult delete(@Parameter(name = "id", description = "角色组ID", required = true) @PathVariable Long id) {
         return super.delete(id);
     }
@@ -125,7 +125,7 @@ public class AdminRoleGroupController
     @Operation(summary = "查询角色组数据", description = "根据条件查询角色组数据列表，支持分页")
     @ApiResponse(responseCode = "200", description = "成功查询角色组数据列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP')")
     public AjaxResult query(
         @Parameter(name = "criteria", description = "查询条件") @RequestBody CommonSystemRoleGroupCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false) Long pageNum,
@@ -143,7 +143,7 @@ public class AdminRoleGroupController
     @Operation(summary = "获取角色组下的权限列表", description = "根据角色组ID获取该角色组下的所有权限列表")
     @ApiResponse(responseCode = "200", description = "成功获取角色组下的权限列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP')")
     public AjaxResult getRoleList(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId) {
         return successResult(groupService.getRoleList(groupId));
@@ -161,7 +161,7 @@ public class AdminRoleGroupController
     @Operation(summary = "添加角色到角色组", description = "将指定角色添加到指定角色组中")
     @ApiResponse(responseCode = "200", description = "成功添加角色到角色组",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.ROLEGROUP')")
     public AjaxResult appendRole(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId,
         @Parameter(name = "roleId", description = "角色ID", required = true) @PathVariable Long roleId) {
@@ -181,7 +181,7 @@ public class AdminRoleGroupController
     @Operation(summary = "移除角色组下的角色", description = "从指定角色组中移除指定角色")
     @ApiResponse(responseCode = "200", description = "成功移除角色组下的角色",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.ROLEGROUP')")
     public AjaxResult removeRole(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId,
         @Parameter(name = "roleId", description = "角色ID", required = true) @PathVariable Long roleId) {
@@ -201,7 +201,7 @@ public class AdminRoleGroupController
     @Operation(summary = "分配用户到角色组", description = "将指定用户添加到指定角色组中")
     @ApiResponse(responseCode = "200", description = "成功分配用户到角色组",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.ROLEGROUP')")
     public AjaxResult applyGroup(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId,
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
@@ -221,7 +221,7 @@ public class AdminRoleGroupController
     @Operation(summary = "移除用户从角色组", description = "从指定角色组中移除指定用户")
     @ApiResponse(responseCode = "200", description = "成功移除用户从角色组",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.ROLEGROUP')")
     public AjaxResult removeGroup(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId,
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
@@ -240,7 +240,7 @@ public class AdminRoleGroupController
     @Operation(summary = "获取角色组详情", description = "根据角色组ID获取角色组详情，包含权限列表")
     @ApiResponse(responseCode = "200", description = "成功获取角色组详情",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP')")
     public AjaxResult getRoleGroupVO(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId) {
         return successResult(groupService.getRoleGroupVO(groupId));
@@ -257,7 +257,7 @@ public class AdminRoleGroupController
     @Operation(summary = "获取用户的角色组列表", description = "根据用户ID获取该用户所属的所有角色组列表")
     @ApiResponse(responseCode = "200", description = "成功获取用户角色组列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP.USER')")
     public AjaxResult getUserRoleGroupVOList(
         @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
         return successResult(groupService.getUserRoleGroupVOList(userId));
@@ -274,43 +274,10 @@ public class AdminRoleGroupController
     @Operation(summary = "获取角色组下的用户列表", description = "根据角色组ID获取该角色组下的所有用户列表")
     @ApiResponse(responseCode = "200", description = "成功获取角色组下的用户列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP')")
     public AjaxResult getUserList(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId) {
         return successResult(groupService.getUserList(groupId));
     }
 
-    /**
-     * 检查权限是否存在于任意角色组中
-     *
-     * @param roleId 权限ID
-     * @return 检查结果
-     */
-    @GetMapping("check/role/{roleId}")
-    @AjaxResponseType(Boolean.class)
-    @Operation(summary = "检查权限是否存在于任意角色组", description = "检查指定权限是否被分配到任意角色组中")
-    @ApiResponse(responseCode = "200", description = "成功获取检查结果",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult isRoleInGroupAnyGroup(
-        @Parameter(name = "roleId", description = "权限ID", required = true) @PathVariable Long roleId) {
-        return successResult(groupService.isRoleInGroupAnyGroup(roleId));
-    }
-
-    /**
-     * 检查用户是否在任意角色组下
-     *
-     * @param userId 用户ID
-     * @return 检查结果
-     */
-    @GetMapping("check/user/{userId}")
-    @AjaxResponseType(Boolean.class)
-    @Operation(summary = "检查用户是否在任意角色组", description = "检查指定用户是否属于任意角色组")
-    @ApiResponse(responseCode = "200", description = "成功获取检查结果",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
-    public AjaxResult isUserInGroupAnyGroup(
-        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
-        return successResult(groupService.isUserInGroupAnyGroup(userId));
-    }
 }

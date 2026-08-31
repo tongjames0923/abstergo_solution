@@ -1,6 +1,6 @@
 package com.tbs.shared.interfaces.service;
 
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.sql.criteria.IPage;
 import com.tbs.sql.criteria.IQueryCriteria;
 

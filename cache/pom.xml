@@ -18,6 +18,9 @@
         <module>
             cache-impl
         </module>
+        <module>
+            cache-caffeine-impl
+        </module>
     </modules>
 
     <properties>

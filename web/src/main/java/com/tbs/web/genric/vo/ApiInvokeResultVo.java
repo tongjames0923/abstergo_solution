@@ -8,8 +8,13 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 执行结果
+ * 泛化接口调用结果视图
+ * <p>
+ * 承载单次泛化调用的整体执行信息：耗时区间、成功标志（仅 {@code 1} 表示成功）、异常明细，以及执行返回结果。
+ * 由 {@link com.tbs.web.genric.AbstractGenricApiInstance#invokeApi} 填充，便于前端展示与排错。
+ * </p>
  *
+ * @param <R> 执行返回结果的序列化类型
  * @author abstergo
  */
 @Data

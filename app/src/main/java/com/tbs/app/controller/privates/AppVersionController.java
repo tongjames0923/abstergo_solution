@@ -9,7 +9,7 @@ import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.criteria.AppVersionCriteria;
 import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionEntity;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -59,7 +59,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "获取版本详情", description = "根据ID获取应用版本详情")
     @ApiResponse(responseCode = "200", description = "成功获取版本详情",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.QUERY')")
     public AjaxResult get(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return super.get(id);
     }
@@ -76,7 +76,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "保存版本", description = "新建或编辑应用版本，新建时初始为草稿状态")
     @ApiResponse(responseCode = "200", description = "成功保存版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
     public AjaxResult save(
         @Parameter(name = "entity", description = "版本实体", required = true) @RequestBody AppVersionEntity entity) {
         return super.save(entity);
@@ -94,7 +94,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "删除版本", description = "根据ID删除应用版本，仅草稿状态可删除")
     @ApiResponse(responseCode = "200", description = "成功删除版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.DELETE')")
     public AjaxResult delete(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return super.delete(id);
     }
@@ -113,7 +113,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "查询版本列表", description = "分页查询应用版本列表")
     @ApiResponse(responseCode = "200", description = "成功查询版本列表",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.QUERY')")
     public AjaxResult query(@Parameter(name = "criteria", description = "查询条件") @RequestBody(
             required = false) AppVersionCriteria criteria,
         @Parameter(name = "pageNum", description = "页码") @RequestParam(required = false,
@@ -134,7 +134,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "提交审核", description = "将草稿状态的版本提交审核")
     @ApiResponse(responseCode = "200", description = "成功提交审核",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
     public AjaxResult submit(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return successResult(appVersionService.submit(id));
     }
@@ -150,7 +150,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "发布版本", description = "将待审核状态的版本正式发布")
     @ApiResponse(responseCode = "200", description = "成功发布版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
     public AjaxResult release(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return successResult(appVersionService.release(id));
     }
@@ -166,7 +166,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "下线版本", description = "将已发布状态的版本下线")
     @ApiResponse(responseCode = "200", description = "成功下线版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
     public AjaxResult offline(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return successResult(appVersionService.offline(id));
     }
@@ -182,7 +182,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "回滚版本", description = "将已发布状态的版本回滚")
     @ApiResponse(responseCode = "200", description = "成功回滚版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
     public AjaxResult rollback(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return successResult(appVersionService.rollback(id));
     }
@@ -198,7 +198,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "归档版本", description = "将已下线状态的版本归档")
     @ApiResponse(responseCode = "200", description = "成功归档版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
     public AjaxResult archive(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return successResult(appVersionService.archive(id));
     }
@@ -214,7 +214,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "获取版本聚合详情", description = "获取版本完整信息与名下安装包列表")
     @ApiResponse(responseCode = "200", description = "成功获取版本聚合详情",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.QUERY')")
     public AjaxResult getDetail(
         @Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         AppVersionEntity version = appVersionService.queryById(id);
@@ -237,7 +237,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "查询最新已发布版本", description = "查询指定应用与平台下的最新已发布版本")
     @ApiResponse(responseCode = "200", description = "成功查询最新已发布版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.QUERY')")
     public AjaxResult getLatestReleased(
         @Parameter(name = "appKey", description = "应用标识", required = true) @RequestParam String appKey,
         @Parameter(name = "platform", description = "平台标识", required = true) @RequestParam String platform) {
@@ -254,7 +254,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     @Operation(summary = "查询应用标识清单", description = "查询已登记版本的应用标识去重列表，供兼容策略选择源/目标应用时使用")
     @ApiResponse(responseCode = "200", description = "成功查询应用标识清单",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
-    @PreAuthorize("@preAuthUtils.accountActived")
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.QUERY')")
     public AjaxResult listAppKeys() {
         return successResult(appVersionService.listAppKeys());
     }

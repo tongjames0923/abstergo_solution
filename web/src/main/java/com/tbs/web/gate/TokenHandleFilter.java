@@ -23,9 +23,15 @@ import java.util.stream.Collectors;
 
 /**
  * 令牌处理过滤器
+ * <p>
+ * 作为请求入口的统一令牌处理点：遍历所有已注册的 {@link IGateWayCenter}（按 {@code Ordered} 排序），
+ * 由支持当前路径的管理器提取并校验令牌、构造认证上下文；任一管理器抛紧急异常则直接写错误响应中断请求，
+ * 非紧急异常仅告警放行。启动时通过 {@link #startUp} 收集全部管理器并按序排序。
+ * </p>
  *
  * @author jiangnan
- *
+ * @see IGateWayCenter 网关中心契约
+ * @see IStartup 启动初始化钩子
  */
 @Slf4j
 public class TokenHandleFilter extends OncePerRequestFilter implements IStartup {

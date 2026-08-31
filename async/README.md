@@ -74,36 +74,74 @@ public class UserEventHandler extends AbstractSubscriber {
 
 ### 3. 任务调度 (Schedule)
 
-灵活的任务调度系统，支持延迟任务执行和定时任务管理。
+轻量级延迟/一次性定时触发调度框架，定位为单进程内"延迟 N 毫秒后执行一次"与"指定时刻触发一次"的轻量能力，
+与 xxl-job 分布式调度形成职责互补（重分布式调度不在此重复实现）。采用"管道 + SPI"架构：
 
-**核心组件：**
-- `ISchedule` - 调度器接口
-- `IScheduleTask` - 调度任务
-- `DelayQueueSchedule` - 延迟队列调度器
-- `TimingWheelSchedule` - 时间轮调度器
+`提交 → 时序引擎(ScheduleStrategy) → 到期提升 → 派发(TaskDispatcher) → 执行(TaskExecutor + ExecutionPolicy) → 生命周期监听(LifecycleListener)`
+
+**核心组件（api 契约层）：**
+- `TaskScheduler` - 调度门面（唯一稳定入口，`submit` / `schedule` 便捷方法）
+- `TaskSubmission` - 纯数据提交描述（taskId / taskType / payload / triggerAt / 策略覆盖）
+- `ScheduleHandle` - 取消句柄（仅 `cancel()`）
+- `ScheduleStrategy` - 时序引擎 SPI（时间轮 `TimingWheelStrategy` / 延迟队列 `DelayQueueStrategy`）
+- `TaskDispatcher` - 派发 SPI（`LocalTaskDispatcher` 默认本地线程池；预留 `BroadcastTaskDispatcher`）
+- `TaskExecutor` - 执行 SPI（按 taskType 匹配，`LocalRunnableTaskExecutor` 执行本地 Runnable）
+- `ExecutionPolicy` - 执行策略（超时/并发隔离/失败处理/优先级，三级覆盖）
+- `LifecycleListener` - 生命周期监听 SPI
+- `TaskStore` - 任务持久化 SPI（默认 `NoopTaskStore` 内存；`TaskSubmission` 的 JSON 线格式转换见 `impl` 包 `TaskSubmissionTransformer`）
+
+**包结构（按职责子域分包，遵循开发规范铁律 12）：**
+```
+com.tbs.schedule/
+├── SchedulerCore.java        # 调度内核：时序引擎驱动、到期取出与派发、优雅停机；暴露无状态 tick()
+├── api/                       # 对外契约：门面、任务模型与全部 SPI 接口
+│   ├── TaskScheduler / TaskSubmission / ScheduleHandle / TaskPayload
+│   ├── ScheduleStrategy / TaskDispatcher / TaskExecutor
+│   ├── TaskStore / LifecycleListener / TaskExecuteErrorHandle / ExecutionPolicy / TypedExecutionPolicy
+│   ├── ScheduleTrigger        # 触发器 SPI（start/stop/wakeup，驱动契约）
+│   └── Tickable               # 可被单次驱动的内核视图（tick）
+├── dispatcher/                # 派发实现：LocalTaskDispatcher（本地线程池）
+├── executor/                  # 执行实现：LocalRunnableTaskExecutor / DefaultExecutionPolicy / ExecutionPolicyResolver
+├── impl/                      # 时序策略与兜底实现：TimingWheelStrategy / DelayQueueStrategy / SimpleLogErrorHandle / NoopTaskStore / LocalRunnablePayload / TaskSubmissionTransformer
+│   ├── LocalThreadScheduleTrigger  # 本地线程常驻轮询触发器（实现 IStartup，@LongTermAsync 自启循环）
+│   └── NoopScheduleTrigger        # 空触发器（外驱场景便利类，按需引用，不进入默认装配）
+├── config/                    # 自动装配：EnableTbsSchedule / ScheduleAutoRegister / ScheduleConfig / ScheduleProperty
+└── i18n/                      # 模块化国际化：ScheduleMessageSourceProvider
+```
 
 **功能特性：**
-- 支持延迟任务执行
-- 任务取消机制
-- 任务执行错误处理
-- 多种调度策略支持
+- **一次性触发语义**：任务到点执行一次即终结，框架无重复定时概念
+- 任务模型与生命周期状态分离（`TaskSubmission` 纯数据，状态收口内核 `ScheduledEntry`）
+- 执行外移：内核只做"按时派发"，执行落线程池，避免慢任务拖累整批
+- 任务类型多样：新增 Payload + `TaskExecutor` 即扩展，无需改内核
+- 触发方式可扩展：手动/事件/外部 API 均通过 `submit` 入口提交（客户端，不进内核）
+- 多种时序策略可插拔
+- **任务持久化**：`TaskSubmission` 状态经 `TaskSubmissionTransformer`（实现 common 模块 `ITransformer` 数据转换 SPI）转为 JSON 快照——载荷携带实现类全限定名，支持任意扩展 Payload 的多态还原；由注册的 `TaskStore` 实现（如 redis-mod 的 `RedisTaskStore`）存取，进程重启后内核经 `loadUnfinished()` 恢复任务重新入队，单条损坏数据跳过不阻断整体恢复；策略覆盖（`policyOverride`）尽力持久化，还原失败降级为默认三级策略解析；内存态载荷（如 `LocalRunnablePayload`）不可持久化，内核自动跳过落盘
+- **触发机制解耦**：内核仅暴露无状态 `tick()`，由 `ScheduleTrigger` SPI 决定驱动方式；
+  `tbs.schedule.embedded-trigger=true`（默认）由内置本地线程常驻轮询（信号量惰性唤醒）驱动；
+  设为 `false` 时不装配内置触发器，由使用方注册自定义 `ScheduleTrigger` Bean 驱动内核 `tick()`（例如接入任意外部调度器时，在该调度器模块中提供调用 `SchedulerCore.tick()` 的触发器实现），async 模块对具体调度器零假设
 
 **使用示例：**
 ```java
 @Autowired
-private ISchedule schedule;
+private TaskScheduler scheduler;
 
 public void scheduleTask() {
-    // 延迟5秒执行任务
-    IScheduleTask task = schedule.pin(() -> {
+    // 延迟 5 秒执行本地任务
+    ScheduleHandle handle = scheduler.schedule(() -> {
         // 需要延迟执行的任务逻辑
-        System.out.println("任务执行了");
+        log.info("任务执行了");
     }, Duration.ofSeconds(5));
-    
+
+    // 指定时刻触发
+    // scheduler.scheduleAt(() -> {...}, Instant.now().plusMillis(1000));
+
     // 取消任务
-    // schedule.unPin(task);
+    // handle.cancel();
 }
 ```
+
+**启用方式：** 启动类标注 `@EnableTbsSchedule`，并在 `application.yml` 设置 `tbs.schedule.enable=true`。
 
 ### 4. 分布式锁 (Lock)
 
@@ -201,9 +239,15 @@ broadcast:
   mode: async
 
 # 调度配置
-schedule:
-  type: delay-queue
-  error-handle: log
+tbs:
+  schedule:
+    enable: true                 # 总开关，默认 false
+    strategy: com.tbs.schedule.impl.TimingWheelStrategy   # 时序策略，默认时间轮
+    poll-time: 5
+    poll-time-unit: SECONDS
+    tick-duration: 1000          # 时间轮槽间隔（毫秒）
+    wheel-size: 300
+    max-ticks-per-poll: 1000
 
 # 锁配置
 lock:
@@ -262,8 +306,10 @@ async/
 
 - 实现`IEventBus`接口创建自定义事件总线
 - 继承`AbstractSubscriber`创建事件处理器
-- 实现`ISchedule`接口创建自定义调度器
-- 扩展`ILockProvider`支持更多锁实现
+- 实现`TaskExecutor`接口 + 扩展`TaskPayload`支持自定义任务类型
+- 实现`TaskDispatcher`接口（如 `BroadcastTaskDispatcher`）支持广播派发
+- 实现`ExecutionPolicy`/`TypedExecutionPolicy`覆盖执行策略；实现`LifecycleListener`做观测
+- 注册`TaskStore`实现（DB/Redis）获得任务可靠性；扩展`ILockProvider`支持更多锁实现
 
 ## 许可证
 

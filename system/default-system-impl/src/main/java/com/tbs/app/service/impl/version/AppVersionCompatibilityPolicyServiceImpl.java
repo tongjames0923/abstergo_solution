@@ -15,7 +15,7 @@ import com.tbs.common.util.function.EnumUtil;
 import com.tbs.oss.core.OssClient;
 import com.tbs.shared.enums.AppVersionCompatibilityActionEnum;
 import com.tbs.shared.enums.CommonFlagEnum;
-import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.version.AppVersionComptMapper;
 import com.tbs.shared.pojo.entity.version.AppPackageEntity;
@@ -25,6 +25,8 @@ import com.tbs.sql.service.QueryEngine;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.APP_VERSION_COMPATIBILITY;
 
 import javax.annotation.Resource;
 import java.util.Collections;
@@ -42,8 +44,8 @@ import java.util.Optional;
  * @author abstergo
  */
 @Slf4j
-public class AppVersionCompatibilityPolicyServiceImpl
-    extends AbstractLogicDeleteFullFeatureServiceTemplate<AppVersionCompatibilityPolicyEntity, Long, AppVersionComptMapper>
+public class AppVersionCompatibilityPolicyServiceImpl extends
+    AbstractPhysicDeleteFullFeatureServiceTemplate<AppVersionCompatibilityPolicyEntity, Long, AppVersionComptMapper>
     implements IAppVersionCompatibilityPolicyService {
 
     @Resource
@@ -71,11 +73,6 @@ public class AppVersionCompatibilityPolicyServiceImpl
     @Override
     protected AppVersionCompatibilityPolicyEntity newEntity() {
         return new AppVersionCompatibilityPolicyEntity();
-    }
-
-    @Override
-    protected Integer getFlagDeleted() {
-        return CommonFlagEnum.DELETED.getCode();
     }
 
     @Override
@@ -135,7 +132,7 @@ public class AppVersionCompatibilityPolicyServiceImpl
     }
 
     @Caching(evict = {
-        @CacheEvict(cacheNames = "app_version_compatibility", allEntries = true)
+        @CacheEvict(cacheNames = APP_VERSION_COMPATIBILITY, allEntries = true)
     })
     @Override
     public void enablePolicy(Long id) {
@@ -147,7 +144,7 @@ public class AppVersionCompatibilityPolicyServiceImpl
     }
 
     @Caching(evict = {
-        @CacheEvict(cacheNames = "app_version_compatibility", allEntries = true)
+        @CacheEvict(cacheNames = APP_VERSION_COMPATIBILITY, allEntries = true)
     })
     @Override
     public void disablePolicy(Long id) {

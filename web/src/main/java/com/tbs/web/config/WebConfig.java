@@ -1,21 +1,17 @@
 package com.tbs.web.config;
 
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import com.tbs.common.context.ContextPropagator;
-import com.tbs.web.context.RequestContextPropagator;
-import com.tbs.web.security.authentication.SecurityContextPropagator;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
+import com.tbs.web.context.RequestContextPropagator;
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.gate.center.impl.LoginGateWayCenter;
+import com.tbs.web.security.authentication.SecurityContextPropagator;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -34,10 +30,19 @@ import javax.annotation.Resource;
 
 /**
  * Web 配置类
- *
- * 主要负责以下功能配置： 1. Spring Security 安全配置 2. CORS 跨域配置 3. HTTP 安全特性配置（CSRF、HTTP Basic、表单登录等） 4. 请求结果构建器配置
+ * <p>
+ * 主要负责以下功能配置：
+ * <ol>
+ *     <li>Spring Security 安全配置（认证入口、访问拒绝、无状态会话、路径放行/受保护）</li>
+ *     <li>CORS 跨域配置</li>
+ *     <li>HTTP 安全特性（CSRF、HTTP Basic、表单登录、注销）开关</li>
+ *     <li>装配请求上下文传播器、登录网关中心等 Web 组件 Bean</li>
+ * </ol>
+ * 各项开关由 {@link WebProperty} 驱动。
+ * </p>
  *
  * @author tongj
+ * @see WebProperty Web 配置属性
  */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
@@ -69,37 +74,6 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
      */
     @Resource
     private WebProperty webProperty;
-
-    //    /**
-    //     * 安全配置
-    //     *
-    //     * 当配置项 tbs.web.auth.enable 为 true 时，启用认证模式，配置令牌认证过滤器、异常处理、用户详情服务和认证提供者 当配置项 tbs.web.auth.enable 为 false
-    //     * 或未配置时，使用无认证模式，仅配置异常处理
-    //     *
-    //     * @param http                      Security HTTP 安全对象
-    //     * @param tokenAuthenticationFilter 令牌认证过滤器
-    //     * @param authenticationEntryPoint  认证入口点
-    //     * @param accessDeniedHandler       访问拒绝处理器
-    //     * @param provider                  默认用户认证服务提供者
-    //     * @param userDetailsService        用户详情服务
-    //     * @param authPropertyEnabled       认证是否启用
-    //     * @return 安全过滤器链
-    //     * @throws Exception 配置异常
-    //     */
-    //    @Bean
-    //    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true")
-    //    public SecurityFilterChain webSecurityConfigurerAdapterWithAuth(HttpSecurity http,) throws Exception {
-    //
-    //        return http.build();
-    //
-    //    }
-    //
-    //    @Bean
-    //    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "false", matchIfMissing = true)
-    //    public SecurityFilterChain webSecurityConfigurerAdapterWithNoAuth(HttpSecurity http) throws Exception {
-    //        setSecurity(http);
-    //        return http.build();
-    //    }
 
     @Bean
     ContextPropagator requestContextPropagator() {
@@ -138,14 +112,11 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     public CorsConfigurationSource corsFilter() {
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         final CorsConfiguration corsConfiguration = new CorsConfiguration();
-        // 1 设置访问源地址
+        // 放行全部来源/头/方法（演示默认配置，生产应按需收紧）
         corsConfiguration.addAllowedOrigin("*");
-        // 2 设置访问源请求头
         corsConfiguration.addAllowedHeader("*");
-        // 3 设置访问源请求方法
         corsConfiguration.addAllowedMethod("*");
         corsConfiguration.setMaxAge(24 * 60 * 60L);
-        // corsConfiguration.setAllowCredentials(true);
         source.registerCorsConfiguration("/**", corsConfiguration);
         return source;
     }

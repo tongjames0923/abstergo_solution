@@ -13,7 +13,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 无实现Token签发中心
+ * 无实现 Token 签发中心
+ * <p>
+ * 占位实现：用于尚未接入具体签发中心的场景。构造即抛 {@link UnsupportedOperationException}，
+ * 提醒使用者必须提供真实的 {@link ITokenIssuanceCenter} 实现。其余方法均为空操作/空集合，避免空指针。
+ * </p>
  * @author abstergo
  */
 public class NoImplTokenIssuanceCenter implements ITokenIssuanceCenter {

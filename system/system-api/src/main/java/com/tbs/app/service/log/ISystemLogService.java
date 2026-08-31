@@ -3,7 +3,7 @@ package com.tbs.app.service.log;
 import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
-import com.tbs.shared.pojo.model.PageVO;
+import com.tbs.common.data.PageVO;
 
 import java.util.List;
 

@@ -23,7 +23,8 @@ public interface ITokenIssuanceCenter {
      * 根据用户详细信息、令牌类型和令牌创建类型生成并返回一个新的令牌模型。 此方法通常在用户成功认证后调用，用于生成后续请求中使用的安全令牌。
      * </p>
      *
-     * @param form@return 生成的令牌模型，包含令牌的详细信息
+     * @param form 令牌请求表单，不能为空；其用户信息、用户名、令牌类型、创建方式、会话ID均不能为空
+     * @return 生成并已持久化的令牌模型，包含令牌的详细信息
      */
     ITokenModel issueToken(TokenRequestForm form);
 

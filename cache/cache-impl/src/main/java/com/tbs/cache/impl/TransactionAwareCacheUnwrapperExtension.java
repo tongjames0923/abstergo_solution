@@ -2,7 +2,6 @@ package com.tbs.cache.impl;
 
 import com.tbs.common.util.helper.FeatureWrapperHelper;
 import com.tbs.common.util.helper.IFeatureWrapperExtension;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.cache.transaction.TransactionAwareCacheDecorator;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +29,7 @@ public class TransactionAwareCacheUnwrapperExtension implements IFeatureWrapperE
      * @return 如果支持返回true，否则返回false
      */
     @Override
-    public <T> boolean support( Object instance,  Class<T> feature) {
+    public <T> boolean support(Object instance, Class<T> feature) {
         return instance instanceof TransactionAwareCacheDecorator;
     }
 

@@ -2,6 +2,7 @@ package com.tbs.app.remote.auth.impl;
 
 import com.tbs.app.remote.auth.IAuthRemoteService;
 import com.tbs.app.vo.RemoteUserAuthVO;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import org.springframework.security.core.GrantedAuthority;
@@ -35,7 +36,7 @@ public class DefaultAuthRemoteServiceImpl implements IAuthRemoteService {
         authInfo.setCreateTime(tk.getCreateTime());
         authInfo.setTokenTypeCode(tk.getTokenType().getCode());
 
-        var userDetails = loginInfoService.getUserDetails(token);
+        var userDetails = CollUtil.getFirst(loginInfoService.getUserDetails(token));
         if (userDetails == null) {
             return authInfo;
         }

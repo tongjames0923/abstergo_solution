@@ -10,7 +10,10 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 登录会话信息
+ * 登录会话视图对象
+ * <p>
+ * 聚合单个会话维度的令牌信息，供前端展示「我的会话」列表。由 {@code IUserLoginInfoService.listUserSessions} 组装。
+ * </p>
  */
 @Data
 @AllArgsConstructor
@@ -24,13 +27,12 @@ public class LoginSessionVO implements Serializable {
     private String sessionId;
 
     /**
-     * 登录时间
+     * 登录（会话创建）时间
      */
-
     private Date createTime;
 
     /**
-     * 登录令牌列表
+     * 会话内的访问令牌列表
      */
     private List<ITokenModel> accessTokens;
 
@@ -50,8 +52,7 @@ public class LoginSessionVO implements Serializable {
     private int activeRefreshTokenCount;
 
     /**
-     * 最后更新时间
+     * 最后活跃时间（最近一次访问令牌创建时间）
      */
-    //
     private Date lastActiveTime;
 }

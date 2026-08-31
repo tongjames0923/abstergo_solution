@@ -3,7 +3,11 @@ package com.tbs.web.enums;
 import com.tbs.common.BaseEnum;
 
 /**
- * 访问令牌标识枚举
+ * 令牌状态枚举
+ * <p>
+ * 描述令牌在其生命周期中的各种状态：生效、已删除、无效、已撤销、已过期。
+ * 校验与吊销流程依据此状态判定令牌是否可用（如 {@code ACTIVE} 才视为有效）。
+ * </p>
  * @author abstergo
  */
 public enum TokenStatusEnum implements BaseEnum<String> {

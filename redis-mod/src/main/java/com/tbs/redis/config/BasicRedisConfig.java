@@ -5,11 +5,9 @@ import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.redis.codec.DefaultSystemCodec;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
-import org.redisson.Redisson;
-import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.Codec;
 import org.redisson.config.Config;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.redisson.spring.starter.RedissonAutoConfigurationCustomizer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -46,29 +44,46 @@ public class BasicRedisConfig {
     @Resource
     RedisProperty property;
 
-    /**
-     * 创建Redisson客户端实例
-     * <p>
-     * 配置Redisson客户端，使用单服务器模式连接Redis，设置密码和编解码器
-     * 仅当tbs.redis.enable属性为true且不存在RedissonClient实例时创建
-     * </p>
-     *
-     * @param serializer Redis值序列化器
-     * @return Redisson客户端实例
-     */
-    @Bean(destroyMethod = "shutdown")
-    @ConditionalOnMissingBean(RedissonClient.class)
-    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
-    public RedissonClient redissonClient(
-        @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer serializer) {
-        Config config = new Config();
-        config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
-        var codec= SpringUtil.getBeanOptional(Codec.class).orElse(new DefaultSystemCodec(
-            SpringUtil.getBean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER, RedisSerializer.class)));
-        config.setCodec(codec);
-        RedissonClient redissonClient = Redisson.create(config);
-        return redissonClient;
+    @Bean
+    RedissonAutoConfigurationCustomizer redissonAutoConfigurationCustomizer() {
+        return new RedissonAutoConfigurationCustomizer() {
+            @Override
+            public void customize(Config configuration) {
+                //                configuration.useSingleServer().setAddress("redis://" + this.host + ":" + this.port)
+                //                    .setPassword(this.password);
+                var codec = SpringUtil.getBeanOptional(Codec.class).orElse(new DefaultSystemCodec(
+                    SpringUtil.getBean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER, RedisSerializer.class)));
+                configuration.setCodec(codec);
+                configuration.setThreads(8);
+                configuration.setNettyThreads(8);
+            }
+        };
     }
+
+    //
+    //    /**
+    //     * 创建Redisson客户端实例
+    //     * <p>
+    //     * 配置Redisson客户端，使用单服务器模式连接Redis，设置密码和编解码器
+    //     * 仅当tbs.redis.enable属性为true且不存在RedissonClient实例时创建
+    //     * </p>
+    //     *
+    //     * @param serializer Redis值序列化器
+    //     * @return Redisson客户端实例
+    //     */
+    //    @Bean(destroyMethod = "shutdown")
+    //    @ConditionalOnMissingBean(RedissonClient.class)
+    //    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
+    //    public RedissonClient redissonClient(
+    //        @Qualifier(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER) RedisSerializer serializer) {
+    //        Config config = new Config();
+    //        config.useSingleServer().setAddress("redis://" + this.host + ":" + this.port).setPassword(this.password);
+    //        var codec= SpringUtil.getBeanOptional(Codec.class).orElse(new DefaultSystemCodec(
+    //            SpringUtil.getBean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER, RedisSerializer.class)));
+    //        config.setCodec(codec);
+    //        RedissonClient redissonClient = Redisson.create(config);
+    //        return redissonClient;
+    //    }
 
     /**
      * 创建Redis值序列化器
@@ -84,7 +99,8 @@ public class BasicRedisConfig {
     @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
     RedisSerializer valueSerializer() throws Throwable {
-        return BeanUtil.buildBeanFromProperties(GenericJackson2JsonRedisSerializer::new, property.getValueSerializer(),
+        return BeanUtil.buildBeanFromProperties(() -> new GenericJackson2JsonRedisSerializer(),
+            property.getValueSerializer(),
             BeanUtil::buildByEmptyArgs);
     }
 

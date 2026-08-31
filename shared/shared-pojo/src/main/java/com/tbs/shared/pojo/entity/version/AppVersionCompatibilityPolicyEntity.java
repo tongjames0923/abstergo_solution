@@ -3,8 +3,8 @@ package com.tbs.shared.pojo.entity.version;
 import com.tbs.shared.pojo.ICommonAuditableEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
 import lombok.Data;
+import org.hibernate.annotations.Comment;
 
 import javax.persistence.*;
 import java.util.Date;
@@ -112,7 +112,7 @@ public class AppVersionCompatibilityPolicyEntity implements ICommonAuditableEnti
     private Long updateBy;
 
     /**
-     * 标志
+     * 标志,排除删除标志，进行物理删除。
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */

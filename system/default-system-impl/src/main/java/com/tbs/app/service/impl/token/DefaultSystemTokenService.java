@@ -18,6 +18,8 @@ import com.tbs.web.enums.TokenStatusEnum;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.TOKEN_ENTITY;
+
 import javax.annotation.Resource;
 import java.util.Date;
 import java.util.List;
@@ -55,7 +57,7 @@ public class DefaultSystemTokenService
         return entity;
     }
 
-    @CacheEvict(cacheNames = "token_entity", key = "#entity.token")
+    @CacheEvict(cacheNames = TOKEN_ENTITY, key = "#entity.token")
     @Override
     public List<SystemTokenEntity> save(SystemTokenEntity entity) {
         return super.save(entity);
@@ -97,7 +99,7 @@ public class DefaultSystemTokenService
         return new SystemTokenEntity();
     }
 
-    @Cacheable(cacheNames = "token_entity", key = "#token")
+    @Cacheable(cacheNames = TOKEN_ENTITY, key = "#token")
     @ExpireOn(value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemTokenEntity> queryByToken(String token) {

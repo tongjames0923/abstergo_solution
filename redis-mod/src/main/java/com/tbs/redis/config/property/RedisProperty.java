@@ -2,8 +2,6 @@ package com.tbs.redis.config.property;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
-import org.springframework.data.redis.serializer.JdkSerializationRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
 /**
@@ -36,6 +34,6 @@ public class RedisProperty {
      * 默认使用JdkSerializationRedisSerializer
      * </p>
      */
-    private Class<? extends RedisSerializer> ValueSerializer = GenericJackson2JsonRedisSerializer.class;
+    private Class<? extends RedisSerializer> valueSerializer = null;
 
 }

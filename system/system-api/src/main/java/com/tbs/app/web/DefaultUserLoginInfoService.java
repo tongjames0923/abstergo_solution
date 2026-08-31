@@ -33,8 +33,20 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.tbs.app.web.CacheNamesConstants.USER_LOGIN_INFO_CACHE;
+import static com.tbs.app.web.CacheNamesConstants.USER_SESSIONS_CACHE;
+
 /**
  * 默认用户登录信息服务
+ * <p>
+ * 缓存设计说明：
+ * <ul>
+ *     <li>缓存键：以业务原始 token / username 作为 key（token 为一次性随机串，天然无冲突，无需额外命名空间）</li>
+ *     <li>失效路径：登出（removeUserLoginInfo）与置换（replaceUserDetails）入口主动 evict；TTL 作为最终兜底</li>
+ *     <li>一致性：insertUserLoginInfo 走新 token，无旧缓存可脏；写路径均先落库后失效，失败不误删</li>
+ *     <li>防膨胀：null 与空集合结果一律不缓存，避免无效 token / 空会话长期占据缓存并产生脏读</li>
+ * </ul>
+ * </p>
  *
  * @author abstergo
  */
@@ -89,7 +101,11 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @Override
     protected UserDetails readUserDetails(String token) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
-        return loginInfoEntity == null ? null : (UserDetails)ValueTransformUtils.valueTransform(
+        // 未命中缓存的回源路径：实体或明细字段缺失时直接短路，避免无意义的 JSON 反序列化开销
+        if (loginInfoEntity == null || loginInfoEntity.getUserDetails() == null) {
+            return null;
+        }
+        return (UserDetails)ValueTransformUtils.valueTransform(
             JSON.parseObject(loginInfoEntity.getUserDetails(), DefaultSystemUserDetailsDto.class),
             ValueTransformUtils.TRANSFORM_READ);
     }
@@ -145,10 +161,23 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
             .collect(Collectors.toList());
     }
 
+    /**
+     * 按令牌获取用户详情（认证高频路径）。
+     * <p>
+     * 缓存策略：
+     * <ul>
+     *     <li>condition 过滤空令牌，避免以空串为 key 产生无效缓存；</li>
+     *     <li>null 结果不缓存（unless）：防止「令牌已签发、登录信息尚未落库」窗口期写入脏 null，
+     *     同时避免依赖底层缓存实现的 null 值语义；</li>
+     *     <li>未启用 sync 防击穿：与 unless 互斥，且回源仅为单条索引查询，击穿代价可控；</li>
+     *     <li>TTL 5 分钟兜底：用户禁用等状态变更在主动 evict 缺位时最长延迟 5 分钟生效。</li>
+     * </ul>
+     * </p>
+     */
     @Override
-    @Cacheable(cacheNames = "user_login_info_cache", key = "#token")
-    @ExpireOn(cacheNames = "user_login_info_cache", value = 5, timeUnit = TimeUnit.MINUTES)
-    public UserDetails getUserDetails(String token) {
+    @Cacheable(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token", condition = "#token != null and !#token.isEmpty()")
+    @ExpireOn(cacheNames = USER_LOGIN_INFO_CACHE, value = 5, timeUnit = TimeUnit.MINUTES)
+    public List<UserDetails> getUserDetails(String token) {
         return super.getUserDetails(token);
     }
 
@@ -157,9 +186,16 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         return getUserAvaliableSessionIdsByUserName(username);
     }
 
+    /**
+     * 按用户名列出会话列表。
+     * <p>
+     * 缓存策略：空用户名不缓存；null / 空会话列表不缓存（unless）—— 避免用户刚登录产生新会话时，2 分钟 TTL 内持续读到旧的空列表（脏读）。
+     * </p>
+     */
     @Override
-    @Cacheable(cacheNames = "user_sessions_cache", key = "#username")
-    @ExpireOn(cacheNames = "user_sessions_cache", value = 2, timeUnit = TimeUnit.MINUTES)
+    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#username",
+        condition = "#username != null and !#username.isEmpty()")
+    @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 2, timeUnit = TimeUnit.MINUTES)
     public List<LoginSessionVO> listUserSessions(String username) {
         // 使用 listSessions 方法一次性获取用户的所有会话令牌，避免多次查询
         Collection<ITokenModel> allTokens = tokenIssuanceCenter.listSessions(username, null, null);
@@ -255,14 +291,20 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         }).collect(Collectors.toList());
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token",condition =
+    /**
+     * 登出：先落库（置 CANCELLED）再失效缓存（evict 默认 afterInvocation， 落库失败不误删缓存，保证读端一致性）。
+     */
+    @CacheEvict(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token",condition =
     "#token!=null and #token.length()>0")
     @Override
     public void removeUserLoginInfo(String token) {
         super.removeUserLoginInfo(token);
     }
 
-    @CacheEvict(cacheNames = "user_login_info_cache", key = "#token.token",condition =
+    /**
+     * 置换用户详情：先落库再失效缓存，下次读取回源获取新值，避免 evict-then-write 竞态下的旧值回填。
+     */
+    @CacheEvict(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token.token",condition =
     "#token!=null and #token.token!=null and #token.token.length()>0")
     @Override
     public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {

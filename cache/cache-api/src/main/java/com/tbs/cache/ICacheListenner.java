@@ -2,6 +2,8 @@ package com.tbs.cache;
 
 import org.springframework.cache.Cache;
 
+import java.util.Date;
+
 /**
  * 缓存监听器接口
  * <p>
@@ -70,5 +72,17 @@ public interface ICacheListenner {
      * @param cacheName 缓存名称
      */
     void onClear(String cacheName);
+
+    /**
+     * 缓存过期事件回调
+     * <p>
+     * 当缓存项过期时触发此方法
+     * </p>
+     *
+     * @param cacheName  缓存名称
+     * @param key        缓存键
+     * @param expireTime 过期时间
+     */
+    void calledExpire(String cacheName, Object key, Date expireTime);
 
 }

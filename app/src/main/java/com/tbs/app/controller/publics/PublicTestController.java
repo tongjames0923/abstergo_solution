@@ -151,7 +151,7 @@ public class PublicTestController extends BaseController {
     //	@Resource
     //	TestService service;
     //
-    //	@Cacheable(key = "#value", value = "test")
+    //	@Cacheable(key = "#value", value = CacheNamesConstants.DEMO_TEST)
     //	@ExpireOn(value = 5)
     //	@GetMapping("/test")
     //	@Operation(summary = "测试缓存", description = "测试缓存功能")

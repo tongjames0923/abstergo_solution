@@ -18,23 +18,32 @@ import java.util.Collection;
 
 /**
  * 抽象令牌提供者
+ * <p>
+ * 模板实现 {@link IUserAccessTokenProvider}：统一编排「校验表单 → 拉取用户 → 校验用户 → 签发令牌 → 写入登录信息」
+ * 的访问令牌发放流程。具体凭证形态（用户名密码、刷新令牌等）由子类填充抽象方法。
+ * </p>
  *
+ * @param <FORM> 请求表单类型，需可序列化
  * @author abstergo
+ * @see IUserAccessTokenProvider 访问令牌提供者契约
  */
 @Slf4j
 public abstract class AbstractAccessTokenProvider<FORM extends Serializable> implements IUserAccessTokenProvider<FORM> {
 
     /**
-     * 验证表单
+     * 校验请求表单的合法性
      *
-     * @param form 表单
+     * @param form 请求表单，不能为空
      */
     protected abstract void validateForm( FORM form);
 
     /**
-     * 验证用户信息
+     * 校验用户详情
+     * <p>
+     * 先执行基础校验（账号状态等），再依次触发 Spring 容器中的 {@link IUserValidator} 校验链。
+     * </p>
      *
-     * @param userDetails 用户信息
+     * @param userDetails 用户详情，不能为空
      */
     protected void validateUser( UserDetails userDetails) {
         AuthUtil.checkUserDetails(userDetails);
@@ -46,17 +55,17 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
     }
 
     /**
-     * 拉取用户信息
+     * 从表单拉取用户详情
      *
-     * @param form 表单
-     * @return 用户信息
+     * @param form 请求表单，不能为空
+     * @return 用户详情，不能为空
      */
     protected abstract UserDetails pullUserDetails( FORM form);
 
     /**
-     * 用户验证器
+     * 收集容器中的用户验证器
      *
-     * @return 用户验证器
+     * @return 用户验证器集合，获取失败时返回空集合（不阻断主流程）
      */
     protected Collection<IUserValidator> getUserValidators() {
         try {
@@ -68,10 +77,10 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
     }
 
     /**
-     * 创建令牌请求表单
+     * 由表单与用户详情组装令牌请求表单
      *
-     * @param form    表单
-     * @param details 用户信息
+     * @param form    请求表单，不能为空
+     * @param details 用户详情，不能为空
      * @return 令牌请求表单
      */
     protected abstract TokenRequestForm createTokenRequestForm( FORM form, UserDetails details);
@@ -79,6 +88,15 @@ public abstract class AbstractAccessTokenProvider<FORM extends Serializable> imp
     @Resource
     private IUserLoginInfoService userLoginInfoService;
 
+    /**
+     * 令牌签发后的钩子
+     * <p>
+     * 将用户登录信息与令牌关联写入，供后续认证回源。
+     * </p>
+     *
+     * @param token   已签发的令牌模型，不能为空
+     * @param details 用户详情，不能为空
+     */
     protected void afterCreateToken(ITokenModel token, UserDetails details) {
         userLoginInfoService.insertUserLoginInfo(details, token);
     }

@@ -1,0 +1,77 @@
+package com.tbs.app.service.impl;
+
+/**
+ * 缓存名称常量
+ * <p>
+ * 集中管理 default-system-impl 模块 Spring Caching 注解使用的 cacheNames，禁止在注解中硬编码魔法值字符串。
+ * </p>
+ *
+ * @see com.tbs.cache.config.TbsCacheProperty.TtlConfig#getOverrides() 对应 TTL 覆盖 key 需与本类取值保持一致
+ */
+public final class CacheNamesConstants {
+
+    // ===== 用户 =====
+    /**
+     * 系统用户实体缓存（按 id）
+     */
+    public static final String SYSTEM_USER = "app:system_user";
+
+    /**
+     * 用户名到用户 id 映射缓存
+     */
+    public static final String USER_NAME_ID_MAP = "app:user_name_id_map";
+
+    /**
+     * 用户名到用户详情映射缓存
+     */
+    public static final String USER_NAME_TO_ID = "app:user_name_to_id";
+
+    // ===== 角色 =====
+    /**
+     * 系统角色实体缓存（按 id）
+     */
+    public static final String SYSTEM_ROLE = "app:system_role";
+
+    /**
+     * 按角色编码缓存的角色实体
+     */
+    public static final String SYSTEM_ROLE_NAME = "app:system_role_name";
+
+    // ===== 角色组 =====
+    /**
+     * 角色组下权限列表缓存（按 groupId）
+     */
+    public static final String ROLE_GROUP = "app:roleGroup";
+
+    // ===== 令牌 =====
+    /**
+     * 令牌实体缓存（按 token）
+     */
+    public static final String TOKEN_ENTITY = "app:token_entity";
+
+    // ===== 应用版本兼容 =====
+    /**
+     * 应用版本兼容性策略缓存
+     */
+    public static final String APP_VERSION_COMPATIBILITY = "app:app_version_compatibility";
+
+    // ===== 视图 =====
+    /**
+     * 视图表单配置缓存（按 id）
+     */
+    public static final String VIEW_FORM_CACHE = "app:view_form_cache";
+
+    // ===== 部门 =====
+    /**
+     * 用户所属部门列表缓存（按 userId）
+     */
+    public static final String USER_DEPARTMENTS = "app:user_departments";
+
+    /**
+     * 通用 API 缓存
+     */
+    public static final String GENERIC_API = "app:generic_api";
+
+    private CacheNamesConstants() {
+    }
+}

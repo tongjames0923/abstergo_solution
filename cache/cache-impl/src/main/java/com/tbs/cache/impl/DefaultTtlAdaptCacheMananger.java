@@ -3,9 +3,16 @@ package com.tbs.cache.impl;
 import com.tbs.cache.ITtlCacheDecorator;
 import com.tbs.cache.integration.AbstractTtlAdaptCacheMananger;
 import com.tbs.cache.integration.AbstractTtlCache;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
+
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.stream.Collectors;
 
 /**
  * 默认的TTL缓存管理器实现
@@ -23,6 +30,23 @@ public class DefaultTtlAdaptCacheMananger extends AbstractTtlAdaptCacheMananger 
      * 原始缓存管理器的类类型
      */
     private Class<? extends CacheManager> orginCacheManagerClass;
+
+    /**
+     * TTL缓存装饰器集合
+     */
+    private Collection<ITtlCacheDecorator> ttlCacheDecorators;
+
+    public Collection<ITtlCacheDecorator> getTtlCacheDecorators() {
+        if (ttlCacheDecorators == null) {
+            synchronized (this) {
+                if (ttlCacheDecorators == null) {
+                    ttlCacheDecorators = SpringUtil.getBeansOfType(ITtlCacheDecorator.class).values().stream()
+                        .sorted(Comparator.comparingInt(ITtlCacheDecorator::getOrder)).collect(Collectors.toList());
+                }
+            }
+        }
+        return ttlCacheDecorators;
+    }
 
     /**
      * 原始缓存管理器实例
@@ -52,7 +76,16 @@ public class DefaultTtlAdaptCacheMananger extends AbstractTtlAdaptCacheMananger 
      */
     @Override
     protected AbstractTtlCache decorateCacheToTtl(Cache cache) {
-        return SpringUtil.getBean(ITtlCacheDecorator.class).decorateCache(cache, getOriginal());
+        if (CollUtil.isNotEmpty(this.getTtlCacheDecorators())) {
+            for (ITtlCacheDecorator decorator : this.getTtlCacheDecorators()) {
+                if (decorator.support(cache, getOriginal())) {
+                    return decorator.decorateCache(cache, getOriginal());
+                }
+            }
+        }
+        AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR)
+            .message("No TTL cache decorator found for cache: {}", cache.getName()).throwIt();
+        return null;
     }
 
     /**

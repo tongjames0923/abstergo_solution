@@ -4,7 +4,10 @@ import com.tbs.web.uitl.AuthUtil;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
- * 泛化接口控制器
+ * 需认证的泛化接口控制器
+ * <p>
+ * 仅承接 {@code needAuth=true} 的实例，当前用户由 {@link AuthUtil} 从认证上下文获取。
+ * </p>
  *
  * @author abstergo
  */

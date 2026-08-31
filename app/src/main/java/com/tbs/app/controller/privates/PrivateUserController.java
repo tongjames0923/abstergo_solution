@@ -189,7 +189,7 @@ public class PrivateUserController extends BaseController {
     //     * @return 用户状态选项集合
     //     */
     //    @GetMapping("/statusOptions")
-    //    @Cacheable(cacheNames = "DEAD_CACHE", key = "'userStatusOptions'")
+    //    @Cacheable(cacheNames = CacheNamesConstants.DEMO_DEAD_CACHE, key = "'userStatusOptions'")
     //    @Operation(summary = "获取用户状态选项", description = "获取用户状态的下拉选项列表，结果会被缓存")
     //    @ApiResponse(responseCode = "200", description = "成功获取用户状态选项",
     //        content = @Content(mediaType = "application/json",

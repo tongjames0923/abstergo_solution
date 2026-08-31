@@ -87,7 +87,7 @@ public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializ
         Optional<UserDetails> userDetails) {
         try {
             String url = String.format("http://%s/%s/%s", baseUrl, interfaceName, methodName);
-            // 根据Dubbo Triple协议，将参数转换为数组格式
+            // Triple 协议要求参数以 JSON 数组形式传递，逐个归一化为合法 JSON 字面量
             Object[] paramArray =
                 parameterForms.values().stream().map(GenricParameterForm::getParameterValue).toArray();
             String jsonBody = toJsonArray(paramArray);

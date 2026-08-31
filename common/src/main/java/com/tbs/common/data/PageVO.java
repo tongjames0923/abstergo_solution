@@ -1,4 +1,4 @@
-package com.tbs.shared.pojo.model;
+package com.tbs.common.data;
 
 import com.tbs.common.util.base.JsonUtils;
 import lombok.Getter;

@@ -9,10 +9,7 @@ import com.tbs.web.exception.NotFoundTokenException;
 import org.springframework.cache.Cache;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -25,7 +22,7 @@ public class CacheListenner implements ICacheListenner {
     private IDataHolder holder;
 
     public CacheListenner(IDataHolderManager holderManager) {
-        holder = holderManager.getDataHolder("CACHE_INFO_HOLDER")
+        holder = holderManager.getDataHolder(HOLDER_NAME)
             .orElseThrow(() -> new NotFoundTokenException("未获取有效的数据容器记录"));
     }
 
@@ -44,7 +41,11 @@ public class CacheListenner implements ICacheListenner {
             var map = holder.computeIfAbsent(HOLDER_NAME, (f) -> {
                 return new HashMap();
             });
-            var set = (Set)map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            var temp = map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            if (temp == null) {
+                return;
+            }
+            var set = (Set)temp;
             set.add(key);
             map.put(cacheName, set);
             holder.set(HOLDER_NAME, map, true);
@@ -58,7 +59,11 @@ public class CacheListenner implements ICacheListenner {
             var map = holder.computeIfAbsent(HOLDER_NAME, (f) -> {
                 return new HashMap();
             });
-            var set = (Set)map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            var temp = map.computeIfAbsent(cacheName, (s) -> new HashSet<>());
+            if (temp == null) {
+                return;
+            }
+            var set = (Set)temp;
             set.remove(key);
             map.put(cacheName, set);
             holder.set(HOLDER_NAME, map, true);
@@ -104,4 +109,17 @@ public class CacheListenner implements ICacheListenner {
         return valueWrapper.get().orElse(List.of());
     }
 
+    /**
+     * 缓存过期事件回调
+     * <p>
+     * 当缓存项过期时触发此方法
+     * </p>
+     *
+     * @param cacheName 缓存名称
+     * @param key       缓存键
+     */
+    @Override
+    public void calledExpire(String cacheName, Object key, Date expireTime) {
+
+    }
 }

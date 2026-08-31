@@ -21,12 +21,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
+
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.GENERIC_API;
 
 /**
  * 泛化API配置服务实现类
@@ -158,13 +161,13 @@ public class GenericApiServiceImpl
         // 删除前检查，可以在这里添加业务逻辑检查
     }
 
-    @CacheEvict(cacheNames = "generic_api", allEntries = true)
+    @CacheEvict(cacheNames = GENERIC_API, allEntries = true)
     @Override
     public List<SystemGenericApiEntity> save(SystemGenericApiEntity entity) {
         return super.save(entity);
     }
 
-    @CacheEvict(cacheNames = "generic_api", allEntries = true)
+    @CacheEvict(cacheNames = GENERIC_API, allEntries = true)
     @Override
     public SystemGenericApiEntity deleteById(Long id) {
         return super.deleteById(id);
@@ -180,14 +183,14 @@ public class GenericApiServiceImpl
         return SpringUtil.getBeansByTypeSafe(IApiInstancePreAuth.class).stream().collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = "generic_api", key = "#apiId", unless = "#result==null")
+    @Cacheable(cacheNames = GENERIC_API, key = "#apiId", unless = "#result==null")
     @Override
     public SystemGenericApiEntity getByApiId(String apiId) {
         return QueryEngine.getEntityQueryWrapper(new SystemGenericApiEntity()).query().where()
             .equal(SystemGenericApiEntity::getApiId, apiId).pour().fetchOne();
     }
 
-    @CacheEvict(cacheNames = "generic_api", allEntries = true)
+    @CacheEvict(cacheNames = GENERIC_API, allEntries = true)
     @Override
     public void enableApi(String apiId) {
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);
@@ -197,7 +200,7 @@ public class GenericApiServiceImpl
         getMapper().updateByPrimaryKey(entity);
     }
 
-    @CacheEvict(cacheNames = "generic_api", allEntries = true)
+    @CacheEvict(cacheNames = GENERIC_API, allEntries = true)
     @Override
     public void disableApi(String apiId) {
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);

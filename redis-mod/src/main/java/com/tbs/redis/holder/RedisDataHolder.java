@@ -37,8 +37,8 @@ public class RedisDataHolder implements IDataHolder, IMatchKeyFounder {
      * @return 是否设置成功
      */
     @Override
-    public boolean set(String key, Object value, boolean force) {
-        RBucket<Object> bucket = redissonClient.getBucket(key);
+    public <T> boolean set(String key, T value, boolean force) {
+        RBucket<T> bucket = redissonClient.getBucket(key);
         if (force) {
             bucket.set(value);
             return true;

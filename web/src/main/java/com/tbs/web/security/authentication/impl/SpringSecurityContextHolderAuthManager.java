@@ -6,9 +6,15 @@ import com.tbs.web.security.authentication.model.ITokenAuthentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 /**
- * SpringSecurityContextHolderAuthManager
+ * 基于 Spring Security {@link SecurityContextHolder}（ThreadLocal）的认证管理器实现
+ * <p>
+ * 认证信息随请求线程生命周期存在，适用于传统同步 Servlet 容器。
+ * 注意：本实现仅维护「当前线程」的认证上下文，不支持按令牌字符串检索，
+ * 故 {@link #clearAuthentication(String)} 与 {@link #getAuthentication(String)} 直接抛 {@link UnsupportedOperationException}。
+ * </p>
  *
  * @author abstergo
+ * @see AbstractAuthManager 抽象基类
  */
 public class SpringSecurityContextHolderAuthManager extends AbstractAuthManager {
     @Override

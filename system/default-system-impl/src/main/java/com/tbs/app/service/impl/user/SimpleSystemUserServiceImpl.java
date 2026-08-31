@@ -29,6 +29,10 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.SYSTEM_USER;
+import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_ID_MAP;
+import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_TO_ID;
+
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
@@ -91,10 +95,10 @@ public class SimpleSystemUserServiceImpl
     }
 
     @Caching(
-        evict = {@CacheEvict(value = "system_user", key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
-            @CacheEvict(value = "user_name_id_map", key = "#entity.userName",
+        evict = {@CacheEvict(value = SYSTEM_USER, key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
+            @CacheEvict(value = USER_NAME_ID_MAP, key = "#entity.userName",
                 condition = "#entity!=null&&#entity.userName!=null"),
-            @CacheEvict(value = "user_name_to_id", key = "#entity.userName",
+            @CacheEvict(value = USER_NAME_TO_ID, key = "#entity.userName",
                 condition = "#entity!=null&&#entity.userName!=null")})
     @Override
     public List<SystemUserEntity> save(SystemUserEntity entity) {
@@ -147,7 +151,7 @@ public class SimpleSystemUserServiceImpl
         return true;
     }
 
-    @Cacheable(value = "system_user", key = "#id")
+    @Cacheable(value = SYSTEM_USER, key = "#id")
     @ExpireOn(value = 5, timeUnit = TimeUnit.MINUTES)
     @Override
     public SystemUserEntity queryById(Long id) {
@@ -160,7 +164,7 @@ public class SimpleSystemUserServiceImpl
      * @param username 用户名
      * @return 用户ID，不存在返回null
      */
-    @Cacheable(cacheNames = "user_name_to_id", key = "#username", unless = "#result==null")
+    @Cacheable(cacheNames = USER_NAME_TO_ID, key = "#username", unless = "#result==null")
     @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
     public Long getUserIdByUserName(String username) {
         var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username)
@@ -192,9 +196,9 @@ public class SimpleSystemUserServiceImpl
      * @param id 用户ID
      * @return 被删除的用户实体
      */
-    @Caching(evict = {@CacheEvict(value = "system_user", key = "#id"),
-        @CacheEvict(value = "user_name_id_map", allEntries = true),
-        @CacheEvict(value = "user_name_to_id", allEntries = true)})
+    @Caching(evict = {@CacheEvict(value = SYSTEM_USER, key = "#id"),
+        @CacheEvict(value = USER_NAME_ID_MAP, allEntries = true),
+        @CacheEvict(value = USER_NAME_TO_ID, allEntries = true)})
     @Override
     public SystemUserEntity deleteById(Long id) {
         return super.deleteById(id);
@@ -206,9 +210,9 @@ public class SimpleSystemUserServiceImpl
      * @param ids 用户ID集合
      * @return 删除的用户数量
      */
-    @Caching(evict = {@CacheEvict(value = "system_user", allEntries = true),
-        @CacheEvict(value = "user_name_id_map", allEntries = true),
-        @CacheEvict(value = "user_name_to_id", allEntries = true)})
+    @Caching(evict = {@CacheEvict(value = SYSTEM_USER, allEntries = true),
+        @CacheEvict(value = USER_NAME_ID_MAP, allEntries = true),
+        @CacheEvict(value = USER_NAME_TO_ID, allEntries = true)})
     @Override
     public int deleteByIds(java.util.Collection<Long> ids) {
         return super.deleteByIds(ids);
@@ -223,7 +227,7 @@ public class SimpleSystemUserServiceImpl
         return userIds.stream().map(getInstance()::queryById).filter(Objects::nonNull).collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames = "user_name_id_map", key = "#username")
+    @Cacheable(cacheNames = USER_NAME_ID_MAP, key = "#username")
     @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<Long> queryUserIdsByUserName(String username) {
