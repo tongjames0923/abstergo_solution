@@ -4,6 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.web.constant.WebI18nConstant;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
 import lombok.Getter;
@@ -90,7 +91,7 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
     public ApiInvokeResultVo<R> invokeApi(List<GenricParameterForm> parameterForms, UserDetails u) {
         var paramMap = new java.util.HashMap<String, GenricParameterForm>();
         ApiInvokeResultVo<R> resultVo = new ApiInvokeResultVo<>();
-        AssertUtil.isTrue(isNeedAuth() && u == null).i18n("GENERIC.API.NOT_LOGIN")
+        AssertUtil.isTrue(isNeedAuth() && u == null).i18n(WebI18nConstant.GENERIC_API_NOT_LOGIN)
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         // 执行预认证链
         if (CollUtil.isNotEmpty(getPreAuths())) {

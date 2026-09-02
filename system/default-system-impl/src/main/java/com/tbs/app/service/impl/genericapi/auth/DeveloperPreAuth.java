@@ -7,6 +7,7 @@ import com.tbs.web.genric.form.HttpInvokeForm;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * @author abstergo
@@ -23,7 +24,7 @@ public class DeveloperPreAuth implements IApiInstancePreAuth {
         throws AuthenticationException {
         AssertUtil.isTrue(!userDetails.getAuthorities().stream()
                 .anyMatch(authority -> "开发者".equals(authority.getAuthority())))
-            .i18n("generic.api.auth.developer.pre.auth.fail").params(apiInstance.getApiId())
+            .i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_AUTH_DEVELOPER_PRE_AUTH_FAIL).params(apiInstance.getApiId())
             .as(e -> new AuthenticationException(e.getMessage()) {
             }).throwIt();
     }

@@ -3,6 +3,7 @@ package com.tbs.mq.impl;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.mq.api.retry.IRetryDelayPolicy;
+import com.tbs.mq.constants.MqI18nConstant;
 
 import java.time.Duration;
 import java.util.ArrayList;
@@ -50,7 +51,7 @@ public class SteppedRetryDelayPolicy implements IRetryDelayPolicy {
      */
     public SteppedRetryDelayPolicy(List<Duration> steps) {
         AssertUtil.isTrue(CollUtil.isEmpty(steps))
-            .i18n("mq.retry.delay.steps.required")
+            .i18n(MqI18nConstant.RETRY_DELAY_STEPS_REQUIRED)
             .throwIt();
         this.steps = new ArrayList<>(steps);
     }

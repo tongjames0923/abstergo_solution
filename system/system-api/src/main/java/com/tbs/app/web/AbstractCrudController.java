@@ -46,7 +46,7 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
      */
     public AjaxResult save(T entity) {
         return AjaxUtil.builder().success(getService().save(entity)).type(WebMessageTypeEnum.SUCCESS)
-            .message(I18nUtil.get("crud.save.success")).build();
+            .message(I18nUtil.get(com.tbs.app.constant.SystemApiI18nConstant.CRUD_SAVE_SUCCESS)).build();
     }
 
     /**
@@ -57,7 +57,7 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
      */
     public AjaxResult delete(K id) {
         return AjaxUtil.builder().success(getService().deleteById(id)).type(WebMessageTypeEnum.SUCCESS)
-            .message(I18nUtil.get("crud.delete.success")).build();
+            .message(I18nUtil.get(com.tbs.app.constant.SystemApiI18nConstant.CRUD_DELETE_SUCCESS)).build();
     }
 
     /**

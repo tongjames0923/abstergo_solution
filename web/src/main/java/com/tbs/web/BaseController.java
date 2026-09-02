@@ -4,6 +4,7 @@ import com.tbs.common.i18n.I18nUtil;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
 import lombok.Getter;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 基础的控制器, 提供获取当前用户和TokenModel的方法
@@ -27,7 +28,7 @@ public abstract class BaseController {
      * @return 统一成功响应
      */
     public AjaxResult successResult(Object val) {
-        return AjaxUtil.getInstance().success(I18nUtil.get("common.success"), val);
+        return AjaxUtil.getInstance().success(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.COMMON_SUCCESS), val);
     }
 
     /**
@@ -36,7 +37,7 @@ public abstract class BaseController {
      * @return 统一成功响应
      */
     public AjaxResult successResult() {
-        return AjaxUtil.getInstance().success(I18nUtil.get("common.success"), null);
+        return AjaxUtil.getInstance().success(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.COMMON_SUCCESS), null);
     }
 
     /**

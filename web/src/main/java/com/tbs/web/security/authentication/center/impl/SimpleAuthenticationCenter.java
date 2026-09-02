@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.AuthenticationException;
 
 import javax.annotation.Resource;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 默认的认证中心
@@ -39,9 +40,9 @@ public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
 
     @Override
     public ITokenAuthentication authenticate(ITokenAuthentication authentication) throws AuthenticationException {
-        AssertUtil.isTrue(authentication == null, () -> new SimpleAuthException(I18nUtil.get("auth.info.empty")));
-        AssertUtil.isTrue(authentication.getTokenModel() == null, () -> new SimpleAuthException(I18nUtil.get("auth.token.empty")));
-        AssertUtil.isTrue(authentication.getUserDetails() == null, () -> new SimpleAuthException(I18nUtil.get("auth.user.empty")));
+        AssertUtil.isTrue(authentication == null, () -> new SimpleAuthException(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.AUTH_INFO_EMPTY)));
+        AssertUtil.isTrue(authentication.getTokenModel() == null, () -> new SimpleAuthException(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.AUTH_TOKEN_EMPTY)));
+        AssertUtil.isTrue(authentication.getUserDetails() == null, () -> new SimpleAuthException(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.AUTH_USER_EMPTY)));
         try {
             // 校验用户详情（状态、绑定等），通过则标记已认证
             AuthUtil.checkUserDetails(authentication.getUserDetails());
@@ -49,7 +50,7 @@ public class SimpleAuthenticationCenter extends AbstractAuthenticationCenter {
         } catch (Exception e) {
             authentication.setAuthenticated(false);
             AssertUtil.throwError(
-                () -> new SimpleAuthException(StrUtil.format(I18nUtil.get("auth.user.verify.fail.detail"), e.getLocalizedMessage())));
+                () -> new SimpleAuthException(StrUtil.format(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.AUTH_USER_VERIFY_FAIL_DETAIL), e.getLocalizedMessage())));
         }
         return authentication;
     }

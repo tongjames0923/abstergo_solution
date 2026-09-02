@@ -10,6 +10,7 @@ import org.springframework.security.core.AuthenticationException;
 
 import javax.annotation.Resource;
 import java.util.function.Supplier;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 令牌认证提供者
@@ -27,7 +28,7 @@ public class TokenAuthenticationProvider implements org.springframework.security
 
     @Override
     public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-        AssertUtil.notNull(authentication, I18nUtil.get("auth.invalid.authentication"));
+        AssertUtil.notNull(authentication, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.AUTH_INVALID_AUTHENTICATION));
         ITokenAuthentication tokenAuthentication = (ITokenAuthentication)authentication;
         // 已存在预处理异常时直接复用，不再走认证中心校验
         AssertUtil.isTrue(tokenAuthentication.getAuthException() != null, new Supplier<RuntimeException>() {

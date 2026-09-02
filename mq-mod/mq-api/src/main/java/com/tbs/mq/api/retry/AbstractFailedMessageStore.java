@@ -2,6 +2,7 @@ package com.tbs.mq.api.retry;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.mq.constants.MqI18nConstant;
 import com.tbs.mq.model.FailedMessage;
 
 import java.util.Collections;
@@ -33,13 +34,13 @@ public abstract class AbstractFailedMessageStore implements IFailedMessageStore 
     @Override
     public final void save(FailedMessage message) {
         AssertUtil.isTrue(message == null)
-            .i18n("mq.failed.message.required")
+            .i18n(MqI18nConstant.FAILED_MESSAGE_REQUIRED)
             .throwIt();
         AssertUtil.isTrue(StrUtil.isEmpty(message.getId()))
-            .i18n("mq.failed.message.id.required")
+            .i18n(MqI18nConstant.FAILED_MESSAGE_ID_REQUIRED)
             .throwIt();
         AssertUtil.isTrue(message.getNextRetryTime() == null)
-            .i18n("mq.failed.message.next.retry.time.required")
+            .i18n(MqI18nConstant.FAILED_MESSAGE_NEXT_RETRY_TIME_REQUIRED)
             .params(message.getId())
             .throwIt();
         doSave(message);

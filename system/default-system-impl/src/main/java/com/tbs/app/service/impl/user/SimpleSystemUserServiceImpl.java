@@ -40,6 +40,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 简单的系统用户服务实现
@@ -74,13 +75,13 @@ public class SimpleSystemUserServiceImpl
         if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
             UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
             AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUserName()))
-                .message(I18nUtil.get("user.name.invalid")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_NAME_INVALID)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()))
-                .message(I18nUtil.get("user.password.invalid")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_PASSWORD_INVALID)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         }
         AssertUtil.isTrue(
                 !CollUtil.isEmpty(SpringUtil.getBean(ISystemUserService.class).queryByUserName(entity.getUserName())))
-            .message(I18nUtil.get("user.name.already.exists", entity.getUserName()))
+            .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_NAME_ALREADY_EXISTS, entity.getUserName()))
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
@@ -112,7 +113,7 @@ public class SimpleSystemUserServiceImpl
             if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
                 UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
                 AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()))
-                    .message(I18nUtil.get("user.password.invalid")).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                    .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_PASSWORD_INVALID)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             }
 
             if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
@@ -123,7 +124,7 @@ public class SimpleSystemUserServiceImpl
         if (systemUserEntity.getFlag() != null) {
             if (!Objects.equals(systemUserEntity.getFlag(), oldSystemUserEntity.getFlag())) {
                 AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()))
-                    .message(I18nUtil.get("user.status.invalid", systemUserEntity.getFlag()))
+                    .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_STATUS_INVALID, systemUserEntity.getFlag()))
                     .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
                 oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
                 AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());

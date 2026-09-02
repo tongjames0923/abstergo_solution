@@ -3,6 +3,7 @@ package com.tbs.schedule.executor;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.schedule.api.ExecutionPolicy;
+import com.tbs.schedule.constant.ScheduleI18nConstant;
 import com.tbs.schedule.api.TaskExecutor;
 import com.tbs.schedule.api.TaskPayload;
 import com.tbs.schedule.api.TaskSubmission;
@@ -28,7 +29,7 @@ public class LocalRunnableTaskExecutor implements TaskExecutor {
     @Override
     public void execute(TaskSubmission submission) {
         AssertUtil.isFalse(submission.getPayload() instanceof LocalRunnablePayload)
-            .i18n("schedule.executor.local.type.mismatch").params(submission.getTaskType()).throwIt();
+            .i18n(ScheduleI18nConstant.EXECUTOR_LOCAL_TYPE_MISMATCH).params(submission.getTaskType()).throwIt();
         ((LocalRunnablePayload) submission.getPayload()).getRunnable().run();
     }
 }

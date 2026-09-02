@@ -1,5 +1,6 @@
 package com.tbs.common.uuid.impl;
 
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.uuid.IUuidGenerator;
@@ -44,9 +45,9 @@ public class SnowFlakeUUID implements IUuidGenerator {
      */
     public SnowFlakeUUID(long workerId, long dataCenterId) {
         AssertUtil.isTrue(workerId < 0 || workerId > MAX_WORKER_ID,
-            I18nUtil.get("snowflake.worker.id.invalid", MAX_WORKER_ID, workerId));
+            I18nUtil.get(CommonI18nConstant.SNOWFLAKE_WORKER_ID_INVALID, MAX_WORKER_ID, workerId));
         AssertUtil.isTrue(dataCenterId < 0 || dataCenterId > MAX_DATA_CENTER_ID,
-            I18nUtil.get("snowflake.datacenter.id.invalid", MAX_DATA_CENTER_ID, dataCenterId));
+            I18nUtil.get(CommonI18nConstant.SNOWFLAKE_DATACENTER_ID_INVALID, MAX_DATA_CENTER_ID, dataCenterId));
         this.workerId = workerId;
         this.dataCenterId = dataCenterId;
     }
@@ -106,7 +107,7 @@ public class SnowFlakeUUID implements IUuidGenerator {
 
             // 时钟回退，拒绝生成ID
             AssertUtil.isTrue(currentTs < lastTs,
-                I18nUtil.get("snowflake.clock.rollback", lastTs, currentTs, lastTs - currentTs));
+                I18nUtil.get(CommonI18nConstant.SNOWFLAKE_CLOCK_ROLLBACK, lastTs, currentTs, lastTs - currentTs));
 
             // 同一毫秒内，序列号自增
             if (currentTs == lastTs) {
@@ -131,7 +132,7 @@ public class SnowFlakeUUID implements IUuidGenerator {
         // 计算时间差值，第一层拦截溢出
         long tsDiff = currentTs - TWEPOCH;
         AssertUtil.isTrue(tsDiff > MAX_TIMESTAMP_DIFF,
-            I18nUtil.get("snowflake.timestamp.overflow", MAX_TIMESTAMP_DIFF, tsDiff));
+            I18nUtil.get(CommonI18nConstant.SNOWFLAKE_TIMESTAMP_OVERFLOW, MAX_TIMESTAMP_DIFF, tsDiff));
 
         // 拼装64位ID
         long id = (tsDiff << TIMESTAMP_LEFT_SHIFT) |
@@ -139,7 +140,7 @@ public class SnowFlakeUUID implements IUuidGenerator {
             (workerId << WORKER_ID_SHIFT) | seq;
 
         // 兜底二次校验：强制保证ID为正数，杜绝极端溢出场景漏判
-        AssertUtil.isTrue(id < 0, I18nUtil.get("snowflake.negative.id", tsDiff, id));
+        AssertUtil.isTrue(id < 0, I18nUtil.get(CommonI18nConstant.SNOWFLAKE_NEGATIVE_ID, tsDiff, id));
 
         return id;
     }

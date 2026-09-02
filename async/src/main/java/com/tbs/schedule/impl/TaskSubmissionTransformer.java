@@ -5,6 +5,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.schedule.api.ExecutionPolicy;
+import com.tbs.schedule.constant.ScheduleI18nConstant;
 import com.tbs.schedule.api.TaskPayload;
 import com.tbs.schedule.api.TaskSubmission;
 import lombok.Data;
@@ -50,10 +51,10 @@ public class TaskSubmissionTransformer implements ITransformer<TaskSubmission> {
      */
     @Override
     public byte[] transform(TaskSubmission value) {
-        AssertUtil.isTrue(value == null).i18n("schedule.transform.submission.null").throwIt();
-        AssertUtil.isTrue(!value.isPersistable()).i18n("schedule.transform.submission.not.persistable")
+        AssertUtil.isTrue(value == null).i18n(ScheduleI18nConstant.TRANSFORM_SUBMISSION_NULL).throwIt();
+        AssertUtil.isTrue(!value.isPersistable()).i18n(ScheduleI18nConstant.TRANSFORM_SUBMISSION_NOT_PERSISTABLE)
             .params(value.getTaskId()).throwIt();
-        AssertUtil.isTrue(value.getTriggerAt() == null).i18n("schedule.transform.submission.trigger.at.null")
+        AssertUtil.isTrue(value.getTriggerAt() == null).i18n(ScheduleI18nConstant.TRANSFORM_SUBMISSION_TRIGGER_AT_NULL)
             .params(value.getTaskId()).throwIt();
         Snapshot snapshot = new Snapshot();
         snapshot.setTaskId(value.getTaskId());
@@ -61,11 +62,11 @@ public class TaskSubmissionTransformer implements ITransformer<TaskSubmission> {
         snapshot.setTriggerAt(value.getTriggerAt().getTime());
         snapshot.setPayloadType(value.getPayload().getClass().getName());
         snapshot.setPayloadJson(JsonUtils.toJSONString(value.getPayload()));
-        AssertUtil.isTrue(snapshot.getPayloadJson() == null).i18n("schedule.transform.serialize.failed")
+        AssertUtil.isTrue(snapshot.getPayloadJson() == null).i18n(ScheduleI18nConstant.TRANSFORM_SERIALIZE_FAILED)
             .params(value.getTaskId()).throwIt();
         fillPolicySnapshot(snapshot, value);
         byte[] bytes = JsonUtils.toJSONBytes(snapshot);
-        AssertUtil.isTrue(bytes == null).i18n("schedule.transform.serialize.failed").params(value.getTaskId())
+        AssertUtil.isTrue(bytes == null).i18n(ScheduleI18nConstant.TRANSFORM_SERIALIZE_FAILED).params(value.getTaskId())
             .throwIt();
         return bytes;
     }
@@ -82,14 +83,14 @@ public class TaskSubmissionTransformer implements ITransformer<TaskSubmission> {
      */
     @Override
     public <T extends TaskSubmission> T reverseTransform(byte[] value, Class<T> clazz) {
-        AssertUtil.isTrue(value == null || value.length == 0).i18n("schedule.transform.deserialize.failed").throwIt();
+        AssertUtil.isTrue(value == null || value.length == 0).i18n(ScheduleI18nConstant.TRANSFORM_DESERIALIZE_FAILED).throwIt();
         Snapshot snapshot = JsonUtils.parseObject(value, Snapshot.class);
         AssertUtil.isTrue(snapshot == null ||
             StrUtil.isEmpty(snapshot.getTaskId()) ||
             StrUtil.isEmpty(snapshot.getTaskType()) ||
             StrUtil.isEmpty(snapshot.getPayloadType()) ||
             StrUtil.isEmpty(snapshot.getPayloadJson()) ||
-            snapshot.getTriggerAt() <= 0).i18n("schedule.transform.deserialize.failed").throwIt();
+            snapshot.getTriggerAt() <= 0).i18n(ScheduleI18nConstant.TRANSFORM_DESERIALIZE_FAILED).throwIt();
         TaskPayload payload = restorePayload(snapshot);
         ExecutionPolicy policy = restorePolicy(snapshot);
         Date triggerAt = new Date(snapshot.getTriggerAt());
@@ -109,10 +110,10 @@ public class TaskSubmissionTransformer implements ITransformer<TaskSubmission> {
     private TaskPayload restorePayload(Snapshot snapshot) {
         Class<?> payloadType = resolveClass(snapshot.getPayloadType());
         AssertUtil.isTrue(payloadType == null || !TaskPayload.class.isAssignableFrom(payloadType))
-            .i18n("schedule.transform.payload.type.invalid").params(snapshot.getPayloadType()).throwIt();
+            .i18n(ScheduleI18nConstant.TRANSFORM_PAYLOAD_TYPE_INVALID).params(snapshot.getPayloadType()).throwIt();
         TaskPayload payload =
             JsonUtils.parseObject(snapshot.getPayloadJson(), payloadType.asSubclass(TaskPayload.class));
-        AssertUtil.isTrue(payload == null).i18n("schedule.transform.payload.parse.failed").params(snapshot.getTaskId())
+        AssertUtil.isTrue(payload == null).i18n(ScheduleI18nConstant.TRANSFORM_PAYLOAD_PARSE_FAILED).params(snapshot.getTaskId())
             .throwIt();
         return payload;
     }

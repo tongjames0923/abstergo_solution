@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 应用版本兼容策略服务实现
@@ -77,16 +78,16 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
 
     @Override
     protected AppVersionCompatibilityPolicyEntity insertNew(AppVersionCompatibilityPolicyEntity entity) {
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getSourceAppKey())).i18n("policy.source.app.key.required")
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getSourceAppKey())).i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_SOURCE_APP_KEY_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getTargetAppKey())).i18n("policy.target.app.key.required")
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getTargetAppKey())).i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_TARGET_APP_KEY_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(entity.getMinCompatVersion() == null).i18n("policy.min.compat.version.required")
+        AssertUtil.isTrue(entity.getMinCompatVersion() == null).i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_MIN_COMPAT_VERSION_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(entity.getAction() == null).i18n("policy.action.required")
+        AssertUtil.isTrue(entity.getAction() == null).i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_ACTION_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(!EnumUtil.isValidCode(AppVersionCompatibilityActionEnum.class, entity.getAction()))
-            .i18n("policy.action.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_ACTION_INVALID).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         validateAppRegistered(entity.getSourceAppKey(), "policy.source.app.not.exists");
         validateAppRegistered(entity.getTargetAppKey(), "policy.target.app.not.exists");
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
@@ -125,7 +126,7 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
         }
         if (newOne.getAction() != null) {
             AssertUtil.isTrue(!EnumUtil.isValidCode(AppVersionCompatibilityActionEnum.class, newOne.getAction()))
-                .i18n("policy.action.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_ACTION_INVALID).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             oldOne.setAction(newOne.getAction());
         }
         return oldOne;
@@ -137,7 +138,7 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
     @Override
     public void enablePolicy(Long id) {
         AppVersionCompatibilityPolicyEntity entity = getInstance().queryById(id);
-        AssertUtil.isTrue(entity == null).i18n("policy.not.exists")
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_NOT_EXISTS)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().updateByPrimaryKey(entity);
@@ -149,7 +150,7 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
     @Override
     public void disablePolicy(Long id) {
         AppVersionCompatibilityPolicyEntity entity = getInstance().queryById(id);
-        AssertUtil.isTrue(entity == null).i18n("policy.not.exists")
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.POLICY_NOT_EXISTS)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(CommonFlagEnum.INACTIVE.getCode());
         getMapper().updateByPrimaryKey(entity);

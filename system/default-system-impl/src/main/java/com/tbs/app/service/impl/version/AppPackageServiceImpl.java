@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Optional;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 应用安装包服务实现
@@ -61,11 +62,11 @@ public class AppPackageServiceImpl
 
     @Override
     protected AppPackageEntity insertNew(AppPackageEntity entity) {
-        AssertUtil.isTrue(entity.getVersionId() == null).i18n("package.version.id.required")
+        AssertUtil.isTrue(entity.getVersionId() == null).i18n(com.tbs.app.constant.SystemI18nConstant.PACKAGE_VERSION_ID_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(StrUtil.isEmpty(entity.getDownloadUrl())
                 && (StrUtil.isEmpty(entity.getBucketName()) || StrUtil.isEmpty(entity.getObjectName())))
-            .i18n("package.download.info.required").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PACKAGE_DOWNLOAD_INFO_REQUIRED).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
         return entity;

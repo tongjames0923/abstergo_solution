@@ -19,6 +19,7 @@ import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.view.route.model.ViewRouteVersionModel;
+import com.tbs.view.route.constant.ViewRouteI18nConstant;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -75,7 +76,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
     public ViewRouteVersionModel saveViewRoute(String group, List<ViewRouteModel> viewRouteModels,
         String description) {
         AssertUtil.isTrue(viewRouteModels == null || viewRouteModels.isEmpty())
-            .message(I18nUtil.get("view.route.config.cannot.be.empty"))
+            .message(I18nUtil.get(ViewRouteI18nConstant.CONFIG_CANNOT_BE_EMPTY))
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
         try {
@@ -98,7 +99,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
         } catch (Exception e) {
             log.error("保存路由配置失败: {}", group, e);
             AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-                .message(I18nUtil.get("view.route.save.failed"))
+                .message(I18nUtil.get(ViewRouteI18nConstant.SAVE_FAILED))
                 .throwIt();
             return null;
         }
@@ -118,7 +119,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             }
 
             // 插入一条不含任何路由行的版本记录（清空分组），历史数据原样保留
-            createVersionRecord(group, I18nUtil.get("view.route.clear.group"), getCurrentUserId());
+            createVersionRecord(group, I18nUtil.get(ViewRouteI18nConstant.CLEAR_GROUP), getCurrentUserId());
 
             // 清除缓存，该分组从列表中消失
             routeCache.remove(group);
@@ -127,7 +128,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
         } catch (Exception e) {
             log.error("删除路由配置失败: {}", group, e);
             AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-                .message(I18nUtil.get("view.route.delete.failed"))
+                .message(I18nUtil.get(ViewRouteI18nConstant.DELETE_FAILED))
                 .throwIt();
         }
     }
@@ -147,14 +148,14 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             // 1. 校验目标版本存在且属于该分组
             ViewRouteVersionEntity targetVersion = viewRouteVersionMapper.selectByPrimaryKey(versionId);
             AssertUtil.isTrue(targetVersion == null || !group.equals(targetVersion.getRouteGroup()))
-                .message(I18nUtil.get("view.route.version.not.found.or.not.in.group"))
+                .message(I18nUtil.get(ViewRouteI18nConstant.VERSION_NOT_FOUND_OR_NOT_IN_GROUP))
                 .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
             Long userId = getCurrentUserId();
 
             // 2. 产生新的版本记录（说明自动填"回滚自 vN"）
             ViewRouteVersionEntity newVersion =
-                createVersionRecord(group, I18nUtil.get("view.route.rollback.from", targetVersion.getVersionNo()),
+                createVersionRecord(group, I18nUtil.get(ViewRouteI18nConstant.ROLLBACK_FROM, targetVersion.getVersionNo()),
                     userId);
 
             // 3. 复制目标版本的路由数据到新版本（含元数据与权限）
@@ -170,7 +171,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
         } catch (Exception e) {
             log.error("回滚路由配置失败: {} -> {}", group, versionId, e);
             AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-                .message(I18nUtil.get("view.route.rollback.failed"))
+                .message(I18nUtil.get(ViewRouteI18nConstant.ROLLBACK_FAILED))
                 .throwIt();
             return null;
         }
@@ -191,7 +192,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
         } catch (Exception e) {
             log.error("从数据库加载路由配置失败", e);
             AssertUtil.isTrue(true).cause(e).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-                .message(I18nUtil.get("view.route.load.failed"))
+                .message(I18nUtil.get(ViewRouteI18nConstant.LOAD_FAILED))
                 .throwIt();
         }
     }

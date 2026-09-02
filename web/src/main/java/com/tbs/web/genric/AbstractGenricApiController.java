@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Collection;
 import java.util.List;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 抽象泛化接口控制器
@@ -56,7 +57,7 @@ public abstract class AbstractGenricApiController extends BaseController {
         List<GenricParameterForm> parameterForms = form.getParameters();
         var instances = getGenricApiInstance(apiId);
         if (CollUtil.isEmpty(instances)) {
-            return AjaxUtil.getInstance().error(I18nUtil.get("GENERIC.API.ID_NOT_FOUND"));
+            return AjaxUtil.getInstance().error(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.GENERIC_API_ID_NOT_FOUND));
         }
         // 匹配优先级：无版本实例 > 未指定版本请求 > 版本精确一致，命中即执行并返回
         for (var instance : instances) {
@@ -70,7 +71,7 @@ public abstract class AbstractGenricApiController extends BaseController {
                 return AjaxUtil.getInstance().success(instance.invokeApi(parameterForms, getCurrentUser()));
             }
         }
-        return AjaxUtil.getInstance().error(I18nUtil.get("GENERIC.API.API_VERSION_NOT_FOUND"));
+        return AjaxUtil.getInstance().error(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.GENERIC_API_API_VERSION_NOT_FOUND));
     }
 
 }
