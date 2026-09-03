@@ -1,385 +1,318 @@
-# Abstergo Solution - 企业级全栈解决方案
+# Abstergo Solution
 
-基于Spring Boot + Vue.js的现代化企业级应用开发平台
+基于 **Spring Boot 2.7 + Dubbo 3 + Nacos** 的 Java 微服务快速开发平台：以「契约/实现分离、注解驱动装配、模块化 i18n、统一响应」为核心设计，提供从认证授权、系统管理、动态路由/表单、缓存、消息队列、任务调度、对象存储到操作日志的全栈能力。配套 Vue 2 + Element UI 管理前端，开箱即用。
 
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-2.7+-green.svg)](https://spring.io/projects/spring-boot)
-[![Vue.js](https://img.shields.io/badge/Vue.js-2.6+-brightgreen.svg)](https://vuejs.org/)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+```
+后端 21 个 Maven 模块 + 1 个前端工程（app-ui-vue）
+└── 3 个可运行服务：app-service（主应用）、data-dic-service（字典）、logging-service（日志）
+```
 
-## 项目简介
+## 目录
 
-Abstergo Solution是一个完整的企业级全栈解决方案，采用微服务架构设计，提供从后端API到前端UI的完整技术栈支持。项目基于Spring
-Boot和Vue.js构建，集成了现代化的开发工具和最佳实践。
+- [核心特性](#核心特性)
+- [架构总览](#架构总览)
+- [技术栈](#技术栈)
+- [模块结构说明](#模块结构说明)
+- [环境要求](#环境要求)
+- [快速开始](#快速开始)
+- [使用示例](#使用示例)
+- [配置说明](#配置说明)
+- [生产部署](#生产部署)
+- [贡献指南](#贡献指南)
+- [许可证](#许可证)
 
-### 核心特性
+## 核心特性
 
-- **模块化架构** - 清晰的模块划分，支持独立开发和部署
-- **安全认证** - 完整的RBAC权限管理和JWT令牌认证
-- **高性能** - 集成Redis缓存、异步处理等性能优化
-- **监控运维** - 完整的日志、监控和运维支持
-- **容器化部署** - Docker Compose一键部署
+- **注解驱动装配**：全部模块经 `@Enable*` 注解启用（如 `@EnableWebPack`、`@EnableTbsCache`），无 `spring.factories` 魔法；`AbstractAutoBeanRegister` 具备重复导入去重能力，按需组合、即插即用
+- **契约/实现分离**：技术型模块一律拆分 `api`（契约，零实现依赖）与 `impl`（实现）两个 Maven 子模块，业务只依赖契约层；切换实现（如 Caffeine→Redis 多级缓存）零业务改动
+- **统一响应与错误分级**：所有 HTTP 接口返回 `AjaxResult`（`{code, message, data}`），全局错误码语义（200/401/403/405/468/500/601/701）；异常按 `ErrorLevelEnum` 四级分级并走 i18n
+- **国际化全链路**：后端 `AssertUtil.i18n(key)` 断言 + 模块化资源文件（`messages-{module}.properties`，中英双语自动注册）；前端 vue-i18n + `Accept-Language` 请求头联动
+- **蓝绿部署验证**：`/public/gateway/version` 版本探针（构建信息 + 视图路由版本号），支撑前端动态路由缓存比对与流量切换验证
+- **append-only 版本化配置**：动态视图路由/表单配置支持版本历史与一键回滚（版本表为唯一事实来源）
+- **消息可靠性骨架**：厂商无关 MQ 抽象层（幂等三态、失败快照存储、档位延迟重投递、毒消息死信），RabbitMQ 实现开箱可用
+- **SQL 观测**：p6spy 代理驱动全量 SQL 日志（慢 SQL 阈值 2s 检测）
 
-## 项目架构
+## 架构总览
 
-### 后端模块 (Spring Boot)
+```mermaid
+flowchart LR
+    subgraph FE["前端"]
+        UI["app-ui-vue<br/>Vue2 + Element UI<br/>:9528"]
+    end
+    subgraph GW["网关层"]
+        NG["Nginx :8866<br/>/api 反向代理"]
+    end
+    subgraph SVC["微服务集群（Dubbo Triple + Nacos 注册）"]
+        APP["app-service :8080<br/>主应用:认证/系统管理/缓存/OSS/版本/泛化API"]
+        DIC["data-dic-service :20779<br/>Kotlin 字典服务"]
+        LOG["logging-service :8081/:20780<br/>日志采集统计"]
+    end
+    subgraph INFRA["基础设施（etc/docker）"]
+        MYSQL[("MySQL 8.4<br/>:3306")]
+        REDIS[("Redis 6.2<br/>:6379")]
+        MQ[/"RabbitMQ 4.3<br/>:5672"/]
+        MINIO[("MinIO<br/>:9000")]
+        NACOS["Nacos v2.5.3<br/>:8848 注册+配置"]
+        XXL["xxl-job-admin<br/>:9898"]
+    end
+    UI --> NG --> APP
+    APP -->|Dubbo RPC| DIC
+    APP -->|"MQ: tbs.log.queue"| LOG
+    APP --> MYSQL & REDIS & MQ & MINIO
+    LOG --> MYSQL & REDIS
+    DIC --> MYSQL & REDIS
+    APP & DIC & LOG -.->|注册| NACOS
+    APP -.->|定时调度| XXL
+```
 
-| 模块                   | 功能描述    | 技术栈                                       |
-|----------------------|---------|-------------------------------------------|
-| **app**              | 核心业务应用  | Spring Boot 2.x, Spring Data JPA, MyBatis |
-| **system**           | 系统管理模块  | Spring Security, JWT, RBAC权限管理            |
-| **cache**            | 缓存解决方案  | Spring Cache, Redis, TTL缓存                |
-| **async**            | 异步编程框架  | Spring Async, 事件广播, 分布式锁                  |
-| **web**              | Web应用框架 | Spring MVC, 统一响应, 请求追踪                    |
-| **sql**              | SQL查询框架 | 注解驱动查询, 类型安全SQL构建                         |
-| **tree-struct**      | 树结构管理   | 闭包表算法, 多叉树支持                              |
-| **open-api-starter** | API文档   | Knife4j, OpenAPI 3.0                      |
-| **redis-mod**        | Redis集成 | Redisson, 分布式锁, 缓存                        |
-| **rabbitmq-mod**     | 消息队列    | Spring AMQP, 异步事件处理                       |
-| **xxl-job-mod**      | 任务调度    | XXL-Job, 分布式任务调度                          |
+三个服务均以 Nacos 为注册中心（Dubbo Triple 协议）与配置中心；操作日志经 RabbitMQ 异步流入 logging-service 落库；xxl-job 集中驱动定时任务（树重建、日志刷盘、MQ 重投递等）。
 
-### 前端模块 (Vue.js)
+## 技术栈
 
-| 模块             | 功能描述   | 技术栈                                |
-|----------------|--------|------------------------------------|
-| **app-ui-vue** | 管理后台UI | Vue.js 2.6, Element UI, Vue Router |
+| 分类 | 技术 | 版本 |
+|------|------|------|
+| 语言/运行时 | Java | 11（dic 模块含存量 Kotlin 1.7.22，新代码统一 Java） |
+| 核心框架 | Spring Boot | 2.7.18 |
+| 微服务 | Spring Cloud / Spring Cloud Alibaba | 2021.0.4 / 2021.0.5.0 |
+| RPC | Dubbo（Triple 协议） | 3.3.0 |
+| 注册/配置中心 | Nacos | v2.5.3 |
+| ORM | tk.mybatis + Spring Data JPA（DDL） | 4.2.3 / - |
+| 数据库 | MySQL | 8.4（驱动 8.0.32） |
+| SQL 观测 | p6spy | 3.8.2 |
+| 缓存 | Redisson + Caffeine 多级缓存 | 3.52.0 |
+| 消息队列 | RabbitMQ（amqp-client） | 4.3 |
+| 任务调度 | XXL-Job | 2.5.0 |
+| 对象存储 | MinIO | 8.5.7 |
+| API 文档 | Knife4j（OpenAPI3） | 4.4.0 |
+| 脚本引擎 | Spring Expression | - |
+| 工具库 | Hutool / fastjson2 | 5.8.22 / 2.x |
+| 前端 | Vue / Element UI / vue-i18n / ECharts | 2.6.10 / 2.15.14 / 8.x / 6.x |
 
-### 基础设施模块
+## 模块结构说明
 
-| 模块         | 功能描述  |
-|------------|-------|
-| **common** | 通用工具包 |
-| **shared** | 共享组件库 |
-| **etc**    | 部署配置  |
+根 POM 聚合 21 个后端模块，按「基础层 → 契约层 → 实现层 → 应用层」组织依赖方向；每个模块均有独立 README（点击模块名查看详情）。
+
+### 基础层（无业务语义的公共底座）
+
+| 模块 | 职责 | 文档 |
+|------|------|------|
+| [common](common/README.md) | 断言/异常分级、i18n、UUID（雪花）、DataHolder、delegate 代理模式、分页、工具矩阵 | [README](common/README.md) |
+| [async](async/README.md) | 线程池管理、事件广播、任务调度（时间轮/延迟队列）、本地锁 | [README](async/README.md) |
+| [sql](sql/README.md) | QueryEngine SQL 构建引擎：注解驱动 QO → DSL → 多方言 SQL，自动填充、逻辑删除拦截 | [README](sql/README.md) |
+| [web](web/README.md) | 令牌认证（Spring Security）、路径网关、统一响应 AjaxResult、请求上下文（Dubbo 传播）、泛化 API 调用 | [README](web/README.md) |
+
+### 契约层（*-api，业务只依赖这些）
+
+| 模块 | 契约 | 文档 |
+|------|------|------|
+| [mq-mod](mq-mod/README.md) | `mq-api`：厂商无关 MQ 契约（生产/消费编排/幂等三态/失败重投递） | [README](mq-mod/README.md) |
+| [cache](cache/README.md) | `cache-api`：TTL 缓存、多级缓存、`@ExpireOn` 过期、`@CacheTransform` 序列化 | [README](cache/README.md) |
+| [shared](shared/README.md) | `shared-api`/`shared-pojo`：全功能 Service 模板、24 个系统实体、27 个 Mapper、逻辑删除、校验框架 | [README](shared/README.md) |
+| [tree-struct](tree-struct/README.md) | `tree-api`：内存多叉树 + 闭包表持久化契约 | [README](tree-struct/README.md) |
+| [dynamic-view-route](dynamic-view-route/README.md) | `view-route-api`：动态视图路由（分组/版本/回滚）与动态表单配置 | [README](dynamic-view-route/README.md) |
+| [system](system/README.md) | `system-api`：用户/角色组/公司/部门/版本/日志/泛化 API 等 20+ 服务契约 | [README](system/README.md) |
+| [dic](dic/README.md) | `dic-api`：数据字典契约（枚举值/标签/比对） | [README](dic/README.md) |
+| [logging](logging/README.md) | `logging-api`：日志记录/提取契约与报表 VO | [README](logging/README.md) |
+| [script-engine](script-engine/README.md) | `script-api`：脚本引擎四层模型（引擎/编译器/执行器/结果），内置 SpEL | [README](script-engine/README.md) |
+| [oss](oss/README.md) | `oss-api`：对象存储统一门面（OssClient/OssOperations） | [README](oss/README.md) |
+
+### 实现层（可替换的具体实现）
+
+| 模块 | 提供的实现 | 文档 |
+|------|------|------|
+| [redis-mod](redis-mod/README.md) | Redisson：分布式锁、缓存 L2、DataHolder、任务存储、MQ 幂等/失败存储 | [README](redis-mod/README.md) |
+| [rabbitmq-mod](rabbitmq-mod/README.md) | RabbitMQ：收发实现、事件广播、日志通道（Java 序列化转换器） | [README](rabbitmq-mod/README.md) |
+| [xxl-job-mod](xxl-job-mod/README.md) | XXL-Job 执行器装配、JSON 任务执行器、后台任务批量驱动、async 内核外部驱动 | [README](xxl-job-mod/README.md) |
+| [open-api-starter](open-api-starter/README.md) | Knife4j 文档装配 + `@AjaxResponseType` 响应 Schema 定制 | [README](open-api-starter/README.md) |
+| [updater](updater/README.md) | 自动更新库（多文件下载/部署脚本）+ `updater-gui` Swing 演示程序（统一文档） | [README](updater/README.md) |
+
+> cache/system/tree-struct/dynamic-view-route 的实现子模块（`cache-impl`、`cache-caffeine-impl`、`default-system-impl`、`closure-list-impl`、`view-route-default-impl`）在各模块 README 内详述。
+
+### 应用层（可运行产物）
+
+| 模块 | 定位 | 文档 |
+|------|------|------|
+| [app](app/README.md) | 主应用运行包：16 注解装配全平台能力，25 个控制器，`app-service` :8080 | [README](app/README.md) |
+| [app-ui-vue](app-ui-vue/README.md) | 管理前端：动态路由/表单、用户/角色/字典/缓存/OSS/日志/版本管理 | [README](app-ui-vue/README.md) |
+
+### 启用注解速查
+
+| 注解 | 模块 | 注解 | 模块 |
+|------|------|------|------|
+| `@EnableCommonPack` | common | `@EnableRabbitMq` | rabbitmq-mod |
+| `@EnableTbsAsyncPack` | async | `@UseXxlJob` | xxl-job-mod |
+| `@EnableTbsSql` + `@UseMysql` | sql | `@UseKnife4jPack` | open-api-starter |
+| `@EnableWebPack` | web | `@EnableViewControl` | dynamic-view-route |
+| `@EnableTbsCache` | cache | `@EnableSharedLibBean` | shared |
+| `@EnableTbsMq` | mq-mod | `@UseClosureTableTree` | tree-struct |
+| `@EnableTbsRedis` | redis-mod | `@EnableTbsOss` | oss |
+| `@EnableScriptEngine` | script-engine | | |
+
+聚合入口见 [app/README.md](app/README.md) 的「启动类与注解装配」。
+
+## 环境要求
+
+| 依赖 | 版本要求 | 说明 |
+|------|----------|------|
+| JDK | 11 | 后端编译运行 |
+| Maven | 3.6+ | 后端构建 |
+| Node.js | >= 8.9（推荐 12+） | 前端构建 |
+| Docker / Docker Compose | 20.10+ | 一键启动依赖服务 |
 
 ## 快速开始
 
-### 环境要求
-
-- **Java**: 11+
-- **Node.js**: 14+
-- **MySQL**: 5.7+
-- **Redis**: 6.0+
-- **Maven**: 3.6+
-
-### 一键部署
+### 第一步：启动依赖服务
 
 ```bash
-# 启动基础设施服务
 cd etc/docker
-docker-compose up -d
-
-# 初始化数据库
-mysql -h localhost -P 3306 -u root -p < etc/sql_file/xxl-job/xxl_job_init.sql
+docker compose up -d
 ```
 
-### 后端启动
+| 服务 | 端口 | 凭证 |
+|------|------|------|
+| MySQL 8.4 | 3306 | root / 123456 |
+| Nacos v2.5.3（standalone） | 8848 | - |
+| Redis 6.2 | 6379 | 密码 123456 |
+| RabbitMQ 4.3 | 5672（管理台 15672） | admin / admin123 |
+| MinIO | 9000（控制台 9001） | minioadmin / minioadmin |
+| xxl-job-admin 2.5.0 | 9898 | accessToken 123456789 |
+| Dubbo Admin 0.6.0 | 9600 | - |
+
+### 第二步：初始化数据库
 
 ```bash
-# 编译项目
-mvn clean compile
-
-# 启动核心应用
-cd app
-mvn spring-boot:run
+# Nacos 配置库（必须）
+mysql -h127.0.0.1 -uroot -p123456 < etc/sql_file/nacos_config.sql
+# XXL-Job 调度库（使用定时任务时必须）
+mysql -h127.0.0.1 -uroot -p123456 < etc/sql_file/xxl-job/xxl_job_init.sql
 ```
 
-### 前端启动
+业务库 `core_app` 由 JPA `ddl-auto: update` 在应用启动时自动建表；`etc/sql_file/app_system.sql` 提供完整表结构参考（含初始数据）。
+
+### 第三步：构建并启动后端主应用
 
 ```bash
-# 安装依赖
+mvn clean package -pl app -am
+java -jar app/target/app-1.0-SNAPSHOT.jar
+```
+
+主应用默认 `http://127.0.0.1:8080`。Nacos 不可用时仍可启动（配置导入带 `optional:` 前缀，回退本地 yml）。
+
+可选：启动独立微服务（字典/日志，主应用不强依赖）：
+
+```bash
+mvn clean package -pl dic/dic-service -am && java -jar dic/dic-service/target/*.jar   # data-dic-service，Dubbo 20779
+mvn clean package -pl logging/logging-impl -am && java -jar logging/logging-impl/target/*.jar  # logging-service，8081
+```
+
+### 第四步：启动前端
+
+```bash
 cd app-ui-vue
 npm install
-
-# 启动开发服务器
-npm run serve
+npm run dev          # http://localhost:9528，/api 自动代理到 127.0.0.1:8080
 ```
 
-## 核心功能详解
+> 前端无 Mock 体系，需要后端主应用真实运行。
 
-### 1. 系统管理 (system模块)
+## 使用示例
 
-**用户认证与授权**
+### 1. 登录获取令牌
 
-- 多方式认证（用户名密码、令牌刷新）
-- 基于角色的权限控制（RBAC）
-- JWT令牌安全管理
-- 多租户数据隔离
+```bash
+curl -X POST http://127.0.0.1:8080/public/user/login \
+  -H 'Content-Type: application/json' \
+  -d '{"userName":"admin","password":"123456"}'
+```
 
-**核心组件**
+响应（统一 `AjaxResult` 结构）：
 
-- `DefaultTokenSignCenter` - 令牌签发中心
-- `DefaultUserInfoService` - 用户信息服务
-- `SystemOperateInterceptor` - 操作日志拦截器
+```json
+{
+  "code": 200,
+  "message": "操作成功",
+  "data": { "token": "xxx", "expireTime": 1757000000000, "sessionId": "...", "tokenType": 1 }
+}
+```
 
-### 2. 缓存管理 (cache模块)
+### 2. 携带令牌访问私有接口
 
-**高级缓存特性**
+```bash
+curl http://127.0.0.1:8080/private/user/info -H 'Authorization: <token>'
+```
 
-- TTL缓存策略
-- 缓存监控统计
-- 缓存限制管理
-- 分布式缓存支持
+令牌过期（业务码 405）时前端会静默调 `GET /public/user/refresh` 续期；刷新失败（468）整页重登。
 
-**核心注解**
+### 3. 版本探针（蓝绿部署验证）
 
-- `@Cacheable` - 缓存读取
-- `@CacheEvict` - 缓存清除
-- `@CachePut` - 缓存更新
+```bash
+curl http://127.0.0.1:8080/public/gateway/version
+# { "version": "1.0-SNAPSHOT", "buildTime": "...", "instancePort": 8080, "viewVersion": 12 }
+```
 
-### 3. 异步处理 (async模块)
+### 4. API 文档
 
-**异步编程解决方案**
+- Swagger（Knife4j）：`http://127.0.0.1:8080/doc.html`
+- xxl-job 控制台：`http://127.0.0.1:9898/xxl-job-admin`
+- Nacos 控制台：`http://127.0.0.1:8848/nacos`
 
-- 异步执行器管理
-- 事件广播机制
-- 分布式锁实现
-- 线程池配置优化
+### 5. 前端
 
-**核心接口**
-
-- `IAsyncExecutor` - 异步执行器
-- `IEventBroadcaster` - 事件广播器
-- `IDistributedLock` - 分布式锁
-
-### 4. 树结构管理 (tree-struct模块)
-
-**基于闭包表算法**
-
-- 多叉树结构支持
-- 层级关系查询
-- 内存与持久化存储
-- 事务完整性保证
-
-**核心实现**
-
-- `ClosureTreeServiceImpl` - 闭包表服务
-- `MultiwayTree` - 多叉树实现
-- `ITreeStore` - 树存储接口
-
-### 5. API文档 (open-api-starter模块)
-
-**开箱即用的API文档**
-
-- OpenAPI 3.0规范支持
-- Knife4j UI界面
-- 多服务器配置
-- 自动配置检测
-
-**访问地址**
-
-- Knife4j界面: http://localhost:8080/doc.html
-- Swagger界面: http://localhost:8080/swagger-ui/index.html
+浏览器打开 `http://localhost:9528` → 登录页 → 登录后进入管理后台（用户/角色/字典/缓存/OSS/日志/版本/路由管理等模块）。
 
 ## 配置说明
 
-### 应用配置 (application.yml)
+### 环境变量
 
-```yaml
-# 数据库配置
-spring:
-  datasource:
-    url: jdbc:mysql://localhost:3306/app_system
-    username: root
-    password: your_password
+| 变量 | 默认值 | 说明 |
+|------|--------|------|
+| `NACOS_ADDRESS` | `127.0.0.1:8848` | Nacos 注册与配置中心 |
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | `127.0.0.1` / `3306` / `core_app` | 数据库 |
+| `DB_USERNAME` / `DB_PASSWORD` | `root` / `123456789` | 数据库凭证 |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | `127.0.0.1` / `6379` / `123456` | Redis |
+| `RABBITMQ_HOST` / `RABBITMQ_PORT` | `127.0.0.1` / `5672` | RabbitMQ |
+| `RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD` | `admin` / `admin123` | RabbitMQ 凭证 |
+| `XXL_JOB_ADMIN_ADDRESS` / `XXL_JOB_ACCESS_TOKEN` | `http://127.0.0.1:9898/xxl-job-admin` / `123456789` | 调度中心 |
+| `OSS_ENABLE` / `OSS_TYPE` | `false` / `minio` | 对象存储开关与实现类型 |
+| `OSS_ENDPOINT` / `OSS_ACCESS_KEY_ID` / `OSS_ACCESS_KEY_SECRET` | `http://127.0.0.1:9000` / `minioadmin` / `minioadmin` | MinIO 连接 |
+| `APP_GATEWAY_VERSION` | 构建版本 | 版本标识覆盖（蓝绿验证） |
 
-  # Redis配置
-  redis:
-    host: localhost
-    port: 6379
-    password: 123456
+### 配置分层
 
-# 系统模块配置
-tbs:
-  system:
-    enable: true
-    enable-operate-log: true
+优先级：**Nacos 远程配置 > 本地 profile（`application-{tbs,db,redis,mq}.yml`）**。主应用经 `spring.config.import` 从 Nacos 拉取 `RABBITMQ.yml`/`CoreAppDb.yml`/`REDIS.yml`/`app-service.yml`（均带 `optional:` 前缀与 `refreshEnabled`）；`.env` 文件经 spring-dotenv 支持本地环境变量兜底。
 
-  # 缓存配置
-  cache:
-    enable: true
-    ttl: 3600
-```
+平台 `tbs.*` 配置（`tbs.web`/`tbs.cache`/`tbs.system` 等 20+ 前缀）的完整清单见 [app/README.md](app/README.md)「配置体系」与各模块 README「配置参考」。
 
-### 安全配置
+## 生产部署
 
-```yaml
-# JWT令牌配置
-web:
-  auth:
-    token:
-      expire-time: 3600
-      refresh-expire-time: 86400
-```
+1. **前端**：`npm run build:prod` → `dist/`；Nginx 参考配置见 `app-ui-vue/nginx.conf`（监听 8866，`/api/` rewrite 后代理后端，history 模式回落 `index.html`，静态资源 7 天缓存）
+2. **后端**：可执行 jar + 环境变量注入（或将配置迁入 Nacos）；建议 `ddl-auto` 改为 `validate`，用迁移脚本管理表结构
+3. **拓扑**：Nginx → app-service（可多实例）；dic/logging 服务按需横向扩容；全部服务注册到生产 Nacos
+4. **调度**：xxl-job 控制台注册执行器（`app-name: mainSystemApplication`），配置 `department_tree_rebuild`、`flushLogData`、`runningBackGroundJobHandler`（含 MQ 重投递）等任务
 
-## 监控与运维
-
-### 健康检查
-
-项目提供完整的健康检查端点：
-
-```bash
-# 应用健康状态
-curl http://localhost:8080/actuator/health
-
-# 缓存状态检查
-curl http://localhost:8080/actuator/caches
-
-# 数据库连接检查
-curl http://localhost:8080/actuator/database
-```
-
-### 日志管理
-
-- **应用日志**: 基于Logback的日志配置
-- **操作审计**: 自动记录系统操作行为
-- **性能监控**: 集成Micrometer指标收集
-
-### 任务调度监控
-
-XXL-Job任务调度中心：http://localhost:9898
-
-- 任务执行监控
-- 执行器管理
-- 调度日志分析
-
-## 开发指南
-
-### 代码规范
-
-- 遵循Google Java代码风格
-- 使用Lombok减少样板代码
-- 统一异常处理机制
-- 完整的单元测试覆盖
-
-### API开发规范
-
-```java
-
-@RestController
-@RequestMapping("/api/users")
-@Tag(name = "用户管理", description = "用户相关的API接口")
-public class UserController {
-
-    @GetMapping("/{id}")
-    @Operation(summary = "获取用户信息")
-    public ResponseEntity<UserVO> getUser(@PathVariable Long id) {
-        // 业务逻辑实现
-    }
-}
-```
-
-### 数据库开发
-
-**实体类定义**
-```java
-@Entity
-@Table(name = "users")
-@Getter
-@Setter
-public class User implements IBaseEntity<Long> {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-
-    private String username;
-    private String email;
-
-    @AutoSetDate
-    private Date createTime;
-}
-```
-
-**查询构建**
-```java
-// 使用SQL框架构建类型安全查询
-UserQuery query = new UserQuery().setNameLike("John").setMinAge(18);
-
-List<User> users = QueryUtil.getEntityQueryWrapper(User.class).where(query).fetch();
-```
-
-## 故障排查
-
-### 常见问题
-
-1. **应用启动失败**
-   ```bash
-   # 检查依赖冲突
-   mvn dependency:tree
-   
-   # 查看启动日志
-   tail -f logs/application.log
-   ```
-
-2. **数据库连接问题**
-   ```bash
-   # 检查数据库服务状态
-   systemctl status mysql
-   
-   # 验证连接信息
-   mysql -h localhost -P 3306 -u root -p
-   ```
-
-3. **缓存失效**
-   ```bash
-   # 检查Redis服务
-   redis-cli -h localhost -p 6379 -a 123456 ping
-   
-   # 清理缓存
-   redis-cli -h localhost -p 6379 -a 123456 flushall
-   ```
-
-### 性能优化
-
-1. **数据库优化**
-    - 合理使用索引
-    - 避免N+1查询问题
-    - 使用连接池配置
-
-2. **缓存策略**
-    - 热点数据缓存
-    - 缓存穿透防护
-    - 缓存雪崩预防
-
-3. **JVM调优**
-   ```bash
-   # 启动参数示例
-   java -Xms512m -Xmx1024m -jar app.jar
-   ```
+详细规范见 [docs/guideline/06-部署与运维规范.md](docs/guideline/06-部署与运维规范.md) 与 [app-ui-vue/DEPLOYMENT.md](app-ui-vue/DEPLOYMENT.md)。
 
 ## 贡献指南
 
-欢迎为Abstergo Solution贡献代码！请遵循以下流程：
+开发规范总纲见 [DEVELOPMENT_GUIDELINE.md](DEVELOPMENT_GUIDELINE.md)（含 7 个分册：项目总览/中间件规范/功能模块规范/接口设计/前端规范/部署运维/Code Review 清单）。**全局铁律摘要**：
 
-1. **Fork项目**
-2. **创建功能分支** (`git checkout -b feature/AmazingFeature`)
-3. **提交更改** (`git commit -m 'Add some AmazingFeature'`)
-4. **推送到分支** (`git push origin feature/AmazingFeature`)
-5. **创建Pull Request**
+1. 后端新代码统一 **Java**（存量 Kotlin 仅维护不新增）
+2. 类与函数使用块注释（`@param`/`@return`），**禁止行尾注释**
+3. 断言必须走 `AssertUtil.isTrue(条件).i18n("key").params(...).errorLevel(...).throwIt()`，禁止 `throw new FormattedRuntimeException`
+4. 所有用户可见文案走 i18n 资源 key（后端）/`$t()`（前端），禁止硬编码
+5. 配置统一 `@ConfigurationProperties` Property 类（提供 `tbs.{module}.enable` 总开关），禁止散落 `@Value`
+6. Controller 只做接入与参数组装，业务校验全部在 Service 层
+7. 技术型模块必须拆分 `api`/`impl` 子模块
+8. 接口统一返回 `AjaxResult`；`/public/**` 免认证、`/private/**` 必须认证
+9. 公共契约方法改造：新增方法 + 旧方法标 `@Deprecated`（渐进迁移），禁止直接改签名
+10. `@Cacheable` 等 cacheNames 必须引用模块 `CacheNamesConstants` 常量，禁止魔法值字符串
 
-### 开发规范
-
-- 提交信息使用约定式提交格式
-- 新增功能需要包含单元测试
-- 更新相关文档和README
-- 通过代码审查
+**文档维护约定**：修改模块行为时同步更新该模块 README（本仓库 22 份模块 README 均基于源码核实维护）；合并前必须通过 [07-Code Review 检查清单](docs/guideline/07-Code-Review检查清单.md)。
 
 ## 许可证
 
-本项目基于 Apache License 2.0 许可证开源。详情请参阅 [LICENSE](LICENSE) 文件。
-
-## 致谢
-
-感谢以下开源项目的支持：
-
-- [Spring Boot](https://spring.io/projects/spring-boot)
-- [Vue.js](https://vuejs.org/)
-- [Element UI](https://element.eleme.io/)
-- [Redis](https://redis.io/)
-- [MySQL](https://www.mysql.com/)
-- [Docker](https://www.docker.com/)
+[Apache License 2.0](LICENSE)
 
 ---
 
-**最后更新**: 2026年6月
-**版本**: 1.0-SNAPSHOT
-
+**维护人**: abstergo　**最后更新**: 2026-09
