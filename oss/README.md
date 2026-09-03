@@ -1,176 +1,113 @@
 # OSS 模块 - 对象存储统一门面
 
-## 模块概述
+基于门面（Facade）模式的对象存储统一门面框架。业务代码只依赖 `OssClient` 一个接口，底层可无缝适配 MinIO、阿里云 OSS、AWS S3、腾讯云 COS 等第三方对象存储。切换存储供应商时业务代码零改动。
 
-OSS 模块是一个对象存储门面（Facade）框架，为 Abstergo Solution 提供统一的对象存储操作契约。业务代码只依赖 `OssClient` 门面接口，底层可无缝适配阿里云 OSS、MinIO、AWS S3、腾讯云 COS 等不同的第三方对象存储组件，切换存储供应商时业务代码零改动。
+## 目录
 
-模块遵循项目统一的 **api / impl 拆分规范**：
+- [模块定位](#模块定位)
+- [子模块说明](#子模块说明)
+- [核心设计](#核心设计)
+- [快速开始](#快速开始)
+- [对象操作契约（OssOperations）](#对象操作契约ossoperations)
+- [桶操作契约（BucketOperations）](#桶操作契约bucketoperations)
+- [统一门面（OssClient）](#统一门面ossclient)
+- [数据模型与 Builder](#数据模型与-builder)
+- [统一异常体系](#统一异常体系)
+- [MinIO 实现](#minio-实现)
+- [配置参考](#配置参考)
+- [扩展指南：新增第三方实现](#扩展指南新增第三方实现)
+- [最佳实践](#最佳实践)
+- [注意事项](#注意事项)
+- [包结构](#包结构)
 
-```
-oss/
-├── oss-api/              # 契约层：门面接口、模型、异常、装配配置（零第三方依赖）
-│   └── src/main/java/com/tbs/oss/
-│       ├── annotation/
-│       │   └── EnableTbsOss.java             # 启用入口注解
-│       ├── config/
-│       │   ├── OssPackAutoRegister.java      # 自动扫描注册器
-│       │   ├── OssConfig.java                # 核心装配类
-│       │   └── property/
-│       │       └── OssProperty.java          # tbs.oss 配置绑定
-│       ├── core/                             # 契约接口
-│       │   ├── OssClient.java                # 统一门面（业务唯一依赖入口）
-│       │   ├── OssOperations.java            # 对象级操作契约
-│       │   ├── BucketOperations.java         # 桶级操作契约
-│       │   ├── OssClientFactory.java         # 工厂 SPI
-│       │   └── ProgressListener.java         # 进度回调
-│       ├── model/                            # 纯 POJO 模型
-│       │   ├── PutObjectRequest / PutObjectResult
-│       │   ├── ListObjectsRequest / ObjectListing / ObjectInfo / ObjectMetadata
-│       │   ├── CopyObjectRequest
-│       │   ├── PresignedUrlRequest / PresignedUrlType
-│       │   ├── Bucket
-│       │   └── OssProperties
-│       └── exception/                        # 统一异常体系
-│           ├── OssException
-│           ├── OssObjectNotFoundException
-│           ├── OssBucketNotFoundException
-│           └── OssAccessDeniedException
-├── (impl 模块规划中，如 oss-minio-impl / oss-aliyun-impl)
-└── pom.xml
-```
+## 模块定位
 
-## 核心特性
+| 维度 | 说明 |
+| --- | --- |
+| 角色层级 | 基础层（common 之上），聚合 API/impl 两子模块 |
+| 核心能力 | 对象上传/下载/删除/复制/移动/列表/预签名 URL/桶管理 的统一契约 |
+| 依赖 | `oss` 聚合 POM 依赖 `common`；`oss-api` 自身零第三方依赖 |
+| 启用方式 | `@EnableTbsOss` 注解（无 `spring.factories`） |
 
-### 🎯 统一门面
-- 业务只依赖 `OssClient` 一个接口，屏蔽所有厂商 SDK 差异
-- 上传 / 下载 / 删除 / 复制 / 移动 / 列表 / 预签名 URL / 桶管理全覆盖
-- 默认桶模式：常规操作无需传递 bucketName，一行代码完成上传
+## 子模块说明
 
-### 🔌 可插拔实现
-- `OssClientFactory` SPI + `tbs.oss.type` 配置驱动，按类型自动匹配实现工厂
-- 每个第三方实现一个独立 impl 模块，依赖边界清晰
-- 多实现共存时通过 `@ConditionalOnMissingBean` 支持自定义覆盖
+`oss` 为 `packaging=pom` 的聚合模块（**不可作为依赖引入**）：
 
-### 🛡️ 统一异常体系
-- 所有第三方 SDK 异常统一转换为 `OssException` 及其子类
-- 异常携带 bucketName / objectKey 上下文，便于定位问题
+| 子模块 | artifactId | 说明 |
+| --- | --- | --- |
+| oss-api | `oss-api` | 契约层：门面接口、模型、异常、装配配置。零第三方依赖，仅依赖 `common` |
+| oss-minio-impl | `oss-minio-impl` | MinIO（S3 协议）官方实现，依赖 `oss-api` + `io.minio:minio` |
 
-### 📦 零厂商耦合模型
-- model 层全部为纯 POJO，不依赖任何第三方 SDK
-- 列表查询采用主流 OSS 通用的 marker 游标分页模型，兼容 S3 / 阿里云 / MinIO
-
-## 设计理念
-
-### 1. 门面模式：业务只认一个接口
-
-对象存储在项目中的典型用法就是"传文件、拿 URL"，但每个厂商 SDK 的 API 形态、异常类型、分页模型各不相同。如果业务直接依赖厂商 SDK，换存储就是全项目改造。
-
-因此本模块将厂商差异全部收敛到 impl 层，业务侧唯一入口是 `OssClient`：
-
-```
-业务代码 ──> OssClient（门面）
-                │
-        OssOperations + BucketOperations（契约拆分）
-                │
-        OssClientFactory（SPI，按 type 匹配）
-                │
-    ┌───────────┼───────────┬─────────────┐
-    MinIO    阿里云 OSS   AWS S3     腾讯云 COS  ...（impl 模块各自实现）
-```
-
-### 2. 契约拆分：对象操作与桶操作分离
-
-- `OssOperations`：对象级操作，是业务 95% 场景用到的契约
-- `BucketOperations`：桶管理操作，属于运维低频操作
-
-拆分后职责清晰，impl 也可以只实现对象操作（部分托管服务不允许程序化建桶）。`OssClient` 通过接口聚合对外呈现完整门面。
-
-### 3. 默认桶模式：消灭样板参数
-
-实际业务中绝大多数上传都落在同一个配置好的桶里。因此契约方法在 `bucketName` 缺省时自动回退到 `tbs.oss.default-bucket`，常见调用简化为一行：
-
-```java
-ossClient.putObject("report/2026/a.xlsx", file);
-```
-
-需要跨桶操作时，通过 Request 对象显式指定桶名即可。
-
-### 4. Request / Result 对象化：接口签名永不膨胀
-
-上传、复制、列表、预签名四类参数较多的操作均使用 Builder 构建的 Request 对象：
-
-```java
-PutObjectRequest.builder("report/2026/a.xlsx")
-    .bucketName("archive")
-    .contentType("application/vnd.ms-excel")
-    .userMetadata(Map.of("source", "report-service"))
-    .progressListener(listener)
-    .file(localFile)
-    .build();
-```
-
-后续扩展字段（分片参数、回调地址、版本控制等）只加 Request 属性，**不破坏接口签名**，实现模块无需跟随改动。
-
-### 5. 工厂 SPI + 条件装配：装配与实现解耦
-
-装配逻辑收敛在 oss-api 的 `OssConfig` 中：从容器收集所有 `OssClientFactory`，按 `tbs.oss.type`（大小写不敏感）匹配并创建客户端。这意味着：
-
-- impl 模块只需提供一个带 `@Component` 的工厂 Bean，放在 `com.tbs.oss` 子包下即被自动扫描
-- oss-api 完全不依赖任何厂商 SDK，pom 保持零第三方依赖
-- 找不到匹配工厂时抛出带明确指引的 `OssException`，而不是隐晦的 NPE
-
-### 6. 防重复装配：与 redis-mod 加固方案一致
-
-- `OssPackAutoRegister` 继承 `AbstractAutoBeanRegister`，天然具备 `PACK_MAP` 去重能力，多模块重复 `@EnableTbsOss` 只扫描一次
-- `OssProperty` 不使用 `@Component`，由 `@EnableConfigurationProperties` 显式声明，避免重复导入时重复注册
-- `ossClient` Bean 带 `@ConditionalOnMissingBean`，业务可自行定义客户端覆盖默认装配
-- `@Bean(destroyMethod = "close")` 保证应用关闭时释放底层 SDK 连接资源
-
-### 7. 统一异常与流责任契约
-
-- impl 必须把厂商 SDK 异常转换为 `OssException` 体系，业务层 catch 逻辑与厂商无关
-- 流的责任边界在 `OssOperations` Javadoc 中写明：调用方传入的上传流由调用方关闭；`getObject` 返回的流由调用方关闭
-
-## 快速开始
-
-### 1. 添加依赖
+依赖坐标：
 
 ```xml
 <dependency>
     <groupId>com.tbs</groupId>
     <artifactId>oss-api</artifactId>
-    <version>1.0-SNAPSHOT</version>
 </dependency>
-<!-- 再引入对应的实现模块，如 oss-minio-impl（规划中） -->
+<!-- 引入对应实现，如 MinIO -->
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>oss-minio-impl</artifactId>
+</dependency>
 ```
 
-### 2. 启用功能
+## 核心设计
 
-在启动类或配置类上添加注解：
+### 1. 门面模式：业务只认一个接口
+
+`OssClient` 聚合 `OssOperations`（对象级）与 `BucketOperations`（桶级），是业务唯一入口。厂商差异全部收敛到各 impl 模块的 `OssClientFactory` SPI 中。
+
+### 2. 默认桶模式：消灭样板参数
+
+契约方法在 `bucketName` 为 null 或空时回退到 `tbs.oss.default-bucket`。若未指定桶名且未配置默认桶，抛 `OssException`：
 
 ```java
-@EnableTbsOss
-@SpringBootApplication
-public class Application {
-    public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
-    }
-}
+ossClient.putObject("report/2026/a.xlsx", file);   // 落到默认桶
 ```
 
-### 3. 配置连接信息
+跨桶操作通过 Request 对象显式指定桶名。
+
+### 3. Request / Result 对象化
+
+参数较多的上传/列表/复制/预签名均用不可变的 Request + Builder 构建，扩展字段只加 Request 属性，不破坏接口签名。
+
+### 4. 装配与实现解耦
+
+装配逻辑收敛在 `OssConfig`：从容器收集全部 `OssClientFactory`，按 `tbs.oss.type`（大小写不敏感）匹配并创建客户端；找不到匹配工厂时抛出带明确指引的 `OssException`。
+
+## 快速开始
+
+### 1. 依赖
+
+```xml
+<dependency><groupId>com.tbs</groupId><artifactId>oss-api</artifactId></dependency>
+<dependency><groupId>com.tbs</groupId><artifactId>oss-minio-impl</artifactId></dependency>
+```
+
+### 2. 启动类标注注解
+
+```java
+@SpringBootApplication
+@EnableTbsOss      // @Import(OssPackAutoRegister) → 继承 AbstractAutoBeanRegister，扫描 com.tbs.oss，注册 Feature.OSS
+public class Application { ... }
+```
+
+`OssPackAutoRegister` 具备 `PACK_MAP` 去重能力，重复 `@EnableTbsOss` 只扫描一次。
+
+### 3. 配置
 
 ```yaml
 tbs:
   oss:
-    enable: true                     # 启用开关
-    type: minio                      # 实现类型，匹配工厂的 supportType()
-    endpoint: http://127.0.0.1:9000  # 服务端点
-    region: us-east-1                # 地域（按厂商要求填写，可为空）
+    enable: true                     # 总开关（默认 false，关闭则不装配 OssClient Bean）
+    type: minio                      # 实现类型，匹配工厂的 supportType()；缺失/不匹配直接启动失败
+    endpoint: http://127.0.0.1:9000
+    region: us-east-1                # 可空
     access-key-id: minioadmin
     access-key-secret: minioadmin
     default-bucket: app-files        # 默认桶
-    path-style-access: true          # MinIO 等自建服务需开启
+    path-style-access: true          # MinIO 官方 SDK 天然 path-style，此配置当前对 MinIO 实现不生效
 ```
 
 ### 4. 业务使用
@@ -178,221 +115,231 @@ tbs:
 ```java
 @Service
 public class FileService {
-
     @Resource
     private OssClient ossClient;
 
-    /** 上传本地文件到默认桶 */
-    public PutObjectResult upload(String objectKey, File file) {
-        return ossClient.putObject(objectKey, file);
-    }
+    public PutObjectResult upload(String key, File file) { return ossClient.putObject(key, file); }
 
-    /** 流式上传，附带元数据与进度回调 */
-    public PutObjectResult uploadStream(String objectKey, InputStream in, long length) {
-        return ossClient.putObject(PutObjectRequest.builder(objectKey)
-            .inputStream(in)
-            .contentLength(length)
+    // 流式上传 + 进度 + 元数据（Request 对象）
+    public PutObjectResult uploadStream(String key, InputStream in, long len) {
+        return ossClient.putObject(PutObjectRequest.builder(key)
+            .inputStream(in).contentLength(len)
             .contentType("application/octet-stream")
             .userMetadata(Map.of("uploader", "system"))
             .progressListener(new ProgressListener.Adapter() {
-                @Override
-                public void onSuccess() {
-                    log.info("上传完成: {}", objectKey);
-                }
-            })
-            .build());
+                @Override public void onSuccess() { /* ... */ }
+            }).build());
     }
 
-    /** 生成一小时有效的下载链接 */
-    public String downloadUrl(String objectKey) {
-        return ossClient.generatePresignedUrl(objectKey, 3600);
+    public String downloadUrl(String key) { return ossClient.generatePresignedUrl(key, 3600); }
+
+    public String directUploadUrl(String key) {
+        return ossClient.generatePresignedUrl(PresignedUrlRequest.upload(key)
+            .expirationSeconds(600).contentType("application/pdf").build());
     }
 
-    /** 客户端直传：生成上传预签名 URL */
-    public String directUploadUrl(String objectKey) {
-        return ossClient.generatePresignedUrl(
-            PresignedUrlRequest.upload(objectKey)
-                .expirationSeconds(600)
-                .contentType("application/pdf")
-                .build());
-    }
-
-    /** 下载对象（注意：流由调用方关闭） */
-    public void downloadTo(String objectKey, File target) {
-        ossClient.getObject(null, objectKey, target);
-    }
-
-    /** 按前缀分页列出对象 */
-    public ObjectListing listReports(String marker) {
+    public ObjectListing list(String prefix, String marker) {
         return ossClient.listObjects(ListObjectsRequest.builder()
-            .prefix("report/2026/")
-            .delimiter("/")
-            .marker(marker)
-            .maxKeys(100)
-            .build());
-    }
-
-    /** 桶管理 */
-    public void ensureBucket(String bucketName) {
-        if (!ossClient.doesBucketExist(bucketName)) {
-            ossClient.createBucket(bucketName);
-        }
+            .prefix(prefix).delimiter("/").marker(marker).maxKeys(100).build());
     }
 }
 ```
 
-## 核心组件详解
-
-### OssClient - 统一门面
-
-聚合 `OssOperations` 与 `BucketOperations` 的业务唯一入口，同时提供：
-
-| 方法 | 说明 |
-|------|------|
-| `getType()` | 当前实现类型标识 |
-| `getDefaultBucket()` | 配置的默认桶名 |
-| `getProperties()` | 连接配置属性 |
-| `close()` | 释放底层 SDK 资源（应用关闭时自动调用） |
-
-### OssOperations - 对象级操作
-
-| 分组 | 方法 |
-|------|------|
-| 上传 | `putObject(PutObjectRequest)` 及流 / 文件 / 字节数组便捷重载 |
-| 下载 | `getObject(...)` 流式 / 落盘两种形态、`getObjectMetadata` |
-| 删除 | `deleteObject` / `deleteObjects` 批量删除 |
-| 复制移动 | `copyObject` / `moveObject`（复制+删除源对象） |
-| 列表 | `listObjects`，支持前缀、delimiter 目录模拟、marker 分页 |
-| 预签名 | `generatePresignedUrl`（下载/上传）、`getObjectUrl` 公开读直链 |
-
-### BucketOperations - 桶级操作
-
-`createBucket` / `deleteBucket` / `doesBucketExist` / `listBuckets`。
-
-### OssClientFactory - 实现接入 SPI
+## 对象操作契约（OssOperations）
 
 ```java
-public interface OssClientFactory {
-    /** 工厂支持的类型标识，与 tbs.oss.type 匹配 */
-    String supportType();
+public interface OssOperations {
+    // 上传：Request / 流 / 文件 / 字节 4 种（对象流版本 contentLength=-1 表示未知）
+    PutObjectResult putObject(PutObjectRequest request);
+    PutObjectResult putObject(String objectKey, InputStream inputStream, long contentLength, String contentType);
+    PutObjectResult putObject(String objectKey, File file);        // 默认桶
+    PutObjectResult putObject(String objectKey, byte[] content);   // 默认桶
 
-    /** 根据配置创建客户端 */
-    OssClient create(OssProperties properties);
+    // 下载：流 / 默认桶流 / 落盘
+    InputStream getObject(String bucketName, String objectKey);    // 返回流由调用方关闭
+    InputStream getObject(String objectKey);
+    void getObject(String bucketName, String objectKey, File targetFile);
+    ObjectMetadata getObjectMetadata(String bucketName, String objectKey);
+
+    // 删除/存在性
+    void deleteObject(String bucketName, String objectKey);
+    void deleteObject(String objectKey);
+    void deleteObjects(String bucketName, List<String> objectKeys);  // 批量
+    boolean doesObjectExist(String bucketName, String objectKey);
+
+    // 复制/移动
+    void copyObject(CopyObjectRequest request);
+    void moveObject(CopyObjectRequest request);                      // 复制 + 删除源
+
+    // 列表（前缀/delimiter/marker 分页）
+    ObjectListing listObjects(ListObjectsRequest request);
+
+    // 预签名 URL
+    String generatePresignedUrl(PresignedUrlRequest request);
+    String generatePresignedUrl(String objectKey, long expirationSeconds); // 默认桶下载
+    String getObjectUrl(String bucketName, String objectKey);              // 公开读直链（行为由实现决定）
 }
 ```
 
-### 配置属性一览（OssProperty，前缀 tbs.oss）
+实现约定（接口 javadoc 明示）：
+1. 所有第三方 SDK 异常必须转换为 `OssException` 及其子类；
+2. 上传传入的流由**调用方**负责关闭，实现只关闭自己新建的内部流；
+3. `getObject` 返回的流由**调用方**负责关闭。
 
-| 属性 | 类型 | 默认值 | 描述 |
-|------|------|--------|------|
-| enable | boolean | false | 是否启用 OSS 功能 |
-| type | String | - | 实现类型标识（aliyun / minio / aws-s3 / tencent-cos 等） |
-| endpoint | String | - | 服务端点地址 |
-| region | String | - | 地域 |
-| access-key-id | String | - | 访问密钥 ID |
-| access-key-secret | String | - | 访问密钥 Secret |
-| default-bucket | String | - | 默认桶名 |
-| path-style-access | boolean | false | 是否启用 path-style 访问（MinIO 等自建服务需开启） |
+## 桶操作契约（BucketOperations）
 
-### 异常体系
+`createBucket` / `deleteBucket`（桶非空抛异常）/ `doesBucketExist` / `listBuckets`。
 
-| 异常 | 触发场景 |
-|------|---------|
-| `OssException` | 基类，所有 OSS 操作失败均抛出此异常或其子类 |
-| `OssObjectNotFoundException` | 对象不存在 |
-| `OssBucketNotFoundException` | 桶不存在 |
-| `OssAccessDeniedException` | 凭证无效、无权限 |
-
-## 扩展开发：新增一个第三方实现
-
-以接入 MinIO 为例，四步完成：
-
-**第一步**：在 `oss/` 下创建 `oss-minio-impl` 模块，依赖 `oss-api` 与 MinIO SDK。
-
-**第二步**：实现 `OssClient`，内部持有 MinIO SDK 客户端，完成契约到 SDK 的映射：
+## 统一门面（OssClient）
 
 ```java
-public class MinioOssClient implements OssClient {
-    // 将 PutObjectRequest / ListObjectsRequest 等统一模型
-    // 映射为 MinIO SDK 调用，并将 SDK 异常转换为 OssException 体系
+public interface OssClient extends OssOperations, BucketOperations, AutoCloseable {
+    String getType();               // 实现类型标识
+    String getDefaultBucket();      // 配置的默认桶（未配置返回 null）
+    OssProperties getProperties();  // 连接配置
+    void close();                   // 释放底层 SDK 资源（@Bean(destroyMethod="close") 自动调用）
 }
 ```
 
-**第三步**：实现工厂并注册为 Bean（**包名必须在 `com.tbs.oss` 子包下**才能被扫描）：
+## 数据模型与 Builder
+
+| 模型 | 构建方式 | 关键字段 |
+| --- | --- | --- |
+| `PutObjectRequest` | `PutObjectRequest.builder(objectKey)` | bucketName、objectKey、inputStream/file/content 三选一、contentLength(默认-1)、contentType、userMetadata、progressListener |
+| `PutObjectResult` | 由实现回填 | bucketName、objectKey、etag、url(实现支持时) |
+| `ListObjectsRequest` | `ListObjectsRequest.builder()` | bucketName、prefix、marker、maxKeys(默认100)、delimiter |
+| `ObjectListing` | 由实现回填 | objects、commonPrefixes、truncated、nextMarker |
+| `ObjectInfo` | 由实现回填 | bucketName、objectKey、contentLength、etag、lastModified |
+| `ObjectMetadata` | 由实现回填 | contentLength、contentType、etag、lastModified、userMetadata |
+| `CopyObjectRequest` | `CopyObjectRequest.builder(srcKey, targetKey)`（默认桶内）| sourceBucketName/sourceObjectKey/targetBucketName/targetObjectKey |
+| `PresignedUrlRequest` | `download(objectKey)` / `upload(objectKey)` | bucketName、type、expirationSeconds(默认3600)、contentType |
+| `OssProperties` | setter（非 Builder） | 与 OssProperty 字段一一对应的连接模型 |
+
+分页模型为 S3 通行的 marker 游标式（`truncated` + `nextMarker`），兼容 MinIO/S3/阿里云/腾讯云。
+
+## 统一异常体系
+
+| 异常 | 触发场景 | 携带上下文 |
+| --- | --- | --- |
+| `OssException`（RuntimeException） | 基类，所有 OSS 操作失败 | bucketName/objectKey（可 null） |
+| `OssObjectNotFoundException` | 对象不存在（S3 `NoSuchKey`） | 构造器自动拼 message |
+| `OssBucketNotFoundException` | 桶不存在（S3 `NoSuchBucket`） | 同上 |
+| `OssAccessDeniedException` | 凭证无效/无权限（`AccessDenied`/`InvalidAccessKeyId`/`SignatureDoesNotMatch`） | message |
+
+## MinIO 实现
+
+### MinioOssClientFactory
 
 ```java
-package com.tbs.oss.minio;
-
 @Component
 public class MinioOssClientFactory implements OssClientFactory {
-
-    @Override
-    public String supportType() {
-        return "minio";
-    }
-
-    @Override
-    public OssClient create(OssProperties properties) {
-        MinioClient sdkClient = MinioClient.builder()
-            .endpoint(properties.getEndpoint())
-            .credentials(properties.getAccessKeyId(), properties.getAccessKeySecret())
-            .build();
-        return new MinioOssClient(sdkClient, properties);
+    public static final String TYPE = "minio";
+    @Override public String supportType() { return TYPE; }
+    @Override public OssClient create(OssProperties properties) {
+        // 校验 endpoint 非空（缺失抛 OssException）；region 可空按需设置
+        return new MinioOssClient(MinioClient.builder()
+            .endpoint(...).credentials(...) /* .region(...) 可选 */
+            .build(), properties);
     }
 }
 ```
 
-**第四步**：业务工程引入 `oss-minio-impl` 依赖，配置 `tbs.oss.type=minio` 即完成切换。
+必须位于 `com.tbs.oss` 子包下且标注 `@Component` 才能被 `OssPackAutoRegister` 扫描到。
+
+### MinioOssClient 实现要点
+
+- **上传**：文件/字节内部开流并在 finally 关闭；调用方流不代关；未指定任何内容抛 `OssException`。进度经 `ProgressInputStream` 包装，MinIO SDK 自身不支持进度回调。
+- **分片**：`PutObjectArgs` 统一用 `DEFAULT_PART_SIZE`（5MiB，MinIO 下限）。
+- **批量删除**：SDK 惰性迭代——必须 `for` 遍历 `removeObjects` 结果才会真正触发删除，任一 `DeleteError` 抛异常。
+- **列表**：向 SDK 取 `maxKeys + 1` 条判断截断；`delimiter` 为 null 时 `recursive(true)`；目录（公共前缀）与文件条目**共用** maxKeys 额度；`nextMarker` 取本页末条文件与末公共前缀的字典序较大者作为 `startAfter` 游标。
+- **预签名**：`UPLOAD`→`Method.PUT`、`DOWNLOAD`→`Method.GET`。
+- **公开读 URL**：`getObjectUrl` 直接拼接 `${endpoint}/${bucket}/${key}`（未走签名）。
+- **异常翻译**（`translate`）：`ErrorResponseException` 按 code 映射 `NoSuchKey`→`OssObjectNotFoundException`、`NoSuchBucket`→`OssBucketNotFoundException`、`AccessDenied`/`InvalidAccessKeyId`/`SignatureDoesNotMatch`→`OssAccessDeniedException`，其余归 `OssException`；`IllegalArgumentException`→参数错误。
+- **元数据头**：标准 HTTP 响应头（`content-disposition`/`content-encoding`/`content-language`/`cache-control`/`expires`）作为对象真实头，其余加 `x-amz-meta-` 前缀。
+- **close()**：MinIO SDK 8.5.x 未暴露关闭方法，底层 OkHttp 连接池由空闲超时自动回收，实现为空操作。
+
+### ProgressInputStream
+
+包装上传流按**64KiB 步长**节流通知 `onProgress`（避免高频回调）；总字节已知且传输完成时也会触发一次。
+
+## 配置参考
+
+### `tbs.oss.*`（OssProperty）
+
+| 属性 | 类型 | 默认值 | 说明 |
+| --- | --- | --- | --- |
+| `enable` | boolean | `false` | 总开关；`true` 且容器无 `OssClient` 时才装配门面 Bean |
+| `type` | String | - | 实现类型标识，缺失抛 "tbs.oss.type未配置"；不匹配抛 "未找到类型[...]对应的OssClientFactory实现" |
+| `endpoint` | String | - | 服务端点 |
+| `region` | String | - | 地域（可空） |
+| `access-key-id` | String | - | 访问密钥 ID |
+| `access-key-secret` | String | - | 访问密钥 Secret |
+| `default-bucket` | String | - | 默认桶名 |
+| `path-style-access` | boolean | `false` | 是否 path-style；MinIO 官方实现天然采用，此配置项当前不消费 |
+
+门面 Bean：`@ConditionalOnMissingBean(OssClient.class)`（业务可自定义覆盖）+ `@ConditionalOnProperty(enable=true)` + `@Bean(destroyMethod="close")`。
+
+## 扩展指南：新增第三方实现
+
+以接入新厂商（如 Aliyun OSS）为例四步完成：
+
+**第一步**：在 `oss/` 下新建 `oss-aliyun-impl`，依赖 `oss-api` 与厂商 SDK。
+
+**第二步**：实现 `OssClient`，把统一模型映射为厂商 SDK 调用，**并将全部 SDK 异常转换为 `OssException` 体系**。
+
+**第三步**：实现工厂并注册为 Bean（**包名必须在 `com.tbs.oss` 子包下**）：
+
+```java
+package com.tbs.oss.aliyun;
+
+@Component
+public class AliyunOssClientFactory implements OssClientFactory {
+    @Override public String supportType() { return "aliyun"; }
+    @Override public OssClient create(OssProperties properties) {
+        // ... 构建厂商 SDK 客户端
+        return new AliyunOssClient(client, properties);
+    }
+}
+```
+
+**第四步**：业务引入 `oss-aliyun-impl`，配置 `tbs.oss.type=aliyun` 即完成切换。
 
 ## 最佳实践
 
-### 1. objectKey 命名规范
-- 使用 `/` 分层组织：`业务域/时间/文件名`，如 `report/2026/08/xxx.xlsx`
-- 配合 `listObjects` 的 `prefix` + `delimiter("/")` 模拟目录浏览
+1. **objectKey 命名**：`业务域/时间/文件名` 分层；配合 `listObjects` 的 `prefix` + `delimiter("/")` 模拟目录。
+2. **大文件/流上传**：尽量显式 `contentLength`（未知时实现需内部缓冲/分片）；挂载 `ProgressListener` 监控进度。
+3. **直传场景**：前端直传走 `PresignedUrlRequest.upload(...)`，文件不经过应用服务器；预签名有效期按需最小化。
+4. **流的关闭责任**：`getObject` 返回的流务必在 try-with-resources 中关闭；上传传入流由调用方关闭，实现不代关。
+5. **MinIO 403/签名错误**：确认 endpoint 协议（http/https）与实际一致；MinIO SDK 天然 path-style，无需额外配置。
 
-### 2. 大文件上传
-- 流式上传尽量显式指定 `contentLength`，避免实现层为计算长度而整体缓冲
-- 挂载 `ProgressListener` 监控大文件传输进度
+## 注意事项
 
-### 3. 直传场景
-- 前端直传走 `PresignedUrlRequest.upload(...)` 生成上传预签名 URL，文件不经过应用服务器
-- 预签名有效期按需最小化，下载链接建议 5~15 分钟
+1. **聚合模块不可依赖**：依赖请引 `oss-api` / `oss-minio-impl`，而非 `oss`。
+2. **`enable` 默认 false**：不显式配置 `tbs.oss.enable=true` 则 `OssClient` Bean 不装配。
+3. **`type` 与工厂 supportType 大小写不敏感**，但缺失或不匹配都会抛 `OssException` 阻止启动（前者 "tbs.oss.type未配置"，后者 "未找到类型[...]对应的OssClientFactory实现"）。
+4. **`path-style-access` 对 MinIO 不生效**：配置属性虽定义，MinIO SDK 天然采用 path-style，官方实现未消费该字段；若接入其他需该开关的厂商实现需自行读取。
+5. **`getObjectUrl` 是字符串拼接而非签名 URL**：MinIO 实现直接拼 `${endpoint}/${bucket}/${key}`，桶非公开读时该链接不可直接访问，仅对公开读场景有意义。
+6. **批量删除必须触发迭代**：MinIO 的 `removeObjects` 返回惰性 `Iterable`，官方实现已通过遍历触发真实删除并逐条校验错误。
+7. **流责任严格遵守契约**：`putObject` 传入的流由调用方管理、实现不关；实现内部新建的流（文件/字节来源）自行关闭。
+8. **`ProgressInputStream` 无 URL 覆盖全局**：进度回调仅在走 `putObject(PutObjectRequest)` 且显式挂载 listener 时生效。
 
-### 4. 流的关闭责任
-- `getObject` 返回的流必须在 finally / try-with-resources 中关闭，避免连接泄漏
-- 上传传入的流由调用方关闭，实现层不会代关
+## 包结构
 
-## 故障排除
-
-**1. 启动报 `tbs.oss.type未配置`**
 ```
-确认 application.yml 中 tbs.oss.enable=true 且配置了 type
+oss/
+├── oss-api/src/main/java/com/tbs/oss/
+│   ├── annotation/       @EnableTbsOss（启用入口）
+│   ├── config/           OssPackAutoRegister（扫描 com.tbs.oss，注册 Feature.OSS）、
+│   │                     OssConfig（装配门面，@EnableConfigurationProperties）
+│   │   └── property/     OssProperty（tbs.oss 配置）
+│   ├── core/             OssClient（门面）、OssOperations、BucketOperations、
+│   │                     OssClientFactory（SPI）、ProgressListener（+ Adapter）
+│   ├── exception/        OssException（基类）+ Object/BucketNotFound + AccessDenied
+│   └── model/            PutObjectRequest/Result、ListObjectsRequest、ObjectListing、
+│                         ObjectInfo、ObjectMetadata、CopyObjectRequest、
+│                         PresignedUrlRequest/Type、OssProperties、Bucket
+└── oss-minio-impl/src/main/java/com/tbs/oss/minio/
+    ├── MinioOssClientFactory（@Component，TYPE="minio"）
+    ├── MinioOssClient（S3 映射 + 异常翻译）
+    └── support/ProgressInputStream（64KiB 步长进度流）
 ```
-
-**2. 启动报 `未找到类型[xxx]对应的OssClientFactory实现`**
-```
-确认已引入对应实现模块依赖
-确认工厂 Bean 所在包位于 com.tbs.oss 子包下且标注了 @Component
-```
-
-**3. `Feature.OSS` 编译找不到**
-```
-oss-api 依赖的 common 模块有改动，需先 mvn install common（或整体构建）
-```
-
-**4. MinIO 访问 403 / 签名错误**
-```
-自建 MinIO 通常需开启 path-style-access: true
-检查 endpoint 协议（http/https）与实际服务是否一致
-```
-
-## 版本信息
-
-- **Java**: 11+
-- **Spring Boot**: 2.7.x
-- **oss-api 第三方依赖**: 无（纯契约 + Spring 装配）
-
----
-
-**最后更新**: 2026年8月
-**版本**: 1.0-SNAPSHOT

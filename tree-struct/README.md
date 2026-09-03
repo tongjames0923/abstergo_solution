@@ -1,407 +1,291 @@
 # Tree-Struct 模块 - 树结构管理
 
 ## 模块概述
-- **零配置启动**：自动配置数据库映射和实体扫描
-- **标准化接口**：提供统一的树结构操作API
-- **内存与持久化**：支持内存树结构和数据库持久化存储
 
-### 核心特性
+Tree-Struct 模块（`com.tbs:tree-struct`）提供两套互补的树结构能力：
 
-#### 开箱即用
-- **闭包表算法**：基于闭包表实现高效的树关系存储
-- **事务支持**：完整的数据库事务管理
-- **缓存优化**：集成Spring Cache提供性能优化
+| 能力 | 所在子模块 | 说明 |
+|------|-----------|------|
+| **内存多叉树** | `tree-api`（`com.tbs.struct.tree.model`） | `ITree` / `ITreeNode` 接口 + `MultiwayTree` 递归实现，纯内存、无持久化 |
+| **闭包表持久化树** | `closure-list-impl`（`com.tbs.struct.tree.closure`） | `ITreeStore` 的 MySQL 实现，支持多树分组、子树删除、关系重建 |
 
-#### 数据完整性
-- **闭包表算法**：基于闭包表实现高效的树关系存储
-- **多叉树支持**：支持任意多叉树结构
-- **层级查询**：支持深度查询、叶子节点查询等
-- **关系维护**：自动维护父子节点关系
+设计要点：
 
-#### 丰富功能
-- **多叉树支持**：支持任意多叉树结构
-- **接口抽象**：基于接口设计，易于扩展
-- **多种实现**：提供内存树和闭包表两种实现方式
-- **配置灵活**：支持自定义配置和扩展
+- **闭包表（Closure Table）**：以 `tree_closure` 冗余存储"祖先-后代"全路径关系（含自身 depth=0），查询子树/祖先链均为单表索引查询；`tree_node` 额外保留 `parent_id` 作为**关系备份**（闭包损坏时可据此重建）；
+- **树分组（treeGroup）**：同一套表可并存多棵逻辑树，所有操作均需携带树组名；
+- **节点与业务解耦**：节点携带 `entityId` 指向业务实体，树结构模块不感知业务含义。
 
-#### 灵活扩展
-- **接口抽象**：基于接口设计，易于扩展
+| 子模块 | artifactId | 依赖 |
+|--------|------------|------|
+| `tree-api` | `tree-api` | （继承父 POM：`cache-api`、`async`、`common`） |
+| `closure-list-impl` | `closure-list-impl` | `tree-api`、`sql`、`xxl-job` |
 
-### 1. 添加依赖
+父 POM `com.tbs:tree-struct` 为 `packaging=pom` 聚合模块——**不可作为依赖直接引入**（旧文档的 `com.tbs:tree-struct` 依赖写法无效）。
 
-```xml
-<dependency>
-    <groupId>com.tbs</groupId>
-    <artifactId>tree-struct</artifactId>
-    <version>1.0-SNAPSHOT</version>
-</dependency>
+## 模块结构
+
+```
+tree-struct/
+├── tree-api/                          # 契约与内存实现（9 个源文件）
+│   └── com.tbs.struct.tree/
+│       ├── api/                       # ITree / ITreeNode / AbstractTree
+│       │   └── persistence/           # ITreeStorable / ITreeStore<ID>
+│       │       └── impl/              # NoImplTreeStore（构造即抛异常）
+│       └── model/                     # MultiwayTree / SimpleTreeNode / TreeNodeModel
+└── closure-list-impl/                 # 闭包表实现（10 个源文件）
+    └── com.tbs.struct.tree.closure/
+        ├── annotation/                # @UseClosureTableTree
+        └── impl/
+            ├── config/                # ClosureTableAutoRegister / TreeConfig
+            ├── entity/                # TreeNodeEntity / TreeRelationEntity
+            ├── mapper/                # TreeNodeMapper / TreeRelationMapper
+            ├── model/                 # SimpleTreeStrorableModel
+            └── service/               # ClosureTreeServiceImpl / CacheNamesConstants
 ```
 
-### 2. 基础配置
-
-确保数据库表结构已创建：
-
-```sql
--- 树节点表
-CREATE TABLE tree_node (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    node_id VARCHAR(64) NOT NULL,
-    group_name VARCHAR(64) NOT NULL,
-    parent_id VARCHAR(64),
-    create_time DATETIME,
-    update_time DATETIME,
-    UNIQUE KEY uk_node_group (group_name, node_id),
-    INDEX idx_group_parent (group_name, parent_id)
-);
-
--- 树闭包关系表
-CREATE TABLE tree_closure (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,
-    ancestor_id VARCHAR(64) NOT NULL,
-    descendant_id VARCHAR(64) NOT NULL,
-    depth INT NOT NULL,
-    group_name VARCHAR(64) NOT NULL,
-    UNIQUE KEY uk_ancestor_descendant (ancestor_id, descendant_id),
-    INDEX idx_ancestor (ancestor_id),
-    INDEX idx_descendant (descendant_id),
-    INDEX idx_depth (depth),
-    INDEX idx_group (group_name)
-);
-```
-
-### 3. 基本使用示例
-
-#### 内存树结构使用
+## 启用方式（闭包表实现）
 
 ```java
-// 创建多叉树
+@SpringBootApplication
+@UseMysql              // 必须：sql 模块的数据库方言（@UseClosureTableTree 不含方言）
+@UseClosureTableTree   // = @EnableCommonPack + @EnableTbsSql + @Import(ClosureTableAutoRegister)
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
+
+- `ClosureTableAutoRegister`：扫描 `com.tbs.struct.tree.closure` 包，注册 `Feature.CLOSURE_TABLE`；
+- `TreeConfig`：`@EntityScan("com.tbs.struct.tree.closure.impl.entity")` + `@MapperScan("com.tbs.struct.tree.closure.impl.mapper")`；
+- **表结构由 JPA `ddl-auto` 自动创建/更新**，无需手工执行建表 SQL；
+- 模块**无 `spring.factories`**，无 i18n 资源文件。
+
+> `@UseClosureTableTree` 内含 `@EnableTbsSql` 但**不含方言注解**，仍需 `@UseMysql`（或其他 `@UseXxx`）提供 `SqlDialect`。
+
+## 数据模型
+
+### tree_node（TreeNodeEntity）
+
+| 字段 | 列 | 说明 |
+|------|-----|------|
+| `id` | `id` | 主键，自增 |
+| `nodeId` | `node_id`(64) | 节点 ID（业务侧唯一标识） |
+| `groupName` | `group_name`(64) | 树组名（作为树的 ID） |
+| `parentId` | `parent_id`(64) | 父节点 ID，**null 表示根节点**；作为关系备份 |
+| `entityId` | `entity_id` | 关联的业务实体 ID |
+| `createTime` / `updateTime` | `create_time` / `update_time` | 审计时间 |
+
+唯一约束：`(group_name, node_id)`；索引：`(group_name, parent_id)`、`(entity_id)`。
+
+### tree_closure（TreeRelationEntity）
+
+| 字段 | 列 | 说明 |
+|------|-----|------|
+| `id` | `id` | 主键，自增 |
+| `ancestorId` | `ancestor_id`(64, 非空) | 祖先节点 ID |
+| `descendantId` | `descendant_id`(64, 非空) | 后代节点 ID |
+| `depth` | `depth`(非空) | 距离：0=自身，1=父子，2=祖孙… |
+| `groupName` | `group_name`(64, 非空) | 树组名 |
+
+唯一约束：`(ancestor_id, descendant_id)`；索引：`ancestor_id`、`descendant_id`、`depth`、`group_name`。
+
+## 一、内存多叉树（tree-api）
+
+### 接口定义
+
+```java
+public interface ITree<K, V> {
+    ITreeNode<K, V> getRoot();
+    void setRoot(ITreeNode<K, V> root);
+    int size();
+    boolean isEmpty();
+    void traverse(Consumer<ITreeNode<K, V>> visitor);  // 深度优先遍历
+    Optional<ITreeNode<K, V>> find(K key);
+    int height();
+    List<ITreeNode<K, V>> getLeafNodes();
+    List<ITreeNode<K, V>> getNodesByDepth(int depth);  // depth 需 > 0
+    void insert(K parentKey, ITreeNode<K, V> newNode);
+    boolean delete(K key);
+}
+
+public interface ITreeNode<K, V> {
+    K getKey();
+    V getValue();
+    void setValue(V value);
+    List<ITreeNode<K, V>> getChildren();
+    void setChildren(List<ITreeNode<K, V>> children);
+}
+```
+
+`AbstractTree` 提供模板（根节点与 size 管理），子类实现 `insertNode` / `deleteNode`；`MultiwayTree` 为递归实现，`SimpleTreeNode` 为默认节点（children 默认 `LinkedList`）。
+
+### 使用示例
+
+```java
 ITree<String, Object> tree = new MultiwayTree<>();
 
-// 创建根节点
 ITreeNode<String, Object> root = new SimpleTreeNode<>("root", "Root Node");
-tree.setRoot(root);
+tree.setRoot(root);                                        // 直接设根（不经过 insert，size 不增加）
 
-// 添加子节点
-ITreeNode<String, Object> child1 = new SimpleTreeNode<>("child1", "Child Node 1");
-tree.insert("root", child1);
+tree.insert("root", new SimpleTreeNode<>("child1", "Child 1"));
+tree.insert("root", new SimpleTreeNode<>("child2", "Child 2"));
+tree.insert("child1", new SimpleTreeNode<>("grandchild", "Grandchild"));
 
-ITreeNode<String, Object> child2 = new SimpleTreeNode<>("child2", "Child Node 2");
-tree.insert("root", child2);
-
-// 添加孙子节点
-ITreeNode<String, Object> grandchild = new SimpleTreeNode<>("grandchild", "Grandchild Node");
-tree.insert("child1", grandchild);
-
-// 遍历树
 tree.traverse(node -> System.out.println(node.getKey() + ": " + node.getValue()));
-
-// 查找节点
 Optional<ITreeNode<String, Object>> found = tree.find("child1");
-found.ifPresent(node -> System.out.println("Found: " + node.getValue()));
-
-// 获取树高度
-int height = tree.height();
-System.out.println("Tree height: " + height);
-
-// 获取叶子节点
+int height = tree.height();                                // 3
 List<ITreeNode<String, Object>> leaves = tree.getLeafNodes();
-System.out.println("Leaf nodes: " + leaves.size());
+List<ITreeNode<String, Object>> level2 = tree.getNodesByDepth(2);
+boolean deleted = tree.delete("child1");                   // 连同子树一并摘除
 ```
 
-#### 持久化树结构使用
+> **内存树使用注意**（源码行为）：
+> - `insert` 在根节点为 null 时，无论 `parentKey` 为何值都把新节点作为**根**插入；
+> - `setRoot` 不维护 `size`，`size` 仅由 `insert` / `delete` 增减；
+> - `delete` 只 `size--` 一次，删除整棵子树时计数偏小；
+> - 键重复时 `insertNode` 会向所有匹配分支插入副本（递归无命中判断）。
+
+## 二、闭包表持久化（closure-list-impl）
+
+### ITreeStore 契约
+
+```java
+public interface ITreeStore<ID> {
+    void store(ITreeStorable treeStorable, String parentNodeId);  // 新增或移动节点
+    List<ITreeStorable> getDirectChildren(String nodeId, String group);      // 直接子节点
+    List<TreeNodeModel> getParentNodes(String nodeId, String group);         // 祖先链（含自身）
+    void delete(String nodeId, String group);                                // 删除节点及整个子树
+    List<ITreeStorable> getRootNodes(String treeGroup);                      // 分组内所有根节点
+    List<String> listTreeGroups();                                           // 所有树组
+    boolean isExist(String nodeId, String group);
+    void tryRebuildStructure(String treeGroup);                              // 重建闭包关系
+    ITreeStorable getNode(String nodeId, String group);
+    List<ITreeStorable> getNodesByEntityId(ID id);
+    default ITreeStorable getNodeByEntityIdAndGroup(ID id, String group);    // 默认方法：按实体ID+组过滤
+}
+```
+
+> 注意：**不存在 `getChildren`（全子树）方法**，取子节点请用 `getDirectChildren`；重建方法名为 `tryRebuildStructure`（非 `buildTreeClosure`）。
+
+节点载体：`ITreeStorable`（`nodeId` / `treeGroup` / `entityId`）——`TreeNodeModel`（含 `depth`）与 `SimpleTreeStrorableModel`（无 depth）两种实现。
+
+### ClosureTreeServiceImpl 行为
+
+**store（新增 / 移动）**：
+
+- 校验节点、节点 ID、树组非空；`parentNodeId` 查不到父节点时按**根节点**插入；
+- **新增**：根节点插入自身关系（depth=0）；子节点插入自身关系 + 父子关系（depth=1）+ 复制父节点全部祖先关系并 depth+1；
+- **更新（移动）**：树组不一致直接异常；`parentNodeId` 为 null 时**不支持升级为根**（记日志返回）；父节点未变则仅更新 `entityId`；父节点变更时——删除该节点全部旧后代关系 → 重建自身/父子/祖先关系 → 对**每个子孙**删除旧祖先链、按 `newParent.depth + child.depth + 1` 重建新祖先链；
+- 全程 `@Transactional(rollbackFor = RuntimeException.class)`。
+
+**delete**：经闭包表取出全部后代 + 自身 → `deleteByIdList` 批量删节点 → 逐节点删除其作为后代与祖先的全部闭包关系；`@Transactional` + `@CacheEvict` 清除该节点缓存。
+
+**getParentNodes**：返回 `TreeNodeModel` 列表，按 `depth` **降序**（距根最远的祖先在前，depth=0 的自身在最后），即"由远及近"的祖先链；**包含节点自身**。
+
+**getDirectChildren**：查询闭包表 `ancestorId=nodeId AND depth=1`，逐个补 `entityId`（会触发节点查询）。
+
+### 缓存
+
+| 缓存名 | 常量 | 应用 |
+|--------|------|------|
+| `tree_node_entity` | `CacheNamesConstants.TREE_NODE_ENTITY` | `@Cacheable(key = "treeGroup:nodeId")` 于 `getTreeNode`；`delete` 单键失效；`tryRebuildStructure` 全量失效 |
+
+TTL 可在 `tbs.cache.ttl.overrides` 中按 `tree_node_entity` 覆盖（需 cache 模块启用）。
+
+> **两个已知实现细节**（以源码为准）：
+> 1. **内部自调用绕过缓存**：`store`/`delete` 等内部均经 `getInstance().getTreeNode(...)` 调用自身，Spring AOP 不生效——`@Cacheable` 仅对**外部经 Bean 注入的调用**生效；
+> 2. **`store` 未失效缓存**：写路径不带 `@CacheEvict`，节点移动/更新后 `tree_node_entity` 可能返回旧数据，依赖 TTL 或 `tryRebuildStructure` 全量清除。
+
+### 关系重建（tryRebuildStructure）
+
+用于闭包表损坏后的数据修复：
+
+1. 抢占 JVM 本地 `ReentrantLock`（抢锁失败抛 `BUSINESS_LOGIC_ERROR` 级"正在重建…"）；
+2. 在 `CacheUtils` 写入重建锁 `rebuildTreeLock`，随后删除目标树组（组名为空则全表）的全部闭包关系；
+3. 加载该组全部节点，按 `nodeId` 建 Map（**重复节点 ID 直接抛异常**）；
+4. 逐节点沿 `parentId` 上溯生成关系（`traceRelations`），**检测父指针成环**（`visited` 命中即抛异常）；
+5. 按 50 条一批 `insertList` 落库；
+6. 事务提交/回滚完成后（`TransactionSynchronization.afterCompletion`）释放缓存锁与本地锁。
+
+**重建期间写保护**：`store` / `delete` / `getParentNodes` 均调用 `rebuildTreeClosureCheck()`，检测到重建锁存在即抛 `BUSINESS_LOGIC_ERROR` 级异常拒绝操作。
+
+### Mapper 自定义 SQL
+
+| Mapper | 方法 |
+|--------|------|
+| `TreeNodeMapper`（继承 `IFrameworkMapper<TreeNodeEntity, Long>`） | `getNodeById`、`getNodeByNodeIdAndTreeGroup`、`listAllGroup`、`getRootNodeByGroupName`、`getNodesByEntityId` |
+| `TreeRelationMapper`（`@Repository`） | `selectAncestorsByDescendantId`、`selectDescendantsByAncestorId`、`updateByAncestorIdAndDescendantId`、`selectByAncestorIdAndDescendantId`、`deleteByAncestorIdAndDescendantId`、`deleteByDescendantId`、`deleteByAncestorId`、`deleteAllRelations`、`deleteRelationsByGroup` |
+
+## 使用示例
 
 ```java
 @Service
-public class TreeService {
-    
+public class DeptTreeService {
+
     @Resource
-    private ITreeStore treeStore;
-    
-    // 存储树节点
-    public void storeTreeNode(String nodeId, String treeGroup, String parentNodeId) {
-        ITreeStorable node = new SimpleTreeStrorableModel();
-        node.setNodeId(nodeId);
-        node.setTreeGroup(treeGroup);
-        treeStore.store(node, parentNodeId);
+    private ITreeStore<Long> treeStore;
+
+    /** 挂载业务实体到树（parentNodeId 为 null 或查无此节点时作为根节点） */
+    public void attach(Long deptId, String parentDeptId) {
+        SimpleTreeStrorableModel node = new SimpleTreeStrorableModel();
+        node.setTreeGroup("department");
+        node.setNodeId(String.valueOf(deptId));
+        node.setEntityId(deptId);
+        treeStore.store(node, parentDeptId);
     }
-    
-    // 获取子节点
-    public List<ITreeStorable> getChildren(String nodeId, String treeGroup) {
-        return treeStore.getChildren(nodeId, treeGroup);
+
+    public List<ITreeStorable> children(String deptId) {
+        return treeStore.getDirectChildren(deptId, "department");
     }
-    
-    // 获取直接子节点
-    public List<ITreeStorable> getDirectChildren(String nodeId, String treeGroup) {
-        return treeStore.getDirectChildren(nodeId, treeGroup);
+
+    /** 祖先链：由远及近，最后一项为自身（depth=0） */
+    public List<TreeNodeModel> ancestors(String deptId) {
+        return treeStore.getParentNodes(deptId, "department");
     }
-    
-    // 获取父节点链
-    public List<TreeNodeModel> getParentNodes(String nodeId, String treeGroup) {
-        return treeStore.getParentNodes(nodeId, treeGroup);
+
+    /** 按业务实体 ID 反查节点 */
+    public ITreeStorable nodeOf(Long deptId) {
+        return treeStore.getNodeByEntityIdAndGroup(deptId, "department");
     }
-    
-    // 删除节点及其子树
-    public void deleteNode(String nodeId, String treeGroup) {
-        treeStore.delete(nodeId, treeGroup);
+
+    /** 删除部门及其全部子部门 */
+    public void remove(String deptId) {
+        treeStore.delete(deptId, "department");
     }
-}
-```
 
-## 快速开始
-
-### 1. 树结构API层 (tree-api)
-
-#### ITree<K, V> 接口
-- **核心功能**：定义树结构的基本操作
-- **方法包括**：插入、删除、查找、遍历、高度计算等
-- **泛型支持**：支持任意键值类型
-
-#### ITreeNode<K, V> 接口
-- **节点定义**：定义树节点的基本结构
-- **属性包括**：键、值、子节点列表
-- **灵活扩展**：支持自定义节点实现
-
-#### AbstractTree<K, V> 抽象类
-- **模板模式**：提供树操作的基本实现框架
-- **抽象方法**：insertNode、deleteNode等由子类实现
-- **通用逻辑**：大小管理、根节点设置等
-
-#### MultiwayTree<K, V> 实现类
-- **多叉树实现**：支持任意数量的子节点
-- **递归算法**：基于递归的插入、删除、查找操作
-- **遍历支持**：深度优先遍历
-
-#### TreeNodeModel 模型类
-- **数据模型**：树节点的数据表示
-- **持久化支持**：实现ITreeStorable接口
-- **层级信息**：包含深度信息
-
-### 2. 闭包表实现层 (closure-list-impl)
-
-#### ClosureTreeServiceImpl 服务类
-- **核心服务**：实现ITreeStore接口的闭包表服务
-- **事务管理**：完整的数据库事务支持
-- **缓存优化**：集成Spring Cache提升性能
-
-#### TreeRelationEntity 实体类
-- **关系存储**：存储节点间的祖先-后代关系
-- **深度信息**：记录节点间的距离
-- **分组支持**：支持多棵树并存
-
-#### TreeNodeEntity 实体类
-- **节点存储**：存储树节点的基本信息
-- **父子关系**：记录直接父子关系（用于恢复）
-- **时间戳**：创建和更新时间
-
-#### TreeConfig 配置类
-- **自动配置**：配置实体扫描和Mapper扫描
-- **零配置**：开箱即用的配置
-
-## 核心组件详解
-
-### 1. 自定义树节点
-
-``java
-@Data
-public class CustomTreeNode implements ITreeStorable {
-    private String nodeId;
-    private String treeGroup;
-    private String customProperty;
-    private Date createTime;
-    
-    // 实现ITreeStorable接口方法
-    @Override
-    public String getNodeId() {
-        return nodeId;
-    }
-    
-    @Override
-    public String getTreeGroup() {
-        return treeGroup;
-    }
-    
-    // 自定义业务方法
-    public boolean isLeaf() {
-        // 自定义逻辑
-        return true;
+    /** 闭包关系损坏时重建（组名传 null 表示全量重建） */
+    public void rebuild() {
+        treeStore.tryRebuildStructure("department");
     }
 }
 ```
 
-### 2. 批量操作优化
+`shared` 模块的 `AbstractTreeStructService`（system 模块部门服务即基于它）已封装上述调用，业务侧通常直接使用它而非裸调 `ITreeStore`。
 
-``java
-@Service
-public class BatchTreeService {
-    
-    @Resource
-    private ClosureTreeServiceImpl treeService;
-    
-    // 批量插入节点
-    @Transactional
-    public void batchInsertNodes(List<ITreeStorable> nodes, String parentNodeId) {
-        for (ITreeStorable node : nodes) {
-            treeService.store(node, parentNodeId);
-        }
-    }
-    
-    // 重建闭包表关系（数据修复）
-    public void rebuildTreeClosure(String groupName) {
-        treeService.buildTreeClosure(groupName);
-    }
-}
-```
+## 扩展开发
 
-### 3. 缓存配置优化
+### 自定义树存储
 
-``yaml
-# application.yml
-spring:
-  cache:
-    type: redis
-    redis:
-      time-to-live: 3600000  # 1小时
+实现 `ITreeStore<ID>` 并注册为 Bean（闭包表实现无 `@ConditionalOnMissingBean`，多实现并存时请用 `@Primary` 或按名称注入）。
 
-# 树节点缓存配置
-cache:
-  tree:
-    node:
-      ttl: 1800  # 30分钟
-```
+### NoImplTreeStore 陷阱
 
-## 高级用法
+`NoImplTreeStore`（tree-api 提供）**构造函数即抛 `FormattedRuntimeException("树类未实现")`**——它是"占位实现"而非可用的空实现，仅用于显式表达"未配置树存储"。若某配置默认值指向它（如 system 模块 `tbs.system.remote.tree-store-impl` 默认值），未在配置中替换会在装配阶段直接失败。
 
-### 1. 查询优化策略
+## 使用注意事项
 
-``java
-// 使用缓存提升查询性能
-@Cacheable(cacheNames = "tree_node_cache", key = "#nodeId+#treeGroup")
-public TreeNodeEntity getTreeNode(String nodeId, String treeGroup) {
-    // 数据库查询逻辑
-}
-
-// 批量查询减少数据库交互
-public List<ITreeStorable> getMultipleNodes(List<String> nodeIds, String treeGroup) {
-    return nodeIds.stream()
-        .map(nodeId -> treeStore.getChildren(nodeId, treeGroup))
-        .flatMap(List::stream)
-        .collect(Collectors.toList());
-}
-```
-
-### 2. 数据库索引优化
-
-``sql
--- 确保关键字段都有索引
-CREATE INDEX idx_tree_node_group ON tree_node(group_name);
-CREATE INDEX idx_tree_closure_ancestor ON tree_closure(ancestor_id);
-CREATE INDEX idx_tree_closure_descendant ON tree_closure(descendant_id);
-CREATE INDEX idx_tree_closure_group ON tree_closure(group_name);
-```
-
-## 性能优化
-
-### 1. 日志配置
-
-```
-logging:
-  level:
-    com.tbs.struct.tree: DEBUG
-```
-
-### 2. 健康检查
-
-``java
-@Component
-public class TreeHealthIndicator implements HealthIndicator {
-    
-    @Resource
-    private ITreeStore treeStore;
-    
-    @Override
-    public Health health() {
-        try {
-            List<String> groups = treeStore.listTreeGroups();
-            return Health.up()
-                .withDetail("treeGroups", groups.size())
-                .build();
-        } catch (Exception e) {
-            return Health.down(e).build();
-        }
-    }
-}
-```
-
-## 监控与调试
-
-### 1. 常见问题
-
-#### 问题：节点关系不一致
-**症状**：查询到的父子关系与预期不符
-**解决方案**：
-``java
-// 重建闭包表关系
-treeService.buildTreeClosure("your-tree-group");
-```
-
-#### 问题：性能下降
-**症状**：树操作响应时间变长
-**解决方案**：
-- 检查数据库索引
-- 优化缓存配置
-- 分批处理大数据量
-
-#### 问题：事务回滚失败
-**症状**：部分操作未正确回滚
-**解决方案**：
-``java
-@Transactional(rollbackFor = Exception.class)
-public void safeTreeOperation() {
-    // 业务逻辑
-}
-```
-
-### 2. 调试技巧
-
-``java
-// 启用调试日志
-@Slf4j
-@Service
-public class DebugTreeService {
-    
-    public void debugTreeOperation(String nodeId, String group) {
-        log.debug("开始树操作 - 节点: {}, 分组: {}", nodeId, group);
-        
-        // 检查节点存在性
-        boolean exists = treeStore.isExist(nodeId, group);
-        log.debug("节点存在性: {}", exists);
-        
-        // 执行操作
-        List<ITreeStorable> children = treeStore.getChildren(nodeId, group);
-        log.debug("子节点数量: {}", children.size());
-    }
-}
-```
-
-## 故障排除
-
-### 1. 设计原则
-
-- **单一职责**：每个树分组负责单一业务领域
-- **适度分层**：避免过深的树层级（建议不超过10层）
-- **节点标识**：使用有意义的节点ID便于维护
-
-### 2. 性能考虑
-
-- **批量操作**：对于大量节点操作使用批量接口
-- **缓存策略**：合理配置缓存时间和范围
-- **索引优化**：确保关键查询字段都有索引
-
-### 3. 数据一致性
-
-- **事务边界**：明确事务边界，避免长事务
-- **异常处理**：完善的异常处理和回滚机制
-- **数据验证**：操作前验证数据的有效性
+1. **依赖坐标不可写父 POM**：`com.tbs:tree-struct` 为聚合 POM，请依赖 `tree-api` 或 `closure-list-impl`
+2. **必须另配方言注解**：`@UseClosureTableTree` 不含 `@UseMysql`，缺失方言会导致 sql 模块 `QueryEngine` 装配失败
+3. **`getChildren` 不存在**：取子节点用 `getDirectChildren`；重建用 `tryRebuildStructure`
+4. **`NoImplTreeStore` 不可直接实例化**：构造即抛异常，勿将其作为默认 Bean
+5. **节点不支持"升级为根"**：`store` 时对已存在节点传 `parentNodeId=null`（或查无父节点）只会记录日志并跳过，不会变为根节点
+6. **祖先链排序为由远及近且含自身**：`getParentNodes` 结果最后一项是节点自身（depth=0）
+7. **缓存自调用不生效**：`getTreeNode` 的 `@Cacheable` 在内部调用路径上被 AOP 绕过；`store` 也不失效缓存，强一致场景请缩短 `tree_node_entity` 的 TTL 或改写后手动 evict
+8. **`getInstance()` 依赖启动顺序**：静态实例由 `IStartup.startUp()` 赋值，容器未就绪时调用会 NPE
+9. **重建期间拒绝写入**：`store`/`delete`/`getParentNodes` 会检测重建锁并抛业务异常，重建完成后自动恢复
+10. **重建会检测环与重复 ID**：父指针成环或同组重复 `nodeId` 均直接抛异常（事务回滚）
+11. **表结构由 JPA 自动维护**：使用 `@UseClosureTableTree` 的应用需开启 `ddl-auto`（平台服务默认 `update`）
 
 ## 许可证
 
@@ -409,5 +293,5 @@ public class DebugTreeService {
 
 ---
 
-**最后更新**: 2026年6月
+**最后更新**: 2026年9月
 **版本**: 1.0-SNAPSHOT

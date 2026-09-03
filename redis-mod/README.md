@@ -1,486 +1,242 @@
-# Redis 模块
+# Redis 模块 - Redisson 分布式组件集
 
-Redis 模块是基于 Redisson 的高性能分布式数据解决方案，为 Abstergo Solution 提供完整的缓存、分布式锁、数据存储和消息广播功能。该模块充分利用 Redisson 的分布式特性，构建了企业级的 Redis 集成方案。
+## 模块概述
 
-## 核心特性
+Redis 模块（`com.tbs:redis`）是基于 **Redisson**（`redisson-spring-boot-starter`）的分布式组件实现集，为平台各 SPI 提供生产级 Redis 落地：
 
-### 🚀 开箱即用
-- **自动配置**：基于 Spring Boot 自动配置 Redisson 客户端和连接管理
-- **条件化启用**：支持通过配置灵活启用或禁用 Redis 功能
-- **序列化支持**：内置多种序列化器，支持 JSON 和 JDK 序列化
+| 能力域 | 组件 | 对接的 SPI |
+|--------|------|-----------|
+| 客户端装配 | `BasicRedisConfig` / `DefaultSystemCodec` | Redisson（编解码与序列化统一） |
+| Spring Cache | `RedissonCacheConfig`（管理器 + L2 提供者） | cache-api：`ILevelCacheProvider` |
+| TTL 装饰 | `RedissonTtlCacheDecorator` / `RedissonAdaptTtlCache` | cache-api：`ITtlCacheDecorator` |
+| 键值存储 | `RedisDataHolder` | common：`IDataHolder` / `IMatchKeyFounder` |
+| 分布式锁 | `RedissonLockProvider` / `RedissonLock` | lock（async 模块）：`ILockProvider` |
+| 事件广播 | `AbstractRedisEventSupport` / `SimpleRedisEventSupport` | broadcast（async 模块）：`IDistributedBusSupport` 等 |
+| 任务持久化 | `RedisTaskStore` | schedule（async 模块）：`TaskStore` |
+| MQ 支撑 | `AbstractRedisIdempotentStore` / `RedisFaildMessageStore` | mq-api：`IIdempotentStore` / `IFailedMessageStore` |
 
-### 🔒 分布式锁
-- **可重入锁**：支持公平锁和非公平锁，避免死锁问题
-- **条件锁**：实现完整的 Condition 机制，支持线程间协调
-- **锁超时控制**：支持锁的自动释放和超时机制
-- **锁状态监控**：提供锁状态查询和持有线程检测
+**单 Maven 模块**（artifactId `redis`，19 个源文件），依赖 `com.tbs:common`、`com.tbs:cache-api`、`com.tbs:mq-api`、`redisson-spring-boot-starter`。
 
-### 💾 数据存储
-- **键值存储**：完整的 CRUD 操作，支持强制写入和条件写入
-- **批量操作**：支持键的批量查询、删除和模式匹配
-- **数据统计**：提供存储大小、空状态和键数量统计
-- **模式匹配**：支持通配符模式查找键和条目
+Redisson 客户端本身由 `redisson-spring-boot-starter` 基于 Spring Boot 标准 `spring.redis.*` 配置自动创建，本模块通过 `RedissonAutoConfigurationCustomizer` 定制编解码与线程参数。
 
-### 📡 消息广播
-- **发布订阅**：基于 Redisson Topic 的发布订阅机制
-- **事件桥接**：与 Abstergo Solution 事件系统无缝集成
-- **自动监听**：应用启动时自动注册消息监听器
-- **分布式事件**：支持跨节点的分布式事件处理
+## 模块结构
 
-### ⚡ 性能优化
-- **连接池管理**：Redisson 内置优化的连接池机制
-- **序列化效率**：支持高效的 JSON 和二进制序列化
-- **批量操作**：优化批量数据操作性能
-- **内存管理**：合理的缓存策略和过期机制
-
-## 快速开始
-
-### 1. 添加依赖
-
-在项目的 `pom.xml` 中添加 Redis 模块依赖：
-
-```xml
-<dependency>
-    <groupId>com.tbs</groupId>
-    <artifactId>redis</artifactId>
-    <version>1.0-SNAPSHOT</version>
-</dependency>
+```
+redis-mod/
+└── src/main/java/
+    ├── com.tbs.redis/                # 核心装配（@EnableTbsRedis 扫描范围）
+    │   ├── annotation/               # @EnableTbsRedis
+    │   ├── codec/                    # DefaultSystemCodec（RedisSerializer → Redisson Codec 桥接）
+    │   ├── config/                   # BasicRedisConfig / RedissonCacheConfig / RedisPackAutoRegister
+    │   │   └── property/             # RedisProperty(tbs.redis) / RedissonCacheProperty(tbs.redission.cache)
+    │   ├── constants/                # RedisBeanNameConstants（序列化器 Bean 名）
+    │   └── holder/                   # RedisDataHolder
+    ├── com.tbs.cache.redis/          # 缓存侧（经 tbs.cache.* 配置或宿主扫描生效）
+    ├── com.tbs.lock.redis/           # 锁侧（经 tbs.lock.lock-provider-type 配置生效）
+    ├── com.tbs.broadcast.redis/      # 广播侧（需注册为 Bean）
+    ├── com.tbs.schedule/             # 调度持久化（注册为 Bean 后供调度内核收集）
+    └── com.tbs.mq/                   # MQ 幂等/失败消息存储（手动注册使用）
 ```
 
-### 2. 基础配置
+## 启用方式
 
-在 `application.yml` 中配置 Redis 连接信息：
+模块无 `spring.factories`，通过注解 + 配置双重启用：
+
+```java
+@SpringBootApplication
+@EnableTbsRedis   // @Import(RedisPackAutoRegister)：扫描 com.tbs.redis 包，注册 Feature.REDIS
+public class Application {
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
+    }
+}
+```
 
 ```yaml
 spring:
-  redis:
+  redis:                    # Redisson 客户端连接参数（redisson-spring-boot-starter 消费）
     host: 127.0.0.1
     port: 6379
     password: 123456
-    timeout: 30000
 
 tbs:
   redis:
-    enable: true  # 启用 Redis 功能
-    value-serializer: org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer  # JSON 序列化器
-  
-  redisson:
-    cache:
-      cache-timeout: 3600000        # 缓存超时时间(毫秒)
-      allow-null-values: false      # 是否允许空值
-      transaction: false            # 是否开启 Redis 事务
-      max-idle-time: 1800           # key 最大空闲时间(秒)
-      max-size: 2048               # key 最大数量
-      eviction-mode: LRU            # 清除模式
+    enable: true            # 必须为 true：控制序列化器 Bean 装配（见"使用注意事项"）
+    value-serializer: org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer  # 可选：自定义序列化器实现类
 ```
 
-### 3. 使用数据存储
+> **启用即必须 `tbs.redis.enable=true`**：`BasicRedisConfig` 中的 Customizer 以急切求值方式引用 `REDIS_VALUE_SERIALIZER` Bean，`enable=false` 时该 Bean 不存在，Redisson 初始化将抛出异常（详见"使用注意事项"）。
 
-通过 <mcsymbol name="RedisDataHolder" filename="RedisDataHolder.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/holder/RedisDataHolder.java" startline="15" type="class">RedisDataHolder</mcsymbol> 进行数据存储操作：
+## 核心组件
+
+### 1. BasicRedisConfig - 客户端与序列化装配
+
+- **`RedissonAutoConfigurationCustomizer`** Bean：在 Redisson starter 创建客户端前定制 `Config`——
+  - **Codec**：优先取容器中的 `Codec` Bean；否则用 `DefaultSystemCodec` 包装 `REDIS_VALUE_SERIALIZER` 序列化器；
+  - **线程**：`threads=8`、`nettyThreads=8`（硬编码）。
+- **`REDIS_VALUE_SERIALIZER`** Bean（`@ConditionalOnMissingBean(name=...)` + `@ConditionalOnProperty(tbs.redis.enable=true)`）：
+  - `tbs.redis.value-serializer` 配置了实现类 → 经无参构造反射实例化；
+  - 未配置 → 兜底 `GenericJackson2JsonRedisSerializer`（JSON 序列化）。
+
+> `RedisProperty` javadoc 中"默认 JdkSerializationRedisSerializer"为过期注释，代码实际兜底为 Jackson JSON。
+
+**DefaultSystemCodec**：将 Spring `RedisSerializer` 包装为 Redisson `BaseCodec`（编码 `serializer.serialize` → ByteBuf，解码反向）。注意：`GenericJackson2JsonRedisSerializer` 会为对象写入 `@class` 类型信息，**对 Redis key 也会带 JSON 包装**（mq 组件因此改用 StringCodec，见下文）。
+
+### 2. 配置说明
+
+#### tbs.redis（RedisProperty）
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `enable` | boolean | **false** | 序列化器 Bean 装配开关（启用模块必须为 true） |
+| `value-serializer` | Class | null | 自定义 `RedisSerializer` 实现类（无参构造） |
+
+#### tbs.redission.cache（RedissonCacheProperty）
+
+| 属性 | 类型 | 默认值 | 说明 |
+|------|------|--------|------|
+| `cache-timeout` | long | 3600 | **单位：秒**，缓存默认 TTL（配置类内部 ×1000 转毫秒） |
+| `allow-null-values` | boolean | false | 是否允许缓存 null |
+| `transaction` | boolean | false | 是否开启事务感知（`setTransactionAware`） |
+| `max-idle-time` | long | 1800 | key 最大空闲时间（秒），0 不限制 |
+| `max-size` | int | 2048 | 缓存最大条目数，0 不限制 |
+| `eviction-mode` | EvictionMode | LRU | 容量超限清除模式（LRU / LFU / NONE） |
+
+> `cache-timeout` 单位为秒（默认 3600 = 1 小时），配置类中以 `cacheTimeout*1000` 传给 Redisson `CacheConfig`。
+
+### 3. RedissonCacheConfig - Spring Cache 管理器
+
+- **`redisCacheManager`**（`@ConditionalOnMissingBean(RedissonSpringCacheManager.class)`）：匿名子类覆盖 `createDefaultConfig()`——以 `cacheTimeout*1000`（TTL）、`maxIdleTime*1000`、`maxSize`、`evictionMode` 构建默认 `CacheConfig`；随后 `setCodec(redissonClient 配置的 codec)`、`setAllowNullValues`、`setTransactionAware(transaction)`；
+- **`redissonLevelCacheProvider`**（`@ConditionalOnProperty(tbs.cache.multi-level.enabled=true)`）：多级缓存 L2 提供者，委托管理器按 cacheName 创建/复用缓存实例。
+
+### 4. 缓存侧三件套（com.tbs.cache.redis）
+
+| 组件 | 行为 |
+|------|------|
+| `RedissonTtlCacheDecorator`（`@Component`，order=1000） | `support()`：unwrap 得到 `RedissonCache`；`decorateCache()`：包装为 `RedissonAdaptTtlCache`（默认过期时长 = `cacheTimeout` 秒） |
+| `RedissonAdaptTtlCache` | `expireAll`：`nativeCache.expire(Duration)`（expireTime 为 null 用默认时长）；`expire`：原生缓存为 `RMapCache` 时 `expireEntry(key, ttl, 0)`（已过期则直接 `remove`） |
+| `RedissonLevelCacheProvider`（order=1000） | `getCache(name, ttl)` **不绑定业务 TTL**——记录 warn"please use @ExpireOn"后委托管理器按全局配置创建 |
+
+### 5. RedisDataHolder - 键值存储
+
+实现 `IDataHolder` + `IMatchKeyFounder`（非自动注册，经 `tbs.data.data-holder` 配置指定），基于 `RBucket`：
 
 ```java
-@Service
-public class UserService {
-    
-    @Resource
-    private RedisDataHolder redisDataHolder;
-    
-    public void saveUser(User user) {
-        // 强制写入用户数据
-        redisDataHolder.set("user:" + user.getId(), user, true);
-        
-        // 设置用户会话，如果键不存在则写入
-        boolean success = redisDataHolder.set("session:" + user.getId(), 
-            user.getSession(), false);
-        
-        log.info("用户数据保存{}", success ? "成功" : "失败");
-    }
-    
-    public Optional<User> getUser(String userId) {
-        // 获取用户数据
-        return redisDataHolder.get("user:" + userId);
-    }
-    
-    public void deleteUser(String userId) {
-        // 删除用户数据
-        redisDataHolder.remove("user:" + userId);
-        redisDataHolder.remove("session:" + userId);
-    }
-    
-    public List<String> findUserKeys(String pattern) {
-        // 查找匹配的用户键
-        return redisDataHolder.find("user:*" + pattern + "*")
-            .stream()
-            .collect(Collectors.toList());
-    }
-}
+redisDataHolder.set("user:" + id, user, true);          // force=true 强制写；false 仅键不存在时写（trySet）
+Optional<User> user = redisDataHolder.get("user:" + id);
+redisDataHolder.remove("user:" + id);
+redisDataHolder.containsKey("user:" + id);
+
+Collection<String> matched = redisDataHolder.find("user:*");        // getKeysByPattern 模式匹配
+Collection<Map.Entry<String, Object>> entries =
+    redisDataHolder.findEntries("session:*");                        // 匹配键并逐个取值
+
+int size = redisDataHolder.size();                       // RKeys.count()
 ```
 
-### 4. 使用分布式锁
+> **危险**：`clear()` 实现为 `RKeys.flushall()`——**清空整个 Redis 实例所有数据**，绝非仅本应用前缀。接入 `tbs.data` 前务必确认无共享实例混用。
 
-通过 <mcsymbol name="RedissonLockProvider" filename="RedissonLockProvider.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/lock/RedissonLockProvider.java" startline="27" type="class">RedissonLockProvider</mcsymbol> 获取分布式锁：
+### 6. 分布式锁（com.tbs.lock.redis）
+
+经 `tbs.lock.lock-provider-type: com.tbs.lock.redis.RedissonLockProvider` 启用：
+
+- **`RedissonLock`**：包装 `RLock`——`tryLock(Duration)`（毫秒等待，中断恢复标志后返回 false）、`unLock()`、`isLocked()`、`isHeldByCurrentThread()`；
+- **`RedissonLockProvider`**：`getLocker(Object target)` → `RedissonLock(target.toString())`；`getConditionLocker(target)` → 匿名 `IConditionLock` + 内部类 `RedissonLockCondition`；
+- **`RedissonLockCondition`**：基于 `RCountDownLatch`（conditionKey = `锁键:condition`）实现 `Condition`——`await` 系列先 `trySetCount(1)` 再等待；`signal()` → `countDown()`；**`signalAll()` 与 `signal()` 等价**（Redisson CountDownLatch 计数到 0 的特性限制）。
 
 ```java
-@Service
-public class OrderService {
-    
-    @Resource
-    private RedissonLockProvider lockProvider;
-    
-    public void processOrder(String orderId) {
-        // 获取订单锁
-        ILock lock = lockProvider.getLocker("order_lock:" + orderId);
-        
-        try {
-            // 尝试获取锁，最多等待10秒
-            if (lock.tryLock(Duration.ofSeconds(10))) {
-                // 执行需要加锁的订单处理逻辑
-                processOrderInternal(orderId);
-                
-                log.info("订单 {} 处理完成", orderId);
-            } else {
-                log.warn("获取订单锁失败: {}", orderId);
-            }
-        } finally {
-            // 确保锁被正确释放
-            if (lock.isHeldByCurrentThread()) {
-                lock.unLock();
-            }
-        }
-    }
-    
-    public void processOrderWithCondition(String orderId) throws Exception {
-        // 获取带条件的锁
-        IConditionLock conditionLock = lockProvider.getConditionLocker("order_condition:" + orderId);
-        
-        if (conditionLock.tryLock(Duration.ofSeconds(5))) {
-            try {
-                Condition condition = conditionLock.newCondition();
-                
-                // 等待条件满足
-                condition.await(30, TimeUnit.SECONDS);
-                
-                // 处理订单
-                processOrderInternal(orderId);
-            } finally {
-                conditionLock.unLock();
-            }
+ILock lock = lockProvider.getLocker("order_lock:" + orderId);
+if (lock.tryLock(Duration.ofSeconds(10))) {
+    try {
+        // 业务处理
+    } finally {
+        if (lock.isHeldByCurrentThread()) {
+            lock.unLock();
         }
     }
 }
 ```
 
-### 5. 使用消息广播
+### 7. Redis 事件广播（com.tbs.broadcast.redis）
 
-继承 <mcsymbol name="AbstractRedisEventSupport" filename="AbstractRedisEventSupport.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/boradcast/AbstractRedisEventSupport.java" startline="18" type="class">AbstractRedisEventSupport</mcsymbol> 实现消息广播：
+将 async 模块进程内事件系统桥接到 Redis Pub/Sub（基于 `RTopic`）：
+
+- **`AbstractRedisEventSupport<T>`**（抽象基类，需注册为 Bean）：
+  - 抽象方法：`getChannel()`（频道名）、`getEventBus()`（事件总线）、bridge/unbridge（继承 `AbstractDistributedSupport` 的数据桥接约定）；
+  - `@PostConstruct initMessageListenerContainer()`：`RTopic.addListener` 注册监听——收到消息后若容器内 `IEventBus` 已装配 `IDistributedBusSupport` 则走该支持分发，否则 `unbridge` 后直接 `getEventBus().inqueueEvent()` 入队；
+  - `broadcastEvent(result)`：`topic.publish(result)` 发布到频道。
+- **`SimpleRedisEventSupport`**（默认桥接实现）：频道固定 **`tbs.event.channel`**；`nodeId()` 返回频道名；`handleEvent` 经 `IEventDispatcher` 分发到本地订阅者；桥接 `IPublishResult` ↔ `SimpleDistributedAcceptedPublishResult`（内部 `SimpleDataBridge`：bridge 取 `event`/`publisher.getPushlisherId()`/`handleMode`，unbridge 还原为 `SpringManagedListenablePublishResult`）。
 
 ```java
 @Component
-public class UserEventBroadcaster extends AbstractRedisEventSupport<UserEvent> {
-    
-    @Resource
-    private IEventBus eventBus;
-    
-    @Override
-    protected IEventBus getEventBus() {
-        return eventBus;
-    }
-    
-    @Override
-    public String getChannel() {
-        return "user.events";
-    }
-    
-    @Override
-    public void receiveEvent(UserEvent event) {
-        // 处理接收到的用户事件
-        log.info("接收到用户事件: {}", event);
-        
-        // 根据事件类型处理
-        switch (event.getType()) {
-            case CREATE:
-                handleUserCreate(event);
-                break;
-            case UPDATE:
-                handleUserUpdate(event);
-                break;
-            case DELETE:
-                handleUserDelete(event);
-                break;
-        }
-    }
-    
-    public void publishUserEvent(UserEvent event) {
-        // 广播用户事件
-        broadcastEvent(event);
-        log.info("用户事件已广播: {}", event);
-    }
+public class OrderEventSupport extends SimpleRedisEventSupport {
+    // 直接继承即可获得进程内事件 → Redis 频道 → 各节点事件总线的完整链路
+    // 自定义频道/载荷时继承 AbstractRedisEventSupport<T> 并实现抽象方法
 }
 ```
 
-## 核心组件详解
+### 8. 调度任务持久化（RedisTaskStore）
 
-### BasicRedisConfig - 核心配置类
+`TaskStore` SPI 的 Redis 实现（注册为 Bean 后被 async 调度内核自动收集，实现重启恢复）：
 
-<mcsymbol name="BasicRedisConfig" filename="BasicRedisConfig.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/BasicRedisConfig.java" startline="23" type="class">BasicRedisConfig</mcsymbol> 是模块的核心配置类，负责创建和管理 Redisson 客户端：
+- 存储：Redis Hash **`schedule:task`**（key/value 均为 `StringCodec` 编码，内容为 `TaskSubmissionTransformer` 序列化的 JSON 快照）；
+- `save`：`isPersistable()==false` 的内存态任务跳过落盘（warn）；
+- `loadUnfinished`：进程重启后逐条还原，单条损坏数据记 error（截断 128 字符摘要）并跳过，不阻断整体恢复。
 
-**主要 Bean 定义：**
-- `redissonClient()`: 创建 Redisson 客户端，支持单机模式配置
-- `valueSerializer()`: 配置 Redis 值序列化器，支持 JSON 和 JDK 序列化
-- **条件化配置**：基于 `tbs.redis.enable` 属性控制是否启用
+### 9. MQ 幂等与失败消息存储（com.tbs.mq）
 
-### RedisProperty - 配置属性
+rabbitmq-mod 消费者的 Redis 落地（**需手动注册 Bean**，模块内无自动装配）：
 
-<mcsymbol name="RedisProperty" filename="RedisProperty.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/config/property/RedisProperty.java" startline="10" type="class">RedisProperty</mcsymbol> 封装了 Redis 相关配置：
+**`AbstractRedisIdempotentStore`**（抽象类，扩展 mq-api `AbstractIdempotentStore`，子类提供 `RedissonClient`）：
 
-**配置属性：**
-- `enable`: 是否启用 Redis 功能（默认：false）
-- `ValueSerializer`: Redis 值序列化器（默认：JdkSerializationRedisSerializer）
+- 幂等键两态生命周期（RBucket value 即状态）：`PROCESSING`（占位）/ `DONE`（完成）；
+- `tryAcquire`：`setIfAbsent(PROCESSING, ttl)` 单命令原子占位（防"崩溃后键无 TTL 永久残留"）；
+- `markDone`：覆盖为 `DONE` 并延续 TTL；
+- `release`：Lua 脚本**仅当值仍为 PROCESSING 时删除**——失败释放不会误删完成态记录。
 
-### RedisDataHolder - 数据存储实现
+**`RedisFaildMessageStore`**（类名拼写如此，扩展 mq-api `AbstractFailedMessageStore`，仅存储职责、无调度逻辑）：
 
-<mcsymbol name="RedisDataHolder" filename="RedisDataHolder.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/holder/RedisDataHolder.java" startline="15" type="class">RedisDataHolder</mcsymbol> 提供完整的数据存储功能：
-
-**核心功能：**
-- **CRUD 操作**：支持 set、get、remove、clear 等基本操作
-- **批量查询**：支持 keys、entries、values 等批量操作
-- **模式匹配**：支持通配符模式查找键和条目
-- **状态统计**：提供 size、isEmpty、containsKey 等状态查询
-
-### RedissonLockProvider - 分布式锁提供者
-
-<mcsymbol name="RedissonLockProvider" filename="RedissonLockProvider.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/lock/RedissonLockProvider.java" startline="27" type="class">RedissonLockProvider</mcsymbol> 提供高级分布式锁功能：
-
-**锁类型支持：**
-- **普通锁**：通过 `getLocker()` 获取基本分布式锁
-- **条件锁**：通过 `getConditionLocker()` 获取带条件的锁
-- **可重入锁**：支持同一线程多次获取锁
-
-**条件锁特性：**
-- 完整的 Condition 接口实现
-- 基于 Redisson CountDownLatch 的条件等待机制
-- 支持超时等待和中断处理
-
-### AbstractRedisEventSupport - 消息广播基类
-
-<mcsymbol name="AbstractRedisEventSupport" filename="AbstractRedisEventSupport.java" path="/Users/abstergo/IdeaProjects/abstergo_solution/redis-mod/src/main/java/com/tbs/redis/boradcast/AbstractRedisEventSupport.java" startline="18" type="class">AbstractRedisEventSupport</mcsymbol> 提供消息广播功能：
-
-**消息机制：**
-- **自动监听**：应用启动时自动注册消息监听器
-- **事件桥接**：与 Abstergo Solution 事件系统集成
-- **发布订阅**：基于 Redisson Topic 的发布订阅模式
-- **类型安全**：支持泛型类型的事件处理
-
-## 高级用法
-
-### 自定义序列化器
+- 数据结构：`failed:message:index`（ZSet，score = nextRetryTime 毫秒）+ `failed:message:status`（Hash，PROCESSING 标记）+ `failed:message:{id}`（Hash，FailedMessage JSON）；
+- 全部 Redis 操作经 **Lua 脚本 + `StringCodec`** 原子执行——规避 `DefaultSystemCodec`（Jackson）为 key 附加类型前缀导致的 key 不一致问题；`FailedMessage` 的序列化在 Java 侧由 `ObjectMapper` 完成，Lua 只传递原始字符串；
+- `doFetchDue`：原子地"取到期 → 标记 PROCESSING → 移出索引"；单条反序列化失败跳过，内容缺失时清理状态标记。
 
 ```java
 @Configuration
-public class CustomRedisConfig {
-    
+public class MqRedisStoreConfig {
+
     @Bean
-    public RedisSerializer<Object> customSerializer() {
-        // 创建自定义序列化器
-        return new RedisSerializer<Object>() {
-            @Override
-            public byte[] serialize(Object obj) throws SerializationException {
-                // 自定义序列化逻辑
-                return CustomSerializationUtils.serialize(obj);
-            }
-            
-            @Override
-            public Object deserialize(byte[] bytes) throws SerializationException {
-                // 自定义反序列化逻辑
-                return CustomSerializationUtils.deserialize(bytes);
-            }
-        };
+    public IFailedMessageStore failedMessageStore(RedissonClient client) {
+        return new RedisFaildMessageStore(client);   // rabbitmq 消费者重试持久化依赖此 Bean
+    }
+
+    @Bean
+    public IIdempotentStore idempotentStore(RedissonClient client) {
+        // AbstractRedisIdempotentStore 为抽象类，需按需提供轻量子类实现 getRedissonClient()
+        return new SimpleRedisIdempotentStore(client);
     }
 }
 ```
 
-### 批量数据操作
+## 装配途径说明
 
-```java
-@Service
-public class BatchDataService {
-    
-    @Resource
-    private RedisDataHolder redisDataHolder;
-    
-    public void batchUpdateUsers(List<User> users) {
-        // 批量更新用户数据
-        users.forEach(user -> {
-            redisDataHolder.set("user:" + user.getId(), user, true);
-        });
-        
-        log.info("批量更新 {} 个用户数据", users.size());
-    }
-    
-    public Map<String, User> batchGetUsers(List<String> userIds) {
-        // 批量获取用户数据
-        return userIds.stream()
-            .map(userId -> {
-                Optional<User> user = redisDataHolder.get("user:" + userId);
-                return new AbstractMap.SimpleEntry<>(userId, user.orElse(null));
-            })
-            .filter(entry -> entry.getValue() != null)
-            .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
-    }
-}
-```
+模块组件的生效途径分三类，接入前请确认对应途径已就位：
 
-### 分布式锁的高级用法
+| 途径 | 组件 | 说明 |
+|------|------|------|
+| `@EnableTbsRedis` 自动扫描 | `BasicRedisConfig`、`RedissonCacheConfig`、codec、常量 | 扫描范围仅 `com.tbs.redis` 包，注册 `Feature.REDIS` |
+| 宿主组件扫描（`@ComponentScan` 覆盖 `com.tbs`） | `RedissonTtlCacheDecorator`（`@Component`） | 宿主仅扫描自身包时不会生效 |
+| 配置指定类名 / 手动注册 Bean | `RedisDataHolder`（`tbs.data.data-holder`）、`RedissonLockProvider`（`tbs.lock.lock-provider-type`）、`RedisTaskStore`、mq 存储、广播支持 | 按需接入 |
 
-```java
-@Service
-public class AdvancedLockService {
-    
-    @Resource
-    private RedissonLockProvider lockProvider;
-    
-    public void distributedTransaction(String resourceId) {
-        ILock lock = lockProvider.getLocker("resource:" + resourceId);
-        
-        try {
-            // 尝试获取锁，带重试机制
-            boolean acquired = false;
-            for (int i = 0; i < 3; i++) {
-                if (lock.tryLock(Duration.ofSeconds(5))) {
-                    acquired = true;
-                    break;
-                }
-                Thread.sleep(1000); // 等待后重试
-            }
-            
-            if (acquired) {
-                // 执行分布式事务
-                performDistributedTransaction(resourceId);
-            } else {
-                throw new RuntimeException("获取分布式锁失败");
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("锁获取被中断", e);
-        } finally {
-            if (lock.isHeldByCurrentThread()) {
-                lock.unLock();
-            }
-        }
-    }
-}
-```
+## 使用注意事项
 
-## 监控和调试
-
-### 启用详细日志
-
-在 `application.yml` 中启用 Redis 相关日志：
-
-```yaml
-logging:
-  level:
-    com.tbs.redis: DEBUG
-    org.redisson: INFO
-    org.springframework.data.redis: WARN
-```
-
-### 健康检查
-
-模块自动集成 Spring Boot Actuator 的健康检查：
-
-```bash
-# 检查 Redis 连接状态
-curl http://localhost:8080/actuator/health
-```
-
-### Redis 监控工具
-
-使用 Redis 命令行工具监控数据：
-
-```bash
-# 连接 Redis
-redis-cli -h 127.0.0.1 -p 6379 -a 123456
-
-# 查看所有键
-keys *
-
-# 查看内存使用情况
-info memory
-
-# 查看客户端连接
-info clients
-```
-
-## 最佳实践
-
-### 1. 键命名规范
-- 使用冒号分隔的层次结构：`domain:type:id`
-- 避免过长的键名，提高存储效率
-- 为不同业务域使用不同的键前缀
-
-### 2. 序列化策略
-- 生产环境推荐使用 JSON 序列化，便于调试
-- 性能敏感场景可使用 JDK 序列化
-- 自定义序列化器时注意版本兼容性
-
-### 3. 锁使用规范
-- 控制锁的粒度，避免锁范围过大
-- 设置合理的锁超时时间，防止死锁
-- 确保锁的正确释放，使用 try-finally 块
-
-### 4. 内存管理
-- 合理设置数据过期时间
-- 监控 Redis 内存使用情况
-- 定期清理过期和无用数据
-
-## 故障排除
-
-### 常见问题
-
-**1. 连接失败**
-```
-检查 Redis 服务是否启动
-确认连接参数（主机、端口、密码）是否正确
-检查网络连接和防火墙设置
-```
-
-**2. 序列化错误**
-```
-确认序列化器配置正确
-检查序列化对象的版本兼容性
-避免序列化敏感信息
-```
-
-**3. 锁竞争问题**
-```
-调整锁的超时时间和重试策略
-优化锁的粒度，减少竞争
-监控锁的使用情况，及时发现瓶颈
-```
-
-### 调试技巧
-
-1. **启用调试日志**：查看详细的 Redis 操作日志
-2. **使用监控工具**：通过 Redis 命令行工具监控数据状态
-3. **性能分析**：监控 Redis 内存使用和响应时间
-
-## 版本信息
-
-- **Spring Boot**: 2.x+
-- **Redisson**: 3.x+
-- **Redis**: 5.0+
-- **Java**: 11+
-
-## 贡献指南
-
-欢迎提交 Issue 和 Pull Request 来改进 Redis 模块。在提交代码前请确保：
-
-1. 代码符合项目的编码规范
-2. 添加相应的单元测试
-3. 更新相关文档
-4. 通过所有现有测试
+1. **`clear()` = `flushall()`**：`RedisDataHolder.clear()` 清空整个 Redis 实例，共享实例环境严禁调用
+2. **必须 `tbs.redis.enable=true`**：Customizer 中 `orElse(new DefaultSystemCodec(SpringUtil.getBean(REDIS_VALUE_SERIALIZER, ...)))` 为急切求值——`enable=false` 时 Bean 不存在，`getBean` 抛异常导致 Redisson 初始化失败（当前实现行为，启用模块即意味着置 true）
+3. **Jackson key 包装**：`GenericJackson2JsonRedisSerializer` 序列化的 key 带 `@class` 类型信息，与本模块 mq 组件（StringCodec 纯文本 key）共存时注意键空间隔离；mq 组件的 StringCodec 方案即为此设计
+4. **序列化器跨服务一致**：读写两端（多个微服务）应配置相同 `value-serializer`，否则反序列化失败
+5. **广播无确认/TTL**：Redis Pub/Sub 为即发即失，节点离线期间的广播事件不会补投；可靠事件请使用 rabbitmq-mod 的 MQ 广播
+6. **条件锁 signalAll 语义弱化**：基于 CountDownLatch，`signalAll()` 等价 `signal()`，仅唤醒一次等待；多等待者场景需自行循环 signal
+7. **锁键即 `target.toString()`**：`getLocker(Object)` 直接调用 toString 作为 Redis 锁键，自定义对象请实现有区分度的 toString（或直接传 String）
 
 ## 许可证
 
-本项目基于 Abstergo Solution 许可证。详情请参阅项目根目录的 LICENSE 文件。
+本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
