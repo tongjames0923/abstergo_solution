@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.util.Objects;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 预授权工具类
@@ -89,13 +90,13 @@ public class PreAuthUtils {
      */
     public boolean isAccountActived() {
         var vo = AuthUtil.getInstance().getCurrentUser();
-//        AssertUtil.isTrue().errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("user.not.logined").throwIt();
+//        AssertUtil.isTrue().errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.USER_NOT_LOGINED).throwIt();
 //
-//        AssertUtil.isTrue(!).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("auth.user.not.enabled")
+//        AssertUtil.isTrue(!).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.AUTH_USER_NOT_ENABLED)
 //            .params(vo.getUsername()).throwIt();
 //
 //        AssertUtil.isTrue().errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
-//            .i18n("auth.user.not.activated").params(vo.getUsername()).throwIt();
+//            .i18n(com.tbs.app.constant.SystemI18nConstant.AUTH_USER_NOT_ACTIVATED).params(vo.getUsername()).throwIt();
 
         return isAccountActived(vo);
     }

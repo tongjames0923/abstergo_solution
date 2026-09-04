@@ -34,6 +34,7 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * @author abstergo
@@ -73,19 +74,19 @@ public class SimpleSystemRoleServiceImpl
     @Override
     protected SystemRoleEntity insertNew(SystemRoleEntity entity) {
 
-        AssertUtil.isTrue(entity.getType() == null).i18n("permission.type.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+        AssertUtil.isTrue(entity.getType() == null).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_TYPE_EMPTY).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .throwIt();
 
         AssertUtil.isTrue(!EnumUtil.isValidCode(SystemRoleTypeEnum.class, entity.getType()))
-            .i18n("permission.type.invalid")
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_TYPE_INVALID)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(StrUtil.isEmpty(entity.getRole())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("permission.code.empty").throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_CODE_EMPTY).throwIt();
         AssertUtil.isTrue(StrUtil.isEmpty(entity.getName())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("permission.name.empty").throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_NAME_EMPTY).throwIt();
 
         var old = ((ISystemRoleService)getInstance()).queryByRole(entity.getRole());
-        AssertUtil.isTrue(old != null).i18n("permission.code.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(old != null).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_CODE_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(SystemRoleFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
         return entity;
@@ -107,11 +108,11 @@ public class SimpleSystemRoleServiceImpl
 
     @Override
     protected SystemRoleEntity compareAndUpdateValue(SystemRoleEntity newOne, SystemRoleEntity oldOne) {
-        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag())).i18n("permission.system.not.modify").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(oldOne.getFlag())).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_SYSTEM_NOT_MODIFY).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         if (newOne.getFlag() != null) {
-            AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode())).i18n("permission.system.not.set.by.api").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            AssertUtil.isTrue(newOne.getFlag().equals(SystemRoleFlagEnum.SYSTEMED.getCode())).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_SYSTEM_NOT_SET_BY_API).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
             AssertUtil.isTrue(!CollUtil.isIn(newOne.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(),
-                SystemRoleFlagEnum.DISABLE.getCode())).i18n("permission.status.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                SystemRoleFlagEnum.DISABLE.getCode())).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_STATUS_INVALID).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             if (newOne.getFlag().equals(SystemRoleFlagEnum.ACTIVE.getCode()) ||
                 newOne.getFlag().equals(SystemRoleFlagEnum.DISABLE.getCode())) {
                 oldOne.setFlag(newOne.getFlag());
@@ -125,17 +126,17 @@ public class SimpleSystemRoleServiceImpl
         }
         if (StrUtil.isNotEmpty(newOne.getRole()) && !Objects.equals(newOne.getRole(), oldOne.getRole())) {
             var old = ((ISystemRoleService)getInstance()).queryByRole(newOne.getRole());
-            AssertUtil.isTrue(old != null).i18n("permission.code.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            AssertUtil.isTrue(old != null).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_CODE_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
                 .throwIt();
         }
         if (newOne.getType() != null) {
             AssertUtil.isTrue(!EnumUtil.isValidCode(SystemRoleTypeEnum.class, newOne.getType()))
-                .i18n("permission.type.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_TYPE_INVALID).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             oldOne.setType(newOne.getType());
         }
         if (newOne.getDataScope() != null) {
             AssertUtil.isTrue(!EnumUtil.isValidCode(SystemDataScopeEnum.class, newOne.getDataScope()))
-                .i18n("permission.data.scope.invalid").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_DATA_SCOPE_INVALID).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             oldOne.setDataScope(newOne.getDataScope());
         }
         return oldOne;
@@ -144,9 +145,9 @@ public class SimpleSystemRoleServiceImpl
     @Override
     protected void deletePending(SystemRoleEntity entity) throws FormattedRuntimeException {
         AssertUtil.isTrue(SystemRoleFlagEnum.SYSTEMED.getCode().equals(entity.getFlag()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.system.not.delete").throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_SYSTEM_NOT_DELETE).throwIt();
         AssertUtil.isTrue(SpringUtil.getBean(ISystemRoleGroupService.class).isRoleInGroupAnyGroup(entity.getId()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.in.use.not.delete").throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_IN_USE_NOT_DELETE).throwIt();
     }
 
     @Caching(evict = {@CacheEvict(cacheNames = SYSTEM_ROLE, key = "#id"),

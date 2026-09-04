@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 import static com.tbs.app.vo.DepartmentInfoVO.convertToDepartmentVOs;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 默认用户信息服务
@@ -40,7 +41,7 @@ public class DefaultUserInfoService implements IUserInfoService {
     @Override
     public UserDetails loadUserInfoByUniqueKey( String uniqueKey) {
         var users = systemUserService.queryByUserName(uniqueKey);
-        AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException(I18nUtil.get("user.not.found")));
+        AssertUtil.isTrue(CollUtil.isEmpty(users), () -> new SimpleAuthException(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_NOT_FOUND)));
         var user = CollUtil.of(users).findFirstOrNull();
 
         var builder = DefaultSystemUserDetails.builder().userName(user.getUserName()).password(user.getPassword())

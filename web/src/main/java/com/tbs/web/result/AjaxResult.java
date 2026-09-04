@@ -5,6 +5,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Map;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 统一 Ajax 响应结果
@@ -71,19 +72,19 @@ public class AjaxResult implements Serializable {
 
 	// ==================== 国际化消息常量Key ====================
 	/** 默认成功消息key */
-	public static final String DEFAULT_SUCCESS_MESSAGE_KEY = "common.success";
+	public static final String DEFAULT_SUCCESS_MESSAGE_KEY = com.tbs.web.constant.WebI18nConstant.COMMON_SUCCESS;
 	/** 默认失败消息key */
-	public static final String DEFAULT_FAIL_MESSAGE_KEY = "common.fail";
+	public static final String DEFAULT_FAIL_MESSAGE_KEY = com.tbs.web.constant.WebI18nConstant.COMMON_FAIL;
 	/** 默认错误消息key */
-	public static final String DEFAULT_ERROR_MESSAGE_KEY = "common.error";
+	public static final String DEFAULT_ERROR_MESSAGE_KEY = com.tbs.web.constant.WebI18nConstant.COMMON_ERROR;
 	/** 默认重新登录消息key */
-	public static final String DEFAULT_RELOGIN_MESSAGE_KEY = "common.relogin";
+	public static final String DEFAULT_RELOGIN_MESSAGE_KEY = com.tbs.web.constant.WebI18nConstant.COMMON_RELOGIN;
 	/** 刷新失败消息key */
-	public static final String REFRESH_FAIL_MESSAGE_KEY = "token.refresh.fail";
+	public static final String REFRESH_FAIL_MESSAGE_KEY = com.tbs.web.constant.WebI18nConstant.TOKEN_REFRESH_FAIL;
 	/** 默认未授权消息key */
-	public static final String DEFAULT_UNAUTHORIZED_MESSAGE_KEY = "common.unauthorized";
+	public static final String DEFAULT_UNAUTHORIZED_MESSAGE_KEY = com.tbs.web.constant.WebI18nConstant.COMMON_UNAUTHORIZED;
 	/** 默认无权限消息key */
-	public static final String DEFAULT_FORBIDDEN_MESSAGE_KEY = "common.forbidden";
+	public static final String DEFAULT_FORBIDDEN_MESSAGE_KEY = com.tbs.web.constant.WebI18nConstant.COMMON_FORBIDDEN;
 
 	// ==================== 静态方法获取国际化消息 ====================
 

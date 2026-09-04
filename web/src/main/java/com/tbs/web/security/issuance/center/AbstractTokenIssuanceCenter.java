@@ -12,6 +12,7 @@ import com.tbs.web.security.token.ITokenModel;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 抽象的令牌颁发中心
@@ -87,9 +88,9 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * @param model 令牌模型，其令牌串、用户名、令牌类型均不能为空
      */
     protected void saveModel( ITokenModel model) {
-        AssertUtil.hasText(model.getToken(), I18nUtil.get("token.required"));
-        AssertUtil.hasText(model.getUserName(), I18nUtil.get("user.name.required"));
-        AssertUtil.isTrue(model.getTokenType() == null, I18nUtil.get("token.type.required"));
+        AssertUtil.hasText(model.getToken(), I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_REQUIRED));
+        AssertUtil.hasText(model.getUserName(), I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_NAME_REQUIRED));
+        AssertUtil.isTrue(model.getTokenType() == null, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_TYPE_REQUIRED));
         center.saveManageInfo(model.getUserName(), model.getTokenType().getCode(), model.getToken());
         center.saveToken(model);
     }
@@ -205,12 +206,12 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      */
     @Override
     public ITokenModel issueToken(TokenRequestForm form) {
-        AssertUtil.notNull(form, I18nUtil.get("token.request.required"));
-        AssertUtil.notNull(form.getUserDetails(), I18nUtil.get("user.info.required"));
-        AssertUtil.hasText(form.getUserDetails().getUsername(), I18nUtil.get("user.name.required"));
-        AssertUtil.isTrue(form.getTokenType() == null, I18nUtil.get("token.type.required"));
-        AssertUtil.isTrue(form.getTokenCreateType() == null, I18nUtil.get("token.create.type.required"));
-        AssertUtil.hasText(form.getSessionId(), I18nUtil.get("token.session.id.required"));
+        AssertUtil.notNull(form, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_REQUEST_REQUIRED));
+        AssertUtil.notNull(form.getUserDetails(), I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_INFO_REQUIRED));
+        AssertUtil.hasText(form.getUserDetails().getUsername(), I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_NAME_REQUIRED));
+        AssertUtil.isTrue(form.getTokenType() == null, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_TYPE_REQUIRED));
+        AssertUtil.isTrue(form.getTokenCreateType() == null, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_CREATE_TYPE_REQUIRED));
+        AssertUtil.hasText(form.getSessionId(), I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_SESSION_ID_REQUIRED));
         ITokenModel model = createModel(form);
         center.saveModel(model);
         return model;
@@ -228,7 +229,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      */
     @Override
     public ITokenModel getTokenByToken( String token) {
-        AssertUtil.hasText(token, I18nUtil.get("token.required"));
+        AssertUtil.hasText(token, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_REQUIRED));
         ITokenModel model = center.getModel(token);
         if (model == null) {
             return model;
@@ -269,7 +270,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
     @Override
     public void setTokenStatus( String token,  TokenStatusEnum status) {
         ITokenModel oldModel = center.getModel(token);
-        AssertUtil.notNull(oldModel, I18nUtil.get("token.not.found"));
+        AssertUtil.notNull(oldModel, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_NOT_FOUND));
         oldModel.setStatus(status);
         center.saveModel(oldModel);
     }
@@ -326,7 +327,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      */
     @Override
     public Collection<ITokenModel> listSessions(String userName, Date beg, Date end) {
-        AssertUtil.hasText(userName, I18nUtil.get("user.name.required"));
+        AssertUtil.hasText(userName, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_NAME_REQUIRED));
         if (beg == null) {
             beg = DateUtil.offsetDay(new Date(), -(28*6));
         }

@@ -16,6 +16,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import java.util.Objects;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 默认用户名密码访问令牌提供者
@@ -38,18 +39,18 @@ public class DefaultUserPasswordAccessTokenProvider extends AbstractAccessTokenP
 
     @Override
     protected void validateForm( IUsernameAndPasswordForm iUsernameAndPasswordForm) {
-        AssertUtil.hasText(iUsernameAndPasswordForm.getUsername(), I18nUtil.get("user.name.required"));
-        AssertUtil.hasText(iUsernameAndPasswordForm.getPassword(), I18nUtil.get("user.password.required"));
+        AssertUtil.hasText(iUsernameAndPasswordForm.getUsername(), I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_NAME_REQUIRED));
+        AssertUtil.hasText(iUsernameAndPasswordForm.getPassword(), I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_PASSWORD_REQUIRED));
     }
 
     @Override
     protected UserDetails pullUserDetails( IUsernameAndPasswordForm iUsernameAndPasswordForm) {
         UserDetails details = userInfoService.loadUserInfoByUniqueKey(iUsernameAndPasswordForm.getUsername());
-        AssertUtil.notNull(details, I18nUtil.get("user.not.found.with.username", iUsernameAndPasswordForm.getUsername()));
+        AssertUtil.notNull(details, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_NOT_FOUND_WITH_USERNAME, iUsernameAndPasswordForm.getUsername()));
         // 明文密码经 IPasswordEncrypt 加密后与存储密文比对，不一致即密码错误
         AssertUtil.isTrue(
             !Objects.equals(encrypt.encrypt(iUsernameAndPasswordForm.getPassword()), details.getPassword()),
-            I18nUtil.get("user.password.error.with.username", iUsernameAndPasswordForm.getUsername()));
+            I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_PASSWORD_ERROR_WITH_USERNAME, iUsernameAndPasswordForm.getUsername()));
         return details;
     }
 

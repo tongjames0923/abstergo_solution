@@ -47,9 +47,28 @@ public class QueryEngine implements IStartup {
     /**
      * 排序字段元数据，缓存注解信息避免重复反射。
      */
+    /**
+     * 排序字段元数据
+     * <p>
+     * 封装单个参与排序的字段描述，供排序解析阶段关联「Java 字段、所属排序 Bean 名称、映射后的列名」三者关系。
+     * </p>
+     *
+     * @param field         排序字段对应的 Java 反射字段
+     * @param orderBeanName 字段隶属的排序 Bean 名称
+     * @param mappedName    字段映射后的数据库列名（或排序目标名）
+     */
     private static class OrderFieldMetadata {
+        /**
+         * 排序字段对应的 Java 反射字段
+         */
         final Field field;
+        /**
+         * 字段隶属的排序 Bean 名称
+         */
         final String orderBeanName;
+        /**
+         * 字段映射后的数据库列名（或排序目标名）
+         */
         final String mappedName;
 
         OrderFieldMetadata(Field field, String orderBeanName, String mappedName) {

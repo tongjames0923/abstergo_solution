@@ -2,6 +2,7 @@ package com.tbs.app.controller.privates;
 
 import cn.hutool.core.date.DateUtil;
 import com.tbs.app.annotation.NoLog;
+import com.tbs.app.controller.constant.AppI18nContant;
 import com.tbs.app.service.oss.UploadTaskProgressManager;
 import com.tbs.app.vo.UploadTaskProgressVO;
 import com.tbs.common.error.AssertUtil;
@@ -95,7 +96,7 @@ public class OssController extends BaseController {
         @Parameter(name = "taskId", description = "上传任务ID，指定后可轮询上传进度") @RequestParam(value = "taskId",
             required = false) String taskId) throws IOException {
         AssertUtil.isTrue(file == null || file.isEmpty()).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.file.empty").throwIt();
+            .i18n(AppI18nContant.OSS_FILE_EMPTY).throwIt();
         String key = StrUtil.isEmpty(objectKey) ? generateObjectKey(file.getOriginalFilename()) : objectKey;
         boolean trackProgress = !StrUtil.isEmpty(taskId);
         if (trackProgress) {
@@ -157,7 +158,7 @@ public class OssController extends BaseController {
         @Parameter(name = "taskId", description = "上传任务ID", required = true) @RequestParam(
             "taskId") String taskId) {
         AssertUtil.isTrue(StrUtil.isEmpty(taskId)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.task.id.empty").throwIt();
+            .i18n(AppI18nContant.OSS_TASK_ID_EMPTY).throwIt();
         UploadTaskProgressVO progress = uploadTaskProgressManager.get(taskId);
         if (progress == null) {
             // 任务尚未登记：请求体仍在接收中，或进度条目已过期
@@ -188,7 +189,7 @@ public class OssController extends BaseController {
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket, HttpServletResponse response) throws IOException {
         AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.object.key.empty").throwIt();
+            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
         String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
         ObjectMetadata metadata = ossClient.getObjectMetadata(resolvedBucket, objectKey);
         response.setContentType(StrUtil.isEmpty(metadata.getContentType()) ? MediaType.APPLICATION_OCTET_STREAM_VALUE
@@ -229,7 +230,7 @@ public class OssController extends BaseController {
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
         AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.object.key.empty").throwIt();
+            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
         String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
         return successResult(ossClient.getObjectMetadata(resolvedBucket, objectKey));
     }
@@ -252,7 +253,7 @@ public class OssController extends BaseController {
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
         AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.object.key.empty").throwIt();
+            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
         String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
         return successResult(ossClient.doesObjectExist(resolvedBucket, objectKey));
     }
@@ -314,7 +315,7 @@ public class OssController extends BaseController {
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
         AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.object.key.empty").throwIt();
+            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
         PresignedUrlRequest.Builder builder = "UPLOAD".equalsIgnoreCase(type) ? PresignedUrlRequest.upload(objectKey)
             : PresignedUrlRequest.download(objectKey);
         builder.expirationSeconds(
@@ -342,7 +343,7 @@ public class OssController extends BaseController {
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
         AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.object.key.empty").throwIt();
+            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
         if (StrUtil.isEmpty(bucket)) {
             ossClient.deleteObject(objectKey);
         } else {
@@ -368,7 +369,7 @@ public class OssController extends BaseController {
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
         AssertUtil.isTrue(objectKeys == null || objectKeys.isEmpty()).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("oss.object.key.empty").throwIt();
+            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
         String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
         ossClient.deleteObjects(resolvedBucket, objectKeys);
         return successResult();

@@ -1,5 +1,6 @@
 package com.tbs.common.delegate;
 
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.i18n.I18nUtil;
@@ -92,7 +93,7 @@ public interface IDelegateFlag<T> {
 	 */
 	default IDelegateFlag<T> exceptionThenThrow() throws FormattedRuntimeException {
 		if (getException() != null) {
-			AssertUtil.throwError(() -> new FormattedRuntimeException(getException(), I18nUtil.get("delegate.error")));
+			AssertUtil.throwError(() -> new FormattedRuntimeException(getException(), I18nUtil.get(CommonI18nConstant.DELEGATE_ERROR)));
 		}
 		return this;
 	}

@@ -4,6 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.lock.util.LockUtil;
 import com.tbs.schedule.api.*;
+import com.tbs.schedule.constant.ScheduleI18nConstant;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
@@ -86,8 +87,8 @@ public class SchedulerCore implements TaskScheduler, Tickable {
 
     @Override
     public ScheduleHandle submit(TaskSubmission submission) {
-        AssertUtil.notNull(submission, "schedule.submission.null");
-        AssertUtil.notNull(submission.getPayload(), "schedule.submission.payload.null");
+        AssertUtil.notNull(submission, ScheduleI18nConstant.SUBMISSION_NULL);
+        AssertUtil.notNull(submission.getPayload(), ScheduleI18nConstant.SUBMISSION_PAYLOAD_NULL);
         ScheduledEntry entry = new ScheduledEntry(submission);
         if (taskStore instanceof NoopTaskStore || submission.isPersistable()) {
             taskStore.save(submission);

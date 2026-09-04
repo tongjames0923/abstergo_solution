@@ -1,5 +1,6 @@
 package com.tbs.common.util.base;
 
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.data.IFeatureWrapper;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -427,8 +428,8 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
             return empty();
         }
 
-        AssertUtil.toAssert(size <= 0).message("分割大小必须为正数").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
-            .throwIt();
+        AssertUtil.toAssert(size <= 0).i18n(CommonI18nConstant.COLL_SPLIT_SIZE_POSITIVE)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
 
         List<T> dataList = this.toList();
         int totalSize = dataList.size();

@@ -1,0 +1,129 @@
+package com.tbs.web.constant;
+
+/**
+ * Web 模块国际化常量
+ * <p>
+ * 集中收拢 web 模块中面向用户的 i18n 资源 key，避免调用方散落硬编码字符串魔法值。
+ * key 对应资源文件见 {@code web/src/main/resources/messages-web.properties}（中文）
+ * 与 {@code messages-web_en_US.properties}（英文），新增 key 须中英文两份同步维护。
+ * </p>
+ *
+ * @author abstergo
+ * @since 1.0.0
+ */
+public final class WebI18nConstant {
+
+    private WebI18nConstant() {
+    }
+
+    /* ===================== 通用消息（定义在 common 模块，web 跨模块引用） ===================== */
+
+    /**
+     * 操作成功提示：操作成功
+     */
+    public static final String COMMON_SUCCESS = "common.success";
+    /**
+     * 操作失败提示：操作失败
+     */
+    public static final String COMMON_FAIL = "common.fail";
+    /**
+     * 操作错误提示：操作错误
+     */
+    public static final String COMMON_ERROR = "common.error";
+    /**
+     * 重新登录提示：请重新登录
+     */
+    public static final String COMMON_RELOGIN = "common.relogin";
+    /**
+     * 未授权提示：未授权
+     */
+    public static final String COMMON_UNAUTHORIZED = "common.unauthorized";
+    /**
+     * 无权限提示：无权限
+     */
+    public static final String COMMON_FORBIDDEN = "common.forbidden";
+
+    /* ===================== 认证相关（auth） ===================== */
+
+    /** 认证信息为空提示：认证信息为空 */
+    public static final String AUTH_INFO_EMPTY = "auth.info.empty";
+    /** 令牌信息为空提示：令牌信息为空 */
+    public static final String AUTH_TOKEN_EMPTY = "auth.token.empty";
+    /** 用户信息为空提示：用户信息为空 */
+    public static final String AUTH_USER_EMPTY = "auth.user.empty";
+    /** 用户校验失败提示：用户信息验证失败 */
+    public static final String AUTH_USER_VERIFY_FAIL = "auth.user.verify.fail";
+    /** 用户校验失败详情提示：用户信息验证失败。详情:{0} */
+    public static final String AUTH_USER_VERIFY_FAIL_DETAIL = "auth.user.verify.fail.detail";
+    /** 用户权限变更提示：用户权限发生变更，用户名:{0} */
+    public static final String AUTH_PERMISSION_CHANGED = "auth.permission.changed";
+    /** 无效认证提示：未获取到有效的Authentication */
+    public static final String AUTH_INVALID_AUTHENTICATION = "auth.invalid.authentication";
+
+    /* ===================== 令牌相关（token） ===================== */
+
+    /** 令牌签发未实现提示：请实现一个Token签发中心 */
+    public static final String TOKEN_ISSUANCE_NOT_IMPLEMENTED = "token.issuance.not.implemented";
+    /** 令牌不能为空提示：令牌不能为空 */
+    public static final String TOKEN_REQUIRED = "token.required";
+    /** 令牌不存在提示：令牌不存在 */
+    public static final String TOKEN_NOT_FOUND = "token.not.found";
+    /** 令牌请求参数为空提示：令牌请求参数不能为空 */
+    public static final String TOKEN_REQUEST_REQUIRED = "token.request.required";
+    /** 令牌类型为空提示：令牌类型不能为空 */
+    public static final String TOKEN_TYPE_REQUIRED = "token.type.required";
+    /** 令牌创建类型为空提示：令牌创建类型不能为空 */
+    public static final String TOKEN_CREATE_TYPE_REQUIRED = "token.create.type.required";
+    /** 会话ID不能为空提示：会话ID不能为空 */
+    public static final String TOKEN_SESSION_ID_REQUIRED = "token.session.id.required";
+    /** 令牌刷新失败提示：Token失效且刷新Token失败 */
+    public static final String TOKEN_REFRESH_FAIL = "token.refresh.fail";
+
+    /* ===================== 用户相关（user） ===================== */
+
+    /** 用户信息为空提示：用户信息不能为空 */
+    public static final String USER_INFO_REQUIRED = "user.info.required";
+    /** 用户名不能为空提示：用户名不能为空 */
+    public static final String USER_NAME_REQUIRED = "user.name.required";
+    /** 密码不能为空提示：密码不能为空 */
+    public static final String USER_PASSWORD_REQUIRED = "user.password.required";
+    /** 用户名对应的用户不存在提示：用户 {0} 不存在 */
+    public static final String USER_NOT_FOUND_WITH_USERNAME = "user.not.found.with.username";
+    /** 用户名密码错误提示：用户 {0} 密码错误 */
+    public static final String USER_PASSWORD_ERROR_WITH_USERNAME = "user.password.error.with.username";
+
+    /* ===================== 通用接口（Generic API） ===================== */
+
+    /** 通用接口ID不存在提示：通用接口ID不存在 */
+    public static final String GENERIC_API_ID_NOT_FOUND = "GENERIC.API.ID_NOT_FOUND";
+    /** 调用需要登录提示：调用需要有效登录 */
+    public static final String GENERIC_API_NOT_LOGIN = "GENERIC.API.NOT_LOGIN";
+    /** 接口版本过低提示：接口版本过低 */
+    public static final String GENERIC_API_API_VERSION_NOT_FOUND = "GENERIC.API.API_VERSION_NOT_FOUND";
+
+    /* ===================== 枚举文案（enum） ===================== */
+
+    /** 枚举：令牌创建类型-登录 */
+    public static final String ENUM_TOKEN_CREATE_LOGIN = "enum.token.create.login";
+    /** 枚举：令牌创建类型-刷新 */
+    public static final String ENUM_TOKEN_CREATE_REFRESH = "enum.token.create.refresh";
+    /** 枚举：令牌类型-访问令牌 */
+    public static final String ENUM_TOKEN_TYPE_WEB_ACCESS = "enum.token.type.web.access";
+    /** 枚举：令牌类型-刷新令牌 */
+    public static final String ENUM_TOKEN_TYPE_REFRESH = "enum.token.type.refresh";
+    /** 枚举：令牌类型-应用访问令牌 */
+    public static final String ENUM_TOKEN_TYPE_APPLICATION_ACCESS = "enum.token.type.application.access";
+    /** 枚举：令牌来源-cookie */
+    public static final String ENUM_TOKEN_SOURCE_COOKIE = "enum.token.source.cookie";
+    /** 枚举：令牌来源-header */
+    public static final String ENUM_TOKEN_SOURCE_HEADER = "enum.token.source.header";
+    /** 枚举：令牌来源-param */
+    public static final String ENUM_TOKEN_SOURCE_PARAM = "enum.token.source.param";
+
+    /* ===================== 其它 ===================== */
+
+    /** 操作成功提示：操作成功 */
+    public static final String CONTROLLER_OPERATION_SUCCESS = "controller.operation.success";
+    /** 设置请求语言日志提示：设置请求语言: {0} */
+    public static final String LOG_I18N_SET_LOCALE = "log.i18n.set.locale";
+}

@@ -7,6 +7,7 @@ import com.tbs.web.genric.form.HttpInvokeForm;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import com.tbs.app.constant.SystemI18nConstant;
 
 @Component
 public class SuperAdminPreAuth implements IApiInstancePreAuth {
@@ -21,7 +22,7 @@ public class SuperAdminPreAuth implements IApiInstancePreAuth {
         throws AuthenticationException {
         AssertUtil.isTrue(!userDetails.getAuthorities().stream()
                 .anyMatch(authority -> "管理员".equals(authority.getAuthority())))
-            .i18n("generic.api.auth.superadmin.pre.auth.fail")
+            .i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_AUTH_SUPERADMIN_PRE_AUTH_FAIL)
             .params(apiInstance.getApiId())
             .as(e -> new AuthenticationException(e.getMessage()) {
             }).throwIt();

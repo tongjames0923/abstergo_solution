@@ -7,6 +7,7 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.shared.constant.SharedI18nConstant;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.common.data.PageVO;
 import com.tbs.common.util.PageUtil;
@@ -88,7 +89,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public T deleteById(K id) {
-        AssertUtil.isTrue(id == null).i18n("crud.delete.id.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(id == null).i18n(SharedI18nConstant.CRUD_DELETE_ID_EMPTY).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var entity = getInstance().queryById(id);
         if (getInstance().isDeleted(entity)) {
             return null;
@@ -118,17 +119,17 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<T> save(T entity) {
-        AssertUtil.isTrue(entity == null).i18n("crud.save.entity.empty").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(entity == null).i18n(SharedI18nConstant.CRUD_SAVE_ENTITY_EMPTY).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var r = ValueWrapper.of(entity);
         if (entity.getId() == null) {
             auditFunction(r, CREATE);
             if (r.get().isPresent()) {
                 r.set(getInstance().insertNew(r.get().get()));
             } else {
-                log.warn(I18nUtil.get("crud.save.entity.not.exists"));
+                log.warn(I18nUtil.get(SharedI18nConstant.CRUD_SAVE_ENTITY_NOT_EXISTS));
             }
             if (r.get().isEmpty()) {
-                log.warn(I18nUtil.get("crud.save.entity.not.exists"));
+                log.warn(I18nUtil.get(SharedI18nConstant.CRUD_SAVE_ENTITY_NOT_EXISTS));
                 return Collections.EMPTY_LIST;
             } else {
                 return List.of(r.get().orElse(null));
@@ -136,11 +137,11 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
         } else {
             r.set(getInstance().queryById(entity.getId()));
-            AssertUtil.isTrue(r.get().isEmpty()).i18n("crud.update.entity.not.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+            AssertUtil.isTrue(r.get().isEmpty()).i18n(SharedI18nConstant.CRUD_UPDATE_ENTITY_NOT_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             r.set(getInstance().compareAndUpdateValue(entity, r.get().get()));
             auditFunction(r, UPDATE);
             if (r.get().isEmpty()) {
-                log.warn(I18nUtil.get("crud.save.entity.not.exists"));
+                log.warn(I18nUtil.get(SharedI18nConstant.CRUD_SAVE_ENTITY_NOT_EXISTS));
                 return Collections.EMPTY_LIST;
             } else {
                 r.set(CollUtil.of(getInstance().updateBy(r.get().get())).findFirstOrNull());
@@ -165,7 +166,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
                     r.set(s.onDelete(r.get().get()));
                 }
             } else {
-                log.warn(I18nUtil.get("crud.audit.entity.not.exists"));
+                log.warn(I18nUtil.get(SharedI18nConstant.CRUD_AUDIT_ENTITY_NOT_EXISTS));
             }
         });
     }

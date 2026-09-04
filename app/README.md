@@ -1,222 +1,429 @@
-# App 模块 - 后端Web应用运行包
+# app 模块 - 后端 Web 运行包
 
-## 项目概述
+Abstergo Solution 的**主应用入口**（pom 描述：后端 web 运行包）：将平台各能力模块装配为可运行的单体 Web 服务，提供用户/角色/公司/部门等系统管理 REST API、登录认证、动态视图路由、数据字典、对象存储、缓存管理、应用版本管理、泛化 API 调用等完整后端能力。经 Dubbo（Nacos 注册中心）对外提供 RPC 服务，并作为 `app-ui-vue` 前端的默认后端。
 
-App模块是Abstergo解决方案的后端Web应用核心运行包，基于Spring Boot框架构建，提供完整的系统管理功能，包括用户管理、角色管理、公司管理等核心业务功能。该模块集成了项目中的所有核心模块，是整个系统的运行入口。
+## 目录
 
-## 技术架构
+- [模块定位](#模块定位)
+- [集成的能力模块](#集成的能力模块)
+- [快速开始](#快速开始)
+- [启动类与注解装配](#启动类与注解装配)
+- [配置体系](#配置体系)
+- [REST API 清单](#rest-api-清单)
+- [核心配置类与服务](#核心配置类与服务)
+- [定时任务](#定时任务)
+- [特殊机制](#特殊机制)
+- [构建与部署](#构建与部署)
+- [注意事项](#注意事项)
+- [包结构](#包结构)
 
-### 核心框架
-- **Spring Boot 2.7.14** - 应用主框架
-- **Spring Data JPA** - 数据持久化
-- **MyBatis** - ORM框架
-- **Dubbo 3.3.0** - RPC框架（用于微服务通信）
-- **Redisson 3.52.0** - 分布式缓存管理
+## 模块定位
 
-### 数据库支持
-- **MySQL 8.4** - 主数据库
-- **Redis 6.2.19** - 缓存数据库
-- **RabbitMQ 3.10** - 消息队列
+| 维度 | 说明 |
+| --- | --- |
+| 角色 | 全平台的组装层与运行入口（唯一可执行模块之一，另见 dic/logging 独立服务） |
+| 打包 | `spring-boot-maven-plugin` repackage 可执行 jar + `build-info`（供版本接口读取构建信息） |
+| Web 容器 | Undertow（经 web 模块排除 Tomcat） |
+| 服务名 | `app-service`（Dubbo 应用名 `dubbo-app-system-service`） |
+| 注册/配置中心 | Nacos（`NACOS_ADDRESS` 环境变量，默认 `127.0.0.1:8848`） |
+| 前端配套 | `app-ui-vue`（开发代理默认指向本服务 8080 端口） |
 
-### 安全与认证
-- **JWT Token** - 身份认证
-- **RBAC** - 基于角色的访问控制
+## 集成的能力模块
 
-## 项目结构
+本模块 pom 直接引入（即运行时启用）的平台能力：
 
-```
-src/main/java/com/tbs/app/
-├── AppApplication.java          # 应用启动类
-├── config/                      # 配置类目录
-│   └── AppConfig.java          # 应用配置
-├── controller/                  # 控制器层
-│   ├── privates/               # 私有接口（需要认证）
-│   │   ├── AdminCompanyController.java    # 公司管理接口
-│   │   ├── AdminRoleController.java       # 角色管理接口
-│   │   ├── AdminSystemLogController.java  # 系统日志接口
-│   │   ├── AdminUserController.java       # 用户管理接口
-│   │   ├── PrivateCompanyController.java  # 私有公司接口
-│   │   ├── PrivateTestController.java     # 私有测试接口
-│   │   ├── PrivateUserController.java     # 私有用户接口
-│   │   ├── RoleController.java            # 角色接口
-│   │   └── ViewController.java            # 视图控制器
-│   └── publics/                 # 公共接口（无需认证）
-│       ├── PublicTestController.java      # 公共测试接口
-│       └── PublicUserController.java      # 公共用户接口
-├── form/                        # 表单对象
-│   ├── DisableTokenForm.java    # Token禁用表单
-│   └── LoginForm.java           # 登录表单
-├── service/                     # 服务层
-│   ├── AppExecutor.java         # 应用执行器
-│   ├── Test2Service.java        # 测试服务2
-│   └── TestService.java         # 测试服务
-└── vo/                          # 值对象
-    └── UserInfoVO.java          # 用户信息视图对象
-```
+| 依赖 | 启用的能力 |
+| --- | --- |
+| `common` / `async` | 基础工具、代理模式、事件广播、任务调度、线程池、本地锁 |
+| `default-system-impl` | 系统管理全套实现：用户/角色/角色组/公司/部门/版本/泛化 API/功能开关服务、`DefaultTokenSignCenter` 令牌签发、认证 SPI 落地 |
+| `cache-impl` + `cache-caffeine-impl` | TTL 缓存 + 多级缓存（Caffeine L1） |
+| `view-route-default-impl` | 动态视图路由（数据库实现） |
+| `redis` | Redisson：分布式锁、缓存 L2、DataHolder、任务存储、幂等存储 |
+| `rabbitmq-broadcast` + `rabbitmq-logging` | RabbitMQ 事件广播、日志通道 |
+| `closure-list-impl` | 闭包表树结构（公司/部门树） |
+| `open-api-starter` | Knife4j OpenAPI 文档（doc.html） |
+| `oss-minio-impl` | MinIO 对象存储 |
+| `script-engine-api` | SpEL 脚本引擎 |
+| `spring-cloud-starter-alibaba-nacos-config` | Nacos 配置中心导入 |
 
-## 配置说明
-
-### 主配置文件 (application.yml)
-- **应用名称**: app-service
-- **国际化支持**: i18n/messages
-- **Dubbo配置**: Zookeeper注册中心 (127.0.0.1:2181)
-- **协议端口**: 20888
-
-### 数据库配置 (application-db.yml)
-- **数据库驱动**: P6Spy (SQL监控)
-- **连接池**: HikariCP
-- **连接配置**: 最小5个连接，最大20个连接
-- **JPA配置**: 自动DDL更新，显示SQL
-- **数据库连接**: jdbc:p6spy:mysql://localhost:3306/app_system
-
-### 缓存配置 (application-redis.yml)
-- **Redis主机**: localhost:6379
-- **认证密码**: 123456
-
-### 消息队列配置 (application-mq.yml)
-- **RabbitMQ**: 127.0.0.1:5672 (admin/admin123)
+另有 `spring-boot-configuration-processor`（编译期生成 `app.gateway.*` 配置元数据，IDE 自动补全）。
 
 ## 快速开始
 
-### 环境要求
-- Java 11+
-- Maven 3.6+
-- MySQL 8.4+
-- Redis 6.0+
-- Zookeeper 3.6+
-- RabbitMQ 3.10+
+### 1. 启动依赖服务
 
-### 启动步骤
-
-1. **克隆项目**
-   ```bash
-   git clone <repository-url>
-   cd abstergo_solution_p
-   ```
-
-2. **配置数据库**
-   - 创建数据库: `app_system`
-   - 导入数据库初始化脚本: `etc/sql_file/app_system.sql`
-   - 修改 `application-db.yml` 中的数据库连接信息
-
-3. **启动依赖服务**
-   ```bash
-   # 使用Docker Compose启动所有依赖服务
-   cd etc/docker
-   docker-compose up -d
-   
-   # 或者单独启动服务
-   redis-server
-   zkServer.sh start
-   ```
-
-4. **编译运行**
-   ```bash
-   # 编译项目
-   mvn clean compile
-   
-   # 运行应用
-   mvn spring-boot:run
-   ```
-
-### 接口访问
-
-应用启动后，可以通过以下地址访问：
-- **应用主页**: http://localhost:8080
-- **健康检查**: http://localhost:8080/actuator/health
-- **API文档**: http://localhost:8080/doc.html (Knife4j)
-
-## 核心功能
-
-### 用户管理模块
-- 用户注册、登录、注销
-- 用户信息管理
-- 权限分配
-- Token管理
-
-### 角色管理模块
-- 角色创建、修改、删除
-- 权限配置
-- 角色分配
-
-### 公司管理模块
-- 公司信息管理
-- 组织架构维护
-- 多租户支持
-
-### 系统日志模块
-- 操作日志记录
-- 系统监控
-- 异常追踪
-
-## 监控与运维
-
-### 健康检查
-应用内置Spring Boot Actuator，提供以下端点：
-- `/actuator/health` - 健康状态
-- `/actuator/info` - 应用信息
-- `/actuator/metrics` - 性能指标
-
-### 日志配置
-- 日志级别: INFO
-- 日志文件: logs/app.log
-- 支持SQL语句日志输出 (P6Spy)
-
-## 安全特性
-
-### 认证机制
-- JWT Token认证
-- 支持Token刷新
-- Token失效管理
-
-### 权限控制
-- 基于角色的访问控制(RBAC)
-- 接口级别权限验证
-- 数据权限隔离
-
-## 部署说明
-
-### 开发环境
 ```bash
-mvn spring-boot:run
+cd etc/docker
+docker compose up -d
 ```
 
-### 生产环境
+启动 7 个依赖服务：MySQL 8.4（3306，root/123456）、Nacos v2.5.3（8848，standalone）、Redis 6.2（6379，密码 123456）、RabbitMQ 4.3（5672/15672，admin/admin123）、MinIO（9000/9001，minioadmin）、xxl-job-admin 2.5.0（9898，token 123456789）、Dubbo Admin 0.6.0（9600）。
+
+> xxl-job 需先执行 `etc/sql_file/xxl-job/xxl_job_init.sql` 初始化 `xxl_job` 库；Nacos 需初始化 `nacos_config` 库。
+
+### 2. 初始化数据库
+
+应用库默认 `core_app`（JPA `ddl-auto: update` 启动时自动建表）；业务数据表结构由 shared 模块实体承载。
+
+### 3. 启动应用
+
 ```bash
-# 打包
-mvn clean package -DskipTests
+mvn spring-boot:run -pl app
+# 或打包后运行
+mvn clean package -pl app -am
+java -jar app/target/app-1.0-SNAPSHOT.jar
+```
+
+默认端口 `server.port=8080`。启动后：
+
+- Swagger 文档：`http://127.0.0.1:8080/doc.html`（Knife4j，`tbs.knife4j.enable=true`）
+- 版本探针：`curl http://127.0.0.1:8080/public/gateway/version`
+- Nacos 不可用时应用仍可启动（配置导入带 `optional:` 前缀，回退本地 yml）
+
+### 4. 前端联调
+
+`app-ui-vue` 开发服务器（9528）默认把 `/api` 代理到 `http://127.0.0.1:8080`，无需额外配置。
+
+## 启动类与注解装配
+
+`AppApplication` 共叠加 **16 个平台注解**（模块能力的启用开关）：
+
+```java
+@SpringBootApplication(scanBasePackages = {"com.tbs.app"})
+@EnableWebPack                // web：Spring Security + 令牌认证 + 统一响应（含 @EnableCommonPack）
+@EnableTbsSql                 // sql：QueryEngine（需配合下方 @UseMysql 方言）
+@UseMysql                     // MySQL 方言（SqlDialect 装配）
+@EnableTbsAsyncPack           // async：线程池/事件广播/调度
+@EnableTbsCache               // cache：TTL/多级缓存
+@EnableRabbitMq               // rabbitmq：MQ 收发
+@UseXxlJob                    // xxl-job：执行器（含 @EnableCommonPack 重复导入去重）
+@UseKnife4jPack               // open-api-starter：Knife4j 文档
+@EnableViewControl            // dynamic-view-route：动态视图路由
+@EnableSharedLibBean          // shared：服务模板 + Mapper 扫描
+@UseClosureTableTree          // tree-struct：闭包表树
+@EnableAspectJAutoProxy(exposeProxy = true)   // shared 服务模板自调用需要
+@EnableTbsRedis               // redis：Redisson 装配
+@EnableTbsOss                 // oss：对象存储门面
+@EnableDubbo                  // Dubbo RPC（应用名 dubbo-app-system-service）
+@EnableScriptEngine           // script-engine：SpEL 引擎
+```
+
+> 注意 `@SpringBootApplication(scanBasePackages = {"com.tbs.app"})`：组件扫描仅限本包，但各平台注解经 AutoRegister 机制注册各自包的 Bean（`com.tbs.web`、`com.tbs.cache` 等），因此无需扩大扫描范围。
+
+## 配置体系
+
+### Profile 组合（application.yml）
+
+`spring.profiles.include: tbs, db, redis, mq` 四个本地 profile + Nacos 远程配置导入：
+
+```yaml
+spring:
+  application:
+    name: app-service
+  config:
+    import:   # optional 前缀：Nacos 不可用时仍可本地启动
+      - optional:nacos:RABBITMQ.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:CoreAppDb.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:REDIS.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
+```
+
+Nacos 中的同名配置优先于本地 profile（远程覆盖本地）。
+
+### 环境变量总表
+
+| 变量 | 默认值 | 用途 |
+| --- | --- | --- |
+| `NACOS_ADDRESS` | `127.0.0.1:8848` | Nacos 注册与配置中心地址 |
+| `DB_HOST` / `DB_PORT` / `DB_NAME` | `127.0.0.1` / `3306` / `core_app` | 数据库 |
+| `DB_USERNAME` / `DB_PASSWORD` | `root` / `123456789` | 数据库凭证 |
+| `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | `127.0.0.1` / `6379` / `123456` | Redis |
+| `RABBITMQ_HOST` / `RABBITMQ_PORT` | `127.0.0.1` / `5672` | RabbitMQ |
+| `RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD` | `admin` / `admin123` | RabbitMQ 凭证 |
+| `XXL_JOB_ADMIN_ADDRESS` | `http://127.0.0.1:9898/xxl-job-admin` | 调度中心地址 |
+| `XXL_JOB_ACCESS_TOKEN` | `123456789` | 调度中心令牌 |
+| `OSS_ENABLE` / `OSS_TYPE` | `false` / `minio` | 对象存储开关与实现 |
+| `OSS_ENDPOINT` / `OSS_ACCESS_KEY_ID` / `OSS_ACCESS_KEY_SECRET` | `http://127.0.0.1:9000` / `minioadmin` / `minioadmin` | MinIO 连接 |
+| `OSS_DEFAULT_BUCKET` | `app-files` | 默认桶 |
+| `APP_GATEWAY_VERSION` | pom 版本号 | 版本标识覆盖（蓝绿部署验证） |
+
+### `tbs.*` 平台配置（application-tbs.yml）
+
+本模块的核心平台配置聚合文件（节选关键项，完整语义见各模块 README）：
+
+```yaml
+tbs:
+  web:
+    permit-all-paths: [/public/**]        # 匿名放行
+    secured-paths: [/private/**]           # 需登录
+    auth:
+      enable: true
+      token-expire-time: 1800              # 访问令牌 30 分钟
+      token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
+      refresh-token-expire-time: 168       # 刷新令牌 7 天（小时）
+      application-token-expire-time: 168
+    enable-cors: true
+  system:
+    enable: true
+    enable-operate-log: true               # 操作日志（写 MQ）
+    enable-api-permission: true            # API 权限校验
+    main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
+    remote:
+      enable: true
+      tree-store-impl: com.tbs.struct.tree.closure.impl.service.ClosureTreeServiceImpl
+  cache:
+    cache-manager-impl: org.redisson.spring.cache.RedissonSpringCacheManager
+    ttl-cache-decorator: com.tbs.cache.redis.RedissonTtlCacheDecorator
+    multi-level:
+      enabled: true                        # Caffeine L1 + Redis L2
+    ttl:
+      overrides:
+        "[app:user_name_id_map]": 2h       # 按缓存名单独覆盖 TTL（方括号记法）
+  broadcast:
+    event-bus-type: com.tbs.broadcast.bus.impl.SimpleEventBus
+  lock:
+    lock-provider-type: com.tbs.lock.redis.RedissonLockProvider
+  data:
+    data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHolderManager
+    data-holder: com.tbs.redis.holder.RedisDataHolder
+  redis:
+    enable: true
+  redission:
+    cache:
+      allow-null-values: true
+      max-idle-time: 7200
+      cache-timeout: 14400
+  start-up:
+    optional-execute: false
+  xxl-job:
+    enable: true
+    enable-json-job-executor: true
+    config:
+      admin-address: ${XXL_JOB_ADMIN_ADDRESS:http://127.0.0.1:9898/xxl-job-admin}
+      app-name: mainSystemApplication
+      access-token: ${XXL_JOB_ACCESS_TOKEN:123456789}
+      log-retentions-days: 3
+      log-path: "logs/xxl-job/jobhandler"
+  knife4j:
+    enable: true
+    show-url: true
+  mq:
+    retry:
+      scheduler: job        # MQ 失败重投递由 xxl-job 驱动（MqRetryDispatchJob）
+  oss:
+    enable: ${OSS_ENABLE:false}
+    type: ${OSS_TYPE:minio}
+    # ... 连接项见环境变量表
+```
+
+### 应用自有配置（app.*）
+
+```yaml
+app:
+  gateway:
+    version: ${APP_GATEWAY_VERSION:@project.version@}   # Maven 资源过滤注入
+    route-groups: [default]                               # 视图路由分组
+    enable-test-controller: pri                            # 测试控制器：none/pub/pri/all
+```
+
+### 其他本地配置
+
+| 文件 | 内容 |
+| --- | --- |
+| `application-db.yml` | 数据源：**p6spy 代理驱动**（SQL 日志）、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、tk.mybatis 驼峰映射 |
+| `application-redis.yml` | Redis 连接 |
+| `application-mq.yml` | RabbitMQ + 手动 ACK |
+| `spy.properties` | p6spy：慢 SQL 检测（>2s）、Slf4J 输出、排除健康检查语句 |
+| `view-route.yml` | **视图路由 YML 兜底配置**（common/admin/develop 三组菜单，含角色 `MENU.ADMIN`/`MENU.DEV`）；数据库实现启用时此文件不生效 |
+| `i18n/messages-app*.properties` | 前端菜单文案（`view.menu.*` key，中英文） |
+
+## REST API 清单
+
+路径前缀约定：`/public/**` 免登录放行，`/private/**` 需认证。统一响应结构 `{code, message, data}`（web 模块 `AjaxResult`）。
+
+### 公开接口（/public）
+
+| 控制器 | 路径 | 接口 |
+| --- | --- | --- |
+| `PublicUserController` | `/public/user` | `POST /login`（账密登录→`ITokenModel`）、`GET /refresh`（无感刷新令牌，无 `IRefreshTokenService` Bean 时返回 468） |
+| `PublicGatewayVersionController` | `/public/gateway` | `GET /version`（版本探针，见[特殊机制](#特殊机制)） |
+| `PublicAppVersionUpdateController` | `/public/app-update` | `POST /check`（客户端更新检查） |
+| `PublicGenricController` | `/public/genric` | 泛化 API 调用入口（免认证版）：按数据库配置 `SystemGenericApiEntity` 动态生成 `DubboGenricApiInstance`，经 Dubbo 服务发现调用远端 |
+| `PublicTestController` | `/public` | 测试接口（条件装配）：树结构 `getChildren`/`getParentNodes`/`deleteNode`、SpEL `scriptTest` |
+
+### 私有接口（/private）
+
+| 控制器 | 路径 | 接口 |
+| --- | --- | --- |
+| `PrivateUserController` | `/private/user` | `GET /logout`、`GET /info`（用户信息+角色+部门）、`GET /getRefreshToken`、`POST /setCurrentDepartment/{id}` |
+| `AdminUserController` | `/private/admin/user` | 用户 CRUD（继承 `AbstractCrudController`）+ `GET sessions/{id}`（登录会话）、`GET tokens/{sessionId}`、`POST token/disable`（令牌禁用） |
+| `RoleController` | `/private/admin/role` | 角色 CRUD + `GET enable/{id}` / `disable/{id}` |
+| `AdminRoleController` | `/private/admin/roles` | 用户角色维度：`GET /{userId}`（用户角色）、`POST /query`、`GET account/activite/{userId}`、`GET account/disable/{userId}` |
+| `AdminRoleGroupController` | `/private/role/group` | 角色组 CRUD + 组内角色增删（`POST/DELETE roles/{groupId}/{roleId}`）+ 组内用户增删 + `GET detail/{groupId}`、`GET user/{userId}` |
+| `AdminCompanyController` | `/private/admin/company` | 公司 CRUD + `POST moveCompanyTo`（树移动）+ `GET listChildren/{parent}` |
+| `AdminDepartmentController` | `/private/admin/department` | 部门 CRUD + 移动 + 子部门 |
+| `PrivateDepartmentController` | `/private/department` | 部门成员：`GET avaliable/{userId}`、`POST addEmp/{depId}/{userId}`、`POST delEmp/{depId}/{userId}`、`GET employee/{depId}` |
+| `SystemDataDicController` | `/private/admin/dic` | 数据字典管理：`POST query`、启停字典/字典项、删除、保存（`DicSaveForm`/`DicItemSaveForm`） |
+| `ViewController` | `/private/view` | **动态表单 + 动态路由管理**：表单 CRUD（`GET form/{id}`、`GET listForms`、`POST saveForm`、`DELETE/PUT form`）+ 路由管理（`GET /routes`、`POST /routes/{group}`、`DELETE /routes/{group}`、`GET route-groups`、`POST /routes/refresh`、`GET /routes/{group}/versions`、`POST /routes/{group}/rollback/{versionId}`） |
+| `CacheController` | `/private/cache` | 缓存管理：`GET names`、`POST keys`、`POST get`、`POST evict` |
+| `OssController` | `/private/oss` | 对象存储：`POST upload`（multipart，最大 1024MB）、`GET upload/progress`（轮询进度）、`GET download`、`GET metadata`、`GET exist`、`GET list`、`GET presigned-url`、`DELETE batch` |
+| `AppVersionController` | `/private/admin/app-version` | 应用版本状态机：CRUD + `POST submit/release/offline/rollback/archive/{id}` + `GET latest` + `GET appKeys` |
+| `AppVersionCompatibilityPolicyController` | `/private/admin/app-version-policy` | 版本兼容策略：CRUD + `POST enable/disable/{id}` + `POST check` |
+| `AppPackageController` | `/private/admin/app-package` | 安装包管理：CRUD + `GET listByVersion/{versionId}` |
+| `GenericApiController` | `/private/admin/generic-api` | 泛化 API 配置管理：CRUD + `POST enable/disable/{apiId}` + `GET allPreAuth` |
+| `GenricController` | `/private/genric` | 泛化 API 调用入口（认证版，当前用户注入） |
+| `AdminSystemLogController` | `/private/log` | 操作日志报表：`GET listWithOpType`、`GET operateTypes`、`POST listRecord`、`POST forceFlush` |
+| `PrivateTestController` | `/private` | 测试接口（条件装配）：`GET /test`、`GET /testAuth` |
+
+> 具体参数与响应结构见 `doc.html`（Swagger 注解齐全，含 `@AjaxResponseType` 包装响应 Schema）。
+
+## 核心配置类与服务
+
+### AppConfig（装配中枢）
+
+| Bean | 说明 |
+| --- | --- |
+| `appMessageSourceProvider` | 注册 `i18n/messages-app`（前端菜单文案） |
+| `rabbitMqSupport` | `SimpleRabbitMqSupport`：RabbitMQ 事件广播支持（频道 `tbs.event.channel`） |
+| `systemFailedMessageStore` | `RedisFaildMessageStore`：MQ 失败消息的 Redis 持久化（重投递） |
+| `loggerRecoreder` | `RabbitMqLoggingRecorder("tbs.log.queue", "systemLog")`：操作日志生产端（→ logging 服务消费落库） |
+| `userLoginInfoService` | `DefaultUserLoginInfoService`（system 模块）：令牌↔用户详情映射 |
+| `refreshTokenService` | `CookieRefreshTokenService`（system 模块）：刷新令牌服务 |
+| `logCacheListenner` | 全量缓存操作日志监听（debug 观测用） |
+| `xxlJobTrigger` | `XxlJobScheduleTrigger`：async 调度内核的外部驱动 |
+| `redisTaskStore` | `RedisTaskStore`：async 任务持久化存储 |
+| `redissonCodec` | `Kryo5Codec`：Redisson 序列化编解码器 |
+
+### DubboGenericCallConfig
+
+注册 Dubbo `ApplicationConfig`/`RegistryConfig` Bean，供 `PublicGenricController` 构造 `DubboGenricApiInstance` 泛化调用使用。
+
+### 条件装配（测试控制器开关）
+
+`@ConditionalOnTestControllerMode` + `TestControllerModeCondition`：按 `app.gateway.enable-test-controller` 的值（`none`/`pub`/`pri`/`all`，默认 `none`，本模块 yml 配置为 `pri`）决定 `PublicTestController`（匹配 `ALL`/`PUB`）与 `PrivateTestController`（匹配 `ALL`/`PRI`）是否注册为 Bean。支持注解多值"或"语义。
+
+### service 层
+
+| 类 | 职责 |
+| --- | --- |
+| `AppExecutor` | XXL-Job 任务执行器（见[定时任务](#定时任务)） |
+| `CacheListenner` | 缓存键收集器：`onPut`/`onEvict` 等事件把缓存键登记进 `CACHE_INFO_HOLDER` DataHolder（供 `CacheController` 的 keys 查询；经 Redis 持有，多实例共享） |
+| `oss/UploadTaskProgressManager` | 内存上传进度注册表：`register/updateTransferred/markSuccess/markFailed/get`，条目 10 分钟过期自动清理，供前端轮询 `GET /private/oss/upload/progress` |
+
+> 业务服务实现（用户/角色/字典/版本/树结构等）位于 `default-system-impl` 模块（同包名 `com.tbs.app.service`），本模块仅做控制器层装配。
+
+### form / vo
+
+- form：`LoginForm`（登录）、`CacheForm`、`DicSaveForm`/`DicItemSaveForm`/`DicSearchForm`/`DicItemSearchForm`（字典）、`DisableTokenForm`（令牌禁用）
+- vo：`UserInfoVO`（用户信息聚合）、`RoleVO`、`UploadTaskProgressVO`（上传进度：taskId/status/totalBytes/transferredBytes/percentage）
+
+## 定时任务（AppExecutor）
+
+| `@XxlJob` Handler | 行为 |
+| --- | --- |
+| `company_tree_rebuild` | 公司树重建（当前为空实现） |
+| `department_tree_rebuild` | 部门树重建（`DepartmentTreeStructService.rebuildTree()`，闭包表关系重建） |
+| `flushLogData` | 操作日志刷盘：`ILogRecorder.flush()`（将 `tbs.log.queue` 缓冲日志推入 MQ） |
+
+另有 xxl-job-mod 提供的三个通用 Handler：`jsonJobHandler`（JSON 任务）、`runningBackGroundJobHandler`（批量 `IBackgroundJob` 驱动，含 MQ 重投递 `MqRetryDispatchJob`）、`available`/`help_json`（查询已注册 Handler）。
+
+## 特殊机制
+
+### 网关版本探针（蓝绿部署验证）
+
+`GET /public/gateway/version`（免认证）返回：
+
+| 字段 | 说明 |
+| --- | --- |
+| `version` | 版本号，解析优先级：`APP_GATEWAY_VERSION` 启动参数 → `build-info.properties`（Maven 打包）→ `@project.version@` 资源过滤注入 → `unknown` |
+| `artifact` / `buildTime` | 构建信息（仅 Maven 打包后存在，IDE 运行为 unknown） |
+| `instancePort` | 当前实例端口（蓝绿切换时区分流量落点） |
+| `viewVersion` | 视图路由配置版本号（版本表 `MAX(id)`，YML 实现时为 0）——**前端菜单缓存比对依据**（app-ui-vue 拉取本地缓存的版本号与之比较，不一致则重新拉取动态路由） |
+
+### 登录与令牌链路
+
+```
+POST /public/user/login (LoginForm)
+  → IUsernamePasswordAccessTokenProvider.requestToken
+      → IUserInfoService.loadUserInfoByUniqueKey（default-system-impl）
+      → IUserValidator 链（账号状态校验）
+      → ITokenIssuanceCenter.issueToken（DefaultTokenSignCenter：雪花 ID + 28 天窗口 + 缓存）
+  → ITokenModel（token/expireTime/sessionId/tokenType...）
+
+GET /public/user/refresh（携带旧访问令牌）
+  → CookieRefreshTokenService.useRefreshToken
+  → 新 ITokenModel（AjaxResult 包装）
+```
+
+### 表结构自动维护
+
+JPA `spring.jpa.hibernate.ddl-auto: update`：shared/tree-struct 等模块的实体表（`sys_user`、`tree_node` 等）在启动时自动创建/更新，无需手工 DDL。
+
+### SQL 观测
+
+p6spy 代理驱动（`spy.properties`）：所有 SQL 经 Slf4J 输出（含执行时间）、慢 SQL 阈值 2 秒、排除 `select 1` 等健康检查。
+
+## 构建与部署
+
+```bash
+# 完整构建（repackage 可执行 jar + build-info）
+mvn clean package -pl app -am
 
 # 运行
-java -jar target/app-1.0-SNAPSHOT.jar
+java -jar app/target/app-1.0-SNAPSHOT.jar
+
+# 覆盖版本标识（蓝绿部署验证）
+java -DAPP_GATEWAY_VERSION=1.2.3-hotfix -jar app/target/app-1.0-SNAPSHOT.jar
+
+# 指定 Nacos 与数据库（覆盖本地 yml 默认值）
+DB_HOST=mysql.internal NACOS_ADDRESS=nacos.internal:8848 java -jar app-*.jar
 ```
 
-### Docker部署
-```dockerfile
-FROM openjdk:11-jre-slim
-COPY target/app-1.0-SNAPSHOT.jar app.jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+生产建议：将 `RABBITMQ.yml`/`CoreAppDb.yml`/`REDIS.yml`/`app-service.yml` 配置迁移到 Nacos 配置中心（远程优先于本地 profile，支持 `refreshEnabled` 动态刷新）；优雅停机超时已设 30s（`spring.lifecycle.timeout-per-shutdown-phase`），配合 Dubbo `shutdown.await-duration: 10000`。
+
+## 注意事项
+
+1. **JPA + tk.mybatis 双 ORM 并存**：JPA 负责 DDL 生成（`ddl-auto: update`），业务 CRUD 走 tk.mybatis；生产环境建议把 `ddl-auto` 改为 `validate`/`none`，用迁移脚本管理表结构。
+2. **`enable-test-controller` 默认 none，本模块配置为 `pri`**：`PrivateTestController`（`/private/test`、`/private/testAuth`）默认注册；生产部署应改回 `none` 关闭全部测试控制器。
+3. **`dubbo.consumer.filter: -ContextHolderAuthenticationPrepareFilter`**：显式移除 web 模块的 Dubbo 消费端认证上下文过滤器，本应用作为消费端调用时不注入用户身份头。
+4. **上传大小限制 1024MB/2048MB**：远大于 Spring Boot 默认（1MB/10MB），网关/反向代理层需同步放开限制，且 Undertow 缓冲区会占用内存。
+5. **`view-route.yml` 仅在 YML 路由实现下生效**：当前 `tbs.view.route.view-route-service-class` 默认数据库实现，菜单实际从 `view_route` 等表加载；该文件只是兜底参考。
+6. **Nacos optional 语义**：配置中心不可用不阻断启动，但 MQ/DB 等远程覆盖配置失效后回退本地默认值，多环境部署时注意本地默认值与远程配置的一致性。
+7. **`oss.enable` 默认 false**：未显式开启（`OSS_ENABLE=true` 或 tbs.oss.enable=true）时 `OssController` 的对象存储调用会因无 `OssClient` Bean 而失败。
+8. **登录依赖 system 模块实现**：`DefaultTokenSignCenter` 等来自 `default-system-impl`，直接移除该依赖会导致登录不可用（web 模块默认 `NoImplTokenIssuanceCenter` 调用即抛异常）。
+9. **上传进度仅内存态**：`UploadTaskProgressManager` 为单实例内存注册表，多实例负载均衡下进度查询可能落到其他实例而查不到（返回 null）；条目 10 分钟过期。
+10. **日志链路依赖 RabbitMQ 与 logging 服务**：操作日志经 `tbs.log.queue` 异步落库，logging-service 未启动时日志仅滞留 MQ；`flushLogData` 定时任务负责兜底刷盘。
+
+## 包结构
+
 ```
+com.tbs.app
+├── AppApplication              启动类（16 个平台注解）
+├── config/
+│   ├── AppConfig               装配中枢（10 个 Bean：日志通道/进度管理/调度驱动/编解码等）
+│   ├── DubboGenericCallConfig  Dubbo 泛化调用配置
+│   ├── condition/              ConditionalOnTestControllerMode + TestControllerModeCondition
+│   │   （TestControllerMode：NONE/PUB/PRI/ALL）
+│   └── property/              GatewayProperty（app.gateway：version/routeGroups/enableTestController）
+├── controller/
+│   ├── publics/               公开接口（免登录）：登录/刷新/版本探针/更新检查/泛化调用/测试
+│   └── privates/              私有接口（需登录）：用户/角色/角色组/公司/部门/字典/视图路由/
+│                              缓存/OSS/版本管理/泛化API配置/操作日志/测试
+├── enums/                      （空目录）
+├── form/                       LoginForm/CacheForm/Dic*Form/DisableTokenForm
+├── service/
+│   ├── AppExecutor             XXL-Job 任务执行器（树重建/日志刷盘）
+│   ├── CacheListenner          缓存键收集（DataHolder 登记）
+│   └── oss/UploadTaskProgressManager   上传进度注册表
+└── vo/                         UserInfoVO/RoleVO/UploadTaskProgressVO
 
-## 依赖模块
-
-App模块集成了以下核心模块：
-- **common** - 公共工具和配置
-- **async** - 异步执行和事件广播
-- **cache** - 缓存抽象和实现
-- **redis** - Redis缓存实现
-- **rabbitmq** - RabbitMQ消息队列
-- **sql** - SQL工具和框架
-- **web** - Web基础框架
-- **system** - 系统管理模块
-- **tree-struct** - 树形结构处理
-- **script-engine** - 脚本引擎
-- **open-api-starter** - API文档生成
-
-## 许可证
-
-本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
-
----
-
-**最后更新**: 2026年6月
-**版本**: 1.0-SNAPSHOT
+resources/
+├── application.yml             主配置（profiles/Nacos导入/Dubbo/app.gateway）
+├── application-tbs.yml          平台 tbs.* 配置聚合
+├── application-db.yml           数据源（p6spy/HikariCP/JPA）
+├── application-redis.yml        Redis
+├── application-mq.yml           RabbitMQ
+├── view-route.yml               视图路由 YML 兜底配置
+├── spy.properties               p6spy SQL 日志
+└── i18n/messages-app*.properties  前端菜单文案（中英文）
+```

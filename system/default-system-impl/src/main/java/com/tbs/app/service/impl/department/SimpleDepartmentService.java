@@ -27,6 +27,7 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 部门服务实现
@@ -56,8 +57,8 @@ public class SimpleDepartmentService
 
     @Override
     protected void deletePending(SystemDepartmentEntity entity) throws FormattedRuntimeException {
-        AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(entity.getId()))).i18n("department.has.users.not.delete").throwIt();
-        AssertUtil.isTrue(!departmentTreeStructService.isLeaf(entity.getId())).i18n("department.has.children.not.delete")
+        AssertUtil.isTrue(CollUtil.isNotEmpty(departmentUserRelationService.queryDepartmentUsers(entity.getId()))).i18n(com.tbs.app.constant.SystemI18nConstant.DEPARTMENT_HAS_USERS_NOT_DELETE).throwIt();
+        AssertUtil.isTrue(!departmentTreeStructService.isLeaf(entity.getId())).i18n(com.tbs.app.constant.SystemI18nConstant.DEPARTMENT_HAS_CHILDREN_NOT_DELETE)
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         super.deletePending(entity);
     }
@@ -66,7 +67,7 @@ public class SimpleDepartmentService
     public SystemDepartmentEntity deleteById(Long id) {
         var entity = super.deleteById(id);
         boolean deleted = departmentTreeStructService.deleteLeaf(id);
-        AssertUtil.isTrue(!deleted).i18n("department.delete.failed").throwIt();
+        AssertUtil.isTrue(!deleted).i18n(com.tbs.app.constant.SystemI18nConstant.DEPARTMENT_DELETE_FAILED).throwIt();
         return entity;
     }
 
@@ -78,14 +79,14 @@ public class SimpleDepartmentService
     @Override
     protected SystemDepartmentEntity insertNew(SystemDepartmentEntity entity) {
 
-        AssertUtil.isTrueUserInputError(entity == null).i18n("department.empty").throwIt();
-        AssertUtil.isTrueUserInputError(StrUtil.isEmpty(entity.getDepartmentName())).i18n("department.name.empty")
+        AssertUtil.isTrueUserInputError(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.DEPARTMENT_EMPTY).throwIt();
+        AssertUtil.isTrueUserInputError(StrUtil.isEmpty(entity.getDepartmentName())).i18n(com.tbs.app.constant.SystemI18nConstant.DEPARTMENT_NAME_EMPTY)
             .throwIt();
-        AssertUtil.isTrueUserInputError(StrUtil.isEmpty(entity.getDepartmentCode())).i18n("department.code.empty")
+        AssertUtil.isTrueUserInputError(StrUtil.isEmpty(entity.getDepartmentCode())).i18n(com.tbs.app.constant.SystemI18nConstant.DEPARTMENT_CODE_EMPTY)
             .throwIt();
-        AssertUtil.isTrueUserInputError(entity.getCompanyId() == null).i18n("department.company.empty").throwIt();
+        AssertUtil.isTrueUserInputError(entity.getCompanyId() == null).i18n(com.tbs.app.constant.SystemI18nConstant.DEPARTMENT_COMPANY_EMPTY).throwIt();
         var company = SpringUtil.getBean(ISystemCompanyService.class).queryById(entity.getCompanyId());
-        AssertUtil.isTrueUserInputError(company == null).i18n("invalid.company").throwIt();
+        AssertUtil.isTrueUserInputError(company == null).i18n(com.tbs.app.constant.SystemI18nConstant.INVALID_COMPANY).throwIt();
 
         entity.setFlag(SystemDepartmentFlagEnum.DISABLED.getCode());
         getMapper().insert(entity);
@@ -109,7 +110,7 @@ public class SimpleDepartmentService
         }
         if (newOne.getCompanyId() != null) {
             var newComp = companyService.queryById(newOne.getCompanyId());
-            AssertUtil.isTrueUserInputError(newComp == null).i18n("invalid.company").throwIt();
+            AssertUtil.isTrueUserInputError(newComp == null).i18n(com.tbs.app.constant.SystemI18nConstant.INVALID_COMPANY).throwIt();
             oldOne.setCompanyId(newOne.getCompanyId());
         }
         if (StrUtil.isNotEmpty(newOne.getManager())) {
@@ -120,12 +121,12 @@ public class SimpleDepartmentService
         }
         if (newOne.getParentId() != null) {
             var newParent = queryById(newOne.getParentId());
-            AssertUtil.isTrueUserInputError(newParent == null).i18n("invalid.department").throwIt();
+            AssertUtil.isTrueUserInputError(newParent == null).i18n(com.tbs.app.constant.SystemI18nConstant.INVALID_DEPARTMENT).throwIt();
             oldOne.setParentId(newOne.getParentId());
         }
         if (newOne.getFlag() != null) {
             AssertUtil.isTrueUserInputError(!EnumUtil.isValidCode(SystemDepartmentFlagEnum.class, newOne.getFlag()))
-                .i18n("invalid.flag").throwIt();
+                .i18n(com.tbs.app.constant.SystemI18nConstant.INVALID_FLAG).throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 

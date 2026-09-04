@@ -4,6 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.mq.api.retry.IFailedMessageStore;
 import com.tbs.mq.api.retry.IRetryDelayPolicy;
 import com.tbs.mq.constants.MqHeaderConstants;
+import com.tbs.mq.constants.MqI18nConstant;
 import com.tbs.mq.model.FailedMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +52,8 @@ public abstract class AbstractMessageRepublisher implements IMessageRepublisher 
      * @param retryDelayPolicy   重试延迟策略，不能为空
      */
     public AbstractMessageRepublisher(IFailedMessageStore failedMessageStore, IRetryDelayPolicy retryDelayPolicy) {
-        AssertUtil.isTrue(failedMessageStore == null).i18n("mq.republisher.failed.store.required").throwIt();
-        AssertUtil.isTrue(retryDelayPolicy == null).i18n("mq.republisher.delay.policy.required").throwIt();
+        AssertUtil.isTrue(failedMessageStore == null).i18n(MqI18nConstant.REPUBLISHER_FAILED_STORE_REQUIRED).throwIt();
+        AssertUtil.isTrue(retryDelayPolicy == null).i18n(MqI18nConstant.REPUBLISHER_DELAY_POLICY_REQUIRED).throwIt();
         this.failedMessageStore = failedMessageStore;
         this.retryDelayPolicy = retryDelayPolicy;
     }

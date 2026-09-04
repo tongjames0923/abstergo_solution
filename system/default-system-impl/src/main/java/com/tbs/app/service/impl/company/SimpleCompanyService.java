@@ -24,6 +24,7 @@ import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 系统公司服务实现类
@@ -57,10 +58,10 @@ public class SimpleCompanyService
         CommonSystemDepartmentQueryCriteria criteria = new CommonSystemDepartmentQueryCriteria();
         criteria.setEqualsCompanyId(id);
         var ls = departmentService.query(criteria, null);
-        AssertUtil.isTrueBusinessError(CollUtil.isNotEmpty(ls)).i18n("company.has.departments.not.delete").throwIt();
+        AssertUtil.isTrueBusinessError(CollUtil.isNotEmpty(ls)).i18n(com.tbs.app.constant.SystemI18nConstant.COMPANY_HAS_DEPARTMENTS_NOT_DELETE).throwIt();
         var entity = super.deleteById(id);
         boolean deleted = companyTreeStructService.deleteLeaf(id);
-        AssertUtil.isTrueBusinessError(!deleted).i18n("company.delete.failed").throwIt();
+        AssertUtil.isTrueBusinessError(!deleted).i18n(com.tbs.app.constant.SystemI18nConstant.COMPANY_DELETE_FAILED).throwIt();
         return entity;
     }
 
@@ -71,13 +72,13 @@ public class SimpleCompanyService
 
     @Override
     protected SystemCompanyEntity insertNew(SystemCompanyEntity entity) {
-        AssertUtil.isTrue(entity == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("company.empty").throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getCompanyName())).i18n("company.name.empty").throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getTaxNumber())).i18n("company.tax.number.empty").throwIt();
+        AssertUtil.isTrue(entity == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.COMPANY_EMPTY).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getCompanyName())).i18n(com.tbs.app.constant.SystemI18nConstant.COMPANY_NAME_EMPTY).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getTaxNumber())).i18n(com.tbs.app.constant.SystemI18nConstant.COMPANY_TAX_NUMBER_EMPTY).throwIt();
         var oldOne =
             getQueryWrapper().query().where().equal(SystemCompanyEntity::getTaxNumber, entity.getTaxNumber()).pour()
                 .fetchOne();
-        AssertUtil.isTrue(oldOne != null).i18n("company.tax.number.exists").throwIt();
+        AssertUtil.isTrue(oldOne != null).i18n(com.tbs.app.constant.SystemI18nConstant.COMPANY_TAX_NUMBER_EXISTS).throwIt();
 
         entity.setFlag(SystemCompanyFlagEnum.DISABLED.getCode());
         getMapper().insert(entity);
@@ -104,7 +105,7 @@ public class SimpleCompanyService
             SystemCompanyEntity that =
                 getQueryWrapper().query().where().equal(SystemCompanyEntity::getTaxNumber, newOne.getTaxNumber()).pour()
                     .fetchOne();
-            AssertUtil.isTrueBusinessError(that != null).i18n("company.tax.number.exists").throwIt();
+            AssertUtil.isTrueBusinessError(that != null).i18n(com.tbs.app.constant.SystemI18nConstant.COMPANY_TAX_NUMBER_EXISTS).throwIt();
             oldOne.setTaxNumber(newOne.getTaxNumber());
         }
         if (StrUtil.isNotEmpty(newOne.getDescription())) {
@@ -116,7 +117,7 @@ public class SimpleCompanyService
         if (newOne.getFlag() != null) {
             AssertUtil.isTrueUserInputError(SystemCompanyFlagEnum.DELETED.getCode().equals(newOne.getFlag()) ||
                     !EnumUtil.isValidCode(SystemCompanyFlagEnum.class, newOne.getFlag()))
-                .i18n("invalid.flag").throwIt();
+                .i18n(com.tbs.app.constant.SystemI18nConstant.INVALID_FLAG).throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
 

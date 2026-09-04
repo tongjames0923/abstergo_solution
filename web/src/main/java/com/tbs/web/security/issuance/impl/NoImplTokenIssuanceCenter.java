@@ -11,6 +11,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 无实现 Token 签发中心
@@ -23,7 +24,7 @@ import java.util.List;
 public class NoImplTokenIssuanceCenter implements ITokenIssuanceCenter {
 
 	public NoImplTokenIssuanceCenter() {
-		AssertUtil.throwError(() -> new UnsupportedOperationException(I18nUtil.get("token.issuance.not.implemented")));
+		AssertUtil.throwError(() -> new UnsupportedOperationException(I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_ISSUANCE_NOT_IMPLEMENTED)));
 	}
 
 	@Override

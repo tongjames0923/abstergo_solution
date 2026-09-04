@@ -1,29 +1,56 @@
-# TBS SQL 框架
+# SQL 模块 - 注解驱动 SQL 查询框架
 
-一个基于注解驱动的强大SQL查询构建框架，提供类型安全的查询构建、自动SQL生成和灵活的查询配置。
+## 模块概述
 
-## 功能特性
+SQL 模块（`com.tbs:sql`）是基于 MyBatis + tk.mybatis 增强的**注解驱动 SQL 构建框架**（Java 11），核心目标是消除手写 SQL 与 XML 映射：通过注解描述查询语义，框架自动完成 SQL 生成、参数绑定、结果映射与分页排序。
 
-## 核心功能
-- **注解驱动查询**：通过注解定义查询条件，无需手动编写SQL
-- **类型安全**：编译时检查查询条件，避免运行时错误
-- **多数据库支持**：支持MySQL等主流数据库方言
-- **自动SQL生成**：根据注解自动生成优化的SQL语句
-- **查询条件组合**：支持AND/OR逻辑组合查询
-- **分页查询**：内置分页支持，简化分页逻辑
+三种查询方式覆盖不同场景：
 
-## 高级特性
-- **自定义查询提供器**：支持自定义查询条件逻辑
-- **SQL拦截器**：可配置的SQL执行前后拦截
-- **自动值填充**：支持自动填充创建时间、更新时间等字段
-- **事务管理**：集成Spring事务管理
-- **SQL日志**：可配置的SQL执行日志记录
+| 方式 | 入口 | 适用场景 |
+|------|------|----------|
+| **DSL 流式查询** | `QueryEngine.getEntityQueryWrapper(Xxx.class).query()` | 类型安全、条件动态的编程式查询 |
+| **注解查询对象（QO）** | `Mapper.queryByQO(qo, page, Xxx.class)` | 前端多条件筛选、固定查询契约 |
+| **资源 SQL 文件** | 继承 `AbstractResourceCriteria` | 复杂 JOIN / 自定义 SQL |
+
+其他能力：**字段自动填充**（ID/时间）、**SQL 执行日志**、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**编程式事务**。
+
+技术底座：tk.mybatis `mapper-spring-boot-starter` + `mapper-extra`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据）、`mysql-connector-java`、`p6spy`、`com.tbs:common`。
+
+## 模块结构
+
+```
+sql/
+└── src/main/java/com/tbs/sql/
+    ├── annotation/               # 全部注解（15 个）
+    │   ├── core/                 #   @EnableTbsSql（启用）/ @SelectSQL（自定义SQL）
+    │   ├── condition/            #   @QueryField / @QueryFields / @OrField / @QueryIndex
+    │   ├── mapping/              #   @QueryMapping（列名映射）/ @SecretField（脱敏标记）
+    │   ├── autofill/             #   @SqlAutoValue / @AutoSetDate
+    │   ├── order/                #   @QueryOrderField
+    │   └── dialect/              #   @UseMysql / @UseOracle / @UsePostgreSql / @UseSqlServer
+    ├── autoconfig/               # SqlAutoConfiguration + 4 个方言自动配置
+    ├── properties/               # SqlProperty（tbs.sql）
+    ├── service/                  # QueryEngine（查询引擎，原 QueryUtil）
+    ├── dsl/                      # 流式查询接口 + impl/
+    ├── builder/                  # SqlDriver / EntitySqlDriver / ISqlBuildContext 等
+    ├── criteria/                 # IQueryCriteria / IPage / Abstract*Criteria + impl/
+    ├── mapper/                   # IFrameworkMapper / SmartQueryMapper / IRawSqlSelectMapper + impl/
+    ├── model/                    # where / select / order / limit / group / query / runtime 模型
+    ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/
+    ├── assembler/                # ISqlAssembler / DefaultSqlAssembler（SQL 片段拼装）
+    ├── interceptor/              # SqlAutoFillInterceptor / SqlLoggingInterceptor / SqlComposeInterceptor
+    ├── provider/                 # IAutoValueProvider / ICustomWhereProvider + impl/
+    ├── logger/                   # ISqlLogger + NoOp/Json/Sql 三种实现
+    ├── order/                    # IQueryOrderBy 排序策略 + impl/（Asc/Desc/OrderedModel）
+    ├── metadata/                 # EntityMetadataExtractor / FieldMetadataCache（反射缓存）
+    ├── constants/                # OrderConstants
+    ├── enums/                    # ContrastEnum / ConnectorEnum / OrderEnum
+    └── util/                     # SqlUtils（表名/列名解析）/ TransactionUtil（编程式事务）
+```
 
 ## 快速开始
 
-### 1. 添加依赖
-
-确保在项目中添加了SQL模块依赖：
+### 1. 依赖引入
 
 ```xml
 <dependency>
@@ -32,13 +59,12 @@
 </dependency>
 ```
 
-### 2. 启用框架
-
-在Spring Boot启动类上添加注解：
+### 2. 启用（必须同时指定数据库方言）
 
 ```java
-@EnableTbsSqlUtils
 @SpringBootApplication
+@EnableTbsSql   // 导入 SqlAutoConfiguration，开启事务管理，扫描 com.tbs.sql.mapper
+@UseMysql       // 必须：提供 SqlDialect Bean，否则 QueryEngine 无法装配
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -46,408 +72,388 @@ public class Application {
 }
 ```
 
-### 3. 配置属性
+`@EnableTbsSql` = `@Import(SqlAutoConfiguration)` + `@EnableTransactionManagement` + `@EnableConfigurationProperties(SqlProperty)`；方言由 `@UseMysql` / `@UseOracle` / `@UsePostgreSql` / `@UseSqlServer` 单独导入（方言配置类同时提供 `SqlDialect`、五个 Extractor 与 `ISqlAssembler` Bean）。
 
-在`application.yml`中配置SQL相关属性：
-
-```yaml
-tbs:
-  sql:
-    enable-log-interceptor: true          # 启用SQL日志拦截器
-    enable-auto-fill-value-interceptor: true  # 启用自动填充值拦截器
-    use-raw-value: false                  # 是否使用原始值（默认使用占位符）
-```
-
-## 核心注解说明
-
-### @QueryField - 查询字段注解
-
-定义查询条件的核心注解，通常与`@QueryMapping`配合使用：
+### 3. DSL 流式查询
 
 ```java
-@Getter
-public class UserQuery extends ClassBaseQueryCriteria<User> {
-    
-    @QueryMapping(value = "username")
-    @QueryField(contrast = ContrastEnum.EQUAL, ignoreNull = true)
-    private String username;
-    
-    @QueryMapping(value = "age")
-    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
-    private Integer minAge;
-    
-    @QueryMapping(value = "name")
-    @QueryField(contrast = ContrastEnum.LIKE, ignoreCase = true)
-    private String searchKey;
-    
-    @QueryMapping(value = "status")
-    @QueryField(contrast = ContrastEnum.IN)
-    private List<Integer> statusList;
-}
-```
-
-**参数说明：**
-- `contrast`：比较操作符（等于、大于、LIKE等）
-- `connector`：逻辑连接符（AND/OR，默认AND）
-- `ignoreCase`：是否忽略大小写
-- `ignoreNull`：是否忽略空值
-- `customWhereProvider`：自定义查询条件提供器
-
-### @QueryOrderField - 排序字段注解
-
-定义查询结果的排序规则：
-
-```java
-public class UserQuery implements IQueryCriteria {
-    
-    @QueryOrderField(mappedName = "create_time", order = AscStaticOrder.class)
-    private Boolean orderByCreateTime;
-}
-```
-
-### @SelectSQL - 直接SQL查询
-
-支持在实体类上直接定义SQL查询语句，用于自定义查询逻辑：
-
-```java
-@SelectSQL("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.dept_id = d.id")
-public class UserWithDepartment {
-    private Long id;
-    private String name;
-    private String deptName;
-    // getter 和 setter 方法
-}
-```
-
-**使用示例：**
-```java
-// 使用自定义SQL查询实体
-IEntityQueryWrapper<UserWithDepartment> wrapper = QueryUtil.getEntityQueryWrapper(UserWithDepartment.class);
-List<UserWithDepartment> users = wrapper.query().fetch();
-```
-
-**注意：** 当实体类上标注了`@SelectSQL`注解时，框架会优先使用注解中定义的SQL语句，而不会自动生成查询语句。该注解适用于需要复杂JOIN查询或自定义SQL逻辑的场景。
-
-### @AutoSetDate - 自动日期填充
-
-自动填充日期字段：
-
-```java
-public class User {
-    
-    @AutoSetDate
-    private Date createTime;
-    
-    @AutoSetDate(onUpdate = true)
-    private Date updateTime;
-}
-```
-
-## 使用示例
-
-### 1. 基本实体查询
-
-```java
-// 定义实体类
-@Table(name = "users")
-public class User {
-    @Id
-    private Long id;
-    private String name;
-    private Integer age;
-    private String status;
-    // getter 和 setter 方法
-}
-
-// 查询所有用户
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
-List<User> users = wrapper.query().fetch();
-
-// 条件查询
-List<User> activeUsers = wrapper.query()
+// 条件 + 排序 + 分页（pageOf 页码从 1 开始）
+List<User> users = QueryEngine.getEntityQueryWrapper(User.class).query()
     .where()
-    .equal(User::getStatus, "ACTIVE")
+    .equal(User::getStatus, 1)
+    .like(User::getName, "张")
+    .andInclude(w -> w.greaterThan(User::getAge, 18).or().equal(User::getVip, true))
     .pour()
+    .getOrderSupport().ifPresent(o -> o.orderByDesc(User::getCreateTime).orderByAsc(User::getName))
+    .getPageLimitSupport().ifPresent(p -> p.pageOf(1L, 10L))
     .fetch();
+
+// 单条与计数
+User one = QueryEngine.getEntityQueryWrapper(User.class).query().where()
+    .equal(User::getId, 1L).pour().fetchOne();
+Integer total = QueryEngine.getEntityQueryWrapper(User.class).query().where()
+    .equal(User::getStatus, 1).pour().count();
 ```
 
-### 2. 基于查询类的查询
+实体需标注 JPA `@Table`（表名）与 `@Column`（列名），框架据此生成 SELECT。
+
+## SQL 构建流水线
+
+```
+查询条件来源（DSL where / @QueryField 注解 / 原始 SQL）
+        ↓
+WhereCompose（条件树：WhereNode 递归组合，节点内 ConnectorEnum 连接）
+        ↓  SqlComposeInterceptor 链（按 order 升序，可改写条件树：数据权限、逻辑删除）
+        ↓
+SqlDriver（EntitySqlDriver 等）装配 SelectInfo / WhereInfo / OrderInfo / GroupInfo / LimitInfo
+        ↓
+SqlDialect 五个 Extractor 分别生成 SQL 片段（方言差异封装在此）
+        ↓
+ISqlAssembler 按 SELECT → WHERE → GROUP BY → ORDER BY → LIMIT 顺序拼接
+        ↓
+FetchMapper → IRawSqlSelectMapper 执行 → Map 转实体（BeanUtil.mapToBean）
+```
+
+参数绑定默认走**预编译占位符** `#{_prs.xxx}`（`tbs.sql.use-raw-value=false` 默认，安全）；置 `true` 时改为值内联（**存在 SQL 注入风险**）。
+
+## 一、DSL 流式查询
+
+### 入口：QueryEngine
 
 ```java
-// 定义查询类，继承ClassBaseQueryCriteria
-@Getter
-public class UserQuery extends ClassBaseQueryCriteria<User> {
-    
-    @QueryMapping(value = "name")
+QueryEngine.getEntityQueryWrapper(User.class);              // 无参构造创建实体
+QueryEngine.getEntityQueryWrapper(User.class, User::new);   // 自定义实体供应商
+QueryEngine.getEntityQueryWrapper(existingUser);            // 复用已有对象（自动继承字段值）
+```
+
+`QueryEngine` 实现 `IStartup`，启动时收集容器内全部 `SqlComposeInterceptor` 并按 order 排序；`QueryEngine.getInstance()` 为静态单例（未初始化时调用会抛异常）。
+
+### IQueryBuilder 方法
+
+| 方法 | 说明 |
+|------|------|
+| `where()` | 进入 WHERE 子句构建 |
+| `getOrderSupport()` / `getPageLimitSupport()` | `Optional` 包装的排序/分页子句 |
+| `groupBy(SFunction)` | 分组字段 |
+| `access(SBiConsumer, P)` / `op(SConsumer)` | 设置实体属性 / 对实体执行自定义操作 |
+| `toSql()` / `toSqlWithParams()` | 导出 SQL（含参数），用于子查询 |
+| `getEntity()` | 获取当前实体 |
+
+### WHERE 子句（IWhereClause）
+
+支持"子语句对象"与"扁平默认方法"两种写法，二者等价：
+
+| 子语句 | 说明 | 扁平默认方法示例 |
+|--------|------|------------------|
+| `comparison()` | 比较运算 | `equal` / `notEqual` / `greaterThan` / `greaterThanOrEqual` / `lessThan` / `lessThanOrEqual` |
+| `like()` | 模糊匹配 | `like` / `notLike` / `leftLike`(LLIKE) / `rightLike`(RLIKE) |
+| `in()` | 集合运算 | `in` / `notIn` |
+| `nullable()` | 空值判断 | `isNull` / `isNotNull` |
+| `sub()` | 嵌套条件组 | `andInclude(Consumer)` / `orInclude(Consumer)` / `include(Consumer, connector)` |
+| `logic()` | 逻辑连接符 | `and()` / `or()` |
+| `subQuery()` | 子查询条件 | EXISTS / IN SUBQUERY 等 |
+
+所有子语句与扁平方法均通过 `pour()` 返回 `IQueryBuilder` 继续链式调用。
+
+### 排序与分页
+
+```java
+// 排序：orderBy(字段, OrderEnum) 或快捷 orderByAsc / orderByDesc
+.getOrderSupport().ifPresent(o -> o.orderBy(User::getAge, OrderEnum.DESC));
+
+// 分页：limit(offset, count) 或 pageOf(page, count)（页码从 1 开始）
+.getPageLimitSupport().ifPresent(p -> p.limit(0L, 10L));
+.getPageLimitSupport().ifPresent(p -> p.pageOf(2L, 10L));   // 等价 limit(10, 10)
+```
+
+### 结果获取（IQueryFetcher）
+
+| 方法 | 返回 | 说明 |
+|------|------|------|
+| `fetch()` | `List<T>` | 无结果返回空列表 |
+| `fetchOne()` | `T` | 无结果返回 null |
+| `count()` | `Integer` | 总数统计 |
+
+### 枚举定义
+
+- **ContrastEnum（19 个）**：`EQUAL`、`NOT_EQUAL`、`GREATER`、`LESS`、`GREATER_EQUAL`、`LESS_EQUAL`、`IS_NULL`、`IS_NOT_NULL`、`LIKE`、`LLIKE`（左模糊）、`RLIKE`（右模糊）、`NOT_LIKE`、`IN`、`NOT_IN`、`EXISTS`、`NOT_EXISTS`、`IN_SUBQUERY`、`NOT_IN_SUBQUERY`
+- **ConnectorEnum**：`AND` / `OR`
+- **OrderEnum**：`ASC` / `DESC`，附 `getOrder(String)`（非 "desc" 一律返回 ASC）与 `getOrder(OrderEnum)`（返回 "asc"/"desc"）
+
+## 二、注解驱动查询对象（QO）
+
+### 注解一览
+
+| 注解 | 位置 | 属性（默认值） | 说明 |
+|------|------|----------------|------|
+| `@QueryField` | 字段 | `index(-1)`、`connector(AND)`、`contrast(EQUAL)`、`ignoreCase(false)`、`ignoreNull(true)`、`customWhereProvider(ICustomWhereProvider)` | 查询条件定义，`@Repeatable`（配合 `@QueryFields` 可重复标注） |
+| `@QueryMapping` | 字段 | `value("")` | 字段 → 数据库列名映射 |
+| `@OrField` | 字段 | — | 与前一条件以 OR 连接（默认 AND） |
+| `@QueryIndex` | 字段 | `index(1000)` | 条件在 WHERE 中的顺序，越小越靠前 |
+| `@QueryOrderField` | 字段 | `mappedName("")`、`order(OrderConstants.ASC)` | 排序字段；字段值为 null 时跳过 |
+| `@SelectSQL` | — | `value("")` | 自定义完整 SQL（见"注意事项"） |
+| `@SecretField` | 字段 | — | 敏感字段标记（由日志/序列化实现消费，框架本身不处理） |
+
+列名解析优先级（`SqlUtils.getFieldNameWithMapping`）：**`@Column` > `@QueryMapping` > 字段名**（注意与工具方法 javadoc 描述相反，以代码为准）。
+
+### 查询条件类体系
+
+```
+IQueryCriteria（getSelectSQLInfo() → SelectInfoModel）
+├── AbstractEntityCriteria        # 基于实体类元数据自动生成
+│   └── DefaultEntityCriteria     # 直接用 new DefaultEntityCriteria(User.class)
+├── AbstractResourceCriteria      # 从 classpath SQL 文件加载（UTF-8，全局缓存）
+└── AbstractRemoteConfigQueryCriteria
+    └── NacosConfigQueryCriteria  # 从 Nacos 配置读取 SQL
+```
+
+实体元数据由 `EntityMetadataExtractor.pullFromClass()` 提取（`@Table` 表名 + 非 static/final/非 `@Transient` 字段），带类级缓存（`clearCache()` 可清除）。
+
+### 完整示例
+
+```java
+public class UserQuery extends DefaultEntityCriteria {
+
+    public UserQuery() { super(User.class); }
+
+    /** 用户名模糊，第 1 个条件 */
+    @QueryIndex(index = 1)
+    @QueryMapping("user_name")
     @QueryField(contrast = ContrastEnum.LIKE)
     private String nameLike;
-    
-    @QueryMapping(value = "age") 
-    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
-    private Integer minAge;
-    
-    @QueryMapping(value = "status")
+
+    /** 状态 IN 查询，忽略空值 */
+    @QueryIndex(index = 2)
+    @QueryMapping("status")
     @QueryField(contrast = ContrastEnum.IN)
-    private List<String> statuses;
-    
-    // 链式设置方法
-    public UserQuery setNameLike(String nameLike) {
-        this.nameLike = nameLike;
-        return this;
-    }
-    
-    public UserQuery setMinAge(Integer minAge) {
-        this.minAge = minAge;
-        return this;
-    }
-    
-    public UserQuery setStatuses(List<String> statuses) {
-        this.statuses = statuses;
-        return this;
-    }
+    private List<Integer> statusList;
+
+    /** 创建时间范围（同一字段两个条件，@Repeatable） */
+    @QueryIndex(index = 3)
+    @QueryMapping("create_time")
+    @QueryField(contrast = ContrastEnum.GREATER_EQUAL)
+    @QueryField(contrast = ContrastEnum.LESS_EQUAL, index = 4)
+    private Date startTime;
+
+    /** 按创建时间倒序（字段值非 null 才生效） */
+    @QueryOrderField(mappedName = "create_time", order = OrderConstants.DESC)
+    private Boolean orderByCreateTime = true;
 }
+```
 
-// 使用查询类
-UserQuery query = new UserQuery()
-    .setNameLike("John")
-    .setMinAge(18)
-    .setStatuses(Arrays.asList("ACTIVE", "PENDING"));
-
+```java
 // 执行查询
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
-List<User> users = wrapper.query()
-    .where(query)
-    .fetch();
+IPage page = new IPage() {
+    @Override public long from() { return 0; }
+    @Override public long number() { return 10; }
+};
+
+List<User> users = userMapper.queryByQO(query, page, User.class);   // page 传 null 表示不分页
+Integer total   = userMapper.countByQO(query, User.class);
 ```
 
-### 3. 自定义SQL查询
+自定义 SQL 条件（如调用数据库函数）：
 
 ```java
-// 使用@SelectSQL注解定义自定义查询
-@SelectSQL("SELECT u.*, d.name as dept_name FROM users u LEFT JOIN departments d ON u.dept_id = d.id")
-public class UserWithDepartment {
+@Component
+public class AgeRangeProvider implements ICustomWhereProvider<Integer> {
+    @Override
+    public String getConditionSql(Integer value) {
+        return "TIMESTAMPDIFF(YEAR, birthday, CURDATE()) >= " + value;   // 注意入参需自行防注入
+    }
+}
+
+// @QueryField(customWhereProvider = AgeRangeProvider.class)
+```
+
+## 三、Mapper 增强
+
+### IFrameworkMapper
+
+业务 Mapper 统一继承（`@RegisterMapper`）：
+
+```java
+@Repository
+public interface UserMapper extends IFrameworkMapper<User, Long> {
+    // 可继续声明自定义 SQL 方法（@Select / @SelectProvider）
+}
+```
+
+继承的能力：tk.mybatis `BaseMapper`（CRUD）、`InsertListMapper`（批量插入）、`BatchUpdateMapper` / `BatchUpdateSelectiveMapper`（批量更新）、`IdListMapper`（按 ID 列表查询/删除）、`SmartQueryMapper`（条件查询）：
+
+| 方法 | 说明 |
+|------|------|
+| `queryByQO(qo, page, entityClass)` | 条件 + 分页查询 |
+| `queryByQO(context, qo, page, entityClass)` | 指定 SQL 上下文 |
+| `countByQO(qo, entityClass)` | 条件计数（返回 `Integer`） |
+| `query(entityClass)` | 直接获得 `IQueryBuilder`（DSL 入口） |
+
+### IRawSqlSelectMapper
+
+框架内部执行的最终出口，也可直接注入使用（结果统一为 `Map`）：
+
+```java
+@Resource
+private IRawSqlSelectMapper rawSqlSelectMapper;
+
+List<Map<String, Object>> rows = rawSqlSelectMapper.fetch(sql, params);
+Integer count = rawSqlSelectMapper.count(sql, params);
+```
+
+## 四、字段自动填充
+
+MyBatis 插件 `SqlAutoFillInterceptor`，拦截 `Executor#update` 获取 SQL 类型（INSERT/UPDATE），再在 `ParameterHandler#setParameters` 阶段回填字段值（仅 INSERT/UPDATE 触发，SELECT/DELETE 跳过）。
+
+| 注解 | 说明 |
+|------|------|
+| `@SqlAutoValue` | `value`（Provider 类）、`insertOnly(false)`（仅 INSERT 填充）、`fillWhenNull(true)`（仅值为 null 时填充） |
+| `@AutoSetDate` | 等价于 `@SqlAutoValue(value = DateValueAutoProvider.class)`，无额外属性 |
+
+内置 Provider：
+
+| Provider | 支持类型 | 行为 |
+|----------|----------|------|
+| `DateValueAutoProvider` | `Date`、`LocalDateTime` | 值为 null 时填当前时间 |
+| `IdAutoProvider` | `Long`、`String` | 经 `UuidUtil` 生成雪花 ID（Long）或 UUID 字符串 |
+
+```java
+@Table(name = "sys_demo")
+public class Demo {
+
+    @Id
+    @SqlAutoValue(value = IdAutoProvider.class, insertOnly = true)  // 仅新增生成
     private Long id;
-    private String name;
-    private String deptName;
-    // getter 和 setter 方法
-}
 
-// 执行自定义SQL查询
-IEntityQueryWrapper<UserWithDepartment> wrapper = QueryUtil.getEntityQueryWrapper(UserWithDepartment.class);
-List<UserWithDepartment> users = wrapper.query().fetch();
-```
+    @AutoSetDate                                                    // 创建时间（Date/LocalDateTime 皆可）
+    private Date createTime;
 
-### 4. 链式条件查询
-
-```java
-// 使用链式API构建复杂查询
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
-
-// 简单条件查询（默认使用AND连接）
-List<User> users = wrapper.query()
-    .where()
-    .like(User::getName, "John")  // 模糊查询
-    .greaterEqual(User::getAge, 18)  // 大于等于
-    .in(User::getStatus, Arrays.asList("ACTIVE", "PENDING"))  // IN查询
-    .pour()
-    .fetch();
-
-// 复杂条件组合（使用include方法）
-List<User> complexUsers = wrapper.query()
-    .where()
-    .like(User::getName, "John")
-    .andInclude(where -> where
-        .greaterEqual(User::getAge, 18)
-        .or()
-        .lessThan(User::getAge, 25)
-    )
-    .pour()
-    .fetch();
-
-// 构建复杂的查询条件
-List<User> complexQueryUsers = wrapper.query()
-    .where()
-    .like(User::getName, "John")  // 模糊查询
-    .andInclude(where -> where
-        .greaterThanOrEqual(User::getAge, 18)  // 大于等于
-        .or()
-        .equal(User::getStatus, "ACTIVE")  // 等于
-    )
-    .isNotNull(User::getEmail)  // 非空
-    .pour()
-    .fetch();
-
-// 更复杂的嵌套条件
-List<User> nestedComplexUsers = wrapper.query()
-    .where()
-    .like(User::getName, "John")
-    .orInclude(where -> where
-        .andInclude(innerWhere -> innerWhere
-            .greaterThanOrEqual(User::getAge, 18)
-            .lessThan(User::getAge, 30)
-        )
-        .equal(User::getStatus, "ACTIVE")
-    )
-    .pour()
-    .fetch();
-```
-
-### 5. 分页查询
-
-```java
-// 分页查询
-IEntityQueryWrapper<User> wrapper = QueryUtil.getEntityQueryWrapper(User.class);
-
-// 获取分页支持
-Optional<IQueryPageProvider<User>> pageSupport = wrapper.query().getPageSupport();
-if (pageSupport.isPresent()) {
-    // 设置分页参数：第1页，每页10条
-    List<User> users = pageSupport.get()
-        .page(1, 10)
-        .fetch();
+    @SqlAutoValue(value = DateValueAutoProvider.class)              // 新增与更新都刷新
+    private LocalDateTime updateTime;
 }
 ```
 
-## 查询操作符支持
+实现细节：字段扫描递归父类并缓存；Provider 实例双重检查锁缓存；支持 MyBatis `Map` 入参（自动跳过 `param1`/`param2`/`collection`/`list`/`array` 内置 key）；`ThreadLocal` 上下文在 finally 中强制清除。
 
-框架支持丰富的查询操作符：
+> 注意：`SqlAutoFillInterceptor` 在 `SqlAutoConfiguration` 中**无条件注册**（无开关配置），启用 `@EnableTbsSql` 即生效。
 
-| 操作符 | 说明 | SQL等价 |
-|--------|------|---------|
-| `EQUAL` | 等于 | `=` |
-| `NOT_EQUAL` | 不等于 | `!=`或`<>` |
-| `GREATER` | 大于 | `>` |
-| `LESS` | 小于 | `<` |
-| `GREATER_EQUAL` | 大于等于 | `>=` |
-| `LESS_EQUAL` | 小于等于 | `<=` |
-| `LIKE` | 模糊匹配 | `LIKE '%value%'` |
-| `LLIKE` | 左模糊 | `LIKE 'value%'` |
-| `RLIKE` | 右模糊 | `LIKE '%value'` |
-| `NOT_LIKE` | 不匹配 | `NOT LIKE` |
-| `IN` | 在集合中 | `IN (...)` |
-| `NOT_IN` | 不在集合中 | `NOT IN (...)` |
-| `IS_NULL` | 为空 | `IS NULL` |
-| `IS_NOT_NULL` | 不为空 | `IS NOT NULL` |
+## 五、拦截器与日志
 
-## 高级功能
+| 组件 | 用途 |
+|------|------|
+| `SqlComposeInterceptor` | WHERE 条件树改写（`intercept(WhereCompose, ISqlBuildContext)`，`Ordered` 排序）。典型用法：数据权限、租户隔离、逻辑删除（shared 模块的 `SqlLogicDeleteIntercepter` 即为其实现） |
+| `SqlLoggingInterceptor` | SQL 执行日志（需 `tbs.sql.enable-log-interceptor=true` 才注册） |
+| `ISqlLogger` | 日志输出策略：`NoSqlLogger`（默认无操作）、`SimpleSqlLogger`、`SimpleJsonLogger`；无其他 `ISqlLogger` Bean 时按 `tbs.sql.sql-logger-type` 创建 |
 
-### 自定义查询条件
-
-实现`ICustomWhereProvider`接口创建自定义查询逻辑：
+自定义拦截器示例：
 
 ```java
 @Component
-public class CustomUserProvider implements ICustomWhereProvider {
-    
+public class TenantInterceptor implements SqlComposeInterceptor {
+
     @Override
-    public String provideWhereClause(Object value, String fieldName) {
-        // 自定义WHERE条件逻辑
-        return "status = 1 AND is_active = true";
+    public WhereCompose intercept(WhereCompose compose, ISqlBuildContext context) {
+        // 在条件树上追加 tenant_id 条件
+        return compose;
     }
+
+    @Override
+    public int getOrder() { return 0; }   // 值越小越先执行
 }
 ```
 
-### SQL拦截器
+## 六、数据库方言
 
-实现`ISqlInfoComposeIntercepter`接口进行SQL拦截：
+框架通过 `SqlDialect`（五个 Extractor：Select / Where / Order / Group / Limit）抽象数据库差异：
+
+| 启用注解 | 方言 | 分页实现 |
+|----------|------|----------|
+| `@UseMysql` | `MysqlDialect` | `MysqlLimitExtractor`（LIMIT） |
+| `@UseOracle` | `OracleDialect` | `OracleLimitExtractor`（ROWNUM 嵌套） |
+| `@UsePostgreSql` | `PostgreSqlDialect` | `PostgreSqlLimitExtractor` |
+| `@UseSqlServer` | `SqlServerDialect` | `SqlServerLimitExtractor`（OFFSET/FETCH） |
+
+除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。扩展新数据库：实现 `SqlDialect` + 各 Extractor，参照 `MysqlDialectAutoConfiguration` 编写配置类并配套 `@UseXxx` 注解。
+
+## 七、编程式事务
+
+`TransactionUtil`（单例，构造时注入 `PlatformTransactionManager`）：
 
 ```java
-@Component
-public class SecurityInterceptor implements ISqlInfoComposeIntercepter {
-    
-    @Override
-    public void intercept(SqlWhereCompose compose, Class<?> entityClass) {
-        // 添加安全过滤条件
-        compose.addWhere("tenant_id = ?", getCurrentTenantId());
-    }
-    
-    @Override
-    public int getOrder() {
-        return 0; // 执行顺序
-    }
-}
+TransactionUtil.getInstance().executeTransaction(() -> {
+    userMapper.insertSelective(user);
+    logMapper.insertSelective(log);
+});
+
+// 指定传播行为
+TransactionUtil.getInstance().executeTransaction(
+    TransactionDefinition.PROPAGATION_REQUIRES_NEW, () -> { /* ... */ });
 ```
+
+异常自动回滚后重新抛出（`TransactionSystemException` / `TransactionException` 原样，其他包装为 `FormattedRuntimeException`）。声明式场景请直接用 `@Transactional`（`@EnableTbsSql` 已开启事务管理）。
 
 ## 配置说明
 
-### 数据库方言配置
-
-框架默认支持MySQL方言，如需配置其他数据库：
-
-```java
-@Configuration
-public class DatabaseConfig {
-    
-    @Bean
-    public ISelectSqlDialect sqlDialect() {
-        return new MySQLDialect(); // 或其他数据库方言
-    }
-}
-```
-
-### 事务配置
-
-框架已集成Spring事务管理，可通过`@Transactional`注解使用：
-
-```java
-@Service
-public class UserService {
-    
-    @Transactional
-    public void updateUser(User user) {
-        // 数据库操作
-    }
-}
-```
-
-## 最佳实践
-
-### 1. 查询对象设计
-- 为每个查询场景创建专用的查询对象
-- 合理使用`ignoreNull`避免不必要的查询条件
-- 使用`@QueryIndex`控制字段查询顺序
-
-### 2. 性能优化
-- 对常用查询字段建立数据库索引
-- 合理使用分页避免大数据量查询
-- 使用`select`指定需要的字段
-
-### 3. 安全考虑
-- 使用参数化查询防止SQL注入
-- 通过拦截器实现数据权限控制
-- 对用户输入进行验证和过滤
-
-## 故障排除
-
-### 常见问题
-
-1. **查询条件不生效**
-   - 检查是否实现了`IQueryCriteria`接口
-   - 确认字段上有正确的注解
-   - 检查`ignoreNull`配置
-
-2. **SQL生成错误**
-   - 验证数据库方言配置
-   - 检查字段名映射是否正确
-   - 查看生成的SQL日志
-
-3. **性能问题**
-   - 检查是否使用了合适的索引
-   - 避免`LIKE '%value%'`全表扫描
-   - 使用分页限制结果集大小
-
-### 日志调试
-
-启用SQL日志查看生成的SQL语句：
-
 ```yaml
 tbs:
   sql:
-    enable-log-interceptor: true
-logging:
-  level:
-    com.tbs.sql: DEBUG
+    enable-log-interceptor: false    # 是否注册 SQL 日志拦截器，默认 false
+    sql-logger-type: com.tbs.sql.logger.impl.NoSqlLogger   # 日志器（默认无操作）
+    use-raw-value: false             # true 时参数值内联进 SQL（不安全），默认 false 走预编译占位符
+    sql-assembler-type: com.tbs.sql.assembler.impl.DefaultSqlAssembler   # 【当前未生效】
 ```
+
+> **未生效配置说明**：`sql-assembler-type` 已定义但代码中无任何读取点——`ISqlAssembler` Bean 由各**方言自动配置类**固定创建 `DefaultSqlAssembler`。如需自定义组装逻辑，请直接注册 `ISqlAssembler` 类型的 Bean 覆盖。
+
+## 扩展开发
+
+### 自定义排序策略
+
+```java
+@Component(OrderConstants.ORDERED_MODEL)
+public class MyOrder implements IQueryOrderBy {
+    @Override
+    public OrderEnum orderBy(Object target, Field field, String mappedName) {
+        return OrderEnum.DESC;   // 返回 null 表示不应用排序
+    }
+}
+```
+
+内置三种：`AscStaticOrder`（Bean 名 `ASC_ORDER_BEAN`）、`DescStaticOrder`（`DESC_ORDER_BEAN`）、`OrderedModelOrderImpl`（`ORDERED_MODEL`，按 `OrderedModel` 值动态决定方向）。`@QueryOrderField(order = ...)` 填的就是这些 **Bean 名称字符串**（`OrderConstants` 常量）。
+
+### 自定义自动填充 Provider
+
+```java
+public class TenantIdProvider implements IAutoValueProvider {
+    @Override
+    public Object getValue(Object target, Field field) { return TenantContext.getTenantId(); }
+
+    @Override
+    public boolean support(Class<?> type, Object oldValue) { return String.class.equals(type); }
+}
+// 使用：@SqlAutoValue(value = TenantIdProvider.class, insertOnly = true)
+```
+
+### 自定义 SQL 组装器 / 方言
+
+注册 `ISqlAssembler` 或 `SqlDialect` 类型的 Bean 即可覆盖方言自动配置提供的默认实现。
+
+### 清除元数据缓存
+
+实体结构变更后（运行期动态修改），调用 `EntityMetadataExtractor.clearCache(Class)` 或 `clearCache()`。
+
+## 使用注意事项
+
+1. **方言注解不可省略**：`@EnableTbsSql` 只导入核心配置，`SqlDialect` Bean 来自 `@UseXxx`；缺失会导致 `QueryEngine` 装配失败
+2. **自动填充无开关**：`SqlAutoFillInterceptor` 无条件注册，实体标注 `@SqlAutoValue`/`@AutoSetDate` 即生效（不存在 `tbs.sql.enable-auto-fill-value-interceptor` 配置项）
+3. **`@SelectSQL` 存在注解目标与读取位置不一致**：注解声明 `@Target(FIELD)`，但 `EntityMetadataExtractor` 从**类**上读取——类级使用无法通过编译，该自定义 SQL 能力实际不可用；复杂 SQL 请改用 `AbstractResourceCriteria`（classpath SQL 文件）
+4. **列名解析以 `@Column` 优先**：与工具方法 javadoc 的"@QueryMapping 优先"描述相反，若两注解同时存在，`@Column` 生效
+5. **`use-raw-value: true` 有注入风险**：参数值直接内联，仅在调试或完全可信入参场景使用
+6. **`sql-assembler-type` 不生效**：见"配置说明"
+7. **`@QueryOrderField` 字段值须非 null**：值为 null 的排序字段会被跳过；`mappedName` 为空同样跳过
+8. **实体必须有 `@Table`**：`EntityMetadataExtractor.pullFromClass()` 对缺少 `@Table` 的类直接断言失败（使用 `@SelectSQL` 或资源 SQL 的查询对象不受此限）
+9. **`QueryEngine.getInstance()` 依赖启动顺序**：静态单例在 `startUp()` 中赋值，过早调用（如其他 `IStartup` 先于本模块执行）会抛"QueryEngine尚未初始化"
+10. **`count()` 返回 `Integer`**：超大数据量计数注意溢出
+11. **`ICustomWhereProvider` 需自行防注入**：返回的 SQL 片段直接拼接进 WHERE
 
 ## 许可证
 
@@ -455,5 +461,5 @@ logging:
 
 ---
 
-**最后更新**: 2026年6月
+**最后更新**: 2026年9月
 **版本**: 1.0-SNAPSHOT

@@ -30,6 +30,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.GENERIC_API;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 泛化API配置服务实现类
@@ -70,22 +71,22 @@ public class GenericApiServiceImpl
     @Override
     protected SystemGenericApiEntity insertNew(SystemGenericApiEntity entity) {
 
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiId())).i18n("generic.api.id.required")
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiId())).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_ID_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiName())).i18n("generic.api.name.required")
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiName())).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_NAME_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getAppName())).i18n("generic.api.app.name.required")
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getAppName())).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_APP_NAME_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getInterfaceName())).i18n("generic.api.interface.name.required")
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getInterfaceName())).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_INTERFACE_NAME_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getMethodName())).i18n("generic.api.method.name.required")
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getMethodName())).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_METHOD_NAME_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
         // 验证预认证Bean名称
         validatePreAuthBeanNames(entity.getPreAuthBeans());
 
         var i = ((IGenericApiService)getInstance()).getByApiId(entity.getApiId());
-        AssertUtil.isTrue(i != null).i18n("generic.api.id.duplicate").params(entity.getApiId())
+        AssertUtil.isTrue(i != null).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_ID_DUPLICATE).params(entity.getApiId())
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
 
@@ -114,7 +115,7 @@ public class GenericApiServiceImpl
 
         if (StrUtil.isNotEmpty(newOne.getApiId()) && !Objects.equals(newOne.getApiId(), oldOne.getApiId())) {
             var i = ((IGenericApiService)getInstance()).getByApiId(newOne.getApiId());
-            AssertUtil.isTrue(i != null).i18n("generic.api.id.duplicate").params(newOne.getApiId())
+            AssertUtil.isTrue(i != null).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_ID_DUPLICATE).params(newOne.getApiId())
                 .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         }
         // 更新API名称
@@ -194,7 +195,7 @@ public class GenericApiServiceImpl
     @Override
     public void enableApi(String apiId) {
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);
-        AssertUtil.isTrue(entity == null).i18n("generic.api.not.found").params(apiId)
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_NOT_FOUND).params(apiId)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().updateByPrimaryKey(entity);
@@ -204,7 +205,7 @@ public class GenericApiServiceImpl
     @Override
     public void disableApi(String apiId) {
         SystemGenericApiEntity entity = ((IGenericApiService)getInstance()).getByApiId(apiId);
-        AssertUtil.isTrue(entity == null).i18n("generic.api.not.found").params(apiId)
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_NOT_FOUND).params(apiId)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(CommonFlagEnum.INACTIVE.getCode());
         getMapper().updateByPrimaryKey(entity);
@@ -254,7 +255,7 @@ public class GenericApiServiceImpl
             }
 
             AssertUtil.isTrue(preAuth == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-                .i18n("generic.api.pre.auth.bean.not.exists").params(trimmedBeanName).throwIt();
+                .i18n(com.tbs.app.constant.SystemI18nConstant.GENERIC_API_PRE_AUTH_BEAN_NOT_EXISTS).params(trimmedBeanName).throwIt();
         }
     }
 }

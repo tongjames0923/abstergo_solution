@@ -4,6 +4,7 @@ import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.delegate.provider.IDelegateFlagProvider;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.i18n.I18nUtil;
@@ -51,7 +52,7 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	 */
 	@Override
 	public void setTarget(IDelegateTarget<T> delegateTarget) {
-		AssertUtil.notNull(delegateTarget, I18nUtil.get("delegate.target.required"));
+		AssertUtil.notNull(delegateTarget, I18nUtil.get(CommonI18nConstant.DELEGATE_TARGET_REQUIRED));
 		this.delegateTarget = delegateTarget;
 	}
 
@@ -159,8 +160,8 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	 */
 	@Override
 	public <P> IDelegateInvoker<T> takeIn(SBiConsumer<T, P> method, SSupplier<P> p) {
-		AssertUtil.notNull(method, I18nUtil.get("delegate.method.required"));
-		AssertUtil.notNull(p, I18nUtil.get("delegate.provider.required"));
+		AssertUtil.notNull(method, I18nUtil.get(CommonI18nConstant.DELEGATE_METHOD_REQUIRED));
+		AssertUtil.notNull(p, I18nUtil.get(CommonI18nConstant.DELEGATE_PROVIDER_REQUIRED));
 		tasks.add(new InvokeTask<>(method, p, index.addAndGet(1), true));
 		return this;
 	}
@@ -183,8 +184,8 @@ public abstract class AbstractDelegateInvoker<T> implements IDelegateInvoker<T> 
 	 */
 	@Override
 	public <P> IDelegateInvoker<T> takeOut(SFunction<T, P> method, SConsumer<P> consumer) {
-		AssertUtil.notNull(method, I18nUtil.get("delegate.method.required"));
-		AssertUtil.notNull(consumer, I18nUtil.get("delegate.consumer.required"));
+		AssertUtil.notNull(method, I18nUtil.get(CommonI18nConstant.DELEGATE_METHOD_REQUIRED));
+		AssertUtil.notNull(consumer, I18nUtil.get(CommonI18nConstant.DELEGATE_CONSUMER_REQUIRED));
 		tasks.add(new InvokeTask<>(method, consumer, index.addAndGet(1), false));
 		return this;
 	}

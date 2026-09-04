@@ -37,6 +37,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 角色组服务实现类
@@ -85,7 +86,7 @@ public class SimpleRoleGroupServiceImpl
     @Override
     public SystemRoleGroupVO getRoleGroupVO(Long groupId) {
         var group = getInstance().queryById(groupId);
-        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.not.exists")
+        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_NOT_EXISTS)
             .throwIt();
         return new SystemRoleGroupVO(group, ((ISystemRoleGroupService)getInstance()).getRoleList(groupId));
     }
@@ -104,16 +105,16 @@ public class SimpleRoleGroupServiceImpl
     public void appendRole(Long groupId, Long roleId) {
 
         var group = getInstance().queryById(groupId);
-        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.not.exists")
+        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_NOT_EXISTS)
             .throwIt();
         AssertUtil.isTrue(!Objects.equals(group.getFlag(), CommonFlagEnum.ACTIVE.getCode()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.group.not.active").throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_NOT_ACTIVE).throwIt();
         var role = SpringUtil.getBean(ISystemRoleService.class).queryById(roleId);
-        AssertUtil.isTrue(role == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.not.exists")
+        AssertUtil.isTrue(role == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_NOT_EXISTS)
             .throwIt();
         AssertUtil.isTrue(
                 !CollUtil.isIn(role.getFlag(), SystemRoleFlagEnum.ACTIVE.getCode(), SystemRoleFlagEnum.SYSTEMED.getCode()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.not.active").throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_NOT_ACTIVE).throwIt();
 
         // 绕过逻辑删除拦截器查询，避免已删除记录无法被重新激活
         var existing = relationMapper.selectByRoleIdAndGroupIdIncludeDeleted(roleId, groupId);
@@ -144,7 +145,7 @@ public class SimpleRoleGroupServiceImpl
         var old = relationMapper.selectByRoleIdAndGroupIdIncludeDeleted(roleId, groupId);
         AssertUtil.isTrue(old == null || Objects.equals(old.getFlag(), CommonFlagEnum.DELETED.getCode()))
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("permission.group.role.not.exists").throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_ROLE_NOT_EXISTS).throwIt();
         old.setFlag(CommonFlagEnum.DELETED.getCode());
         audit.onDelete(old);
         relationMapper.updateByPrimaryKey(old);
@@ -159,19 +160,19 @@ public class SimpleRoleGroupServiceImpl
     @Override
     public void applyGroup(Long groupId, Long userId) {
         var group = getInstance().queryById(groupId);
-        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.not.exists")
+        AssertUtil.isTrue(group == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_NOT_EXISTS)
             .throwIt();
         AssertUtil.isTrue(!Objects.equals(group.getFlag(), CommonFlagEnum.ACTIVE.getCode()))
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n("permission.group.not.active").throwIt();
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_NOT_ACTIVE).throwIt();
         var user = SpringUtil.getBean(ISystemUserService.class).queryById(userId);
-        AssertUtil.isTrue(user == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("user.not.exists").throwIt();
+        AssertUtil.isTrue(user == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.USER_NOT_EXISTS).throwIt();
 
         SystemRoleGroupUserRelationEntity relation = new SystemRoleGroupUserRelationEntity();
         relation.setUserId(userId);
         relation.setRoleGroupId(groupId);
         var ls = roleGroupUserRelationMapper.select(relation);
         AssertUtil.isTrue(CollUtil.isNotEmpty(ls)).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
-            .i18n("permission.group.user.exists").throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_USER_EXISTS).throwIt();
         roleGroupUserRelationMapper.insert(relation);
         AuthUtil.getInstance().notifyUserAuthStatusChanged(user.getUserName());
     }
@@ -186,13 +187,13 @@ public class SimpleRoleGroupServiceImpl
     public void removeGroup(Long groupId, Long userId) {
 
         SystemUserEntity user = SpringUtil.getBean(ISystemUserService.class).queryById(userId);
-        AssertUtil.isTrue(user == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("user.not.exists").throwIt();
+        AssertUtil.isTrue(user == null).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.USER_NOT_EXISTS).throwIt();
         var relation = new SystemRoleGroupUserRelationEntity();
         relation.setUserId(userId);
         relation.setRoleGroupId(groupId);
         var ls = roleGroupUserRelationMapper.select(relation);
         AssertUtil.isTrue(CollUtil.isEmpty(ls)).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
-            .i18n("permission.group.user.not.exists").throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_USER_NOT_EXISTS).throwIt();
         roleGroupUserRelationMapper.delete(relation);
         AuthUtil.getInstance().notifyUserAuthStatusChanged(user.getUserName());
     }
@@ -294,7 +295,7 @@ public class SimpleRoleGroupServiceImpl
     @Override
     protected SystemRoleGroupEntity insertNew(SystemRoleGroupEntity entity) {
         AssertUtil.isTrue(StrUtil.isEmpty(entity.getRoleGroupName())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n("permission.group.name.empty").throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_NAME_EMPTY).throwIt();
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
         return entity;
@@ -324,7 +325,7 @@ public class SimpleRoleGroupServiceImpl
         if (newOne.getFlag() != null && !Objects.equals(newOne.getFlag(), oldOne.getFlag())) {
             AssertUtil.isTrue(
                     !CollUtil.isIn(newOne.getFlag(), CommonFlagEnum.ACTIVE.getCode(), CommonFlagEnum.INACTIVE.getCode()))
-                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n("permission.group.status.invalid").throwIt();
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_STATUS_INVALID).throwIt();
             oldOne.setFlag(newOne.getFlag());
         }
         if (StrUtil.isNotEmpty(newOne.getRoleGroupName())) {
