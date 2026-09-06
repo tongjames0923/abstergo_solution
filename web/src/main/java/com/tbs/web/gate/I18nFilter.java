@@ -21,6 +21,10 @@ import java.util.Locale;
  * 在请求开始时解析客户端语言偏好，设置到I18nContextHolder中，
  * 确保整个请求生命周期（包括Spring Security过滤器链）都能正确获取Locale。
  * <p>
+ * 本过滤器只负责语言解析与设置，请求结束的清理统一由
+ * {@code RequestContextLifecycleFilter} 的 {@code IContextClean} 清理管道执行
+ * （{@code I18nContextClean} 实现）。
+ * <p>
  * 语言解析优先级（从高到低）：
  * 1. 请求参数 ?lang=zh_CN 或 ?locale=en_US
  * 2. 请求头 Accept-Language
@@ -30,6 +34,7 @@ import java.util.Locale;
  * @author abstergo
  * @see OncePerRequestFilter
  * @see I18nContextHolder
+ * @see com.tbs.web.context.I18nContextClean
  */
 @Slf4j
 @Component
@@ -55,12 +60,7 @@ public class I18nFilter extends OncePerRequestFilter {
             log.warn("I18nFilter解析请求语言失败", e);
         }
 
-        try {
-            filterChain.doFilter(request, response);
-        } finally {
-            // 请求结束后清理，防止内存泄漏
-            I18nContextHolder.clear();
-        }
+        filterChain.doFilter(request, response);
     }
 
     /**

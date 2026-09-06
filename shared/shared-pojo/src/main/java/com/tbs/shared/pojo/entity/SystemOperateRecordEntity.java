@@ -128,4 +128,10 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
     @Column(name = "system_log_flag")
     private Integer systemLogFlag;
 
+    /**
+     * 链路追踪ID
+     */
+    @Comment("链路追踪ID")
+    @Column(name = "trace_id", length = 64)
+    private String traceId;
 }

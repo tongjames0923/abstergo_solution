@@ -1,5 +1,6 @@
 package com.tbs.web.context;
 
+import com.tbs.common.util.framework.UuidUtil;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -7,7 +8,6 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
  * 请求上下文数据载体
@@ -229,7 +229,7 @@ public class RequestDataContext implements Serializable {
      * @return 链路追踪ID字符串
      */
     private static String generateTraceId() {
-        return System.currentTimeMillis() + "-" + UUID.randomUUID().toString().replace("-", "").substring(0, 16);
+        return UuidUtil.getInstance().getUuidString();
     }
 
     @Override
