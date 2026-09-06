@@ -1,5 +1,6 @@
 package com.tbs.web.context;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 /**
@@ -119,7 +120,7 @@ public final class RequestContextHolder {
      * @param key   业务标识
      * @param value 业务数据
      */
-    public static void put(String key, Object value) {
+    public static void put(String key, Serializable value) {
         RequestDataContext ctx = CONTEXT_HOLDER.get();
         if (ctx != null) {
             ctx.put(key, value);
@@ -134,7 +135,7 @@ public final class RequestContextHolder {
      * @param key 业务标识
      * @return 值的Optional包装
      */
-    public static Optional<Object> get(String key) {
+    public static Optional<Serializable> get(String key) {
         return context().flatMap(ctx -> ctx.get(key));
     }
 
@@ -148,7 +149,7 @@ public final class RequestContextHolder {
      * @param <T>  泛型类型
      * @return 类型安全的值的Optional包装
      */
-    public static <T> Optional<T> get(String key, Class<T> type) {
+    public static <T extends Serializable> Optional<T> get(String key, Class<T> type) {
         return context().flatMap(ctx -> ctx.get(key, type));
     }
 

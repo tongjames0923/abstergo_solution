@@ -91,7 +91,7 @@ public class RequestDataContext implements Serializable {
      * <p>
      * key为业务标识字符串，value为任意类型业务对象
      */
-    private Map<String, Object> businessData;
+    private Map<String, Serializable> businessData;
 
     // ==================== 构造与工厂方法 ====================
 
@@ -130,7 +130,7 @@ public class RequestDataContext implements Serializable {
      * @param key   业务标识
      * @param value 业务数据
      */
-    public void put(String key, Object value) {
+    public void put(String key, Serializable value) {
         if (businessData == null) {
             businessData = new HashMap<>();
         }
@@ -143,7 +143,7 @@ public class RequestDataContext implements Serializable {
      * @param key 业务标识
      * @return 值的Optional包装
      */
-    public Optional<Object> get(String key) {
+    public Optional<Serializable> get(String key) {
         if (businessData == null) {
             return Optional.empty();
         }
