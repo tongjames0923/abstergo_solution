@@ -1,5 +1,6 @@
 package com.tbs.oss.minio;
 
+import com.tbs.logging.annotation.OperateLog;
 import com.tbs.oss.core.OssClient;
 import com.tbs.oss.core.ProgressListener;
 import com.tbs.oss.exception.OssAccessDeniedException;
@@ -164,6 +165,7 @@ public class MinioOssClient implements OssClient {
         });
     }
 
+    @OperateLog
     @Override
     public ObjectMetadata getObjectMetadata(String bucketName, String objectKey) {
         String bucket = resolveBucket(bucketName);

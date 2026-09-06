@@ -1,6 +1,6 @@
 package com.tbs.app.intercept;
 
-import com.tbs.app.annotation.NoLog;
+import com.tbs.logging.annotation.NoLog;
 import com.tbs.common.FeatureManager;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -8,17 +8,16 @@ import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.logging.core.ILogRecorder;
+import com.tbs.logging.core.ILoggingContextApplier;
+import com.tbs.logging.core.ILoggingContextResolver;
 import com.tbs.logging.form.LoggingRecordForm;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
-import com.tbs.web.uitl.AuthUtil;
-import com.tbs.web.uitl.NetUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Date;
@@ -94,15 +93,21 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
     }
 
     /**
-     * HTTP请求对象
+     * 日志上下文解析门面
      * <p>
-     * 通过Spring的@Resource注解注入，用于获取当前HTTP请求的相关信息， 如请求URI、请求方法、客户端IP等。
-     *
-     * @see HttpServletRequest HTTP请求接口
-     * @see Resource 资源注入注解
+     * 获取当前链路的日志上下文快照（链路追踪ID、操作用户、IP、请求URL与方法等
+     * 环境维度信息），见 {@link ILoggingContextResolver}。
      */
     @Resource
-    private HttpServletRequest request;
+    private ILoggingContextResolver loggingContextResolver;
+
+    /**
+     * 日志上下文回填器
+     * <p>
+     * 将上下文快照中的环境维度信息回填到日志表单，见 {@link ILoggingContextApplier}。
+     */
+    @Resource
+    private ILoggingContextApplier loggingContextApplier;
 
     @Resource
     private FeatureManager featureManager;
@@ -120,8 +125,7 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
      * @see SystemOperContext 系统操作上下文类
      * @see SystemOperateRecordEntity 系统操作记录实体类
      * @see BaseController 基础控制器类
-     * @see NetUtil 网络工具类
-     * @see AuthUtil 认证工具类
+     * @see ILoggingContextResolver 日志上下文解析门面
      * @see JSON JSON处理工具类
      * @see BeanUtil Bean工具类
      */
@@ -135,17 +139,11 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
         BaseController baseController = context.getTarget();
         LoggingRecordForm record = new LoggingRecordForm();
         record.setOperateType(context.getTarget().getClass().getTypeName() + "." + context.getMethod().getName());
-        record.setOperateIp(NetUtil.getIp(request));
-        record.setMethod(request.getMethod());
-        record.setOperateUrl(request.getRequestURI());
         record.setOperateTime(new Date());
         record.setOperateDesc(baseController.getBusinessName());
-        if (AuthUtil.getInstance().isUserLoggedIn()) {
-            record.setOperateUser(AuthUtil.getInstance().getCurrentUser().getUsername());
-        } else {
-            record.setOperateUser("NULL USERNAME:" + NetUtil.getIp(request));
-        }
         record.setOperateParam(JsonUtils.toJSONString(context.getArgs()));
+        // 环境维度信息（链路追踪ID、操作用户、IP、请求URL与方法）经上下文链路统一回填
+        loggingContextApplier.apply(loggingContextResolver.resolveCurrent(), record);
         operateContext.setOperateRecord(record);
         return operateContext;
     }

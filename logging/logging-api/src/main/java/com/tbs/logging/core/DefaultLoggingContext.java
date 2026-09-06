@@ -76,13 +76,23 @@ public class DefaultLoggingContext implements ILoggingContext {
     }
 
     /**
-     * 构造指定来源的快照
+     * 构造指定来源的快照，采集开始时间取当前时刻
      *
      * @param source 来源标识，传入 null 按 "default" 处理
      */
     public DefaultLoggingContext(String source) {
+        this(source, System.currentTimeMillis());
+    }
+
+    /**
+     * 构造指定来源与采集开始时间的快照
+     *
+     * @param source    来源标识，传入 null 按 "default" 处理
+     * @param startTime 采集开始时间戳（毫秒）
+     */
+    public DefaultLoggingContext(String source, long startTime) {
         this.source = source == null ? SOURCE_DEFAULT : source;
-        this.startTime = System.currentTimeMillis();
+        this.startTime = startTime;
     }
 
     /**

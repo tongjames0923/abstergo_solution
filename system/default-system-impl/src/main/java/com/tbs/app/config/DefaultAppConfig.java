@@ -1,11 +1,18 @@
 package com.tbs.app.config;
 
 import com.tbs.app.intercept.DataPermissionIntercepter;
+import com.tbs.app.intercept.OperateLogAspect;
 import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.service.impl.FeatureFlagServiceImpl;
 import com.tbs.app.service.impl.user.DefaultUserInfoService;
 import com.tbs.common.util.base.BeanUtil;
+import com.tbs.logging.core.DefaultLoggingContextApplier;
+import com.tbs.logging.core.DefaultLoggingContextResolver;
+import com.tbs.logging.core.ILoggingContextApplier;
+import com.tbs.logging.core.ILoggingContextCreator;
+import com.tbs.logging.core.ILoggingContextInterceptor;
+import com.tbs.logging.core.ILoggingContextResolver;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
 import com.tbs.shared.interfaces.constraint.PasswordValidator;
 import com.tbs.shared.interfaces.constraint.UserNameValidator;
@@ -27,6 +34,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author abstergo
@@ -106,6 +114,52 @@ public class DefaultAppConfig {
         matchIfMissing = true)
     SystemOperateInterceptor systemOperAop() {
         return new SystemOperateInterceptor();
+    }
+
+    /**
+     * 日志上下文解析门面配置
+     * <p>
+     * 收集全部来源模块注册的上下文创建器（如 web 模块的
+     * WebLoggingContextCreator）与上下文拦截器，装配统一解析门面，
+     * 供接口级与方法级日志采集链路获取环境维度信息。
+     * </p>
+     *
+     * @param creators     上下文创建器集合，可为空
+     * @param interceptors 上下文拦截器集合，可为空
+     * @return 日志上下文解析门面
+     */
+    @Bean
+    @ConditionalOnMissingBean(ILoggingContextResolver.class)
+    public ILoggingContextResolver loggingContextResolver(List<ILoggingContextCreator> creators,
+        List<ILoggingContextInterceptor> interceptors) {
+        return new DefaultLoggingContextResolver(creators, interceptors);
+    }
+
+    /**
+     * 日志上下文回填器配置
+     *
+     * @return 默认日志上下文回填器
+     */
+    @Bean
+    @ConditionalOnMissingBean(ILoggingContextApplier.class)
+    public ILoggingContextApplier loggingContextApplier() {
+        return new DefaultLoggingContextApplier();
+    }
+
+    /**
+     * 方法级操作日志切面配置
+     * <p>
+     * 仅拦截标注 {@code @OperateLog} 的方法，需显式开启
+     * {@code tbs.system.enable-method-log=true}（默认关闭）。
+     * </p>
+     *
+     * @return 方法级操作日志切面
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.system", name = "enable-method-log", havingValue = "true",
+        matchIfMissing = false)
+    public OperateLogAspect operateLogAspect() {
+        return new OperateLogAspect();
     }
 
     /**
