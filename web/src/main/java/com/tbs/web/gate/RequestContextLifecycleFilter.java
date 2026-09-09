@@ -1,9 +1,10 @@
 package com.tbs.web.gate;
 
+import com.tbs.common.util.base.CollUtil;
+import com.tbs.web.context.IContextBuilder;
 import com.tbs.web.context.IContextClean;
-import com.tbs.web.context.RequestDataContext;
 import com.tbs.web.context.RequestContextHolder;
-import com.tbs.web.uitl.NetUtil;
+import com.tbs.web.context.RequestDataContext;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
@@ -24,10 +25,12 @@ import java.util.List;
  * <p>
  * HTTP 请求生命周期中 {@link RequestDataContext} 的<b>创建与清理统一管理点</b>：
  * <ul>
- *   <li><b>进入时创建并填充</b>：生成链路追踪 ID（traceId）与开始时间，填充客户端
- *       IP、请求方法、请求 URI。上下文在过滤器链最外层就绪，保证后续任何阶段
- *       （Spring Security、AOP 拦截器链、Service 层切面、日志上下文创建器）
- *       读到的都是<b>本请求</b>的数据，不受拦截器执行顺序影响。</li>
+ *   <li><b>进入时创建并填充</b>：经 {@link IContextBuilder} 生成管道按序执行，
+ *       由各生成器创建并填充线程级上下文（默认 {@code RequestContextBuilder}
+ *       创建 {@link RequestDataContext}，生成链路追踪 ID（traceId）与开始时间，
+ *       填充客户端 IP、请求方法、请求 URI）。上下文在过滤器链最外层就绪，
+ *       保证后续任何阶段（Spring Security、AOP 拦截器链、Service 层切面、
+ *       日志上下文创建器）读到的都是<b>本请求</b>的数据，不受拦截器执行顺序影响。</li>
  *   <li><b>结束时清理</b>：请求返回时（finally）经 {@link IContextClean} 清理管道
  *       统一清理（请求上下文及各扩展实现），防止单个清理器失败影响其余清理器执行、
  *       防止容器线程（线程池复用）残留上一请求数据导致的上下文串台（traceId、URI
@@ -52,6 +55,7 @@ import java.util.List;
  *
  * @author abstergo
  * @see OncePerRequestFilter
+ * @see IContextBuilder
  * @see IContextClean
  * @see RequestDataContext
  * @see RequestContextHolder
@@ -68,15 +72,27 @@ public class RequestContextLifecycleFilter extends OncePerRequestFilter {
     private final List<IContextClean> contextCleans;
 
     /**
-     * 构造过滤器
-     *
-     * @param contextCleans 上下文清理器集合，Spring 自动收集全部实现，允许为空
+     * 上下文生成管道（已按 {@link IContextBuilder#getOrder()} 升序排列）
      */
-    public RequestContextLifecycleFilter(List<IContextClean> contextCleans) {
+    private final List<IContextBuilder> contextBuilders;
+
+    /**
+     * 构造过滤器
+     * <p>
+     * 两条管道均为构造时一次性收集并排序，避免每请求重复执行
+     * Bean 查找与排序的开销。
+     * </p>
+     *
+     * @param contextCleans  上下文清理器集合，Spring 自动收集全部实现，允许为空
+     * @param contextBuilders 上下文生成器集合，Spring 自动收集全部实现，允许为空
+     */
+    public RequestContextLifecycleFilter(List<IContextClean> contextCleans, List<IContextBuilder> contextBuilders) {
         List<IContextClean> sorted = new ArrayList<>(
             contextCleans == null ? new ArrayList<>() : contextCleans);
         sorted.sort(Comparator.comparingInt(IContextClean::getOrder));
         this.contextCleans = sorted;
+        this.contextBuilders = new ArrayList<>(contextBuilders == null ? new ArrayList<>() : contextBuilders);
+        this.contextBuilders.sort(Comparator.comparingInt(IContextBuilder::getOrder));
     }
 
     @Override
@@ -108,28 +124,25 @@ public class RequestContextLifecycleFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 初始化当前请求的请求上下文
+     * 执行上下文生成管道
      * <p>
-     * 上下文已存在（如 Dubbo 传播恢复、更早入口创建）时保留原实例仅刷新
-     * 基础运行数据，保证 traceId 与调用链一致；否则创建新上下文。
-     * 初始化失败仅记 warn，不阻断请求。
+     * 按顺序依次执行全部生成器；单个生成器异常仅记 warn 并继续，
+     * 保证其余上下文仍被初始化，且不阻断请求。
      * </p>
      *
      * @param request 当前 HTTP 请求
      */
     private void initContext(HttpServletRequest request) {
-        try {
-            RequestDataContext context = RequestContextHolder.get();
-            if (context == null) {
-                context = RequestDataContext.create();
-                RequestContextHolder.set(context);
+        if (CollUtil.isEmpty(contextBuilders)) {
+            log.debug("请求上下文初始化: 无上下文生成器");
+            return;
+        }
+        for (IContextBuilder contextBuilder : contextBuilders) {
+            try {
+                contextBuilder.build(request);
+            } catch (Exception e) {
+                log.warn("上下文生成器执行失败: {}", contextBuilder.getClass().getName(), e);
             }
-            context.setClientIp(NetUtil.getIp(request));
-            context.setRequestMethod(request.getMethod());
-            context.setRequestUri(request.getRequestURI());
-            log.debug("请求上下文初始化: traceId={}, uri={}", context.getTraceId(), context.getRequestUri());
-        } catch (Exception e) {
-            log.warn("请求上下文初始化失败", e);
         }
     }
 }

@@ -1,43 +1,43 @@
 package com.tbs.web.gate.intercept;
 
 import com.tbs.common.data.ValueWrapper;
-import com.tbs.web.BaseController;
 import com.tbs.web.context.RequestDataContext;
 import com.tbs.web.context.RequestContextHolder;
-import com.tbs.web.uitl.NetUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 
 /**
  * 请求上下文拦截器
  * <p>
  * 集成到 {@link com.tbs.web.aop.ApiInvokeAop} 的拦截器链中，
- * 负责在Controller方法调用前后管理 {@link RequestDataContext} 的生命周期。
+ * 在 Controller 方法调用前后补充管理 {@link RequestDataContext}。
  * <p>
  * 职责：
  * <ul>
- *   <li><b>beforeInvoke</b>：创建或恢复请求上下文，填充基础运行数据（IP、URI、方法名等）</li>
- *   <li><b>afterInvoke</b>：记录请求耗时日志</li>
+ *   <li><b>beforeInvoke</b>：补充填充 Controller 层信息（controllerName、methodName），
+ *       该信息仅切点可知，Filter 层无法获取。上下文由 {@code RequestContextLifecycleFilter}
+ *       的 {@code IContextBuilder} 生成管道在最外层创建，本类不重建——
+ *       中途新建会导致 traceId 断链；上下文缺失（生成管道异常）时仅记 warn 跳过</li>
+ *   <li><b>afterInvoke</b>：记录请求耗时日志（Controller 级唯一耗时观测点）</li>
  *   <li><b>onException</b>：记录异常信息到上下文，便于后续处理</li>
  * </ul>
  * <p>
  * 上下文的清理工作由以下机制保证：
  * <ul>
- *   <li>对于HTTP请求：由 {@link com.tbs.web.gate.I18nFilter} 等Filter在请求结束时统一清理</li>
+ *   <li>对于HTTP请求：由 {@code RequestContextLifecycleFilter} 在 finally 中经
+ *       {@code IContextClean} 清理管道统一清理（含 {@code RequestContextClean}、
+ *       {@code I18nContextClean} 等实现）</li>
  *   <li>对于Dubbo调用：由 {@link com.tbs.web.context.propagator.DubboRequestContextFilter} 在调用结束后清理</li>
  * </ul>
  * <p>
  * 典型调用链路：
  * <pre>
  * HTTP请求进入
- *   → I18nFilter（Filter层，可以创建初始上下文）
- *     → ApiInvokeAop → RequestContextInterceptor.beforeInvoke（填充详细数据）
+ *   → RequestContextLifecycleFilter（Filter层，IContextBuilder 管道创建/填充上下文）
+ *     → ApiInvokeAop → RequestContextInterceptor.beforeInvoke（补充 Controller 层信息）
  *       → 业务逻辑（可通过 RequestContextHolder.current() 获取上下文）
  *     → ApiInvokeAop → RequestContextInterceptor.afterInvoke（记录日志）
- *   → I18nFilter finally（清理上下文）
+ *   → RequestContextLifecycleFilter finally（IContextClean 管道统一清理上下文）
  * </pre>
  *
  * @author abstergo
@@ -50,22 +50,13 @@ import javax.servlet.http.HttpServletRequest;
 public class RequestContextInterceptor implements IApiInvokeInterceptor {
 
     /**
-     * HTTP请求对象，用于获取请求相关信息
-     */
-    @Resource
-    private HttpServletRequest request;
-
-    /**
      * 方法调用前拦截处理
      * <p>
-     * 创建或获取已有的请求上下文，并填充以下基础运行数据：
-     * <ul>
-     *   <li>clientIp：客户端IP地址</li>
-     *   <li>requestMethod：HTTP请求方法</li>
-     *   <li>requestUri：请求URI路径</li>
-     *   <li>controllerName：控制器类名</li>
-     *   <li>methodName：被调用的方法名</li>
-     * </ul>
+     * 补充填充 Controller 层信息（controllerName、methodName）到已有的请求上下文。
+     * 上下文由 {@code RequestContextLifecycleFilter} 在过滤器链最外层创建并填充
+     * 基础运行数据（clientIp、requestMethod、requestUri），本类不重复填充、不重建。
+     * 上下文缺失（生成管道异常降级）时仅记 warn 跳过，避免中途新建导致 traceId 断链。
+     * </p>
      *
      * @param context API调用上下文，包含目标对象、方法和参数等信息
      * @return 原样返回的API调用上下文
@@ -77,23 +68,16 @@ public class RequestContextInterceptor implements IApiInvokeInterceptor {
         }
 
         try {
-            // 获取或创建请求上下文
             RequestDataContext ctx = RequestContextHolder.get();
             if (ctx == null) {
-                ctx = RequestDataContext.create();
-                RequestContextHolder.set(ctx);
+                log.warn("请求上下文缺失，跳过 Controller 层信息填充: {}.{}",
+                    context.getTarget().getClass().getSimpleName(), context.getMethod().getName());
+                return context;
             }
-
-            // 填充基础运行数据
-            ctx.setClientIp(NetUtil.getIp(request));
-            ctx.setRequestMethod(request.getMethod());
-            ctx.setRequestUri(request.getRequestURI());
             ctx.setControllerName(context.getTarget().getClass().getSimpleName());
             ctx.setMethodName(context.getMethod().getName());
-
-            log.debug("请求上下文初始化: {}", ctx);
         } catch (Exception e) {
-            log.warn("请求上下文初始化失败", e);
+            log.warn("请求上下文 Controller 层信息填充失败", e);
         }
 
         return context;

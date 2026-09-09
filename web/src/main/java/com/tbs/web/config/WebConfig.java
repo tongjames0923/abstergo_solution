@@ -1,13 +1,10 @@
 package com.tbs.web.config;
 
-import com.tbs.common.context.ContextPropagator;
 import com.tbs.web.config.property.WebProperty;
 import com.tbs.web.constants.WebBeanNameConstant;
-import com.tbs.web.context.RequestContextPropagator;
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.gate.center.impl.LoginGateWayCenter;
-import com.tbs.web.security.authentication.SecurityContextPropagator;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -36,7 +33,7 @@ import javax.annotation.Resource;
  *     <li>Spring Security 安全配置（认证入口、访问拒绝、无状态会话、路径放行/受保护）</li>
  *     <li>CORS 跨域配置</li>
  *     <li>HTTP 安全特性（CSRF、HTTP Basic、表单登录、注销）开关</li>
- *     <li>装配请求上下文传播器、登录网关中心等 Web 组件 Bean</li>
+ *     <li>装配登录网关中心等 Web 组件 Bean（上下文传播器见 {@link ContextPropagatorConfig}）</li>
  * </ol>
  * 各项开关由 {@link WebProperty} 驱动。
  * </p>
@@ -74,16 +71,6 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
      */
     @Resource
     private WebProperty webProperty;
-
-    @Bean
-    ContextPropagator requestContextPropagator() {
-        return new RequestContextPropagator();
-    }
-
-    @Bean
-    ContextPropagator securityContextPropagator() {
-        return new SecurityContextPropagator();
-    }
 
     @Bean
     LoginGateWayCenter loginSecurityManager(@Qualifier(WebBeanNameConstant.LOGIN_TOKEN_PICKER) ITokenPicker picker) {

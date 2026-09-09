@@ -51,7 +51,8 @@ public class Application {
 - `@EnableTbsAsyncPack(useSchedule = false)`：关闭任务调度子域；
 - 也可单独启用调度子域：`@EnableTbsSchedule`（内部同样经自动注册器扫描 `com.tbs.schedule` 包）；
 - 自动注册器默认扫描 `com.tbs.async`、`com.tbs.lock`、`com.tbs.thread` 包，并向 `FeatureManager` 注册 `Feature.ASYNC`；
-- `AsyncConfig` 同时开启 Spring 的 `@EnableAsync` 与 `@EnableScheduling`。
+- `AsyncConfig` 同时开启 Spring 的 `@EnableAsync` 与 `@EnableScheduling`；
+- `ContextPropagatorAsyncConfig` 将 `@Async` 默认执行器接入上下文传播链（见"多层级线程池"一节）。
 
 ## 核心组件
 
@@ -113,7 +114,9 @@ public void syncOrders() {
 | 主线程池 `mainExecutorService`（`@Primary`） | `ThreadPoolExecutor` | 核心 10 / 最大 100 / 空闲 60s / 队列 100（`ExecutorProperty` 可配） | 常规异步任务，拒绝策略 `CallerRunsPolicy` |
 | 长任务线程池 `longTermExecutorService` | `LongTermThreadExecutor` | 每任务新建线程，容器销毁时中断全部 | 最大可接受耗时 5 分钟，优先级 100 |
 
-上下文传播：管理器持有容器内全部 `ContextPropagator`（common 模块约定），每次 `submit` 时链式包装任务，将父线程上下文快照传播到工作线程并在执行后清理。
+上下文传播：管理器持有容器内全部 `ContextPropagator`（common 模块约定，统一经 `ContextPropagators` 工具包装），每次 `submit` 时链式包装任务，将父线程上下文快照传播到工作线程，执行后**恢复式清理**（还原工作线程执行前状态，`CallerRunsPolicy` 下任务回退到提交线程执行时不会误清提交线程自身上下文）。
+
+**Spring `@Async` 接入**：`ContextPropagatorAsyncConfig` 实现 `AsyncConfigurer`，将 `@Async` 注解方法的默认执行器从 Spring 回退的 `SimpleAsyncTaskExecutor`（每任务一线程、无上下文传播）改为经传播链包装的主线程池 `mainExecutorService`——`@Async` 方法既复用池化线程，又能读取请求上下文/Locale。
 
 ### 3. 事件广播（broadcast 包）
 
@@ -383,7 +386,8 @@ com.tbs
 ├── async                 # 长期异步任务
 │   ├── annotation        # @EnableTbsAsyncPack / @LongTermAsync
 │   ├── aop               # LongTermAsyncAop 切面
-│   ├── config            # AsyncConfig / ExecutorProperty(tbs.async.executor) / AsyncAutoRegister
+│   ├── config            # AsyncConfig / ContextPropagatorAsyncConfig(@Async 执行器接入传播链) /
+│   │                     #   ExecutorProperty(tbs.async.executor) / AsyncAutoRegister
 │   ├── constant          # AsyncBeanNameConstant
 │   └── delegate          # AsyncDelegateInvoker（桥接 common 代理模式与线程池）
 ├── thread                # 线程池管理

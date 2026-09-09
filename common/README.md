@@ -356,7 +356,8 @@ public class SystemModuleMessageSourceProvider extends AbstractMessageSourceProv
 ### 7. 上下文传播（context）
 
 - `IContext`：环境生命周期接口（`destroy()` / `rebuild()` / `isValid()` / `checkValid()`）；
-- `ContextPropagator`：线程池上下文传播约定 —— `wrap(Runnable)` 在提交线程捕获上下文快照，返回的 `Runnable` 在工作线程恢复并在 `finally` 中清理，防止线程复用残留脏数据。
+- `ContextPropagator`：线程池上下文传播约定 —— `wrap(Runnable)` 在提交线程捕获上下文快照，返回的 `Runnable` 在工作线程恢复并在 `finally` 中**恢复式清理**（还原工作线程执行前状态，任务回退到提交线程同步执行时不会误清其上下文）；
+- `ContextPropagators`：传播链统一包装工具——`wrap`（链式包装任务）与 `wrapExecutor`（包装整个 `Executor`），供托管线程池、Spring `@Async`、Spring MVC 异步等各执行路径复用。
 
 `I18nContextPropagator`（i18n 自动装配提供）是该约定的内置实现，将父线程 Locale 传播至异步任务线程。
 
@@ -655,7 +656,7 @@ com.tbs.common
 │   └── property      # UuidProperty / DataHolderProperty / DelegateProperty /
 │                     #   StartUpProperty / I18nProperty
 ├── constant          # CommonI18nConstant / DataHolderBeanNameConstant
-├── context           # IContext / ContextPropagator
+├── context           # IContext / ContextPropagator / ContextPropagators
 ├── data              # IDataHolder / IDataHolderManager / PageVO 等
 │   ├── impl          # MapDataHolder / SpringManagedDataHolderManager / JsonTransformer 等
 │   ├── serializer    # ToStringOrNumberDeserializer

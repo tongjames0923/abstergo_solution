@@ -25,6 +25,8 @@ public class I18nContextPropagator implements ContextPropagator {
         // 在调用线程（请求线程）中快照 Locale
         Locale locale = I18nContextHolder.getLocaleNullable();
         return () -> {
+            // 记录工作线程原有 Locale，支持恢复式清理
+            Locale previous = I18nContextHolder.getLocaleNullable();
             try {
                 // 在工作线程中恢复 Locale
                 if (locale != null) {
@@ -32,8 +34,9 @@ public class I18nContextPropagator implements ContextPropagator {
                 }
                 task.run();
             } finally {
-                // 清理，防止线程池复用时残留上一个请求的 Locale
-                I18nContextHolder.clear();
+                // 恢复工作线程原有状态：任务被拒绝回退到提交线程执行（CallerRunsPolicy）时，
+                // 不会误清提交线程自身的 Locale
+                I18nContextHolder.setLocale(previous);
             }
         };
     }

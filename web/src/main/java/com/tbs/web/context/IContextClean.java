@@ -1,5 +1,7 @@
 package com.tbs.web.context;
 
+import org.springframework.core.Ordered;
+
 /**
  * 上下文清理器——请求结束时清理当前线程的请求级上下文
  * <p>
@@ -15,7 +17,7 @@ package com.tbs.web.context;
  * @author abstergo
  * @see RequestContextHolder
  */
-public interface IContextClean {
+public interface IContextClean extends Ordered {
 
     /**
      * 清理当前线程的上下文
@@ -35,6 +37,7 @@ public interface IContextClean {
      *
      * @return 清理顺序，默认 0
      */
+    @Override
     default int getOrder() {
         return 0;
     }
