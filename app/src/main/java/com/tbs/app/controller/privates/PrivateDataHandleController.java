@@ -1,6 +1,8 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.controller.constant.AppI18nContant;
+import com.tbs.app.data.HandlerOptionVO;
+import com.tbs.app.data.HandlerValidateVO;
 import com.tbs.app.data.TableDataHandlerRegistry;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.data.impl.CsvTableDataAdapter;
@@ -23,6 +25,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.IOException;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 数据处理控制器
@@ -51,6 +55,61 @@ public class PrivateDataHandleController extends BaseController {
      */
     @Resource
     private CsvTableDataAdapter csvAdapter;
+
+    /**
+     * 获取处理器选项列表
+     * <p>
+     * 返回本地 Spring 容器中注册的全部 {@link ITableDataHandler} 选项（ID 与名称），
+     * 供前端下拉列表展示。Dubbo 远程处理器为按需发现，不在此列。
+     * </p>
+     *
+     * @return 处理器选项列表
+     */
+    @NoLog
+    @AjaxResponseType(value = List.class, genericArgs = {HandlerOptionVO.class})
+    @PreAuthorize("@preAuthUtils.accountActived")
+    @Operation(summary = "获取处理器选项列表", description = "返回本地注册的数据处理器选项列表，供前端下拉选择")
+    @ApiResponse(responseCode = "200", description = "处理器选项列表")
+    @GetMapping("/handler/list")
+    public AjaxResult listHandlers() {
+        List<HandlerOptionVO> options = handlerRegistry.getAllHandlers().stream()
+            .map(handler -> new HandlerOptionVO(handler.getId(), handler.getName()))
+            .collect(Collectors.toList());
+        return successResult(options);
+    }
+
+    /**
+     * 校验处理器ID有效性
+     * <p>
+     * 用于前端"可选可输入"模式下校验自定义输入的 handlerId：
+     * 按"本地优先 → Dubbo 远程"顺序查找，返回可用性与命中来源。
+     * </p>
+     *
+     * @param handlerId 处理器ID
+     * @return 校验结果（available + source）
+     */
+    @NoLog
+    @AjaxResponseType(HandlerValidateVO.class)
+    @PreAuthorize("@preAuthUtils.accountActived")
+    @Operation(summary = "校验处理器ID有效性", description = "校验自定义输入的处理器ID是否可用，返回可用性与命中来源（local/remote）")
+    @ApiResponse(responseCode = "200", description = "校验结果")
+    @GetMapping("/handler/validate/{handlerId}")
+    public AjaxResult validateHandler(
+        @Parameter(name = "handlerId", description = "处理器ID", required = true) @PathVariable String handlerId) {
+
+        AssertUtil.isTrue(StrUtil.isEmpty(handlerId))
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .i18n(AppI18nContant.DATA_HANDLE_HANDLER_ID_EMPTY)
+            .throwIt();
+
+        ITableDataHandler handler = handlerRegistry.getHandler(handlerId);
+        if (handler == null) {
+            return successResult(new HandlerValidateVO(false, null));
+        }
+        boolean isLocal = handlerRegistry.getAllHandlers().stream()
+            .anyMatch(item -> item.getId().equals(handlerId));
+        return successResult(new HandlerValidateVO(true, isLocal ? "local" : "remote"));
+    }
 
     /**
      * CSV 文件上传与解析

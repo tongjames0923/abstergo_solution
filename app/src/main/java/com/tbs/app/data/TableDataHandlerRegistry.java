@@ -78,6 +78,11 @@ public class TableDataHandlerRegistry {
     private Map<String, ITableDataHandler> localHandlerMap;
 
     /**
+     * Dubbo 远程处理器代理缓存（key 为 handlerId，线程安全）
+     */
+    private final ConcurrentHashMap<String, ITableDataHandler> remoteHandlerCache = new ConcurrentHashMap<>();
+
+    /**
      * 初始化本地处理器映射
      */
     @PostConstruct
@@ -109,7 +114,7 @@ public class TableDataHandlerRegistry {
             return local;
         }
         if (remoteEnabled && applicationConfig != null && registryConfig != null) {
-            return createDubboReference(id);
+            return remoteHandlerCache.computeIfAbsent(id, this::createDubboReference);
         }
         return null;
     }

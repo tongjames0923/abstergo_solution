@@ -111,7 +111,8 @@ export default {
     formManager: 'Form Manager',
     genericApi: 'Generic API',
     route: 'Route Management',
-    routeManager: 'Route Config'
+    routeManager: 'Route Config',
+    dataHandle: 'Data Handling'
   },
 
   // Route Menu i18n
@@ -337,6 +338,34 @@ export default {
     clear: 'Clear Cache',
     refresh: 'Refresh',
     confirmClear: 'Are you sure to clear all caches?'
+  },
+
+  // Data Handling
+  dataHandle: {
+    title: 'Data Handling',
+    subtitle: 'Upload CSV files and process them with the specified data handler',
+    refresh: 'Refresh',
+    handlerLabel: 'Data Handler',
+    handlerPlaceholder: 'Select from the list, or enter a custom handler ID',
+    handlerRequired: 'Please select or enter a data handler ID',
+    validating: 'Validating handler ID...',
+    validLocal: 'Handler available (local)',
+    validRemote: 'Handler available (remote)',
+    invalid: 'Handler not found, please check the ID',
+    fileLabel: 'CSV File',
+    dragText: 'Drop CSV file here, or ',
+    clickUpload: 'click to upload',
+    uploadTip: 'Only .csv files (UTF-8 encoded) are supported, one file at a time',
+    onlyCsv: 'Only .csv format files are supported',
+    fileExceed: 'Only one file can be uploaded at a time, replaced with the latest selection',
+    fileRequired: 'Please select a CSV file to upload',
+    submit: 'Upload & Parse',
+    reset: 'Reset',
+    submitSuccess: 'Parsed successfully, {count} rows in total',
+    resultTitle: 'Parse Result',
+    rowCount: 'Rows: {count}',
+    columnCount: 'Columns: {count}',
+    emptyResult: 'Table data is empty'
   },
 
   // Object Storage Management

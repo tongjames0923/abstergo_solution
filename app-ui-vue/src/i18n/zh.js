@@ -111,7 +111,8 @@ export default {
     formManager: '表单管理',
     genericApi: '泛化API',
     route: '路由管理',
-    routeManager: '路由配置'
+    routeManager: '路由配置',
+    dataHandle: '数据处理'
   },
 
   // 路由菜单国际化
@@ -337,6 +338,34 @@ export default {
     clear: '清空缓存',
     refresh: '刷新',
     confirmClear: '确定要清空所有缓存吗？'
+  },
+
+  // 数据处理
+  dataHandle: {
+    title: '数据处理',
+    subtitle: '上传 CSV 文件并交由指定数据处理器解析处理',
+    refresh: '刷新',
+    handlerLabel: '数据处理器',
+    handlerPlaceholder: '从列表选择，或输入自定义处理器ID',
+    handlerRequired: '请选择或输入数据处理器ID',
+    validating: '正在校验处理器ID...',
+    validLocal: '处理器可用（本地）',
+    validRemote: '处理器可用（远程）',
+    invalid: '未找到该处理器，请确认ID是否正确',
+    fileLabel: 'CSV 文件',
+    dragText: '将 CSV 文件拖到此处，或',
+    clickUpload: '点击上传',
+    uploadTip: '仅支持 .csv 文件（UTF-8 编码），单次上传一个文件',
+    onlyCsv: '仅支持 .csv 格式的文件',
+    fileExceed: '单次仅能上传一个文件，已自动替换为最新选择',
+    fileRequired: '请选择要上传的 CSV 文件',
+    submit: '上传并解析',
+    reset: '重置',
+    submitSuccess: '解析成功，共 {count} 行数据',
+    resultTitle: '解析结果',
+    rowCount: '总行数：{count}',
+    columnCount: '列数：{count}',
+    emptyResult: '表格数据为空'
   },
 
   // 对象存储管理
