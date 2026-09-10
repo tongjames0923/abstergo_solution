@@ -1,6 +1,6 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.annotation.NoLog;
+import com.tbs.logging.annotation.NoLog;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.logging.core.ILogRecorder;

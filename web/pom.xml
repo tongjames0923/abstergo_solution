@@ -24,6 +24,10 @@
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>
+            <artifactId>logging-api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
             <artifactId>tree-api</artifactId>
         </dependency>
         <dependency>

@@ -65,12 +65,12 @@ public class I18nInterceptor implements IApiInvokeInterceptor {
 
     @Override
     public void afterInvoke(ApiInvokeContext context, ValueWrapper<Object> result) {
-        // 不在这里清理，由I18nFilter统一清理
+        // 不在这里清理，由 RequestContextLifecycleFilter 的 IContextClean 清理管道统一清理
     }
 
     @Override
     public void onException(ApiInvokeContext context, Throwable e) {
-        // 不在这里清理，由I18nFilter统一清理
+        // 不在这里清理，由 RequestContextLifecycleFilter 的 IContextClean 清理管道统一清理
     }
 
     protected Locale resolveLocale( HttpServletRequest request) {

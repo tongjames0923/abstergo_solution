@@ -27,6 +27,10 @@
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>logging-api</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

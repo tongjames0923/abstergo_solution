@@ -32,4 +32,21 @@ public final class AppI18nContant {
      * 上传任务ID为空校验提示：上传任务ID不能为空
      */
     public static final String OSS_TASK_ID_EMPTY = "oss.task.id.empty";
+
+    /* ===================== 数据处理 ===================== */
+
+    /**
+     * 数据处理文件为空校验提示：上传文件不能为空
+     */
+    public static final String DATA_HANDLE_FILE_EMPTY = "data.handle.file.empty";
+
+    /**
+     * 数据处理器ID为空校验提示：处理器ID不能为空
+     */
+    public static final String DATA_HANDLE_HANDLER_ID_EMPTY = "data.handle.handler.id.empty";
+
+    /**
+     * 数据处理器未找到提示：未找到数据处理器，ID：{0}
+     */
+    public static final String DATA_HANDLE_HANDLER_NOT_FOUND = "data.handle.handler.not.found";
 }

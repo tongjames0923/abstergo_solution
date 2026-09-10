@@ -91,9 +91,17 @@ tbs:
 ```
 HTTP 请求
   │
+  ├─ RequestContextLifecycleFilter（@Order(HIGHEST_PRECEDENCE+5)，过滤器链最外层）
+  │    进入时按序执行 IContextBuilder 生成管道
+  │      （RequestContextBuilder 获取/创建 RequestDataContext，填充 traceId、
+  │        startTime、IP、请求方法、URI）
+  │    finally 按序执行 IContextClean 清理管道
+  │      （I18nContextClean → RequestContextClean，统一清理线程级上下文）
+  │    单个生成器/清理器异常仅记 warn，不中断管道、不阻断请求
+  │
   ├─ I18nFilter（@Order(HIGHEST_PRECEDENCE+10)，先于 Spring Security）
   │    解析语言（?lang= → Accept-Language → X-Lang/X-Locale）写入 I18nContextHolder
-  │    finally 清理 Locale
+  │    （语言上下文的清理由 IContextClean 管道的 I18nContextClean 统一执行）
   │
   ├─ Spring Security 过滤链
   │    └─ TokenHandleFilter（插在 UsernamePasswordAuthenticationFilter 之前）
@@ -109,7 +117,7 @@ HTTP 请求
   │
   ├─ ApiInvokeAop（拦截 BaseController 子类的 @*Mapping 方法）
   │    依次执行 IApiInvokeInterceptor：
-  │      ├─ RequestContextInterceptor（创建/填充 RequestDataContext）
+  │      ├─ RequestContextInterceptor（补充填充 controllerName/methodName）
   │      └─ I18nInterceptor（备份语言解析）
   │
   ├─ Controller 业务方法
@@ -338,7 +346,25 @@ public abstract class BaseController {
 
 `RequestDataContext`（可序列化）携带：`traceId`（格式 `timestamp-16位随机串`）、`startTime`、`clientIp`、`requestMethod`、`requestUri`、`controllerName`、`methodName`、`serviceName`，以及业务数据 Map（`put`/`get`/`get(key, type)`/`getOrDefault`/`remove`/`containsKey`/`elapsed()`）。
 
-`RequestContextHolder` 基于 `InheritableThreadLocal`（子线程可继承），提供 `current()`/`get()`/`context()`（Optional）/`getOrCreate()`/`traceId()`/`put()`/`get()`/`clear()`。
+`RequestContextHolder` 基于普通 `ThreadLocal`（ **非** InheritableThreadLocal——池化线程仅在创建时继承一次，复用会残留上一请求数据导致串台），提供
+`current()`/`get()`/`context()`（Optional）/`getOrCreate()`/`traceId()`/`put()`/`get()`/`clear()`。线程池异步任务的上下文传播由
+`ContextPropagator` SPI 显式接管（见下文）。
+
+### 生命周期管理（RequestContextLifecycleFilter）
+
+`RequestContextLifecycleFilter`（`@Order(HIGHEST_PRECEDENCE + 5)`，先于 `I18nFilter` 进入过滤器链、其 finally 更晚执行）是请求上下文的
+**创建与清理统一管理点**：
+
+- **生成管道（`IContextBuilder`）**：请求进入时按 `getOrder()` 升序依次执行；单个生成器异常仅记 warn 不中断管道。内置
+  `RequestContextBuilder`——获取或创建 `RequestDataContext` 并填充 IP/请求方法/URI；上下文已存在（如 Dubbo
+  传播恢复）时保留原实例仅刷新基础数据，保证 traceId 与调用链一致；
+- **清理管道（`IContextClean`）**：请求返回时（finally）按 `getOrder()` 升序依次执行；单个清理器异常仅记 warn 不中断。内置
+  `I18nContextClean`（order=10，语言上下文）与 `RequestContextClean`（order=100，请求上下文）——业务语义上下文先于基础上下文清理；
+- **扩展方式**：新增线程级上下文类型只需实现 `IContextBuilder`（及配套 `IContextClean`）并注册为 Bean，即自动纳入管道，无需修改过滤器；
+- 两条管道均在过滤器构造时一次性注入并排序，请求路径上不重复执行 Bean 查找与排序。
+
+> 类名刻意不使用 `RequestContextFilter`，避免与 Spring Boot `WebMvcAutoConfiguration` 内置注册的同名 Bean 冲突（Bean
+> 定义覆盖默认关闭）。
 
 ### Dubbo 跨服务传播
 
@@ -347,7 +373,32 @@ public abstract class BaseController {
 - **Consumer 端**：调用前将上下文 JSON 序列化 + Base64 编码放入 RpcContext attachments（键 `tbs.request.context`），同时附轻量键 `tbs.request.traceId`；调用后 finally 清理 attachments 防污染；
 - **Provider 端**：提取并反序列化恢复到当前线程；仅有 traceId 时按 traceId 新建上下文；调用后 finally 还原之前的上下文。
 
-配合 `WebConfig` 注册的两个 `ContextPropagator`（common 模块异步线程池传播 SPI）——`RequestContextPropagator` 与 `SecurityContextPropagator`（认证信息传播）。
+### 线程池异步传播（ContextPropagator）
+
+请求上下文在服务内的线程间传播由 common 模块的 `ContextPropagator` SPI 显式接管（`RequestContextHolder` 为普通
+`ThreadLocal`，不做隐式继承），统一经 `ContextPropagators` 工具包装：
+
+- **传播机制**：`wrap()` 在提交线程（请求线程）中快照上下文引用 → 工作线程执行前恢复 → `finally`
+  中**恢复式清理**（还原工作线程执行前状态）——池化线程复用不残留；任务被拒绝策略回退到提交线程执行（`CallerRunsPolicy`）时也不会误清提交线程自身上下文；
+- **本模块实现**（`WebConfig` 注册）：
+    - `RequestContextPropagator`：传播 `RequestDataContext`（traceId、业务数据等）；
+    - `SecurityContextPropagator`：传播 Spring Security 认证信息；
+    - common 模块另注册 `I18nContextPropagator` 传播 Locale。
+
+**异步执行路径覆盖情况**：
+
+| 执行路径 | 执行器 | 是否经传播链 | 说明 |
+|---------|--------|------------|------|
+| 托管线程池（`IThreadPoolManager`） | `mainExecutorService` 等 | ✅ | `AbstractThreadPoolManager.submit()` 提交时包装 |
+| Spring `@Async` | `mainExecutorService` | ✅ | `ContextPropagatorAsyncConfig`（async 模块）将默认执行器接入传播链，替代 Spring 回退的每任务一线程模式 |
+| Spring MVC 异步（`Callable` / `StreamingResponseBody`） | `mvc-async-` 执行器 | ✅ | `WebAsyncConfig`（本模块）接入传播链 |
+| `DeferredResult` 结果产生线程 | 取决于业务代码 | 视情况 | 使用托管线程池或 `@Async` 时已覆盖 |
+| `CompletableFuture.supplyAsync()` 默认 ForkJoinPool | JVM 公共池 | ❌ | **无上下文**，如需 traceId 请改用托管线程池或显式传参 |
+
+- **契约**：快照为对象引用而非深拷贝——请求线程与工作线程共享同一上下文实例，`businessData` 非线程安全，两端并发读写需自行保证同步。
+
+> 自定义上下文类型接入异步传播：实现 `ContextPropagator.wrap(Runnable)` 并注册为 Bean 即可，参考
+> `RequestContextPropagator`。
 
 ## API 调用拦截器
 
@@ -365,14 +416,17 @@ public interface IApiInvokeInterceptor {
 
 内置实现：
 
-- `RequestContextInterceptor`：前置创建/恢复上下文并填充 IP、URI、方法名等；后置记录耗时日志；异常时把异常类名/消息写入上下文（`_exception`/`_errorMessage`）；
+- `RequestContextInterceptor`：前置补充填充 `controllerName`/`methodName`（仅切点可知，Filter 层无法获取；
+  不重建上下文，缺失时记 warn 跳过避免 traceId 断链）；后置记录耗时日志；异常时把异常类名/消息写入上下文（`_exception`/`_errorMessage`）；
 - `I18nInterceptor`：备份语言解析（主路径为 `I18nFilter`）。
 
 拦截器自身抛出的异常会被 AOP 捕获并记 error，不影响业务调用。
 
 ## 国际化
 
-- `I18nFilter`（`@Order(HIGHEST_PRECEDENCE + 10)`，先于 Spring Security 执行）：解析语言写入 `I18nContextHolder`，请求结束 finally 清理。解析优先级：`?lang=` / `?locale=` 参数 → `Accept-Language` 头 → `X-Lang` / `X-Locale` 头。
+- `I18nFilter`（`@Order(HIGHEST_PRECEDENCE + 10)`，先于 Spring Security 执行）：解析语言写入 `I18nContextHolder`；语言上下文的清理由
+  `RequestContextLifecycleFilter` 的 `IContextClean` 管道统一执行（实现为 `I18nContextClean`）。解析优先级：`?lang=` /
+  `?locale=` 参数 → `Accept-Language` 头 → `X-Lang` / `X-Locale` 头。
 - `WebMessageSourceProvider`：注册 `messages-web` 资源（order=-200），中英文两份（`messages-web.properties` / `messages-web_en_US.properties`）。
 - `WebI18nConstant`：集中定义全部 key（通用/认证/令牌/用户/泛化 API/枚举文案/日志分组）。注意 `common.success`、`common.error`、`common.unauthorized`、`common.forbidden` 定义于 common 模块，web 跨模块引用。
 
@@ -520,16 +574,21 @@ com.tbs.web
 ├── annotation/            @EnableWebPack（启用入口）
 ├── aop/                   ApiInvokeAop（API 调用拦截切面）
 ├── config/                WebConfig（Security）、AuthConfig、TokenSetConfig、
-│                          JacksonCustomConfig、DubboConfig、WebAutoRegister
+│                          JacksonCustomConfig、DubboConfig、WebAutoRegister、
+│                          ContextPropagatorConfig（传播器装配，独立于 WebConfig 断开依赖环）、
+│                          WebAsyncConfig（MVC 异步执行器接入上下文传播链）
 │   └── property/          WebProperty / WebAuthProperty
 ├── constant/              WebI18nConstant（i18n key 常量）
 ├── constants/             WebBeanNameConstant（Bean 名常量）
-├── context/               RequestDataContext / RequestContextHolder
+├── context/               RequestDataContext / RequestContextHolder、
+│                          IContextBuilder / IContextClean 及其实现：
+│                          RequestContextBuilder / RequestContextClean / I18nContextClean
 │   └── propagator/        DubboRequestContextFilter（跨服务传播）
 ├── enums/                 TokenTypeEnum / TokenStatusEnum / TokenCreateTypeEnum /
 │                          TokenSource / WebMessageTypeEnum
 ├── exception/             NoLogin / NotFoundToken / InvalidToken / ReLoginRequest / SimpleAuth
-├── gate/                  TokenHandleFilter、ITokenPicker、I18nFilter
+├── gate/                  TokenHandleFilter、ITokenPicker、I18nFilter、
+│                          RequestContextLifecycleFilter（上下文生命周期管理）
 │   ├── center/            IGateWayCenter、AbstractAntPathSupportGateWayCenter
 │   │   └── impl/          LoginGateWayCenter
 │   └── intercept/         IApiInvokeInterceptor、RequestContextInterceptor、I18nInterceptor

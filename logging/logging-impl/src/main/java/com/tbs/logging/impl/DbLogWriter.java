@@ -7,7 +7,6 @@ import com.tbs.rabbitmq.support.MqConsumerProperties;
 import com.tbs.shared.mapper.SystemOperateMapper;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
@@ -123,7 +122,7 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
         entity.setOperateErrorLevel(form.getErrorCode());
         entity.setOperateUrl(form.getOperateUrl());
         entity.setMethod(form.getMethod());
-
+        entity.setTraceId(form.getTraceId());
         // 计算耗时
         if (form.getOperateTime() != null && form.getOperateFinishTime() != null) {
             entity.setCostTime(form.getOperateFinishTime().getTime() - form.getOperateTime().getTime());

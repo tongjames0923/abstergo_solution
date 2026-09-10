@@ -1,7 +1,7 @@
 package com.tbs.app.controller.privates;
 
 import cn.hutool.core.date.DateUtil;
-import com.tbs.app.annotation.NoLog;
+import com.tbs.logging.annotation.NoLog;
 import com.tbs.app.controller.constant.AppI18nContant;
 import com.tbs.app.service.oss.UploadTaskProgressManager;
 import com.tbs.app.vo.UploadTaskProgressVO;

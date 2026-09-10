@@ -61,5 +61,14 @@ public class AppSettingProperty {
      */
     private boolean enableApiPermission = true;
 
+    /**
+     * 是否启用方法级操作日志切面（拦截标注 @OperateLog 的方法）
+     */
+    private boolean enableMethodLog = false;
+
+    /**
+     * 单请求方法级日志记录上限（防爆炸护栏），非正数表示不限制
+     */
+    private int methodLogMaxRecordsPerRequest = 200;
 
 }

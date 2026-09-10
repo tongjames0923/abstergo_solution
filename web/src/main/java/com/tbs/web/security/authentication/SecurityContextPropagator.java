@@ -33,10 +33,11 @@ public class SecurityContextPropagator implements ContextPropagator {
 
     @Override
     public Runnable wrap(Runnable task) {
-        // 在调用线程（请求线程）中快照当前 SecurityContext
-        SecurityContext securityContext = SecurityContextHolder.getContext();
-        Authentication authentication = securityContext.getAuthentication();
+        // 在调用线程（请求线程）中快照当前认证信息
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return () -> {
+            // 记录工作线程原有认证信息，支持恢复式清理
+            Authentication previous = SecurityContextHolder.getContext().getAuthentication();
             try {
                 // 在工作线程中恢复认证信息
                 if (authentication != null) {
@@ -44,8 +45,13 @@ public class SecurityContextPropagator implements ContextPropagator {
                 }
                 task.run();
             } finally {
-                // 清理，防止线程池复用时残留上一个请求的认证信息
-                SecurityContextHolder.clearContext();
+                // 恢复工作线程原有状态：任务被拒绝回退到提交线程执行（CallerRunsPolicy）时，
+                // 不会误清提交线程自身的认证信息
+                if (previous != null) {
+                    SecurityContextHolder.getContext().setAuthentication(previous);
+                } else {
+                    SecurityContextHolder.clearContext();
+                }
             }
         };
     }

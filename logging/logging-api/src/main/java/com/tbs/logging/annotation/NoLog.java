@@ -1,4 +1,4 @@
-package com.tbs.app.annotation;
+package com.tbs.logging.annotation;
 
 import java.lang.annotation.*;
 

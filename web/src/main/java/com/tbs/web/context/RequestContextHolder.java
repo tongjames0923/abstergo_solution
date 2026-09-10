@@ -1,5 +1,6 @@
 package com.tbs.web.context;
 
+import java.io.Serializable;
 import java.util.Optional;
 
 /**
@@ -9,6 +10,12 @@ import java.util.Optional;
  * <p>
  * 本类仅负责当前服务实例内的上下文存储。跨服务的上下文传播由
  * {@link com.tbs.web.context.propagator.DubboRequestContextFilter} 等传播器自动完成。
+ * <p>
+ * <b>线程模型</b>：基于普通 {@link ThreadLocal}——线程池异步任务的上下文传播由
+ * {@code RequestContextPropagator}（{@code ContextPropagator} SPI 实现）显式接管：
+ * 提交任务时快照、工作线程执行前恢复、finally 清理。刻意不使用
+ * {@code InheritableThreadLocal}：池化线程仅在创建时继承一次父线程值，复用时残留
+ * 上一请求数据导致串台，且快照继承会传播脏数据。
  * <p>
  * 典型使用场景：
  * <pre>{@code
@@ -29,15 +36,19 @@ import java.util.Optional;
  *
  * @author abstergo
  * @see RequestDataContext
+ * @see RequestContextPropagator
  */
 public final class RequestContextHolder {
 
     /**
-     * 使用InheritableThreadLocal支持子线程继承父线程的上下文
+     * 当前线程的请求上下文存储
      * <p>
-     * 在异步任务（如线程池）场景下，子线程可以继承父线程的请求上下文
+     * 使用普通 {@link ThreadLocal}：线程池异步任务的上下文传播由
+     * {@link RequestContextPropagator} 显式接管（提交时快照、执行前恢复、finally 清理），
+     * 不使用 InheritableThreadLocal——池化线程仅在创建时继承一次父线程值，
+     * 线程复用时会残留上一请求数据（串台）并长期持有引用（内存泄漏）。
      */
-    private static final InheritableThreadLocal<RequestDataContext> CONTEXT_HOLDER = new InheritableThreadLocal<>();
+    private static final ThreadLocal<RequestDataContext> CONTEXT_HOLDER = new ThreadLocal<>();
 
     private RequestContextHolder() {
         // 工具类，禁止实例化
@@ -119,7 +130,7 @@ public final class RequestContextHolder {
      * @param key   业务标识
      * @param value 业务数据
      */
-    public static void put(String key, Object value) {
+    public static void put(String key, Serializable value) {
         RequestDataContext ctx = CONTEXT_HOLDER.get();
         if (ctx != null) {
             ctx.put(key, value);
@@ -134,7 +145,7 @@ public final class RequestContextHolder {
      * @param key 业务标识
      * @return 值的Optional包装
      */
-    public static Optional<Object> get(String key) {
+    public static Optional<Serializable> get(String key) {
         return context().flatMap(ctx -> ctx.get(key));
     }
 
@@ -148,7 +159,7 @@ public final class RequestContextHolder {
      * @param <T>  泛型类型
      * @return 类型安全的值的Optional包装
      */
-    public static <T> Optional<T> get(String key, Class<T> type) {
+    public static <T extends Serializable> Optional<T> get(String key, Class<T> type) {
         return context().flatMap(ctx -> ctx.get(key, type));
     }
 

@@ -1,6 +1,7 @@
 package com.tbs.thread;
 
 import com.tbs.common.context.ContextPropagator;
+import com.tbs.common.context.ContextPropagators;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import org.jetbrains.annotations.NotNull;
@@ -77,8 +78,8 @@ public abstract class AbstractThreadPoolManager implements IThreadPoolManager {
         });
         AssertUtil.notNull(executor, "未找到ExecutorService");
 
-        // 构造原始任务
-        Runnable task = () -> {
+        // 构造原始任务，并经上下文传播器链包装，将提交线程上下文传播到工作线程
+        Runnable task = ContextPropagators.wrap(propagators, () -> {
             try {
                 request.getThreadCall().call(request, this);
             } catch (Throwable e) {
@@ -87,12 +88,7 @@ public abstract class AbstractThreadPoolManager implements IThreadPoolManager {
                         e.getLocalizedMessage()));
                 onThreadError.onThreadError(e, Thread.currentThread());
             }
-        };
-
-        // 通过上下文传播器链式包装任务，将父线程上下文传播到工作线程
-        for (ContextPropagator propagator : propagators) {
-            task = propagator.wrap(task);
-        }
+        });
 
         executor.execute(task);
     }
