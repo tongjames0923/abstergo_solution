@@ -10,13 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -69,7 +63,7 @@ public class TableDataHandlerRegistry {
     /**
      * 是否启用 Dubbo 远程查找
      */
-    @Value("${tbs.data.handler.remote.enable:false}")
+    @Value("${tbs.data.handler.remote.enable:true}")
     private boolean remoteEnabled;
 
     /**
@@ -82,11 +76,6 @@ public class TableDataHandlerRegistry {
      * 本地处理器映射（只读，线程安全）
      */
     private Map<String, ITableDataHandler> localHandlerMap;
-
-    /**
-     * Dubbo 远程处理器代理缓存
-     */
-    private final Map<String, ITableDataHandler> remoteHandlerCache = new ConcurrentHashMap<>();
 
     /**
      * 初始化本地处理器映射
@@ -120,7 +109,7 @@ public class TableDataHandlerRegistry {
             return local;
         }
         if (remoteEnabled && applicationConfig != null && registryConfig != null) {
-            return remoteHandlerCache.computeIfAbsent(id, this::createDubboReference);
+            return createDubboReference(id);
         }
         return null;
     }

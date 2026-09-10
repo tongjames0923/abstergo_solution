@@ -9,6 +9,7 @@ import com.tbs.common.data.structs.TableData;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import org.springframework.stereotype.Component;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
@@ -35,6 +36,7 @@ import java.util.List;
  * @author abstergo
  * @since 1.0.0
  */
+@Component
 public class CsvTableDataAdapter implements ITableDataAdapter {
 
     /**
@@ -47,7 +49,8 @@ public class CsvTableDataAdapter implements ITableDataAdapter {
     public TableData adapt(InputStream stream) {
         AssertUtil.isTrue(stream == null).i18n("table.adapter.stream.null").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .throwIt();
-        try (CsvReader csvReader = new CsvReader(new InputStreamReader(stream), CsvReadConfig.defaultConfig())) {
+        try (CsvReader csvReader = new CsvReader(new InputStreamReader(stream, StandardCharsets.UTF_8),
+            CsvReadConfig.defaultConfig())) {
             var rows = csvReader.read().getRows();
             AssertUtil.isTrue(rows == null || rows.isEmpty()).i18n("table.adapter.csv.header.missing")
                 .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();

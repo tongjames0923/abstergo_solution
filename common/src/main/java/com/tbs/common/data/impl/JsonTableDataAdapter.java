@@ -7,6 +7,7 @@ import com.tbs.common.data.structs.TableData;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.JsonUtils;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -35,6 +36,7 @@ import java.util.List;
  * @author abstergo
  * @since 1.0.0
  */
+@Component
 public class JsonTableDataAdapter implements ITableDataAdapter {
 
     /**
