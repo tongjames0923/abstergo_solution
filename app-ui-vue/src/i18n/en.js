@@ -365,7 +365,11 @@ export default {
     resultTitle: 'Parse Result',
     rowCount: 'Rows: {count}',
     columnCount: 'Columns: {count}',
-    emptyResult: 'Table data is empty'
+    emptyResult: 'Table data is empty',
+    searchPlaceholder: 'Search table content...',
+    resetFilter: 'Clear Conditions',
+    noMatch: 'No matching data, please adjust search or filters',
+    filteredCount: '{count} / {total} rows matched'
   },
 
   // Object Storage Management

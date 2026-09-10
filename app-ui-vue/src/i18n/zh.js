@@ -365,7 +365,11 @@ export default {
     resultTitle: '解析结果',
     rowCount: '总行数：{count}',
     columnCount: '列数：{count}',
-    emptyResult: '表格数据为空'
+    emptyResult: '表格数据为空',
+    searchPlaceholder: '搜索表格内容...',
+    resetFilter: '清除条件',
+    noMatch: '没有匹配的数据，请调整搜索或筛选条件',
+    filteredCount: '匹配 {count} / {total} 行'
   },
 
   // 对象存储管理
