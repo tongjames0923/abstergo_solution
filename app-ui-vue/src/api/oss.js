@@ -166,6 +166,69 @@ export function downloadObject(objectKey, bucket) {
 }
 
 /**
+ * 构造公开下载码的免认证下载地址
+ * @param {string} code - 下载唯一码
+ * @returns {string} 完整公开下载 URL
+ */
+export function buildPublicDownloadUrl(code) {
+  return process.env.VUE_APP_BASE_API + '/public/oss/download-code/download?code=' + encodeURIComponent(code)
+}
+
+/**
+ * 创建公开下载码（code 缺省时由后端自动生成）
+ * @param {Object} form - { objectKey, code?, bucket?, expireSeconds?, remark? }
+ * @returns {Promise} 创建成功的下载码信息
+ */
+export function createDownloadCode(form) {
+  return request({
+    url: '/private/oss/download-code',
+    method: 'post',
+    data: form
+  })
+}
+
+/**
+ * 按码查询下载码信息
+ * @param {string} code - 下载唯一码
+ * @returns {Promise} 下载码信息
+ */
+export function getDownloadCode(code) {
+  return request({
+    url: '/private/oss/download-code',
+    method: 'get',
+    params: { code }
+  })
+}
+
+/**
+ * 更新下载码（续期/改备注）
+ * @param {string} code - 下载唯一码
+ * @param {Object} form - { expireSeconds?, remark? }
+ * @returns {Promise} 操作结果
+ */
+export function updateDownloadCode(code, form) {
+  return request({
+    url: '/private/oss/download-code',
+    method: 'put',
+    params: { code },
+    data: form
+  })
+}
+
+/**
+ * 删除下载码
+ * @param {string} code - 下载唯一码
+ * @returns {Promise} 操作结果
+ */
+export function deleteDownloadCode(code) {
+  return request({
+    url: '/private/oss/download-code',
+    method: 'delete',
+    params: { code }
+  })
+}
+
+/**
  * 携带鉴权头以 Blob 方式下载对象（回退通道）
  * @param {string} objectKey - 存储对象键
  * @param {string} [bucket] - 存储桶

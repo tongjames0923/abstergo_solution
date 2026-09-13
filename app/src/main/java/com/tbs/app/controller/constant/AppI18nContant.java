@@ -33,6 +33,41 @@ public final class AppI18nContant {
      */
     public static final String OSS_TASK_ID_EMPTY = "oss.task.id.empty";
 
+    /**
+     * 下载唯一码为空校验提示：下载唯一码不能为空
+     */
+    public static final String OSS_DOWNLOAD_CODE_EMPTY = "oss.download.code.empty";
+
+    /**
+     * 下载唯一码不存在提示：下载唯一码不存在：{0}
+     */
+    public static final String OSS_DOWNLOAD_CODE_NOT_FOUND = "oss.download.code.not.found";
+
+    /**
+     * 下载码无效或已过期提示（通用语义，不泄露存储细节）
+     */
+    public static final String OSS_DOWNLOAD_CODE_INVALID = "oss.download.code.invalid";
+
+    /**
+     * 下载码对应存储对象不存在提示：存储对象不存在：{0}
+     */
+    public static final String OSS_DOWNLOAD_OBJECT_NOT_EXIST = "oss.download.code.object.not.exist";
+
+    /**
+     * 下载唯一码生成失败提示
+     */
+    public static final String OSS_DOWNLOAD_CODE_GENERATE_FAILED = "oss.download.code.generate.failed";
+
+    /**
+     * 自定义下载码格式非法提示：下载码须为4~64位Base64字符（字母、数字、-、_）：{0}
+     */
+    public static final String OSS_DOWNLOAD_CODE_FORMAT_INVALID = "oss.download.code.format.invalid";
+
+    /**
+     * 自定义下载码已存在提示：下载唯一码已存在：{0}
+     */
+    public static final String OSS_DOWNLOAD_CODE_ALREADY_EXISTS = "oss.download.code.already.exists";
+
     /* ===================== 数据处理 ===================== */
 
     /**

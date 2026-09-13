@@ -97,7 +97,7 @@
             <span v-else>{{ formatTime(scope.row.lastModified) }}</span>
           </template>
         </el-table-column>
-        <el-table-column :label="$t('oss.operation')" width="260" fixed="right" align="center">
+        <el-table-column :label="$t('oss.operation')" width="340" fixed="right" align="center">
           <template slot-scope="scope">
             <template v-if="scope.row.isFolder">
               <el-button icon="el-icon-folder-opened" size="mini" type="text" @click="enterFolder(scope.row)">{{ $t('oss.open') }}</el-button>
@@ -105,6 +105,7 @@
             <template v-else>
               <el-button icon="el-icon-download" size="mini" type="text" @click="handleDownload(scope.row)">{{ $t('oss.download') }}</el-button>
               <el-button icon="el-icon-link" size="mini" type="text" @click="openPresignedDialog(scope.row)">{{ $t('oss.presigned') }}</el-button>
+              <el-button icon="el-icon-key" size="mini" type="text" @click="openDownloadCodeDialog(scope.row)">{{ $t('oss.downloadCode') }}</el-button>
               <el-button icon="el-icon-document" size="mini" type="text" @click="handleMetadata(scope.row)">{{ $t('oss.metadata') }}</el-button>
               <el-button icon="el-icon-delete" size="mini" type="text" class="danger-text" @click="handleDelete(scope.row)">{{ $t('oss.delete') }}</el-button>
             </template>
@@ -243,6 +244,125 @@
         <el-button size="small" @click="metadataVisible = false">{{ $t('oss.close') }}</el-button>
       </span>
     </el-dialog>
+
+    <!-- 公开下载码对话框 -->
+    <el-dialog :title="$t('oss.downloadCodeTitle')" :visible.sync="downloadCodeVisible" width="620px">
+      <div v-loading="downloadCodeLoading">
+        <div class="block-title">{{ $t('oss.generateCode') }}</div>
+        <el-form label-width="110px" size="small">
+          <el-form-item :label="$t('oss.objectKey')">
+            <span class="plain-text">{{ downloadCodeForm.objectKey }}</span>
+          </el-form-item>
+          <el-form-item :label="$t('oss.codeMode')">
+            <el-radio-group v-model="downloadCodeForm.mode">
+              <el-radio-button label="auto">{{ $t('oss.modeAuto') }}</el-radio-button>
+              <el-radio-button label="custom">{{ $t('oss.modeCustom') }}</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item v-if="downloadCodeForm.mode === 'custom'" :label="$t('oss.customCode')">
+            <el-input
+              v-model="downloadCodeForm.code"
+              :placeholder="$t('oss.customCodePlaceholder')"
+              maxlength="64"
+              show-word-limit
+              clearable
+              style="width: 280px;"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('oss.codeExpire')">
+            <el-radio-group v-model="downloadCodeForm.expireMode">
+              <el-radio-button label="never">{{ $t('oss.neverExpire') }}</el-radio-button>
+              <el-radio-button label="day">{{ $t('oss.oneDay') }}</el-radio-button>
+              <el-radio-button label="week">{{ $t('oss.sevenDays') }}</el-radio-button>
+              <el-radio-button label="custom">{{ $t('oss.custom') }}</el-radio-button>
+            </el-radio-group>
+            <el-input-number
+              v-if="downloadCodeForm.expireMode === 'custom'"
+              v-model="downloadCodeForm.expireSeconds"
+              :min="1"
+              size="small"
+              style="margin-left: 8px;"
+            />
+          </el-form-item>
+          <el-form-item :label="$t('oss.remark')">
+            <el-input
+              v-model="downloadCodeForm.remark"
+              :placeholder="$t('oss.remarkPlaceholder')"
+              maxlength="100"
+              clearable
+              style="width: 320px;"
+            />
+          </el-form-item>
+        </el-form>
+        <template v-if="downloadCodeResult">
+          <el-form label-width="110px" size="small" class="result-form">
+            <el-form-item :label="$t('oss.codeResult')">
+              <div class="copy-field">
+                <el-input :value="downloadCodeResult.code" readonly style="width: 320px;" />
+                <el-button icon="el-icon-copy-document" size="small" @click="copyText(downloadCodeResult.code)" />
+              </div>
+            </el-form-item>
+            <el-form-item :label="$t('oss.publicUrl')">
+              <el-input :value="publicDownloadUrl" type="textarea" :rows="2" readonly />
+              <el-button size="mini" icon="el-icon-copy-document" style="margin-top: 6px;" @click="copyText(publicDownloadUrl)">{{ $t('oss.copyLink') }}</el-button>
+            </el-form-item>
+            <el-form-item :label="$t('oss.codeExpireAt')">
+              <span class="plain-text">{{ downloadCodeResult.expireAt > 0 ? formatTime(downloadCodeResult.expireAt) : '-' }}</span>
+            </el-form-item>
+          </el-form>
+        </template>
+
+        <div class="block-title manage-title">{{ $t('oss.manageByCode') }}</div>
+        <el-form label-width="110px" size="small">
+          <el-form-item :label="$t('oss.downloadCode')">
+            <el-input
+              v-model="manageCode"
+              :placeholder="$t('oss.codeQueryPlaceholder')"
+              maxlength="64"
+              clearable
+              style="width: 280px;"
+              @keyup.enter.native="queryDownloadCode"
+            />
+            <el-button size="small" icon="el-icon-search" style="margin-left: 8px;" @click="queryDownloadCode">{{ $t('oss.query') }}</el-button>
+          </el-form-item>
+          <template v-if="manageResult">
+            <el-form-item :label="$t('oss.objectKey')">
+              <span class="plain-text">{{ manageResult.objectKey }}</span>
+            </el-form-item>
+            <el-form-item :label="$t('oss.codeExpireAt')">
+              <span class="plain-text">{{ manageResult.expireAt > 0 ? formatTime(manageResult.expireAt) : '-' }}</span>
+            </el-form-item>
+            <el-form-item :label="$t('oss.renewTo')">
+              <el-radio-group v-model="manageExpire.mode">
+                <el-radio-button label="never">{{ $t('oss.neverExpire') }}</el-radio-button>
+                <el-radio-button label="day">{{ $t('oss.oneDay') }}</el-radio-button>
+                <el-radio-button label="week">{{ $t('oss.sevenDays') }}</el-radio-button>
+                <el-radio-button label="custom">{{ $t('oss.custom') }}</el-radio-button>
+              </el-radio-group>
+              <el-input-number
+                v-if="manageExpire.mode === 'custom'"
+                v-model="manageExpire.seconds"
+                :min="1"
+                size="small"
+                style="margin-left: 8px;"
+              />
+              <el-button size="small" type="primary" plain style="margin-left: 8px;" @click="renewDownloadCode">{{ $t('oss.renew') }}</el-button>
+              <el-button size="small" type="danger" plain icon="el-icon-delete" style="margin-left: 8px;" @click="removeDownloadCode">{{ $t('oss.delete') }}</el-button>
+            </el-form-item>
+          </template>
+        </el-form>
+      </div>
+      <span slot="footer">
+        <el-button size="small" @click="downloadCodeVisible = false">{{ $t('oss.close') }}</el-button>
+        <el-button
+          :loading="downloadCodeLoading"
+          icon="el-icon-key"
+          size="small"
+          type="primary"
+          @click="submitCreateDownloadCode"
+        >{{ $t('oss.generateCode') }}</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -255,7 +375,12 @@ import {
   getPresignedUrl,
   deleteObject,
   deleteObjects,
-  downloadObject
+  downloadObject,
+  createDownloadCode,
+  getDownloadCode,
+  updateDownloadCode,
+  deleteDownloadCode,
+  buildPublicDownloadUrl
 } from '@/api/oss'
 
 export default {
@@ -290,7 +415,16 @@ export default {
       // 元数据相关
       metadataVisible: false,
       metadataLoading: false,
-      metadataDetail: { objectKey: '' }
+      metadataDetail: { objectKey: '' },
+
+      // 公开下载码相关
+      downloadCodeVisible: false,
+      downloadCodeLoading: false,
+      downloadCodeForm: { objectKey: '', mode: 'auto', code: '', expireMode: 'never', expireSeconds: 86400, remark: '' },
+      downloadCodeResult: null,
+      manageCode: '',
+      manageResult: null,
+      manageExpire: { mode: 'day', seconds: 86400 }
     }
   },
   computed: {
@@ -331,6 +465,11 @@ export default {
       const meta = this.metadataDetail.userMetadata
       if (!meta) return []
       return Object.keys(meta).map(key => ({ key, value: meta[key] }))
+    },
+    // 最近一次生成的下载码对应的公开下载地址
+    publicDownloadUrl() {
+      if (!this.downloadCodeResult) return ''
+      return buildPublicDownloadUrl(this.downloadCodeResult.code)
     }
   },
   created() {
@@ -504,6 +643,107 @@ export default {
         .catch(() => {
           this.metadataLoading = false
         })
+    },
+
+    // ===== 公开下载码 =====
+    openDownloadCodeDialog(row) {
+      this.downloadCodeForm = { objectKey: row.objectKey, mode: 'auto', code: '', expireMode: 'never', expireSeconds: 86400, remark: '' }
+      this.downloadCodeResult = null
+      this.manageCode = ''
+      this.manageResult = null
+      this.manageExpire = { mode: 'day', seconds: 86400 }
+      this.downloadCodeVisible = true
+    },
+
+    // 将有效期快捷选项解析为后端 expireSeconds（never 传空，创建时后端视为永不过期）
+    resolveExpireSeconds(form) {
+      if (form.expireMode === 'never') return undefined
+      if (form.expireMode === 'day') return 86400
+      if (form.expireMode === 'week') return 604800
+      return form.expireSeconds
+    },
+
+    submitCreateDownloadCode() {
+      const form = this.downloadCodeForm
+      if (form.mode === 'custom' && !/^[A-Za-z0-9_-]{4,64}$/.test(form.code || '')) {
+        this.$message.warning(this.$t('oss.codeInvalid'))
+        return
+      }
+      const payload = { objectKey: form.objectKey }
+      if (form.mode === 'custom') {
+        payload.code = form.code
+      }
+      const expireSeconds = this.resolveExpireSeconds(form)
+      if (expireSeconds !== undefined) {
+        payload.expireSeconds = expireSeconds
+      }
+      if (form.remark) {
+        payload.remark = form.remark
+      }
+      this.downloadCodeLoading = true
+      createDownloadCode(payload)
+        .then(res => {
+          this.downloadCodeResult = res.data || null
+          this.downloadCodeLoading = false
+          this.$message.success(this.$t('oss.createSuccess'))
+        })
+        .catch(() => {
+          this.downloadCodeLoading = false
+        })
+    },
+
+    queryDownloadCode() {
+      const code = (this.manageCode || '').trim()
+      if (!code) return
+      getDownloadCode(code)
+        .then(res => {
+          this.manageResult = res.data || null
+        })
+        .catch(() => {
+          this.manageResult = null
+          this.$message.error(this.$t('oss.queryFail'))
+        })
+    },
+
+    // 将续期快捷选项解析为后端 expireSeconds（never 传 0，更新时显式表示改为永不过期）
+    resolveRenewSeconds() {
+      if (this.manageExpire.mode === 'never') return 0
+      if (this.manageExpire.mode === 'day') return 86400
+      if (this.manageExpire.mode === 'week') return 604800
+      return this.manageExpire.seconds
+    },
+
+    renewDownloadCode() {
+      const code = this.manageResult.code
+      updateDownloadCode(code, { expireSeconds: this.resolveRenewSeconds() })
+        .then(() => {
+          this.$message.success(this.$t('oss.renewSuccess'))
+          return getDownloadCode(code).then(res => {
+            this.manageResult = res.data || null
+          })
+        })
+        .catch(() => {})
+    },
+
+    removeDownloadCode() {
+      const code = this.manageResult.code
+      this.$confirm(
+        this.$t('oss.confirmDeleteCode', { code }),
+        this.$t('common.tip'),
+        {
+          confirmButtonText: this.$t('common.confirm'),
+          cancelButtonText: this.$t('common.cancel'),
+          type: 'warning'
+        }
+      ).then(() => {
+        deleteDownloadCode(code)
+          .then(() => {
+            this.manageResult = null
+            this.manageCode = ''
+            this.$message.success(this.$t('oss.deleteCodeSuccess'))
+          })
+          .catch(() => {})
+      }).catch(() => {})
     },
 
     // ===== 上传 =====
@@ -773,6 +1013,34 @@ export default {
   .plain-text {
     word-break: break-all;
     color: #303133;
+  }
+
+  // 下载码对话框
+  .result-form {
+    margin-top: 4px;
+    padding-top: 4px;
+  }
+
+  .block-title {
+    margin-bottom: 12px;
+    font-weight: 600;
+    font-size: 13px;
+    color: #606266;
+
+    &.manage-title {
+      margin-top: 20px;
+      padding-top: 16px;
+      border-top: 1px solid #ebeef5;
+    }
+  }
+
+  .copy-field {
+    display: inline-flex;
+    align-items: center;
+
+    .el-button {
+      margin-left: 8px;
+    }
   }
 
   // 上传对话框
