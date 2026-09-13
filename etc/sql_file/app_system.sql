@@ -3689,3 +3689,23 @@ INSERT INTO `view_route_version` (`id`, `create_by`, `create_time`, `description
 COMMIT;
 
 SET FOREIGN_KEY_CHECKS = 1;
+
+-- ----------------------------
+-- Table structure for oss_download_code
+-- 公开下载码持久化表（tbs.oss.download-code.storage=db 时启用）
+-- ----------------------------
+CREATE TABLE `oss_download_code` (
+  `id` bigint NOT NULL COMMENT '主键ID（雪花算法生成）',
+  `code` varchar(64) NOT NULL COMMENT '下载唯一码（4~64位URL安全Base64字符）',
+  `bucket` varchar(255) DEFAULT NULL COMMENT '存储桶名',
+  `object_key` varchar(512) NOT NULL COMMENT '存储对象键',
+  `expire_at` bigint DEFAULT NULL COMMENT '过期时间戳（毫秒），小于等于0表示永不过期',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注说明',
+  `create_time` datetime(6) DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
+  `flag` int DEFAULT NULL COMMENT '逻辑删除标志（1有效，-1已删除）',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE KEY `uk_code` (`code`) USING BTREE,
+  KEY `idx_flag` (`flag`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='OSS公开下载码表';
+
