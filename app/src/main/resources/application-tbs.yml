@@ -79,3 +79,5 @@ tbs:
     access-key-secret: ${OSS_ACCESS_KEY_SECRET:minioadmin}
     default-bucket: ${OSS_DEFAULT_BUCKET:app-files}
     path-style-access: true
+    download-code:
+      storage: db

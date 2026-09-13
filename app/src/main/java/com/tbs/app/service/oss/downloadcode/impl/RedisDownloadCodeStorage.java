@@ -1,6 +1,8 @@
 package com.tbs.app.service.oss.downloadcode.impl;
 
 import com.tbs.app.service.oss.downloadcode.IDownloadCodeStorage;
+import com.tbs.app.config.condition.ConditionalOnDownloadCodeStorage;
+import com.tbs.app.config.property.OssDownloadCodeStorageType;
 import com.tbs.app.service.oss.downloadcode.OssDownloadCodeInfo;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -13,13 +15,15 @@ import javax.annotation.Resource;
  * <p>
  * 基于Redisson的{@link RBucket}持久化下载码记录，键前缀统一为{@code tbs:oss:download-code:}。
  * 过期策略：记录内expireAt字段与Redis TTL双保险，TTL到期由Redis自动清理；
- * 永不过期（expireAt小于等于{@link OssDownloadCodeInfo#NEVER_EXPIRE}）时不设置TTL
+ * 永不过期（expireAt小于等于{@link OssDownloadCodeInfo#NEVER_EXPIRE}）时不设置TTL。
+ * 通过配置{@code tbs.oss.download-code.storage=redis}（或缺省）启用
  * </p>
  *
  * @author abstergo
  * @since 1.0.0
  */
 @Component
+@ConditionalOnDownloadCodeStorage(OssDownloadCodeStorageType.REDIS)
 public class RedisDownloadCodeStorage implements IDownloadCodeStorage {
 
     /**
