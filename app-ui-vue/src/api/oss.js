@@ -229,6 +229,30 @@ export function deleteDownloadCode(code) {
 }
 
 /**
+ * 分页查询下载码
+ * @param {Object} form - { code?, objectKey?, keyword?, status?, pageNum?, pageSize? }
+ * @returns {Promise} 分页结果（total + data）
+ */
+export function queryDownloadCodePage(form) {
+  return request({
+    url: '/private/oss/download-code/page',
+    method: 'post',
+    data: form
+  })
+}
+
+/**
+ * 统计下载码概览
+ * @returns {Promise} 统计结果（total/valid/expired/permanent）
+ */
+export function getDownloadCodeStatistics() {
+  return request({
+    url: '/private/oss/download-code/statistics',
+    method: 'get'
+  })
+}
+
+/**
  * 携带鉴权头以 Blob 方式下载对象（回退通道）
  * @param {string} objectKey - 存储对象键
  * @param {string} [bucket] - 存储桶

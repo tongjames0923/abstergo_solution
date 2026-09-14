@@ -1,10 +1,11 @@
 package com.tbs.app.controller.publics;
 
+import com.tbs.app.service.oss.IOssFileService;
+import com.tbs.app.service.oss.OssObjectStream;
 import com.tbs.app.service.oss.downloadcode.IOssDownloadCodeService;
-import com.tbs.app.service.oss.downloadcode.OssDownloadCodeInfo;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.logging.annotation.NoLog;
-import com.tbs.oss.core.OssClient;
+import com.tbs.oss.downloadcode.OssDownloadCodeInfo;
 import com.tbs.oss.model.ObjectMetadata;
 import com.tbs.web.BaseController;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,8 +29,9 @@ import java.nio.charset.StandardCharsets;
 /**
  * OSS公开下载码下载控制器
  * <p>
- * 面向系统集成方的免认证下载入口：凭16位Base64下载唯一码直接下载对应的OSS对象。
- * 位于 {@code /public/**} 路径下无需认证，码无效或已过期时返回用户级错误且不泄露存储细节
+ * 面向系统集成方的免认证下载入口：凭下载唯一码直接下载对应的OSS对象。
+ * 位于 {@code /public/**} 路径下无需认证，码无效或已过期时返回用户级错误且不泄露存储细节；
+ * 仅做HTTP接入与响应组装，对象内容经 {@link IOssFileService} 获取，不直接依赖对象存储门面
  * </p>
  *
  * @author abstergo
@@ -45,11 +47,17 @@ public class PublicOssDownloadCodeController extends BaseController {
      */
     private static final int COPY_BUFFER_SIZE = 8192;
 
+    /**
+     * 下载码服务
+     */
     @Resource
     private IOssDownloadCodeService ossDownloadCodeService;
 
+    /**
+     * OSS文件服务
+     */
     @Resource
-    private OssClient ossClient;
+    private IOssFileService ossFileService;
 
     /**
      * 凭下载唯一码下载文件
@@ -69,15 +77,41 @@ public class PublicOssDownloadCodeController extends BaseController {
     public void download(@Parameter(name = "code", description = "下载唯一码",
         required = true) @RequestParam("code") String code, HttpServletResponse response) throws IOException {
         OssDownloadCodeInfo info = ossDownloadCodeService.resolveForDownload(code);
-        ObjectMetadata metadata = ossClient.getObjectMetadata(info.getBucket(), info.getObjectKey());
+        OssObjectStream objectStream = ossFileService.openObject(info.getBucket(), info.getObjectKey());
+        applyObjectHeaders(response, objectStream);
+        writeObjectStream(objectStream, response);
+    }
+
+    /**
+     * 组装对象下载响应头
+     * <p>
+     * 依据对象元数据设置内容类型与长度，文件名取对象键最后一段并做URL编码
+     * </p>
+     *
+     * @param response     HTTP响应
+     * @param objectStream 对象流（含元数据与对象键）
+     */
+    private void applyObjectHeaders(HttpServletResponse response, OssObjectStream objectStream) {
+        ObjectMetadata metadata = objectStream.getMetadata();
         response.setContentType(
-            StrUtil.isEmpty(metadata.getContentType()) ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+            metadata == null || StrUtil.isEmpty(metadata.getContentType()) ? MediaType.APPLICATION_OCTET_STREAM_VALUE
                 : metadata.getContentType());
-        if (metadata.getContentLength() > 0) {
+        if (metadata != null && metadata.getContentLength() > 0) {
             response.setContentLengthLong(metadata.getContentLength());
         }
-        response.setHeader("Content-Disposition", "attachment;filename=" + encodeFileName(resolveFileName(info)));
-        try (InputStream inputStream = ossClient.getObject(info.getBucket(), info.getObjectKey());
+        response.setHeader("Content-Disposition",
+            "attachment;filename=" + encodeFileName(resolveFileName(objectStream.getObjectKey())));
+    }
+
+    /**
+     * 输出对象内容流
+     *
+     * @param objectStream 对象流
+     * @param response     HTTP响应
+     * @throws IOException 输出流写入失败时抛出
+     */
+    private void writeObjectStream(OssObjectStream objectStream, HttpServletResponse response) throws IOException {
+        try (InputStream inputStream = objectStream.getStream();
             OutputStream outputStream = response.getOutputStream()) {
             byte[] buffer = new byte[COPY_BUFFER_SIZE];
             int len;
@@ -94,11 +128,10 @@ public class PublicOssDownloadCodeController extends BaseController {
      * 取对象键最后一段作为文件名
      * </p>
      *
-     * @param info 下载码信息
+     * @param objectKey 对象存储键
      * @return 文件名
      */
-    private String resolveFileName(OssDownloadCodeInfo info) {
-        String objectKey = info.getObjectKey();
+    private String resolveFileName(String objectKey) {
         return objectKey.contains("/") ? objectKey.substring(objectKey.lastIndexOf('/') + 1) : objectKey;
     }
 
@@ -107,10 +140,9 @@ public class PublicOssDownloadCodeController extends BaseController {
      *
      * @param fileName 原始文件名
      * @return URL编码后的文件名（空格转%20）
-     * @throws IOException 编码不支持时抛出
      */
-    private String encodeFileName(String fileName) throws IOException {
-        return URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()).replace("+", "%20");
+    private String encodeFileName(String fileName) {
+        return URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     /**

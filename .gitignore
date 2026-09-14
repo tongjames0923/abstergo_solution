@@ -44,3 +44,7 @@ build/
 .env
 .env.local
 .env.*.local
+
+###xxljob日志文件###
+*.log
+logs

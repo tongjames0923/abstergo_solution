@@ -1,8 +1,8 @@
 package com.tbs.app.controller.privates;
 
-import com.tbs.app.controller.constant.AppI18nContant;
-import com.tbs.app.data.HandlerOptionVO;
-import com.tbs.app.data.HandlerValidateVO;
+import com.tbs.app.constant.FileProcessI18nConstant;
+import com.tbs.app.vo.HandlerOptionVO;
+import com.tbs.app.vo.HandlerValidateVO;
 import com.tbs.app.data.TableDataHandlerRegistry;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.data.impl.CsvTableDataAdapter;
@@ -99,7 +99,7 @@ public class PrivateDataHandleController extends BaseController {
 
         AssertUtil.isTrue(StrUtil.isEmpty(handlerId))
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.DATA_HANDLE_HANDLER_ID_EMPTY)
+            .i18n(FileProcessI18nConstant.DATA_HANDLE_HANDLER_ID_EMPTY)
             .throwIt();
 
         ITableDataHandler handler = handlerRegistry.getHandler(handlerId);
@@ -134,18 +134,18 @@ public class PrivateDataHandleController extends BaseController {
 
         AssertUtil.isTrue(file == null || file.isEmpty())
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.DATA_HANDLE_FILE_EMPTY)
+            .i18n(FileProcessI18nConstant.DATA_HANDLE_FILE_EMPTY)
             .throwIt();
 
         AssertUtil.isTrue(StrUtil.isEmpty(handlerId))
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.DATA_HANDLE_HANDLER_ID_EMPTY)
+            .i18n(FileProcessI18nConstant.DATA_HANDLE_HANDLER_ID_EMPTY)
             .throwIt();
 
         ITableDataHandler handler = handlerRegistry.getHandler(handlerId);
         AssertUtil.isTrue(handler == null)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.DATA_HANDLE_HANDLER_NOT_FOUND, handlerId)
+            .i18n(FileProcessI18nConstant.DATA_HANDLE_HANDLER_NOT_FOUND, handlerId)
             .throwIt();
 
         try {

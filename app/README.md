@@ -241,6 +241,8 @@ app:
 
 路径前缀约定：`/public/**` 免登录放行，`/private/**` 需认证。统一响应结构 `{code, message, data}`（web 模块 `AjaxResult`）。
 
+> **实现位置说明**：本模块的 Controller 仅承担 HTTP 接入；对象存储/公开下载码/数据处理/应用包管理的服务实现位于 `default-system-impl`（`com.tbs.app.service.impl.oss.downloadcode`、`com.tbs.app.data` 等），契约位于 `system-api` 与 `oss-api`（`com.tbs.oss.downloadcode`：存储抽象/条件装配），Redis 存储实现位于 `redis-mod`（`com.tbs.redis.oss.RedisDownloadCodeStorage`），下载码实体与 Mapper 位于 `shared-pojo`/`shared-api` 的 `oss` 子包。
+
 ### 公开接口（/public）
 
 | 控制器 | 路径 | 接口 |
@@ -267,6 +269,8 @@ app:
 | `ViewController` | `/private/view` | **动态表单 + 动态路由管理**：表单 CRUD（`GET form/{id}`、`GET listForms`、`POST saveForm`、`DELETE/PUT form`）+ 路由管理（`GET /routes`、`POST /routes/{group}`、`DELETE /routes/{group}`、`GET route-groups`、`POST /routes/refresh`、`GET /routes/{group}/versions`、`POST /routes/{group}/rollback/{versionId}`） |
 | `CacheController` | `/private/cache` | 缓存管理：`GET names`、`POST keys`、`POST get`、`POST evict` |
 | `OssController` | `/private/oss` | 对象存储：`POST upload`（multipart，最大 1024MB）、`GET upload/progress`（轮询进度）、`GET download`、`GET metadata`、`GET exist`、`GET list`、`GET presigned-url`、`DELETE batch` |
+| `OssDownloadCodeController` | `/private/oss/download-code` | 公开下载码管理：`POST`（生成，可自定义4~64位Base64码）、`GET`（查询）、`PUT`（续期/备注）、`DELETE`；`PublicOssDownloadCodeController` 提供 `/public/oss/download-code/download?code=` 免认证下载 |
+| `PrivateDataHandleController` | `/private/data` | 数据处理：`GET handler/list`、`GET handler/validate/{handlerId}`、`POST handle/csv/{handlerId}`（CSV 解析→ITableDataHandler） |
 | `AppVersionController` | `/private/admin/app-version` | 应用版本状态机：CRUD + `POST submit/release/offline/rollback/archive/{id}` + `GET latest` + `GET appKeys` |
 | `AppVersionCompatibilityPolicyController` | `/private/admin/app-version-policy` | 版本兼容策略：CRUD + `POST enable/disable/{id}` + `POST check` |
 | `AppPackageController` | `/private/admin/app-package` | 安装包管理：CRUD + `GET listByVersion/{versionId}` |

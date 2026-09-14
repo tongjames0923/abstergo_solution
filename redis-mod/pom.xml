@@ -34,5 +34,9 @@
             <groupId>com.tbs</groupId>
             <artifactId>mq-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>oss-api</artifactId>
+        </dependency>
     </dependencies>
 </project>
