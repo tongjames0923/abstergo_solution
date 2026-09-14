@@ -1,7 +1,10 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.app.form.OssDownloadCodeForm;
+import com.tbs.app.form.OssDownloadCodeSearchForm;
 import com.tbs.app.service.oss.downloadcode.IOssDownloadCodeService;
+import com.tbs.app.vo.OssDownloadCodeStatisticsVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.oss.downloadcode.OssDownloadCodeInfo;
 import com.tbs.web.BaseController;
@@ -124,6 +127,41 @@ public class OssDownloadCodeController extends BaseController {
         required = true) @RequestParam("code") String code) {
         ossDownloadCodeService.deleteCode(code);
         return successResult();
+    }
+
+    /**
+     * 分页查询下载码
+     * <p>
+     * 支持按码精确匹配、对象键前缀、关键字与状态筛选，结果按创建时间倒序
+     * </p>
+     *
+     * @param form 查询表单（条件与分页参数，均可选）
+     * @return 分页结果（总数与当前页数据）
+     */
+    @PostMapping("page")
+    @AjaxResponseType(value = PageVO.class, genericArgs = {OssDownloadCodeInfo.class})
+    @Operation(summary = "分页查询下载码", description = "按条件分页查询下载码列表，支持关键字、对象键与状态筛选")
+    @ApiResponse(responseCode = "200", description = "成功分页查询下载码",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult queryPage(@Parameter(name = "form", description = "下载码查询表单") @RequestBody(
+        required = false) OssDownloadCodeSearchForm form) {
+        return successResult(ossDownloadCodeService.queryPage(form));
+    }
+
+    /**
+     * 统计下载码概览
+     *
+     * @return 统计结果（总数/有效/已过期/永久有效）
+     */
+    @GetMapping("statistics")
+    @AjaxResponseType(OssDownloadCodeStatisticsVO.class)
+    @Operation(summary = "统计下载码概览", description = "统计下载码总数、有效数、已过期数与永久有效数")
+    @ApiResponse(responseCode = "200", description = "成功统计下载码概览",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult statistics() {
+        return successResult(ossDownloadCodeService.statistics());
     }
 
     /**

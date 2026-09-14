@@ -1,11 +1,12 @@
 package com.tbs.oss.downloadcode;
-import com.tbs.oss.downloadcode.OssDownloadCodeInfo;
 
+import java.util.List;
 
 /**
  * 下载码存储抽象契约
  * <p>
- * 屏蔽下载码的持久化介质（Redis/数据库等），服务实现仅依赖本抽象； 每种存储介质提供独立实现并通过条件装配切换，新增介质不影响调用方
+ * 屏蔽下载码的持久化介质（Redis/数据库等），服务实现仅依赖本抽象；
+ * 每种存储介质提供独立实现并通过条件装配切换，新增介质不影响调用方
  * </p>
  *
  * @author abstergo
@@ -51,4 +52,23 @@ public interface IDownloadCodeStorage {
      * @return 存在返回true
      */
     boolean exists(String code);
+
+    /**
+     * 按条件分页查询下载码记录
+     * <p>
+     * 结果按创建时间倒序排列；状态条件由各实现翻译为自身查询语义
+     * </p>
+     *
+     * @param query 查询条件（含分页偏移）
+     * @return 下载码记录列表
+     */
+    List<OssDownloadCodeInfo> list(OssDownloadCodeQuery query);
+
+    /**
+     * 按条件统计下载码记录总数
+     *
+     * @param query 查询条件（分页参数被忽略）
+     * @return 记录总数
+     */
+    long count(OssDownloadCodeQuery query);
 }

@@ -1,5 +1,8 @@
 package com.tbs.app.service.oss.downloadcode;
 
+import com.tbs.app.form.OssDownloadCodeSearchForm;
+import com.tbs.app.vo.OssDownloadCodeStatisticsVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.oss.downloadcode.OssDownloadCodeInfo;
 
 /**
@@ -72,4 +75,23 @@ public interface IOssDownloadCodeService {
      * @return 校验通过的下载码信息
      */
     OssDownloadCodeInfo resolveForDownload(String code);
+
+    /**
+     * 分页查询下载码
+     * <p>
+     * 支持按码精确匹配、对象键前缀、关键字（码/对象键/备注）与状态筛选，结果按创建时间倒序；
+     * 分页参数非法时归一化为默认值（页码1、每页10、上限100），状态取值非法时报用户输入错误
+     * </p>
+     *
+     * @param form 查询表单（条件与分页参数）
+     * @return 分页结果（总数与当前页数据）
+     */
+    PageVO<OssDownloadCodeInfo> queryPage(OssDownloadCodeSearchForm form);
+
+    /**
+     * 统计下载码概览
+     *
+     * @return 统计结果（总数/有效/已过期/永久有效）
+     */
+    OssDownloadCodeStatisticsVO statistics();
 }

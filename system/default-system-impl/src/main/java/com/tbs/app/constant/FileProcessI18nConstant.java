@@ -69,6 +69,11 @@ public final class FileProcessI18nConstant {
      */
     public static final String OSS_DOWNLOAD_CODE_ALREADY_EXISTS = "oss.download.code.already.exists";
 
+    /**
+     * 下载码状态取值非法提示：下载码状态取值非法：{0}
+     */
+    public static final String OSS_DOWNLOAD_CODE_STATUS_INVALID = "oss.download.code.status.invalid";
+
     /* ===================== 数据处理 ===================== */
 
     /**

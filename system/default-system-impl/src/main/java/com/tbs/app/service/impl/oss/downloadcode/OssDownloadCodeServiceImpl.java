@@ -1,18 +1,24 @@
 package com.tbs.app.service.impl.oss.downloadcode;
 
 import com.tbs.app.constant.FileProcessI18nConstant;
+import com.tbs.app.form.OssDownloadCodeSearchForm;
 import com.tbs.app.service.oss.downloadcode.IOssDownloadCodeService;
+import com.tbs.app.vo.OssDownloadCodeStatisticsVO;
+import com.tbs.common.data.PageVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.oss.core.OssClient;
 import com.tbs.oss.downloadcode.IDownloadCodeStorage;
 import com.tbs.oss.downloadcode.OssDownloadCodeInfo;
+import com.tbs.oss.downloadcode.OssDownloadCodeQuery;
+import com.tbs.oss.downloadcode.OssDownloadCodeStatus;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.security.SecureRandom;
 import java.util.Base64;
+import java.util.List;
 import java.util.regex.Pattern;
 
 /**
@@ -42,6 +48,21 @@ public class OssDownloadCodeServiceImpl implements IOssDownloadCodeService {
      * 自定义下载码合法格式：4~64位URL安全Base64字符（字母、数字、-、_）
      */
     private static final Pattern CODE_PATTERN = Pattern.compile("^[A-Za-z0-9_-]{4,64}$");
+
+    /**
+     * 默认页码
+     */
+    private static final long DEFAULT_PAGE_NUM = 1L;
+
+    /**
+     * 默认每页条数
+     */
+    private static final long DEFAULT_PAGE_SIZE = 10L;
+
+    /**
+     * 每页条数上限
+     */
+    private static final long MAX_PAGE_SIZE = 100L;
 
     /**
      * 下载码存储实现
@@ -159,6 +180,99 @@ public class OssDownloadCodeServiceImpl implements IOssDownloadCodeService {
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .i18n(FileProcessI18nConstant.OSS_DOWNLOAD_CODE_INVALID).throwIt();
         return info;
+    }
+
+    /**
+     * 分页查询下载码
+     * <p>
+     * 归一化分页参数并将条件翻译为存储层查询模型，组装总数与当前页数据
+     * </p>
+     *
+     * @param form 查询表单（条件与分页参数）
+     * @return 分页结果（总数与当前页数据）
+     */
+    @Override
+    public PageVO<OssDownloadCodeInfo> queryPage(OssDownloadCodeSearchForm form) {
+        long pageNum = resolvePageNum(form);
+        long pageSize = resolvePageSize(form);
+        OssDownloadCodeQuery query = OssDownloadCodeQuery.builder()
+            .code(form == null ? null : form.getCode())
+            .objectKey(form == null ? null : form.getObjectKey())
+            .keyword(form == null ? null : form.getKeyword())
+            .status(resolveStatus(form))
+            .offset((int)((pageNum - 1) * pageSize))
+            .limit((int)pageSize)
+            .build();
+        List<OssDownloadCodeInfo> data = downloadCodeStorage.list(query);
+        long total = downloadCodeStorage.count(query);
+        return new PageVO<OssDownloadCodeInfo>().setTotal((int)total).setData(data);
+    }
+
+    /**
+     * 统计下载码概览
+     * <p>
+     * 有效数量为总数与已过期数量之差（含永久有效）
+     * </p>
+     *
+     * @return 统计结果（总数/有效/已过期/永久有效）
+     */
+    @Override
+    public OssDownloadCodeStatisticsVO statistics() {
+        long total = downloadCodeStorage.count(null);
+        long expired = downloadCodeStorage.count(OssDownloadCodeQuery.builder()
+            .status(OssDownloadCodeStatus.EXPIRED).build());
+        long permanent = downloadCodeStorage.count(OssDownloadCodeQuery.builder()
+            .status(OssDownloadCodeStatus.PERMANENT).build());
+        OssDownloadCodeStatisticsVO vo = new OssDownloadCodeStatisticsVO();
+        vo.setTotal(total);
+        vo.setExpired(expired);
+        vo.setPermanent(permanent);
+        vo.setValid(total - expired);
+        return vo;
+    }
+
+    /**
+     * 解析归一化页码
+     *
+     * @param form 查询表单（可为空）
+     * @return 页码（从1开始）
+     */
+    private long resolvePageNum(OssDownloadCodeSearchForm form) {
+        return form == null || form.getPageNum() == null || form.getPageNum() < 1 ? DEFAULT_PAGE_NUM
+            : form.getPageNum();
+    }
+
+    /**
+     * 解析归一化每页条数
+     *
+     * @param form 查询表单（可为空）
+     * @return 每页条数（不超过上限）
+     */
+    private long resolvePageSize(OssDownloadCodeSearchForm form) {
+        if (form == null || form.getPageSize() == null || form.getPageSize() < 1) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(form.getPageSize(), MAX_PAGE_SIZE);
+    }
+
+    /**
+     * 解析状态筛选条件
+     *
+     * @param form 查询表单（可为空）
+     * @return 状态枚举，空表示全部；取值非法时报用户输入错误
+     */
+    private OssDownloadCodeStatus resolveStatus(OssDownloadCodeSearchForm form) {
+        if (form == null || StrUtil.isEmpty(form.getStatus())) {
+            return null;
+        }
+        String status = form.getStatus().toUpperCase();
+        try {
+            return OssDownloadCodeStatus.valueOf(status);
+        } catch (IllegalArgumentException e) {
+            AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+                .i18n(FileProcessI18nConstant.OSS_DOWNLOAD_CODE_STATUS_INVALID, form.getStatus()).throwIt();
+            return null;
+        }
     }
 
     /**
