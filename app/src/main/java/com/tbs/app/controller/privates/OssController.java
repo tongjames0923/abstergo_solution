@@ -1,17 +1,15 @@
 package com.tbs.app.controller.privates;
 
-import cn.hutool.core.date.DateUtil;
-import com.tbs.logging.annotation.NoLog;
-import com.tbs.app.controller.constant.AppI18nContant;
-import com.tbs.app.service.oss.UploadTaskProgressManager;
+import com.tbs.app.service.oss.IOssFileService;
+import com.tbs.app.service.oss.OssObjectStream;
+import com.tbs.app.service.oss.OssUploadRequest;
 import com.tbs.app.vo.UploadTaskProgressVO;
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.oss.core.OssClient;
-import com.tbs.oss.core.ProgressListener;
-import com.tbs.oss.model.*;
+import com.tbs.logging.annotation.NoLog;
+import com.tbs.oss.model.ObjectListing;
+import com.tbs.oss.model.ObjectMetadata;
+import com.tbs.oss.model.PutObjectResult;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -32,15 +30,13 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Date;
 import java.util.List;
-import java.util.UUID;
 
 /**
  * 对象存储控制器
  * <p>
- * 该控制器基于统一OSS门面提供文件上传、下载、删除、列举、预签名地址等能力， 底层由{@link OssClient}适配具体的对象存储实现（如MinIO）
+ * 对象存储HTTP接入层：仅做参数绑定、调用{@link IOssFileService}与响应组装；
+ * 上传策略（默认键生成/附件头/进度采集）、缺省桶解析、预签名规则等业务逻辑均在服务实现层
  * </p>
  *
  * @author abstergo
@@ -52,26 +48,20 @@ import java.util.UUID;
 public class OssController extends BaseController {
 
     /**
-     * 预签名地址默认有效期（秒）
+     * 流式拷贝缓冲区大小
      */
-    private static final long DEFAULT_PRESIGNED_EXPIRE_SECONDS = 3600L;
+    private static final int COPY_BUFFER_SIZE = 8192;
 
     /**
-     * 列举对象默认最大条数
+     * OSS文件服务
      */
-    private static final int DEFAULT_LIST_MAX_KEYS = 100;
-
     @Resource
-    private OssClient ossClient;
-
-    @Resource
-    private UploadTaskProgressManager uploadTaskProgressManager;
+    private IOssFileService ossFileService;
 
     /**
      * 上传文件
      * <p>
-     * 未指定objectKey时自动生成“日期目录/UUID.扩展名”形式的存储路径， 避免直接暴露原始文件名。
-     * 指定taskId时登记上传任务并采集写入对象存储的实时进度，前端可通过进度查询接口轮询
+     * 未指定objectKey时由服务端按存储策略自动生成；指定taskId时可通过进度查询接口轮询
      * </p>
      *
      * @param file      上传的文件
@@ -95,53 +85,17 @@ public class OssController extends BaseController {
             required = false) String bucket,
         @Parameter(name = "taskId", description = "上传任务ID，指定后可轮询上传进度") @RequestParam(value = "taskId",
             required = false) String taskId) throws IOException {
-        AssertUtil.isTrue(file == null || file.isEmpty()).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_FILE_EMPTY).throwIt();
-        String key = StrUtil.isEmpty(objectKey) ? generateObjectKey(file.getOriginalFilename()) : objectKey;
-        boolean trackProgress = !StrUtil.isEmpty(taskId);
-        if (trackProgress) {
-            uploadTaskProgressManager.register(taskId, file.getSize());
-        }
-        PutObjectRequest.Builder builder =
-            PutObjectRequest.builder(key).inputStream(file.getInputStream()).contentLength(file.getSize())
-                .contentType(file.getContentType());
-        // 存储时携带附件头，浏览器直接访问对象（如预签名地址）时也会触发下载而非内联预览
-        String fileName = StrUtil.isEmpty(file.getOriginalFilename()) ? key
-            : file.getOriginalFilename();
-        builder.userMetadata(Collections.singletonMap("Content-Disposition",
-            "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()).replace("+", "%20")));
-        if (!StrUtil.isEmpty(bucket)) {
-            builder.bucketName(bucket);
-        }
-        if (trackProgress) {
-            // 挂载进度监听器，采集写入对象存储的真实字节数（MinIO实现按64KiB步长驱动回调）
-            builder.progressListener(new ProgressListener.Adapter() {
-
-                @Override
-                public void onProgress(long transferredBytes, long totalBytes) {
-                    uploadTaskProgressManager.updateTransferred(taskId, transferredBytes);
-                }
-
-                @Override
-                public void onSuccess() {
-                    uploadTaskProgressManager.markSuccess(taskId);
-                }
-
-                @Override
-                public void onError(Exception e) {
-                    uploadTaskProgressManager.markFailed(taskId);
-                }
-            });
-        }
-        PutObjectResult result = ossClient.putObject(builder.build());
-        return successResult(result);
+        OssUploadRequest request =
+            OssUploadRequest.builder().inputStream(file.getInputStream()).contentLength(file.getSize())
+                .contentType(file.getContentType()).originalFilename(file.getOriginalFilename()).objectKey(objectKey)
+                .bucket(bucket).taskId(taskId).build();
+        return successResult(ossFileService.upload(request));
     }
 
     /**
      * 查询上传任务进度
      * <p>
-     * 供前端在上传请求执行期间轮询。任务不存在时返回RECEIVING状态，
-     * 表示请求体仍在接收中，尚未进入写入阶段
+     * 供前端在上传请求执行期间轮询，任务不存在时返回RECEIVING状态
      * </p>
      *
      * @param taskId 上传任务ID
@@ -157,16 +111,7 @@ public class OssController extends BaseController {
     public AjaxResult uploadProgress(
         @Parameter(name = "taskId", description = "上传任务ID", required = true) @RequestParam(
             "taskId") String taskId) {
-        AssertUtil.isTrue(StrUtil.isEmpty(taskId)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_TASK_ID_EMPTY).throwIt();
-        UploadTaskProgressVO progress = uploadTaskProgressManager.get(taskId);
-        if (progress == null) {
-            // 任务尚未登记：请求体仍在接收中，或进度条目已过期
-            progress = new UploadTaskProgressVO();
-            progress.setTaskId(taskId);
-            progress.setStatus(UploadTaskProgressVO.STATUS_RECEIVING);
-        }
-        return successResult(progress);
+        return successResult(ossFileService.getUploadProgress(taskId));
     }
 
     /**
@@ -188,27 +133,9 @@ public class OssController extends BaseController {
             "objectKey") String objectKey,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket, HttpServletResponse response) throws IOException {
-        AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
-        String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
-        ObjectMetadata metadata = ossClient.getObjectMetadata(resolvedBucket, objectKey);
-        response.setContentType(StrUtil.isEmpty(metadata.getContentType()) ? MediaType.APPLICATION_OCTET_STREAM_VALUE
-            : metadata.getContentType());
-        if (metadata.getContentLength() > 0) {
-            response.setContentLengthLong(metadata.getContentLength());
-        }
-        String fileName = objectKey.contains("/") ? objectKey.substring(objectKey.lastIndexOf('/') + 1) : objectKey;
-        response.setHeader("Content-Disposition",
-            "attachment;filename=" + URLEncoder.encode(fileName, StandardCharsets.UTF_8.name()).replace("+", "%20"));
-        try (InputStream inputStream = ossClient.getObject(resolvedBucket, objectKey);
-            OutputStream outputStream = response.getOutputStream()) {
-            byte[] buffer = new byte[8192];
-            int len;
-            while ((len = inputStream.read(buffer)) != -1) {
-                outputStream.write(buffer, 0, len);
-            }
-            outputStream.flush();
-        }
+        OssObjectStream objectStream = ossFileService.openObject(bucket, objectKey);
+        applyObjectHeaders(response, objectStream);
+        writeObjectStream(objectStream, response);
     }
 
     /**
@@ -229,10 +156,7 @@ public class OssController extends BaseController {
             "objectKey") String objectKey,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
-        AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
-        String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
-        return successResult(ossClient.getObjectMetadata(resolvedBucket, objectKey));
+        return successResult(ossFileService.getMetadata(bucket, objectKey));
     }
 
     /**
@@ -252,10 +176,7 @@ public class OssController extends BaseController {
             "objectKey") String objectKey,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
-        AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
-        String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
-        return successResult(ossClient.doesObjectExist(resolvedBucket, objectKey));
+        return successResult(ossFileService.exists(bucket, objectKey));
     }
 
     /**
@@ -278,13 +199,7 @@ public class OssController extends BaseController {
             required = false) String marker,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
-        // delimiter固定为“/”，按目录层级列举（公共前缀即目录）；不传时底层会递归平铺全部对象
-        ListObjectsRequest.Builder builder = ListObjectsRequest.builder().prefix(prefix).marker(marker)
-            .maxKeys(DEFAULT_LIST_MAX_KEYS).delimiter("/");
-        if (!StrUtil.isEmpty(bucket)) {
-            builder.bucketName(bucket);
-        }
-        return successResult(ossClient.listObjects(builder.build()));
+        return successResult(ossFileService.listObjects(prefix, marker, bucket));
     }
 
     /**
@@ -314,16 +229,7 @@ public class OssController extends BaseController {
             required = false) Long expirationSeconds,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
-        AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
-        PresignedUrlRequest.Builder builder = "UPLOAD".equalsIgnoreCase(type) ? PresignedUrlRequest.upload(objectKey)
-            : PresignedUrlRequest.download(objectKey);
-        builder.expirationSeconds(
-            expirationSeconds == null || expirationSeconds <= 0 ? DEFAULT_PRESIGNED_EXPIRE_SECONDS : expirationSeconds);
-        if (!StrUtil.isEmpty(bucket)) {
-            builder.bucketName(bucket);
-        }
-        return successResult(ossClient.generatePresignedUrl(builder.build()));
+        return successResult(ossFileService.generatePresignedUrl(objectKey, type, expirationSeconds, bucket));
     }
 
     /**
@@ -342,13 +248,7 @@ public class OssController extends BaseController {
             "objectKey") String objectKey,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
-        AssertUtil.isTrue(StrUtil.isEmpty(objectKey)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
-        if (StrUtil.isEmpty(bucket)) {
-            ossClient.deleteObject(objectKey);
-        } else {
-            ossClient.deleteObject(bucket, objectKey);
-        }
+        ossFileService.deleteObject(objectKey, bucket);
         return successResult();
     }
 
@@ -368,29 +268,71 @@ public class OssController extends BaseController {
             required = true) @RequestBody List<String> objectKeys,
         @Parameter(name = "bucket", description = "存储桶，缺省使用默认桶") @RequestParam(value = "bucket",
             required = false) String bucket) {
-        AssertUtil.isTrue(objectKeys == null || objectKeys.isEmpty()).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .i18n(AppI18nContant.OSS_OBJECT_KEY_EMPTY).throwIt();
-        String resolvedBucket = StrUtil.isEmpty(bucket) ? ossClient.getDefaultBucket() : bucket;
-        ossClient.deleteObjects(resolvedBucket, objectKeys);
+        ossFileService.deleteObjects(bucket, objectKeys);
         return successResult();
     }
 
     /**
-     * 生成上传对象的默认存储键
+     * 组装对象下载响应头
      * <p>
-     * 格式为“yyyyMMdd/UUID.扩展名”，保留原始文件扩展名
+     * 依据对象元数据设置内容类型与长度，文件名取对象键最后一段并做URL编码
      * </p>
      *
-     * @param originalFilename 原始文件名
-     * @return 存储对象键
+     * @param response     HTTP响应
+     * @param objectStream 对象流（含元数据与对象键）
      */
-    private String generateObjectKey(String originalFilename) {
-        String date = DateUtil.format(new Date(), "yyyyMMdd");
-        String suffix = "";
-        if (!StrUtil.isEmpty(originalFilename) && originalFilename.lastIndexOf('.') > 0) {
-            suffix = originalFilename.substring(originalFilename.lastIndexOf('.'));
+    private void applyObjectHeaders(HttpServletResponse response, OssObjectStream objectStream) {
+        ObjectMetadata metadata = objectStream.getMetadata();
+        response.setContentType(
+            metadata == null || StrUtil.isEmpty(metadata.getContentType()) ? MediaType.APPLICATION_OCTET_STREAM_VALUE
+                : metadata.getContentType());
+        if (metadata != null && metadata.getContentLength() > 0) {
+            response.setContentLengthLong(metadata.getContentLength());
         }
-        return date + "/" + UUID.randomUUID().toString().replace("-", "") + suffix;
+        response.setHeader("Content-Disposition",
+            "attachment;filename=" + encodeFileName(resolveFileName(objectStream.getObjectKey())));
+    }
+
+    /**
+     * 输出对象内容流
+     *
+     * @param objectStream 对象流
+     * @param response     HTTP响应
+     * @throws IOException 输出流写入失败时抛出
+     */
+    private void writeObjectStream(OssObjectStream objectStream, HttpServletResponse response) throws IOException {
+        try (InputStream inputStream = objectStream.getStream();
+            OutputStream outputStream = response.getOutputStream()) {
+            byte[] buffer = new byte[COPY_BUFFER_SIZE];
+            int len;
+            while ((len = inputStream.read(buffer)) != -1) {
+                outputStream.write(buffer, 0, len);
+            }
+            outputStream.flush();
+        }
+    }
+
+    /**
+     * 解析下载展示文件名
+     * <p>
+     * 取对象键最后一段作为文件名
+     * </p>
+     *
+     * @param objectKey 对象存储键
+     * @return 文件名
+     */
+    private String resolveFileName(String objectKey) {
+        return objectKey.contains("/") ? objectKey.substring(objectKey.lastIndexOf('/') + 1) : objectKey;
+    }
+
+    /**
+     * URL编码文件名
+     *
+     * @param fileName 原始文件名
+     * @return URL编码后的文件名（空格转%20）
+     */
+    private String encodeFileName(String fileName) {
+        return URLEncoder.encode(fileName, StandardCharsets.UTF_8).replace("+", "%20");
     }
 
     /**

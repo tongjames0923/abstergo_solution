@@ -2,8 +2,8 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.form.OssDownloadCodeForm;
 import com.tbs.app.service.oss.downloadcode.IOssDownloadCodeService;
-import com.tbs.app.service.oss.downloadcode.OssDownloadCodeInfo;
 import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.oss.downloadcode.OssDownloadCodeInfo;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +47,7 @@ public class OssDownloadCodeController extends BaseController {
      * 生成下载唯一码
      * <p>
      * 为指定OSS对象生成下载码，默认自动生成16位Base64随机码；
-     * form.code非空时使用自定义码（须为16位Base64字符且唯一），创建时校验对象存在性；
+     * form.code非空时使用自定义码（须为4~64位Base64字符且唯一），创建时校验对象存在性；
      * expireSeconds为空或小于等于0表示永不过期
      * </p>
      *
@@ -56,7 +56,7 @@ public class OssDownloadCodeController extends BaseController {
      */
     @PostMapping
     @AjaxResponseType(OssDownloadCodeInfo.class)
-    @Operation(summary = "生成下载唯一码", description = "为指定存储对象生成下载码，可自定义16位Base64码、指定有效期与备注")
+    @Operation(summary = "生成下载唯一码", description = "为指定存储对象生成下载码，可自定义4~64位Base64码、指定有效期与备注")
     @ApiResponse(responseCode = "200", description = "成功生成下载唯一码",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.accountActived")

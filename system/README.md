@@ -11,6 +11,14 @@ System 模块（`com.tbs:system`）是平台的系统管理组件，提供用户
 | `system-api` | `system-api` | 契约层：服务接口、VO/Form、令牌签发中心、CRUD 控制器基类（50 个源文件） | `web`、`logging-api` |
 | `default-system-impl` | `default-system-impl` | 默认实现：全部服务实现、配置装配、拦截器、异常转换器（38 个源文件） | `system-api`、`dic-api`、`logging-api`、`view-route-api`、`oss-api` |
 
+### 文件处理能力（自 app 模块迁入）
+
+- **服务实现**：`service/impl/oss/downloadcode/OssDownloadCodeServiceImpl`（公开下载码生成/CRUD/下载解析，自定义码须为 4~64 位 Base64 字符且唯一）、`service/impl/oss/downloadcode/DbDownloadCodeStorage`（数据库存储，`tbs.oss.download-code.storage=db` 启用）、`service/oss/UploadTaskProgressManager`（上传进度内存注册表）
+- **数据处理**：`data/TableDataHandlerRegistry`（本地 Spring + Dubbo 远程双模式处理器查找），HTTP 出参 VO 在 `system-api` 的 `com.tbs.app.vo`（`HandlerOptionVO`/`HandlerValidateVO`/`UploadTaskProgressVO`）
+- **存储抽象与条件装配**（oss-api `com.tbs.oss.downloadcode`）：`IDownloadCodeStorage`/`OssDownloadCodeInfo`/配置键常量 `OssDownloadCodeConfigKeys`；Redis 实现位于 `redis-mod` 的 `com.tbs.redis.oss.RedisDownloadCodeStorage`（`RedisDownloadCodeStorageConfig` 装配，缺省 `storage=redis`），DB 实现位于本模块（`OssDownloadCodeStorageConfig` 装配，`storage=db`）
+- **实体与 Mapper**：`shared-pojo` 的 `com.tbs.shared.pojo.entity.oss.OssDownloadCodeEntity`（flag 逻辑删除）与 `shared-api` 的 `com.tbs.shared.mapper.oss.OssDownloadCodeMapper`
+- **i18n**：`oss.*`（含 `oss.download.code.*`）与 `data.handle.*` 文案迁入 `messages-system(.properties/_en_US.properties)`，常量见 `com.tbs.app.constant.FileProcessI18nConstant`；对应 HTTP 接入层（Controller）保留在 app 模块
+
 父 POM `com.tbs:system`（`packaging=pom`）统一引入 `shared-api`、`shared-pojo`、`cache-api`。
 
 > **注意**：父 POM 为聚合 POM，**不能作为依赖引入**（旧文档中的 `com.tbs:system` 依赖写法无效）。业务方按需引入 `system-api`（仅契约）或 `default-system-impl`（含默认实现）。

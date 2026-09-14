@@ -1,4 +1,4 @@
-package com.tbs.app.data;
+package com.tbs.app.vo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
