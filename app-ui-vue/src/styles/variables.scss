@@ -13,6 +13,21 @@ $sideBarWidth: 200px;
 $sidebarBorderRadius: 12px;
 $sidebarPadding: 3px;
 
+// 响应式断点（与 layout/mixin/ResizeHandler.js 三档判定保持一致）
+// 手机竖屏：宽度 <= 768px；平板：769px ~ 992px；桌面：> 992px
+$bp-phone: 768px;
+$bp-tablet: 992px;
+// 手机横屏（iPhone Plus/Max 横屏宽度也在该范围内）
+$bp-phone-landscape: 896px;
+
+// html 根字号基准（rem 分级缩放：新组件字号/间距优先使用 rem）
+$rem-base-desktop: 16px;
+$rem-base-tablet: 15px;
+$rem-base-phone: 14px;
+
+// 最小触摸目标尺寸（Apple HIG 推荐 44pt）
+$touch-target-size: 44px;
+
 // the :export directive is the magic sauce for webpack
 // https://www.bluematador.com/blog/how-to-share-variables-between-js-and-sass
 :export {

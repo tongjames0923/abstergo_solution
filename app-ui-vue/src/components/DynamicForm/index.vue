@@ -901,6 +901,20 @@ export default {
   ::v-deep .date-range-picker-popper .el-picker-panel__body-wrapper {
     flex-direction: column;
   }
+
+  /* 小屏下 label 置顶堆叠（覆盖内联 label-width，避免横排标签挤压输入区） */
+  ::v-deep .el-form-item__label {
+    width: auto !important;
+    float: none;
+    display: block;
+    text-align: left;
+    padding: 0 0 4px;
+    line-height: 1.5;
+  }
+
+  ::v-deep .el-form-item__content {
+    margin-left: 0 !important;
+  }
 }
 
 /* 动画效果 */

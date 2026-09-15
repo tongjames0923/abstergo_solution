@@ -53,6 +53,7 @@
 
       <DynamicTable
         ref="dynamicTable"
+        v-bind="$attrs"
         :data-fetcher="fetchData"
         :columns.sync="internalColumns"
         :actions="actions"
@@ -146,6 +147,8 @@ export default {
     DynamicFormWithApi,
     DynamicTable
   },
+  // 关闭根元素属性透传：$attrs 全部转发给内部 DynamicTable（如 cardFields/titleField/responsive）
+  inheritAttrs: false,
   props: {
     // 主标题
     mainTitle: {

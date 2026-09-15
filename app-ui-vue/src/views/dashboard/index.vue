@@ -865,7 +865,11 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   flex: 1;
   min-height: 0;
 
-  @media (max-width: 800px) {
+  @media (max-width: 992px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @media (max-width: 640px) {
     grid-template-columns: 1fr;
   }
 }
@@ -1160,6 +1164,29 @@ $font-mono:    'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 
   .head__date {
     font-size: 11px;
+  }
+}
+
+/* 横屏手机：统计行紧凑化，避免一行 5 项过挤 */
+@media (max-width: 896px) and (orientation: landscape) {
+  .nums {
+    padding: 10px 12px;
+  }
+
+  .num {
+    padding: 8px 4px;
+  }
+
+  .num__info {
+    gap: 4px;
+  }
+}
+
+/* 矮视口（含横屏手机）：压缩头像尺寸减少纵向占用 */
+@media (max-height: 480px) {
+  .avatar {
+    width: 64px;
+    height: 64px;
   }
 }
 </style>

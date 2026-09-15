@@ -23,6 +23,23 @@ label {
 html {
   height: 100%;
   box-sizing: border-box;
+  // rem 分级缩放基准：桌面 16px / 平板 15px / 手机 14px（配合 respond-to mixin 供组件按 rem 取值）
+  font-size: $rem-base-desktop;
+
+  @include respond-to(tablet) {
+    font-size: $rem-base-tablet;
+  }
+
+  @include respond-to(phone) {
+    font-size: $rem-base-phone;
+  }
+}
+
+// 图片自适应：防止大图在窄屏容器内溢出
+img,
+video {
+  max-width: 100%;
+  height: auto;
 }
 
 #app {
@@ -33,6 +50,8 @@ html {
 *:before,
 *:after {
   box-sizing: inherit;
+  // 触摸易用性：抑制移动端点按高亮，由组件按压态（:active）提供反馈
+  -webkit-tap-highlight-color: transparent;
 }
 
 a:focus,
@@ -95,4 +114,18 @@ div:focus {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+
+  // 小屏下收紧页面留白，扩大内容可视区域
+  @include respond-to(tablet) {
+    padding: 10px;
+  }
+
+  @include respond-to(phone) {
+    padding: 8px;
+  }
+
+  // 手机横屏下进一步压缩上下留白
+  @include respond-to(phone-landscape) {
+    padding: 6px 10px;
+  }
 }

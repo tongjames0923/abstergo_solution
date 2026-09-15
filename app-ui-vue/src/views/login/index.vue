@@ -640,5 +640,35 @@ export default {
   .login-card {
     padding: 36px 24px 24px;
   }
+
+  .login-title {
+    font-size: 20px;
+  }
+}
+
+/* 横屏手机：压缩卡片与间距，避免纵向溢出 */
+@media (max-height: 480px) and (orientation: landscape) {
+  .login-container {
+    align-items: flex-start;
+    overflow-y: auto;
+    padding: 12px;
+  }
+
+  .login-card {
+    padding: 16px 24px;
+  }
+
+  .app-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .login-header {
+    margin-bottom: 12px;
+  }
+
+  .login-button {
+    height: 38px;
+  }
 }
 </style>

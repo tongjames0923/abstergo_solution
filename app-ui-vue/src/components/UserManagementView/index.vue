@@ -6,6 +6,8 @@
       :config-name="userSearchFormKey()"
       :search-handler="searchHandler"
       :columns="columns"
+      title-field="userName"
+      :card-fields="['avatar', 'nickName', 'flag', 'createTime']"
       :add-form-config-name="userAddFormKey()"
       :add-handler="(formData) => saveUser(formData)"
       :edit-form-config-name="userEditFormKey()"
