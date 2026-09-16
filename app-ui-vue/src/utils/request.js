@@ -10,8 +10,6 @@ const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
   withCredentials: true, // send cookies when cross-domain requests
   // 全局超时：后端/网关无响应时请求必须能失败返回，
-  // 否则启动期 bootstrap 会永久挂起，导致“正在进入系统…”闪屏卡死
-  timeout: 15000
 })
 
 // 在请求头中添加语言设置
@@ -151,6 +149,13 @@ service.interceptors.response.use(
       return Promise.reject(new Error(i18n.t('request.configError')))
     }
 
+    // 刷新token请求自身的未登录/刷新失败响应：说明刷新会话已失效，
+    // 必须直接失败返回。若进入下方刷新逻辑，会排队等待自己触发的刷新流程，造成死锁
+    if (response.config._isRefreshRequest &&
+        settings.noLoginCode.concat(settings.refreshTokenCode).includes(res.code)) {
+      return Promise.reject(new Error(res.message || i18n.t('login.sessionExpired')))
+    }
+
     // 成功响应处理
     if (res.code === settings.successCode) {
       if (res.message && res.type) {
@@ -174,7 +179,7 @@ service.interceptors.response.use(
     if (settings.noLoginCode.includes(res.code)) {
       // 已重试过仍返回未登录码，说明刷新后依然无效，
       // 必须终止，否则会陷入“刷新→重试→再刷新”的死循环
-      if (config._retry) {
+      if (response.config._retry) {
         return await noLoginFunction(res)
       }
       try {

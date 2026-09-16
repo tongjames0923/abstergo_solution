@@ -194,7 +194,9 @@ const actions = {
       const response = await request({
         url: 'public/user/refresh',
         method: 'get',
-        timeout: 10000
+        timeout: 10000,
+        // 标记刷新请求自身：其未登录响应必须直接失败，避免在拦截器中排队死锁
+        _isRefreshRequest: true
       })
 
       const { code, data } = response
