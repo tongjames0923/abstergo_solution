@@ -39,14 +39,31 @@ class RouteCacheService {
       const cacheTime = parseInt(timestamp, 10)
 
       if (now - cacheTime > this.cacheDuration) {
-        // 缓存已过期，清除缓存
-        this.clearCache()
+        // 缓存已过期，视为无效；但保留原始数据供 stale-while-revalidate 先行渲染使用
         return null
       }
 
       return JSON.parse(cachedData)
     } catch (error) {
       console.error('获取路由缓存失败:', error)
+      return null
+    }
+  }
+
+  /**
+   * 获取过期但未损坏的缓存路由数据（忽略 TTL）
+   * 用于 stale-while-revalidate：先旧数据立即渲染，后台再刷新
+   * @returns {Object|null} 过期的缓存路由数据或null
+   */
+  getStaleRoutes() {
+    try {
+      const cachedData = localStorage.getItem(ROUTE_CACHE_KEY)
+      if (!cachedData) {
+        return null
+      }
+      return JSON.parse(cachedData)
+    } catch (error) {
+      console.error('获取过期路由缓存失败:', error)
       return null
     }
   }

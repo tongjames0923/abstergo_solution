@@ -49,16 +49,18 @@ export function setUpRouterPermissions(router) {
         const hasGetUserInfo = store.getters.name
         if (!hasGetUserInfo) {
           try {
-            // get user info
-            await store.dispatch('user/getInfo')
+            // 获取用户信息与动态路由加载并行执行，缩短首次进入系统的等待时间
+            const tasks = [store.dispatch('user/getInfo')]
 
-            // 获取用户信息后，更新路由数据
             // 如果是从登录页跳转过来，且已经加载过路由，则跳过
             if (from.path !== '/login' || !dynamicRoutesLoaded) {
               const { updateRouter } = await import('@/router')
-              await updateRouter()
-              dynamicRoutesLoaded = true
+              tasks.push(updateRouter().then(() => {
+                dynamicRoutesLoaded = true
+              }))
             }
+
+            await Promise.all(tasks)
           } catch (error) {
             // remove token and go to login page to re-login
             await store.dispatch('user/resetToken')
