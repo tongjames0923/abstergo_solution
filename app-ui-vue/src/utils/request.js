@@ -8,8 +8,10 @@ import i18n from '@/i18n'
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-  withCredentials: true // send cookies when cross-domain requests
-  // timeout: 3000 // request timeout
+  withCredentials: true, // send cookies when cross-domain requests
+  // 全局超时：后端/网关无响应时请求必须能失败返回，
+  // 否则启动期 bootstrap 会永久挂起，导致“正在进入系统…”闪屏卡死
+  timeout: 15000
 })
 
 // 在请求头中添加语言设置
@@ -170,6 +172,11 @@ service.interceptors.response.use(
 
     // 当遇到刷新token失败的错误码(468)时，先尝试刷新token
     if (settings.noLoginCode.includes(res.code)) {
+      // 已重试过仍返回未登录码，说明刷新后依然无效，
+      // 必须终止，否则会陷入“刷新→重试→再刷新”的死循环
+      if (config._retry) {
+        return await noLoginFunction(res)
+      }
       try {
         return await refreshTokenHandler(response)
       } catch (err) {

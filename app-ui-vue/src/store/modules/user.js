@@ -189,17 +189,13 @@ const actions = {
    */
   async refreshToken({ commit }) {
     try {
-      // 添加超时控制，避免长时间等待
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10秒超时
-
+      // 使用 axios 的 timeout 实现超时控制（当前 axios 0.18.1 不支持 AbortController.signal，
+      // 用 signal 做的超时不会生效，刷新请求一旦无响应会永久挂起）
       const response = await request({
         url: 'public/user/refresh',
         method: 'get',
-        signal: controller.signal
+        timeout: 10000
       })
-
-      clearTimeout(timeoutId)
 
       const { code, data } = response
       setToken(data.token)

@@ -272,6 +272,9 @@ export async function updateRouter() {
     })
   } catch (error) {
     console.error('路由更新失败:', error)
+    // 出错时也要唤醒等待队列，否则路由守卫中 waitForRouteUpdate 会永久挂起（页面卡死）
+    updateWaitQueue.forEach(resolve => resolve(currentRouter))
+    updateWaitQueue = []
     throw error
   } finally {
     isUpdatingRoutes = false
