@@ -234,4 +234,40 @@ export default {
     }
   }
 }
+
+/* 手机端：居中堆叠，图片与文案占满宽度，避免 1200px 固定布局溢出 */
+@media (max-width: 768px) {
+  .wscn-http404-container {
+    position: static;
+    transform: none;
+    top: auto;
+    left: auto;
+    padding: 40px 16px;
+  }
+
+  .wscn-http404 {
+    width: 100%;
+    max-width: 480px;
+    padding: 0;
+  }
+
+  .pic-404 {
+    float: none;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto 20px;
+  }
+
+  .bullshit {
+    float: none;
+    width: 100%;
+    padding: 0 16px;
+    text-align: center;
+  }
+
+  .bullshit__return-home {
+    float: none;
+    margin: 0 auto;
+  }
+}
 </style>

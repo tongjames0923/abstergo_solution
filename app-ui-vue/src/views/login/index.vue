@@ -23,7 +23,14 @@
         <p class="login-subtitle anim-stagger" style="--stagger-delay: 0.18s">{{ $t('login.title') }}</p>
       </div>
 
+      <!-- 内嵌登录面板：embedded-qr 等自渲染模式由 Provider component 承载 -->
+      <div v-if="panelComponent && loginContext" class="login-embed-area anim-stagger" style="--stagger-delay: 0.24s">
+        <component :is="panelComponent" :context="loginContext" />
+        <el-button type="text" class="embed-back" @click="closeProviderPanel">{{ $t('login.backToLogin') }}</el-button>
+      </div>
+
       <el-form
+        v-else-if="primaryProvider"
         ref="loginForm"
         :model="loginForm"
         :rules="loginRules"
@@ -31,58 +38,70 @@
         auto-complete="on"
         label-position="left"
       >
-        <el-form-item prop="username" class="anim-stagger" style="--stagger-delay: 0.24s">
+        <!-- 主登录方式字段区：由 Provider formSchema 驱动渲染 -->
+        <el-form-item
+          v-for="(field, index) in primarySchema"
+          :key="field.key"
+          :prop="field.key"
+          class="anim-stagger"
+          :style="{ '--stagger-delay': (0.24 + index * 0.06) + 's' }"
+        >
           <el-input
-            ref="username"
-            v-model="loginForm.username"
-            :placeholder="$t('login.username')"
-            name="username"
-            type="text"
-            tabindex="1"
+            :ref="field.key"
+            :key="field.toggleable ? passwordType : field.key"
+            v-model="loginForm[field.key]"
+            :type="field.toggleable ? passwordType : field.type"
+            :placeholder="$t(field.placeholderKey)"
+            :name="field.key"
+            :tabindex="field.tabindex"
             auto-complete="on"
-            prefix-icon="el-icon-user"
+            :prefix-icon="field.prefixIcon"
             size="medium"
             class="login-input"
+            @keyup.enter.native="handleFieldEnter(field)"
             @focus="handleInputFocus"
             @blur="handleInputBlur"
           />
-        </el-form-item>
-
-        <el-form-item prop="password" class="anim-stagger" style="--stagger-delay: 0.3s">
-          <el-input
-            :key="passwordType"
-            ref="password"
-            v-model="loginForm.password"
-            :type="passwordType"
-            :placeholder="$t('login.password')"
-            name="password"
-            tabindex="2"
-            auto-complete="on"
-            prefix-icon="el-icon-lock"
-            size="medium"
-            class="login-input"
-            @keyup.enter.native="handleLogin"
-            @focus="handleInputFocus"
-            @blur="handleInputBlur"
-          />
-          <span class="show-pwd" @click="showPwd">
+          <span v-if="field.toggleable" class="show-pwd" @click="showPwd">
             <i :class="passwordType === 'password' ? 'el-icon-view' : 'el-icon-hide'" />
           </span>
         </el-form-item>
 
-        <div class="login-options anim-stagger" style="--stagger-delay: 0.36s">
+        <div v-if="primaryOptions.rememberMe" class="login-options anim-stagger" style="--stagger-delay: 0.36s">
           <el-checkbox v-model="loginForm.rememberMe">{{ $t('login.rememberMe') || '记住我' }}</el-checkbox>
         </div>
 
         <el-button
-          :loading="loading"
+          :loading="submitting"
           type="primary"
           class="login-button anim-stagger"
           style="--stagger-delay: 0.42s"
           @click.native.prevent="handleLogin"
         >
-          {{ loading ? ($t('login.loggingIn') || '登录中...') : $t('login.login') }}
+          {{
+            submitting ? $t(primaryOptions.submittingLabelKey || 'login.loggingIn') : $t(primaryOptions.submitLabelKey || 'login.login')
+          }}
         </el-button>
+
+        <!-- 其他登录方式入口：由注册表按配置渲染 -->
+        <div v-if="secondaryProviders.length" class="login-alt-methods anim-stagger" style="--stagger-delay: 0.46s">
+          <div class="alt-divider">
+            <span>{{ $t('login.otherMethods') }}</span>
+          </div>
+          <div class="alt-buttons">
+            <button
+              v-for="method in secondaryProviders"
+              :key="method.id"
+              type="button"
+              class="alt-button"
+              :title="$t(method.labelKey)"
+              @click="startProvider(method)"
+            >
+              <i :class="method.icon"/>
+              <span>{{ $t(method.labelKey) }}</span>
+            </button>
+          </div>
+        </div>
 
         <div class="secure-hint anim-stagger" style="--stagger-delay: 0.48s">
           <i class="el-icon-lock" />
@@ -99,12 +118,15 @@
 </template>
 
 <script>
-import { validUsername } from '@/utils/validate'
-import { getRememberMe } from '@/utils/auth'
+import {getRememberMe} from '@/utils/auth'
 import settings from '@/settings'
-import { updateRouter } from '@/router'
+import {updateRouter} from '@/router'
 import LangSelect from '@/components/LangSelect'
-import { getGatewayVersion } from '@/api/system'
+import {getGatewayVersion} from '@/api/system'
+import {getPrimaryProvider, getSecondaryProviders} from '@/login/registry'
+import {dispatchLoginCallback} from '@/login/callback'
+// 引入登录能力模块入口，确保内置 Provider 注册副作用执行
+import '@/login'
 
 export default {
   name: 'Login',
@@ -112,33 +134,16 @@ export default {
     LangSelect
   },
   data() {
-    const validateUsername = (rule, value, callback) => {
-      if (!validUsername(value)) {
-        callback(new Error(this.$t('login.usernameRequired')))
-      } else {
-        callback()
-      }
-    }
-    const validatePassword = (rule, value, callback) => {
-      if (value.length < 6) {
-        callback(new Error(this.$t('login.passwordRequired')))
-      } else {
-        callback()
-      }
-    }
     return {
       isLoaded: false,
       loginForm: {
-        username: '',
-        password: '',
         rememberMe: false
       },
-      loginRules: {
-        // username: [{ required: true, trigger: 'blur', validator: validateUsername }],
-        // password: [{ required: true, trigger: 'blur', validator: validatePassword }]
-      },
-      loading: false,
+      loginRules: {},
+      submitting: false,
       passwordType: 'password',
+      // 当前内嵌面板 Provider（embedded-qr 等自渲染模式）
+      panelProvider: null,
       redirect: undefined,
       // 后端网关版本号（接口无需认证，登录前即可展示）
       gatewayVersion: ''
@@ -147,6 +152,24 @@ export default {
   computed: {
     systemTitle() {
       return settings.title || '企业管理平台'
+    },
+    // 主登录方式：注册表中第一个 form-fields 模式的 Provider
+    primaryProvider() {
+      return getPrimaryProvider()
+    },
+    // 其他登录方式：渲染为补充入口
+    secondaryProviders() {
+      return getSecondaryProviders()
+    },
+    primarySchema() {
+      return (this.primaryProvider && this.primaryProvider.formSchema) || []
+    },
+    primaryOptions() {
+      return (this.primaryProvider && this.primaryProvider.formOptions) || {}
+    },
+    // 内嵌面板组件：声明了 component 的 Provider（embedded-qr 模式）
+    panelComponent() {
+      return (this.panelProvider && this.panelProvider.component) || null
     }
   },
   watch: {
@@ -157,9 +180,14 @@ export default {
       immediate: true
     }
   },
+  created() {
+    this.initLoginForm()
+  },
   mounted() {
     this.loginForm.rememberMe = getRememberMe()
     this.loadGatewayVersion()
+    this.loginContext = this.createLoginContext()
+    this.handleLoginCallback()
     // 添加淡入动画
     this.$nextTick(() => {
       setTimeout(() => {
@@ -168,6 +196,38 @@ export default {
     })
   },
   methods: {
+    // 按主登录方式的 formSchema 初始化表单值
+    initLoginForm() {
+      const form = {}
+      this.primarySchema.forEach(field => {
+        form[field.key] = ''
+      })
+      form.rememberMe = false
+      this.loginForm = form
+    },
+    // 构造注入给 Provider 的宿主上下文（LoginContext）
+    createLoginContext() {
+      const self = this
+      return {
+        t: key => self.$t(key),
+        setSubmitting: value => {
+          self.submitting = value
+        },
+        reportError: message => {
+          self.$message.error(message)
+        },
+        loginWithCredentials: credentials => self.doLoginWithCredentials(credentials),
+        loginWithToken: tokenInfo => self.doLoginWithToken(tokenInfo)
+      }
+    },
+    // SSO 授权回调分发入口：state 携带 Provider id，code 为授权码
+    async handleLoginCallback() {
+      try {
+        await dispatchLoginCallback(this.$route.query, this.loginContext)
+      } catch (e) {
+        // 回调异常时静默降级，交还登录表单正常渲染
+      }
+    },
     // 拉取后端网关版本信息，失败时静默降级不影响登录页
     async loadGatewayVersion() {
       try {
@@ -185,6 +245,11 @@ export default {
     handleInputBlur(event) {
       event.target.closest('.el-form-item').classList.remove('input-focused')
     },
+    handleFieldEnter(field) {
+      if (field.submitOnEnter) {
+        this.handleLogin()
+      }
+    },
     showPwd() {
       if (this.passwordType === 'password') {
         this.passwordType = 'text'
@@ -192,41 +257,76 @@ export default {
         this.passwordType = 'password'
       }
       this.$nextTick(() => {
-        this.$refs.password.focus()
-      })
-    },
-    async handleLogin() {
-      this.$refs.loginForm.validate(valid => {
-        if (valid) {
-          this.loading = true
-
-          this.$store.dispatch('user/login', this.loginForm).then(async() => {
-            // 等待一小段时间确俜token已经设置到请求拦截器中
-            await new Promise(resolve => setTimeout(resolve, 100))
-
-            try {
-              // 先获取用户信息，再更新路由
-              await this.$store.dispatch('user/getInfo')
-              // 登录成功后更新路由数据
-              await updateRouter()
-              // 确保路由更新完成后才跳转
-              await this.$nextTick()
-              // 登录后始终跳转到dashboard
-              this.$router.push({ path: '/Welcome' })
-            } catch (error) {
-              console.error('路由更新失败:', error)
-              // 即使路由更新失败，也允许跳转到dashboard
-              this.$router.push({ path: '/Welcome' })
-            }
-            this.loading = false
-          }).catch(() => {
-            this.loading = false
-          })
-        } else {
-          console.log('error submit!!')
-          return false
+        const ref = this.$refs.password
+        const input = Array.isArray(ref) ? ref[0] : ref
+        if (input) {
+          input.focus()
         }
       })
+    },
+    handleLogin() {
+      if (!this.primaryProvider) {
+        return
+      }
+      this.$refs.loginForm.validate(valid => {
+        if (valid) {
+          this.primaryProvider.authenticate(this.loginContext, this.loginForm).catch(() => {
+          })
+        }
+      })
+    },
+    // 发起其他登录方式：声明 component 的走内嵌面板，其余走 authenticate
+    startProvider(provider) {
+      if (provider.component) {
+        this.panelProvider = provider
+        return
+      }
+      provider.authenticate(this.loginContext).catch(() => {
+      })
+    },
+    // 关闭内嵌面板，交还账号密码表单
+    closeProviderPanel() {
+      this.panelProvider = null
+    },
+    // 账号密码登录收口：复用既有 user/login 链路
+    async doLoginWithCredentials(credentials) {
+      this.submitting = true
+      try {
+        await this.$store.dispatch('user/login', credentials)
+        await this.finalizeAfterLogin()
+      } finally {
+        this.submitting = false
+      }
+    },
+    // SSO Token 收口：复用 loginByToken 链路，与账号密码登录共用后置逻辑
+    async doLoginWithToken(tokenInfo) {
+      this.submitting = true
+      try {
+        await this.$store.dispatch('user/loginByToken', tokenInfo)
+        await this.finalizeAfterLogin()
+      } finally {
+        this.submitting = false
+      }
+    },
+    // 登录成功后的统一后置链路：获取用户信息 → 更新路由 → 跳转
+    async finalizeAfterLogin() {
+      // 等待一小段时间确保token已经设置到请求拦截器中
+      await new Promise(resolve => setTimeout(resolve, 100))
+
+      try {
+        // 先获取用户信息，再更新路由
+        await this.$store.dispatch('user/getInfo')
+        // 登录成功后更新路由数据
+        await updateRouter()
+        // 确保路由更新完成后才跳转
+        await this.$nextTick()
+        // 登录后始终跳转到dashboard
+        this.$router.push({path: '/Welcome'})
+      } catch (error) {
+        console.error('路由更新失败:', error)
+        // 即使路由更新失败，也允许跳转到dashboard
+        this.$router.push({path: '/Welcome'})
+      }
     }
   }
 }
@@ -575,6 +675,86 @@ export default {
   &.is-loading {
     background-color: #0071e3;
     opacity: 0.85;
+  }
+}
+
+/* 其他登录方式入口：分割线 + 胶囊按钮，延续卡片细节质感 */
+.login-alt-methods {
+  margin-top: 14px;
+
+  .alt-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #9a9aa0;
+    font-size: 11px;
+
+    &::before,
+    &::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #ececf0;
+    }
+  }
+
+  .alt-buttons {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 12px;
+  }
+
+  .alt-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 16px;
+    border-radius: 17px;
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    background: rgba(255, 255, 255, 0.85);
+    color: #515154;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.25s ease;
+
+    i {
+      font-size: 14px;
+      color: #86868b;
+      transition: color 0.25s ease;
+    }
+
+    &:hover {
+      border-color: rgba(0, 113, 227, 0.4);
+      color: #0071e3;
+      box-shadow: 0 2px 10px rgba(0, 113, 227, 0.12);
+
+      i {
+        color: #0071e3;
+      }
+    }
+
+    &:active {
+      transform: scale(0.97);
+    }
+  }
+}
+
+/* 内嵌登录面板：承载 embedded-qr 等自渲染组件 */
+.login-embed-area {
+  text-align: center;
+
+  .embed-back {
+    margin-top: 4px;
+    padding: 0;
+    font-size: 12px;
+    color: #86868b;
+
+    &:hover {
+      color: #0071e3;
+    }
   }
 }
 

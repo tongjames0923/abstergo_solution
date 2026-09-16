@@ -60,7 +60,21 @@ export default {
     loggingIn: 'Logging in...',
     secureHint: 'Protected by an encrypted connection',
     copyright: 'All rights reserved.',
-    version: 'Version'
+    version: 'Version',
+    otherMethods: 'Other sign-in methods',
+    method: {
+      password: 'Account & Password',
+      wecom: 'WeCom Sign-in',
+      qr: 'WeCom QR Sign-in'
+    },
+    qr: {
+      title: 'Scan to Sign in',
+      hint: 'Scan with the WeCom app',
+      placeholder: 'QR code area',
+      tip: 'If the QR code expires, refresh and try again'
+    },
+    backToLogin: 'Back to account sign-in',
+    wecomNotConfigured: 'WeCom sign-in is not configured. Please contact the administrator.'
   },
 
   // Navigation

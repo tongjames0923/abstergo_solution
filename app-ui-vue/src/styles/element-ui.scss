@@ -157,6 +157,17 @@
     }
   }
 
+  // 行内固定宽度的筛选控件（如 style="width:280px"）在手机端一律满宽，
+  // 覆盖各列表页硬编码的搜索框/下拉宽度，避免窄屏溢出
+  .el-input[style*='width'],
+  .el-select[style*='width'],
+  .el-input-number[style*='width'],
+  .el-date-editor[style*='width'],
+  .el-cascader[style*='width'],
+  .el-autocomplete[style*='width'] {
+    width: 100% !important;
+  }
+
   .el-form-item__error {
     padding-top: 2px;
   }

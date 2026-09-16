@@ -60,7 +60,21 @@ export default {
     loggingIn: '登录中...',
     secureHint: '已通过加密连接保护',
     copyright: '保留所有权利.',
-    version: '版本'
+    version: '版本',
+    otherMethods: '其他登录方式',
+    method: {
+      password: '账号密码登录',
+      wecom: '企业微信登录',
+      qr: '企业微信扫码登录'
+    },
+    qr: {
+      title: '扫码登录',
+      hint: '请使用企业微信 App 扫一扫',
+      placeholder: '二维码区域',
+      tip: '二维码过期后请刷新重试'
+    },
+    backToLogin: '返回账号登录',
+    wecomNotConfigured: '企业微信登录未配置，请联系管理员'
   },
 
   // 导航
