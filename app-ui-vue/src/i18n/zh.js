@@ -40,6 +40,13 @@ export default {
     value: '数值'
   },
 
+  // 详情页通用
+  detail: {
+    invalidId: '无效的标识参数，即将返回列表',
+    loadFailed: '详情加载失败',
+    retry: '重试'
+  },
+
   // 登录
   login: {
     title: '系统登录',
@@ -203,6 +210,7 @@ export default {
     editUser: '编辑用户',
     deleteUser: '删除用户',
     confirmDelete: '确定要删除该用户吗？',
+    viewDetail: '详情',
     loginInfo: '登录信息',
     noLoginInfo: '暂无登录信息',
     // 用户管理界面
@@ -217,6 +225,32 @@ export default {
     inputConfirmPassword: '请再次输入密码',
     confirmPasswordRequired: '请再次输入密码',
     confirmPasswordMismatch: '两次输入密码不一致!'
+  },
+
+  // 用户详情页
+  userDetail: {
+    title: '用户详情',
+    backToList: '返回列表',
+    basicInfo: '基本信息',
+    userId: '用户ID',
+    roleGroups: '角色组',
+    sessions: '登录会话',
+    tokens: '访问令牌',
+    loadTokens: '加载令牌',
+    disableToken: '禁用令牌',
+    confirmDisableToken: '确认禁用该令牌吗？禁用后对应会话需要重新登录',
+    online: '在线',
+    offline: '离线',
+    sessionId: '会话ID',
+    loginTime: '登录时间',
+    lastActiveTime: '最后活跃时间',
+    tokenCount: '令牌数量',
+    token: '令牌串',
+    tokenStatus: '令牌状态',
+    tokenType: '令牌类型',
+    expireTime: '过期时间',
+    noRoleGroups: '暂未分配角色组',
+    noSessions: '暂无登录会话'
   },
 
   // 权限管理

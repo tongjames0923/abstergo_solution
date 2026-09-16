@@ -40,6 +40,13 @@ export default {
     value: 'Value'
   },
 
+  // Detail page common
+  detail: {
+    invalidId: 'Invalid identifier, redirecting to list',
+    loadFailed: 'Failed to load detail',
+    retry: 'Retry'
+  },
+
   // Login
   login: {
     title: 'System Login',
@@ -203,6 +210,7 @@ export default {
     editUser: 'Edit User',
     deleteUser: 'Delete User',
     confirmDelete: 'Are you sure to delete this user?',
+    viewDetail: 'Details',
     loginInfo: 'Login Info',
     noLoginInfo: 'No login info',
     // User Management View
@@ -217,6 +225,32 @@ export default {
     inputConfirmPassword: 'Please enter password again',
     confirmPasswordRequired: 'Please enter password again',
     confirmPasswordMismatch: 'Passwords do not match!'
+  },
+
+  // User detail page
+  userDetail: {
+    title: 'User Details',
+    backToList: 'Back to List',
+    basicInfo: 'Basic Info',
+    userId: 'User ID',
+    roleGroups: 'Role Groups',
+    sessions: 'Login Sessions',
+    tokens: 'Access Tokens',
+    loadTokens: 'Load Tokens',
+    disableToken: 'Disable Token',
+    confirmDisableToken: 'Disable this token? The session will need to re-login.',
+    online: 'Online',
+    offline: 'Offline',
+    sessionId: 'Session ID',
+    loginTime: 'Login Time',
+    lastActiveTime: 'Last Active Time',
+    tokenCount: 'Token Count',
+    token: 'Token',
+    tokenStatus: 'Status',
+    tokenType: 'Type',
+    expireTime: 'Expire Time',
+    noRoleGroups: 'No role groups assigned',
+    noSessions: 'No login sessions'
   },
 
   // Role Management

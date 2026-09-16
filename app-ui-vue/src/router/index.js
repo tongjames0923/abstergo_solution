@@ -3,6 +3,7 @@ import Router from 'vue-router'
 import store from '@/store'
 /* Layout */
 import Layout from '@/layout'
+import { detailRoutes } from './modules/detail-routes'
 import { getRoutes } from '@/api/view'
 import { getGatewayVersion } from '@/api/system'
 import { setUpRouterPermissions } from '@/permission'
@@ -71,7 +72,10 @@ export const constantRoutes = [
       meta: { title: '欢迎页', icon: 'el-icon-star-on' }
     }
     ]
-  }
+  },
+
+  /* 详情页路由（URL 动态参数），集中登记于 modules/detail-routes.js */
+  ...detailRoutes
 ]
 
 export async function resetRouter() {

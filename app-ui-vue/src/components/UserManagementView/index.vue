@@ -15,13 +15,18 @@
       :query-transformer="rangeQueryTransform"
       @add-success="(data)=>{}"
       @edit-success="(data)=>{}"
-    />
+    >
+      <template v-slot:actions="{ row }">
+        <el-button size="mini" type="default" plain @click="goUserDetail(row)">
+          {{ $t('user.viewDetail') }}
+        </el-button>
+      </template>
+    </quick-use-management-view>
   </div>
 </template>
 
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
-import DynamicTable from '@/components/DynamicTable/index.vue'
 import { adminQueryUser, saveUser } from '@/api/admin_user'
 import { rangeQueryTransform } from '@/utils/query-help'
 import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
@@ -29,8 +34,7 @@ import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
 export default {
   name: 'UserManagementView',
   components: {
-    QuickUseManagementView,
-    DynamicTable
+    QuickUseManagementView
   },
   data() {
     return {
@@ -82,6 +86,12 @@ export default {
 
     saveUser,
     rangeQueryTransform,
+    /**
+     * 跳转用户详情页：按路由 name + params 跳转，与 URL 形态解耦
+     */
+    goUserDetail(row) {
+      this.$router.push({ name: 'UserDetails', params: { userId: row.id }})
+    },
     // 简化后的搜索处理函数，适配AbstractCrudController的数据格式
     async searchHandler(bodyParams, requestParams) {
       // 返回符合组件要求的数据格式
