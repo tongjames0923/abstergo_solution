@@ -202,6 +202,7 @@ async function generateRoutesFromServer() {
 async function getServiceRouter() {
   const routes = await generateRoutesFromServer()
   currentRouter = new Router({
+    mode: 'history',
     scrollBehavior: () => ({ y: 0 }),
     routes
   })
@@ -226,6 +227,7 @@ export async function updateRouter() {
 
     // 2. 创建新 router 实例
     const newRouter = new Router({
+      mode: 'history',
       scrollBehavior: () => ({ y: 0 }),
       routes: newRoutes
     })
