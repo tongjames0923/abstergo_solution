@@ -9,6 +9,32 @@ const WECOM_WEB_LOGIN_URL = 'https://login.work.weixin.qq.com/wwlogin/sso/login'
 const GRANT_TYPE = 'wecom'
 
 /**
+ * 构造企业微信 Web 登录（扫码授权）跳转地址
+ * <p>
+ * 使用企业微信 wwlogin 扫码登录地址，授权完成后携带 code/state 回跳 redirectUri；
+ * 若需企微客户端内静默授权，可另行切换 open.weixin.qq.com/connect/oauth2/authorize 网页授权地址。
+ * </p>
+ * @param {string} state - 回传状态标识（区分登录 / 绑定等场景）
+ * @param {string} [redirectUri] - 授权回调地址，缺省回退站点根路径
+ * @returns {string} 授权跳转地址；未配置 corpId 时返回空字符串
+ */
+export function buildWecomAuthorizeUrl(state, redirectUri) {
+  const options = (loginConfig.methods && loginConfig.methods['wecom-sso']) || {}
+  if (!options.corpId) {
+    return ''
+  }
+  const callbackUri = redirectUri || `${window.location.origin}/`
+  const params = [
+    'login_type=CorpApp',
+    `appid=${encodeURIComponent(options.corpId)}`,
+    `agentid=${encodeURIComponent(options.agentId || '')}`,
+    `redirect_uri=${encodeURIComponent(callbackUri)}`,
+    `state=${state}`
+  ]
+  return `${WECOM_WEB_LOGIN_URL}?${params.join('&')}`
+}
+
+/**
  * 企业微信单点登录 Provider（OAuth 重定向模式）
  *
  * - authenticate：携带 corpId/redirectUri/state 跳转企业微信授权页
@@ -22,27 +48,17 @@ export default {
   interactionMode: 'redirect',
 
   /**
-   * 认证入口：发起企业微信 Web 登录（PC 浏览器扫码授权）
-   * 使用企业微信 wwlogin 扫码登录地址，授权完成后携带 code/state 回跳 redirectUri；
-   * 若需企微客户端内静默授权，可另行切换 open.weixin.qq.com/connect/oauth2/authorize 网页授权地址
+   * 认证入口：发起企业微信 Web 登录（PC 浏览器扫码授权），state 携带本 Provider id
    * @param {Object} context - 宿主登录上下文（LoginContext）
    * @returns {Promise} 跳转发起后即 resolve（页面随后被授权页替换）
    */
   async authenticate(context) {
-    const options = (loginConfig.methods && loginConfig.methods[this.id]) || {}
-    if (!options.corpId) {
+    const url = buildWecomAuthorizeUrl(this.id)
+    if (!url) {
       context.reportError(context.t('login.wecomNotConfigured'))
       return
     }
-    const redirectUri = options.redirectUri || `${window.location.origin}/`
-    const params = [
-      'login_type=CorpApp',
-      `appid=${encodeURIComponent(options.corpId)}`,
-      `agentid=${encodeURIComponent(options.agentId || '')}`,
-      `redirect_uri=${encodeURIComponent(redirectUri)}`,
-      `state=${this.id}`
-    ]
-    window.location.href = `${WECOM_WEB_LOGIN_URL}?${params.join('&')}`
+    window.location.href = url
   },
 
   /**

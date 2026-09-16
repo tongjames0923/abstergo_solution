@@ -9,7 +9,7 @@ export default {
   enabledMethods: [
     'password',
     'wecom-sso',
-    'wecom-qr'
+    // 'wecom-qr'
   ],
   methods: {
     /**
@@ -21,13 +21,6 @@ export default {
       corpId: 'ww1cdff73cf26ec042',
       agentId: '1000047',
       redirectUri: ''
-    },
-    /**
-     * 企业微信内嵌扫码登录参数（embedded-qr 模式）
-     */
-    'wecom-qr': {
-      corpId: 'ww1cdff73cf26ec042',
-      agentId: '1000047'
     }
   }
 }

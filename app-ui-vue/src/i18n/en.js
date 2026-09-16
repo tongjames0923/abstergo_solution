@@ -77,6 +77,42 @@ export default {
     wecomNotConfigured: 'WeCom sign-in is not configured. Please contact the administrator.'
   },
 
+  // External identity binding
+  identity: {
+    title: 'External Identity Binding',
+    bindWecom: 'Bind WeCom',
+    unbind: 'Unbind',
+    identityType: 'Identity Type',
+    externalId: 'External Identity',
+    userId: 'System User ID',
+    userName: 'System Username',
+    userNamePlaceholder: 'Enter the system username',
+    bindTime: 'Bound At',
+    actions: 'Actions',
+    noData: 'No bindings yet',
+    all: 'All',
+    search: 'Search',
+    reset: 'Reset',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    confirmUnbind: 'Unbind this external identity? You will no longer be able to sign in with it',
+    autoBindHint: 'When the third-party identity matches the system username, binding is created automatically after authorization',
+    bindSuccess: 'Bound successfully',
+    bindFailed: 'Binding failed',
+    processing: 'Processing authorization result...',
+    type: {
+      wecom: 'WeCom'
+    },
+    rules: {
+      identityType: 'Please select an identity type',
+      externalId: 'Please enter the external identity',
+      userName: 'Please enter the system username'
+    },
+    admin: {
+      addBind: 'Add Binding'
+    }
+  },
+
   // Navigation
   nav: {
     home: 'Home',

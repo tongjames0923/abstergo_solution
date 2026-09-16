@@ -5,7 +5,11 @@ import com.tbs.app.intercept.OperateLogAspect;
 import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.app.security.grant.PasswordGrantProviderAdapter;
 import com.tbs.app.service.IFeatureFlagService;
+import com.tbs.app.service.identity.IExternalIdentityResolver;
+import com.tbs.app.service.identity.IUserExternalIdentityService;
 import com.tbs.app.service.impl.FeatureFlagServiceImpl;
+import com.tbs.app.service.impl.identity.SimpleUserExternalIdentityServiceImpl;
+import com.tbs.app.service.impl.identity.UniqueKeyMatchResolver;
 import com.tbs.app.service.impl.user.DefaultUserInfoService;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.logging.core.*;
@@ -104,6 +108,39 @@ public class DefaultAppConfig {
     @ConditionalOnMissingBean(PasswordGrantProviderAdapter.class)
     PasswordGrantProviderAdapter passwordGrantProvider(IUsernamePasswordAccessTokenProvider delegate) {
         return new PasswordGrantProviderAdapter(delegate);
+    }
+
+    /**
+     * 约定式唯一标识匹配策略配置（默认自动关联策略）
+     * <p>
+     * 外部身份标识与系统登录用户名一致时自动关联；作为兜底策略仅在没有其他
+     * {@code IExternalIdentityResolver} 实现时装配，不阻挡业务方注册更高优先级策略。
+     * </p>
+     *
+     * @return 约定式唯一标识匹配策略
+     */
+    @Bean
+    @ConditionalOnMissingBean(IExternalIdentityResolver.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
+    public IExternalIdentityResolver uniqueKeyMatchResolver() {
+        return new UniqueKeyMatchResolver();
+    }
+
+    /**
+     * 外部身份绑定管理服务配置
+     * <p>
+     * 收集容器中全部自动关联策略（按 Ordered 排序）装配绑定管理服务，
+     * 供外部登录链路与绑定管理接口共用。
+     * </p>
+     *
+     * @param resolvers 容器中全部自动关联策略
+     * @return 外部身份绑定管理服务
+     */
+    @Bean
+    @ConditionalOnMissingBean(IUserExternalIdentityService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
+    public IUserExternalIdentityService userExternalIdentityService(List<IExternalIdentityResolver> resolvers) {
+        return new SimpleUserExternalIdentityServiceImpl(resolvers);
     }
 
     @Bean

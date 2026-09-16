@@ -164,7 +164,7 @@ export default {
 接入步骤（不改动任何既有核心文件）：
 
 1. **后端配置**：`application.yml` 设置 `tbs.wecom.enable=true` 与 `corpId/corpSecret/agentId`（secret 仅后端持有）。
-2. **数据库**：执行 `etc/sql_file/sys_user_external_identity.sql` 建外部身份绑定表，并预绑定企微 userid 与系统用户（未绑定时登录报「未绑定」提示）。
+2. **数据库**：执行 `etc/sql_file/sys_user_external_identity.sql` 建外部身份绑定表；**企微 userid 与系统登录用户名一致时登录自动关联**（默认策略，见第 11 节），不一致时走自助绑定或管理端绑定接口。
 3. **企微管理后台**：配置可信回调域名（与前端 `redirectUri` 一致）。
 4. **前端配置**：`login.config.js` 填入 `corpId/redirectUri`，`enabledMethods` 中放开 `'wecom-sso'`。
 5. **i18n**：`login.method.wecom` 等中英文文案已就位，无需改动。
@@ -210,7 +210,7 @@ graph TD
 | `LoginGrantDescriptor` | 同上 | 元数据 VO（grantType / labelKey / publicOptions），供 `login-grants` 接口导出 |
 | `PublicLoginGrantController` | `app/controller/publics` | `POST /public/user/login/{grantType}` + `GET /public/user/login-grants`，仅 HTTP 接入 |
 | `PasswordGrantProviderAdapter` | `system-impl/security/grant` | 桥接既有 `IUsernamePasswordAccessTokenProvider` 为 `password` 类型，既有实现零修改（铁律 11） |
-| `WecomLoginGrantProvider` | `system-impl/security/grant/wecom` | 企微策略：授权码换 userid → 外部身份绑定 → 系统用户，复用 `AbstractAccessTokenProvider` 模板链路 |
+| `WecomLoginGrantProvider` | `system-impl/security/grant/wecom` | 企微策略：继承 `AbstractExternalLoginGrantProvider`（见第 11 节），仅保留授权类型自描述与「授权码 → 外部用户信息」换取 |
 | `WecomApiClient` / `WecomProperty` | 同上 | 企微 API 封装（access_token 缓存 `app:wecom_access_token`，铁律 13 常量）与 `tbs.wecom.*` 配置收拢 |
 | `sys_user_external_identity` | `etc/sql_file/*.sql` + shared 实体/Mapper | 外部身份绑定表，`(identity_type, external_id)` 唯一索引；`IUserInfoService` 仅新增 `loadUserInfoByExternalIdentity`（default 方法，存量实现零破坏） |
 
@@ -230,9 +230,69 @@ graph TD
 - **缓存代理注意**：企微 `access_token` 获取与换票拆为两个方法由 Provider 编排，规避 `@Cacheable` 自调用代理失效。
 - **兼容性**：旧端点 `POST /public/user/login` 与 `DefaultUserPasswordAccessTokenProvider` 原样保留；新端点统一 `AjaxResult{data: ITokenModel}`（铁律 8）。
 
-## 11. 变更记录
+## 11. 外部身份绑定与自动关联框架
+
+不局限于企业微信的通用绑定能力：以 `identityType` 维度支持多第三方平台，三个正交 SPI 分离关注点——平台差异收敛在 Exchanger，匹配策略差异收敛在 Resolver，绑定规则（幂等/冲突/唯一性）单点收敛在绑定管理服务。
+
+```mermaid
+graph TD
+    LG[统一登录端点 /public/user/login/:grantType] --> AGP[AbstractExternalLoginGrantProvider 模板]
+    SB[自助绑定端点 /private/external-identity/self-bind/:type] --> EX[登录态当前用户]
+    AGP -->|pullExternalIdentity| EC[IExternalIdentityExchanger 平台凭证换取 SPI]
+    SB --> EC
+    EC -->|ExternalUserProfile| SVC[IUserExternalIdentityService 绑定管理服务]
+    SVC -->|绑定未命中| RS[IExternalIdentityResolver 自动关联策略链 Ordered]
+    RS -->|默认: 外部ID==登录用户名| SVC
+    SVC --> T[(sys_user_external_identity 绑定表)]
+    SVC --> U[ISystemUserService 系统用户]
+    ADMIN[管理端 /private/external-identity/page·bind·unbind] --> SVC
+```
+
+### 11.1 SPI 与契约清单（system-api `service/identity`）
+
+| 契约 | 职责 | 默认实现（system-impl） |
+|------|------|--------------------------|
+| `ExternalUserProfile` | 第三方用户信息通用载体（identityType/externalId/displayName/raw） | — |
+| `IExternalIdentityResolver`（Ordered 链） | 自动关联策略：按第三方用户信息匹配系统用户 | `UniqueKeyMatchResolver`：外部ID == 系统登录用户名即自动关联（兜底优先级，适用全部平台） |
+| `IUserExternalIdentityService` | 绑定管理：查绑定 / autoBind（查→miss 策略链→落库）/ 手工绑定 / 解绑 / 按用户查询 / 分页 | `SimpleUserExternalIdentityServiceImpl` |
+| `IExternalIdentityExchanger` | 平台凭证换取外部用户信息（登录与自助绑定共用） | `WecomIdentityExchanger`（企微 code→userid） |
+| `AbstractExternalLoginGrantProvider`（`security/grant`） | 外部登录模板：凭证换取 → 绑定查询/自动关联 → 加载用户；平台仅剩 `getIdentityType` + `pullExternalIdentity` 两钩子 | `WecomLoginGrantProvider` 重构继承 |
+
+**绑定语义**：一个外部身份最多绑定一个系统用户（已绑他人报「该外部身份已绑定其他用户」）；一个系统用户在一个平台最多持有一个外部身份（重复绑定替换旧绑定）；解绑置 `flag=0` 失效。
+
+### 11.2 管理与自助接口（app `controller/privates`，`/private/external-identity`）
+
+| 接口 | 用途 | 边界 |
+|------|------|------|
+| `GET /my` | 当前用户绑定列表 | 仅本人 |
+| `POST /self-bind/{identityType}` | 登录态自助绑定：平台凭证换取后绑定本人 | 仅绑定当前登录用户 |
+| `GET /page` | 管理端分页（identityType/用户名过滤） | 管理能力 |
+| `POST /bind` | 管理端手工绑定（表单：identityType/externalId/userName） | 管理能力 |
+| `DELETE /unbind/{identityType}/{userName}` | 管理端解绑 | 管理能力 |
+
+前端 API 封装：`app-ui-vue/src/api/external-identity.js`（my/self-bind/page/bind/unbind 五个函数，JSDoc 齐全）。
+
+前端页面（已落地）：
+
+- `views/account/external-identity/index.vue` — 我的绑定（静态路由 `/account/external-identity`，侧边栏「账号与安全」分组）：绑定列表、企微自助绑定（跳转扫码 → `/oauth/callback` 回调页处理 → 自动回绑）、解绑
+- `views/oauth/callback/index.vue` — OAuth 回调处理页（静态路由 `/oauth/callback`，hidden）：`state=wecom-bind` 走自助绑定；其余 state 交还登录链路
+- `views/admin/external-identity/index.vue` — 管理端绑定管理（分页查询 / 新增绑定 / 解绑）：**需在后端菜单管理登记 type=1 菜单，component 路径填 `/admin/external-identity/index`**
+
+### 11.3 新增一个第三方平台 / 匹配策略的成本
+
+- **新平台**：FORM + `IXxxIdentityExchanger` + 继承 `AbstractExternalLoginGrantProvider` 的 Provider + 配置——控制器、门面、绑定服务零改动。
+- **新匹配策略**（如邮箱/手机号匹配）：实现 `IExternalIdentityResolver`（优先级高于兜底策略即可），注册 Bean 即接入策略链。
+
+### 11.4 演进
+
+- 自动建户（首次登录无匹配时按策略创建系统用户）：在 `autoBind` 的策略链后追加「建户策略」即可，契约不变。
+- 绑定策略后端下发（租户级开关 Resolver）：策略链来源可由静态 Bean 切换为配置驱动。
+- 管理端接口权限收紧：`page/bind/unbind` 当前为登录态即可访问，建议登记专属权限码后收紧。
+
+## 12. 变更记录
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
 | 1.0.0 | 2026-09 | 初版：前端架构落地（宿主/注册表/回调分发/双 Provider/store loginByToken/i18n 文案） |
 | 1.1.0 | 2026-09 | 后端通用化：LoginGrant SPI + 注册表 + 门面 + 统一端点 + login-grants 元数据接口；企微策略与外部身份绑定表落地；前端 handleCallback 换票补全（wecom-sso）与 wecom-qr 内嵌面板骨架 |
+| 1.2.0 | 2026-09 | 外部身份绑定框架：三正交 SPI（Exchanger/Resolver/绑定服务）+ 外部登录模板 + 自动关联（外部ID==登录用户名）+ 私有管理/自助绑定接口 + 前端 API 封装；企微 Provider 重构为模板子类 |

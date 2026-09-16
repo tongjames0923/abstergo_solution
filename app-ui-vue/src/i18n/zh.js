@@ -77,6 +77,42 @@ export default {
     wecomNotConfigured: '企业微信登录未配置，请联系管理员'
   },
 
+  // 外部身份绑定
+  identity: {
+    title: '外部身份绑定',
+    bindWecom: '绑定企业微信',
+    unbind: '解绑',
+    identityType: '身份类型',
+    externalId: '外部身份标识',
+    userId: '系统用户ID',
+    userName: '系统用户名',
+    userNamePlaceholder: '请输入系统用户名',
+    bindTime: '绑定时间',
+    actions: '操作',
+    noData: '暂无绑定关系',
+    all: '全部',
+    search: '查询',
+    reset: '重置',
+    cancel: '取消',
+    confirm: '确定',
+    confirmUnbind: '确定解除该绑定关系吗？解除后将无法使用该第三方身份登录',
+    autoBindHint: '第三方标识与系统登录用户名一致时，扫码授权后将自动关联绑定',
+    bindSuccess: '绑定成功',
+    bindFailed: '绑定失败',
+    processing: '正在处理授权结果...',
+    type: {
+      wecom: '企业微信'
+    },
+    rules: {
+      identityType: '请选择身份类型',
+      externalId: '请输入外部身份标识',
+      userName: '请输入系统用户名'
+    },
+    admin: {
+      addBind: '新增绑定'
+    }
+  },
+
   // 导航
   nav: {
     home: '首页',

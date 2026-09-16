@@ -48,3 +48,4 @@ build/
 ###xxljob日志文件###
 *.log
 logs
+/.codebuddy/plans

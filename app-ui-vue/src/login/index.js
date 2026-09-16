@@ -1,7 +1,6 @@
 import { registerProvider } from './registry'
 import passwordProvider from './providers/password-provider'
 import wecomSsoProvider from './providers/wecom-sso-provider'
-import wecomQrProvider from './providers/wecom-qr-provider'
 
 /**
  * 登录能力模块入口：注册内置登录方式
@@ -9,4 +8,3 @@ import wecomQrProvider from './providers/wecom-qr-provider'
  */
 registerProvider(passwordProvider)
 registerProvider(wecomSsoProvider)
-registerProvider(wecomQrProvider)

@@ -1,6 +1,5 @@
 package com.tbs.app.security.grant.wecom;
 
-import com.tbs.web.security.user.IUserInfoService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,17 +33,28 @@ public class WecomGrantConfig {
     }
 
     /**
+     * 企业微信凭证换取实现
+     *
+     * @param apiClient 企业微信 API 客户端
+     * @return 凭证换取实现实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(WecomIdentityExchanger.class)
+    public WecomIdentityExchanger wecomIdentityExchanger(WecomApiClient apiClient) {
+        return new WecomIdentityExchanger(apiClient);
+    }
+
+    /**
      * 企业微信登录授权提供者
      *
-     * @param property        企业微信登录配置属性
-     * @param apiClient       企业微信 API 客户端
-     * @param userInfoService 用户信息服务（外部身份加载）
+     * @param property         企业微信登录配置属性
+     * @param identityExchanger 企微凭证换取实现（与自助绑定链路共用）
      * @return 提供者实例
      */
     @Bean
     @ConditionalOnMissingBean(WecomLoginGrantProvider.class)
-    public WecomLoginGrantProvider wecomLoginGrantProvider(WecomProperty property, WecomApiClient apiClient,
-        IUserInfoService userInfoService) {
-        return new WecomLoginGrantProvider(property, apiClient, userInfoService);
+    public WecomLoginGrantProvider wecomLoginGrantProvider(WecomProperty property,
+        WecomIdentityExchanger identityExchanger) {
+        return new WecomLoginGrantProvider(property, identityExchanger);
     }
 }

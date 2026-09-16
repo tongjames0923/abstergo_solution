@@ -50,6 +50,26 @@ function cleanLocationSearch() {
 }
 
 /**
+ * 读取 OAuth 回调查询参数
+ * <p>
+ * 合并路由查询与启动期 search 捕获（路由值优先，缺失项由 search 补齐），
+ * 供登录分发与自助绑定回调页等场景共用。
+ * </p>
+ * @param {Object} routeQuery - 当前路由查询对象（可为空）
+ * @returns {Object} 合并后的查询对象（含 code/state 等）
+ */
+export function readCallbackQuery(routeQuery) {
+  return mergeQuery(routeQuery)
+}
+
+/**
+ * 清理地址栏 search 中的回调查询参数（防一次性授权码重放）
+ */
+export function cleanCallbackSearch() {
+  cleanLocationSearch()
+}
+
+/**
  * 按回调参数路由到对应 Provider 的 handleCallback
  * <p>
  * 查询来源合并了路由查询与启动期 search 参数，兼容 history 与 hash 两种路由模式的回调落点。
