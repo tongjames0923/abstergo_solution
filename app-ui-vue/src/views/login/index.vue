@@ -26,8 +26,8 @@
       <!-- SSO 授权处理态：回调换票期间替换表单区，避免表单闪现造成割裂 -->
       <div v-if="ssoProcessing" class="sso-processing anim-stagger" style="--stagger-delay: 0.24s">
         <span class="sso-spinner" />
-        <p class="sso-text">{{ $t('login.ssoProcessing') }}</p>
-        <p class="sso-sub">{{ $t('login.ssoProcessingSub') }}</p>
+        <p class="sso-text">{{ ssoProcessingText }}</p>
+        <p class="sso-sub">{{ ssoProcessingSubText }}</p>
       </div>
 
       <!-- 内嵌登录面板：embedded-qr 等自渲染模式由 Provider component 承载 -->
@@ -150,6 +150,8 @@ export default {
       submitting: false,
       // SSO 授权回调处理中：替换表单区的过渡态
       ssoProcessing: false,
+      ssoProcessingText: '',
+      ssoProcessingSubText: '',
       passwordType: 'password',
       // 当前内嵌面板 Provider（embedded-qr 等自渲染模式）
       panelProvider: null,
@@ -225,6 +227,8 @@ export default {
           self.submitting = value
         },
         reportError: message => {
+          // 授权跳转前的前置失败（如未配置 corpId）需退出处理态，交还表单
+          self.ssoProcessing = false
           self.$message.error(message)
         },
         loginWithCredentials: credentials => self.doLoginWithCredentials(credentials),
@@ -255,7 +259,12 @@ export default {
       }
       const providerId = query.state || query.loginMethod
       const provider = providerId ? getProviderById(providerId) : null
-      return !!(provider && typeof provider.handleCallback === 'function')
+      const hit = !!(provider && typeof provider.handleCallback === 'function')
+      if (hit) {
+        this.ssoProcessingText = this.$t('login.ssoProcessing')
+        this.ssoProcessingSubText = this.$t('login.ssoProcessingSub')
+      }
+      return hit
     },
     // 拉取后端网关版本信息，失败时静默降级不影响登录页
     async loadGatewayVersion() {
@@ -304,13 +313,19 @@ export default {
         }
       })
     },
-    // 发起其他登录方式：声明 component 的走内嵌面板，其余走 authenticate
+    // 发起其他登录方式：声明 component 的走内嵌面板，redirect 模式先进入跳转处理态
     startProvider(provider) {
       if (provider.component) {
         this.panelProvider = provider
         return
       }
+      if (provider.interactionMode === 'redirect') {
+        this.ssoProcessingText = this.$t('login.ssoRedirecting')
+        this.ssoProcessingSubText = this.$t('login.ssoRedirectingSub')
+        this.ssoProcessing = true
+      }
       provider.authenticate(this.loginContext).catch(() => {
+        this.ssoProcessing = false
       })
     },
     // 关闭内嵌面板，交还账号密码表单

@@ -76,7 +76,9 @@ export default {
     backToLogin: '返回账号登录',
     wecomNotConfigured: '企业微信登录未配置，请联系管理员',
     ssoProcessing: '正在完成授权登录',
-    ssoProcessingSub: '验证通过后即将进入系统，请稍候'
+    ssoProcessingSub: '验证通过后即将进入系统，请稍候',
+    ssoRedirecting: '正在跳转至第三方授权页',
+    ssoRedirectingSub: '请在打开的页面中完成授权'
   },
 
   // 外部身份绑定

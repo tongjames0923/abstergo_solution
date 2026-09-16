@@ -76,7 +76,9 @@ export default {
     backToLogin: 'Back to account sign-in',
     wecomNotConfigured: 'WeCom sign-in is not configured. Please contact the administrator.',
     ssoProcessing: 'Completing authorized sign-in',
-    ssoProcessingSub: 'Entering the system after verification, please wait'
+    ssoProcessingSub: 'Entering the system after verification, please wait',
+    ssoRedirecting: 'Redirecting to the authorization page',
+    ssoRedirectingSub: 'Please complete the authorization in the opened page'
   },
 
   // External identity binding
