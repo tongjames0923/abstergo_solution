@@ -9,15 +9,9 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-
 import org.hibernate.annotations.Comment;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
-
+import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -30,8 +24,8 @@ import java.util.Date;
  * @author abstergo
  */
 @Table(name = "sys_user_external_identity", indexes = {
-		@Index(name = "uk_identity_type_external_id", columnList = "identity_type,external_id", unique = true),
-		@Index(name = "idx_user_id", columnList = "user_id") })
+	@Index(name = "idx_identity_type_external_id", columnList = "identity_type,external_id"),
+	@Index(name = "idx_user_id", columnList = "user_id"), @Index(name = "idx_flag", columnList = "flag")})
 @Entity
 @Getter
 @Setter

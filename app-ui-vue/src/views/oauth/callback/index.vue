@@ -20,12 +20,12 @@ import { selfBindExternalIdentity } from '@/api/external-identity'
 /**
  * OAuth 授权回调处理页（静态路由 /oauth/callback）
  * <p>
- * 当前处理自助绑定场景（state=wecom-bind）：以授权码调用自助绑定接口后回到绑定页；
+ * 自助绑定场景（约定 state = 「{identityType}-bind」）：以授权码调用自助绑定接口后回到绑定来源页；
  * 其他 state 交还登录链路处理（登录页回调分发器基于同一启动期参数捕获）。
  * 状态切换与登录页授权处理态共用同一套动画语言（环形进度 / 淡入过渡）。
  * </p>
  */
-const SELF_BIND_STATE_PREFIX = 'wecom-bind'
+const SELF_BIND_STATE_SUFFIX = '-bind'
 
 export default {
   name: 'OauthCallback',
@@ -56,15 +56,17 @@ export default {
         this.goHome()
         return
       }
-      if (query.state === SELF_BIND_STATE_PREFIX) {
-        await this.handleSelfBind(query.code)
+      const state = query.state || ''
+      if (state.endsWith(SELF_BIND_STATE_SUFFIX)) {
+        const identityType = state.slice(0, -SELF_BIND_STATE_SUFFIX.length)
+        await this.handleSelfBind(identityType, query.code)
         return
       }
       this.$router.replace({ path: '/login', query: { code: query.code, state: query.state } })
     },
-    async handleSelfBind(code) {
+    async handleSelfBind(identityType, code) {
       try {
-        await selfBindExternalIdentity('wecom', { code })
+        await selfBindExternalIdentity(identityType, { code })
         this.status = 'success'
         this.goToBindingPage(1200)
       } catch (e) {
@@ -74,7 +76,7 @@ export default {
     },
     goToBindingPage(delay) {
       setTimeout(() => {
-        this.$router.replace('/account/external-identity')
+        this.$router.replace('/')
       }, delay)
     },
     goHome() {

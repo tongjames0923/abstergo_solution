@@ -1,7 +1,5 @@
-import loginConfig from '@/config/login.config'
+import { buildAuthorizeUrl } from '@/identity/authorize'
 import { loginByGrant } from '@/api/user'
-
-const WECOM_WEB_LOGIN_URL = 'https://login.work.weixin.qq.com/wwlogin/sso/login'
 
 /**
  * 后端授权类型标识（重定向与扫码两种前端交互共用同一凭证类型）
@@ -9,35 +7,14 @@ const WECOM_WEB_LOGIN_URL = 'https://login.work.weixin.qq.com/wwlogin/sso/login'
 const GRANT_TYPE = 'wecom'
 
 /**
- * 构造企业微信 Web 登录（扫码授权）跳转地址
- * <p>
- * 使用企业微信 wwlogin 扫码登录地址，授权完成后携带 code/state 回跳 redirectUri；
- * 若需企微客户端内静默授权，可另行切换 open.weixin.qq.com/connect/oauth2/authorize 网页授权地址。
- * </p>
- * @param {string} state - 回传状态标识（区分登录 / 绑定等场景）
- * @param {string} [redirectUri] - 授权回调地址，缺省回退站点根路径
- * @returns {string} 授权跳转地址；未配置 corpId 时返回空字符串
+ * 授权跳转构造器名称（见 src/identity/authorize.js）
  */
-export function buildWecomAuthorizeUrl(state, redirectUri) {
-  const options = (loginConfig.methods && loginConfig.methods['wecom-sso']) || {}
-  if (!options.corpId) {
-    return ''
-  }
-  const callbackUri = redirectUri || `${window.location.origin}/`
-  const params = [
-    'login_type=CorpApp',
-    `appid=${encodeURIComponent(options.corpId)}`,
-    `agentid=${encodeURIComponent(options.agentId || '')}`,
-    `redirect_uri=${encodeURIComponent(callbackUri)}`,
-    `state=${state}`
-  ]
-  return `${WECOM_WEB_LOGIN_URL}?${params.join('&')}`
-}
+const AUTHORIZE_BUILDER = 'wecom-web-login'
 
 /**
  * 企业微信单点登录 Provider（OAuth 重定向模式）
  *
- * - authenticate：携带 corpId/redirectUri/state 跳转企业微信授权页
+ * - authenticate：跳转企业微信 Web 登录（扫码授权），state 携带本 Provider id
  * - handleCallback：回调 code 经统一授权端点换票，经 loginWithToken 收口
  * 默认未在 login.config.js 中启用；启用前须配置后端 tbs.wecom.* 参数与可信回调域名
  */
@@ -53,7 +30,7 @@ export default {
    * @returns {Promise} 跳转发起后即 resolve（页面随后被授权页替换）
    */
   async authenticate(context) {
-    const url = buildWecomAuthorizeUrl(this.id)
+    const url = buildAuthorizeUrl(AUTHORIZE_BUILDER, this.id)
     if (!url) {
       context.reportError(context.t('login.wecomNotConfigured'))
       return

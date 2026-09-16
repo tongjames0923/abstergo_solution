@@ -84,7 +84,9 @@ export default {
   // External identity binding
   identity: {
     title: 'External Identity Binding',
-    bindWecom: 'Bind WeCom',
+    bindPlatform: 'Bind {platform}',
+    unbound: 'Not bound',
+    authorizeNotConfigured: 'External authorization is not configured. Please contact the administrator.',
     unbind: 'Unbind',
     identityType: 'Identity Type',
     externalId: 'External Identity',

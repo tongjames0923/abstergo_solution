@@ -272,11 +272,14 @@ graph TD
 
 前端 API 封装：`app-ui-vue/src/api/external-identity.js`（my/self-bind/page/bind/unbind 五个函数，JSDoc 齐全）。
 
-前端页面（已落地）：
+前端控件与页面（已落地，配置驱动）：
 
-- `views/account/external-identity/index.vue` — 我的绑定（静态路由 `/account/external-identity`，侧边栏「账号与安全」分组）：绑定列表、企微自助绑定（跳转扫码 → `/oauth/callback` 回调页处理 → 自动回绑）、解绑
-- `views/oauth/callback/index.vue` — OAuth 回调处理页（静态路由 `/oauth/callback`，hidden）：`state=wecom-bind` 走自助绑定；其余 state 交还登录链路
+- `components/ExternalIdentityPanel/index.vue` — 可复用绑定面板控件：平台清单由 `config/external-identity.config.js` 声明式配置（身份类型/文案/图标/授权构造器/按钮文案均可自定义），控件零平台硬编码；根节点带 `.pane` 类，可嵌入任意页面栅格（已嵌入主页 `views/dashboard/index.vue` 的 panels 网格）
+- `identity/authorize.js` — 授权跳转构造器注册表（如 `wecom-web-login`），登录 Provider 与绑定控件共用；新增平台注册新构造器即可
+- `views/oauth/callback/index.vue` — OAuth 回调处理页（静态路由 `/oauth/callback`，hidden）：`state={identityType}-bind` 走自助绑定（任意平台）；其余 state 交还登录链路
 - `views/admin/external-identity/index.vue` — 管理端绑定管理（分页查询 / 新增绑定 / 解绑）：**需在后端菜单管理登记 type=1 菜单，component 路径填 `/admin/external-identity/index`**
+
+新增一个可绑定平台的前端成本：`external-identity.config.js` 加一项 + `authorize.js` 注册构造器，面板/回调/管理端零改动。
 
 ### 11.3 新增一个第三方平台 / 匹配策略的成本
 

@@ -219,6 +219,9 @@
             </li>
           </ul>
         </div>
+
+        <!-- External identity bindings (config-driven reusable panel) -->
+        <external-identity-panel />
       </div>
 
       <!-- Footer -->
@@ -233,11 +236,15 @@
 
 <script>
 import { mapGetters } from 'vuex'
+import ExternalIdentityPanel from '@/components/ExternalIdentityPanel/index.vue'
 
 const PAL = ['#D97706', '#059669', '#0071e3', '#7C5CFC', '#DC2626']
 
 export default {
   name: 'Dashboard',
+  components: {
+    ExternalIdentityPanel
+  },
   data() {
     return {
       ready: false,

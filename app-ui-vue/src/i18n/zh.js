@@ -84,7 +84,9 @@ export default {
   // 外部身份绑定
   identity: {
     title: '外部身份绑定',
-    bindWecom: '绑定企业微信',
+    bindPlatform: '绑定{platform}',
+    unbound: '未绑定',
+    authorizeNotConfigured: '第三方授权未配置，请联系管理员',
     unbind: '解绑',
     identityType: '身份类型',
     externalId: '外部身份标识',

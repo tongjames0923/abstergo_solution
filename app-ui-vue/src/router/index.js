@@ -60,19 +60,6 @@ export const constantRoutes = [
   },
 
   {
-    path: '/account',
-    component: Layout,
-    redirect: '/account/external-identity',
-    meta: { title: '账号与安全', icon: 'el-icon-lock' },
-    children: [{
-      path: 'external-identity',
-      name: 'ExternalIdentityBind',
-      component: () => import('@/views/account/external-identity/index'),
-      meta: { title: '外部身份绑定', icon: 'el-icon-key' }
-    }]
-  },
-
-  {
     path: '/',
     component: Layout,
     redirect: '/Welcome',
