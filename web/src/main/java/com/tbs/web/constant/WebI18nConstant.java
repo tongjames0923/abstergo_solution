@@ -92,6 +92,19 @@ public final class WebI18nConstant {
     /** 用户名密码错误提示：用户 {0} 密码错误 */
     public static final String USER_PASSWORD_ERROR_WITH_USERNAME = "user.password.error.with.username";
 
+    /* ===================== 登录授权（login grant） ===================== */
+
+    /** 不支持的登录授权类型提示：不支持的登录方式: {0} */
+    public static final String LOGIN_GRANT_NOT_SUPPORTED = "login.grant.not.supported";
+    /** 登录方式未启用提示：登录方式未启用: {0} */
+    public static final String LOGIN_GRANT_DISABLED = "login.grant.disabled";
+    /** 登录凭证格式错误提示：登录凭证格式错误: {0} */
+    public static final String LOGIN_GRANT_PAYLOAD_INVALID = "login.grant.payload.invalid";
+    /** 登录授权类型重复注册提示：登录授权类型重复注册: {0} */
+    public static final String LOGIN_GRANT_TYPE_DUPLICATE = "login.grant.type.duplicate";
+    /** 外部身份未绑定提示：当前外部身份未绑定系统用户，请联系管理员 */
+    public static final String LOGIN_GRANT_EXTERNAL_NOT_BOUND = "login.grant.external.not.bound";
+
     /* ===================== 通用接口（Generic API） ===================== */
 
     /** 通用接口ID不存在提示：通用接口ID不存在 */

@@ -26,8 +26,8 @@ export default {
     // TODO 接入企业微信内嵌二维码登录 SDK（wwLogin）：
     // 1. 动态加载 https://wwcdn.weixin.qq.com/node/open/js/wecom-login-{version}.js
     // 2. 读取 login.config.js 中 wecom-qr 的 corpId/agentId，在 this.$refs.qrContainer 内创建登录实例
-    // 3. SDK 回调获得 code 后，经 request.js 调后端换票接口取得 token，
-    //    调用 this.context.loginWithToken({ token })，由宿主统一完成后置链路
+    // 3. SDK 回调获得 code 后，经 @/api/user 的 loginByGrant('wecom', { code }) 调统一授权端点换票，
+    //    再调用 this.context.loginWithToken({ token })，由宿主统一完成后置链路
     // 4. 二维码过期时重建登录实例实现刷新
   }
 }

@@ -81,3 +81,8 @@ tbs:
     path-style-access: true
     download-code:
       storage: db
+  wecom:
+    enable: true
+    corp-id: ww1cdff73cf26ec042
+    agent-id: 1000047
+    corp-secret: ${WECOM_CORP_SECRET:J7ZvKVAdTRT6tJSfPMCj2jmqkqeHqBvWD4xCugVs3Pc}

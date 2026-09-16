@@ -1,14 +1,19 @@
 import loginConfig from '@/config/login.config'
+import { loginByGrant } from '@/api/user'
 
-const WECOM_AUTHORIZE_URL = 'https://open.weixin.qq.com/connect/oauth2/authorize'
+const WECOM_WEB_LOGIN_URL = 'https://login.work.weixin.qq.com/wwlogin/sso/login'
 
 /**
- * 企业微信单点登录 Provider（接入骨架）
+ * 后端授权类型标识（重定向与扫码两种前端交互共用同一凭证类型）
+ */
+const GRANT_TYPE = 'wecom'
+
+/**
+ * 企业微信单点登录 Provider（OAuth 重定向模式）
  *
- * 交互模式为 OAuth 重定向回调：
  * - authenticate：携带 corpId/redirectUri/state 跳转企业微信授权页
- * - handleCallback：接收回调 code，待后端换票接口就绪后补全换票逻辑
- * 默认未在 login.config.js 中启用；启用前须在后端登记换票接口并配置可信回调域名
+ * - handleCallback：回调 code 经统一授权端点换票，经 loginWithToken 收口
+ * 默认未在 login.config.js 中启用；启用前须配置后端 tbs.wecom.* 参数与可信回调域名
  */
 export default {
   id: 'wecom-sso',
@@ -17,7 +22,9 @@ export default {
   interactionMode: 'redirect',
 
   /**
-   * 认证入口：发起企业微信 OAuth 授权跳转
+   * 认证入口：发起企业微信 Web 登录（PC 浏览器扫码授权）
+   * 使用企业微信 wwlogin 扫码登录地址，授权完成后携带 code/state 回跳 redirectUri；
+   * 若需企微客户端内静默授权，可另行切换 open.weixin.qq.com/connect/oauth2/authorize 网页授权地址
    * @param {Object} context - 宿主登录上下文（LoginContext）
    * @returns {Promise} 跳转发起后即 resolve（页面随后被授权页替换）
    */
@@ -27,24 +34,21 @@ export default {
       context.reportError(context.t('login.wecomNotConfigured'))
       return
     }
-    const redirectUri = options.redirectUri || `${window.location.origin}/login`
+    const redirectUri = options.redirectUri || `${window.location.origin}/`
     const params = [
+      'login_type=CorpApp',
       `appid=${encodeURIComponent(options.corpId)}`,
+      `agentid=${encodeURIComponent(options.agentId || '')}`,
       `redirect_uri=${encodeURIComponent(redirectUri)}`,
-      'response_type=code',
-      'scope=snsapi_base',
       `state=${this.id}`
     ]
-    window.location.href = `${WECOM_AUTHORIZE_URL}?${params.join('&')}#wechat_redirect`
+    window.location.href = `${WECOM_WEB_LOGIN_URL}?${params.join('&')}`
   },
 
   /**
    * 授权回调处理：state 携带本 Provider id，code 为企业微信授权码
-   *
-   * TODO 后端换票接口（建议 /public/user/login/wecom，入参 code）就绪后补全：
-   *   经 request.js 调用换票接口取得 token 后，调用 context.loginWithToken({ token })
-   *   并返回 true，由宿主统一完成 getInfo/updateRouter/跳转 后置链路
-   * 当前骨架仅识别回调但不发起登录，返回 false 交还宿主正常渲染登录表单
+   * 经统一授权端点（POST /public/user/login/wecom）换票后由宿主收口，
+   * 完成 getInfo/updateRouter/跳转 后置链路；换票失败由 request.js 统一提示并 reject
    *
    * @param {Object} query - 回调路由查询参数（含 code/state）
    * @param {Object} context - 宿主登录上下文（LoginContext）
@@ -54,6 +58,12 @@ export default {
     if (query.state !== this.id || !query.code) {
       return false
     }
-    return false
+    const res = await loginByGrant(GRANT_TYPE, { code: query.code })
+    const token = res && res.data && res.data.token
+    if (!token) {
+      return false
+    }
+    await context.loginWithToken({ token })
+    return true
   }
 }

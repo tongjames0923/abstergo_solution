@@ -203,6 +203,18 @@ public final class SystemI18nConstant {
     public static final String VERSION_STATUS_NOT_OFFLINE = "version.status.not.offline";
 
 
+    /* ===================== 企业微信登录（wecom） ===================== */
+
+    /** 企业微信登录未配置提示：企业微信登录未配置，请联系管理员 */
+    public static final String WECOM_CONFIG_MISSING = "wecom.config.missing";
+    /** 企业微信接口调用失败提示：企业微信接口调用失败: {0} */
+    public static final String WECOM_API_ERROR = "wecom.api.error";
+    /** 企业微信授权码为空校验提示：企业微信授权码不能为空 */
+    public static final String WECOM_CODE_REQUIRED = "wecom.code.required";
+    /** 企业微信授权码无效提示：企业微信授权码无效或已过期 */
+    public static final String WECOM_CODE_INVALID = "wecom.code.invalid";
+
+
     /* ===================== 通用校验 ===================== */
 
     /** 标识位（flag）非法提示：标识位非法 */

@@ -18,16 +18,16 @@ export default {
      * redirectUri 须与企业微信管理后台配置的可信回调域名一致
      */
     'wecom-sso': {
-      corpId: '',
-      agentId: '',
+      corpId: 'ww1cdff73cf26ec042',
+      agentId: '1000047',
       redirectUri: ''
     },
     /**
      * 企业微信内嵌扫码登录参数（embedded-qr 模式）
      */
     'wecom-qr': {
-      corpId: '',
-      agentId: ''
+      corpId: 'ww1cdff73cf26ec042',
+      agentId: '1000047'
     }
   }
 }

@@ -159,30 +159,80 @@ export default {
 
 ## 8. 企业微信 SSO 接入路径（零侵入示例）
 
-前置条件：后端提供换票接口（建议 `/public/user/login/wecom`，入参 `code`，出参 `AjaxResult{token}`）。
+后端统一授权端点 `POST /public/user/login/wecom` 已随 LoginGrant SPI 落地（见第 10 节），前端 `handleCallback` 换票逻辑已补全。
 
 接入步骤（不改动任何既有核心文件）：
 
-1. **补全换票逻辑**：在 `wecom-sso-provider.js` 的 `handleCallback` 中，经 `@/utils/request` 调用换票接口，取 `token` 后调用 `context.loginWithToken({ token })` 并返回 `true`（TODO 注释已标记位置）。
-2. **填写配置**：`login.config.js` 中填入 `corpId/agentId/redirectUri`。
-3. **启用方式**：`enabledMethods` 中放开 `'wecom-sso'`。
-4. **后端登记**：企微管理后台配置可信域名与授权回调域；后端用 secret 调企微 API 换取用户身份并签发本系统 token。
-5. **i18n**：`login.method.wecom` 中英文文案已就位，无需改动。
+1. **后端配置**：`application.yml` 设置 `tbs.wecom.enable=true` 与 `corpId/corpSecret/agentId`（secret 仅后端持有）。
+2. **数据库**：执行 `etc/sql_file/sys_user_external_identity.sql` 建外部身份绑定表，并预绑定企微 userid 与系统用户（未绑定时登录报「未绑定」提示）。
+3. **企微管理后台**：配置可信回调域名（与前端 `redirectUri` 一致）。
+4. **前端配置**：`login.config.js` 填入 `corpId/redirectUri`，`enabledMethods` 中放开 `'wecom-sso'`。
+5. **i18n**：`login.method.wecom` 等中英文文案已就位，无需改动。
 
-行为链路：点击「企业微信登录」→ 整页跳转企微授权 → 回跳 `/login?code=xxx&state=wecom-sso` → 分发器路由到 `handleCallback` → 换票 → `loginByToken` → `getInfo` → `updateRouter` → 跳转首页。
+行为链路：点击「企业微信登录」→ 整页跳转企微授权 → 回跳 `/login?code=xxx&state=wecom-sso` → 分发器路由到 `handleCallback` → `loginByGrant('wecom', { code })` 调统一授权端点 → 后端 `WecomLoginGrantProvider`（access_token 缓存 → 授权码换 userid → 外部身份绑定 → 系统用户 → 签发令牌）→ `loginWithToken` → `getInfo` → `updateRouter` → 跳转首页。
 
 **扫码登录（embedded-qr）路径**：点击「企业微信扫码登录」入口 → 宿主将卡片区域切换渲染 `WecomQrPanel`（Provider 自渲染 `component`）→ 面板内接入企微 wwLogin SDK 展示二维码 → 扫码确认回调获得 `code` → 后端换票取 `token` → `context.loginWithToken` 收口复用统一后置链路；「返回账号登录」关闭面板回到账号密码表单。入口调度为通用规则：Provider 声明了 `component` 即走内嵌面板，否则走 `authenticate`，宿主无按方式硬编码的分支。
 
 ## 9. 演进与降级策略
 
-- **向后端下发演进**：`enabledMethods` 未来可改为启动时经 `/public` 接口获取（租户/环境级开关），注册表 API 不变，仅替换「启用清单」来源；Provider 契约不变。
+- **向后端下发演进（已就绪）**：后端 `GET /public/user/login-grants` 已随统一授权架构落地，导出当前启用的方式（grantType、labelKey、公开参数如 corpId）；前端 `enabledMethods` 可从静态配置切到该接口，注册表 API 与 Provider 契约不变。注意前端 Provider id（交互方式，如 `wecom-sso`/`wecom-qr`）与后端 grantType（凭证类型，如 `wecom`）的粒度差异：一种凭证类型可对应多种前端交互。
 - **Provider 缺失降级**：`enabledMethods` 中未注册的 id 静默跳过，登录页照常渲染其余方式。
 - **主方式缺失降级**：无任何 `form-fields` 方式时表单区不渲染（`v-if` 兜底），仅展示其他方式入口。
 - **回调异常降级**：`handleCallback` 返回 `false`（未消费/参数不符）时，页面正常渲染表单，不阻塞密码登录；换票失败提示经 `reportError` 统一展示后端 message。
 - **骨架安全**：`wecom-sso` 未配置 `corpId` 或未启用时不产生任何跳转行为。
 
-## 10. 变更记录
+## 10. 后端通用化架构（统一授权端点 + LoginGrant SPI）
+
+与前端「Provider 注册表 + 统一收口」完全对称：登录方式以 `ILoginGrantProvider` 策略 Bean 自描述（`getGrantType` / `getFormType` / `isEnabled`），由 Spring 容器自动收集进 `LoginGrantRegistry`，**控制器只写一次、永不随登录方式增长**。
+
+```mermaid
+graph TD
+    FE[前端 Provider 注册表] -->|POST /public/user/login/:grantType| C[PublicLoginGrantController 唯一控制器]
+    C --> S[LoginGrantService 门面]
+    S --> R[LoginGrantRegistry Spring 收集 SPI]
+    R --> P1[PasswordGrantProviderAdapter grantType=password 桥接既有实现]
+    R --> P2[WecomLoginGrantProvider grantType=wecom]
+    R --> PN[未来其他策略...]
+    P1 --> T[AbstractAccessTokenProvider 模板链路]
+    P2 --> T
+    T --> U[IUserInfoService + IUserValidator 链]
+    T --> I[ITokenIssuanceCenter]
+    C -->|GET /login-grants| FE
+```
+
+### 10.1 核心组件与职责
+
+| 组件 | 位置 | 职责 |
+|------|------|------|
+| `ILoginGrantProvider<FORM>` | `web/security/user/access/grant` | 登录授权 SPI：授权类型 / 表单类型 / 启用开关 / 公开参数自描述 |
+| `LoginGrantRegistry` | 同上 | Spring 收集全部 SPI 按 `grantType` 建 Map；重复注册启动期 fail-fast |
+| `LoginGrantService` | 同上 | 门面：查找 → 开关校验 → `ObjectMapper.convertValue` 反序列化为强类型表单 → 委托 `requestToken` |
+| `LoginGrantDescriptor` | 同上 | 元数据 VO（grantType / labelKey / publicOptions），供 `login-grants` 接口导出 |
+| `PublicLoginGrantController` | `app/controller/publics` | `POST /public/user/login/{grantType}` + `GET /public/user/login-grants`，仅 HTTP 接入 |
+| `PasswordGrantProviderAdapter` | `system-impl/security/grant` | 桥接既有 `IUsernamePasswordAccessTokenProvider` 为 `password` 类型，既有实现零修改（铁律 11） |
+| `WecomLoginGrantProvider` | `system-impl/security/grant/wecom` | 企微策略：授权码换 userid → 外部身份绑定 → 系统用户，复用 `AbstractAccessTokenProvider` 模板链路 |
+| `WecomApiClient` / `WecomProperty` | 同上 | 企微 API 封装（access_token 缓存 `app:wecom_access_token`，铁律 13 常量）与 `tbs.wecom.*` 配置收拢 |
+| `sys_user_external_identity` | `etc/sql_file/*.sql` + shared 实体/Mapper | 外部身份绑定表，`(identity_type, external_id)` 唯一索引；`IUserInfoService` 仅新增 `loadUserInfoByExternalIdentity`（default 方法，存量实现零破坏） |
+
+### 10.2 新增一种登录方式的后端成本
+
+| 项 | 成本 |
+|----|------|
+| Controller / 门面 / 注册表 | **0 改动** |
+| FORM 凭证类 | 1（数据契约） |
+| Provider 实现 | 1（继承 `AbstractAccessTokenProvider` + 实现 SPI，填 3 个模板钩子 + 3 个自描述方法） |
+| 配置 | 1 个 `@ConfigurationProperties` + 总开关 |
+
+### 10.3 关键取舍
+
+- **路径变量分发**（`/{grantType}`）优于包体分发：URL 语义清晰，Spring 按类型注入天然消灭 Controller 分支。
+- **类型安全下沉**：Controller 收 `Map`，门面反序列化为 Provider 声明的强类型 FORM，各方式契约仍强类型。
+- **缓存代理注意**：企微 `access_token` 获取与换票拆为两个方法由 Provider 编排，规避 `@Cacheable` 自调用代理失效。
+- **兼容性**：旧端点 `POST /public/user/login` 与 `DefaultUserPasswordAccessTokenProvider` 原样保留；新端点统一 `AjaxResult{data: ITokenModel}`（铁律 8）。
+
+## 11. 变更记录
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
-| 1.0.0 | 2026-09 | 初版：架构落地（宿主/注册表/回调分发/双 Provider/store 新增 loginByToken/i18n 文案），本文档与代码同步 |
+| 1.0.0 | 2026-09 | 初版：前端架构落地（宿主/注册表/回调分发/双 Provider/store loginByToken/i18n 文案） |
+| 1.1.0 | 2026-09 | 后端通用化：LoginGrant SPI + 注册表 + 门面 + 统一端点 + login-grants 元数据接口；企微策略与外部身份绑定表落地；前端 handleCallback 换票补全（wecom-sso）与 wecom-qr 内嵌面板骨架 |

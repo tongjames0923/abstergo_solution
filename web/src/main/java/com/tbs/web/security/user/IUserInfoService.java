@@ -25,4 +25,20 @@ public interface IUserInfoService {
      * @return 标准用户详情；标识不存在时返回 {@code null}
      */
     UserDetails loadUserInfoByUniqueKey( String uniqueKey);
+
+    /**
+     * 通过外部身份标识获取标准用户信息
+     * <p>
+     * 按外部身份类型（如企业微信）与外部标识加载绑定的系统用户，供第三方单点登录换取本系统用户详情。
+     * 默认未实现（返回 {@code null}），由业务模块按需覆写；未绑定场景由调用方断言提示。
+     * 仅新增方法，不改变 {@link #loadUserInfoByUniqueKey(String)} 的既有契约。
+     * </p>
+     *
+     * @param identityType 外部身份类型（如 wecom），不能为空
+     * @param externalId   外部身份标识（如企微 userid），不能为空
+     * @return 绑定的标准用户详情；未绑定或未实现时返回 {@code null}
+     */
+    default UserDetails loadUserInfoByExternalIdentity( String identityType,  String externalId) {
+        return null;
+    }
 }
