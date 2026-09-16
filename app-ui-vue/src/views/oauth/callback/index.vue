@@ -68,13 +68,13 @@ export default {
       try {
         await selfBindExternalIdentity(identityType, { code })
         this.status = 'success'
-        this.goToBindingPage(1200)
+        this.goHomeAfter(1200)
       } catch (e) {
         this.status = 'error'
-        this.goToBindingPage(2000)
+        this.goHomeAfter(2000)
       }
     },
-    goToBindingPage(delay) {
+    goHomeAfter(delay) {
       setTimeout(() => {
         this.$router.replace('/')
       }, delay)
