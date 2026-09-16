@@ -31,6 +31,8 @@ module.exports = {
   productionSourceMap: false,
   devServer: {
     port: port,
+    // 允许 nginx 等反向代理以任意 Host 头访问开发服务器，避免 "Invalid Host header"
+    disableHostCheck: true,
     proxy: {
       '/api': {
         target: defaultSettings.backend,

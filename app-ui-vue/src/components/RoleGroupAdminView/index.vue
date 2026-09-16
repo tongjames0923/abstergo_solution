@@ -6,6 +6,8 @@
       :config-name="roleGroupSearchFormKey()"
       :search-handler="searchHandler"
       :columns="columns"
+      title-field="roleGroupName"
+      :card-fields="['description', 'flag', 'createTime']"
       :add-form-config-name="roleGroupAddFormKey()"
       :add-handler="(formData) => saveRoleGroupData(formData)"
       :edit-form-config-name="roleGroupEditFormKey()"

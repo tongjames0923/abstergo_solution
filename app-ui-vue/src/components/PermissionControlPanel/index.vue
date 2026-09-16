@@ -1027,6 +1027,13 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   }
 }
 
+/* 小屏下权限网格降为单列，避免 minmax(320px) 撑破窄屏 */
+@media (max-width: 768px) {
+  .permissions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .permission-card {
   background: $surface;
   backdrop-filter: blur(20px);

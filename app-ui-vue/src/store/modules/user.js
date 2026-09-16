@@ -79,6 +79,24 @@ const actions = {
     }
   },
 
+  /**
+   * 第三方登录（SSO）Token 收口：复用与账号密码登录相同的后置链路
+   * 仅新增动作，不改变既有 login 动作的签名与语义
+   * @param {Object} tokenInfo - SSO 换票结果
+   * @param {string} tokenInfo.token - 后端签发的访问令牌
+   * @param {boolean} [tokenInfo.rememberMe] - 是否记住登录态
+   * @returns {Promise<Object>} 收口后的 token 信息
+   */
+  async loginByToken({ commit }, tokenInfo) {
+    const { token, rememberMe } = tokenInfo
+    if (rememberMe) {
+      setRememberMe(rememberMe)
+    }
+    setToken(token, rememberMe)
+    commit('SET_TOKEN', token)
+    return tokenInfo
+  },
+
   // get user info
   async getInfo({ commit, state }) {
     try {

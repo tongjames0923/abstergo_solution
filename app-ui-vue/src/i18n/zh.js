@@ -40,6 +40,13 @@ export default {
     value: '数值'
   },
 
+  // 详情页通用
+  detail: {
+    invalidId: '无效的标识参数，即将返回列表',
+    loadFailed: '详情加载失败',
+    retry: '重试'
+  },
+
   // 登录
   login: {
     title: '系统登录',
@@ -60,7 +67,63 @@ export default {
     loggingIn: '登录中...',
     secureHint: '已通过加密连接保护',
     copyright: '保留所有权利.',
-    version: '版本'
+    version: '版本',
+    otherMethods: '其他登录方式',
+    method: {
+      password: '账号密码登录',
+      wecom: '企业微信登录',
+      qr: '企业微信扫码登录'
+    },
+    qr: {
+      title: '扫码登录',
+      hint: '请使用企业微信 App 扫一扫',
+      placeholder: '二维码区域',
+      tip: '二维码过期后请刷新重试'
+    },
+    backToLogin: '返回账号登录',
+    wecomNotConfigured: '企业微信登录未配置，请联系管理员',
+    ssoProcessing: '正在完成授权登录',
+    ssoProcessingSub: '验证通过后即将进入系统，请稍候',
+    ssoRedirecting: '正在跳转至第三方授权页',
+    ssoRedirectingSub: '请在打开的页面中完成授权'
+  },
+
+  // 外部身份绑定
+  identity: {
+    title: '外部身份绑定',
+    bindPlatform: '绑定{platform}',
+    unbound: '未绑定',
+    authorizeNotConfigured: '第三方授权未配置，请联系管理员',
+    unbind: '解绑',
+    identityType: '身份类型',
+    externalId: '外部身份标识',
+    userId: '系统用户ID',
+    userName: '系统用户名',
+    userNamePlaceholder: '请输入系统用户名',
+    bindTime: '绑定时间',
+    actions: '操作',
+    noData: '暂无绑定关系',
+    all: '全部',
+    search: '查询',
+    reset: '重置',
+    cancel: '取消',
+    confirm: '确定',
+    confirmUnbind: '确定解除该绑定关系吗？解除后将无法使用该第三方身份登录',
+    autoBindHint: '第三方标识与系统登录用户名一致时，扫码授权后将自动关联绑定',
+    bindSuccess: '绑定成功',
+    bindFailed: '绑定失败',
+    processing: '正在处理授权结果...',
+    type: {
+      wecom: '企业微信'
+    },
+    rules: {
+      identityType: '请选择身份类型',
+      externalId: '请输入外部身份标识',
+      userName: '请输入系统用户名'
+    },
+    admin: {
+      addBind: '新增绑定'
+    }
   },
 
   // 导航
@@ -147,6 +210,7 @@ export default {
     editUser: '编辑用户',
     deleteUser: '删除用户',
     confirmDelete: '确定要删除该用户吗？',
+    viewDetail: '详情',
     loginInfo: '登录信息',
     noLoginInfo: '暂无登录信息',
     // 用户管理界面
@@ -161,6 +225,32 @@ export default {
     inputConfirmPassword: '请再次输入密码',
     confirmPasswordRequired: '请再次输入密码',
     confirmPasswordMismatch: '两次输入密码不一致!'
+  },
+
+  // 用户详情页
+  userDetail: {
+    title: '用户详情',
+    backToList: '返回列表',
+    basicInfo: '基本信息',
+    userId: '用户ID',
+    roleGroups: '角色组',
+    sessions: '登录会话',
+    tokens: '访问令牌',
+    loadTokens: '加载令牌',
+    disableToken: '禁用令牌',
+    confirmDisableToken: '确认禁用该令牌吗？禁用后对应会话需要重新登录',
+    online: '在线',
+    offline: '离线',
+    sessionId: '会话ID',
+    loginTime: '登录时间',
+    lastActiveTime: '最后活跃时间',
+    tokenCount: '令牌数量',
+    token: '令牌串',
+    tokenStatus: '令牌状态',
+    tokenType: '令牌类型',
+    expireTime: '过期时间',
+    noRoleGroups: '暂未分配角色组',
+    noSessions: '暂无登录会话'
   },
 
   // 权限管理

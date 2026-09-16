@@ -26,3 +26,61 @@
   width: 100%;
   height: 100%;
 }
+
+/**
+ * 响应式断点查询 mixin
+ * 用法：@include respond-to(phone) { ... }
+ * @param $breakpoint: phone(<=768) / tablet(769~992) / mobile(<=992) / desktop(>992) / portrait / landscape / phone-landscape
+ */
+@mixin respond-to($breakpoint) {
+  @if $breakpoint == phone {
+    @media only screen and (max-width: #{$bp-phone}) {
+      @content;
+    }
+  } @else if $breakpoint == tablet {
+    @media only screen and (min-width: #{$bp-phone + 1}) and (max-width: #{$bp-tablet}) {
+      @content;
+    }
+  } @else if $breakpoint == mobile {
+    @media only screen and (max-width: #{$bp-tablet}) {
+      @content;
+    }
+  } @else if $breakpoint == desktop {
+    @media only screen and (min-width: #{$bp-tablet + 1}) {
+      @content;
+    }
+  } @else if $breakpoint == portrait {
+    @media only screen and (orientation: portrait) {
+      @content;
+    }
+  } @else if $breakpoint == landscape {
+    @media only screen and (orientation: landscape) {
+      @content;
+    }
+  } @else if $breakpoint == phone-landscape {
+    @media only screen and (orientation: landscape) and (max-width: #{$bp-phone-landscape}) {
+      @content;
+    }
+  }
+}
+
+/**
+ * 触摸目标约束：保证交互元素最小 44px 可点击区域
+ * @param $size: 最小尺寸，默认 $touch-target-size
+ */
+@mixin touch-target($size: $touch-target-size) {
+  min-width: $size;
+  min-height: $size;
+}
+
+/**
+ * 触摸设备下的点击态反馈（替代 hover 依赖）
+ * 用法：@include touch-feedback { background: #fafafa; }
+ */
+@mixin touch-feedback {
+  @media (hover: none) {
+    &:active {
+      @content;
+    }
+  }
+}

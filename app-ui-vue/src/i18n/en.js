@@ -40,6 +40,13 @@ export default {
     value: 'Value'
   },
 
+  // Detail page common
+  detail: {
+    invalidId: 'Invalid identifier, redirecting to list',
+    loadFailed: 'Failed to load detail',
+    retry: 'Retry'
+  },
+
   // Login
   login: {
     title: 'System Login',
@@ -60,7 +67,63 @@ export default {
     loggingIn: 'Logging in...',
     secureHint: 'Protected by an encrypted connection',
     copyright: 'All rights reserved.',
-    version: 'Version'
+    version: 'Version',
+    otherMethods: 'Other sign-in methods',
+    method: {
+      password: 'Account & Password',
+      wecom: 'WeCom Sign-in',
+      qr: 'WeCom QR Sign-in'
+    },
+    qr: {
+      title: 'Scan to Sign in',
+      hint: 'Scan with the WeCom app',
+      placeholder: 'QR code area',
+      tip: 'If the QR code expires, refresh and try again'
+    },
+    backToLogin: 'Back to account sign-in',
+    wecomNotConfigured: 'WeCom sign-in is not configured. Please contact the administrator.',
+    ssoProcessing: 'Completing authorized sign-in',
+    ssoProcessingSub: 'Entering the system after verification, please wait',
+    ssoRedirecting: 'Redirecting to the authorization page',
+    ssoRedirectingSub: 'Please complete the authorization in the opened page'
+  },
+
+  // External identity binding
+  identity: {
+    title: 'External Identity Binding',
+    bindPlatform: 'Bind {platform}',
+    unbound: 'Not bound',
+    authorizeNotConfigured: 'External authorization is not configured. Please contact the administrator.',
+    unbind: 'Unbind',
+    identityType: 'Identity Type',
+    externalId: 'External Identity',
+    userId: 'System User ID',
+    userName: 'System Username',
+    userNamePlaceholder: 'Enter the system username',
+    bindTime: 'Bound At',
+    actions: 'Actions',
+    noData: 'No bindings yet',
+    all: 'All',
+    search: 'Search',
+    reset: 'Reset',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
+    confirmUnbind: 'Unbind this external identity? You will no longer be able to sign in with it',
+    autoBindHint: 'When the third-party identity matches the system username, binding is created automatically after authorization',
+    bindSuccess: 'Bound successfully',
+    bindFailed: 'Binding failed',
+    processing: 'Processing authorization result...',
+    type: {
+      wecom: 'WeCom'
+    },
+    rules: {
+      identityType: 'Please select an identity type',
+      externalId: 'Please enter the external identity',
+      userName: 'Please enter the system username'
+    },
+    admin: {
+      addBind: 'Add Binding'
+    }
   },
 
   // Navigation
@@ -147,6 +210,7 @@ export default {
     editUser: 'Edit User',
     deleteUser: 'Delete User',
     confirmDelete: 'Are you sure to delete this user?',
+    viewDetail: 'Details',
     loginInfo: 'Login Info',
     noLoginInfo: 'No login info',
     // User Management View
@@ -161,6 +225,32 @@ export default {
     inputConfirmPassword: 'Please enter password again',
     confirmPasswordRequired: 'Please enter password again',
     confirmPasswordMismatch: 'Passwords do not match!'
+  },
+
+  // User detail page
+  userDetail: {
+    title: 'User Details',
+    backToList: 'Back to List',
+    basicInfo: 'Basic Info',
+    userId: 'User ID',
+    roleGroups: 'Role Groups',
+    sessions: 'Login Sessions',
+    tokens: 'Access Tokens',
+    loadTokens: 'Load Tokens',
+    disableToken: 'Disable Token',
+    confirmDisableToken: 'Disable this token? The session will need to re-login.',
+    online: 'Online',
+    offline: 'Offline',
+    sessionId: 'Session ID',
+    loginTime: 'Login Time',
+    lastActiveTime: 'Last Active Time',
+    tokenCount: 'Token Count',
+    token: 'Token',
+    tokenStatus: 'Status',
+    tokenType: 'Type',
+    expireTime: 'Expire Time',
+    noRoleGroups: 'No role groups assigned',
+    noSessions: 'No login sessions'
   },
 
   // Role Management

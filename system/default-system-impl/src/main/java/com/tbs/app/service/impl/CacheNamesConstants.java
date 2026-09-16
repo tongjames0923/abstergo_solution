@@ -72,6 +72,12 @@ public final class CacheNamesConstants {
      */
     public static final String GENERIC_API = "app:generic_api";
 
+    // ===== 企业微信 =====
+    /**
+     * 企业微信应用 access_token 缓存（单应用单 token）
+     */
+    public static final String WECOM_ACCESS_TOKEN = "app:wecom_access_token";
+
     private CacheNamesConstants() {
     }
 }

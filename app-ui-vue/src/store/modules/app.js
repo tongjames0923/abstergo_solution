@@ -6,6 +6,8 @@ const state = {
     withoutAnimation: false
   },
   device: 'desktop',
+  // 当前横竖屏方向：portrait（竖屏）/ landscape（横屏）
+  orientation: 'portrait',
   language: Cookies.get('language') || 'zh'
 }
 
@@ -27,6 +29,9 @@ const mutations = {
   TOGGLE_DEVICE: (state, device) => {
     state.device = device
   },
+  SET_ORIENTATION: (state, orientation) => {
+    state.orientation = orientation
+  },
   SET_LANGUAGE: (state, language) => {
     state.language = language
     Cookies.set('language', language)
@@ -42,6 +47,9 @@ const actions = {
   },
   toggleDevice({ commit }, device) {
     commit('TOGGLE_DEVICE', device)
+  },
+  setOrientation({ commit }, orientation) {
+    commit('SET_ORIENTATION', orientation)
   },
   setLanguage({ commit }, language) {
     commit('SET_LANGUAGE', language)

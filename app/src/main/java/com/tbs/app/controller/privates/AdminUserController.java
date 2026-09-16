@@ -62,6 +62,9 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     /**
      * 根据ID获取用户数据信息
      *
+     * <p>覆写父类实现，增加用户存在性校验：用户不存在时抛出 i18n 业务异常，
+     * 避免前端详情页拿到 data 为 null 的成功响应。</p>
+     *
      * @param id 用户ID
      * @return 用户信息
      */
@@ -73,7 +76,10 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.USER')")
     public AjaxResult get(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
-        return super.get(id);
+        var user = getService().queryById(id);
+        AssertUtil.isTrue(user == null).i18n("user.not.exists").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
+            .throwIt();
+        return successResult(user);
     }
 
     /**

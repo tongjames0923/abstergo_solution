@@ -3,14 +3,14 @@ package com.tbs.logging.impl;
 import cn.hutool.core.date.DateUtil;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.log.model.LogOperateTypeView;
+import com.tbs.common.data.PageVO;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.util.PageUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
-import com.tbs.common.data.PageVO;
-import com.tbs.common.util.PageUtil;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
@@ -53,6 +53,7 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
         Map<String, Set<String>> userMap = new HashMap<>(); // 记录每个操作类型的用户数
         Map<String, Set<String>> ipMap = new HashMap<>();   // 记录每个操作类型的IP数
         Map<String, List<Long>> timeListMap = new HashMap<>(); // 记录每个操作类型的时间列表用于计算分位数
+        Map<String, BigDecimal> ignoredErrorMap = new HashMap<>(); // 记录每个操作类型的低级别错误数(不计入稳定性统计)
         if (CollUtil.isEmpty(data)) {
             return new ArrayList<>();
         }
@@ -70,13 +71,18 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
             // 收集时间列表用于计算分位数
             timeListMap.computeIfAbsent(operateType, k -> new ArrayList<>()).add(costTime);
 
+            // 统计低级别错误数，成功率计算时从分母中剔除
+            if (isLowLevelError(operateRecordEntity)) {
+                ignoredErrorMap.merge(operateType, BigDecimal.ONE, BigDecimal::add);
+            }
+
             LogOperateTypeView logOperateTypeView = dataMap.get(operateRecordEntity.getOperateType());
             if (logOperateTypeView == null) {
                 logOperateTypeView = new LogOperateTypeView();
                 logOperateTypeView.setOperateCount(BigDecimal.ONE);
                 var costTimeDecimal = BigDecimal.valueOf(costTime);
                 logOperateTypeView.setOperateTime(new BigDecimal(costTimeDecimal.toString()));
-                if (StrUtil.isNotEmpty(operateRecordEntity.getErrorMessage())) {
+                if (!isIgnoreError(operateRecordEntity)) {
                     logOperateTypeView.setErrorCount(BigDecimal.ONE);
                 } else {
                     logOperateTypeView.setErrorCount(BigDecimal.ZERO);
@@ -111,9 +117,12 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
             view.setIpCount(BigDecimal.valueOf(ipMap.get(operateType).size()));
 
             // 计算成功率
-            BigDecimal successCount = view.getOperateCount().subtract(view.getErrorCount());
-            if (view.getOperateCount().compareTo(BigDecimal.ZERO) > 0) {
-                view.setSuccessRate(successCount.divide(view.getOperateCount(), 4, RoundingMode.HALF_UP)
+            // 低级别错误(用户输入/业务逻辑错误)既不算失败也不算成功，从分母中剔除
+            BigDecimal ignoredCount = ignoredErrorMap.getOrDefault(operateType, BigDecimal.ZERO);
+            BigDecimal validCount = view.getOperateCount().subtract(ignoredCount);
+            BigDecimal successCount = validCount.subtract(view.getErrorCount());
+            if (validCount.compareTo(BigDecimal.ZERO) > 0) {
+                view.setSuccessRate(successCount.divide(validCount, 4, RoundingMode.HALF_UP)
                     .multiply(BigDecimal.valueOf(100)));
             } else {
                 view.setSuccessRate(BigDecimal.ZERO);
@@ -260,8 +269,15 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     }
 
     private static boolean isIgnoreError(LogRecordVO operateRecordEntity) {
-        return StrUtil.isEmpty(operateRecordEntity.getErrorMessage()) ||
-            (operateRecordEntity.getErrorCode() != null &&
-                operateRecordEntity.getErrorCode() < ErrorLevelEnum.DATA_ACCESS_ERROR.getCode());
+        return StrUtil.isEmpty(operateRecordEntity.getErrorMessage()) || isLowLevelError(operateRecordEntity);
+    }
+
+    /**
+     * 是否为低级别错误(用户输入错误/业务逻辑错误)，该类错误不计入稳定性统计
+     */
+    private static boolean isLowLevelError(LogRecordVO operateRecordEntity) {
+        return StrUtil.isNotEmpty(operateRecordEntity.getErrorMessage()) &&
+            operateRecordEntity.getErrorCode() != null &&
+            operateRecordEntity.getErrorCode() < ErrorLevelEnum.DATA_ACCESS_ERROR.getCode();
     }
 }

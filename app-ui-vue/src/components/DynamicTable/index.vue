@@ -5,8 +5,9 @@
       <slot name="toolbar" />
     </div>
 
-    <!-- 数据表格 -->
+    <!-- 数据表格（桌面/平板） -->
     <el-table
+      v-if="!isMobileView"
       ref="table"
       v-loading="loading"
       :data="tableData"
@@ -120,17 +121,46 @@
       </el-table-column>
     </el-table>
 
+    <!-- 手机端卡片视图：列配置/操作/选择与表格视图共用，业务方无感切换 -->
+    <mobile-card-list
+      v-else
+      :data="tableData"
+      :columns="internalColumns"
+      :card-fields="cardFields"
+      :title-field="titleField"
+      :loading="loading"
+      :loading-text="computedLoadingText"
+      :selection="selection"
+      :value="selectionData"
+      :actions="actions"
+      :has-actions-slot="hasActionsSlot"
+      @selection-change="handleSelectionChange"
+      @row-click="handleCardRowClick"
+    >
+      <!-- 列作用域插槽转发：卡片视图复用表格的自定义列渲染 -->
+      <template
+        v-for="column in mobileSlotColumns"
+        v-slot:[column.slot]="{ row, $index, column: col }"
+      >
+        <slot :name="column.slot" :row="row" :$index="$index" :column="col" />
+      </template>
+      <!-- 操作插槽转发（v-if 不可与 v-slot 同置于 template，存在性由 hasActionsSlot 控制） -->
+      <template #actions="{ row, $index }">
+        <slot name="actions" :row="row" :$index="$index" />
+      </template>
+    </mobile-card-list>
+
     <!-- 分页组件 -->
     <el-pagination
       v-if="pagination"
       class="dynamic-table__pagination"
-      :layout="paginationLayout"
+      :layout="paginationLayoutForDevice"
       :page-sizes="pageSizes"
       hide-on-single-page
       :page-size="pageParams.size"
       :total="computedTotal"
       :current-page="pageParams.page"
-      :pager-count="pagerCount"
+      :pager-count="pagerCountForDevice"
       :background="paginationBackground"
       @size-change="handleSizeChange"
       @current-change="handleCurrentPageChange"
@@ -139,6 +169,8 @@
 </template>
 
 <script>
+import MobileCardList from './MobileCardList.vue'
+
 // 定义render组件用于渲染函数
 const Render = {
   name: 'Render',
@@ -155,7 +187,8 @@ const Render = {
 export default {
   name: 'DynamicTable',
   components: {
-    Render
+    Render,
+    MobileCardList
   },
   props: {
     // 数据获取函数，必须返回Promise
@@ -312,6 +345,21 @@ export default {
     pageSize: {
       type: Number,
       default: 10
+    },
+    // 是否启用响应式：手机档自动切换为卡片视图
+    responsive: {
+      type: Boolean,
+      default: true
+    },
+    // 卡片视图展示字段（prop 名称数组），不传则取前几个有 label 的列
+    cardFields: {
+      type: Array,
+      default: null
+    },
+    // 卡片视图标题字段（prop 名称），不传则取第一个展示列
+    titleField: {
+      type: String,
+      default: ''
     }
   },
   data() {
@@ -351,6 +399,32 @@ export default {
     // 操作列标签（支持 i18n 回退）
     computedActionsLabel() {
       return this.actionsLabel || this.$t('common.operation')
+    },
+    // 当前设备档位（phone/tablet/desktop），由 store 全局驱动
+    device() {
+      return this.$store.state.app.device
+    },
+    // 手机端是否切换为卡片视图（responsive 关闭或非手机档仍用表格）
+    isMobileView() {
+      return this.responsive && this.device === 'phone'
+    },
+    // 卡片视图需要转发的列作用域插槽（父组件已提供对应插槽的列）
+    mobileSlotColumns() {
+      return (this.internalColumns || []).filter(
+        column => column.slot && this.$scopedSlots[column.slot]
+      )
+    },
+    // 父组件是否提供了 actions 作用域插槽（决定卡片视图是否渲染操作区）
+    hasActionsSlot() {
+      return !!this.$scopedSlots.actions
+    },
+    // 分页布局：手机端精简为前后翻页，避免溢出
+    paginationLayoutForDevice() {
+      return this.isMobileView ? 'prev, pager, next' : this.paginationLayout
+    },
+    // 分页按钮数量：手机端收紧为 5 个
+    pagerCountForDevice() {
+      return this.isMobileView ? 5 : this.pagerCount
     }
   },
   watch: {
@@ -568,6 +642,14 @@ export default {
       this.forwardEvent('row-click', row, column, event)
     },
 
+    /**
+     * 卡片视图行点击转发（column/event 以 null 占位，与表格事件签名对齐）
+     * @param {Object} row - 行数据
+     */
+    handleCardRowClick(row) {
+      this.forwardEvent('row-click', row, null, null)
+    },
+
     handleRowDblclick(row, column, event) {
       this.forwardEvent('row-dblclick', row, column, event)
     },
@@ -628,10 +710,13 @@ export default {
     },
 
     /**
-     * 清空选择
+     * 清空选择（卡片视图下直接重置内部选中状态）
      */
     clearSelection() {
-      this.$refs.table.clearSelection()
+      if (this.$refs.table) {
+        this.$refs.table.clearSelection()
+      }
+      this.selectionData = []
     },
 
     /**
@@ -643,14 +728,19 @@ export default {
     },
 
     /**
-     * 设置选中行
+     * 设置选中行（卡片视图下直接以受控方式写入选中状态）
      * @param {Array} rows - 要选中的行数组
      */
     setSelection(rows) {
-      if (Array.isArray(rows)) {
+      if (!Array.isArray(rows)) {
+        return
+      }
+      if (this.$refs.table) {
         rows.forEach(row => {
           this.$refs.table.toggleRowSelection(row, true)
         })
+      } else {
+        this.selectionData = [...rows]
       }
     }
   }

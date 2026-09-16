@@ -182,7 +182,7 @@
                 </el-tag>
               </template>
             </el-table-column>
-            <el-table-column label="操作" width="240" align="center" fixed="right">
+            <el-table-column label="操作" width="180" align="center" fixed="right">
               <template slot-scope="{ row }">
                 <el-button
                   size="mini"

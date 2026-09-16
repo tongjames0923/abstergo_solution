@@ -26,7 +26,7 @@ module.exports = {
    * @type {string}
    * 后台接口地址
    */
-  backend: 'http://127.0.0.1:8080',
+  backend: 'http://192.168.10.48:8083',
   /**
    * @type {string}
    * token header

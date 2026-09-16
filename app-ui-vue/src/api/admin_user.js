@@ -30,6 +30,18 @@ export function adminQueryUser(data, pageNum, pageSize) {
 }
 
 /**
+ * 根据ID获取用户详情
+ * @param {number} userId - 用户ID
+ * @returns {Promise} 用户详情（AjaxResult.data 为 SystemUserEntity，用户不存在时后端返回业务异常）
+ */
+export function getUserDetail(userId) {
+  return request({
+    url: `/private/admin/user/get/${userId}`,
+    method: 'get'
+  })
+}
+
+/**
  * 激活用户账户
  * @param {number} userId - 用户ID
  * @returns {Promise} 操作结果

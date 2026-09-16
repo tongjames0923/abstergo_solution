@@ -10,6 +10,9 @@ import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.mapper.SystemCompanyMapper;
+import com.tbs.shared.pojo.entity.SystemUserEntity;
+import com.tbs.shared.pojo.entity.SystemUserExternalIdentityEntity;
+import com.tbs.sql.service.QueryEngine;
 import com.tbs.web.exception.SimpleAuthException;
 import com.tbs.web.security.user.IUserInfoService;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -65,6 +68,38 @@ public class DefaultUserInfoService implements IUserInfoService {
             builder.departments(convertToDepartmentVOs(departments));
         }
         return builder.build();
+    }
+
+    /**
+     * 通过外部身份标识获取标准用户信息
+     * <p>
+     * 按外部身份绑定关系解析系统用户，再复用 {@link #loadUserInfoByUniqueKey(String)}
+     * 的既有链路构建标准用户详情（角色、部门、状态语义完全一致）；
+     * 未绑定或绑定用户不存在时返回 {@code null}，由调用方断言提示。
+     * </p>
+     *
+     * @param identityType 外部身份类型（如 wecom）
+     * @param externalId   外部身份标识（如企微 userid）
+     * @return 绑定的标准用户详情；未绑定时返回 {@code null}
+     */
+    @Override
+    public UserDetails loadUserInfoByExternalIdentity(String identityType, String externalId) {
+        if (identityType == null || identityType.isEmpty() || externalId == null || externalId.isEmpty()) {
+            return null;
+        }
+        SystemUserExternalIdentityEntity identity = QueryEngine
+            .getEntityQueryWrapper(new SystemUserExternalIdentityEntity()).query().where()
+            .equal(SystemUserExternalIdentityEntity::getIdentityType, identityType)
+            .equal(SystemUserExternalIdentityEntity::getExternalId, externalId)
+            .pour().fetchOne();
+        if (identity == null) {
+            return null;
+        }
+        SystemUserEntity user = systemUserService.queryById(identity.getUserId());
+        if (user == null) {
+            return null;
+        }
+        return loadUserInfoByUniqueKey(user.getUserName());
     }
 
 }

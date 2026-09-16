@@ -187,6 +187,22 @@
         transform: translate3d(-$sideBarWidth, 0, 0);
       }
     }
+
+    // 手机横屏下压缩抽屉宽度，减少对内容的遮挡
+    @media only screen and (orientation: landscape) and (max-width: #{$bp-phone-landscape}) {
+      .sidebar-container {
+        width: 160px !important;
+
+        .el-menu-item,
+        .nest-menu .el-submenu > .el-submenu__title {
+          min-width: 160px !important;
+        }
+      }
+
+      &.hideSidebar .sidebar-container {
+        transform: translate3d(-160px, 0, 0);
+      }
+    }
   }
 
   .withoutAnimation {

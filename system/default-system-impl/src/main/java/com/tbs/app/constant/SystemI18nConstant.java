@@ -203,6 +203,29 @@ public final class SystemI18nConstant {
     public static final String VERSION_STATUS_NOT_OFFLINE = "version.status.not.offline";
 
 
+    /* ===================== 企业微信登录（wecom） ===================== */
+
+    /** 企业微信登录未配置提示：企业微信登录未配置，请联系管理员 */
+    public static final String WECOM_CONFIG_MISSING = "wecom.config.missing";
+    /** 企业微信接口调用失败提示：企业微信接口调用失败: {0} */
+    public static final String WECOM_API_ERROR = "wecom.api.error";
+    /** 企业微信授权码为空校验提示：企业微信授权码不能为空 */
+    public static final String WECOM_CODE_REQUIRED = "wecom.code.required";
+    /** 企业微信授权码无效提示：企业微信授权码无效或已过期 */
+    public static final String WECOM_CODE_INVALID = "wecom.code.invalid";
+
+    /* ===================== 外部身份绑定（external identity） ===================== */
+
+    /** 绑定参数为空校验提示：绑定参数不能为空 */
+    public static final String EXTERNAL_IDENTITY_PARAM_REQUIRED = "external.identity.param.required";
+    /** 外部身份已绑定其他用户提示：该外部身份已绑定其他用户 */
+    public static final String EXTERNAL_IDENTITY_ALREADY_BOUND = "external.identity.already.bound";
+    /** 不支持的外部身份类型提示：不支持的外部身份类型: {0} */
+    public static final String EXTERNAL_IDENTITY_TYPE_UNSUPPORTED = "external.identity.type.unsupported";
+    /** 自动关联失败提示：未找到匹配的系统用户，请先绑定后重试 */
+    public static final String EXTERNAL_IDENTITY_AUTO_MATCH_FAIL = "external.identity.auto.match.fail";
+
+
     /* ===================== 通用校验 ===================== */
 
     /** 标识位（flag）非法提示：标识位非法 */

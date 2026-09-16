@@ -387,4 +387,19 @@ $dhu-primary: #4a7de0;
     background: rgba(74, 125, 224, 0.14);
   }
 }
+
+/* 手机端：搜索框与统计标签占满换行，避免固定 260px 宽度溢出窄屏 */
+@media (max-width: 768px) {
+  .rdt-toolbar {
+    flex-wrap: wrap;
+  }
+
+  .rdt-search {
+    width: 100%;
+  }
+
+  .rdt-stats {
+    flex-wrap: wrap;
+  }
+}
 </style>

@@ -8,6 +8,20 @@ export function login(data) {
   })
 }
 
+/**
+ * 统一登录授权：按授权类型换取访问令牌
+ * @param {string} grantType - 授权类型标识，与后端 ILoginGrantProvider 对齐（如 'wecom'）
+ * @param {Object} credential - 凭证参数，字段由各授权方式表单契约约定（如 { code }）
+ * @returns {Promise} 令牌信息（AjaxResult.data 为 ITokenModel）
+ */
+export function loginByGrant(grantType, credential) {
+  return request({
+    url: `/public/user/login/${grantType}`,
+    method: 'post',
+    data: credential
+  })
+}
+
 export function getInfo() {
   return request({
     url: '/private/user/info',

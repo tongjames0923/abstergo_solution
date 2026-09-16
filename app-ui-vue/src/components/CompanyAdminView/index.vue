@@ -1239,6 +1239,13 @@ export default {
   .ca-search-inner { flex-direction: column; }
   .ca-search-field, .ca-search-field-sm, .ca-search-field-select { min-width: 100%; }
   .ca-search-actions { width: 100%; margin-left: 0; }
+  /* 上下堆叠后取消固定最小高度，避免小屏大面积留白 */
+  .ca-layout { min-height: auto; }
+}
+
+/* 横屏手机：压缩占位区高度，减少纵向滚动 */
+@media (max-height: 480px) {
+  .ca-placeholder { min-height: 300px; }
 }
 </style>
 

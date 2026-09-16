@@ -44,6 +44,17 @@ export default {
     padding-top: 44px;
   }
 }
+
+/* 手机横屏：导航栏压缩为 38px，内容区同步偏移 */
+@media only screen and (orientation: landscape) and (max-width: 896px) {
+  .app-main {
+    min-height: calc(100vh - 38px);
+  }
+
+  .fixed-header + .app-main {
+    padding-top: 38px;
+  }
+}
 </style>
 
 <style lang="scss">
