@@ -74,7 +74,9 @@ export default {
       tip: '二维码过期后请刷新重试'
     },
     backToLogin: '返回账号登录',
-    wecomNotConfigured: '企业微信登录未配置，请联系管理员'
+    wecomNotConfigured: '企业微信登录未配置，请联系管理员',
+    ssoProcessing: '正在完成授权登录',
+    ssoProcessingSub: '验证通过后即将进入系统，请稍候'
   },
 
   // 外部身份绑定

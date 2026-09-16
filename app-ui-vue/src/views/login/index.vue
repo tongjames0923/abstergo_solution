@@ -23,8 +23,15 @@
         <p class="login-subtitle anim-stagger" style="--stagger-delay: 0.18s">{{ $t('login.title') }}</p>
       </div>
 
+      <!-- SSO 授权处理态：回调换票期间替换表单区，避免表单闪现造成割裂 -->
+      <div v-if="ssoProcessing" class="sso-processing anim-stagger" style="--stagger-delay: 0.24s">
+        <span class="sso-spinner" />
+        <p class="sso-text">{{ $t('login.ssoProcessing') }}</p>
+        <p class="sso-sub">{{ $t('login.ssoProcessingSub') }}</p>
+      </div>
+
       <!-- 内嵌登录面板：embedded-qr 等自渲染模式由 Provider component 承载 -->
-      <div v-if="panelComponent && loginContext" class="login-embed-area anim-stagger" style="--stagger-delay: 0.24s">
+      <div v-else-if="panelComponent && loginContext" class="login-embed-area anim-stagger" style="--stagger-delay: 0.24s">
         <component :is="panelComponent" :context="loginContext" />
         <el-button type="text" class="embed-back" @click="closeProviderPanel">{{ $t('login.backToLogin') }}</el-button>
       </div>
@@ -123,8 +130,8 @@ import settings from '@/settings'
 import {updateRouter} from '@/router'
 import LangSelect from '@/components/LangSelect'
 import {getGatewayVersion} from '@/api/system'
-import {getPrimaryProvider, getSecondaryProviders} from '@/login/registry'
-import {dispatchLoginCallback} from '@/login/callback'
+import {getPrimaryProvider, getSecondaryProviders, getProviderById} from '@/login/registry'
+import {dispatchLoginCallback, readCallbackQuery} from '@/login/callback'
 // 引入登录能力模块入口，确保内置 Provider 注册副作用执行
 import '@/login'
 
@@ -141,6 +148,8 @@ export default {
       },
       loginRules: {},
       submitting: false,
+      // SSO 授权回调处理中：替换表单区的过渡态
+      ssoProcessing: false,
       passwordType: 'password',
       // 当前内嵌面板 Provider（embedded-qr 等自渲染模式）
       panelProvider: null,
@@ -182,6 +191,8 @@ export default {
   },
   created() {
     this.initLoginForm()
+    // 首帧前判定 SSO 回调，命中则直接进入授权处理态，表单不闪现
+    this.ssoProcessing = this.detectSsoCallback()
   },
   mounted() {
     this.loginForm.rememberMe = getRememberMe()
@@ -222,11 +233,29 @@ export default {
     },
     // SSO 授权回调分发入口：state 携带 Provider id，code 为授权码
     async handleLoginCallback() {
-      try {
-        await dispatchLoginCallback(this.$route.query, this.loginContext)
-      } catch (e) {
-        // 回调异常时静默降级，交还登录表单正常渲染
+      if (!this.ssoProcessing) {
+        return
       }
+      try {
+        const handled = await dispatchLoginCallback(this.$route.query, this.loginContext)
+        // 成功时保持处理态直至路由跳转完成；未消费或失败回落表单
+        if (!handled) {
+          this.ssoProcessing = false
+        }
+      } catch (e) {
+        // 授权失败时回落登录表单，错误提示由 request.js 统一展示
+        this.ssoProcessing = false
+      }
+    },
+    // 判定当前是否为 SSO 授权回调（code + 已注册 Provider）
+    detectSsoCallback() {
+      const query = readCallbackQuery(this.$route.query)
+      if (!query.code) {
+        return false
+      }
+      const providerId = query.state || query.loginMethod
+      const provider = providerId ? getProviderById(providerId) : null
+      return !!(provider && typeof provider.handleCallback === 'function')
     },
     // 拉取后端网关版本信息，失败时静默降级不影响登录页
     async loadGatewayVersion() {
@@ -739,6 +768,41 @@ export default {
     &:active {
       transform: scale(0.97);
     }
+  }
+}
+
+/* SSO 授权处理态：环形进度 + 说明文案，与卡片入场动画衔接 */
+.sso-processing {
+  padding: 42px 0 52px;
+  text-align: center;
+
+  .sso-spinner {
+    display: inline-block;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 3px solid rgba(0, 113, 227, 0.15);
+    border-top-color: #0071e3;
+    animation: sso-spin 0.9s linear infinite;
+  }
+
+  .sso-text {
+    margin: 18px 0 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1d1d1f;
+  }
+
+  .sso-sub {
+    margin: 6px 0 0;
+    font-size: 12px;
+    color: #86868b;
+  }
+}
+
+@keyframes sso-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 

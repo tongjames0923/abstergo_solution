@@ -50,6 +50,20 @@ function cleanLocationSearch() {
 }
 
 /**
+ * 清空启动期捕获的回调查询参数
+ * <p>
+ * 授权码一次性且消费即失效；SPA 生命周期内登出回登录页不发生页面重载，
+ * 若不清理内存捕获，登录页回调探测会再次命中残留 code/state，
+ * 触发对已失效授权码的重复换票请求。
+ * </p>
+ */
+function clearCapturedQuery() {
+  Object.keys(BOOT_SEARCH_QUERY).forEach(key => {
+    delete BOOT_SEARCH_QUERY[key]
+  })
+}
+
+/**
  * 读取 OAuth 回调查询参数
  * <p>
  * 合并路由查询与启动期 search 捕获（路由值优先，缺失项由 search 补齐），
@@ -63,10 +77,14 @@ export function readCallbackQuery(routeQuery) {
 }
 
 /**
- * 清理地址栏 search 中的回调查询参数（防一次性授权码重放）
+ * 清理回调现场（防一次性授权码重放）
+ * <p>
+ * 同时清理地址栏 search 部分与内存中的启动期捕获，调用即视为本次授权码已消费。
+ * </p>
  */
 export function cleanCallbackSearch() {
   cleanLocationSearch()
+  clearCapturedQuery()
 }
 
 /**
@@ -94,6 +112,6 @@ export async function dispatchLoginCallback(query, context) {
   try {
     return await provider.handleCallback(merged, context)
   } finally {
-    cleanLocationSearch()
+    cleanCallbackSearch()
   }
 }

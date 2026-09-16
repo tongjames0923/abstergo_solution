@@ -74,7 +74,9 @@ export default {
       tip: 'If the QR code expires, refresh and try again'
     },
     backToLogin: 'Back to account sign-in',
-    wecomNotConfigured: 'WeCom sign-in is not configured. Please contact the administrator.'
+    wecomNotConfigured: 'WeCom sign-in is not configured. Please contact the administrator.',
+    ssoProcessing: 'Completing authorized sign-in',
+    ssoProcessingSub: 'Entering the system after verification, please wait'
   },
 
   // External identity binding
