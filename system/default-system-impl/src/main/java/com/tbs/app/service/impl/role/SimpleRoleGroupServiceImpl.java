@@ -28,8 +28,6 @@ import com.tbs.web.uitl.AuthUtil;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
-import static com.tbs.app.service.impl.CacheNamesConstants.ROLE_GROUP;
-
 import javax.annotation.Resource;
 import java.util.Arrays;
 import java.util.List;
@@ -37,7 +35,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import com.tbs.app.constant.SystemI18nConstant;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.ROLE_GROUP;
 
 /**
  * 角色组服务实现类
@@ -215,7 +214,7 @@ public class SimpleRoleGroupServiceImpl
             }
             return new SystemRoleGroupVO(group,
                 ((ISystemRoleGroupService)getInstance()).getRoleList(res.getRoleGroupId()));
-        }).filter(val -> val.getGroup() != null).collect(Collectors.toList());
+        }).filter(Objects::nonNull).filter(val -> val.getGroup() != null).collect(Collectors.toList());
 
     }
 
