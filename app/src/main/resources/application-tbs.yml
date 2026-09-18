@@ -86,3 +86,9 @@ tbs:
     corp-id: ${WECOM_CORP_ID}
     agent-id: ${WECOM_AGENT_ID}
     corp-secret: ${WECOM_CORP_SECRET}
+  push:
+    enable: true
+    transport: sse
+    heartbeat-timeout-millis: 600000
+    dispatch:
+      scheduler: job
