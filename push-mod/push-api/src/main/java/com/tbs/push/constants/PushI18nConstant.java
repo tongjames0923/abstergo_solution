@@ -53,6 +53,16 @@ public final class PushI18nConstant {
     public static final String TOPIC_INVALID = "push.topic.invalid";
 
     /**
+     * 主题不能为空
+     */
+    public static final String TOPIC_REQUIRED = "push.topic.required";
+
+    /**
+     * 主题超长, 最大{0}字符
+     */
+    public static final String TOPIC_TOO_LONG = "push.topic.too.long";
+
+    /**
      * 会话不能为空
      */
     public static final String SESSION_REQUIRED = "push.session.required";
@@ -131,6 +141,11 @@ public final class PushI18nConstant {
      * 认证失败: {0}
      */
     public static final String AUTH_FAILED = "push.auth.failed";
+
+    /**
+     * 认证凭证不能为空
+     */
+    public static final String AUTH_TOKEN_REQUIRED = "push.auth.token.required";
 
     /**
      * 连接凭证缺失, 请先调用认证端点获取

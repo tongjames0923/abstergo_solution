@@ -1,13 +1,14 @@
 package com.tbs.push.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONException;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.push.api.exception.PushProtocolException;
 import com.tbs.push.api.frame.IPushCodec;
 import com.tbs.push.constants.PushI18nConstant;
 import com.tbs.push.model.FrameTypeEnum;
 import com.tbs.push.model.PushFrame;
 import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.PushTopic;
 
 /**
  * JSON协议编解码器（默认实现）
@@ -30,7 +31,7 @@ public class JsonPushCodec implements IPushCodec {
      */
     @Override
     public String serializePayload(Object payload) {
-        return payload == null ? null : JSON.toJSONString(payload);
+        return payload == null ? null : JsonUtils.toJSONString(payload);
     }
 
     /**
@@ -44,7 +45,7 @@ public class JsonPushCodec implements IPushCodec {
         PushFrame frame = new PushFrame(FrameTypeEnum.DATA);
         frame.setVersion(com.tbs.push.constants.PushFrameConstants.PROTOCOL_VERSION);
         frame.setMessageId(message.getId());
-        frame.setTopic(message.getTopic());
+        frame.setTopic(PushTopic.of(message.getTopic()));
         frame.setPayload(message.getPayload());
         return frame;
     }
@@ -57,7 +58,7 @@ public class JsonPushCodec implements IPushCodec {
      */
     @Override
     public String encodeFrame(PushFrame frame) {
-        return JSON.toJSONString(frame);
+        return JsonUtils.toJSONString(frame);
     }
 
     /**
@@ -71,7 +72,7 @@ public class JsonPushCodec implements IPushCodec {
     public PushFrame decodeFrame(String text) {
         PushFrame frame;
         try {
-            frame = JSON.parseObject(text, PushFrame.class);
+            frame = JsonUtils.parseObject(text, PushFrame.class);
         } catch (JSONException error) {
             throw PushProtocolException.protocolI18n(PushI18nConstant.FRAME_DECODE_FAILED, text);
         }

@@ -88,6 +88,7 @@ public class PushCredentialService {
      */
     public PushCredential issue(PushAuthForm form) {
         AssertUtil.isTrue(form == null).i18n(PushI18nConstant.AUTH_FORM_REQUIRED).throwIt();
+        AssertUtil.isTrue(form.getToken() == null).i18n(PushI18nConstant.AUTH_TOKEN_REQUIRED).throwIt();
         PushAuthResult authResult = authenticator.authenticate(form);
         AssertUtil.isTrue(authResult == null).i18n(PushI18nConstant.AUTH_FAILED).throwIt();
         AssertUtil.isTrue(!authResult.isAuthenticated())

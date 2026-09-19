@@ -273,7 +273,7 @@ public class UserRouteCoordinator implements IRouteCoordinator {
 public class TokenPushAuthenticator implements IPushAuthenticator {
     @Override
     public PushAuthResult authenticate(PushAuthForm form) {
-        if (!tokenService.verify(form.getToken())) {
+        if (!tokenService.verify(form.getToken().getValue())) {
             return PushAuthResult.failure("token.invalid");
         }
         Map<String, String> attributes = Map.of(

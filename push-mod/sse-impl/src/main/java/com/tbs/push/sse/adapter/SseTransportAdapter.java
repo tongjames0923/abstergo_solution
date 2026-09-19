@@ -1,6 +1,7 @@
 package com.tbs.push.sse.adapter;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.push.api.exception.PushProtocolException;
 import com.tbs.push.api.frame.IPushCodec;
 import com.tbs.push.api.intercept.IConnectionInterceptor;
@@ -13,6 +14,7 @@ import com.tbs.push.impl.PushCredentialService;
 import com.tbs.push.impl.PushFrameProcessor;
 import com.tbs.push.model.ConnectionStateEnum;
 import com.tbs.push.model.PushCredential;
+import com.tbs.push.model.PushFrame;
 import com.tbs.push.model.TransportCapability;
 import com.tbs.push.sse.session.SseSessionWrapper;
 import org.slf4j.Logger;
@@ -148,25 +150,59 @@ public class SseTransportAdapter implements ITransportAdapter {
     }
 
     /**
-     * 处理HTTP POST上行的传输文本
+     * 处理HTTP POST上行的结构化协议帧
      * <p>
-     * sessionId未注册或会话已关闭时快速失败（i18n协议异常，经全局异常处理转为统一响应）。
+     * sessionId未注册、会话已关闭或帧缺失时快速失败（i18n协议异常，
+     * 经全局异常处理转为统一响应）。帧内容直接交由协议层帧处理器按类型分发处理。
+     * </p>
+     *
+     * @param sessionId 会话唯一标识
+     * @param frame     结构化协议帧
+     */
+    public void uploadFrame(String sessionId, PushFrame frame) {
+        AssertUtil.isTrue(StrUtil.isEmpty(sessionId))
+            .i18n(PushI18nConstant.SESSION_ID_REQUIRED).throwIt();
+        AssertUtil.isTrue(frame == null)
+            .i18n(PushI18nConstant.FRAME_REQUIRED).throwIt();
+        SseSessionWrapper wrapper = resolveSession(sessionId);
+        AssertUtil.isTrue(wrapper == null)
+            .i18n(PushI18nConstant.SESSION_NOT_FOUND).params(sessionId).throwIt();
+        AssertUtil.isTrue(wrapper.getState() == ConnectionStateEnum.CLOSED)
+            .i18n(PushI18nConstant.SESSION_NOT_CONNECTED).params(sessionId).throwIt();
+        wrapper.touch();
+        frameProcessor.handleFrame(wrapper, frame);
+    }
+
+    /**
+     * 处理HTTP POST上行的传输文本（兼容入口）
+     * <p>
+     * 历史文本协议入口：解析失败由协议层按协议违规回发ERROR帧并关闭会话。
      * </p>
      *
      * @param sessionId 会话唯一标识
      * @param text      上行的帧JSON文本
      */
     public void uploadText(String sessionId, String text) {
-        AssertUtil.isTrue(sessionId == null)
-            .i18n(PushI18nConstant.SESSION_ID_REQUIRED).throwIt();
-        SseSessionWrapper wrapper = sessionRegistry.get(sessionId) instanceof SseSessionWrapper
-            ? (SseSessionWrapper) sessionRegistry.get(sessionId) : null;
+        AssertUtil.isTrue(StrUtil.isEmpty(text))
+            .i18n(PushI18nConstant.FRAME_REQUIRED).throwIt();
+        SseSessionWrapper wrapper = resolveSession(sessionId);
         AssertUtil.isTrue(wrapper == null)
             .i18n(PushI18nConstant.SESSION_NOT_FOUND).params(sessionId).throwIt();
         AssertUtil.isTrue(wrapper.getState() == ConnectionStateEnum.CLOSED)
             .i18n(PushI18nConstant.SESSION_NOT_CONNECTED).params(sessionId).throwIt();
         wrapper.touch();
         frameProcessor.handleText(wrapper, text);
+    }
+
+    /**
+     * 解析上行目标会话
+     *
+     * @param sessionId 会话唯一标识
+     * @return 会话包装，未注册时返回null
+     */
+    private SseSessionWrapper resolveSession(String sessionId) {
+        return sessionRegistry.get(sessionId) instanceof SseSessionWrapper
+            ? (SseSessionWrapper) sessionRegistry.get(sessionId) : null;
     }
 
     /**

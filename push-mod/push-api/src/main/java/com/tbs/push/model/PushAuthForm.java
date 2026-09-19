@@ -22,9 +22,10 @@ public class PushAuthForm implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 业务认证凭证（如登录令牌），内容由业务认证器解释
+     * 业务认证凭证（如登录令牌），类型化为{@link PushAuthToken}值对象（非空约束由类型承载），
+     * 内容由业务认证器解释
      */
-    private String token;
+    private PushAuthToken token;
 
     /**
      * 业务用户标识（可选，供业务认证器使用与审计）

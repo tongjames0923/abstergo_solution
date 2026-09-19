@@ -195,9 +195,9 @@ public class PushFrameProcessor {
     private void handleSubscribe(IConnectionSession session, PushFrame frame, boolean subscribe) {
         try {
             if (subscribe) {
-                topicRegistry.subscribe(session.getSessionId(), frame.getTopic());
+                topicRegistry.subscribe(session.getSessionId(), frame.getTopic().getValue());
             } else {
-                topicRegistry.unsubscribe(session.getSessionId(), frame.getTopic());
+                topicRegistry.unsubscribe(session.getSessionId(), frame.getTopic().getValue());
             }
         } catch (PushProtocolException error) {
             reject(session, PushErrorCodeEnum.TOPIC_INVALID, error.getMessage());
@@ -222,14 +222,15 @@ public class PushFrameProcessor {
             return;
         }
         if (CollUtil.isEmpty(upstreamListeners)) {
-            log.debug("上行DATA帧无监听器处理, sessionId:{}, topic:{}", session.getSessionId(), frame.getTopic());
+            log.debug("上行DATA帧无监听器处理, sessionId:{}, topic:{}", session.getSessionId(), frame.getTopic().getValue());
             return;
         }
         for (IUpstreamListener listener : upstreamListeners) {
             try {
                 listener.onUpstream(session, frame);
             } catch (Throwable error) {
-                log.warn("上行监听器处理异常, sessionId:{}, topic:{}", session.getSessionId(), frame.getTopic(), error);
+                log.warn("上行监听器处理异常, sessionId:{}, topic:{}", session.getSessionId(),
+                    frame.getTopic().getValue(), error);
             }
         }
     }

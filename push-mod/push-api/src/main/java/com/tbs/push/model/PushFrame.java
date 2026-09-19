@@ -36,9 +36,10 @@ public class PushFrame implements Serializable {
     private String messageId;
 
     /**
-     * 业务主题，DATA/SUBSCRIBE/UNSUBSCRIBE帧必填，控制帧可为空
+     * 业务主题，DATA/SUBSCRIBE/UNSUBSCRIBE帧必填，控制帧可为空；
+     * 类型化为{@link PushTopic}值对象，非空与长度约束由类型自身承载
      */
-    private String topic;
+    private PushTopic topic;
 
     /**
      * 发送方序列号，可选，用于接收端做乱序检测
