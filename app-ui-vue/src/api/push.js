@@ -50,7 +50,7 @@ export function pushSubscribe(sessionId, topic) {
 /**
  * 发布一条业务消息到指定 topic
  * <p>
- * 走公开测试端点（免认证），body 为 {topic, payload}；
+ * 走私有接口 /private/push/send（受登录网关鉴权，须携带 Authorization 令牌），body 为 {topic, payload}；
  * 返回 data 含 messageId（消息唯一标识）、topic（实际投递主题）、onlineCount（投递时在线会话数）。
  * 供管理侧发布封装（@/push/admin）复用。
  * </p>
@@ -61,7 +61,7 @@ export function pushSubscribe(sessionId, topic) {
  */
 export function pushSend(topic, payload) {
   return request({
-    url: '/public/push/send',
+    url: '/private/push/send',
     method: 'post',
     data: { topic, payload }
   }).then(res => res.data)

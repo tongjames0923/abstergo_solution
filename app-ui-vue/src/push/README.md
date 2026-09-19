@@ -38,7 +38,7 @@ UI 库依赖被隔离在默认渲染器内，可整体替换；业务可按消�
 }
 ```
 
-发送端使用 `POST /public/push/send`，`topic` 填订阅主题（支持 `*` 单级 / `#` 多级通配符）。
+发送端使用 `POST /private/push/send`（私有接口，须登录鉴权），`topic` 填订阅主题（支持 `*` 单级 / `#` 多级通配符）。
 
 ## 模块结构
 
@@ -204,7 +204,7 @@ registerRenderer((message, { onRead }) => { /* 自定义 UI */ })
 
 1. 登录后 Network：`POST /api/private/push/auth` 200 → `GET /api/private/push/sse/connect?push-ticket=...` 处于 pending（EventStream）。
 2. NavBar 状态点由「未连接」变「已连接」（i18n `push.status.*`）。
-3. `POST /public/push/send`（topic 为 `global.system.notify.{用户名}` 或其通配）→ 右上角弹窗 + 铃铛红点 + 消息中心历史。
+3. `POST /private/push/send`（topic 为 `global.system.notify.{用户名}` 或其通配）→ 右上角弹窗 + 铃铛红点 + 消息中心历史。
 4. 重复推送同 id 消息 → 不重复弹窗、不重复入列。
 5. 重启后端使 SSE 断开 → 状态变「重连中」，后端恢复后自动换票重连并重新订阅。
 6. 登出 → SSE 连接关闭，不再自动重连；再次登录自动重建。

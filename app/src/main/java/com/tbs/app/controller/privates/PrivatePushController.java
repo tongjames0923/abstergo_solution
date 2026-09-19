@@ -1,4 +1,4 @@
-package com.tbs.app.controller.publics;
+package com.tbs.app.controller.privates;
 
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.push.api.transport.IPushEndpoint;
@@ -20,11 +20,12 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 推送公开测试控制器
+ * 推送发布（私有）控制器
  * <p>
- * 公开访问（/public/**，免认证）的推送功能测试入口：
- * 向指定topic发布一条业务消息，由默认topic直配协调器投递给
- * 全部订阅了该topic的在线会话（全局广播语义）。
+ * 置于 /private/** 由项目认证体系统一保护（需登录鉴权），面向系统通知发布场景：
+ * 向指定 topic 发布一条业务消息，由默认 topic 直配协调器投递给
+ * 全部订阅了该 topic 的在线会话（全局广播语义）。
+ * 原 /public/push/send 公开测试入口已收敛至此私有接口，发送能力不再对外匿名开放。
  * </p>
  * <p>
  * 使用示例（完整链路）：
@@ -32,7 +33,7 @@ import java.util.Map;
  *     <li>POST /private/push/auth → 获取 ticket</li>
  *     <li>GET /private/push/sse/connect?push-ticket=xxx → 建立SSE流，收到hello帧（含sessionId）</li>
  *     <li>POST /private/push/sse/upload → 提交结构化SUBSCRIBE帧订阅目标topic</li>
- *     <li>POST /public/push/send → 订阅该topic的会话收到data帧</li>
+ *     <li>POST /private/push/send → 订阅该topic的会话收到data帧</li>
  * </ol>
  * </p>
  *
@@ -40,9 +41,9 @@ import java.util.Map;
  * @since 1.0.0
  */
 @RestController
-@RequestMapping("/public/push")
-@Tag(name = "推送公开测试控制器", description = "公开访问的推送功能测试接口：全局广播发送与在线会话查询")
-public class PublicPushController extends BaseController {
+@RequestMapping("/private/push")
+@Tag(name = "推送发布控制器", description = "私有访问（需登录鉴权）的系统通知发布接口：发送与在线会话查询")
+public class PrivatePushController extends BaseController {
 
     /**
      * 默认广播主题
@@ -62,7 +63,7 @@ public class PublicPushController extends BaseController {
     /**
      * 发送消息表单
      * <p>
-     * POST /public/push/send 的请求体，参数全部类型化：
+     * POST /private/push/send 的请求体，参数全部类型化：
      * <ul>
      *     <li>topic — {@link PushTopic}值对象，可选：非空且长度不超过128字符；
      *     缺省时使用全局广播主题 {@link #GLOBAL_TOPIC}</li>
@@ -124,10 +125,11 @@ public class PublicPushController extends BaseController {
     }
 
     /**
-     * 全局发送测试消息
+     * 发送系统通知消息
      * <p>
      * 将业务载荷发布到指定topic（缺省为全局广播主题global.broadcast），
      * 消息进入消息源后由分发器投递给全部订阅了该topic的在线会话。
+     * 接口位于 /private/**，须携带有效登录令牌（Authorization 头），匿名请求将被认证网关拦截。
      * </p>
      * <p>
      * 请求示例：{"topic": "global.broadcast", "payload": {"msg": "hello"}}；
@@ -138,7 +140,7 @@ public class PublicPushController extends BaseController {
      * @return 统一响应（data：messageId消息唯一标识、topic实际投递主题、onlineCount投递时在线会话数）
      */
     @PostMapping("/send")
-    @Operation(summary = "全局发送测试消息", description = "向指定topic（缺省global.broadcast）发布一条业务消息，投递给全部订阅该topic的在线会话")
+    @Operation(summary = "发送系统通知消息", description = "向指定topic（缺省global.broadcast）发布一条业务消息，投递给全部订阅该topic的在线会话；须登录鉴权")
     @ApiResponse(responseCode = "200", description = "发送成功，data含messageId/topic/onlineCount")
     @AjaxResponseType(Object.class)
     public AjaxResult send(@RequestBody SendForm form) {
@@ -155,16 +157,16 @@ public class PublicPushController extends BaseController {
      * 查询当前在线会话数量
      * <p>
      * 返回推送服务当前登记的全部在线会话数量（SSE与WebSocket会话统一计数），
-     * 可用于广播发送前确认有会话在线。
+     * 可用于发布前确认有会话在线。接口位于 /private/**，须登录鉴权。
      * </p>
      * <p>
-     * 请求示例：GET /public/push/online（无参数）。
+     * 请求示例：GET /private/push/online（无参数）。
      * </p>
      *
      * @return 统一响应（data：onlineCount当前在线会话数量）
      */
     @GetMapping("/online")
-    @Operation(summary = "查询在线会话数量", description = "返回推送服务当前登记的全部在线会话数量")
+    @Operation(summary = "查询在线会话数量", description = "返回推送服务当前登记的全部在线会话数量；须登录鉴权")
     @ApiResponse(responseCode = "200", description = "查询成功，data含onlineCount")
     @AjaxResponseType(Object.class)
     public AjaxResult online() {
@@ -178,7 +180,7 @@ public class PublicPushController extends BaseController {
      */
     @Override
     public String getBusinessName() {
-        return "推送公开测试";
+        return "推送发布";
     }
 
 }
