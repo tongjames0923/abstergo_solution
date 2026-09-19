@@ -1,5 +1,8 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.form.PushNotifyMessage;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.push.api.transport.IPushEndpoint;
 import com.tbs.push.model.PushTopic;
@@ -8,11 +11,7 @@ import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import java.io.Serializable;
@@ -23,8 +22,10 @@ import java.util.Map;
  * 推送发布（私有）控制器
  * <p>
  * 置于 /private/** 由项目认证体系统一保护（需登录鉴权），面向系统通知发布场景：
- * 向指定 topic 发布一条业务消息，由默认 topic 直配协调器投递给
+ * 向指定 topic 发布一条系统通知，由默认 topic 直配协调器投递给
  * 全部订阅了该 topic 的在线会话（全局广播语义）。
+ * 载荷为 {@link PushNotifyMessage} 强约束契约：契约校验在发布入口前置执行，非法载荷直接拒绝，
+ * 超出契约的发布需求由后续开发者自行扩展新端点。
  * 原 /public/push/send 公开测试入口已收敛至此私有接口，发送能力不再对外匿名开放。
  * </p>
  * <p>
@@ -67,10 +68,11 @@ public class PrivatePushController extends BaseController {
      * <ul>
      *     <li>topic — {@link PushTopic}值对象，可选：非空且长度不超过128字符；
      *     缺省时使用全局广播主题 {@link #GLOBAL_TOPIC}</li>
-     *     <li>payload — 业务载荷，可选：任意JSON对象（对象/数组/字符串等），
-     *     经编解码器序列化后作为DATA帧载荷下发</li>
+     *     <li>payload — {@link PushNotifyMessage}强约束契约载荷，必填：id 与 type 必填，
+     *     type/priority 白名单校验，timestamp/priority 缺省补齐，非法载荷发布时直接拒绝</li>
      * </ul>
-     * 请求示例：{"topic": "global.broadcast", "payload": {"msg": "hello"}}
+     * 请求示例：{"topic": "global.system.notify.zhangsan", "payload": {"id": "M1705123456789",
+     * "type": "notify", "title": "系统通知", "content": "您有一条新的审批待处理。", "priority": "normal"}}
      * </p>
      */
     public static class SendForm implements Serializable {
@@ -83,9 +85,9 @@ public class PrivatePushController extends BaseController {
         private PushTopic topic;
 
         /**
-         * 业务载荷，可选，任意JSON对象，经序列化后作为DATA帧载荷下发
+         * 系统通知载荷（强约束契约），必填
          */
-        private Object payload;
+        private PushNotifyMessage payload;
 
         /**
          * 获取业务主题
@@ -106,20 +108,20 @@ public class PrivatePushController extends BaseController {
         }
 
         /**
-         * 获取业务载荷
+         * 获取系统通知载荷
          *
-         * @return 业务载荷对象
+         * @return 强约束契约载荷对象
          */
-        public Object getPayload() {
+        public PushNotifyMessage getPayload() {
             return payload;
         }
 
         /**
-         * 设置业务载荷
+         * 设置系统通知载荷
          *
-         * @param payload 业务载荷对象
+         * @param payload 强约束契约载荷对象
          */
-        public void setPayload(Object payload) {
+        public void setPayload(PushNotifyMessage payload) {
             this.payload = payload;
         }
     }
@@ -127,25 +129,32 @@ public class PrivatePushController extends BaseController {
     /**
      * 发送系统通知消息
      * <p>
-     * 将业务载荷发布到指定topic（缺省为全局广播主题global.broadcast），
+     * 将系统通知载荷发布到指定topic（缺省为全局广播主题global.broadcast），
      * 消息进入消息源后由分发器投递给全部订阅了该topic的在线会话。
+     * 载荷为{@link PushNotifyMessage}强约束契约：id/type必填、type/priority白名单校验、
+     * timestamp/priority缺省补齐，非法载荷直接拒绝发布（i18n：push.notify.*）。
      * 接口位于 /private/**，须携带有效登录令牌（Authorization 头），匿名请求将被认证网关拦截。
      * </p>
      * <p>
-     * 请求示例：{"topic": "global.broadcast", "payload": {"msg": "hello"}}；
-     * 也可省略topic：{"payload": {"msg": "hello"}}。
+     * 请求示例：{"topic": "global.system.notify.zhangsan", "payload": {"id": "M1705123456789",
+     * "type": "notify", "title": "系统通知", "content": "您有一条新的审批待处理。", "priority": "normal"}}。
      * </p>
      *
-     * @param form 发送表单（topic可选，payload任意JSON）
+     * @param form 发送表单（topic可选，payload为强约束契约载荷）
      * @return 统一响应（data：messageId消息唯一标识、topic实际投递主题、onlineCount投递时在线会话数）
      */
     @PostMapping("/send")
-    @Operation(summary = "发送系统通知消息", description = "向指定topic（缺省global.broadcast）发布一条业务消息，投递给全部订阅该topic的在线会话；须登录鉴权")
+    @Operation(summary = "发送系统通知消息",
+        description = "向指定topic（缺省global.broadcast）发布一条系统通知；payload为强约束契约（id/type必填，type/priority白名单校验），非法载荷直接拒绝；须登录鉴权")
     @ApiResponse(responseCode = "200", description = "发送成功，data含messageId/topic/onlineCount")
     @AjaxResponseType(Object.class)
     public AjaxResult send(@RequestBody SendForm form) {
         PushTopic topic = form.getTopic() != null ? form.getTopic() : GLOBAL_TOPIC;
-        String messageId = pushEndpoint.publish(topic.getValue(), form.getPayload());
+        PushNotifyMessage message = form.getPayload();
+        AssertUtil.isTrue(message == null).i18n(PushNotifyMessage.I18N_PAYLOAD_REQUIRED)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        message.prepare();
+        String messageId = pushEndpoint.publish(topic.getValue(), message);
         Map<String, Object> data = new LinkedHashMap<>();
         data.put("messageId", messageId);
         data.put("topic", topic.getValue());
