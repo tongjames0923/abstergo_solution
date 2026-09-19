@@ -60,7 +60,7 @@
             :type="field.toggleable ? passwordType : field.type"
             :placeholder="$t(field.placeholderKey)"
             :name="field.key"
-            :tabindex="field.tabindex"
+            :tabindex="String(field.tabindex)"
             auto-complete="on"
             :prefix-icon="field.prefixIcon"
             size="medium"
@@ -104,7 +104,7 @@
               :title="$t(method.labelKey)"
               @click="startProvider(method)"
             >
-              <i :class="method.icon"/>
+              <i :class="method.icon" />
               <span>{{ $t(method.labelKey) }}</span>
             </button>
           </div>
@@ -125,13 +125,13 @@
 </template>
 
 <script>
-import {getRememberMe} from '@/utils/auth'
+import { getRememberMe } from '@/utils/auth'
 import settings from '@/settings'
-import {updateRouter} from '@/router'
+import { updateRouter } from '@/router'
 import LangSelect from '@/components/LangSelect'
-import {getGatewayVersion} from '@/api/system'
-import {getPrimaryProvider, getSecondaryProviders, getProviderById} from '@/login/registry'
-import {dispatchLoginCallback, readCallbackQuery} from '@/login/callback'
+import { getGatewayVersion } from '@/api/system'
+import { getPrimaryProvider, getSecondaryProviders, getProviderById } from '@/login/registry'
+import { dispatchLoginCallback, readCallbackQuery } from '@/login/callback'
 // 引入登录能力模块入口，确保内置 Provider 注册副作用执行
 import '@/login'
 
@@ -365,11 +365,11 @@ export default {
         // 确保路由更新完成后才跳转
         await this.$nextTick()
         // 登录后始终跳转到dashboard
-        this.$router.push({path: '/Welcome'})
+        this.$router.push({ path: '/Welcome' })
       } catch (error) {
         console.error('路由更新失败:', error)
         // 即使路由更新失败，也允许跳转到dashboard
-        this.$router.push({path: '/Welcome'})
+        this.$router.push({ path: '/Welcome' })
       }
     }
   }

@@ -871,6 +871,40 @@ export default {
     helpTip: 'Tip: When creating a version you can type a brand-new app key directly; other dropdown options come from registered app keys and support searchable filtering.'
   },
 
+  // Push Messages
+  push: {
+    defaultTitle: 'System Notification',
+    status: {
+      idle: 'Disconnected',
+      connecting: 'Connecting',
+      connected: 'Connected',
+      reconnecting: 'Reconnecting',
+      closed: 'Closed'
+    },
+    type: {
+      notify: 'Notice',
+      warning: 'Alert',
+      reminder: 'Reminder'
+    },
+    priority: {
+      low: 'Low',
+      normal: 'Normal',
+      high: 'High',
+      urgent: 'Urgent'
+    },
+    center: {
+      title: 'Message Center',
+      empty: 'No messages',
+      unread: 'Unread',
+      markAllRead: 'Mark all read',
+      clear: 'Clear'
+    },
+    time: {
+      justNow: 'Just now',
+      minutesAgo: 'min ago'
+    }
+  },
+
   // Network Request
   request: {
     networkError: 'Network connection failed, please check network settings',

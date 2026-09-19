@@ -20,6 +20,7 @@
     "core-js": "3.6.5",
     "echarts": "^6.0.0",
     "element-ui": "2.15.14",
+    "event-source-polyfill": "^1.0.31",
     "js-cookie": "2.2.0",
     "normalize.css": "7.0.0",
     "nprogress": "0.2.0",

@@ -871,6 +871,40 @@ export default {
     helpTip: '提示：新建版本时可直接输入新的应用标识；其余下拉选项来源于已登记的应用标识，支持搜索筛选。'
   },
 
+  // 推送消息
+  push: {
+    defaultTitle: '系统通知',
+    status: {
+      idle: '未连接',
+      connecting: '连接中',
+      connected: '已连接',
+      reconnecting: '重连中',
+      closed: '已关闭'
+    },
+    type: {
+      notify: '通知',
+      warning: '告警',
+      reminder: '提醒'
+    },
+    priority: {
+      low: '低',
+      normal: '普通',
+      high: '高',
+      urgent: '紧急'
+    },
+    center: {
+      title: '消息中心',
+      empty: '暂无消息',
+      unread: '未读',
+      markAllRead: '全部已读',
+      clear: '清空'
+    },
+    time: {
+      justNow: '刚刚',
+      minutesAgo: '分钟前'
+    }
+  },
+
   // 网络请求
   request: {
     networkError: '网络连接失败，请检查网络设置',

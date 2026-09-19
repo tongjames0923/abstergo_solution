@@ -66,17 +66,13 @@ const mutations = {
 const actions = {
   // user login
   async login({ commit }, userInfo) {
-    try {
-      const { username, password, rememberMe } = userInfo
-      const { data } = await login({ username: username.trim(), password: password })
-      commit('SET_TOKEN', data.token)
-      setRememberMe(rememberMe)
-      // 根据rememberMe选项设置Token存储方式
-      setToken(data.token, rememberMe)
-      return data
-    } catch (error) {
-      throw error
-    }
+    const { username, password, rememberMe } = userInfo
+    const { data } = await login({ username: username.trim(), password: password })
+    commit('SET_TOKEN', data.token)
+    setRememberMe(rememberMe)
+    // 根据rememberMe选项设置Token存储方式
+    setToken(data.token, rememberMe)
+    return data
   },
 
   /**
@@ -98,73 +94,71 @@ const actions = {
   },
 
   // get user info
-  async getInfo({ commit, state }) {
-    try {
-      const response = await getInfo()
-      const { data } = response
+  async getInfo({ commit, dispatch, state }) {
+    const response = await getInfo()
+    const { data } = response
 
-      if (!data) {
-        throw new Error('Verification failed, please Login again.')
+    if (!data) {
+      throw new Error('Verification failed, please Login again.')
+    }
+
+    const { nickName, userName, avatar, avaliableRoles, avaliableDepartments, accountStatus, accountStatusStr } = data
+
+    // 后端返回 List<SystemRoleGroupVO>，需拆分为权限组列表和展平的权限项列表
+    const roleGroups = avaliableRoles || []
+    const flatPermissions = []
+    roleGroups.forEach(vo => {
+      if (vo.permissions && Array.isArray(vo.permissions)) {
+        vo.permissions.forEach(perm => flatPermissions.push(perm))
       }
+    })
 
-      const { nickName, userName, avatar, avaliableRoles, avaliableDepartments, accountStatus, accountStatusStr } = data
+    commit('SET_NAME', nickName)
+    commit('SET_USER_NAME', userName)
+    commit('SET_AVATAR', avatar)
+    commit('SET_ROLES', flatPermissions)
+    commit('SET_ROLE_GROUPS', roleGroups)
+    commit('SET_DEPARTMENTS', avaliableDepartments || [])
+    commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
+    commit('SET_ACCOUNT_STATUS', accountStatus)
+    commit('SET_ACCOUNT_STATUS_STR', accountStatusStr || '')
 
-      // 后端返回 List<SystemRoleGroupVO>，需拆分为权限组列表和展平的权限项列表
-      const roleGroups = avaliableRoles || []
+    // 用户态就绪后启动推送连接（登录成功自动建连并订阅 per-user 主题）
+    // user 模块为 namespaced，跨模块分发必须显式 root 作用域，否则被解析为 user/push/... 而失效
+    dispatch('push/startConnection', null, { root: true })
+    return data
+  },
+
+  // 切换当前部门
+  async switchDepartment({ commit }, departmentId) {
+    await setCurrentDepartment(departmentId)
+    // 刷新用户信息以获取最新的 currentDepartment
+    const response = await getInfo()
+    const { data } = response
+    if (data) {
+      const roleGroups = data.avaliableRoles || []
       const flatPermissions = []
       roleGroups.forEach(vo => {
         if (vo.permissions && Array.isArray(vo.permissions)) {
           vo.permissions.forEach(perm => flatPermissions.push(perm))
         }
       })
-
-      commit('SET_NAME', nickName)
-      commit('SET_USER_NAME', userName)
-      commit('SET_AVATAR', avatar)
+      commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
+      commit('SET_DEPARTMENTS', data.avaliableDepartments || [])
       commit('SET_ROLES', flatPermissions)
       commit('SET_ROLE_GROUPS', roleGroups)
-      commit('SET_DEPARTMENTS', avaliableDepartments || [])
-      commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
-      commit('SET_ACCOUNT_STATUS', accountStatus)
-      commit('SET_ACCOUNT_STATUS_STR', accountStatusStr || '')
-      return data
-    } catch (error) {
-      throw error
-    }
-  },
-
-  // 切换当前部门
-  async switchDepartment({ commit }, departmentId) {
-    try {
-      await setCurrentDepartment(departmentId)
-      // 刷新用户信息以获取最新的 currentDepartment
-      const response = await getInfo()
-      const { data } = response
-      if (data) {
-        const roleGroups = data.avaliableRoles || []
-        const flatPermissions = []
-        roleGroups.forEach(vo => {
-          if (vo.permissions && Array.isArray(vo.permissions)) {
-            vo.permissions.forEach(perm => flatPermissions.push(perm))
-          }
-        })
-        commit('SET_CURRENT_DEPARTMENT', data.currentDepartment || null)
-        commit('SET_DEPARTMENTS', data.avaliableDepartments || [])
-        commit('SET_ROLES', flatPermissions)
-        commit('SET_ROLE_GROUPS', roleGroups)
-      }
-    } catch (error) {
-      throw error
     }
   },
 
   // user logout
-  async logout({ commit, state }) {
+  async logout({ commit, dispatch, state }) {
     try {
       await logout()
     } catch (error) {
       console.error('Logout API request failed:', error)
     } finally {
+      // 先关闭推送长连接，避免登出后继续占用会话（跨模块分发须显式 root 作用域）
+      dispatch('push/stopConnection', null, { root: true })
       removeToken() // must remove  token  first
       resetRouter()
       resetDynamicRoutesLoaded()
@@ -199,7 +193,7 @@ const actions = {
         _isRefreshRequest: true
       })
 
-      const { code, data } = response
+      const { data } = response
       setToken(data.token)
       commit('SET_TOKEN', data.token)
       setToken(data.token, getRememberMe())

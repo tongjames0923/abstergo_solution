@@ -6,6 +6,7 @@ import settings from './modules/settings'
 import user from './modules/user'
 import formConfigs from './modules/FormConfig'
 import routes from './modules/routes'
+import push from './modules/push'
 
 Vue.use(Vuex)
 
@@ -15,7 +16,8 @@ const store = new Vuex.Store({
     settings,
     user,
     formConfigs,
-    routes
+    routes,
+    push
   },
   getters
 })
