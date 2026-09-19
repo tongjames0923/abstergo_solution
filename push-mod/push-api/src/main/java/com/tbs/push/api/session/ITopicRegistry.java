@@ -36,8 +36,13 @@ public interface ITopicRegistry {
 
     /**
      * 查询订阅指定主题的全部会话标识
+     * <p>
+     * 支持通配符模糊匹配：topic可含{@code *}（匹配恰好一个分段）与
+     * {@code #}（匹配零个或多个分段，约定尾段）。含通配符时匹配所有命中的已订阅会话；
+     * 不含通配符时精确查找。订阅侧同样允许写入含通配符的topic（对称支持）。
+     * </p>
      *
-     * @param topic 主题
+     * @param topic 主题（可含通配符）
      * @return 会话标识集合，不为null
      */
     Set<String> findSessionIdsByTopic(String topic);

@@ -14,8 +14,10 @@ import java.util.Set;
  * topic直配投递协调器（默认实现）
  * <p>
  * "投递给谁"的默认决策实现：按消息topic在订阅注册表中匹配会话标识，
- * 再从会话注册表解析出会话实例。业务需要按元数据/会话属性做定向投递时，
- * 注册自定义IRouteCoordinator Bean覆盖本实现。
+ * 再从会话注册表解析出会话实例。topic支持通配符模糊匹配
+ * （{@code *}单级 / {@code #}多级，详见{@link com.tbs.push.util.TopicMatcher}），
+ * 故发布{@code global.broadcast.*}可命中订阅了{@code global.broadcast.user}等更具体主题的会话。
+ * 业务需要按元数据/会话属性做定向投递时，注册自定义IRouteCoordinator Bean覆盖本实现。
  * </p>
  *
  * @author abstergo
