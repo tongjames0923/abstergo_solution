@@ -905,6 +905,62 @@ export default {
     }
   },
 
+  // System Notification Publishing
+  notifyAdmin: {
+    title: 'System Notification Publishing',
+    subtitle: 'Deliver system notifications to all users or selected users instantly; online users receive them in the message center and popups in real time',
+    form: {
+      type: 'Type',
+      priority: 'Priority',
+      inputTitle: 'Title',
+      titlePlaceholder: 'Enter notification title',
+      content: 'Content',
+      contentPlaceholder: 'Enter notification content…',
+      url: 'Redirect Route',
+      urlPlaceholder: 'Optional, e.g. /approve/123',
+      scope: 'Audience',
+      scopeAll: 'All users',
+      scopeUsers: 'Selected users',
+      usersPlaceholder: 'Search by username and select recipients',
+      publish: 'Publish Now',
+      publishing: 'Publishing…'
+    },
+    preview: {
+      title: 'Live Preview',
+      badge: 'Preview',
+      empty: 'Fill in the form and see exactly what users will receive'
+    },
+    history: {
+      title: 'Publish History',
+      localTip: 'Records are kept in this browser only',
+      colTitle: 'Title',
+      colType: 'Type',
+      colScope: 'Audience',
+      colTime: 'Published At',
+      colReceipt: 'Receipt',
+      scopeAll: 'All users',
+      receiptText: '{delivered}/{total} · online {online}',
+      empty: 'No publish records',
+      remove: 'Remove',
+      clear: 'Clear All',
+      clearConfirm: 'Clear all local publish records?'
+    },
+    errors: {
+      titleRequired: 'Please enter the notification title',
+      titleTooLong: 'Title cannot exceed {max} characters',
+      contentRequired: 'Please enter the notification content',
+      contentTooLong: 'Content cannot exceed {max} characters',
+      usersEmpty: 'Please select at least one user',
+      invalid: 'Invalid form data, please check your input'
+    },
+    message: {
+      publishSuccess: 'Published: delivered {delivered}/{total}, online sessions {online}',
+      publishPartial: 'Partially delivered: {delivered} succeeded, {failed} failed ({targets})',
+      publishFailed: 'Publishing failed, please check the network and retry',
+      invalidForm: 'Form validation failed, please check your input'
+    }
+  },
+
   // Network Request
   request: {
     networkError: 'Network connection failed, please check network settings',

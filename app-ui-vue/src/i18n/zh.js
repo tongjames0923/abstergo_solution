@@ -905,6 +905,62 @@ export default {
     }
   },
 
+  // 系统通知发布
+  notifyAdmin: {
+    title: '系统通知发布',
+    subtitle: '面向全体或指定用户即时投递系统通知，在线用户将在消息中心与弹窗实时收到',
+    form: {
+      type: '通知类型',
+      priority: '优先级',
+      inputTitle: '标题',
+      titlePlaceholder: '请输入通知标题',
+      content: '正文内容',
+      contentPlaceholder: '请输入通知正文…',
+      url: '跳转路由',
+      urlPlaceholder: '可选，如 /approve/123',
+      scope: '发布范围',
+      scopeAll: '全体用户',
+      scopeUsers: '指定用户',
+      usersPlaceholder: '搜索用户名，选择要通知的用户',
+      publish: '立即发布',
+      publishing: '发布中…'
+    },
+    preview: {
+      title: '实时预览',
+      badge: '预览',
+      empty: '填写左侧表单，此处实时呈现用户收到的效果'
+    },
+    history: {
+      title: '发布历史',
+      localTip: '记录仅保存在本浏览器',
+      colTitle: '标题',
+      colType: '类型',
+      colScope: '范围',
+      colTime: '发布时间',
+      colReceipt: '送达回执',
+      scopeAll: '全体用户',
+      receiptText: '{delivered}/{total} · 在线 {online}',
+      empty: '暂无发布记录',
+      remove: '删除记录',
+      clear: '清空记录',
+      clearConfirm: '确定清空全部本地发布记录吗？'
+    },
+    errors: {
+      titleRequired: '请输入通知标题',
+      titleTooLong: '标题不能超过 {max} 字',
+      contentRequired: '请输入通知正文',
+      contentTooLong: '正文不能超过 {max} 字',
+      usersEmpty: '请至少选择一名用户',
+      invalid: '表单数据不合法，请检查填写'
+    },
+    message: {
+      publishSuccess: '发布成功：送达 {delivered}/{total}，在线会话 {online}',
+      publishPartial: '部分投递失败：成功 {delivered}，失败 {failed}（{targets}）',
+      publishFailed: '发布失败，请检查网络后重试',
+      invalidForm: '表单校验未通过，请检查填写'
+    }
+  },
+
   // 网络请求
   request: {
     networkError: '网络连接失败，请检查网络设置',

@@ -49,6 +49,7 @@ src/push/
 ├── renderer.js        # 渲染器注册表：registerRenderer/unregisterRenderer/notifyMessage（核心与 UI 解耦枢纽）
 ├── notify.js          # 默认渲染器：Element UI Notification 堆叠实现（唯一 element-ui 依赖点）
 ├── index.js           # 门面：initPush/subscribeTopics/registerMessageHandler/closePush 等统一出口
+├── admin.js           # 管理侧发布封装：表单校验/投递编排/本地发布历史（无组件依赖，供管理页面复用）
 └── README.md          # 本文档
 ```
 
@@ -113,6 +114,38 @@ notify.js ──> element-ui + push-message.js
 | unregisterRenderer | `unregisterRenderer(renderer)` | 注销渲染器 |
 | closePush | `closePush()` | 关闭连接并阻止重连 |
 | CONNECTION_STATUS | 常量对象 | 连接状态枚举 |
+
+## 管理侧发布封装（admin.js）
+
+面向管理界面的通知发布能力，全部为纯函数 + localStorage + api 层调用，不依赖任何组件：
+
+| API | 签名 | 说明 |
+|-----|------|------|
+| validateNotifyForm | `validateNotifyForm(form) => { valid, errors: [{field, code}] }` | 结构化校验；code: required/tooLong/invalid/empty，文案由调用方映射 i18n |
+| publishNotify | `async publishNotify(form) => { ok, summary, results, record }` | 组装契约消息并按范围投递：全体走 `global.system.notify.*` 通配单发；指定用户逐人 `global.system.notify.{username}`（allSettled 语义，单条失败不中断）；完成后写入本地历史 |
+| buildNotifyMessage | `buildNotifyMessage(form) => payload` | 组装符合消息契约的载荷（id/timestamp 自动生成，sender=admin） |
+| getPublishHistory / addHistoryRecord / removeHistoryRecord / clearHistory | — | 本地发布历史（key `PUSH_NOTIFY_HISTORY`，上限 50 条滚动淘汰，读写均 try-catch 容错） |
+| NOTIFY_FORM_LIMITS / ALL_SCOPE_TOPIC | 常量 | 标题 50 / 正文 500 长度上限；全体通配主题 |
+
+接入示例（任意管理模块）：
+
+```js
+import { publishNotify, validateNotifyForm } from '@/push/admin'
+
+const check = validateNotifyForm(form)
+if (!check.valid) {
+  // 按 check.errors[{field, code}] 映射提示文案
+  return
+}
+const result = await publishNotify(form)
+// result.summary: { total, delivered, failed }
+// result.results: [{ target, topic, ok, messageId?, onlineCount?, error? }]
+// result.record: 已写入本地历史的记录
+```
+
+配套管理页面：`src/views/push/notify-admin/index.vue`（发布表单 + 实时预览 + 本地历史），
+经动态路由接入（菜单 component 填 `push/notify-admin/index`，在系统「路由管理」界面录入）。
+使用该页面搜索指定用户需具备后端 `API.QUERY.USER` 权限。
 
 ## 扩展指南
 

@@ -48,6 +48,26 @@ export function pushSubscribe(sessionId, topic) {
 }
 
 /**
+ * 发布一条业务消息到指定 topic
+ * <p>
+ * 走公开测试端点（免认证），body 为 {topic, payload}；
+ * 返回 data 含 messageId（消息唯一标识）、topic（实际投递主题）、onlineCount（投递时在线会话数）。
+ * 供管理侧发布封装（@/push/admin）复用。
+ * </p>
+ *
+ * @param {string} topic 投递主题（支持 * 单级 / # 多级通配符）
+ * @param {Object} payload 业务载荷（须符合 push-message.js 消息契约，否则接收端容错丢弃）
+ * @returns {Promise<Object>} data: { messageId, topic, onlineCount }
+ */
+export function pushSend(topic, payload) {
+  return request({
+    url: '/public/push/send',
+    method: 'post',
+    data: { topic, payload }
+  }).then(res => res.data)
+}
+
+/**
  * 上行退订帧：取消对指定 topic 的接收意愿
  *
  * @param {string} sessionId 握手确认帧下发的会话标识
