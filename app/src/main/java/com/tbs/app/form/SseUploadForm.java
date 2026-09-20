@@ -1,4 +1,4 @@
-package com.tbs.push.sse.controller;
+package com.tbs.app.form;
 
 import com.tbs.push.model.PushFrame;
 import com.tbs.push.model.PushSessionId;

@@ -1,4 +1,4 @@
-package com.tbs.app.controller.privates;
+package com.tbs.app.controller.privates.version;
 
 import com.tbs.app.service.version.IAppPackageService;
 import com.tbs.app.web.AbstractCrudController;

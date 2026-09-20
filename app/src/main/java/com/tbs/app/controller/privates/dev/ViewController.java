@@ -1,4 +1,4 @@
-package com.tbs.app.controller.privates;
+package com.tbs.app.controller.privates.dev;
 
 import com.tbs.app.config.property.GatewayProperty;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;

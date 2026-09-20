@@ -1,4 +1,4 @@
-package com.tbs.app.controller.privates;
+package com.tbs.app.controller.privates.admin;
 
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.vo.RemoteUserInfoVO;

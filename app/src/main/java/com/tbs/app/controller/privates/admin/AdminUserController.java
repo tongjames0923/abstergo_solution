@@ -1,4 +1,4 @@
-package com.tbs.app.controller.privates;
+package com.tbs.app.controller.privates.admin;
 
 
 import com.tbs.app.form.DisableTokenForm;

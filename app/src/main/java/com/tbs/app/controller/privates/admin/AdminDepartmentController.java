@@ -1,4 +1,4 @@
-package com.tbs.app.controller.privates;
+package com.tbs.app.controller.privates.admin;
 
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
