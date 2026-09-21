@@ -1,7 +1,7 @@
 package com.tbs.push.api.frame;
 
-import com.tbs.push.model.PushFrame;
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.frame.PushFrame;
+import com.tbs.push.model.message.PushMessage;
 
 /**
  * 推送协议编解码器SPI

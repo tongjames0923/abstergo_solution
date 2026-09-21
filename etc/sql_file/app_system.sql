@@ -3709,3 +3709,60 @@ CREATE TABLE `oss_download_code` (
   KEY `idx_flag` (`flag`) USING BTREE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='OSS公开下载码表';
 
+-- ----------------------------
+-- Table structure for push_message
+-- 推送业务消息主表（不可变；保留期外由业务方物理删除，无逻辑删除标志）
+-- 约束原则：无外键/唯一键/组合主键，业务完整性全部在应用层保证
+-- ----------------------------
+CREATE TABLE `push_message` (
+  `id` bigint NOT NULL COMMENT '主键（即业务消息标识，DB自增生成）',
+  `topic` varchar(128) NOT NULL COMMENT '业务主题',
+  `msg_type` varchar(32) NOT NULL COMMENT '消息类型（notify/warning/reminder，可字典驱动扩展）',
+  `title` varchar(255) DEFAULT NULL COMMENT '标题',
+  `content` text COMMENT '正文',
+  `priority` varchar(16) NOT NULL COMMENT '优先级（normal/high/urgent，缺省normal由应用层填充）',
+  `sender` varchar(64) DEFAULT NULL COMMENT '发送者标识',
+  `url` varchar(512) DEFAULT NULL COMMENT '点击跳转地址',
+  `ext_info` text COMMENT '扩展信息（JSON，业务自定义字段，避免频繁DDL）',
+  `create_time` datetime(6) NOT NULL COMMENT '创建时间',
+  `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_create_time` (`create_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='推送业务消息主表';
+
+-- ----------------------------
+-- Table structure for push_message_receiver
+-- 推送消息接收人表（纯投递事实，append-only，物理删除）
+-- ----------------------------
+CREATE TABLE `push_message_receiver` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `message_id` bigint NOT NULL COMMENT '消息ID（push_message.id）',
+  `receiver` bigint NOT NULL COMMENT '接收用户ID',
+  `create_time` datetime(6) NOT NULL COMMENT '创建时间',
+  `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_receiver` (`receiver`) USING BTREE,
+  KEY `idx_create_time` (`create_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='推送消息接收人表';
+
+-- ----------------------------
+-- Table structure for push_message_operation_log
+-- 消息全链路操作日志（SEND/READ/CLICK 等生命周期事件流水，append-only，物理删除）
+-- 已读状态由存在 READ 类型记录派生，非列状态
+-- ----------------------------
+CREATE TABLE `push_message_operation_log` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `message_id` bigint NOT NULL COMMENT '消息ID',
+  `operator` bigint DEFAULT NULL COMMENT '操作人（系统/服务发起时可空，身份进ext_info）',
+  `op_type` varchar(32) NOT NULL COMMENT '操作类型：SEND/READ/CLICK（可字典驱动扩展）',
+  `op_source` varchar(32) DEFAULT NULL COMMENT '发起来源通道：http/rpc/job/system',
+  `op_time` datetime(6) NOT NULL COMMENT '操作时间',
+  `ext_info` text COMMENT '操作上下文扩展（服务名、调用方标识、点击位置等）',
+  `create_time` datetime(6) NOT NULL COMMENT '创建时间',
+  `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  KEY `idx_operator_msg` (`operator`, `message_id`) USING BTREE,
+  KEY `idx_message` (`message_id`) USING BTREE,
+  KEY `idx_op_time` (`op_time`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='消息全链路操作日志表';
+

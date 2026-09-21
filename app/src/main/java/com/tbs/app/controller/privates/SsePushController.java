@@ -1,10 +1,10 @@
 package com.tbs.app.controller.privates;
 
+import com.tbs.app.form.SseUploadForm;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.push.constants.PushFrameConstants;
-import com.tbs.push.model.PushTicket;
+import com.tbs.push.model.auth.PushTicket;
 import com.tbs.push.sse.adapter.SseTransportAdapter;
-import com.tbs.app.form.SseUploadForm;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.result.annotation.NoWrapped;

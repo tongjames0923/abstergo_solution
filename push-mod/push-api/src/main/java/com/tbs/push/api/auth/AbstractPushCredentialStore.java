@@ -3,7 +3,7 @@ package com.tbs.push.api.auth;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.push.constants.PushI18nConstant;
-import com.tbs.push.model.PushCredential;
+import com.tbs.push.model.auth.PushCredential;
 
 /**
  * 连接凭证存储基类

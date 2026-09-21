@@ -1,6 +1,6 @@
 package com.tbs.push.api.store;
 
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.message.PushMessage;
 
 import java.util.List;
 

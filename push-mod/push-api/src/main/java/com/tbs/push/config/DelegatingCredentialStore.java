@@ -1,7 +1,7 @@
 package com.tbs.push.config;
 
 import com.tbs.push.api.auth.IPushCredentialStore;
-import com.tbs.push.model.PushCredential;
+import com.tbs.push.model.auth.PushCredential;
 import org.springframework.beans.factory.ObjectProvider;
 
 /**

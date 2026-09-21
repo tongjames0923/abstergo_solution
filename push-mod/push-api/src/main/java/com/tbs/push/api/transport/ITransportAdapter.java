@@ -1,6 +1,6 @@
 package com.tbs.push.api.transport;
 
-import com.tbs.push.model.TransportCapability;
+import com.tbs.push.model.session.TransportCapability;
 
 /**
  * 传输适配器契约

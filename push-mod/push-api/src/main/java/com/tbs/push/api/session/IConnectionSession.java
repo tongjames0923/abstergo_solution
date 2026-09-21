@@ -1,7 +1,7 @@
 package com.tbs.push.api.session;
 
-import com.tbs.push.model.ConnectionStateEnum;
-import com.tbs.push.model.PushFrame;
+import com.tbs.push.model.frame.PushFrame;
+import com.tbs.push.model.session.ConnectionStateEnum;
 
 /**
  * 统一连接会话契约

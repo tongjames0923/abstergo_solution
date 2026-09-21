@@ -1,8 +1,7 @@
 package com.tbs.push.config;
 
 import com.tbs.push.api.store.IPushMessageStore;
-import com.tbs.push.impl.InMemoryPushMessageStore;
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.message.PushMessage;
 import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.List;

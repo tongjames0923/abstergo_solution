@@ -1,10 +1,10 @@
 package com.tbs.app.controller.privates;
 
 import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.push.impl.PushCredentialService;
 import com.tbs.push.constants.PushFrameConstants;
-import com.tbs.push.model.PushAuthForm;
-import com.tbs.push.model.PushCredential;
+import com.tbs.push.impl.auth.PushCredentialService;
+import com.tbs.push.model.auth.PushAuthForm;
+import com.tbs.push.model.auth.PushCredential;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
@@ -47,7 +47,7 @@ public class SsePushAuthController extends BaseController {
     /**
      * 连接认证并签发一次性凭证
      * <p>
-     * 认证表单经协议层凭证服务处理：token（{@link com.tbs.push.model.PushAuthToken}值对象，
+     * 认证表单经协议层凭证服务处理：token（{@link com.tbs.push.model.auth.PushAuthToken}值对象，
      * 必填非空，内容由业务认证器解释）交由IPushAuthenticator SPI校验，通过后预分配sessionId、
      * 签发一次性ticket（TTL默认60秒）入存储。
      * </p>

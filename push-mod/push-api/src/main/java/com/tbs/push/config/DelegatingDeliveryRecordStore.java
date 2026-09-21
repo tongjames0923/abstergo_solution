@@ -1,8 +1,7 @@
 package com.tbs.push.config;
 
 import com.tbs.push.api.record.IDeliveryRecordStore;
-import com.tbs.push.impl.InMemoryDeliveryRecordStore;
-import com.tbs.push.model.DeliveryRecord;
+import com.tbs.push.model.message.DeliveryRecord;
 import org.springframework.beans.factory.ObjectProvider;
 
 import java.util.List;

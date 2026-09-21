@@ -1,7 +1,7 @@
 package com.tbs.push.api.auth;
 
-import com.tbs.push.model.PushAuthForm;
-import com.tbs.push.model.PushAuthResult;
+import com.tbs.push.model.auth.PushAuthForm;
+import com.tbs.push.model.auth.PushAuthResult;
 
 /**
  * 连接认证器 SPI

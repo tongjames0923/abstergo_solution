@@ -9,9 +9,9 @@ import com.tbs.push.api.record.IDeliveryRecordStore;
 import com.tbs.push.api.session.IConnectionSession;
 import com.tbs.push.api.store.IPushMessageStore;
 import com.tbs.push.constants.PushI18nConstant;
-import com.tbs.push.model.DeliveryRecord;
-import com.tbs.push.model.DeliveryResultEnum;
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.message.DeliveryRecord;
+import com.tbs.push.model.message.DeliveryResultEnum;
+import com.tbs.push.model.message.PushMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

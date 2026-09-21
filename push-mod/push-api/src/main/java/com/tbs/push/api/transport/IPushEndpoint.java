@@ -1,6 +1,6 @@
 package com.tbs.push.api.transport;
 
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.message.PushMessage;
 
 import java.util.Map;
 
@@ -42,6 +42,18 @@ public interface IPushEndpoint {
      * @return 消息唯一标识
      */
     String publish(PushMessage message);
+
+    /**
+     * 发布信令消息（SIGNAL帧，通知目标频道存在新消息可拉取）
+     * <p>
+     * 信令为轻量通知：payload允许为空且不承载业务内容，送达与否不影响业务成功语义 （消息持久化即成功），离线未订阅场景由前端建连/重连后主动拉取兜底。
+     * </p>
+     *
+     * @param topic   目标频道主题
+     * @param payload 信令载荷文本，允许为null
+     * @return 帧消息唯一标识
+     */
+    String publishSignal(String topic, String payload);
 
     /**
      * 统计全部在线会话数量

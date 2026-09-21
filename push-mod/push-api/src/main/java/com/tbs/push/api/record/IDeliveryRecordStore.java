@@ -1,6 +1,6 @@
 package com.tbs.push.api.record;
 
-import com.tbs.push.model.DeliveryRecord;
+import com.tbs.push.model.message.DeliveryRecord;
 
 import java.util.List;
 

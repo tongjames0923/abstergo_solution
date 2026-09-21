@@ -1,6 +1,6 @@
 package com.tbs.push.api.dispatch;
 
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.message.PushMessage;
 
 /**
  * 推送消息分发器契约

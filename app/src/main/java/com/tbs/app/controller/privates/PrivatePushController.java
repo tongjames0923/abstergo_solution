@@ -5,7 +5,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.push.api.transport.IPushEndpoint;
-import com.tbs.push.model.PushTopic;
+import com.tbs.push.model.frame.PushTopic;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;

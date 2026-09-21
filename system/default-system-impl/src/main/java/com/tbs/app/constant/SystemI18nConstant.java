@@ -230,4 +230,37 @@ public final class SystemI18nConstant {
 
     /** 标识位（flag）非法提示：标识位非法 */
     public static final String INVALID_FLAG = "invalid.flag";
+
+    /* ===================== 推送消息中心 ===================== */
+
+    /** 发送表单为空校验提示：发送表单不能为空 */
+    public static final String PUSH_NOTIFY_FORM_REQUIRED = "push.notify.form.required";
+    /** 消息类型为空校验提示：消息类型不能为空 */
+    public static final String PUSH_NOTIFY_TYPE_REQUIRED = "push.notify.type.required";
+    /** 消息类型长度超限提示：消息类型长度超限：{0} */
+    public static final String PUSH_NOTIFY_TYPE_TOO_LONG = "push.notify.type.too.long";
+    /** 标题长度超限提示：标题长度不能超过 {0} 字符 */
+    public static final String PUSH_NOTIFY_TITLE_TOO_LONG = "push.notify.title.too.long";
+    /** 优先级非法提示：非法的优先级：{0} */
+    public static final String PUSH_NOTIFY_PRIORITY_INVALID = "push.notify.priority.invalid";
+    /** 业务主题长度超限提示：业务主题长度超限：{0} */
+    public static final String PUSH_NOTIFY_TOPIC_TOO_LONG = "push.notify.topic.too.long";
+    /** 跳转地址长度超限提示：跳转地址长度超限：{0} */
+    public static final String PUSH_NOTIFY_URL_TOO_LONG = "push.notify.url.too.long";
+    /** 已读消息ID列表为空校验提示：消息ID列表不能为空 */
+    public static final String PUSH_MESSAGE_READ_IDS_REQUIRED = "push.message.read.ids.required";
+    /** 已读回传批量超限提示：单次已读回传消息数不能超过 {0} */
+    public static final String PUSH_MESSAGE_READ_IDS_TOO_MANY = "push.message.read.ids.too.many";
+    /** 操作回传消息ID为空校验提示：消息ID不能为空 */
+    public static final String PUSH_MESSAGE_OP_MESSAGE_REQUIRED = "push.message.op.message.required";
+    /** 操作类型非法提示：非法的操作类型：{0} */
+    public static final String PUSH_MESSAGE_OP_TYPE_INVALID = "push.message.op.type.invalid";
+    /** 消息不存在提示：消息不存在：{0} */
+    public static final String PUSH_MESSAGE_NOT_EXISTS = "push.message.not.exists";
+    /** 当前用户未找到提示：当前用户未找到 */
+    public static final String PUSH_MESSAGE_USER_NOT_FOUND = "push.message.user.not.found";
+    /** 分页条数非法提示：每页条数非法：{0} */
+    public static final String PUSH_MESSAGE_QUERY_LIMIT_INVALID = "push.message.query.limit.invalid";
+    /** 读状态筛选标记非法提示：读状态筛选标记非法：{0} */
+    public static final String PUSH_MESSAGE_QUERY_FLAG_INVALID = "push.message.query.flag.invalid";
 }

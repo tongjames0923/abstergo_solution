@@ -1,7 +1,7 @@
 package com.tbs.push.api.transport;
 
-import com.tbs.push.model.PushFrame;
 import com.tbs.push.api.session.IConnectionSession;
+import com.tbs.push.model.frame.PushFrame;
 
 /**
  * 上行消息监听器SPI

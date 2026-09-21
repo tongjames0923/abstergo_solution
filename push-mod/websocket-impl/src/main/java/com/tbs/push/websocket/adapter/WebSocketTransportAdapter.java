@@ -2,7 +2,7 @@ package com.tbs.push.websocket.adapter;
 
 import com.tbs.push.api.transport.ITransportAdapter;
 import com.tbs.push.constants.PushFrameConstants;
-import com.tbs.push.model.TransportCapability;
+import com.tbs.push.model.session.TransportCapability;
 import com.tbs.push.websocket.handler.PushWebSocketHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

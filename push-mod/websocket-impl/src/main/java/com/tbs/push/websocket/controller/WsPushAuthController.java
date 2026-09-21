@@ -1,9 +1,9 @@
 package com.tbs.push.websocket.controller;
 
-import com.tbs.push.impl.PushCredentialService;
 import com.tbs.push.constants.PushFrameConstants;
-import com.tbs.push.model.PushAuthForm;
-import com.tbs.push.model.PushCredential;
+import com.tbs.push.impl.auth.PushCredentialService;
+import com.tbs.push.model.auth.PushAuthForm;
+import com.tbs.push.model.auth.PushCredential;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import org.springframework.web.bind.annotation.PostMapping;

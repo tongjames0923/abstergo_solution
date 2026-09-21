@@ -1,6 +1,6 @@
 package com.tbs.push.api.auth;
 
-import com.tbs.push.model.PushCredential;
+import com.tbs.push.model.auth.PushCredential;
 
 /**
  * 连接凭证存储契约

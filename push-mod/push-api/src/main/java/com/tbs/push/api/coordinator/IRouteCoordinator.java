@@ -1,7 +1,7 @@
 package com.tbs.push.api.coordinator;
 
 import com.tbs.push.api.session.IConnectionSession;
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.message.PushMessage;
 
 import java.util.List;
 

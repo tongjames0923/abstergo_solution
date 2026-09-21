@@ -2,8 +2,8 @@ package com.tbs.push.websocket.session;
 
 import com.tbs.push.api.frame.IPushCodec;
 import com.tbs.push.api.session.IConnectionSession;
-import com.tbs.push.model.ConnectionStateEnum;
-import com.tbs.push.model.PushFrame;
+import com.tbs.push.model.frame.PushFrame;
+import com.tbs.push.model.session.ConnectionStateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.socket.CloseStatus;

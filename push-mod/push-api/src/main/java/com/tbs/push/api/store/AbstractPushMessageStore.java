@@ -3,7 +3,7 @@ package com.tbs.push.api.store;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.push.constants.PushI18nConstant;
-import com.tbs.push.model.PushMessage;
+import com.tbs.push.model.message.PushMessage;
 
 import java.util.Collections;
 import java.util.List;

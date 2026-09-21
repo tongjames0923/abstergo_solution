@@ -3,7 +3,7 @@ package com.tbs.push.api.record;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.push.constants.PushI18nConstant;
-import com.tbs.push.model.DeliveryRecord;
+import com.tbs.push.model.message.DeliveryRecord;
 
 import java.util.Collections;
 import java.util.List;
