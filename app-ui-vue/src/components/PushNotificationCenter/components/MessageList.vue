@@ -58,8 +58,8 @@ import MessageCard from './MessageCard'
  * <p>
  * 渲染按今天/昨天/更早分组的消息流，动效由两层 transition-group 编排：
  * 外层负责分组（section）的进出与位移，内层负责消息卡（appear 首屏错峰浮现、
- * 筛选切换淡出、新消息插入时的位移动画）。分组标题 sticky 吸顶并带毛玻璃底，
- * 卡片滚动时从其下方穿行而不穿透。
+ * 筛选切换淡出、新消息插入时的位移动画）。分组标题 sticky 吸顶，实色底 +
+ * 发丝分隔线，卡片滚动时从其下方穿行而不穿透。
  * 滚动通道：近底部（阈值 80px、节流 200ms）触发 load-more，与底部按钮互为兜底；
  * store 层 loadingMore 防重入保证幂等。子项事件原样上抛，不掺业务逻辑。
  * </p>
@@ -165,7 +165,9 @@ export default {
   position: relative;
 }
 
-/* 时间分组吸顶标题：小号大写字距标签 + 细线延伸，毛玻璃底防穿透 */
+/* 时间分组吸顶标题：与抽屉底色一致的实色横条 + 底部发丝线。
+   不用半透明/毛玻璃底——它们与渐变背景叠加会产生矩形色差；
+   实色 + 发丝线最简单稳定，卡片从下方穿行被完全遮住。 */
 .pn-group__head {
   position: sticky;
   top: 0;
@@ -179,9 +181,8 @@ export default {
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #a1a1a6;
-  background: rgba(246, 247, 250, 0.88);
-  backdrop-filter: blur(8px) saturate(1.6);
-  -webkit-backdrop-filter: blur(8px) saturate(1.6);
+  background: #f6f7fa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
 
   &::after {
     content: '';
@@ -317,9 +318,6 @@ export default {
 
   .pn-group__head {
     padding: 7px 2px;
-    background: rgba(246, 247, 250, 0.96);
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
   }
 
   .pn-more-btn {
