@@ -18,7 +18,6 @@ import com.tbs.push.config.property.PushProperty;
 import com.tbs.push.impl.auth.NoopAuthenticator;
 import com.tbs.push.impl.auth.PushCredentialService;
 import com.tbs.push.impl.endpoint.*;
-import com.tbs.push.impl.intercept.ConnectionInterceptorChain;
 import com.tbs.push.impl.protocol.JsonPushCodec;
 import com.tbs.push.impl.protocol.PushFrameProcessor;
 import com.tbs.push.impl.session.DefaultSessionRegistry;
@@ -140,21 +139,6 @@ public class PushSupportConfig {
     @ConditionalOnMissingBean(ITopicRegistry.class)
     public ITopicRegistry topicRegistry() {
         return new DefaultTopicRegistry();
-    }
-
-    /**
-     * 连接拦截器链（默认无校验）
-     * <p>
-     * 协议层默认不集成安全验证：容器无拦截器实现时本链退化为无操作。
-     * </p>
-     *
-     * @param provider 拦截器实现提供者
-     * @return 连接拦截器
-     */
-    @Bean
-    @ConditionalOnMissingBean(IConnectionInterceptor.class)
-    public IConnectionInterceptor connectionInterceptor(ObjectProvider<IConnectionInterceptor> provider) {
-        return new ConnectionInterceptorChain(provider);
     }
 
     /**

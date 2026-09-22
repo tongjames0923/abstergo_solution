@@ -19,6 +19,7 @@ import com.tbs.push.model.session.TransportCapability;
 import com.tbs.push.sse.session.SseSessionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import java.util.Set;
@@ -62,7 +63,7 @@ public class SseTransportAdapter implements ITransportAdapter {
     /**
      * 连接拦截器链
      */
-    private final IConnectionInterceptor interceptorChain;
+    private final ObjectProvider<IConnectionInterceptor> interceptorChain;
 
     /**
      * 协议帧处理器
@@ -90,7 +91,7 @@ public class SseTransportAdapter implements ITransportAdapter {
      * @param credentialService 连接凭证服务
      */
     public SseTransportAdapter(IPushCodec codec, ISessionRegistry sessionRegistry, ITopicRegistry topicRegistry,
-        IConnectionInterceptor interceptorChain, PushFrameProcessor frameProcessor,
+        ObjectProvider<IConnectionInterceptor> interceptorChain, PushFrameProcessor frameProcessor,
         PushCredentialService credentialService) {
         this.codec = codec;
         this.sessionRegistry = sessionRegistry;
@@ -142,7 +143,14 @@ public class SseTransportAdapter implements ITransportAdapter {
         emitter.onTimeout(() -> cleanup(wrapper, "sse-timeout"));
         emitter.onError(error -> cleanup(wrapper, "sse-error"));
         sessionRegistry.register(wrapper);
-        interceptorChain.onConnect(wrapper);
+        for (IConnectionInterceptor interceptor : interceptorChain) {
+            try {
+                interceptor.onConnect(wrapper);
+            } catch (Exception e) {
+                log.error("连接拦截器[{}]执行失败", interceptor.getClass().getSimpleName(), e);
+            }
+        }
+
         wrapper.markConnected();
         frameProcessor.sendHelloAck(wrapper);
         log.info("SSE连接建立, sessionId:{}", wrapper.getSessionId());
@@ -239,7 +247,20 @@ public class SseTransportAdapter implements ITransportAdapter {
         sessions.remove(wrapper);
         sessionRegistry.unregister(wrapper.getSessionId());
         topicRegistry.clearSession(wrapper.getSessionId());
-        interceptorChain.onDisconnect(wrapper, reason);
+
+        try {
+            for (IConnectionInterceptor interceptor : interceptorChain) {
+                try {
+                    interceptor.onDisconnect(wrapper, reason);
+                } catch (Exception e) {
+                    log.error("连接拦截器[{}]执行失败", interceptor.getClass().getSimpleName(), e);
+                }
+            }
+        } catch (Exception e) {
+            log.error("连接拦截器执行失败", e);
+        }
+
+
         log.info("SSE连接关闭, sessionId:{}, reason:{}", wrapper.getSessionId(), reason);
     }
 

@@ -7,6 +7,7 @@ import com.tbs.push.api.session.ITopicRegistry;
 import com.tbs.push.impl.auth.PushCredentialService;
 import com.tbs.push.impl.protocol.PushFrameProcessor;
 import com.tbs.push.sse.adapter.SseTransportAdapter;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,7 +40,8 @@ public class SsePushConfig {
     @Bean
     @ConditionalOnMissingBean(SseTransportAdapter.class)
     public SseTransportAdapter sseTransportAdapter(IPushCodec codec, ISessionRegistry sessionRegistry,
-        ITopicRegistry topicRegistry, IConnectionInterceptor interceptorChain, PushFrameProcessor frameProcessor,
+        ITopicRegistry topicRegistry, ObjectProvider<IConnectionInterceptor> interceptorChain,
+        PushFrameProcessor frameProcessor,
         PushCredentialService credentialService) {
         return new SseTransportAdapter(codec, sessionRegistry, topicRegistry, interceptorChain, frameProcessor,
             credentialService);
