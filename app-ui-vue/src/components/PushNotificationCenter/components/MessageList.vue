@@ -3,37 +3,50 @@
     class="pn-list"
     @scroll.passive="handleScroll"
   >
-    <section
-      v-for="group in groups"
-      :key="group.key"
-      class="pn-group"
+    <transition-group
+      name="pn-group"
+      tag="div"
+      class="pn-groups"
     >
-      <header class="pn-group__head">{{ $t('push.center.group.' + group.key) }}</header>
-      <ul class="pn-group__list">
-        <message-card
-          v-for="(message, index) in group.items"
-          :key="message.id"
-          :message="message"
-          :index="index"
-          @click="$emit('item-click', $event)"
-          @mark-read="$emit('item-mark-read', $event)"
-        />
-      </ul>
-    </section>
-    <div
-      v-if="hasMore"
-      class="pn-load-more"
-    >
-      <button
-        type="button"
-        class="pn-more-btn"
-        :disabled="loadingMore"
-        @click="$emit('load-more')"
+      <section
+        v-for="group in groups"
+        :key="group.key"
+        class="pn-group"
       >
-        <i v-if="loadingMore" class="el-icon-loading" />
-        {{ loadingMore ? $t('push.center.loading') : $t('push.center.loadMore') }}
-      </button>
-    </div>
+        <header class="pn-group__head">{{ $t('push.center.group.' + group.key) }}</header>
+        <transition-group
+          name="pn-list"
+          tag="ul"
+          class="pn-group__list"
+          appear
+        >
+          <message-card
+            v-for="(message, index) in group.items"
+            :key="message.id"
+            :message="message"
+            :index="index"
+            @click="$emit('item-click', $event)"
+            @mark-read="$emit('item-mark-read', $event)"
+          />
+        </transition-group>
+      </section>
+    </transition-group>
+    <transition name="pn-more">
+      <div
+        v-if="hasMore"
+        class="pn-load-more"
+      >
+        <button
+          type="button"
+          class="pn-more-btn"
+          :disabled="loadingMore"
+          @click="$emit('load-more')"
+        >
+          <i v-if="loadingMore" class="el-icon-loading" />
+          {{ loadingMore ? $t('push.center.loading') : $t('push.center.loadMore') }}
+        </button>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -43,9 +56,12 @@ import MessageCard from './MessageCard'
 /**
  * 消息中心滚动列表
  * <p>
- * 渲染按今天/昨天/更早分组的消息流（分组标题吸顶），承载“加载更多”双通道中的
- * 滚动通道：滚动近底部（阈值 80px、节流 200ms）触发 load-more，与底部按钮互为
- * 兜底；store 层 loadingMore 防重入保证幂等。子项事件原样上抛，不掺业务逻辑。
+ * 渲染按今天/昨天/更早分组的消息流，动效由两层 transition-group 编排：
+ * 外层负责分组（section）的进出与位移，内层负责消息卡（appear 首屏错峰浮现、
+ * 筛选切换淡出、新消息插入时的位移动画）。分组标题 sticky 吸顶并带毛玻璃底，
+ * 卡片滚动时从其下方穿行而不穿透。
+ * 滚动通道：近底部（阈值 80px、节流 200ms）触发 load-more，与底部按钮互为兜底；
+ * store 层 loadingMore 防重入保证幂等。子项事件原样上抛，不掺业务逻辑。
  * </p>
  */
 
@@ -121,12 +137,17 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../styles/motion';
+
 .pn-list {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 14px 14px 20px;
+  padding: 6px var(--pn-gutter, 16px) 22px;
+  /* sticky 分组标题的高度补偿：锚点滚动不被标题遮挡 */
+  scroll-padding-top: 34px;
 
   &::-webkit-scrollbar {
     width: 4px;
@@ -140,7 +161,11 @@ export default {
   }
 }
 
-/* 时间分组吸顶标题：小号大写字距标签 + 细线延伸 */
+.pn-groups {
+  position: relative;
+}
+
+/* 时间分组吸顶标题：小号大写字距标签 + 细线延伸，毛玻璃底防穿透 */
 .pn-group__head {
   position: sticky;
   top: 0;
@@ -148,13 +173,15 @@ export default {
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 6px 4px 8px;
+  padding: 8px 2px;
   font-size: 10.5px;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: #a1a1a6;
-  background: rgba(246, 247, 250, 0.92);
+  background: rgba(246, 247, 250, 0.88);
+  backdrop-filter: blur(8px) saturate(1.6);
+  -webkit-backdrop-filter: blur(8px) saturate(1.6);
 
   &::after {
     content: '';
@@ -165,6 +192,7 @@ export default {
 }
 
 .pn-group__list {
+  position: relative;
   list-style: none;
   margin: 0 0 10px;
   padding: 0;
@@ -173,10 +201,71 @@ export default {
   gap: 10px;
 }
 
+/* ── 分组进出与位移 ─────────────────────────────── */
+.pn-group-enter-active,
+.pn-group-leave-active {
+  transition: opacity $mo-dur-base $mo-ease-out, transform $mo-dur-base $mo-ease-out;
+}
+
+.pn-group-enter,
+.pn-group-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.pn-group-leave-active {
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.pn-group-move {
+  transition: transform $mo-dur-base $mo-ease-out;
+}
+
+/* ── 消息卡浮现 / 离场 / 位移（--delay 提供错峰） ──── */
+.pn-list-enter-active {
+  transition:
+    opacity $mo-dur-base $mo-ease-out,
+    transform $mo-dur-base $mo-ease-spring;
+  transition-delay: var(--delay, 0ms);
+}
+
+.pn-list-enter,
+.pn-list-leave-to {
+  opacity: 0;
+  transform: translateX(16px) scale(0.98);
+}
+
+.pn-list-leave-active {
+  transition:
+    opacity $mo-dur-fast ease,
+    transform $mo-dur-fast ease;
+  position: absolute;
+  left: 0;
+  right: 0;
+}
+
+.pn-list-move {
+  transition: transform $mo-dur-base $mo-ease-out;
+}
+
+/* ── 加载更多 ─────────────────────────────── */
 .pn-load-more {
   display: flex;
   justify-content: center;
-  padding: 6px 0 2px;
+  padding: 8px 0 2px;
+}
+
+.pn-more-enter-active,
+.pn-more-leave-active {
+  transition: opacity $mo-dur-base ease, transform $mo-dur-base $mo-ease-out;
+}
+
+.pn-more-enter,
+.pn-more-leave-to {
+  opacity: 0;
+  transform: translateY(6px);
 }
 
 .pn-more-btn {
@@ -190,29 +279,84 @@ export default {
   padding: 7px 22px;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background $mo-dur-fast ease,
+    border-color $mo-dur-fast ease,
+    color $mo-dur-fast ease,
+    box-shadow $mo-dur-base ease,
+    transform $mo-dur-fast $mo-ease-out;
+
+  @include focus-ring;
+  @include press;
 
   i {
     margin-right: 4px;
   }
 
-  &:hover:not(:disabled) {
-    background: #0a84ff;
-    border-color: #0a84ff;
-    color: #fff;
-    box-shadow: 0 4px 14px rgba(10, 132, 255, 0.32);
+  @media (hover: hover) and (pointer: fine) {
+    &:hover:not(:disabled) {
+      background: #0a84ff;
+      border-color: #0a84ff;
+      color: #fff;
+      box-shadow: 0 4px 14px rgba(10, 132, 255, 0.32);
+    }
   }
+
   &:disabled {
     color: #c7c7cc;
     cursor: default;
   }
 }
 
-/* 移动端：加载更多按钮触摸目标 >= 44px */
-@media (max-width: 768px) {
+/* ── 手机：触摸目标 >= 44px，毛玻璃吸顶降级为实色 ── */
+@include respond-to(phone) {
+  .pn-list {
+    padding: 4px var(--pn-gutter, 14px) 18px;
+  }
+
+  .pn-group__head {
+    padding: 7px 2px;
+    background: rgba(246, 247, 250, 0.96);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+
   .pn-more-btn {
-    min-height: 44px;
+    @include touch-target;
     padding: 10px 26px;
+  }
+}
+
+/* ── 手机横屏：压缩纵向留白 ── */
+@include respond-to(phone-landscape) {
+  .pn-list {
+    padding-top: 2px;
+    padding-bottom: 12px;
+  }
+
+  .pn-group__head {
+    padding: 4px 2px;
+  }
+
+  .pn-group__list {
+    gap: 8px;
+    margin-bottom: 6px;
+  }
+}
+
+/* ── 弱动效偏好：交由系统设置关闭位移类过渡 ── */
+@media (prefers-reduced-motion: reduce) {
+  .pn-group-enter-active,
+  .pn-group-leave-active,
+  .pn-group-move,
+  .pn-list-enter-active,
+  .pn-list-leave-active,
+  .pn-list-move,
+  .pn-more-enter-active,
+  .pn-more-leave-active {
+    transition-duration: 0.01ms;
+    transition-delay: 0ms;
   }
 }
 </style>

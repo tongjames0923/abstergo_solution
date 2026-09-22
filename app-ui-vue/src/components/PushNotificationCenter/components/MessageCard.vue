@@ -61,7 +61,8 @@ import { resolveTypeKey, typeAccent, priorityBadge, relativeTime } from '@/push/
  * 纯展示组件：接收规范化消息对象，类型归组、优先级徽章、相对时间均委托
  * push/message-display.js 展示语义层；视觉结构复用共享 partial
  * styles/_message-card.scss（与 NotifyPreviewCard center 模式同构）。
- * 类型/优先级语义色经 CSS 变量 --accent 注入；错峰浮现延迟随列表序号封顶。
+ * 类型/优先级语义色经 CSS 变量 --accent 注入；入场动效由父级 MessageList 的
+ * transition-group 统一编排（错峰延迟取 --delay），本组件不自带动画以免冲突。
  * 交互仅上抛语义事件（click / mark-read），业务动作由编排层处理。
  * </p>
  */
@@ -120,7 +121,7 @@ export default {
       return relativeTime(this.message.timestamp || this.message.receivedAt, key => this.$t(key))
     },
     /**
-     * 卡片样式变量：类型语义色 + 错峰浮现延迟
+     * 卡片样式变量：类型语义色 + 错峰入场延迟（列表 transition-group 消费）
      */
     cardVars() {
       return {
@@ -134,13 +135,4 @@ export default {
 
 <style lang="scss" scoped>
 @import '../styles/message-card';
-
-/* 移动端：卡片行动按钮触摸目标 >= 44px */
-@media (max-width: 768px) {
-  .ink-btn {
-    min-height: 44px;
-    padding: 10px 18px;
-    font-size: 12.5px;
-  }
-}
 </style>

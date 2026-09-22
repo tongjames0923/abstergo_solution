@@ -142,7 +142,7 @@ macOS 浅色布局同色系（系统蓝 #0a84ff / 绿 #34c759 / 橙 #ff9f0a / �
 components/PushNotificationCenter/
 ├── index.vue            # 编排层：抽屉外壳、筛选状态（activeType/unreadOnly，视图态不进 Vuex）、三态派生、matchMedia 三档视口
 ├── components/
-│   ├── CenterHeader.vue # 头部：信标徽标 + 未读大数 + 全部已读/清空（手机端收纳为底部固定操作栏）
+│   ├── CenterHeader.vue # 头部两行：信标+标题+未读+常驻关闭按钮 / 全部已读·清空操作组（手机端操作组转为抽屉底部毛玻璃浮层）
 │   ├── FilterBar.vue    # 筛选栏：全部/只看未读分段切换 + 类型 Tab 胶囊（未知类型动态归入"其他"，各 Tab 未读角标）
 │   ├── MessageList.vue  # 滚动容器：时间分组吸顶标题、滚动近底部节流加载更多（与底部按钮双通道）
 │   ├── MessageCard.vue  # 单条消息卡：玻璃卡 + 语义色导轨 + 优先级徽章 + 相对时间

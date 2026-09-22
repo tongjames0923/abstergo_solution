@@ -900,6 +900,7 @@ export default {
       total: '共 {n} 条',
       markAllRead: '全部已读',
       clear: '清空',
+      close: '关闭',
       loadMore: '加载更多',
       loading: '加载中…',
       emptyContent: '（无正文）',

@@ -6,7 +6,7 @@
     <div
       v-if="mode === 'center'"
       :key="'center'"
-      class="ink-card is-unread"
+      class="ink-card ink-card--rise is-unread"
       :class="{ 'is-urgent': form.priority === 'urgent' }"
       :style="centerVars"
     >

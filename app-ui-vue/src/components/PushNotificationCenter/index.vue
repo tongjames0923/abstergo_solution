@@ -8,14 +8,20 @@
     :show-close="false"
     @close="handleClose"
   >
-    <div class="pn-root">
+    <div
+      class="pn-root"
+      :class="{ 'is-open': visible }"
+    >
       <center-header
+        class="pn-choreo"
         :unread-count="unreadCount"
         :total="messages.length"
         @mark-all-read="handleAllRead"
         @clear="handleClear"
+        @close="handleClose"
       />
       <filter-bar
+        class="pn-choreo pn-choreo--delay"
         :tabs="typeTabs"
         :active-type="activeType"
         :unreadonly="unreadOnly"
@@ -24,29 +30,31 @@
         @change-type="handleChangeType"
         @toggle-unread="handleToggleUnread"
       />
-      <list-state
-        v-if="stateMode"
-        :mode="stateMode"
-        @retry="handleRetry"
-        @clear-filter="handleClearFilter"
-      />
-      <message-list
-        v-else
-        :groups="groupedMessages"
-        :has-more="hasMore"
-        :loading-more="loadingMore"
-        @load-more="handleLoadMore"
-        @item-click="handleItemClick"
-        @item-mark-read="handleMarkRead"
-      />
+      <transition name="pn-state" mode="out-in">
+        <list-state
+          v-if="stateMode"
+          :mode="stateMode"
+          @retry="handleRetry"
+          @clear-filter="handleClearFilter"
+        />
+        <message-list
+          v-else
+          :groups="groupedMessages"
+          :has-more="hasMore"
+          :loading-more="loadingMore"
+          @load-more="handleLoadMore"
+          @item-click="handleItemClick"
+          @item-mark-read="handleMarkRead"
+        />
+      </transition>
     </div>
   </el-drawer>
 </template>
 
 <script>
-import {mapActions, mapGetters} from 'vuex'
-import {operateMessage} from '@/api/push-message'
-import {groupByDay, resolveTypeKey, typeAccent} from '@/push/message-display'
+import { mapGetters, mapActions } from 'vuex'
+import { operateMessage } from '@/api/push-message'
+import { resolveTypeKey, typeAccent, groupByDay } from '@/push/message-display'
 import CenterHeader from './components/CenterHeader'
 import FilterBar from './components/FilterBar'
 import MessageList from './components/MessageList'
@@ -64,8 +72,12 @@ import ListState from './components/ListState'
  * push，规避 Promise 链式调用的 TypeError）、全部已读批量回传 READ、底部按钮与
  * 滚动近底部双通道加载更多、打开时主动拉取最新一页兜底。
  * 三态：首屏骨架（loading 且无数据）、错误重试（loadError 且无数据）、空态（无消息
- * 与筛选无结果区分，后者提供一键清除筛选）。响应式三档：手机 100% 全屏 + 底部
- * 操作栏 / 平板 480px / 桌面 400px，经 matchMedia 驱动，与 variables.scss 断点一致。
+ * 与筛选无结果区分，后者提供一键清除筛选）。
+ * 动效编排：抽屉打开时头部与筛选栏错峰落位（is-open 驱动，可重复触发），
+ * 列表与三态之间以 out-in 淡入淡出切换，列表内部动效由 MessageList 承担。
+ * 响应式四档：手机 ≤768px（100% 全屏 + 底部操作栏 + 刘海/底部安全区）、
+ * 平板 769-992px（480px）、桌面 993-1439px（400px）、宽屏 ≥1440px（440px）；
+ * 横向内边距经 --pn-gutter 变量统一下发，窄屏逐级收紧。
  * </p>
  */
 
@@ -102,7 +114,7 @@ export default {
        */
       unreadOnly: false,
       /**
-       * 视口档位（matchMedia 驱动）：phone / tablet / desktop
+       * 视口档位（matchMedia 驱动）：phone / tablet / desktop / wide
        */
       viewport: 'desktop'
     }
@@ -135,7 +147,7 @@ export default {
       return this.pushLoadError
     },
     /**
-     * 抽屉宽度三档：手机全屏 / 平板 480px / 桌面 400px
+     * 抽屉宽度四档：手机全屏 / 平板 480px / 桌面 400px / 宽屏 440px
      */
     drawerSize() {
       if (this.viewport === 'phone') {
@@ -143,6 +155,9 @@ export default {
       }
       if (this.viewport === 'tablet') {
         return '480px'
+      }
+      if (this.viewport === 'wide') {
+        return '440px'
       }
       return '400px'
     },
@@ -224,34 +239,41 @@ export default {
   mounted() {
     this.mqPhone = window.matchMedia('(max-width: 768px)')
     this.mqTablet = window.matchMedia('(max-width: 992px)')
+    this.mqWide = window.matchMedia('(min-width: 1440px)')
     this.updateViewport()
     if (typeof this.mqPhone.addEventListener === 'function') {
       this.mqPhone.addEventListener('change', this.updateViewport)
       this.mqTablet.addEventListener('change', this.updateViewport)
+      this.mqWide.addEventListener('change', this.updateViewport)
     } else {
       this.mqPhone.addListener(this.updateViewport)
       this.mqTablet.addListener(this.updateViewport)
+      this.mqWide.addListener(this.updateViewport)
     }
   },
   beforeDestroy() {
     if (typeof this.mqPhone.removeEventListener === 'function') {
       this.mqPhone.removeEventListener('change', this.updateViewport)
       this.mqTablet.removeEventListener('change', this.updateViewport)
+      this.mqWide.removeEventListener('change', this.updateViewport)
     } else {
       this.mqPhone.removeListener(this.updateViewport)
       this.mqTablet.removeListener(this.updateViewport)
+      this.mqWide.removeListener(this.updateViewport)
     }
   },
   methods: {
     ...mapActions('push', ['markRead', 'markAllRead', 'clearAll', 'pullLatest', 'loadMore', 'retry']),
     /**
-     * 视口档位刷新（matchMedia change 驱动，与 $bp-phone/$bp-tablet 断点一致）
+     * 视口档位刷新（matchMedia change 驱动，断点与 styles/variables.scss 一致）
      */
     updateViewport() {
       if (this.mqPhone.matches) {
         this.viewport = 'phone'
       } else if (this.mqTablet.matches) {
         this.viewport = 'tablet'
+      } else if (this.mqWide.matches) {
+        this.viewport = 'wide'
       } else {
         this.viewport = 'desktop'
       }
@@ -350,10 +372,38 @@ export default {
     overflow: hidden;
   }
 }
+
+/* 手机：大面域毛玻璃开销高，降级为近实色底 */
+@media only screen and (max-width: 768px) {
+  .push-center-drawer {
+    background: rgba(246, 247, 250, 0.98);
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    box-shadow: none;
+  }
+}
+
+/* 弱动效偏好：抽屉内所有装饰性动画与过渡统一降级 */
+@media (prefers-reduced-motion: reduce) {
+  .push-center-drawer,
+  .push-center-drawer * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+}
 </style>
 
 <style lang="scss" scoped>
+@import './styles/motion';
+
 .pn-root {
+  /* 横向内边距统一由编排层下发，子组件以 var(--pn-gutter) 消费 */
+  --pn-gutter: 18px;
+
+  /* 定位基准：手机端操作浮层(CenterHeader 内)以本容器为包含块贴底 */
+  position: relative;
   height: 100%;
   display: flex;
   flex-direction: column;
@@ -362,10 +412,91 @@ export default {
   color: #1d1d1f;
 }
 
-/* 手机端：为 CenterHeader 内固定的底部操作栏预留空间（含安全区） */
-@media (max-width: 768px) {
+/* 抽屉打开：头部 → 筛选栏依次落位（类切换驱动，可重复触发）
+   注意：此处只做透明度过渡，刻意不加 transform —— transform（含动画 fill 残留）
+   会让该元素成为 absolute/fixed 后代的包含块，导致手机端 CenterHeader 内的
+   底部操作浮层被错误地定位到头部内部；fill 用 backwards 保证动画结束后无残留样式。
+   列表的位移观感由 MessageList 内部的错峰浮现承担。 */
+.pn-root.is-open {
+  .pn-choreo {
+    animation: pn-enter 0.32s cubic-bezier(0.22, 0.61, 0.36, 1) backwards;
+  }
+
+  .pn-choreo--delay {
+    animation-delay: 0.07s;
+  }
+}
+
+@keyframes pn-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* 列表 ↔ 三态：out-in 淡入淡出，避免形态重叠 */
+.pn-state-enter-active,
+.pn-state-leave-active {
+  transition: opacity 0.24s ease, transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.pn-state-enter {
+  opacity: 0;
+  transform: translateY(6px);
+}
+
+.pn-state-leave-to {
+  opacity: 0;
+  transform: translateY(-4px);
+}
+
+/* 手机：底部操作栏预留空间（含安全区），并收紧横向内边距 */
+@include respond-to(phone) {
   .pn-root {
+    --pn-gutter: 14px;
     padding-bottom: calc(64px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* 手机横屏：操作栏更薄，纵向留白同步压缩 */
+@include respond-to(phone-landscape) {
+  .pn-root {
+    --pn-gutter: 14px;
+    padding-bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  }
+}
+
+/* 平板 / 桌面 / 宽屏：标准内边距 */
+@include respond-to(tablet) {
+  .pn-root {
+    --pn-gutter: 18px;
+  }
+}
+
+@include respond-to(desktop) {
+  .pn-root {
+    --pn-gutter: 18px;
+  }
+}
+
+/* 窄屏手机（<=360px）：内边距进一步收紧 */
+@media only screen and (max-width: 360px) {
+  .pn-root {
+    --pn-gutter: 12px;
+  }
+}
+
+/* 弱动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .pn-root.is-open .pn-choreo {
+    animation: none;
+  }
+
+  .pn-state-enter-active,
+  .pn-state-leave-active {
+    transition-duration: 0.01ms;
   }
 }
 </style>

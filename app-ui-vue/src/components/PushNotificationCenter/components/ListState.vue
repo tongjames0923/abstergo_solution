@@ -1,6 +1,6 @@
 <template>
   <div class="pn-state">
-    <!-- 加载骨架：玻璃占位 shimmer -->
+    <!-- 加载骨架：玻璃占位 shimmer，逐张错峰浮现 -->
     <div
       v-if="mode === 'loading'"
       class="pn-skeleton"
@@ -72,10 +72,12 @@
 /**
  * 消息中心列表三态复用组件
  * <p>
- * 互斥呈现四种非消息流形态：loading（首屏骨架屏）、empty（无消息）、
- * filtered-empty（有消息但当前筛选无结果，提供一键清除筛选）、error（首屏拉取
- * 失败，提供重试）。mode 由编排层依据 store loading/loadError/messages 派生；
- * 事件仅上抛 retry / clear-filter。
+ * 互斥呈现四种非消息流形态：loading（首屏骨架屏，逐张错峰浮现 + 行内 shimmer）、
+ * empty（无消息，熄灭的信标 + 双层光晕呼吸）、filtered-empty（有消息但当前筛选
+ * 无结果，提供一键清除筛选）、error（首屏拉取失败，警示 + 重试）。
+ * 各形态内部元素带 0.32s 上浮淡入，与编排层的形态切换过渡叠加形成层次；
+ * mode 由编排层依据 store loading/loadError/messages 派生；事件仅上抛
+ * retry / clear-filter。移动端关闭装饰动画与 shimmer 以降 GPU 负载。
  * </p>
  */
 export default {
@@ -93,6 +95,8 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import '../styles/motion';
+
 .pn-state {
   flex: 1;
   min-height: 0;
@@ -103,10 +107,10 @@ export default {
 
 /* ── 骨架屏 ─────────────────────────────── */
 .pn-skeleton {
-  padding: 16px 14px;
+  padding: 12px var(--pn-gutter, 16px);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .pn-skel-card {
@@ -117,6 +121,15 @@ export default {
   flex-direction: column;
   gap: 10px;
   background: rgba(255, 255, 255, 0.55);
+  animation: pn-state-in $mo-dur-slow $mo-ease-out both;
+
+  &:nth-child(2) {
+    animation-delay: 0.06s;
+  }
+
+  &:nth-child(3) {
+    animation-delay: 0.12s;
+  }
 }
 
 .pn-skel-line {
@@ -169,10 +182,11 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 16px;
-  padding: 24px;
+  padding: 24px var(--pn-gutter, 16px);
+  animation: pn-state-in $mo-dur-slow $mo-ease-out both;
 }
 
-/* 熄灭的信标：双层光晕呼吸（系统蓝） */
+/* 熄灭的信标：双层光晕错峰呼吸（系统蓝） */
 .pn-empty-beacon {
   position: relative;
   width: 92px;
@@ -186,15 +200,23 @@ export default {
     font-size: 34px;
     color: #0a84ff;
     opacity: 0.75;
+    z-index: 1;
   }
 
-  &::before {
+  &::before,
+  &::after {
     content: '';
     position: absolute;
-    inset: -14px;
+    inset: 0;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(10, 132, 255, 0.16), transparent 70%);
+    background: radial-gradient(circle, rgba(10, 132, 255, 0.16), transparent 68%);
     animation: pn-breathe 3.2s ease-in-out infinite;
+  }
+
+  &::after {
+    inset: -18px;
+    background: radial-gradient(circle, rgba(10, 132, 255, 0.07), transparent 70%);
+    animation-delay: 1.4s;
   }
 
   &--filtered i {
@@ -204,12 +226,24 @@ export default {
 
 @keyframes pn-breathe {
   0%, 100% {
-    transform: scale(0.94);
-    opacity: 0.5;
+    transform: scale(0.92);
+    opacity: 0.55;
   }
   50% {
-    transform: scale(1.05);
+    transform: scale(1.06);
     opacity: 1;
+  }
+}
+
+/* 形态整体上浮淡入 */
+@keyframes pn-state-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -218,6 +252,7 @@ export default {
   font-size: 13px;
   letter-spacing: 0.12em;
   color: #a1a1a6;
+  text-align: center;
 }
 
 /* ── 错误态（系统橙警示） ─────────────────── */
@@ -228,8 +263,9 @@ export default {
   align-items: center;
   justify-content: center;
   gap: 8px;
-  padding: 24px;
+  padding: 24px var(--pn-gutter, 16px);
   text-align: center;
+  animation: pn-state-in $mo-dur-slow $mo-ease-out both;
 }
 
 .pn-error-icon {
@@ -275,9 +311,18 @@ export default {
   padding: 8px 22px;
   border-radius: 999px;
   cursor: pointer;
-  transition: all 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+  transition:
+    background $mo-dur-fast ease,
+    border-color $mo-dur-fast ease,
+    color $mo-dur-fast ease,
+    box-shadow $mo-dur-base ease,
+    transform $mo-dur-fast $mo-ease-out;
 
-  &:hover {
+  @include focus-ring;
+  @include press;
+
+  @include hover-only {
     background: #0a84ff;
     border-color: #0a84ff;
     color: #fff;
@@ -285,18 +330,68 @@ export default {
   }
 }
 
-/* 移动端：触摸目标 >= 44px，关闭装饰动画 */
-@media (max-width: 768px) {
+/* 手机：触摸目标 >= 44px，关闭装饰动画（光晕呼吸/骨架 shimmer/上浮） */
+@include respond-to(phone) {
   .pn-state-btn {
-    min-height: 44px;
+    @include touch-target;
     padding: 10px 24px;
   }
 
-  .pn-empty-beacon::before {
+  .pn-empty-beacon::before,
+  .pn-empty-beacon::after {
     animation: none;
   }
 
-  .pn-skel-line {
+  .pn-skel-line,
+  .pn-skel-card {
+    animation: none;
+  }
+
+  .pn-skeleton {
+    padding: 10px var(--pn-gutter, 14px);
+  }
+}
+
+/* 手机横屏：压缩留白与信标尺寸 */
+@include respond-to(phone-landscape) {
+  .pn-empty,
+  .pn-error {
+    gap: 10px;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .pn-empty-beacon {
+    width: 70px;
+    height: 70px;
+
+    i {
+      font-size: 26px;
+    }
+
+    &::after {
+      inset: -12px;
+    }
+  }
+
+  .pn-error-icon {
+    width: 52px;
+    height: 52px;
+
+    i {
+      font-size: 22px;
+    }
+  }
+}
+
+/* 弱动效偏好 */
+@media (prefers-reduced-motion: reduce) {
+  .pn-empty,
+  .pn-error,
+  .pn-skel-card,
+  .pn-skel-line,
+  .pn-empty-beacon::before,
+  .pn-empty-beacon::after {
     animation: none;
   }
 }

@@ -900,6 +900,7 @@ export default {
       total: '{n} total',
       markAllRead: 'Mark all read',
       clear: 'Clear',
+      close: 'Close',
       loadMore: 'Load More',
       loading: 'Loading…',
       emptyContent: '(No content)',
