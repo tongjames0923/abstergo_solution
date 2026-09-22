@@ -28,11 +28,13 @@ import javax.servlet.http.HttpServletRequest;
  * </p>
  * <p>
  * 注意：本控制器已废弃（{@code @Deprecated}）。未来登录相关的所有操作（用户登录、令牌刷新等）
- * 将统一迁移至「统一登录接口」处集中处理，本控制器及其中各接口后续将被移除，请勿在新业务中使用。
+ * 将统一迁移至「统一登录接口」{@link PublicLoginGrantController} 处集中处理，
+ * 本控制器及其中各接口后续将被移除，请勿在新业务中使用。
  * </p>
  *
  * @author abstergo
  * @since 1.0.0
+ * @see PublicLoginGrantController
  */
 @RestController
 @RequestMapping("/public/user")
@@ -54,10 +56,11 @@ public class PublicUserController extends BaseController {
      * </p>
      * <p>
      * 废弃说明：本接口已标记为 {@code @Deprecated}，未来用户登录相关的操作将统一迁移至
-     * 「统一登录接口」集中处理，本接口后续会被移除，请勿在新业务中使用。
+     * 「统一登录接口」{@link PublicLoginGrantController} 集中处理，本接口后续会被移除，请勿在新业务中使用。
      * </p>
      * @param loginForm 登录表单，包含用户名和密码
      * @return 登录成功后的令牌信息
+     * @see PublicLoginGrantController#login(String, java.util.Map)
      */
 
     @Deprecated
@@ -77,10 +80,11 @@ public class PublicUserController extends BaseController {
      * </p>
      * <p>
      * 废弃说明：本接口已标记为 {@code @Deprecated}，未来令牌刷新相关的操作将统一迁移至
-     * 「统一登录接口」集中处理，本接口后续会被移除，请勿在新业务中使用。
+     * 「统一登录接口」{@link PublicLoginGrantController} 集中处理，本接口后续会被移除，请勿在新业务中使用。
      * </p>
      *
      * @return 刷新成功后的令牌信息
+     * @see PublicLoginGrantController
      */
     @GetMapping("refresh")
     @AjaxResponseType(ITokenModel.class)

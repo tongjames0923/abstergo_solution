@@ -4,6 +4,7 @@ import com.tbs.app.intercept.DataPermissionIntercepter;
 import com.tbs.app.intercept.OperateLogAspect;
 import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.app.security.grant.PasswordGrantProviderAdapter;
+import com.tbs.app.security.grant.RefreshGrantProviderAdapter;
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.service.identity.IExternalIdentityResolver;
 import com.tbs.app.service.identity.IUserExternalIdentityService;
@@ -27,6 +28,7 @@ import com.tbs.web.security.user.access.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.security.user.access.impl.DefaultRefreshAccessTokenProvider;
 import com.tbs.web.security.user.access.impl.DefaultUserPasswordAccessTokenProvider;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -109,6 +111,29 @@ public class DefaultAppConfig {
     PasswordGrantProviderAdapter passwordGrantProvider(IUsernamePasswordAccessTokenProvider delegate) {
         return new PasswordGrantProviderAdapter(delegate);
     }
+
+
+
+    /**
+     * 刷新令牌授权适配器配置
+     * <p>
+     * 将刷新令牌换发访问令牌的能力桥接为 {@code refresh} 授权类型接入统一登录门面，
+     * 复用既有 {@link com.tbs.web.security.token.IRefreshTokenService#useRefreshToken()} 全链路（刷新令牌解析、校验链、
+     * 换发访问令牌、一次性失效），使「刷新」与「登录」收敛到同一端点 {@code POST /public/user/login/refresh}。
+     * 适配器以 {@code ObjectProvider} 注入 {@link com.tbs.web.security.token.IRefreshTokenService}，
+     * 避免刷新令牌服务缺失时启动失败；当容器中不存在该服务 Bean 时，刷新授权类型自动不启用。
+     * </p>
+     *
+     * @param objectProvider 刷新令牌服务 Bean 的延迟/可选提供者
+     * @return 刷新令牌登录授权适配器
+     */
+    @Bean
+    @ConditionalOnMissingBean(RefreshGrantProviderAdapter.class)
+    RefreshGrantProviderAdapter refreshGrantProviderAdapter(ObjectProvider<IRefreshTokenService> objectProvider) {
+        return new RefreshGrantProviderAdapter(objectProvider);
+    }
+
+
 
     /**
      * 约定式唯一标识匹配策略配置（默认自动关联策略）
