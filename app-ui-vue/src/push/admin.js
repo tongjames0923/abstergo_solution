@@ -85,18 +85,27 @@ export function validateNotifyForm(form) {
  * 发布系统通知（新链路 notify 接口）
  * <p>
  * 全体范围走 global.broadcast topic 单次提交；指定用户逐人 user.name.{userName} topic 提交
- * （任一条失败不中断其余投递）。接收人由后端按 topic 前缀查询用户表解析并 fan-out + 发信令。
- * 发布完成后写入本地发布历史。网络异常被捕获并归入该条投递的失败结果，不向上抛出。
+ * （任一条失败不中断其余投递）。接收人由后端按 topic 前缀查询用户表解析并 fan-out + 发信令，
+ * HTTP 请求成功不等于送达——每个目标的真实送达规模以后端返回的 receiverCount 为准：
+ * receiverCount=0 表示该目标未解析到任何接收人（如用户名不存在），计入失败目标。
+ * 发布完成后写入本地发布历史（delivered=解析到的接收人总数，failed=未解析到接收人的目标数）。
+ * 网络异常被捕获并归入该条投递的失败结果，不向上抛出。
  * </p>
  *
  * @param {Object} form 通知表单 { title, content, type, priority, url?, scope, users? }
- * @returns {Promise<Object>} { ok, summary: {total, delivered, failed},
- *          results: Array<{target, topic, ok, messageId?, error?}>, record, validation? }
+ * @returns {Promise<Object>} { ok, summary: {total, delivered, failed, receivers},
+ *          results: Array<{target, topic, ok, receiverCount, messageId?, error?}>, record, validation? }
  */
 export async function publishNotify(form) {
   const check = validateNotifyForm(form)
   if (!check.valid) {
-    return { ok: false, summary: { total: 0, delivered: 0, failed: 0 }, results: [], record: null, validation: check }
+    return {
+      ok: false,
+      summary: { total: 0, delivered: 0, failed: 0, receivers: 0 },
+      results: [],
+      record: null,
+      validation: check
+    }
   }
 
   const baseForm = {
@@ -117,17 +126,25 @@ export async function publishNotify(form) {
   const publishedAt = Date.now()
   const settled = await Promise.all(plan.map(async item => {
     try {
-      const messageId = await sendNotify(Object.assign({}, baseForm, { topic: item.topic }))
-      return { target: item.target, topic: item.topic, ok: messageId != null, messageId }
+      const result = await sendNotify(Object.assign({}, baseForm, { topic: item.topic }))
+      const receiverCount = result && typeof result.receiverCount === 'number' ? result.receiverCount : 0
+      return {
+        target: item.target,
+        topic: item.topic,
+        ok: result != null && receiverCount > 0,
+        receiverCount,
+        messageId: result ? result.messageId : null
+      }
     } catch (e) {
       console.warn('[push-admin] 发布失败', item.target, e)
-      return { target: item.target, topic: item.topic, ok: false, error: e && e.message }
+      return { target: item.target, topic: item.topic, ok: false, receiverCount: 0, error: e && e.message }
     }
   }))
 
   const delivered = settled.filter(item => item.ok).length
   const failed = settled.length - delivered
-  const summary = { total: settled.length, delivered, failed }
+  const receivers = settled.reduce((sum, item) => sum + item.receiverCount, 0)
+  const summary = { total: settled.length, delivered, failed, receivers }
   const okResult = settled.find(item => item.ok && item.messageId != null)
 
   const record = {
@@ -138,7 +155,7 @@ export async function publishNotify(form) {
     scope: form.scope,
     targets: settled.map(item => item.target),
     publishedAt,
-    delivered,
+    delivered: receivers,
     failed
   }
   addHistoryRecord(record)

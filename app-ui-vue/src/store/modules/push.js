@@ -130,7 +130,7 @@ const actions = {
     if (!token || !userId) {
       return
     }
-    // SIGNAL 信令/hello 兜底统一经防抖触发拉取第一页（合并信令风暴）
+    // SIGNAL 信令/hello 兜底统一经防抖触发拉取（合并信令风暴）
     const triggerPull = () => {
       if (pullTimer) {
         clearTimeout(pullTimer)
@@ -146,12 +146,25 @@ const actions = {
       onStatus: status => commit('SET_STATUS', status),
       onSignal: triggerPull
     })
+    // 登录即先拉一遍：不等待 SSE 握手（hello 慢/解析失败时不至于空窗），
+    // 与 hello 兜底/SIGNAL 触发的后续拉取经 seenIds 去重，幂等无害
+    dispatch('pullLatest').catch(e => console.warn('[push] 登录首轮拉取失败', e))
   },
   /**
    * 停止推送连接（登出 / 页面卸载）
+   * <p>
+   * 关闭连接同时复位模块态：清空消息与 seenIds、复位 firstPullDone、取消挂起的拉取防抖，
+   * 避免同会话内换账号重登后，旧账号消息残留或首轮拉取被误判为非首拉而批量弹窗。
+   * </p>
    */
   stopConnection({ commit }) {
     closePush()
+    if (pullTimer) {
+      clearTimeout(pullTimer)
+      pullTimer = null
+    }
+    firstPullDone = false
+    commit('RESET')
     commit('SET_STATUS', CONNECTION_STATUS.CLOSED)
   },
   /**

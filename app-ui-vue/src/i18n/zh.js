@@ -954,7 +954,7 @@ export default {
       colTime: '发布时间',
       colReceipt: '送达回执',
       scopeAll: '全体用户',
-      receiptText: '{delivered}/{total} 条送达',
+      receiptText: '送达 {delivered}/{total} 人',
       receiptOk: '全部送达',
       receiptFail: '投递失败',
       empty: '暂无发布记录',
@@ -971,8 +971,9 @@ export default {
       invalid: '表单数据不合法，请检查填写'
     },
     message: {
-      publishSuccess: '发布成功：送达 {delivered}/{total}',
-      publishPartial: '部分投递失败：成功 {delivered}，失败 {failed}（{targets}）',
+      publishSuccess: '发布成功：已送达 {receivers} 名用户',
+      publishPartial: '部分目标未解析到接收人（{targets}），已送达 {receivers} 名用户',
+      publishZeroReceiver: '消息已落库，但未解析到任何接收人，未产生实时信令',
       publishFailed: '发布失败，请检查网络后重试',
       invalidForm: '表单校验未通过，请检查填写'
     }

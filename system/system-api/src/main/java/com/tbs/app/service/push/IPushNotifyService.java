@@ -5,6 +5,7 @@ import com.tbs.app.form.PushMessageQueryForm;
 import com.tbs.app.form.PushNotifySendForm;
 import com.tbs.app.vo.PushMessageChainVO;
 import com.tbs.app.vo.PushMessagePageVO;
+import com.tbs.app.vo.PushSendResultVO;
 
 import java.util.Date;
 import java.util.List;
@@ -25,13 +26,13 @@ public interface IPushNotifyService {
      * 发送持久化通知
      * <p>
      * 契约校验 → 主表落库 → SPI 解析接收人（去重）→ fan-out 落库 → SEND 日志落库， 同一事务原子完成；事务提交后逐接收人发布 SIGNAL 信令（推送未启用或信令失败仅记日志）。
-     * 接收人列表为空是合法状态（消息仅落库，无信令）。
+     * 接收人列表为空是合法状态（消息仅落库，无信令）。 返回结果回传消息ID、实际主题、接收人数与信令数，供调用方构建真实送达回执。
      * </p>
      *
      * @param form 发送表单
-     * @return 消息ID
+     * @return 发送结果视图（messageId/topic/msgType/receiverCount/signalCount）
      */
-    Long send(PushNotifySendForm form);
+    PushSendResultVO send(PushNotifySendForm form);
 
     /**
      * 分页拉取当前用户消息列表

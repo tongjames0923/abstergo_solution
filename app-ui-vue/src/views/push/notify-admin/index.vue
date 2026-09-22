@@ -197,7 +197,6 @@
 </template>
 
 <script>
-import { Notification } from 'element-ui'
 import { adminQueryUser } from '@/api/admin_user'
 import {
   publishNotify,
@@ -374,34 +373,31 @@ export default {
       })
     },
     /**
-     * 发布结果反馈：全成功 Notification.success（含送达数）、
-     * 部分失败 Notification.warning（列失败目标）、全失败 Message.error
+     * 发布结果反馈（对齐全库 $message 反馈约定）：
+     * 送达事实以后端 receiverCount 为准——请求全挂 error 判网络失败，
+     * receivers=0 判未解析到接收人（消息仅落库），部分目标未解析列目标，全成功报送达人数
      */
     reportPublishResult(result) {
       const { summary, results } = result
-      if (summary.delivered === 0) {
+      if (summary.total > 0 && results.every(item => item.error)) {
         this.$message.error(this.$t('notifyAdmin.message.publishFailed'))
+        return
+      }
+      if (summary.receivers === 0) {
+        this.$message.warning(this.$t('notifyAdmin.message.publishZeroReceiver'))
         return
       }
       if (!result.ok) {
         const targets = results.filter(item => !item.ok).map(item => item.target).join(', ')
-        Notification.warning({
-          title: this.$t('notifyAdmin.title'),
-          message: this.$t('notifyAdmin.message.publishPartial', {
-            delivered: summary.delivered,
-            failed: summary.failed,
-            targets
-          })
-        })
+        this.$message.warning(this.$t('notifyAdmin.message.publishPartial', {
+          receivers: summary.receivers,
+          targets
+        }))
         return
       }
-      Notification.success({
-        title: this.$t('notifyAdmin.title'),
-        message: this.$t('notifyAdmin.message.publishSuccess', {
-          delivered: summary.delivered,
-          total: summary.total
-        })
-      })
+      this.$message.success(this.$t('notifyAdmin.message.publishSuccess', {
+        receivers: summary.receivers
+      }))
     },
     /**
      * 将封装层的结构化校验错误映射为 i18n 文案（取首条）

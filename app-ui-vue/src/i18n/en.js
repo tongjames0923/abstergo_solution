@@ -954,7 +954,7 @@ export default {
       colTime: 'Published At',
       colReceipt: 'Receipt',
       scopeAll: 'All users',
-      receiptText: '{delivered}/{total} delivered',
+      receiptText: '{delivered}/{total} users reached',
       receiptOk: 'All delivered',
       receiptFail: 'Delivery failed',
       empty: 'No publish records',
@@ -971,8 +971,9 @@ export default {
       invalid: 'Invalid form data, please check your input'
     },
     message: {
-      publishSuccess: 'Published: delivered {delivered}/{total}',
-      publishPartial: 'Partially delivered: {delivered} succeeded, {failed} failed ({targets})',
+      publishSuccess: 'Published: delivered to {receivers} users',
+      publishPartial: 'Some targets resolved no receivers ({targets}); delivered to {receivers} users',
+      publishZeroReceiver: 'Message persisted, but no receivers resolved; no signals were sent',
       publishFailed: 'Publishing failed, please check the network and retry',
       invalidForm: 'Form validation failed, please check your input'
     }

@@ -86,17 +86,18 @@ export function operateMessage(payload) {
  * <p>
  * POST /private/push/message/notify，请求体为 PushNotifySendForm
  * （msgType 必填，title/content/priority/url/source 可选）。
- * 注意：接收人不随表单传递，由后端 INotifyReceiverResolver SPI 解析（默认实现为空集=无人接收），
- * 业务需注册自定义 resolver 才能确定实际接收范围。业务体为 Long（生成的消息ID）。
+ * 注意：接收人不随表单传递，由后端 INotifyReceiverResolver SPI 解析（默认实现为空集=无人接收）。
+ * 业务体为 PushSendResultVO {messageId, topic, msgType, receiverCount, signalCount}，
+ * receiverCount 是真实送达规模（HTTP 成功 ≠ 送达），0 为合法状态（仅落库无信令）。
  * </p>
  *
  * @param {Object} form PushNotifySendForm { msgType, title?, content?, priority?, url?, source?, extInfo? }
- * @returns {Promise<number|null>} 生成的消息ID
+ * @returns {Promise<Object|null>} 发送结果视图 { messageId, topic, msgType, receiverCount, signalCount }
  */
 export function sendNotify(form) {
   return request({
     url: '/private/push/message/notify',
     method: 'post',
     data: form
-  }).then(res => (typeof res.data === 'number' ? res.data : null))
+  }).then(res => res.data || null)
 }

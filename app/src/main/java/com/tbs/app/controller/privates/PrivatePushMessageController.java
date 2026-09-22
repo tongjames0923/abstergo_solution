@@ -6,6 +6,7 @@ import com.tbs.app.form.PushNotifySendForm;
 import com.tbs.app.service.push.IPushNotifyService;
 import com.tbs.app.vo.PushMessageChainVO;
 import com.tbs.app.vo.PushMessagePageVO;
+import com.tbs.app.vo.PushSendResultVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
@@ -42,17 +43,18 @@ public class PrivatePushMessageController extends BaseController {
     /**
      * 发送持久化通知
      * <p>
-     * 落库（主表+fan-out+SEND日志）与事务提交后发布 SIGNAL 信令均由服务内部完成； 返回生成的消息ID（Long）。
+     * 落库（主表+fan-out+SEND日志）与事务提交后发布 SIGNAL 信令均由服务内部完成； 返回发送结果视图（消息ID/主题/类型/接收人数/信令数），
+     * 调用方以 receiverCount 为准构建真实送达回执。
      * </p>
      *
      * @param form 发送表单（msgType 必填，其余可选）
-     * @return 统一响应（data：消息ID）
+     * @return 统一响应（data：PushSendResultVO）
      */
     @PostMapping("/notify")
     @Operation(summary = "发送持久化通知",
-        description = "提交消息内容并落库，事务提交后向接收人发布信令；msgType必填，其余字段可选")
-    @ApiResponse(responseCode = "200", description = "发送成功，data为消息ID")
-    @AjaxResponseType(Long.class)
+        description = "提交消息内容并落库，事务提交后向接收人发布信令；msgType必填，其余字段可选；data为发送结果视图（messageId/topic/msgType/receiverCount/signalCount）")
+    @ApiResponse(responseCode = "200", description = "发送成功，data为发送结果视图")
+    @AjaxResponseType(PushSendResultVO.class)
     public AjaxResult notify(@RequestBody PushNotifySendForm form) {
         return successResult(pushNotifyService.send(form));
     }

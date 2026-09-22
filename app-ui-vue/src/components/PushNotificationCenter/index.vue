@@ -166,7 +166,9 @@ export default {
     },
     /**
      * 单条点击：未读即时标记（READ 回传由 markRead 处理）；
-     * 有跳转路由时回传 CLICK 操作日志（后端自动补记 READ）并跳转
+     * 有跳转路由时回传 CLICK 操作日志（后端自动补记 READ）并跳转。
+     * 路由跳转用 onComplete/onAbort 回调承接——vue-router 3.0.6 的 push 不返回 Promise，
+     * Promise 链式 .catch 会导致 TypeError，回跳重复路由由 onAbort 静默吞掉
      */
     handleItemClick(item) {
       if (!item.read) {
@@ -174,7 +176,7 @@ export default {
       }
       if (item.url) {
         this.reportClick(item)
-        this.$router.push(item.url).catch(() => {})
+        this.$router.push(item.url, () => {}, () => {})
         this.handleClose()
       }
     },

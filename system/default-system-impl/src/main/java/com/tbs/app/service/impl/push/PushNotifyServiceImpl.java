@@ -17,6 +17,7 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.vo.PushMessageChainVO;
 import com.tbs.app.vo.PushMessagePageVO;
 import com.tbs.app.vo.PushNotifyMessageVO;
+import com.tbs.app.vo.PushSendResultVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
@@ -155,19 +156,20 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
      * 发送持久化通知（事务内三表原子落库，提交后发信令）
      *
      * @param form 发送表单
-     * @return 消息ID
+     * @return 发送结果视图（messageId/topic/msgType/receiverCount/signalCount）
      */
     @Override
-    public Long send(PushNotifySendForm form) {
+    public PushSendResultVO send(PushNotifySendForm form) {
         validateSendForm(form);
         Date now = new Date();
         List<Long> receivers = resolveReceivers(form);
         PushMessageEntity entity = buildMessageEntity(form, now);
         transactionTemplate.executeWithoutResult(status -> doSend(entity, receivers, form, now));
-        publishSignals(receivers);
-        log.info("推送通知发送完成, messageId={}, topic={}, receiverCount={}", entity.getId(), entity.getTopic(),
-            receivers.size());
-        return entity.getId();
+        int signalCount = publishSignals(receivers);
+        log.info("推送通知发送完成, messageId={}, topic={}, receiverCount={}, signalCount={}", entity.getId(),
+            entity.getTopic(), receivers.size(), signalCount);
+        return new PushSendResultVO(entity.getId(), entity.getTopic(), entity.getMsgType(), receivers.size(),
+            signalCount);
     }
 
     /**
@@ -407,20 +409,24 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
      * 事务提交后逐接收人发布 SIGNAL 信令（推送未启用或单条失败仅记日志）
      *
      * @param receivers 接收人列表
+     * @return 成功发布的信令条数
      */
-    private void publishSignals(List<Long> receivers) {
+    private int publishSignals(List<Long> receivers) {
         IPushEndpoint endpoint = pushEndpointProvider.getIfAvailable();
         if (endpoint == null) {
             log.warn("推送能力未启用(tbs.push.enable=false)，信令发布跳过, receiverCount={}", receivers.size());
-            return;
+            return 0;
         }
+        int published = 0;
         for (Long receiver : receivers) {
             try {
                 endpoint.publishSignal(CHANNEL_TOPIC_PREFIX + receiver, null);
+                published++;
             } catch (Exception error) {
                 log.warn("SIGNAL信令发布失败, receiver={}", receiver, error);
             }
         }
+        return published;
     }
 
     /**
