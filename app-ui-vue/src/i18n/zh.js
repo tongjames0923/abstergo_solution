@@ -884,7 +884,8 @@ export default {
     type: {
       notify: '通知',
       warning: '告警',
-      reminder: '提醒'
+      reminder: '提醒',
+      other: '其他'
     },
     priority: {
       low: '低',
@@ -901,11 +902,32 @@ export default {
       clear: '清空',
       loadMore: '加载更多',
       loading: '加载中…',
-      emptyContent: '（无正文）'
+      emptyContent: '（无正文）',
+      markRead: '标记已读',
+      open: '查看详情',
+      read: '已读',
+      sentAt: '发送于 {time}',
+      filter: {
+        all: '全部',
+        unread: '只看未读'
+      },
+      group: {
+        today: '今天',
+        yesterday: '昨天',
+        earlier: '更早'
+      },
+      error: {
+        title: '消息加载失败',
+        hint: '网络异常或服务暂不可用，请稍后重试',
+        retry: '重试'
+      },
+      emptyFiltered: '当前筛选条件下暂无消息',
+      clearFilter: '清除筛选'
     },
     time: {
       justNow: '刚刚',
-      minutesAgo: '分钟前'
+      minutesAgo: '分钟前',
+      hoursAgo: '小时前'
     }
   },
 

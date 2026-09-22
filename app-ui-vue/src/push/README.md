@@ -45,6 +45,7 @@ UI 库依赖被隔离在默认渲染器内，可整体替换；业务可按消�
 ```
 src/push/
 ├── push-message.js    # 协议契约层：常量（含业务 topic）、PUSH_DEFAULTS、hello/signal 帧解析、拉取消息规范化（纯函数）
+├── message-display.js # 展示语义层：类型归组/语义色（Apple 系统色板）、优先级徽章、相对时间、今天-昨天-更早时间分组（消息中心与通知预览卡共享，纯函数）
 ├── sse-client.js      # 连接层：认证→建连→握手→订阅→心跳→退避重连；多主题与配置覆盖；单例 sseClient
 ├── renderer.js        # 渲染器注册表：registerRenderer/unregisterRenderer/notifyMessage（核心与 UI 解耦枢纽）
 ├── notify.js          # 默认渲染器：Element UI Notification 堆叠实现（唯一 element-ui 依赖点）
@@ -61,6 +62,9 @@ push/index.js ──> sse-client.js / renderer.js / notify.js
 sse-client.js ──> api/push.js（HTTP 上行）+ push-message.js（协议）
 push/admin.js ──> api/push-message.js（sendNotify）+ push-message.js（契约）
 notify.js ──> element-ui + push-message.js
+push/message-display.js ──> push-message.js（类型/优先级契约）
+components/PushNotificationCenter/** ──> push/message-display.js + store(push) + api/push-message.js
+views/push/notify-admin/components/NotifyPreviewCard.vue ──> push/message-display.js（同构语义色）
 ```
 
 ## 连接与消息时序
@@ -127,6 +131,41 @@ notify.js ──> element-ui + push-message.js
 | markRead | `POST /private/push/message/read` | 批量已读（`List<Long>` 裸数组，返回记录条数） |
 | operateMessage | `POST /private/push/message/operate` | 操作回传（CLICK 等，返回写入条数） |
 | sendNotify | `POST /private/push/message/notify` | 发送持久化通知（返回消息ID；接收人由后端按 topic 解析） |
+
+## 消息中心 UI（Liquid Glass 玻璃拟态）
+
+消息中心抽屉按「编排层 + 五个职责单一子组件 + 共享样式 token」拆分，视觉与全站
+macOS 浅色布局同色系（系统蓝 #0a84ff / 绿 #34c759 / 橙 #ff9f0a / 红 #ff3b30），
+数据流保持单一来源：
+
+```
+components/PushNotificationCenter/
+├── index.vue            # 编排层：抽屉外壳、筛选状态（activeType/unreadOnly，视图态不进 Vuex）、三态派生、matchMedia 三档视口
+├── components/
+│   ├── CenterHeader.vue # 头部：信标徽标 + 未读大数 + 全部已读/清空（手机端收纳为底部固定操作栏）
+│   ├── FilterBar.vue    # 筛选栏：全部/只看未读分段切换 + 类型 Tab 胶囊（未知类型动态归入"其他"，各 Tab 未读角标）
+│   ├── MessageList.vue  # 滚动容器：时间分组吸顶标题、滚动近底部节流加载更多（与底部按钮双通道）
+│   ├── MessageCard.vue  # 单条消息卡：玻璃卡 + 语义色导轨 + 优先级徽章 + 相对时间
+│   └── ListState.vue    # 三态复用：首屏骨架 / 空态（无消息 vs 筛选无结果）/ 错误态 + 重试
+└── styles/
+    └── _message-card.scss  # 卡片视觉 token partial，供 NotifyPreviewCard(center 模式) @import 同构复用
+```
+
+数据流与关键决策：
+
+- **单一数据源**：消息列表、未读数、分页游标、loading/loadError 全部收敛在 `store/modules/push`；
+  筛选为组件 computed 客户端派生（`filteredMessages` → `groupByDay`），不与服务端
+  `readFlag=unread` 参数混用，避免游标/去重双数据源错乱（该 API 参数保留供未来服务端过滤演进）。
+- **类型归组**：后端 msgType 字典扩展出的未知类型经 `resolveTypeKey` 归入 `other`，
+  "其他" Tab 仅在实际存在时动态出现，未知类型绝不直出 i18n key。
+- **时间分组**：`groupByDay` 基于消息 `timestamp` 按今天/昨天/更早 O(n) 分桶，分组标题吸顶。
+- **三态**：首屏骨架（loading 且无数据）、错误重试（loadError 且无数据，store `retry` 动作）、
+  空态区分"无消息"与"筛选无结果"（后者提供一键清除筛选）。
+- **响应式三档**：手机（≤768px）100% 全屏 + 底部固定操作栏 + 安全区留白、平板（769-992px）480px、
+  桌面（>992px）400px；触摸目标 ≥ 44px；移动端关闭入场错峰/呼吸/shimmer 动画降 GPU 负载。
+- **同构预览**：`views/push/notify-admin/components/NotifyPreviewCard.vue` center 模式
+  @import 同一 token partial 并复用 `message-display.js` 语义色，与 MessageCard 视觉严格一致。
+- **清空仅本地**：后端无删除接口，清空只清内存（刷新后重新拉取），维持既有语义。
 
 ## 管理侧发布封装（admin.js）
 
@@ -209,7 +248,8 @@ registerRenderer((message, { onRead }) => { /* 自定义 UI */ })
 | `store/modules/user.js` | getInfo 成功后 `dispatch('push/startConnection', null, { root: true })`；logout 中 stopConnection（同为 root 作用域） |
 | `App.vue` | mounted 幂等兜底建连；`beforeunload` 关闭连接 |
 | `layout/components/NavBar.vue` | 铃铛 + 连接状态点 + 未读红点，`mapGetters('push', [...])`（必须带命名空间） |
-| `components/PushNotificationCenter/index.vue` | 消息中心抽屉（历史/已读未读/清空） |
+| `components/PushNotificationCenter/index.vue` | 消息中心抽屉编排层（筛选/时间分组/三态/响应式，子组件见 `components/PushNotificationCenter/components/`） |
+| `views/push/notify-admin/components/NotifyPreviewCard.vue` | 管理侧实时预览卡（center 模式复用消息中心共享 token 保持同构） |
 | `store/index.js` | 注册 namespaced 的 push 模块 |
 | `views/push/notify-admin/index.vue` | 管理侧发布页面（走 admin.js → notify 接口） |
 

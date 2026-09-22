@@ -2,31 +2,49 @@
   <div class="pv-wrap">
     <span class="pv-badge">{{ $t('notifyAdmin.preview.badge') }}</span>
 
-    <!-- 消息中心视角：与 PushNotificationCenter 消息卡片同构 -->
-    <div v-if="mode === 'center'" :key="'center'" class="pv-card" :style="centerVars">
-      <span class="pv-rail" />
-      <div class="pv-body">
-        <div class="pv-head">
-          <span class="pv-chip"><i class="pv-dot" />{{ $t('push.type.' + form.type) }}</span>
-          <span v-if="isHighPriority" class="pv-priority">
+    <!-- 消息中心视角：复用消息中心共享 token，与 MessageCard 严格同构 -->
+    <div
+      v-if="mode === 'center'"
+      :key="'center'"
+      class="ink-card is-unread"
+      :class="{ 'is-urgent': form.priority === 'urgent' }"
+      :style="centerVars"
+    >
+      <span class="ink-card__rail" />
+      <div class="ink-card__body">
+        <div class="ink-card__head">
+          <span class="ink-chip">
+            <i class="ink-chip__dot" />
+            {{ $t('push.type.' + form.type) }}
+          </span>
+          <span
+            v-if="isHighPriority"
+            class="ink-priority"
+            :style="priorityStyle"
+          >
             {{ $t('push.priority.' + form.priority) }}
           </span>
         </div>
-        <p class="pv-title">{{ form.title || $t('notifyAdmin.form.titlePlaceholder') }}</p>
-        <p class="pv-content">{{ form.content || $t('notifyAdmin.preview.empty') }}</p>
+        <p class="ink-card__title">{{ form.title || $t('notifyAdmin.form.titlePlaceholder') }}</p>
+        <p class="ink-card__content">{{ form.content || $t('notifyAdmin.preview.empty') }}</p>
         <div v-if="form.url" class="pv-url">
           <i class="el-icon-link" />
           <span>{{ form.url }}</span>
         </div>
-        <div class="pv-foot">
-          <span class="pv-time">{{ timeText }}</span>
+        <div class="ink-card__meta">
+          <span class="ink-time">{{ timeText }}</span>
           <i class="pv-unread" />
         </div>
       </div>
     </div>
 
     <!-- 在线弹窗视角：与站内实时弹窗（Element Notification）同构 -->
-    <div v-else :key="'toast'" class="pv-toast" :style="toastVars">
+    <div
+      v-else
+      :key="'toast'"
+      class="pv-toast"
+      :style="toastVars"
+    >
       <span class="pv-toast-icon">
         <i :class="toastIcon" />
       </span>
@@ -40,28 +58,22 @@
 </template>
 
 <script>
+import { typeAccent, priorityBadge } from '@/push/message-display'
+
 /**
  * 通知实时预览卡（双视角）
  * <p>
- * center 模式与消息中心（PushNotificationCenter）消息卡片同构：语义色导轨、类型 chip、
- * 优先级徽章、未读辉光圆点；toast 模式与在线实时弹窗（Element Notification）同构：
- * 类型图标、标题、正文、时间。随表单输入实时重渲染，呈现"所见即用户所得"效果。
- * 优先级徽章按 low/normal/high/urgent 四级语义色映射。
+ * center 模式与消息中心（PushNotificationCenter/MessageCard）严格同构：直接复用
+ * components/PushNotificationCenter/styles/_message-card.scss 共享 token 与
+ * push/message-display.js 语义色（Liquid Glass 玻璃卡 + 语义色导轨），与全站
+ * macOS 浅色布局同色系；toast 模式与在线实时弹窗（Element Notification）
+ * 同构：类型图标、标题、正文、时间。随表单输入实时重渲染，呈现"所见即用户所得"。
  * </p>
  */
-const ACCENTS = {
-  notify: '#34c759',
-  warning: '#ff9f0a',
-  reminder: '#0a84ff'
-}
 
-const PRIORITY_ACCENTS = {
-  low: '#8e8e93',
-  normal: '#0a84ff',
-  high: '#ff9f0a',
-  urgent: '#ff3b30'
-}
-
+/**
+ * toast 视角类型图标映射（未知类型回退铃铛）
+ */
 const TOAST_ICONS = {
   notify: 'el-icon-bell',
   warning: 'el-icon-warning',
@@ -109,27 +121,44 @@ export default {
     }
   },
   computed: {
+    /**
+     * 类型语义强调色（与消息中心共享 message-display 展示语义层）
+     */
     accent() {
-      return ACCENTS[this.form.type] || '#8e8e93'
+      return typeAccent(this.form.type)
     },
-    priorityAccent() {
-      return PRIORITY_ACCENTS[this.form.priority] || '#0a84ff'
+    /**
+     * 优先级徽章参数（仅 high/urgent 展示）
+     */
+    badge() {
+      return priorityBadge(this.form.priority)
     },
     isHighPriority() {
-      return this.form.priority === 'high' || this.form.priority === 'urgent'
+      return this.badge.visible
     },
     toastIcon() {
       return TOAST_ICONS[this.form.type] || 'el-icon-bell'
     },
     /**
-     * 消息中心视角的语义色变量（优先级徽章底色/描边随优先级联动）
+     * 消息中心视角的语义色变量（极光导轨/类型圆点/未读辉光）
      */
     centerVars() {
       return {
-        '--accent': this.accent,
-        '--pri': this.priorityAccent,
-        '--pri-bg': hexToRgba(this.priorityAccent, 0.09),
-        '--pri-border': hexToRgba(this.priorityAccent, 0.2)
+        '--accent': this.accent
+      }
+    },
+    /**
+     * 优先级徽章语义色联动（文字/底色/描边，与 MessageCard 一致）
+     */
+    priorityStyle() {
+      if (!this.badge.visible) {
+        return {}
+      }
+      const accent = this.badge.accent
+      return {
+        color: accent,
+        background: accent + '22',
+        borderColor: accent + '3d'
       }
     },
     /**
@@ -158,6 +187,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+/* 消息中心视角：复用共享 token，与 MessageCard 严格同构 */
+@import '~@/components/PushNotificationCenter/styles/message-card';
+
 .pv-wrap {
   position: relative;
   padding-top: 10px;
@@ -177,109 +209,12 @@ export default {
   padding: 2px 10px;
 }
 
-/* ---------- 消息中心视角 ---------- */
-.pv-card {
-  position: relative;
-  display: flex;
-  align-items: stretch;
-  background:
-    linear-gradient(100deg, rgba(255, 255, 255, 0), rgba(255, 255, 255, 0) 42%),
-    rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.07);
-  border-radius: 14px;
-  padding: 14px 16px 14px 18px;
-  overflow: hidden;
-  box-shadow: 0 10px 30px rgba(12, 18, 38, 0.08);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  animation: pv-in 0.35s ease both;
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 16px 40px rgba(12, 18, 38, 0.12);
-  }
+/* 预览卡非交互件：覆盖共享 token 的指针形态 */
+.ink-card {
+  cursor: default;
 }
 
-@keyframes pv-in {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.pv-rail {
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 3px;
-  background: var(--accent);
-}
-
-.pv-body {
-  flex: 1;
-  min-width: 0;
-}
-
-.pv-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.pv-chip {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 10px;
-  letter-spacing: 0.1em;
-  color: #86868b;
-}
-
-.pv-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--accent);
-}
-
-.pv-priority {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  color: var(--pri);
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: var(--pri-bg);
-  border: 1px solid var(--pri-border);
-}
-
-.pv-title {
-  margin: 9px 0 5px;
-  font-size: 14px;
-  font-weight: 600;
-  color: #1d1d1f;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.pv-content {
-  margin: 0;
-  font-size: 12.5px;
-  color: #6e6e73;
-  line-height: 1.55;
-  min-height: 38px;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
+/* 跳转路由胶囊（系统蓝淡染） */
 .pv-url {
   display: inline-flex;
   align-items: center;
@@ -301,21 +236,7 @@ export default {
   }
 }
 
-.pv-foot {
-  margin-top: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.pv-time {
-  font-family: 'DIN Alternate', 'Avenir Next', 'Helvetica Neue', sans-serif;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  color: #a1a1a6;
-  font-variant-numeric: tabular-nums;
-}
-
+/* 未读辉光圆点 */
 .pv-unread {
   width: 7px;
   height: 7px;

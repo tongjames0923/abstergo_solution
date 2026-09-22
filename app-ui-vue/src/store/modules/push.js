@@ -56,7 +56,15 @@ const state = () => ({
   messages: [],
   cursor: null,
   hasMore: false,
-  loadingMore: false
+  loadingMore: false,
+  /**
+   * 首屏/刷新拉取进行中（消息中心骨架屏依据）
+   */
+  loading: false,
+  /**
+   * 最近一次拉取失败标记（消息中心错误态与重试依据）
+   */
+  loadError: false
 })
 
 const mutations = {
@@ -89,6 +97,8 @@ const mutations = {
     state.connectionStatus = CONNECTION_STATUS.IDLE
     state.cursor = null
     state.hasMore = false
+    state.loading = false
+    state.loadError = false
     seenIds.clear()
   },
   /**
@@ -107,6 +117,12 @@ const mutations = {
   },
   SET_LOADING_MORE(state, loading) {
     state.loadingMore = Boolean(loading)
+  },
+  SET_LOADING(state, loading) {
+    state.loading = Boolean(loading)
+  },
+  SET_LOAD_ERROR(state, error) {
+    state.loadError = Boolean(error)
   }
 }
 
@@ -116,7 +132,9 @@ const getters = {
   pushUnreadCount: state => state.messages.filter(item => !item.read).length,
   pushHasMore: state => state.hasMore,
   pushCursor: state => state.cursor,
-  pushLoadingMore: state => state.loadingMore
+  pushLoadingMore: state => state.loadingMore,
+  pushLoading: state => state.loading,
+  pushLoadError: state => state.loadError
 }
 
 const actions = {
@@ -174,9 +192,11 @@ const actions = {
    * 游标与 hasMore 写入 state 供消息中心分页加载。
    * 新增消息依次触发渲染器（默认弹窗，弹窗查看/关闭回传已读）与业务处理器；
    * 首次拉取（hello 兜底）仅入列不弹窗，避免登录即弹出一批历史通知。
+   * 拉取期间置 loading、失败置 loadError，供消息中心骨架屏与错误重试呈现。
    * </p>
    */
   async pullLatest({ commit, dispatch }) {
+    commit('SET_LOADING', true)
     try {
       const data = await fetchMessages({ limit: 20, readFlag: 'all' })
       const list = (data && data.list) || []
@@ -197,12 +217,23 @@ const actions = {
         }
       })
       commit('SET_PAGE', { cursor: data.cursor, hasMore: data.hasMore })
+      commit('SET_LOAD_ERROR', false)
       if (added > 0) {
         console.info(`[push] 拉取新增 ${added} 条消息`)
       }
     } catch (e) {
+      commit('SET_LOAD_ERROR', true)
       console.warn('[push] 拉取消息失败', e)
+    } finally {
+      commit('SET_LOADING', false)
     }
+  },
+  /**
+   * 首屏拉取失败后的用户触发重试：复位错误态后重发 pullLatest
+   */
+  retry({ commit, dispatch }) {
+    commit('SET_LOAD_ERROR', false)
+    return dispatch('pullLatest')
   },
   /**
    * 游标加载更早的历史消息（消息中心分页）

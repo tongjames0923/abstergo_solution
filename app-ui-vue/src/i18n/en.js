@@ -884,7 +884,8 @@ export default {
     type: {
       notify: 'Notice',
       warning: 'Alert',
-      reminder: 'Reminder'
+      reminder: 'Reminder',
+      other: 'Other'
     },
     priority: {
       low: 'Low',
@@ -901,11 +902,32 @@ export default {
       clear: 'Clear',
       loadMore: 'Load More',
       loading: 'Loading…',
-      emptyContent: '(No content)'
+      emptyContent: '(No content)',
+      markRead: 'Mark read',
+      open: 'View detail',
+      read: 'Read',
+      sentAt: 'Sent {time}',
+      filter: {
+        all: 'All',
+        unread: 'Unread only'
+      },
+      group: {
+        today: 'Today',
+        yesterday: 'Yesterday',
+        earlier: 'Earlier'
+      },
+      error: {
+        title: 'Failed to load messages',
+        hint: 'Network issue or service unavailable, please retry later',
+        retry: 'Retry'
+      },
+      emptyFiltered: 'No messages under current filters',
+      clearFilter: 'Clear filters'
     },
     time: {
       justNow: 'Just now',
-      minutesAgo: 'min ago'
+      minutesAgo: 'min ago',
+      hoursAgo: 'h ago'
     }
   },
 
