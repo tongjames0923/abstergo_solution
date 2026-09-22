@@ -94,8 +94,7 @@ export default {
     receiptText(item) {
       return this.$t('notifyAdmin.history.receiptText', {
         delivered: item.delivered,
-        total: item.delivered + item.failed,
-        online: item.online
+        total: item.delivered + item.failed
       })
     }
   }

@@ -27,4 +27,19 @@ public interface ISystemUserService extends IServiceTemplate<SystemUserEntity, L
      * @return
      */
     List<Long> queryUserIdsByUserName(String username);
+
+    /**
+     * 查询全部激活状态用户的ID（全体广播 fan-out 数据源）
+     *
+     * @return 激活用户ID列表
+     */
+    List<Long> queryAllActiveUserIds();
+
+    /**
+     * 按用户名前缀搜索激活状态用户的ID（topic 关键字匹配数据源）
+     *
+     * @param prefix 用户名前缀关键字
+     * @return 匹配的用户ID列表
+     */
+    List<Long> queryUserIdsByUserNamePrefix(String prefix);
 }

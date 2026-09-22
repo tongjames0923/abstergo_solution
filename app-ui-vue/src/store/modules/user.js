@@ -11,6 +11,7 @@ const getDefaultState = () => {
     refreshToken: null,
     name: '',
     userName: '',
+    userId: null,
     avatar: '',
     roles: [],
     roleGroups: [],
@@ -36,6 +37,9 @@ const mutations = {
   },
   SET_USER_NAME: (state, userName) => {
     state.userName = userName
+  },
+  SET_USER_ID: (state, userId) => {
+    state.userId = userId
   },
   SET_AVATAR: (state, avatar) => {
     state.avatar = avatar
@@ -102,7 +106,7 @@ const actions = {
       throw new Error('Verification failed, please Login again.')
     }
 
-    const { nickName, userName, avatar, avaliableRoles, avaliableDepartments, accountStatus, accountStatusStr } = data
+    const { id, nickName, userName, avatar, avaliableRoles, avaliableDepartments, accountStatus, accountStatusStr } = data
 
     // 后端返回 List<SystemRoleGroupVO>，需拆分为权限组列表和展平的权限项列表
     const roleGroups = avaliableRoles || []
@@ -115,6 +119,7 @@ const actions = {
 
     commit('SET_NAME', nickName)
     commit('SET_USER_NAME', userName)
+    commit('SET_USER_ID', id)
     commit('SET_AVATAR', avatar)
     commit('SET_ROLES', flatPermissions)
     commit('SET_ROLE_GROUPS', roleGroups)

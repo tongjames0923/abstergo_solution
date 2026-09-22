@@ -6,7 +6,9 @@ import { showPushNotification } from './notify'
  * push 推送模块统一门面（业务复用唯一入口）
  * <p>
  * 编排连接层（sse-client）、渲染器注册表（renderer）与消息处理器注册表：
- * initPush 建连并组装消息流水线（调用方去重拦截 → 渲染器分发 → 业务处理器分发），
+ * initPush 建连并订阅 SIGNAL 信令频道，信令/hello 兜底触发调用方拉取
+ * （/private/push/message/list）；拉取到的消息由调用方经 notifyMessage（渲染器分发，
+ * 默认弹窗）与 dispatchMessage（业务处理器分发）处理。
  * subscribeTopics/unsubscribeTopics 支持连接就绪后动态增删订阅主题，
  * registerMessageHandler 支持业务按消息类型（或 * 通配）注入自定义处理逻辑。
  * 上层集成点（store 模块、业务组件）只应依赖本文件导出的 API。
@@ -68,6 +70,7 @@ export function unregisterMessageHandler(type, handler) {
  * 向已注册的消息处理器分发一条消息
  * <p>
  * 命中顺序：精确 type 处理器在前，'*' 通配处理器在后；单个处理器异常被捕获隔离。
+ * 新链路下由拉取侧（store 拉取新增消息后）调用。
  * </p>
  *
  * @param {Object} message 规范化消息对象
@@ -100,39 +103,20 @@ export function dispatchMessage(message) {
 /**
  * 初始化推送连接（登录后调用）
  * <p>
- * 组装消息流水线：onMessage 先交调用方处理（如 store 去重入列，返回 false 表示消息被拦截、
- * 终止后续分发），通过后依次触发渲染器（默认弹窗 + 已注册渲染器）与业务处理器。
+ * 建连并订阅主题；收到 SIGNAL 信令或 hello 握手成功时回调 onSignal（由调用方触发拉取）。
  * 幂等：重复调用由连接层忽略。
  * </p>
  *
  * @param {Object} options 初始化参数
  * @param {string} options.token 当前登录令牌
- * @param {string} options.userName 当前登录用户名（缺省拼接 per-user 主题）
- * @param {string|Array<string>} [options.topics] 订阅主题（缺省 topicPrefix + userName）
+ * @param {string|number} options.userId 当前登录用户数字 id（缺省拼接 SIGNAL 频道 tbs.push.channel.{userId}）
+ * @param {string|Array<string>} [options.topics] 订阅主题（缺省 topicPrefix + userId）
  * @param {Object} [options.config] 连接配置覆盖项（心跳/退避/主题前缀，见 PUSH_DEFAULTS）
  * @param {Function} [options.onStatus] 连接状态变更回调 (status) => void
- * @param {Function} [options.onMessage] 消息拦截回调 (message) => boolean|void，返回 false 终止分发
- * @param {Function} [options.onRead] 用户查看或关闭弹窗回调 (message) => void（透传渲染器钩子）
+ * @param {Function} [options.onSignal] 收到 SIGNAL 信令或建连兜底回调 () => void，用于触发拉取
  */
-export function initPush({ token, userName, topics, config, onStatus, onMessage, onRead }) {
-  sseClient.connect({
-    token,
-    userName,
-    topics,
-    config,
-    onStatus,
-    onMessage: message => {
-      let accepted = true
-      if (typeof onMessage === 'function') {
-        accepted = onMessage(message) !== false
-      }
-      if (!accepted) {
-        return
-      }
-      notifyMessage(message, { onRead })
-      dispatchMessage(message)
-    }
-  })
+export function initPush({ token, userId, topics, config, onStatus, onSignal }) {
+  sseClient.connect({ token, userId, topics, config, onStatus, onSignal })
 }
 
 /**
@@ -159,5 +143,8 @@ export function unsubscribeTopics(topics) {
 export function closePush() {
   sseClient.close()
 }
+
+// 渲染器分发由拉取侧调用：通知弹窗入口（与 dispatchMessage 配对使用）
+export { notifyMessage }
 
 export { CONNECTION_STATUS }

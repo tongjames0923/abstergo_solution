@@ -120,8 +120,16 @@ export default {
       return this.$store.getters.device === 'mobile' ? '100%' : '384px'
     }
   },
+  watch: {
+    visible(open) {
+      // 打开时主动拉取最新一页，兜底内存态未更新的情况
+      if (open) {
+        this.pullLatest().catch(e => console.warn('[push-center] 拉取失败', e))
+      }
+    }
+  },
   methods: {
-    ...mapActions('push', ['markRead', 'markAllRead', 'clearAll']),
+    ...mapActions('push', ['markRead', 'markAllRead', 'clearAll', 'pullLatest']),
     handleClose() {
       this.$emit('update:visible', false)
     },

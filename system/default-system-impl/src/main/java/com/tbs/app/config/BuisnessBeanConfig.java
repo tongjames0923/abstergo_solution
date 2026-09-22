@@ -10,7 +10,7 @@ import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
 import com.tbs.app.service.impl.genericapi.GenericApiServiceImpl;
-import com.tbs.app.service.impl.push.DefaultNotifyReceiverResolver;
+import com.tbs.app.service.impl.push.TopicPrefixNotifyReceiverResolver;
 import com.tbs.app.service.impl.push.PushNotifyServiceImpl;
 import com.tbs.app.service.impl.role.SimpleRoleGroupServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
@@ -182,7 +182,7 @@ public class BuisnessBeanConfig {
     @ConditionalOnMissingBean(INotifyReceiverResolver.class)
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public INotifyReceiverResolver notifyReceiverResolver() {
-        return new DefaultNotifyReceiverResolver();
+        return new TopicPrefixNotifyReceiverResolver();
     }
 
 }

@@ -1,13 +1,15 @@
 /**
- * 推送消息结构体与协议帧常量
+ * 推送协议帧常量与消息规范化工具
  * <p>
- * 约定后台 DATA 帧 payload 内承载的业务消息 JSON 结构（见 MESSAGE_EXAMPLE），
- * 以及 SSE 事件名（即帧类型小写值）。前端所有解析与校验集中在此，避免散落。
+ * 新链路（信令+拉取）：SSE 仅承载 hello/signal/ping/pong 等协议帧，业务消息内容一律
+ * 通过 /private/push/message/list 拉取并经 normalizeFetchedMessage 规范化；
+ * 消息投递范围由后端 TopicPrefixNotifyReceiverResolver 按 topic 前缀解析。
+ * 前端所有协议常量与解析校验集中在此，避免散落。
  * </p>
  */
 
 /**
- * 消息类型（与后台 FrameTypeEnum 业务语义对齐）
+ * 消息类型（业务可字典驱动扩展，后端仅校验非空与长度）
  */
 export const MESSAGE_TYPES = {
   NOTIFY: 'notify',
@@ -27,10 +29,11 @@ export const PRIORITIES = {
 
 /**
  * SSE 事件名 = 帧类型小写值（与后台 FrameTypeEnum.getValue 对齐，无 push- 前缀）
+ * 注：新链路下不再订阅 DATA 帧，业务消息一律由 SIGNAL 信令触发拉取获得
  */
 export const FRAME_EVENTS = {
   HELLO: 'hello',
-  DATA: 'data',
+  SIGNAL: 'signal',
   ERROR: 'error',
   PING: 'ping',
   PONG: 'pong',
@@ -39,9 +42,25 @@ export const FRAME_EVENTS = {
 }
 
 /**
- * 订阅主题前缀：拼接当前登录用户名得到 per-user 通知主题
+ * SIGNAL 信令频道前缀：拼接当前登录用户数字 id 得到 per-user 频道
+ * 须与后端 PushNotifyServiceImpl.CHANNEL_TOPIC_PREFIX 及设计文档 4.4/4.5 保持一致
  */
-export const TOPIC_PREFIX = 'global.system.notify.'
+export const TOPIC_PREFIX = 'tbs.push.channel.'
+
+/**
+ * 业务 topic：全体广播（后端 TopicPrefixNotifyReceiverResolver 按用户表全量解析激活用户）
+ */
+export const TOPIC_BROADCAST = 'global.broadcast'
+
+/**
+ * 业务 topic 前缀：精确匹配单个用户（user.name.{userName}，后端按用户表精确查询）
+ */
+export const TOPIC_USER_NAME_PREFIX = 'user.name.'
+
+/**
+ * 业务 topic 前缀：按用户名前缀搜索匹配多个用户（user.search.{keyword}，后端 leftLike 查询）
+ */
+export const TOPIC_USER_SEARCH_PREFIX = 'user.search.'
 
 /**
  * 心跳上行周期（毫秒）：须远小于后台空闲超时（tbs.push.heartbeat-timeout-millis，默认 600000ms 可配置），
@@ -81,20 +100,6 @@ export const PUSH_DEFAULTS = {
 }
 
 /**
- * 业务消息示例（DATA 帧 payload 形态），用于联调与文档对齐
- */
-export const MESSAGE_EXAMPLE = {
-  id: 'M1705123456789',
-  type: MESSAGE_TYPES.NOTIFY,
-  title: '系统通知',
-  content: '您有一条新的审批待处理，请及时处理。',
-  timestamp: 1705123456789,
-  priority: PRIORITIES.NORMAL,
-  sender: 'system',
-  url: '/approve/123'
-}
-
-/**
  * 解析并校验 hello 帧 payload（字符串需二次 JSON.parse），提取会话标识
  *
  * @param {string} rawPayload hello 帧的 payload 字符串
@@ -117,41 +122,66 @@ export function parseHelloPayload(rawPayload) {
 }
 
 /**
- * 解析并校验业务消息（DATA 帧 payload 字符串）
+ * 解析并校验 SIGNAL 信令帧（payload 为空，仅表达某频道有新消息）
  * <p>
- * 校验规则：必须可解析为对象，且含必填字段 id 与 type（type 须在 MESSAGE_TYPES 内）。
- * 解析或校验失败返回 null，调用方容错忽略该条，不阻断 SSE 连接。
+ * 信令只承载频道提示，不携带消息标识；解析仅作合法性校验与轻量事件提取。
  * </p>
  *
- * @param {string} rawPayload DATA 帧的 payload 字符串
+ * @param {string} raw SIGNAL 帧原始字符串
+ * @returns {Object|null} { topic, messageId, timestamp } 或非法时 null
+ */
+export function parseSignalFrame(raw) {
+  if (!raw) {
+    return null
+  }
+  try {
+    const obj = JSON.parse(raw)
+    if (!obj || obj.type !== FRAME_EVENTS.SIGNAL) {
+      return null
+    }
+    return {
+      topic: obj.topic,
+      messageId: obj.messageId,
+      timestamp: typeof obj.timestamp === 'number' ? obj.timestamp : Date.now()
+    }
+  } catch (e) {
+    console.warn('[push] SIGNAL 帧解析失败', e)
+    return null
+  }
+}
+
+/**
+ * 将后端分页拉取返回的 PushNotifyMessageVO 规范化为前端消息对象
+ * <p>
+ * 字段映射：messageId→id、msgType→type、createTime→timestamp、readFlag→read；
+ * 与拉取接口（/private/push/message/list）返回体一一对应，统一入列与渲染。
+ * </p>
+ *
+ * @param {Object} vo 后端 PushNotifyMessageVO
  * @returns {Object|null} 规范化消息对象，或非法时 null
  */
-export function parsePushMessage(rawPayload) {
-  if (!rawPayload) {
+export function normalizeFetchedMessage(vo) {
+  if (!vo || vo.messageId == null) {
     return null
   }
-  let obj
-  try {
-    obj = JSON.parse(rawPayload)
-  } catch (e) {
-    console.warn('[push] 业务消息 JSON 解析失败', e)
-    return null
-  }
-  if (!obj || typeof obj !== 'object') {
-    return null
-  }
-  if (!obj.id || !Object.values(MESSAGE_TYPES).includes(obj.type)) {
-    console.warn('[push] 业务消息缺少必填字段 id/type', obj)
-    return null
+  let timestamp = Date.now()
+  if (typeof vo.createTime === 'number') {
+    timestamp = vo.createTime
+  } else if (typeof vo.createTime === 'string' && vo.createTime) {
+    const parsed = new Date(vo.createTime.replace(/-/g, '/')).getTime()
+    if (!Number.isNaN(parsed)) {
+      timestamp = parsed
+    }
   }
   return {
-    id: String(obj.id),
-    type: obj.type,
-    title: obj.title || '',
-    content: obj.content || '',
-    timestamp: typeof obj.timestamp === 'number' ? obj.timestamp : Date.now(),
-    priority: Object.values(PRIORITIES).includes(obj.priority) ? obj.priority : PRIORITIES.NORMAL,
-    sender: obj.sender || '',
-    url: obj.url || ''
+    id: String(vo.messageId),
+    type: vo.msgType,
+    title: vo.title || '',
+    content: vo.content || '',
+    timestamp,
+    priority: Object.values(PRIORITIES).includes(vo.priority) ? vo.priority : PRIORITIES.NORMAL,
+    sender: vo.sender || '',
+    url: vo.url || '',
+    read: Boolean(vo.readFlag)
   }
 }

@@ -16,8 +16,8 @@ export default {
   name: 'App',
   mounted() {
     // 已登录且用户态就绪时的幂等兜底（权限守卫已触发过则此处不重复建连）
-    const { token, userName } = this.$store.state.user
-    if (token && userName) {
+    const { token, userId } = this.$store.state.user
+    if (token && userId) {
       this.$store.dispatch('push/startConnection')
     }
     window.addEventListener('beforeunload', this.handleBeforeUnload)

@@ -40,7 +40,16 @@ public class ConnectionInterceptorChain implements IConnectionInterceptor {
      */
     @Override
     public void onConnect(IConnectionSession session) {
+        if (provider == null) {
+            return;
+        }
         for (IConnectionInterceptor interceptor : provider) {
+            if (interceptor instanceof ConnectionInterceptorChain) {
+                continue;
+            }
+            if (interceptor == this) {
+                continue;
+            }
             try {
                 interceptor.onConnect(session);
             } catch (Throwable error) {

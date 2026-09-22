@@ -1,11 +1,13 @@
-import { pushSend } from '@/api/push'
-import { MESSAGE_TYPES, PRIORITIES, TOPIC_PREFIX } from '@/push/push-message'
+import { sendNotify } from '@/api/push-message'
+import { MESSAGE_TYPES, PRIORITIES, TOPIC_BROADCAST, TOPIC_USER_NAME_PREFIX } from '@/push/push-message'
 
 /**
  * 系统通知发布封装层（可复用基础工具）
  * <p>
- * 面向管理侧的通知发布能力收敛：表单结构化校验、消息契约组装、按发布范围
- * （全体通配 / 逐用户 topic）投递与结果汇总、本地发布历史存取。
+ * 面向管理侧的通知发布能力收敛：表单结构化校验、新链路 notify 接口（/private/push/message/notify）
+ * 提交、按发布范围（全体广播 topic / 逐用户精确 topic）投递与结果汇总、本地发布历史存取。
+ * 接收人不随表单传递，由后端 TopicPrefixNotifyReceiverResolver 按 topic 前缀查询用户表解析：
+ * global.broadcast → 全体激活用户；user.name.{userName} → 按用户名精确匹配。
  * 本模块不依赖任何 Vue 组件与 UI 库，可被任意模块直接调用；
  * 用户可读文案由调用方基于返回的结构化结果自行映射 i18n。
  * </p>
@@ -26,34 +28,10 @@ export const NOTIFY_FORM_LIMITS = {
 }
 
 /**
- * 全体范围的通配主题
- */
-export const ALL_SCOPE_TOPIC = TOPIC_PREFIX + '*'
-
-/**
  * 发布历史 localStorage 键与容量上限
  */
 const HISTORY_KEY = 'PUSH_NOTIFY_HISTORY'
 const HISTORY_LIMIT = 50
-
-/**
- * 组装符合消息契约的业务载荷（见 push-message.js MESSAGE_EXAMPLE）
- *
- * @param {Object} form 通知表单 { title, content, type, priority, url? }
- * @returns {Object} 消息载荷 { id, type, title, content, timestamp, priority, sender, url }
- */
-export function buildNotifyMessage(form) {
-  return {
-    id: 'M' + Date.now() + Math.random().toString(36).slice(2, 6),
-    type: form.type,
-    title: form.title,
-    content: form.content,
-    timestamp: Date.now(),
-    priority: form.priority,
-    sender: 'admin',
-    url: form.url || ''
-  }
-}
 
 /**
  * 表单结构化校验（不抛异常，返回结构化结果，文案由调用方映射 i18n）
@@ -104,71 +82,68 @@ export function validateNotifyForm(form) {
 }
 
 /**
- * 解析发布范围为目标 topic 列表
- *
- * @param {Object} form 通知表单（含 scope/users）
- * @returns {Array<{target: string, topic: string}>} 投递计划（target: '*' 表示全体，否则为用户名）
- */
-function buildDeliverPlan(form) {
-  if (form.scope === 'all') {
-    return [{ target: '*', topic: ALL_SCOPE_TOPIC }]
-  }
-  const users = Array.isArray(form.users) ? form.users : []
-  return users
-    .filter(item => typeof item === 'string' && item.trim())
-    .map(username => ({ target: username.trim(), topic: TOPIC_PREFIX + username.trim() }))
-}
-
-/**
- * 发布系统通知
+ * 发布系统通知（新链路 notify 接口）
  * <p>
- * 全体范围走通配主题单次投递；指定用户逐人投递（任一条失败不中断其余投递）。
- * 投递完成后写入本地发布历史。网络异常被捕获并归入该条投递的失败结果，不向上抛出。
+ * 全体范围走 global.broadcast topic 单次提交；指定用户逐人 user.name.{userName} topic 提交
+ * （任一条失败不中断其余投递）。接收人由后端按 topic 前缀查询用户表解析并 fan-out + 发信令。
+ * 发布完成后写入本地发布历史。网络异常被捕获并归入该条投递的失败结果，不向上抛出。
  * </p>
  *
  * @param {Object} form 通知表单 { title, content, type, priority, url?, scope, users? }
- * @returns {Promise<Object>} { ok, message, summary: {total, delivered, failed},
- *          results: Array<{target, topic, ok, messageId?, onlineCount?, error?}>, record }
+ * @returns {Promise<Object>} { ok, summary: {total, delivered, failed},
+ *          results: Array<{target, topic, ok, messageId?, error?}>, record, validation? }
  */
 export async function publishNotify(form) {
   const check = validateNotifyForm(form)
   if (!check.valid) {
-    return { ok: false, message: null, summary: { total: 0, delivered: 0, failed: 0 }, results: [], record: null, validation: check }
+    return { ok: false, summary: { total: 0, delivered: 0, failed: 0 }, results: [], record: null, validation: check }
   }
 
-  const message = buildNotifyMessage(form)
-  const plan = buildDeliverPlan(form)
+  const baseForm = {
+    msgType: form.type,
+    title: form.title,
+    content: form.content,
+    priority: form.priority,
+    url: form.url || '',
+    source: 'http'
+  }
 
+  const plan = form.scope === 'all'
+    ? [{ target: '*', topic: TOPIC_BROADCAST }]
+    : form.users
+      .filter(item => typeof item === 'string' && item.trim())
+      .map(username => ({ target: username.trim(), topic: TOPIC_USER_NAME_PREFIX + username.trim() }))
+
+  const publishedAt = Date.now()
   const settled = await Promise.all(plan.map(async item => {
     try {
-      const receipt = await pushSend(item.topic, message)
-      return { target: item.target, topic: item.topic, ok: true, messageId: receipt.messageId, onlineCount: receipt.onlineCount }
+      const messageId = await sendNotify(Object.assign({}, baseForm, { topic: item.topic }))
+      return { target: item.target, topic: item.topic, ok: messageId != null, messageId }
     } catch (e) {
-      console.warn('[push-admin] 投递失败', item.target, e)
+      console.warn('[push-admin] 发布失败', item.target, e)
       return { target: item.target, topic: item.topic, ok: false, error: e && e.message }
     }
   }))
 
   const delivered = settled.filter(item => item.ok).length
   const failed = settled.length - delivered
-  const online = settled.reduce((max, item) => (item.ok && item.onlineCount > max ? item.onlineCount : max), 0)
   const summary = { total: settled.length, delivered, failed }
+  const okResult = settled.find(item => item.ok && item.messageId != null)
 
   const record = {
-    id: message.id,
-    title: message.title,
-    type: message.type,
-    priority: message.priority,
+    id: okResult ? String(okResult.messageId) : null,
+    title: form.title,
+    type: form.type,
+    priority: form.priority,
     scope: form.scope,
     targets: settled.map(item => item.target),
-    publishedAt: message.timestamp,
+    publishedAt,
     delivered,
-    failed,
-    online
+    failed
   }
   addHistoryRecord(record)
 
-  return { ok: failed === 0, message, summary, results: settled, record }
+  return { ok: failed === 0, summary, results: settled, record }
 }
 
 /**

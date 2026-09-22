@@ -939,7 +939,7 @@ export default {
       colTime: '发布时间',
       colReceipt: '送达回执',
       scopeAll: '全体用户',
-      receiptText: '{delivered}/{total} · 在线 {online}',
+      receiptText: '{delivered}/{total} 条送达',
       empty: '暂无发布记录',
       remove: '删除记录',
       clear: '清空记录',
@@ -954,7 +954,7 @@ export default {
       invalid: '表单数据不合法，请检查填写'
     },
     message: {
-      publishSuccess: '发布成功：送达 {delivered}/{total}，在线会话 {online}',
+      publishSuccess: '发布成功：送达 {delivered}/{total}',
       publishPartial: '部分投递失败：成功 {delivered}，失败 {failed}（{targets}）',
       publishFailed: '发布失败，请检查网络后重试',
       invalidForm: '表单校验未通过，请检查填写'

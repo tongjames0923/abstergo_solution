@@ -294,7 +294,7 @@ export default {
       })
     },
     /**
-     * 发布结果反馈：全成功 Notification.success（含送达数与在线会话数）、
+     * 发布结果反馈：全成功 Notification.success（含送达数）、
      * 部分失败 Notification.warning（列失败目标）、全失败 Message.error
      */
     reportPublishResult(result) {
@@ -315,13 +315,11 @@ export default {
         })
         return
       }
-      const online = results.reduce((max, item) => (item.ok && item.onlineCount > max ? item.onlineCount : max), 0)
       Notification.success({
         title: this.$t('notifyAdmin.title'),
         message: this.$t('notifyAdmin.message.publishSuccess', {
           delivered: summary.delivered,
-          total: summary.total,
-          online
+          total: summary.total
         })
       })
     },

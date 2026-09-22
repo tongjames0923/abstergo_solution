@@ -3,8 +3,7 @@ import { pushAuth, pushSubscribe, pushUnsubscribe, pushPing } from '@/api/push'
 import {
   PUSH_DEFAULTS,
   FRAME_EVENTS,
-  parseHelloPayload,
-  parsePushMessage
+  parseHelloPayload
 } from '@/push/push-message'
 
 /**
@@ -35,14 +34,14 @@ class SsePushClient {
     this.eventSource = null
     this.ticket = null
     this.sessionId = null
-    this.userName = null
+    this.userId = null
     this.token = null
     this.status = CONNECTION_STATUS.IDLE
     this.heartbeatTimer = null
     this.reconnectTimer = null
     this.reconnectAttempts = 0
-    this.onMessage = null
     this.onStatus = null
+    this.onSignal = null
     // 主动关闭标记：登出/卸载时置位，阻止重连
     this.manualClose = false
     /**
@@ -60,20 +59,20 @@ class SsePushClient {
    *
    * @param {Object} opts 连接参数
    * @param {string} opts.token 当前登录令牌
-   * @param {string} opts.userName 当前登录用户名（用于缺省拼接 per-user 主题）
-   * @param {string|Array<string>} [opts.topics] 订阅主题（缺省为 topicPrefix + userName）
+   * @param {string|number} opts.userId 当前登录用户数字 id（用于缺省拼接 SIGNAL 频道 tbs.push.channel.{userId}）
+   * @param {string|Array<string>} [opts.topics] 订阅主题（缺省为 topicPrefix + userId）
    * @param {Object} [opts.config] 配置覆盖项（心跳周期/退避参数/主题前缀，见 PUSH_DEFAULTS）
-   * @param {Function} [opts.onMessage] 收到业务消息回调 (message) => boolean|void，返回 false 表示调用方已拦截（如去重）
    * @param {Function} [opts.onStatus] 连接状态变更回调 (status) => void
+   * @param {Function} [opts.onSignal] 收到 SIGNAL 信令或建连成功（hello 兜底）回调 () => void，用于触发拉取
    */
-  connect({ token, userName, topics, onMessage, onStatus, config }) {
-    if (onMessage) this.onMessage = onMessage
+  connect({ token, userId, topics, onStatus, onSignal, config }) {
     if (onStatus) this.onStatus = onStatus
+    if (onSignal) this.onSignal = onSignal
     if (config) {
       this.config = { ...this.config, ...config }
     }
     this.token = token
-    this.userName = userName
+    this.userId = userId
     this.topics = this._resolveTopics(topics)
     this.manualClose = false
     if (this.eventSource || this.status === CONNECTION_STATUS.CONNECTING) {
@@ -126,7 +125,7 @@ class SsePushClient {
     this._setStatus(this.reconnectAttempts > 0 ? CONNECTION_STATUS.RECONNECTING : CONNECTION_STATUS.CONNECTING)
     let credential
     try {
-      credential = await pushAuth(this.token, this.userName)
+      credential = await pushAuth(this.token, this.userId)
     } catch (e) {
       console.warn('[push] 认证签票据失败，准备重连', e)
       this._scheduleReconnect()
@@ -157,16 +156,16 @@ class SsePushClient {
       this._startHeartbeat()
       this.reconnectAttempts = 0
       this._setStatus(CONNECTION_STATUS.CONNECTED)
+      // hello 握手成功后主动拉第一页：兜底离线期间消息与丢失的信令
+      if (typeof this.onSignal === 'function') {
+        this.onSignal()
+      }
     })
 
-    es.addEventListener(FRAME_EVENTS.DATA, (ev) => {
-      const frame = this._safeParse(ev.data)
-      if (!frame) {
-        return
-      }
-      const message = parsePushMessage(frame.payload)
-      if (message && typeof this.onMessage === 'function') {
-        this.onMessage(message)
+    es.addEventListener(FRAME_EVENTS.SIGNAL, () => {
+      // 信令本身无载荷，仅提示"该频道有新消息"，由调用方触发拉取
+      if (typeof this.onSignal === 'function') {
+        this.onSignal()
       }
     })
 
@@ -184,7 +183,7 @@ class SsePushClient {
 
   /**
    * 归一化主题入参：字符串/数组统一为数组并过滤非法项；
-   * 入参为空时回退为 per-user 缺省主题（topicPrefix + userName）
+   * 入参为空时回退为 per-user 缺省 SIGNAL 频道主题（topicPrefix + userId）
    *
    * @param {string|Array<string>} [topics] 主题入参
    * @returns {Array<string>} 有效主题数组，不为null
@@ -195,7 +194,7 @@ class SsePushClient {
     if (valid.length) {
       return valid
     }
-    return this.userName ? [this.config.topicPrefix + this.userName] : []
+    return this.userId != null ? [this.config.topicPrefix + this.userId] : []
   }
 
   /**

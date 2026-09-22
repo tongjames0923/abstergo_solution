@@ -1,13 +1,15 @@
-import { initPush, closePush, CONNECTION_STATUS } from '@/push'
+import { initPush, closePush, CONNECTION_STATUS, notifyMessage, dispatchMessage } from '@/push'
 import { getToken } from '@/utils/auth'
+import { TOPIC_PREFIX, normalizeFetchedMessage } from '@/push/push-message'
+import { fetchMessages, markRead } from '@/api/push-message'
 
 /**
  * 推送消息 Vuex 模块
  * <p>
  * 单一数据源：消息列表、已读状态、连接状态均收敛于此；去重用模块级 seenIds（非响应式，
  * 仅作幂等判断）避免重连/重发导致的重复弹窗与重复入列。未读计数由 messages 派生。
- * 消息呈现与业务处理不在本模块内：连接与分发统一走门面 {@link module:@/push}（initPush），
- * 弹窗由默认渲染器负责，本模块仅在 onMessage 中完成去重与入列。
+ * 新链路（信令+拉取）：SSE 仅触发 SIGNAL 拉取，消息内容由 pullLatest 拉取后去重入列，
+ * 再经门面渲染器（默认弹窗）与业务处理器分发；本模块不直接依赖 SSE 数据帧。
  * </p>
  */
 
@@ -20,6 +22,21 @@ const MAX_MESSAGES = 200
  * 已见消息 id 集合（非响应式，仅用于去重）
  */
 const seenIds = new Set()
+
+/**
+ * SIGNAL 拉取防抖定时器（合并信令风暴与 hello 兜底）
+ */
+let pullTimer = null
+
+/**
+ * 是否已完成首次拉取（hello 兜底）：首拉仅入列不弹窗，避免登录即弹出一批历史通知
+ */
+let firstPullDone = false
+
+/**
+ * 拉取防抖间隔（毫秒），对齐设计文档 2.3 触发条件 A
+ */
+const PULL_DEBOUNCE = 300
 
 /**
  * 已读状态持久化扩展点（本轮为空实现，维持内存态）
@@ -36,7 +53,9 @@ function persistRead(messages) {
 
 const state = () => ({
   connectionStatus: CONNECTION_STATUS.IDLE,
-  messages: []
+  messages: [],
+  cursor: null,
+  hasMore: false
 })
 
 const mutations = {
@@ -67,7 +86,13 @@ const mutations = {
   RESET(state) {
     state.messages = []
     state.connectionStatus = CONNECTION_STATUS.IDLE
+    state.cursor = null
+    state.hasMore = false
     seenIds.clear()
+  },
+  SET_PAGE(state, { cursor, hasMore }) {
+    state.cursor = cursor != null ? cursor : null
+    state.hasMore = Boolean(hasMore)
   }
 }
 
@@ -79,29 +104,30 @@ const getters = {
 
 const actions = {
   /**
-   * 启动推送连接：取登录态 token 与 userName 委托门面建连；
-   * onMessage 仅做去重与入列（重复消息返回 false 交由门面终止后续渲染与处理器分发）
+   * 启动推送连接：取登录态 token 与数字 id 委托门面建连；
+   * 仅订阅 SIGNAL 信令频道（tbs.push.channel.{userId}），业务消息由信令触发拉取获得
    */
-  startConnection({ commit, rootState }) {
+  startConnection({ commit, dispatch, rootState }) {
     const token = getToken()
-    const userName = rootState.user.userName
-    if (!token || !userName) {
+    const userId = rootState.user.userId
+    if (!token || !userId) {
       return
+    }
+    // SIGNAL 信令/hello 兜底统一经防抖触发拉取第一页（合并信令风暴）
+    const triggerPull = () => {
+      if (pullTimer) {
+        clearTimeout(pullTimer)
+      }
+      pullTimer = setTimeout(() => {
+        dispatch('pullLatest').catch(e => console.warn('[push] 拉取消息失败', e))
+      }, PULL_DEBOUNCE)
     }
     initPush({
       token,
-      userName,
+      userId,
+      topics: [TOPIC_PREFIX + userId].filter(Boolean),
       onStatus: status => commit('SET_STATUS', status),
-      onMessage: message => {
-        if (seenIds.has(message.id)) {
-          return false
-        }
-        seenIds.add(message.id)
-        const full = { ...message, read: false, receivedAt: Date.now() }
-        commit('ADD_MESSAGE', full)
-        return true
-      },
-      onRead: message => commit('MARK_READ', message.id)
+      onSignal: triggerPull
     })
   },
   /**
@@ -111,16 +137,75 @@ const actions = {
     closePush()
     commit('SET_STATUS', CONNECTION_STATUS.CLOSED)
   },
-  markRead({ commit }, id) {
-    commit('MARK_READ', id)
+  /**
+   * 拉取当前用户消息第一页并合并入列（SIGNAL 信令/hello 兜底触发）
+   * <p>
+   * 按 messageId 去重（seenIds 幂等）；拉取回来的 readFlag 直接决定本地已读态；
+   * 游标与 hasMore 写入 state 供消息中心分页加载。
+   * 新增消息依次触发渲染器（默认弹窗，弹窗查看/关闭回传已读）与业务处理器；
+   * 首次拉取（hello 兜底）仅入列不弹窗，避免登录即弹出一批历史通知。
+   * </p>
+   */
+  async pullLatest({ commit, dispatch }) {
+    try {
+      const data = await fetchMessages({ limit: 20, readFlag: 'all' })
+      const list = (data && data.list) || []
+      const isFirst = !firstPullDone
+      firstPullDone = true
+      let added = 0
+      list.forEach(vo => {
+        const message = normalizeFetchedMessage(vo)
+        if (!message || seenIds.has(message.id)) {
+          return
+        }
+        seenIds.add(message.id)
+        commit('ADD_MESSAGE', { ...message, receivedAt: Date.now() })
+        added++
+        if (!isFirst) {
+          notifyMessage(message, { onRead: () => dispatch('markRead', message.id) })
+          dispatchMessage(message)
+        }
+      })
+      commit('SET_PAGE', { cursor: data.cursor, hasMore: data.hasMore })
+      if (added > 0) {
+        console.info(`[push] 拉取新增 ${added} 条消息`)
+      }
+    } catch (e) {
+      console.warn('[push] 拉取消息失败', e)
+    }
   },
-  markAllRead({ commit }) {
+  /**
+   * 记录单条已读：本地即时反馈，并异步回传后端写 READ 日志
+   */
+  async markRead({ commit }, id) {
+    commit('MARK_READ', id)
+    if (id != null && /^\d+$/.test(String(id))) {
+      try {
+        await markRead([Number(id)])
+      } catch (e) {
+        console.warn('[push] 标记已读回传失败', id, e)
+      }
+    }
+  },
+  /**
+   * 全部已读：本地全标，并异步回传后端（仅数字 id 视为新链路消息）
+   */
+  async markAllRead({ commit, state }) {
+    const ids = state.messages.filter(item => !item.read && /^\d+$/.test(String(item.id))).map(item => Number(item.id))
     commit('MARK_ALL_READ')
+    if (ids.length) {
+      try {
+        await markRead(ids)
+      } catch (e) {
+        console.warn('[push] 全部已读回传失败', e)
+      }
+    }
   },
   clearAll({ commit }) {
     commit('CLEAR_ALL')
   },
   reset({ commit }) {
+    firstPullDone = false
     commit('RESET')
   }
 }

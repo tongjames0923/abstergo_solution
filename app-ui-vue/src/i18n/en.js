@@ -908,7 +908,7 @@ export default {
   // System Notification Publishing
   notifyAdmin: {
     title: 'System Notification Publishing',
-    subtitle: 'Deliver system notifications to all users or selected users instantly; online users receive them in the message center and popups in real time',
+    subtitle: 'Deliver system notifications to all users or selected users; messages are persisted and pushed to the message center with real-time popups',
     form: {
       type: 'Type',
       priority: 'Priority',
@@ -939,7 +939,7 @@ export default {
       colTime: 'Published At',
       colReceipt: 'Receipt',
       scopeAll: 'All users',
-      receiptText: '{delivered}/{total} · online {online}',
+      receiptText: '{delivered}/{total} delivered',
       empty: 'No publish records',
       remove: 'Remove',
       clear: 'Clear All',
@@ -954,7 +954,7 @@ export default {
       invalid: 'Invalid form data, please check your input'
     },
     message: {
-      publishSuccess: 'Published: delivered {delivered}/{total}, online sessions {online}',
+      publishSuccess: 'Published: delivered {delivered}/{total}',
       publishPartial: 'Partially delivered: {delivered} succeeded, {failed} failed ({targets})',
       publishFailed: 'Publishing failed, please check the network and retry',
       invalidForm: 'Form validation failed, please check your input'
