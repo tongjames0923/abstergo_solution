@@ -2,13 +2,13 @@ package com.tbs.app.controller.publics;
 
 import com.tbs.app.form.LoginForm;
 import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.access.IUsernamePasswordAccessTokenProvider;
 import com.tbs.web.uitl.AjaxUtil;
-import com.tbs.knife4j.annotation.AjaxResponseType;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -24,7 +24,11 @@ import javax.servlet.http.HttpServletRequest;
 /**
  * 公开用户控制器
  * <p>
- * 提供无需登录即可访问的用户相关接口，包括用户登录和令牌刷新
+ * 提供无需登录即可访问的用户相关接口，包括用户登录和令牌刷新。
+ * </p>
+ * <p>
+ * 注意：本控制器已废弃（{@code @Deprecated}）。未来登录相关的所有操作（用户登录、令牌刷新等）
+ * 将统一迁移至「统一登录接口」处集中处理，本控制器及其中各接口后续将被移除，请勿在新业务中使用。
  * </p>
  *
  * @author abstergo
@@ -32,6 +36,7 @@ import javax.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/public/user")
+@Deprecated
 @Tag(name = "公开用户控制器", description = "公开用户控制器")
 @Slf4j
 public class PublicUserController extends BaseController {
@@ -43,14 +48,19 @@ public class PublicUserController extends BaseController {
     HttpServletRequest request;
 
     /**
-     * 用户登录接口
+     * 用户登录接口（已废弃）
      * <p>
-     * 用户使用用户名和密码登录系统，成功后返回访问令牌
+     * 用户使用用户名和密码登录系统，成功后返回访问令牌。
      * </p>
-     *
+     * <p>
+     * 废弃说明：本接口已标记为 {@code @Deprecated}，未来用户登录相关的操作将统一迁移至
+     * 「统一登录接口」集中处理，本接口后续会被移除，请勿在新业务中使用。
+     * </p>
      * @param loginForm 登录表单，包含用户名和密码
      * @return 登录成功后的令牌信息
      */
+
+    @Deprecated
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "用户使用用户名和密码登录系统")
     @ApiResponse(responseCode = "200", description = "成功登录",
@@ -61,9 +71,13 @@ public class PublicUserController extends BaseController {
     }
 
     /**
-     * 刷新令牌接口
+     * 刷新令牌接口（已废弃）
      * <p>
-     * 使用刷新令牌获取新的访问令牌，实现无感登录
+     * 使用刷新令牌获取新的访问令牌，实现无感登录。
+     * </p>
+     * <p>
+     * 废弃说明：本接口已标记为 {@code @Deprecated}，未来令牌刷新相关的操作将统一迁移至
+     * 「统一登录接口」集中处理，本接口后续会被移除，请勿在新业务中使用。
      * </p>
      *
      * @return 刷新成功后的令牌信息
@@ -73,6 +87,7 @@ public class PublicUserController extends BaseController {
     @Operation(summary = "刷新令牌", description = "使用刷新令牌获取新的访问令牌")
     @ApiResponse(responseCode = "200", description = "成功刷新令牌",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @Deprecated
     public AjaxResult refresh() {
         var refreshTokenService = SpringUtil.getBeanOptional(IRefreshTokenService.class);
         if (refreshTokenService.isEmpty()) {
