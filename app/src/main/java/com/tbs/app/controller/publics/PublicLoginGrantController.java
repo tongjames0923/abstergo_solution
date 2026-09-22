@@ -61,7 +61,7 @@ public class PublicLoginGrantController extends BaseController {
     @ApiResponse(responseCode = "200", description = "成功登录",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult login(@Parameter(description = "授权类型标识，如 password / wecom") @PathVariable("grantType") String grantType,
-        @Parameter(description = "凭证请求体，字段由各授权方式表单契约约定") @RequestBody Map<String, Object> payload) {
+        @Parameter(description = "凭证请求体，字段由各授权方式表单契约约定（如 refresh 授权类型无需请求体）") @RequestBody(required = false) Map<String, Object> payload) {
         ITokenModel tokenModel = loginGrantService.requestToken(grantType, payload);
         return successResult(tokenModel);
     }

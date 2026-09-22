@@ -1,7 +1,7 @@
-import { getInfo, login, logout, setCurrentDepartment } from '@/api/user'
-import { getRememberMe, getToken, removeToken, setRememberMe, setToken } from '@/utils/auth'
-import { resetRouter } from '@/router'
-import { resetDynamicRoutesLoaded } from '@/permission'
+import {getInfo, login, logout, setCurrentDepartment} from '@/api/user'
+import {getRememberMe, getToken, removeToken, setRememberMe, setToken} from '@/utils/auth'
+import {resetRouter} from '@/router'
+import {resetDynamicRoutesLoaded} from '@/permission'
 import request from '@/utils/request'
 import routeCacheService from '@/utils/route-cache'
 
@@ -191,8 +191,9 @@ const actions = {
       // 使用 axios 的 timeout 实现超时控制（当前 axios 0.18.1 不支持 AbortController.signal，
       // 用 signal 做的超时不会生效，刷新请求一旦无响应会永久挂起）
       const response = await request({
-        url: 'public/user/refresh',
-        method: 'get',
+        url: 'public/user/login/refresh',
+        method: 'post',
+        data: {},
         timeout: 10000,
         // 标记刷新请求自身：其未登录响应必须直接失败，避免在拦截器中排队死锁
         _isRefreshRequest: true
