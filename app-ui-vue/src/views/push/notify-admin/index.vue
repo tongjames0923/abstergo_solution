@@ -1,14 +1,22 @@
 <template>
   <div class="notify-admin">
-    <header class="na-header">
-      <h2 class="na-title">{{ $t('notifyAdmin.title') }}</h2>
-      <p class="na-subtitle">{{ $t('notifyAdmin.subtitle') }}</p>
+    <header class="na-hero">
+      <div class="na-hero-text">
+        <span class="na-eyebrow">{{ $t('notifyAdmin.hero.eyebrow') }}</span>
+        <h2 class="na-title">{{ $t('notifyAdmin.title') }}</h2>
+        <p class="na-subtitle">{{ $t('notifyAdmin.subtitle') }}</p>
+      </div>
+      <ul class="na-hero-chips">
+        <li v-for="chip in heroChips" :key="chip.key" class="na-hero-chip">
+          <i class="na-chip-dot" :style="{ background: chip.accent }" />{{ $t('notifyAdmin.hero.' + chip.key) }}
+        </li>
+      </ul>
     </header>
 
     <el-row :gutter="18" class="na-main">
       <!-- 左列：发布表单 -->
       <el-col :xs="24" :md="14">
-        <section class="na-card">
+        <section class="na-card na-card--form">
           <el-form
             ref="notifyForm"
             :model="form"
@@ -18,37 +26,42 @@
             class="na-form"
             @submit.native.prevent
           >
-            <el-form-item :label="$t('notifyAdmin.form.type')">
-              <div class="na-seg">
-                <button
-                  v-for="item in typeOptions"
-                  :key="item.value"
-                  type="button"
-                  class="na-seg-item"
-                  :class="{ 'is-active': form.type === item.value }"
-                  :style="{ '--accent': item.accent }"
-                  @click="form.type = item.value"
-                >
-                  <i class="na-seg-dot" />{{ $t('push.type.' + item.value) }}
-                </button>
-              </div>
-            </el-form-item>
-
-            <el-form-item :label="$t('notifyAdmin.form.priority')">
-              <div class="na-seg">
-                <button
-                  v-for="item in priorityOptions"
-                  :key="item.value"
-                  type="button"
-                  class="na-seg-item"
-                  :class="{ 'is-active': form.priority === item.value }"
-                  :style="{ '--accent': item.accent }"
-                  @click="form.priority = item.value"
-                >
-                  {{ $t('push.priority.' + item.value) }}
-                </button>
-              </div>
-            </el-form-item>
+            <el-row :gutter="14">
+              <el-col :span="12">
+                <el-form-item :label="$t('notifyAdmin.form.type')">
+                  <div class="na-seg">
+                    <button
+                      v-for="item in typeOptions"
+                      :key="item.value"
+                      type="button"
+                      class="na-seg-item"
+                      :class="{ 'is-active': form.type === item.value }"
+                      :style="{ '--accent': item.accent }"
+                      @click="form.type = item.value"
+                    >
+                      <i class="na-seg-dot" />{{ $t('push.type.' + item.value) }}
+                    </button>
+                  </div>
+                </el-form-item>
+              </el-col>
+              <el-col :span="12">
+                <el-form-item :label="$t('notifyAdmin.form.priority')">
+                  <div class="na-seg">
+                    <button
+                      v-for="item in priorityOptions"
+                      :key="item.value"
+                      type="button"
+                      class="na-seg-item"
+                      :class="{ 'is-active': form.priority === item.value }"
+                      :style="{ '--accent': item.accent }"
+                      @click="form.priority = item.value"
+                    >
+                      {{ $t('push.priority.' + item.value) }}
+                    </button>
+                  </div>
+                </el-form-item>
+              </el-col>
+            </el-row>
 
             <el-form-item :label="$t('notifyAdmin.form.inputTitle')" prop="title">
               <el-input
@@ -75,52 +88,68 @@
             </el-form-item>
 
             <el-form-item :label="$t('notifyAdmin.form.scope')">
-              <div class="na-seg">
-                <button
-                  type="button"
-                  class="na-seg-item"
-                  :class="{ 'is-active': form.scope === 'all' }"
-                  :style="{ '--accent': '#0a84ff' }"
-                  @click="form.scope = 'all'"
-                >
-                  {{ $t('notifyAdmin.form.scopeAll') }}
-                </button>
-                <button
-                  type="button"
-                  class="na-seg-item"
-                  :class="{ 'is-active': form.scope === 'users' }"
-                  :style="{ '--accent': '#0a84ff' }"
-                  @click="form.scope = 'users'"
-                >
-                  {{ $t('notifyAdmin.form.scopeUsers') }}
-                </button>
-              </div>
-            </el-form-item>
+              <div class="na-scope">
+                <div class="na-seg">
+                  <button
+                    type="button"
+                    class="na-seg-item"
+                    :class="{ 'is-active': form.scope === 'all' }"
+                    :style="{ '--accent': '#0a84ff' }"
+                    @click="form.scope = 'all'"
+                  >
+                    {{ $t('notifyAdmin.form.scopeAll') }}
+                  </button>
+                  <button
+                    type="button"
+                    class="na-seg-item"
+                    :class="{ 'is-active': form.scope === 'users' }"
+                    :style="{ '--accent': '#0a84ff' }"
+                    @click="form.scope = 'users'"
+                  >
+                    {{ $t('notifyAdmin.form.scopeUsers') }}
+                  </button>
+                </div>
 
-            <el-form-item v-if="form.scope === 'users'" prop="users">
-              <el-select
-                v-model="form.users"
-                multiple
-                filterable
-                remote
-                reserve-keyword
-                class="na-users"
-                :remote-method="searchUsers"
-                :loading="userSearching"
-                :placeholder="$t('notifyAdmin.form.usersPlaceholder')"
-              >
-                <el-option
-                  v-for="option in userOptions"
-                  :key="option.value"
-                  :label="option.label"
-                  :value="option.value"
-                />
-              </el-select>
+                <el-select
+                  v-if="form.scope === 'users'"
+                  v-model="form.users"
+                  multiple
+                  filterable
+                  remote
+                  reserve-keyword
+                  class="na-users"
+                  :remote-method="searchUsers"
+                  :loading="userSearching"
+                  :placeholder="$t('notifyAdmin.form.usersPlaceholder')"
+                >
+                  <el-option
+                    v-for="option in userOptions"
+                    :key="option.value"
+                    :label="option.label"
+                    :value="option.value"
+                  />
+                </el-select>
+
+                <!-- 投递通道：与后端 TopicPrefixNotifyReceiverResolver 的 topic 解析规则同构 -->
+                <div class="na-topic">
+                  <span class="na-topic-label">{{ $t('notifyAdmin.form.effectiveTopic') }}</span>
+                  <div class="na-topic-chips">
+                    <code
+                      v-for="chip in topicChips"
+                      :key="chip.text"
+                      class="na-topic-chip"
+                      :class="'is-' + chip.tone"
+                    >{{ chip.text }}</code>
+                    <span v-if="!topicChips.length" class="na-topic-empty">—</span>
+                  </div>
+                </div>
+              </div>
             </el-form-item>
 
             <button
               type="button"
               class="na-publish-btn"
+              :class="{ 'is-busy': publishing }"
               :disabled="publishing"
               @click="handlePublish"
             >
@@ -131,11 +160,31 @@
         </section>
       </el-col>
 
-      <!-- 右列：实时预览 -->
+      <!-- 右列：实时预览（消息中心卡片 / 在线弹窗双视角） -->
       <el-col :xs="24" :md="10">
-        <section class="na-card na-preview">
-          <h4 class="na-card-head">{{ $t('notifyAdmin.preview.title') }}</h4>
-          <notify-preview-card :form="form" />
+        <section class="na-card na-card--preview">
+          <div class="na-card-head-row">
+            <h4 class="na-card-head">{{ $t('notifyAdmin.preview.title') }}</h4>
+            <div class="na-mode">
+              <button
+                type="button"
+                class="na-mode-item"
+                :class="{ 'is-active': previewMode === 'center' }"
+                @click="previewMode = 'center'"
+              >
+                {{ $t('notifyAdmin.preview.modeCenter') }}
+              </button>
+              <button
+                type="button"
+                class="na-mode-item"
+                :class="{ 'is-active': previewMode === 'toast' }"
+                @click="previewMode = 'toast'"
+              >
+                {{ $t('notifyAdmin.preview.modeToast') }}
+              </button>
+            </div>
+          </div>
+          <notify-preview-card :form="form" :mode="previewMode" />
         </section>
       </el-col>
     </el-row>
@@ -158,7 +207,12 @@ import {
   removeHistoryRecord,
   clearHistory
 } from '@/push/admin'
-import { MESSAGE_TYPES, PRIORITIES } from '@/push/push-message'
+import {
+  MESSAGE_TYPES,
+  PRIORITIES,
+  TOPIC_BROADCAST,
+  TOPIC_USER_NAME_PREFIX
+} from '@/push/push-message'
 import NotifyPreviewCard from './components/NotifyPreviewCard.vue'
 import PublishHistoryPanel from './components/PublishHistoryPanel.vue'
 
@@ -170,6 +224,7 @@ export default {
   },
   data() {
     return {
+      previewMode: 'center',
       form: {
         title: '',
         content: '',
@@ -190,6 +245,16 @@ export default {
     limits() {
       return NOTIFY_FORM_LIMITS
     },
+    /**
+     * Hero 能力徽章：对应新链路「持久化存储 / 信令实时触达 / 离线补拉」三大特征
+     */
+    heroChips() {
+      return [
+        { key: 'persist', accent: '#0a84ff' },
+        { key: 'realtime', accent: '#34c759' },
+        { key: 'offline', accent: '#ff9f0a' }
+      ]
+    },
     typeOptions() {
       return [
         { value: MESSAGE_TYPES.NOTIFY, accent: '#34c759' },
@@ -204,6 +269,21 @@ export default {
         { value: PRIORITIES.HIGH, accent: '#ff9f0a' },
         { value: PRIORITIES.URGENT, accent: '#ff3b30' }
       ]
+    },
+    /**
+     * 投递通道预览：全体广播走 global.broadcast 单 topic，指定用户逐人
+     * user.name.{userName} 精确 topic（展示前 3 个，其余折叠计数）
+     */
+    topicChips() {
+      if (this.form.scope === 'all') {
+        return [{ text: TOPIC_BROADCAST, tone: 'all' }]
+      }
+      const users = this.form.users || []
+      const chips = users.slice(0, 3).map(user => ({ text: TOPIC_USER_NAME_PREFIX + user, tone: 'user' }))
+      if (users.length > 3) {
+        chips.push({ text: '+' + (users.length - 3), tone: 'more' })
+      }
+      return chips
     },
     formRules() {
       return {
@@ -366,51 +446,184 @@ export default {
 
 <style lang="scss" scoped>
 .notify-admin {
-  padding: 20px 22px 30px;
-}
+  position: relative;
+  padding: 24px 22px 34px;
 
-.na-header {
-  margin-bottom: 18px;
-
-  .na-title {
-    margin: 0 0 6px;
-    font-size: 20px;
-    font-weight: 600;
-    color: #1d1d1f;
-    letter-spacing: 0.02em;
+  /* 环境光：三色语义光斑呼应 notify/warning/reminder */
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background:
+      radial-gradient(560px 300px at 12% -4%, rgba(10, 132, 255, 0.09), transparent 70%),
+      radial-gradient(480px 260px at 96% 8%, rgba(52, 199, 89, 0.07), transparent 70%),
+      radial-gradient(420px 240px at 55% 110%, rgba(255, 159, 10, 0.06), transparent 70%);
   }
 
-  .na-subtitle {
-    margin: 0;
-    font-size: 13px;
-    color: #6e6e73;
+  /* 细颗粒噪点，压住渐变的塑料感 */
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.5;
+    background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2"/><feColorMatrix type="saturate" values="0"/></filter><rect width="120" height="120" filter="url(%23n)" opacity="0.04"/></svg>');
+  }
+
+  > * {
+    position: relative;
+    z-index: 1;
   }
 }
 
+/* ---------- Hero ---------- */
+.na-hero {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.na-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: 'DIN Alternate', 'Avenir Next', 'Helvetica Neue', sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: #0a84ff;
+  margin-bottom: 8px;
+
+  &::before {
+    content: '';
+    width: 22px;
+    height: 1px;
+    background: linear-gradient(90deg, #0a84ff, transparent);
+  }
+}
+
+.na-title {
+  margin: 0 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+  color: #1d1d1f;
+  letter-spacing: 0.02em;
+}
+
+.na-subtitle {
+  margin: 0;
+  max-width: 520px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #6e6e73;
+}
+
+.na-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.na-hero-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.07);
+  background: rgba(255, 255, 255, 0.66);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  color: #3a3a3c;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+
+.na-chip-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+}
+
+/* ---------- 布局与卡片 ---------- */
 .na-main {
   margin-bottom: 18px;
 }
 
 .na-card {
-  background: rgba(255, 255, 255, 0.72);
+  background: rgba(255, 255, 255, 0.66);
   border: 1px solid rgba(0, 0, 0, 0.06);
-  border-radius: 16px;
-  padding: 20px 22px;
+  border-radius: 18px;
+  padding: 22px 24px;
   box-shadow:
-    0 12px 40px rgba(12, 18, 38, 0.08),
-    inset 0 1px 0 rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+    0 14px 44px rgba(12, 18, 38, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
 }
 
 .na-card-head {
-  margin: 0 0 16px;
+  margin: 0;
   font-size: 14px;
   font-weight: 600;
   color: #1d1d1f;
 }
 
-/* 分段选择器：类型/优先级/范围共用 */
+.na-card-head-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.na-card--preview {
+  position: sticky;
+  top: 84px;
+}
+
+/* ---------- 预览模式切换 ---------- */
+.na-mode {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.na-mode-item {
+  appearance: none;
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 11px;
+  color: #86868b;
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  &.is-active {
+    background: #fff;
+    color: #1d1d1f;
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(12, 18, 38, 0.12);
+  }
+}
+
+/* ---------- 分段选择器：类型/优先级/范围共用 ---------- */
 .na-seg {
   display: flex;
   flex-wrap: wrap;
@@ -440,6 +653,7 @@ export default {
 
   &:hover {
     border-color: var(--accent);
+    transform: translateY(-1px);
   }
 
   &.is-active {
@@ -447,42 +661,154 @@ export default {
     color: #1d1d1f;
     font-weight: 600;
     background: rgba(255, 255, 255, 0.95);
-    box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
+    box-shadow:
+      0 0 0 3px rgba(0, 0, 0, 0.05),
+      0 4px 14px rgba(12, 18, 38, 0.08);
   }
 }
 
-.na-users {
+/* ---------- 投递通道 ---------- */
+.na-scope {
   width: 100%;
+
+  .na-users {
+    width: 100%;
+    margin-top: 10px;
+  }
 }
 
+.na-topic {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: rgba(10, 132, 255, 0.05);
+  border: 1px dashed rgba(10, 132, 255, 0.2);
+}
+
+.na-topic-label {
+  flex-shrink: 0;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  color: #6e6e73;
+}
+
+.na-topic-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.na-topic-chip {
+  font-family: 'SF Mono', 'DIN Alternate', Menlo, monospace;
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  padding: 2px 9px;
+  border-radius: 6px;
+  white-space: nowrap;
+
+  &.is-all {
+    color: #0a84ff;
+    background: rgba(10, 132, 255, 0.1);
+    border: 1px solid rgba(10, 132, 255, 0.2);
+  }
+
+  &.is-user {
+    color: #1d1d1f;
+    background: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+  }
+
+  &.is-more {
+    color: #86868b;
+    background: rgba(0, 0, 0, 0.04);
+    border: 1px solid rgba(0, 0, 0, 0.06);
+  }
+}
+
+.na-topic-empty {
+  font-size: 11px;
+  color: #a1a1a6;
+}
+
+/* ---------- 发布按钮 ---------- */
 .na-publish-btn {
+  position: relative;
+  overflow: hidden;
   width: 100%;
-  height: 42px;
-  margin-top: 4px;
+  height: 44px;
+  margin-top: 6px;
   border: none;
-  border-radius: 12px;
+  border-radius: 13px;
   color: #fff;
   font-family: inherit;
   font-size: 14px;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.06em;
   cursor: pointer;
   background: linear-gradient(135deg, #0a84ff, #3ea0ff);
-  box-shadow: 0 8px 24px rgba(10, 132, 255, 0.35);
+  box-shadow:
+    0 10px 26px rgba(10, 132, 255, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
   transition: all 0.2s ease;
+
+  /* 掠光：发布通道激活时的信号扫过 */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -80%;
+    width: 60%;
+    height: 100%;
+    background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+    transform: skewX(-18deg);
+    transition: none;
+  }
+
+  &:hover:not(:disabled)::after {
+    left: 130%;
+    transition: left 0.7s ease;
+  }
 
   &:hover:not(:disabled) {
     transform: translateY(-1px);
-    box-shadow: 0 12px 30px rgba(10, 132, 255, 0.45);
+    box-shadow: 0 14px 32px rgba(10, 132, 255, 0.45);
+  }
+
+  &.is-busy::after {
+    animation: na-scan 1.1s linear infinite;
   }
 
   &:disabled {
-    opacity: 0.7;
+    opacity: 0.72;
     cursor: not-allowed;
+  }
+}
+
+@keyframes na-scan {
+  0% {
+    left: -80%;
+  }
+  100% {
+    left: 130%;
   }
 }
 
 .na-history {
   margin-top: 0;
+}
+
+@media (max-width: 768px) {
+  .na-hero {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .na-card--preview {
+    position: static;
+  }
 }
 </style>

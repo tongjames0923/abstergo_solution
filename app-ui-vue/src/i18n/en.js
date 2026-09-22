@@ -896,8 +896,12 @@ export default {
       title: 'Message Center',
       empty: 'No messages',
       unread: 'Unread',
+      total: '{n} total',
       markAllRead: 'Mark all read',
-      clear: 'Clear'
+      clear: 'Clear',
+      loadMore: 'Load More',
+      loading: 'Loading…',
+      emptyContent: '(No content)'
     },
     time: {
       justNow: 'Just now',
@@ -908,7 +912,13 @@ export default {
   // System Notification Publishing
   notifyAdmin: {
     title: 'System Notification Publishing',
-    subtitle: 'Deliver system notifications to all users or selected users; messages are persisted and pushed to the message center with real-time popups',
+    subtitle: 'Deliver system notifications to all users or selected users; messages are persisted server-side, received in the message center with real-time popups, and catchable up after offline',
+    hero: {
+      eyebrow: 'Push Console',
+      persist: 'Server persistence',
+      realtime: 'Realtime signaling',
+      offline: 'Offline catch-up'
+    },
     form: {
       type: 'Type',
       priority: 'Priority',
@@ -918,6 +928,7 @@ export default {
       contentPlaceholder: 'Enter notification content…',
       url: 'Redirect Route',
       urlPlaceholder: 'Optional, e.g. /approve/123',
+      effectiveTopic: 'Delivery Channel',
       scope: 'Audience',
       scopeAll: 'All users',
       scopeUsers: 'Selected users',
@@ -928,18 +939,24 @@ export default {
     preview: {
       title: 'Live Preview',
       badge: 'Preview',
-      empty: 'Fill in the form and see exactly what users will receive'
+      empty: 'Fill in the form and see exactly what users will receive',
+      modeCenter: 'Message Center',
+      modeToast: 'Online Toast'
     },
     history: {
       title: 'Publish History',
       localTip: 'Records are kept in this browser only',
+      count: '{n} records',
       colTitle: 'Title',
       colType: 'Type',
+      colPriority: 'Priority',
       colScope: 'Audience',
       colTime: 'Published At',
       colReceipt: 'Receipt',
       scopeAll: 'All users',
       receiptText: '{delivered}/{total} delivered',
+      receiptOk: 'All delivered',
+      receiptFail: 'Delivery failed',
       empty: 'No publish records',
       remove: 'Remove',
       clear: 'Clear All',

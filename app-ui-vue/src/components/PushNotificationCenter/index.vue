@@ -20,7 +20,7 @@
             <p class="pn-sub">
               <span class="pn-sub-num">{{ unreadCount }}</span>
               <span class="pn-sub-label">{{ $t('push.center.unread') }}</span>
-              <span v-if="!unreadCount" class="pn-sub-calm">·  ∞</span>
+              <span v-if="messages.length" class="pn-sub-total">· {{ $t('push.center.total', { n: messages.length }) }}</span>
             </p>
           </div>
         </div>
@@ -58,10 +58,7 @@
           :key="item.id"
           class="pn-card"
           :class="{ 'is-unread': !item.read }"
-          :style="{
-            '--accent': accentOf(item.type),
-            '--delay': Math.min(index, 10) * 45 + 'ms'
-          }"
+          :style="cardStyle(item, index)"
           @click="handleItemClick(item)"
         >
           <span class="pn-card-rail" />
@@ -69,20 +66,34 @@
             <div class="pn-card-head">
               <span class="pn-chip">
                 <i class="pn-chip-dot" />
-                {{ $t('push.type.' + item.type) }}
+                {{ typeText(item) }}
               </span>
               <span
-                v-if="item.priority === 'urgent' || item.priority === 'high'"
+                v-if="isHighPriority(item)"
                 class="pn-priority"
+                :style="priorityStyle(item.priority)"
               >{{ $t('push.priority.' + item.priority) }}</span>
             </div>
             <p class="pn-card-title">{{ item.title || $t('push.defaultTitle') }}</p>
-            <p class="pn-card-content">{{ item.content }}</p>
+            <p class="pn-card-content">{{ item.content || $t('push.center.emptyContent') }}</p>
             <div class="pn-card-foot">
-              <span class="pn-time">{{ relativeTime(item.receivedAt || item.timestamp) }}</span>
+              <span class="pn-time">
+                <span v-if="item.sender" class="pn-sender">{{ item.sender }} · </span>{{ displayTime(item) }}
+              </span>
               <i v-if="!item.read" class="pn-unread-dot" />
             </div>
           </div>
+        </li>
+        <li v-if="hasMore" class="pn-load-more">
+          <button
+            type="button"
+            class="pn-more-btn"
+            :disabled="loadingMore"
+            @click="handleLoadMore"
+          >
+            <i v-if="loadingMore" class="el-icon-loading" />
+            {{ loadingMore ? $t('push.center.loading') : $t('push.center.loadMore') }}
+          </button>
         </li>
       </ul>
     </div>
@@ -91,15 +102,29 @@
 
 <script>
 import { mapGetters, mapActions } from 'vuex'
+import { MESSAGE_TYPES, PRIORITIES } from '@/push/push-message'
+import { operateMessage } from '@/api/push-message'
 
 /**
  * 消息中心抽屉（Liquid Glass 视觉）
  * <p>
- * 展示当前用户接收到的推送消息历史，区分已读/未读，支持单条查看（标记已读并可跳转 url）、
- * 全部已读与清空。数据源自 push Vuex 模块，文案全部走 i18n。
+ * 展示当前用户接收到的推送消息历史，字段与新链路 PushNotifyMessageVO 规范化结果对齐：
+ * 类型 chip（未知 msgType 回退系统通知）、优先级语义色徽章（high/urgent 分级）、
+ * 服务端 createTime 优先的相对时间、sender 发送者展示、空正文占位、未读态（readFlag 派生）。
+ * 交互：单条点击标记已读，跳转 url 时回传 CLICK 操作日志；全部已读批量回传 READ；
+ * 底部按 cursor/hasMore 游标加载更早消息。数据源自 push Vuex 模块，文案全部走 i18n。
  * 外壳样式因 append-to-body 传送至 body 而置于非 scoped 样式块（.push-center-drawer 命名空间下）。
  * </p>
  */
+
+/**
+ * 优先级 → 徽章语义色（高=橙，紧急=红）
+ */
+const PRIORITY_ACCENTS = {
+  high: '#ff9f0a',
+  urgent: '#ff3b30'
+}
+
 export default {
   name: 'PushNotificationCenter',
   props: {
@@ -109,12 +134,18 @@ export default {
     }
   },
   computed: {
-    ...mapGetters('push', ['pushMessages', 'pushUnreadCount']),
+    ...mapGetters('push', ['pushMessages', 'pushUnreadCount', 'pushHasMore', 'pushLoadingMore']),
     messages() {
       return this.pushMessages
     },
     unreadCount() {
       return this.pushUnreadCount
+    },
+    hasMore() {
+      return this.pushHasMore
+    },
+    loadingMore() {
+      return this.pushLoadingMore
     },
     drawerSize() {
       return this.$store.getters.device === 'mobile' ? '100%' : '384px'
@@ -129,24 +160,88 @@ export default {
     }
   },
   methods: {
-    ...mapActions('push', ['markRead', 'markAllRead', 'clearAll', 'pullLatest']),
+    ...mapActions('push', ['markRead', 'markAllRead', 'clearAll', 'pullLatest', 'loadMore']),
     handleClose() {
       this.$emit('update:visible', false)
     },
+    /**
+     * 单条点击：未读即时标记（READ 回传由 markRead 处理）；
+     * 有跳转路由时回传 CLICK 操作日志（后端自动补记 READ）并跳转
+     */
     handleItemClick(item) {
       if (!item.read) {
         this.markRead(item.id)
       }
       if (item.url) {
-        this.$router.push(item.url)
+        this.reportClick(item)
+        this.$router.push(item.url).catch(() => {})
         this.handleClose()
       }
+    },
+    /**
+     * 回传 CLICK 操作日志（仅新链路数字 id；异常隔离不影响跳转）
+     */
+    reportClick(item) {
+      if (item.id == null || !/^\d+$/.test(String(item.id))) {
+        return
+      }
+      operateMessage({
+        messageId: Number(item.id),
+        opType: 'CLICK',
+        extInfo: 'message-center'
+      }).catch(e => console.warn('[push-center] 点击回传失败', e))
     },
     handleAllRead() {
       this.markAllRead()
     },
     handleClear() {
       this.clearAll()
+    },
+    handleLoadMore() {
+      this.loadMore()
+    },
+    /**
+     * 卡片样式变量：类型语义色导轨 + 错峰浮现延迟
+     */
+    cardStyle(item, index) {
+      return {
+        '--accent': this.accentOf(item.type),
+        '--delay': Math.min(index, 10) * 45 + 'ms'
+      }
+    },
+    /**
+     * 类型展示文案：未知 msgType（后端字典可扩展）回退为系统通知，避免 i18n key 直出
+     */
+    typeText(item) {
+      return Object.values(MESSAGE_TYPES).includes(item.type)
+        ? this.$t('push.type.' + item.type)
+        : this.$t('push.defaultTitle')
+    },
+    /**
+     * 是否展示优先级徽章（仅高/紧急两级；normalize 层已将非法值回退 normal）
+     */
+    isHighPriority(item) {
+      return item.priority === PRIORITIES.HIGH || item.priority === PRIORITIES.URGENT
+    },
+    /**
+     * 优先级徽章语义色（文字/底色/描边联动）
+     */
+    priorityAccent(priority) {
+      return PRIORITY_ACCENTS[priority] || '#ff3b30'
+    },
+    priorityStyle(priority) {
+      const accent = this.priorityAccent(priority)
+      return {
+        color: accent,
+        background: accent + '17',
+        borderColor: accent + '2e'
+      }
+    },
+    /**
+     * 展示时间：以服务端 createTime（timestamp）为准，本地拉取时刻仅兜底
+     */
+    displayTime(item) {
+      return this.relativeTime(item.timestamp || item.receivedAt)
     },
     /**
      * 消息类型 → 语义强调色（Apple 系统色板）
@@ -277,9 +372,10 @@ $font-num: 'DIN Alternate', 'Avenir Next', 'Helvetica Neue', sans-serif;
     font-size: 11px;
     letter-spacing: 0.06em;
   }
-  .pn-sub-calm {
+  .pn-sub-total {
     font-family: $font-num;
     font-size: 11px;
+    color: #a1a1a6;
   }
 }
 
@@ -544,6 +640,46 @@ $font-num: 'DIN Alternate', 'Avenir Next', 'Helvetica Neue', sans-serif;
   letter-spacing: 0.04em;
   color: #a1a1a6;
   font-variant-numeric: tabular-nums;
+}
+
+.pn-sender {
+  color: #86868b;
+}
+
+/* ── 加载更多 ─────────────────────────── */
+.pn-load-more {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 2px;
+}
+
+.pn-more-btn {
+  appearance: none;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+  color: #0a84ff;
+  font-family: inherit;
+  font-size: 11.5px;
+  letter-spacing: 0.04em;
+  padding: 7px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s ease;
+
+  i {
+    margin-right: 4px;
+  }
+
+  &:hover:not(:disabled) {
+    background: #0a84ff;
+    border-color: #0a84ff;
+    color: #fff;
+    box-shadow: 0 4px 14px rgba(10, 132, 255, 0.32);
+  }
+  &:disabled {
+    color: #c7c7cc;
+    cursor: default;
+  }
 }
 
 .pn-unread-dot {

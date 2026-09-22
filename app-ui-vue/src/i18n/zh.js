@@ -896,8 +896,12 @@ export default {
       title: '消息中心',
       empty: '暂无消息',
       unread: '未读',
+      total: '共 {n} 条',
       markAllRead: '全部已读',
-      clear: '清空'
+      clear: '清空',
+      loadMore: '加载更多',
+      loading: '加载中…',
+      emptyContent: '（无正文）'
     },
     time: {
       justNow: '刚刚',
@@ -908,7 +912,13 @@ export default {
   // 系统通知发布
   notifyAdmin: {
     title: '系统通知发布',
-    subtitle: '面向全体或指定用户即时投递系统通知，在线用户将在消息中心与弹窗实时收到',
+    subtitle: '面向全体或指定用户即时投递系统通知，消息持久化存储，用户在消息中心与弹窗实时接收，离线后可补拉',
+    hero: {
+      eyebrow: '推送控制台',
+      persist: '服务端持久化',
+      realtime: '信令实时触达',
+      offline: '离线补拉可达'
+    },
     form: {
       type: '通知类型',
       priority: '优先级',
@@ -918,6 +928,7 @@ export default {
       contentPlaceholder: '请输入通知正文…',
       url: '跳转路由',
       urlPlaceholder: '可选，如 /approve/123',
+      effectiveTopic: '投递通道',
       scope: '发布范围',
       scopeAll: '全体用户',
       scopeUsers: '指定用户',
@@ -928,18 +939,24 @@ export default {
     preview: {
       title: '实时预览',
       badge: '预览',
-      empty: '填写左侧表单，此处实时呈现用户收到的效果'
+      empty: '填写左侧表单，此处实时呈现用户收到的效果',
+      modeCenter: '消息中心',
+      modeToast: '在线弹窗'
     },
     history: {
       title: '发布历史',
       localTip: '记录仅保存在本浏览器',
+      count: '共 {n} 条',
       colTitle: '标题',
       colType: '类型',
+      colPriority: '优先级',
       colScope: '范围',
       colTime: '发布时间',
       colReceipt: '送达回执',
       scopeAll: '全体用户',
       receiptText: '{delivered}/{total} 条送达',
+      receiptOk: '全部送达',
+      receiptFail: '投递失败',
       empty: '暂无发布记录',
       remove: '删除记录',
       clear: '清空记录',

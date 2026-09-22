@@ -55,7 +55,8 @@ const state = () => ({
   connectionStatus: CONNECTION_STATUS.IDLE,
   messages: [],
   cursor: null,
-  hasMore: false
+  hasMore: false,
+  loadingMore: false
 })
 
 const mutations = {
@@ -90,16 +91,32 @@ const mutations = {
     state.hasMore = false
     seenIds.clear()
   },
+  /**
+   * 追加更早的历史消息（游标分页加载，到达序追加到列表尾部）
+   */
+  APPEND_MESSAGES(state, messages) {
+    messages.forEach(message => state.messages.push(message))
+    if (state.messages.length > MAX_MESSAGES) {
+      const overflow = state.messages.splice(MAX_MESSAGES)
+      overflow.forEach(m => seenIds.delete(m.id))
+    }
+  },
   SET_PAGE(state, { cursor, hasMore }) {
     state.cursor = cursor != null ? cursor : null
     state.hasMore = Boolean(hasMore)
+  },
+  SET_LOADING_MORE(state, loading) {
+    state.loadingMore = Boolean(loading)
   }
 }
 
 const getters = {
   pushConnectionStatus: state => state.connectionStatus,
   pushMessages: state => state.messages,
-  pushUnreadCount: state => state.messages.filter(item => !item.read).length
+  pushUnreadCount: state => state.messages.filter(item => !item.read).length,
+  pushHasMore: state => state.hasMore,
+  pushCursor: state => state.cursor,
+  pushLoadingMore: state => state.loadingMore
 }
 
 const actions = {
@@ -172,6 +189,38 @@ const actions = {
       }
     } catch (e) {
       console.warn('[push] 拉取消息失败', e)
+    }
+  },
+  /**
+   * 游标加载更早的历史消息（消息中心分页）
+   * <p>
+   * 以 state.cursor（上一页响应返回的接收行ID）请求下一页，规范化并按 seenIds 去重后
+   * 追加到列表尾部；游标与 hasMore 以本页响应为准。无更多或加载中时幂等返回。
+   * </p>
+   */
+  async loadMore({ state, commit }) {
+    if (!state.hasMore || state.loadingMore) {
+      return
+    }
+    commit('SET_LOADING_MORE', true)
+    try {
+      const data = await fetchMessages({ cursor: state.cursor, limit: 20, readFlag: 'all' })
+      const list = (data && data.list) || []
+      const normalized = []
+      list.forEach(vo => {
+        const message = normalizeFetchedMessage(vo)
+        if (!message || seenIds.has(message.id)) {
+          return
+        }
+        seenIds.add(message.id)
+        normalized.push(message)
+      })
+      commit('APPEND_MESSAGES', normalized)
+      commit('SET_PAGE', { cursor: data.cursor, hasMore: data.hasMore })
+    } catch (e) {
+      console.warn('[push] 加载更多消息失败', e)
+    } finally {
+      commit('SET_LOADING_MORE', false)
     }
   },
   /**
