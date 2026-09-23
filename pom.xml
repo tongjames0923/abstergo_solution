@@ -35,6 +35,7 @@
         <module>oss</module>
         <module>updater</module>
         <module>updater-gui</module>
+        <module>sdk</module>
     </modules>
 
     <groupId>com.tbs</groupId>
@@ -382,6 +383,12 @@
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+            <!-- SSE事件流实现（sdk模块使用），版本与okhttp保持一致 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-sse</artifactId>
                 <version>${okhttp3.version}</version>
             </dependency>
 
