@@ -1,6 +1,7 @@
 package com.tbs.app.service.impl.identity;
 
 import com.tbs.app.constant.SystemI18nConstant;
+import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.identity.IThirdPartyAppService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
@@ -12,6 +13,7 @@ import com.tbs.common.util.encrypt.EncryptUitl;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
+import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.ThirdPartyAppMapper;
 import com.tbs.shared.pojo.entity.ThirdPartyAppEntity;
 import com.tbs.web.security.user.access.grant.ILoginGrantProvider;
@@ -20,6 +22,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 /**
  * 第三方应用接出能力的默认实现。
@@ -121,7 +124,9 @@ public class DefaultThirdPartyServiceImpl
         }
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
-        entity.setAppSecret(EncryptUitl.hash256Encrypt(entity.getAppSecret(), entity.getAppId()));
+        var appSecret = EncryptUitl.hash256Encrypt(entity.getAppId() + UuidUtil.getInstance().getUuidString(),
+            String.valueOf(entity.getId()));
+        entity.setAppSecret(appSecret);
         getMapper().updateByPrimaryKey(entity);
         return entity;
     }
@@ -172,5 +177,17 @@ public class DefaultThirdPartyServiceImpl
     @Override
     protected ThirdPartyAppEntity newEntity() {
         return EMPTY;
+    }
+
+    private static final DefaultAuditService<ThirdPartyAppEntity, Long> auditService = new DefaultAuditService<>();
+
+    /**
+     * 获取审计服务支持
+     *
+     * @return
+     */
+    @Override
+    protected Optional<IAuditService<ThirdPartyAppEntity, Long, ?>> getAuditServiceSupport() {
+        return Optional.of(auditService);
     }
 }

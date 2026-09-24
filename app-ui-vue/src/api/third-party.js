@@ -34,7 +34,7 @@ export function getThirdPartyApp(id) {
  * 新增第三方应用（后端不支持更新，带ID保存会被拒绝）
  * @param {Object} data - 应用信息
  * @param {string}  [data.appId]  - 应用标识，留空由系统生成UUID
- * @param {string}  data.appSecret - 应用密钥（明文，保存后由系统哈希存储）
+ * @param {string} [data.appSecret] - 应用密钥（可选，留空由系统生成并哈希存储）
  * @param {string}  data.grantType - 授权类型（对应 ILoginGrantProvider 的 grantType）
  * @param {number}  data.proxyId  - 代理用户ID（执行人账号）
  * @returns {Promise} 保存后的应用信息

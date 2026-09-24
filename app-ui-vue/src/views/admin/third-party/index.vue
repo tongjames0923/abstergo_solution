@@ -156,14 +156,11 @@
               show-word-limit
             />
           </el-form-item>
-          <el-form-item :label="$t('thirdParty.appSecret')" prop="appSecret">
+          <el-form-item :label="$t('thirdParty.appSecret')">
             <el-input
-              v-model="appForm.appSecret"
+              :value="$t('thirdParty.appSecretAuto')"
+              disabled
               :placeholder="$t('thirdParty.appSecretPlaceholder')"
-              maxlength="64"
-              show-word-limit
-              type="password"
-              autocomplete="new-password"
             />
           </el-form-item>
           <el-form-item :label="$t('thirdParty.grantType')" prop="grantType">
@@ -216,8 +213,7 @@
           <el-descriptions-item :label="'ID'">{{ detailData.id }}</el-descriptions-item>
           <el-descriptions-item :label="$t('thirdParty.appId')">{{ detailData.appId || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="$t('thirdParty.appSecret')">
-            <code class="secret-text">{{ detailData.appSecret || '-' }}</code>
-            <div class="secret-tip">{{ $t('thirdParty.appSecretPlaceholder') }}</div>
+            <span class="secret-text">{{ $t('thirdParty.appSecretNotShow') }}</span>
           </el-descriptions-item>
           <el-descriptions-item :label="$t('thirdParty.grantType')">
             {{ grantTypeLabel(detailData.grantType) }}
@@ -234,6 +230,29 @@
           <el-descriptions-item :label="$t('thirdParty.createTime')">{{ formatTime(detailData.createTime) }}</el-descriptions-item>
           <el-descriptions-item :label="$t('thirdParty.updateTime')">{{ formatTime(detailData.updateTime) }}</el-descriptions-item>
         </el-descriptions>
+      </el-dialog>
+
+      <!-- 创建后一次性展示应用密钥 -->
+      <el-dialog
+        :title="$t('thirdParty.secretGeneratedTitle')"
+        :visible.sync="secretVisible"
+        width="520px"
+        :close-on-click-modal="false"
+      >
+        <div class="secret-generated">
+          <p class="secret-tip">{{ $t('thirdParty.secretGeneratedTip') }}</p>
+          <el-input
+            :value="generatedSecret"
+            type="textarea"
+            :rows="3"
+            readonly
+            class="secret-textarea"
+          />
+        </div>
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="secretVisible = false">{{ $t('common.close') }}</el-button>
+          <el-button type="primary" @click="copySecret">{{ $t('thirdParty.copySecret') }}</el-button>
+        </div>
       </el-dialog>
     </div>
   </div>
@@ -275,14 +294,10 @@ export default {
       grantTypeOptions: [],
       appForm: {
         appId: '',
-        appSecret: '',
         grantType: '',
         proxyId: null
       },
       formRules: {
-        appSecret: [
-          { required: true, message: this.$t('thirdParty.appSecretRequired'), trigger: 'blur' }
-        ],
         grantType: [
           { required: true, message: this.$t('thirdParty.grantTypeRequired'), trigger: 'change' }
         ],
@@ -293,7 +308,11 @@ export default {
 
       // 详情弹窗
       detailVisible: false,
-      detailData: null
+      detailData: null,
+
+      // 创建后一次性展示的应用密钥
+      secretVisible: false,
+      generatedSecret: ''
     }
   },
   mounted() {
@@ -385,7 +404,7 @@ export default {
 
     // ========== 新增 ==========
     handleAdd() {
-      this.appForm = { appId: '', appSecret: '', grantType: '', proxyId: null }
+      this.appForm = { appId: '', grantType: '', proxyId: null }
       this.dialogVisible = true
       this.$nextTick(() => {
         this.$refs.appForm && this.$refs.appForm.clearValidate()
@@ -408,13 +427,30 @@ export default {
         if (!payload.appId) {
           delete payload.appId
         }
-        await saveThirdPartyApp(payload)
+        const res = await saveThirdPartyApp(payload)
+        const rows = res.data
+        const saved = Array.isArray(rows) ? rows[0] : rows
+        const secret = saved && saved.appSecret
         this.dialogVisible = false
+        if (secret) {
+          this.generatedSecret = secret
+          this.secretVisible = true
+        }
         await this.loadData()
       } catch (error) {
         console.error('保存第三方应用失败:', error)
       } finally {
         this.saving = false
+      }
+    },
+
+    // 复制一次性生成的密钥到剪贴板
+    async copySecret() {
+      try {
+        await navigator.clipboard.writeText(this.generatedSecret)
+        this.$message.success(this.$t('thirdParty.copySuccess'))
+      } catch {
+        this.$message.warning(this.$t('thirdParty.copyFailed'))
       }
     },
 
