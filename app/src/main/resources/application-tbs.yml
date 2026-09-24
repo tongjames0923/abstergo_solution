@@ -20,6 +20,7 @@ tbs:
       token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
       refresh-token-expire-time: 168
       application-token-expire-time: 168
+      third-party-token-expire-time: 3
     enable-cors: true
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker

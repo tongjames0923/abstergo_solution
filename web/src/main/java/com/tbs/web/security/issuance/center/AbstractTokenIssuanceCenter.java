@@ -12,7 +12,6 @@ import com.tbs.web.security.token.ITokenModel;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
-import com.tbs.web.constant.WebI18nConstant;
 
 /**
  * 抽象的令牌颁发中心
@@ -56,6 +55,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      *     <li>{@link TokenTypeEnum#REFRESH_TOKEN}：按刷新令牌有效期，单位小时；</li>
      *     <li>{@link TokenTypeEnum#WEB_ACCESS_TOKEN}：按访问令牌有效期，单位秒；</li>
      *     <li>{@link TokenTypeEnum#APPLICATION_ACCESS_TOKEN}：按应用令牌有效期，单位小时。</li>
+     *     <li>{@link TokenTypeEnum#THIRD_PARTY_ACCESS_TOKEN}：按第三方令牌有效期，单位小时。</li>
      * </ul>
      * 子类可重写以接入自定义有效期策略（如按用户等级、租户差异化）。
      * </p>
@@ -73,6 +73,8 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
             exp = new Date(now.getTime() + TimeUnit.SECONDS.toMillis(authProperty.getTokenExpireTime()));
         } else if (Objects.equals(tokenType, TokenTypeEnum.APPLICATION_ACCESS_TOKEN.getCode())) {
             exp = new Date(now.getTime() + TimeUnit.HOURS.toMillis(authProperty.getApplicationTokenExpireTime()));
+        } else if (Objects.equals(tokenType, TokenTypeEnum.THIRD_PARTY_ACCESS_TOKEN.getCode())) {
+            exp = new Date(now.getTime() + TimeUnit.HOURS.toMillis(authProperty.getThirdPartyTokenExpireTime()));
         }
         return exp;
     }

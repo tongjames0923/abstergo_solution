@@ -9,7 +9,7 @@ import lombok.Getter;
  */
 @Getter
 public enum TokenCreateTypeEnum implements BaseEnum<String> {
-	LOGIN("登录", 1), REFRESH("刷新替换", 2);
+	LOGIN("登录", 1), REFRESH("刷新替换", 2), THIRD("第三方登录", 3);
 
 	private String value;
 	private Integer code;

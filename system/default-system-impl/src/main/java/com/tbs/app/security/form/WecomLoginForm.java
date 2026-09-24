@@ -1,4 +1,4 @@
-package com.tbs.app.security.grant.wecom;
+package com.tbs.app.security.form;
 
 import lombok.Data;
 

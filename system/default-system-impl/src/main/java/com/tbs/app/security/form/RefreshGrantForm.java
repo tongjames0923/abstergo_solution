@@ -1,4 +1,4 @@
-package com.tbs.app.security.grant;
+package com.tbs.app.security.form;
 
 import java.io.Serializable;
 

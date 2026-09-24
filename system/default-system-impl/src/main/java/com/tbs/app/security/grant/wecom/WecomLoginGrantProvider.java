@@ -1,6 +1,7 @@
 package com.tbs.app.security.grant.wecom;
 
 import com.tbs.app.constant.SystemI18nConstant;
+import com.tbs.app.security.form.WecomLoginForm;
 import com.tbs.app.security.grant.AbstractExternalLoginGrantProvider;
 import com.tbs.app.service.identity.ExternalUserProfile;
 import com.tbs.common.error.AssertUtil;

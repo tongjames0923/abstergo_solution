@@ -76,5 +76,15 @@ public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<
         return QueryEngine.getEntityQueryWrapper(entityClass).query();
     }
 
+    /**
+     * 根据实体类对象获取查询构建器。
+     *
+     * @param entity 实体类对象
+     * @return 查询构建器
+     */
+    default IQueryBuilder<T> query(T entity) {
+        return QueryEngine.getEntityQueryWrapper(entity).query();
+    }
+
 
 }

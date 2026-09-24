@@ -9,7 +9,6 @@ import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.IUserValidator;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
