@@ -72,7 +72,9 @@ export default {
     method: {
       password: 'Account & Password',
       wecom: 'WeCom Sign-in',
-      qr: 'WeCom QR Sign-in'
+      qr: 'WeCom QR Sign-in',
+      third_party: 'Third-party Application',
+      refresh: 'Refresh Token'
     },
     qr: {
       title: 'Scan to Sign in',
@@ -735,6 +737,44 @@ export default {
     requestFailed: 'Request failed',
     testSuccess: 'Test Success',
     testFailed: 'Test Failed'
+  },
+
+  // Third-party Application Management
+  thirdParty: {
+    title: 'Third-party Application Management',
+    subtitle: 'Manage third-party application onboarding: app id, secret and grant type',
+    add: 'Add Application',
+    addTitle: 'Add Third-party Application',
+    detailTitle: 'Third-party Application Detail',
+    appId: 'App ID',
+    appIdPlaceholder: 'Leave empty to auto-generate a UUID',
+    appSecret: 'App Secret',
+    appSecretPlaceholder: 'Enter app secret (plaintext; hashed by server on save)',
+    appSecretRequired: 'Please enter app secret',
+    grantType: 'Grant Type',
+    grantTypePlaceholder: 'Select grant type',
+    grantTypeRequired: 'Please select grant type',
+    proxyId: 'Proxy User',
+    proxyIdPlaceholder: 'Select proxy user (executor account)',
+    proxyIdRequired: 'Please select proxy user',
+    flag: 'Status',
+    active: 'Active',
+    inactive: 'Inactive',
+    deleted: 'Deleted',
+    createTime: 'Create Time',
+    updateTime: 'Update Time',
+    createBy: 'Created By',
+    updateBy: 'Updated By',
+    operation: 'Operations',
+    detail: 'Detail',
+    saving: 'Saving...',
+    confirmDelete: 'Are you sure to delete third-party application "{name}"? This cannot be undone.',
+    emptyTitle: 'No Third-party Applications',
+    emptyDesc: 'Click "Add Application" to create the first third-party application',
+    appIdFilter: 'App ID',
+    appIdFilterPlaceholder: 'Exact search by app id',
+    proxyFilter: 'Proxy User ID',
+    proxyFilterPlaceholder: 'Exact search by proxy user id'
   },
 
   // App Version Management

@@ -3,6 +3,7 @@ package com.tbs.app.config;
 import com.tbs.app.intercept.DataPermissionIntercepter;
 import com.tbs.app.intercept.OperateLogAspect;
 import com.tbs.app.intercept.SystemOperateInterceptor;
+import com.tbs.app.security.grant.DefaultThirdPartyGrantProvider;
 import com.tbs.app.security.grant.PasswordGrantProviderAdapter;
 import com.tbs.app.security.grant.RefreshGrantProviderAdapter;
 import com.tbs.app.service.IFeatureFlagService;
@@ -147,6 +148,19 @@ public class DefaultAppConfig {
     @ConditionalOnMissingBean(IThirdPartyAppService.class)
     IThirdPartyAppService thirdPartyAppService() {
         return new DefaultThirdPartyServiceImpl();
+    }
+
+    /**
+     * 第三方授权适配器配置
+     * <p>
+     * 无特殊需求时无需配置，仅用于收集容器中所有第三方授权注册信息，提供给第三方授权管理接口查询。
+     * </p>
+     *
+     * @return
+     */
+    @Bean
+    DefaultThirdPartyGrantProvider defaultThirdPartyGrantProvider() {
+        return new DefaultThirdPartyGrantProvider();
     }
 
 

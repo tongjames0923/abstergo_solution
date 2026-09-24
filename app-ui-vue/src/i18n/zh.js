@@ -123,6 +123,12 @@ export default {
     },
     admin: {
       addBind: '新增绑定'
+    },
+    method: {
+      password: '账号密码',
+      wecom: '企业微信',
+      third_party: '第三方应用',
+      refresh: '刷新令牌'
     }
   },
 
@@ -735,6 +741,44 @@ export default {
     requestFailed: '请求失败',
     testSuccess: '测试成功',
     testFailed: '测试失败'
+  },
+
+  // 第三方应用管理
+  thirdParty: {
+    title: '第三方应用管理',
+    subtitle: '管理系统第三方应用接出登记，配置应用标识、密钥与授权类型',
+    add: '新增应用',
+    addTitle: '新增第三方应用',
+    detailTitle: '第三方应用详情',
+    appId: '应用标识',
+    appIdPlaceholder: '留空则系统自动生成 UUID',
+    appSecret: '应用密钥',
+    appSecretPlaceholder: '请输入应用密钥（明文，保存后由系统哈希存储）',
+    appSecretRequired: '请输入应用密钥',
+    grantType: '授权类型',
+    grantTypePlaceholder: '请选择授权类型',
+    grantTypeRequired: '请选择授权类型',
+    proxyId: '代理用户',
+    proxyIdPlaceholder: '请选择代理用户（执行人账号）',
+    proxyIdRequired: '请选择代理用户',
+    flag: '状态',
+    active: '启用',
+    inactive: '未启用',
+    deleted: '已删除',
+    createTime: '创建时间',
+    updateTime: '更新时间',
+    createBy: '创建人',
+    updateBy: '更新人',
+    operation: '操作',
+    detail: '详情',
+    saving: '保存中...',
+    confirmDelete: '确认要删除第三方应用「{name}」吗？此操作不可恢复。',
+    emptyTitle: '暂无第三方应用',
+    emptyDesc: '点击「新增应用」按钮创建第一个第三方应用',
+    appIdFilter: '应用标识',
+    appIdFilterPlaceholder: '按应用标识精确查询',
+    proxyFilter: '代理用户ID',
+    proxyFilterPlaceholder: '按代理用户ID精确查询'
   },
 
   // 版本控制管理

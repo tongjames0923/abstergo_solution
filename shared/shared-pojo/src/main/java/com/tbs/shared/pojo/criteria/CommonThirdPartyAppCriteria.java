@@ -6,10 +6,8 @@ import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.criteria.impl.DefaultEntityCriteria;
 import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.enums.ContrastEnum;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.List;
 
@@ -19,8 +17,6 @@ import java.util.List;
  * @author Boolean
  */
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
 public class CommonThirdPartyAppCriteria extends DefaultEntityCriteria {
     /**
@@ -28,6 +24,12 @@ public class CommonThirdPartyAppCriteria extends DefaultEntityCriteria {
      */
     public CommonThirdPartyAppCriteria() {
         super(ThirdPartyAppEntity.class);
+    }
+
+    public CommonThirdPartyAppCriteria( String eqAppId, List<Long> proxyUserIdList) {
+        super(ThirdPartyAppEntity.class);
+        EqAppId = eqAppId;
+        this.proxyUserIdList = proxyUserIdList;
     }
 
     /**
