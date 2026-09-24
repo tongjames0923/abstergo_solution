@@ -297,4 +297,7 @@ public final class SystemI18nConstant {
     public static final String PUSH_MESSAGE_QUERY_LIMIT_INVALID = "push.message.query.limit.invalid";
     /** 读状态筛选标记非法提示：读状态筛选标记非法：{0} */
     public static final String PUSH_MESSAGE_QUERY_FLAG_INVALID = "push.message.query.flag.invalid";
+
+    /** 授权码时间戳非法提示：请求时间戳无效或已过期，请检查客户端与服务端时间是否同步 */
+    public static final String THIRD_PARTY_APP_CODE_TIMESTAMP_ERROR = "third.party.app.code.timestamp.error";
 }

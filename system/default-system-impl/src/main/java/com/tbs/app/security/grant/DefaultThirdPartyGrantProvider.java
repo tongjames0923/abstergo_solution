@@ -22,6 +22,7 @@ import com.tbs.web.security.user.access.grant.ILoginGrantProvider;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
+import java.util.Date;
 import java.util.Objects;
 
 /**
@@ -84,6 +85,13 @@ public class DefaultThirdPartyGrantProvider implements ILoginGrantProvider<Defau
     public static final String GRANT_TYPE = "third_party";
 
     /**
+     * 时间戳有效窗口（毫秒）。
+     * <p>请求时间戳必须落在 {@code [now - 窗口, now + 窗口]} 区间内：下界用于抗重放，上界用于拒绝未来时间戳
+     * （否则攻击者可构造远期时间戳生成长期有效的授权码），同时容忍客户端与服务器的少量时钟偏差。</p>
+     */
+    private static final long TIMESTAMP_WINDOW_MILLIS = 3 * 60 * 1000L;
+
+    /**
      * 获取授权类型唯一标识
      * <p>
      * 全局唯一，重复注册在启动期即失败；与前端登录方式 Provider id 对齐。
@@ -135,6 +143,13 @@ public class DefaultThirdPartyGrantProvider implements ILoginGrantProvider<Defau
     public ITokenModel requestToken(DefaultThirdPartyLoginForm defaultThirdPartyLoginForm) {
         AssertUtil.isTrueBusinessError(defaultThirdPartyLoginForm == null)
             .i18n(SystemI18nConstant.THIRD_PARTY_LOGIN_FORM_CANNOT_BE_NULL).throwIt();
+
+        var nowMillis = new Date().getTime();
+        var timestamp = defaultThirdPartyLoginForm.getTimestamp();
+        AssertUtil.isTrueBusinessError(timestamp == null
+            || Math.abs(nowMillis - timestamp) > TIMESTAMP_WINDOW_MILLIS)
+            .i18n(SystemI18nConstant.THIRD_PARTY_APP_CODE_TIMESTAMP_ERROR).throwIt();
+
         var thirdPartyApp = CollUtil.getFirst(thirdPartyAppService.query(
             CommonThirdPartyAppCriteria.builder().EqAppId(defaultThirdPartyLoginForm.getAppId()).build(), null));
         AssertUtil.isTrueBusinessError(thirdPartyApp == null).i18n(SystemI18nConstant.THIRD_PARTY_APP_NOT_EXISTS)
