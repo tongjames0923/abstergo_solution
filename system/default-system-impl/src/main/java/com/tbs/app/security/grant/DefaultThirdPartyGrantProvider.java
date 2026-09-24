@@ -151,7 +151,7 @@ public class DefaultThirdPartyGrantProvider implements ILoginGrantProvider<Defau
 
         var code = defaultThirdPartyLoginForm.getCode();
         var gCode = codeGenerate(thirdPartyApp, defaultThirdPartyLoginForm.getTimestamp());
-        AssertUtil.isTrueBusinessError(Objects.equals(gCode, code)).i18n(SystemI18nConstant.THIRD_PARTY_APP_CODE_ERROR)
+        AssertUtil.isTrueBusinessError(!Objects.equals(gCode, code)).i18n(SystemI18nConstant.THIRD_PARTY_APP_CODE_ERROR)
             .throwIt();
         TokenRequestForm requestForm = new TokenRequestForm();
         requestForm.setTokenCreateType(TokenCreateTypeEnum.THIRD.getCode());
