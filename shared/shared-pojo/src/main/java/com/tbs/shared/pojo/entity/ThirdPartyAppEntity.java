@@ -23,7 +23,7 @@ import java.util.Date;
  */
 @Data
 @Builder
-@Table(name = "third_party_app", indexes = {@Index(name = "idx_app_secret_id", columnList = "app_id,app_secret"),
+@Table(name = "third_party_app", indexes = {@Index(name = "idx_app_id", columnList = "app_id"),
     @Index(name = "idx_flag", columnList = "flag"), @Index(name = "idx_proxy_id", columnList = "proxy_id")})
 @Entity
 @AllArgsConstructor
@@ -47,10 +47,10 @@ public class ThirdPartyAppEntity
     private String appId;
 
     /**
-     * 应用密钥（创建时由系统按 appId 加盐哈希后落库，不存储明文）。
-     * <p>用于 {@code DefaultThirdPartyGrantProvider#codeGenerate} 重建授权码并与请求方传入的 code 比对。</p>
+     * 应用密钥
+     * <p>不落库，用于 {@code DefaultThirdPartyGrantProvider#codeGenerate} 重建授权码并与请求方传入的 code 比对。</p>
      */
-    @Column(name = "app_secret", length = 64)
+    @Transient
     private String appSecret;
 
     /**

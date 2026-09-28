@@ -2,6 +2,7 @@ package com.tbs.app.service.impl.identity;
 
 import com.tbs.app.constant.SystemI18nConstant;
 import com.tbs.app.service.DefaultAuditService;
+import com.tbs.app.service.identity.IThirdPartyAppSecretBuilder;
 import com.tbs.app.service.identity.IThirdPartyAppService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
@@ -9,7 +10,6 @@ import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.common.util.encrypt.EncryptUitl;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
@@ -46,6 +46,9 @@ public class DefaultThirdPartyServiceImpl
 
     @Resource
     private ThirdPartyAppMapper thirdPartyAppMapper;
+
+    @Resource
+    private IThirdPartyAppSecretBuilder secretBuilder;
 
     /**
      * 获取逻辑删除时写入的标志值（{@link CommonFlagEnum#DELETED}）。
@@ -124,10 +127,8 @@ public class DefaultThirdPartyServiceImpl
         }
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
-        var appSecret = EncryptUitl.hash256Encrypt(entity.getAppId() + UuidUtil.getInstance().getUuidString(),
-            String.valueOf(entity.getId()));
+        var appSecret = secretBuilder.build(entity);
         entity.setAppSecret(appSecret);
-        getMapper().updateByPrimaryKey(entity);
         return entity;
     }
 
