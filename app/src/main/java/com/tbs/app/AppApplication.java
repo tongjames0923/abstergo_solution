@@ -4,10 +4,12 @@ import com.tbs.async.annotation.EnableTbsAsyncPack;
 import com.tbs.cache.annotation.EnableTbsCache;
 import com.tbs.knife4j.annotation.UseKnife4jPack;
 import com.tbs.oss.annotation.EnableTbsOss;
+import com.tbs.push.annotation.EnableTbsPush;
 import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.script.annotation.EnableScriptEngine;
 import com.tbs.shared.annotation.EnableSharedLibBean;
+import com.tbs.push.sse.annotation.EnableTbsPushSse;
 import com.tbs.sql.annotation.core.EnableTbsSql;
 import com.tbs.sql.annotation.dialect.UseMysql;
 import com.tbs.struct.tree.closure.annotation.UseClosureTableTree;
@@ -45,6 +47,8 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableTbsOss
 @EnableDubbo
 @EnableScriptEngine
+@EnableTbsPush
+@EnableTbsPushSse
 public class AppApplication {
 
     public static void main(String[] args) {

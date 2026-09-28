@@ -132,6 +132,44 @@ let isUpdatingRoutes = false
 // 路由更新等待队列
 let updateWaitQueue = []
 
+// 后台静默刷新路由数据的标记（单飞，避免并发重复请求）
+let backgroundRouteRefreshing = false
+
+/**
+ * 后台静默刷新路由缓存：不阻塞当前渲染。
+ * 拉取成功后若应用已挂载则立即更新路由，否则由首次导航的路由守卫读取新缓存。
+ */
+function scheduleBackgroundRouteRefresh() {
+  if (backgroundRouteRefreshing) {
+    return
+  }
+  backgroundRouteRefreshing = true
+
+  Promise.resolve()
+    .then(() => getRoutes())
+    .then(response => {
+      // 覆盖旧缓存（不清除，保证并发期间其他调用方仍能读到旧数据先行渲染）
+      routeCacheService.cacheRoutes(response.data)
+      // 实际拉取路由后，记录服务端视图版本号供后续比对（失败不阻断）
+      return getGatewayVersion()
+        .then(versionRes => {
+          if (versionRes && versionRes.data && versionRes.data.viewVersion) {
+            routeCacheService.setLocalVersion(versionRes.data.viewVersion)
+          }
+        })
+        .catch(e => console.warn('获取视图版本号失败:', e))
+    })
+    .then(() => {
+      if (window.vueInstance) {
+        return updateRouter()
+      }
+    })
+    .catch(error => console.warn('后台刷新路由数据失败:', error))
+    .then(() => {
+      backgroundRouteRefreshing = false
+    })
+}
+
 async function generateRoutesFromServer() {
   try {
     const hasToken = getToken()
@@ -151,22 +189,31 @@ async function generateRoutesFromServer() {
         if (res) {
           console.log('使用缓存的动态路由数据') // 调试日志
         } else {
-          // 缓存中没有数据，从后端获取
-          const response = await getRoutes()
-          res = response.data
-          console.log('从后端获取的动态路由数据:', res) // 调试日志
+          // 缓存过期但仍有旧数据：先用旧数据立即渲染（stale-while-revalidate），
+          // 后台刷新新数据后再更新路由，避免进入系统被后端请求阻塞
+          res = routeCacheService.getStaleRoutes()
 
-          // 将获取到的路由数据缓存起来
-          routeCacheService.cacheRoutes(res)
+          if (res) {
+            console.log('缓存已过期，使用旧缓存先行渲染，后台刷新路由数据') // 调试日志
+            scheduleBackgroundRouteRefresh()
+          } else {
+            // 完全没有缓存，从后端获取
+            const response = await getRoutes()
+            res = response.data
+            console.log('从后端获取的动态路由数据:', res) // 调试日志
 
-          // 实际拉取路由后，记录服务端视图版本号供后续比对（失败不阻断路由加载）
-          try {
-            const versionRes = await getGatewayVersion()
-            if (versionRes && versionRes.data && versionRes.data.viewVersion) {
-              routeCacheService.setLocalVersion(versionRes.data.viewVersion)
+            // 将获取到的路由数据缓存起来
+            routeCacheService.cacheRoutes(res)
+
+            // 实际拉取路由后，记录服务端视图版本号供后续比对（失败不阻断路由加载）
+            try {
+              const versionRes = await getGatewayVersion()
+              if (versionRes && versionRes.data && versionRes.data.viewVersion) {
+                routeCacheService.setLocalVersion(versionRes.data.viewVersion)
+              }
+            } catch (e) {
+              console.warn('获取视图版本号失败:', e)
             }
-          } catch (e) {
-            console.warn('获取视图版本号失败:', e)
           }
         }
 
@@ -272,6 +319,9 @@ export async function updateRouter() {
     })
   } catch (error) {
     console.error('路由更新失败:', error)
+    // 出错时也要唤醒等待队列，否则路由守卫中 waitForRouteUpdate 会永久挂起（页面卡死）
+    updateWaitQueue.forEach(resolve => resolve(currentRouter))
+    updateWaitQueue = []
     throw error
   } finally {
     isUpdatingRoutes = false

@@ -23,6 +23,7 @@
         <module>redis-mod</module>
         <module>mq-mod</module>
         <module>rabbitmq-mod</module>
+        <module>push-mod</module>
         <module>shared</module>
         <module>tree-struct</module>
         <module>xxl-job-mod</module>
@@ -34,6 +35,7 @@
         <module>oss</module>
         <module>updater</module>
         <module>updater-gui</module>
+        <module>sdk</module>
     </modules>
 
     <groupId>com.tbs</groupId>
@@ -175,6 +177,21 @@
             <dependency>
                 <groupId>com.tbs</groupId>
                 <artifactId>mq-api</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>push-api</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>push-websocket-impl</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>push-sse-impl</artifactId>
                 <version>${tbs.version}</version>
             </dependency>
             <dependency>
@@ -366,6 +383,12 @@
             <dependency>
                 <groupId>com.squareup.okhttp3</groupId>
                 <artifactId>okhttp</artifactId>
+                <version>${okhttp3.version}</version>
+            </dependency>
+            <!-- SSE事件流实现（sdk模块使用），版本与okhttp保持一致 -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp-sse</artifactId>
                 <version>${okhttp3.version}</version>
             </dependency>
 

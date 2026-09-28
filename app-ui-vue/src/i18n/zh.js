@@ -123,6 +123,12 @@ export default {
     },
     admin: {
       addBind: '新增绑定'
+    },
+    method: {
+      password: '账号密码',
+      wecom: '企业微信',
+      third_party: '第三方应用',
+      refresh: '刷新令牌'
     }
   },
 
@@ -737,6 +743,88 @@ export default {
     testFailed: '测试失败'
   },
 
+  // 第三方应用管理
+  thirdParty: {
+    id: 'ID',
+    title: '第三方应用管理',
+    subtitle: '管理系统第三方应用接出登记，配置应用标识、密钥与授权类型',
+    add: '新增应用',
+    addTitle: '新增第三方应用',
+    detailTitle: '第三方应用详情',
+    appId: '应用标识',
+    appIdPlaceholder: '留空则系统自动生成 UUID',
+    appSecret: '应用密钥',
+    appSecretPlaceholder: '系统自动生成',
+    appSecretAuto: '系统自动生成（无需填写）',
+    appSecretNotShow: '系统生成，出于安全考虑不对外展示',
+    secretGeneratedTitle: '应用密钥已生成',
+    secretGeneratedTip: '请复制并妥善保存以下应用密钥，关闭后不可再次查看：',
+    copySecret: '复制密钥',
+    copySuccess: '已复制到剪贴板',
+    copyFailed: '复制失败，请手动选择复制',
+    grantType: '授权类型',
+    grantTypePlaceholder: '请选择授权类型',
+    grantTypeRequired: '请选择授权类型',
+    proxyId: '代理用户',
+    proxyIdPlaceholder: '请选择代理用户（执行人账号）',
+    proxyIdRequired: '请选择代理用户',
+    flag: '状态',
+    active: '启用',
+    inactive: '未启用',
+    deleted: '已删除',
+    createTime: '创建时间',
+    updateTime: '更新时间',
+    createBy: '创建人',
+    updateBy: '更新人',
+    operation: '操作',
+    detail: '详情',
+    saving: '保存中...',
+    confirmDelete: '确认要删除第三方应用「{name}」吗？此操作不可恢复。',
+    emptyTitle: '暂无第三方应用',
+    emptyDesc: '点击「新增应用」按钮创建第一个第三方应用',
+    appIdFilter: '应用标识',
+    appIdFilterPlaceholder: '按应用标识精确查询',
+    proxyFilter: '代理用户ID',
+    proxyFilterPlaceholder: '按代理用户ID精确查询',
+    test: {
+      rowBtn: '测试',
+      title: 'Token 连通性测试',
+      subtitle: '模拟第三方应用使用应用标识与密钥获取访问令牌，并验证令牌能否成功调用用户信息接口',
+      guideTitle: '使用说明',
+      guideStep1: '先在上方列表创建第三方应用，创建成功时会一次性展示应用密钥（appSecret），请复制保存。',
+      guideStep2: '在本面板输入应用标识（appId）与创建时保存的密钥（appSecret），也可点击列表行的「测试」按钮自动填入应用标识。',
+      guideStep3: '点击「开始测试」：前端按后端约定的算法用密钥与当前时间戳生成授权码（code）。',
+      guideStep4: '前端调用统一登录接口 POST /public/user/login/third_party 换取访问令牌。',
+      guideStep5: '使用获得的令牌调用 GET /private/user/info：能正确返回代理用户信息即说明令牌可用，测试通过。',
+      clockTip: '注意：授权码包含时间戳，仅在服务器时间 ±3 分钟内有效；若提示时间戳无效，请检查本机与服务器的时钟是否同步。',
+      appId: '应用标识（appId）',
+      appIdPlaceholder: '请输入待测试应用的 appId',
+      appSecret: '应用密钥（appSecret）',
+      appSecretPlaceholder: '请输入创建应用时展示的明文密钥',
+      startTest: '开始测试',
+      testing: '测试中...',
+      inputRequired: '请先填写应用标识与应用密钥',
+      stepCode: '步骤 1：生成授权码',
+      stepToken: '步骤 2：换取访问令牌',
+      stepInfo: '步骤 3：验证令牌可用性',
+      statusPending: '待执行',
+      statusRunning: '执行中',
+      statusSuccess: '成功',
+      statusFailed: '失败',
+      statusSkipped: '已跳过',
+      codeDetail: '已按约定算法生成授权码：{code}（时间戳：{time}）',
+      tokenDetail: '令牌获取成功：{token}',
+      infoDetail: '令牌可用，成功获取代理用户：{user}',
+      passed: '测试通过：令牌获取成功且可正常调用用户信息接口',
+      failed: '测试未通过：请查看下方失败步骤的具体原因',
+      unknownError: '请求异常，请检查网络或后端服务状态',
+      userName: '用户名',
+      nickName: '昵称',
+      userId: '用户ID',
+      accountStatus: '账号状态'
+    }
+  },
+
   // 版本控制管理
   version: {
     title: '版本控制管理',
@@ -869,6 +957,137 @@ export default {
     helpStep5Title: '复制新建 & 升级检查',
     helpStep5Desc: '版本列表支持「复制新建」——一键基于已有版本快速创建新版本，免去重复填写。兼容策略页的「升级检查」可模拟客户端查询，验证策略是否按预期触发升级提示。',
     helpTip: '提示：新建版本时可直接输入新的应用标识；其余下拉选项来源于已登记的应用标识，支持搜索筛选。'
+  },
+
+  // 推送消息
+  push: {
+    defaultTitle: '系统通知',
+    status: {
+      idle: '未连接',
+      connecting: '连接中',
+      connected: '已连接',
+      reconnecting: '重连中',
+      closed: '已关闭'
+    },
+    type: {
+      notify: '通知',
+      warning: '告警',
+      reminder: '提醒',
+      other: '其他'
+    },
+    priority: {
+      low: '低',
+      normal: '普通',
+      high: '高',
+      urgent: '紧急'
+    },
+    center: {
+      title: '消息中心',
+      empty: '暂无消息',
+      unread: '未读',
+      total: '共 {n} 条',
+      markAllRead: '全部已读',
+      clear: '清空',
+      close: '关闭',
+      loadMore: '加载更多',
+      loading: '加载中…',
+      emptyContent: '（无正文）',
+      markRead: '标记已读',
+      open: '查看详情',
+      read: '已读',
+      sentAt: '发送于 {time}',
+      filter: {
+        all: '全部',
+        unread: '只看未读'
+      },
+      group: {
+        today: '今天',
+        yesterday: '昨天',
+        earlier: '更早'
+      },
+      error: {
+        title: '消息加载失败',
+        hint: '网络异常或服务暂不可用，请稍后重试',
+        retry: '重试'
+      },
+      emptyFiltered: '当前筛选条件下暂无消息',
+      clearFilter: '清除筛选'
+    },
+    time: {
+      justNow: '刚刚',
+      minutesAgo: '分钟前',
+      hoursAgo: '小时前'
+    }
+  },
+
+  // 系统通知发布
+  notifyAdmin: {
+    title: '系统通知发布',
+    subtitle: '面向全体或指定用户即时投递系统通知，消息持久化存储，用户在消息中心与弹窗实时接收，离线后可补拉',
+    hero: {
+      eyebrow: '推送控制台',
+      persist: '服务端持久化',
+      realtime: '信令实时触达',
+      offline: '离线补拉可达'
+    },
+    form: {
+      type: '通知类型',
+      priority: '优先级',
+      inputTitle: '标题',
+      titlePlaceholder: '请输入通知标题',
+      content: '正文内容',
+      contentPlaceholder: '请输入通知正文…',
+      url: '跳转路由',
+      urlPlaceholder: '可选，如 /approve/123',
+      effectiveTopic: '投递通道',
+      scope: '发布范围',
+      scopeAll: '全体用户',
+      scopeUsers: '指定用户',
+      usersPlaceholder: '搜索用户名，选择要通知的用户',
+      publish: '立即发布',
+      publishing: '发布中…'
+    },
+    preview: {
+      title: '实时预览',
+      badge: '预览',
+      empty: '填写左侧表单，此处实时呈现用户收到的效果',
+      modeCenter: '消息中心',
+      modeToast: '在线弹窗'
+    },
+    history: {
+      title: '发布历史',
+      localTip: '记录仅保存在本浏览器',
+      count: '共 {n} 条',
+      colTitle: '标题',
+      colType: '类型',
+      colPriority: '优先级',
+      colScope: '范围',
+      colTime: '发布时间',
+      colReceipt: '送达回执',
+      scopeAll: '全体用户',
+      receiptText: '送达 {delivered}/{total} 人',
+      receiptOk: '全部送达',
+      receiptFail: '投递失败',
+      empty: '暂无发布记录',
+      remove: '删除记录',
+      clear: '清空记录',
+      clearConfirm: '确定清空全部本地发布记录吗？'
+    },
+    errors: {
+      titleRequired: '请输入通知标题',
+      titleTooLong: '标题不能超过 {max} 字',
+      contentRequired: '请输入通知正文',
+      contentTooLong: '正文不能超过 {max} 字',
+      usersEmpty: '请至少选择一名用户',
+      invalid: '表单数据不合法，请检查填写'
+    },
+    message: {
+      publishSuccess: '发布成功：已送达 {receivers} 名用户',
+      publishPartial: '部分目标未解析到接收人（{targets}），已送达 {receivers} 名用户',
+      publishZeroReceiver: '消息已落库，但未解析到任何接收人，未产生实时信令',
+      publishFailed: '发布失败，请检查网络后重试',
+      invalidForm: '表单校验未通过，请检查填写'
+    }
   },
 
   // 网络请求

@@ -1,11 +1,15 @@
 import request from '@/utils/request'
 
+/**
+ * 账号密码登录（统一登录授权：password 授权类型）
+ * <p>
+ * 复用统一登录端点 {@code POST /public/user/login/{grantType}}，授权类型传 {@code password}。
+ * </p>
+ * @param {Object} data - 登录表单，含 username / password
+ * @returns {Promise} 令牌信息（AjaxResult.data 为 ITokenModel）
+ */
 export function login(data) {
-  return request({
-    url: '/public/user/login',
-    method: 'post',
-    data
-  })
+  return loginByGrant('password', data)
 }
 
 /**

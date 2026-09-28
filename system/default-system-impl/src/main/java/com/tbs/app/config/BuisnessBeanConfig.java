@@ -10,6 +10,8 @@ import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
 import com.tbs.app.service.impl.genericapi.GenericApiServiceImpl;
+import com.tbs.app.service.impl.push.TopicPrefixNotifyReceiverResolver;
+import com.tbs.app.service.impl.push.PushNotifyServiceImpl;
 import com.tbs.app.service.impl.role.SimpleRoleGroupServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
@@ -18,6 +20,8 @@ import com.tbs.app.service.impl.version.AppPackageServiceImpl;
 import com.tbs.app.service.impl.version.AppVersionCompatibilityPolicyServiceImpl;
 import com.tbs.app.service.impl.version.AppVersionServiceImpl;
 import com.tbs.app.service.impl.view.ViewServiceImpl;
+import com.tbs.app.service.push.INotifyReceiverResolver;
+import com.tbs.app.service.push.IPushNotifyService;
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.token.ISystemTokenService;
@@ -165,6 +169,20 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IAppVersionCompatibilityPolicyService appVersionCompatibilityPolicyService() {
         return new AppVersionCompatibilityPolicyServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IPushNotifyService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IPushNotifyService pushNotifyService() {
+        return new PushNotifyServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(INotifyReceiverResolver.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public INotifyReceiverResolver notifyReceiverResolver() {
+        return new TopicPrefixNotifyReceiverResolver();
     }
 
 }

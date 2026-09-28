@@ -6,6 +6,20 @@
     <breadcrumb class="breadcrumb-container" />
 
     <div class="right-menu">
+      <!-- 推送消息：铃铛 + 未读红点 + 连接状态 -->
+      <div class="push-bell" @click="openCenter">
+        <span
+          class="push-bell__status"
+          :class="'is-' + connectionStatus"
+          :title="$t('push.status.' + connectionStatus)"
+        />
+        <el-badge :value="unreadCount" :max="99" :hidden="!unreadCount" class="push-bell__badge">
+          <i class="el-icon-bell" />
+        </el-badge>
+      </div>
+
+      <push-notification-center :visible.sync="centerVisible" />
+
       <!-- 语言切换 -->
       <lang-select class="lang-select-container" />
 
@@ -157,6 +171,7 @@ import { mapGetters } from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import LangSelect from '@/components/LangSelect'
+import PushNotificationCenter from '@/components/PushNotificationCenter'
 import sidebar from '@/layout/components/Sidebar/index.vue'
 import { getGatewayVersion } from '@/api/system'
 import routeCacheService from '@/utils/route-cache'
@@ -168,10 +183,13 @@ export default {
   components: {
     Breadcrumb,
     Hamburger,
-    LangSelect
+    LangSelect,
+    PushNotificationCenter
   },
   data() {
     return {
+      // 消息中心抽屉可见性
+      centerVisible: false,
       // 关于系统弹窗状态与后端版本信息
       aboutVisible: false,
       aboutLoading: false,
@@ -234,11 +252,25 @@ export default {
       'currentDepartment',
       'accountStatus',
       'accountStatusStr'
-    ])
+    ]),
+    ...mapGetters('push', [
+      'pushConnectionStatus',
+      'pushUnreadCount'
+    ]),
+    connectionStatus() {
+      return this.pushConnectionStatus
+    },
+    unreadCount() {
+      return this.pushUnreadCount
+    }
   },
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
+    },
+    // 打开消息中心抽屉
+    openCenter() {
+      this.centerVisible = true
     },
     // 打开关于系统弹窗，拉取后端网关版本信息
     async showAbout() {
@@ -356,6 +388,80 @@ export default {
 
       &:hover {
         color: #333;
+      }
+    }
+
+    .push-bell {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      cursor: pointer;
+      color: #5a5a5a;
+      transition: background 0.2s, color 0.2s;
+
+      &:hover {
+        background: #f0f0f2;
+        color: #1d1d1f;
+      }
+
+      .push-bell__badge {
+        display: flex;
+        align-items: center;
+
+        ::v-deep .el-badge__content {
+          border: none;
+          box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.82);
+        }
+      }
+
+      .el-icon-bell {
+        font-size: 18px;
+      }
+
+      /* 连接状态圆点：绿=已连 / 黄=重连中 / 灰=断开 / 蓝=连接中 */
+      .push-bell__status {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #c0c4cc;
+        transition: background 0.3s;
+
+        &.is-connected {
+          background: #34c759;
+          box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18);
+        }
+
+        &.is-connecting,
+        &.is-reconnecting {
+          background: #ff9500;
+          animation: push-bell-pulse 1.2s infinite;
+        }
+
+        &.is-closed,
+        &.is-idle {
+          background: #c0c4cc;
+        }
+      }
+    }
+
+    @keyframes push-bell-pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 149, 0, 0.4);
+      }
+
+      70% {
+        box-shadow: 0 0 0 5px rgba(255, 149, 0, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 149, 0, 0);
       }
     }
 

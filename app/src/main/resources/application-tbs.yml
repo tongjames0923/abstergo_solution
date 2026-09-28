@@ -20,6 +20,7 @@ tbs:
       token-issuance-center-impl: com.tbs.app.web.DefaultTokenSignCenter
       refresh-token-expire-time: 168
       application-token-expire-time: 168
+      third-party-token-expire-time: 3
     enable-cors: true
   system:
     main-delegate-invoker-impl: com.tbs.async.delegate.AsyncDelegateInvoker
@@ -83,6 +84,11 @@ tbs:
       storage: db
   wecom:
     enable: true
-    corp-id: ww1cdff73cf26ec042
-    agent-id: 1000047
-    corp-secret: ${WECOM_CORP_SECRET:J7ZvKVAdTRT6tJSfPMCj2jmqkqeHqBvWD4xCugVs3Pc}
+    corp-id: ${WECOM_CORP_ID}
+    agent-id: ${WECOM_AGENT_ID}
+    corp-secret: ${WECOM_CORP_SECRET}
+  push:
+    transport: sse
+    heartbeat-timeout-millis: 600000
+    dispatch:
+      scheduler: job

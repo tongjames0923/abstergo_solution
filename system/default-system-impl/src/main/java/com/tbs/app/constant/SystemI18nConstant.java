@@ -226,8 +226,80 @@ public final class SystemI18nConstant {
     public static final String EXTERNAL_IDENTITY_AUTO_MATCH_FAIL = "external.identity.auto.match.fail";
 
 
+    /* ===================== 第三方应用（third party app） ===================== */
+
+    /** 代理用户ID为空校验提示：代理用户ID不能为空 */
+    public static final String THIRD_PARTY_APP_PROXY_ID_EMPTY = "third.party.app.proxy.id.empty";
+    /** 代理用户不存在提示：代理用户不存在：{0} */
+    public static final String THIRD_PARTY_APP_PROXY_ID_NOT_FOUND = "third.party.app.proxy.id.not.found";
+    /** 代理用户已删除提示：代理用户已删除：{0} */
+    public static final String THIRD_PARTY_APP_PROXY_ID_DELETED = "third.party.app.proxy.id.deleted";
+    /** 代理用户未激活提示：代理用户未激活：{0} */
+    public static final String THIRD_PARTY_APP_PROXY_ID_INACTIVE = "third.party.app.proxy.id.inactive";
+    /** 登录授权提供方未配置提示：未配置登录授权提供方 */
+    public static final String THIRD_PARTY_APP_LOGIN_GRANT_PROVIDER_EMPTY = "third.party.app.login.grant.provider.empty";
+    /** 应用标识已存在提示：应用标识已存在：{0} */
+    public static final String THIRD_PARTY_APP_APP_ID_EXISTED = "third.party.app.app.id.existed";
+    /** 登录授权类型不支持提示：不支持的登录授权类型：{0} */
+    public static final String THIRD_PARTY_APP_LOGIN_GRANT_PROVIDER_NOT_FOUND = "third.party.app.login.grant.provider.not.found";
+    /** 第三方应用不支持直接更新提示：第三方应用不支持直接更新 */
+    public static final String THIRD_PARTY_APP_UPDATE_NOT_SUPPORTED = "third.party.app.update.not.supported";
+    /** 密钥构建器应用实体为空校验提示：应用实体不能为空 */
+    public static final String THIRD_PARTY_APP_SECRET_BUILDER_ENTITY_NULL = "third.party.app.secret.builder.entity.null";
+
+    /* ===================== 第三方应用登录授权（third party grant） ===================== */
+
+    /** 第三方登录表单为空校验提示：登录表单不能为空 */
+    public static final String THIRD_PARTY_LOGIN_FORM_CANNOT_BE_NULL = "third.party.login.form.cannot.be.null";
+    /** 第三方应用不存在提示：第三方应用不存在 */
+    public static final String THIRD_PARTY_APP_NOT_EXISTS = "third.party.app.not.exists";
+    /** 第三方应用未启用提示：第三方应用未启用 */
+    public static final String THIRD_PARTY_APP_NOT_ENABLED = "third.party.app.not.enabled";
+    /** 第三方应用代理用户不存在提示：代理用户不存在 */
+    public static final String THIRD_PARTY_APP_PROXY_USER_NOT_EXISTS = "third.party.app.proxy.user.not.exists";
+    /** 第三方应用代理用户未激活提示：代理用户未激活 */
+    public static final String THIRD_PARTY_APP_PROXY_USER_NOT_ACTIVE = "third.party.app.proxy.user.not.active";
+    /** 第三方应用授权码校验失败提示：授权码校验失败 */
+    public static final String THIRD_PARTY_APP_CODE_ERROR = "third.party.app.code.error";
+
     /* ===================== 通用校验 ===================== */
 
     /** 标识位（flag）非法提示：标识位非法 */
     public static final String INVALID_FLAG = "invalid.flag";
+
+    /* ===================== 推送消息中心 ===================== */
+
+    /** 发送表单为空校验提示：发送表单不能为空 */
+    public static final String PUSH_NOTIFY_FORM_REQUIRED = "push.notify.form.required";
+    /** 消息类型为空校验提示：消息类型不能为空 */
+    public static final String PUSH_NOTIFY_TYPE_REQUIRED = "push.notify.type.required";
+    /** 消息类型长度超限提示：消息类型长度超限：{0} */
+    public static final String PUSH_NOTIFY_TYPE_TOO_LONG = "push.notify.type.too.long";
+    /** 标题长度超限提示：标题长度不能超过 {0} 字符 */
+    public static final String PUSH_NOTIFY_TITLE_TOO_LONG = "push.notify.title.too.long";
+    /** 优先级非法提示：非法的优先级：{0} */
+    public static final String PUSH_NOTIFY_PRIORITY_INVALID = "push.notify.priority.invalid";
+    /** 业务主题长度超限提示：业务主题长度超限：{0} */
+    public static final String PUSH_NOTIFY_TOPIC_TOO_LONG = "push.notify.topic.too.long";
+    /** 跳转地址长度超限提示：跳转地址长度超限：{0} */
+    public static final String PUSH_NOTIFY_URL_TOO_LONG = "push.notify.url.too.long";
+    /** 已读消息ID列表为空校验提示：消息ID列表不能为空 */
+    public static final String PUSH_MESSAGE_READ_IDS_REQUIRED = "push.message.read.ids.required";
+    /** 已读回传批量超限提示：单次已读回传消息数不能超过 {0} */
+    public static final String PUSH_MESSAGE_READ_IDS_TOO_MANY = "push.message.read.ids.too.many";
+    /** 操作回传消息ID为空校验提示：消息ID不能为空 */
+    public static final String PUSH_MESSAGE_OP_MESSAGE_REQUIRED = "push.message.op.message.required";
+    /** 操作类型非法提示：非法的操作类型：{0} */
+    public static final String PUSH_MESSAGE_OP_TYPE_INVALID = "push.message.op.type.invalid";
+    /** 消息不存在提示：消息不存在：{0} */
+    public static final String PUSH_MESSAGE_NOT_EXISTS = "push.message.not.exists";
+    /** 当前用户未找到提示：当前用户未找到 */
+    public static final String PUSH_MESSAGE_USER_NOT_FOUND = "push.message.user.not.found";
+    /** 分页条数非法提示：每页条数非法：{0} */
+    public static final String PUSH_MESSAGE_QUERY_LIMIT_INVALID = "push.message.query.limit.invalid";
+    /** 读状态筛选标记非法提示：读状态筛选标记非法：{0} */
+    public static final String PUSH_MESSAGE_QUERY_FLAG_INVALID = "push.message.query.flag.invalid";
+
+    /** 授权码时间戳非法提示：请求时间戳无效或已过期，请检查客户端与服务端时间是否同步 */
+    public static final String THIRD_PARTY_APP_CODE_TIMESTAMP_ERROR = "third.party.app.code.timestamp.error";
 }

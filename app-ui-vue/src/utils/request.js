@@ -8,15 +8,16 @@ import i18n from '@/i18n'
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-  withCredentials: true // send cookies when cross-domain requests
-  // timeout: 3000 // request timeout
+  withCredentials: true, // send cookies when cross-domain requests
+  // 全局超时：后端/网关无响应时请求必须能失败返回，
 })
 
 // 在请求头中添加语言设置
 service.interceptors.request.use(
   config => {
     // do something before request is sent
-    if (store.getters.token) {
+    // 允许调用方显式指定令牌（如第三方连通性测试）：请求头已携带令牌时不再用当前登录令牌覆盖
+    if (store.getters.token && !config.headers[settings.tokenHeader]) {
       // let each request carry token
       // ['X-Token'] is a custom headers key
       // please modify it according to the actual situation
@@ -145,8 +146,22 @@ service.interceptors.response.use(
       return Promise.reject(new Error(i18n.t('request.networkError')))
     }
     const res = response.data
+
+    // 隔离型请求（如第三方连通性测试）：不走统一的登录态处理流程（刷新/重登/全局通知），
+    // 直接返回原始响应体，由调用方自行判定 code 并展示结果
+    if (response.config._skipAuthHandling) {
+      return res
+    }
+
     if (!res.code) {
       return Promise.reject(new Error(i18n.t('request.configError')))
+    }
+
+    // 刷新token请求自身的未登录/刷新失败响应：说明刷新会话已失效，
+    // 必须直接失败返回。若进入下方刷新逻辑，会排队等待自己触发的刷新流程，造成死锁
+    if (response.config._isRefreshRequest &&
+        settings.noLoginCode.concat(settings.refreshTokenCode).includes(res.code)) {
+      return Promise.reject(new Error(res.message || i18n.t('login.sessionExpired')))
     }
 
     // 成功响应处理
@@ -170,6 +185,11 @@ service.interceptors.response.use(
 
     // 当遇到刷新token失败的错误码(468)时，先尝试刷新token
     if (settings.noLoginCode.includes(res.code)) {
+      // 已重试过仍返回未登录码，说明刷新后依然无效，
+      // 必须终止，否则会陷入“刷新→重试→再刷新”的死循环
+      if (response.config._retry) {
+        return await noLoginFunction(res)
+      }
       try {
         return await refreshTokenHandler(response)
       } catch (err) {

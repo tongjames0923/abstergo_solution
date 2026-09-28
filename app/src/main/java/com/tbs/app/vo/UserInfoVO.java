@@ -17,6 +17,11 @@ import java.util.Collection;
 @Data
 public class UserInfoVO implements Serializable {
 	/**
+	 * 用户ID（数字主键，前端用于拼接推送 SIGNAL 频道 tbs.push.channel.{id}）
+	 */
+	private Long id;
+
+	/**
 	 * 用户名
 	 */
 	private String userName;

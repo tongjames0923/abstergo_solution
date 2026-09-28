@@ -239,6 +239,39 @@ public class SimpleSystemUserServiceImpl
         return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
     }
 
+    /**
+     * 查询全部激活状态用户ID（短缓存，兼顾广播 fan-out 性能与新增用户可见性）
+     *
+     * @return 激活用户ID列表
+     */
+    @Cacheable(cacheNames = SYSTEM_USER, key = "'allActiveIds'")
+    @ExpireOn(value = 1, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public List<Long> queryAllActiveUserIds() {
+        var users = getQueryWrapper().query().where()
+            .equal(SystemUserEntity::getFlag, SystemUserStatusEnum.ACTIVE.getCode()).pour().fetch();
+        return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
+    }
+
+    /**
+     * 按用户名前缀搜索激活状态用户ID
+     *
+     * @param prefix 用户名前缀关键字
+     * @return 匹配的用户ID列表
+     */
+    @Cacheable(cacheNames = USER_NAME_ID_MAP, key = "'namePrefix:' + #prefix")
+    @ExpireOn(value = 15, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public List<Long> queryUserIdsByUserNamePrefix(String prefix) {
+        if (StrUtil.isEmpty(prefix)) {
+            return new ArrayList<>();
+        }
+        var users = getQueryWrapper().query().where()
+            .leftLike(SystemUserEntity::getUserName, prefix)
+            .equal(SystemUserEntity::getFlag, SystemUserStatusEnum.ACTIVE.getCode()).pour().fetch();
+        return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
+    }
+
     private static final IAuditService<SystemUserEntity, Long, Long> auditService = new DefaultAuditService<>();
 
     @Override

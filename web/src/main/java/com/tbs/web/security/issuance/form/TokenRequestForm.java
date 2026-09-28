@@ -4,7 +4,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.io.Serializable;
@@ -34,10 +33,12 @@ public class TokenRequestForm implements Serializable {
     private  UserDetails userDetails;
     /**
      * token类型
+     * @see com.tbs.web.enums.TokenStatusEnum
      */
     private  Integer tokenType;
     /**
      * token创建方式
+     * @see com.tbs.web.enums.TokenCreateTypeEnum
      */
     private  Integer tokenCreateType;
 }

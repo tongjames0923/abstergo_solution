@@ -56,7 +56,12 @@ public class WebAuthProperty {
     /**
      * 应用token有效期,单位：小时
      */
-    private int applicationTokenExpireTime = 7 * 24;
+    private int applicationTokenExpireTime = 3 * 24;
+
+    /**
+     * 第三方token有效期,单位：小时
+     */
+    private int thirdPartyTokenExpireTime = 3;
 
 
     /**

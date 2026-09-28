@@ -1,0 +1,43 @@
+/**
+ * 消息中心动效与可访问性 token（partial）
+ * <p>
+ * 统一抽屉内各组件与共享消息卡的时长、缓动曲线、焦点环与触摸反馈写法，
+ * 避免各组件散落魔法值；断点与触摸目标复用全站 styles/mixin.scss 的
+ * respond-to / touch-target / touch-feedback，保持与其余模块同一套响应式语言。
+ * </p>
+ */
+@import '~@/styles/variables.scss';
+@import '~@/styles/mixin.scss';
+
+/* 时长：交互反馈快、过渡中、入场慢 */
+$mo-dur-fast: 0.16s;
+$mo-dur-base: 0.24s;
+$mo-dur-slow: 0.42s;
+
+/* 缓动：out 用于位移过渡，spring 用于浮现类动效 */
+$mo-ease-out: cubic-bezier(0.22, 0.61, 0.36, 1);
+$mo-ease-spring: cubic-bezier(0.2, 0.8, 0.3, 1);
+
+/* 键盘可达性焦点环（系统蓝） */
+@mixin focus-ring {
+  &:focus-visible {
+    outline: 2px solid rgba(10, 132, 255, 0.55);
+    outline-offset: 2px;
+  }
+}
+
+/* 指针设备悬停：避免触摸设备出现粘滞 hover */
+@mixin hover-only {
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      @content;
+    }
+  }
+}
+
+/* 按压反馈：轻微缩放 */
+@mixin press {
+  &:active {
+    transform: scale(0.965);
+  }
+}

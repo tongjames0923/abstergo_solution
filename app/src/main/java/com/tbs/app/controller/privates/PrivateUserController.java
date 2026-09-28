@@ -117,6 +117,7 @@ public class PrivateUserController extends BaseController {
         Optional<SystemUserEntity> user = userService.queryByUserName(userDetail.getUsername()).stream().findFirst();
         AssertUtil.isTrue(!user.isPresent()).message("用户{} 不存在", userDetail.getUsername())
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        userInfoVO.setId(user.get().getId());
         userInfoVO.setNickName(user.get().getNickName());
         userInfoVO.setAccountStatus(user.get().getFlag());
         userInfoVO.setAccountStatusStr(EnumUtil.valueOf(SystemUserStatusEnum.class, user.get().getFlag()).getValue());

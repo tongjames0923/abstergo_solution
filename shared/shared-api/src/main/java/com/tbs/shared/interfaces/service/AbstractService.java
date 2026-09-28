@@ -1,6 +1,7 @@
 package com.tbs.shared.interfaces.service;
 
 import com.tbs.sql.dsl.IEntityQueryWrapper;
+import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.mapper.IFrameworkMapper;
 
 import javax.annotation.PostConstruct;
@@ -31,6 +32,16 @@ public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K
      * @return
      */
     protected abstract Mapper getMapper();
+
+    /**
+     * 获取查询构建器
+     *
+     * @return
+     */
+    protected IQueryBuilder<E> getQueryBuilder() {
+        return getMapper().query(getEntity());
+    }
+
 
     /**
      * 创建一个新的实体对象

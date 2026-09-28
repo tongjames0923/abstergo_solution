@@ -192,6 +192,7 @@ graph TD
     S --> R[LoginGrantRegistry Spring 收集 SPI]
     R --> P1[PasswordGrantProviderAdapter grantType=password 桥接既有实现]
     R --> P2[WecomLoginGrantProvider grantType=wecom]
+    R --> PR[RefreshGrantProviderAdapter grantType=refresh 桥接 IRefreshTokenService.useRefreshToken]
     R --> PN[未来其他策略...]
     P1 --> T[AbstractAccessTokenProvider 模板链路]
     P2 --> T

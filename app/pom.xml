@@ -73,6 +73,11 @@
 
         <dependency>
             <groupId>com.tbs</groupId>
+            <artifactId>push-sse-impl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.tbs</groupId>
             <artifactId>script-engine-api</artifactId>
         </dependency>
         <dependency>
