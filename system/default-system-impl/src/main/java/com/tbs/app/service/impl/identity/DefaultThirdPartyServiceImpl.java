@@ -6,6 +6,7 @@ import com.tbs.app.service.identity.IThirdPartyAppSecretBuilder;
 import com.tbs.app.service.identity.IThirdPartyAppService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
@@ -15,14 +16,17 @@ import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.ThirdPartyAppMapper;
+import com.tbs.shared.pojo.criteria.CommonThirdPartyAppCriteria;
 import com.tbs.shared.pojo.entity.ThirdPartyAppEntity;
 import com.tbs.web.security.user.access.grant.ILoginGrantProvider;
 import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.cache.annotation.Cacheable;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 第三方应用接出能力的默认实现。
@@ -190,5 +194,18 @@ public class DefaultThirdPartyServiceImpl
     @Override
     protected Optional<IAuditService<ThirdPartyAppEntity, Long, ?>> getAuditServiceSupport() {
         return Optional.of(auditService);
+    }
+
+    /**
+     * 根据应用ID查询应用信息。
+     *
+     * @param appId 应用ID
+     * @return 应用信息
+     */
+    @Cacheable(value = "thirdPartyApp", key = "#appId")
+    @ExpireOn(value = 12, timeUnit = TimeUnit.HOURS)
+    @Override
+    public ThirdPartyAppEntity getThirdPartyAppEntity(String appId) {
+        return CollUtil.getFirst(query(CommonThirdPartyAppCriteria.builder().EqAppId(appId).build(), null));
     }
 }

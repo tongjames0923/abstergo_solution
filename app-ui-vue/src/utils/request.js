@@ -16,7 +16,8 @@ const service = axios.create({
 service.interceptors.request.use(
   config => {
     // do something before request is sent
-    if (store.getters.token) {
+    // 允许调用方显式指定令牌（如第三方连通性测试）：请求头已携带令牌时不再用当前登录令牌覆盖
+    if (store.getters.token && !config.headers[settings.tokenHeader]) {
       // let each request carry token
       // ['X-Token'] is a custom headers key
       // please modify it according to the actual situation
@@ -145,6 +146,13 @@ service.interceptors.response.use(
       return Promise.reject(new Error(i18n.t('request.networkError')))
     }
     const res = response.data
+
+    // 隔离型请求（如第三方连通性测试）：不走统一的登录态处理流程（刷新/重登/全局通知），
+    // 直接返回原始响应体，由调用方自行判定 code 并展示结果
+    if (response.config._skipAuthHandling) {
+      return res
+    }
+
     if (!res.code) {
       return Promise.reject(new Error(i18n.t('request.configError')))
     }

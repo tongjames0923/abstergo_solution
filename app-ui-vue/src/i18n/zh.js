@@ -745,6 +745,7 @@ export default {
 
   // 第三方应用管理
   thirdParty: {
+    id: 'ID',
     title: '第三方应用管理',
     subtitle: '管理系统第三方应用接出登记，配置应用标识、密钥与授权类型',
     add: '新增应用',
@@ -784,7 +785,44 @@ export default {
     appIdFilter: '应用标识',
     appIdFilterPlaceholder: '按应用标识精确查询',
     proxyFilter: '代理用户ID',
-    proxyFilterPlaceholder: '按代理用户ID精确查询'
+    proxyFilterPlaceholder: '按代理用户ID精确查询',
+    test: {
+      rowBtn: '测试',
+      title: 'Token 连通性测试',
+      subtitle: '模拟第三方应用使用应用标识与密钥获取访问令牌，并验证令牌能否成功调用用户信息接口',
+      guideTitle: '使用说明',
+      guideStep1: '先在上方列表创建第三方应用，创建成功时会一次性展示应用密钥（appSecret），请复制保存。',
+      guideStep2: '在本面板输入应用标识（appId）与创建时保存的密钥（appSecret），也可点击列表行的「测试」按钮自动填入应用标识。',
+      guideStep3: '点击「开始测试」：前端按后端约定的算法用密钥与当前时间戳生成授权码（code）。',
+      guideStep4: '前端调用统一登录接口 POST /public/user/login/third_party 换取访问令牌。',
+      guideStep5: '使用获得的令牌调用 GET /private/user/info：能正确返回代理用户信息即说明令牌可用，测试通过。',
+      clockTip: '注意：授权码包含时间戳，仅在服务器时间 ±3 分钟内有效；若提示时间戳无效，请检查本机与服务器的时钟是否同步。',
+      appId: '应用标识（appId）',
+      appIdPlaceholder: '请输入待测试应用的 appId',
+      appSecret: '应用密钥（appSecret）',
+      appSecretPlaceholder: '请输入创建应用时展示的明文密钥',
+      startTest: '开始测试',
+      testing: '测试中...',
+      inputRequired: '请先填写应用标识与应用密钥',
+      stepCode: '步骤 1：生成授权码',
+      stepToken: '步骤 2：换取访问令牌',
+      stepInfo: '步骤 3：验证令牌可用性',
+      statusPending: '待执行',
+      statusRunning: '执行中',
+      statusSuccess: '成功',
+      statusFailed: '失败',
+      statusSkipped: '已跳过',
+      codeDetail: '已按约定算法生成授权码：{code}（时间戳：{time}）',
+      tokenDetail: '令牌获取成功：{token}',
+      infoDetail: '令牌可用，成功获取代理用户：{user}',
+      passed: '测试通过：令牌获取成功且可正常调用用户信息接口',
+      failed: '测试未通过：请查看下方失败步骤的具体原因',
+      unknownError: '请求异常，请检查网络或后端服务状态',
+      userName: '用户名',
+      nickName: '昵称',
+      userId: '用户ID',
+      accountStatus: '账号状态'
+    }
   },
 
   // 版本控制管理

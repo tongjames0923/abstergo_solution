@@ -1,5 +1,6 @@
 package com.tbs.app.service.impl.identity;
 
+import com.tbs.app.constant.SystemI18nConstant;
 import com.tbs.app.service.identity.IThirdPartyAppSecretBuilder;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.encrypt.EncryptUitl;
@@ -14,13 +15,13 @@ public class DefaultThirdPartyAppSecretBuilder implements IThirdPartyAppSecretBu
     /**
      * 构建第三方应用的密钥
      *
-     * @param appEntity
-     * @return
+     * @param appEntity 待构建密钥的第三方应用实体
+     * @return 基于约定原料拼接后经 SHA-256 哈希的应用密钥
      */
     @Override
     public String build(ThirdPartyAppEntity appEntity) {
-        AssertUtil.isTrueBusinessError(appEntity == null).i18n("third_party_app_secret_builder.app_entity_is_null")
-            .throwIt();
+        AssertUtil.isTrueBusinessError(appEntity == null)
+            .i18n(SystemI18nConstant.THIRD_PARTY_APP_SECRET_BUILDER_ENTITY_NULL).throwIt();
         var appId = appEntity.getId();
         var proxyId = appEntity.getProxyId();
         var grantType = appEntity.getGrantType();

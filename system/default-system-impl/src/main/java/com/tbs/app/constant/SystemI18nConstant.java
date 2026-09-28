@@ -244,6 +244,8 @@ public final class SystemI18nConstant {
     public static final String THIRD_PARTY_APP_LOGIN_GRANT_PROVIDER_NOT_FOUND = "third.party.app.login.grant.provider.not.found";
     /** 第三方应用不支持直接更新提示：第三方应用不支持直接更新 */
     public static final String THIRD_PARTY_APP_UPDATE_NOT_SUPPORTED = "third.party.app.update.not.supported";
+    /** 密钥构建器应用实体为空校验提示：应用实体不能为空 */
+    public static final String THIRD_PARTY_APP_SECRET_BUILDER_ENTITY_NULL = "third.party.app.secret.builder.entity.null";
 
     /* ===================== 第三方应用登录授权（third party grant） ===================== */
 

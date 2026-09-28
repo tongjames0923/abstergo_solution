@@ -69,7 +69,7 @@
             style="width: 100%"
             :header-cell-style="{ background: '#f8fafc', color: '#334155', fontWeight: 600 }"
           >
-            <el-table-column prop="id" label="ID" width="80" align="center" />
+            <el-table-column prop="id" :label="$t('thirdParty.id')" width="80" align="center" />
             <el-table-column prop="appId" :label="$t('thirdParty.appId')" min-width="180" show-overflow-tooltip />
             <el-table-column :label="$t('thirdParty.grantType')" width="140" align="center">
               <template slot-scope="{ row }">
@@ -88,10 +88,13 @@
             <el-table-column prop="updateTime" :label="$t('thirdParty.updateTime')" width="160" align="center">
               <template slot-scope="{ row }">{{ formatTime(row.updateTime) }}</template>
             </el-table-column>
-            <el-table-column :label="$t('thirdParty.operation')" width="150" align="center" fixed="right">
+            <el-table-column :label="$t('thirdParty.operation')" width="210" align="center" fixed="right">
               <template slot-scope="{ row }">
                 <el-button size="mini" type="text" class="detail-text" @click="handleDetail(row)">
                   <i class="el-icon-view" /> {{ $t('thirdParty.detail') }}
+                </el-button>
+                <el-button size="mini" type="text" class="test-text" @click="handleFillTest(row)">
+                  <i class="el-icon-cpu" /> {{ $t('thirdParty.test.rowBtn') }}
                 </el-button>
                 <el-button
                   size="mini"
@@ -131,6 +134,99 @@
             />
           </div>
         </template>
+      </div>
+
+      <!-- Token 连通性测试 -->
+      <div ref="testPanel" class="test-panel">
+        <div class="test-panel-header">
+          <h3 class="test-title">
+            <i class="el-icon-cpu test-title-icon" />
+            {{ $t('thirdParty.test.title') }}
+          </h3>
+          <span class="test-subtitle">{{ $t('thirdParty.test.subtitle') }}</span>
+        </div>
+
+        <el-alert
+          :title="$t('thirdParty.test.guideTitle')"
+          type="info"
+          :closable="false"
+          class="test-guide"
+        >
+          <ol class="guide-list">
+            <li>{{ $t('thirdParty.test.guideStep1') }}</li>
+            <li>{{ $t('thirdParty.test.guideStep2') }}</li>
+            <li>{{ $t('thirdParty.test.guideStep3') }}</li>
+            <li>{{ $t('thirdParty.test.guideStep4') }}</li>
+            <li>{{ $t('thirdParty.test.guideStep5') }}</li>
+          </ol>
+          <p class="guide-tip">
+            <i class="el-icon-warning-outline" /> {{ $t('thirdParty.test.clockTip') }}
+          </p>
+        </el-alert>
+
+        <div class="test-form-row">
+          <div class="filter-item">
+            <label class="filter-label">{{ $t('thirdParty.test.appId') }}</label>
+            <el-input
+              v-model="testForm.appId"
+              :placeholder="$t('thirdParty.test.appIdPlaceholder')"
+              size="small"
+              clearable
+            />
+          </div>
+          <div class="filter-item">
+            <label class="filter-label">{{ $t('thirdParty.test.appSecret') }}</label>
+            <el-input
+              v-model="testForm.appSecret"
+              :placeholder="$t('thirdParty.test.appSecretPlaceholder')"
+              size="small"
+              show-password
+            />
+          </div>
+          <div class="filter-actions">
+            <el-button
+              type="primary"
+              icon="el-icon-video-play"
+              size="small"
+              :loading="testing"
+              @click="handleTest"
+            >
+              {{ testing ? $t('thirdParty.test.testing') : $t('thirdParty.test.startTest') }}
+            </el-button>
+            <el-button icon="el-icon-refresh-left" size="small" @click="resetTest">
+              {{ $t('common.reset') }}
+            </el-button>
+          </div>
+        </div>
+
+        <div v-if="testResult" class="test-result">
+          <el-alert
+            :type="testResult.passed ? 'success' : 'error'"
+            :title="testResult.passed ? $t('thirdParty.test.passed') : $t('thirdParty.test.failed')"
+            :closable="false"
+            show-icon
+            class="test-summary"
+          />
+          <div class="test-steps">
+            <div v-for="step in testResult.steps" :key="step.key" class="test-step">
+              <el-tag :type="testStepTagType(step.status)" size="mini">{{ testStepStatusText(step.status) }}</el-tag>
+              <span class="step-label">{{ testStepLabel(step.key) }}</span>
+              <span v-if="step.detail" class="step-detail">{{ step.detail }}</span>
+            </div>
+          </div>
+          <el-descriptions
+            v-if="testResult.user"
+            :column="2"
+            border
+            size="small"
+            class="test-user-descriptions"
+          >
+            <el-descriptions-item :label="$t('thirdParty.test.userName')">{{ testResult.user.userName || '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('thirdParty.test.nickName')">{{ testResult.user.nickName || '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('thirdParty.test.userId')">{{ testResult.user.id || '-' }}</el-descriptions-item>
+            <el-descriptions-item :label="$t('thirdParty.test.accountStatus')">{{ testResult.user.accountStatusStr || '-' }}</el-descriptions-item>
+          </el-descriptions>
+        </div>
       </div>
 
       <!-- 新增弹窗 -->
@@ -210,7 +306,7 @@
         :close-on-click-modal="false"
       >
         <el-descriptions v-if="detailData" :column="1" border size="small" class="detail-descriptions">
-          <el-descriptions-item :label="'ID'">{{ detailData.id }}</el-descriptions-item>
+          <el-descriptions-item :label="$t('thirdParty.id')">{{ detailData.id }}</el-descriptions-item>
           <el-descriptions-item :label="$t('thirdParty.appId')">{{ detailData.appId || '-' }}</el-descriptions-item>
           <el-descriptions-item :label="$t('thirdParty.appSecret')">
             <span class="secret-text">{{ $t('thirdParty.appSecretNotShow') }}</span>
@@ -260,11 +356,15 @@
 
 <script>
 import {
+  buildThirdPartyCode,
   deleteThirdPartyApp,
   getLoginGrants,
   getThirdPartyApp,
+  getUserInfoByToken,
+  loginByGrantType,
   queryThirdPartyApps,
-  saveThirdPartyApp
+  saveThirdPartyApp,
+  THIRD_PARTY_GRANT_TYPE
 } from '@/api/third-party'
 import { adminQueryUser } from '@/api/admin_user'
 
@@ -312,7 +412,15 @@ export default {
 
       // 创建后一次性展示的应用密钥
       secretVisible: false,
-      generatedSecret: ''
+      generatedSecret: '',
+
+      // Token 连通性测试
+      testForm: {
+        appId: '',
+        appSecret: ''
+      },
+      testing: false,
+      testResult: null
     }
   },
   mounted() {
@@ -494,6 +602,110 @@ export default {
       }
     },
 
+    // ========== Token 连通性测试 ==========
+    // 模拟第三方应用完整链路：生成授权码 → 换取访问令牌 → 用令牌获取用户信息
+    async handleTest() {
+      if (!this.testForm.appId || !this.testForm.appSecret) {
+        this.$message.warning(this.$t('thirdParty.test.inputRequired'))
+        return
+      }
+      this.testing = true
+      const steps = [
+        { key: 'code', status: 'running', detail: '' },
+        { key: 'token', status: 'pending', detail: '' },
+        { key: 'info', status: 'pending', detail: '' }
+      ]
+      this.testResult = { passed: false, steps, user: null }
+      let current = 0
+      const timestamp = Date.now()
+      try {
+        const code = buildThirdPartyCode(this.testForm.appId, this.testForm.appSecret, timestamp)
+        steps[0].status = 'success'
+        steps[0].detail = this.$t('thirdParty.test.codeDetail', { code: this.ellipsisMiddle(code), time: timestamp })
+
+        current = 1
+        steps[1].status = 'running'
+        const loginRes = await loginByGrantType(THIRD_PARTY_GRANT_TYPE, {
+          appId: this.testForm.appId,
+          code,
+          timestamp
+        })
+        const token = loginRes && loginRes.data && loginRes.data.token
+        if (!loginRes || loginRes.code !== 200 || !token) {
+          throw new Error((loginRes && loginRes.message) || this.$t('thirdParty.test.unknownError'))
+        }
+        steps[1].status = 'success'
+        steps[1].detail = this.$t('thirdParty.test.tokenDetail', { token: this.ellipsisMiddle(token) })
+
+        current = 2
+        steps[2].status = 'running'
+        const infoRes = await getUserInfoByToken(token)
+        if (!infoRes || infoRes.code !== 200 || !infoRes.data) {
+          throw new Error((infoRes && infoRes.message) || this.$t('thirdParty.test.unknownError'))
+        }
+        steps[2].status = 'success'
+        steps[2].detail = this.$t('thirdParty.test.infoDetail', { user: infoRes.data.userName || '-' })
+        this.testResult.user = infoRes.data
+        this.testResult.passed = true
+      } catch (error) {
+        steps[current].status = 'failed'
+        steps[current].detail = (error && error.message) || this.$t('thirdParty.test.unknownError')
+        for (let i = current + 1; i < steps.length; i++) {
+          steps[i].status = 'skipped'
+        }
+      } finally {
+        this.testing = false
+      }
+    },
+
+    // 列表行一键将应用标识填入测试表单
+    handleFillTest(row) {
+      this.testForm.appId = row.appId
+      this.testForm.appSecret = ''
+      this.testResult = null
+      if (this.$refs.testPanel && this.$refs.testPanel.scrollIntoView) {
+        this.$refs.testPanel.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
+
+    resetTest() {
+      this.testForm = { appId: '', appSecret: '' }
+      this.testResult = null
+    },
+
+    testStepLabel(key) {
+      const map = {
+        code: this.$t('thirdParty.test.stepCode'),
+        token: this.$t('thirdParty.test.stepToken'),
+        info: this.$t('thirdParty.test.stepInfo')
+      }
+      return map[key] || key
+    },
+
+    testStepStatusText(status) {
+      const map = {
+        pending: this.$t('thirdParty.test.statusPending'),
+        running: this.$t('thirdParty.test.statusRunning'),
+        success: this.$t('thirdParty.test.statusSuccess'),
+        failed: this.$t('thirdParty.test.statusFailed'),
+        skipped: this.$t('thirdParty.test.statusSkipped')
+      }
+      return map[status] || status
+    },
+
+    testStepTagType(status) {
+      if (status === 'success') return 'success'
+      if (status === 'failed') return 'danger'
+      if (status === 'running') return ''
+      return 'info'
+    },
+
+    // 长串（授权码/令牌）只展示首尾片段，避免撑破界面排版
+    ellipsisMiddle(str) {
+      if (!str || str.length <= 24) return str || ''
+      return `${str.slice(0, 12)}...${str.slice(-8)}`
+    },
+
     // ========== 展示辅助 ==========
     statusType(flag) {
       if (flag === 1) return 'success' // ACTIVE
@@ -653,9 +865,124 @@ export default {
   &:hover { color: #38bdf8 !important; }
 }
 
+.test-text {
+  color: #8b5cf6 !important;
+  &:hover { color: #a78bfa !important; }
+}
+
 .danger-text {
   color: #ef4444 !important;
   &:hover { color: #f87171 !important; }
+}
+
+/* ========== Token 连通性测试 ========== */
+.test-panel {
+  margin-top: 16px;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.04);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.03);
+  padding: 20px;
+}
+
+.test-panel-header {
+  margin-bottom: 14px;
+}
+
+.test-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.test-title-icon {
+  color: #8b5cf6;
+}
+
+.test-subtitle {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.test-guide {
+  margin-bottom: 16px;
+
+  ::v-deep .el-alert__description {
+    width: 100%;
+  }
+}
+
+.guide-list {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  font-size: 12px;
+  line-height: 1.9;
+  color: #475569;
+}
+
+.guide-tip {
+  margin: 8px 0 0;
+  font-size: 12px;
+  color: #b45309;
+}
+
+.test-form-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.test-result {
+  margin-top: 14px;
+}
+
+.test-summary {
+  margin-bottom: 12px;
+}
+
+.test-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.test-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 13px;
+}
+
+.step-label {
+  font-weight: 500;
+  color: #334155;
+  white-space: nowrap;
+}
+
+.step-detail {
+  color: #64748b;
+  word-break: break-all;
+}
+
+.test-user-descriptions {
+  margin-top: 14px;
+
+  ::v-deep .el-descriptions-item__label {
+    width: 110px;
+    color: #64748b;
+    font-weight: 500;
+  }
 }
 
 /* ========== 分页 ========== */
@@ -769,7 +1096,8 @@ export default {
     padding: 16px;
   }
 
-  .filter-row {
+  .filter-row,
+  .test-form-row {
     flex-direction: column;
     align-items: stretch;
   }

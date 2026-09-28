@@ -13,4 +13,12 @@ import com.tbs.shared.pojo.entity.ThirdPartyAppEntity;
  */
 public interface IThirdPartyAppService extends IServiceTemplate<ThirdPartyAppEntity, Long> {
 
+    /**
+     * 根据应用ID查询应用信息。
+     *
+     * @param appId 应用ID
+     * @return 应用信息
+     */
+    ThirdPartyAppEntity getThirdPartyAppEntity(String appId);
+
 }

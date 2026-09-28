@@ -2,24 +2,25 @@ package com.tbs.app.security.grant;
 
 import com.tbs.app.constant.SystemI18nConstant;
 import com.tbs.app.security.form.DefaultThirdPartyLoginForm;
+import com.tbs.app.service.identity.IThirdPartyAppSecretBuilder;
 import com.tbs.app.service.identity.IThirdPartyAppService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.encrypt.EncryptUitl;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.enums.SystemUserStatusEnum;
-import com.tbs.shared.pojo.criteria.CommonThirdPartyAppCriteria;
 import com.tbs.shared.pojo.entity.ThirdPartyAppEntity;
 import com.tbs.web.enums.TokenCreateTypeEnum;
 import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
-import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserInfoService;
+import com.tbs.web.security.user.access.AbstractAccessTokenProvider;
 import com.tbs.web.security.user.access.grant.ILoginGrantProvider;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -40,7 +41,8 @@ import java.util.Objects;
  *
  * @author abstergo
  */
-public class DefaultThirdPartyGrantProvider implements ILoginGrantProvider<DefaultThirdPartyLoginForm> {
+public class DefaultThirdPartyGrantProvider extends AbstractAccessTokenProvider<DefaultThirdPartyLoginForm>
+    implements ILoginGrantProvider<DefaultThirdPartyLoginForm> {
 
     @Lazy
     @Resource
@@ -74,7 +76,7 @@ public class DefaultThirdPartyGrantProvider implements ILoginGrantProvider<Defau
      * @return 32 位小写十六进制授权码字符串
      */
     public static final String codeGenerate(ThirdPartyAppEntity thirdPartyApp, Long timeStamp) {
-        var sec = thirdPartyApp.getAppSecret();
+        var sec = SpringUtil.getBean(IThirdPartyAppSecretBuilder.class).build(thirdPartyApp);
         var finalBase = SALT + ":" + sec + ":" + String.valueOf(timeStamp) + ":" + thirdPartyApp.getAppId();
         return EncryptUitl.hash256Encrypt(finalBase, "").toLowerCase();
     }
@@ -131,48 +133,66 @@ public class DefaultThirdPartyGrantProvider implements ILoginGrantProvider<Defau
     }
 
     /**
-     * 请求访问令牌
-     * <p>
-     * 按具体凭证完成认证并签发访问令牌；凭证非法或校验不通过时由实现方抛异常。
-     * </p>
+     * 校验请求表单的合法性
      *
-     * @param defaultThirdPartyLoginForm 换取令牌所需的请求表单，不能为空
-     * @return 签发的访问令牌模型
+     * @param defaultThirdPartyLoginForm 请求表单，不能为空
      */
     @Override
-    public ITokenModel requestToken(DefaultThirdPartyLoginForm defaultThirdPartyLoginForm) {
+    protected void validateForm(DefaultThirdPartyLoginForm defaultThirdPartyLoginForm) {
         AssertUtil.isTrueBusinessError(defaultThirdPartyLoginForm == null)
             .i18n(SystemI18nConstant.THIRD_PARTY_LOGIN_FORM_CANNOT_BE_NULL).throwIt();
 
         var nowMillis = new Date().getTime();
         var timestamp = defaultThirdPartyLoginForm.getTimestamp();
-        AssertUtil.isTrueBusinessError(timestamp == null
-            || Math.abs(nowMillis - timestamp) > TIMESTAMP_WINDOW_MILLIS)
+        AssertUtil.isTrueBusinessError(timestamp == null || Math.abs(nowMillis - timestamp) > TIMESTAMP_WINDOW_MILLIS)
             .i18n(SystemI18nConstant.THIRD_PARTY_APP_CODE_TIMESTAMP_ERROR).throwIt();
-
-        var thirdPartyApp = CollUtil.getFirst(thirdPartyAppService.query(
-            CommonThirdPartyAppCriteria.builder().EqAppId(defaultThirdPartyLoginForm.getAppId()).build(), null));
+        var thirdPartyApp = thirdPartyAppService.getThirdPartyAppEntity(defaultThirdPartyLoginForm.getAppId());
         AssertUtil.isTrueBusinessError(thirdPartyApp == null).i18n(SystemI18nConstant.THIRD_PARTY_APP_NOT_EXISTS)
             .throwIt();
         AssertUtil.isTrueBusinessError(!Objects.equals(thirdPartyApp.getFlag(), CommonFlagEnum.ACTIVE.getCode()))
             .i18n(SystemI18nConstant.THIRD_PARTY_APP_NOT_ENABLED).throwIt();
+        var code = defaultThirdPartyLoginForm.getCode();
+        var gCode = codeGenerate(thirdPartyApp, defaultThirdPartyLoginForm.getTimestamp());
+        AssertUtil.isTrueBusinessError(!Objects.equals(gCode, code)).i18n(SystemI18nConstant.THIRD_PARTY_APP_CODE_ERROR)
+            .throwIt();
 
-        var user = userService.queryById(thirdPartyApp.getProxyId());
+    }
+
+    /**
+     * 从表单拉取用户详情
+     *
+     * @param defaultThirdPartyLoginForm 请求表单，不能为空
+     * @return 用户详情，不能为空
+     */
+    @Override
+    protected UserDetails pullUserDetails(DefaultThirdPartyLoginForm defaultThirdPartyLoginForm) {
+        var app = thirdPartyAppService.getThirdPartyAppEntity(defaultThirdPartyLoginForm.getAppId());
+        AssertUtil.isTrueBusinessError(app == null).i18n(SystemI18nConstant.THIRD_PARTY_APP_NOT_EXISTS).throwIt();
+        var user = userService.queryById(app.getProxyId());
 
         AssertUtil.isTrueBusinessError(user == null).i18n(SystemI18nConstant.THIRD_PARTY_APP_PROXY_USER_NOT_EXISTS)
             .throwIt();
         AssertUtil.isTrueBusinessError(!Objects.equals(user.getFlag(), SystemUserStatusEnum.ACTIVE.getCode()))
             .i18n(SystemI18nConstant.THIRD_PARTY_APP_PROXY_USER_NOT_ACTIVE).throwIt();
+        return userInfoService.loadUserInfoByUniqueKey(user.getUserName());
+    }
 
-        var code = defaultThirdPartyLoginForm.getCode();
-        var gCode = codeGenerate(thirdPartyApp, defaultThirdPartyLoginForm.getTimestamp());
-        AssertUtil.isTrueBusinessError(!Objects.equals(gCode, code)).i18n(SystemI18nConstant.THIRD_PARTY_APP_CODE_ERROR)
-            .throwIt();
+    /**
+     * 由表单与用户详情组装令牌请求表单
+     *
+     * @param defaultThirdPartyLoginForm 请求表单，不能为空
+     * @param details                    用户详情，不能为空
+     * @return 令牌请求表单
+     */
+    @Override
+    protected TokenRequestForm createTokenRequestForm(DefaultThirdPartyLoginForm defaultThirdPartyLoginForm,
+        UserDetails details) {
         TokenRequestForm requestForm = new TokenRequestForm();
         requestForm.setTokenCreateType(TokenCreateTypeEnum.THIRD.getCode());
         requestForm.setSessionId(UuidUtil.getInstance().getUuidString());
-        requestForm.setUserDetails(userInfoService.loadUserInfoByUniqueKey(user.getUserName()));
+        requestForm.setUserDetails(details);
         requestForm.setTokenType(TokenTypeEnum.THIRD_PARTY_ACCESS_TOKEN.getCode());
-        return tokenService.issueToken(requestForm);
+        return requestForm;
     }
+
 }
