@@ -28,7 +28,7 @@ client.SessionExpired += (s, e) => Log("会话失效，请重新登录: " + e.Me
 
 // ---- 1. 登录并取用户数字 id（SSE 缺省订阅 per-user SIGNAL 频道需要） ----
 Log("正在登录...");
-var token = await client.LoginAsync("01505", "01505");
+var token = await client.LoginAsync("admin", "123456");
 Log($"登录成功: userName={token.UserName}, tokenType={token.TokenType}");
 
 var user = await client.Auth.GetUserInfoAsync();

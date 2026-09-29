@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyDescriptionAttribute("Tbs 平台后端接入 SDK：统一 HTTP 封装、App 模式登录、SSE 推送与消息中心。")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+52fcb2bc412557d4731ce8b8c089f027f661d579")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+65c006a480093bd610cddf2f65e21e62d4434082")]
 [assembly: System.Reflection.AssemblyProductAttribute("TbsSdk")]
 [assembly: System.Reflection.AssemblyTitleAttribute("TbsSdk")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

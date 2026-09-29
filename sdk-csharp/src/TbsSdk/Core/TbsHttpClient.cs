@@ -16,7 +16,10 @@ namespace TbsSdk.Core
     /// </summary>
     public sealed class TbsHttpClient : IDisposable
     {
+        private readonly HttpMessageHandler _handler;
+        private readonly bool _ownsHandler;
         private readonly HttpClient _httpClient;
+        private readonly HttpClient _streamHttpClient;
         private readonly TbsSdkOptions _options;
         private readonly ITokenStore _tokenStore;
 
@@ -37,27 +40,31 @@ namespace TbsSdk.Core
             _options = options ?? new TbsSdkOptions();
             _tokenStore = tokenStore;
 
-            if (httpMessageHandler != null)
-            {
-                _httpClient = new HttpClient(httpMessageHandler);
-            }
-            else if (_options.UseCookies)
+            // 共用同一个 handler 派生两个 HttpClient（disposeHandler=false，由 Dispose 统一释放 handler）：
+            // _httpClient 承担普通短请求（受 Timeout 约束）；_streamHttpClient 专供 SSE 长连接，
+            // 必须关闭总超时——HttpClient.Timeout 对流式响应是从 SendAsync 起算的整段硬超时，
+            // 不会被数据活动重置，否则下行长连接会被周期性掐断导致信令等低频事件丢失。
+            _handler = httpMessageHandler ?? BuildHandler(_options);
+            _ownsHandler = httpMessageHandler == null;
+            _httpClient = new HttpClient(_handler, disposeHandler: false);
+            _httpClient.Timeout = _options.Timeout;
+            _streamHttpClient = new HttpClient(_handler, disposeHandler: false);
+            _streamHttpClient.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
+        }
+
+        private static HttpMessageHandler BuildHandler(TbsSdkOptions options)
+        {
+            if (options.UseCookies)
             {
                 // 开启 Cookie 支持后可复用后端 Web 侧的 REFRESH_TOKEN 刷新链路（App 模式默认不需要）
-                var handler = new HttpClientHandler
+                return new HttpClientHandler
                 {
                     UseCookies = true,
                     CookieContainer = new System.Net.CookieContainer(),
                     AllowAutoRedirect = true
                 };
-                _httpClient = new HttpClient(handler);
             }
-            else
-            {
-                _httpClient = new HttpClient();
-            }
-
-            _httpClient.Timeout = _options.Timeout;
+            return new HttpClientHandler();
         }
 
         /// <summary>泛化 GET，返回统一响应体。</summary>
@@ -118,7 +125,7 @@ namespace TbsSdk.Core
             IDictionary<string, object> query = null, TbsRequestOptions requestOptions = null,
             CancellationToken cancellationToken = default)
         {
-            var response = await SendCoreAsync(method, path, body, query, requestOptions,
+            var response = await SendCoreAsync(_httpClient, method, path, body, query, requestOptions,
                 HttpCompletionOption.ResponseContentRead, cancellationToken).ConfigureAwait(false);
 
             string responseBody;
@@ -138,11 +145,12 @@ namespace TbsSdk.Core
             IDictionary<string, object> query = null, TbsRequestOptions requestOptions = null,
             CancellationToken cancellationToken = default)
         {
-            return SendCoreAsync(method, path, null, query, requestOptions,
+            // SSE 建连走无总超时的专用 client（见构造函数注释），避免长连接被 Timeout 周期掐断
+            return SendCoreAsync(_streamHttpClient, method, path, null, query, requestOptions,
                 HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         }
 
-        private async Task<HttpResponseMessage> SendCoreAsync(HttpMethod method, string path, object body,
+        private async Task<HttpResponseMessage> SendCoreAsync(HttpClient client, HttpMethod method, string path, object body,
             IDictionary<string, object> query, TbsRequestOptions requestOptions,
             HttpCompletionOption completionOption, CancellationToken cancellationToken)
         {
@@ -160,7 +168,7 @@ namespace TbsSdk.Core
                     request.Content = new StringContent(json, Encoding.UTF8, "application/json");
                 }
 
-                return await _httpClient.SendAsync(request, completionOption, cancellationToken)
+                return await client.SendAsync(request, completionOption, cancellationToken)
                     .ConfigureAwait(false);
             }
             catch (HttpRequestException ex)
@@ -320,6 +328,12 @@ namespace TbsSdk.Core
         public void Dispose()
         {
             _httpClient.Dispose();
+            _streamHttpClient.Dispose();
+            // 仅释放由本类创建的 handler；外部注入的 handler 归调用方所有
+            if (_ownsHandler)
+            {
+                _handler.Dispose();
+            }
         }
     }
 }
