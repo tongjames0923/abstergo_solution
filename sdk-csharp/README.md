@@ -7,6 +7,7 @@
 - **完整登录流程**：统一授权端点 `POST /public/user/login/{grantType}`，App 模式登录为主
 - **无鉴权 + 有鉴权双通道**：`/public/**` 免鉴权与 `/private/**` 带令牌，另提供泛化请求方法覆盖全部业务模块
 - **push-message SSE 兼容适配**：签票据建连、hello 握手、订阅/心跳上行帧、signal 信令、消息拉取、换票退避重连
+- **应用更新**：公开升级检查（无需登录）、升级动作强度（force/recommend/notify）、安装包下载（进度回调/取消/残包清理）
 
 > 令牌说明：后端令牌为不透明随机串，请求头 `Authorization: <裸token>`（无 Bearer 前缀）。
 > 令牌刷新（refresh grant）依赖 HttpOnly Cookie 属 Web 专属；App 模式下收到 405/468
@@ -23,6 +24,7 @@ sdk-csharp/
 │   ├── Core/                       # HTTP 核心 + AjaxResult + 异常体系
 │   ├── Auth/                       # 登录授权 + 令牌存储 + 第三方授权码
 │   ├── Push/                       # SSE 推送 + 消息中心
+│   ├── Update/                     # 应用更新（升级检查 + 安装包下载）
 │   └── Models/                     # 消息模型
 └── tests/TbsSdk.Tests/             # xUnit 单元测试
 ```
@@ -124,7 +126,38 @@ var sendResult = await sdk.Messages.SendNotifyAsync(new PushNotifySendForm
 });
 ```
 
-### 4. 登出
+### 4. 应用更新（升级检查与安装包下载）
+
+```csharp
+// 升级检查：公开端点 POST /public/app-update/check，无需登录
+var update = await sdk.CheckUpdateAsync("desktop-app", AppPlatform.Windows, currentVersionCode: 100);
+
+if (update.NeedUpdate == true)
+{
+    Console.WriteLine($"新版本 {update.LatestVersionName}（{update.ActionName}）：{update.ReleaseNote}");
+
+    if (update.Action == AppUpdateAction.Force)
+    {
+        // 强制更新：阻断使用直至升级完成
+    }
+
+    // 下载安装包（支持进度回调与取消；失败自动清理不完整文件）
+    var progress = new Progress<DownloadProgress>(p =>
+        Console.WriteLine($"{p.DownloadedBytes}/{p.TotalBytes} ({p.Percent:P0})"));
+    var bytes = await sdk.Update.DownloadPackageAsync(
+        update.DownloadUrls[0], @"D:\update\setup.exe", progress);
+}
+
+// 管理端版本/安装包/兼容策略维护接口（需登录与权限），可经泛化方法调用：
+// POST /private/admin/app-version/query|save|delete|release|rollback...
+// GET  /private/admin/app-version/latest?appKey=xx&platform=xx
+// POST /private/admin/app-version-policy/check（与公开检查同契约）
+```
+
+升级动作强度（对齐后端 `AppVersionCompatibilityActionEnum`）：
+`1=force` 强制更新、`2=recommend` 推荐更新、`3=notify` 仅提示；不需要升级时 `action` 为空。
+
+### 5. 登出
 
 ```csharp
 await sdk.LogoutAsync();   // 调用后端登出 + 关闭推送 + 清理本地令牌

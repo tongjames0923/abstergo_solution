@@ -7,6 +7,7 @@ using TbsSdk.Auth;
 using TbsSdk.Configuration;
 using TbsSdk.Core;
 using TbsSdk.Push;
+using TbsSdk.Update;
 
 namespace TbsSdk
 {
@@ -45,6 +46,9 @@ namespace TbsSdk
         /// <summary>SSE 推送连接管理器。</summary>
         public SsePushClient Push { get; }
 
+        /// <summary>应用更新模块：升级检查与安装包下载。</summary>
+        public AppUpdateClient Update { get; }
+
         /// <summary>
         /// 会话失效事件（405/468）：App 模式下宿主应引导用户重新登录。
         /// </summary>
@@ -60,8 +64,9 @@ namespace TbsSdk
         /// <param name="options">配置（为空时使用默认配置，需自行设置 BaseUrl）。</param>
         /// <param name="httpMessageHandler">可替换底层 Handler（测试/代理场景）。</param>
         /// <param name="tokenStore">令牌存储（为空时使用内存实现）。</param>
+        /// <param name="downloadHttpClient">外部注入的安装包下载 HttpClient（可选）。</param>
         public TbsSdkClient(TbsSdkOptions options = null, HttpMessageHandler httpMessageHandler = null,
-            ITokenStore tokenStore = null)
+            ITokenStore tokenStore = null, HttpClient downloadHttpClient = null)
         {
             Options = options ?? new TbsSdkOptions();
             TokenStore = tokenStore ?? new InMemoryTokenStore();
@@ -69,6 +74,7 @@ namespace TbsSdk
             Auth = new TbsAuthClient(Http, TokenStore);
             Messages = new PushMessageClient(Http);
             Push = new SsePushClient(Http, Options);
+            Update = new AppUpdateClient(Http, downloadHttpClient);
         }
 
         /// <summary>
@@ -111,6 +117,18 @@ namespace TbsSdk
                 Push.Close();
                 TokenStore.Clear();
             }
+        }
+
+        /// <summary>
+        /// 应用升级检查（公开端点，无需登录）：返回是否需要升级、动作强度与安装包下载地址。
+        /// </summary>
+        /// <param name="appKey">应用标识。</param>
+        /// <param name="platform">平台（如 ANDROID/IOS/WEB，见 AppPlatform）。</param>
+        /// <param name="currentVersionCode">客户端当前内部版本号。</param>
+        public Task<AppUpdateCheckResult> CheckUpdateAsync(string appKey, string platform,
+            long currentVersionCode, CancellationToken cancellationToken = default)
+        {
+            return Update.CheckUpgradeAsync(appKey, platform, currentVersionCode, cancellationToken);
         }
 
         /// <summary>仅清理本地登录态（不调用后端）。</summary>
