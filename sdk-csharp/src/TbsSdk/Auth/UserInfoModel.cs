@@ -59,9 +59,17 @@ namespace TbsSdk.Auth
             }
             foreach (var group in AvaliableRoles)
             {
-                if (group?.Permissions != null)
+                if (group?.Permissions == null)
                 {
-                    permissions.AddRange(group.Permissions);
+                    continue;
+                }
+                foreach (var permission in group.Permissions)
+                {
+                    // 鉴权编码为权限项的 role 字段（对齐前端 getMenuRoleCodes 取 role）
+                    if (permission != null && !string.IsNullOrEmpty(permission.Role))
+                    {
+                        permissions.Add(permission.Role);
+                    }
                 }
             }
             return permissions;
@@ -69,18 +77,77 @@ namespace TbsSdk.Auth
     }
 
     /// <summary>
-    /// 角色组视图（后端 SystemRoleGroupVO，字段以 Extra 兜底）。
+    /// 角色组视图（后端 SystemRoleGroupVO：group 为角色组实体，permissions 为权限项对象列表）。
+    /// <para>注意：角色组 id/名称在 group 子对象内，权限项为结构化对象（非字符串）。</para>
     /// </summary>
     public sealed class RoleGroupModel
+    {
+        /// <summary>角色组信息（SystemRoleGroupEntity）。</summary>
+        [JsonPropertyName("group")]
+        public RoleGroupInfo Group { get; set; }
+
+        /// <summary>角色组下的权限项列表（SystemRoleEntity）。</summary>
+        [JsonPropertyName("permissions")]
+        public List<RolePermissionModel> Permissions { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JsonElement> Extra { get; set; }
+
+        /// <summary>角色组主键（取自 group）。</summary>
+        public long? GetId() => Group?.Id;
+
+        /// <summary>角色组名称（取自 group.roleGroupName）。</summary>
+        public string GetName() => Group?.RoleGroupName;
+    }
+
+    /// <summary>
+    /// 角色组信息（后端 SystemRoleGroupEntity，未承诺字段以 Extra 兜底）。
+    /// </summary>
+    public sealed class RoleGroupInfo
     {
         [JsonPropertyName("id")]
         public long? Id { get; set; }
 
+        /// <summary>角色组名称（后端列 role_group_name）。</summary>
+        [JsonPropertyName("roleGroupName")]
+        public string RoleGroupName { get; set; }
+
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
+
+        [JsonPropertyName("flag")]
+        public int? Flag { get; set; }
+
+        [JsonExtensionData]
+        public IDictionary<string, JsonElement> Extra { get; set; }
+    }
+
+    /// <summary>
+    /// 权限项（后端 SystemRoleEntity，权限编码为 role 字段，未承诺字段以 Extra 兜底）。
+    /// </summary>
+    public sealed class RolePermissionModel
+    {
+        [JsonPropertyName("id")]
+        public long? Id { get; set; }
+
+        /// <summary>权限编码（唯一标识，鉴权比对用）。</summary>
+        [JsonPropertyName("role")]
+        public string Role { get; set; }
+
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
-        [JsonPropertyName("permissions")]
-        public List<string> Permissions { get; set; }
+        [JsonPropertyName("type")]
+        public int? Type { get; set; }
+
+        [JsonPropertyName("description")]
+        public string Description { get; set; }
+
+        [JsonPropertyName("flag")]
+        public int? Flag { get; set; }
+
+        [JsonPropertyName("dataScope")]
+        public int? DataScope { get; set; }
 
         [JsonExtensionData]
         public IDictionary<string, JsonElement> Extra { get; set; }

@@ -125,6 +125,7 @@ namespace TbsSdk
         /// <param name="appKey">应用标识。</param>
         /// <param name="platform">平台（如 ANDROID/IOS/WEB，见 AppPlatform）。</param>
         /// <param name="currentVersionCode">客户端当前内部版本号。</param>
+        /// <param name="cancellationToken">取消令牌。</param>
         public Task<AppUpdateCheckResult> CheckUpdateAsync(string appKey, string platform,
             long currentVersionCode, CancellationToken cancellationToken = default)
         {

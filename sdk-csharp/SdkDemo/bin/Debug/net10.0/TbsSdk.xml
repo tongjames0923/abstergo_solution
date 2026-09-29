@@ -98,6 +98,7 @@
             <param name="appId">第三方应用标识。</param>
             <param name="appSecret">第三方应用密钥。</param>
             <param name="timestamp">毫秒时间戳，缺省取当前时间（服务端窗口 ±3 分钟）。</param>
+            <param name="cancellationToken">取消令牌。</param>
         </member>
         <member name="M:TbsSdk.Auth.TbsAuthClient.LoginByGrantAsync(System.String,System.Object,System.Threading.CancellationToken)">
             <summary>
@@ -105,6 +106,7 @@
             </summary>
             <param name="grantType">授权类型标识（与后端 ILoginGrantProvider 对齐）。</param>
             <param name="credential">凭证对象（字段由各授权方式表单契约约定）。</param>
+            <param name="cancellationToken">取消令牌。</param>
         </member>
         <member name="M:TbsSdk.Auth.TbsAuthClient.GetLoginGrantsAsync(System.Threading.CancellationToken)">
             <summary>
@@ -236,8 +238,37 @@
         </member>
         <member name="T:TbsSdk.Auth.RoleGroupModel">
             <summary>
-            角色组视图（后端 SystemRoleGroupVO，字段以 Extra 兜底）。
+            角色组视图（后端 SystemRoleGroupVO：group 为角色组实体，permissions 为权限项对象列表）。
+            <para>注意：角色组 id/名称在 group 子对象内，权限项为结构化对象（非字符串）。</para>
             </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RoleGroupModel.Group">
+            <summary>角色组信息（SystemRoleGroupEntity）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RoleGroupModel.Permissions">
+            <summary>角色组下的权限项列表（SystemRoleEntity）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.RoleGroupModel.GetId">
+            <summary>角色组主键（取自 group）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.RoleGroupModel.GetName">
+            <summary>角色组名称（取自 group.roleGroupName）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.RoleGroupInfo">
+            <summary>
+            角色组信息（后端 SystemRoleGroupEntity，未承诺字段以 Extra 兜底）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RoleGroupInfo.RoleGroupName">
+            <summary>角色组名称（后端列 role_group_name）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.RolePermissionModel">
+            <summary>
+            权限项（后端 SystemRoleEntity，权限编码为 role 字段，未承诺字段以 Extra 兜底）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RolePermissionModel.Role">
+            <summary>权限编码（唯一标识，鉴权比对用）。</summary>
         </member>
         <member name="T:TbsSdk.Auth.DepartmentModel">
             <summary>
@@ -498,6 +529,18 @@
             写入时输出 "yyyy-MM-dd HH:mm:ss"。对齐前端对 createTime 的多格式解析逻辑。
             </summary>
         </member>
+        <member name="T:TbsSdk.Core.FlexibleNullableLongConverter">
+            <summary>
+            可空长整型转换器：读取时兼容数值与字符串（后端 Jackson 将 Long 统一序列化为字符串），
+            写入时输出数值。null 读取为 null。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Core.FlexibleLongConverter">
+            <summary>
+            长整型转换器：读取时兼容数值与字符串（后端 Jackson 将 Long 统一序列化为字符串），
+            写入时输出数值。空字符串视为解析失败抛 JsonException。
+            </summary>
+        </member>
         <member name="T:TbsSdk.Models.PushMessageVO">
             <summary>
             后端分页拉取返回的消息视图（对齐 PushNotifyMessageVO，与
@@ -743,6 +786,7 @@
             <param name="cursor">游标：上一页响应返回的 cursor（接收行 id），首页不传。</param>
             <param name="limit">每页条数，默认 20，上限 100。</param>
             <param name="readFlag">读取范围：all（全部）/ unread（仅未读），缺省为全部。</param>
+            <param name="cancellationToken">取消令牌。</param>
         </member>
         <member name="M:TbsSdk.Push.PushMessageClient.FetchUnreadCountAsync(System.Threading.CancellationToken)">
             <summary>
@@ -969,18 +1013,22 @@
         <member name="P:TbsSdk.TbsSdkClient.Push">
             <summary>SSE 推送连接管理器。</summary>
         </member>
+        <member name="P:TbsSdk.TbsSdkClient.Update">
+            <summary>应用更新模块：升级检查与安装包下载。</summary>
+        </member>
         <member name="E:TbsSdk.TbsSdkClient.SessionExpired">
             <summary>
             会话失效事件（405/468）：App 模式下宿主应引导用户重新登录。
             </summary>
         </member>
-        <member name="M:TbsSdk.TbsSdkClient.#ctor(TbsSdk.Configuration.TbsSdkOptions,System.Net.Http.HttpMessageHandler,TbsSdk.Auth.ITokenStore)">
+        <member name="M:TbsSdk.TbsSdkClient.#ctor(TbsSdk.Configuration.TbsSdkOptions,System.Net.Http.HttpMessageHandler,TbsSdk.Auth.ITokenStore,System.Net.Http.HttpClient)">
             <summary>
             创建 SDK 客户端。
             </summary>
             <param name="options">配置（为空时使用默认配置，需自行设置 BaseUrl）。</param>
             <param name="httpMessageHandler">可替换底层 Handler（测试/代理场景）。</param>
             <param name="tokenStore">令牌存储（为空时使用内存实现）。</param>
+            <param name="downloadHttpClient">外部注入的安装包下载 HttpClient（可选）。</param>
         </member>
         <member name="M:TbsSdk.TbsSdkClient.LoginAsync(System.String,System.String,System.Threading.CancellationToken)">
             <summary>
@@ -1000,8 +1048,162 @@
             后端接口失败不阻断本地清理（对齐前端 logout 兜底语义）。
             </summary>
         </member>
+        <member name="M:TbsSdk.TbsSdkClient.CheckUpdateAsync(System.String,System.String,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            应用升级检查（公开端点，无需登录）：返回是否需要升级、动作强度与安装包下载地址。
+            </summary>
+            <param name="appKey">应用标识。</param>
+            <param name="platform">平台（如 ANDROID/IOS/WEB，见 AppPlatform）。</param>
+            <param name="currentVersionCode">客户端当前内部版本号。</param>
+            <param name="cancellationToken">取消令牌。</param>
+        </member>
         <member name="M:TbsSdk.TbsSdkClient.ClearLocalSession">
             <summary>仅清理本地登录态（不调用后端）。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateClient">
+            <summary>
+            应用更新模块：客户端升级检查与安装包下载。
+            <para>
+            升级检查走公开端点 POST /public/app-update/check（无需登录）；服务端综合最新已发布版本
+            与生效的兼容策略返回升级动作强度（force/recommend/notify）与安装包下载地址。
+            下载地址为 OSS 预签名 URL 或外部托管链接，下载使用独立 HttpClient（不受 API 超时限制），
+            支持进度回调与取消。
+            </para>
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateClient.PublicCheckPath">
+            <summary>公开升级检查端点。</summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateClient.AdminCheckPath">
+            <summary>管理端升级检查端点（需 API.DEV.VERSION.POLICY.QUERY 权限）。</summary>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.#ctor(TbsSdk.Core.TbsHttpClient,System.Net.Http.HttpClient)">
+            <summary>创建更新模块。</summary>
+            <param name="http">HTTP 核心（升级检查复用）。</param>
+            <param name="downloadHttpClient">外部注入的下载 HttpClient（可选，用于代理/测试）。</param>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.CheckUpgradeAsync(System.String,System.String,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            客户端升级检查（公开端点，无需登录）。
+            </summary>
+            <param name="appKey">应用标识。</param>
+            <param name="platform">平台（如 ANDROID/IOS/WEB，见 <see cref="T:TbsSdk.Update.AppPlatform"/>）。</param>
+            <param name="currentVersionCode">客户端当前内部版本号。</param>
+            <param name="cancellationToken">取消令牌。</param>
+            <returns>升级检查结果：needUpdate、action 强度与 downloadUrls。</returns>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.CheckUpgradeAsync(System.String,System.String,System.String,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            升级检查（指定端点）：公开端点或管理端 `/private/admin/app-version-policy/check` 均可传入。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.DownloadPackageAsync(System.String,System.String,System.IProgress{TbsSdk.Update.DownloadProgress},System.Threading.CancellationToken)">
+            <summary>
+            下载安装包到指定文件（支持进度回调与取消；异常时删除不完整文件）。
+            </summary>
+            <param name="downloadUrl">安装包下载地址（升级检查结果中的 downloadUrls 项）。</param>
+            <param name="destinationPath">目标文件完整路径。</param>
+            <param name="progress">进度回调：已下载字节数与总字节数（总长未知时为 -1）。</param>
+            <param name="cancellationToken">取消令牌。</param>
+            <returns>下载到磁盘的总字节数。</returns>
+        </member>
+        <member name="T:TbsSdk.Update.DownloadProgress">
+            <summary>
+            下载进度（已下载字节数与总字节数，总长未知时 TotalBytes 为 -1）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.DownloadProgress.DownloadedBytes">
+            <summary>已下载字节数。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.DownloadProgress.TotalBytes">
+            <summary>总字节数（服务端未返回 Content-Length 时为 -1）。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.DownloadProgress.Percent">
+            <summary>进度百分比（0~1，总长未知时为 null）。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateAction">
+            <summary>
+            升级动作类型常量（对齐后端 AppVersionCompatibilityActionEnum 的 code 值）。
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateAction.Force">
+            <summary>强制更新：低于最低兼容版本时阻断使用直至升级。</summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateAction.Recommend">
+            <summary>推荐更新：提示用户升级但不阻断使用。</summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateAction.Notify">
+            <summary>仅提示：告知用户存在新版本，不做进一步干预。</summary>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateAction.ToName(System.Nullable{System.Int32})">
+            <summary>动作编码转可读名称（force/recommend/notify），未知值返回 null。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppPlatform">
+            <summary>
+            客户端平台常量（对齐后端升级检查入参 platform 约定，如 ANDROID、IOS、WEB）。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateCheckForm">
+            <summary>
+            升级检查请求体（对齐后端 AppVersionCheckForm）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckForm.AppKey">
+            <summary>应用标识。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckForm.Platform">
+            <summary>平台标识（如 ANDROID/IOS/WEB，见 <see cref="T:TbsSdk.Update.AppPlatform"/>）。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckForm.CurrentVersionCode">
+            <summary>客户端当前内部版本号。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateCheckResult">
+            <summary>
+            升级检查结果（对齐后端 AppVersionUpdateCheckVO）。
+            <para>服务端综合最新已发布版本与生效的兼容策略，返回升级动作强度与下载地址
+            （OSS 预签名 URL 或外部托管链接，可能存在多个安装包地址）。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.NeedUpdate">
+            <summary>是否需要升级。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.Action">
+            <summary>升级动作类型（1=force / 2=recommend / 3=notify），不需要升级时为空。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.LatestVersionCode">
+            <summary>最新已发布版本的内部版本号。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.LatestVersionName">
+            <summary>最新已发布版本的外部版本名称。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.ReleaseNote">
+            <summary>最新版本的更新日志。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.DownloadUrls">
+            <summary>最新版本安装包的下载地址列表。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.ActionName">
+            <summary>升级动作可读名称（force/recommend/notify），不需要升级时为 null。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppPackageVO">
+            <summary>
+            安装包视图（对齐后端 AppPackageVO，来源于管理端接口，含完整性校验信息）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.VersionId">
+            <summary>所属应用版本 ID。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.BucketName">
+            <summary>对象存储桶名。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.ObjectName">
+            <summary>对象存储对象名。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.Md5">
+            <summary>安装包文件 MD5 值。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.DownloadUrl">
+            <summary>下载地址。</summary>
         </member>
     </members>
 </doc>

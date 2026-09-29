@@ -53,6 +53,7 @@ namespace TbsSdk.Update
         /// <param name="appKey">应用标识。</param>
         /// <param name="platform">平台（如 ANDROID/IOS/WEB，见 <see cref="AppPlatform"/>）。</param>
         /// <param name="currentVersionCode">客户端当前内部版本号。</param>
+        /// <param name="cancellationToken">取消令牌。</param>
         /// <returns>升级检查结果：needUpdate、action 强度与 downloadUrls。</returns>
         public Task<AppUpdateCheckResult> CheckUpgradeAsync(string appKey, string platform,
             long currentVersionCode, CancellationToken cancellationToken = default)
@@ -91,6 +92,7 @@ namespace TbsSdk.Update
         /// <param name="downloadUrl">安装包下载地址（升级检查结果中的 downloadUrls 项）。</param>
         /// <param name="destinationPath">目标文件完整路径。</param>
         /// <param name="progress">进度回调：已下载字节数与总字节数（总长未知时为 -1）。</param>
+        /// <param name="cancellationToken">取消令牌。</param>
         /// <returns>下载到磁盘的总字节数。</returns>
         public async Task<long> DownloadPackageAsync(string downloadUrl, string destinationPath,
             IProgress<DownloadProgress> progress = null, CancellationToken cancellationToken = default)

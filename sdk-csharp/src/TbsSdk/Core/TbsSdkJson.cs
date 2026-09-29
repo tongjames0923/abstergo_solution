@@ -24,6 +24,9 @@ namespace TbsSdk.Core
                 DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
             };
             options.Converters.Add(new FlexibleDateTimeConverter());
+            // 后端 Jackson 对 Long 统一序列化为字符串（防 JS 精度丢失），读取侧数字/字符串双兼容
+            options.Converters.Add(new FlexibleLongConverter());
+            options.Converters.Add(new FlexibleNullableLongConverter());
             return options;
         }
     }
@@ -83,6 +86,71 @@ namespace TbsSdk.Core
             {
                 writer.WriteNullValue();
             }
+        }
+    }
+
+    /// <summary>
+    /// 可空长整型转换器：读取时兼容数值与字符串（后端 Jackson 将 Long 统一序列化为字符串），
+    /// 写入时输出数值。null 读取为 null。
+    /// </summary>
+    public sealed class FlexibleNullableLongConverter : JsonConverter<long?>
+    {
+        public override long? Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            if (reader.TokenType == JsonTokenType.Null)
+            {
+                return null;
+            }
+            return FlexibleLongConverter.ReadCore(ref reader);
+        }
+
+        public override void Write(Utf8JsonWriter writer, long? value, JsonSerializerOptions options)
+        {
+            if (value.HasValue)
+            {
+                writer.WriteNumberValue(value.Value);
+            }
+            else
+            {
+                writer.WriteNullValue();
+            }
+        }
+    }
+
+    /// <summary>
+    /// 长整型转换器：读取时兼容数值与字符串（后端 Jackson 将 Long 统一序列化为字符串），
+    /// 写入时输出数值。空字符串视为解析失败抛 JsonException。
+    /// </summary>
+    public sealed class FlexibleLongConverter : JsonConverter<long>
+    {
+        public override long Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            return ReadCore(ref reader);
+        }
+
+        public override void Write(Utf8JsonWriter writer, long value, JsonSerializerOptions options)
+        {
+            writer.WriteNumberValue(value);
+        }
+
+        internal static long ReadCore(ref Utf8JsonReader reader)
+        {
+            if (reader.TokenType == JsonTokenType.Number)
+            {
+                return reader.GetInt64();
+            }
+
+            if (reader.TokenType == JsonTokenType.String)
+            {
+                var text = reader.GetString();
+                if (!string.IsNullOrEmpty(text) &&
+                    long.TryParse(text, NumberStyles.Integer, CultureInfo.InvariantCulture, out var value))
+                {
+                    return value;
+                }
+            }
+
+            throw new JsonException("无法将 " + reader.TokenType + " 解析为 long");
         }
     }
 }

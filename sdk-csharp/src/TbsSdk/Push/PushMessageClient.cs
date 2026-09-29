@@ -26,6 +26,7 @@ namespace TbsSdk.Push
         /// <param name="cursor">游标：上一页响应返回的 cursor（接收行 id），首页不传。</param>
         /// <param name="limit">每页条数，默认 20，上限 100。</param>
         /// <param name="readFlag">读取范围：all（全部）/ unread（仅未读），缺省为全部。</param>
+        /// <param name="cancellationToken">取消令牌。</param>
         public async Task<PushMessagePageVO> FetchMessagesAsync(long? cursor = null, int? limit = null,
             string readFlag = null, CancellationToken cancellationToken = default)
         {

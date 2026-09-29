@@ -77,6 +77,7 @@ namespace TbsSdk.Auth
         /// <param name="appId">第三方应用标识。</param>
         /// <param name="appSecret">第三方应用密钥。</param>
         /// <param name="timestamp">毫秒时间戳，缺省取当前时间（服务端窗口 ±3 分钟）。</param>
+        /// <param name="cancellationToken">取消令牌。</param>
         public Task<TokenModel> LoginThirdPartyAsync(string appId, string appSecret, long? timestamp = null,
             CancellationToken cancellationToken = default)
         {
@@ -95,6 +96,7 @@ namespace TbsSdk.Auth
         /// </summary>
         /// <param name="grantType">授权类型标识（与后端 ILoginGrantProvider 对齐）。</param>
         /// <param name="credential">凭证对象（字段由各授权方式表单契约约定）。</param>
+        /// <param name="cancellationToken">取消令牌。</param>
         public async Task<TokenModel> LoginByGrantAsync(string grantType, object credential,
             CancellationToken cancellationToken = default)
         {
