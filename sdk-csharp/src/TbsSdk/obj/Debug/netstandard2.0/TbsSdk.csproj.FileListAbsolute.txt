@@ -1,0 +1,12 @@
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/bin/Debug/netstandard2.0/TbsSdk.deps.json
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/bin/Debug/netstandard2.0/TbsSdk.dll
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/bin/Debug/netstandard2.0/TbsSdk.pdb
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/bin/Debug/netstandard2.0/TbsSdk.xml
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.csproj.AssemblyReference.cache
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.GeneratedMSBuildEditorConfig.editorconfig
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.AssemblyInfoInputs.cache
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.AssemblyInfo.cs
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.csproj.CoreCompileInputs.cache
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.dll
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.xml
+/Users/abstergo/IdeaProjects/abstergo_solution_p/sdk-csharp/src/TbsSdk/obj/Debug/netstandard2.0/TbsSdk.pdb

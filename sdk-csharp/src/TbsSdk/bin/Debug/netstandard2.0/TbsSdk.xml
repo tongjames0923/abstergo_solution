@@ -1,0 +1,1209 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>TbsSdk</name>
+    </assembly>
+    <members>
+        <member name="T:TbsSdk.Auth.ITokenStore">
+            <summary>
+            令牌存储抽象：SDK 登录成功后自动写入，私有请求时自动读取注入请求头。
+            <para>宿主可实现此接口接入自有持久化（如桌面端加密文件、移动端安全存储），
+            以实现跨进程/跨会话的登录态复用。</para>
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Auth.ITokenStore.Get">
+            <summary>获取当前令牌（未登录时返回 null）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.ITokenStore.Set(TbsSdk.Auth.TokenModel)">
+            <summary>写入令牌（登录成功时由 SDK 调用）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.ITokenStore.Clear">
+            <summary>清除令牌（登出/会话失效时由 SDK 或宿主调用）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.InMemoryTokenStore">
+            <summary>
+            默认内存令牌存储（线程安全）。进程退出即失效，适合服务端/桌面端短生命周期场景。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Auth.LoginForm">
+            <summary>
+            账号密码登录表单（对齐后端 LoginForm）。
+            <para>SDK 默认 <see cref="P:TbsSdk.Auth.LoginForm.LoginType"/>=1（客户端/App 登录）；0 或缺省为 Web 登录。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.LoginForm.LoginType">
+            <summary>登录模式：0/缺省 = Web；1 = 客户端/App。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.WecomLoginForm">
+            <summary>
+            企业微信 SSO 登录表单（对齐后端 WecomLoginForm）：企微 OAuth 授权码换票。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.WecomLoginForm.Code">
+            <summary>企微 OAuth 授权码（必填）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.WecomLoginForm.State">
+            <summary>OAuth state（可选）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.ThirdPartyLoginForm">
+            <summary>
+            第三方应用登录表单（对齐后端 DefaultThirdPartyLoginForm）。
+            <para>code 由 <see cref="M:TbsSdk.Auth.ThirdPartyAuthCode.Generate(System.String,System.String,System.Int64)"/> 按约定算法生成，时间戳窗口 ±3 分钟。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.ThirdPartyLoginForm.Code">
+            <summary>授权码（必填）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.ThirdPartyLoginForm.AppId">
+            <summary>第三方应用标识（必填）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.ThirdPartyLoginForm.Timestamp">
+            <summary>毫秒时间戳（必填，±3 分钟窗口）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.TbsAuthClient">
+            <summary>
+            登录授权模块：统一授权端点 POST /public/user/login/{grantType} 的各授权方式封装，
+            以及登录方式元数据、用户信息、登出。
+            <para>以 App 模式登录为主（password + loginType=1）；令牌刷新依赖 Cookie 属 Web 专属，
+            本模块不实现，会话失效（405/468）由宿主重新调用登录接口。</para>
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Auth.TbsAuthClient.GrantPassword">
+            <summary>授权类型：账号密码。</summary>
+        </member>
+        <member name="F:TbsSdk.Auth.TbsAuthClient.GrantWecom">
+            <summary>授权类型：企业微信 SSO。</summary>
+        </member>
+        <member name="F:TbsSdk.Auth.TbsAuthClient.GrantThirdParty">
+            <summary>授权类型：第三方应用。</summary>
+        </member>
+        <member name="F:TbsSdk.Auth.TbsAuthClient.GrantRefresh">
+            <summary>授权类型：刷新令牌（Web 专属，App 模式不可用——依赖 HttpOnly Cookie）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.TbsAuthClient.LoginByPasswordAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            账号密码登录（App 模式：loginType=1）。
+            </summary>
+            <returns>令牌信息（已写入令牌存储）。</returns>
+        </member>
+        <member name="M:TbsSdk.Auth.TbsAuthClient.LoginWecomAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            企业微信 SSO 登录（企微 OAuth 授权码换票）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Auth.TbsAuthClient.LoginThirdPartyAsync(System.String,System.String,System.Nullable{System.Int64},System.Threading.CancellationToken)">
+            <summary>
+            第三方应用登录：按约定算法生成授权码并换票（以第三方应用代理用户身份签发令牌）。
+            </summary>
+            <param name="appId">第三方应用标识。</param>
+            <param name="appSecret">第三方应用密钥。</param>
+            <param name="timestamp">毫秒时间戳，缺省取当前时间（服务端窗口 ±3 分钟）。</param>
+            <param name="cancellationToken">取消令牌。</param>
+        </member>
+        <member name="M:TbsSdk.Auth.TbsAuthClient.LoginByGrantAsync(System.String,System.Object,System.Threading.CancellationToken)">
+            <summary>
+            通用授权入口：任意 grantType + 凭证对象，登录成功自动写入令牌存储。
+            </summary>
+            <param name="grantType">授权类型标识（与后端 ILoginGrantProvider 对齐）。</param>
+            <param name="credential">凭证对象（字段由各授权方式表单契约约定）。</param>
+            <param name="cancellationToken">取消令牌。</param>
+        </member>
+        <member name="M:TbsSdk.Auth.TbsAuthClient.GetLoginGrantsAsync(System.Threading.CancellationToken)">
+            <summary>
+            获取当前启用的登录方式元数据（GET /public/user/login-grants）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Auth.TbsAuthClient.GetUserInfoAsync(System.Threading.CancellationToken)">
+            <summary>
+            获取当前登录用户信息（GET /private/user/info）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Auth.TbsAuthClient.LogoutAsync(System.Threading.CancellationToken)">
+            <summary>
+            登出（GET /private/user/logout）：后端注销令牌与刷新令牌。
+            注意：本方法不清理本地令牌存储，请配合 TbsSdkClient.LogoutAsync 或自行调用 ITokenStore.Clear。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Auth.LoginGrantDescriptor">
+            <summary>
+            登录方式元数据（GET /public/user/login-grants 的数组项）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.LoginGrantDescriptor.GrantType">
+            <summary>授权类型标识（如 password / wecom / third_party）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.LoginGrantDescriptor.LabelKey">
+            <summary>展示文案 i18n key。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.LoginGrantDescriptor.PublicOptions">
+            <summary>公开配置（如企微 corpId/agentId）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.ThirdPartyAuthCode">
+            <summary>
+            第三方应用授权码生成器（对齐后端 DefaultThirdPartyGrantProvider.codeGenerate）。
+            <para>算法：SHA-256(SALT:appSecret:timestamp:appId) 转小写十六进制；
+            服务端以相同算法重建授权码比对，时间戳有效窗口 ±3 分钟。</para>
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Auth.ThirdPartyAuthCode.Salt">
+            <summary>授权码生成盐值（与后端固定常量一致，禁止修改）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.ThirdPartyAuthCode.Generate(System.String,System.String,System.Int64)">
+            <summary>
+            生成第三方登录授权码。
+            </summary>
+            <param name="appId">第三方应用标识。</param>
+            <param name="appSecret">第三方应用密钥。</param>
+            <param name="timestamp">毫秒时间戳（与请求体 timestamp 一致）。</param>
+            <returns>64 位小写十六进制授权码。</returns>
+        </member>
+        <member name="M:TbsSdk.Auth.ThirdPartyAuthCode.Sha256Hex(System.String)">
+            <summary>
+            计算字符串的 SHA-256 大写十六进制值（独立暴露便于校验测试）。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Auth.TokenModel">
+            <summary>
+            登录令牌模型（对齐后端 SimpleTokenModel / ITokenModel）。
+            <para>令牌为不透明随机串（非 JWT），有效期由后端 tbs.web.auth.token-expire-time 控制。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.Token">
+            <summary>访问令牌（裸值，请求头 Authorization 直接携带，无 Bearer 前缀）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.UserName">
+            <summary>登录用户名。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.Status">
+            <summary>账号状态。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.TokenType">
+            <summary>令牌类型（如 WEB_ACCESS_TOKEN / THIRD_PARTY_ACCESS_TOKEN）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.SessionId">
+            <summary>会话标识。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.CreateType">
+            <summary>创建方式（如 LOGIN / THIRD）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.MacAddr">
+            <summary>登录终端 MAC 地址（后端可选采集）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.IpAddr">
+            <summary>登录 IP（后端可选采集）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.ExpireTime">
+            <summary>过期时间（毫秒时间戳或字符串日期均可解析）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.CreateTime">
+            <summary>创建时间。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.IsValid">
+            <summary>令牌是否有效（非空）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.TokenModel.IsExpired">
+            <summary>令牌是否已按本地时钟过期（后端为准，仅作预判）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.UserInfoModel">
+            <summary>
+            当前登录用户信息（对齐后端 UserInfoVO，来源于 GET /private/user/info）。
+            <para>后端未承诺的字段一律保留在 <see cref="P:TbsSdk.Auth.UserInfoModel.Extra"/> 中，避免强类型映射失真。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.UserInfoModel.Id">
+            <summary>用户数字 id。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.UserInfoModel.AccountStatus">
+            <summary>账号状态码。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.UserInfoModel.AccountStatusStr">
+            <summary>账号状态文案。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.UserInfoModel.AvaliableRoles">
+            <summary>可用角色组列表（含展平前的权限组结构）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.UserInfoModel.AvaliableDepartments">
+            <summary>可用部门列表。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.UserInfoModel.CurrentDepartment">
+            <summary>当前选中部门。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.UserInfoModel.Extra">
+            <summary>其余未映射字段。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.UserInfoModel.FlattenPermissions">
+            <summary>
+            展平全部角色组内的权限项列表（对齐前端 flatPermissions 逻辑）。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Auth.RoleGroupModel">
+            <summary>
+            角色组视图（后端 SystemRoleGroupVO：group 为角色组实体，permissions 为权限项对象列表）。
+            <para>注意：角色组 id/名称在 group 子对象内，权限项为结构化对象（非字符串）。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RoleGroupModel.Group">
+            <summary>角色组信息（SystemRoleGroupEntity）。</summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RoleGroupModel.Permissions">
+            <summary>角色组下的权限项列表（SystemRoleEntity）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.RoleGroupModel.GetId">
+            <summary>角色组主键（取自 group）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.RoleGroupModel.GetName">
+            <summary>角色组名称（取自 group.roleGroupName）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.RoleGroupInfo">
+            <summary>
+            角色组信息（后端 SystemRoleGroupEntity，未承诺字段以 Extra 兜底）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RoleGroupInfo.RoleGroupName">
+            <summary>角色组名称（后端列 role_group_name）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.RolePermissionModel">
+            <summary>
+            权限项（后端 SystemRoleEntity，权限编码为 role 字段，未承诺字段以 Extra 兜底）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Auth.RolePermissionModel.Role">
+            <summary>权限编码（唯一标识，鉴权比对用）。</summary>
+        </member>
+        <member name="T:TbsSdk.Auth.DepartmentModel">
+            <summary>
+            部门视图（字段名以后端实际返回为准，未命中字段保留在 Extra）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Auth.DepartmentModel.GetId">
+            <summary>取主键（id 与 departmentId 兜底）。</summary>
+        </member>
+        <member name="M:TbsSdk.Auth.DepartmentModel.GetName">
+            <summary>取名称（departmentName 与 name 兜底）。</summary>
+        </member>
+        <member name="T:TbsSdk.Configuration.TbsSdkLogLevel">
+            <summary>
+            SDK 日志级别（诊断用途）。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Configuration.TbsSdkOptions">
+            <summary>
+            SDK 全局配置项。
+            <para>错误码默认值与前端 settings.js 及后端 AjaxResult 常量对齐：</para>
+            <para>200 成功；405 重新登录（token 失效）；468 刷新失败（Web 专属，App 模式同样触发重登）；</para>
+            <para>601 调试；701 通知；401 未授权；403 无权限；500 服务器错误。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.BaseUrl">
+            <summary>
+            后端接口基地址（必须为绝对地址，如 http://localhost:8083 或经代理的 http://host/api）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.Timeout">
+            <summary>单次 HTTP 请求超时（SSE 长连接不受此超时限制，走流式读取）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.Language">
+            <summary>语言头 Accept-Language 的取值（对齐前端：zh_CN / en_US）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.TokenHeaderName">
+            <summary>令牌请求头名称（后端 tbs.web.auth.token-filed-name，默认 Authorization，裸 token 无 Bearer 前缀）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.SuccessCode">
+            <summary>业务成功码。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.NoLoginCodes">
+            <summary>未登录错误码集合（触发重登）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.RefreshFailCodes">
+            <summary>刷新令牌失败错误码集合（Web 专属链路，App 模式下与未登录同等处理）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.DebugCodes">
+            <summary>调试信息错误码集合。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.NoticeCodes">
+            <summary>通知信息错误码集合。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.UseCookies">
+            <summary>是否允许携带 Cookie（默认关闭；App 模式无 Cookie 依赖，开启后可复用 Web 的刷新令牌链路）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.Push">
+            <summary>SSE 推送默认参数。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.TbsSdkOptions.OnLog">
+            <summary>诊断日志回调（可空）。</summary>
+        </member>
+        <member name="T:TbsSdk.Configuration.PushOptions">
+            <summary>
+            SSE 推送默认参数（对齐前端 PUSH_DEFAULTS 与后端 PushFrameConstants）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.PushOptions.TopicPrefix">
+            <summary>per-user SIGNAL 频道主题前缀（与后端 CHANNEL_TOPIC_PREFIX 一致）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.PushOptions.HeartbeatInterval">
+            <summary>心跳上行周期（须远小于后端空闲超时，默认 30s）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.PushOptions.ReconnectBaseDelay">
+            <summary>重连退避基数。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.PushOptions.ReconnectMaxDelay">
+            <summary>重连退避上限。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.PushOptions.ReconnectJitter">
+            <summary>重连退避随机抖动上限（防惊群）。</summary>
+        </member>
+        <member name="P:TbsSdk.Configuration.PushOptions.ProtocolVersion">
+            <summary>协议版本号（与后端 PROTOCOL_VERSION 一致）。</summary>
+        </member>
+        <member name="T:TbsSdk.Core.AjaxResult">
+            <summary>
+            后端统一响应体 AjaxResult 的 C# 映射。
+            <para>固定键：code(int)/message(string)/data(业务体)；其余键（redirect/type/duration/title 等）
+            归入扩展字典，可通过 <see cref="M:TbsSdk.Core.AjaxResult.TryGet``1(System.String,``0@)"/> / <see cref="M:TbsSdk.Core.AjaxResult.GetString(System.String)"/> 按需读取。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Code">
+            <summary>业务码（缺失时为 null）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Message">
+            <summary>业务消息。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Data">
+            <summary>业务体元素（缺失时为 default，可用 <see cref="P:TbsSdk.Core.AjaxResult.HasData"/> 判定）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.HasData">
+            <summary>业务体是否存在于响应中（data 为 null 时为 true 但元素为 Null）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Raw">
+            <summary>响应体根元素（整包，便于取扩展字段）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Redirect">
+            <summary>redirect 附加字段（存在时由调用方自行跳转/处理）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Type">
+            <summary>type 附加字段（消息展示类型，如 success/error/info）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Title">
+            <summary>title 附加字段。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.AjaxResult.Duration">
+            <summary>duration 附加字段（展示时长毫秒）。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.AjaxResult.Parse(System.Text.Json.JsonElement)">
+            <summary>
+            将响应体解析为 <see cref="T:TbsSdk.Core.AjaxResult"/>；非 JSON 对象时 Code 为 null。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Core.AjaxResult.GetData``1(System.Text.Json.JsonSerializerOptions)">
+            <summary>
+            将业务体反序列化为指定类型；业务体缺失或为 null 时返回 default。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Core.AjaxResult.TryGet``1(System.String,``0@)">
+            <summary>读取扩展字段并反序列化。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.AjaxResult.GetString(System.String)">
+            <summary>读取字符串扩展字段。</summary>
+        </member>
+        <member name="T:TbsSdk.Core.TbsApiException">
+            <summary>
+            后端接口调用异常：承载业务码、消息、redirect 附加字段与 HTTP 状态。
+            <para>code=200 之外的一切业务失败均以此表达；405/468 以
+            <see cref="T:TbsSdk.Core.TbsReloginRequiredException"/> 子类表达。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsApiException.Code">
+            <summary>业务错误码（如 500/401/403），非业务错误时为 null。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsApiException.Redirect">
+            <summary>响应体中的 redirect 附加字段。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsApiException.HttpStatusCode">
+            <summary>HTTP 状态码（可获取到响应时）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsApiException.ResponseBody">
+            <summary>原始响应体（截断后，便于排查）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsApiException.Result">
+            <summary>解析出的完整响应（可空）。</summary>
+        </member>
+        <member name="T:TbsSdk.Core.TbsReloginRequiredException">
+            <summary>
+            会话失效异常：业务码为 405（token 失效需重登）或 468（刷新失败）时抛出。
+            <para>App 模式下不实现 Cookie 刷新链路，宿主收到此异常应重新调用登录接口换取令牌。</para>
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Core.TbsSessionExpiredEventArgs">
+            <summary>
+            会话失效事件参数。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsSessionExpiredEventArgs.Code">
+            <summary>触发失效的业务码（405 或 468）。</summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsSessionExpiredEventArgs.Message">
+            <summary>失效描述。</summary>
+        </member>
+        <member name="T:TbsSdk.Core.TbsHttpClient">
+            <summary>
+            HTTP 请求核心封装（对齐前端 utils/request.js）。
+            <para>能力：token 头与语言头自动注入；统一响应解包与业务码判定；
+            405/468 会话失效事件与异常；隔离型请求；泛化 GET/POST/PUT/DELETE/PATCH。</para>
+            </summary>
+        </member>
+        <member name="E:TbsSdk.Core.TbsHttpClient.SessionExpired">
+            <summary>
+            会话失效事件：收到 405/468 业务码时触发（先于异常抛出）。
+            宿主应在事件中引导用户重新登录。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.#ctor(TbsSdk.Configuration.TbsSdkOptions,TbsSdk.Auth.ITokenStore,System.Net.Http.HttpMessageHandler)">
+            <summary>
+            创建 HTTP 客户端。
+            </summary>
+            <param name="options">SDK 配置。</param>
+            <param name="tokenStore">令牌存储。</param>
+            <param name="httpMessageHandler">可替换的底层 Handler（测试/代理场景），为空时按配置创建。</param>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.GetAsync(System.String,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>泛化 GET，返回统一响应体。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.GetAsync``1(System.String,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>泛化 GET，返回反序列化后的业务体。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.PostAsync(System.String,System.Object,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>泛化 POST，返回统一响应体。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.PostAsync``1(System.String,System.Object,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>泛化 POST，返回反序列化后的业务体。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.PutAsync(System.String,System.Object,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>泛化 PUT，返回统一响应体。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.DeleteAsync(System.String,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>泛化 DELETE，返回统一响应体。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.PatchAsync(System.String,System.Object,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>泛化 PATCH（netstandard2.0 无 HttpMethod.Patch 常量，此处显式构造），返回统一响应体。</summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.SendAsync(System.Net.Http.HttpMethod,System.String,System.Object,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>
+            统一请求入口：发送请求 → 读取响应体 → 解包 AjaxResult → 按业务码判定成功/会话失效/普通失败。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Core.TbsHttpClient.SendForStreamAsync(System.Net.Http.HttpMethod,System.String,System.Collections.Generic.IDictionary{System.String,System.Object},TbsSdk.Core.TbsRequestOptions,System.Threading.CancellationToken)">
+            <summary>
+            流式请求入口（SSE 建连专用）：仅等待响应头即返回，不读取/解包响应体，
+            调用方自行接管响应流并负责释放。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Core.TbsRequestOptions">
+            <summary>
+            单次请求级选项。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsRequestOptions.SkipAuthHandling">
+            <summary>
+            隔离型请求（对齐前端 _skipAuthHandling）：跳过统一登录态处理（不触发 405/468 重登事件），
+            直接返回原始响应体，由调用方自行判定 code 并展示结果（如第三方连通性测试）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsRequestOptions.ExplicitToken">
+            <summary>
+            显式令牌（对齐前端“请求头已携带令牌时不覆盖”）：优先于令牌存储中的当前令牌。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Core.TbsSdkJson">
+            <summary>
+            SDK 统一 JSON 序列化配置。
+            <para>后端 Spring Jackson 默认输出 camelCase，故写入侧使用 CamelCase 命名策略、
+            读取侧大小写不敏感；时间字段同时兼容数值毫秒时间戳与字符串日期。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Core.TbsSdkJson.DefaultOptions">
+            <summary>默认序列化选项（线程安全，可全局复用）。</summary>
+        </member>
+        <member name="T:TbsSdk.Core.FlexibleDateTimeConverter">
+            <summary>
+            可空时间字段转换器：读取时兼容数值毫秒时间戳与多种字符串日期格式，
+            写入时输出 "yyyy-MM-dd HH:mm:ss"。对齐前端对 createTime 的多格式解析逻辑。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Core.FlexibleNullableLongConverter">
+            <summary>
+            可空长整型转换器：读取时兼容数值与字符串（后端 Jackson 将 Long 统一序列化为字符串），
+            写入时输出数值。null 读取为 null。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Core.FlexibleLongConverter">
+            <summary>
+            长整型转换器：读取时兼容数值与字符串（后端 Jackson 将 Long 统一序列化为字符串），
+            写入时输出数值。空字符串视为解析失败抛 JsonException。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Models.PushMessageVO">
+            <summary>
+            后端分页拉取返回的消息视图（对齐 PushNotifyMessageVO，与
+            /private/push/message/list 返回体一一对应）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageVO.MessageId">
+            <summary>消息 ID（接收行 id）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageVO.MsgType">
+            <summary>消息类型（notify/warning/reminder，业务可扩展）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageVO.Priority">
+            <summary>优先级（low/normal/high/urgent）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageVO.Url">
+            <summary>跳转地址（可选）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageVO.CreateTime">
+            <summary>创建时间（毫秒时间戳或字符串日期均可解析）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageVO.ReadFlag">
+            <summary>已读标记。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageVO.Extra">
+            <summary>其余未映射字段。</summary>
+        </member>
+        <member name="M:TbsSdk.Models.PushMessageVO.Normalize">
+            <summary>
+            规范化为客户端消息对象（对齐前端 normalizeFetchedMessage）。
+            messageId 缺失时返回 null。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Models.PushMessagePageVO">
+            <summary>
+            消息分页视图（对齐 PushMessagePageVO）：到达序倒序，游标分页。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessagePageVO.List">
+            <summary>消息列表。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessagePageVO.Cursor">
+            <summary>下一页游标（上一页响应返回的 cursor；无更多数据时为 null）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessagePageVO.HasMore">
+            <summary>是否还有更多。</summary>
+        </member>
+        <member name="M:TbsSdk.Models.PushMessagePageVO.Normalize">
+            <summary>批量规范化为客户端消息列表（过滤无效项）。</summary>
+        </member>
+        <member name="T:TbsSdk.Models.PushMessage">
+            <summary>
+            规范化后的客户端消息对象（对齐前端 normalizeFetchedMessage 的产出结构）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessage.Id">
+            <summary>消息标识（字符串化 messageId）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessage.Type">
+            <summary>消息类型。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessage.Timestamp">
+            <summary>到达时间。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessage.Priority">
+            <summary>优先级（未知值归一为 normal）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessage.Read">
+            <summary>是否已读。</summary>
+        </member>
+        <member name="T:TbsSdk.Models.PushNotifySendForm">
+            <summary>
+            发送持久化通知表单（对齐 PushNotifySendForm）。
+            <para>接收人不随表单传递，由后端 INotifyReceiverResolver SPI 解析（默认实现为空集=无人接收）。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushNotifySendForm.MsgType">
+            <summary>消息类型（必填，如 notify/warning/reminder）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushNotifySendForm.Source">
+            <summary>来源标识（可选）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushNotifySendForm.ExtInfo">
+            <summary>扩展信息（可选）。</summary>
+        </member>
+        <member name="T:TbsSdk.Models.PushSendResultVO">
+            <summary>
+            发送结果视图（对齐 PushSendResultVO）。
+            <para>receiverCount 是真实送达规模（HTTP 成功 ≠ 送达），0 为合法状态（仅落库无信令）。</para>
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Models.PushMessageOperateForm">
+            <summary>
+            通用操作回传表单（对齐 PushMessageOperateForm，CLICK 等预留扩展）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageOperateForm.OpType">
+            <summary>操作类型（如 CLICK）。</summary>
+        </member>
+        <member name="P:TbsSdk.Models.PushMessageOperateForm.ExtInfo">
+            <summary>扩展信息（可选）。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushConstants">
+            <summary>
+            推送协议常量（对齐前端 push/push-message.js 与后端 PushFrameConstants / PushNotifyServiceImpl）。
+            <para>注意：上行帧 type 为后端 FrameTypeEnum 枚举大写名（SUBSCRIBE/UNSUBSCRIBE/PING），
+            下行 SSE 事件名为帧类型小写值（hello/signal/pong/data/error），两套表达勿混用。</para>
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.AuthPath">
+            <summary>连接认证并签发一次性凭证。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.SseConnectPath">
+            <summary>SSE 下行流建连（push-ticket 作 query 参数）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.SseUploadPath">
+            <summary>上行帧端点（订阅/退订/心跳）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.MessageListPath">
+            <summary>分页拉取当前用户消息列表。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.MessageUnreadCountPath">
+            <summary>查询当前用户未读数。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.MessageReadPath">
+            <summary>批量记录已读。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.MessageOperatePath">
+            <summary>通用操作回传（CLICK 等预留扩展）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.MessageNotifyPath">
+            <summary>发送持久化通知（新链路发送入口）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.TopicPrefixDefault">
+            <summary>per-user SIGNAL 频道主题前缀（拼接用户数字 id 得到频道）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.ReadFlagAll">
+            <summary>消息读取范围：全部（含已读）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushConstants.ReadFlagUnread">
+            <summary>消息读取范围：仅未读。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushMessagePriority">
+            <summary>
+            消息优先级（对齐前端 PRIORITIES）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.PushMessagePriority.IsKnown(System.String)">
+            <summary>判定是否为已知优先级。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushMessageType">
+            <summary>
+            消息类型常量（业务可字典驱动扩展，后端仅校验非空与长度）。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushMessageOperation">
+            <summary>
+            消息操作类型（operate 回传预留扩展）。
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Push.PushMessageOperation.Click">
+            <summary>点击。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushFrame">
+            <summary>
+            推送协议帧（对齐后端 PushFrame）。上行与下行共用同一结构。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushFrame.Version">
+            <summary>协议版本号（缺省 1，与后端 PROTOCOL_VERSION 一致）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushFrame.Type">
+            <summary>帧类型：上行传大写枚举名（SUBSCRIBE/UNSUBSCRIBE/PING），下行 SSE 事件名为小写值。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushFrame.MessageId">
+            <summary>消息标识（可选）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushFrame.Topic">
+            <summary>主题（SUBSCRIBE/UNSUBSCRIBE 必填，≤128 字符）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushFrame.Seq">
+            <summary>序列号（可选）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushFrame.Timestamp">
+            <summary>毫秒时间戳。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushFrame.Payload">
+            <summary>载荷（hello 帧为 JSON 字符串，需二次解析取 sessionId）。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushUploadForm">
+            <summary>
+            上行帧请求体（对齐后端 SseUploadForm）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushUploadForm.SessionId">
+            <summary>hello 握手确认帧下发的会话标识（必填）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushUploadForm.Frame">
+            <summary>协议帧。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushAuthForm">
+            <summary>
+            推送认证请求体（对齐后端 PushAuthForm）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushAuthForm.Token">
+            <summary>当前登录令牌（必填）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushAuthForm.UserId">
+            <summary>业务用户标识（可选，供后端审计）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushAuthForm.Attributes">
+            <summary>附加属性（可选）。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushCredential">
+            <summary>
+            推送建连凭证（对齐后端 PushCredential）：一次性、TTL 默认 60s，须尽快用于 SSE 建连。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushCredential.Ticket">
+            <summary>一次性建连票据（被服务端原子消费，断线后必须重新签发）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushCredential.SessionId">
+            <summary>预分配会话标识（以 hello 握手确认帧下发值为准）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushCredential.ExpireAt">
+            <summary>过期时间。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.PushCredential.Attributes">
+            <summary>附加属性。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.PushMessageClient">
+            <summary>
+            推送消息中心接口封装（对齐后端 PrivatePushMessageController，基础路径 /private/push/message）。
+            <para>新链路（信令+拉取）：SSE 仅承载协议帧，业务消息内容一律通过
+            <see cref="M:TbsSdk.Push.PushMessageClient.FetchMessagesAsync(System.Nullable{System.Int64},System.Nullable{System.Int32},System.String,System.Threading.CancellationToken)"/> 拉取，由 SIGNAL 信令触发。</para>
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.PushMessageClient.FetchMessagesAsync(System.Nullable{System.Int64},System.Nullable{System.Int32},System.String,System.Threading.CancellationToken)">
+            <summary>
+            分页拉取当前用户消息列表（到达序倒序，含已读）。
+            </summary>
+            <param name="cursor">游标：上一页响应返回的 cursor（接收行 id），首页不传。</param>
+            <param name="limit">每页条数，默认 20，上限 100。</param>
+            <param name="readFlag">读取范围：all（全部）/ unread（仅未读），缺省为全部。</param>
+            <param name="cancellationToken">取消令牌。</param>
+        </member>
+        <member name="M:TbsSdk.Push.PushMessageClient.FetchUnreadCountAsync(System.Threading.CancellationToken)">
+            <summary>
+            查询当前用户未读数（业务体为裸 Long 数字）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.PushMessageClient.MarkReadAsync(System.Collections.Generic.IEnumerable{System.Int64},System.Threading.CancellationToken)">
+            <summary>
+            批量记录已读（写 READ 操作日志）。请求体为裸 Long 数组（非包装对象）。
+            </summary>
+            <returns>实际记录条数。</returns>
+        </member>
+        <member name="M:TbsSdk.Push.PushMessageClient.OperateMessageAsync(System.Int64,System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            通用操作回传（CLICK 等，预留扩展）。
+            </summary>
+            <returns>实际写入日志条数。</returns>
+        </member>
+        <member name="M:TbsSdk.Push.PushMessageClient.SendNotifyAsync(TbsSdk.Models.PushNotifySendForm,System.Threading.CancellationToken)">
+            <summary>
+            发送持久化通知（新链路发送入口，非旧全量推送）。
+            <para>注意：接收人不随表单传递，由后端 INotifyReceiverResolver SPI 解析（默认实现为空集=无人接收）。</para>
+            </summary>
+            <returns>发送结果视图（receiverCount 为真实送达规模，0 为合法状态）。</returns>
+        </member>
+        <member name="T:TbsSdk.Push.SseEvent">
+            <summary>
+            解析完成的 SSE 事件。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Push.SseEvent.Event">
+            <summary>事件名（未指定时按规范为 message）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SseEvent.Data">
+            <summary>数据载荷（多行 data 以 \n 连接）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SseEvent.LastEventId">
+            <summary>最近一次声明的 id（跨事件持久）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SseEvent.RetryMillis">
+            <summary>服务端建议的重连间隔（毫秒，可空）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SseEvent.HasData">
+            <summary>是否携带数据。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.SseEventParser">
+            <summary>
+            SSE（Server-Sent Events）文本流增量解析器（纯函数式喂行，可独立单测）。
+            <para>遵循 SSE 规范：event/data/id/retry 字段与空行派发；冒号开头为注释行；
+            无 data 的事件不派发；data 多行以 \n 连接；字段值的前导单个空格被剥离。</para>
+            <para>netstandard2.0 无内置 SSE 客户端，SDK 借助 HttpClient 流式读取 +
+            本解析器实现事件流消费（可原生携带 Authorization 头）。</para>
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SseEventParser.Reset">
+            <summary>重置解析状态（新事件流开始时调用）。</summary>
+        </member>
+        <member name="M:TbsSdk.Push.SseEventParser.FeedLine(System.String)">
+            <summary>
+            喂入一行原始文本。
+            </summary>
+            <returns>空行结束一个事件时返回完整 <see cref="T:TbsSdk.Push.SseEvent"/>，否则返回 null。</returns>
+        </member>
+        <member name="T:TbsSdk.Push.ConnectionStatus">
+            <summary>
+            SSE 推送连接状态。
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Push.ConnectionStatus.Idle">
+            <summary>空闲（未启动）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.ConnectionStatus.Connecting">
+            <summary>建连中。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.ConnectionStatus.Connected">
+            <summary>已连接（hello 握手完成）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.ConnectionStatus.Reconnecting">
+            <summary>重连中（退避等待或换票建连）。</summary>
+        </member>
+        <member name="F:TbsSdk.Push.ConnectionStatus.Closed">
+            <summary>已关闭（主动关闭，不再重连）。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.HelloInfo">
+            <summary>
+            hello 握手帧载荷。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Push.HelloInfo.SessionId">
+            <summary>会话标识（后续上行帧均需携带）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.HelloInfo.Version">
+            <summary>协议版本（可空）。</summary>
+        </member>
+        <member name="T:TbsSdk.Push.SsePushClient">
+            <summary>
+            SSE 推送连接管理器（对齐前端 push/sse-client.js 的完整协议流程）。
+            <para>
+            协议层统一连接流程：认证签票据 → SSE 建连（ticket 作 query 参数，同时携带与 HTTP 同源的
+            Authorization 令牌头）→ 收 hello 帧取 sessionId → 上行 SUBSCRIBE 订阅全部主题 →
+            周期 PING 保活。一次性 ticket 被服务端原子消费，故断线后必须换票重连，
+            退避策略为指数退避 + 随机抖动（1s 起，上限 30s）。
+            </para>
+            <para>主题与心跳/退避参数可通过 <see cref="P:TbsSdk.Configuration.TbsSdkOptions.Push"/> 覆盖；
+            提供 <see cref="M:TbsSdk.Push.SsePushClient.SubscribeTopics(System.String[])"/>/<see cref="M:TbsSdk.Push.SsePushClient.UnsubscribeTopics(System.String[])"/> 支持连接就绪后的动态增删主题。</para>
+            </summary>
+        </member>
+        <member name="E:TbsSdk.Push.SsePushClient.StatusChanged">
+            <summary>连接状态变更回调（对齐前端 onStatus）。</summary>
+        </member>
+        <member name="E:TbsSdk.Push.SsePushClient.SignalReceived">
+            <summary>
+            收到 SIGNAL 信令或建连成功（hello 兜底）时触发（对齐前端 onSignal）。
+            信令本身无载荷，仅提示"该频道有新消息"，宿主应触发消息拉取。
+            </summary>
+        </member>
+        <member name="E:TbsSdk.Push.SsePushClient.Hello">
+            <summary>hello 握手完成（携带 sessionId）。</summary>
+        </member>
+        <member name="E:TbsSdk.Push.SsePushClient.FrameReceived">
+            <summary>收到任意下行协议帧（signal/pong/data 等已按事件名归一化为帧结构）。</summary>
+        </member>
+        <member name="E:TbsSdk.Push.SsePushClient.ErrorOccurred">
+            <summary>连接异常（即将换票重连）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SsePushClient.Status">
+            <summary>当前状态。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SsePushClient.SessionId">
+            <summary>当前会话标识（握手完成后可用）。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SsePushClient.Topics">
+            <summary>当前订阅主题快照。</summary>
+        </member>
+        <member name="P:TbsSdk.Push.SsePushClient.IsManuallyClosed">
+            <summary>是否已主动关闭（关闭后不再重连）。</summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.Configure(System.String,System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            配置连接参数（须在 <see cref="M:TbsSdk.Push.SsePushClient.Connect"/> 前调用；重连后复用同一配置）。
+            </summary>
+            <param name="token">当前登录令牌。</param>
+            <param name="userId">当前登录用户数字 id（缺省据此拼接 SIGNAL 频道 topicPrefix + userId）。</param>
+            <param name="topics">订阅主题（缺省为 per-user 频道）。</param>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.Connect">
+            <summary>
+            建立推送连接（幂等：连接循环已在运行则忽略）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.SubscribeTopics(System.String[])">
+            <summary>
+            动态追加订阅主题：连接就绪时立即上行订阅帧；未就绪时仅登记，
+            待 hello 握手后随全量主题统一订阅。重复主题幂等忽略。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.UnsubscribeTopics(System.String[])">
+            <summary>
+            动态移除订阅主题（连接就绪时同步上行退订帧）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.Close">
+            <summary>
+            主动关闭连接（登出/程序退出调用），置位后不再重连。幂等。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.Dispose">
+            <inheritdoc />
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.OpenOnceAsync(System.Threading.CancellationToken)">
+            <summary>
+            单次建连：签票据 → SSE 建连 → 逐行消费事件流直至流结束（响应与流资源在内部释放）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.ParseHelloPayload(System.String)">
+            <summary>
+            解析并校验 hello 帧 payload（JSON 字符串需二次解析），提取会话标识。
+            对齐前端 parseHelloPayload。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.UploadFrame(TbsSdk.Push.PushFrame)">
+            <summary>
+            上行帧（fire-and-forget）：失败仅告警，不影响主流程（对齐前端行为）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Push.SsePushClient.ResolveTopics(System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            归一化主题入参：过滤非法项；入参为空时回退为 per-user 缺省 SIGNAL 频道（topicPrefix + userId）。
+            对齐前端 _resolveTopics。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.TbsSdkClient">
+            <summary>
+            SDK 组合根：聚合认证、HTTP、消息中心与 SSE 推送，提供统一入口。
+            <para>
+            快速接入示例：
+            <code>
+            var options = new TbsSdkOptions { BaseUrl = "http://localhost:8083" };
+            using var sdk = new TbsSdkClient(options);
+            sdk.SessionExpired += (s, e) => Console.WriteLine("会话失效，请重新登录: " + e.Message);
+            var token = await sdk.LoginAsync("admin", "123456");
+            var user = await sdk.Auth.GetUserInfoAsync();
+            sdk.StartPush(token.Id?.ToString());   // 或显式指定订阅主题
+            sdk.Push.SignalReceived += () => { /* 触发 sdk.Messages.FetchMessagesAsync 拉取 */ };
+            </code>
+            </para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.TbsSdkClient.Options">
+            <summary>SDK 配置。</summary>
+        </member>
+        <member name="P:TbsSdk.TbsSdkClient.TokenStore">
+            <summary>令牌存储（登录成功自动写入；宿主可注入自有实现实现持久化）。</summary>
+        </member>
+        <member name="P:TbsSdk.TbsSdkClient.Http">
+            <summary>HTTP 核心（泛化请求入口，覆盖全部业务模块）。</summary>
+        </member>
+        <member name="P:TbsSdk.TbsSdkClient.Auth">
+            <summary>登录授权模块。</summary>
+        </member>
+        <member name="P:TbsSdk.TbsSdkClient.Messages">
+            <summary>推送消息中心模块。</summary>
+        </member>
+        <member name="P:TbsSdk.TbsSdkClient.Push">
+            <summary>SSE 推送连接管理器。</summary>
+        </member>
+        <member name="P:TbsSdk.TbsSdkClient.Update">
+            <summary>应用更新模块：升级检查与安装包下载。</summary>
+        </member>
+        <member name="E:TbsSdk.TbsSdkClient.SessionExpired">
+            <summary>
+            会话失效事件（405/468）：App 模式下宿主应引导用户重新登录。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.TbsSdkClient.#ctor(TbsSdk.Configuration.TbsSdkOptions,System.Net.Http.HttpMessageHandler,TbsSdk.Auth.ITokenStore,System.Net.Http.HttpClient)">
+            <summary>
+            创建 SDK 客户端。
+            </summary>
+            <param name="options">配置（为空时使用默认配置，需自行设置 BaseUrl）。</param>
+            <param name="httpMessageHandler">可替换底层 Handler（测试/代理场景）。</param>
+            <param name="tokenStore">令牌存储（为空时使用内存实现）。</param>
+            <param name="downloadHttpClient">外部注入的安装包下载 HttpClient（可选）。</param>
+        </member>
+        <member name="M:TbsSdk.TbsSdkClient.LoginAsync(System.String,System.String,System.Threading.CancellationToken)">
+            <summary>
+            账号密码登录（App 模式：loginType=1），成功后令牌写入存储。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.TbsSdkClient.StartPush(System.String,System.Collections.Generic.IEnumerable{System.String})">
+            <summary>
+            登录后启动推送连接（对齐前端：用户态就绪后自动建连并订阅 per-user 主题）。
+            </summary>
+            <param name="userId">当前登录用户数字 id（用于缺省拼接 per-user SIGNAL 频道）。</param>
+            <param name="topics">显式订阅主题（缺省为 topicPrefix + userId）。</param>
+        </member>
+        <member name="M:TbsSdk.TbsSdkClient.LogoutAsync(System.Threading.CancellationToken)">
+            <summary>
+            登出：调用后端登出接口，关闭推送长连接并清理本地令牌。
+            后端接口失败不阻断本地清理（对齐前端 logout 兜底语义）。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.TbsSdkClient.CheckUpdateAsync(System.String,System.String,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            应用升级检查（公开端点，无需登录）：返回是否需要升级、动作强度与安装包下载地址。
+            </summary>
+            <param name="appKey">应用标识。</param>
+            <param name="platform">平台（如 ANDROID/IOS/WEB，见 AppPlatform）。</param>
+            <param name="currentVersionCode">客户端当前内部版本号。</param>
+            <param name="cancellationToken">取消令牌。</param>
+        </member>
+        <member name="M:TbsSdk.TbsSdkClient.ClearLocalSession">
+            <summary>仅清理本地登录态（不调用后端）。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateClient">
+            <summary>
+            应用更新模块：客户端升级检查与安装包下载。
+            <para>
+            升级检查走公开端点 POST /public/app-update/check（无需登录）；服务端综合最新已发布版本
+            与生效的兼容策略返回升级动作强度（force/recommend/notify）与安装包下载地址。
+            下载地址为 OSS 预签名 URL 或外部托管链接，下载使用独立 HttpClient（不受 API 超时限制），
+            支持进度回调与取消。
+            </para>
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateClient.PublicCheckPath">
+            <summary>公开升级检查端点。</summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateClient.AdminCheckPath">
+            <summary>管理端升级检查端点（需 API.DEV.VERSION.POLICY.QUERY 权限）。</summary>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.#ctor(TbsSdk.Core.TbsHttpClient,System.Net.Http.HttpClient)">
+            <summary>创建更新模块。</summary>
+            <param name="http">HTTP 核心（升级检查复用）。</param>
+            <param name="downloadHttpClient">外部注入的下载 HttpClient（可选，用于代理/测试）。</param>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.CheckUpgradeAsync(System.String,System.String,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            客户端升级检查（公开端点，无需登录）。
+            </summary>
+            <param name="appKey">应用标识。</param>
+            <param name="platform">平台（如 ANDROID/IOS/WEB，见 <see cref="T:TbsSdk.Update.AppPlatform"/>）。</param>
+            <param name="currentVersionCode">客户端当前内部版本号。</param>
+            <param name="cancellationToken">取消令牌。</param>
+            <returns>升级检查结果：needUpdate、action 强度与 downloadUrls。</returns>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.CheckUpgradeAsync(System.String,System.String,System.String,System.Int64,System.Threading.CancellationToken)">
+            <summary>
+            升级检查（指定端点）：公开端点或管理端 `/private/admin/app-version-policy/check` 均可传入。
+            </summary>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateClient.DownloadPackageAsync(System.String,System.String,System.IProgress{TbsSdk.Update.DownloadProgress},System.Threading.CancellationToken)">
+            <summary>
+            下载安装包到指定文件（支持进度回调与取消；异常时删除不完整文件）。
+            </summary>
+            <param name="downloadUrl">安装包下载地址（升级检查结果中的 downloadUrls 项）。</param>
+            <param name="destinationPath">目标文件完整路径。</param>
+            <param name="progress">进度回调：已下载字节数与总字节数（总长未知时为 -1）。</param>
+            <param name="cancellationToken">取消令牌。</param>
+            <returns>下载到磁盘的总字节数。</returns>
+        </member>
+        <member name="T:TbsSdk.Update.DownloadProgress">
+            <summary>
+            下载进度（已下载字节数与总字节数，总长未知时 TotalBytes 为 -1）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.DownloadProgress.DownloadedBytes">
+            <summary>已下载字节数。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.DownloadProgress.TotalBytes">
+            <summary>总字节数（服务端未返回 Content-Length 时为 -1）。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.DownloadProgress.Percent">
+            <summary>进度百分比（0~1，总长未知时为 null）。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateAction">
+            <summary>
+            升级动作类型常量（对齐后端 AppVersionCompatibilityActionEnum 的 code 值）。
+            </summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateAction.Force">
+            <summary>强制更新：低于最低兼容版本时阻断使用直至升级。</summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateAction.Recommend">
+            <summary>推荐更新：提示用户升级但不阻断使用。</summary>
+        </member>
+        <member name="F:TbsSdk.Update.AppUpdateAction.Notify">
+            <summary>仅提示：告知用户存在新版本，不做进一步干预。</summary>
+        </member>
+        <member name="M:TbsSdk.Update.AppUpdateAction.ToName(System.Nullable{System.Int32})">
+            <summary>动作编码转可读名称（force/recommend/notify），未知值返回 null。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppPlatform">
+            <summary>
+            客户端平台常量（对齐后端升级检查入参 platform 约定，如 ANDROID、IOS、WEB）。
+            </summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateCheckForm">
+            <summary>
+            升级检查请求体（对齐后端 AppVersionCheckForm）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckForm.AppKey">
+            <summary>应用标识。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckForm.Platform">
+            <summary>平台标识（如 ANDROID/IOS/WEB，见 <see cref="T:TbsSdk.Update.AppPlatform"/>）。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckForm.CurrentVersionCode">
+            <summary>客户端当前内部版本号。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppUpdateCheckResult">
+            <summary>
+            升级检查结果（对齐后端 AppVersionUpdateCheckVO）。
+            <para>服务端综合最新已发布版本与生效的兼容策略，返回升级动作强度与下载地址
+            （OSS 预签名 URL 或外部托管链接，可能存在多个安装包地址）。</para>
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.NeedUpdate">
+            <summary>是否需要升级。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.Action">
+            <summary>升级动作类型（1=force / 2=recommend / 3=notify），不需要升级时为空。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.LatestVersionCode">
+            <summary>最新已发布版本的内部版本号。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.LatestVersionName">
+            <summary>最新已发布版本的外部版本名称。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.ReleaseNote">
+            <summary>最新版本的更新日志。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.DownloadUrls">
+            <summary>最新版本安装包的下载地址列表。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppUpdateCheckResult.ActionName">
+            <summary>升级动作可读名称（force/recommend/notify），不需要升级时为 null。</summary>
+        </member>
+        <member name="T:TbsSdk.Update.AppPackageVO">
+            <summary>
+            安装包视图（对齐后端 AppPackageVO，来源于管理端接口，含完整性校验信息）。
+            </summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.VersionId">
+            <summary>所属应用版本 ID。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.BucketName">
+            <summary>对象存储桶名。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.ObjectName">
+            <summary>对象存储对象名。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.Md5">
+            <summary>安装包文件 MD5 值。</summary>
+        </member>
+        <member name="P:TbsSdk.Update.AppPackageVO.DownloadUrl">
+            <summary>下载地址。</summary>
+        </member>
+    </members>
+</doc>
