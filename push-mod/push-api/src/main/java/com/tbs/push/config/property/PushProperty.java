@@ -45,6 +45,11 @@ public class PushProperty {
         Collections.singletonList("global.broadcast"));
 
     /**
+     * 是否启用推送
+     */
+    private boolean enable = true;
+
+    /**
      * 心跳空闲超时（毫秒）
      * <p>
      * 会话最近活性距今超过该值即判定为死连接并关闭注销；
