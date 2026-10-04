@@ -80,7 +80,7 @@ public class WebSocketTransportAdapter implements ITransportAdapter {
         WebSocketSession webSocketSession = (WebSocketSession) physicalChannel;
         PushCredential credential = orchestrator.consumeTicket(ticket);
         WebSocketSessionWrapper wrapper = new WebSocketSessionWrapper(credential.getSessionId(), webSocketSession,
-            codec, credential.getAttributes());
+            codec, credential.getSessionAttributes());
         webSocketSession.getAttributes().put(SESSION_ATTR_KEY, wrapper);
         orchestrator.establish(wrapper);
         return wrapper;

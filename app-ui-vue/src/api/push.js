@@ -19,7 +19,8 @@ import request from '@/utils/request'
  *
  * @param {string} token 当前登录令牌（取自 utils/auth.getToken）
  * @param {string} [userId] 业务用户标识（可选，供后端审计）
- * @returns {Promise<Object>} 凭证对象 { ticket, sessionId, expireAt, attributes }
+ * @returns {Promise<Object>} 凭证对象 { ticket, sessionId, expireAt, grantedTopics, attributes }，
+ *          其中 grantedTopics 为服务端签票时点算出的可订阅主题清单（越权订阅会被拒）
  */
 export function pushAuth(token, userId) {
   return request({

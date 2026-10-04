@@ -175,6 +175,7 @@ await sdk.LogoutAsync();   // 调用后端登出 + 关闭推送 + 清理本地�
 | SSE 重连 | 一次性 ticket 被服务端原子消费，断线后自动换票，指数退避 1s~30s + 随机抖动 |
 | 心跳 | 每 30s 上行 `{"version":1,"type":"PING"}` 帧（可配置） |
 | 上行帧 | type 为大写枚举名（SUBSCRIBE/UNSUBSCRIBE/PING）；下行事件名为小写值（hello/signal/pong/data/error） |
+| 订阅授权集 | auth 响应的 `PushCredential.GrantedTopics` 为服务端签票时点算出的可订主题模式清单；不在清单内的 SUBSCRIBE 会被服务端拒绝（`ErrorOccurred` 收到 ERROR 帧，code 1008，仅拒该次订阅不断流）；为 `null`/空表示服务端未启用订阅鉴权，授权变更需重新签票重连 |
 
 ## 构建
 

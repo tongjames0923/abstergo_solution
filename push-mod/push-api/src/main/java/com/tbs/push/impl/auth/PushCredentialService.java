@@ -8,13 +8,13 @@ import com.tbs.push.api.auth.IPushCredentialStore;
 import com.tbs.push.api.auth.IPushTopicGranter;
 import com.tbs.push.api.exception.PushProtocolException;
 import com.tbs.push.constants.PushI18nConstant;
-import com.tbs.push.constants.PushSessionAttrConstants;
 import com.tbs.push.model.auth.PushAuthForm;
 import com.tbs.push.model.auth.PushAuthResult;
 import com.tbs.push.model.auth.PushCredential;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -108,8 +108,8 @@ public class PushCredentialService {
         credential.setTicket(UuidUtil.getInstance().getUuidString());
         credential.setSessionId(UuidUtil.getInstance().getUuidString());
         Map<String, String> attributes = copyAttributes(authResult.getAttributes());
-        applyTopicGrants(attributes, authResult);
         credential.setAttributes(attributes);
+        credential.setGrantedTopics(mergeTopicGrants(authResult));
         credential.setExpireAt(new Date(System.currentTimeMillis() + ticketTtlMillis));
         credentialStore.save(credential);
         log.info("连接凭证已签发, sessionId:{}, ticket:{}...", credential.getSessionId(),
@@ -124,7 +124,7 @@ public class PushCredentialService {
      * </p>
      *
      * @param ticket 一次性连接凭证
-     * @return 消费成功的连接凭证（含预分配 sessionId 与认证属性）
+     * @return 消费成功的连接凭证（含预分配 sessionId、认证属性与订阅授权集）
      * @throws PushProtocolException 凭证缺失、无效或已过期时抛出
      */
     public PushCredential consume(String ticket) {
@@ -150,7 +150,7 @@ public class PushCredentialService {
     }
 
     /**
-     * 复制认证属性（授权集写入需要可变副本，不假设认证器返回的Map可变更）
+     * 复制认证属性（不假设认证器返回的Map可变更，凭证内保持可变副本）
      *
      * @param source 认证器产出的会话属性，允许为null
      * @return 可变副本，不为null
@@ -160,18 +160,18 @@ public class PushCredentialService {
     }
 
     /**
-     * 链式主题授权：合并全部授权器产出去重后写入授权集属性
+     * 链式主题授权：合并全部授权器产出去重后的可订阅主题模式列表
      * <p>
-     * 单个授权器异常仅跳过不影响其余产出；授权集为空（未注册授权器或全部
-     * 返回空）时不写属性，订阅校验侧对无授权集会话保持放行，兼容无鉴权部署。
+     * 单个授权器异常仅跳过不影响其余产出；未注册授权器或全部返回空时结果为空列表，
+     * 订阅校验侧对无授权集会话保持放行，兼容无鉴权部署。
      * </p>
      *
-     * @param attributes 待写入的会话属性副本
-     * @param authResult 认证通过结果
+     * @param authResult 认证通过结果（携带服务端权威身份）
+     * @return 去重后的授权集，不为null
      */
-    private void applyTopicGrants(Map<String, String> attributes, PushAuthResult authResult) {
+    private List<String> mergeTopicGrants(PushAuthResult authResult) {
         if (topicGranters == null || topicGranters.isEmpty()) {
-            return;
+            return new ArrayList<>();
         }
         Set<String> granted = new LinkedHashSet<>();
         for (IPushTopicGranter granter : topicGranters) {
@@ -189,10 +189,7 @@ public class PushCredentialService {
                 log.warn("主题授权器[{}]执行失败, 跳过", granter.getClass().getSimpleName(), error);
             }
         }
-        if (!granted.isEmpty()) {
-            attributes.put(PushSessionAttrConstants.GRANTED_TOPICS,
-                String.join(PushSessionAttrConstants.GRANT_SEPARATOR, granted));
-        }
+        return new ArrayList<>(granted);
     }
 
 }

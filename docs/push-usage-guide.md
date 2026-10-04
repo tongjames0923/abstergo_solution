@@ -173,7 +173,7 @@ const result = await publishNotify(form)
 
 #### 2.2.4 权限申请
 
-- **接收**：订阅权限以 **auth 签票时下发的授权集** 为准。服务端签票时点经链式 SPI `IPushTopicGranter` 计算可订阅主题集，写入凭证属性 `grantedTopics`（逗号分隔）随 auth 响应返回，前端可据此按需订阅；订阅时服务端按授权集实时校验，**越权订阅被拒**（ERROR 帧，见 2.2.5）。授权集三层来源：
+- **接收**：订阅权限以 **auth 签票时下发的授权集** 为准。服务端签票时点经链式 SPI `IPushTopicGranter` 计算可订阅主题集，写入凭证一等字段 `grantedTopics`（字符串数组，主题模式清单）随 auth 响应返回，前端可据此按需订阅；订阅时服务端按授权集实时校验，**越权订阅被拒**（ERROR 帧，见 2.2.5）。授权集三层来源：
   - **硬编码本人频道**：`tbs.push.channel.{userId}` 由服务端认证身份推导，建连时服务端自动订阅，无需申请也不依赖客户端自报；
   - **配置白名单**：`tbs.push.grant-public-topics`（默认 `global.broadcast`）中的公共主题对全体用户放行；
   - **业务 SPI 扩展**：实现 `IPushTopicGranter` 注册为 Spring Bean 即可按角色/业务规则追加主题（支持订阅侧通配模式），多个授权器按注册顺序链式合并去重，单个异常仅跳过不阻断签票。
@@ -221,7 +221,7 @@ SSE 本质是 `text/event-stream` 格式的 HTTP 长连接，**任何支持 HTTP
   - **短时效**：默认 TTL 60s（`tbs.push.auth.ticket-ttl-millis`），签发后须立即建连；
   - 通过 query 参数 `push-ticket` 携带（EventSource 无法自定义 Header 的折中设计）。
 - **身份绑定**：auth 请求体中的 `userId`/`token` 仅是客户端声明，服务端以**网关认证主体**（登录令牌解析出的用户）为唯一权威反查数字 ID 后覆盖写入凭证属性，声明与解析不一致时仅记审计日志不拒绝（兼容存量客户端）；ticket 被旁路获取时，他人携该票建连会因建连时点身份一致性校验被关闭。
-- **授权集机制**：签票时点链式 `IPushTopicGranter` 计算授权主题集写入 `PushCredential.attributes.grantedTopics`（见 2.2.4），建连时恢复绑定到会话属性，订阅时点由 `ISubscriptionAuthorizer` 实时校验。授权集为**签票时点快照**：长连接期间业务侧降权不生效、提权需断线重连换票。授权集经凭证 `attributes` 既有 Map 通道下发，Jackson / System.Text.Json 默认忽略未知属性，**Java / C# SDK 与前端均零强制改动**。
+- **授权集机制**：签票时点链式 `IPushTopicGranter` 计算授权主题集，写入凭证字段 `PushCredential.grantedTopics`（**唯一真源**，见 2.2.4）；建连时由凭证派生为会话属性（逗号分隔字符串只是跨层载体，不存在双写），订阅时点由 `ISubscriptionAuthorizer` 按会话属性判定。授权集为**签票时点快照**：长连接期间业务侧降权不生效、提权需断线重连换票。旧客户端（未读该字段的 Java / C# SDK 与前端）因 Jackson / System.Text.Json 忽略未知属性而不受影响；需消费可订清单时，两个 SDK 的 `PushCredential` 镜像模型已同步 `grantedTopics` / `GrantedTopics` 字段。
 - **发布接口**：直接用登录令牌走 Header 鉴权，与 ticket 无关。
 
 ### 3.3 消息格式
@@ -298,7 +298,7 @@ SSE 本质是 `text/event-stream` 格式的 HTTP 长连接，**任何支持 HTTP
 curl -X POST http://host:8080/private/push/auth \
   -H "Authorization: ${TOKEN}" -H "Content-Type: application/json" \
   -d '{"token":"${TOKEN}","userId":"zhangsan"}'
-# 响应 data: { "ticket": "...", "sessionId": "...", "expireAt": ... }
+# 响应 data: { "ticket": "...", "sessionId": "...", "expireAt": ..., "grantedTopics": ["tbs.push.channel.1001","global.broadcast"] }
 
 # 2. 建立 SSE 下行流（-N 禁用缓冲；必须带 Authorization 头）
 curl -N "http://host:8080/private/push/sse/connect?push-ticket=${TICKET}" \
@@ -336,7 +336,7 @@ curl -X POST http://host:8080/private/push/sse/upload \
 用户登录(取令牌 TOKEN)
    │
    ├─ 授权: POST /private/push/auth {token}
-   │        ← data: {ticket, sessionId, expireAt}      (ticket 一次性, TTL 60s)
+   │        ← data: {ticket, sessionId, expireAt, grantedTopics}  (ticket 一次性, TTL 60s)
    │
    ├─ 建连: GET /private/push/sse/connect?push-ticket=xxx   (Header: Authorization)
    │        ← event: hello (二次解析 payload 取 sessionId)

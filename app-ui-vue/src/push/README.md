@@ -227,7 +227,9 @@ subscribeTopics(['global.system.announce'])   // 连接就绪后自动生效
 unsubscribeTopics(['global.system.announce'])
 ```
 
-后端已启用**订阅鉴权**：可订阅主题以 auth 签票时下发的授权集（`grantedTopics`）为准——
+后端已启用**订阅鉴权**：可订阅主题以 auth 签票时下发的授权集为准——服务端返回的
+`grantedTopics` 是 `PushCredential` 的独立字段（字符串数组，见 `@/api/push` 的 `pushAuth`），
+需要渲染"可订清单"时直接读它，不必再从 `attributes` 里拆字符串；
 本人信令频道 `tbs.push.channel.{userId}` 硬编码授权且建连时服务端已自动订阅（前端自报
 订阅与之幂等并存，不必移除）；公共主题受 `tbs.push.grant-public-topics` 白名单控制，
 业务主题需后端 `IPushTopicGranter` 扩展授权。**越权订阅会被服务端拒绝**（下行 error

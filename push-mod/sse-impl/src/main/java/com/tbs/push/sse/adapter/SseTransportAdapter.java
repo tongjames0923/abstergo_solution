@@ -81,7 +81,7 @@ public class SseTransportAdapter implements ITransportAdapter {
         PushCredential credential = orchestrator.consumeTicket(ticket);
         SseEmitter emitter = physicalChannel instanceof SseEmitter ? (SseEmitter)physicalChannel : new SseEmitter(0L);
         SseSessionWrapper wrapper =
-            new SseSessionWrapper(credential.getSessionId(), emitter, codec, credential.getAttributes());
+            new SseSessionWrapper(credential.getSessionId(), emitter, codec, credential.getSessionAttributes());
         emitter.onCompletion(
             () -> onChannelClosed(wrapper.getSessionId(), PushFrameConstants.CLOSE_REASON_CHANNEL_CLOSED));
         emitter.onTimeout(
