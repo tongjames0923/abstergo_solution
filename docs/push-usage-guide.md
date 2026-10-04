@@ -70,6 +70,7 @@ initPush({
   // topics: ['global.biz.order.1001'], // 可选：显式指定订阅主题，缺省为 global.system.notify.{userName}
   config: {                           // 可选：覆盖连接默认参数（见 PUSH_DEFAULTS）
     heartbeatInterval: 30_000,        // 心跳周期（毫秒）
+    heartbeatMaxFailures: 3,         // 心跳连续失败阈值（达阈判定会话已死，换票重连）
     reconnectBaseDelay: 1_000,       // 重连退避基数
     reconnectMaxDelay: 30_000,       // 重连退避上限
     reconnectJitter: 1_000,           // 随机抖动上限（防惊群）
@@ -172,7 +173,12 @@ const result = await publishNotify(form)
 
 #### 2.2.4 权限申请
 
-- **接收**：订阅 `global.system.notify.{用户名}` 属系统默认行为，无需申请；订阅自定义业务主题无权限校验，按需约定命名空间（建议 `global.biz.{业务}.{标识}`）。
+- **接收**：订阅权限以 **auth 签票时下发的授权集** 为准。服务端签票时点经链式 SPI `IPushTopicGranter` 计算可订阅主题集，写入凭证属性 `grantedTopics`（逗号分隔）随 auth 响应返回，前端可据此按需订阅；订阅时服务端按授权集实时校验，**越权订阅被拒**（ERROR 帧，见 2.2.5）。授权集三层来源：
+  - **硬编码本人频道**：`tbs.push.channel.{userId}` 由服务端认证身份推导，建连时服务端自动订阅，无需申请也不依赖客户端自报；
+  - **配置白名单**：`tbs.push.grant-public-topics`（默认 `global.broadcast`）中的公共主题对全体用户放行；
+  - **业务 SPI 扩展**：实现 `IPushTopicGranter` 注册为 Spring Bean 即可按角色/业务规则追加主题（支持订阅侧通配模式），多个授权器按注册顺序链式合并去重，单个异常仅跳过不阻断签票。
+
+  保留前缀 `tbs.push.channel.*` **禁止客户端订制任何形态**（含通配窃听写法），只放行精确本人频道，杜绝跨用户信令元数据窃听。自定义业务主题建议约定命名空间（`global.biz.{业务}.{标识}`）并经上述白名单或 SPI 纳入授权。
 - **发布**：`POST /private/push/send` 为私有接口，须持有有效登录令牌（请求头 `Authorization`）。**当前未做细粒度权限注解**，任何登录用户均可调用；如需收敛到管理员，请在业务层自行加权限校验（见 5.1）。
 - **页面**：管理端通知发布页（`views/push/notify-admin`）按动态路由权限分配，与其它菜单权限一致。
 
@@ -182,11 +188,12 @@ const result = await publishNotify(form)
 
 | 异常 | 模块行为 | 业务侧建议 |
 |------|----------|------------|
-| 认证签票失败 | 打 warn 日志，进入退避重连 | 检查登录态是否过期，过期请引导重新登录 |
-| SSE 流断开 | 换票自动重连（指数退避），重连后自动重订阅 | 监听 `onStatus`/`pushConnectionStatus` 展示状态即可 |
+| 认证签票失败 | 打 warn 日志，进入退避重连；登录态失效（刷新失败 / 本地已无 token）时停止重连置 closed | 监听状态变 closed 且非登出触发时引导重新登录 |
+| SSE 流断开 | 换票自动重连（指数退避，每次建连实时取最新 token），重连后自动重订阅 | 监听 `onStatus`/`pushConnectionStatus` 展示状态即可 |
 | 消息 JSON 非法 / 缺 id 或 type | 丢弃该条（warn 日志），不影响后续消息 | 发送端务必遵守消息契约（见 3.3） |
 | 处理器抛异常 | 捕获隔离，不影响其它处理器 | 处理器内部尽量自兜底 |
-| 订阅/退订/心跳上行失败 | 打 warn 日志，心跳下轮重试 | 关注 `reconnecting` 状态超过 1 分钟未恢复时告警 |
+| 订阅/退订/心跳上行失败 | 订阅失败 warn 日志（重连后全量重订阅自愈）；心跳连续失败达 `heartbeatMaxFailures`（默认 3）判定会话已死，关流换票重连 | 关注 `reconnecting` 状态超过 1 分钟未恢复时告警 |
+| 越权订阅（主题不在授权集） | 服务端回 ERROR 帧（code 1008 `SUBSCRIBE_DENIED`，含 i18n 文案），**仅拒绝该次订阅不断流**，其余订阅与心跳不受影响 | 校验主题是否在签票返回的 `grantedTopics` 内；升权需重新 auth 换票重连（授权集是签票时点快照） |
 
 控制台统一以 `[push]` 前缀输出告警，可作为排障入口。
 
@@ -213,6 +220,8 @@ SSE 本质是 `text/event-stream` 格式的 HTTP 长连接，**任何支持 HTTP
   - **一次性**：服务端原子消费，防重放；连接断开后必须**重新** auth 换新票，复用旧票必然失败；
   - **短时效**：默认 TTL 60s（`tbs.push.auth.ticket-ttl-millis`），签发后须立即建连；
   - 通过 query 参数 `push-ticket` 携带（EventSource 无法自定义 Header 的折中设计）。
+- **身份绑定**：auth 请求体中的 `userId`/`token` 仅是客户端声明，服务端以**网关认证主体**（登录令牌解析出的用户）为唯一权威反查数字 ID 后覆盖写入凭证属性，声明与解析不一致时仅记审计日志不拒绝（兼容存量客户端）；ticket 被旁路获取时，他人携该票建连会因建连时点身份一致性校验被关闭。
+- **授权集机制**：签票时点链式 `IPushTopicGranter` 计算授权主题集写入 `PushCredential.attributes.grantedTopics`（见 2.2.4），建连时恢复绑定到会话属性，订阅时点由 `ISubscriptionAuthorizer` 实时校验。授权集为**签票时点快照**：长连接期间业务侧降权不生效、提权需断线重连换票。授权集经凭证 `attributes` 既有 Map 通道下发，Jackson / System.Text.Json 默认忽略未知属性，**Java / C# SDK 与前端均零强制改动**。
 - **发布接口**：直接用登录令牌走 Header 鉴权，与 ticket 无关。
 
 ### 3.3 消息格式
@@ -346,11 +355,13 @@ curl -X POST http://host:8080/private/push/sse/upload \
 
 | 阶段 | 失败表现 | 处理机制 |
 |------|----------|----------|
-| auth 签票 | 请求失败/401 | 退避后整体重试（重新签票） |
+| auth 签票 | 请求失败/401 | 退避后整体重试（重新签票，每次实时取最新 token）；登录态失效（拦截器标记 authExpired）或本地已无 token 时停止重连，置 closed 等待重新登录 |
 | SSE 建连 | error 事件 | 关流 → **重新 auth 换新票**（旧票已消费不可复用）→ 退避重连 |
 | 订阅上行 | upload 请求失败 | warn 日志；重连成功后随全量主题统一重订阅（自然自愈） |
-| 心跳上行 | PING 请求失败 | warn 日志，下一周期（30s）重试 |
-| 链路空闲 | 服务端超 `tbs.push.heartbeat-timeout-millis` 无活动 | 服务端关闭会话 → 客户端 error → 自动重连 |
+| 越权订阅 | 下行 error 事件（帧 code 1008） | 该次订阅被拒不断流；按授权集（2.2.4）核对主题，必要时重新 auth 换票重连刷新授权快照 |
+| 上行守卫拒绝 | 下行 error 事件（帧 code 1009） | 携他人 sessionId 上行或会话绑定身份与当前主体不符，该帧被丢弃不断流；前端正常链路不会触发，出现即按归属异常排查 |
+| 心跳上行 | PING 请求失败 | warn 日志，下一周期（30s）重试；连续失败达 `heartbeatMaxFailures`（默认 3）判定会话已死（下行流可能仍开着但上行全死），主动关流转换票重连自愈 |
+| 链路空闲 | 服务端超 `tbs.push.heartbeat-timeout-millis` 无活动 | 服务端主动关闭会话（完整清理链：物理拆除→注销→订阅清理→断开拦截器，不依赖半开连接的事件回传）→ 客户端 error → 自动重连 |
 | 发布投递 | send 请求失败 | `publishNotify` 按 allSettled 语义单条重试不中断其余；调用方按 `results[].ok` 决定是否人工重发 |
 | 消息非法 | 缺 id/type、JSON 损坏 | 接收端容错丢弃（warn 日志），不影响后续消息 |
 
@@ -364,10 +375,14 @@ curl -X POST http://host:8080/private/push/sse/upload \
 
 ### 5.1 权限与安全
 
-- 发布接口 `/private/push/send` 仅要求登录，**无细粒度权限校验**——任何登录用户都能向任意 topic 发消息。生产环境若要收敛，建议在业务层加管理员权限校验，或拆分出独立发布端点。
+- **身份绑定三层模型**：身份在签票点绑定（网关认证主体为唯一权威，表单声明仅被覆盖与审计）；一致性在建连时点校验（凭证绑定身份≠当前请求主体 → 直接关闭会话，close 原因 `identity-mismatch`）；归属在上行时点校验（协议层上行守卫链 `IUploadGuard` 在帧处理器内对**全部上行帧**判定：会话绑定身份≠当前登录主体则回发 ERROR 帧（code 1009 `UPLOAD_DENIED`）丢弃该帧不断流，SSE 与 WebSocket 两种传输统一覆盖；Controller 不做任何校验编排）。业务侧可注册自定义 `IUploadGuard` Bean 叠加或替换默认守卫（未注册任何守卫时上行全放行）。
+- **订阅鉴权**：订阅点按授权集判定（见 2.2.4/3.2），未注册 `ISubscriptionAuthorizer` 时全放行（向后兼容无鉴权部署）；保留前缀 `tbs.push.channel.*` 无论授权集如何配置都拒绝客户端通配订阅。
+- **服务端主动关闭能力**：传输适配器契约 `ITransportAdapter` 覆盖「建连→上下行→主动/被动关闭」全链路，`closeSession(sessionId, reason)` 一次调用完成物理拆除与清理链（注销→订阅清理→断开拦截器），不依赖事件回传——适用于 token 实际失效、无心跳场景踢线、管理踢线等业务场景（关闭原因常量见 `PushFrameConstants`，如 `token-expired`）；心跳超时监控已走本链路。清理链幂等门禁为注册表注销的原子唯一性，主动关闭与通道事件回传竞态时仅一方执行清理，业务侧可放心双入口调用。
+- **数据面独立安全**：消息拉取接口（`/private/push/message/list` 等）按认证主体过滤，只返回本人收件箱消息——即使信令面配置不当，消息内容也不会串号。
+- 发布接口 `/private/push/send` 仅要求登录，**无细粒度权限校验**——任何登录用户都能向任意 topic 发消息（接收人由后端按 topic 解析）。生产环境若要收敛，建议在业务层加管理员权限校验，或拆分出独立发布端点。
 - ticket 为一次性 + 60s 短时效 + 服务端原子消费，具备防重放能力；不要在日志中输出 ticket/token 原文（后端已做脱敏）。
 - payload 经消息源与投递链路，**不要放置敏感明文**（密码、密钥等）。
-- 自定义 topic 建议遵循命名空间约定（`global.system.*` 系统保留、`global.biz.{业务}.*` 业务自用），避免与系统通知主题冲突。
+- 自定义 topic 建议遵循命名空间约定（`tbs.push.channel.*` 信令保留、`global.system.*` 系统保留、`global.biz.{业务}.*` 业务自用），并通过授权白名单/SPI 显式授权后才可订阅。
 
 ### 5.2 浏览器与网络兼容性
 
@@ -404,6 +419,7 @@ curl -X POST http://host:8080/private/push/sse/upload \
 | 状态一直停在「连接中」 | ① Network 看 `POST /private/push/auth` 是否 200（401 → 登录过期，重新登录）；② 看 `GET /private/push/sse/connect` 的 HTTP 状态与响应头 `Content-Type: text/event-stream`（401 → 未带 Authorization 头，检查是否用了原生 EventSource；404/404* → 后端 `tbs.push.enable=true` 且 `transport=sse`）；③ 控制台搜 `[push]` 告警 |
 | auth 成功但收不到 hello | 确认 SSE 响应未被代理缓冲（见 5.2）；确认 ticket 在 60s 内使用且为首次使用 |
 | 收不到业务消息 | ① 发送方响应是否成功——payload 违反强约束契约（缺 id/type、type/priority 非白名单值）会在**发布时即报错**（错误文案 `push.notify.*`）；② 发送成功的响应里 `onlineCount` 是否 ≥1（=0 → 目标不在线，属正常丢失，见 5.3）；③ 订阅与发布 topic 是否匹配（注意通配符级别）；④ 接收端控制台是否有 `[push] 业务消息缺少必填字段 id/type`——仅历史/旁路消息可能出现，正常发布已被强约束拦截 |
+| 订阅返回 code 1008 被拒 | 主题不在签票下发的 `grantedTopics` 授权集内：检查 `tbs.push.grant-public-topics` 配置或业务 `IPushTopicGranter` 扩展是否覆盖该主题；授权变更前签发的旧票不含新授权，需重新 auth 换票重连；`tbs.push.channel.*` 前缀主题只允许精确本人频道（且服务端已自动订阅） |
 | 消息弹了两次 | ① 是否绕过 store 的去重直接调用了 `initPush`（onMessage 没做去重且返回 true）；② 自研处理器是否重复注册；③ 前端已有 id 去重，检查是否多页面各自建连 |
 | 反复「重连中」不恢复 | ① 后端是否重启（恢复后应自动连上）；② auth 是否持续 401（令牌过期）；③ 退避已到 30s 封顶，看服务端会话与网关超时配置（见 5.2） |
 | 登出后仍在收消息 | 确认 `logout` 中 `dispatch('push/stopConnection', null, { root: true })` 未被删改（namespaced 跨模块必须带 root） |
@@ -431,10 +447,11 @@ curl -X POST http://host:8080/private/push/sse/upload \
 | `tbs.push.transport` | `websocket` | 传输选择（`sse` / `websocket`，互斥装配） |
 | `tbs.push.heartbeat-timeout-millis` | `90000` | 服务端会话空闲超时（本项目配置 600000） |
 | `tbs.push.auth.ticket-ttl-millis` | `60000` | 一次性建连凭证有效期 |
+| `tbs.push.grant-public-topics` | `global.broadcast` | 签票授权集的公共主题白名单（支持订阅侧通配模式，业务 `IPushTopicGranter` 可另行扩展） |
 | `tbs.push.memory-message-capacity` | `10000` | 内存消息源容量上限 |
 | `tbs.push.memory-record-capacity` | `10000` | 内存投递记录容量上限 |
 | `tbs.web.auth.token-source` | `HEADER` | 登录令牌来源（HEADER/COOKIE/PARAM/BODY） |
 | `tbs.web.auth.token-filed-name` | `Authorization` | 登录令牌字段名 |
 | `tbs.web.secured-paths` | `/api/**` | 网关受保护路径（本项目覆盖为 `/private/**` 等） |
 
-前端连接默认参数见 `app-ui-vue/src/push/push-message.js` 的 `PUSH_DEFAULTS`（心跳 30s、退避 1s→30s+抖动 1s），可在 `initPush({ config })` 逐项覆盖。
+前端连接默认参数见 `app-ui-vue/src/push/push-message.js` 的 `PUSH_DEFAULTS`（心跳 30s、心跳连续失败阈值 3、退避 1s→30s+抖动 1s），可在 `initPush({ config })` 逐项覆盖。

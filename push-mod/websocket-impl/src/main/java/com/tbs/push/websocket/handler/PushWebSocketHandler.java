@@ -1,17 +1,14 @@
 package com.tbs.push.websocket.handler;
 
 import com.tbs.push.api.exception.PushProtocolException;
-import com.tbs.push.api.frame.IPushCodec;
-import com.tbs.push.api.intercept.IConnectionInterceptor;
-import com.tbs.push.api.session.ISessionRegistry;
+import com.tbs.push.api.transport.ITransportAdapter;
 import com.tbs.push.constants.PushFrameConstants;
 import com.tbs.push.constants.PushI18nConstant;
-import com.tbs.push.impl.auth.PushCredentialService;
-import com.tbs.push.impl.protocol.PushFrameProcessor;
-import com.tbs.push.model.auth.PushCredential;
+import com.tbs.push.websocket.adapter.WebSocketTransportAdapter;
 import com.tbs.push.websocket.session.WebSocketSessionWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
@@ -20,21 +17,15 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 import java.io.IOException;
 import java.net.URLDecoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * 推送WebSocket帧处理器
  * <p>
- * WebSocket连接生命周期的适配入口，与SSE共用协议层的统一连接建立流程：
- * <ul>
- *     <li>连接建立：从握手URL提取 push-ticket → 原子消费凭证（一次性防重放）→
- *     以预分配sessionId包装会话、注入认证属性、登记注册表 → 下发统一ACK帧进入可用态；
- *     凭证校验失败按策略关闭（1008）</li>
- *     <li>文本消息：刷新活性后委托协议层{@link PushFrameProcessor}处理（心跳/订阅/数据/可选版本确认）</li>
- *     <li>连接关闭：注销会话、触发断开拦截器（订阅清理由协议层注册表完成）</li>
- * </ul>
- * 协议校验逻辑全部在协议层完成，本类不感知帧语义。
+ * WebSocket容器事件的薄壳转接层：本类只做容器语境的物理动作（URL凭证提取、
+ * 容器会话属性位反查、物理通道关闭），全部链路语义转接
+ * {@link ITransportAdapter}全链路契约——建立走establish、上行默认走
+ * acceptUpstreamText契约口（与SSE同一路径）、被动关闭走onChannelClosed
+ * （与主动关闭共享幂等门禁）。不持有注册表/拦截器/帧处理器等编排依赖。
  * </p>
  *
  * @author abstergo
@@ -45,83 +36,42 @@ public class PushWebSocketHandler extends TextWebSocketHandler {
     private static final Logger log = LoggerFactory.getLogger(PushWebSocketHandler.class);
 
     /**
-     * 协议编解码器
+     * 传输适配器延迟获取（transport条件未命中或业务覆盖装配时缺失，容器动作静默拒绝）
      */
-    private final IPushCodec codec;
-
-    /**
-     * 会话注册表
-     */
-    private final ISessionRegistry sessionRegistry;
-
-    /**
-     * 连接拦截器链
-     */
-    private final IConnectionInterceptor interceptorChain;
-
-    /**
-     * 协议帧处理器
-     */
-    private final PushFrameProcessor frameProcessor;
-
-    /**
-     * 连接凭证服务
-     */
-    private final PushCredentialService credentialService;
-
-    /**
-     * 本处理器产出的全部会话包装（供适配器stop时统一关闭）
-     */
-    private final Set<WebSocketSessionWrapper> sessions = ConcurrentHashMap.newKeySet();
+    private final ObjectProvider<ITransportAdapter> transportProvider;
 
     /**
      * 构造推送WebSocket帧处理器
      *
-     * @param codec             协议编解码器
-     * @param sessionRegistry   会话注册表
-     * @param interceptorChain  连接拦截器链
-     * @param frameProcessor    协议帧处理器
-     * @param credentialService 连接凭证服务
+     * @param transportProvider 传输适配器提供者
      */
-    public PushWebSocketHandler(IPushCodec codec, ISessionRegistry sessionRegistry,
-        IConnectionInterceptor interceptorChain, PushFrameProcessor frameProcessor,
-        PushCredentialService credentialService) {
-        this.codec = codec;
-        this.sessionRegistry = sessionRegistry;
-        this.interceptorChain = interceptorChain;
-        this.frameProcessor = frameProcessor;
-        this.credentialService = credentialService;
+    public PushWebSocketHandler(ObjectProvider<ITransportAdapter> transportProvider) {
+        this.transportProvider = transportProvider;
     }
 
     /**
-     * 连接建立回调：凭证校验 → 预分配会话登记 → 统一ACK
+     * 连接建立回调：提取握手凭证 → 适配器统一建立编排；凭证校验失败按策略关闭
      *
      * @param session 底层WebSocket会话
      */
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
-        String ticket;
-        PushCredential credential;
-        try {
-            ticket = extractTicket(session);
-            credential = credentialService.consume(ticket);
-        } catch (PushProtocolException error) {
-            log.warn("WebSocket连接凭证校验失败, uri:{}", session.getUri(), error);
+        ITransportAdapter adapter = transportProvider.getIfAvailable();
+        if (adapter == null) {
+            log.error("WebSocket传输适配器未装配, 拒绝连接, uri:{}", session.getUri());
             closeQuietly(session);
             return;
         }
-        WebSocketSessionWrapper wrapper =
-            new WebSocketSessionWrapper(credential.getSessionId(), session, codec, credential.getAttributes());
-        sessions.add(wrapper);
-        sessionRegistry.register(wrapper);
-        interceptorChain.onConnect(wrapper);
-        wrapper.markConnected();
-        frameProcessor.sendHelloAck(wrapper);
-        log.info("WebSocket连接建立, sessionId:{}", wrapper.getSessionId());
+        try {
+            adapter.establish(extractTicket(session), session);
+        } catch (PushProtocolException error) {
+            log.warn("WebSocket连接凭证校验失败, uri:{}", session.getUri(), error);
+            closeQuietly(session);
+        }
     }
 
     /**
-     * 文本消息回调：刷新活性并委托协议层处理
+     * 文本消息回调：反查统一会话后转接上行契约口
      *
      * @param session 底层WebSocket会话
      * @param message 文本消息
@@ -133,12 +83,14 @@ public class PushWebSocketHandler extends TextWebSocketHandler {
             log.warn("收到未注册会话的文本消息, 忽略, uri:{}", session.getUri());
             return;
         }
-        wrapper.touch();
-        frameProcessor.handleText(wrapper, message.getPayload());
+        ITransportAdapter adapter = transportProvider.getIfAvailable();
+        if (adapter != null) {
+            adapter.acceptUpstreamText(wrapper.getSessionId(), message.getPayload());
+        }
     }
 
     /**
-     * 传输异常回调：记录并关闭该会话（不影响其他连接）
+     * 传输异常回调：记录并关闭该会话（不影响其他连接，清理经关闭回调统一触发）
      *
      * @param session 底层WebSocket会话
      * @param error   传输异常
@@ -154,7 +106,7 @@ public class PushWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * 连接关闭回调：注销会话并触发断开拦截器
+     * 连接关闭回调：被动关闭事件回传契约入口（幂等门禁去重主动关闭已完成的清理）
      *
      * @param session 底层WebSocket会话
      * @param status  关闭状态
@@ -165,23 +117,10 @@ public class PushWebSocketHandler extends TextWebSocketHandler {
         if (wrapper == null) {
             return;
         }
-        sessions.remove(wrapper);
-        sessionRegistry.unregister(wrapper.getSessionId());
-        interceptorChain.onDisconnect(wrapper, String.valueOf(status.getCode()));
-        log.info("WebSocket连接关闭, sessionId:{}, status:{}", wrapper.getSessionId(), status);
-    }
-
-    /**
-     * 关闭本处理器管理的全部会话（服务端优雅停机）
-     *
-     * @param reason 关闭原因标识
-     */
-    public void closeAll(String reason) {
-        for (WebSocketSessionWrapper wrapper : sessions) {
-            wrapper.close(reason);
-            sessionRegistry.unregister(wrapper.getSessionId());
+        ITransportAdapter adapter = transportProvider.getIfAvailable();
+        if (adapter != null) {
+            adapter.onChannelClosed(wrapper.getSessionId(), String.valueOf(status.getCode()));
         }
-        sessions.clear();
     }
 
     /**
@@ -205,18 +144,14 @@ public class PushWebSocketHandler extends TextWebSocketHandler {
     }
 
     /**
-     * 按底层会话id解析会话包装（预分配sessionId与容器id解耦后需遍历匹配）
+     * 从容器会话属性位反查统一会话包装（建立时由适配器登记）
      *
      * @param session 底层WebSocket会话
      * @return 会话包装，不存在时返回null
      */
     private WebSocketSessionWrapper resolveWrapper(WebSocketSession session) {
-        for (WebSocketSessionWrapper wrapper : sessions) {
-            if (wrapper.getWebSocketSession() == session) {
-                return wrapper;
-            }
-        }
-        return null;
+        Object wrapper = session.getAttributes().get(WebSocketTransportAdapter.SESSION_ATTR_KEY);
+        return wrapper instanceof WebSocketSessionWrapper ? (WebSocketSessionWrapper) wrapper : null;
     }
 
     /**

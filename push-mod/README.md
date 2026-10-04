@@ -65,8 +65,9 @@ AbstractPushDispatcher 分发编排（模板：目标解析 → 逐会话投递 
   ▼
 ISessionRegistry 会话注册表（全部在线 IConnectionSession 单点登记）
   │
-  ├─ websocket-impl：TextWebSocketHandler → WebSocketSessionWrapper
-  └─ sse-impl：SseEmitter 下行 + /private/push/sse/upload HTTP POST 上行 → SseSessionWrapper
+  ├─ websocket-impl：TextWebSocketHandler → WebSocketTransportAdapter（establish/acceptUpstreamText/closeSession）→ WebSocketSessionWrapper
+  └─ sse-impl：SseEmitter 下行 + /private/push/sse/upload HTTP POST 上行 → SseTransportAdapter → SseSessionWrapper
+  │    （两适配器共用协议层 PushConnectionOrchestrator：建立编排/上行分发/清理链幂等门禁）
   │
   ▼
 IDeliveryRecordStore 投递记录（每次投递动作完整留痕，投递一次即可、失败不重试）
@@ -97,6 +98,20 @@ WebSocket 与 SSE 共用同一套"认证 → 建连 → ACK"流程，仅建连�
 ```
 
 认证端点为薄壳控制器：逻辑全部在协议层 `PushCredentialService`，两个 impl 各持一个互斥的 MVC 壳，端点路径取自协议层常量 `PushFrameConstants.AUTH_PATH`。
+
+### 传输适配器全链路契约（ITransportAdapter）
+
+`ITransportAdapter` 定位是覆盖「建立连接 → 上下行传输 → 主动/被动关闭」的全链路能力门面，每种传输一个实现；流程编排全部收拢在协议层 `PushConnectionOrchestrator`（跨传输行为唯一实现），适配器只做物理通道构造与传输语境的快速失败断言：
+
+| 契约方法 | 语义 |
+| --- | --- |
+| `establish(ticket, physicalChannel)` | 消费凭证并按统一编排建立会话（注册 → 拦截器链 → 置可用 → ACK） |
+| `acceptUpstream` / `acceptUpstreamText` | 上行契约唯一受理口；WebSocket 容器文本事件也默认转接本口，跨传输上行语义一致 |
+| `closeSession(sessionId, reason)` | 服务端主动关闭（token 过期、心跳超时、管理踢线等），物理拆除与清理链一次调用闭环，不依赖事件回传 |
+| `onChannelClosed(sessionId, reason)` | 物理通道关闭的事件回传入口，与主动关闭共享幂等门禁 |
+| `stop()` | 优雅关停，按注册表全扫描逐个主动关闭 |
+
+清理链（注销 → 订阅清理 → 断开拦截器）的幂等门禁是注册表注销的原子唯一性（`ISessionRegistry.unregister` 首次移除成功方）——主动关闭与通道事件回传双入口竞态时仅一方执行清理，杜绝订阅泄漏。
 
 ## 快速开始
 
@@ -181,6 +196,8 @@ public void notifyOrder(String orderNo) {
 | 1005 | SESSION_NOT_FOUND | 会话不存在（SSE 上行失效） | HTTP 错误响应 |
 | 1006 | NOT_CONNECTED | 未完成握手即发 DATA | 否 |
 | 1007 | INTERNAL_ERROR | 服务端内部错误 | 否 |
+| 1008 | SUBSCRIBE_DENIED | 订阅主题不在签票授权集内（越权订阅） | 否 |
+| 1009 | UPLOAD_DENIED | 上行帧未通过协议层守卫链（IUploadGuard，如会话归属校验） | 否 |
 
 ### 协议层职责边界
 
@@ -193,7 +210,7 @@ public void notifyOrder(String orderNo) {
 - **发布即入源**：`publish` 先将消息写入消息源，再触发一轮即时分发；未及时取出的消息由调度驱动兜底补发一轮；
 - **投递一次即可**：`fetchPending` 取出即占用（原子），同一条消息不会被重复分发；发送失败仅记 `FAILED` 投递记录，不做重试；
 - **完整留痕**：每次投递动作（含无目标场景 `NO_SUBSCRIBER`）均写一条 `DeliveryRecord`（messageId/topic/sessionId/transport/result/deliverTime/errorMessage）；
-- **死连接防护**：会话关闭时由注册表注销并清理全部 topic 订阅；心跳空闲超时（`HeartbeatMonitor`）统一判定并关闭。
+- **死连接防护**：会话关闭时由注册表注销并清理全部 topic 订阅；心跳空闲超时（`HeartbeatMonitor`）统一判定，经 `ITransportAdapter.closeSession` 走完整主动关闭链（物理拆除 + 注销 + 订阅清理 + 断开拦截器，不依赖半开连接不可靠的事件回传）。
 
 ## SSE 组合通道
 
@@ -317,8 +334,8 @@ com.tbs.push                                  （push-api：协议规范层）
 ├── api/
 │   ├── auth/                IPushAuthenticator / IPushCredentialStore / AbstractPushCredentialStore（连接认证与凭证存储契约）
 │   ├── frame/               IPushCodec（编解码 SPI）
-│   ├── session/             IConnectionSession / ISessionRegistry / ITopicRegistry
-│   ├── transport/           ITransportAdapter / IPushEndpoint / IUpstreamListener
+│   ├── session/             IConnectionSession / ISessionRegistry / ITopicRegistry / IUploadGuard（上行守卫SPI）
+│   ├── transport/           ITransportAdapter（全链路能力契约）/ IPushEndpoint / IUpstreamListener
 │   ├── dispatch/            IPushDispatcher / AbstractPushDispatcher（分发编排模板）
 │   ├── store/               IPushMessageStore / AbstractPushMessageStore（消息源契约）
 │   ├── coordinator/         IRouteCoordinator（投递协调器 SPI）
@@ -334,21 +351,22 @@ com.tbs.push                                  （push-api：协议规范层）
 └── impl/                    JsonPushCodec、InMemoryPushMessageStore、InMemoryDeliveryRecordStore、
                              InMemoryCredentialStore、NoopAuthenticator、PushCredentialService、
                              DefaultSessionRegistry、DefaultTopicRegistry、TopicRouteCoordinator、
-                             PushFrameProcessor、DefaultPushDispatcher、DefaultPushEndpoint、
+                             PushFrameProcessor、PushConnectionOrchestrator（连接生命周期编排）、
+                             DefaultPushDispatcher、DefaultPushEndpoint、
                              EmbeddedPushScheduler、PushDispatchBackgroundJob、HeartbeatMonitor、
                              ConnectionInterceptorChain、NoopConnectionInterceptor
 
 com.tbs.push.websocket        （websocket-impl：WebSocket 传输适配）
 ├── annotation/              @EnableTbsPushWebSocket（含抽象层装配范围）
-├── adapter/                 WebSocketTransportAdapter（生命周期与能力声明）
+├── adapter/                 WebSocketTransportAdapter（全链路契约实现：establish/acceptUpstream/closeSession）
 ├── controller/              WsPushAuthController（认证薄壳，transport=websocket 互斥激活）
-├── handler/                 PushWebSocketHandler（ticket 消费 + 生命周期适配，协议逻辑全部委托协议层）
+├── handler/                 PushWebSocketHandler（容器事件薄壳，物理动作转接适配器契约口，协议逻辑全部委托协议层）
 ├── session/                 WebSocketSessionWrapper（统一会话包装，预分配 sessionId）
 └── config/                  WebSocketPushAutoRegister / WebSocketPushConfig / property/WebSocketPushProperty
 
 com.tbs.push.sse              （sse-impl：SSE 组合通道适配）
 ├── annotation/              @EnableTbsPushSse（含抽象层装配范围）
-├── adapter/                 SseTransportAdapter（connect(ticket)/uploadText + 清理回调）
+├── adapter/                 SseTransportAdapter（全链路契约实现：connect便捷入口/establish/acceptUpstream/emitter回调转接onChannelClosed）
 ├── session/                 SseSessionWrapper（统一会话包装，预分配 sessionId）
 ├── controller/              SsePushAuthController（认证薄壳）与 SsePushController（connect/upload 端点）、SseUploadForm
 └── config/                  SsePushAutoRegister / SsePushConfig

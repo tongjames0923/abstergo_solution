@@ -2,9 +2,11 @@ package com.tbs.push.impl.session;
 
 import com.tbs.push.api.session.IConnectionSession;
 import com.tbs.push.api.session.ISessionRegistry;
+import com.tbs.push.api.transport.ITransportAdapter;
 import com.tbs.push.constants.PushFrameConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -41,6 +43,11 @@ public class HeartbeatMonitor {
     private final long heartbeatTimeoutMillis;
 
     /**
+     * 传输适配器延迟获取（存在时主动关闭走完整清理链，缺失时退化为基线动作）
+     */
+    private final ObjectProvider<ITransportAdapter> transportProvider;
+
+    /**
      * 检查线程
      */
     private ScheduledExecutorService scheduler;
@@ -50,10 +57,13 @@ public class HeartbeatMonitor {
      *
      * @param sessionRegistry        会话注册表
      * @param heartbeatTimeoutMillis 空闲超时（毫秒），非正数表示关闭监控
+     * @param transportProvider      传输适配器提供者（超时会话经其主动关闭，清理链完整闭环）
      */
-    public HeartbeatMonitor(ISessionRegistry sessionRegistry, long heartbeatTimeoutMillis) {
+    public HeartbeatMonitor(ISessionRegistry sessionRegistry, long heartbeatTimeoutMillis,
+        ObjectProvider<ITransportAdapter> transportProvider) {
         this.sessionRegistry = sessionRegistry;
         this.heartbeatTimeoutMillis = heartbeatTimeoutMillis;
+        this.transportProvider = transportProvider;
     }
 
     /**
@@ -87,14 +97,25 @@ public class HeartbeatMonitor {
 
     /**
      * 扫描并关闭空闲超时会话（异常安全，保证调度线程存活）
+     * <p>
+     * 优先经传输适配器主动关闭：物理拆除+清理链（注销/订阅清理/断开拦截器）
+     * 一次闭环——超时的半开连接事件回传不可靠，不能依赖其触发清理；
+     * 适配器缺失（传输未装配）时退化为直接关闭与基线注销。
+     * </p>
      */
     private void checkIdleSessions() {
         try {
             long now = System.currentTimeMillis();
+            ITransportAdapter adapter = transportProvider.getIfAvailable();
             for (IConnectionSession session : sessionRegistry.all()) {
-                if (now - session.getLastActiveTime() > heartbeatTimeoutMillis) {
-                    log.warn("会话心跳空闲超时, sessionId:{}, transport:{}", session.getSessionId(),
-                        session.getTransportType());
+                if (now - session.getLastActiveTime() <= heartbeatTimeoutMillis) {
+                    continue;
+                }
+                log.warn("会话心跳空闲超时, sessionId:{}, transport:{}", session.getSessionId(),
+                    session.getTransportType());
+                if (adapter != null) {
+                    adapter.closeSession(session.getSessionId(), PushFrameConstants.CLOSE_REASON_HEARTBEAT_TIMEOUT);
+                } else {
                     session.close(PushFrameConstants.CLOSE_REASON_HEARTBEAT_TIMEOUT);
                     sessionRegistry.unregister(session.getSessionId());
                 }

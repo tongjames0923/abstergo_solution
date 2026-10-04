@@ -1,4 +1,5 @@
 import { EventSourcePolyfill } from 'event-source-polyfill'
+import { getToken } from '@/utils/auth'
 import { pushAuth, pushSubscribe, pushUnsubscribe, pushPing } from '@/api/push'
 import {
   PUSH_DEFAULTS,
@@ -25,6 +26,11 @@ export const CONNECTION_STATUS = {
  * 周期 PING 保活。一次性 ticket 被服务端原子消费，故断线后必须由 error 回调主动换票重连，
  * 不使用 EventSource 原生自动重连（会拿已失效 ticket 反复失败）。
  * <p>
+ * 登录态处理：每次建连（含重连）都实时取 getToken()，不依赖 connect 时的快照，
+ * 保证 token 无感刷新后重连仍用新令牌；pushAuth 因登录态失效被拒（拦截器标记 authExpired）
+ * 或本地已无 token 时停止重连，置 CLOSED 等待重新登录，避免过期凭证下的无效重连风暴；
+ * 心跳上行连续失败达 heartbeatMaxFailures 阈值即判定会话已死，主动关流转换票重连自愈。
+ * <p>
  * 主题与心跳/退避参数均可在 connect 时通过 options/config 覆盖（缺省取 PUSH_DEFAULTS），
  * 并提供 subscribeTopics/unsubscribeTopics 支持连接就绪后的动态增删主题。
  * </p>
@@ -45,6 +51,10 @@ class SsePushClient {
     // 主动关闭标记：登出/卸载时置位，阻止重连
     this.manualClose = false
     /**
+     * 心跳上行连续失败计数（成功后清零，达阈值判定会话已死）
+     */
+    this.heartbeatFailures = 0
+    /**
      * 当前订阅主题集合
      */
     this.topics = []
@@ -61,7 +71,7 @@ class SsePushClient {
    * @param {string} opts.token 当前登录令牌
    * @param {string|number} opts.userId 当前登录用户数字 id（用于缺省拼接 SIGNAL 频道 tbs.push.channel.{userId}）
    * @param {string|Array<string>} [opts.topics] 订阅主题（缺省为 topicPrefix + userId）
-   * @param {Object} [opts.config] 配置覆盖项（心跳周期/退避参数/主题前缀，见 PUSH_DEFAULTS）
+   * @param {Object} [opts.config] 配置覆盖项（心跳周期/心跳失败阈值/退避参数/主题前缀，见 PUSH_DEFAULTS）
    * @param {Function} [opts.onStatus] 连接状态变更回调 (status) => void
    * @param {Function} [opts.onSignal] 收到 SIGNAL 信令或建连成功（hello 兜底）回调 () => void，用于触发拉取
    */
@@ -123,10 +133,21 @@ class SsePushClient {
     }
     this._clearReconnect()
     this._setStatus(this.reconnectAttempts > 0 ? CONNECTION_STATUS.RECONNECTING : CONNECTION_STATUS.CONNECTING)
+    // 每次建连都实时取登录态令牌：connect 时的 this.token 仅作兜底，
+    // token 无感刷新后的重连若还用旧快照，SSE 建连必被网关拒绝且永不自愈
+    const token = getToken() || this.token
+    this.token = token
     let credential
     try {
       credential = await pushAuth(this.token, this.userId)
     } catch (e) {
+      // 登录态失效（拦截器刷新失败后标记 authExpired）：停止换票重连，等待重新登录
+      if (e && e.authExpired) {
+        console.warn('[push] 登录态已失效，停止推送重连，等待重新登录')
+        this._stopHeartbeat()
+        this._setStatus(CONNECTION_STATUS.CLOSED)
+        return
+      }
       console.warn('[push] 认证签票据失败，准备重连', e)
       this._scheduleReconnect()
       return
@@ -214,11 +235,24 @@ class SsePushClient {
 
   _startHeartbeat() {
     this._stopHeartbeat()
+    this.heartbeatFailures = 0
     this.heartbeatTimer = setInterval(() => {
       if (!this.sessionId) {
         return
       }
-      pushPing(this.sessionId).catch(e => console.warn('[push] 心跳上行失败', e))
+      pushPing(this.sessionId).then(() => {
+        this.heartbeatFailures = 0
+      }).catch(e => {
+        console.warn('[push] 心跳上行失败', e)
+        this.heartbeatFailures++
+        // 连续失败达阈值：会话大概率已被服务端回收（如认证失效），下行流虽开着但上行全死，
+        // 不能停留在 CONNECTED，主动关流转换票重连自愈
+        if (this.heartbeatFailures >= this.config.heartbeatMaxFailures) {
+          console.warn('[push] 心跳连续失败达阈值，判定会话已死，关流换票重连')
+          this._closeStream()
+          this._scheduleReconnect()
+        }
+      })
     }, this.config.heartbeatInterval)
   }
 
@@ -233,7 +267,15 @@ class SsePushClient {
     if (this.manualClose) {
       return
     }
+    // 本地已无令牌（登出/会话被清）：无凭证可换，停止重连，避免过期态下无限退避循环
+    if (!getToken()) {
+      console.warn('[push] 本地登录态不存在，停止推送重连')
+      this._stopHeartbeat()
+      this._setStatus(CONNECTION_STATUS.CLOSED)
+      return
+    }
     this._stopHeartbeat()
+    this.heartbeatFailures = 0
     this._setStatus(CONNECTION_STATUS.RECONNECTING)
     const { reconnectBaseDelay, reconnectMaxDelay, reconnectJitter } = this.config
     const delay = Math.min(reconnectMaxDelay, reconnectBaseDelay * Math.pow(2, this.reconnectAttempts)) +
@@ -279,6 +321,7 @@ class SsePushClient {
     this._clearReconnect()
     this._stopHeartbeat()
     this._closeStream()
+    this.heartbeatFailures = 0
     this._setStatus(CONNECTION_STATUS.CLOSED)
   }
 }

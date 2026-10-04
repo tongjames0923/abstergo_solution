@@ -152,7 +152,8 @@ class DefaultPushEndpointTest {
         }
 
         @Override
-        public void unregister(String sessionId) {
+        public boolean unregister(String sessionId) {
+            return false;
         }
 
         @Override

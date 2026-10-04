@@ -126,7 +126,11 @@ async function noLoginFunction(res) {
   )
   await store.dispatch('user/resetToken')
   location.reload()
-  return Promise.reject(new Error(res.message || i18n.t('login.sessionExpired')))
+  const error = new Error(res.message || i18n.t('login.sessionExpired'))
+  // 登录态失效标记：push 等长连接模块据此区分“凭证失效”与“网络失败”，
+  // 停止无效重连循环，等待重登
+  error.authExpired = true
+  return Promise.reject(error)
 }
 
 // response interceptor

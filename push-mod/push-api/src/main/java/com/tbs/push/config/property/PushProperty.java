@@ -3,6 +3,10 @@ package com.tbs.push.config.property;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 /**
  * 推送基础配置属性类
  * <p>
@@ -35,6 +39,12 @@ public class PushProperty {
     public static final int DEFAULT_MEMORY_RECORD_CAPACITY = 10_000;
 
     /**
+     * 默认公开可订阅主题白名单
+     */
+    public static final List<String> DEFAULT_GRANT_PUBLIC_TOPICS = Collections.unmodifiableList(
+        Collections.singletonList("global.broadcast"));
+
+    /**
      * 心跳空闲超时（毫秒）
      * <p>
      * 会话最近活性距今超过该值即判定为死连接并关闭注销；
@@ -58,5 +68,14 @@ public class PushProperty {
      * </p>
      */
     private int memoryRecordCapacity = DEFAULT_MEMORY_RECORD_CAPACITY;
+
+    /**
+     * 公开可订阅主题白名单
+     * <p>
+     * 授权集的配置层来源：内置授权器将这些主题模式（支持订阅侧通配符）
+     * 无条件授予全部认证会话，与本人专属频道等硬编码层合并为授权集。
+     * </p>
+     */
+    private List<String> grantPublicTopics = new ArrayList<>(DEFAULT_GRANT_PUBLIC_TOPICS);
 
 }
