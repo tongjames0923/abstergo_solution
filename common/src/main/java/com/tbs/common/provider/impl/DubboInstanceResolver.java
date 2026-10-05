@@ -215,6 +215,8 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
         state.refresh(lookupProviderUrls(interfaceType), refreshMillis);
         var aliveKeys = state.getProviderUrls().stream().map(this::instanceKeyOf).collect(Collectors.toSet());
         state.retainInstanceReferences(aliveKeys);
+        log.debug("[DubboResolver] 接口[{}]实例发现刷新完成, 提供者实例数: {}", interfaceType.getName(),
+            state.getProviderUrls().size());
         return state;
     }
 
@@ -293,6 +295,7 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
                     e.getMessage());
             }
         }
+        log.debug("[DubboResolver] 接口[{}]枚举Dubbo实例 {} 个", context.getTargetType().getName(), result.size());
         return result;
     }
 
@@ -315,6 +318,7 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
         }
         var state = getState(context.getTargetType());
         if (state.getProviderUrls().isEmpty()) {
+            log.debug("[DubboResolver] 接口[{}]当前无可用Dubbo提供者", context.getTargetType().getName());
             return Optional.empty();
         }
         try {

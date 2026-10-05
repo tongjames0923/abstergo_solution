@@ -185,6 +185,8 @@ public class RoutingServiceRegistrar
                         continue;
                     }
                     registerFactoryBean(registry, beanName, interfaceType, strategy);
+                    log.debug("[RoutingService] 注册路由代理Bean[{}], 接口: {}, 策略: {}", beanName, interfaceName,
+                        strategy);
                     count++;
                 } catch (ClassNotFoundException e) {
                     log.warn("@RoutingService接口类加载失败: {}", interfaceName);

@@ -69,6 +69,9 @@ public class DefaultObjectProvider implements IObjectProvider {
                 this.resolversBySource.putIfAbsent(resolver.getSource(), resolver);
             }
         }
+        log.debug("[ObjectProvider] 多来源解析链初始化: {}",
+            sorted.stream().map(r -> r.getSource() + "(order=" + r.getOrder() + ")")
+                .collect(java.util.stream.Collectors.joining(" -> ")));
     }
 
     /**
@@ -87,6 +90,8 @@ public class DefaultObjectProvider implements IObjectProvider {
             try {
                 var resolved = resolver.resolveOne(context);
                 if (resolved.isPresent()) {
+                    log.debug("[ObjectProvider] 单实例解析命中, 接口: {}, 来源: {}, 实例: {}",
+                        context.getTargetType().getName(), resolved.get().getSource(), resolved.get().getInstanceKey());
                     return resolved;
                 }
             } catch (Exception e) {
@@ -94,6 +99,8 @@ public class DefaultObjectProvider implements IObjectProvider {
                     context.getTargetType().getName(), e.getMessage());
             }
         }
+        log.debug("[ObjectProvider] 全部来源均未命中, 接口: {}, beanName: {}", context.getTargetType().getName(),
+            context.getBeanName());
         return Optional.empty();
     }
 
@@ -129,6 +136,11 @@ public class DefaultObjectProvider implements IObjectProvider {
                     e.getMessage());
             }
         }
+        if (log.isDebugEnabled()) {
+            log.debug("[ObjectProvider] 多来源枚举接口: {}, 共 {} 个实例: {}", type.getName(), result.size(),
+                result.stream().map(o -> o.getSource() + ":" + o.getInstanceKey())
+                    .collect(java.util.stream.Collectors.toList()));
+        }
         return result;
     }
 
@@ -162,8 +174,11 @@ public class DefaultObjectProvider implements IObjectProvider {
     private <T> T getOrCreateProxy(Class<T> interfaceType, RoutingStrategy strategy) {
         var cacheKey = interfaceType.getName() + "#" + strategy.name();
         return (T) proxyCache.computeIfAbsent(cacheKey,
-            key -> Proxy.newProxyInstance(interfaceType.getClassLoader(), new Class<?>[] {interfaceType},
-                new RoutingServiceProxy<>(interfaceType, strategy, this)));
+            key -> {
+                log.debug("[ObjectProvider] 构建路由代理, 接口: {}, 策略: {}", interfaceType.getName(), strategy);
+                return Proxy.newProxyInstance(interfaceType.getClassLoader(), new Class<?>[] {interfaceType},
+                    new RoutingServiceProxy<>(interfaceType, strategy, this));
+            });
     }
 
     @Override

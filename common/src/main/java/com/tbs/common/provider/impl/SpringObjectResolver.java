@@ -47,6 +47,8 @@ public class SpringObjectResolver implements IObjectResolver {
             if (RoutingServiceProxy.isRoutingProxy(bean)) {
                 return Collections.emptyList();
             }
+            log.debug("[SpringResolver] 按名称[{}]命中Bean, 接口: {}", context.getBeanName(),
+                context.getTargetType().getName());
             return Collections.singletonList(ResolvedObject.of(bean, ObjectSource.SPRING, context.getBeanName()));
         } catch (Exception e) {
             log.debug("Spring容器按名称解析Bean失败, beanName: {}, type: {}", context.getBeanName(),
@@ -71,10 +73,16 @@ public class SpringObjectResolver implements IObjectResolver {
             if (beans == null || beans.isEmpty()) {
                 return Collections.emptyList();
             }
-            return beans.entrySet().stream()
+            var results = beans.entrySet().stream()
                 .filter(entry -> !RoutingServiceProxy.isRoutingProxy(entry.getValue()))
                 .map(entry -> ResolvedObject.of(entry.getValue(), ObjectSource.SPRING, entry.getKey()))
                 .collect(java.util.stream.Collectors.toList());
+            if (log.isDebugEnabled()) {
+                log.debug("[SpringResolver] 容器命中 {} 个Bean, 接口: {}, Bean: {}", results.size(),
+                    context.getTargetType().getName(), results.stream().map(ResolvedObject::getInstanceKey)
+                        .collect(java.util.stream.Collectors.toList()));
+            }
+            return results;
         } catch (Exception e) {
             log.debug("Spring容器按类型解析Bean失败, type: {}", context.getTargetType().getName(), e);
             return Collections.emptyList();

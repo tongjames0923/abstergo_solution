@@ -136,6 +136,8 @@ public class RoutingServiceProxy<T> implements InvocationHandler {
             return null;
         }
         try {
+            log.debug("[RoutingProxy] 路由转发, 接口: {}, 方法: {}, 来源: {}, 实例: {}", interfaceType.getName(),
+                method.getName(), target.get().getSource(), target.get().getInstanceKey());
             return method.invoke(target.get().getInstance(), args);
         } catch (InvocationTargetException e) {
             throw e.getCause() == null ? e : e.getCause();
