@@ -2,7 +2,6 @@ package com.tbs.app.service.impl;
 
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.vo.SystemFeatureFlagVO;
-import com.tbs.common.provider.IObjectProvider;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.dic.entity.SystemDataDicItemEntity;
 import com.tbs.dic.enums.DataDicFlagEnum;
@@ -21,16 +20,7 @@ import java.util.stream.Collectors;
 public class FeatureFlagServiceImpl implements IFeatureFlagService {
 
     @Resource
-    private IObjectProvider objectProvider;
-
-    /**
-     * 解析数据字典服务：本地无实现时经 Dubbo 集群引用兜底
-     *
-     * @return 数据字典服务实例
-     */
-    private IDataDicService getDicService() {
-        return objectProvider.getObject(IDataDicService.class);
-    }
+    private IDataDicService dicService;
 
     @Override
     public boolean isEnableValue(String flagName, String value) {
@@ -56,7 +46,7 @@ public class FeatureFlagServiceImpl implements IFeatureFlagService {
     private @Nullable DicModel getDicModel() {
         DicModel dicModel = null;
         try {
-            var model = getDicService().getDicByCode("SYSTEM", true);
+            var model = dicService.getDicByCode("SYSTEM", true);
             if (CollUtil.isEmpty(model)) {
                 log.warn("未找到系统数据字典");
                 return null;
@@ -75,7 +65,7 @@ public class FeatureFlagServiceImpl implements IFeatureFlagService {
             log.warn("未找到系统数据字典");
             return;
         }
-        getDicService().enableDataDicItem("SYSTEM", flagName);
+        dicService.enableDataDicItem("SYSTEM", flagName);
     }
 
     @Override
@@ -85,12 +75,12 @@ public class FeatureFlagServiceImpl implements IFeatureFlagService {
             log.warn("未找到系统数据字典");
             return;
         }
-        getDicService().disableDataDicItem("SYSTEM", flagName);
+        dicService.disableDataDicItem("SYSTEM", flagName);
     }
 
     @Override
     public void addSystemFeatureFlag(SystemFeatureFlagVO systemFeatureFlagVO) {
-        getDicService().saveDataDicItem("SYSTEM", new SystemDataDicItemEntity(null, null, systemFeatureFlagVO.getFlagName(),
+        dicService.saveDataDicItem("SYSTEM", new SystemDataDicItemEntity(null, null, systemFeatureFlagVO.getFlagName(),
             systemFeatureFlagVO.getFlagValue(), systemFeatureFlagVO.getFlagDesc(), 0, null, null,
             DataDicFlagEnum.ENABLE.getCode()));
     }
@@ -113,7 +103,7 @@ public class FeatureFlagServiceImpl implements IFeatureFlagService {
             log.warn("未找到系统数据字典项:{}", systemFeatureFlagVO.getFlagName());
             return;
         }
-        getDicService().saveDataDicItem(dicModel.getDicCode(),
+        dicService.saveDataDicItem(dicModel.getDicCode(),
             new SystemDataDicItemEntity(item.getId(), dicModel.getDicCode(), systemFeatureFlagVO.getFlagName(),
                 systemFeatureFlagVO.getFlagValue(), systemFeatureFlagVO.getFlagDesc(), 0, null, null,
                 DataDicFlagEnum.ENABLE.getCode()));
@@ -121,7 +111,7 @@ public class FeatureFlagServiceImpl implements IFeatureFlagService {
 
     @Override
     public void deleteSystemFeatureFlag(String flagName) {
-        getDicService().deleteDataDicItem("SYSTEM", flagName);
+        dicService.deleteDataDicItem("SYSTEM", flagName);
     }
 
     @Override

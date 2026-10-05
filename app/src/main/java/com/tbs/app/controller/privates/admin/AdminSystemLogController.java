@@ -2,7 +2,6 @@ package com.tbs.app.controller.privates.admin;
 
 import com.tbs.logging.annotation.NoLog;
 import com.tbs.app.service.log.ISystemLogService;
-import com.tbs.common.provider.IObjectProvider;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordExtractForm;
@@ -28,16 +27,7 @@ import javax.annotation.Resource;
 public class AdminSystemLogController extends BaseController {
 
     @Resource
-    private IObjectProvider objectProvider;
-
-    /**
-     * 解析系统日志服务：本地无实现时经 Dubbo 集群引用兜底
-     *
-     * @return 系统日志服务实例
-     */
-    private ISystemLogService getSystemLogService() {
-        return objectProvider.getObject(ISystemLogService.class);
-    }
+    private ISystemLogService systemLogService;
 
     @Resource
     private ILogRecorder recorder;
@@ -55,7 +45,7 @@ public class AdminSystemLogController extends BaseController {
     @AjaxResponseType(Object.class)
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult listWithOpType() {
-        return successResult(getSystemLogService().getLogOperateTypeList(28));
+        return successResult(systemLogService.getLogOperateTypeList(28));
     }
 
     /**
@@ -72,7 +62,7 @@ public class AdminSystemLogController extends BaseController {
     @AjaxResponseType(Object.class)
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult getOperateTypes(@RequestParam(required = false) String keyword) {
-        return successResult(getSystemLogService().getOperateTypeList(keyword));
+        return successResult(systemLogService.getOperateTypeList(keyword));
     }
 
     /**
@@ -89,7 +79,7 @@ public class AdminSystemLogController extends BaseController {
     @AjaxResponseType(PageVO.class)
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult listRecord(@RequestBody LoggingRecordExtractForm form) {
-        return successResult(getSystemLogService().getLogRecordList(form));
+        return successResult(systemLogService.getLogRecordList(form));
     }
 
     /**

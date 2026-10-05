@@ -4,6 +4,7 @@ import com.tbs.dic.entity.SystemDataDicEntity;
 import com.tbs.dic.entity.SystemDataDicItemEntity;
 import com.tbs.dic.enums.DataDicCompareEnum;
 import com.tbs.dic.model.DicModel;
+import com.tbs.common.provider.annotation.RoutingService;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  *
  * @author abstergo
  */
+@RoutingService
 public interface IDataDicService {
 
     /**
