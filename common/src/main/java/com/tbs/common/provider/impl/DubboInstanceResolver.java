@@ -220,6 +220,10 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
 
     /**
      * 构建指向指定实例的直连引用
+     * <p>
+     * 直连协议取自提供者实例 URL 自身（如 dubbo/tri），不能硬编码：
+     * 提供方可能以 Triple 协议导出，协议不匹配时直连引用构建成功但调用必然失败。
+     * </p>
      *
      * @param providerUrl 提供者实例 URL，不能为null
      * @param interfaceType 接口类型，不能为null
@@ -229,7 +233,7 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
     private <T> ReferenceConfig<T> buildInstanceReference(URL providerUrl, Class<T> interfaceType) {
         ReferenceConfig<T> reference = new ReferenceConfig<>();
         reference.setInterface(interfaceType);
-        reference.setUrl("dubbo://" + providerUrl.getHost() + ":" + providerUrl.getPort());
+        reference.setUrl(providerUrl.getProtocol() + "://" + providerUrl.getHost() + ":" + providerUrl.getPort());
         reference.setTimeout(property.getDubboTimeout());
         reference.setCheck(false);
         var group = providerUrl.getParameter(CommonConstants.GROUP_KEY);

@@ -59,8 +59,7 @@ public class PrivateDataHandleController extends BaseController {
     /**
      * 获取处理器选项列表
      * <p>
-     * 返回本地 Spring 容器中注册的全部 {@link ITableDataHandler} 选项（ID 与名称），
-     * 供前端下拉列表展示。Dubbo 远程处理器为按需发现，不在此列。
+     * 返回全部来源（Spring 本地 + Dubbo 远程）的 {@link ITableDataHandler} 选项，供前端下拉选择。
      * </p>
      *
      * @return 处理器选项列表
@@ -68,12 +67,12 @@ public class PrivateDataHandleController extends BaseController {
     @NoLog
     @AjaxResponseType(value = List.class, genericArgs = {HandlerOptionVO.class})
     @PreAuthorize("@preAuthUtils.accountActived")
-    @Operation(summary = "获取处理器选项列表", description = "返回本地注册的数据处理器选项列表，供前端下拉选择")
+    @Operation(summary = "获取处理器选项列表", description = "返回全部来源的数据处理器选项列表，含本地与远程")
     @ApiResponse(responseCode = "200", description = "处理器选项列表")
     @GetMapping("/handler/list")
     public AjaxResult listHandlers() {
-        List<HandlerOptionVO> options = handlerRegistry.getAllHandlers().stream()
-            .map(handler -> new HandlerOptionVO(handler.getId(), handler.getName()))
+        List<HandlerOptionVO> options = handlerRegistry.getAllResolvedHandlers().stream()
+            .map(r -> new HandlerOptionVO(r.getInstance().getId(), r.getInstance().getName()))
             .collect(Collectors.toList());
         return successResult(options);
     }
@@ -82,7 +81,7 @@ public class PrivateDataHandleController extends BaseController {
      * 校验处理器ID有效性
      * <p>
      * 用于前端"可选可输入"模式下校验自定义输入的 handlerId：
-     * 按"本地优先 → Dubbo 远程"顺序查找，返回可用性与命中来源。
+     * 通过 ObjectProvider 多来源枚举查找，返回可用性与命中来源。
      * </p>
      *
      * @param handlerId 处理器ID
@@ -102,13 +101,8 @@ public class PrivateDataHandleController extends BaseController {
             .i18n(FileProcessI18nConstant.DATA_HANDLE_HANDLER_ID_EMPTY)
             .throwIt();
 
-        ITableDataHandler handler = handlerRegistry.getHandler(handlerId);
-        if (handler == null) {
-            return successResult(new HandlerValidateVO(false, null));
-        }
-        boolean isLocal = handlerRegistry.getAllHandlers().stream()
-            .anyMatch(item -> item.getId().equals(handlerId));
-        return successResult(new HandlerValidateVO(true, isLocal ? "local" : "remote"));
+        String source = handlerRegistry.getHandlerSource(handlerId);
+        return successResult(new HandlerValidateVO(source != null, source));
     }
 
     /**

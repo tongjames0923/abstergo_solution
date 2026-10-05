@@ -1,160 +1,72 @@
 package com.tbs.app.data;
 
 import com.tbs.common.data.ITableDataHandler;
-import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.ApplicationConfig;
-import org.apache.dubbo.config.ReferenceConfig;
-import org.apache.dubbo.config.RegistryConfig;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
+import com.tbs.common.provider.IObjectProvider;
+import com.tbs.common.provider.ObjectSource;
+import com.tbs.common.provider.ResolvedObject;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Resource;
+import java.util.Collection;
+import java.util.Optional;
 
 /**
  * 表格数据处理器注册中心
  * <p>
- * 支持双模式查找：
- * <ul>
- *   <li><b>本地模式</b>（默认）：从 Spring 容器注入 {@code List<ITableDataHandler>}，
- *       按 {@link ITableDataHandler#getId()} 构建 Map，适用于单体架构</li>
- *   <li><b>Dubbo 远程模式</b>：通过 {@link ReferenceConfig} 动态创建 Dubbo 引用，
- *       以 handlerId 作为 group 从注册中心查找远程服务，适用于微服务架构</li>
- * </ul>
- * <p>
- * 查找顺序：本地优先 → Dubbo 远程（若启用）。Dubbo 代理创建后缓存于
- * {@link ConcurrentHashMap}，避免重复创建 {@link ReferenceConfig}。
- * </p>
- * <p>
- * 配置项：
- * <pre>
- * tbs.data.handler.remote.enable=true   # 启用 Dubbo 远程查找
- * tbs.data.handler.remote.timeout=10000 # Dubbo 引用超时（毫秒）
- * </pre>
+ * 基于 {@link IObjectProvider#getObjects(Class)} 统一枚举 Spring 本地 Bean 与 Dubbo 远程实例，
+ * 按 {@link ITableDataHandler#getId()} 精确匹配目标处理器。来源解析链天然 Spring 优先，
+ * 本地有实现时直取（零协议开销），无本地实现时自动降级到 Dubbo 发现。
  * </p>
  *
  * @author abstergo
  * @since 1.0.0
  */
-@Slf4j
 @Component
 public class TableDataHandlerRegistry {
 
-    /**
-     * 本地处理器列表（Spring 容器注入，单体架构下生效）
-     */
-    @Autowired(required = false)
-    private List<ITableDataHandler> localHandlers;
+    @Resource
+    private IObjectProvider objectProvider;
 
     /**
-     * Dubbo 应用配置（远程模式必需）
+     * 枚举全部来源的处理器（含来源元数据）
+     * <p>
+     * 返回 Spring 本地 Bean 与 Dubbo 注册中心发现实例的完整集合，顺序为 Spring 在前、Dubbo 在后。
+     * </p>
+     *
+     * @return 带来源元数据的处理器集合
      */
-    @Autowired(required = false)
-    private ApplicationConfig applicationConfig;
-
-    /**
-     * Dubbo 注册中心配置（远程模式必需）
-     */
-    @Autowired(required = false)
-    private RegistryConfig registryConfig;
-
-    /**
-     * 是否启用 Dubbo 远程查找
-     */
-    @Value("${tbs.data.handler.remote.enable:true}")
-    private boolean remoteEnabled;
-
-    /**
-     * Dubbo 引用超时时间（毫秒）
-     */
-    @Value("${tbs.data.handler.remote.timeout:10000}")
-    private int remoteTimeout;
-
-    /**
-     * 本地处理器映射（只读，线程安全）
-     */
-    private Map<String, ITableDataHandler> localHandlerMap;
-
-    /**
-     * Dubbo 远程处理器代理缓存（key 为 handlerId，线程安全）
-     */
-    private final ConcurrentHashMap<String, ITableDataHandler> remoteHandlerCache = new ConcurrentHashMap<>();
-
-    /**
-     * 初始化本地处理器映射
-     */
-    @PostConstruct
-    private void init() {
-        Map<String, ITableDataHandler> map = new HashMap<>();
-        if (localHandlers != null) {
-            for (ITableDataHandler handler : localHandlers) {
-                map.put(handler.getId(), handler);
-            }
-        }
-        this.localHandlerMap = Collections.unmodifiableMap(map);
-        log.info("TableDataHandlerRegistry 初始化完成，本地处理器数量：{}，远程模式：{}",
-            map.size(), remoteEnabled);
+    public Collection<ResolvedObject<ITableDataHandler>> getAllResolvedHandlers() {
+        return objectProvider.getObjects(ITableDataHandler.class);
     }
 
     /**
-     * 按ID查找处理器
+     * 按 ID 查找处理器
      * <p>
-     * 查找顺序：本地 Map → Dubbo 远程（若启用且本地未命中）。
-     * Dubbo 代理首次创建后缓存，后续直接返回缓存实例。
+     * 遍历全部来源解析结果，匹配 {@link ITableDataHandler#getId()}。
+     * 由于 getObjects 按 Spring → Dubbo 顺序返回，同 ID 本地实现优先命中。
      * </p>
      *
-     * @param id 处理器ID
+     * @param id 处理器 ID
      * @return 处理器实例，未找到返回 null
      */
     public ITableDataHandler getHandler(String id) {
-        ITableDataHandler local = localHandlerMap.get(id);
-        if (local != null) {
-            return local;
-        }
-        if (remoteEnabled && applicationConfig != null && registryConfig != null) {
-            return remoteHandlerCache.computeIfAbsent(id, this::createDubboReference);
-        }
-        return null;
+        return findResolved(id).map(ResolvedObject::getInstance).orElse(null);
     }
 
     /**
-     * 获取所有本地处理器
-     * <p>
-     * 仅返回本地 Spring 容器中的处理器，Dubbo 远程处理器为按需发现，不在此列。
-     * </p>
+     * 按 ID 查找处理器并判定来源
      *
-     * @return 不可变处理器集合
+     * @param id 处理器 ID
+     * @return "local" 或 "remote"，未找到返回 null
      */
-    public Collection<ITableDataHandler> getAllHandlers() {
-        return localHandlerMap.values();
+    public String getHandlerSource(String id) {
+        return findResolved(id).map(r -> r.isSource(ObjectSource.SPRING) ? "local" : "remote").orElse(null);
     }
 
     /**
-     * 创建 Dubbo 远程引用
-     * <p>
-     * 以 handlerId 作为 Dubbo group，创建 {@link ReferenceConfig} 并获取代理。
-     * 创建失败时记录警告日志并返回 null，不抛异常（由调用方处理 null）。
-     * </p>
-     *
-     * @param handlerId 处理器ID（作为 Dubbo group）
-     * @return Dubbo 代理实例，创建失败返回 null
+     * 内部复用：按 ID 从全量枚举中定位首个匹配的 ResolvedObject
      */
-    private ITableDataHandler createDubboReference(String handlerId) {
-        try {
-            ReferenceConfig<ITableDataHandler> reference = new ReferenceConfig<>();
-            reference.setApplication(applicationConfig);
-            reference.setRegistry(registryConfig);
-            reference.setInterface(ITableDataHandler.class);
-            reference.setGroup(handlerId);
-            reference.setTimeout(remoteTimeout);
-            ITableDataHandler handler = reference.get();
-            log.info("Dubbo 远程处理器引用创建成功，handlerId：{}", handlerId);
-            return handler;
-        } catch (Exception e) {
-            log.warn("Dubbo 远程处理器引用创建失败，handlerId：{}，原因：{}", handlerId, e.getMessage());
-            return null;
-        }
+    private Optional<ResolvedObject<ITableDataHandler>> findResolved(String id) {
+        return getAllResolvedHandlers().stream().filter(r -> id.equals(r.getInstance().getId())).findFirst();
     }
 }
