@@ -1,17 +1,12 @@
 package com.tbs.app.service.impl.push;
 
 import com.tbs.app.constant.SystemI18nConstant;
-import com.tbs.shared.pojo.entity.push.PushMessageEntity;
-import com.tbs.shared.pojo.entity.push.PushMessageOperationLogEntity;
-import com.tbs.shared.pojo.entity.push.PushMessageReceiverEntity;
 import com.tbs.app.enums.PushMessageOperationTypeEnum;
 import com.tbs.app.form.PushMessageOperateForm;
 import com.tbs.app.form.PushMessageQueryForm;
 import com.tbs.app.form.PushNotifySendForm;
-import com.tbs.shared.mapper.push.PushMessageMapper;
-import com.tbs.shared.mapper.push.PushMessageOperationLogMapper;
-import com.tbs.shared.mapper.push.PushMessageReceiverMapper;
 import com.tbs.app.service.push.INotifyReceiverResolver;
+import com.tbs.app.service.push.IPushMessageInterceptor;
 import com.tbs.app.service.push.IPushNotifyService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.vo.PushMessageChainVO;
@@ -24,6 +19,12 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.push.api.transport.IPushEndpoint;
+import com.tbs.shared.mapper.push.PushMessageMapper;
+import com.tbs.shared.mapper.push.PushMessageOperationLogMapper;
+import com.tbs.shared.mapper.push.PushMessageReceiverMapper;
+import com.tbs.shared.pojo.entity.push.PushMessageEntity;
+import com.tbs.shared.pojo.entity.push.PushMessageOperationLogEntity;
+import com.tbs.shared.pojo.entity.push.PushMessageReceiverEntity;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.TransactionUtil;
 import com.tbs.web.uitl.AuthUtil;
@@ -31,9 +32,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.support.TransactionTemplate;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.function.Function;
@@ -105,6 +104,12 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
     private PushMessageMapper pushMessageMapper;
 
     /**
+     * 消息拦截器列表（SPI 链式分派）
+     */
+    @Resource
+    private ObjectProvider<IPushMessageInterceptor> pushMessageInterceptorProviders;
+
+    /**
      * 推送消息接收人表 Mapper
      */
     @Resource
@@ -141,19 +146,6 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
     private ObjectProvider<IPushEndpoint> pushEndpointProvider;
 
     /**
-     * 编程式事务模板
-     */
-    private TransactionTemplate transactionTemplate;
-
-    /**
-     * 初始化编程式事务模板
-     */
-    @PostConstruct
-    public void initTransactionTemplate() {
-        this.transactionTemplate = new TransactionTemplate(transactionManager);
-    }
-
-    /**
      * 发送持久化通知（事务内三表原子落库，提交后发信令）
      *
      * @param form 发送表单
@@ -162,11 +154,18 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
     @Override
     public PushSendResultVO send(PushNotifySendForm form) {
         validateSendForm(form);
+        for (IPushMessageInterceptor interceptor : pushMessageInterceptorProviders) {
+            if (!interceptor.support(form)) {
+                continue;
+            }
+            form = interceptor.intercept(form);
+        }
         Date now = new Date();
         List<Long> receivers = resolveReceivers(form);
         PushMessageEntity entity = buildMessageEntity(form, now);
+        PushNotifySendForm finalForm = form;
         TransactionUtil.getInstance().executeTransaction(() -> {
-            doSend(entity, receivers, form, now);
+            doSend(entity, receivers, finalForm, now);
         });
         int signalCount = publishSignals(receivers);
         log.info("推送通知发送完成, messageId={}, topic={}, receiverCount={}, signalCount={}", entity.getId(),
@@ -242,12 +241,13 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
         Set<Long> alreadyRead = fetchReadTimes(operator, new ArrayList<>(ownedIds)).keySet();
         List<Long> toRecord = messageIds.stream().filter(id -> ownedIds.contains(id) && !alreadyRead.contains(id))
             .collect(Collectors.toList());
-        transactionTemplate.executeWithoutResult(status -> {
+        TransactionUtil.getInstance().executeTransaction(() -> {
             for (Long messageId : toRecord) {
                 pushMessageOperationLogMapper.insert(
                     buildOperationLog(messageId, operator, PushMessageOperationTypeEnum.READ, DEFAULT_SOURCE, now,
                         null));
             }
+
         });
         return toRecord.size();
     }
@@ -274,7 +274,7 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
         if (!ownedMessageIds(operator, Collections.singletonList(form.getMessageId())).contains(form.getMessageId())) {
             return 0;
         }
-        transactionTemplate.executeWithoutResult(status -> {
+        TransactionUtil.getInstance().executeTransaction(() -> {
             pushMessageOperationLogMapper.insert(buildOperationLog(form.getMessageId(), operator,
                 PushMessageOperationTypeEnum.fromValue(form.getOpType()), DEFAULT_SOURCE, now, form.getExtInfo()));
             if (PushMessageOperationTypeEnum.CLICK.getValue().equals(form.getOpType()) &&
