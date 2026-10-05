@@ -1,16 +1,16 @@
 package com.tbs.app.service.impl.push;
 
 import com.tbs.app.constant.SystemI18nConstant;
-import com.tbs.app.entity.push.PushMessageEntity;
-import com.tbs.app.entity.push.PushMessageOperationLogEntity;
-import com.tbs.app.entity.push.PushMessageReceiverEntity;
+import com.tbs.shared.pojo.entity.push.PushMessageEntity;
+import com.tbs.shared.pojo.entity.push.PushMessageOperationLogEntity;
+import com.tbs.shared.pojo.entity.push.PushMessageReceiverEntity;
 import com.tbs.app.enums.PushMessageOperationTypeEnum;
 import com.tbs.app.form.PushMessageOperateForm;
 import com.tbs.app.form.PushMessageQueryForm;
 import com.tbs.app.form.PushNotifySendForm;
-import com.tbs.app.mapper.push.PushMessageMapper;
-import com.tbs.app.mapper.push.PushMessageOperationLogMapper;
-import com.tbs.app.mapper.push.PushMessageReceiverMapper;
+import com.tbs.shared.mapper.push.PushMessageMapper;
+import com.tbs.shared.mapper.push.PushMessageOperationLogMapper;
+import com.tbs.shared.mapper.push.PushMessageReceiverMapper;
 import com.tbs.app.service.push.INotifyReceiverResolver;
 import com.tbs.app.service.push.IPushNotifyService;
 import com.tbs.app.service.user.ISystemUserService;
@@ -25,6 +25,7 @@ import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.push.api.transport.IPushEndpoint;
 import com.tbs.sql.service.QueryEngine;
+import com.tbs.sql.util.TransactionUtil;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
@@ -164,7 +165,9 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
         Date now = new Date();
         List<Long> receivers = resolveReceivers(form);
         PushMessageEntity entity = buildMessageEntity(form, now);
-        transactionTemplate.executeWithoutResult(status -> doSend(entity, receivers, form, now));
+        TransactionUtil.getInstance().executeTransaction(() -> {
+            doSend(entity, receivers, form, now);
+        });
         int signalCount = publishSignals(receivers);
         log.info("推送通知发送完成, messageId={}, topic={}, receiverCount={}, signalCount={}", entity.getId(),
             entity.getTopic(), receivers.size(), signalCount);

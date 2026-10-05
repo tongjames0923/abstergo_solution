@@ -1,8 +1,8 @@
 package com.tbs.app.config;
 
-import tk.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Configuration;
+import tk.mybatis.spring.annotation.MapperScan;
 
 /**
  * 推送消息中心实体与 Mapper 扫描配置
@@ -15,8 +15,8 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.0.0
  */
 @Configuration
-@MapperScan(basePackages = "com.tbs.app.mapper.push")
-@EntityScan(basePackages = "com.tbs.app.entity.push")
+@MapperScan(basePackages = "com.tbs.shared.mapper.push")
+@EntityScan(basePackages = "com.tbs.shared.pojo.entity.push")
 public class PushMessageScanConfig {
 
 }

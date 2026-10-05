@@ -1,6 +1,6 @@
-package com.tbs.app.mapper.push;
+package com.tbs.shared.mapper.push;
 
-import com.tbs.app.entity.push.PushMessageOperationLogEntity;
+import com.tbs.shared.pojo.entity.push.PushMessageOperationLogEntity;
 import com.tbs.sql.mapper.IFrameworkMapper;
 import org.apache.ibatis.annotations.Mapper;
 
