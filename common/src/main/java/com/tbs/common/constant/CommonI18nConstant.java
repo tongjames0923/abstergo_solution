@@ -88,4 +88,12 @@ public final class CommonI18nConstant {
      * SnowFlake 生成负数ID提示：SnowFlake 生成负数ID，时间戳溢出！tsDiff={0}, id={1}
      */
     public static final String SNOWFLAKE_NEGATIVE_ID = "snowflake.negative.id";
+
+    /* ===================== 多来源对象提供器相关 ===================== */
+
+    /**
+     * 路由代理未命中目标实例提示（仅基本类型返回值场景下抛出）：
+     * 未找到可用的服务实现，接口：{0}，路由策略：{1}，方法：{2}
+     */
+    public static final String ROUTING_TARGET_NOT_FOUND = "provider.routing.target.not.found";
 }
