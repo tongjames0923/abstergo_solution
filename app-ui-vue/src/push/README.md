@@ -73,14 +73,16 @@ views/push/notify-admin/components/NotifyPreviewCard.vue ──> push/message-di
 登录成功（user/getInfo）
   └─> dispatch('push/startConnection', null, { root: true })
         └─> store action 委托门面 initPush({ token, userId, onStatus, onSignal })
-              ├─> POST /private/push/auth        # 换一次性 ticket（TTL 60s）
+              ├─> POST /private/push/auth        # 换一次性 ticket（TTL 60s），每次建连实时取 getToken()
               ├─> EventSource /private/push/sse/connect?push-ticket=xxx   # 下行长连接
               │     ├─ hello 帧 → 二次解析 payload 取 sessionId
               │     ├─ 上行 SUBSCRIBE 订阅 tbs.push.channel.{userId}（SIGNAL 信令频道）
-              │     ├─ 周期上行 PING（30s，远小于后端空闲超时）保活
+              │     ├─ 周期上行 PING（30s，远小于后端空闲超时）保活；
+              │     │    连续失败达 heartbeatMaxFailures（默认 3）判定会话已死 → 关流换票重连
               │     ├─ hello 握手成功 → 首次拉取（仅入列不弹窗，兜底离线期间消息）
               │     └─ signal 帧 → 防抖触发拉取（合并信令风暴）
-              └─ 断线（error）→ 关流 → 指数退避换票重连（1s→30s + 随机抖动）
+              └─ 断线（error）→ 关流 → 指数退避换票重连（1s→30s + 随机抖动）；
+                 登录态失效（authExpired）或本地无 token 时停止重连置 closed
 拉取（pullLatest，store action）
   ├─> GET /private/push/message/list?limit=20&readFlag=all
   ├─ normalizeFetchedMessage 规范化 → seenIds 去重 → 入列（上限 200 条滚动淘汰）
@@ -93,6 +95,11 @@ views/push/notify-admin/components/NotifyPreviewCard.vue ──> push/message-di
 
 - ticket 一次性消费，EventSource 无法自定义 Header，凭证走 query 参数；
   原生自动重连会拿已失效 ticket 反复失败，因此断线必须由 error 回调换票重连。
+- 登录态令牌每次建连（含重连）都实时取 `getToken()`，不依赖 connect 时的快照，
+  token 无感刷新后重连仍用新令牌；pushAuth 因登录态失效被拒（request.js 拦截器标记
+  `authExpired`）或本地已无 token 时停止重连置 closed，避免过期凭证下的无效重连风暴。
+- 心跳上行连续失败达 `heartbeatMaxFailures` 即判定会话已死（服务端会话可能因认证失效
+  被回收但下行流仍开着），主动关流转换票重连自愈。
 - 连接状态机 `CONNECTION_STATUS`：`idle / connecting / connected / reconnecting / closed`，
   经 `onStatus` 回调同步到 store，由 NavBar 状态点实时展示（i18n `push.status.*`）。
 - 首次拉取（hello 兜底）仅入列不弹窗，避免登录即弹出一批历史通知；仅信令触发的增量弹窗。
@@ -220,6 +227,15 @@ subscribeTopics(['global.system.announce'])   // 连接就绪后自动生效
 unsubscribeTopics(['global.system.announce'])
 ```
 
+后端已启用**订阅鉴权**：可订阅主题以 auth 签票时下发的授权集为准——服务端返回的
+`grantedTopics` 是 `PushCredential` 的独立字段（字符串数组，见 `@/api/push` 的 `pushAuth`），
+需要渲染"可订清单"时直接读它，不必再从 `attributes` 里拆字符串；
+本人信令频道 `tbs.push.channel.{userId}` 硬编码授权且建连时服务端已自动订阅（前端自报
+订阅与之幂等并存，不必移除）；公共主题受 `tbs.push.grant-public-topics` 白名单控制，
+业务主题需后端 `IPushTopicGranter` 扩展授权。**越权订阅会被服务端拒绝**（下行 error
+帧，code 1008，仅拒该次订阅不断流），前端无需改码，但新主题接入前应先与后端确认
+授权覆盖；授权变更需重新换票重连才生效。
+
 ### 替换/叠加渲染器
 
 ```js
@@ -234,7 +250,7 @@ registerRenderer((message, { onRead }) => { /* 自定义 UI */ })
 ### 配置覆盖
 
 `connect`/`initPush` 传入 `config` 可逐项覆盖 `PUSH_DEFAULTS`：
-`topicPrefix`、`heartbeatInterval`、`reconnectBaseDelay`、`reconnectMaxDelay`、`reconnectJitter`。
+`topicPrefix`、`heartbeatInterval`、`heartbeatMaxFailures`、`reconnectBaseDelay`、`reconnectMaxDelay`、`reconnectJitter`。
 
 ### 已读状态持久化（预留扩展点）
 
@@ -262,3 +278,5 @@ registerRenderer((message, { onRead }) => { /* 自定义 UI */ })
 5. 重复触发信令/拉取同 id 消息 → 不重复弹窗、不重复入列。
 6. 重启后端使 SSE 断开 → 状态变「重连中」，后端恢复后自动换票重连并重新订阅。
 7. 登出 → SSE 连接关闭，不再自动重连；再次登录自动重建并首拉兜底。
+8. 刷新页面 → 旧连接随 beforeunload 关闭且服务端回收会话；新页面重走 getInfo→startConnection
+   全链路（令牌取刷新后的最新值），首拉仅入列不弹窗，空窗期消息不丢（20 条内，更早靠分页补齐）。

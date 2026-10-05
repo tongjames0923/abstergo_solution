@@ -1,11 +1,9 @@
 package com.tbs.push.websocket.config;
 
 import com.tbs.push.api.frame.IPushCodec;
-import com.tbs.push.api.intercept.IConnectionInterceptor;
-import com.tbs.push.api.session.ISessionRegistry;
 import com.tbs.push.api.transport.ITransportAdapter;
 import com.tbs.push.impl.auth.PushCredentialService;
-import com.tbs.push.impl.protocol.PushFrameProcessor;
+import com.tbs.push.impl.transport.PushConnectionOrchestrator;
 import com.tbs.push.websocket.adapter.WebSocketTransportAdapter;
 import com.tbs.push.websocket.config.property.WebSocketPushProperty;
 import com.tbs.push.websocket.controller.WsPushAuthController;
@@ -62,35 +60,31 @@ public class WebSocketPushConfig implements WebSocketConfigurer {
     }
 
     /**
-     * 推送WebSocket帧处理器
+     * 推送WebSocket帧处理器（容器事件薄壳，链路语义经传输适配器契约口转接）
      *
-     * @param codec             协议编解码器
-     * @param sessionRegistry   会话注册表
-     * @param interceptorChain  连接拦截器链
-     * @param frameProcessor    协议帧处理器
-     * @param credentialService 连接凭证服务
+     * @param transportProvider 传输适配器提供者
      * @return 推送WebSocket帧处理器
      */
     @Bean
     @ConditionalOnProperty(prefix = "tbs.push", name = "transport", havingValue = "websocket", matchIfMissing = true)
     @ConditionalOnMissingBean(PushWebSocketHandler.class)
-    public PushWebSocketHandler pushWebSocketHandler(IPushCodec codec, ISessionRegistry sessionRegistry,
-        IConnectionInterceptor interceptorChain, PushFrameProcessor frameProcessor,
-        PushCredentialService credentialService) {
-        return new PushWebSocketHandler(codec, sessionRegistry, interceptorChain, frameProcessor, credentialService);
+    public PushWebSocketHandler pushWebSocketHandler(ObjectProvider<ITransportAdapter> transportProvider) {
+        return new PushWebSocketHandler(transportProvider);
     }
 
     /**
-     * WebSocket传输适配器
+     * WebSocket传输适配器（全链路契约薄壳，流程编排委托协议层编排器）
      *
-     * @param handler  推送WebSocket帧处理器
+     * @param codec        协议编解码器
+     * @param orchestrator 连接生命周期编排器
      * @return WebSocket传输适配器
      */
     @Bean
     @ConditionalOnProperty(prefix = "tbs.push", name = "transport", havingValue = "websocket", matchIfMissing = true)
     @ConditionalOnMissingBean(WebSocketTransportAdapter.class)
-    public ITransportAdapter websocketTransportAdapter(PushWebSocketHandler handler) {
-        return new WebSocketTransportAdapter(handler, property.getPath());
+    public WebSocketTransportAdapter websocketTransportAdapter(IPushCodec codec,
+        PushConnectionOrchestrator orchestrator) {
+        return new WebSocketTransportAdapter(codec, orchestrator, property.getPath());
     }
 
     /**

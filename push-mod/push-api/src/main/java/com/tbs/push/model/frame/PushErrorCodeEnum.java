@@ -47,7 +47,17 @@ public enum PushErrorCodeEnum implements BaseEnum<String> {
     /**
      * 服务端内部错误
      */
-    INTERNAL_ERROR(1007, PushI18nConstant.INTERNAL_ERROR);
+    INTERNAL_ERROR(1007, PushI18nConstant.INTERNAL_ERROR),
+
+    /**
+     * 订阅未获授权：SUBSCRIBE帧主题不在会话授权集内（回发ERROR帧，不关闭连接）
+     */
+    SUBSCRIBE_DENIED(1008, PushI18nConstant.SUBSCRIBE_DENIED),
+
+    /**
+     * 上行被拒：会话未通过上行守卫校验（如归属身份不符），回发ERROR帧丢弃该帧不关闭连接
+     */
+    UPLOAD_DENIED(1009, PushI18nConstant.UPLOAD_DENIED);
 
     /**
      * 错误码

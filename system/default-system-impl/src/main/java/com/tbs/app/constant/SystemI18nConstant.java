@@ -300,6 +300,9 @@ public final class SystemI18nConstant {
     /** 读状态筛选标记非法提示：读状态筛选标记非法：{0} */
     public static final String PUSH_MESSAGE_QUERY_FLAG_INVALID = "push.message.query.flag.invalid";
 
+    /** 推送认证无法获取登录身份提示：无法获取当前登录身份，请重新登录 */
+    public static final String PUSH_AUTH_IDENTITY_MISSING = "push.auth.identity.missing";
+
     /** 授权码时间戳非法提示：请求时间戳无效或已过期，请检查客户端与服务端时间是否同步 */
     public static final String THIRD_PARTY_APP_CODE_TIMESTAMP_ERROR = "third.party.app.code.timestamp.error";
 }

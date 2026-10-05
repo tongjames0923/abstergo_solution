@@ -1,6 +1,7 @@
 package com.tbs.push.impl.auth;
 
 import com.tbs.push.api.auth.IPushAuthenticator;
+import com.tbs.push.constants.PushSessionAttrConstants;
 import com.tbs.push.model.auth.PushAuthForm;
 import com.tbs.push.model.auth.PushAuthResult;
 
@@ -19,9 +20,9 @@ import java.util.Map;
 public class NoopAuthenticator implements IPushAuthenticator {
 
     /**
-     * 会话属性键：认证用户标识
+     * 会话属性键：认证用户标识（与全局属性键约定一致）
      */
-    public static final String ATTR_USER_ID = "userId";
+    public static final String ATTR_USER_ID = PushSessionAttrConstants.USER_ID;
 
     /**
      * 执行认证（默认放行并透传用户标识）

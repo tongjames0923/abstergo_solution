@@ -1,6 +1,7 @@
 package com.tbs.sdk.model;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import lombok.Data;
 
@@ -31,6 +32,16 @@ public class PushCredential {
      * 会话属性（认证表单透传，服务端可能追加）
      */
     private Map<String, String> attributes;
+
+    /**
+     * 订阅授权集（服务端签票时点计算的可订阅主题模式列表，支持订阅侧通配）
+     * <p>
+     * 不在集内的主题上行订阅会被服务端拒绝（ERROR 帧 code 1008）；
+     * 字段缺失或为空表示服务端未启用订阅鉴权，订阅全放行。旧版本服务端不返回该字段，
+     * 反序列化得null，客户端按需降级处理。
+     * </p>
+     */
+    private List<String> grantedTopics;
 
     /**
      * 凭证过期时间

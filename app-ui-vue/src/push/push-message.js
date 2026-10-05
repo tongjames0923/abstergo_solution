@@ -86,13 +86,18 @@ export const PUSH_DEFAULTS = {
    */
   heartbeatInterval: HEARTBEAT_INTERVAL,
   /**
+   * 心跳连续失败阈值：达到即判定当前会话已死（服务端会话可能因认证失效/异常回收而
+   * 上行全失败但下行流仍开着），主动关流转换票重连自愈
+   */
+  heartbeatMaxFailures: 3,
+  /**
    * 重连退避基数（毫秒）
    */
   reconnectBaseDelay: 1_000,
   /**
    * 重连退避上限（毫秒）
    */
-  reconnectMaxDelay: 30_000,
+  reconnectMaxDelay: 90_000,
   /**
    * 重连退避随机抖动上限（毫秒），防惊群
    */

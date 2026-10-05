@@ -177,6 +177,16 @@ public final class PushI18nConstant {
      */
     public static final String CREDENTIAL_STORE_FULL = "push.credential.store.full";
 
+    /**
+     * 主题未获授权, 拒绝订阅: {0}
+     */
+    public static final String SUBSCRIBE_DENIED = "push.subscribe.denied";
+
+    /**
+     * 会话未通过上行守卫校验, 拒绝上行: {0}
+     */
+    public static final String UPLOAD_DENIED = "push.upload.denied";
+
     private PushI18nConstant() {
     }
 

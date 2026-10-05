@@ -1,13 +1,8 @@
 package com.tbs.push.sse.config;
 
 import com.tbs.push.api.frame.IPushCodec;
-import com.tbs.push.api.intercept.IConnectionInterceptor;
-import com.tbs.push.api.session.ISessionRegistry;
-import com.tbs.push.api.session.ITopicRegistry;
-import com.tbs.push.impl.auth.PushCredentialService;
-import com.tbs.push.impl.protocol.PushFrameProcessor;
+import com.tbs.push.impl.transport.PushConnectionOrchestrator;
 import com.tbs.push.sse.adapter.SseTransportAdapter;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,24 +22,16 @@ import org.springframework.context.annotation.Configuration;
 public class SsePushConfig {
 
     /**
-     * SSE传输适配器
+     * SSE传输适配器（全链路契约薄壳，流程编排委托协议层编排器）
      *
-     * @param codec             协议编解码器
-     * @param sessionRegistry   会话注册表
-     * @param topicRegistry     订阅注册表
-     * @param interceptorChain  连接拦截器链
-     * @param frameProcessor    协议帧处理器
-     * @param credentialService 连接凭证服务
+     * @param codec        协议编解码器
+     * @param orchestrator 连接生命周期编排器
      * @return SSE传输适配器
      */
     @Bean
     @ConditionalOnMissingBean(SseTransportAdapter.class)
-    public SseTransportAdapter sseTransportAdapter(IPushCodec codec, ISessionRegistry sessionRegistry,
-        ITopicRegistry topicRegistry, ObjectProvider<IConnectionInterceptor> interceptorChain,
-        PushFrameProcessor frameProcessor,
-        PushCredentialService credentialService) {
-        return new SseTransportAdapter(codec, sessionRegistry, topicRegistry, interceptorChain, frameProcessor,
-            credentialService);
+    public SseTransportAdapter sseTransportAdapter(IPushCodec codec, PushConnectionOrchestrator orchestrator) {
+        return new SseTransportAdapter(codec, orchestrator);
     }
 
 }

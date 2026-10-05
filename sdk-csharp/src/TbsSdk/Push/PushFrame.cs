@@ -89,5 +89,13 @@ namespace TbsSdk.Push
         /// <summary>附加属性。</summary>
         [JsonPropertyName("attributes")]
         public IDictionary<string, string> Attributes { get; set; }
+
+        /// <summary>
+        /// 订阅授权集：服务端签票时点计算的可订阅主题模式列表（支持订阅侧通配）。
+        /// 不在集内的主题上行订阅会被服务端拒绝（ERROR 帧 code 1008）；
+        /// 为 null 或空表示服务端未启用订阅鉴权（旧版本服务端不返回该字段）。
+        /// </summary>
+        [JsonPropertyName("grantedTopics")]
+        public IList<string> GrantedTopics { get; set; }
     }
 }
