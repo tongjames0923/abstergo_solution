@@ -2,13 +2,13 @@ package com.tbs.app.controller.privates.admin;
 
 import com.tbs.logging.annotation.NoLog;
 import com.tbs.app.service.log.ISystemLogService;
+import com.tbs.common.provider.IObjectProvider;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.common.data.PageVO;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,8 +27,17 @@ import javax.annotation.Resource;
 @RequestMapping("/private/log/")
 public class AdminSystemLogController extends BaseController {
 
-    @DubboReference(check = false, lazy = true)
-    private ISystemLogService systemLogService;
+    @Resource
+    private IObjectProvider objectProvider;
+
+    /**
+     * 解析系统日志服务：本地无实现时经 Dubbo 集群引用兜底
+     *
+     * @return 系统日志服务实例
+     */
+    private ISystemLogService getSystemLogService() {
+        return objectProvider.getObject(ISystemLogService.class);
+    }
 
     @Resource
     private ILogRecorder recorder;
@@ -46,7 +55,7 @@ public class AdminSystemLogController extends BaseController {
     @AjaxResponseType(Object.class)
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult listWithOpType() {
-        return successResult(systemLogService.getLogOperateTypeList(28));
+        return successResult(getSystemLogService().getLogOperateTypeList(28));
     }
 
     /**
@@ -63,7 +72,7 @@ public class AdminSystemLogController extends BaseController {
     @AjaxResponseType(Object.class)
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult getOperateTypes(@RequestParam(required = false) String keyword) {
-        return successResult(systemLogService.getOperateTypeList(keyword));
+        return successResult(getSystemLogService().getOperateTypeList(keyword));
     }
 
     /**
@@ -80,7 +89,7 @@ public class AdminSystemLogController extends BaseController {
     @AjaxResponseType(PageVO.class)
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult listRecord(@RequestBody LoggingRecordExtractForm form) {
-        return successResult(systemLogService.getLogRecordList(form));
+        return successResult(getSystemLogService().getLogRecordList(form));
     }
 
     /**

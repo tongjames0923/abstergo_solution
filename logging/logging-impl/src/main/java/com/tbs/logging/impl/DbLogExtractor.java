@@ -1,7 +1,6 @@
 package com.tbs.logging.impl;
 
 import cn.hutool.core.date.DateUtil;
-import com.tbs.app.remote.user.IUserRemoteService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.logging.core.ILogExtractor;
@@ -10,7 +9,6 @@ import com.tbs.logging.vo.LogRecordVO;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.sql.enums.OrderEnum;
 import com.tbs.sql.service.QueryEngine;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.cache.annotation.Cacheable;
 
 import static com.tbs.logging.impl.CacheNamesConstants.ALL_OPERATE_TYPES;
@@ -22,9 +20,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class DbLogExtractor implements ILogExtractor {
-
-    @DubboReference(check = false, lazy = true)
-    private IUserRemoteService userRemoteService;
 
 
     @Override

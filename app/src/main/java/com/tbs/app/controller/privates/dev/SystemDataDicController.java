@@ -4,6 +4,7 @@ import com.tbs.app.form.DicItemSaveForm;
 import com.tbs.app.form.DicItemSearchForm;
 import com.tbs.app.form.DicSaveForm;
 import com.tbs.app.form.DicSearchForm;
+import com.tbs.common.provider.IObjectProvider;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.dic.entity.SystemDataDicEntity;
@@ -19,13 +20,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,10 +46,19 @@ import java.util.List;
 public class SystemDataDicController extends BaseController {
 
     /**
-     * 数据字典服务
+     * 对象提供器：统一解析多来源服务
      */
-    @DubboReference(lazy = true, check = false)
-    private IDataDicService dataDicService;
+    @Resource
+    private IObjectProvider objectProvider;
+
+    /**
+     * 解析数据字典服务：本地无实现时经 Dubbo 集群引用兜底
+     *
+     * @return 数据字典服务实例
+     */
+    private IDataDicService getDataDicService() {
+        return objectProvider.getObject(IDataDicService.class);
+    }
 
     /**
      * 根据字典名称模糊查询字典列表
@@ -77,14 +87,14 @@ public class SystemDataDicController extends BaseController {
         if (form.getDicName() == null) {
             form.setDicName("");
         }
-        var dicCodes = dataDicService.getDicCodesByNamesLike(form.getDicName());
+        var dicCodes = getDataDicService().getDicCodesByNamesLike(form.getDicName());
         if (CollUtil.isEmpty(dicCodes)) {
             return successResult(CollUtil.newArrayList());
         }
         List<DicModel> dicModels = new LinkedList<>();
         for (var dicCode : dicCodes) {
             if (dicCode.contains(form.getDicCode())) {
-                dicModels.addAll(dataDicService.getDicByCode(dicCode, true));
+                dicModels.addAll(getDataDicService().getDicByCode(dicCode, true));
             }
         }
         return successResult(dicModels);
@@ -105,7 +115,7 @@ public class SystemDataDicController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult enableDic(@Parameter(name = "form", description = "字典编码信息",
         required = true) @RequestBody @NotNull DicSearchForm form) {
-        dataDicService.enableDataDic(form.getDicCode());
+        getDataDicService().enableDataDic(form.getDicCode());
         return successResult(null);
     }
 
@@ -124,7 +134,7 @@ public class SystemDataDicController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult disableDic(@Parameter(name = "form", description = "字典编码信息",
         required = true) @RequestBody @NotNull DicSearchForm form) {
-        dataDicService.disableDataDic(form.getDicCode());
+        getDataDicService().disableDataDic(form.getDicCode());
         return successResult(null);
     }
 
@@ -143,7 +153,7 @@ public class SystemDataDicController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult enableDicItem(@Parameter(name = "form", description = "字典项查询条件",
         required = true) @RequestBody @NotNull DicItemSearchForm form) {
-        dataDicService.enableDataDicItem(form.getDicCode(), form.getLabel());
+        getDataDicService().enableDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
 
@@ -162,7 +172,7 @@ public class SystemDataDicController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult disableDicItem(@Parameter(name = "form", description = "字典项查询条件",
         required = true) @RequestBody @NotNull DicItemSearchForm form) {
-        dataDicService.disableDataDicItem(form.getDicCode(), form.getLabel());
+        getDataDicService().disableDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
 
@@ -181,7 +191,7 @@ public class SystemDataDicController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult deleteDic(@Parameter(name = "form", description = "字典编码信息",
         required = true) @RequestBody @NotNull DicSearchForm form) {
-        dataDicService.deleteDataDic(form.getDicCode());
+        getDataDicService().deleteDataDic(form.getDicCode());
         return successResult(null);
     }
 
@@ -200,7 +210,7 @@ public class SystemDataDicController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult deleteDicItem(@Parameter(name = "form", description = "字典项查询条件",
         required = true) @RequestBody @NotNull DicItemSearchForm form) {
-        dataDicService.deleteDataDicItem(form.getDicCode(), form.getLabel());
+        getDataDicService().deleteDataDicItem(form.getDicCode(), form.getLabel());
         return successResult(null);
     }
 
@@ -228,7 +238,7 @@ public class SystemDataDicController extends BaseController {
         if (StrUtil.isNotBlank(form.getDicDesc())) {
             dic.setRemark(form.getDicDesc());
         }
-        return successResult(dataDicService.saveDataDic(dic));
+        return successResult(getDataDicService().saveDataDic(dic));
     }
 
     /**
@@ -257,7 +267,7 @@ public class SystemDataDicController extends BaseController {
         if (StrUtil.isNotBlank(form.getDicItemDesc())) {
             item.setRemark(form.getDicItemDesc());
         }
-        dataDicService.saveDataDicItem(form.getDicCode(), item);
+        getDataDicService().saveDataDicItem(form.getDicCode(), item);
         return successResult(null);
     }
 
