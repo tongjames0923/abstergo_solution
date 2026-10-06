@@ -11,13 +11,13 @@ import com.tbs.sql.enums.OrderEnum;
 import com.tbs.sql.service.QueryEngine;
 import org.springframework.cache.annotation.Cacheable;
 
-import static com.tbs.logging.impl.CacheNamesConstants.ALL_OPERATE_TYPES;
-
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+
+import static com.tbs.logging.impl.CacheNamesConstants.ALL_OPERATE_TYPES;
 
 public class DbLogExtractor implements ILogExtractor {
 
@@ -78,7 +78,7 @@ public class DbLogExtractor implements ILogExtractor {
         if (form.getOperateTimeEnd() != null) {
             q.lessThanOrEqual(SystemOperateRecordEntity::getOperateTime, form.getOperateTimeEnd());
         }
-        return q.pour().fetch().size();
+        return q.pour().count();
     }
 
     /**
@@ -94,8 +94,11 @@ public class DbLogExtractor implements ILogExtractor {
         Date today = new Date();
         Date threeMonthsAgo = DateUtil.offsetMonth(today, -3).toJdkDate();
 
+        // 仅需 operateType 一列，投影排除 param/result/error 等 longtext 大字段，避免整行大字段回传
         var q = QueryEngine.getEntityQueryWrapper(new SystemOperateRecordEntity()).query().where()
-            .greaterThanOrEqual(SystemOperateRecordEntity::getOperateTime, threeMonthsAgo).pour().fetch();
+            .greaterThanOrEqual(SystemOperateRecordEntity::getOperateTime, threeMonthsAgo).pour()
+            .select(SystemOperateRecordEntity::getOperateType)
+            .fetch();
 
         if (CollUtil.isEmpty(q)) {
             return CollUtil.newArrayList();
