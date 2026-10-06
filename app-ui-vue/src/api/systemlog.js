@@ -30,6 +30,18 @@ export function getSystemLogRecordList(form) {
 }
 
 /**
+ * 获取单条日志全量详情（含参数/结果/异常等大字段）
+ * @param {number} id 日志主键
+ * @returns {Promise} 日志详情
+ */
+export function getSystemLogDetail(id) {
+  return request({
+    url: `/private/log/detail/${id}`,
+    method: 'get'
+  })
+}
+
+/**
  * 获取所有操作类型列表(用于下拉框搜索)
  * @param {string} keyword 关键词(可选),支持模糊搜索
  * @returns {Promise} 操作类型列表

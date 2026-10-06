@@ -83,6 +83,23 @@ public class AdminSystemLogController extends BaseController {
     }
 
     /**
+     * 获取单条日志全量详情
+     * <p>
+     * 列表查询不返回参数/结果/异常等大字段，详情抽屉点击时按主键单查。
+     * </p>
+     *
+     * @param id 日志主键
+     * @return 日志全量详情
+     */
+    @NoLog
+    @GetMapping("detail/{id}")
+    @AjaxResponseType(Object.class)
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
+    public AjaxResult recordDetail(@PathVariable Long id) {
+        return successResult(systemLogService.getLogDetail(id));
+    }
+
+    /**
      * 强制刷新日志记录
      * <p>
      * 强制刷新日志记录，使日志记录立即生效
