@@ -4,6 +4,7 @@ import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
 import com.tbs.common.data.PageVO;
+import com.tbs.common.provider.annotation.RoutingService;
 
 import java.util.List;
 
@@ -12,6 +13,7 @@ import java.util.List;
  *
  *
  * @author abstergo*/
+@RoutingService
 public interface ISystemLogService {
 
     /**
@@ -37,4 +39,12 @@ public interface ISystemLogService {
      * @return 分页结果
      */
     PageVO<LogRecordVO> getLogRecordList(LoggingRecordExtractForm form);
+
+    /**
+     * 按主键获取单条日志全量详情（含参数/结果/异常等大字段）。
+     *
+     * @param id 日志主键
+     * @return 全量详情；不存在时返回 null
+     */
+    LogRecordVO getLogDetail(Long id);
 }

@@ -16,6 +16,10 @@ import java.util.Date;
 public class LogRecordVO implements Serializable {
     private static final long serialVersionUID = 1L;
     /**
+     * 主键ID（列表行用于详情单查）
+     */
+    private Long id;
+    /**
      * 操作类型
      */
     private String operateType;

@@ -1,7 +1,6 @@
 package com.tbs.logging.impl;
 
 import cn.hutool.core.date.DateUtil;
-import com.tbs.app.remote.user.IUserRemoteService;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.logging.core.ILogExtractor;
@@ -10,10 +9,7 @@ import com.tbs.logging.vo.LogRecordVO;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.sql.enums.OrderEnum;
 import com.tbs.sql.service.QueryEngine;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.cache.annotation.Cacheable;
-
-import static com.tbs.logging.impl.CacheNamesConstants.ALL_OPERATE_TYPES;
 
 import java.util.Arrays;
 import java.util.Date;
@@ -21,10 +17,9 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class DbLogExtractor implements ILogExtractor {
+import static com.tbs.logging.impl.CacheNamesConstants.ALL_OPERATE_TYPES;
 
-    @DubboReference(check = false, lazy = true)
-    private IUserRemoteService userRemoteService;
+public class DbLogExtractor implements ILogExtractor {
 
 
     @Override
@@ -57,15 +52,38 @@ public class DbLogExtractor implements ILogExtractor {
                 .ifPresent(pageLimit -> pageLimit.pageOf((long)form.getPageNum(), (long)ref.size));
         }
 
-        return q.pour().fetch().stream().map(entity -> {
-            return new LogRecordVO(entity.getOperateType(), entity.getOperateContent(), entity.getOperateUserName(),
-                entity.getOperateIp(), entity.getOperateTime(), entity.getOperateResultJson(),
-                entity.getOperateParamJson(), entity.getOperateError(), entity.getOperateErrorLevel(),
-                new Date(entity.getOperateTime().getTime() + entity.getCostTime()), entity.getOperateUrl(),
-                entity.getMethod(), entity.getCostTime());
-        }).
+        // 列表轻投影：排除 param/result/error 三个 longtext 大字段，避免整行大字段回传；
+        // 列表状态列改用已有的 operate_error_level(errorCode，异常时写入、非大字段) 判定，详情由 getById 按需单查。
+        return q.pour()
+            .excludeAny(SystemOperateRecordEntity::getOperateParamJson,
+                SystemOperateRecordEntity::getOperateResultJson,
+                SystemOperateRecordEntity::getOperateError)
+            .fetch().stream().map(this::toVO).collect(Collectors.toList());
+    }
 
-            collect(Collectors.toList());
+    @Override
+    public LogRecordVO getById(Long id) {
+        if (id == null) {
+            return null;
+        }
+        SystemOperateRecordEntity entity = QueryEngine.getEntityQueryWrapper(new SystemOperateRecordEntity()).query()
+            .where().equal(SystemOperateRecordEntity::getId, id).pour().fetchOne();
+        return entity == null ? null : toVO(entity);
+    }
+
+    /**
+     * 实体转 VO。列表轻投影时三个 longtext 字段为 null，详情全量查询时回齐。
+     *
+     * @param entity 日志实体
+     * @return 视图对象
+     */
+    private LogRecordVO toVO(SystemOperateRecordEntity entity) {
+        return new LogRecordVO(entity.getId(), entity.getOperateType(), entity.getOperateContent(),
+            entity.getOperateUserName(), entity.getOperateIp(), entity.getOperateTime(),
+            entity.getOperateResultJson(), entity.getOperateParamJson(), entity.getOperateError(),
+            entity.getOperateErrorLevel(),
+            new Date(entity.getOperateTime().getTime() + entity.getCostTime()), entity.getOperateUrl(),
+            entity.getMethod(), entity.getCostTime());
     }
 
     @Override
@@ -83,7 +101,7 @@ public class DbLogExtractor implements ILogExtractor {
         if (form.getOperateTimeEnd() != null) {
             q.lessThanOrEqual(SystemOperateRecordEntity::getOperateTime, form.getOperateTimeEnd());
         }
-        return q.pour().fetch().size();
+        return q.pour().count();
     }
 
     /**
@@ -99,8 +117,11 @@ public class DbLogExtractor implements ILogExtractor {
         Date today = new Date();
         Date threeMonthsAgo = DateUtil.offsetMonth(today, -3).toJdkDate();
 
+        // 仅需 operateType 一列，投影排除 param/result/error 等 longtext 大字段，避免整行大字段回传
         var q = QueryEngine.getEntityQueryWrapper(new SystemOperateRecordEntity()).query().where()
-            .greaterThanOrEqual(SystemOperateRecordEntity::getOperateTime, threeMonthsAgo).pour().fetch();
+            .greaterThanOrEqual(SystemOperateRecordEntity::getOperateTime, threeMonthsAgo).pour()
+            .select(SystemOperateRecordEntity::getOperateType)
+            .fetch();
 
         if (CollUtil.isEmpty(q)) {
             return CollUtil.newArrayList();

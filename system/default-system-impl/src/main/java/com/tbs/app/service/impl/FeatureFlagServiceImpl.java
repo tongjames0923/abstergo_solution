@@ -9,9 +9,9 @@ import com.tbs.dic.model.DicItemModel;
 import com.tbs.dic.model.DicModel;
 import com.tbs.dic.service.IDataDicService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.jetbrains.annotations.Nullable;
 
+import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class FeatureFlagServiceImpl implements IFeatureFlagService {
 
-    @DubboReference(lazy = true)
+    @Resource
     private IDataDicService dicService;
 
     @Override
