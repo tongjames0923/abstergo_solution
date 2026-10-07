@@ -8,7 +8,6 @@ import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.common.data.PageVO;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -27,7 +26,7 @@ import javax.annotation.Resource;
 @RequestMapping("/private/log/")
 public class AdminSystemLogController extends BaseController {
 
-    @DubboReference(check = false, lazy = true)
+    @Resource
     private ISystemLogService systemLogService;
 
     @Resource
@@ -81,6 +80,23 @@ public class AdminSystemLogController extends BaseController {
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
     public AjaxResult listRecord(@RequestBody LoggingRecordExtractForm form) {
         return successResult(systemLogService.getLogRecordList(form));
+    }
+
+    /**
+     * 获取单条日志全量详情
+     * <p>
+     * 列表查询不返回参数/结果/异常等大字段，详情抽屉点击时按主键单查。
+     * </p>
+     *
+     * @param id 日志主键
+     * @return 日志全量详情
+     */
+    @NoLog
+    @GetMapping("detail/{id}")
+    @AjaxResponseType(Object.class)
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.LOG.QUERY')")
+    public AjaxResult recordDetail(@PathVariable Long id) {
+        return successResult(systemLogService.getLogDetail(id));
     }
 
     /**

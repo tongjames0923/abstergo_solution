@@ -159,7 +159,7 @@
       size="60%"
       :before-close="handleDetailDrawerClose"
     >
-      <div v-if="currentLogDetail" class="log-detail-content">
+      <div v-if="currentLogDetail" v-loading="detailLoading" class="log-detail-content">
         <!-- 基本信息 -->
         <el-card class="detail-section" shadow="never">
           <div slot="header" class="section-header">
@@ -246,7 +246,7 @@
 </template>
 
 <script>
-import { getOperateTypeList, getSystemLogRecordList } from '@/api/systemlog'
+import { getOperateTypeList, getSystemLogRecordList, getSystemLogDetail } from '@/api/systemlog'
 
 export default {
   name: 'SystemLogRecord',
@@ -263,6 +263,7 @@ export default {
       operateTypeOptions: [],
       // 日志详情侧边栏
       detailDrawerVisible: false,
+      detailLoading: false,
       currentLogDetail: null,
       searchForm: {
         operateTypes: [],
@@ -354,8 +355,22 @@ export default {
     },
     // ========== 日志详情侧边栏方法 ==========
     showLogDetail(row) {
-      this.currentLogDetail = { ...row } // 创建副本避免响应式问题
+      // 先用列表行占位（已含 errorCode，状态列可即时渲染），再按主键单查全量详情
+      this.currentLogDetail = { ...row }
       this.detailDrawerVisible = true
+      this.detailLoading = true
+      getSystemLogDetail(row.id)
+        .then(response => {
+          if (response.data) {
+            this.currentLogDetail = response.data
+          }
+        })
+        .catch(error => {
+          console.error('获取日志详情失败:', error)
+        })
+        .finally(() => {
+          this.detailLoading = false
+        })
     },
     handleDetailDrawerClose() {
       this.detailDrawerVisible = false
@@ -377,7 +392,9 @@ export default {
     // 后端契约:
     // 1. 方法正常返回时,operateResult为控制器原始返回值的JSON;
     //    返回AjaxResult时结构为{map:{code,message,data}},仅code=200代表成功
-    // 2. 方法抛出异常时,operateResult为空,errorMessage记录异常类名与堆栈
+    // 2. 方法抛出异常时,operateResult为空,errorMessage记录异常类名与堆栈,同时写入 operate_error_level(错误码)
+    // 列表查询走轻投影不回传 operateResult/errorMessage 大字段,故用 errorCode 非空作为失败信号;
+    // 详情查询回传全字段,仍按 message/结果码精确判定。
     parseResultJson(resultStr) {
       if (!resultStr) return null
       try {
@@ -390,6 +407,8 @@ export default {
     getOperateStatus(row) {
       // 存在异常信息即为失败
       if (row.errorMessage) return 'fail'
+      // 列表轻投影仅有错误码:异常路径必写 errorCode,非空即失败
+      if (row.errorCode != null) return 'fail'
       // 标准AjaxResult格式:按code判定成败
       const result = this.parseResultJson(row.operateResult)
       if (result && result.map && result.map.code !== undefined && result.map.code !== null) {
@@ -418,6 +437,7 @@ export default {
       if (result && result.map) {
         return result.map.message || `code: ${result.map.code}`
       }
+      // 列表轻投影无消息文本:失败态但无提示(完整异常可见于详情)
       return ''
     },
     formatJson(jsonStr) {

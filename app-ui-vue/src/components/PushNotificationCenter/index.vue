@@ -24,7 +24,7 @@
         class="pn-choreo pn-choreo--delay"
         :tabs="typeTabs"
         :active-type="activeType"
-        :unreadonly="unreadOnly"
+        :unread-only="unreadOnly"
         :unread-count="unreadCount"
         :total="messages.length"
         @change-type="handleChangeType"

@@ -7,13 +7,13 @@ import com.tbs.app.config.property.TestControllerMode;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.script.api.compiler.impl.SpelCompiler;
 import com.tbs.script.api.engine.IScriptEngine;
+import com.tbs.common.provider.IObjectProvider;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.Data;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,11 +37,16 @@ import java.io.Serializable;
 @ConditionalOnTestControllerMode({TestControllerMode.ALL, TestControllerMode.PUB})
 public class PublicTestController extends BaseController {
 
-    @DubboReference
-    private ITreeStore store;
+    @Resource
+    private IObjectProvider objectProvider;
 
     @Resource
     private ConfigService configService;
+
+    @SuppressWarnings("unchecked")
+    private ITreeStore getTreeStore() {
+        return objectProvider.getObject(ITreeStore.class);
+    }
 
     public static final String TEST_GROUP = "Test Tree Group";
 
@@ -92,19 +97,19 @@ public class PublicTestController extends BaseController {
     @PostMapping("/getChildren")
     @AjaxResponseType(Object.class)
     public AjaxResult getChildren(String nodeId) {
-        return AjaxUtil.getInstance().success(store.getDirectChildren(nodeId, TEST_GROUP));
+        return AjaxUtil.getInstance().success(getTreeStore().getDirectChildren(nodeId, TEST_GROUP));
     }
 
     @PostMapping("/getParentNodes")
     @AjaxResponseType(Object.class)
     public AjaxResult getParentNodes(String nodeId) {
-        return AjaxUtil.getInstance().success(store.getParentNodes(nodeId, TEST_GROUP));
+        return AjaxUtil.getInstance().success(getTreeStore().getParentNodes(nodeId, TEST_GROUP));
     }
 
     @PostMapping("/deleteNode")
     @AjaxResponseType(void.class)
     public AjaxResult deleteNode(String nodeId) {
-        store.delete(nodeId, TEST_GROUP);
+        getTreeStore().delete(nodeId, TEST_GROUP);
         return AjaxUtil.getInstance().success(null);
     }
 

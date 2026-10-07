@@ -19,13 +19,13 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.annotation.Resource;
 import javax.validation.constraints.NotNull;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,9 +45,9 @@ import java.util.List;
 public class SystemDataDicController extends BaseController {
 
     /**
-     * 数据字典服务
+     * 数据字典服务：{@code @RoutingService} 路由代理，本地优先、Dubbo 兜底
      */
-    @DubboReference(lazy = true, check = false)
+    @Resource
     private IDataDicService dataDicService;
 
     /**

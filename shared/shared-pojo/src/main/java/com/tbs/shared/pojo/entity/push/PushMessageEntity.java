@@ -1,4 +1,4 @@
-package com.tbs.app.entity.push;
+package com.tbs.shared.pojo.entity.push;
 
 import com.tbs.shared.pojo.ICreateTimeAuditable;
 import com.tbs.shared.pojo.IIdentifiable;

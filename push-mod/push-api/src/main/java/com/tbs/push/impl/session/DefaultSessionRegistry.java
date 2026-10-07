@@ -38,16 +38,17 @@ public class DefaultSessionRegistry implements ISessionRegistry {
     }
 
     /**
-     * 注销会话（不存在的id静默跳过）
+     * 注销会话（不存在的id静默跳过；并发下仅首次移除返回true）
      *
      * @param sessionId 会话标识
+     * @return true表示本次调用首次移除登记
      */
     @Override
-    public void unregister(String sessionId) {
+    public boolean unregister(String sessionId) {
         if (sessionId == null) {
-            return;
+            return false;
         }
-        sessions.remove(sessionId);
+        return sessions.remove(sessionId) != null;
     }
 
     /**

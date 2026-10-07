@@ -19,9 +19,11 @@ import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.SqlUtils;
 
 import java.lang.reflect.Field;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
     List<GroupModel> groups = new LinkedList<>();
@@ -29,6 +31,10 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
     private IWhereClause<T> whereProvider;
     private IOrderClause<T> orderProvider;
     private IPageClause<T> pageProvider;
+    /** 投影：仅返回的列（物理列名），为空表示不限制 */
+    private Set<String> includeColumns;
+    /** 投影：需排除的列（物理列名），为空表示不排除 */
+    private Set<String> excludeColumns;
 
     public EntityQueryBuilder(T entity) { this.entity = entity; }
 
@@ -82,6 +88,57 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
     }
 
     @Override
+    public <P> IQueryBuilder<T> select(SFunction<T, P> accessor) {
+        if (entity != null) {
+            if (includeColumns == null) {
+                includeColumns = new LinkedHashSet<>();
+            }
+            includeColumns.add(resolveColumnName(accessor));
+        }
+        return this;
+    }
+
+    @Override
+    public <P> IQueryBuilder<T> exclude(SFunction<T, P> accessor) {
+        if (entity != null) {
+            if (excludeColumns == null) {
+                excludeColumns = new LinkedHashSet<>();
+            }
+            excludeColumns.add(resolveColumnName(accessor));
+        }
+        return this;
+    }
+
+    @SafeVarargs
+    @Override
+    public final IQueryBuilder<T> selectAny(SFunction<T, ?>... accessors) {
+        if (accessors != null) {
+            for (SFunction<T, ?> accessor : accessors) {
+                select(accessor);
+            }
+        }
+        return this;
+    }
+
+    @SafeVarargs
+    @Override
+    public final IQueryBuilder<T> excludeAny(SFunction<T, ?>... accessors) {
+        if (accessors != null) {
+            for (SFunction<T, ?> accessor : accessors) {
+                exclude(accessor);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * 将字段引用解析为物理列名，与 {@link com.tbs.sql.metadata.EntityMetadataExtractor} 产出的 fieldName 对齐。
+     */
+    private <P> String resolveColumnName(SFunction<T, P> accessor) {
+        return SqlUtils.getFieldNameWithMapping(LambdaUtil.getField(accessor));
+    }
+
+    @Override
     public List<T> fetch() {
         if (entity == null) {
             return CollUtil.newArrayList();
@@ -128,6 +185,7 @@ public class EntityQueryBuilder<T> implements IQueryBuilder<T> {
         driver.setWhereInfo(whereProvider != null ? whereProvider.getCompose() : null);
         driver.setLimit(pageProvider != null ? pageProvider.getLimit() : null);
         driver.setOrders(orderProvider != null ? orderProvider.getSqlOrders() : null);
+        driver.setProjection(includeColumns, excludeColumns);
     }
 
     @Override

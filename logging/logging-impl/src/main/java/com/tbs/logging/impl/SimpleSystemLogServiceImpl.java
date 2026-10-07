@@ -253,6 +253,17 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     }
 
     /**
+     * 按主键获取单条日志全量详情
+     *
+     * @param id 日志主键
+     * @return 全量详情；不存在时返回 null
+     */
+    @Override
+    public LogRecordVO getLogDetail(Long id) {
+        return extractor.getById(id);
+    }
+
+    /**
      * 获取所有不重复的操作类型列表(用于下拉框搜索)
      *
      * @param keyword 关键词,支持模糊搜索(可选)
@@ -269,15 +280,18 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     }
 
     private static boolean isIgnoreError(LogRecordVO operateRecordEntity) {
-        return StrUtil.isEmpty(operateRecordEntity.getErrorMessage()) || isLowLevelError(operateRecordEntity);
+        return operateRecordEntity.getErrorCode() == null || isLowLevelError(operateRecordEntity);
     }
 
     /**
      * 是否为低级别错误(用户输入错误/业务逻辑错误)，该类错误不计入稳定性统计
+     * <p>
+     * 异常路径下 errorCode 与 errorMessage 必同时写入，故用 errorCode 非空判定“是否发生异常”，
+     * 与列表轻投影不再回传 errorMessage 保持一致。
+     * </p>
      */
     private static boolean isLowLevelError(LogRecordVO operateRecordEntity) {
-        return StrUtil.isNotEmpty(operateRecordEntity.getErrorMessage()) &&
-            operateRecordEntity.getErrorCode() != null &&
+        return operateRecordEntity.getErrorCode() != null &&
             operateRecordEntity.getErrorCode() < ErrorLevelEnum.DATA_ACCESS_ERROR.getCode();
     }
 }

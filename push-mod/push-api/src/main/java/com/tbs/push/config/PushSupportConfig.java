@@ -2,15 +2,19 @@ package com.tbs.push.config;
 
 import com.tbs.push.api.auth.IPushAuthenticator;
 import com.tbs.push.api.auth.IPushCredentialStore;
+import com.tbs.push.api.auth.IPushTopicGranter;
 import com.tbs.push.api.coordinator.IRouteCoordinator;
 import com.tbs.push.api.dispatch.IPushDispatcher;
 import com.tbs.push.api.frame.IPushCodec;
 import com.tbs.push.api.intercept.IConnectionInterceptor;
 import com.tbs.push.api.record.IDeliveryRecordStore;
 import com.tbs.push.api.session.ISessionRegistry;
+import com.tbs.push.api.session.ISubscriptionAuthorizer;
 import com.tbs.push.api.session.ITopicRegistry;
+import com.tbs.push.api.session.IUploadGuard;
 import com.tbs.push.api.store.IPushMessageStore;
 import com.tbs.push.api.transport.IPushEndpoint;
+import com.tbs.push.api.transport.ITransportAdapter;
 import com.tbs.push.api.transport.IUpstreamListener;
 import com.tbs.push.config.property.PushAuthProperty;
 import com.tbs.push.config.property.PushDispatchProperty;
@@ -23,6 +27,7 @@ import com.tbs.push.impl.protocol.PushFrameProcessor;
 import com.tbs.push.impl.session.DefaultSessionRegistry;
 import com.tbs.push.impl.session.DefaultTopicRegistry;
 import com.tbs.push.impl.session.HeartbeatMonitor;
+import com.tbs.push.impl.transport.PushConnectionOrchestrator;
 import com.tbs.push.impl.store.InMemoryCredentialStore;
 import com.tbs.push.impl.store.InMemoryDeliveryRecordStore;
 import com.tbs.push.impl.store.InMemoryPushMessageStore;
@@ -109,14 +114,17 @@ public class PushSupportConfig {
      *
      * @param pushAuthenticator 连接认证器
      * @param credentialStore   连接凭证存储
+     * @param granterProvider   主题授权器链提供者（无实现Bean时不计算授权集）
      * @param authProperty      连接认证配置属性
      * @return 连接凭证服务
      */
     @Bean
     @ConditionalOnMissingBean(PushCredentialService.class)
     public PushCredentialService pushCredentialService(IPushAuthenticator pushAuthenticator,
-        IPushCredentialStore credentialStore, PushAuthProperty authProperty) {
-        return new PushCredentialService(pushAuthenticator, credentialStore, authProperty.getTicketTtlMillis());
+        IPushCredentialStore credentialStore, ObjectProvider<IPushTopicGranter> granterProvider,
+        PushAuthProperty authProperty) {
+        return new PushCredentialService(pushAuthenticator, credentialStore,
+            granterProvider.stream().collect(Collectors.toList()), authProperty.getTicketTtlMillis());
     }
 
     /**
@@ -191,18 +199,23 @@ public class PushSupportConfig {
      * 协议帧处理器
      * <p>
      * 协议层控制帧的统一处理中枢，全部传输适配层共用，保证协议行为跨传输一致。
+     * 订阅授权校验器与上行守卫链由业务方按需注册，缺失时均全放行（历史行为）。
      * </p>
      *
-     * @param codec           协议编解码器
-     * @param topicRegistry   订阅注册表
-     * @param listenerProvider 上行监听器实现提供者
+     * @param codec                 协议编解码器
+     * @param topicRegistry         订阅注册表
+     * @param listenerProvider      上行监听器实现提供者
+     * @param authorizerProvider    订阅授权校验器提供者（多实现时取唯一Bean，无实现时全放行）
+     * @param guardProvider         上行守卫实现提供者（多实现链式叠加，无实现时全放行）
      * @return 协议帧处理器
      */
     @Bean
     @ConditionalOnMissingBean(PushFrameProcessor.class)
     public PushFrameProcessor pushFrameProcessor(IPushCodec codec, ITopicRegistry topicRegistry,
-        ObjectProvider<IUpstreamListener> listenerProvider) {
-        return new PushFrameProcessor(codec, topicRegistry, listenerProvider.stream().collect(Collectors.toList()));
+        ObjectProvider<IUpstreamListener> listenerProvider, ObjectProvider<ISubscriptionAuthorizer> authorizerProvider,
+        ObjectProvider<IUploadGuard> guardProvider) {
+        return new PushFrameProcessor(codec, topicRegistry, listenerProvider.stream().collect(Collectors.toList()),
+            authorizerProvider.getIfAvailable(), guardProvider.stream().collect(Collectors.toList()));
     }
 
     /**
@@ -242,19 +255,45 @@ public class PushSupportConfig {
     }
 
     /**
-     * 心跳空闲超时监控器
+     * 连接生命周期编排器（跨传输统一的建立/上行/清理流程中枢）
      * <p>
-     * 超时配置为非正数时监控器启动后不做任何动作。
+     * 拦截器链、注册表操作与清理链的唯一实现点，传输适配器内部共享；
+     * 适配器只保留物理通道包装与契约转发，避免两份实现行为分叉。
      * </p>
      *
-     * @param sessionRegistry 会话注册表
-     * @param property        推送基础配置属性
+     * @param sessionRegistry   会话注册表
+     * @param topicRegistry     订阅注册表
+     * @param interceptorChain  连接拦截器链提供者
+     * @param frameProcessor    协议帧处理器
+     * @param credentialService 连接凭证服务
+     * @return 连接生命周期编排器
+     */
+    @Bean
+    @ConditionalOnMissingBean(PushConnectionOrchestrator.class)
+    public PushConnectionOrchestrator pushConnectionOrchestrator(ISessionRegistry sessionRegistry,
+        ITopicRegistry topicRegistry, ObjectProvider<IConnectionInterceptor> interceptorChain,
+        PushFrameProcessor frameProcessor, PushCredentialService credentialService) {
+        return new PushConnectionOrchestrator(sessionRegistry, topicRegistry, interceptorChain, frameProcessor,
+            credentialService);
+    }
+
+    /**
+     * 心跳空闲超时监控器
+     * <p>
+     * 超时配置为非正数时监控器启动后不做任何动作；超时会话优先经传输适配器
+     * 主动关闭（清理链完整闭环），适配器缺失时退化为基线关闭与注销。
+     * </p>
+     *
+     * @param sessionRegistry  会话注册表
+     * @param property         推送基础配置属性
+     * @param transportProvider 传输适配器提供者
      * @return 心跳监控器
      */
     @Bean
     @ConditionalOnMissingBean(HeartbeatMonitor.class)
-    public HeartbeatMonitor heartbeatMonitor(ISessionRegistry sessionRegistry, PushProperty property) {
-        return new HeartbeatMonitor(sessionRegistry, property.getHeartbeatTimeoutMillis());
+    public HeartbeatMonitor heartbeatMonitor(ISessionRegistry sessionRegistry, PushProperty property,
+        ObjectProvider<ITransportAdapter> transportProvider) {
+        return new HeartbeatMonitor(sessionRegistry, property.getHeartbeatTimeoutMillis(), transportProvider);
     }
 
     /**

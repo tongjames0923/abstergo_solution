@@ -71,6 +71,26 @@ public final class PushFrameConstants {
     public static final String CLOSE_REASON_AUTH_FAILED = "auth-failed";
 
     /**
+     * 会话关闭原因：建连主体与凭证绑定身份不一致
+     */
+    public static final String CLOSE_REASON_IDENTITY_MISMATCH = "identity-mismatch";
+
+    /**
+     * 会话关闭原因：登录态（token）实际失效，服务端主动踢线（业务侧触发）
+     */
+    public static final String CLOSE_REASON_TOKEN_EXPIRED = "token-expired";
+
+    /**
+     * 会话关闭原因：物理通道关闭事件回传
+     */
+    public static final String CLOSE_REASON_CHANNEL_CLOSED = "channel-closed";
+
+    /**
+     * 会话关闭原因：建连编排中被拦截器拒绝
+     */
+    public static final String CLOSE_REASON_CONNECT_REJECTED = "connect-rejected";
+
+    /**
      * HTTP POST 认证端点路径（薄壳控制器引用，改路径只动本常量）
      */
     public static final String AUTH_PATH = "/private/push/auth";

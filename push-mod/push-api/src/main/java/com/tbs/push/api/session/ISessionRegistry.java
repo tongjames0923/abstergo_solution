@@ -25,10 +25,15 @@ public interface ISessionRegistry {
 
     /**
      * 注销会话
+     * <p>
+     * 注销动作的原子唯一性（首次移除成功）是会话清理链的幂等门禁：
+     * 主动关闭与物理通道事件回传双入口时，仅成功注销的一方执行后续清理。
+     * </p>
      *
      * @param sessionId 会话标识，空或不存在的id静默跳过
+     * @return true表示本次调用首次移除登记（清理链唯一执行者），false表示登记项已不存在（重复清理跳过）
      */
-    void unregister(String sessionId);
+    boolean unregister(String sessionId);
 
     /**
      * 按标识查询会话

@@ -24,8 +24,9 @@ import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
  *     <li>GET connect — 建立SSE下行流（@NoWrapped跳过统一响应包装，直接返回SseEmitter）</li>
  *     <li>POST upload — 客户端→服务端上行端点，接收结构化协议帧，返回统一{@link AjaxResult}</li>
  * </ul>
- * 端点置于/private/**由项目认证体系统一保护；本控制器不集成任何鉴权逻辑，
- * 与协议层"默认不集成安全验证"的定位一致。
+ * 端点置于/private/**由项目认证体系统一保护；上行帧的归属校验等规则判定
+ * 由协议层上行守卫链（IUploadGuard）在帧处理器内统一编排，跨传输（SSE/WebSocket）
+ * 一致生效，本控制器不做任何校验编排。
  * </p>
  *
  * @author abstergo
@@ -44,8 +45,7 @@ public class SsePushController extends BaseController {
     /**
      * 构造SSE通道控制器
      *
-     * @param adapter       SSE传输适配器
-     * @param objectMapper  JSON解析器
+     * @param adapter SSE传输适配器
      */
     public SsePushController(SseTransportAdapter adapter) {
         this.adapter = adapter;
@@ -94,15 +94,17 @@ public class SsePushController extends BaseController {
      * </p>
      *
      * @param form 上行请求表单（sessionId必填非空；frame必填，type必填，topic按帧类型要求）
-     * @return 统一响应（成功时data为空；帧处理产生的确认/错误帧经SSE下行流异步下发）
+     * @return 统一响应（成功时data为空；会话不存在/未就绪为HTTP错误响应，
+     *         守卫拒绝与帧处理确认均经SSE下行流异步下发）
      */
     @PostMapping("/upload")
     @Operation(summary = "上行结构化协议帧",
         description = "客户端携sessionId上行结构化协议帧（HELLO/PING/SUBSCRIBE/UNSUBSCRIBE/DATA等），服务端按帧类型统一处理")
-    @ApiResponse(responseCode = "200", description = "上行受理成功；会话不存在/未就绪时返回统一错误响应")
+    @ApiResponse(responseCode = "200",
+        description = "上行受理成功；会话不存在时返回统一错误响应，协议层拒绝（守卫/鉴权）经下行error帧反馈")
     @AjaxResponseType(Object.class)
     public AjaxResult upload(@RequestBody SseUploadForm form) {
-        adapter.uploadFrame(form.getSessionId().getValue(), form.getFrame());
+        adapter.acceptUpstream(form.getSessionId().getValue(), form.getFrame());
         return successResult();
     }
 

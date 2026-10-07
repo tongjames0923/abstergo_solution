@@ -92,3 +92,4 @@ tbs:
     heartbeat-timeout-millis: 600000
     dispatch:
       scheduler: job
+    enable: true

@@ -128,6 +128,57 @@ public interface IQueryBuilder<T> extends IQueryFetcher<T> {
     <P> IQueryBuilder<T> groupBy(SFunction<T, P> accessor);
 
     /**
+     * 投影：声明查询只需要返回的字段（可多次调用累积）。
+     * <p>
+     * 被 select 的字段才会出现在最终 SELECT 列中；与 {@link #exclude(SFunction)}
+     * 同时使用时，先以 select 集合作为基集，再移除 exclude 命中的字段。
+     * 未调用任何 select/exclude 时保持全字段返回（即既有行为）。
+     * </p>
+     *
+     * @param accessor 字段引用函数，指定需要返回的字段
+     * @param <P>      字段类型
+     * @return 当前查询构建器实例，支持链式调用
+     */
+    <P> IQueryBuilder<T> select(SFunction<T, P> accessor);
+
+    /**
+     * 投影：声明查询需要排除的字段（可多次调用累积）。
+     * <p>
+     * 典型用途：列表查询排除 longtext 等大字段，避免整行大字段回传，详情按需单独查询。
+     * 与 {@link #select(SFunction)} 同时使用时，exclude 命中的字段会从基集中移除。
+     * </p>
+     *
+     * @param accessor 字段引用函数，指定需要排除的字段
+     * @param <P>      字段类型
+     * @return 当前查询构建器实例，支持链式调用
+     */
+    <P> IQueryBuilder<T> exclude(SFunction<T, P> accessor);
+
+    /**
+     * 投影（批量）：一次性声明多个只需要返回的字段。
+     * <p>
+     * 语义等价于多次调用 {@link #select(SFunction)}，与单字段版本可混用累积。
+     * </p>
+     *
+     * @param accessors 字段引用函数数组，指定需要返回的多个字段
+     * @return 当前查询构建器实例，支持链式调用
+     */
+    @SuppressWarnings("unchecked")
+    IQueryBuilder<T> selectAny(SFunction<T, ?>... accessors);
+
+    /**
+     * 投影（批量）：一次性声明多个需要排除的字段。
+     * <p>
+     * 语义等价于多次调用 {@link #exclude(SFunction)}，与单字段版本可混用累积。
+     * </p>
+     *
+     * @param accessors 字段引用函数数组，指定需要排除的多个字段
+     * @return 当前查询构建器实例，支持链式调用
+     */
+    @SuppressWarnings("unchecked")
+    IQueryBuilder<T> excludeAny(SFunction<T, ?>... accessors);
+
+    /**
      * 将当前查询构建器转换为SQL字符串（用于子查询）。
      *
      * <p>该方法将当前查询条件生成为SELECT SQL字符串，可用于子查询场景。
