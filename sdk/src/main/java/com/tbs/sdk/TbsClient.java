@@ -4,15 +4,19 @@ import com.tbs.sdk.auth.ILoginApi;
 import com.tbs.sdk.auth.LoginApi;
 import com.tbs.sdk.auth.TokenManager;
 import com.tbs.sdk.config.SdkConfig;
+import com.tbs.sdk.exception.SdkClientException;
 import com.tbs.sdk.http.OkHttpBaseHttpClient;
+import com.tbs.sdk.http.SessionExpiredListener;
 import com.tbs.sdk.push.IPushMessageApi;
 import com.tbs.sdk.push.ISsePushSubscriber;
 import com.tbs.sdk.push.PushMessageApi;
+import com.tbs.sdk.push.SseFrameListener;
 import com.tbs.sdk.push.SsePushSubscriber;
 import com.tbs.sdk.update.IUpdateApi;
 import com.tbs.sdk.update.UpdateApi;
 import java.io.Closeable;
 import java.io.IOException;
+import java.util.List;
 
 /**
  * SDK顶层门面
@@ -130,6 +134,52 @@ public class TbsClient implements Closeable {
     }
 
     /**
+     * 注册会话失效监听器（收到405/468时先行回调，宿主据此引导重新登录）
+     *
+     * @param listener 监听器（可为null清除）
+     */
+    public void onSessionExpired(SessionExpiredListener listener) {
+        httpClient.setSessionExpiredListener(listener);
+    }
+
+    /**
+     * 登录后启动推送连接（缺省订阅per-user频道 topicPrefix + userId）
+     *
+     * @param userId   当前登录用户数字id（用于派生缺省主题）
+     * @param listener 推送回调监听器
+     * @throws SdkClientException 尚未登录无可用令牌时抛出
+     */
+    public void startPush(String userId, SseFrameListener listener) {
+        startPush(null, userId, listener);
+    }
+
+    /**
+     * 登录后启动推送连接（显式指定订阅主题）
+     *
+     * @param topics   订阅主题列表（为空时按userId派生per-user缺省频道）
+     * @param userId   当前登录用户数字id
+     * @param listener 推送回调监听器
+     * @throws SdkClientException 尚未登录无可用令牌时抛出
+     */
+    public void startPush(List<String> topics, String userId, SseFrameListener listener) {
+        if (!tokenManager.hasToken()) {
+            throw new SdkClientException("尚未登录，无可用令牌；请先登录后再启动推送");
+        }
+        sse.subscribe(topics, userId, null, listener);
+    }
+
+    /**
+     * 登出：调用后端登出接口注销令牌，关闭推送长连接并清理本地令牌（后端失败不阻断本地清理）
+     */
+    public void logout() {
+        try {
+            login.logout();
+        } finally {
+            sse.close();
+        }
+    }
+
+    /**
      * 获取SDK配置
      *
      * @return 配置对象
@@ -139,8 +189,8 @@ public class TbsClient implements Closeable {
     }
 
     /**
-     * 释放全部资源（幂等）：先关闭SSE订阅器（含其内部执行器），
-     * 再关闭HTTP客户端连接池。
+     * 释放资源（幂等）：关闭SSE连接（订阅器守护线程随实例回收，不阻止JVM退出），
+     * 再关闭HTTP客户端连接池与分发器。
      *
      * @throws IOException 资源释放失败时抛出
      */
