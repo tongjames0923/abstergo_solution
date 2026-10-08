@@ -1,457 +1,514 @@
-# 消息推送（SSE）使用说明文档
+# 推送消息中心 · 接入与开发指南（从 0 到 1 + 多客户端案例）
 
-> 适用版本：push-mod（SSE 传输）+ app-ui-vue 前端推送模块
-> 读者：需要接入推送能力的前端/后端/第三方系统开发人员
-> 相关文档：[前端推送模块契约](../app-ui-vue/src/push/README.md)、后端 `push-mod/README.md`（WebSocket 传输与协议详解）
+> 面向"要把推送/站内信接进来"的开发者。设计原理与决策见同目录 `推送消息中心设计方案.md`，本文只讲**怎么跑通、怎么接**。
+> 全文端点、字段、帧格式均对齐当前代码仓库。约定服务地址用变量 `BASE`（如 `http://localhost:8083`），令牌用 `TOKEN`。
+
+## 0. 读前须知
+
+- **两个开关**：业务消息中心能力受 `tbs.system.enable=true` 控制；长连接与信令受 `tbs.push.enable=true` 控制。二者相互独立。
+- **令牌头**：所有 `/private/**` 需登录令牌。浏览器 axios 与 SDK 均自动携带；手写请求时置于 `Authorization` 头（取值即登录令牌，前缀以项目认证体系为准）。
+- **成功语义**：**入库即投递成功**。HTTP 发送成功 ≠ 前端收到；信令丢了也没关系，客户端建连/重连会主动拉第一页兜底。
+
+## 1. 一分钟心智模型
+
+一条消息的旅程 = **落库 → 空信令 → 拉取 → 回传**：
+
+```
+① 签票   POST /private/push/auth            带 token，换一次性 ticket(TTL60s) + sessionId
+② 建连   GET  /private/push/sse/connect?push-ticket=…   下行事件流，首帧 event:hello 带回 sessionId
+③ 订阅   POST /private/push/sse/upload       上行帧 type=SUBSCRIBE，订阅 tbs.push.channel.{userId}
+④ 发送   POST /private/push/message/notify   落库(fan-out)，事务提交后逐人 publishSignal
+⑤ 触达   在线客户端收到 event:signal         →（防抖）→ GET /private/push/message/list 拉正文
+⑥ 回传   POST /private/push/message/read | /operate       写 READ/CLICK 日志，未读由日志派生
+```
+
+要点：**长连接只推空信令（`signal`，无载荷）**，正文一律走鉴权的分页拉取接口。这样天然获得持久化、历史、未读、翻页，且大消息不占用广播通道。
+
+## 2. 端点与契约速查
+
+### 2.1 传输层（3 个，建"管道"）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/private/push/auth` | body `{token, userId?, attributes?}` → `data:{ticket, sessionId, grantedTopics}` |
+| GET | `/private/push/sse/connect?push-ticket=` | SSE 下行流；首帧 `hello`；`@NoWrapped`（非统一响应体） |
+| POST | `/private/push/sse/upload` | body `{sessionId, frame:{version:1, type, topic?, payload?}}` |
+
+**两套表达，勿混**：
+
+- 上行帧 `type` = 后端 `FrameTypeEnum` **大写枚举名**：`SUBSCRIBE` / `UNSUBSCRIBE` / `PING`（`DATA` 编程用）。
+- 下行 SSE **事件名** = 帧类型 **小写值**：`hello` / `signal` / `pong` / `data` / `error`。
+
+### 2.2 消息中心（6 个，基路径 `/private/push/message`，注意 message 单数）
+
+| 方法 | 路径 | 入参 | data |
+|------|------|------|------|
+| POST | `/notify` | `PushNotifySendForm`（`msgType` 必填） | `{messageId, topic, msgType, receiverCount, signalCount}` |
+| GET | `/list` | query：`cursor` / `limit`(≤100,缺省20) / `readFlag=all\|unread` | `{list:[…], cursor, hasMore}` |
+| GET | `/unread-count` | — | `long` |
+| POST | `/read` | **裸数组** `[10086,10087]`（≤100） | `int`（实际写入数，幂等） |
+| POST | `/operate` | `{messageId, opType, extInfo?}` | `int`（CLICK 补记 READ） |
+| GET | `/chain` | query：`?messageId=` | `{message, sendEvent, receivers[], operations[]}` |
+
+列表行 `list[i]` 字段：`messageId, topic, msgType, title, content, priority, sender, url, createTime, readFlag, readTime`。
+
+### 2.3 发送表单字段（`/notify`）
+
+| 字段 | 必填 | 约束 | 缺省 |
+|------|------|------|------|
+| `msgType` | ✅ | 非空、≤32 | — |
+| `title` | | ≤255 | — |
+| `content` | | — | — |
+| `priority` | | `low`/`normal`/`high`/`urgent` | `normal` |
+| `topic` | | ≤128，见 §2.4 | `global.broadcast` |
+| `sender` | | ≤64 | HTTP 下取当前登录用户 |
+| `url` | | ≤512 | — |
+| `extInfo` | | 任意 JSON | — |
+| `source` | | `http`/`rpc`/`job`/`system` | `http` |
+
+> **接收人不随表单传递**，由后端按 `topic` 解析（见 §2.4）。
+
+### 2.4 topic 决定"发给谁"（默认解析器规则）
+
+| topic 写法 | 投递对象 |
+|------------|----------|
+| 不传 / `global.broadcast` | 全体激活用户 |
+| `user.name.{userName}` | 按用户名精确匹配 |
+| `user.search.{keyword}` | 按用户名前缀搜索 |
+| `tbs.push.channel.*` | **保留命名空间**，业务禁用（防伪装信令） |
+| 其他未知 topic | 无人（仅落库，`receiverCount=0`） |
+
+`receiverCount>0` 才算真有人收到；`=0` 表示没解析到接收人（如用户名不存在）。
 
 ---
 
-## 一、功能整体介绍与适用场景
+## 3. 从 0 到 1 跑通
 
-### 1.1 功能定位
+### 3.1 后端就绪
 
-消息推送功能基于 **SSE（Server-Sent Events）** 提供服务端到浏览器的实时单向下行通道，配套完整的连接管理、认证鉴权、主题订阅、心跳保活、断线重连、消息去重与 UI 呈现能力，可作为系统通知、任务提醒、审批催办等场景的**可复用基座**。
+```yaml
+# application-tbs.yml
+tbs:
+  system:
+    enable: true
+  push:
+    enable: true
+    transport: sse          # 或 websocket
+```
 
-核心能力一览：
+- 启动类标注 `@EnableTbsPush` + `@EnableTbsPushSse`（WebSocket 用对应启用注解）；
+- 引入 `push-sse-impl`（或 `push-websocket-impl`）与 `default-system-impl`；
+- 三张表建好：`push_message` / `push_message_receiver` / `push_message_operation_log`；
+- `PushMessageScanConfig` 已 `@MapperScan`/`@EntityScan` 指向 shared 的 push 包（引入即生效）。
 
-| 能力 | 说明 |
-|------|------|
-| 认证建连 | 登录令牌换取一次性 ticket（TTL 60s），携票据建立 SSE 流 |
-| 主题订阅 | 支持点对点（per-user）与通配符（`*` 单级 / `#` 多级）主题 |
-| 心跳保活 | 前端周期上行 PING（默认 30s），服务端空闲超时监控（可配置） |
-| 断线重连 | 指数退避（1s→30s + 随机抖动），自动换票重连、重连后自动重订阅 |
-| 消息去重 | 基于消息 id 的 Set 去重，杜绝重连/重发导致的重复弹窗 |
-| 容错隔离 | 非法消息（缺 id/type、JSON 损坏）静默丢弃，不影响后续接收 |
-| UI 呈现 | 右上角通知弹窗（按优先级控制时长）+ 顶栏铃铛 + 消息中心抽屉 |
-| 管理发布 | 通知发布页（全体/指定用户）、结构化校验、发布历史本地留存 |
+### 3.2 验证判据（跑通即达标）
 
-### 1.2 适用场景
+1. `POST /notify` 返回 `receiverCount>0`；
+2. 在线客户端收到 `event:signal`；
+3. `GET /list` 能拉到这条消息；
+4. `GET /unread-count` 计入它；
+5. `POST /read` 后未读减 1、`readFlag` 变 `true`；
+6. `GET /chain?messageId=` 能看到 SEND + 接收人 + READ 三段。
 
-- **系统通知**：向全体用户（`global.system.notify.*`）或指定用户（`global.system.notify.{用户名}`）发布通知/警告/提醒。
-- **业务实时提醒**：订单状态、审批待办、监控告警等需要实时触达在线用户的场景（业务自定义 topic，如 `global.biz.order.{orderId}`）。
-- **轻量实时看板**：单向数据下发场景（SSE 不支持客户端→服务端的流内上行，上行走独立 HTTP 端点）。
+### 3.3 选客户端
 
-不适用：高频双向通信（请评估 WebSocket 传输，见 `push-mod/README.md`）、离线消息必达（见 5.3 消息丢失）。
+| 场景 | 走 | 见 |
+|------|----|----|
+| 命令行验证 / 网关联调 | curl | §4 |
+| 非 Vue 的纯前端页 | 浏览器原生 SSE | §5 |
+| 本项目 `app-ui-vue` | 复用 `src/push` | §6 |
+| Java 后端/桌面 | Java SDK | §7 |
+| .NET 应用 | C# SDK | §8 |
+| 脚本/服务集成 | Python / Go | §9 / §10 |
+| 系统内部发通知（免 HTTP） | 程序化 Service | §11 |
 
 ---
 
-## 二、Vue 前端接入与使用方式
+## 4. 案例 A：curl 全流程
 
-### 2.1 本项目（app-ui-vue）——开箱即用
+> 一个终端挂着 SSE 流，另一个终端发通知，观察信令与拉取。
 
-本项目已完成全部接线，**登录成功即自动建连、登出自动断开，无需任何额外配置**：
+```bash
+BASE=http://localhost:8083
 
-| 接线点 | 位置 | 作用 |
-|--------|------|------|
-| 自动建连 | `store/modules/user.js` 的 `getInfo` | 登录态就绪后 `dispatch('push/startConnection', null, { root: true })` |
-| 自动断开 | `store/modules/user.js` 的 `logout` | 登出前 `dispatch('push/stopConnection', null, { root: true })` |
-| 幂等兜底 | `App.vue` 的 `mounted` | 页面刷新后登录态仍在时补启动；`beforeunload` 关闭连接 |
-| 状态展示 | `layout/components/NavBar.vue` | 铃铛 + 未读红点 + 连接状态点（i18n `push.status.*`） |
-| 消息中心 | `components/PushNotificationCenter/index.vue` | 抽屉式历史消息列表（全部已读/清空） |
-| 通知发布 | `views/push/notify-admin/index.vue` | 管理端发布页（全体/指定用户、预览、历史） |
+# 0) 登录取 token（grantType/响应字段以项目实际启用的登录方式为准）
+TOKEN=$(curl -s -X POST "$BASE/public/user/login/password" \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"123456"}' | jq -r '.data.token')
 
-> 注意：`user` 模块是 `namespaced: true`，其内部跨模块 dispatch **必须带 `{ root: true }`**，否则报 `unknown local action type`，推送链路静默失效。该坑已修复过两次，修改 `user.js` 时请留意。
+# 1) 签票：换一次性 ticket + sessionId
+AUTH=$(curl -s -X POST "$BASE/private/push/auth" \
+  -H "Authorization: $TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"token\":\"$TOKEN\",\"userId\":\"1\"}")
+TICKET=$(echo "$AUTH" | jq -r '.data.ticket')
+SID=$(echo "$AUTH" | jq -r '.data.sessionId')
 
-### 2.2 新业务扩展接入（推荐方式）
+# 2) 建连（-N 关缓冲，持续读事件流；另开一个终端继续 3~6）
+curl -N -H "Authorization: $TOKEN" \
+  "$BASE/private/push/sse/connect?push-ticket=$TICKET"
+#   预期先收到： event:hello  data:{...,"sessionId":"..."}
 
-业务代码**只应依赖门面 `@/push`**，不要直接触碰 `sse-client.js` / `notify.js`。
+# 3) 订阅本人信令频道（大写 type）
+curl -s -X POST "$BASE/private/push/sse/upload" \
+  -H "Authorization: $TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"sessionId\":\"$SID\",\"frame\":{\"version\":1,\"type\":\"SUBSCRIBE\",\"topic\":\"tbs.push.channel.1\"}}"
 
-#### 2.2.1 初始化配置
+# 3b) 心跳保活（周期发 PING）
+curl -s -X POST "$BASE/private/push/sse/upload" \
+  -H "Authorization: $TOKEN" -H 'Content-Type: application/json' \
+  -d "{\"sessionId\":\"$SID\",\"frame\":{\"version\":1,\"type\":\"PING\"}}"
+```
 
-本项目已由 store 的 `startConnection` 完成初始化，业务通常**无需再初始化**。若在新页面/新系统中独立接入：
+**另一个终端**（管理员发通知给 `admin`）：
+
+```bash
+BASE=http://localhost:8083
+TOKEN=<上一步的 token>
+
+# 4) 发送：发给用户名精确匹配的接收人
+curl -s -X POST "$BASE/private/push/message/notify" \
+  -H "Authorization: $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"msgType":"notify","title":"工单已分派","content":"#2048 已分派给您","priority":"high","topic":"user.name.admin","url":"/ticket/2048"}'
+#   → data.receiverCount 应 >0；此时第一个终端应打印 event:signal
+
+# 5) 拉正文
+curl -s "$BASE/private/push/message/list?limit=20&readFlag=unread" -H "Authorization: $TOKEN" | jq '.data'
+
+# 5b) 未读数
+curl -s "$BASE/private/push/message/unread-count" -H "Authorization: $TOKEN"
+
+# 6) 已读（裸数组）
+curl -s -X POST "$BASE/private/push/message/read" \
+  -H "Authorization: $TOKEN" -H 'Content-Type: application/json' -d '[10086]'
+
+# 6b) 点击回传
+curl -s -X POST "$BASE/private/push/message/operate" \
+  -H "Authorization: $TOKEN" -H 'Content-Type: application/json' \
+  -d '{"messageId":10086,"opType":"CLICK","extInfo":"curl-demo"}'
+```
+
+---
+
+## 5. 案例 B：浏览器原生 SSE（不依赖框架）
+
+> 原生 `EventSource` 不能带 `Authorization` 头，而 `/private/**` 要求该头。两种解法：① 用 `eventsource-polyfill`（XHR 流实现，可带 Header，本项目即用它）；② 网关放宽 connect 端点鉴权（不推荐）。
 
 ```js
-import { initPush, closePush, CONNECTION_STATUS } from '@/push'
-import { getToken } from '@/utils/auth'
+import { EventSourcePolyfill } from 'event-source-polyfill'
 
-initPush({
-  token: getToken(),                  // 当前登录令牌（必填）
-  userName: this.userName,            // 用于缺省拼接 per-user 主题（必填）
-  // topics: ['global.biz.order.1001'], // 可选：显式指定订阅主题，缺省为 global.system.notify.{userName}
-  config: {                           // 可选：覆盖连接默认参数（见 PUSH_DEFAULTS）
-    heartbeatInterval: 30_000,        // 心跳周期（毫秒）
-    heartbeatMaxFailures: 3,         // 心跳连续失败阈值（达阈判定会话已死，换票重连）
-    reconnectBaseDelay: 1_000,       // 重连退避基数
-    reconnectMaxDelay: 30_000,       // 重连退避上限
-    reconnectJitter: 1_000,           // 随机抖动上限（防惊群）
-    topicPrefix: 'global.system.notify.'
-  },
-  onStatus: status => {              // 可选：连接状态回调
-    // idle | connecting | connected | reconnecting | closed
-  },
-  onMessage: message => {            // 可选：消息拦截，返回 false 可终止弹窗与后续分发（本项用于去重）
-    return true
-  },
-  onRead: message => {               // 可选：用户查看/关闭弹窗回调
-    console.log('已读', message.id)
+async function connect({ token, userId, onNewMessage }) {
+  const base = ''
+  // 1) 签票
+  const { data: cred } = await fetch(base + '/private/push/auth', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: token },
+    body: JSON.stringify({ token, userId })
+  }).then(r => r.json())
+
+  // 2) 建连（携带与 axios 同源的 Authorization 头）
+  const es = new EventSourcePolyfill(
+    `${base}/private/push/sse/connect?push-ticket=${encodeURIComponent(cred.ticket)}`,
+    { headers: { Authorization: token } })
+
+  const upload = frame => fetch(base + '/private/push/sse/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: token },
+    body: JSON.stringify({ sessionId: cred.sessionId, frame })
+  })
+
+  es.addEventListener('hello', () => {
+    // 3) 订阅本人信令频道
+    upload({ version: 1, type: 'SUBSCRIBE', topic: `tbs.push.channel.${userId}` })
+    setInterval(() => upload({ version: 1, type: 'PING' }), 30000)   // 心跳
+    pull()   // hello 兜底先拉一遍
+  })
+
+  es.addEventListener('signal', () => pull())   // 4) 收到信令→拉正文（建议 300ms 防抖）
+
+  async function pull() {
+    const { data: page } = await fetch(base + '/private/push/message/list?limit=20&readFlag=all',
+      { headers: { Authorization: token } }).then(r => r.json())
+    page.list.forEach(onNewMessage)
   }
-})
+  return es   // 关闭：es.close()
+}
 ```
 
-`initPush` 幂等（连接层忽略重复调用），消息流水线为：**调用方拦截（去重）→ 渲染器（弹窗）→ 业务处理器分发**。
+---
 
-#### 2.2.2 订阅推送
+## 6. 案例 C：在本项目 `app-ui-vue` 里接入（推荐路径）
+
+本项目已封装 `src/push`（连接层）+ `src/store/modules/push`（Vuex 单一数据源）+ `PushNotificationCenter`（UI）。**业务通常不用碰 SSE 细节**，只做三件事：
+
+### 6.1 登录后启动连接
+
+在用户登录成功（拿到 token 与 userId）处派发一次：
 
 ```js
-import { subscribeTopics, unsubscribeTopics } from '@/push'
-
-// 动态追加业务主题（连接未就绪时先登记，握手后统一订阅；重复主题幂等）
-subscribeTopics(['global.biz.order.1001', 'global.biz.task.*'])
-
-// 动态退订（连接就绪时同步上行退订帧）
-unsubscribeTopics(['global.biz.order.1001'])
+this.$store.dispatch('push/startConnection')
 ```
 
-缺省订阅主题为 `global.system.notify.{当前登录用户名}`（`TOPIC_PREFIX` 拼接），由 `startConnection` 自动完成，业务无感。
+`startConnection` 内部：取 `getToken()` 与 `rootState.user.userId` → `initPush({ topics:[tbs.push.channel.{userId}], onSignal })`；`onSignal` 对 `/list` 拉取做 **300ms 防抖**；并"登录即先拉一遍"兜底（不等握手）。登出/卸载调 `this.$store.dispatch('push/stopConnection')`。
 
-#### 2.2.3 接收消息
+### 6.2 挂消息中心组件 + 角标
 
-**方式一：注册消息处理器（推荐，与 UI 解耦）**
+```vue
+<template>
+  <PushNotificationCenter
+    :messages="pushMessages"
+    :unread="pushUnreadCount"
+    :status="pushConnectionStatus" />
+</template>
+<script>
+import { mapGetters } from 'vuex'
+import PushNotificationCenter from '@/components/PushNotificationCenter'
+export default {
+  components: { PushNotificationCenter },
+  computed: mapGetters('push', ['pushMessages', 'pushUnreadCount', 'pushConnectionStatus'])
+}
+</script>
+```
+
+关键行为（无需改）：`seenIds` 去重防重复弹窗；**首轮拉取只入列不弹窗**（`firstPullDone`）避免登录弹一堆历史；点击条目自动回传 `read`/`operate`；未读角标展示以服务端 `/unread-count` 为准更精确。
+
+### 6.3 按业务类型定制处理（可选）
 
 ```js
 import { registerMessageHandler } from '@/push'
-
-// 按类型注册（notify | warning | reminder），返回取消注册函数
-const off = registerMessageHandler('warning', message => {
-  console.log('收到警告', message.id, message.title)
+const off = registerMessageHandler('notify', msg => {
+  // msg: { id, type, title, content, timestamp, priority, sender, url, read }
+  if (msg.url) routerPush(msg.url)
 })
-
-// '*' 通配：命中全部消息（精确类型处理器先于通配执行）
-registerMessageHandler('*', message => {
-  // 埋点、静默更新等
-})
+// 组件销毁时 off() 注销；'*' 可订阅全部类型
 ```
 
-单个处理器抛出的异常会被捕获隔离，不影响其它处理器与 SSE 流。
+管理端发布用 `src/push/admin.js` 的 `publishNotify(form)`（`scope:'all'`→`global.broadcast` 单次；`scope:'users'`→逐人 `user.name.{username}`）。
 
-**方式二：读取 Vuex 状态（UI 呈现）**
+---
+## 7. 案例 D：Java SDK（`sdk` 模块）
 
-```js
-import { mapGetters } from 'vuex'
+> 门面 `TbsClient` 聚合 `login()`/`push()`/`sse()`/`update()`，登录令牌由 HTTP 层自动注入；`TbsClient` 实现 `Closeable`，用毕释放。
 
-export default {
-  computed: {
-    // push 模块是 namespaced，必须带命名空间！
-    ...mapGetters('push', ['pushConnectionStatus', 'pushMessages', 'pushUnreadCount'])
-  },
-  methods: {
-    markRead(id) { this.$store.dispatch('push/markRead', id) },
-    markAll() { this.$store.dispatch('push/markAllRead') }
-  }
+```java
+import com.tbs.sdk.TbsClient;
+import com.tbs.sdk.model.*;
+import com.tbs.sdk.push.*;
+import java.util.*;
+
+try (TbsClient client = TbsClient.create("http://localhost:8083")) {
+    // 1) 登录（grantType + 对应表单），令牌自动写入后续请求
+    client.login().login("password", Map.of("username", "admin", "password", "123456"));
+
+    // 2) 发通知（落库 + fan-out + 信令均由后端完成）
+    PushNotifySendForm form = new PushNotifySendForm();
+    form.setMsgType("notify");
+    form.setTitle("工单已分派");
+    form.setPriority("high");
+    form.setTopic("user.name.admin");
+    PushSendResult r = client.push().notify(form);
+    System.out.println("接收人=" + r.getReceiverCount() + ", 信令=" + r.getSignalCount());
+
+    // 3) 订阅本人信令频道；收 SIGNAL 后拉取正文
+    client.sse().subscribe(List.of("tbs.push.channel.1"), "1", null, new SseFrameListener() {
+        @Override public void onConnected(String sessionId) { pull(client); }   // hello 兑底
+        @Override public void onFrame(FrameType type, PushFrame frame) {
+            if (type == FrameType.SIGNAL) pull(client);                          // 收信令→拉
+        }
+        @Override public void onError(Throwable cause) { cause.printStackTrace(); }
+    });
+
+    Thread.sleep(60_000);
+}
+
+static void pull(TbsClient client) {
+    PushMessageQueryForm q = new PushMessageQueryForm();
+    q.setLimit(20);
+    q.setReadFlag("all");
+    PushMessagePage page = client.push().list(q);
+    page.getList().forEach(m -> System.out.println(m.getTitle() + " read=" + m.getReadFlag()));
+    // 未读数： client.push().unreadCount();
+    // 已读：   client.push().markRead(List.of(10086L));
 }
 ```
 
-| Getter | 说明 |
-|--------|------|
-| `pushConnectionStatus` | 连接状态（idle/connecting/connected/reconnecting/closed） |
-| `pushMessages` | 消息列表（新消息在前，内存上限 200 条滚动淘汰） |
-| `pushUnreadCount` | 未读数（派生值） |
+---
 
-**方式三：管理端发布（发通知）**
+## 8. 案例 E：C# SDK（`sdk-csharp` 模块）
 
-```js
-import { publishNotify, validateNotifyForm } from '@/push/admin'
+> 组合根 `TbsSdkClient` 暴露 `Auth`/`Messages`（CRUD）/`Push`（`SsePushClient`）。`SignalReceived` 在 `hello` 兑底与 `signal` 两路都触发。
 
-const form = {
-  title: '系统维护通知',
-  content: '今晚 22:00-24:00 系统升级维护',
-  type: 'notify',        // notify | warning | reminder
-  priority: 'high',      // low | normal | high | urgent
-  url: '/notice/1',      // 可选：点击弹窗跳转
-  scope: 'users',        // 'all' 全体（通配 global.system.notify.*）| 'users' 指定用户
-  users: ['zhangsan']    // scope 为 users 时必填
+```csharp
+using TbsSdk;
+using TbsSdk.Configuration;
+using TbsSdk.Models;
+using TbsSdk.Push;
+
+var options = new TbsSdkOptions { BaseUrl = "http://localhost:8083" };
+using var sdk = new TbsSdkClient(options);
+sdk.SessionExpired += (s, e) => Console.WriteLine("会话失效，请重新登录: " + e.Message);
+
+// 1) 登录（账号密码），令牌自动存入 TokenStore
+var token = await sdk.LoginAsync("admin", "123456");
+
+// 2) 发通知
+var send = await sdk.Messages.SendNotifyAsync(new PushNotifySendForm {
+    MsgType = "notify", Title = "工单已分派", Priority = PushMessagePriority.High,
+    Topic = "user.name.admin", Url = "/ticket/2048"
+});
+Console.WriteLine($"接收人={send.ReceiverCount}, 信令={send.SignalCount}");
+
+// 3) 收信令→拉取
+sdk.Push.SignalReceived += async () => {
+    var page = await sdk.Messages.FetchMessagesAsync(limit: 20, readFlag: PushConstants.ReadFlagAll);
+    foreach (var m in page.List) Console.WriteLine($"{m.Title} read={m.ReadFlag}");
+};
+
+// 4) 启动推送（内部 Configure+Connect，缺省订阅 tbs.push.channel.{userId}）
+sdk.StartPush(userId: token.Id?.ToString());
+// 动态增订：sdk.Push.SubscribeTopics("global.broadcast");
+// 已读：  await sdk.Messages.MarkReadAsync(new long[]{10086});
+```
+
+---
+
+## 9. 案例 F：Python（`requests` + 手动读 SSE）
+
+> 无专用 SDK，直接用 REST + SSE。关键点：`Authorization` 头、`signal` 事件触拉取、`stream=True` 逐行。
+
+```python
+import requests, threading, time
+
+BASE = "http://localhost:8083"
+s = requests.Session()
+
+# 0) 登录（grantType / 字段以实际启用方式为准）
+tok = s.post(f"{BASE}/public/user/login/password",
+             json={"username": "admin", "password": "123456"}).json()["data"]["token"]
+H = {"Authorization": tok}
+
+# 1) 签票
+cred = s.post(f"{BASE}/private/push/auth", headers=H,
+              json={"token": tok, "userId": "1"}).json()["data"]
+sid = cred["sessionId"]
+
+# 2) 订阅本人频道（上行帧 type 大写）
+s.post(f"{BASE}/private/push/sse/upload", headers=H, json={
+    "sessionId": sid, "frame": {"version": 1, "type": "SUBSCRIBE",
+                                 "topic": "tbs.push.channel.1"}})
+
+def pull():
+    page = s.get(f"{BASE}/private/push/message/list", headers=H,
+                 params={"limit": 20, "readFlag": "all"}).json()["data"]
+    for m in page["list"]:
+        print(m["title"], m["readFlag"])
+
+def listen():
+    with s.get(f"{BASE}/private/push/sse/connect", headers=H,
+               params={"push-ticket": cred["ticket"]}, stream=True) as r:
+        event = None
+        for line in r.iter_lines(decode_unicode=True):
+            if line and line.startswith("event:"):
+                event = line.split(":", 1)[1].strip()
+            elif event == "signal" and line.startswith("data:"):
+                pull()   # 建议此处加 300ms 防抖
+
+def heartbeat():
+    while True:
+        s.post(f"{BASE}/private/push/sse/upload", headers=H, json={
+            "sessionId": sid, "frame": {"version": 1, "type": "PING"}})
+        time.sleep(30)
+
+threading.Thread(target=listen, daemon=True).start()
+threading.Thread(target=heartbeat, daemon=True).start()
+# 发通知：s.post(f"{BASE}/private/push/message/notify", headers=H, json={"msgType":"notify", "topic":"user.name.admin", "title":"x"})
+```
+
+---
+
+## 10. 案例 G：Go（`net/http` + `bufio`）
+
+> 同理：签票 → `GET .../sse/connect?push-ticket=` 流式读 → `event:signal` 行触发 `GET /list`。错误处理略。
+
+```go
+base := "http://localhost:8083"
+
+// 1) 签票（POST /private/push/auth，头 Authorization: tok），取 data.Ticket / data.SessionId
+// 2) 订阅（POST /private/push/sse/upload，frame.type="SUBSCRIBE", topic="tbs.push.channel.1"）
+
+req, _ := http.NewRequest("GET", base+"/private/push/sse/connect?push-ticket="+ticket, nil)
+req.Header.Set("Authorization", tok)
+stream, _ := http.DefaultClient.Do(req)
+defer stream.Body.Close()
+
+sc := bufio.NewScanner(stream.Body)
+var event string
+for sc.Scan() {
+    line := sc.Text()
+    switch {
+    case strings.HasPrefix(line, "event:"):
+        event = strings.TrimPrefix(line, "event:")
+    case event == "signal" && strings.HasPrefix(line, "data:"):
+        pullMessages(base, tok) // GET /private/push/message/list
+    }
+}
+```
+
+---
+
+## 11. 后端程序化发送（免 HTTP）
+
+同一 JVM 内的业务代码直接依赖服务，走与 `/notify` 完全一致的链路：
+
+```java
+@Resource
+private IPushNotifyService pushNotifyService;   // 推荐：落库 + fan-out + 信令
+
+public void fireOrderAssigned(long assigneeUserId, String assigneeName) {
+    PushNotifySendForm form = new PushNotifySendForm();
+    form.setMsgType("notify");
+    form.setTitle("工单已分派");
+    form.setPriority(PushNotifySendForm.PRIORITY_HIGH);
+    form.setTopic("user.name." + assigneeName);   // 接收人由解析器按 topic 解析
+    PushSendResultVO r = pushNotifyService.send(form);
+    // r.getReceiverCount()==0 时自行降级（如改发部门广播 topic）
 }
 
-const check = validateNotifyForm(form)   // 结构化校验，不抛异常
-if (!check.valid) return
-
-const result = await publishNotify(form)
-// result.summary: { total, delivered, failed }
-// result.results: [{ target, topic, ok, messageId?, onlineCount?, error? }]
-// 单条失败不中断其余投递；发布历史自动写入 localStorage（上限 50 条）
+// 定时清理（由 xxl-job 等调度调用，非内置）
+// pushNotifyService.cleanupBefore(Date.from(Instant.now().minus(Duration.ofDays(28))));
 ```
 
-#### 2.2.4 权限申请
-
-- **接收**：订阅权限以 **auth 签票时下发的授权集** 为准。服务端签票时点经链式 SPI `IPushTopicGranter` 计算可订阅主题集，写入凭证一等字段 `grantedTopics`（字符串数组，主题模式清单）随 auth 响应返回，前端可据此按需订阅；订阅时服务端按授权集实时校验，**越权订阅被拒**（ERROR 帧，见 2.2.5）。授权集三层来源：
-  - **硬编码本人频道**：`tbs.push.channel.{userId}` 由服务端认证身份推导，建连时服务端自动订阅，无需申请也不依赖客户端自报；
-  - **配置白名单**：`tbs.push.grant-public-topics`（默认 `global.broadcast`）中的公共主题对全体用户放行；
-  - **业务 SPI 扩展**：实现 `IPushTopicGranter` 注册为 Spring Bean 即可按角色/业务规则追加主题（支持订阅侧通配模式），多个授权器按注册顺序链式合并去重，单个异常仅跳过不阻断签票。
-
-  保留前缀 `tbs.push.channel.*` **禁止客户端订制任何形态**（含通配窃听写法），只放行精确本人频道，杜绝跨用户信令元数据窃听。自定义业务主题建议约定命名空间（`global.biz.{业务}.{标识}`）并经上述白名单或 SPI 纳入授权。
-- **发布**：`POST /private/push/send` 为私有接口，须持有有效登录令牌（请求头 `Authorization`）。**当前未做细粒度权限注解**，任何登录用户均可调用；如需收敛到管理员，请在业务层自行加权限校验（见 5.1）。
-- **页面**：管理端通知发布页（`views/push/notify-admin`）按动态路由权限分配，与其它菜单权限一致。
-
-#### 2.2.5 异常处理
-
-模块自身已内置完整容错，业务侧只需感知：
-
-| 异常 | 模块行为 | 业务侧建议 |
-|------|----------|------------|
-| 认证签票失败 | 打 warn 日志，进入退避重连；登录态失效（刷新失败 / 本地已无 token）时停止重连置 closed | 监听状态变 closed 且非登出触发时引导重新登录 |
-| SSE 流断开 | 换票自动重连（指数退避，每次建连实时取最新 token），重连后自动重订阅 | 监听 `onStatus`/`pushConnectionStatus` 展示状态即可 |
-| 消息 JSON 非法 / 缺 id 或 type | 丢弃该条（warn 日志），不影响后续消息 | 发送端务必遵守消息契约（见 3.3） |
-| 处理器抛异常 | 捕获隔离，不影响其它处理器 | 处理器内部尽量自兜底 |
-| 订阅/退订/心跳上行失败 | 订阅失败 warn 日志（重连后全量重订阅自愈）；心跳连续失败达 `heartbeatMaxFailures`（默认 3）判定会话已死，关流换票重连 | 关注 `reconnecting` 状态超过 1 分钟未恢复时告警 |
-| 越权订阅（主题不在授权集） | 服务端回 ERROR 帧（code 1008 `SUBSCRIBE_DENIED`，含 i18n 文案），**仅拒绝该次订阅不断流**，其余订阅与心跳不受影响 | 校验主题是否在签票返回的 `grantedTopics` 内；升权需重新 auth 换票重连（授权集是签票时点快照） |
-
-控制台统一以 `[push]` 前缀输出告警，可作为排障入口。
+> 低层 `IPushEndpoint` 只走协议管道、**不写消息中心库**，供自定义推送：
+> `publish(topic, payload)` = DATA 全量帧；`publishSignal("tbs.push.channel.1", null)` = 空信令。消息中心发送请优先用 `IPushNotifyService.send`。
 
 ---
 
-## 三、其他语言 / 技术栈接入方式
+## 12. 常见问题排查
 
-SSE 本质是 `text/event-stream` 格式的 HTTP 长连接，**任何支持 HTTP 流式读取的语言都能接入**（curl、Java、Python、Go 等）。前端仓库使用 `event-source-polyfill`，纯技术栈直接用原生 `EventSource` 或流式 HTTP 客户端即可。
-
-### 3.1 通用接口清单
-
-| 接口 | 方法 | 路径 | 说明 |
-|------|------|------|------|
-| 签发凭证 | POST | `/private/push/auth` | 换取一次性 ticket |
-| 建立下行流 | GET | `/private/push/sse/connect?push-ticket={ticket}` | SSE 事件流 |
-| 上行帧 | POST | `/private/push/sse/upload` | 订阅/退订/心跳 |
-| 发布消息 | POST | `/private/push/send` | 发布到指定 topic |
-| 在线会话数 | GET | `/private/push/online` | 当前全部在线会话数 |
-
-### 3.2 鉴权方式
-
-- **认证体系**：所有 `/private/**` 接口受登录网关保护，令牌默认经 **HTTP Header `Authorization`** 携带（可配置 `tbs.web.auth.token-source` 为 header/cookie/param，字段名 `tbs.web.auth.token-filed-name`）。
-- **推送双凭证机制**：登录令牌 ≠ 建连凭证。流程是「登录令牌 → auth 端点换一次性 ticket → ticket 建连」。ticket：
-  - **一次性**：服务端原子消费，防重放；连接断开后必须**重新** auth 换新票，复用旧票必然失败；
-  - **短时效**：默认 TTL 60s（`tbs.push.auth.ticket-ttl-millis`），签发后须立即建连；
-  - 通过 query 参数 `push-ticket` 携带（EventSource 无法自定义 Header 的折中设计）。
-- **身份绑定**：auth 请求体中的 `userId`/`token` 仅是客户端声明，服务端以**网关认证主体**（登录令牌解析出的用户）为唯一权威反查数字 ID 后覆盖写入凭证属性，声明与解析不一致时仅记审计日志不拒绝（兼容存量客户端）；ticket 被旁路获取时，他人携该票建连会因建连时点身份一致性校验被关闭。
-- **授权集机制**：签票时点链式 `IPushTopicGranter` 计算授权主题集，写入凭证字段 `PushCredential.grantedTopics`（**唯一真源**，见 2.2.4）；建连时由凭证派生为会话属性（逗号分隔字符串只是跨层载体，不存在双写），订阅时点由 `ISubscriptionAuthorizer` 按会话属性判定。授权集为**签票时点快照**：长连接期间业务侧降权不生效、提权需断线重连换票。旧客户端（未读该字段的 Java / C# SDK 与前端）因 Jackson / System.Text.Json 忽略未知属性而不受影响；需消费可订清单时，两个 SDK 的 `PushCredential` 镜像模型已同步 `grantedTopics` / `GrantedTopics` 字段。
-- **发布接口**：直接用登录令牌走 Header 鉴权，与 ticket 无关。
-
-### 3.3 消息格式
-
-**发布请求体**（`POST /private/push/send`）：
-
-```json
-{
-  "topic": "global.system.notify.zhangsan",
-  "payload": {
-    "id": "M1705123456789",
-    "type": "notify",
-    "title": "系统通知",
-    "content": "您有一条新的审批待处理，请及时处理。",
-    "timestamp": 1705123456789,
-    "priority": "normal",
-    "sender": "system",
-    "url": "/approve/123"
-  }
-}
-```
-
-`topic` 可省略（缺省 `global.broadcast`）；支持通配符 `*`（单级）、`#`（多级）。
-
-> **payload 强约束**：发布端点对载荷做前置契约校验（`PushNotifyMessage`）——`id`/`type` 必填、`type`/`priority` 白名单校验（type: notify/warning/reminder；priority: low/normal/high/urgent）、`timestamp`/`priority` 缺省自动补齐（当前毫秒/normal）。非法载荷在**发布时即被拒绝**（返回 i18n 错误文案 `push.notify.*`），不再依赖接收端容错丢弃。
-
-**业务消息契约**（payload 字段）：
-
-| 字段 | 类型 | 必填 | 说明 |
-|------|------|------|------|
-| `id` | string | **是** | 消息唯一标识（接收端据此去重，缺失则整条被丢弃） |
-| `type` | string | **是** | `notify`（通知）/ `warning`（警告）/ `reminder`（提醒），白名单外丢弃 |
-| `title` | string | 否 | 标题，缺省空串 |
-| `content` | string | 否 | 正文，缺省空串 |
-| `timestamp` | number | 否 | 毫秒时间戳，缺省取接收时刻 |
-| `priority` | string | 否 | `urgent` / `high` / `normal` / `low`，缺省 normal（影响弹窗时长：urgent/high 常驻，normal 4.5s，low 3s） |
-| `sender` | string | 否 | 发送者标识 |
-| `url` | string | 否 | 点击弹窗跳转地址（相对路由或完整 URL） |
-
-**上行帧**（`POST /private/push/sse/upload`）——`type` 为帧类型**大写枚举名**：
-
-```json
-{ "sessionId": "uuid", "frame": { "version": 1, "type": "SUBSCRIBE", "topic": "global.system.notify.zhangsan" } }
-```
-
-```json
-{ "sessionId": "uuid", "frame": { "version": 1, "type": "UNSUBSCRIBE", "topic": "global.system.notify.zhangsan" } }
-```
-
-```json
-{ "sessionId": "uuid", "frame": { "version": 1, "type": "PING" } }
-```
-
-> 注意两套表达勿混用：**上行帧 type 用大写枚举名**（SUBSCRIBE/PING），**下行 SSE 事件名是小写值**（hello/data/pong/error）。
-
-**下行 SSE 事件**：每个事件的 `data` 为帧对象 JSON 字符串，其 `payload` 字段为内容 JSON 字符串（**需二次 JSON 解析**）：
-
-| 事件名 | 触发时机 | payload 内容 |
-|--------|----------|--------------|
-| `hello` | 建连成功握手帧 | `{"sessionId":"...","version":1}`（字符串，二次解析取 sessionId） |
-| `subscribe` | 订阅确认 | 订阅结果信息 |
-| `unsubscribe` | 退订确认 | 退订结果信息 |
-| `data` | 业务消息下发 | 业务消息 JSON（见上契约） |
-| `ping` | 服务端心跳探测 | — |
-| `pong` | 对上行 PING 的应答 | —（作为链路活性观测点） |
-| `error` | 协议/凭证错误 | 错误信息 |
-
-### 3.4 通用交互流程（curl 演示）
-
-```bash
-# 0. 登录取令牌（项目现有登录接口，略） → 得到 TOKEN
-
-# 1. 换取一次性凭证（60 秒内用于建连）
-curl -X POST http://host:8080/private/push/auth \
-  -H "Authorization: ${TOKEN}" -H "Content-Type: application/json" \
-  -d '{"token":"${TOKEN}","userId":"zhangsan"}'
-# 响应 data: { "ticket": "...", "sessionId": "...", "expireAt": ..., "grantedTopics": ["tbs.push.channel.1001","global.broadcast"] }
-
-# 2. 建立 SSE 下行流（-N 禁用缓冲；必须带 Authorization 头）
-curl -N "http://host:8080/private/push/sse/connect?push-ticket=${TICKET}" \
-  -H "Authorization: ${TOKEN}"
-# 首事件: event: hello → 二次解析 payload 取 sessionId
-
-# 3. 订阅主题（用 hello 下发的 sessionId）
-curl -X POST http://host:8080/private/push/sse/upload \
-  -H "Authorization: ${TOKEN}" -H "Content-Type: application/json" \
-  -d '{"sessionId":"${SESSION_ID}","frame":{"version":1,"type":"SUBSCRIBE","topic":"global.system.notify.zhangsan"}}'
-
-# 4. 发布消息（另一终端，任意已登录客户端）
-curl -X POST http://host:8080/private/push/send \
-  -H "Authorization: ${TOKEN}" -H "Content-Type: application/json" \
-  -d '{"topic":"global.system.notify.zhangsan","payload":{"id":"M-001","type":"notify","title":"测试","content":"hello","priority":"normal"}}'
-# 响应 data: { "messageId": "...", "topic": "...", "onlineCount": 1 }
-
-# 5. 步骤 2 的连接收到 event: data，二次解析 payload 得业务消息
-
-# 6. 心跳保活（周期性，默认前端 30s 一次）
-curl -X POST http://host:8080/private/push/sse/upload \
-  -H "Authorization: ${TOKEN}" -H "Content-Type: application/json" \
-  -d '{"sessionId":"${SESSION_ID}","frame":{"version":1,"type":"PING"}}'
-```
-
-其它语言要点：Java 用 `OkHttp`/`HttpClient` 的流式响应或 `okhttp-sse`；Python 用 `requests(stream=True)` 逐行读 `event:`/`data:` 行。WebSocket 技术栈可直接切后端传输（`tbs.push.transport=websocket`，`ws://host/push/ws?push-ticket=...`，帧语义相同，详见 `push-mod/README.md`）。
-
----
-
-## 四、端到端完整流程说明
-
-### 4.1 主链路（注册 → 授权 → 订阅 → 发送 → 接收）
-
-```text
-用户登录(取令牌 TOKEN)
-   │
-   ├─ 授权: POST /private/push/auth {token}
-   │        ← data: {ticket, sessionId, expireAt, grantedTopics}  (ticket 一次性, TTL 60s)
-   │
-   ├─ 建连: GET /private/push/sse/connect?push-ticket=xxx   (Header: Authorization)
-   │        ← event: hello (二次解析 payload 取 sessionId)
-   │
-   ├─ 订阅: POST /sse/upload {sessionId, frame: SUBSCRIBE topic}   ← 事件: subscribe 确认
-   │
-   ├─ 保活: 每 30s POST /sse/upload {frame: PING}                 ← 事件: pong
-   │
-发送方: POST /private/push/send {topic, payload}  → 投递给订阅该 topic 的全部在线会话
-   │
-   └─ 接收: event: data → 二次解析 payload → 契约校验(缺 id/type 则丢弃)
-            → id 去重(Set) → 入列(上限200) → 弹窗(按优先级定时) → 业务处理器
-```
-
-### 4.2 失败与重试机制
-
-| 阶段 | 失败表现 | 处理机制 |
-|------|----------|----------|
-| auth 签票 | 请求失败/401 | 退避后整体重试（重新签票，每次实时取最新 token）；登录态失效（拦截器标记 authExpired）或本地已无 token 时停止重连，置 closed 等待重新登录 |
-| SSE 建连 | error 事件 | 关流 → **重新 auth 换新票**（旧票已消费不可复用）→ 退避重连 |
-| 订阅上行 | upload 请求失败 | warn 日志；重连成功后随全量主题统一重订阅（自然自愈） |
-| 越权订阅 | 下行 error 事件（帧 code 1008） | 该次订阅被拒不断流；按授权集（2.2.4）核对主题，必要时重新 auth 换票重连刷新授权快照 |
-| 上行守卫拒绝 | 下行 error 事件（帧 code 1009） | 携他人 sessionId 上行或会话绑定身份与当前主体不符，该帧被丢弃不断流；前端正常链路不会触发，出现即按归属异常排查 |
-| 心跳上行 | PING 请求失败 | warn 日志，下一周期（30s）重试；连续失败达 `heartbeatMaxFailures`（默认 3）判定会话已死（下行流可能仍开着但上行全死），主动关流转换票重连自愈 |
-| 链路空闲 | 服务端超 `tbs.push.heartbeat-timeout-millis` 无活动 | 服务端主动关闭会话（完整清理链：物理拆除→注销→订阅清理→断开拦截器，不依赖半开连接的事件回传）→ 客户端 error → 自动重连 |
-| 发布投递 | send 请求失败 | `publishNotify` 按 allSettled 语义单条重试不中断其余；调用方按 `results[].ok` 决定是否人工重发 |
-| 消息非法 | 缺 id/type、JSON 损坏 | 接收端容错丢弃（warn 日志），不影响后续消息 |
-
-**退避算法**：`delay = min(30s, 1s × 2^attempts) + random(0~1s)`，首次失败约 1s 重试，持续失败逐步拉长到 30s 封顶，随机抖动防多客户端惊群。重连成功后 `attempts` 归零。
-
-**登出**：主动关闭（`close()`），置 `manualClose` 标记阻止一切自动重连；再次登录重新走完整链路。
-
----
-
-## 五、注意事项
-
-### 5.1 权限与安全
-
-- **身份绑定三层模型**：身份在签票点绑定（网关认证主体为唯一权威，表单声明仅被覆盖与审计）；一致性在建连时点校验（凭证绑定身份≠当前请求主体 → 直接关闭会话，close 原因 `identity-mismatch`）；归属在上行时点校验（协议层上行守卫链 `IUploadGuard` 在帧处理器内对**全部上行帧**判定：会话绑定身份≠当前登录主体则回发 ERROR 帧（code 1009 `UPLOAD_DENIED`）丢弃该帧不断流，SSE 与 WebSocket 两种传输统一覆盖；Controller 不做任何校验编排）。业务侧可注册自定义 `IUploadGuard` Bean 叠加或替换默认守卫（未注册任何守卫时上行全放行）。
-- **订阅鉴权**：订阅点按授权集判定（见 2.2.4/3.2），未注册 `ISubscriptionAuthorizer` 时全放行（向后兼容无鉴权部署）；保留前缀 `tbs.push.channel.*` 无论授权集如何配置都拒绝客户端通配订阅。
-- **服务端主动关闭能力**：传输适配器契约 `ITransportAdapter` 覆盖「建连→上下行→主动/被动关闭」全链路，`closeSession(sessionId, reason)` 一次调用完成物理拆除与清理链（注销→订阅清理→断开拦截器），不依赖事件回传——适用于 token 实际失效、无心跳场景踢线、管理踢线等业务场景（关闭原因常量见 `PushFrameConstants`，如 `token-expired`）；心跳超时监控已走本链路。清理链幂等门禁为注册表注销的原子唯一性，主动关闭与通道事件回传竞态时仅一方执行清理，业务侧可放心双入口调用。
-- **数据面独立安全**：消息拉取接口（`/private/push/message/list` 等）按认证主体过滤，只返回本人收件箱消息——即使信令面配置不当，消息内容也不会串号。
-- 发布接口 `/private/push/send` 仅要求登录，**无细粒度权限校验**——任何登录用户都能向任意 topic 发消息（接收人由后端按 topic 解析）。生产环境若要收敛，建议在业务层加管理员权限校验，或拆分出独立发布端点。
-- ticket 为一次性 + 60s 短时效 + 服务端原子消费，具备防重放能力；不要在日志中输出 ticket/token 原文（后端已做脱敏）。
-- payload 经消息源与投递链路，**不要放置敏感明文**（密码、密钥等）。
-- 自定义 topic 建议遵循命名空间约定（`tbs.push.channel.*` 信令保留、`global.system.*` 系统保留、`global.biz.{业务}.*` 业务自用），并通过授权白名单/SPI 显式授权后才可订阅。
-
-### 5.2 浏览器与网络兼容性
-
-- 原生 `EventSource` 无法携带自定义 Header，而网关对 `/private/**` 要求 `Authorization`——**必须使用 `event-source-polyfill`**（XHR 流实现，本项目已采用）或等价方案。
-- SSE 要求响应**不被代理缓冲**：Nginx 需 `proxy_buffering off;`（或后端输出 `X-Accel-Buffering: no`），否则消息被攒批、延迟明显；开发环境 vue devServer proxy 已配置可用。
-- 网关/负载均衡的**读超时须大于心跳周期**（前端 30s PING、服务端默认空闲超时 90s、本项目配置 600s），否则空闲连接被中间层掐断会引发频繁重连。
-- HTTP/1.1 同域浏览器长连接上限约 6 条，多标签页同开会占满连接池，导致其它请求排队——重场景请评估 HTTP/2 或合并订阅。
-- IE/老浏览器依赖 polyfill 的 XHR 流式能力，兼容目标包含 IE 时需回归验证。
-
-### 5.3 消息丢失（重要）
-
-- **SSE 是"在线投递"语义**：断线期间发布的消息不会补发给重连后的客户端（内存消息源，不落库）。重要业务**必须提供拉取兜底**（页面加载/重连成功后主动查询一次），推送只作加速。
-- 消息列表为**内存态**：刷新页面/重登后历史与已读状态重置（已读持久化为预留扩展点 `persistRead`，当前空实现）。
-- 内存消息源容量上限 `tbs.push.memory-message-capacity`（默认 10000），满时淘汰最早消息。
-
-### 5.4 重复推送
-
-- 通配符主题重叠（如同时订阅 `global.system.notify.*` 与 `global.system.notify.zhangsan`）会收到同一消息多次——前端已按 `id` 去重兜底，但**自研接收端必须实现 id 去重**，业务处理器也应幂等。
-- 发送端对同一 id 重复发布属正常重试语义，接收端天然去重，可放心失败重发（同 id）。
-
-### 5.5 性能
-
-- 每用户一条长连接，会话数 = 在线用户数，评估服务器连接数与网关并发。
-- 发布是"发布即投递给在线订阅者"，`onlineCount` 可判断触达面；不在线用户收不到（见 5.3）。
-- 前端消息列表上限 200 条滚动淘汰，发布历史本地 50 条，均有硬上限防内存膨胀。
-- payload 控制在合理大小（建议 KB 级以内），避免阻塞事件流。
-
----
-
-## 六、常见问题与排查建议
-
-| 现象 | 排查步骤 |
+| 现象 | 排查方向 |
 |------|----------|
-| 状态一直停在「连接中」 | ① Network 看 `POST /private/push/auth` 是否 200（401 → 登录过期，重新登录）；② 看 `GET /private/push/sse/connect` 的 HTTP 状态与响应头 `Content-Type: text/event-stream`（401 → 未带 Authorization 头，检查是否用了原生 EventSource；404/404* → 后端 `tbs.push.enable=true` 且 `transport=sse`）；③ 控制台搜 `[push]` 告警 |
-| auth 成功但收不到 hello | 确认 SSE 响应未被代理缓冲（见 5.2）；确认 ticket 在 60s 内使用且为首次使用 |
-| 收不到业务消息 | ① 发送方响应是否成功——payload 违反强约束契约（缺 id/type、type/priority 非白名单值）会在**发布时即报错**（错误文案 `push.notify.*`）；② 发送成功的响应里 `onlineCount` 是否 ≥1（=0 → 目标不在线，属正常丢失，见 5.3）；③ 订阅与发布 topic 是否匹配（注意通配符级别）；④ 接收端控制台是否有 `[push] 业务消息缺少必填字段 id/type`——仅历史/旁路消息可能出现，正常发布已被强约束拦截 |
-| 订阅返回 code 1008 被拒 | 主题不在签票下发的 `grantedTopics` 授权集内：检查 `tbs.push.grant-public-topics` 配置或业务 `IPushTopicGranter` 扩展是否覆盖该主题；授权变更前签发的旧票不含新授权，需重新 auth 换票重连；`tbs.push.channel.*` 前缀主题只允许精确本人频道（且服务端已自动订阅） |
-| 消息弹了两次 | ① 是否绕过 store 的去重直接调用了 `initPush`（onMessage 没做去重且返回 true）；② 自研处理器是否重复注册；③ 前端已有 id 去重，检查是否多页面各自建连 |
-| 反复「重连中」不恢复 | ① 后端是否重启（恢复后应自动连上）；② auth 是否持续 401（令牌过期）；③ 退避已到 30s 封顶，看服务端会话与网关超时配置（见 5.2） |
-| 登出后仍在收消息 | 确认 `logout` 中 `dispatch('push/stopConnection', null, { root: true })` 未被删改（namespaced 跨模块必须带 root） |
-| 弹窗点击跳转无效 | payload 的 `url` 是否为有效前端路由（相对路径走 `router.push`，完整 URL 走跳转） |
-| 已读状态刷新后丢失 | 当前为内存态设计（见 5.3），如需持久化在 `store/modules/push.js` 的 `persistRead` 扩展点接入 |
-| 控制台 `unknown getter: pushMessages` | `mapGetters` 未带 `'push'` 命名空间：`mapGetters('push', [...])` |
-| 控制台 `unknown local action type: push/startConnection` | namespaced 模块内跨模块 dispatch 漏了 `{ root: true }` |
-
-### 快速自检清单（联调新接入方）
-
-1. 登录后 Network 出现：`POST /private/push/auth` 200 → `GET .../sse/connect?push-ticket=...` pending（EventStream）；
-2. 收到 hello 事件且能解析出 sessionId；
-3. `POST /private/push/send`（topic 命中订阅）返回 `onlineCount ≥ 1`；
-4. SSE 流收到 `data` 事件，二次解析 payload 通过契约校验；
-5. 断开后端 30s 内出现自动重连日志，恢复后自动重订阅并继续收消息；
-6. 同 id 重发一次，接收端不重复入列/弹窗。
+| 404 / 连不上 | 路径拼写：基路径是 `message`（单数）；`transport` 与启用注解匹配 |
+| 建连报 ticket 错 | ticket 一次性且 TTL≈60s；**重连必须重新签票**，不能复用 |
+| 收不到 signal | 未订阅本人频道 `tbs.push.channel.{userId}`；`tbs.push.enable≠true`；userId 与登录用户不符 |
+| 订阅被拒（1008） | 主题不在授权集；`grant-public-topics` 未含该主题；保留前缀不可订 |
+| `receiverCount=0` | topic 未解析到人（用户名不存在/未知 topic）；自定义 SPI 返回空 |
+| 前端不弹窗但列表有消息 | **首轮拉取只入列不弹**（设计如此，避免登录弹一堆历史） |
+| 已读没变化 | 非本人接收关系被静默跳过；`/read` 用**裸数组** `[id]` 不是 `{ids}` |
+| signal 来了拉到旧数据 | 拉取有 300ms 防抖；确认 `/list` 分页游标；重连会拉第一页兑底 |
+| 心跳后仍被关 | 心跳上行连续失败达阈值→自动换票重连；检查令牌是否过期 |
+| 消息发不出去（服务端） | `tbs.system.enable` 未开→Service Bean 未装配；未建表；`msgType` 未传 |
 
 ---
 
-## 附录：相关配置项速查
+## 13. 配置速查
 
-| 配置键 | 默认值 | 说明 |
-|--------|--------|------|
-| `tbs.push.enable` | `false` | 推送功能总开关（项目须显式置 true） |
-| `tbs.push.transport` | `websocket` | 传输选择（`sse` / `websocket`，互斥装配） |
-| `tbs.push.heartbeat-timeout-millis` | `90000` | 服务端会话空闲超时（本项目配置 600000） |
-| `tbs.push.auth.ticket-ttl-millis` | `60000` | 一次性建连凭证有效期 |
-| `tbs.push.grant-public-topics` | `global.broadcast` | 签票授权集的公共主题白名单（支持订阅侧通配模式，业务 `IPushTopicGranter` 可另行扩展） |
-| `tbs.push.memory-message-capacity` | `10000` | 内存消息源容量上限 |
-| `tbs.push.memory-record-capacity` | `10000` | 内存投递记录容量上限 |
-| `tbs.web.auth.token-source` | `HEADER` | 登录令牌来源（HEADER/COOKIE/PARAM/BODY） |
-| `tbs.web.auth.token-filed-name` | `Authorization` | 登录令牌字段名 |
-| `tbs.web.secured-paths` | `/api/**` | 网关受保护路径（本项目覆盖为 `/private/**` 等） |
+| 键 | 缺省 | 作用 |
+|----|------|------|
+| `tbs.system.enable` | — | 业务 Service / Resolver 装配 |
+| `tbs.push.enable` | 字段 true，但需**显式配** | 协议层 + 安全 SPI 装配 |
+| `tbs.push.transport` | `sse`（非 PushProperty 字段，仅 WS 侧条件读） | 传输实现选择 |
+| `tbs.push.heartbeat-timeout-millis` | 90000（本项目 600000） | 服务端死连接判定空闲时长 |
+| `tbs.push.grant-public-topics` | `[global.broadcast]` | 公开可订阅白名单 |
+| `tbs.push.memory-message-capacity` | 10000 | 内存信令源容量 |
+| `tbs.push.dispatch.scheduler` | — | 分发调度方式（`job` 走 PushDispatchJob） |
 
-前端连接默认参数见 `app-ui-vue/src/push/push-message.js` 的 `PUSH_DEFAULTS`（心跳 30s、心跳连续失败阈值 3、退避 1s→30s+抖动 1s），可在 `initPush({ config })` 逐项覆盖。
+> 客户端侧：心跳周期/退避上限、拉取防抖（300ms）、内存保留上限（200）等在前端 `src/push/push-message.js` 的 `PUSH_DEFAULTS` 与 SDK `TbsSdkOptions.Push` 中配置。
