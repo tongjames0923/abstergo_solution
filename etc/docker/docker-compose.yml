@@ -51,8 +51,9 @@ services:
 
 
   minio:
-    image: c7l2hmalrte697hztn.xuanyuan.run/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: c7l2hmalrte697hztn.xuanyuan.run/alpine/minio:RELEASE.2025-10-15T17-29-55Z
     container_name: abstergo_minio
+    user: "0:0"
     ports:
       - "9000:9000"
       - "9001:9001"
