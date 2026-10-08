@@ -2,6 +2,7 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.form.SseUploadForm;
 import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.logging.annotation.NoLog;
 import com.tbs.push.constants.PushFrameConstants;
 import com.tbs.push.model.auth.PushTicket;
 import com.tbs.push.sse.adapter.SseTransportAdapter;
@@ -73,6 +74,7 @@ public class SsePushController extends BaseController {
     @Operation(summary = "建立SSE下行连接",
         description = "携一次性凭证建连，校验通过后下发hello握手确认帧（载荷含sessionId与协议版本）")
     @ApiResponse(responseCode = "200", description = "SSE事件流建立成功，首帧为hello握手确认；凭证无效时返回统一错误响应")
+    @NoLog
     public SseEmitter connect(
         @Parameter(name = "push-ticket", required = true, description = "认证端点签发的一次性连接凭证") @RequestParam(
             PushFrameConstants.TICKET_PARAM) String ticket) {
@@ -103,6 +105,7 @@ public class SsePushController extends BaseController {
     @ApiResponse(responseCode = "200",
         description = "上行受理成功；会话不存在时返回统一错误响应，协议层拒绝（守卫/鉴权）经下行error帧反馈")
     @AjaxResponseType(Object.class)
+    @NoLog
     public AjaxResult upload(@RequestBody SseUploadForm form) {
         adapter.acceptUpstream(form.getSessionId().getValue(), form.getFrame());
         return successResult();

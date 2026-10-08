@@ -63,7 +63,7 @@ public class SsePushAuthController extends BaseController {
     @PostMapping(PushFrameConstants.AUTH_PATH)
     @Operation(summary = "连接认证并签发一次性凭证", description = "校验认证表单后签发一次性push-ticket与预分配sessionId，凭证用于SSE建连（TTL默认60秒）")
     @ApiResponse(responseCode = "200", description = "认证成功，data为PushCredential凭证对象；认证失败返回统一错误响应")
-    @AjaxResponseType(Object.class)
+    @AjaxResponseType(PushCredential.class)
     public AjaxResult auth(@RequestBody PushAuthForm form) {
         PushCredential credential = credentialService.issue(form);
         return successResult(credential);
