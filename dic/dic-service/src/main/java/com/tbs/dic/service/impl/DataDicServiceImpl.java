@@ -14,16 +14,12 @@ import com.tbs.dic.model.DicItemModel;
 import com.tbs.dic.model.DicModel;
 import com.tbs.dic.service.IDataDicService;
 import com.tbs.sql.service.QueryEngine;
+import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
-import javax.annotation.Resource;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @DubboService

@@ -1,13 +1,16 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: validate
+      ddl-auto: update
     show-sql: true
     generate-ddl: true
     database: mysql
   datasource:
     driver-class-name: com.p6spy.engine.spy.P6SpyDriver
-    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:core_app}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true
+    # nullCatalogMeansCurrent=true：修正 MySQL 8.x 驱动默认行为——让 JDBC 元数据只扫描当前连接的库，
+    # 否则 Hibernate 的 ddl-auto:update 会误把同服务器上其它库（如 core_app）已有的同名表当作“已存在”而跳过建表，
+    # 进而对当前库执行 create index 时报 “Table 'xxx.yyy' doesn't exist”
+    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:core_app}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true&nullCatalogMeansCurrent=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:123456789}
     type: com.zaxxer.hikari.HikariDataSource

@@ -17,25 +17,6 @@
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
--- ----------------------------
--- Table structure for app_package
--- ----------------------------
-DROP TABLE IF EXISTS `app_package`;
-CREATE TABLE `app_package` (
-  `id` bigint NOT NULL,
-  `bucket_name` varchar(255) DEFAULT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `download_url` varchar(255) DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `md5` varchar(255) DEFAULT NULL,
-  `object_name` varchar(255) DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  `version_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_version_id` (`version_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of app_package
@@ -48,62 +29,6 @@ INSERT INTO `app_package` (`id`, `bucket_name`, `create_by`, `create_time`, `dow
 COMMIT;
 
 -- ----------------------------
--- Table structure for app_version_compatibility_policy
--- ----------------------------
-DROP TABLE IF EXISTS `app_version_compatibility_policy`;
-CREATE TABLE `app_version_compatibility_policy` (
-  `id` bigint NOT NULL,
-  `action` int NOT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `min_compat_version` bigint NOT NULL,
-  `source_app_key` varchar(64) NOT NULL,
-  `source_platform` varchar(32) DEFAULT NULL,
-  `source_version_code` bigint DEFAULT NULL,
-  `target_app_key` varchar(64) NOT NULL,
-  `target_platform` varchar(32) DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_source` (`source_app_key`,`source_version_code`,`source_platform`),
-  KEY `idx_target` (`target_app_key`,`target_platform`,`flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
--- Records of app_version_compatibility_policy
--- ----------------------------
-BEGIN;
-COMMIT;
-
--- ----------------------------
--- Table structure for app_version_info
--- ----------------------------
-DROP TABLE IF EXISTS `app_version_info`;
-CREATE TABLE `app_version_info` (
-  `id` bigint NOT NULL,
-  `app_key` varchar(64) DEFAULT NULL,
-  `build_info` text COMMENT '构建信息（JSON 格式的构建元数据）',
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `offline_time` datetime(6) DEFAULT NULL,
-  `platform` varchar(32) DEFAULT NULL,
-  `release_note` text COMMENT '版本更新日志（描述本次版本的变更内容）',
-  `release_time` datetime(6) DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  `version_code` bigint DEFAULT NULL,
-  `version_name` varchar(64) DEFAULT NULL,
-  `version_type` int DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `IDXj53bupwoxufnjtu17kpjk5gu2` (`app_key`,`version_code`),
-  KEY `IDX9cd1jj6lob0wcwer68ly9akd0` (`version_name`),
-  KEY `IDXi9b41sl0tw5yhwj1jkvv9mqgx` (`version_type`,`platform`),
-  KEY `IDXl36rwti7637k1aby3jks715yo` (`flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
 -- Records of app_version_info
 -- ----------------------------
 BEGIN;
@@ -112,25 +37,6 @@ INSERT INTO `app_version_info` (`id`, `app_key`, `build_info`, `create_by`, `cre
 INSERT INTO `app_version_info` (`id`, `app_key`, `build_info`, `create_by`, `create_time`, `flag`, `offline_time`, `platform`, `release_note`, `release_time`, `update_by`, `update_time`, `version_code`, `version_name`, `version_type`) VALUES (744821750109306880, 'TEST', '', 1, '2026-08-18 15:35:43.303000', -3, '2026-08-21 15:49:43.694000', 'windows', '', '2026-08-18 15:37:12.154000', NULL, NULL, 2, '2', 1);
 INSERT INTO `app_version_info` (`id`, `app_key`, `build_info`, `create_by`, `create_time`, `flag`, `offline_time`, `platform`, `release_note`, `release_time`, `update_by`, `update_time`, `version_code`, `version_name`, `version_type`) VALUES (749787246822948864, 'Test', '', 1, '2026-09-01 08:26:49.995000', 0, NULL, 'windows', '', NULL, NULL, NULL, 1, '1.0', 1);
 COMMIT;
-
--- ----------------------------
--- Table structure for dynamic_form_configration
--- ----------------------------
-DROP TABLE IF EXISTS `dynamic_form_configration`;
-CREATE TABLE `dynamic_form_configration` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `expandable` int DEFAULT NULL,
-  `expanded` int DEFAULT NULL,
-  `gutter` int DEFAULT NULL,
-  `label_width` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `span` int DEFAULT NULL,
-  `title` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '表单标题',
-  `flag` int DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `IDXnwmmyxc6ycs9enf76259ukckp` (`flag`) USING BTREE,
-  KEY `IDXhpd82ymnmm8l26ylo49r363et` (`title`) USING BTREE,
-  KEY `IDXivdgpn6eg2l95b8qaycymamxe` (`expandable`,`expanded`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of dynamic_form_configration
@@ -145,21 +51,7 @@ INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter
 INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (14, 1, 1, 20, '100px', 8, '权限组查询表单', 1);
 INSERT INTO `dynamic_form_configration` (`id`, `expandable`, `expanded`, `gutter`, `label_width`, `span`, `title`, `flag`) VALUES (15, 1, 1, 20, '100px', 8, '权限组新增表单', 1);
 COMMIT;
-
--- ----------------------------
--- Table structure for form_field_configration
--- ----------------------------
-DROP TABLE IF EXISTS `form_field_configration`;
-CREATE TABLE `form_field_configration` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `label` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `prop` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `gobal_index` (`type`,`prop`,`label`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
+-- ---------------------
 -- Records of form_field_configration
 -- ----------------------------
 BEGIN;
@@ -279,18 +171,6 @@ INSERT INTO `form_field_configration` (`id`, `label`, `prop`, `type`) VALUES (72
 COMMIT;
 
 -- ----------------------------
--- Table structure for form_field_relation
--- ----------------------------
-DROP TABLE IF EXISTS `form_field_relation`;
-CREATE TABLE `form_field_relation` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `field_id` bigint DEFAULT NULL,
-  `form_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `form_field_relation_form_id_index` (`form_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=128 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
 -- Records of form_field_relation
 -- ----------------------------
 BEGIN;
@@ -336,24 +216,6 @@ INSERT INTO `form_field_relation` (`id`, `field_id`, `form_id`) VALUES (126, 126
 INSERT INTO `form_field_relation` (`id`, `field_id`, `form_id`) VALUES (127, 127, 1);
 COMMIT;
 
--- ----------------------------
--- Table structure for oss_download_code
--- ----------------------------
-DROP TABLE IF EXISTS `oss_download_code`;
-CREATE TABLE `oss_download_code` (
-  `id` bigint NOT NULL COMMENT '主键ID（雪花算法生成）',
-  `bucket` varchar(255) DEFAULT NULL COMMENT '存储桶名',
-  `code` varchar(64) NOT NULL COMMENT '下载唯一码',
-  `create_time` datetime(6) DEFAULT NULL COMMENT '创建时间',
-  `expire_at` bigint DEFAULT NULL COMMENT '过期时间戳（毫秒），小于等于0表示永不过期',
-  `flag` int DEFAULT NULL COMMENT '逻辑删除标志（1有效，-1已删除）',
-  `object_key` varchar(512) NOT NULL COMMENT '存储对象键',
-  `remark` varchar(255) DEFAULT NULL COMMENT '备注说明',
-  `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_code` (`code`),
-  KEY `idx_flag` (`flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of oss_download_code
@@ -363,19 +225,6 @@ INSERT INTO `oss_download_code` (`id`, `bucket`, `code`, `create_time`, `expire_
 INSERT INTO `oss_download_code` (`id`, `bucket`, `code`, `create_time`, `expire_at`, `flag`, `object_key`, `remark`, `update_time`) VALUES (754542831716007936, 'app-files', '525yLMVvojkI1Xbk', '2026-09-14 11:23:49.801000', 0, -1, '20260906/ef727b5926a94868986b56220c145581.apk', NULL, '2026-09-14 11:24:07.630000');
 COMMIT;
 
--- ----------------------------
--- Table structure for property_relation
--- ----------------------------
-DROP TABLE IF EXISTS `property_relation`;
-CREATE TABLE `property_relation` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `property_id` bigint DEFAULT NULL,
-  `relation_id` bigint DEFAULT NULL,
-  `relation_type` int DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `property_relation_property_id_index` (`property_id`) USING BTREE,
-  KEY `property_relation_relation_id_index` (`relation_id`,`relation_type`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=344 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of property_relation
@@ -727,20 +576,6 @@ INSERT INTO `property_relation` (`id`, `property_id`, `relation_id`, `relation_t
 COMMIT;
 
 -- ----------------------------
--- Table structure for property_value
--- ----------------------------
-DROP TABLE IF EXISTS `property_value`;
-CREATE TABLE `property_value` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `prop_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `transformer_type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `prop_value` text COLLATE utf8mb4_bin COMMENT '属性值（JSON 或纯文本格式）',
-  `value_class` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `name_idx` (`prop_name`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=344 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
 -- Records of property_value
 -- ----------------------------
 BEGIN;
@@ -1090,26 +925,6 @@ INSERT INTO `property_value` (`id`, `prop_name`, `transformer_type`, `prop_value
 COMMIT;
 
 -- ----------------------------
--- Table structure for push_message
--- ----------------------------
-DROP TABLE IF EXISTS `push_message`;
-CREATE TABLE `push_message` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `content` varchar(255) DEFAULT NULL,
-  `create_time` datetime(6) NOT NULL,
-  `ext_info` varchar(255) DEFAULT NULL,
-  `msg_type` varchar(32) NOT NULL,
-  `priority` varchar(16) NOT NULL,
-  `sender` varchar(64) DEFAULT NULL,
-  `title` varchar(255) DEFAULT NULL,
-  `topic` varchar(128) NOT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  `url` varchar(512) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
 -- Records of push_message
 -- ----------------------------
 BEGIN;
@@ -1123,26 +938,6 @@ INSERT INTO `push_message` (`id`, `content`, `create_time`, `ext_info`, `msg_typ
 INSERT INTO `push_message` (`id`, `content`, `create_time`, `ext_info`, `msg_type`, `priority`, `sender`, `title`, `topic`, `update_time`, `url`) VALUES (13, '123', '2026-10-05 10:37:49.106000', NULL, 'notify', 'normal', '223344', '你好', 'global.broadcast', '2026-10-05 10:37:49.106000', '');
 INSERT INTO `push_message` (`id`, `content`, `create_time`, `ext_info`, `msg_type`, `priority`, `sender`, `title`, `topic`, `update_time`, `url`) VALUES (14, '123', '2026-10-05 10:47:03.403000', NULL, 'notify', 'normal', '223344', '你好', 'global.broadcast', '2026-10-05 10:47:03.403000', '');
 COMMIT;
-
--- ----------------------------
--- Table structure for push_message_operation_log
--- ----------------------------
-DROP TABLE IF EXISTS `push_message_operation_log`;
-CREATE TABLE `push_message_operation_log` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime(6) NOT NULL,
-  `ext_info` varchar(255) DEFAULT NULL,
-  `message_id` bigint NOT NULL,
-  `op_source` varchar(32) DEFAULT NULL,
-  `op_time` datetime(6) NOT NULL,
-  `op_type` varchar(32) NOT NULL,
-  `operator` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_operator_msg` (`operator`,`message_id`),
-  KEY `idx_message` (`message_id`),
-  KEY `idx_op_time` (`op_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of push_message_operation_log
@@ -1180,21 +975,6 @@ INSERT INTO `push_message_operation_log` (`id`, `create_time`, `ext_info`, `mess
 INSERT INTO `push_message_operation_log` (`id`, `create_time`, `ext_info`, `message_id`, `op_source`, `op_time`, `op_type`, `operator`, `update_time`) VALUES (42, '2026-10-05 10:47:08.188000', NULL, 14, 'http', '2026-10-05 10:47:08.188000', 'READ', 1, '2026-10-05 10:47:08.188000');
 INSERT INTO `push_message_operation_log` (`id`, `create_time`, `ext_info`, `message_id`, `op_source`, `op_time`, `op_type`, `operator`, `update_time`) VALUES (43, '2026-10-05 10:47:08.188000', NULL, 13, 'http', '2026-10-05 10:47:08.188000', 'READ', 1, '2026-10-05 10:47:08.188000');
 COMMIT;
-
--- ----------------------------
--- Table structure for push_message_receiver
--- ----------------------------
-DROP TABLE IF EXISTS `push_message_receiver`;
-CREATE TABLE `push_message_receiver` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime(6) NOT NULL,
-  `message_id` bigint NOT NULL,
-  `receiver` bigint NOT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_receiver` (`receiver`),
-  KEY `idx_create_time` (`create_time`)
-) ENGINE=InnoDB AUTO_INCREMENT=123 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 
 -- ----------------------------
 -- Records of push_message_receiver
@@ -1295,28 +1075,6 @@ INSERT INTO `push_message_receiver` (`id`, `create_time`, `message_id`, `receive
 COMMIT;
 
 -- ----------------------------
--- Table structure for sys_company
--- ----------------------------
-DROP TABLE IF EXISTS `sys_company`;
-CREATE TABLE `sys_company` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `company_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `create_time` datetime DEFAULT NULL,
-  `description` text COLLATE utf8mb4_bin COMMENT '公司描述',
-  `flag` int DEFAULT NULL,
-  `logo_image` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `tax_number` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `update_time` datetime DEFAULT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_company_name` (`company_name`) USING BTREE,
-  KEY `idx_flag` (`flag`) USING BTREE,
-  KEY `idx_create_time` (`create_time`) USING BTREE,
-  KEY `idx_update_time` (`update_time`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=740830978083127297 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
 -- Records of sys_company
 -- ----------------------------
 BEGIN;
@@ -1324,23 +1082,6 @@ INSERT INTO `sys_company` (`id`, `company_name`, `create_time`, `description`, `
 INSERT INTO `sys_company` (`id`, `company_name`, `create_time`, `description`, `flag`, `logo_image`, `tax_number`, `update_time`, `create_by`, `update_by`) VALUES (2, '测试公司', '2025-09-03 12:20:00', '这是一个测试公司', 1, '', '11223355', '2026-07-13 11:12:38', NULL, 1);
 INSERT INTO `sys_company` (`id`, `company_name`, `create_time`, `description`, `flag`, `logo_image`, `tax_number`, `update_time`, `create_by`, `update_by`) VALUES (740830978083127296, '待删除公司', '2026-08-07 15:17:49', '', 0, NULL, 'NeedToDelete', NULL, 1, NULL);
 COMMIT;
-
--- ----------------------------
--- Table structure for sys_data_dic
--- ----------------------------
-DROP TABLE IF EXISTS `sys_data_dic`;
-CREATE TABLE `sys_data_dic` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime(6) DEFAULT NULL,
-  `data_dic_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `data_dic_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_data_dic_name_code` (`data_dic_name`,`data_dic_code`),
-  KEY `idx_flag` (`flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Records of sys_data_dic
@@ -1355,32 +1096,6 @@ INSERT INTO `sys_data_dic` (`id`, `create_time`, `data_dic_code`, `data_dic_name
 COMMIT;
 
 -- ----------------------------
--- Table structure for sys_department
--- ----------------------------
-DROP TABLE IF EXISTS `sys_department`;
-CREATE TABLE `sys_department` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `company_id` bigint NOT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `department_code` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `department_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `description` text COLLATE utf8mb4_unicode_ci COMMENT '部门描述',
-  `flag` int DEFAULT NULL,
-  `manager` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `parent_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_name_code` (`department_name`,`department_code`),
-  KEY `idx_flag` (`flag`),
-  KEY `idx_create_time` (`create_time`),
-  KEY `idx_update_time` (`update_time`),
-  KEY `idx_company_id` (`company_id`),
-  KEY `idx_parent_id` (`parent_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3511711354564116481 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
 -- Records of sys_department
 -- ----------------------------
 BEGIN;
@@ -1389,32 +1104,6 @@ INSERT INTO `sys_department` (`id`, `company_id`, `create_time`, `department_cod
 INSERT INTO `sys_department` (`id`, `company_id`, `create_time`, `department_code`, `department_name`, `description`, `flag`, `manager`, `update_time`, `create_by`, `update_by`, `parent_id`) VALUES (6, 2, '2026-06-15 18:45:22.072000', 'XZ1', '行政部', '', 1, '', '2026-07-16 11:09:21.701000', NULL, 1, NULL);
 INSERT INTO `sys_department` (`id`, `company_id`, `create_time`, `department_code`, `department_name`, `description`, `flag`, `manager`, `update_time`, `create_by`, `update_by`, `parent_id`) VALUES (3511711354564116480, 2, '2026-07-13 11:27:11.217000', 'SCB', '生产部', '', 1, '', '2026-07-16 11:09:26.360000', 1, 1, NULL);
 COMMIT;
-
--- ----------------------------
--- Table structure for sys_generic_api
--- ----------------------------
-DROP TABLE IF EXISTS `sys_generic_api`;
-CREATE TABLE `sys_generic_api` (
-  `id` bigint NOT NULL,
-  `api_id` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `api_name` varchar(200) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `app_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `interface_name` varchar(300) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `method_name` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `need_auth` bit(1) NOT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  `version` int DEFAULT NULL,
-  `pre_auth_beans` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_generic_api_api_id` (`api_id`),
-  KEY `idx_generic_api_app_name` (`app_name`),
-  KEY `idx_generic_api_flag` (`flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Records of sys_generic_api
@@ -1433,94 +1122,16 @@ INSERT INTO `sys_generic_api` (`id`, `api_id`, `api_name`, `app_name`, `create_b
 COMMIT;
 
 -- ----------------------------
--- Table structure for sys_login_info
--- ----------------------------
-DROP TABLE IF EXISTS `sys_login_info`;
-CREATE TABLE `sys_login_info` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `token` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `update_time` datetime DEFAULT NULL,
-  `user_details` mediumblob COMMENT '用户详情（序列化字节数组）',
-  `user_details_target_class` varchar(256) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `user_details_transformer_impl` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `user_id` bigint DEFAULT NULL,
-  `token_expire_time` datetime DEFAULT NULL,
-  `session_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_flag` (`flag`) USING BTREE,
-  KEY `idx_time` (`create_time`,`update_time`) USING BTREE,
-  KEY `idx_user_id` (`user_id`) USING BTREE,
-  KEY `idx_token` (`token`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=3513492933309366275 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
 -- Records of sys_login_info
 -- ----------------------------
 BEGIN;
 COMMIT;
 
 -- ----------------------------
--- Table structure for sys_operate_record
--- ----------------------------
-DROP TABLE IF EXISTS `sys_operate_record`;
-CREATE TABLE `sys_operate_record` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `cost_time` bigint DEFAULT NULL,
-  `method_type` varchar(64) COLLATE utf8mb4_bin DEFAULT NULL COMMENT 'HTTP方法类型（GET/PUT/POST等）',
-  `operate_content` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `operate_error` longtext COLLATE utf8mb4_bin COMMENT '操作异常信息',
-  `operate_ip` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `operate_param_json` longtext COLLATE utf8mb4_bin COMMENT '请求参数JSON',
-  `operate_result_json` longtext COLLATE utf8mb4_bin COMMENT '操作结果JSON',
-  `operate_time` datetime DEFAULT NULL,
-  `operate_type` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `operate_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `operate_user_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `operate_error_level` int DEFAULT NULL,
-  `system_log_flag` int DEFAULT NULL,
-  `trace_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `common_index` (`operate_content`,`operate_type`) USING BTREE,
-  KEY `time_idx` (`operate_time`) USING BTREE,
-  KEY `error_level_idx` (`operate_error_level`) USING BTREE,
-  KEY `user_idx` (`operate_user_name`,`operate_ip`) USING BTREE,
-  KEY `url_idx` (`operate_url`) USING BTREE,
-  KEY `method_idx` (`method_type`) USING BTREE,
-  KEY `trace_idx` (`trace_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=184880 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
 -- Records of sys_operate_record
 -- ----------------------------
 BEGIN;
 COMMIT;
-
--- ----------------------------
--- Table structure for sys_role
--- ----------------------------
-DROP TABLE IF EXISTS `sys_role`;
-CREATE TABLE `sys_role` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime DEFAULT NULL,
-  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `role` varchar(128) COLLATE utf8mb4_bin NOT NULL COMMENT '权限编码（唯一标识）',
-  `update_time` datetime DEFAULT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `data_scope` int DEFAULT NULL,
-  `name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `type` int DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `UKmwbqlu5c82jfd2w9oa9d6e87d` (`role`),
-  KEY `idx_flag` (`flag`) USING BTREE,
-  KEY `idx_time` (`create_time`,`update_time`) USING BTREE,
-  KEY `idx_role` (`role`),
-  KEY `idx_role_type` (`role`,`type`),
-  KEY `idx_name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=3509573881151094785 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_role
@@ -1560,26 +1171,6 @@ INSERT INTO `sys_role` (`id`, `create_time`, `description`, `flag`, `role`, `upd
 COMMIT;
 
 -- ----------------------------
--- Table structure for sys_role_group
--- ----------------------------
-DROP TABLE IF EXISTS `sys_role_group`;
-CREATE TABLE `sys_role_group` (
-  `id` bigint NOT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `delete_by` bigint DEFAULT NULL,
-  `delete_time` datetime(6) DEFAULT NULL,
-  `description` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `role_group_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_sys_role_group_flag` (`flag`),
-  KEY `idx_sys_role_group_role_group_name` (`role_group_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
-
--- ----------------------------
 -- Records of sys_role_group
 -- ----------------------------
 BEGIN;
@@ -1587,27 +1178,6 @@ INSERT INTO `sys_role_group` (`id`, `create_by`, `create_time`, `delete_by`, `de
 INSERT INTO `sys_role_group` (`id`, `create_by`, `create_time`, `delete_by`, `delete_time`, `description`, `flag`, `role_group_name`, `update_by`, `update_time`) VALUES (740491594708287488, 1, '2026-08-06 16:49:13.827000', NULL, NULL, '管理员操作菜单权限', 1, '管理员', 1, '2026-08-11 17:03:19.980000');
 INSERT INTO `sys_role_group` (`id`, `create_by`, `create_time`, `delete_by`, `delete_time`, `description`, `flag`, `role_group_name`, `update_by`, `update_time`) VALUES (740721847200382976, 1, '2026-08-07 08:04:10.053000', NULL, NULL, '网页端开发者操作菜单权限', 1, '开发者', 1, '2026-08-09 16:03:27.065000');
 COMMIT;
-
--- ----------------------------
--- Table structure for sys_role_group_relation
--- ----------------------------
-DROP TABLE IF EXISTS `sys_role_group_relation`;
-CREATE TABLE `sys_role_group_relation` (
-  `id` bigint NOT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `delete_by` bigint DEFAULT NULL,
-  `delete_time` datetime(6) DEFAULT NULL,
-  `group_id` bigint DEFAULT NULL,
-  `role_id` bigint DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  `flag` int DEFAULT NULL COMMENT '逻辑删除标志位',
-  PRIMARY KEY (`id`),
-  KEY `idx_role_group_relation_role_id` (`role_id`),
-  KEY `idx_role_group_relation_group_id` (`group_id`),
-  KEY `idx_flag` (`flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Records of sys_role_group_relation
@@ -1648,61 +1218,10 @@ INSERT INTO `sys_role_group_relation` (`id`, `create_by`, `create_time`, `delete
 COMMIT;
 
 -- ----------------------------
--- Table structure for sys_token
--- ----------------------------
-DROP TABLE IF EXISTS `sys_token`;
-CREATE TABLE `sys_token` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime DEFAULT NULL,
-  `create_type` int DEFAULT NULL,
-  `expire_time` datetime DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `ip_address` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `mac_address` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `token` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `token_type` int NOT NULL,
-  `update_time` datetime DEFAULT NULL,
-  `user_name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `session_id` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_token` (`token`) USING BTREE,
-  KEY `ix_user` (`user_name`) USING BTREE,
-  KEY `ix_time` (`create_time`,`update_time`) USING BTREE,
-  KEY `ix_flag` (`flag`) USING BTREE,
-  KEY `ix_expire` (`expire_time`) USING BTREE,
-  KEY `ix_token_type` (`token_type`) USING BTREE,
-  KEY `ix_session` (`session_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=6771699607021295902 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
 -- Records of sys_token
 -- ----------------------------
 BEGIN;
 COMMIT;
-
--- ----------------------------
--- Table structure for sys_user
--- ----------------------------
-DROP TABLE IF EXISTS `sys_user`;
-CREATE TABLE `sys_user` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `avatar` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `create_time` datetime DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `nick_name` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `password` varchar(72) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `update_time` datetime DEFAULT NULL,
-  `user_name` varchar(72) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `dept_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  KEY `idx_username_password` (`user_name`,`password`) USING BTREE,
-  KEY `idx_nickname` (`nick_name`) USING BTREE,
-  KEY `idx_flag` (`flag`) USING BTREE,
-  KEY `idx_time` (`create_time`,`update_time`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=740822608424992769 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_user
@@ -1738,26 +1257,6 @@ INSERT INTO `sys_user` (`id`, `avatar`, `create_time`, `flag`, `nick_name`, `pas
 COMMIT;
 
 -- ----------------------------
--- Table structure for sys_user_external_identity
--- ----------------------------
-DROP TABLE IF EXISTS `sys_user_external_identity`;
-CREATE TABLE `sys_user_external_identity` (
-  `id` bigint NOT NULL COMMENT '绑定ID（雪花算法生成）',
-  `create_by` bigint DEFAULT NULL COMMENT '创建者用户ID',
-  `create_time` datetime(6) DEFAULT NULL COMMENT '创建时间',
-  `external_id` varchar(128) NOT NULL COMMENT '外部身份标识（如企微 userid）',
-  `flag` int DEFAULT NULL COMMENT '绑定状态（1为有效）',
-  `identity_type` varchar(32) NOT NULL COMMENT '外部身份类型（如 wecom）',
-  `update_by` bigint DEFAULT NULL COMMENT '最后更新者用户ID',
-  `update_time` datetime(6) DEFAULT NULL COMMENT '修改时间',
-  `user_id` bigint NOT NULL COMMENT '绑定的系统用户ID',
-  PRIMARY KEY (`id`),
-  KEY `idx_user_id` (`user_id`),
-  KEY `idx_identity_type_external_id` (`identity_type`,`external_id`),
-  KEY `idx_flag` (`flag`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
 -- Records of sys_user_external_identity
 -- ----------------------------
 BEGIN;
@@ -1765,25 +1264,6 @@ INSERT INTO `sys_user_external_identity` (`id`, `create_by`, `create_time`, `ext
 INSERT INTO `sys_user_external_identity` (`id`, `create_by`, `create_time`, `external_id`, `flag`, `identity_type`, `update_by`, `update_time`, `user_id`) VALUES (755305353435938816, NULL, '2026-09-16 13:53:49.152000', '15606810923', 0, 'wecom', NULL, '2026-09-16 14:01:23.276000', 1);
 INSERT INTO `sys_user_external_identity` (`id`, `create_by`, `create_time`, `external_id`, `flag`, `identity_type`, `update_by`, `update_time`, `user_id`) VALUES (755307277606453248, NULL, '2026-09-16 14:01:27.910000', '15606810923', 1, 'wecom', NULL, NULL, 1);
 COMMIT;
-
--- ----------------------------
--- Table structure for system_data_dic_item
--- ----------------------------
-DROP TABLE IF EXISTS `system_data_dic_item`;
-CREATE TABLE `system_data_dic_item` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime(6) DEFAULT NULL,
-  `dic_code` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `label` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `remark` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `sort` int DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  `value` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_system_data_dic_item_dic_code` (`dic_code`),
-  KEY `idx_flag` (`flag`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Records of system_data_dic_item
@@ -1798,19 +1278,6 @@ INSERT INTO `system_data_dic_item` (`id`, `create_time`, `dic_code`, `flag`, `la
 INSERT INTO `system_data_dic_item` (`id`, `create_time`, `dic_code`, `flag`, `label`, `remark`, `sort`, `update_time`, `value`) VALUES (8, '2026-07-24 14:31:43.031000', 'GENRIC_API_INTERFACE_DIC', 0, 'MES.OUTSTATION.BARCODE', NULL, NULL, '2026-08-04 11:15:42.216000', 'com.tbs.xh.mes.service.IMesQueryService');
 INSERT INTO `system_data_dic_item` (`id`, `create_time`, `dic_code`, `flag`, `label`, `remark`, `sort`, `update_time`, `value`) VALUES (9, '2026-07-24 14:32:16.077000', 'GENRIC_API_ID_DIC', 0, 'MES.OUTSTATION.BARCODE', NULL, NULL, '2026-08-04 11:15:32.632000', 'dubbo-xh-mes-service');
 COMMIT;
-
--- ----------------------------
--- Table structure for system_role_group_user_relation
--- ----------------------------
-DROP TABLE IF EXISTS `system_role_group_user_relation`;
-CREATE TABLE `system_role_group_user_relation` (
-  `id` bigint NOT NULL,
-  `role_group_id` bigint DEFAULT NULL,
-  `user_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_system_role_group_user_relation_role_group_id` (`role_group_id`),
-  KEY `idx_system_role_group_user_relation_user_id` (`user_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Records of system_role_group_user_relation
@@ -1834,41 +1301,6 @@ INSERT INTO `system_role_group_user_relation` (`id`, `role_group_id`, `user_id`)
 COMMIT;
 
 -- ----------------------------
--- Table structure for system_user_company_relation
--- ----------------------------
-DROP TABLE IF EXISTS `system_user_company_relation`;
-CREATE TABLE `system_user_company_relation` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `company_id` bigint DEFAULT NULL,
-  `user_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_user_id_company_id` (`user_id`,`company_id`) USING BTREE,
-  KEY `idx_user_id` (`user_id`) USING BTREE,
-  KEY `idx_company_id` (`company_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
--- Records of system_user_company_relation
--- ----------------------------
-BEGIN;
-INSERT INTO `system_user_company_relation` (`id`, `company_id`, `user_id`) VALUES (1, 1, 0);
-COMMIT;
-
--- ----------------------------
--- Table structure for system_user_department_relation
--- ----------------------------
-DROP TABLE IF EXISTS `system_user_department_relation`;
-CREATE TABLE `system_user_department_relation` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `department_id` bigint DEFAULT NULL,
-  `user_id` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `uk_user_id_department_id` (`user_id`,`department_id`),
-  KEY `idx_user_id` (`user_id`),
-  KEY `idx_department_id` (`department_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3509885629540335617 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
 -- Records of system_user_department_relation
 -- ----------------------------
 BEGIN;
@@ -1881,50 +1313,11 @@ INSERT INTO `system_user_department_relation` (`id`, `department_id`, `user_id`)
 COMMIT;
 
 -- ----------------------------
--- Table structure for third_party_app
--- ----------------------------
-DROP TABLE IF EXISTS `third_party_app`;
-CREATE TABLE `third_party_app` (
-  `id` bigint NOT NULL,
-  `app_id` varchar(64) DEFAULT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `grant_type` varchar(255) DEFAULT NULL,
-  `proxy_id` bigint DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_app_secret_id` (`app_id`),
-  KEY `idx_flag` (`flag`),
-  KEY `idx_proxy_id` (`proxy_id`),
-  KEY `idx_app_id` (`app_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-
--- ----------------------------
 -- Records of third_party_app
 -- ----------------------------
 BEGIN;
 INSERT INTO `third_party_app` (`id`, `app_id`, `create_by`, `create_time`, `flag`, `grant_type`, `proxy_id`, `update_by`, `update_time`) VALUES (759566440134082560, 'TEST', 1, '2026-09-28 08:05:51.368000', 1, 'third_party', 739774367356944384, NULL, NULL);
 COMMIT;
-
--- ----------------------------
--- Table structure for tree_closure
--- ----------------------------
-DROP TABLE IF EXISTS `tree_closure`;
-CREATE TABLE `tree_closure` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `ancestor_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `depth` int NOT NULL,
-  `descendant_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  `group_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UK4q1vrtow52u2ih3utui5nxues` (`ancestor_id`,`descendant_id`),
-  KEY `IDXlcjh1709srvurk844d5l9jjtu` (`ancestor_id`),
-  KEY `IDX5spq70g67u0mhko5tuwntwxa3` (`descendant_id`),
-  KEY `IDXgkkwbnbsyakv2u533604sdto1` (`depth`),
-  KEY `IDXi7fuflkybyivi3mhmaj5cfynt` (`group_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=64 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ----------------------------
 -- Records of tree_closure
@@ -1939,24 +1332,6 @@ INSERT INTO `tree_closure` (`id`, `ancestor_id`, `depth`, `descendant_id`, `grou
 COMMIT;
 
 -- ----------------------------
--- Table structure for tree_node
--- ----------------------------
-DROP TABLE IF EXISTS `tree_node`;
-CREATE TABLE `tree_node` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime(6) DEFAULT NULL,
-  `entity_id` bigint DEFAULT NULL,
-  `group_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `node_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `parent_id` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci DEFAULT NULL,
-  `update_time` datetime(6) DEFAULT NULL,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `UKj31ps1fvxja2xe7166bjvweme` (`group_name`,`node_id`),
-  KEY `IDXdnk5hk5vr111xcunlqkjfni6h` (`group_name`,`parent_id`),
-  KEY `IDX5ytbu0cqp6qalcb0fdf9kl31r` (`entity_id`)
-) ENGINE=InnoDB AUTO_INCREMENT=30 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
-
--- ----------------------------
 -- Records of tree_node
 -- ----------------------------
 BEGIN;
@@ -1966,87 +1341,6 @@ INSERT INTO `tree_node` (`id`, `create_time`, `entity_id`, `group_name`, `node_i
 INSERT INTO `tree_node` (`id`, `create_time`, `entity_id`, `group_name`, `node_id`, `parent_id`, `update_time`) VALUES (27, '2026-06-15 18:45:22.100000', 6, 'DEPARTMENT_TREE', 'DEPARTMENT_TREE::6', NULL, NULL);
 INSERT INTO `tree_node` (`id`, `create_time`, `entity_id`, `group_name`, `node_id`, `parent_id`, `update_time`) VALUES (28, '2026-07-13 11:27:11.464000', 3511711354564116480, 'DEPARTMENT_TREE', 'DEPARTMENT_TREE::3511711354564116480', NULL, NULL);
 COMMIT;
-
--- ----------------------------
--- Table structure for user_role_relation
--- ----------------------------
-DROP TABLE IF EXISTS `user_role_relation`;
-CREATE TABLE `user_role_relation` (
-  `id` bigint NOT NULL AUTO_INCREMENT,
-  `create_time` datetime DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `role_id` bigint NOT NULL,
-  `update_time` datetime DEFAULT NULL,
-  `user_id` bigint NOT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `update_by` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `UKm4mcursyc5qymymmnxq6nrlvq` (`user_id`,`role_id`) USING BTREE,
-  KEY `idx_flag` (`flag`) USING BTREE,
-  KEY `idx_time` (`create_time`,`update_time`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=31 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC;
-
--- ----------------------------
--- Records of user_role_relation
--- ----------------------------
-BEGIN;
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (4, '2025-07-23 16:34:17', 1, 2, '2025-11-14 14:25:24', 1, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (5, '2025-07-23 16:44:03', 1, 1, NULL, 0, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (6, '2025-07-23 16:44:06', 1, 2, '2025-08-08 17:32:02', 0, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (7, '2025-08-16 11:56:25', 1, 2, NULL, 2, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (8, '2025-08-16 12:13:10', 1, 2, '2025-08-21 12:09:34', 3, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (9, '2025-08-16 12:38:43', 0, 2, '2026-07-05 16:51:57', 4, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (10, '2025-08-16 18:21:16', 1, 2, '2025-08-27 17:40:19', 5, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (11, '2025-08-16 19:04:14', 1, 2, '2025-08-19 14:04:58', 6, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (12, '2025-08-17 19:23:18', 1, 1, '2026-05-05 20:52:02', 6, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (13, '2025-08-20 21:23:22', 0, 4, '2025-09-18 19:13:44', 0, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (14, '2025-08-21 12:10:51', 1, 2, '2025-11-12 20:08:21', 7, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (15, '2025-08-27 17:26:56', 0, 4, '2025-08-27 17:26:59', 5, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (16, '2025-09-03 10:57:06', 1, 2, '2025-11-12 20:34:25', 8, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (17, '2025-09-09 10:28:04', 1, 1, '2025-09-19 20:18:25', 1, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (18, '2025-09-13 18:46:41', 1, 2, '2025-11-12 20:34:28', 9, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (19, '2025-09-13 18:49:17', 1, 2, '2025-11-13 20:54:23', 10, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (20, '2025-11-12 17:23:59', 1, 2, '2025-11-13 20:54:25', 11, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (21, '2025-11-14 18:40:54', 1, 2, NULL, 12, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (22, '2025-11-14 18:43:03', 1, 4, NULL, 10, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (23, '2025-11-14 18:43:04', 1, 5, NULL, 10, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (24, '2025-11-17 17:10:51', 1, 2, NULL, 13, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (25, '2026-05-06 14:38:26', 1, 2, NULL, 14, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (26, '2026-05-06 14:38:28', 1, 1, NULL, 14, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (27, '2026-06-05 14:43:11', 1, 3, NULL, 1, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (28, '2026-06-15 18:31:21', 1, 2, NULL, 16, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (29, '2026-06-15 18:34:53', 1, 9, NULL, 2, NULL, NULL);
-INSERT INTO `user_role_relation` (`id`, `create_time`, `flag`, `role_id`, `update_time`, `user_id`, `create_by`, `update_by`) VALUES (30, '2026-06-15 18:45:51', 1, 2, NULL, 17, NULL, NULL);
-COMMIT;
-
--- ----------------------------
--- Table structure for view_route_configration
--- ----------------------------
-DROP TABLE IF EXISTS `view_route_configration`;
-CREATE TABLE `view_route_configration` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `route_group` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '路由分组（如 common, admin, develop）',
-  `path` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '路由路径',
-  `component` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '组件路径',
-  `name` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '路由名称',
-  `redirect` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '重定向路径',
-  `hidden` int DEFAULT NULL COMMENT '是否隐藏（0:否，1:是）',
-  `always_show` int DEFAULT NULL COMMENT '是否始终显示在菜单中（0:否，1:是）',
-  `parent_id` bigint DEFAULT NULL COMMENT '父路由ID（用于构建树形结构）',
-  `sort_order` int DEFAULT '0' COMMENT '排序顺序',
-  `flag` int DEFAULT '1' COMMENT '状态标志（0:禁用，1:启用）',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  `create_by` bigint DEFAULT NULL COMMENT '创建人',
-  `update_by` bigint DEFAULT NULL COMMENT '更新人',
-  `version` bigint DEFAULT NULL,
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_group_path_parent` (`route_group`,`path`,`parent_id`) USING BTREE,
-  KEY `idx_route_group` (`route_group`) USING BTREE,
-  KEY `idx_parent_id` (`parent_id`) USING BTREE,
-  KEY `idx_flag` (`flag`) USING BTREE,
-  KEY `idx_sort_order` (`sort_order`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=758238409918513153 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC COMMENT='视图路由配置表';
 
 -- ----------------------------
 -- Records of view_route_configration
@@ -2439,26 +1733,6 @@ INSERT INTO `view_route_configration` (`id`, `route_group`, `path`, `component`,
 COMMIT;
 
 -- ----------------------------
--- Table structure for view_route_meta
--- ----------------------------
-DROP TABLE IF EXISTS `view_route_meta`;
-CREATE TABLE `view_route_meta` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `route_id` bigint NOT NULL COMMENT '关联的路由ID',
-  `route_group` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '路由分组',
-  `title` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '路由标题',
-  `icon` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '路由图标',
-  `breadcrumb` int DEFAULT NULL COMMENT '是否显示面包屑（0:否，1:是）',
-  `active_menu` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '激活菜单路径',
-  `flag` int DEFAULT '1' COMMENT '状态标志（0:禁用，1:启用）',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_route_id` (`route_id`) USING BTREE,
-  KEY `idx_route_id` (`route_id`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=758238409922707457 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC COMMENT='视图路由元数据表';
-
--- ----------------------------
 -- Records of view_route_meta
 -- ----------------------------
 BEGIN;
@@ -2849,23 +2123,6 @@ INSERT INTO `view_route_meta` (`id`, `route_id`, `route_group`, `title`, `icon`,
 COMMIT;
 
 -- ----------------------------
--- Table structure for view_route_role
--- ----------------------------
-DROP TABLE IF EXISTS `view_route_role`;
-CREATE TABLE `view_route_role` (
-  `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-  `route_id` bigint NOT NULL COMMENT '关联的路由ID',
-  `role_code` varchar(128) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '权限编码',
-  `flag` int DEFAULT '1' COMMENT '状态标志（0:禁用，1:启用）',
-  `create_time` datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-  `update_time` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-  PRIMARY KEY (`id`) USING BTREE,
-  UNIQUE KEY `uk_route_role` (`route_id`,`role_code`) USING BTREE,
-  KEY `idx_route_id` (`route_id`) USING BTREE,
-  KEY `idx_role_code` (`role_code`) USING BTREE
-) ENGINE=InnoDB AUTO_INCREMENT=758238409826238465 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ROW_FORMAT=DYNAMIC COMMENT='视图路由权限表';
-
--- ----------------------------
 -- Records of view_route_role
 -- ----------------------------
 BEGIN;
@@ -2939,22 +2196,6 @@ INSERT INTO `view_route_role` (`id`, `route_id`, `role_code`, `flag`, `create_ti
 INSERT INTO `view_route_role` (`id`, `route_id`, `role_code`, `flag`, `create_time`, `update_time`) VALUES (758238409553608704, 758238409536831488, 'MENU.DEV', 1, NULL, NULL);
 INSERT INTO `view_route_role` (`id`, `route_id`, `role_code`, `flag`, `create_time`, `update_time`) VALUES (758238409826238464, 758238409809461248, 'MENU.DEV', 1, NULL, NULL);
 COMMIT;
-
--- ----------------------------
--- Table structure for view_route_version
--- ----------------------------
-DROP TABLE IF EXISTS `view_route_version`;
-CREATE TABLE `view_route_version` (
-  `id` bigint NOT NULL,
-  `create_by` bigint DEFAULT NULL,
-  `create_time` datetime(6) DEFAULT NULL,
-  `description` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL,
-  `flag` int DEFAULT NULL,
-  `route_group` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL,
-  `version_no` int NOT NULL,
-  PRIMARY KEY (`id`),
-  KEY `idx_group` (`route_group`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin;
 
 -- ----------------------------
 -- Records of view_route_version

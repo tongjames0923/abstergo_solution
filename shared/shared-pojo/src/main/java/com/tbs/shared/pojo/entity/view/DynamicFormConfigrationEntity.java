@@ -20,7 +20,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "dynamic_form_configration",
     indexes = {@jakarta.persistence.Index(columnList = "flag"), @jakarta.persistence.Index(columnList = "title"),
-        @jakarta.persistence.Index(columnList = "expandable,expanded"),})
+        @jakarta.persistence.Index(columnList = "expandable,expanded")})
 @Data
 @LogicDeleteEntity(activeFlagValues = {0, 1})
 @Comment("动态表单配置表")
@@ -59,7 +59,7 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
     /**
      * 表单字段的宽度
      */
-    @Comment("表单标签宽度（如 '100px'）")
+    @Comment("表单标签宽度（如 100px）")
     @Column(name = "label_width")
     private String labelWidth;
 
