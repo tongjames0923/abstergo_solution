@@ -29,18 +29,23 @@ public class DefaultAuthEntryPoint implements AuthenticationEntryPoint {
         log.error("认证异常", authException);
         // 区分「需重新登录」与通用「未认证」两类语义，前端据此决定跳转登录还是提示失效
         if (authException instanceof ReLoginRequestException) {
+            String msg = StrUtil.isEmpty(authException.getLocalizedMessage()) ?
+                    AjaxResult.getDefaultReLoginMessage() : authException.getLocalizedMessage();
             AjaxUtil.writeInfoResp(
-                    response, AjaxUtil.getInstance().custom(
-                            AjaxResult.RELOGIN_CODE,
-                            StrUtil.isEmpty(authException.getLocalizedMessage()) ?
-                                    AjaxResult.getDefaultReLoginMessage() :
-                                    authException.getLocalizedMessage(), authException
-                    )
+                    response, AjaxUtil.builder()
+                            .code(AjaxResult.RELOGIN_CODE)
+                            .message(msg)
+                            .data(authException)
+                            .build()
             );
+            return;
         }
         AjaxUtil.writeInfoResp(
-                response, AjaxUtil.getInstance()
-                        .custom(AjaxResult.DEFAULT_UNAUTHORIZED_CODE, authException.getLocalizedMessage(), authException)
+                response, AjaxUtil.builder()
+                        .code(AjaxResult.DEFAULT_UNAUTHORIZED_CODE)
+                        .message(authException.getLocalizedMessage())
+                        .data(authException)
+                        .build()
         );
     }
 }
