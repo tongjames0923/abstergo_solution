@@ -1,9 +1,9 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: update
+      ddl-auto: validate
     show-sql: true
-    generate-ddl: true
+    generate-ddl: false
     database: mysql
   datasource:
     driver-class-name: com.p6spy.engine.spy.P6SpyDriver
