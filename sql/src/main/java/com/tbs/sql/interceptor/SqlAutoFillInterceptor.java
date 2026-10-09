@@ -5,7 +5,6 @@ import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.IAutoValueProvider;
 import org.apache.ibatis.executor.Executor;
-import org.apache.ibatis.executor.parameter.ParameterHandler;
 import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.mapping.SqlCommandType;
 import org.apache.ibatis.plugin.*;
@@ -14,27 +13,24 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.reflect.Field;
-import java.sql.PreparedStatement;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * SQL自动填充MyBatis插件，用于在SQL执行前自动填充字段值。
  *
- * <p>该类同时拦截两个层级：</p>
- * <ul>
- *   <li>{@link Executor#update} 层：捕获当前SQL的 {@link SqlCommandType}，存入上下文ThreadLocal</li>
- *   <li>{@link ParameterHandler#setParameters} 层：根据SQL类型和注解属性执行自动填充</li>
- * </ul>
+ * <p>填充发生在 {@link Executor#update} 拦截层、{@code invocation.proceed()} 之前。
+ * 原因：MyBatis 在 {@code newStatementHandler} 内调用 {@link MappedStatement#getBoundSql(Object)}
+ * 拼装最终SQL（含动态列清单），随后才执行 {@code ParameterHandler.setParameters}。若在后者填充，
+ * 则 tk.mybatis {@code insertSelective} 的 {@code <if test="id != null">id,</if>} 早在填充前就判定
+ * 为false而丢弃该列，导致雪花主键无法写入。只有在SQL生成前填充，字段才会进入列清单。</p>
  *
  * @author abstergo
  * @see SqlAutoValue
  * @see IAutoValueProvider
  * @since 1.0.0
  */
-@Intercepts({@Signature(type = Executor.class, method = "update", args = {MappedStatement.class, Object.class}),
-    @Signature(type = ParameterHandler.class, method = "setParameters", args = {PreparedStatement.class})})
+@Intercepts({@Signature(type = Executor.class, method = "update", args = {MappedStatement.class, Object.class})})
 public class SqlAutoFillInterceptor implements Interceptor {
 
     private static final Logger logger = LoggerFactory.getLogger(SqlAutoFillInterceptor.class);
@@ -45,82 +41,50 @@ public class SqlAutoFillInterceptor implements Interceptor {
     /** Class-带注解字段缓存，减少反射遍历开销 */
     private static final Map<Class<?>, List<Field>> classFieldCache = new ConcurrentHashMap<>(64);
 
-    /** 单次SQL上下文，隔离ThreadLocal，避免多条SQL类型互相覆盖 */
-    private static final ThreadLocal<SqlContext> SQL_CONTEXT = new ThreadLocal<>();
-
-    /** SQL上下文载体 */
-    private static class SqlContext {
-        private final SqlCommandType commandType;
-
-        public SqlContext(SqlCommandType commandType) {
-            this.commandType = commandType;
-        }
-
-        public SqlCommandType getCommandType() {
-            return commandType;
-        }
-    }
-
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
-        Object target = invocation.getTarget();
-        if (target instanceof Executor) {
-            return interceptExecutor(invocation);
-        }
-        if (target instanceof ParameterHandler) {
-            return interceptParameterHandler(invocation);
+        Object[] args = invocation.getArgs();
+        MappedStatement ms = (MappedStatement)args[0];
+        SqlCommandType commandType = ms.getSqlCommandType();
+        // 仅增删改需要填充，查询直接跳过
+        if (SqlCommandType.INSERT == commandType || SqlCommandType.UPDATE == commandType) {
+            // 必须在proceed()之前填充：此时SQL列清单尚未拼装
+            doFill(args[1], commandType);
         }
         return invocation.proceed();
     }
 
-    /** 拦截Executor.update，绑定当前SQL类型上下文 */
-    private Object interceptExecutor(Invocation invocation) throws Throwable {
-        MappedStatement ms = (MappedStatement)invocation.getArgs()[0];
-        SqlCommandType commandType = ms.getSqlCommandType();
-        // 仅增删改需要填充，查询直接跳过上下文绑定
-        if (SqlCommandType.INSERT == commandType || SqlCommandType.UPDATE == commandType) {
-            SQL_CONTEXT.set(new SqlContext(commandType));
-        }
-        try {
-            return invocation.proceed();
-        } finally {
-            // 强制清除，杜绝内存泄漏
-            SQL_CONTEXT.remove();
-        }
-    }
-
-    /** 拦截参数赋值，执行字段自动填充 */
-    private Object interceptParameterHandler(Invocation invocation) throws Throwable {
-        SqlContext context = SQL_CONTEXT.get();
-        // 无上下文说明是SELECT/DELETE，无需填充
-        if (context == null) {
-            return invocation.proceed();
-        }
-        SqlCommandType commandType = context.getCommandType();
-        ParameterHandler parameterHandler = (ParameterHandler)invocation.getTarget();
-        Object paramObj = parameterHandler.getParameterObject();
+    /** 处理入参：普通实体直接填充，Map入参递归提取其中的实体与集合 */
+    private void doFill(Object paramObj, SqlCommandType commandType) {
         if (paramObj == null) {
-            return invocation.proceed();
+            return;
         }
-        // 处理Map参数
         if (paramObj instanceof Map) {
-            handleMapParam((Map<?, ?>)paramObj, commandType);
+            // 用identity去重，避免同一集合/实体经多个别名key被重复遍历
+            Set<Object> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+            for (Object value : ((Map<?, ?>)paramObj).values()) {
+                collectAndFill(value, commandType, visited);
+            }
         } else {
-            // 普通实体对象
             applyFill(paramObj, commandType);
         }
-        return invocation.proceed();
     }
 
-    /** 处理MyBatis Map入参，过滤内置参数，只处理业务实体 */
-    private void handleMapParam(Map<?, ?> paramMap, SqlCommandType commandType) {
-        // MyBatis内置参数key过滤，不处理
-        Set<String> excludeKeys = new HashSet<>(Arrays.asList("param1", "param2", "collection", "list", "array"));
-        List<Object> entityList =
-            paramMap.entrySet().stream().filter(entry -> !excludeKeys.contains(String.valueOf(entry.getKey())))
-                .map(Map.Entry::getValue).filter(Objects::nonNull).distinct().collect(Collectors.toList());
-        for (Object entity : entityList) {
-            applyFill(entity, commandType);
+    /** 递归收集实体：集合/数组逐元素下钻，其余对象直接填充 */
+    private void collectAndFill(Object value, SqlCommandType commandType, Set<Object> visited) {
+        if (value == null || !visited.add(value)) {
+            return;
+        }
+        if (value instanceof Collection) {
+            for (Object element : (Collection<?>)value) {
+                collectAndFill(element, commandType, visited);
+            }
+        } else if (value instanceof Object[]) {
+            for (Object element : (Object[])value) {
+                collectAndFill(element, commandType, visited);
+            }
+        } else {
+            applyFill(value, commandType);
         }
     }
 
