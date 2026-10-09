@@ -43,6 +43,17 @@ public final class CacheNamesConstants {
      */
     public static final String ROLE_GROUP = "app:roleGroup";
 
+    /**
+     * 角色组下用户列表缓存（按 userId）
+     */
+    public static final String ROLE_GROUP_USER_ID = "app:role_group_user_id";
+
+    /**
+     * 公司查询缓存
+     */
+    public static final String COMPANY_QUERY_ID = "app:company_query_id";
+
+
     // ===== 令牌 =====
     /**
      * 令牌实体缓存（按 token）

@@ -37,6 +37,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.ROLE_GROUP;
+import static com.tbs.app.service.impl.CacheNamesConstants.ROLE_GROUP_USER_ID;
 
 /**
  * 角色组服务实现类
@@ -203,6 +204,8 @@ public class SimpleRoleGroupServiceImpl
      * @param userId
      * @return
      */
+    @Cacheable(value = ROLE_GROUP_USER_ID, key = "#userId")
+    @ExpireOn(cacheNames = ROLE_GROUP_USER_ID, value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemRoleGroupVO> getUserRoleGroupVOList(Long userId) {
         var relation = new SystemRoleGroupUserRelationEntity();
