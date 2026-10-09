@@ -28,7 +28,7 @@ import org.springframework.cache.annotation.Caching;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.APP_VERSION_COMPATIBILITY;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;

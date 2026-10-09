@@ -22,7 +22,7 @@ import com.tbs.web.security.user.access.grant.ILoginGrantProvider;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.cache.annotation.Cacheable;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

@@ -17,7 +17,7 @@ import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Date;

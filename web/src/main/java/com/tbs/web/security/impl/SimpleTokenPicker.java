@@ -5,7 +5,7 @@ import com.tbs.web.enums.TokenSource;
 import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.gate.ITokenPicker;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Map;
@@ -41,11 +41,11 @@ public class SimpleTokenPicker implements ITokenPicker {
     }
 
     private String getFromCookie(HttpServletRequest request, String name) {
-        javax.servlet.http.Cookie[] cookies = request.getCookies();
+        jakarta.servlet.http.Cookie[] cookies = request.getCookies();
         if (cookies == null) {
             return null;
         }
-        for (javax.servlet.http.Cookie cookie : cookies) {
+        for (jakarta.servlet.http.Cookie cookie : cookies) {
             if (cookie.getName().equals(name)) {
                 return cookie.getValue();
             }

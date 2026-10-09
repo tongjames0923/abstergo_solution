@@ -4,10 +4,10 @@ import com.tbs.shared.pojo.IIdentifiable;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 
 /**
@@ -28,8 +28,8 @@ public class PropertyValueEntity implements IIdentifiable<Long>, Serializable {
      * 主键ID
      */
     @Comment("主键ID（自增）")
-    @javax.persistence.Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @jakarta.persistence.Id
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     /**

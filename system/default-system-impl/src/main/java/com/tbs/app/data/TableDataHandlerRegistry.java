@@ -6,7 +6,7 @@ import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.ResolvedObject;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collection;
 import java.util.Optional;
 

@@ -12,7 +12,7 @@ import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AuthUtil;
 import org.springframework.security.authentication.AuthenticationManager;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 登录网关中心

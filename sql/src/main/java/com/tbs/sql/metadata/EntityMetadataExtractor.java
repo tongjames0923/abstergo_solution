@@ -7,7 +7,7 @@ import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
 import com.tbs.sql.util.SqlUtils;
 
-import javax.persistence.Table;
+import jakarta.persistence.Table;
 import java.lang.reflect.Field;
 import java.util.LinkedList;
 import java.util.List;

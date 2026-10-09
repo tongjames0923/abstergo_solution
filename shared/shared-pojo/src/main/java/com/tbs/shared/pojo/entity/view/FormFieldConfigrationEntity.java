@@ -4,7 +4,7 @@ import com.tbs.shared.pojo.IIdentifiable;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -25,7 +25,7 @@ public class FormFieldConfigrationEntity implements Serializable, IIdentifiable<
      */
     @Comment("主键ID（自增）")
     @Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     /**

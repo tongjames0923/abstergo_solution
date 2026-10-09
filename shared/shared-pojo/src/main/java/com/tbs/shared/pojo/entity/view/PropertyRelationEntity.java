@@ -4,9 +4,9 @@ import com.tbs.shared.pojo.IIdentifiable;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 
 /**
@@ -20,8 +20,8 @@ import java.io.Serializable;
 @Data
 @Entity
 @Table(name = "property_relation",
-    indexes = {@javax.persistence.Index(name = "property_relation_property_id_index", columnList = "property_id"),
-        @javax.persistence.Index(name = "property_relation_relation_id_index",
+    indexes = {@jakarta.persistence.Index(name = "property_relation_property_id_index", columnList = "property_id"),
+        @jakarta.persistence.Index(name = "property_relation_relation_id_index",
             columnList = "relation_id,relation_type")})
 public class PropertyRelationEntity implements IIdentifiable<Long>, Serializable {
 
@@ -29,8 +29,8 @@ public class PropertyRelationEntity implements IIdentifiable<Long>, Serializable
      * 主键ID
      */
     @Comment("主键ID（自增）")
-    @javax.persistence.Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @jakarta.persistence.Id
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     /**

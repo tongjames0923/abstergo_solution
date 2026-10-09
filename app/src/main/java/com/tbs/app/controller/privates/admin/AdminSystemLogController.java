@@ -11,7 +11,7 @@ import com.tbs.web.result.AjaxResult;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 系统日志管理控制器

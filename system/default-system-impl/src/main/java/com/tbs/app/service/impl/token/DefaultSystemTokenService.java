@@ -20,7 +20,7 @@ import org.springframework.cache.annotation.Cacheable;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.TOKEN_ENTITY;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;

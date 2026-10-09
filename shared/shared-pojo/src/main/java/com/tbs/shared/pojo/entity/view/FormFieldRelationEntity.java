@@ -4,9 +4,9 @@ import com.tbs.shared.pojo.IIdentifiable;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 
 /**
@@ -21,7 +21,7 @@ import java.io.Serializable;
 @Data
 @Entity
 @Table(name = "form_field_relation",
-    indexes = {@javax.persistence.Index(name = "form_field_relation_form_id_index", columnList = "form_id")})
+    indexes = {@jakarta.persistence.Index(name = "form_field_relation_form_id_index", columnList = "form_id")})
 public class FormFieldRelationEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -29,8 +29,8 @@ public class FormFieldRelationEntity implements IIdentifiable<Long>, Serializabl
      * 主键ID
      */
     @Comment("主键ID（自增）")
-    @javax.persistence.Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @jakarta.persistence.Id
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     /**

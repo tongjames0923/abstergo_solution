@@ -4,8 +4,8 @@ import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.mapper.IFrameworkMapper;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 import java.util.Optional;
 
 /**

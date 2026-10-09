@@ -10,7 +10,7 @@ import com.tbs.web.uitl.AuthUtil;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Objects;
 import com.tbs.app.constant.SystemI18nConstant;
 

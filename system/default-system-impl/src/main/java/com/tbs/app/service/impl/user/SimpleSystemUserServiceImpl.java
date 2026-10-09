@@ -33,7 +33,7 @@ import static com.tbs.app.service.impl.CacheNamesConstants.SYSTEM_USER;
 import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_ID_MAP;
 import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_TO_ID;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;

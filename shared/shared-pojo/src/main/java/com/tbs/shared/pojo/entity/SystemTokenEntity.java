@@ -10,7 +10,7 @@ import org.hibernate.annotations.Comment;
 import lombok.Data;
 import lombok.ToString;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**

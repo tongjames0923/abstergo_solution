@@ -9,7 +9,7 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import org.hibernate.annotations.Comment;
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**

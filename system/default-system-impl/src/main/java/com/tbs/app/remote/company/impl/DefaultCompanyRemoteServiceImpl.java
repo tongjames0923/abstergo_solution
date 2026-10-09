@@ -9,7 +9,7 @@ import com.tbs.app.vo.RemoteCompanyInfoVO;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;

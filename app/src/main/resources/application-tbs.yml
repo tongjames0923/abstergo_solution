@@ -12,6 +12,11 @@ tbs:
   web:
     permit-all-paths:
       - /public/**
+      - /doc.html
+      - /swagger-ui/**
+      - /swagger-resources/**
+      - /v3/api-docs/**
+      - /webjars/**
     secured-paths:
       - /private/**
     auth:

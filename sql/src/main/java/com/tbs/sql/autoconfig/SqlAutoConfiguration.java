@@ -20,12 +20,13 @@ import com.tbs.sql.util.TransactionUtil;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.apache.ibatis.annotations.Mapper;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.PlatformTransactionManager;
 import tk.mybatis.spring.annotation.MapperScan;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * SQL模块自动配置类，负责注册和配置SQL框架的所有核心组件。
@@ -73,7 +74,7 @@ import javax.annotation.Resource;
  * @see ISqlAssembler
  * @see com.tbs.sql.annotation.core.EnableTbsSql
  */
-@MapperScan(basePackages = "com.tbs.sql.mapper")
+@MapperScan(basePackages = "com.tbs.sql.mapper", annotationClass = Mapper.class)
 public class SqlAutoConfiguration {
 
     @Resource

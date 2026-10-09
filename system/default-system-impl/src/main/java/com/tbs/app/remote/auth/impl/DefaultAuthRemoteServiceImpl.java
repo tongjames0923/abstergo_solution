@@ -7,7 +7,7 @@ import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import org.springframework.security.core.GrantedAuthority;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.stream.Collectors;
 
 /**

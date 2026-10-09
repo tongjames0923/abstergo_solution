@@ -8,10 +8,10 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Comment;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -37,81 +37,81 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
      * 主键
      */
     @Comment("主键ID")
-    @javax.persistence.Id
+    @jakarta.persistence.Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
     /**
      * 操作类型
      */
     @Comment("操作类型")
-    @javax.persistence.Column(name = "operate_type", length = 128)
+    @jakarta.persistence.Column(name = "operate_type", length = 128)
     private String operateType;
 
     /**
      * 操作内容,即调用的方法
      */
     @Comment("操作内容（调用的方法描述）")
-    @javax.persistence.Column(name = "operate_content", length = 512)
+    @jakarta.persistence.Column(name = "operate_content", length = 512)
     private String operateContent;
     /**
      * 操作时间
      */
     @Comment("操作时间")
-    @javax.persistence.Column(name = "operate_time")
+    @jakarta.persistence.Column(name = "operate_time")
     private Date operateTime;
 
     /**
      * 操作用户名称
      */
     @Comment("操作用户名称")
-    @javax.persistence.Column(name = "operate_user_name", length = 64)
+    @jakarta.persistence.Column(name = "operate_user_name", length = 64)
     private String operateUserName;
     /**
      * 操作ip
      */
     @Comment("操作用户IP地址")
-    @javax.persistence.Column(name = "operate_ip", length = 64)
+    @jakarta.persistence.Column(name = "operate_ip", length = 64)
     private String operateIp;
 
     /**
      * 操作方法 GET,PUT等操作方法类型
      */
     @Comment("HTTP方法类型（GET/PUT/POST等）")
-    @javax.persistence.Column(name = "method_type", length = 64)
+    @jakarta.persistence.Column(name = "method_type", length = 64)
     private String method;
 
     /**
      * 操作url
      */
     @Comment("请求URL")
-    @javax.persistence.Column(name = "operate_url", length = 512)
+    @jakarta.persistence.Column(name = "operate_url", length = 512)
     private String operateUrl;
 
     /**
      * 操作参数json
      */
     @Comment("请求参数JSON")
-    @javax.persistence.Column(name = "operate_param_json", columnDefinition = "longtext")
+    @jakarta.persistence.Column(name = "operate_param_json", columnDefinition = "longtext")
     private String operateParamJson;
     /**
      * 操作结果json
      */
     @Comment("操作结果JSON")
-    @javax.persistence.Column(name = "operate_result_json", columnDefinition = "longtext")
+    @jakarta.persistence.Column(name = "operate_result_json", columnDefinition = "longtext")
     private String operateResultJson;
 
     /**
      * 操作耗时
      */
     @Comment("操作耗时（毫秒）")
-    @javax.persistence.Column(name = "cost_time")
+    @jakarta.persistence.Column(name = "cost_time")
     private Long costTime;
 
     /**
      * 操作异常信息
      */
     @Comment("操作异常信息")
-    @javax.persistence.Column(name = "operate_error", columnDefinition = "longtext")
+    @jakarta.persistence.Column(name = "operate_error", columnDefinition = "longtext")
     private String operateError;
 
     /**

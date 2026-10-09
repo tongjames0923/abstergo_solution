@@ -12,7 +12,7 @@ import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;

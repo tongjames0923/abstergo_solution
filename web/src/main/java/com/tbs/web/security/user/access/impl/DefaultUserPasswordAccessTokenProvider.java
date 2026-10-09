@@ -14,7 +14,7 @@ import com.tbs.web.security.user.form.IUsernameAndPasswordForm;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Objects;
 import com.tbs.web.constant.WebI18nConstant;
 

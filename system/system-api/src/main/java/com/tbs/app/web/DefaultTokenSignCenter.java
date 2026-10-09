@@ -23,8 +23,8 @@ import org.springframework.cache.annotation.Cacheable;
 
 import static com.tbs.app.web.CacheNamesConstants.TOKEN_CACHE;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Collection;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;

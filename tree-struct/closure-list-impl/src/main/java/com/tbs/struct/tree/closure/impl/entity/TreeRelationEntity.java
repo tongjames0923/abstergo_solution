@@ -2,7 +2,7 @@ package com.tbs.struct.tree.closure.impl.entity;
 
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 @Data

@@ -13,7 +13,7 @@ import com.tbs.web.uitl.AuthUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.AuthenticationException;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import com.tbs.web.constant.WebI18nConstant;
 
 /**

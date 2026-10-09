@@ -11,7 +11,7 @@ import com.tbs.push.model.auth.PushAuthResult;
 import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;

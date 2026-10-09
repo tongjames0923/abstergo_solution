@@ -6,7 +6,7 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 
 /**
  * 系统用户部门关系实体

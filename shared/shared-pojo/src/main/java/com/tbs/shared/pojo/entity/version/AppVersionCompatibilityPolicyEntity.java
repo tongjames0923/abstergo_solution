@@ -6,7 +6,7 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**

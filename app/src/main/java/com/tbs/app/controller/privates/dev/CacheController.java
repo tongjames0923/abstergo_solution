@@ -19,7 +19,7 @@ import org.springframework.cache.support.AbstractCacheManager;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 缓存管理控制器

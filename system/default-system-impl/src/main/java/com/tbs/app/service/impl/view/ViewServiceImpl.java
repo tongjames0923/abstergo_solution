@@ -20,8 +20,8 @@ import org.springframework.cache.annotation.Cacheable;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.VIEW_FORM_CACHE;
 
-import javax.annotation.Resource;
-import javax.transaction.Transactional;
+import jakarta.annotation.Resource;
+import jakarta.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
 

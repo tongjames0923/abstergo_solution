@@ -1,7 +1,7 @@
 package com.tbs.broadcast.redis;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 
 import org.redisson.api.RTopic;
 import org.redisson.api.RedissonClient;

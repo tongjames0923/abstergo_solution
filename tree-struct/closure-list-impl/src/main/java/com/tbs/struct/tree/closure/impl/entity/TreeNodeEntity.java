@@ -2,7 +2,7 @@ package com.tbs.struct.tree.closure.impl.entity;
 
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -15,8 +15,8 @@ import java.util.Date;
 @Data
 @Entity
 @Table(name = "tree_node", uniqueConstraints = @UniqueConstraint(columnNames = {"group_name", "node_id"}),
-    indexes = {@javax.persistence.Index(columnList = "group_name,parent_id"),
-        @javax.persistence.Index(columnList = "entity_id")})
+    indexes = {@jakarta.persistence.Index(columnList = "group_name,parent_id"),
+        @jakarta.persistence.Index(columnList = "entity_id")})
 public class TreeNodeEntity implements Serializable {
     private static final long serialVersionUID = 1L;
 

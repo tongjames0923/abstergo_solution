@@ -14,8 +14,8 @@
     <description>推送SSE传输适配层：SseEmitter下行+HTTP POST上行组合成统一双向通道，与websocket-impl互斥装配</description>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

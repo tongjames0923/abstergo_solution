@@ -5,7 +5,7 @@ import com.tbs.common.uuid.IUuidGenerator;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @author abstergo

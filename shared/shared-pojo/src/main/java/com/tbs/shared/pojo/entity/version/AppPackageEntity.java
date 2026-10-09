@@ -6,10 +6,10 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.util.Date;
 
 /**
@@ -22,7 +22,7 @@ import java.util.Date;
  */
 @Entity
 @Data
-@Table(name = "app_package", indexes = {@javax.persistence.Index(name = "idx_version_id", columnList = "version_id")})
+@Table(name = "app_package", indexes = {@jakarta.persistence.Index(name = "idx_version_id", columnList = "version_id")})
 public class AppPackageEntity implements ICommonAuditableEntity<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -39,7 +39,7 @@ public class AppPackageEntity implements ICommonAuditableEntity<Long> {
      * 应用版本id
      */
     @Comment("关联的应用版本ID（援引 app_version_info.id）")
-    @javax.persistence.Column(name = "version_id")
+    @jakarta.persistence.Column(name = "version_id")
     private Long versionId;
 
     /**

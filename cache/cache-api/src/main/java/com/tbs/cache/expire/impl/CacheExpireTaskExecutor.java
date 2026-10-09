@@ -6,7 +6,7 @@ import com.tbs.schedule.api.TaskSubmission;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.Serializable;
 import java.util.Date;
 

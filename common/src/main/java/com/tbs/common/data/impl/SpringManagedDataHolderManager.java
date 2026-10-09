@@ -3,7 +3,7 @@ package com.tbs.common.data.impl;
 import com.tbs.common.data.IDataHolder;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Map;
 
 /**

@@ -6,7 +6,7 @@ import com.tbs.push.config.property.PushProperty;
 import com.tbs.push.constants.PushSessionAttrConstants;
 import com.tbs.push.model.auth.PushAuthResult;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;

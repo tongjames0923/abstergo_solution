@@ -4,7 +4,7 @@ import java.lang.reflect.Field;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 
 import com.tbs.common.util.base.ReflectUtil;
 import com.tbs.common.util.base.StrUtil;
@@ -52,7 +52,7 @@ import com.tbs.sql.annotation.mapping.QueryMapping;
  * @author abstergo
  * @since 1.0.0
  * @see com.tbs.sql.annotation.mapping.QueryMapping
- * @see javax.persistence.Column
+ * @see jakarta.persistence.Column
  */
 public class SqlUtils {
     private static final Map<Class<?>, String> tableNames = new ConcurrentHashMap<>();
@@ -94,7 +94,7 @@ public class SqlUtils {
             return true;
         }
         return skipFieldCache.computeIfAbsent(field, f -> 
-            ReflectUtil.isStaticOrFinal(f) || f.isAnnotationPresent(javax.persistence.Transient.class)
+            ReflectUtil.isStaticOrFinal(f) || f.isAnnotationPresent(jakarta.persistence.Transient.class)
         );
     }
 
@@ -109,8 +109,8 @@ public class SqlUtils {
             return null;
         }
         return tableNames.computeIfAbsent(clazz, c -> {
-            if (c.isAnnotationPresent(javax.persistence.Table.class)) {
-                javax.persistence.Table table = c.getAnnotation(javax.persistence.Table.class);
+            if (c.isAnnotationPresent(jakarta.persistence.Table.class)) {
+                jakarta.persistence.Table table = c.getAnnotation(jakarta.persistence.Table.class);
                 if (StrUtil.isNotEmpty(table.name())) {
                     return table.name();
                 }

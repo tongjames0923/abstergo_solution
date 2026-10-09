@@ -15,7 +15,7 @@ import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.sql.service.QueryEngine;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Optional;
 import com.tbs.app.constant.SystemI18nConstant;

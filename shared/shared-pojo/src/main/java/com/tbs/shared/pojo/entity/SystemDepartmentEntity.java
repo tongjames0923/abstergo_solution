@@ -13,7 +13,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -38,7 +38,7 @@ public class SystemDepartmentEntity
 	 * 部门ID
 	 */
 	@Comment("部门ID（雪花算法生成）")
-	@javax.persistence.Id
+	@jakarta.persistence.Id
 	@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
 	private Long id;
 

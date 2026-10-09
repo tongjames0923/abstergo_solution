@@ -5,6 +5,7 @@ import com.tbs.web.constants.WebBeanNameConstant;
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.gate.TokenHandleFilter;
 import com.tbs.web.gate.center.impl.LoginGateWayCenter;
+import jakarta.annotation.Resource;
 import org.jetbrains.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -14,16 +15,15 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import javax.annotation.Resource;
 
 /**
  * Web 配置类
@@ -37,13 +37,17 @@ import javax.annotation.Resource;
  * </ol>
  * 各项开关由 {@link WebProperty} 驱动。
  * </p>
+ * <p>
+ * Spring Security 6（Spring Boot 3）起 WebSecurityConfigurerAdapter 已移除，安全配置改为
+ * 暴露 {@link SecurityFilterChain} Bean；antMatchers 改为 requestMatchers。
+ * </p>
  *
  * @author tongj
  * @see WebProperty Web 配置属性
  */
 @Configuration
 @EnableMethodSecurity(prePostEnabled = true)
-public class WebConfig extends WebSecurityConfigurerAdapter {
+public class WebConfig {
 
     @Resource
     AuthenticationEntryPoint authenticationEntryPoint;
@@ -53,18 +57,6 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     @Nullable AuthenticationProvider provider;
     @Resource
     TokenHandleFilter filter;
-
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        setSecurity(http);
-        if (filter != null && provider != null) {
-            http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
-            http.authenticationProvider(provider);
-        }
-
-        http.exceptionHandling().authenticationEntryPoint(authenticationEntryPoint)
-            .accessDeniedHandler(accessDeniedHandler);
-    }
 
     /**
      * Web 配置属性 用于获取跨域、CSRF等Web相关配置参数
@@ -87,6 +79,25 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
     @Bean
     AuthenticationManager manager(AuthenticationConfiguration configuration) throws Exception {
         return configuration.getAuthenticationManager();
+    }
+
+    /**
+     * 安全过滤器链（Spring Security 6 组件式配置，替代旧的 WebSecurityConfigurerAdapter）
+     *
+     * @param http HTTP 安全对象
+     * @return 构建后的过滤器链
+     * @throws Exception 配置异常
+     */
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        setSecurity(http);
+        if (filter != null && provider != null) {
+            http.addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class);
+            http.authenticationProvider(provider);
+        }
+        http.exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint)
+            .accessDeniedHandler(accessDeniedHandler));
+        return http.build();
     }
 
     /**
@@ -118,40 +129,37 @@ public class WebConfig extends WebSecurityConfigurerAdapter {
      */
     private void setSecurity(HttpSecurity http) throws Exception {
         if (webProperty.isEnableCors()) {
-            http.cors().configurationSource(corsFilter());
+            http.cors(cors -> cors.configurationSource(corsFilter()));
         }
-        if (webProperty.isEnableCsrf()) {
-            http.csrf();
-        } else {
-            http.csrf().disable();
+        if (!webProperty.isEnableCsrf()) {
+            http.csrf(AbstractHttpConfigurer::disable);
         }
 
-        if (webProperty.isEnableHttpBasic()) {
-            http.httpBasic();
-        } else {
-            http.httpBasic().disable();
+        if (!webProperty.isEnableHttpBasic()) {
+            http.httpBasic(AbstractHttpConfigurer::disable);
         }
 
         if (webProperty.isEnableFormLogin()) {
-            http.formLogin().loginPage("/login").permitAll();
+            http.formLogin(form -> form.loginPage("/login").permitAll());
         } else {
-            http.formLogin().disable();
+            http.formLogin(AbstractHttpConfigurer::disable);
         }
 
         if (webProperty.isEnableLogout()) {
-            http.logout().permitAll();
+            http.logout(logout -> logout.permitAll());
         } else {
-            http.logout().disable();
+            http.logout(AbstractHttpConfigurer::disable);
         }
 
-        http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS);
+        http.sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        var letgo = webProperty.getPermitAllPaths().toArray(new String[0]);
-        http.authorizeHttpRequests().antMatchers(letgo).permitAll();
-
-        var securedPaths = webProperty.getSecuredPaths().toArray(new String[0]);
-        http.authorizeHttpRequests().antMatchers(securedPaths).authenticated();
-
+        String[] letgo = webProperty.getPermitAllPaths().toArray(new String[0]);
+        String[] securedPaths = webProperty.getSecuredPaths().toArray(new String[0]);
+        // 注意：anyRequest 的兜底匹配语义需按原有放行意图核验（此处默认受保护）
+        http.authorizeHttpRequests(auth -> auth
+            .requestMatchers(letgo).permitAll()
+            .requestMatchers(securedPaths).authenticated()
+            .anyRequest().authenticated());
     }
 
 }

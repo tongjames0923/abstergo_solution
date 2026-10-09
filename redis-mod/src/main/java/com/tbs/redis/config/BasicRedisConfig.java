@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * Redis基础配置类

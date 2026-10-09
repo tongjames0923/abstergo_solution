@@ -5,7 +5,7 @@ import java.util.Date;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import com.tbs.lock.IConditionLock;
 import com.tbs.lock.ILock;

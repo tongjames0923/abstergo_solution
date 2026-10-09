@@ -8,7 +8,6 @@ import com.tbs.sql.service.QueryEngine;
 import tk.mybatis.mapper.additional.idlist.IdListMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateSelectiveMapper;
-import tk.mybatis.mapper.annotation.RegisterMapper;
 import tk.mybatis.mapper.common.BaseMapper;
 import tk.mybatis.mapper.common.special.InsertListMapper;
 
@@ -62,7 +61,6 @@ import tk.mybatis.mapper.common.special.InsertListMapper;
  * @see ConditionBuilder
  * @see FetchMapper
  */
-@RegisterMapper
 public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<T>, BatchUpdateMapper<T>,
     BatchUpdateSelectiveMapper<T>, IdListMapper<T, K>, SmartQueryMapper {
 

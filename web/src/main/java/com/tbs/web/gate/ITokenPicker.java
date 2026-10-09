@@ -5,7 +5,7 @@ import com.tbs.web.exception.NotFoundTokenException;
 import com.tbs.web.security.token.ITokenModel;
 import org.jetbrains.annotations.NotNull;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.util.Optional;
 
 /**

@@ -19,7 +19,7 @@ import org.springframework.cache.annotation.CacheEvict
 import org.springframework.cache.annotation.Cacheable
 import java.util.*
 import java.util.stream.Collectors
-import javax.annotation.Resource
+import jakarta.annotation.Resource
 
 
 @DubboService

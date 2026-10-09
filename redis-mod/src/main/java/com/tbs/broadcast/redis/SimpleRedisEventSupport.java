@@ -1,6 +1,6 @@
 package com.tbs.broadcast.redis;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.jetbrains.annotations.NotNull;
 import org.springframework.context.annotation.Lazy;

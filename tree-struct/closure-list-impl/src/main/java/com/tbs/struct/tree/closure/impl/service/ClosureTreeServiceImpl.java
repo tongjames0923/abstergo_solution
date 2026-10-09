@@ -26,7 +26,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 
 import static com.tbs.struct.tree.closure.impl.service.CacheNamesConstants.TREE_NODE_ENTITY;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;

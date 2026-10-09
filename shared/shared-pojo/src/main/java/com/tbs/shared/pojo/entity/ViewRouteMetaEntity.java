@@ -8,10 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.util.Date;
 
 /**
@@ -24,7 +24,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "view_route_meta", indexes = {
-    @javax.persistence.Index(name = "idx_route_id", columnList = "route_id")
+    @jakarta.persistence.Index(name = "idx_route_id", columnList = "route_id")
 })
 @Data
 @AllArgsConstructor

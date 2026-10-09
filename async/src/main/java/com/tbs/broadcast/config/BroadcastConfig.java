@@ -1,6 +1,6 @@
 package com.tbs.broadcast.config;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
