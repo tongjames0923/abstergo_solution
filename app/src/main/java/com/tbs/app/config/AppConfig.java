@@ -89,100 +89,100 @@ public class AppConfig {
         return new CookieRefreshTokenService();
     }
 
-    @Bean
-    public ICacheListenner logCacheListenner() {
-        return new ICacheListenner() {
-            /**
-             * 判断是否支持指定的缓存
-             * <p>
-             * 用于确定当前监听器是否应该处理指定的缓存实例
-             * </p>
-             *
-             * @param cache 要检查的缓存实例
-             * @return 如果支持则返回true，否则返回false
-             */
-            @Override
-            public boolean support(Cache cache) {
-                return true;
-            }
-
-            /**
-             * 缓存获取事件回调
-             * <p>
-             * 当从缓存中获取值时触发此方法
-             * </p>
-             *
-             * @param cacheName 缓存名称
-             * @param key       缓存键
-             * @param value     缓存值
-             */
-            @Override
-            public void onGet(String cacheName, Object key, Object value) {
-                log.info("Cache Get: cacheName={}, key={}, value={}", cacheName, key, value);
-            }
-
-            /**
-             * 缓存设置事件回调
-             * <p>
-             * 当向缓存中设置值时触发此方法
-             * </p>
-             *
-             * @param cacheName 缓存名称
-             * @param key       缓存键
-             * @param value     缓存值
-             */
-            @Override
-            public void onPut(String cacheName, Object key, Object value) {
-                log.info("Cache Put: cacheName={}, key={}, value={}", cacheName, key, value);
-
-            }
-
-            /**
-             * 缓存删除事件回调
-             * <p>
-             * 当从缓存中删除值时触发此方法
-             * </p>
-             *
-             * @param cacheName 缓存名称
-             * @param key       缓存键
-             */
-            @Override
-            public void onEvict(String cacheName, Object key) {
-                log.info("Cache Evict: cacheName={}, key={}", cacheName, key);
-
-            }
-
-            /**
-             * 缓存清除事件回调
-             * <p>
-             * 当清除缓存中的所有值时触发此方法
-             * </p>
-             *
-             * @param cacheName 缓存名称
-             */
-            @Override
-            public void onClear(String cacheName) {
-                log.info("Cache Clear: cacheName={}", cacheName);
-
-            }
-
-            /**
-             * 缓存过期事件回调
-             * <p>
-             * 当缓存项过期时触发此方法
-             * </p>
-             *
-             * @param cacheName  缓存名称
-             * @param key        缓存键
-             * @param expireTime 过期时间
-             */
-            @Override
-            public void calledExpire(String cacheName, Object key, Date expireTime) {
-                log.info("Cache Expire: cacheName={}, key={}, expireTime={}", cacheName, key, expireTime);
-
-            }
-        };
-    }
+//    @Bean
+//    public ICacheListenner logCacheListenner() {
+//        return new ICacheListenner() {
+//            /**
+//             * 判断是否支持指定的缓存
+//             * <p>
+//             * 用于确定当前监听器是否应该处理指定的缓存实例
+//             * </p>
+//             *
+//             * @param cache 要检查的缓存实例
+//             * @return 如果支持则返回true，否则返回false
+//             */
+//            @Override
+//            public boolean support(Cache cache) {
+//                return true;
+//            }
+//
+//            /**
+//             * 缓存获取事件回调
+//             * <p>
+//             * 当从缓存中获取值时触发此方法
+//             * </p>
+//             *
+//             * @param cacheName 缓存名称
+//             * @param key       缓存键
+//             * @param value     缓存值
+//             */
+//            @Override
+//            public void onGet(String cacheName, Object key, Object value) {
+//                log.info("Cache Get: cacheName={}, key={}, value={}", cacheName, key, value);
+//            }
+//
+//            /**
+//             * 缓存设置事件回调
+//             * <p>
+//             * 当向缓存中设置值时触发此方法
+//             * </p>
+//             *
+//             * @param cacheName 缓存名称
+//             * @param key       缓存键
+//             * @param value     缓存值
+//             */
+//            @Override
+//            public void onPut(String cacheName, Object key, Object value) {
+//                log.info("Cache Put: cacheName={}, key={}, value={}", cacheName, key, value);
+//
+//            }
+//
+//            /**
+//             * 缓存删除事件回调
+//             * <p>
+//             * 当从缓存中删除值时触发此方法
+//             * </p>
+//             *
+//             * @param cacheName 缓存名称
+//             * @param key       缓存键
+//             */
+//            @Override
+//            public void onEvict(String cacheName, Object key) {
+//                log.info("Cache Evict: cacheName={}, key={}", cacheName, key);
+//
+//            }
+//
+//            /**
+//             * 缓存清除事件回调
+//             * <p>
+//             * 当清除缓存中的所有值时触发此方法
+//             * </p>
+//             *
+//             * @param cacheName 缓存名称
+//             */
+//            @Override
+//            public void onClear(String cacheName) {
+//                log.info("Cache Clear: cacheName={}", cacheName);
+//
+//            }
+//
+//            /**
+//             * 缓存过期事件回调
+//             * <p>
+//             * 当缓存项过期时触发此方法
+//             * </p>
+//             *
+//             * @param cacheName  缓存名称
+//             * @param key        缓存键
+//             * @param expireTime 过期时间
+//             */
+//            @Override
+//            public void calledExpire(String cacheName, Object key, Date expireTime) {
+//                log.info("Cache Expire: cacheName={}, key={}, expireTime={}", cacheName, key, expireTime);
+//
+//            }
+//        };
+//    }
 
     @Bean
     public ScheduleTrigger xxlJobTrigger() {

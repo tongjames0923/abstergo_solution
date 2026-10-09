@@ -1,9 +1,5 @@
 # Spring配置
 spring:
-  autoconfigure:
-    exclude:
-      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
-      - org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
   profiles:
     include:
       - tbs
@@ -37,6 +33,9 @@ spring:
       # 上传大小限制（Spring Boot默认仅 max-file-size=1MB / max-request-size=10MB，大文件上传会被拒绝）
       max-file-size: 1024MB
       max-request-size: 2048MB
+  threads:
+    virtual:
+      enabled: true
 logging:
   level:
     com.alibaba: warn
