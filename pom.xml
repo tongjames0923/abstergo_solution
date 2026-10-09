@@ -78,7 +78,6 @@
         <knife4j.version>4.5.0</knife4j.version>
         <xxl.job.version>2.5.0</xxl.job.version>
         <snakeyaml.version>2.2</snakeyaml.version>
-        <kotlin.version>1.7.22</kotlin.version>
 
         <!-- 内部模块统一版本号：与 project.version 解耦，
              避免个别模块单独改发布版本时污染依赖管理 -->
