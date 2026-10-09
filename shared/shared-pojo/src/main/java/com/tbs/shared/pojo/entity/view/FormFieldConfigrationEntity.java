@@ -17,6 +17,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "form_field_configration", indexes = {@Index(name = "gobal_index", columnList = "type,prop,label")})
 @Data
+@Comment("表单域配置表")
 public class FormFieldConfigrationEntity implements Serializable, IIdentifiable<Long> {
     private static final long serialVersionUID = 1L;
 

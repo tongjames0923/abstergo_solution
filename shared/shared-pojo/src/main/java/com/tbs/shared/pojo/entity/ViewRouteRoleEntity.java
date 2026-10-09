@@ -30,6 +30,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Comment("视图路由与角色关联表")
 public class ViewRouteRoleEntity implements IBaseEntity<Long> {
 
     private static final long serialVersionUID = 1L;

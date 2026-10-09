@@ -30,6 +30,7 @@ import java.util.Date;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Comment("视图路由版本表")
 public class ViewRouteVersionEntity implements IBaseEntity<Long> {
 
     private static final long serialVersionUID = 1L;

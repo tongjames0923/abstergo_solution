@@ -31,6 +31,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, 2})
+@Comment("系统部门信息表")
 public class SystemDepartmentEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
@@ -96,7 +97,7 @@ public class SystemDepartmentEntity
 	 *
 	 * @see com.tbs.shared.enums.SystemDepartmentFlagEnum
 	 */
-	@Comment("数据状态")
+	@Comment("部门状态：0-已删除，1-已激活，2-禁用")
 	@Column(name = "flag")
 	private Integer flag;
 

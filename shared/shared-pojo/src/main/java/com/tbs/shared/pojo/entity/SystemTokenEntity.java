@@ -27,6 +27,7 @@ import java.util.Date;
 @ToString
 @Data
 @LogicDeleteEntity(activeFlagValues = {1, -1, -2, -3}, filedName = "flag")
+@Comment("系统令牌表")
 public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditable, IUpdateTimeAuditable {
     private static final long serialVersionUID = 1L;
     /**
@@ -64,7 +65,7 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
     /**
      * 标记
      */
-    @Comment("状态标记")
+    @Comment("令牌状态：1-有效，0-已删除，-1-已撤销，-2-已过期，-3-无效")
     private Integer flag;
     /**
      * 过期时间
@@ -87,7 +88,7 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
     @Column(name = "ip_address", length = 64)
     private String ipAddress;
 
-    @Comment("令牌创建方式")
+    @Comment("令牌创建方式：1-登录，2-刷新替换，3-第三方登录")
     @Column(name = "create_type")
     private Integer createType;
 
@@ -96,7 +97,7 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
      *
      * @see com.tbs.web.enums.TokenTypeEnum
      */
-    @Comment("令牌类型")
+    @Comment("令牌类型：1-访问令牌，2-刷新令牌，3-应用访问令牌，4-第三方访问令牌")
     @Column(name = "token_type", nullable = false)
     private Integer tokenType;
 

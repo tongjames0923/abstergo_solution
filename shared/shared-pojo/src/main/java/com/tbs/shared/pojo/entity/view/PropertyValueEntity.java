@@ -20,6 +20,7 @@ import java.io.Serializable;
 @Data
 @Entity
 @Table(name = "property_value", indexes = {@Index(name = "name_idx", columnList = "prop_name"),})
+@Comment("属性设置表")
 public class PropertyValueEntity implements IIdentifiable<Long>, Serializable {
 
     private static final long serialVersionUID = 1L;

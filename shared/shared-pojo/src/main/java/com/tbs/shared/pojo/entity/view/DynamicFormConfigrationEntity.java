@@ -23,6 +23,7 @@ import java.io.Serializable;
         @jakarta.persistence.Index(columnList = "expandable,expanded"),})
 @Data
 @LogicDeleteEntity(activeFlagValues = {0, 1})
+@Comment("动态表单配置表")
 public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -80,7 +81,7 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
      * 标记
      * @see com.tbs.shared.enums.DynamicFormConfigFlagEnum
      */
-    @Comment("数据状态标志（逻辑删除用）")
+    @Comment("表单状态：1-已启用，0-未启用，-1-已删除")
     @Column(name = "flag")
     private Integer flag;
 

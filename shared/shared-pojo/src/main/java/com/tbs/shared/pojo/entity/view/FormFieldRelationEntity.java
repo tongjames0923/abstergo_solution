@@ -22,6 +22,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "form_field_relation",
     indexes = {@jakarta.persistence.Index(name = "form_field_relation_form_id_index", columnList = "form_id")})
+@Comment("表单与表单域关联表")
 public class FormFieldRelationEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
 

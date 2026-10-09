@@ -37,6 +37,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, -1}, onNullIsDeleted = false)
+@Comment("系统角色与角色组关系表")
 public class SystemRoleGroupRelationEntity
     implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>,
     ICommonDeleteAuditable<Long>, Serializable {
@@ -112,7 +113,7 @@ public class SystemRoleGroupRelationEntity
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */
-    @Comment("逻辑删除标志位")
+    @Comment("逻辑删除标志位：1-启用，-1-禁用，0-删除")
     @Column(name = "flag")
     private Integer flag;
 

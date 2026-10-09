@@ -31,6 +31,7 @@ import java.util.Date;
 @Setter
 @ToString
 @LogicDeleteEntity(activeFlagValues = { 1 })
+@Comment("系统用户外部身份绑定表")
 public class SystemUserExternalIdentityEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;

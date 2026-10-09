@@ -22,6 +22,7 @@ import java.util.Date;
         // 可选：唯一索引防止重复策略，但需要注意 source_version_code 为 NULL 时唯一约束的数据库兼容性
         // @Index(name = "uk_source_target", columnList = "source_app_key, source_version_code, source_platform, target_app_key, target_platform", unique = true)
     })
+@Comment("应用版本兼容策略表")
 public class AppVersionCompatibilityPolicyEntity implements ICommonAuditableEntity<Long> {
     private static final long serialVersionUID = 1L;
 
@@ -79,7 +80,7 @@ public class AppVersionCompatibilityPolicyEntity implements ICommonAuditableEnti
      * 动作类型
      * @see  com.tbs.shared.enums.AppVersionCompatibilityActionEnum
      */
-    @Comment("动作类型（不兼容时的处理策略）")
+    @Comment("动作类型（不兼容时的处理策略）：1-force 强制更新，2-recommend 建议更新，3-notify 仅提醒")
     @Column(name = "action", nullable = false)
     private Integer action;
 
@@ -116,7 +117,7 @@ public class AppVersionCompatibilityPolicyEntity implements ICommonAuditableEnti
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */
-    @Comment("数据状态标志")
+    @Comment("数据状态标志：1-启用，-1-禁用，0-删除")
     @Column(name = "flag")
     private Integer flag;
 }

@@ -38,6 +38,7 @@ import java.util.Date;
     indexes = {@jakarta.persistence.Index(name = "idx_sys_role_group_flag", columnList = "flag"),
         @jakarta.persistence.Index(name = "idx_sys_role_group_role_group_name", columnList = "role_group_name")})
 @LogicDeleteEntity(activeFlagValues = {1, 0})
+@Comment("系统角色组表")
 public class SystemRoleGroupEntity
     implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>,
     ICommonDeleteAuditable<Long> {
@@ -58,7 +59,7 @@ public class SystemRoleGroupEntity
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */
-    @Comment("角色组状态标识")
+    @Comment("角色组状态标识：1-启用，-1-禁用，0-删除")
     @Column(name = "flag")
     private Integer flag;
 

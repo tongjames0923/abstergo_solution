@@ -23,6 +23,7 @@ import java.util.Date;
 @Entity
 @Data
 @Table(name = "app_package", indexes = {@jakarta.persistence.Index(name = "idx_version_id", columnList = "version_id")})
+@Comment("应用安装包表")
 public class AppPackageEntity implements ICommonAuditableEntity<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -103,7 +104,7 @@ public class AppPackageEntity implements ICommonAuditableEntity<Long> {
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */
-    @Comment("数据状态标志")
+    @Comment("数据状态标志：1-启用，-1-禁用，0-删除")
     @Column(name = "flag")
     private Integer flag;
 }

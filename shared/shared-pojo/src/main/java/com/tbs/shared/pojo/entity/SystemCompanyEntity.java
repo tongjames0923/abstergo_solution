@@ -30,6 +30,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, 2, 5})
+@Comment("公司信息表")
 public class SystemCompanyEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
@@ -88,7 +89,7 @@ public class SystemCompanyEntity
 	 *
 	 * @see com.tbs.shared.enums.SystemCompanyFlagEnum
 	 */
-	@Comment("数据状态")
+	@Comment("公司状态：0-已删除，1-已激活，2-禁用，5-系统内置")
 	@Column(name = "flag")
 	private Integer flag;
 

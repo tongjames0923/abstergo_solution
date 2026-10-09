@@ -22,6 +22,7 @@ import jakarta.persistence.*;
     @Index(name = "idx_department_id", columnList = "department_id")},
     uniqueConstraints = {@UniqueConstraint(name = "uk_user_id_department_id", columnNames = {"user_id", "department_id"})})
 @Data
+@Comment("系统用户与部门关系表")
 public class SystemUserDepartmentRelationEntity implements IIdentifiable<Long> {
 
     /**

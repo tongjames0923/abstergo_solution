@@ -7,6 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Comment;
 
 import jakarta.persistence.*;
 import java.io.Serializable;
@@ -30,6 +31,7 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Comment("推送消息全链路操作日志表")
 public class PushMessageOperationLogEntity
     implements IIdentifiable<Long>, IUpdateTimeAuditable, ICreateTimeAuditable, Serializable {
 
@@ -38,6 +40,7 @@ public class PushMessageOperationLogEntity
     /**
      * 主键
      */
+    @Comment("主键（自增）")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -45,48 +48,56 @@ public class PushMessageOperationLogEntity
     /**
      * 消息ID（push_message.id）
      */
+    @Comment("消息ID（关联 push_message.id）")
     @Column(name = "message_id", nullable = false)
     private Long messageId;
 
     /**
      * 操作人（系统/服务发起时可空，身份进 ext_info）
      */
+    @Comment("操作人用户ID（系统/服务发起时可空，身份进 ext_info）")
     @Column(name = "operator")
     private Long operator;
 
     /**
      * 操作类型（SEND/READ/CLICK/...，取值见 PushMessageOperationTypeEnum）
      */
+    @Comment("操作类型：SEND-发送，READ-已读，CLICK-点击")
     @Column(name = "op_type", nullable = false, length = 32)
     private String opType;
 
     /**
      * 来源通道（http/rpc/job/system）
      */
+    @Comment("操作来源通道（http/rpc/job/system）")
     @Column(name = "op_source", length = 32)
     private String opSource;
 
     /**
      * 操作时间
      */
+    @Comment("操作发生时间")
     @Column(name = "op_time", nullable = false)
     private Date opTime;
 
     /**
      * 操作上下文扩展（JSON，服务名、调用方标识、点击位置等）
      */
+    @Comment("操作上下文扩展（JSON，服务名、调用方标识、点击位置等）")
     @Column(name = "ext_info")
     private String extInfo;
 
     /**
      * 创建时间
      */
+    @Comment("创建时间")
     @Column(name = "create_time", nullable = false)
     private Date createTime;
 
     /**
      * 更新时间
      */
+    @Comment("更新时间")
     @Column(name = "update_time")
     private Date updateTime;
 

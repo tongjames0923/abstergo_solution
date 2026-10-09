@@ -30,6 +30,7 @@ import java.util.Date;
 @Getter
 @Setter
 @ToString
+@Comment("系统操作记录表")
 public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -117,7 +118,7 @@ public class SystemOperateRecordEntity implements IIdentifiable<Long>, Serializa
     /**
      * 操作异常级别
      */
-    @Comment("操作异常级别")
+    @Comment("操作异常级别：1-用户输入错误，2-业务逻辑错误，3-数据访问错误，4-系统错误，5-严重系统错误（仅异常时写入）")
     @Column(name = "operate_error_level")
     private Integer operateErrorLevel;
 

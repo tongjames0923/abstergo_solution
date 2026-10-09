@@ -28,6 +28,7 @@ import java.util.Date;
     @Index(name = "idx_user_id", columnList = "user_id"), @Index(name = "idx_token", columnList = "token")})
 @Slf4j
 @LogicDeleteEntity
+@Comment("系统登录信息表")
 public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAuditable, IUpdateTimeAuditable {
 
     /**
@@ -70,7 +71,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 状态
      */
-    @Comment("登录状态标识")
+    @Comment("登录状态：1-正常，0-已删除，-1-已撤销")
     @jakarta.persistence.Column(name = "flag")
     @Getter
     @Setter

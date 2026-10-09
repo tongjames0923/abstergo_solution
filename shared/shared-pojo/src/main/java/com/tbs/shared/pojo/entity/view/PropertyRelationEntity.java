@@ -23,6 +23,7 @@ import java.io.Serializable;
     indexes = {@jakarta.persistence.Index(name = "property_relation_property_id_index", columnList = "property_id"),
         @jakarta.persistence.Index(name = "property_relation_relation_id_index",
             columnList = "relation_id,relation_type")})
+@Comment("属性关系表")
 public class PropertyRelationEntity implements IIdentifiable<Long>, Serializable {
 
     /**
