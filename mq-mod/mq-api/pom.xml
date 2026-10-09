@@ -14,8 +14,7 @@
     <description>MQ抽象层：厂商无关的消息发送、消费、幂等、失败重试存储等契约接口，不依赖任何具体MQ厂商SDK</description>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

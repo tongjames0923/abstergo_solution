@@ -14,8 +14,7 @@
     <description>推送协议规范层：消息帧结构、编解码SPI、心跳、错误码、版本协商、会话与订阅契约、消息源/投递记录存储契约、投递协调器与分发编排，不依赖任何具体传输实现SDK</description>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

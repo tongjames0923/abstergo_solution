@@ -14,8 +14,7 @@
     <description>RabbitMQ快速使用实现包：消费者基类、资源声明、默认发送实现、重试调度与自动装配</description>
 
     <properties>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
