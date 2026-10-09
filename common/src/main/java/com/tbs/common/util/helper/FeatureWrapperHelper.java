@@ -38,6 +38,12 @@ public class FeatureWrapperHelper implements IStartup {
             return Optional.empty();
         }
 
+        // 短路：实例本身就是目标类型（缓存直接存 T 的主场景），
+        // 直接返回，避免拼接字符串缓存 key 与遍历全部扩展的开销
+        if (feature.isInstance(instance)) {
+            return Optional.of(feature.cast(instance));
+        }
+
         // 生成缓存key
         String cacheKey = instance.getClass().getName() + "#" + feature.getName();
 

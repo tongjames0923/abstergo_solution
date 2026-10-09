@@ -78,7 +78,9 @@ public class CacheUtils implements IStartup {
     /**
      * 获取缓存
      * <p>
-     * 根据指定的键和类型从缓存中获取值
+     * 根据指定的键和类型从缓存中获取值。
+     * 底层 {@link IManualCacheHandler} 采用并发安全存储，读操作为幂等非阻塞，
+     * 因此本方法无需加锁，避免同一热点键的读请求被串行化。
      * </p>
      *
      * @param key   缓存键
@@ -87,20 +89,18 @@ public class CacheUtils implements IStartup {
      * @return 包含缓存值的ValueWrapper对象
      */
     public <T> ValueWrapper<T> get(String key, Class<T> clazz) {
+        var val = FeatureWrapperHelper.unwrap(manualCacheHandler.get(key), clazz);
+        recorder.onGet(manualCacheHandler, key, val.isPresent() ? 1 : 0);
+        limiter.limitExecution(manualCacheHandler, recorder);
         ValueWrapper<T> value = ValueWrapper.empty();
-        LockUtil.getInstance().lockThen(this, () -> {
-            var val = FeatureWrapperHelper.unwrap(manualCacheHandler.get(key), clazz);
-            recorder.onGet(manualCacheHandler, key, val.isEmpty() ? 0 : 1);
-            value.set(val.orElse(null));
-            limiter.limitExecution(manualCacheHandler, recorder);
-        });
+        value.set(val.orElse(null));
         return value;
     }
 
     /**
      * 放入缓存
      * <p>
-     * 将指定的键值对放入缓存中
+     * 将指定的键值对放入缓存中。并发安全存储下单次写入本身原子，无需加锁。
      * </p>
      *
      * @param key   缓存键
@@ -111,38 +111,47 @@ public class CacheUtils implements IStartup {
         if (value == null) {
             return;
         }
-        LockUtil.getInstance().lockThen(this, () -> {
-            manualCacheHandler.put(key, value);
-            recorder.onPut(manualCacheHandler, key, 1);
-            limiter.limitExecution(manualCacheHandler, recorder);
-        });
-
+        manualCacheHandler.put(key, value);
+        recorder.onPut(manualCacheHandler, key, 1);
+        limiter.limitExecution(manualCacheHandler, recorder);
     }
 
     /**
      * 获取缓存，如果缓存中不存在则调用sSupplier获取并放入缓存
      * <p>
-     * 这是一个原子操作，通过锁机制确保线程安全
+     * 命中路径无锁直接返回；仅在真正 miss 时进入加锁 + 双重检查的慢路径，
+     * 保证同一 key 只有一个线程执行 sSupplier（防缓存击穿），
+     * 同时避免 key 存在但解包失败时抛 {@code NoSuchElementException}（此时回源重建）。
      * </p>
      *
-     * @param key        缓存键
-     * @param sSupplier  值不存在时的供应函数
-     * @param clazz      值的类型
-     * @param <T>        泛型类型
+     * @param key       缓存键
+     * @param sSupplier 值不存在时的供应函数
+     * @param clazz     值的类型
+     * @param <T>       泛型类型
      * @return 包含缓存值的ValueWrapper对象
      */
     public <T> ValueWrapper<T> computeIfAbsent(String key, SSupplier<T> sSupplier, Class<T> clazz) {
+        // 快路径：无锁读命中，覆盖绝大多数调用
+        var cached = FeatureWrapperHelper.unwrap(manualCacheHandler.get(key), clazz);
+        if (cached.isPresent()) {
+            recorder.onGet(manualCacheHandler, key, 1);
+            limiter.limitExecution(manualCacheHandler, recorder);
+            return ValueWrapper.of(cached.get());
+        }
+        // 慢路径：加锁 + 双重检查，仅 miss 时回源，保证 single-flight
         ValueWrapper<T> val = ValueWrapper.empty();
-        LockUtil.getInstance().lockThen(this, () -> {
-            if (manualCacheHandler.contains(key)) {
-                val.set(FeatureWrapperHelper.unwrap(manualCacheHandler.get(key), clazz).get());
+        LockUtil.getInstance().lockThen(key, () -> {
+            var recheck = FeatureWrapperHelper.unwrap(manualCacheHandler.get(key), clazz);
+            if (recheck.isPresent()) {
+                recorder.onGet(manualCacheHandler, key, 1);
+                val.set(recheck.get());
             } else {
                 var value = sSupplier.get();
                 manualCacheHandler.put(key, value);
                 recorder.onPut(manualCacheHandler, key, 1);
-                limiter.limitExecution(manualCacheHandler, recorder);
                 val.set(value);
             }
+            limiter.limitExecution(manualCacheHandler, recorder);
         });
         return val;
     }
@@ -150,16 +159,14 @@ public class CacheUtils implements IStartup {
     /**
      * 删除缓存
      * <p>
-     * 根据指定的键删除缓存
+     * 根据指定的键删除缓存。并发安全存储下单次删除本身原子，无需加锁。
      * </p>
      *
      * @param key 缓存键
      */
     public void remove(String key) {
-        LockUtil.getInstance().lockThen(this, () -> {
-            manualCacheHandler.remove(key);
-            recorder.onRemove(manualCacheHandler, key, 1);
-        });
+        manualCacheHandler.remove(key);
+        recorder.onRemove(manualCacheHandler, key, 1);
     }
 
     /**

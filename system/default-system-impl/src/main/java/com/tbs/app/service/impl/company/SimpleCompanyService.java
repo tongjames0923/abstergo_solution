@@ -4,6 +4,7 @@ import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.async.delegate.AsyncDelegateInvoker;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.IStartup;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
@@ -18,13 +19,16 @@ import com.tbs.shared.mapper.SystemCompanyMapper;
 import com.tbs.shared.pojo.criteria.CommonSystemDepartmentQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import com.tbs.app.constant.SystemI18nConstant;
+import java.util.concurrent.TimeUnit;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.COMPANY_QUERY_ID;
 
 /**
  * 系统公司服务实现类
@@ -152,6 +156,18 @@ public class SimpleCompanyService
     @Override
     protected Optional<IAuditService<SystemCompanyEntity, Long, ?>> getAuditServiceSupport() {
         return Optional.of(auditService);
+    }
+
+    /**
+     * @param id
+     * @return
+     */
+
+    @Cacheable(value = COMPANY_QUERY_ID, key = "#id")
+    @ExpireOn(cacheNames = COMPANY_QUERY_ID, value = 10, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public SystemCompanyEntity queryById(Long id) {
+        return super.queryById(id);
     }
 
     /**

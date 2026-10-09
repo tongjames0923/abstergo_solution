@@ -7,11 +7,18 @@ import com.tbs.common.util.base.CollUtil;
 
 import java.util.Date;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class SimpleCacheLimiter implements ICacheLimiter {
 
     private AtomicInteger count = new AtomicInteger(0);
+
+    /**
+     * 淘汰并发护栏：读/写路径已不再持有互斥锁，同一时刻仅允许一个线程执行全量淘汰，
+     * 其余线程直接跳过，避免多个请求线程同时跑 O(N log N) 形成惊群
+     */
+    private final AtomicBoolean evicting = new AtomicBoolean(false);
 
     private static final int maxCount = 2048;
 
@@ -24,6 +31,18 @@ public class SimpleCacheLimiter implements ICacheLimiter {
             return;
         }
         count.set(0);
+        // 抢占淘汰执行权，抢不到说明已有线程在淘汰，本次直接跳过
+        if (!evicting.compareAndSet(false, true)) {
+            return;
+        }
+        try {
+            evict(handler, recorder);
+        } finally {
+            evicting.set(false);
+        }
+    }
+
+    private void evict(IManualCacheHandler handler, ICacheOperationRecorder recorder) {
         var keys = handler.keys();
         if (CollUtil.isEmpty(keys)) {
             return;

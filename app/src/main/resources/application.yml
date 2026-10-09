@@ -21,6 +21,10 @@ spring:
         server-addr: ${NACOS_ADDRESS:127.0.0.1:8848}
   lifecycle:
     timeout-per-shutdown-phase: 30s
+#  # 虚拟线程：将 Servlet 请求线程切换为 JDK21 虚拟线程，提升 IO 阻塞型（Dubbo/Redis/DB/Nacos）并发吞吐并降低线程内存开销
+#  threads:
+#    virtual:
+#      enabled: true
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
@@ -35,6 +39,12 @@ logging:
     org.apache: warn
     com.tbs.cache: warn
     com.tbs.common.provider: debug
+# Actuator：仅暴露必要端点，减少自动装配与内存/攻击面开销
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
 # 应用自定义配置
 app:
   gateway:
