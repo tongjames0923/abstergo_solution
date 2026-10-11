@@ -122,6 +122,9 @@ tbs:
       table-include-list: ${CDC_TABLE_INCLUDE:dbo.PURCHASE_ORDER}
       # 消费位点持久化文件：生产建议挂持久卷；删除该文件且 snapshot.mode=initial 会触发全量重新消费
       offset-storage-file: ${CDC_OFFSET_FILE:data/cdc-offsets-sqlserver.dat}
+      # 位点重置维护开关：true 时启动前成对删除位点+结构历史文件（全新启动），仅用于二者不一致的故障恢复；
+      # 使用后必须置回 false，否则每次重启都会丢弃消费位点
+      reset-offset: true
       # 快照模式：schema_only 仅快照表结构后立即进入增量；SQL Server 不支持 never
       snapshot-mode: ${CDC_SNAPSHOT_MODE:schema_only}
       # 连接加密与证书：本地/自签环境常置 false + true（与 JDBC 连接串一致）

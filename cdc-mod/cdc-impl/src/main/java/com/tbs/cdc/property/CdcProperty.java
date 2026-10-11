@@ -196,6 +196,13 @@ public class CdcProperty {
         private String offsetStorageFile = "data/cdc-offsets-sqlserver.dat";
 
         /**
+         * 位点重置维护开关：true时启动前成对删除位点与结构历史文件，连接器全新启动并按snapshot.mode重新初始化。
+         * 仅用于位点与结构历史不一致的故障恢复（报"The db history topic is missing"）；
+         * 使用后必须置回false，否则每次重启都会丢弃消费位点；位点正常时开启也会强制重新初始化
+         */
+        private boolean resetOffset = false;
+
+        /**
          * 快照模式：initial/no_data/schema_only/recovered等，SQL Server不支持never，默认no_data仅结构不快照数据
          */
         private String snapshotMode = "no_data";

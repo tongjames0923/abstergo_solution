@@ -89,6 +89,9 @@ public class DebeziumConfigFactory {
 
         String offsetFile = sqlserver.getOffsetStorageFile();
         String historyFile = deriveHistoryFile(offsetFile);
+        if (sqlserver.isResetOffset()) {
+            resetOffsetFiles(offsetFile, historyFile);
+        }
         prepareParentDir(offsetFile);
         prepareParentDir(historyFile);
 
@@ -153,6 +156,29 @@ public class DebeziumConfigFactory {
         int idx = offsetFile.lastIndexOf('.');
         String base = idx > 0 ? offsetFile.substring(0, idx) : offsetFile;
         return base + "-dbhistory.dat";
+    }
+
+    /**
+     * 成对重置位点与结构历史文件
+     * <p>
+     * 两个文件是一对状态绑定的存储：位点记录消费进度，结构历史记录对应时点的表结构，
+     * 启动校验要求二者协调一致。单独删除其一会导致启动报"The db history topic is missing"，
+     * 因此重置必须成对执行。重置后连接器全新启动并按snapshot.mode重新初始化。
+     * </p>
+     *
+     * @param offsetFile 位点文件路径
+     * @param historyFile 结构历史文件路径
+     */
+    private void resetOffsetFiles(String offsetFile, String historyFile) {
+        log.warn("CDC位点重置开关已开启, 成对删除位点与结构历史文件: {}, {}", offsetFile, historyFile);
+        for (String file : java.util.List.of(offsetFile, historyFile)) {
+            var target = new File(file);
+            if (target.exists() && !target.delete()) {
+                throw AssertUtil.isTrue(true).i18n(CdcI18nConstant.OFFSET_DIR_FAILED, target.getAbsolutePath())
+                    .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).build();
+            }
+        }
+        log.warn("位点已重置, 连接器将全新启动; 请将tbs.cdc.sqlserver.reset-offset置回false, 否则每次重启都会丢弃消费位点");
     }
 
     /**
