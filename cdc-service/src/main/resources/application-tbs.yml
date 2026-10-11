@@ -25,7 +25,7 @@ tbs:
       database-include-list: ${CDC_DB_INCLUDE:XH_E10}
       # 捕获的表白名单，逗号分隔【schema.table 格式】（透传table.include.list）；
       # 注意：Debezium 3.0.8 实测匹配的是 schema.table，不带数据库名前缀（写 XH_E10.dbo.PURCHASE_ORDER 不会命中）
-      table-include-list: ${CDC_TABLE_INCLUDE:dbo.PURCHASE_ORDER}
+      table-include-list: ${CDC_TABLE_INCLUDE:dbo.PURCHASE_ORDER,dbo.SO_CHANGE_DOC}
       # 消费位点持久化文件：生产建议挂持久卷；删除该文件且 snapshot.mode=initial 会触发全量重新消费
       offset-storage-file: ${CDC_OFFSET_FILE:data/cdc-offsets-sqlserver.dat}
       # 位点重置维护开关：true 时启动前成对删除位点+结构历史文件（全新启动），仅用于二者不一致的故障恢复；
