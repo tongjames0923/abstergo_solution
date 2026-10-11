@@ -1,5 +1,6 @@
 package com.tbs.cdc.service.publisher;
 
+import com.alibaba.fastjson2.JSON;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.cdc.listener.CdcChangeListener;
 import com.tbs.cdc.listener.CdcSubscription;
@@ -102,10 +103,9 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
         }
         try {
             String routingKey = renderRoutingKey(event);
-            String payload = objectMapper.writeValueAsString(event);
             log.info("CDC事件MQ发送中,{} eventId:{}, routingKey:{}, payload:{}", property.getExchange(),
-                event.getEventId(), routingKey, payload);
-            mqProducer.send(property.getExchange(), routingKey, payload, event.getEventId());
+                event.getEventId(), routingKey, JSON.toJSONString(event));
+            mqProducer.send(property.getExchange(), routingKey, event, event.getEventId());
         } catch (Exception e) {
             log.error("CDC事件MQ发送失败, eventId:{}, table:{}", event.getEventId(), event.getTable(), e);
         }
