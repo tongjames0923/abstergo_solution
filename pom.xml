@@ -37,6 +37,7 @@
         <module>updater-gui</module>
         <module>sdk</module>
         <module>cdc-mod</module>
+        <module>cdc-service</module>
     </modules>
 
     <groupId>com.tbs</groupId>

@@ -2,8 +2,6 @@ package com.tbs.app;
 
 import com.tbs.async.annotation.EnableTbsAsyncPack;
 import com.tbs.cache.annotation.EnableTbsCache;
-import com.tbs.cdc.annotation.EnableTbsCdc;
-import com.tbs.cdc.sqlserver.annotation.EnableCdcSqlserver;
 import com.tbs.knife4j.annotation.UseKnife4jPack;
 import com.tbs.oss.annotation.EnableTbsOss;
 import com.tbs.push.annotation.EnableTbsPush;
@@ -51,8 +49,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableScriptEngine
 @EnableTbsPush
 @EnableTbsPushSse
-@EnableTbsCdc
-@EnableCdcSqlserver
 public class AppApplication {
 
     public static void main(String[] args) {

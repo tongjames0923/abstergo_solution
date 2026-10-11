@@ -1,0 +1,48 @@
+# Spring配置
+spring:
+  profiles:
+    include:
+      - tbs
+  application:
+    name: cdc-service
+  # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
+  config:
+    import:
+      - optional:nacos:RABBITMQ.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      - optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
+  cloud:
+    nacos:
+      config:
+        server-addr: ${NACOS_ADDRESS:127.0.0.1:8848}
+  lifecycle:
+    timeout-per-shutdown-phase: 30s
+  # RabbitMQ连接：本地默认值兜底，生产经Nacos RABBITMQ.yml或环境变量覆盖
+  rabbitmq:
+    host: ${RABBITMQ_HOST:127.0.0.1}
+    port: ${RABBITMQ_PORT:5672}
+    username: ${RABBITMQ_USERNAME:admin}
+    password: ${RABBITMQ_PASSWORD:admin123}
+    virtual-host: ${RABBITMQ_VHOST:/}
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+logging:
+  level:
+    com.alibaba: warn
+    org.apache: warn
+# Actuator：仅暴露必要端点，减少自动装配与内存/攻击面开销
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+dubbo:
+  application:
+    name: cdc-service
+    logger: slf4j
+    check-serializable: false
+    serialize-check-status: DISABLE
+  registry:
+    address: nacos://${NACOS_ADDRESS:127.0.0.1:8848}
+  shutdown:
+    await-duration: 10000
