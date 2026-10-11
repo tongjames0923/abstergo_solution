@@ -11,7 +11,7 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.mq.api.producer.IMqProducer;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 
@@ -103,6 +103,8 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
         try {
             String routingKey = renderRoutingKey(event);
             String payload = objectMapper.writeValueAsString(event);
+            log.info("CDC事件MQ发送中,{} eventId:{}, routingKey:{}, payload:{}", property.getExchange(),
+                event.getEventId(), routingKey, payload);
             mqProducer.send(property.getExchange(), routingKey, payload, event.getEventId());
         } catch (Exception e) {
             log.error("CDC事件MQ发送失败, eventId:{}, table:{}", event.getEventId(), event.getTable(), e);
@@ -118,9 +120,6 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
             .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
         AssertUtil.isTrue(StrUtil.isBlank(property.getRoutingPattern()))
             .i18n(CdcServiceI18nConstant.MQ_ROUTING_PATTERN_REQUIRED).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
-        if (property.isAutoDeclare()) {
-            declareResources();
-        }
         log.info("CDC MQ发出监听器已启动, exchange:{}, routingPattern:{}", property.getExchange(),
             property.getRoutingPattern());
     }
@@ -147,41 +146,4 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
         return value == null ? "" : value;
     }
 
-    /**
-     * 自动声明交换机与可选的队列绑定
-     */
-    private void declareResources() {
-        AmqpAdmin admin = amqpAdminProvider.getIfAvailable();
-        if (admin == null) {
-            log.warn("AmqpAdmin未注入, 跳过CDC交换机自动声明, exchange:{}", property.getExchange());
-            return;
-        }
-        admin.declareExchange(buildExchange());
-        for (CdcMqProperty.BindingItem item : property.getBindings()) {
-            if (StrUtil.isBlank(item.getQueue())) {
-                continue;
-            }
-            admin.declareQueue(new Queue(item.getQueue(), property.isDurable(), false, false));
-            admin.declareBinding(new Binding(item.getQueue(), Binding.DestinationType.QUEUE, property.getExchange(),
-                item.getRoutingKey(), null));
-        }
-        log.info("CDC交换机资源自动声明完成, exchange:{}, bindings:{}", property.getExchange(),
-            property.getBindings().size());
-    }
-
-    /**
-     * 按配置类型构建交换机
-     *
-     * @return 交换机实例
-     */
-    private Exchange buildExchange() {
-        String type = property.getExchangeType() == null ? "" : property.getExchangeType().toLowerCase();
-        boolean durable = property.isDurable();
-        return switch (type) {
-            case "direct" -> new DirectExchange(property.getExchange(), durable, false);
-            case "fanout" -> new FanoutExchange(property.getExchange(), durable, false);
-            case "headers" -> new HeadersExchange(property.getExchange(), durable, false);
-            default -> new TopicExchange(property.getExchange(), durable, false);
-        };
-    }
 }

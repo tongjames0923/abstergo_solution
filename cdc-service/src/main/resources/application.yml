@@ -8,7 +8,7 @@ spring:
   # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
   config:
     import:
-      - optional:nacos:RABBITMQ.yml?group=DEFAULT_GROUP&refreshEnabled=true
+      #      - optional:nacos:RABBITMQ.yml?group=DEFAULT_GROUP&refreshEnabled=true
       - optional:nacos:${spring.application.name}.yml?group=DEFAULT_GROUP&refreshEnabled=true
   cloud:
     nacos:
@@ -22,7 +22,6 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:admin}
     password: ${RABBITMQ_PASSWORD:admin123}
-    virtual-host: ${RABBITMQ_VHOST:/}
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

@@ -1,10 +1,8 @@
 package com.tbs.cdc.service.property;
 
+import com.tbs.rabbitmq.support.MqConsumerProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * CDC MQ发出配置
@@ -31,9 +29,9 @@ public class CdcMqProperty {
     private String exchange = "tbs.cdc";
 
     /**
-     * 交换机类型：direct / topic / fanout / headers
+     * 交换机类型：direct / topic / fanout / headers（复用rabbitmq模块的ExchangeType枚举，yml配置不区分大小写）
      */
-    private String exchangeType = "topic";
+    private MqConsumerProperties.ExchangeType exchangeType = MqConsumerProperties.ExchangeType.TOPIC;
 
     /**
      * 交换机与自动声明队列是否持久化
@@ -45,33 +43,4 @@ public class CdcMqProperty {
      */
     private String routingPattern = "cdc.{database}.{table}.{changeType}";
 
-    /**
-     * 启动时是否自动声明目标交换机（解决发送侧只发不建导致的404）
-     */
-    private boolean autoDeclare = true;
-
-    /**
-     * 可选的队列绑定声明列表：随启动自动声明队列并绑定到目标交换机，为空则只声明交换机
-     */
-    private List<BindingItem> bindings = new ArrayList<>();
-
-    /**
-     * 队列绑定声明项
-     *
-     * @author abstergo
-     * @since 1.0.0
-     */
-    @Data
-    public static class BindingItem {
-
-        /**
-         * 队列名称
-         */
-        private String queue;
-
-        /**
-         * 绑定的路由键模式（topic交换机支持*与#通配）
-         */
-        private String routingKey = "#";
-    }
 }
