@@ -102,34 +102,35 @@ tbs:
   cdc:
     # 模块总开关：false 时零 Bean 装配、零线程占用，对存量应用无影响
     enable: ${CDC_ENABLE:true}
-    # 捕获源类型：mysql（postgresql/mongodb 需另引入对应实现子模块）
-    source-type: mysql
+    # 捕获源类型：mysql / sqlserver（需引入对应实现子模块，并与下方连接段一致）
+    source-type: sqlserver
     # 事件载荷裁剪模式：full / changed-only / key-only
     payload-mode: changed-only
-    mysql:
-      hostname: ${CDC_DB_HOST:${DB_HOST:127.0.0.1}}
-      port: ${CDC_DB_PORT:${DB_PORT:3306}}
-      # CDC 专用最小权限账号（仅 REPLICATION SLAVE/CLIENT），走环境变量注入
-      username: ${CDC_DB_USERNAME:root}
-      password: ${CDC_DB_PASSWORD:123456}
+    sqlserver:
+      # 独立于主库(MySQL)的连接变量：默认 192.168.80.12:1433，可用 CDC_DB_HOST/CDC_DB_PORT 覆盖
+      hostname: ${CDC_DB_HOST:192.168.80.12}
+      port: ${CDC_DB_PORT:1433}
+      # CDC 专用账号（需对目标库读取及 CDC 元数据访问权限），走环境变量注入
+      username: ${CDC_DB_USERNAME:fr}
+      password: ${CDC_DB_PASSWORD:XhErp@888}
       # Debezium 逻辑服务名（topic 前缀/源标识），须全局唯一
       server-name: tbs_cdc
-      # MySQL 复制节点 server-id：高危项，须唯一且落在 [2,4294967294]，不得与集群其他复制节点冲突
-      server-id: ${CDC_SERVER_ID:184001}
-      # 捕获的数据库白名单，逗号分隔（透传 database.include.list）
-      database-include-list: ${CDC_DB_INCLUDE:app_system}
-      # 捕获的表白名单，逗号分隔，【必须为 db.table 全限定名】（透传 table.include.list），只写表名不会命中
-      table-include-list: ${CDC_TABLE_INCLUDE:app_system.sys_user}
+      # 捕获的数据库列表，逗号分隔（透传 database.names，SQL Server 连接器必填，无 database.include.list 概念）
+      database-include-list: ${CDC_DB_INCLUDE:XH_E10}
+      # 捕获的表白名单，逗号分隔，【必须为 database.schema.table 全限定名】（透传 table.include.list），只写表名不会命中
+      table-include-list: ${CDC_TABLE_INCLUDE:XH_E10.dbo.PURCHASE_ORDER}
       # 消费位点持久化文件：生产建议挂持久卷；删除该文件且 snapshot.mode=initial 会触发全量重新消费
-      offset-storage-file: ${CDC_OFFSET_FILE:data/cdc-offsets.dat}
-      # 快照模式：schema_only 仅快照表结构（不重放存量数据）后立即进入增量；never 仅增量，
-      # 但要求结构历史文件已有该表DDL，否则位点无记录时无法反序列化行事件
+      offset-storage-file: ${CDC_OFFSET_FILE:data/cdc-offsets-sqlserver.dat}
+      # 快照模式：schema_only 仅快照表结构后立即进入增量；SQL Server 不支持 never
       snapshot-mode: ${CDC_SNAPSHOT_MODE:schema_only}
+      # 连接加密与证书：本地/自签环境常置 false + true（与 JDBC 连接串一致）
+      encrypt: false
+      trust-server-certificate: true
       # 心跳间隔（毫秒），无变更时产生心跳事件推进位点
       heartbeat-interval-ms: 5000
     filter:
-      # 库/表白名单、黑名单，为空表示不限制
-      include-databases: ["app_system"]
+      # 库/表白名单、黑名单，为空表示不限制（include-databases 比对的是库名，非表名）
+      include-databases: [ "XH_E10" ]
       exclude-databases: []
       include-table-patterns: []
       exclude-table-patterns: []

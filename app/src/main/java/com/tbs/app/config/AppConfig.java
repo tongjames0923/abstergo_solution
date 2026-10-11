@@ -196,7 +196,7 @@ public class AppConfig {
     public class MyChangeListener implements CdcChangeListener {
         @Override
         public CdcSubscription getSubscription() {
-            return CdcSubscription.builder().tablePatterns(Set.of("sys_user"))
+            return CdcSubscription.builder().tablePatterns(Set.of("PURCHASE_ORDER"))
                 .changeTypes(EnumSet.of(CdcChangeType.UPDATE, CdcChangeType.CREATE)).async(true).build();
         }
 

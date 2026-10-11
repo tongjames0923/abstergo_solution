@@ -57,8 +57,12 @@ public class DebeziumConfigFactory {
 
     /**
      * Agent状态探测查询的Debezium配置键
+     * <p>
+     * 连接器经SqlServerJdbcConfiguration读取JDBC配置时只保留database.*前缀子集，
+     * 故实际键须带database.前缀（已实测验证：顶层键sqlserver.agent.status.query会被静默忽略）。
+     * </p>
      */
-    private static final String AGENT_STATUS_QUERY_KEY = "sqlserver.agent.status.query";
+    private static final String AGENT_STATUS_QUERY_KEY = "database.sqlserver.agent.status.query";
 
     /**
      * Agent状态探测查询的中英服务名兼容默认值
