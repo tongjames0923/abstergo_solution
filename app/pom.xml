@@ -80,6 +80,11 @@
             <groupId>com.tbs</groupId>
             <artifactId>script-engine-api</artifactId>
         </dependency>
+        <!-- CDC事件契约：消费cdc-service发出的CdcEvent消息体类型 -->
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>cdc-api</artifactId>
+        </dependency>
         <dependency>
             <groupId>com.tbs</groupId>
             <artifactId>cache-caffeine-impl</artifactId>
@@ -96,6 +101,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>cdc-api</artifactId>
         </dependency>
     </dependencies>
 

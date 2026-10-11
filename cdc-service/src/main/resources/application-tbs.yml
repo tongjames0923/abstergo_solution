@@ -77,7 +77,7 @@ tbs:
       # 交换机与自动声明队列是否持久化
       durable: true
       # 路由键模板，占位符 {database}/{table}/{changeType} 按事件渲染
-      routing-pattern: ERP.E10.{table}.{changeType}
+      routing-pattern: ERP.E10.{table}
       # 启动时自动声明交换机（解决发送侧只发不建导致的 404）
       auto-declare: true
       # 可选：随启动自动声明队列并绑定到交换机（消费者不在本服务时可不配置，由消费侧声明）

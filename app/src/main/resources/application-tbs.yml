@@ -98,3 +98,20 @@ tbs:
     heartbeat-timeout-millis: 600000
     dispatch:
       scheduler: job
+
+# 应用自定义配置
+app:
+  # CDC事件MQ消费（消费cdc-service发出的数据库变更事件）
+  cdc:
+    mq:
+      consumer:
+        # 总开关：false 时不装配 CDC 事件消费者
+        enable: true
+        # 消费队列名称
+        queue: tbs.cdc.app
+        # 目标交换机（与 cdc-service 的 tbs.cdc.mq.exchange 保持一致）
+        exchange: tbs.cdc
+        # 绑定路由键模式（cdc-service 路由模板为 cdc.{database}.{table}.{changeType}）
+        routing-key: cdc.#
+        # 消费幂等（按 eventId/messageId 去重，依赖 IIdempotentStore 实现）
+        idempotent-enabled: true
