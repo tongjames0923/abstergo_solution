@@ -45,8 +45,14 @@ public class DebeziumConfigFactory {
 
     /**
      * 文件结构历史存储实现
+     * <p>
+     * Debezium 3.x 已删除2.x的{@code io.debezium.relational.history.FileDatabaseHistory}，
+     * 文件型结构历史改由{@code debezium-storage-file}（随{@code debezium-connector-mysql}传递引入）的
+     * {@code FileSchemaHistory} 承载，属性键仍为{@code schema.history.internal.file.filename}。
+     * 升级Debezium大版本时需重新校对实现类与属性键。
+     * </p>
      */
-    private static final String SCHEMA_HISTORY_CLASS = "io.debezium.relational.history.FileDatabaseHistory";
+    private static final String SCHEMA_HISTORY_CLASS = "io.debezium.storage.file.history.FileSchemaHistory";
 
     /**
      * server-id合法下界

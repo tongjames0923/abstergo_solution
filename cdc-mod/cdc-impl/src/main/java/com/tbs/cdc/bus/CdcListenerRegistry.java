@@ -224,8 +224,13 @@ public class CdcListenerRegistry implements SmartInitializingSingleton {
             if (CollUtil.isEmpty(compiledTablePatterns)) {
                 return true;
             }
+            // 事件无表名（如快照/心跳/DDL）时不可能命中任何表模式，直接不匹配，避免向Pattern.matcher传入null
             String table = event.getTable();
-            String qualified = event.getDatabase() + "." + table;
+            if (StrUtil.isBlank(table)) {
+                return false;
+            }
+            String database = event.getDatabase();
+            String qualified = StrUtil.isNotBlank(database) ? database + "." + table : table;
             for (Pattern pattern : compiledTablePatterns) {
                 if (pattern.matcher(table).matches() || pattern.matcher(qualified).matches()) {
                     return true;

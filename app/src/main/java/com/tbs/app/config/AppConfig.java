@@ -3,8 +3,12 @@ package com.tbs.app.config;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
-import com.tbs.cache.ICacheListenner;
+import com.tbs.cdc.listener.CdcChangeListener;
+import com.tbs.cdc.listener.CdcSubscription;
+import com.tbs.cdc.model.CdcChangeType;
+import com.tbs.cdc.model.CdcEvent;
 import com.tbs.common.i18n.AbstractMessageSourceProvider;
+import com.tbs.common.util.base.JsonUtils;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
 import com.tbs.mq.RedisFaildMessageStore;
@@ -19,11 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.Codec;
 import org.redisson.codec.Kryo5Codec;
-import org.springframework.cache.Cache;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.util.Date;
+import java.util.EnumSet;
+import java.util.Set;
 
 /**
  * 应用程序配置类
@@ -183,6 +187,26 @@ public class AppConfig {
 //            }
 //        };
 //    }
+
+    @Bean
+    public CdcChangeListener changeListener() {
+        return new MyChangeListener();
+    }
+
+    public class MyChangeListener implements CdcChangeListener {
+        @Override
+        public CdcSubscription getSubscription() {
+            return CdcSubscription.builder().tablePatterns(Set.of("sys_user"))
+                .changeTypes(EnumSet.of(CdcChangeType.UPDATE, CdcChangeType.CREATE)).async(true).build();
+        }
+
+        @Override
+        public void onCdcEvent(CdcEvent event) {
+
+            log.info("CDC EVENT  {}", JsonUtils.toJSONString(event));
+
+        }
+    }
 
     @Bean
     public ScheduleTrigger xxlJobTrigger() {

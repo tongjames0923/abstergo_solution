@@ -159,6 +159,12 @@ public class CdcEventBus implements CdcEventPublisher {
         if (event.getCaptureTimestamp() == null) {
             event.setCaptureTimestamp(System.currentTimeMillis());
         }
+        // 无表名事件无法参与表模式路由，属结构不合法的脏事件，在入口丢弃以免进入分发/队列
+        if (StrUtil.isBlank(event.getTable())) {
+            log.debug("CDC事件缺少表名, 于入口丢弃, eventId:{}, database:{}, changeType:{}",
+                event.getEventId(), event.getDatabase(), event.getChangeType());
+            return;
+        }
         if (!cdcEventFilter.accepts(event)) {
             return;
         }

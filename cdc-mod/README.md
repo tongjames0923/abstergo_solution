@@ -208,7 +208,17 @@ public class MyChangeListener implements CdcChangeListener {
 ## 8. 已知限制与待验证
 
 - **Debezium 键名版本对齐**：`DebeziumConfigFactory` 按 Debezium **3.0.x** 键名配置（`topic.prefix`、
-  `schema.history.internal` 等）。升级 Debezium 大版本时需对齐键名；`SCHEMA_HISTORY_CLASS`
-  (`io.debezium.relational.history.FileDatabaseHistory`) 在部分新版本可能改名为 `io.debezium.schema.*`，需按实际依赖版本核对。
+  `schema.history.internal` 等）。升级 Debezium 大版本时需对齐键名；`SCHEMA_HISTORY_CLASS` 取
+  `io.debezium.storage.file.history.FileSchemaHistory`（由 `debezium-storage-file` 提供，随 `debezium-connector-mysql`
+  传递引入），属性键仍为 `schema.history.internal.file.filename`。**2.x 的
+  `io.debezium.relational.history.FileDatabaseHistory` 在 3.0.x 已被移除**，写该类名会在启动期抛
+  `ClassNotFoundException`。
+- **表白名单必须全限定**：`table.include.list` 只接受 `db.table` 形式（Debezium 侧为正则匹配），
+  单写表名（如 `sys_user`）不会命中任何表，表现为连接器正常启动但零事件。
+- **首次捕获用 `snapshot.mode=schema_only`**：位点文件为空且结构历史文件无该表 DDL 时，`never` 模式
+  无表结构可用于反序列化行事件；`schema_only` 只快照结构、不重放存量数据，随后可改回 `never`
+  （前提是保留 `data/cdc-offsets.dat` 与 `data/cdc-offsets-dbhistory.dat`）。
+- **条件注解依赖扫描器环境**：类上 `@ConditionalOnProperty` 由 `AbstractAutoBeanRegister` 的扫描器在扫描期评估，
+  需注册器把应用 `Environment` 交给扫描器（已实现 `EnvironmentAware`），否则 yml 属性对条件不可见、Bean 被静默跳过。
 - **编译/联调验证**：本模块产出代码仅做静态自查，`mvn compile` 与真实 binlog 联调**待人工验证**。
 - **行级过滤表达式**：使用只读 `SimpleEvaluationContext`，表达式仅可访问数据变量，禁止类型引用与构造。
