@@ -26,13 +26,6 @@
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
         </dependency>
-
-        <!-- JSON序列化：无web的非HTTP服务需显式引入，激活JacksonAutoConfiguration提供ObjectMapper Bean -->
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-json</artifactId>
-        </dependency>
-
         <!-- CDC捕获：SQL Server连接器（传递引入cdc-impl/cdc-api与Debezium嵌入式引擎） -->
         <dependency>
             <groupId>com.tbs</groupId>

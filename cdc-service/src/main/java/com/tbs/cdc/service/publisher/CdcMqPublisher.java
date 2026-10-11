@@ -1,7 +1,6 @@
 package com.tbs.cdc.service.publisher;
 
 import com.alibaba.fastjson2.JSON;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.cdc.listener.CdcChangeListener;
 import com.tbs.cdc.listener.CdcSubscription;
 import com.tbs.cdc.model.CdcEvent;
@@ -55,11 +54,6 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
     private final CdcMqProperty property;
 
     /**
-     * JSON序列化器
-     */
-    private final ObjectMapper objectMapper;
-
-    /**
      * AMQP管理器提供者，用于按配置自动声明资源；未装配时跳过声明
      */
     private final ObjectProvider<AmqpAdmin> amqpAdminProvider;
@@ -72,11 +66,10 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
      * @param objectMapper      JSON序列化器
      * @param amqpAdminProvider AMQP管理器提供者
      */
-    public CdcMqPublisher(IMqProducer mqProducer, CdcMqProperty property, ObjectMapper objectMapper,
+    public CdcMqPublisher(IMqProducer mqProducer, CdcMqProperty property,
         ObjectProvider<AmqpAdmin> amqpAdminProvider) {
         this.mqProducer = mqProducer;
         this.property = property;
-        this.objectMapper = objectMapper;
         this.amqpAdminProvider = amqpAdminProvider;
     }
 

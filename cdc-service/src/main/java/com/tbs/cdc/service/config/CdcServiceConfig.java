@@ -1,6 +1,5 @@
 package com.tbs.cdc.service.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.cdc.service.property.CdcMqProperty;
 import com.tbs.cdc.service.publisher.CdcMqPublisher;
 import com.tbs.mq.api.producer.IMqProducer;
@@ -55,7 +54,7 @@ public class CdcServiceConfig {
      */
     @Bean
     public CdcMqPublisher cdcMqPublisher(IMqProducer cdcMqProducer, CdcMqProperty cdcMqProperty,
-                                         ObjectMapper objectMapper, ObjectProvider<AmqpAdmin> amqpAdminProvider) {
-        return new CdcMqPublisher(cdcMqProducer, cdcMqProperty, objectMapper, amqpAdminProvider);
+        ObjectProvider<AmqpAdmin> amqpAdminProvider) {
+        return new CdcMqPublisher(cdcMqProducer, cdcMqProperty, amqpAdminProvider);
     }
 }
