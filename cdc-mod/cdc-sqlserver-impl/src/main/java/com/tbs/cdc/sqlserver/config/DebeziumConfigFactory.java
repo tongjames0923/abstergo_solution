@@ -113,6 +113,9 @@ public class DebeziumConfigFactory {
         }
         props.setProperty("snapshot.mode", sqlserver.getSnapshotMode());
         props.setProperty("heartbeat.interval.ms", String.valueOf(sqlserver.getHeartbeatIntervalMs()));
+        // 值编码模式：金额类可读字符串、二进制类可读十六进制，避免MQ载荷出现base64“乱码”
+        props.setProperty("decimal.handling.mode", sqlserver.getDecimalHandlingMode());
+        props.setProperty("binary.handling.mode", sqlserver.getBinaryHandlingMode());
         // Agent状态探测：默认中英服务名兼容，允许业务方按环境覆盖
         var agentStatusQuery = StrUtil.isBlank(sqlserver.getAgentStatusQuery())
             ? DEFAULT_AGENT_STATUS_QUERY

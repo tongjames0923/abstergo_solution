@@ -38,6 +38,10 @@ tbs:
       trust-server-certificate: true
       # 心跳间隔（毫秒），无变更时产生心跳事件推进位点
       heartbeat-interval-ms: 5000
+      # 金额类(DECIMAL/NUMERIC/MONEY)值编码：string(默认，可读如"123.4500") / double / precise(unscaled大整数base64，不可读)
+      decimal-handling-mode: string
+      # 二进制类(BINARY/VARBINARY/ROWVERSION)值编码：hex(默认，可读十六进制) / base64 / base64-url-safe
+      binary-handling-mode: hex
     filter:
       # 库/表白名单、黑名单，为空表示不限制（include-databases 比对的是库名，非表名）
       include-databases: [ "XH_E10" ]

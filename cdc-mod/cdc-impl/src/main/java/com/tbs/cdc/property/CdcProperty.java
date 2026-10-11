@@ -214,6 +214,20 @@ public class CdcProperty {
          * Debezium默认查询仅匹配英文服务名，中文本地化实例（服务名"SQL Server 代理 (...)"）会探测失败
          */
         private String agentStatusQuery = "";
+
+        /**
+         * DECIMAL/NUMERIC/MONEY的值编码模式（透传decimal.handling.mode）：
+         * string（默认，值为"123.4500"形式可读字符串）/ double / precise（unscaled大整数base64，不可读）；
+         * 默认改为string以保证MQ载荷对消费方可读
+         */
+        private String decimalHandlingMode = "string";
+
+        /**
+         * BINARY/VARBINARY/ROWVERSION的值编码模式（透传binary.handling.mode）：
+         * hex（默认，可读十六进制）/ base64 / base64-url-safe；
+         * 默认改为hex以保证MQ载荷对消费方可读
+         */
+        private String binaryHandlingMode = "hex";
     }
 
     /**
