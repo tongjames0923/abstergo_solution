@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>cdc-impl</artifactId>
-    <description>CDC通用运行时：配置绑定、进程内事件总线（同步/异步/背压/批量）、监听器注册路由、过滤链、MQ桥接、生命周期编排与i18n资源</description>
+    <description>CDC通用运行时：配置绑定、进程内事件总线（同步/异步/背压/批量）、监听器注册路由、过滤链、生命周期编排与i18n资源</description>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
@@ -21,10 +21,6 @@
         <dependency>
             <groupId>com.tbs</groupId>
             <artifactId>cdc-api</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>mq-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>

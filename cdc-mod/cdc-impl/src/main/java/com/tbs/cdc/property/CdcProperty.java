@@ -251,41 +251,18 @@ public class CdcProperty {
 
     /**
      * 消息分发配置
+     * <p>
+     * 仅进程内分发：事件经滤链后路由至命中监听器；
+     * 跨服务分发由后续开发基于{@code CdcEventPublisher}自行对接MQ实现，模块内不内置MQ桥接。
+     * </p>
      */
     @Data
     public static class Dispatch {
 
         /**
-         * 分发模式：in-process/mq/both
-         */
-        private String mode = DispatchMode.IN_PROCESS.value;
-
-        /**
          * 进程内分发线程模式：sync/async
          */
         private String inProcessMode = InProcessMode.ASYNC.value;
-
-        /**
-         * MQ桥接配置，mode为mq/both时生效
-         */
-        private Mq mq = new Mq();
-    }
-
-    /**
-     * MQ桥接配置
-     */
-    @Data
-    public static class Mq {
-
-        /**
-         * 目标交换机名称
-         */
-        private String exchange = "tbs.cdc";
-
-        /**
-         * 路由键模板，支持占位符{database}/{table}/{changeType}
-         */
-        private String routingPattern = "cdc.{database}.{table}.{changeType}";
     }
 
     /**
@@ -363,40 +340,6 @@ public class CdcProperty {
         private final String value;
 
         PayloadMode(String value) {
-            this.value = value;
-        }
-
-        public String getValue() {
-            return value;
-        }
-    }
-
-    /**
-     * 分发模式
-     */
-    public enum DispatchMode {
-
-        /**
-         * 仅进程内分发
-         */
-        IN_PROCESS("in-process"),
-
-        /**
-         * 仅桥接至MQ
-         */
-        MQ("mq"),
-
-        /**
-         * 进程内与MQ同时分发
-         */
-        BOTH("both");
-
-        /**
-         * 配置取值
-         */
-        private final String value;
-
-        DispatchMode(String value) {
             this.value = value;
         }
 

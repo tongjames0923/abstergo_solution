@@ -24,7 +24,6 @@
 - binlog 解析：Debezium Embedded Engine 3.x（`debezium-api` + `debezium-embedded` + `debezium-connector-mysql`）
 - 位点持久化：Debezium `FileOffsetBackingStore`（文件存储，零额外中间件依赖）
 - 进程内分发：自建轻量事件总线（同步直发 / 异步有界队列批量，队列满背压）
-- MQ 桥接：复用 `mq-api` 的 `IMqProducer` 契约（RabbitMQ 实现开箱可用）
 - 行级过滤：Spring Expression（SpEL），与 `script-engine` 模块技术选型一致
 
 ---
@@ -41,23 +40,21 @@ flowchart LR
         CVT --> FLT["CdcEventFilter<br/>库表白名单/正则/行级SpEL"]
         FLT --> BUS["CdcEventBus<br/>同步/异步·批量·背压"]
         BUS --> REG["CdcListenerRegistry<br/>监听器注册路由"]
-        BUS -.可选.-> BR["CdcMqBridge"]
     end
     REG --> L1["@CdcListener 注解方法"]
     REG --> L2["CdcChangeListener 实现"]
-    BR --> MQ["IMqProducer → RabbitMQ 跨服务"]
     BIN --> SRC
 ```
 
 **数据流**：binlog 流 → Debezium Engine（独立单线程、位点文件持久化）→ `ChangeEvent` 转 `CdcEvent`
-→ 过滤链 → 事件总线（有界队列，批量/逐条可配）→ 并行分发至匹配的进程内监听器 + 可选 MQ 路由
-（routingKey 模板 `cdc.{database}.{table}.{changeType}`）。
+→ 过滤链 → 事件总线（有界队列，批量/逐条可配）→ 路由分发至匹配的进程内监听器。
+跨服务分发由业务侧基于 `CdcEventPublisher` 契约自行对接 MQ 实现，模块内不内置桥接。
 
 ### 模块拆分（契约/实现分离）
 ```
 cdc-mod/
 ├── cdc-api          # 契约层，仅依赖 common：CdcEvent/CdcSource/监听契约/@EnableTbsCdc
-├── cdc-impl         # 通用运行时，依赖 cdc-api + mq-api + async：配置/总线/路由/过滤/MQ桥接/生命周期/i18n
+├── cdc-impl         # 通用运行时，依赖 cdc-api + async：配置/总线/路由/过滤/生命周期/i18n
 └── cdc-mysql-impl   # MySQL 实现，依赖 cdc-impl + Debezium：DebeziumCdcSource/转换器/配置工厂/@EnableCdcMysql
 ```
 
@@ -101,11 +98,7 @@ tbs:
       row-conditions:                         # 行级 SpEL，key=db.table，false 则丢弃
         "[core_app.sys_user]": "#afterData['status'] != 'DELETED'"
     dispatch:
-      mode: in-process                        # in-process / mq / both
-      in-process-mode: async                  # sync / async
-      mq:
-        exchange: tbs.cdc
-        routing-pattern: "cdc.{database}.{table}.{changeType}"
+      in-process-mode: async                  # sync / async（仅进程内分发，跨服务分发业务侧自行对接 MQ）
     batch:
       queue-capacity: 10000
       batch-size: 200
@@ -157,9 +150,7 @@ public class MyChangeListener implements CdcChangeListener {
 | `payload-mode` | changed-only | 载荷裁剪：`full` 前后完整行；`changed-only` UPDATE 仅差异列；`key-only` 仅主键 |
 | `mysql.*` | 见上 | 连接信息、`server-name`、`server-id`、include 列表、位点文件、快照模式、心跳 |
 | `filter.*` | 空 | 库/表白名单与排除、行级 SpEL 条件 |
-| `dispatch.mode` | in-process | `in-process`/`mq`/`both` |
-| `dispatch.in-process-mode` | async | 进程内 `sync`/`async` |
-| `dispatch.mq.*` | `tbs.cdc` / 模板 | MQ 交换机与路由键模板 |
+| `dispatch.in-process-mode` | async | 进程内分发线程模式：`sync` 在捕获线程直发；`async` 走有界队列+批量刷新（仅进程内分发） |
 | `batch.*` | 10000/200/500/block | 队列容量、批量、刷新间隔、背压策略 |
 | `error.*` | 3/1000/skip | 重试次数、延迟、最终失败策略 |
 
@@ -181,7 +172,7 @@ public class MyChangeListener implements CdcChangeListener {
 ## 6. 可靠性与语义
 
 - **至少一次投递**：位点在事件成功进入分发管道（`markProcessed`）后随批次提交；重启断点续传可能产生重复事件，
-  **消费端必须按 `eventId` 幂等去重**（进程内监听器文档约定幂等责任；MQ 侧复用 `mq-api` 幂等/失败快照骨架）。
+  **消费端必须按 `eventId` 幂等去重**。
 - **背压**：异步模式使用有界队列，队列满按 `on-full` 策略 `block`（阻塞捕获线程保证不丢）或
   `drop-oldest`（丢最旧并告警，保证不阻塞、可能丢）。
 - **错误分级**：捕获层连接类异常由 Debezium 引擎内部重连重试；分发层监听器异常按 `retry-times`/`retry-delay`
@@ -196,7 +187,7 @@ public class MyChangeListener implements CdcChangeListener {
 
 1. 新建 `cdc-{db}-impl` 子模块，parent 为 `cdc-mod`，依赖 `cdc-impl` + 对应 Debezium connector。
 2. 实现 `CdcSource`（如 `DebeziumCdcSource` 的同构封装），将连接器事件转为统一 `CdcEvent`。
-3. 复用 `cdc-impl` 的事件总线、过滤链、MQ 桥接与 `CdcRuntimeManager`（按类型装配 `CdcSource` Bean）。
+3. 复用 `cdc-impl` 的事件总线、过滤链与 `CdcRuntimeManager`（按类型装配 `CdcSource` Bean）。
 4. 提供 `@EnableCdc{Db}` + `Cdc{Db}AutoRegister`（参考 `RabbitMqAutoRegister` 一步装配实现与运行时包）。
 
 > Debezium 的通用 `ChangeEvent` API 使 PostgreSQL（pgoutput）/MongoDB（Change Stream）扩展只需换 connector + 新增子模块。

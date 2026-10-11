@@ -150,11 +150,7 @@ tbs:
       exclude-table-patterns: []
       row-conditions: {}                 # 行级 SpEL，key=db.table，false 则丢弃
     dispatch:
-      mode: in-process                   # in-process / mq / both
-      in-process-mode: async             # sync / async
-      mq:
-        exchange: tbs.cdc
-        routing-pattern: "cdc.{database}.{table}.{changeType}"
+      in-process-mode: async             # sync / async（仅进程内分发，跨服务分发业务侧自行对接 MQ）
     batch:
       queue-capacity: 10000
       batch-size: 200

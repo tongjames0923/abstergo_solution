@@ -2,7 +2,6 @@ package com.tbs.cdc.bus;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.StrUtil;
-import com.tbs.cdc.bridge.CdcMqBridge;
 import com.tbs.cdc.filter.CdcEventFilter;
 import com.tbs.cdc.i18n.CdcI18nConstant;
 import com.tbs.cdc.model.CdcEvent;
@@ -32,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
  *   <li>同步模式：在捕获线程内即时路由分发</li>
  *   <li>异步模式：入有界队列，由独立刷新线程按批量/间隔刷出，队列满按背压策略处理</li>
  * </ul>
- * 分发时并行投递至命中的进程内监听器（按监听async标志走独立线程池或内联执行）与可选MQ桥接。
+ * 分发时并行投递至命中的进程内监听器（按监听async标志走独立线程池或内联执行）。
  * 监听器执行失败按{@code retry-times}/{@code retry-delay}重试，最终失败按{@code on-fail}策略处理。
  * </p>
  *
@@ -52,9 +51,6 @@ public class CdcEventBus implements CdcEventPublisher {
 
     @Resource
     private CdcListenerRegistry cdcListenerRegistry;
-
-    @Resource
-    private CdcMqBridge cdcMqBridge;
 
     @Resource
     private UuidUtil uuidUtil;
@@ -104,8 +100,8 @@ public class CdcEventBus implements CdcEventPublisher {
             this.listenerExecutor = newExecutor();
         }
         running.set(true);
-        log.info("CDC事件总线已启动, in-process-mode:{}, dispatch-mode:{}, queue-capacity:{}",
-            cdcProperty.getDispatch().getInProcessMode(), cdcProperty.getDispatch().getMode(),
+        log.info("CDC事件总线已启动, in-process-mode:{}, queue-capacity:{}",
+            cdcProperty.getDispatch().getInProcessMode(),
             async ? batch.getQueueCapacity() : 0);
     }
 
@@ -258,12 +254,11 @@ public class CdcEventBus implements CdcEventPublisher {
     }
 
     /**
-     * 分发单个事件：桥接MQ + 路由进程内监听器
+     * 分发单个事件：路由至命中的进程内监听器
      *
      * @param event 变更事件
      */
     private void dispatchEvent(CdcEvent event) {
-        cdcMqBridge.send(event);
         List<CdcListenerRegistry.ListenerRoute> routes = cdcListenerRegistry.match(event);
         if (CollUtil.isEmpty(routes)) {
             return;
