@@ -44,6 +44,11 @@ public class CdcProperty {
     private Mysql mysql = new Mysql();
 
     /**
+     * SQL Server捕获源连接与位点配置
+     */
+    private Sqlserver sqlserver = new Sqlserver();
+
+    /**
      * 过滤控制配置
      */
     private Filter filter = new Filter();
@@ -121,6 +126,78 @@ public class CdcProperty {
          * 快照模式：initial/never/schema_only等，默认never仅增量
          */
         private String snapshotMode = "never";
+
+        /**
+         * 心跳间隔（毫秒），无变更事务时产生心跳事件以推进位点
+         */
+        private long heartbeatIntervalMs = 5000L;
+    }
+
+    /**
+     * SQL Server捕获源配置
+     * <p>
+     * 透传给Debezium SQL Server连接器：连接信息、库表白名单与位点/结构历史存储。
+     * 前提：目标库表已启用SQL Server CDC（{@code sp_cdc_enable_db}/{@code sp_cdc_enable_table}）
+     * 且SQL Server Agent运行中，连接器据此读取变更表（change tables）。
+     * </p>
+     */
+    @Data
+    public static class Sqlserver {
+
+        /**
+         * SQL Server主机地址
+         */
+        private String hostname = "127.0.0.1";
+
+        /**
+         * SQL Server端口
+         */
+        private int port = 1433;
+
+        /**
+         * CDC专用账号（需对目标库的读取与CDC元数据访问权限），走环境变量注入
+         */
+        private String username;
+
+        /**
+         * CDC专用账号密码，走环境变量注入
+         */
+        private String password;
+
+        /**
+         * Debezium逻辑服务名，用于topic前缀与源标识，须全局唯一
+         */
+        private String serverName = "cdc_sqlserver";
+
+        /**
+         * 是否加密连接（透传database.encrypt），新版mssql-jdbc驱动默认true，本地自签环境常置false
+         */
+        private boolean encrypt = false;
+
+        /**
+         * 是否信任服务端证书（透传database.trustServerCertificate），encrypt为false时通常置true
+         */
+        private boolean trustServerCertificate = true;
+
+        /**
+         * 捕获的数据库列表，逗号分隔（透传database.names，SQL Server必填，连接器无database.include.list概念）
+         */
+        private String databaseIncludeList;
+
+        /**
+         * 捕获的表列表，逗号分隔，格式database.schema.table（透传table.include.list）
+         */
+        private String tableIncludeList;
+
+        /**
+         * 消费位点持久化文件路径，删除该文件可能触发快照重新消费
+         */
+        private String offsetStorageFile = "data/cdc-offsets-sqlserver.dat";
+
+        /**
+         * 快照模式：initial/no_data/schema_only/recovered等，SQL Server不支持never，默认no_data仅结构不快照数据
+         */
+        private String snapshotMode = "no_data";
 
         /**
          * 心跳间隔（毫秒），无变更事务时产生心跳事件以推进位点

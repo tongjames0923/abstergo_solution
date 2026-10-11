@@ -60,6 +60,16 @@ public final class CdcI18nConstant {
     public static final String MYSQL_CONNECT_REQUIRED = "cdc.mysql.connect.required";
 
     /**
+     * 连接信息缺失：SQL Server CDC配置hostname/username/password不能为空
+     */
+    public static final String SQLSERVER_CONNECT_REQUIRED = "cdc.sqlserver.connect.required";
+
+    /**
+     * 库名列表缺失：SQL Server CDC配置database.names（对应databaseIncludeList）不能为空
+     */
+    public static final String SQLSERVER_DATABASE_NAMES_REQUIRED = "cdc.sqlserver.database.names.required";
+
+    /**
      * 位点目录创建失败：CDC位点存储目录创建失败, path:{0}
      */
     public static final String OFFSET_DIR_FAILED = "cdc.offset.dir.failed";

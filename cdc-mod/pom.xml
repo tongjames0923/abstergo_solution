@@ -17,6 +17,7 @@
         <module>cdc-api</module>
         <module>cdc-impl</module>
         <module>cdc-mysql-impl</module>
+        <module>cdc-sqlserver-impl</module>
     </modules>
 
     <properties>
