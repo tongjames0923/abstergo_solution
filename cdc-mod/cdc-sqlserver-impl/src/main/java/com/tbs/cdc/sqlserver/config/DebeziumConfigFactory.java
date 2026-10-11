@@ -22,7 +22,9 @@ import java.util.Properties;
  * <p>
  * 与MySQL连接器的关键差异：SQL Server无需{@code database.server.id}；连接加密由
  * {@code database.encrypt}/{@code database.trustServerCertificate}控制（新版mssql-jdbc驱动默认强制加密，
- * 本地/自签环境常需关闭）；捕获前提为目标库表已启用SQL Server CDC且SQL Server Agent运行中。
+ * 本地/自签环境常需关闭）；捕获前提为目标库表已启用SQL Server CDC且SQL Server Agent运行中，
+ * Agent状态探测查询默认兼容中英文服务名（中文本地化实例服务名为"SQL Server 代理 (...)"），
+ * 可经{@code tbs.cdc.sqlserver.agent-status-query}覆盖。
  * 属性键按Debezium 3.0.x配置，升级大版本时需对齐键名，详见模块README。
  * </p>
  *
@@ -52,6 +54,24 @@ public class DebeziumConfigFactory {
      * </p>
      */
     private static final String SCHEMA_HISTORY_CLASS = "io.debezium.storage.file.history.FileSchemaHistory";
+
+    /**
+     * Agent状态探测查询的Debezium配置键
+     */
+    private static final String AGENT_STATUS_QUERY_KEY = "sqlserver.agent.status.query";
+
+    /**
+     * Agent状态探测查询的中英服务名兼容默认值
+     * <p>
+     * Debezium默认查询仅匹配英文服务名（LIKE N'SQL Server Agent (%'），中文本地化SQL Server实例的
+     * 服务名为"SQL Server 代理 (...)"会导致探测返回0行并使连接器停止；
+     * 此默认值在官方语义基础上扩展中文分支，{@code [#db]}占位符由连接器替换为当前库名。
+     * </p>
+     */
+    private static final String DEFAULT_AGENT_STATUS_QUERY = "SELECT CASE WHEN dss.[status]=4 THEN 1 ELSE 0 END "
+        + "AS isRunning FROM [#db].sys.dm_server_services dss "
+        + "WHERE dss.[servicename] LIKE N'SQL Server Agent (%' "
+        + "OR dss.[servicename] LIKE N'SQL Server 代理 (%'";
 
     /**
      * 由CDC配置构建Debezium引擎属性
@@ -85,6 +105,11 @@ public class DebeziumConfigFactory {
         }
         props.setProperty("snapshot.mode", sqlserver.getSnapshotMode());
         props.setProperty("heartbeat.interval.ms", String.valueOf(sqlserver.getHeartbeatIntervalMs()));
+        // Agent状态探测：默认中英服务名兼容，允许业务方按环境覆盖
+        var agentStatusQuery = StrUtil.isBlank(sqlserver.getAgentStatusQuery())
+            ? DEFAULT_AGENT_STATUS_QUERY
+            : sqlserver.getAgentStatusQuery();
+        props.setProperty(AGENT_STATUS_QUERY_KEY, agentStatusQuery);
 
         props.setProperty("offset.storage", OFFSET_STORE_CLASS);
         props.setProperty("offset.storage.file.filename", offsetFile);

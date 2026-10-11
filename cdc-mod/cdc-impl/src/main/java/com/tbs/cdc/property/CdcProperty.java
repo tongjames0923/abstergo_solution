@@ -203,6 +203,13 @@ public class CdcProperty {
          * 心跳间隔（毫秒），无变更事务时产生心跳事件以推进位点
          */
         private long heartbeatIntervalMs = 5000L;
+
+        /**
+         * SQL Server Agent状态探测查询（透传sqlserver.agent.status.query），留空使用模块内置中英服务名兼容默认值；
+         * {@code [#db]}占位符由连接器替换为当前库名，查询必须恰好返回一行，否则连接器停止；
+         * Debezium默认查询仅匹配英文服务名，中文本地化实例（服务名"SQL Server 代理 (...)"）会探测失败
+         */
+        private String agentStatusQuery = "";
     }
 
     /**
