@@ -11,7 +11,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.Comment;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -31,6 +31,7 @@ import java.util.Date;
 @Setter
 @ToString
 @LogicDeleteEntity(activeFlagValues = { 1 })
+@Comment("系统用户外部身份绑定表")
 public class SystemUserExternalIdentityEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;

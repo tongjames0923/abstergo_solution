@@ -4,7 +4,7 @@ import com.tbs.shared.pojo.IIdentifiable;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 
 /**
@@ -17,6 +17,7 @@ import java.io.Serializable;
 @Entity
 @Table(name = "form_field_configration", indexes = {@Index(name = "gobal_index", columnList = "type,prop,label")})
 @Data
+@Comment("表单域配置表")
 public class FormFieldConfigrationEntity implements Serializable, IIdentifiable<Long> {
     private static final long serialVersionUID = 1L;
 
@@ -25,7 +26,7 @@ public class FormFieldConfigrationEntity implements Serializable, IIdentifiable<
      */
     @Comment("主键ID（自增）")
     @Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     /**

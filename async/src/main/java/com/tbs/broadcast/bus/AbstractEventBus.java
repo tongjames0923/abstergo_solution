@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.concurrent.TimeUnit;
 
-import javax.annotation.PostConstruct;
+import jakarta.annotation.PostConstruct;
 
 import com.tbs.common.IStartup;
 import org.slf4j.Logger;

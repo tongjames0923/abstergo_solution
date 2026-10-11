@@ -10,11 +10,12 @@ import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.issuance.impl.NoImplTokenIssuanceCenter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * Token 设置
@@ -53,5 +54,23 @@ public class TokenSetConfig {
     @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
     public TokenHandleFilter tokenPickFilter() {
         return new TokenHandleFilter();
+    }
+
+    /**
+     * 关闭 Spring Boot 对 {@link TokenHandleFilter} 的容器级自动注册。
+     * <p>
+     * {@code TokenHandleFilter} 作为 {@code Filter} 类型的 Bean 会被 Boot 自动注册为 Servlet 容器过滤器，
+     * 在 Spring Security 过滤器链之前执行；此时它写入 {@code SecurityContextHolder} 的认证信息会被链内的
+     * {@code SecurityContextHolderFilter} 覆盖清除，而其本应生效的链内位置（{@code addFilterBefore}）又因
+     * {@code OncePerRequestFilter} 的去重被跳过，最终导致受保护接口拿到匿名身份而 401。
+     * 禁用自动注册后，该过滤器仅在安全链内按 {@code WebConfig} 编排的位置执行一次。
+     * </p>
+     */
+    @Bean
+    @ConditionalOnProperty(prefix = "tbs.web.auth", name = "enable", havingValue = "true", matchIfMissing = true)
+    public FilterRegistrationBean<TokenHandleFilter> tokenHandleFilterRegistration(TokenHandleFilter filter) {
+        FilterRegistrationBean<TokenHandleFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 }

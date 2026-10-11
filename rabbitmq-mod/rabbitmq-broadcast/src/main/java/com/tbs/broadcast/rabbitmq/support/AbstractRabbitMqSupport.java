@@ -14,7 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import org.springframework.amqp.core.AcknowledgeMode;
 import org.springframework.context.annotation.Lazy;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * RabbitMQ广播支持抽象类

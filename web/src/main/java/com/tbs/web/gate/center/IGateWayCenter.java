@@ -1,6 +1,6 @@
 package com.tbs.web.gate.center;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 import com.tbs.web.gate.ITokenPicker;
 import com.tbs.web.security.token.ITokenModel;

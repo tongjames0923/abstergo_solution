@@ -12,7 +12,7 @@ import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 抽象认证管理器

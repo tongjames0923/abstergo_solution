@@ -1,6 +1,6 @@
 package com.tbs.broadcast.subscriber;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import com.tbs.broadcast.enums.EventStatusEnum;
 import com.tbs.broadcast.event.IEvent;

@@ -229,7 +229,7 @@ public class AssertUtil implements IStartup {
     }
 
     @Getter
-    private static List<IErrorThrowEvent> errorThrowEvents;
+    private static List<IErrorThrowEvent> errorThrowEvents = new ArrayList<>();
 
     /**
      * 抛出异常

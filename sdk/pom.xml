@@ -14,8 +14,7 @@
     <description>纯Java客户端SDK：OkHttp统一HTTP工具，封装登录、推送消息中心、SSE信令订阅与应用更新检查下载流程</description>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

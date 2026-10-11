@@ -53,7 +53,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * @author abstergo
@@ -209,7 +209,7 @@ public class BuisnessBeanConfig {
      */
     @Bean
     @Primary
-    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true")
+    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true", matchIfMissing = true)
     public IPushAuthenticator pushUserAuthenticator() {
         return new PushUserAuthenticator();
     }
@@ -220,7 +220,7 @@ public class BuisnessBeanConfig {
      * @return 主题授权器
      */
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true")
+    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true", matchIfMissing = true)
     public IPushTopicGranter signalChannelTopicGranter() {
         return new SignalChannelTopicGranter();
     }
@@ -231,7 +231,7 @@ public class BuisnessBeanConfig {
      * @return 订阅授权校验器
      */
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true")
+    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true", matchIfMissing = true)
     public ISubscriptionAuthorizer subscriptionAuthorizer() {
         return new GrantedTopicSubscriptionAuthorizer();
     }
@@ -242,7 +242,7 @@ public class BuisnessBeanConfig {
      * @return 连接拦截器
      */
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true")
+    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true", matchIfMissing = true)
     public IConnectionInterceptor pushSessionIdentityInterceptor() {
         return new PushSessionIdentityInterceptor();
     }
@@ -253,7 +253,7 @@ public class BuisnessBeanConfig {
      * @return 上行守卫
      */
     @Bean
-    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true")
+    @ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true", matchIfMissing = true)
     public IUploadGuard pushSessionUploadGuard() {
         return new PushSessionUploadGuard();
     }

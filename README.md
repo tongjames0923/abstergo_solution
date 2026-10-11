@@ -44,7 +44,7 @@ flowchart LR
     end
     subgraph SVC["微服务集群（Dubbo Triple + Nacos 注册）"]
         APP["app-service :8080<br/>主应用:认证/系统管理/缓存/OSS/版本/泛化API"]
-        DIC["data-dic-service :20779<br/>Kotlin 字典服务"]
+        DIC["data-dic-service :20779<br/>字典服务"]
         LOG["logging-service :8081/:20780<br/>日志采集统计"]
     end
     subgraph INFRA["基础设施（etc/docker）"]
@@ -71,7 +71,7 @@ flowchart LR
 
 | 分类 | 技术 | 版本 |
 |------|------|------|
-| 语言/运行时 | Java | 11（dic 模块含存量 Kotlin 1.7.22，新代码统一 Java） |
+| 语言/运行时 | Java | 11 |
 | 核心框架 | Spring Boot | 2.7.18 |
 | 微服务 | Spring Cloud / Spring Cloud Alibaba | 2021.0.4 / 2021.0.5.0 |
 | RPC | Dubbo（Triple 协议） | 3.3.0 |
@@ -296,7 +296,7 @@ curl http://127.0.0.1:8080/public/gateway/version
 
 开发规范总纲见 [DEVELOPMENT_GUIDELINE.md](DEVELOPMENT_GUIDELINE.md)（含 7 个分册：项目总览/中间件规范/功能模块规范/接口设计/前端规范/部署运维/Code Review 清单）。**全局铁律摘要**：
 
-1. 后端新代码统一 **Java**（存量 Kotlin 仅维护不新增）
+1. 后端代码统一 **Java**（项目已全面 Java 化，不再使用 Kotlin）
 2. 类与函数使用块注释（`@param`/`@return`），**禁止行尾注释**
 3. 断言必须走 `AssertUtil.isTrue(条件).i18n("key").params(...).errorLevel(...).throwIt()`，禁止 `throw new FormattedRuntimeException`
 4. 所有用户可见文案走 i18n 资源 key（后端）/`$t()`（前端），禁止硬编码

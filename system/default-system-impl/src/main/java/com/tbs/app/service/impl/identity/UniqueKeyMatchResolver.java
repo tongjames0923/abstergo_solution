@@ -8,7 +8,7 @@ import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import org.springframework.core.Ordered;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 
 /**

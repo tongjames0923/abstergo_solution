@@ -4,17 +4,17 @@
 
 Dic 模块（`com.tbs:dic`）提供**数据字典**能力：字典（Dict）与字典项（Item）两级结构，支持字典/字典项的增删改查、启用/禁用、值比对校验，并通过 `@Cacheable` 缓存加速查询。
 
-该模块是一个**独立 Dubbo 微服务**（区别于本仓库内的内嵌模块），以 Kotlin 实现，包含两个子模块：
+该模块是一个**独立 Dubbo 微服务**（区别于本仓库内的内嵌模块），以 Java 实现，包含两个子模块：
 
 | 子模块 | 语言 | 职责 |
 |--------|------|------|
 | `dic-api` | Java | 契约层：实体、枚举、模型、Mapper、服务接口 `IDataDicService`（消费方仅依赖此包） |
-| `dic-service` | Kotlin 1.7.22 | 服务实现：Dubbo 服务提供者，独立 Spring Boot 进程 |
+| `dic-service` | Java | 服务实现：Dubbo 服务提供者，独立 Spring Boot 进程 |
 
 依赖关系：
 
 - `dic-api` → `shared-api`、`shared-pojo`、`common`、`sql`、`cache-api`、`async`
-- `dic-service` → `dic-api`、`cache-impl`、`redis`（Redisson）、Nacos Config、Kotlin stdlib/reflect
+- `dic-service` → `dic-api`、`cache-impl`、`redis`（Redisson）、Nacos Config
 
 ## 模块结构
 
@@ -27,9 +27,9 @@ dic/
 │       ├── mapper/                   # DataDicMapper / DataDicItemMapper
 │       ├── model/                    # DicModel / DicItemModel
 │       └── service/                  # IDataDicService
-└── dic-service/                      # 服务实现（Kotlin）
-    ├── src/main/kotlin/com.tbs.dic/
-    │   ├── DicServiceApplication.kt  # 启动类
+└── dic-service/                      # 服务实现（Java）
+    ├── src/main/java/com.tbs.dic/
+    │   ├── DicServiceApplication.java  # 启动类
     │   ├── config/                   # DicMessageSourceProvider（i18n 资源注册）
     │   ├── constant/                 # DicI18nConstant（i18n key 常量）
     │   └── service/impl/             # DataDicServiceImpl（@DubboService）
@@ -132,8 +132,8 @@ public interface IDataDicService {
 
 启动类 `DicServiceApplication` 启用的能力：
 
-```kotlin
-@SpringBootApplication(scanBasePackages = ["com.tbs.dic"])
+```java
+@SpringBootApplication(scanBasePackages = "com.tbs.dic")
 @EnableTbsSql            // sql 模块（注解驱动查询框架）
 @EnableTbsAsyncPack      // async 模块（长期异步任务/调度，optional-execute=false）
 @EnableTbsCache          // cache 模块（Redisson 缓存管理器）

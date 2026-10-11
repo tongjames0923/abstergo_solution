@@ -7,8 +7,9 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.Comment;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.io.Serializable;
 import java.util.Date;
 
@@ -28,6 +29,7 @@ import java.util.Date;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
+@Comment("推送消息接收人关系表")
 public class PushMessageReceiverEntity
     implements IIdentifiable<Long>, IUpdateTimeAuditable, ICreateTimeAuditable, Serializable {
 
@@ -36,6 +38,7 @@ public class PushMessageReceiverEntity
     /**
      * 主键（兼游标分页排序键，自增即到达序）
      */
+    @Comment("主键（兼游标分页排序键，自增即到达序）")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -43,24 +46,28 @@ public class PushMessageReceiverEntity
     /**
      * 消息ID（push_message.id）
      */
+    @Comment("消息ID（关联 push_message.id）")
     @Column(name = "message_id", nullable = false)
     private Long messageId;
 
     /**
      * 接收用户ID
      */
+    @Comment("接收用户ID")
     @Column(name = "receiver", nullable = false)
     private Long receiver;
 
     /**
      * 创建时间
      */
+    @Comment("创建时间（即消息到达时间）")
     @Column(name = "create_time", nullable = false)
     private Date createTime;
 
     /**
      * 更新时间
      */
+    @Comment("更新时间")
     @Column(name = "update_time")
     private Date updateTime;
 

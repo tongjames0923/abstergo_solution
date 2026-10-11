@@ -8,7 +8,7 @@ import com.tbs.oss.downloadcode.OssDownloadCodeStatus;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;

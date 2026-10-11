@@ -14,8 +14,7 @@
     <description>更新器 GUI 演示程序：依赖 updater 类库，打包为可执行 fat JAR</description>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 

@@ -11,13 +11,11 @@ import com.tbs.sql.mapper.impl.ConditionBuilder;
 import com.tbs.sql.mapper.impl.FetchMapper;
 import com.tbs.sql.model.limit.LimitModel;
 import com.tbs.sql.service.QueryEngine;
-import tk.mybatis.mapper.annotation.RegisterMapper;
 
 import java.util.List;
 
 import static com.tbs.sql.mapper.impl.ConditionBuilder.buildSqlContext;
 
-@RegisterMapper
 public interface SmartQueryMapper {
     /**
      * 根据查询条件、分页参数和实体类查询实体列表。

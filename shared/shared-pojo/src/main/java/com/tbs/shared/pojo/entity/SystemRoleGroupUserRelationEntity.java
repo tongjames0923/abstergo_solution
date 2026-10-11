@@ -6,10 +6,10 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
 /**
  * 角色组与用户关系实体
@@ -22,9 +22,10 @@ import javax.persistence.Table;
  */
 @Entity
 @Table(name = "system_role_group_user_relation", indexes = {
-    @javax.persistence.Index(name = "idx_system_role_group_user_relation_role_group_id", columnList = "role_group_id"),
-    @javax.persistence.Index(name = "idx_system_role_group_user_relation_user_id", columnList = "user_id")})
+    @jakarta.persistence.Index(name = "idx_system_role_group_user_relation_role_group_id", columnList = "role_group_id"),
+    @jakarta.persistence.Index(name = "idx_system_role_group_user_relation_user_id", columnList = "user_id")})
 @Data
+@Comment("角色组与用户关系表")
 public class SystemRoleGroupUserRelationEntity implements IIdentifiable<Long> {
 
     /**

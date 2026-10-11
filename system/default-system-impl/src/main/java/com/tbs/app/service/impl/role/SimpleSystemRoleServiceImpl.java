@@ -30,7 +30,7 @@ import static com.tbs.app.service.impl.CacheNamesConstants.SYSTEM_ROLE;
 import static com.tbs.app.service.impl.CacheNamesConstants.SYSTEM_ROLE_NAME;
 import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_ID_MAP;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;

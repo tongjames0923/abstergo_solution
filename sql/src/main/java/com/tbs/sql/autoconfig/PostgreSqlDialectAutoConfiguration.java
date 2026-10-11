@@ -5,10 +5,10 @@ import com.tbs.sql.assembler.impl.DefaultSqlAssembler;
 import com.tbs.sql.dialect.*;
 import com.tbs.sql.dialect.extractor.CommonGroupExtractor;
 import com.tbs.sql.dialect.extractor.CommonOrderExtractor;
-import com.tbs.sql.dialect.extractor.CommonSelectExtractor;
 import com.tbs.sql.dialect.extractor.CommonWhereExtractor;
 import com.tbs.sql.dialect.postgresql.PostgreSqlDialect;
 import com.tbs.sql.dialect.postgresql.extractor.PostgreSqlLimitExtractor;
+import com.tbs.sql.dialect.postgresql.extractor.PostgreSqlSelectExtractor;
 import org.springframework.context.annotation.Bean;
 
 /**
@@ -47,7 +47,7 @@ public class PostgreSqlDialectAutoConfiguration {
 
     @Bean
     public ISelectExtractor selectExtractor() {
-        return new CommonSelectExtractor();
+        return new PostgreSqlSelectExtractor();
     }
 
     @Bean

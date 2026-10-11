@@ -13,7 +13,7 @@ import lombok.ToString;
 
 import org.hibernate.annotations.Comment;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -29,6 +29,7 @@ import java.util.Date;
 @Setter
 @ToString
 @LogicDeleteEntity(activeFlagValues = {1, 2, 0})
+@Comment("系统用户表")
 public class SystemUserEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>, IDeptBelongEntity<Long> {
 	private static final long serialVersionUID = 1L;
@@ -96,7 +97,7 @@ public class SystemUserEntity
 	 *
 	 * @see com.tbs.shared.enums.SystemUserStatusEnum
 	 */
-	@Comment("账号状态（1/2/0为活跃）")
+	@Comment("账号状态：1-激活，2-锁定，0-禁用，-1-删除")
 	@Column(name = "flag")
 	private Integer flag;
 

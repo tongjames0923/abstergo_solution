@@ -1,6 +1,7 @@
 spring:
-  redis:
-    password: ${REDIS_PASSWORD:123456}
-    host: ${REDIS_HOST:127.0.0.1}
-    port: ${REDIS_PORT:6379}
-    timeout: 3000
+  data:
+    redis:
+      password: ${REDIS_PASSWORD:123456}
+      host: ${REDIS_HOST:127.0.0.1}
+      port: ${REDIS_PORT:6379}
+      timeout: 3000

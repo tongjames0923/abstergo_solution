@@ -6,7 +6,7 @@ import com.tbs.common.data.IDataHolderManager;
 import com.tbs.common.error.AssertUtil;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;

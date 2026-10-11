@@ -101,6 +101,11 @@ public class Feature {
      */
     public static final Feature OSS = Feature.create("com.tbs.oss", "对象存储");
 
+    /**
+     * 数据库变更数据捕获（CDC）功能
+     */
+    public static final Feature CDC = Feature.create("com.tbs.cdc", "数据库变更数据捕获");
+
 
     // ==================== 实例字段 ====================
 
@@ -205,7 +210,7 @@ public class Feature {
         }
         // 通过反射获取所有预定义的静态常量
         for (Feature feature : new Feature[]{COMMON, REDIS, RABBITMQ, CACHE, ASYNC, SCRIPT,
-                VIEW_ROUTE, WEB, SHARED, CLOSURE_TABLE, KNIFE4J, XXL_JOB, LOGGING, OSS}) {
+                VIEW_ROUTE, WEB, SHARED, CLOSURE_TABLE, KNIFE4J, XXL_JOB, LOGGING, OSS, CDC}) {
             if (feature.id.equalsIgnoreCase(id)) {
                 return feature;
             }

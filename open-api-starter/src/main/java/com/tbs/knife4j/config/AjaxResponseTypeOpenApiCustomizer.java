@@ -6,7 +6,7 @@ import io.swagger.v3.oas.models.Operation;
 import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import lombok.extern.slf4j.Slf4j;
-import org.springdoc.core.customizers.OpenApiCustomiser;
+import org.springdoc.core.customizers.OpenApiCustomizer;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -22,7 +22,7 @@ import java.util.Map;
  * 两阶段设计的原因：
  * {@link org.springdoc.core.customizers.OperationCustomizer} 在Operation构建过程中被调用，
  * 但SpringDoc后续会用自己的逻辑重新设置response content，导致OperationCustomizer的修改被覆盖。
- * 而 {@link OpenApiCustomiser} 在所有Operation构建完成后执行，修改不会被覆盖。
+ * 而 {@link OpenApiCustomizer} 在所有Operation构建完成后执行，修改不会被覆盖。
  * </p>
  *
  * @author abstergo
@@ -32,7 +32,7 @@ import java.util.Map;
  */
 @Slf4j
 @Component
-public class AjaxResponseTypeOpenApiCustomizer implements OpenApiCustomiser {
+public class AjaxResponseTypeOpenApiCustomizer implements OpenApiCustomizer {
 
     private final AjaxResponseTypeOperationCustomizer operationCollector;
 

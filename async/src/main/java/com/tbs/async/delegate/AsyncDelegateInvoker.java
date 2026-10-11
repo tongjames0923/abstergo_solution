@@ -11,7 +11,7 @@ import com.tbs.thread.IOnThreadError;
 import com.tbs.thread.IThreadPoolManager;
 import com.tbs.thread.impl.SimpleThreadRequest;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.concurrent.ExecutorService;
 
 /**

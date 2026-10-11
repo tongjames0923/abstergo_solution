@@ -1,14 +1,15 @@
 package com.tbs.sdk.push;
 
 import com.tbs.sdk.model.FrameType;
+import com.tbs.sdk.model.HelloInfo;
 import com.tbs.sdk.model.PushFrame;
 
 /**
- * SSE信令帧回调监听器
+ * SSE推送回调监听器
  * <p>
- * 全部方法均为默认空实现，调用方按需覆写。回调在SDK独立的单线程执行器中
- * 分发且回调异常被隔离，不影响SSE流本身；实现方应保持回调轻量，
- * 耗时处理自行转交业务线程池。
+ * 全部方法均为默认空实现，调用方按需覆写。回调在SDK单线程执行器中分发且异常被隔离，
+ * 不影响SSE流本身；实现方应保持回调轻量，耗时处理自行转交业务线程池。
+ * 事件模型对齐C#端：状态变更、握手完成、信令、协议帧、异常五类回调。
  * </p>
  *
  * @author abstergo
@@ -17,15 +18,33 @@ import com.tbs.sdk.model.PushFrame;
 public interface SseFrameListener {
 
     /**
-     * 连接建立并握手成功（收到hello帧）后回调
+     * 连接状态变更回调（建连/连接/重连/关闭）
      *
-     * @param sessionId 会话标识
+     * @param status 新状态
      */
-    default void onConnected(String sessionId) {
+    default void onStatusChanged(ConnectionStatus status) {
     }
 
     /**
-     * 收到协议帧回调（按帧类型分发，DATA/SIGNAL等业务帧在此处理）
+     * hello握手完成回调（携带会话标识，此后可以上行帧）
+     *
+     * @param hello 握手信息
+     */
+    default void onHello(HelloInfo hello) {
+    }
+
+    /**
+     * 收到SIGNAL信令回调
+     * <p>
+     * 信令本身无载荷，仅提示"该频道有新消息"；hello握手后亦触发一次兜底信令，
+     * 以便宿主补齐离线期间消息与丢失的信令。宿主据此触发消息拉取。
+     * </p>
+     */
+    default void onSignal() {
+    }
+
+    /**
+     * 收到下行协议帧回调（data/pong等业务帧在此处理）
      *
      * @param type  帧类型
      * @param frame 协议帧
@@ -34,15 +53,7 @@ public interface SseFrameListener {
     }
 
     /**
-     * 连接关闭回调（主动close、服务端关闭或重连耗尽后触发）
-     *
-     * @param reason 关闭原因（服务端协议原因串或SDK内部描述）
-     */
-    default void onClosed(String reason) {
-    }
-
-    /**
-     * 连接异常回调（认证失败、建连失败或重连耗尽时触发）
+     * 连接异常回调（认证失败、建连失败或收到error帧，随后将自动换票重连）
      *
      * @param cause 异常
      */

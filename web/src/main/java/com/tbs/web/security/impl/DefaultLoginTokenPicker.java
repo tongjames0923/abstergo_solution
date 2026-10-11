@@ -2,8 +2,8 @@ package com.tbs.web.security.impl;
 
 import com.tbs.web.config.property.WebAuthProperty;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 
 /**
  * 默认登录令牌拾取器

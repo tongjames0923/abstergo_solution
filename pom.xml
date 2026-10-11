@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>2.7.18</version>
+        <version>3.3.5</version>
         <relativePath/>
     </parent>
     <packaging>pom</packaging>
@@ -36,6 +36,8 @@
         <module>updater</module>
         <module>updater-gui</module>
         <module>sdk</module>
+        <module>cdc-mod</module>
+        <module>cdc-service</module>
     </modules>
 
     <groupId>com.tbs</groupId>
@@ -46,39 +48,39 @@
     <!-- ============================== 版本属性 ============================== -->
     <properties>
         <!-- 编译/编码 -->
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <!-- 框架版本 -->
-        <spring.boot.version>2.7.18</spring.boot.version>
-        <spring.cloud.version>2021.0.4</spring.cloud.version>
-        <spring.cloud.alibaba.version>2021.0.5.0</spring.cloud.alibaba.version>
-        <dubbo.version>3.3.0</dubbo.version>
+        <spring.boot.version>3.3.5</spring.boot.version>
+        <spring.cloud.version>2023.0.3</spring.cloud.version>
+        <spring.cloud.alibaba.version>2023.0.1.2</spring.cloud.alibaba.version>
+        <dubbo.version>3.3.4</dubbo.version>
 
         <!-- 工具库 -->
-        <lombok.version>1.18.30</lombok.version>
+        <lombok.version>1.18.34</lombok.version>
         <annotations.version>24.1.0</annotations.version>
         <hutool.version>5.8.22</hutool.version>
         <spring.dotenv.version>4.0.0</spring.dotenv.version>
 
         <!-- 数据库 / ORM -->
         <mysql.version>8.0.32</mysql.version>
-        <tk.mybatis.version>4.2.3</tk.mybatis.version>
+        <tk.mybatis.version>5.0.0</tk.mybatis.version>
         <p6spy.version>3.8.2</p6spy.version>
 
         <!-- 中间件 -->
         <redisson.version>3.52.0</redisson.version>
         <minio.version>8.5.7</minio.version>
+        <!-- CDC变更数据捕获：Debezium嵌入式引擎3.x稳定维护线，需JDK17+ -->
+        <debezium.version>3.0.8.Final</debezium.version>
         <!-- MinIO SDK 8.5.x需要okhttp 4.x，覆盖spring-boot父BOM与dubbo-bom管控的3.14.9 -->
         <okhttp3.version>4.12.0</okhttp3.version>
 
         <!-- 其他三方 -->
-        <knife4j.version>4.4.0</knife4j.version>
+        <knife4j.version>4.5.0</knife4j.version>
         <xxl.job.version>2.5.0</xxl.job.version>
         <snakeyaml.version>2.2</snakeyaml.version>
-        <kotlin.version>1.7.22</kotlin.version>
 
         <!-- 内部模块统一版本号：与 project.version 解耦，
              避免个别模块单独改发布版本时污染依赖管理 -->
@@ -124,6 +126,18 @@
         <dependencies>
 
             <!-- ========== BOM 导入 ========== -->
+            <!--
+              spring-boot-dependencies 必须最先导入：它把 spring-framework 锁定为 6.1.14（jakarta 命名空间）。
+              后续的 dubbo-bom 会在其 dependencyManagement 里把所有 org.springframework:* 降级为 5.3.39（javax），
+              而 Maven 对多个 import BOM 采用「先声明者胜」，故此处提前声明可阻止 spring 被拉回 javax。
+            -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -239,6 +253,11 @@
                 <artifactId>oss-api</artifactId>
                 <version>${tbs.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>cdc-api</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
 
             <!-- ========== 内部模块 — 实现层 ========== -->
             <dependency>
@@ -311,6 +330,21 @@
                 <artifactId>updater-gui</artifactId>
                 <version>${tbs.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>cdc-impl</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>cdc-mysql-impl</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tbs</groupId>
+                <artifactId>cdc-sqlserver-impl</artifactId>
+                <version>${tbs.version}</version>
+            </dependency>
 
             <!-- ========== 外部依赖 ========== -->
             <dependency>
@@ -330,7 +364,7 @@
             </dependency>
             <dependency>
                 <groupId>com.github.xiaoymin</groupId>
-                <artifactId>knife4j-openapi3-spring-boot-starter</artifactId>
+                <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
             </dependency>
             <dependency>
@@ -392,6 +426,28 @@
                 <version>${okhttp3.version}</version>
             </dependency>
 
+            <!-- ========== CDC / Debezium ========== -->
+            <dependency>
+                <groupId>io.debezium</groupId>
+                <artifactId>debezium-api</artifactId>
+                <version>${debezium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.debezium</groupId>
+                <artifactId>debezium-embedded</artifactId>
+                <version>${debezium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.debezium</groupId>
+                <artifactId>debezium-connector-mysql</artifactId>
+                <version>${debezium.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>io.debezium</groupId>
+                <artifactId>debezium-connector-sqlserver</artifactId>
+                <version>${debezium.version}</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 
@@ -431,8 +487,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <version>3.8.1</version>
                     <configuration>
-                        <source>11</source>
-                        <target>11</target>
+                        <release>21</release>
                         <encoding>UTF-8</encoding>
                     </configuration>
                 </plugin>

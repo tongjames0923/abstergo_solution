@@ -17,7 +17,7 @@ import com.tbs.sql.properties.SqlProperty;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.*;
 
 /**

@@ -10,12 +10,12 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.UniqueConstraint;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 import java.util.Date;
 
 /**
@@ -36,6 +36,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(filedName = "flag", activeFlagValues = {1})
+@Comment("OSS 公开下载码表")
 public class OssDownloadCodeEntity implements IBaseEntity<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -104,7 +105,7 @@ public class OssDownloadCodeEntity implements IBaseEntity<Long> {
      *
      * @see com.tbs.shared.enums.OssDownloadCodeFlagEnum
      */
-    @Comment("逻辑删除标志（1有效，-1已删除）")
+    @Comment("下载码状态：1-有效，-1-已删除")
     @Column(name = "flag")
     private Integer flag;
 }

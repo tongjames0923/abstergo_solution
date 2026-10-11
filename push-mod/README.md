@@ -51,7 +51,7 @@
 ## 架构设计
 
 ```
-业务代码 IPushEndpoint.publish(topic, payload)
+业务代码 IPushEndpoint.publish(topic, payload)  或  publishSignal(topic, null)（信令+拉取）
   │  消息先入消息源（削峰 + 多实例安全）
   ▼
 IPushMessageStore 消息源（内存兜底 / Redis 等持久化实现经懒委托自动接管）
@@ -145,7 +145,7 @@ public class Application { ... }
 ```yaml
 tbs:
   push:
-    enable: true            # 总开关，默认 false
+    enable: true            # 总开关；PushProperty.enable 字段缺省 true，但条件装配需显式配 true
     transport: websocket    # 传输选择，未配置时默认 websocket
 ```
 
@@ -190,6 +190,8 @@ public void notifyOrder(String orderNo) {
 }
 ```
 
+> **DATA vs SIGNAL**：`publish(topic, payload)` 下发 **DATA 全量帧**（载荷即业务数据，适合小体积即时广播）；`publishSignal(topic, null)` 下发 **SIGNAL 空信令帧**，仅提示“该频道有新消息”、不携带正文，接收方收到后自行调用拉取接口取内容。站内消息中心即采用后者（落库 + 逐接收人发信令 + 前端拉取），详见 `docs/推送消息中心设计方案.md` 与 `docs/push-usage-guide.md`。
+
 ## 协议要素
 
 ### 帧结构（PushFrame）
@@ -197,12 +199,12 @@ public void notifyOrder(String orderNo) {
 | 字段 | 类型 | 说明 |
 | --- | --- | --- |
 | version | int | 协议版本（当前 1），握手阶段协商 |
-| type | FrameTypeEnum | HELLO / PING / PONG / DATA / SUBSCRIBE / UNSUBSCRIBE / ERROR |
+| type | FrameTypeEnum | HELLO / PING / PONG / DATA / SIGNAL / SUBSCRIBE / UNSUBSCRIBE / ERROR |
 | messageId | String | 帧唯一标识，DATA 帧与投递记录的关联键 |
 | topic | String | 业务主题，DATA/SUBSCRIBE/UNSUBSCRIBE 必填（非空且 ≤128 字符） |
 | seq | Long | 发送方序列号，可选，用于乱序检测 |
 | timestamp | long | 帧产生时间戳 |
-| payload | String | 载荷文本（DATA 为业务数据 JSON；HELLO 确认为 sessionId+version；ERROR 为错误描述） |
+| payload | String | 载荷文本（DATA 为业务数据 JSON；SIGNAL 为空信令不携带正文；HELLO 确认为 sessionId+version；ERROR 为错误描述） |
 
 ### 错误码（PushErrorCodeEnum，ERROR 帧 + 全局关闭判定）
 
@@ -248,8 +250,8 @@ public void notifyOrder(String orderNo) {
 
 | 属性 | 类型 | 默认值 | 说明 |
 | --- | --- | --- | --- |
-| `enable` | boolean | `false` | 总开关，push 相关装配全部生效的前提 |
-| `transport` | String | `websocket` | 传输选择：`websocket` / `sse`，互斥装配 |
+| `enable` | boolean | `true`（字段缺省） | 总开关；鉴权/SPI 等 Bean 经 `@ConditionalOnProperty(havingValue="true")` 装配且无 `matchIfMissing`，须**显式配置 `tbs.push.enable=true`** 方生效 |
+| `transport`（**非 PushProperty 绑定字段**） | String | 未配置视为 `websocket` | 仅由 WebSocket 侧 `@ConditionalOnProperty(name="transport", havingValue="websocket", matchIfMissing=true)` 读取以决定其装配；SSE 侧装配不依赖它，两传输薄壳互斥 |
 | `heartbeat-timeout-millis` | long | `90000` | 会话空闲超时（毫秒），非正数关闭心跳监控 |
 | `grant-public-topics` | List | `[global.broadcast]` | 授权集的配置层来源：内置授权器无条件授予全部认证会话的公开主题模式（支持订阅侧通配） |
 | `memory-message-capacity` | int | `10000` | 内存消息源容量上限，满时淘汰最早消息 |
@@ -357,7 +359,7 @@ public class RoleTopicGranter implements IPushTopicGranter {
 
 1. **聚合模块不可依赖**：依赖请引 `push-api` / `push-websocket-impl` / `push-sse-impl`，而非 `push`（packaging=pom）。
 2. **`transport` 互斥**：同一时刻仅一个传输适配器与对应认证薄壳生效；两个 impl 模块可同时引入依赖，但需经 `tbs.push.transport` 显式二选一。
-3. **未开总开关装配不生效**：`tbs.push.enable=false`（默认）时全部 push 装配跳过。
+3. **未显式开启装配不生效**：`PushProperty.enable` 字段虽缺省 `true`，但鉴权/授权/守卫等 SPI Bean 以 `@ConditionalOnProperty(prefix="tbs.push", name="enable", havingValue="true")` 装配（无 `matchIfMissing`），故**必须显式配置 `tbs.push.enable=true`**；未开启时消息中心信令发布经 `ObjectProvider<IPushEndpoint>` 降级为仅落库。
 4. **先认证后建连**：未携有效 `push-ticket` 建连将被拒绝（WS 关闭 1008 / SSE 错误响应）；ticket 一次性消费，重连必须重新 POST 认证。
 5. **`fetchPending` 必须原子占用**：自定义持久化消息源不保证"取出即锁定"将导致多实例重复投递；凭证存储 `consume` 同理需"取出即失效"防重放。
 6. **内存兜底不跨重启**：进程重启后内存消息源、投递记录与未消费凭证清空，需持久化请注册覆盖实现。
@@ -395,7 +397,7 @@ com.tbs.push                                  （push-api：协议规范层）
                              PushFrameProcessor、PushConnectionOrchestrator（连接生命周期编排）、
                              DefaultPushDispatcher、DefaultPushEndpoint、
                              EmbeddedPushScheduler、PushDispatchBackgroundJob、HeartbeatMonitor、
-                             ConnectionInterceptorChain、NoopConnectionInterceptor
+                             NoopConnectionInterceptor（ConnectionInterceptorChain 已停用，改由 ObjectProvider<IConnectionInterceptor> 按需收集）
 
 com.tbs.push.websocket        （websocket-impl：WebSocket 传输适配）
 ├── annotation/              @EnableTbsPushWebSocket（含抽象层装配范围）
@@ -409,8 +411,9 @@ com.tbs.push.sse              （sse-impl：SSE 组合通道适配）
 ├── annotation/              @EnableTbsPushSse（含抽象层装配范围）
 ├── adapter/                 SseTransportAdapter（全链路契约实现：connect便捷入口/establish/acceptUpstream/emitter回调转接onChannelClosed）
 ├── session/                 SseSessionWrapper（统一会话包装，预分配 sessionId）
-├── controller/              SsePushAuthController（认证薄壳）与 SsePushController（connect/upload 端点）、SseUploadForm
 └── config/                  SsePushAutoRegister / SsePushConfig
+
+（注：sse-impl 仅提供适配层，不含 controller 包；SSE 的 HTTP 端点薄壳 `SsePushAuthController`/`SsePushController` 与 `SseUploadForm` 由**应用模块**提供——本项目位于 app 的 `com.tbs.app.controller.privates` 与 `com.tbs.app.form`，仅依赖并转调 `SseTransportAdapter`；这与自带 `WsPushAuthController` 的 websocket-impl 不同。）
 
 resources/i18n/
 └── messages-push.properties / messages-push_en_US.properties   （中英文 i18n 资源）

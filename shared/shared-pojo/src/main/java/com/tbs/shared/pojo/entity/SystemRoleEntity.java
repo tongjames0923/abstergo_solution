@@ -9,7 +9,7 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import org.hibernate.annotations.Comment;
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -26,6 +26,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, 2, 0})
+@Comment("系统角色（权限）表")
 public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;
 
@@ -56,7 +57,7 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 *
 	 * @see com.tbs.shared.enums.SystemRoleTypeEnum
 	 */
-	@Comment("权限类型")
+	@Comment("权限类型：1-菜单权限，2-数据权限，3-API权限")
 	@Column(name = "type")
 	private Integer type;
 
@@ -86,7 +87,7 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 *
 	 * @see com.tbs.shared.enums.SystemRoleFlagEnum
 	 */
-	@Comment("状态标识")
+	@Comment("角色状态：1-激活，0-失效，-1-删除，2-系统内置")
 	@Column(name = "flag")
 	private Integer flag;
 
@@ -109,7 +110,7 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 *
 	 * @see com.tbs.shared.enums.SystemDataScopeEnum
 	 */
-	@Comment("数据权限范围")
+	@Comment("数据权限范围：1-全部数据，2-部门数据，3-仅本人数据，4-自定义权限")
 	@Column(name = "data_scope")
 	private Integer dataScope;
 

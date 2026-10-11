@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import okhttp3.ConnectionPool;
@@ -30,9 +31,11 @@ import okhttp3.ResponseBody;
 /**
  * 基于OkHttp的统一HTTP客户端实现
  * <p>
- * 单例连接池复用、超时按配置初始化；令牌经拦截器从TokenManager读取并注入
- * 请求头（未登录时不注入，由服务端返回认证错误码统一裁决）。
- * 全部JSON响应统一走AjaxResult解析与业务码异常映射，下载走流式落盘。
+ * 单例连接池复用、超时按配置初始化；请求头经拦截器注入令牌与语言（显式令牌已由调用方
+ * 设置在请求上时不覆盖，未登录时不注入令牌由服务端统一裁决）。以 {@link #send} 为泛化入口
+ * 统一解析AjaxResult并按业务码判定：成功返回、会话失效（405/468）先回调监听器再抛重登异常、
+ * 其余非成功码抛服务端异常；隔离型请求跳过登录态处理直接返回原始载体。下载走独立无读超时
+ * 客户端流式落盘，临时文件原子重命名防半包。
  * </p>
  *
  * @author abstergo
@@ -56,9 +59,14 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
     private static final String TMP_FILE_SUFFIX = ".part";
 
     /**
-     * OkHttp客户端
+     * OkHttp客户端（普通短请求）
      */
     private final OkHttpClient client;
+
+    /**
+     * 下载专用客户端（共用连接池/分发器，解除读超时限制以支撑大包长下载）
+     */
+    private final OkHttpClient downloadClient;
 
     /**
      * JSON处理器（线程安全）
@@ -74,6 +82,11 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
      * SDK配置
      */
     private final SdkConfig config;
+
+    /**
+     * 会话失效监听器（volatile保证跨线程可见）
+     */
+    private volatile SessionExpiredListener sessionExpiredListener;
 
     /**
      * 构造HTTP客户端
@@ -92,29 +105,34 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
             .writeTimeout(config.getWriteTimeoutSeconds(), TimeUnit.SECONDS)
             .connectionPool(new ConnectionPool())
             .retryOnConnectionFailure(true)
-            .addInterceptor(tokenInterceptor())
+            .addInterceptor(headerInterceptor())
+            .build();
+        // 下载耗时可远超API请求，派生独立客户端解除读超时（共享连接池与分发器，close时统一释放）
+        this.downloadClient = this.client.newBuilder()
+            .readTimeout(0, TimeUnit.MILLISECONDS)
             .build();
     }
 
     /**
-     * 构建令牌注入拦截器
+     * 构建请求头注入拦截器
      * <p>
-     * 持有令牌时向请求注入配置的请求头字段；未登录时原样放行，
-     * 由服务端统一返回认证错误码裁决。
+     * 令牌：请求已由调用方显式携带时不覆盖，否则从令牌存储注入；语言：始终注入
+     * Accept-Language（缺省zh_CN）。未登录且无显式令牌时原样放行由服务端裁决。
      * </p>
      *
      * @return 拦截器
      */
-    private Interceptor tokenInterceptor() {
+    private Interceptor headerInterceptor() {
         return chain -> {
             Request original = chain.request();
-            if (tokenManager.hasToken()) {
-                Request withToken = original.newBuilder()
-                    .header(config.getTokenHeaderName(), tokenManager.peek().getToken())
-                    .build();
-                return chain.proceed(withToken);
+            Request.Builder builder = original.newBuilder();
+            if (original.header(config.getTokenHeaderName()) == null && tokenManager.hasToken()) {
+                builder.header(config.getTokenHeaderName(), tokenManager.peek().getToken());
             }
-            return chain.proceed(original);
+            if (original.header("Accept-Language") == null) {
+                builder.header("Accept-Language", config.getLanguage());
+            }
+            return chain.proceed(builder.build());
         };
     }
 
@@ -123,7 +141,7 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
      */
     @Override
     public <T> T get(String path, Map<String, String> queryParams, Class<T> dataType) {
-        return execute(buildRequest(path, queryParams, null, false), dataType);
+        return data(send("GET", path, null, queryParams, null), dataType);
     }
 
     /**
@@ -131,7 +149,15 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
      */
     @Override
     public <T> T get(String path, Map<String, String> queryParams, TypeReference<T> dataType) {
-        return execute(buildRequest(path, queryParams, null, false), dataType);
+        return data(send("GET", path, null, queryParams, null), dataType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T get(String path, Map<String, String> queryParams, Class<T> dataType, SdkRequestOptions options) {
+        return data(send("GET", path, null, queryParams, options), dataType);
     }
 
     /**
@@ -139,7 +165,7 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
      */
     @Override
     public <T> T post(String path, Object jsonBody, Class<T> dataType) {
-        return execute(buildRequest(path, null, jsonBody, true), dataType);
+        return data(send("POST", path, jsonBody, null, null), dataType);
     }
 
     /**
@@ -147,26 +173,139 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
      */
     @Override
     public <T> T post(String path, Object jsonBody, TypeReference<T> dataType) {
-        return execute(buildRequest(path, null, jsonBody, true), dataType);
+        return data(send("POST", path, jsonBody, null, null), dataType);
     }
 
     /**
-     * 构建HTTP请求
-     *
-     * @param path      接口路径
-     * @param params    查询参数（GET时使用）
-     * @param jsonBody  请求体对象（POST时使用，可为null）
-     * @param post      是否POST
-     * @return OkHttp请求
-     * @throws SdkClientException 路径非法或请求体序列化失败时抛出
+     * {@inheritDoc}
      */
-    private Request buildRequest(String path, Map<String, String> params, Object jsonBody, boolean post) {
-        HttpUrl url = buildUrl(path, params);
-        if (!post) {
-            return new Request.Builder().url(url).get().build();
+    @Override
+    public <T> T post(String path, Object jsonBody, Class<T> dataType, SdkRequestOptions options) {
+        return data(send("POST", path, jsonBody, null, options), dataType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T put(String path, Object jsonBody, Class<T> dataType) {
+        return data(send("PUT", path, jsonBody, null, null), dataType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T delete(String path, Map<String, String> queryParams, Class<T> dataType) {
+        return data(send("DELETE", path, null, queryParams, null), dataType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public <T> T patch(String path, Object jsonBody, Class<T> dataType) {
+        return data(send("PATCH", path, jsonBody, null, null), dataType);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AjaxResponse<JsonNode> send(String method, String path, Object jsonBody,
+                                       Map<String, String> queryParams, SdkRequestOptions options) {
+        Request request = buildRequest(method, path, jsonBody, queryParams, options);
+        AjaxResponse<JsonNode> ajax;
+        try (Response response = client.newCall(request).execute()) {
+            String bodyText = readBody(response);
+            ajax = parseResponse(bodyText, response.code());
+        } catch (IOException e) {
+            throw new SdkClientException("网络请求失败: " + request.url().redact(), e);
         }
-        RequestBody body = RequestBody.create(toJson(jsonBody), JSON_MEDIA_TYPE);
-        return new Request.Builder().url(url).post(body).build();
+
+        // 隔离型请求：跳过统一登录态处理，直接返回原始响应体由调用方自行判定
+        if (options != null && options.isSkipAuthHandling()) {
+            return ajax;
+        }
+
+        SdkException error = ajax.mapToException();
+        if (error != null) {
+            if (AjaxResponse.isSessionExpired(ajax.getCode())) {
+                SessionExpiredListener listener = sessionExpiredListener;
+                if (listener != null) {
+                    listener.onSessionExpired(ajax.getCode(), ajax.getMessage());
+                }
+            }
+            throw error;
+        }
+        return ajax;
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public void setSessionExpiredListener(SessionExpiredListener listener) {
+        this.sessionExpiredListener = listener;
+    }
+
+    /**
+     * 从统一响应载体提取data并转换为目标类型
+     *
+     * @param raw      data为原始JSON节点的响应载体
+     * @param dataType 目标类型
+     * @param <T>      目标类型
+     * @return data反序列化结果
+     */
+    private <T> T data(AjaxResponse<JsonNode> raw, Class<T> dataType) {
+        return mapper.convertValue(raw.getData(), dataType);
+    }
+
+    /**
+     * 从统一响应载体提取data并转换为目标泛型类型
+     *
+     * @param raw      data为原始JSON节点的响应载体
+     * @param dataType 目标类型引用
+     * @param <T>      目标类型
+     * @return data反序列化结果
+     */
+    private <T> T data(AjaxResponse<JsonNode> raw, TypeReference<T> dataType) {
+        return mapper.convertValue(raw.getData(), dataType);
+    }
+
+    /**
+     * 按动词构建OkHttp请求
+     *
+     * @param method  HTTP动词（GET/POST/PUT/DELETE/PATCH，大小写不敏感）
+     * @param path    接口路径
+     * @param body    请求体对象（GET/DELETE忽略）
+     * @param params  查询参数（可为null）
+     * @param options 请求级选项（可为null）
+     * @return OkHttp请求
+     * @throws SdkClientException 动词或路径非法时抛出
+     */
+    private Request buildRequest(String method, String path, Object body,
+                                 Map<String, String> params, SdkRequestOptions options) {
+        HttpUrl url = buildUrl(path, params);
+        Request.Builder builder = new Request.Builder().url(url);
+        String explicitToken = options == null ? null : options.getExplicitToken();
+        if (explicitToken != null && !explicitToken.trim().isEmpty()) {
+            builder.header(config.getTokenHeaderName(), explicitToken);
+        }
+        switch (method == null ? "" : method.toUpperCase(Locale.ROOT)) {
+            case "GET":
+                return builder.get().build();
+            case "DELETE":
+                return builder.delete().build();
+            case "POST":
+                return builder.post(RequestBody.create(toJson(body), JSON_MEDIA_TYPE)).build();
+            case "PUT":
+                return builder.put(RequestBody.create(toJson(body), JSON_MEDIA_TYPE)).build();
+            case "PATCH":
+                return builder.patch(RequestBody.create(toJson(body), JSON_MEDIA_TYPE)).build();
+            default:
+                throw new SdkClientException("不支持的请求方法: " + method);
+        }
     }
 
     /**
@@ -203,7 +342,7 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
      * 序列化请求体
      *
      * @param body 请求体对象
-     * @return JSON文本（body为null时返回"null"占位，避免构造空body失败）
+     * @return JSON文本（body为null时返回"{}"占位，避免构造空body失败）
      * @throws SdkClientException 序列化失败时抛出
      */
     private String toJson(Object body) {
@@ -214,91 +353,6 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
             return mapper.writeValueAsString(body);
         } catch (IOException e) {
             throw new SdkClientException("请求体JSON序列化失败", e);
-        }
-    }
-
-    /**
-     * 执行请求并解析data节点
-     *
-     * @param request  OkHttp请求
-     * @param dataType data目标类型
-     * @param <T>      data类型
-     * @return data反序列化结果
-     * @throws SdkClientException 网络、超时或解析失败时抛出
-     */
-    private <T> T execute(Request request, TypeReference<T> dataType) {
-        return doExecute(request, dataType).getData();
-    }
-
-    /**
-     * 执行请求并解析data节点
-     *
-     * @param request  OkHttp请求
-     * @param dataType data目标类型
-     * @param <T>      data类型
-     * @return data反序列化结果
-     * @throws SdkClientException 网络、超时或解析失败时抛出
-     */
-    private <T> T execute(Request request, Class<T> dataType) {
-        return doExecute(request, dataType).getData();
-    }
-
-    /**
-     * 执行请求并返回data已反序列化的泛型响应载体
-     * <p>
-     * 两阶段流转：先解析为data为原始JSON节点的载体并完成业务码校验，
-     * 再将data转换为泛型目标类型，类型约束随载体对象向后传递。
-     * </p>
-     *
-     * @param request  OkHttp请求
-     * @param dataType data目标类型
-     * @param <T>      data类型
-     * @return data已反序列化的统一响应载体
-     * @throws SdkAuthException   业务码为401/405/468时抛出
-     * @throws SdkServerException 其他非成功业务码时抛出
-     * @throws SdkClientException 网络、超时或解析失败时抛出
-     */
-    private <T> AjaxResponse<T> doExecute(Request request, TypeReference<T> dataType) {
-        AjaxResponse<JsonNode> raw = doParse(request);
-        return new AjaxResponse<>(raw.getCode(), raw.getMessage(), mapper.convertValue(raw.getData(), dataType));
-    }
-
-    /**
-     * 执行请求并返回data已反序列化的泛型响应载体
-     *
-     * @param request  OkHttp请求
-     * @param dataType data目标类型
-     * @param <T>      data类型
-     * @return data已反序列化的统一响应载体
-     * @throws SdkAuthException   业务码为401/405/468时抛出
-     * @throws SdkServerException 其他非成功业务码时抛出
-     * @throws SdkClientException 网络、超时或解析失败时抛出
-     */
-    private <T> AjaxResponse<T> doExecute(Request request, Class<T> dataType) {
-        AjaxResponse<JsonNode> raw = doParse(request);
-        return new AjaxResponse<>(raw.getCode(), raw.getMessage(), mapper.convertValue(raw.getData(), dataType));
-    }
-
-    /**
-     * 执行请求并完成统一响应解析与业务码校验（data保持原始JSON节点）
-     *
-     * @param request OkHttp请求
-     * @return data为原始JSON节点的统一响应载体
-     * @throws SdkAuthException   业务码为401/405/468时抛出
-     * @throws SdkServerException 其他非成功业务码时抛出
-     * @throws SdkClientException 网络、超时或响应格式非法时抛出
-     */
-    private AjaxResponse<JsonNode> doParse(Request request) {
-        try (Response response = client.newCall(request).execute()) {
-            String bodyText = readBody(response);
-            AjaxResponse<JsonNode> ajax = parseResponse(bodyText, response.code());
-            SdkException error = ajax.mapToException();
-            if (error != null) {
-                throw error;
-            }
-            return ajax;
-        } catch (IOException e) {
-            throw new SdkClientException("网络请求失败: " + request.url().redact(), e);
         }
     }
 
@@ -315,10 +369,10 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
     }
 
     /**
-     * 解析统一响应结构
+     * 解析统一响应结构（data保持原始JSON节点）
      * <p>
-     * HTTP状态非200时优先尝试按统一结构解析业务码（服务端统一包装场景），
-     * 解析失败则按HTTP状态抛出服务端异常。
+     * HTTP状态非成功或响应非法时优先尝试按统一结构解析业务码（服务端统一包装场景），
+     * 非JSON或缺少code字段则按HTTP状态抛出服务端异常。
      * </p>
      *
      * @param bodyText   响应体文本
@@ -352,7 +406,7 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
         }
         File tmp = new File(target.getParentFile(), target.getName() + TMP_FILE_SUFFIX);
         Request request = new Request.Builder().url(httpUrl).get().build();
-        try (Response response = client.newCall(request).execute()) {
+        try (Response response = downloadClient.newCall(request).execute()) {
             if (!response.isSuccessful()) {
                 throw new SdkClientException("下载HTTP状态异常: " + response.code());
             }

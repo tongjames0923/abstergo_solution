@@ -4,9 +4,11 @@ import cn.hutool.core.collection.CollUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
 import org.springframework.beans.factory.support.BeanNameGenerator;
+import org.springframework.context.EnvironmentAware;
 import org.springframework.context.annotation.ClassPathBeanDefinitionScanner;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
+import org.springframework.core.env.Environment;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.filter.AnnotationTypeFilter;
 import org.springframework.stereotype.Component;
@@ -25,7 +27,27 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 1.0.0
  */
 @Slf4j
-public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRegistrar {
+public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRegistrar, EnvironmentAware {
+
+    /**
+     * 应用运行环境
+     * <p>
+     * 由Spring在注册Bean定义之前回调注入。必须显式传给扫描器，否则扫描器会自建一个仅含JVM系统属性与OS环境变量的
+     * StandardEnvironment，application.yml、profile与配置中心的属性对其不可见，
+     * 类上的{@code @Conditional}/{@code @ConditionalOnProperty}会被误判为不满足而静默跳过Bean。
+     * </p>
+     */
+    private Environment environment;
+
+    /**
+     * 注入应用运行环境
+     *
+     * @param environment 当前应用的运行环境
+     */
+    @Override
+    public void setEnvironment(Environment environment) {
+        this.environment = environment;
+    }
 
     /**
      * 已注册的功能模块集合
@@ -125,6 +147,9 @@ public abstract class AbstractAutoBeanRegister implements ImportBeanDefinitionRe
         BeanNameGenerator importBeanNameGenerator) {
         PACK_MAP.computeIfAbsent(getPackName(), k -> {
             ClassPathBeanDefinitionScanner scanner = new ClassPathBeanDefinitionScanner(registry, true);
+            if (this.environment != null) {
+                scanner.setEnvironment(this.environment);
+            }
             begin(scanner, importingClassMetadata, registry, importBeanNameGenerator);
             var scanAnnotations = getScanAnnotations();
             if (CollUtil.isNotEmpty(scanAnnotations)) {

@@ -9,7 +9,7 @@ import com.tbs.sql.provider.impl.IdAutoProvider;
 import org.hibernate.annotations.Comment;
 import lombok.*;
 
-import javax.persistence.*;
+import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -33,6 +33,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, -1})
+@Comment("泛化API配置表")
 public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -99,7 +100,7 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */
-    @Comment("状态标识")
+    @Comment("状态标识：1-启用，-1-禁用，0-删除")
     @Column(name = "flag")
     private Integer flag;
 

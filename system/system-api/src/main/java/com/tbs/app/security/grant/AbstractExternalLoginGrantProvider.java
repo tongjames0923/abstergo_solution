@@ -13,7 +13,7 @@ import com.tbs.web.security.user.access.AbstractAccessTokenProvider;
 import com.tbs.web.security.user.access.grant.ILoginGrantProvider;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.io.Serializable;
 
 /**

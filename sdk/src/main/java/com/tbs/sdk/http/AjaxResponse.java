@@ -3,6 +3,7 @@ package com.tbs.sdk.http;
 import com.tbs.sdk.constants.SdkConstants;
 import com.tbs.sdk.exception.SdkAuthException;
 import com.tbs.sdk.exception.SdkException;
+import com.tbs.sdk.exception.SdkReloginRequiredException;
 import com.tbs.sdk.exception.SdkServerException;
 
 /**
@@ -84,9 +85,23 @@ public class AjaxResponse<T> {
     }
 
     /**
+     * 判断业务码是否代表会话失效（405令牌失效 / 468刷新失败）
+     * <p>
+     * 该类码在 App/SDK 模式一律要求宿主重新登录，HTTP层据此先行触发会话失效事件。
+     * </p>
+     *
+     * @param code 业务码
+     * @return 会话失效返回true
+     */
+    public static boolean isSessionExpired(int code) {
+        return code == SdkConstants.CODE_RELOGIN || code == SdkConstants.CODE_REFRESH_FAIL;
+    }
+
+    /**
      * 按业务码映射SDK异常
      * <p>
-     * 401/405/468归入认证异常（SDK不实现刷新，468代表令牌链路失效需重新登录）， 其余非成功码归入服务端异常；成功码返回null。
+     * 405/468归入会话失效重登异常（{@link SdkReloginRequiredException}，其父类为认证异常），
+     * 401归入认证异常，其余非成功码归入服务端异常；成功码返回null。
      * </p>
      *
      * @return 对应异常，成功时为null
@@ -95,9 +110,10 @@ public class AjaxResponse<T> {
         if (isOk()) {
             return null;
         }
-        if (code == SdkConstants.CODE_UNAUTHORIZED ||
-            code == SdkConstants.CODE_RELOGIN ||
-            code == SdkConstants.CODE_REFRESH_FAIL) {
+        if (isSessionExpired(code)) {
+            return new SdkReloginRequiredException(code, message);
+        }
+        if (code == SdkConstants.CODE_UNAUTHORIZED) {
             return new SdkAuthException(code, message);
         }
         return new SdkServerException(code, message);

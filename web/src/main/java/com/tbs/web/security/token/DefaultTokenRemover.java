@@ -5,7 +5,7 @@ import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import org.jetbrains.annotations.NotNull;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Objects;
 
 /**

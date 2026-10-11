@@ -2,7 +2,7 @@ package com.tbs.web.context;
 
 import org.springframework.core.Ordered;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 上下文环境生成器

@@ -16,7 +16,7 @@ import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 认证配置

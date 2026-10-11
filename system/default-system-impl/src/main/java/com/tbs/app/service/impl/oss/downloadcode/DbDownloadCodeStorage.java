@@ -12,7 +12,7 @@ import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.dsl.IWhereClause;
 import com.tbs.sql.service.QueryEngine;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;

@@ -15,8 +15,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
+/**
+ * XXL-Job执行器装配
+ * <p>
+ * 装配XXL-Job执行器与任务回调链路。tbs.xxl-job.enable开关刻意默认关闭（matchIfMissing=false）：
+ * 执行器依赖外部XXL-Job admin地址与应用名配置，未配置时启用会注册失败，需显式开启。
+ * </p>
+ *
+ * @author abstergo
+ * @since 1.0.0
+ */
 @Slf4j
 
 @Configuration

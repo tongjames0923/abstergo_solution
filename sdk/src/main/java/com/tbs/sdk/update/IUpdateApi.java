@@ -35,6 +35,23 @@ public interface IUpdateApi {
     AppUpdateCheckResult checkUpgrade(String appKey, String platform, Long currentVersionCode);
 
     /**
+     * 升级检查（指定端点）
+     * <p>
+     * 公开端点与 {@link com.tbs.sdk.constants.SdkConstants#PATH_APP_UPDATE_CHECK_ADMIN 管理端检查端点}
+     * 同契约，管理端需登录令牌与查询权限。{@link #checkUpgrade(String, String, Long)} 为本方法走公开端点的便捷重载。
+     * </p>
+     *
+     * @param path               检查端点路径（公开或管理端）
+     * @param appKey             应用标识（必填）
+     * @param platform           平台标识（必填，见 {@link com.tbs.sdk.model.AppPlatform}）
+     * @param currentVersionCode 客户端当前内部版本号
+     * @return 升级检查结果（needUpdate为false时其余字段为空）
+     * @throws com.tbs.sdk.exception.SdkServerException 服务端错误时抛出
+     * @throws com.tbs.sdk.exception.SdkClientException 参数非法、网络失败或响应非法时抛出
+     */
+    AppUpdateCheckResult checkUpgrade(String path, String appKey, String platform, Long currentVersionCode);
+
+    /**
      * 下载全部更新包
      * <p>
      * 按downloadUrls顺序逐个下载（每个URL一个目标文件），全部成功后返回列表；

@@ -8,7 +8,7 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 @Slf4j
 public class RabbitMqLoggingRecorder implements ILogRecorder {

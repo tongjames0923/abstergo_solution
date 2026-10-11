@@ -8,10 +8,10 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 import java.util.Date;
 
 /**
@@ -25,11 +25,12 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "view_route_version", indexes = {
-    @javax.persistence.Index(name = "idx_group", columnList = "route_group")
+    @jakarta.persistence.Index(name = "idx_group", columnList = "route_group")
 })
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Comment("视图路由版本表")
 public class ViewRouteVersionEntity implements IBaseEntity<Long> {
 
     private static final long serialVersionUID = 1L;

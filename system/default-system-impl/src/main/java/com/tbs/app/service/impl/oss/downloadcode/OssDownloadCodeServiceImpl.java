@@ -15,7 +15,7 @@ import com.tbs.oss.downloadcode.OssDownloadCodeQuery;
 import com.tbs.oss.downloadcode.OssDownloadCodeStatus;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.security.SecureRandom;
 import java.util.Base64;
 import java.util.List;

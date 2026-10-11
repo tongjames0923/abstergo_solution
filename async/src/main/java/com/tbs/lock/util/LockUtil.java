@@ -9,8 +9,8 @@ import com.tbs.lock.config.LockProperty;
 import lombok.Getter;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.Resource;
 import java.time.Duration;
 
 /**

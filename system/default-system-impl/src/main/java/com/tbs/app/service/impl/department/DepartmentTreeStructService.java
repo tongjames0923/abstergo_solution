@@ -7,7 +7,7 @@ import com.tbs.shared.interfaces.service.AbstractTreeStructService;
 import com.tbs.shared.pojo.entity.SystemDepartmentEntity;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * 部门树形结构服务

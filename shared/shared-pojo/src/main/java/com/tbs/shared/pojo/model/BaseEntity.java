@@ -3,7 +3,7 @@ package com.tbs.shared.pojo.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
-import javax.persistence.Column;
+import jakarta.persistence.Column;
 import java.io.Serializable;
 import java.util.Date;
 

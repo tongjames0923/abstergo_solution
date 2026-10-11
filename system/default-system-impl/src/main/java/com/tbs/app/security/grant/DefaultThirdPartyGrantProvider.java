@@ -22,7 +22,7 @@ import com.tbs.web.security.user.access.grant.ILoginGrantProvider;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Date;
 import java.util.Objects;
 

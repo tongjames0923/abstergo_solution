@@ -13,7 +13,7 @@ import org.apache.ibatis.session.ResultHandler;
 import org.apache.ibatis.session.RowBounds;
 import org.springframework.context.annotation.Lazy;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Map;
 import java.util.Properties;
 

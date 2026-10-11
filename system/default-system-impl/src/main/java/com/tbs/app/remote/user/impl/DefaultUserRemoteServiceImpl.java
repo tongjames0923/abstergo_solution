@@ -8,7 +8,7 @@ import com.tbs.app.vo.RemoteUserInfoVO;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;

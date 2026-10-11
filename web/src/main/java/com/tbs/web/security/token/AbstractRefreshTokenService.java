@@ -16,7 +16,7 @@ import com.tbs.web.uitl.AuthUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Collection;
 import java.util.Optional;
 

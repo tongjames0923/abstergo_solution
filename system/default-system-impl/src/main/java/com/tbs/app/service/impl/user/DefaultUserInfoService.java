@@ -17,7 +17,7 @@ import com.tbs.web.exception.SimpleAuthException;
 import com.tbs.web.security.user.IUserInfoService;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.Objects;
 import java.util.stream.Collectors;
 

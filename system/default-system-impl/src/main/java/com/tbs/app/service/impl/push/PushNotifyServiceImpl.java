@@ -33,7 +33,7 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.PlatformTransactionManager;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;

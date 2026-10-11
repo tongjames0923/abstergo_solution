@@ -8,7 +8,7 @@ import com.tbs.web.security.authentication.model.ITokenAuthentication;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.function.Supplier;
 import com.tbs.web.constant.WebI18nConstant;
 

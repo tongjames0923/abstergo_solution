@@ -22,7 +22,7 @@ import org.springframework.stereotype.Service;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.USER_DEPARTMENTS;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import com.tbs.app.constant.SystemI18nConstant;

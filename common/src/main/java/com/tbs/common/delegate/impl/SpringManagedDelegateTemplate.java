@@ -1,6 +1,6 @@
 package com.tbs.common.delegate.impl;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.delegate.IDelegateTarget;

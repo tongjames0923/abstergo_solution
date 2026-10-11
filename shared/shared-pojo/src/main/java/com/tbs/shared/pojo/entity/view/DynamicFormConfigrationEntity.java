@@ -5,9 +5,9 @@ import com.tbs.shared.pojo.IIdentifiable;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
 import java.io.Serializable;
 
 /**
@@ -19,10 +19,11 @@ import java.io.Serializable;
  */
 @Entity
 @Table(name = "dynamic_form_configration",
-    indexes = {@javax.persistence.Index(columnList = "flag"), @javax.persistence.Index(columnList = "title"),
-        @javax.persistence.Index(columnList = "expandable,expanded"),})
+    indexes = {@jakarta.persistence.Index(columnList = "flag"), @jakarta.persistence.Index(columnList = "title"),
+        @jakarta.persistence.Index(columnList = "expandable,expanded")})
 @Data
 @LogicDeleteEntity(activeFlagValues = {0, 1})
+@Comment("动态表单配置表")
 public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
 
@@ -30,8 +31,8 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
      * 主键ID
      */
     @Comment("主键ID（自增）")
-    @javax.persistence.Id
-    @javax.persistence.GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
+    @jakarta.persistence.Id
+    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
     private Long id;
 
     /**
@@ -58,7 +59,7 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
     /**
      * 表单字段的宽度
      */
-    @Comment("表单标签宽度（如 '100px'）")
+    @Comment("表单标签宽度（如 100px）")
     @Column(name = "label_width")
     private String labelWidth;
 
@@ -80,7 +81,7 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
      * 标记
      * @see com.tbs.shared.enums.DynamicFormConfigFlagEnum
      */
-    @Comment("数据状态标志（逻辑删除用）")
+    @Comment("表单状态：1-已启用，0-未启用，-1-已删除")
     @Column(name = "flag")
     private Integer flag;
 

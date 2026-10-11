@@ -1,15 +1,12 @@
 package com.tbs.shared.pojo.entity.version;
 
-import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonAuditableEntity;
-import com.tbs.shared.pojo.ICommonCreateAuditable;
-import com.tbs.shared.pojo.ICommonUpdateAuditable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
+import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.Comment;
 
-import javax.persistence.*;
 import java.util.Date;
 
 /**
@@ -22,6 +19,7 @@ import java.util.Date;
 @Table(name = "app_version_info",
     indexes = {@Index(columnList = "app_key,version_code"), @Index(columnList = "version_name"),
         @Index(columnList = "version_type,platform"), @Index(columnList = "flag")})
+@Comment("应用版本信息表")
 public class AppVersionEntity implements ICommonAuditableEntity<Long> {
     private static final long serialVersionUID = 1L;
     /**
@@ -58,7 +56,7 @@ public class AppVersionEntity implements ICommonAuditableEntity<Long> {
      *
      * @see com.tbs.shared.enums.AppVersionTypeEnum
      */
-    @Comment("版本类型（如正式版、测试版等）")
+    @Comment("版本类型：1-alpha，2-beta，3-rc，4-release")
     @Column(name = "version_type")
     private Integer versionType;
 
@@ -116,7 +114,7 @@ public class AppVersionEntity implements ICommonAuditableEntity<Long> {
      *
      * @see com.tbs.shared.enums.AppVersionFlagEnum
      */
-    @Comment("数据状态标志")
+    @Comment("版本状态：0-草稿，1-发布，2-待审核，-1-下线，-2-回滚，-3-归档")
     @Column(name = "flag")
     private Integer flag;
 

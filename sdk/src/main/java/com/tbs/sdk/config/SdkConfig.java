@@ -35,14 +35,9 @@ public class SdkConfig {
     public static final String DEFAULT_TOKEN_HEADER = "Authorization";
 
     /**
-     * SSE断线重连最大次数默认值
+     * 语言请求头默认值（Accept-Language，与服务端 i18n 及前端 zh_CN 对齐）
      */
-    public static final int DEFAULT_SSE_MAX_RECONNECT = 3;
-
-    /**
-     * SSE断线重连基础间隔默认值（秒）
-     */
-    public static final int DEFAULT_SSE_RECONNECT_INTERVAL = 2;
+    public static final String DEFAULT_LANGUAGE = "zh_CN";
 
     /**
      * 服务端基础地址，如 https://api.example.com（不以/结尾）
@@ -70,19 +65,14 @@ public class SdkConfig {
     private final String tokenHeaderName;
 
     /**
-     * 是否启用SSE断线自动重连
+     * 语言请求头 Accept-Language 取值（zh_CN / en_US）
      */
-    private final boolean sseReconnectEnabled;
+    private final String language;
 
     /**
-     * SSE断线重连最大尝试次数（超出后停止重连并回调失败）
+     * SSE推送参数（可变配置，集中承载主题/心跳/重连退避）
      */
-    private final int sseMaxReconnectAttempts;
-
-    /**
-     * SSE断线重连基础间隔（秒），实际间隔按尝试次数指数退避
-     */
-    private final int sseReconnectBaseIntervalSeconds;
+    private final PushOptions push;
 
     private SdkConfig(Builder builder) {
         this.baseUrl = builder.baseUrl;
@@ -90,9 +80,8 @@ public class SdkConfig {
         this.readTimeoutSeconds = builder.readTimeoutSeconds;
         this.writeTimeoutSeconds = builder.writeTimeoutSeconds;
         this.tokenHeaderName = builder.tokenHeaderName;
-        this.sseReconnectEnabled = builder.sseReconnectEnabled;
-        this.sseMaxReconnectAttempts = builder.sseMaxReconnectAttempts;
-        this.sseReconnectBaseIntervalSeconds = builder.sseReconnectBaseIntervalSeconds;
+        this.language = builder.language;
+        this.push = builder.push;
     }
 
     /**
@@ -141,30 +130,21 @@ public class SdkConfig {
     }
 
     /**
-     * 是否启用SSE断线自动重连
+     * 获取语言请求头 Accept-Language 取值
      *
-     * @return 启用返回true
+     * @return 语言取值
      */
-    public boolean isSseReconnectEnabled() {
-        return sseReconnectEnabled;
+    public String getLanguage() {
+        return language;
     }
 
     /**
-     * 获取SSE断线重连最大尝试次数
+     * 获取SSE推送参数（可变，宿主可覆盖心跳/重连/主题前缀等）
      *
-     * @return 最大尝试次数
+     * @return 推送参数对象
      */
-    public int getSseMaxReconnectAttempts() {
-        return sseMaxReconnectAttempts;
-    }
-
-    /**
-     * 获取SSE断线重连基础间隔（秒）
-     *
-     * @return 基础间隔
-     */
-    public int getSseReconnectBaseIntervalSeconds() {
-        return sseReconnectBaseIntervalSeconds;
+    public PushOptions getPush() {
+        return push;
     }
 
     /**
@@ -208,19 +188,14 @@ public class SdkConfig {
         private String tokenHeaderName = DEFAULT_TOKEN_HEADER;
 
         /**
-         * 是否启用SSE断线自动重连
+         * 语言请求头取值
          */
-        private boolean sseReconnectEnabled = false;
+        private String language = DEFAULT_LANGUAGE;
 
         /**
-         * SSE断线重连最大尝试次数
+         * SSE推送参数
          */
-        private int sseMaxReconnectAttempts = DEFAULT_SSE_MAX_RECONNECT;
-
-        /**
-         * SSE断线重连基础间隔（秒）
-         */
-        private int sseReconnectBaseIntervalSeconds = DEFAULT_SSE_RECONNECT_INTERVAL;
+        private final PushOptions push = new PushOptions();
 
         private Builder(String baseUrl) {
             this.baseUrl = baseUrl;
@@ -271,16 +246,32 @@ public class SdkConfig {
         }
 
         /**
-         * 启用SSE断线自动重连
+         * 设置语言请求头 Accept-Language 取值（默认zh_CN，需与服务端 i18n 支持一致）
          *
-         * @param maxAttempts         最大尝试次数
-         * @param baseIntervalSeconds 基础间隔秒数（按尝试次数指数退避）
+         * @param language 语言取值
          * @return 构造器
          */
-        public Builder sseReconnect(int maxAttempts, int baseIntervalSeconds) {
-            this.sseReconnectEnabled = true;
-            this.sseMaxReconnectAttempts = maxAttempts;
-            this.sseReconnectBaseIntervalSeconds = baseIntervalSeconds;
+        public Builder language(String language) {
+            this.language = language;
+            return this;
+        }
+
+        /**
+         * 覆盖SSE推送参数（心跳/重连退避/主题前缀/协议版本）
+         *
+         * @param push 推送参数（为null时保留默认）
+         * @return 构造器
+         */
+        public Builder push(PushOptions push) {
+            if (push != null) {
+                this.push.setTopicPrefix(push.getTopicPrefix())
+                    .setHeartbeatIntervalSeconds(push.getHeartbeatIntervalSeconds())
+                    .setReconnectEnabled(push.isReconnectEnabled())
+                    .setReconnectBaseDelaySeconds(push.getReconnectBaseDelaySeconds())
+                    .setReconnectMaxDelaySeconds(push.getReconnectMaxDelaySeconds())
+                    .setReconnectJitterSeconds(push.getReconnectJitterSeconds())
+                    .setProtocolVersion(push.getProtocolVersion());
+            }
             return this;
         }
 
@@ -300,11 +291,12 @@ public class SdkConfig {
             if (tokenHeaderName == null || tokenHeaderName.trim().isEmpty()) {
                 throw new SdkClientException("tokenHeaderName不能为空");
             }
-            if (sseMaxReconnectAttempts < 0) {
-                throw new SdkClientException("SSE重连次数不能为负数");
+            if (language == null || language.trim().isEmpty()) {
+                throw new SdkClientException("language不能为空");
             }
-            if (sseReconnectBaseIntervalSeconds < 0) {
-                throw new SdkClientException("SSE重连间隔不能为负数");
+            if (push.getReconnectBaseDelaySeconds() < 0 || push.getReconnectMaxDelaySeconds() < 0
+                || push.getReconnectJitterSeconds() < 0 || push.getHeartbeatIntervalSeconds() < 0) {
+                throw new SdkClientException("推送心跳/重连参数不能为负数");
             }
             return new SdkConfig(this);
         }

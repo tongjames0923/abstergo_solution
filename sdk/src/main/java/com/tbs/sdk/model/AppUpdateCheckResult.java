@@ -1,5 +1,6 @@
 package com.tbs.sdk.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.List;
 import lombok.Data;
 
@@ -45,4 +46,15 @@ public class AppUpdateCheckResult {
      * 安装包下载地址列表（多镜像容灾）
      */
     private List<String> downloadUrls;
+
+    /**
+     * 升级动作可读名称（force/recommend/notify），不需要升级时为null。
+     * <p>由 {@link #action} 派生的只读属性，不参与JSON反序列化。</p>
+     *
+     * @return 动作可读名称
+     */
+    @JsonIgnore
+    public String getActionName() {
+        return AppUpdateAction.toName(action);
+    }
 }

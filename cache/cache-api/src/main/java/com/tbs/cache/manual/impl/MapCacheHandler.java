@@ -3,13 +3,17 @@ package com.tbs.cache.manual.impl;
 import com.tbs.cache.manual.IManualCacheHandler;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class MapCacheHandler implements IManualCacheHandler {
 
-    private Map<String, Object> cache = new HashMap<>(64);
+    /**
+     * 底层存储采用 ConcurrentHashMap，读操作天然线程安全，
+     * 使 {@code CacheUtils} 的读命中路径无需再依赖外部互斥锁
+     */
+    private final Map<String, Object> cache = new ConcurrentHashMap<>(64);
 
     @Override
     public void put(String key, Object value) {

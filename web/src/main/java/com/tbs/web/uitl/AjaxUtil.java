@@ -9,8 +9,8 @@ import com.tbs.web.enums.WebMessageTypeEnum;
 import com.tbs.web.result.*;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import javax.servlet.http.HttpServletResponse;
+import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Collection;
@@ -64,11 +64,18 @@ public class AjaxUtil implements IStartup {
 
     /**
      * 获取Ajax工具类实例
+     * <p>
+     * 该实例在 {@link #startUp()} 时被赋值；但启动窗口（如异步启动、ApplicationRunner 尚未执行）
+     * 内可能被 Security 认证入口等提前调用，故在未初始化时返回一个临时实例兜底。
+     * {@code custom/error/success/debugError/noticeError} 等方法仅依赖静态 builder，不依赖注入字段，
+     * 兜底实例可正常工作；待 startUp 完成后会被真正的 Spring Bean 覆盖。
+     * </p>
      *
      * @return AjaxUtil实例
      */
     public static AjaxUtil getInstance() {
-        return ajaxUtil;
+        AjaxUtil instance = ajaxUtil;
+        return instance != null ? instance : new AjaxUtil();
     }
 
     /**

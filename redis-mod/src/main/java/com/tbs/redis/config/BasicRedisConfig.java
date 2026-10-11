@@ -17,7 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 
-import javax.annotation.Resource;
+import jakarta.annotation.Resource;
 
 /**
  * Redis基础配置类
@@ -97,7 +97,7 @@ public class BasicRedisConfig {
      */
     @Bean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
-    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
+    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true", matchIfMissing = true)
     RedisSerializer valueSerializer() throws Throwable {
         return BeanUtil.buildBeanFromProperties(() -> new GenericJackson2JsonRedisSerializer(),
             property.getValueSerializer(),

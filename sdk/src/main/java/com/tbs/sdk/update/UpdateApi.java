@@ -43,6 +43,14 @@ public class UpdateApi implements IUpdateApi {
      */
     @Override
     public AppUpdateCheckResult checkUpgrade(String appKey, String platform, Long currentVersionCode) {
+        return checkUpgrade(SdkConstants.PATH_APP_UPDATE_CHECK, appKey, platform, currentVersionCode);
+    }
+
+    /**
+     * {@inheritDoc}
+     */
+    @Override
+    public AppUpdateCheckResult checkUpgrade(String path, String appKey, String platform, Long currentVersionCode) {
         if (appKey == null || appKey.trim().isEmpty()) {
             throw new SdkClientException("appKey不能为空");
         }
@@ -53,7 +61,8 @@ public class UpdateApi implements IUpdateApi {
         form.setAppKey(appKey);
         form.setPlatform(platform);
         form.setCurrentVersionCode(currentVersionCode);
-        return httpClient.post(SdkConstants.PATH_APP_UPDATE_CHECK, form, AppUpdateCheckResult.class);
+        AppUpdateCheckResult result = httpClient.post(path, form, AppUpdateCheckResult.class);
+        return result != null ? result : new AppUpdateCheckResult();
     }
 
     /**

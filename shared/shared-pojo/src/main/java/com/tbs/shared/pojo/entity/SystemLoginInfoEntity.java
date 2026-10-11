@@ -11,10 +11,10 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.Index;
-import javax.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import java.util.Date;
 
 /**
@@ -28,13 +28,14 @@ import java.util.Date;
     @Index(name = "idx_user_id", columnList = "user_id"), @Index(name = "idx_token", columnList = "token")})
 @Slf4j
 @LogicDeleteEntity
+@Comment("系统登录信息表")
 public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAuditable, IUpdateTimeAuditable {
 
     /**
      * 主键
      */
     @Comment("主键ID")
-    @javax.persistence.Id
+    @jakarta.persistence.Id
     @Getter
     @Setter
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
@@ -44,7 +45,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
      * 用户ID
      */
     @Comment("关联用户ID")
-    @javax.persistence.Column(name = "user_id")
+    @jakarta.persistence.Column(name = "user_id")
     @Getter
     @Setter
     private Long userId;
@@ -53,7 +54,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
      * 登录令牌
      */
     @Comment("登录令牌")
-    @javax.persistence.Column(name = "token", length = 128)
+    @jakarta.persistence.Column(name = "token", length = 128)
     @Getter
     @Setter
     private String token;
@@ -62,7 +63,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
      * 用户详情
      */
     @Comment("用户详情（序列化字节数组）")
-    @javax.persistence.Column(name = "user_details", columnDefinition = "MEDIUMBLOB")
+    @jakarta.persistence.Column(name = "user_details", columnDefinition = "MEDIUMBLOB")
     @Getter
     @Setter
     private byte[] userDetails;
@@ -70,8 +71,8 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     /**
      * 状态
      */
-    @Comment("登录状态标识")
-    @javax.persistence.Column(name = "flag")
+    @Comment("登录状态：1-正常，0-已删除，-1-已撤销")
+    @jakarta.persistence.Column(name = "flag")
     @Getter
     @Setter
     private Integer flag;
@@ -80,7 +81,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
      * 创建时间
      */
     @Comment("创建时间")
-    @javax.persistence.Column(name = "create_time")
+    @jakarta.persistence.Column(name = "create_time")
     @Getter
     @Setter
     private Date createTime;
@@ -89,7 +90,7 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
      * 更新时间
      */
     @Comment("更新时间")
-    @javax.persistence.Column(name = "update_time")
+    @jakarta.persistence.Column(name = "update_time")
     @Getter
     @Setter
     private Date updateTime;
