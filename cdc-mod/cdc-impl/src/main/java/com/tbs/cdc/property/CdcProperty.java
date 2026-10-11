@@ -185,7 +185,8 @@ public class CdcProperty {
         private String databaseIncludeList;
 
         /**
-         * 捕获的表列表，逗号分隔，格式database.schema.table（透传table.include.list）
+         * 捕获的表列表，逗号分隔（透传table.include.list）；
+         * Debezium 3.0.8实测匹配格式为{@code schema.table}（如dbo.PURCHASE_ORDER），不带数据库名前缀，仅表名不命中
          */
         private String tableIncludeList;
 

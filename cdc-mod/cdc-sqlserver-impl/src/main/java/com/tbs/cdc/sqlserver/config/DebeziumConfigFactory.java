@@ -104,6 +104,7 @@ public class DebeziumConfigFactory {
         props.setProperty("topic.prefix", sqlserver.getServerName());
         // SQL Server连接器无database.include.list，以必填的database.names声明要捕获的库（逗号分隔）
         props.setProperty("database.names", sqlserver.getDatabaseIncludeList());
+        // table.include.list在Debezium 3.0.8实测匹配格式为schema.table（不带数据库名前缀），仅表名不命中
         if (StrUtil.isNotBlank(sqlserver.getTableIncludeList())) {
             props.setProperty("table.include.list", sqlserver.getTableIncludeList());
         }
