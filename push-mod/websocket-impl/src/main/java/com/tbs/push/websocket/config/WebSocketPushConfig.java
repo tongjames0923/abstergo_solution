@@ -33,7 +33,7 @@ import java.util.Arrays;
  * @since 1.0.0
  */
 @Configuration
-@ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true")
+@ConditionalOnProperty(prefix = "tbs.push", name = "enable", havingValue = "true", matchIfMissing = true)
 @EnableWebSocket
 @EnableConfigurationProperties(WebSocketPushProperty.class)
 public class WebSocketPushConfig implements WebSocketConfigurer {

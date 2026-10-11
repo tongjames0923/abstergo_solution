@@ -97,7 +97,7 @@ public class BasicRedisConfig {
      */
     @Bean(RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
     @ConditionalOnMissingBean(name = RedisBeanNameConstants.REDIS_VALUE_SERIALIZER)
-    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true")
+    @ConditionalOnProperty(prefix = "tbs.redis", value = "enable", havingValue = "true", matchIfMissing = true)
     RedisSerializer valueSerializer() throws Throwable {
         return BeanUtil.buildBeanFromProperties(() -> new GenericJackson2JsonRedisSerializer(),
             property.getValueSerializer(),

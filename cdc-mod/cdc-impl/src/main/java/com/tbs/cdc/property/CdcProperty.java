@@ -29,11 +29,6 @@ public class CdcProperty {
     private boolean enable = false;
 
     /**
-     * 捕获源类型标识：mysql/postgresql/mongodb
-     */
-    private String sourceType = "mysql";
-
-    /**
      * 事件载荷裁剪模式：full/changed-only/key-only
      */
     private String payloadMode = PayloadMode.CHANGED_ONLY.value;

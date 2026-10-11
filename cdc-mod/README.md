@@ -79,8 +79,7 @@ public class AppApplication { /* ... */ }
 ```yaml
 tbs:
   cdc:
-    enable: ${CDC_ENABLE:false}        # 总开关，false 时零 Bean、零线程
-    source-type: mysql
+    # 总开关默认启用：@EnableTbsCdc 注解引入即生效；如需关闭可配置 enable: false（false 时零 Bean、零线程）
     payload-mode: changed-only         # full / changed-only / key-only
     mysql:
       hostname: ${CDC_DB_HOST:127.0.0.1}
@@ -154,8 +153,7 @@ public class MyChangeListener implements CdcChangeListener {
 ### CdcProperty（`tbs.cdc.*`）
 | 配置 | 默认 | 说明 |
 |------|------|------|
-| `enable` | false | 模块总开关 |
-| `source-type` | mysql | 捕获源类型标识 |
+| `enable` | true（matchIfMissing） | 模块总开关：注解引入即默认启用，显式 false 关闭（零 Bean、零线程） |
 | `payload-mode` | changed-only | 载荷裁剪：`full` 前后完整行；`changed-only` UPDATE 仅差异列；`key-only` 仅主键 |
 | `mysql.*` | 见上 | 连接信息、`server-name`、`server-id`、include 列表、位点文件、快照模式、心跳 |
 | `filter.*` | 空 | 库/表白名单与排除、行级 SpEL 条件 |

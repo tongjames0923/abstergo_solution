@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Configuration;
  * <p>
  * 按 {@code tbs.wecom.enable} 总开关装配企业微信 API 客户端与登录授权提供者；
  * 提供者注册为 Spring Bean 后由统一登录门面的注册表自动收集，无需改动控制器与门面。
+ * 开关刻意默认关闭（matchIfMissing=false）：依赖企业微信 corpId/agentId/secret 等外部配置，
+ * 未配置时启用会创建失败，需显式开启。
  * </p>
  *
  * @author abstergo

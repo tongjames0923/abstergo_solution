@@ -36,8 +36,13 @@ import java.util.Set;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true")
+@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true", matchIfMissing = true)
 public class DebeziumEventConverter {
+
+    /**
+     * 捕获源类型标识，由实现模块内置决定，不由配置声明（避免与实际运行实现不一致）
+     */
+    private static final String SOURCE_TYPE = "sqlserver";
 
     @Resource
     private CdcProperty cdcProperty;
@@ -64,7 +69,7 @@ public class DebeziumEventConverter {
 
         CdcEvent event = new CdcEvent();
         event.setChangeType(mapChangeType(str(payload.get("op"))));
-        event.setSourceType(cdcProperty.getSourceType());
+        event.setSourceType(SOURCE_TYPE);
 
         Map<String, Object> source = asMap(payload.get("source"));
         if (source != null) {

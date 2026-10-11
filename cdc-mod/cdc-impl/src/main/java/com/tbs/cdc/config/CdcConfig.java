@@ -20,7 +20,7 @@ import org.springframework.context.annotation.Configuration;
  * @since 1.0.0
  */
 @Configuration
-@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true")
+@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true", matchIfMissing = true)
 @EnableConfigurationProperties(CdcProperty.class)
 public class CdcConfig {
 

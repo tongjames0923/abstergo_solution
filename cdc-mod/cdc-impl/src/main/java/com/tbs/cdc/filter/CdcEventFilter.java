@@ -34,7 +34,7 @@ import java.util.regex.Pattern;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true")
+@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true", matchIfMissing = true)
 public class CdcEventFilter {
 
     @Resource

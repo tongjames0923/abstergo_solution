@@ -35,7 +35,9 @@ public class OssConfig {
      * 创建OSS统一门面客户端实例
      * <p>
      * 仅当tbs.oss.enable属性为true且容器中不存在OssClient实例时创建，
-     * 应用关闭时自动调用close释放底层SDK资源
+     * 应用关闭时自动调用close释放底层SDK资源。
+     * 此开关刻意默认关闭（matchIfMissing缺省为false）：OSS依赖外部MinIO/OSS服务，
+     * 未配置endpoint等参数时启用会创建失败，需显式开启。
      * </p>
      *
      * @param factoryProvider 容器中所有OssClientFactory实现的提供者

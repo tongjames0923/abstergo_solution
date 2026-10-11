@@ -30,7 +30,7 @@ import java.util.Properties;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true")
+@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true", matchIfMissing = true)
 public class DebeziumConfigFactory {
 
     /**

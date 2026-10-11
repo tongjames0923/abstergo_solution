@@ -54,7 +54,7 @@ tbs:
     data-holder-manager: com.tbs.common.data.impl.DefaultAutoGenDataHolderManager
     data-holder: com.tbs.redis.holder.RedisDataHolder
   redis:
-    enable: true
+    # 总开关默认启用：@EnableTbsRedis 注解引入即生效；如需关闭可配置 enable: false
   redission:
     cache:
       allow-null-values: true
@@ -92,18 +92,16 @@ tbs:
     corp-id: ${WECOM_CORP_ID}
     agent-id: ${WECOM_AGENT_ID}
     corp-secret: ${WECOM_CORP_SECRET}
+  # 推送模块总开关默认启用：@EnableTbsPush 注解引入即生效；如需关闭可配置 enable: false
   push:
     transport: sse
     heartbeat-timeout-millis: 600000
     dispatch:
       scheduler: job
-    enable: true
   # CDC 数据库变更数据捕获（纯后端能力模块）
+  # 总开关默认启用：@EnableTbsCdc 注解引入即生效；如需关闭可配置 enable: false
   cdc:
-    # 模块总开关：false 时零 Bean 装配、零线程占用，对存量应用无影响
-    enable: ${CDC_ENABLE:true}
-    # 捕获源类型：mysql / sqlserver（需引入对应实现子模块，并与下方连接段一致）
-    source-type: sqlserver
+    # 捕获源由引入的实现子模块（cdc-mysql-impl / cdc-sqlserver-impl）决定，无需声明类型
     # 事件载荷裁剪模式：full / changed-only / key-only
     payload-mode: changed-only
     sqlserver:

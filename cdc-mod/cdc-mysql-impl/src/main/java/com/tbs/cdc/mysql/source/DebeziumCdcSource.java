@@ -38,7 +38,7 @@ import java.util.function.Consumer;
  */
 @Slf4j
 @Component
-@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true")
+@ConditionalOnProperty(prefix = "tbs.cdc", name = "enable", havingValue = "true", matchIfMissing = true)
 public class DebeziumCdcSource implements CdcSource {
 
     /**
