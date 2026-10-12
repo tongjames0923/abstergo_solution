@@ -1,5 +1,7 @@
 package com.tbs.sql.mapper.impl;
 
+import org.apache.ibatis.annotations.Param;
+
 import java.util.Map;
 
 /**
@@ -41,6 +43,36 @@ import java.util.Map;
  * @see IRawSqlSelectMapper
  */
 public class RawSqlSelectProvider {
-    public String dynamicSql(String sql, Map<String, Object> _prs) { return sql; }
-    public String dynamicCountSql(String sql, Map<String, Object> _prs) { return "select count(*) from (" + sql + ") as t1"; }
+
+    /**
+     * 直接返回原始 SQL 语句。
+     * <p>
+     * 参数名必须与 {@link com.tbs.sql.mapper.IRawSqlSelectMapper#fetch} 的
+     * {@code @Param} 名称一致：MyBatis 对多参数 provider 方法按参数名从
+     * Mapper 的参数表中取值，显式声明 {@code @Param} 后不再依赖
+     * {@code -parameters} 编译参数保留的方法参数名。
+     * </p>
+     *
+     * @param sql  原始 SQL 语句
+     * @param _prs SQL 参数表
+     * @return 原样返回的 SQL 语句
+     */
+    public String dynamicSql(@Param("sql") String sql, @Param("_prs") Map<String, Object> _prs) {
+        return sql;
+    }
+
+    /**
+     * 将原始 SQL 包装为 count 统计查询。
+     * <p>
+     * 参数名必须与 {@link com.tbs.sql.mapper.IRawSqlSelectMapper#count} 的
+     * {@code @Param} 名称一致，理由同 {@link #dynamicSql}。
+     * </p>
+     *
+     * @param sql  原始 SQL 语句
+     * @param _prs SQL 参数表
+     * @return 包装为 count 查询的 SQL 语句
+     */
+    public String dynamicCountSql(@Param("sql") String sql, @Param("_prs") Map<String, Object> _prs) {
+        return "select count(*) from (" + sql + ") as t1";
+    }
 }

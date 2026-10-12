@@ -489,6 +489,8 @@
                     <configuration>
                         <release>21</release>
                         <encoding>UTF-8</encoding>
+                        <!-- 保留方法参数名：MyBatis 多参数 provider/Mapper 方法依赖参数名解析 -->
+                        <parameters>true</parameters>
                     </configuration>
                 </plugin>
             </plugins>
