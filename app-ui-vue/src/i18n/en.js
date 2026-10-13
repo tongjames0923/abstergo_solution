@@ -101,7 +101,7 @@ export default {
     externalId: 'External Identity',
     userId: 'System User ID',
     userName: 'System Username',
-    userNamePlaceholder: 'Enter the system username',
+    userNamePlaceholder: 'Search by name or account',
     bindTime: 'Bound At',
     actions: 'Actions',
     noData: 'No bindings yet',
@@ -116,12 +116,13 @@ export default {
     bindFailed: 'Binding failed',
     processing: 'Processing authorization result...',
     type: {
-      wecom: 'WeCom'
+      wecom: 'WeCom',
+      mes: 'MES'
     },
     rules: {
       identityType: 'Please select an identity type',
       externalId: 'Please enter the external identity',
-      userName: 'Please enter the system username'
+      userName: 'Please select a system user'
     },
     admin: {
       addBind: 'Add Binding'

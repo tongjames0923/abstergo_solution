@@ -99,7 +99,7 @@ export default {
     externalId: '外部身份标识',
     userId: '系统用户ID',
     userName: '系统用户名',
-    userNamePlaceholder: '请输入系统用户名',
+    userNamePlaceholder: '输入姓名或登录账号搜索',
     bindTime: '绑定时间',
     actions: '操作',
     noData: '暂无绑定关系',
@@ -114,12 +114,13 @@ export default {
     bindFailed: '绑定失败',
     processing: '正在处理授权结果...',
     type: {
-      wecom: '企业微信'
+      wecom: '企业微信',
+      mes: 'MES 系统'
     },
     rules: {
       identityType: '请选择身份类型',
       externalId: '请输入外部身份标识',
-      userName: '请输入系统用户名'
+      userName: '请选择系统用户'
     },
     admin: {
       addBind: '新增绑定'
