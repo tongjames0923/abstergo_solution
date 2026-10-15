@@ -70,4 +70,9 @@ public class PushNotifyMessage {
      * 已读时间
      */
     private Date readTime;
+
+    /**
+     * 扩展信息
+     */
+    private String extraInfo;
 }

@@ -1,7 +1,6 @@
 package com.tbs.sdk.http;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.sdk.auth.TokenManager;
@@ -97,8 +96,7 @@ public class OkHttpBaseHttpClient implements IBaseHttpClient {
     public OkHttpBaseHttpClient(SdkConfig config, TokenManager tokenManager) {
         this.config = config;
         this.tokenManager = tokenManager;
-        this.mapper = new ObjectMapper()
-            .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        this.mapper = SdkObjectMappers.newMapper();
         this.client = new OkHttpClient.Builder()
             .connectTimeout(config.getConnectTimeoutSeconds(), TimeUnit.SECONDS)
             .readTimeout(config.getReadTimeoutSeconds(), TimeUnit.SECONDS)

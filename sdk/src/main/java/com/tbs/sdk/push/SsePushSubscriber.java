@@ -1,6 +1,5 @@
 package com.tbs.sdk.push;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.sdk.auth.TokenManager;
@@ -9,6 +8,7 @@ import com.tbs.sdk.config.SdkConfig;
 import com.tbs.sdk.constants.SdkConstants;
 import com.tbs.sdk.exception.SdkClientException;
 import com.tbs.sdk.http.IBaseHttpClient;
+import com.tbs.sdk.http.SdkObjectMappers;
 import com.tbs.sdk.model.FrameType;
 import com.tbs.sdk.model.FrameUploadRequest;
 import com.tbs.sdk.model.HelloInfo;
@@ -67,8 +67,7 @@ public class SsePushSubscriber implements ISsePushSubscriber {
     /**
      * JSON处理器（线程安全）
      */
-    private final ObjectMapper mapper = new ObjectMapper()
-        .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+    private final ObjectMapper mapper = SdkObjectMappers.newMapper();
 
     /**
      * SSE专用OkHttp客户端（读超时必须为0，避免空闲长连接被读超时切断）
@@ -114,6 +113,13 @@ public class SsePushSubscriber implements ISsePushSubscriber {
      * 已登记主题（有序去重）
      */
     private final List<String> topics = new ArrayList<>();
+
+    /**
+     * 订阅主题是否为缺省派生（调用方未显式指定主题）：
+     * 为true时建连后以服务端授权集 {@code PushCredential.grantedTopics} 为准，
+     * 免疫客户端声明 userId（可能为登录名）与服务端数字身份口径不一致导致的订阅被拒
+     */
+    private volatile boolean defaultTopicsDerived;
 
     /**
      * 会话标识（hello握手成功后写入，为上行帧唯一权威来源）
@@ -220,6 +226,8 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             this.topics.clear();
             this.topics.addAll(resolveDefaultTopics(topics, userId));
         }
+        // 调用方未显式指定主题即缺省派生本人频道，建连后按服务端授权集校正
+        this.defaultTopicsDerived = (topics == null || topics.isEmpty());
         this.closed.set(false);
         this.reconnectAttempts.set(0);
         scheduler.execute(this::connect);
@@ -250,6 +258,11 @@ public class SsePushSubscriber implements ISsePushSubscriber {
         if (credential == null || credential.getTicket() == null || credential.getTicket().isEmpty()) {
             handleFailure(new SdkClientException("推送认证未返回有效ticket"));
             return;
+        }
+        // 缺省派生订阅时以服务端授权集为准：本人频道由服务端按数字身份签发，
+        // 直接采用 auth 响应的 grantedTopics 可消除"userId传成登录名→频道被拒1008"的口径不一致
+        if (defaultTopicsDerived) {
+            applyGrantedTopics(credential.getGrantedTopics());
         }
         Request request = new Request.Builder()
             .url(buildConnectUrl(credential.getTicket()))
@@ -324,12 +337,12 @@ public class SsePushSubscriber implements ISsePushSubscriber {
                 handleHello(frame);
                 return;
             }
+            // error帧是协议层对某一上行帧的异步反馈（订阅未授权1008/上行被拒1009/topic非法1003等），
+            // 后端回发后保持连接不断开；连接真异常经onFailure/onClosed独立触发换票重连。
+            // 此处不得拆流重连，否则被拒主题会在"订阅→error→重连→再订阅"间形成auth风暴。
+            // 仅记录并透传给宿主处置（如停订该主题）。
             if (resolved == FrameType.ERROR) {
-                // 服务端error帧：ticket已消费，取消当前流并换票重连
-                String detail = frame != null ? frame.getPayload() : data;
-                cancelCurrentEventSource();
-                handleFailure(new SdkClientException("收到SSE error帧: " + detail));
-                return;
+                log.warn("收到SSE error帧(连接保持不断开): {}", frame != null ? frame.getPayload() : data);
             }
             SseFrameListener current = listener;
             if (current == null) {
@@ -734,6 +747,25 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             valid.add(pushOptions.getTopicPrefix() + userId.trim());
         }
         return valid;
+    }
+
+    /**
+     * 以服务端授权集替换缺省派生的订阅主题（仅当授权集非空时覆盖，否则保留本地缺省项以兼容无鉴权部署）
+     *
+     * @param granted 认证响应下发的授权主题列表，允许为null或空
+     */
+    private void applyGrantedTopics(List<String> granted) {
+        if (granted == null || granted.isEmpty()) {
+            return;
+        }
+        synchronized (topicsLock) {
+            topics.clear();
+            for (String topic : granted) {
+                if (topic != null && !topic.trim().isEmpty()) {
+                    topics.add(topic.trim());
+                }
+            }
+        }
     }
 
     /**

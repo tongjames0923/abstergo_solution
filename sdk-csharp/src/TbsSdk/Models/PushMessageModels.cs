@@ -47,6 +47,10 @@ namespace TbsSdk.Models
         [JsonPropertyName("readFlag")]
         public bool? ReadFlag { get; set; }
 
+        /// <summary>扩展信息（可选）。</summary>
+        [JsonPropertyName("extraInfo")]
+        public string ExtraInfo { get; set; }
+
         /// <summary>其余未映射字段。</summary>
         [JsonExtensionData]
         public IDictionary<string, JsonElement> Extra { get; set; }
