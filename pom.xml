@@ -47,8 +47,11 @@
 
     <!-- ============================== 版本属性 ============================== -->
     <properties>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <!-- 编译/编码 -->
         <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
