@@ -13,8 +13,12 @@
     <description>CDC契约层：统一变更事件模型、数据库无关捕获源抽象、监听与订阅契约、装配注解，仅依赖common，不含任何实现与厂商SDK依赖</description>
 
     <properties>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <dependencies>

@@ -488,7 +488,8 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
+                    <!-- JDK 21 编译：3.11.0+ 对 release/toolchain 支持与内部依赖更新更稳 -->
+                    <version>3.13.0</version>
                     <configuration>
                         <release>21</release>
                         <encoding>UTF-8</encoding>

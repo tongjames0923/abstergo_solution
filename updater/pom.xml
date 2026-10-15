@@ -14,8 +14,12 @@
     <description>可嵌入的应用自动更新类库：检查更新、下载安装包、执行部署/启动脚本</description>
 
     <properties>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <!-- 类库自身仅声明Jackson一个传递依赖，保持嵌入方依赖面最小；
