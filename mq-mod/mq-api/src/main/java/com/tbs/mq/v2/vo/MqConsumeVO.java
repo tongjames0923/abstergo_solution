@@ -9,12 +9,14 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
- * 消费行VO（v2 记录驱动模型）
+ * 消费台账VO（v2 记录驱动模型）
  * <p>
- * 一条消息对每一个消费者展开一行，行是处理、单飞、状态推进与重试回灌的最小工作单元： 行身份 = messageId + consumeId，单行失败不影响同消息其他行，重试只回灌失败行对应的消费者。
+ * 记录“消息 × 消费者”单次分发的事后结果（messageId + consumeId 为身份键，起止时间 + 成败状态 + 异常）：
+ * 主记录 PROCESSED 仅代表分发完成，各消费者是否真正消费成功以台账为准；
+ * 重试扫描基于台账的 FAIL 行判断回灌目标，只重跑失败消费者，不重跑已成功消费者。
  * </p>
  *
- * @param <T> 厂商原始消息类型
+ * @param <T> 业务负载类型
  * @author tongj
  * @since 2.0.0
  */
@@ -32,7 +34,7 @@ public class MqConsumeVO<T extends Serializable> implements Serializable {
     private String messageId;
 
     /**
-     * 消费者ID，对应 {@code IMqConsumer.consumeId()}
+     * 消费者ID，对应 {@code IMqConsumer.consumeId()}，台账行身份键组成部分
      */
     private Integer consumeId;
 
@@ -42,7 +44,7 @@ public class MqConsumeVO<T extends Serializable> implements Serializable {
     private String businessId;
 
     /**
-     * 厂商原始消息
+     * 业务负载（当前未赋值，回灌时由 messageId 经主记录回查取得）
      */
     private T payload;
 
@@ -57,14 +59,14 @@ public class MqConsumeVO<T extends Serializable> implements Serializable {
     private Date consumeEndTime;
 
     /**
-     * 行状态
+     * 行状态（成/败）
      *
      * @see com.tbs.mq.v2.enums.MqMessageConsumeStatusEnum
      */
     private Integer flag;
 
     /**
-     * 异常
+     * 消费失败时的原因异常，成功时为空；落库时由实现方序列化为字符串留痕
      */
     private Exception exception;
 

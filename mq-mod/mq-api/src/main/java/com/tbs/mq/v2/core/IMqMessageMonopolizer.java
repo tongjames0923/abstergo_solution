@@ -6,22 +6,27 @@ import java.io.Serializable;
 
 /**
  * 消息抢占者
- *
+ * <p>
+ * 单飞保护以消息为粒度：同一 messageId 同一时刻仅允许一个处理者持有并分发，
+ * 多实例部署时防止同一消息被并行重处理；重试回灌同样需先抢占，保证旧处理者与回灌者不并发。
+ * 抢占失败方不得释放他人持有的占有。
+ * </p>
  */
 public interface IMqMessageMonopolizer {
     /**
      * 抢占消息
      *
-     * @param message
-     * @return
+     * @param message 待抢占的消息主记录VO
+     * @return true表示抢占成功，调用方负责处理完成后 release；false表示他人持有，不得触碰 release
      */
-    <T extends Serializable> boolean monopolize(MqMessageVO<T> message);
+    <R, T extends Serializable> boolean monopolize(MqMessageVO<R, T> message);
 
     /**
-     * 释放消息
+     * 释放消息的占有，仅限抢占成功的那个持有者调用
      *
-     * @param message
+     * @param message 已分发完成的消息主记录VO
+     * @return 释放后的消息主记录VO
      */
-    <T extends Serializable> MqMessageVO<T> release(MqMessageVO<T> message);
+    <R, T extends Serializable> MqMessageVO<R, T> release(MqMessageVO<R, T> message);
 
 }

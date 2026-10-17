@@ -31,21 +31,27 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * MQ消费上下文抽象基类（v2 记录驱动模型）
  * <p>
- * 厂商无关的消费骨架：厂商通道（RabbitMQ/其他）退化为纯传输层，可靠性由记录层承担。 每条消息遵循固定流程：
+ * 厂商无关的消费骨架：厂商通道（RabbitMQ/其他）退化为纯传输层（类型 R），业务负载（类型 T）
+ * 由子类经 {@link #getPayload(Object)} 转换，可靠性由记录层承担。全链路遵循固定流程：
  * <ol>
- *     <li>接收：{@link #messageReceived} 按批次经 {@link IMqRecorder} 落库建档，建档逐条结果按 messageId 配对：
+ *     <li>接收：{@link #messageReceived} 按批次经 {@link IMqRecorder} 落库建立主记录，逐条结果按 messageId 配对：
  *     成功者进内存待处理队列并 {@link #ackMessage} 结清厂商投递；失败与结果缺席者 {@link #nakMessage} 拒收（每条至多一次），
  *     由厂商重投兜底——这是全链路唯一依赖厂商能力的位置；</li>
- *     <li>处理：独立处理线程按序取队列消息，经 {@link IMqMessageMonopolizer} 单飞抢占后推进状态机
- *     RECEIVED → PROCESSING → PROCESSED/FAILED，异常时记录错误信息供重试扫描；</li>
- *     <li>重试：完全基于记录（状态+错误信息+重试次数）由外部扫描组件回灌，不依赖厂商死信/重投能力。</li>
+ *     <li>处理：独立处理线程按序取队列消息，经 {@link IMqMessageMonopolizer} 单飞抢占后推进主记录状态机
+ *     RECEIVED → PROCESSING → PROCESSED/FAILED；{@link #handleMessage} 对当前负载类型注册的全部消费者广播执行，
+ *     每个消费者的成败与耗时经 {@link IMqConsumeRecorder} 写入消费台账——单消费者失败只留 FAIL 台账，
+ *     不中断其他消费者，也不改变主记录终态（PROCESSED 指分发完成，不等于全员成功）；</li>
+ *     <li>重试：完全基于记录层（主记录状态 + 消费台账状态 + 错误信息）由外部扫描组件回灌，
+ *     不依赖厂商死信/重投能力。</li>
  * </ol>
- * 子类职责：实现 {@link #handleMessage} 完成业务消费，实现 ackMessage/nakMessage 对接具体厂商的确认语义，
- * 并在厂商监听回调中将原始消息交给 {@link #messageReceived}。一个上下文实例对应一个队列/一个环境，
+ * 子类职责：实现 {@link #getPayload}/{@link #resolveBusinessId}/{@link #getMessageType}/{@link #getMessagePayloadType}
+ * 与 ackMessage/nakMessage 对接具体厂商的确认语义，并在厂商监听回调中将原始消息交给 {@link #messageReceived}；
+ * 业务消费由注册到 {@code IConsumerRegistry} 的 {@code IMqConsumer} 承担。一个上下文实例对应一个队列/一个环境，
  * 多队列扩容通过注册多个上下文实例实现。
  * </p>
  *
- * @param <T> 厂商原始消息类型
+ * @param <R> 厂商原始消息类型（传输层）
+ * @param <T> 业务负载类型（消费者面对的类型）
  * @author tongj
  * @since 2.0.0
  */
@@ -69,17 +75,17 @@ public abstract class AbstractMqContext<R, T extends Serializable>
     private Thread messageHandlerThread;
 
     /**
-     * 消息单飞抢占器，保证同一消息同一时刻仅被一个处理者消费
+     * 消息单飞抢占器，保证同一消息同一时刻仅被一个处理者分发
      */
     private IMqMessageMonopolizer mqMessageMonopolizer;
 
     /**
-     * 消息记录器，承载消费链路的可靠性真源
+     * 消息主记录器，承载消费链路的可靠性真源
      */
     private IMqRecorder<R, T> recorder;
 
     /**
-     * 消费记录器，记录消费结果
+     * 消费台账记录器，逐消费者记录每次分发的成败与耗时
      */
     private IMqConsumeRecorder<T> consumeRecorder;
 
@@ -90,11 +96,12 @@ public abstract class AbstractMqContext<R, T extends Serializable>
     /**
      * 构造消费上下文
      * <p>
-     * 记录器与抢占器是可靠性的根基，缺失时上下文无法保证不丢消息，故在装配期即拒绝空值。
+     * 主记录器、台账记录器与抢占器是可靠性的根基，缺失时上下文无法保证不丢消息与台账可查，故在装配期即拒绝空值。
      * </p>
      *
-     * @param recorder             消息记录器，不能为空
+     * @param recorder             消息主记录器，不能为空
      * @param mqMessageMonopolizer 消息单飞抢占器，不能为空
+     * @param consumeRecorder      消费台账记录器，不能为空
      */
     public AbstractMqContext(IMqRecorder<R, T> recorder, IMqMessageMonopolizer mqMessageMonopolizer,
         IMqConsumeRecorder<T> consumeRecorder) {
@@ -128,17 +135,26 @@ public abstract class AbstractMqContext<R, T extends Serializable>
     /**
      * 组装消息VO
      * <p>
-     * 构建待落库的初始记录：框架生成的消息ID + 业务标识 + 原始消息 + RECEIVED 初始状态。
+     * 构建待落库的初始主记录：框架生成的消息ID + 业务标识 + 厂商原始消息 + 转换后的业务负载 + RECEIVED 初始状态。
      * </p>
      *
      * @param message 厂商原始消息
-     * @return 初始状态的消息记录VO，不为空
+     * @return 初始状态的消息主记录VO，不为空
      */
     protected MqMessageVO<R, T> assembleMessageVO(R message) {
         return MqMessageVO.<R, T>builder().messageId(genMessageId(message)).businessId(resolveBusinessId(message))
             .flag(MqMessageStatusEnum.RECEIVED.getCode()).rawMessage(message).payload(getPayload(message)).build();
     }
 
+    /**
+     * 转换业务负载
+     * <p>
+     * 传输层与业务层的边界：把厂商消息（R）反序列化/解析为消费者直接面对的业务对象（T）。 消费链路只传递负载，原始消息仅保留在主记录中供排查与重放。
+     * </p>
+     *
+     * @param e 厂商原始消息
+     * @return 业务负载
+     */
     protected abstract T getPayload(R e);
 
     /**
@@ -231,24 +247,28 @@ public abstract class AbstractMqContext<R, T extends Serializable>
     }
 
     /**
-     * 业务消费钩子
+     * 业务消费分发
      * <p>
-     * 由处理线程在单飞保护与 PROCESSING 状态内调用，子类覆盖实现真正的业务消费。 失败时建议抛 {@code MqConsumeException} 并携带 retryFlag 声明是否允许按记录重试；
-     * 抛其他异常或本方法返回后，上下文按固定语义推进状态（异常 → FAILED，正常 → PROCESSED）。 本方法内不应再做厂商侧确认动作。
+     * 由处理线程在单飞保护与 PROCESSING 状态内调用：当前负载类型未注册任何消费者时抛可重试
+     * {@code MqConsumeException}（主记录置 FAILED，等待消费者注册后由记录层回灌）；否则对全部注册消费者
+     * 逐个执行，每个消费者的成败与耗时汇总为消费台账一次性落库——单消费者失败只留 FAIL 台账，
+     * 不中断其他消费者，也不改变主记录终态（PROCESSED 指分发完成，不等于全员成功）。
+     * 本方法内不做任何厂商侧确认动作。
      * </p>
      *
-     * @param message 厂商原始消息
+     * @param messageVo 消息主记录VO，为 null 时直接忽略
      */
     @Override
     public void handleMessage(MqMessageVO<R, T> messageVo) {
         if (messageVo == null) {
-            log.warn("message vo is null, messageId={}", messageVo.getMessageId());
+            log.warn("message vo is null");
             return;
         }
         log.debug("message vo: {}", messageVo);
         List<IMqConsumer<T>> consumers = consumerRegistry.getConsumers(getMessagePayloadType());
         AssertUtil.isTrueSystemError(CollUtil.isEmpty(consumers)).as(e -> {
-            return MqConsumeException.retryable(e, "no consumer registered for message type: {}", getMessageType());
+            return MqConsumeException.retryable(e, "no consumer registered for message type: {}",
+                getMessagePayloadType());
         }).throwIt();
         List<MqConsumeVO<T>> consumeVos = new LinkedList<>();
         for (IMqConsumer<T> consumer : consumers) {
@@ -258,10 +278,7 @@ public abstract class AbstractMqContext<R, T extends Serializable>
                 consumeVos.add(
                     MqConsumeVO.<T>builder().messageId(messageVo.getMessageId()).businessId(messageVo.getBusinessId())
                         .consumeId(consumer.consumeId()).consumeStartTime(startTime).consumeEndTime(new Date())
-                        .build());
-                consumeVos.add(
-                    MqConsumeVO.<T>builder().messageId(messageVo.getMessageId()).businessId(messageVo.getBusinessId())
-                        .build());
+                        .flag(MqMessageConsumeStatusEnum.SUCCESS.getCode()).build());
             } catch (Exception e) {
                 log.warn("consumer {} consume error", consumer.getClass().getName(), e);
                 consumeVos.add(
@@ -270,6 +287,7 @@ public abstract class AbstractMqContext<R, T extends Serializable>
                         .flag(MqMessageConsumeStatusEnum.FAIL.getCode()).exception(e).build());
             }
         }
+        consumeRecorder.record(consumeVos);
 
     }
 
@@ -290,8 +308,9 @@ public abstract class AbstractMqContext<R, T extends Serializable>
     /**
      * 初始化上下文：启动消息处理线程
      * <p>
-     * 处理线程主循环分三段： 取队列消息（带超时阻塞，避免空转）→ 单飞抢占（失败则跳过，不碰他人锁）→ 状态推进（PROCESSING → handleMessage → PROCESSED，异常记录错误信息并置 FAILED）。
-     * 释放占有仅在抢占成功的路径上执行；单条消息的处理器异常不中断循环。
+     * 处理线程主循环分三段： 取队列消息（带超时阻塞，避免空转）→ 单飞抢占（失败则跳过，不碰他人锁）→
+     * 主记录状态推进（PROCESSING → handleMessage 分发 → PROCESSED，分发环节异常留痕并置 FAILED）。
+     * 释放占有仅在抢占成功的路径上执行；单条消息的异常不中断循环。
      * </p>
      *
      * @throws Exception 初始化失败时抛出，阻断bean启动

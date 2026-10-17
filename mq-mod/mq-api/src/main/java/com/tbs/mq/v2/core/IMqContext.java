@@ -9,10 +9,11 @@ import java.util.List;
  * MQ消费上下文接口
  * <p>
  * 一个上下文实例对应一个队列/一个消费环境，职责详见 {@link AbstractMqContext} 的链路说明。
- * 业务消费由注册到 {@code IConsumerRegistry} 的 {@code IMqConsumer} 承担，上下文不再提供消费钩子。
+ * 上下文负责建档、分发与台账推进；业务消费由注册到 {@code IConsumerRegistry} 的 {@code IMqConsumer} 承担。
  * </p>
  *
- * @param <T> 厂商原始消息类型
+ * @param <R> 厂商原始消息类型（传输层）
+ * @param <T> 业务负载类型（消费者面对的类型）
  */
 public interface IMqContext<R, T extends Serializable> {
 
@@ -27,9 +28,13 @@ public interface IMqContext<R, T extends Serializable> {
     void messageReceived(List<R> messages);
 
     /**
-     * 业务消费钩子，由处理线程在单飞保护内调用
+     * 业务消费分发
+     * <p>
+     * 由处理线程在单飞保护内调用：对当前负载类型注册的全部消费者广播执行，
+     * 逐消费者结果写入消费台账，单消费者失败不影响其他消费者与主记录终态。
+     * </p>
      *
-     * @param message 厂商原始消息
+     * @param message 消息主记录VO
      */
     void handleMessage(MqMessageVO<R,T> message);
 
@@ -56,10 +61,18 @@ public interface IMqContext<R, T extends Serializable> {
     /**
      * 获取消息类型
      *
-     * @return 厂商原始消息类型
+     * @return 厂商原始消息类型（传输层 R）
      */
     Class<R> getMessageType();
 
+    /**
+     * 获取业务负载类型
+     * <p>
+     * 消费者注册与分发回查的键：{@code IConsumerRegistry} 按该类型路由到对应的 {@code IMqConsumer} 集合。
+     * </p>
+     *
+     * @return 业务负载类型（消费者面对的类型 T）
+     */
     Class<T> getMessagePayloadType();
 
 }

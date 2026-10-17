@@ -8,14 +8,16 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- * 消息记录器接口
+ * 消息主记录器接口
  * <p>
- * v2 记录驱动模型的可靠性真源：所有消费状态以该接口的落库记录为准，
- * 重试、留痕、恢复均基于记录推进，不依赖厂商死信/重投能力。
+ * v2 记录驱动模型的可靠性真源：所有消息主记录（建档、状态推进、终态留痕）以该接口的落库记录为准，
+ * 重试、恢复均基于记录推进，不依赖厂商死信/重投能力；逐消费者的成败结果由消费台账
+ * {@code IMqConsumeRecorder} 承担，不在本接口范围。
  * 实现类仅保留存取能力，不得内嵌调度/重投逻辑。
  * </p>
  *
- * @param <T> 厂商原始消息类型
+ * @param <R> 厂商原始消息类型（传输层）
+ * @param <T> 业务负载类型
  */
 public interface IMqRecorder<R, T extends Serializable> {
     /**
@@ -31,7 +33,7 @@ public interface IMqRecorder<R, T extends Serializable> {
     List<MqRecordVO<T>> record(List<MqMessageVO<R, T>> messages);
 
     /**
-     * 更新消息状态
+     * 更新消息主记录状态
      *
      * @param messageId 消息ID
      * @param flag      目标状态
@@ -47,10 +49,13 @@ public interface IMqRecorder<R, T extends Serializable> {
     void errorFlag(String messageId, Exception e);
 
     /**
-     * 根据消息获取消息VO
+     * 按消息ID回查消息主记录
+     * <p>
+     * 重试扫描/台账回灌场景取回 payload 与原始消息的入口。
+     * </p>
      *
-     * @param message 厂商消息
-     * @return 消息VO
+     * @param messageId 消息ID
+     * @return 消息主记录VO，不存在时由实现方决定返回空或抛异常
      */
     MqMessageVO<R, T> get(String messageId);
 

@@ -11,7 +11,7 @@ import java.io.Serializable;
  * 支持部分成功语义：单条建档失败不影响同批其他消息。
  * </p>
  *
- * @param <T> 厂商原始消息类型
+ * @param <T> 业务负载类型
  */
 @Data
 public class MqRecordVO<T extends Serializable> implements Serializable {
@@ -24,7 +24,7 @@ public class MqRecordVO<T extends Serializable> implements Serializable {
     private String messageId;
 
     /**
-     * 消息体（厂商原始消息）
+     * 消息体（业务负载）
      */
     private T body;
 
