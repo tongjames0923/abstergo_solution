@@ -1,5 +1,7 @@
 package com.tbs.mq.v2.core;
 
+import com.tbs.mq.v2.vo.MqMessageVO;
+
 import java.io.Serializable;
 import java.util.List;
 
@@ -7,11 +9,12 @@ import java.util.List;
  * MQ消费上下文接口
  * <p>
  * 一个上下文实例对应一个队列/一个消费环境，职责详见 {@link AbstractMqContext} 的链路说明。
+ * 业务消费由注册到 {@code IConsumerRegistry} 的 {@code IMqConsumer} 承担，上下文不再提供消费钩子。
  * </p>
  *
  * @param <T> 厂商原始消息类型
  */
-public interface IMqContext<T extends Serializable> {
+public interface IMqContext<R, T extends Serializable> {
 
     /**
      * 消息接收处理
@@ -21,14 +24,14 @@ public interface IMqContext<T extends Serializable> {
      *
      * @param messages 厂商原始消息批次
      */
-    void messageReceived(List<T> messages);
+    void messageReceived(List<R> messages);
 
     /**
      * 业务消费钩子，由处理线程在单飞保护内调用
      *
      * @param message 厂商原始消息
      */
-    void handleMessage(T message);
+    void handleMessage(MqMessageVO<R,T> message);
 
     /**
      * 结清厂商侧投递确认
@@ -38,7 +41,7 @@ public interface IMqContext<T extends Serializable> {
      *
      * @param message 厂商原始消息
      */
-    void ackMessage(T message);
+    void ackMessage(R message);
 
     /**
      * 拒收厂商侧投递
@@ -48,6 +51,15 @@ public interface IMqContext<T extends Serializable> {
      *
      * @param message 厂商原始消息
      */
-    void nakMessage(T message);
+    void nakMessage(R message);
+
+    /**
+     * 获取消息类型
+     *
+     * @return 厂商原始消息类型
+     */
+    Class<R> getMessageType();
+
+    Class<T> getMessagePayloadType();
 
 }

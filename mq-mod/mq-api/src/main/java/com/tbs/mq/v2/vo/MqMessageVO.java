@@ -11,7 +11,7 @@ import java.io.Serializable;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class MqMessageVO<T extends Serializable> implements Serializable {
+public class MqMessageVO<R, T extends Serializable> implements Serializable {
 
     /**
      * 消息ID
@@ -26,7 +26,13 @@ public class MqMessageVO<T extends Serializable> implements Serializable {
     /**
      * 原始消息
      */
-    private T rawMessage;
+    private R rawMessage;
+
+    /**
+     * 消息体
+     */
+    private T payload;
+
 
     /**
      * 消息标志

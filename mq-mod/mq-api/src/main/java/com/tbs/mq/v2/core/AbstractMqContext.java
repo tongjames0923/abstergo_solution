@@ -5,14 +5,22 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.UuidUtil;
+import com.tbs.mq.v2.consume.IConsumerRegistry;
+import com.tbs.mq.v2.consume.IMqConsumeRecorder;
+import com.tbs.mq.v2.consume.IMqConsumer;
+import com.tbs.mq.v2.enums.MqMessageConsumeStatusEnum;
 import com.tbs.mq.v2.enums.MqMessageStatusEnum;
+import com.tbs.mq.v2.exception.MqConsumeException;
+import com.tbs.mq.v2.vo.MqConsumeVO;
 import com.tbs.mq.v2.vo.MqMessageVO;
 import com.tbs.mq.v2.vo.MqRecordVO;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -42,8 +50,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @since 2.0.0
  */
 @Slf4j
-public abstract class AbstractMqContext<T extends Serializable>
-    implements IMqContext<T>, InitializingBean, DisposableBean {
+public abstract class AbstractMqContext<R, T extends Serializable>
+    implements IMqContext<R, T>, InitializingBean, DisposableBean {
 
     /**
      * 运行守卫，控制处理线程主循环的启停
@@ -53,7 +61,7 @@ public abstract class AbstractMqContext<T extends Serializable>
     /**
      * 内存待处理队列，承接已落库建档与处理线程之间的缓冲；进程重启后队列清空，未处理消息由记录层扫描回灌
      */
-    private BlockingQueue<MqMessageVO<T>> messageQueue = new LinkedBlockingQueue<>();
+    private BlockingQueue<MqMessageVO<R, T>> messageQueue = new LinkedBlockingQueue<>();
 
     /**
      * 消息处理线程，{@link #afterPropertiesSet} 时创建并启动
@@ -68,7 +76,16 @@ public abstract class AbstractMqContext<T extends Serializable>
     /**
      * 消息记录器，承载消费链路的可靠性真源
      */
-    private IMqRecorder<T> recorder;
+    private IMqRecorder<R, T> recorder;
+
+    /**
+     * 消费记录器，记录消费结果
+     */
+    private IMqConsumeRecorder<T> consumeRecorder;
+
+    @Resource
+    private IConsumerRegistry consumerRegistry;
+
 
     /**
      * 构造消费上下文
@@ -79,15 +96,20 @@ public abstract class AbstractMqContext<T extends Serializable>
      * @param recorder             消息记录器，不能为空
      * @param mqMessageMonopolizer 消息单飞抢占器，不能为空
      */
-    public AbstractMqContext(IMqRecorder<T> recorder, IMqMessageMonopolizer mqMessageMonopolizer) {
+    public AbstractMqContext(IMqRecorder<R, T> recorder, IMqMessageMonopolizer mqMessageMonopolizer,
+        IMqConsumeRecorder<T> consumeRecorder) {
 
         AssertUtil.isTrueSystemError(mqMessageMonopolizer == null).message("mqMessageMonopolizer cannot be null")
             .throwIt();
 
         AssertUtil.isTrueSystemError(recorder == null).message("recorder cannot be null").throwIt();
 
+        AssertUtil.isTrueSystemError(consumeRecorder == null).message("consumeRecorder cannot be null").throwIt();
+
         this.recorder = recorder;
         this.mqMessageMonopolizer = mqMessageMonopolizer;
+        this.consumeRecorder = consumeRecorder;
+
 
     }
 
@@ -99,7 +121,7 @@ public abstract class AbstractMqContext<T extends Serializable>
      *
      * @return 全局唯一的消息ID，不为空
      */
-    protected String genMessageId() {
+    protected String genMessageId(R message) {
         return UuidUtil.getInstance().getUuidString();
     }
 
@@ -112,10 +134,12 @@ public abstract class AbstractMqContext<T extends Serializable>
      * @param message 厂商原始消息
      * @return 初始状态的消息记录VO，不为空
      */
-    protected MqMessageVO<T> assembleMessageVO(T message) {
-        return MqMessageVO.<T>builder().messageId(genMessageId()).businessId(resolveBusinessId(message))
-            .flag(MqMessageStatusEnum.RECEIVED.getCode()).rawMessage(message).build();
+    protected MqMessageVO<R, T> assembleMessageVO(R message) {
+        return MqMessageVO.<R, T>builder().messageId(genMessageId(message)).businessId(resolveBusinessId(message))
+            .flag(MqMessageStatusEnum.RECEIVED.getCode()).rawMessage(message).payload(getPayload(message)).build();
     }
+
+    protected abstract T getPayload(R e);
 
     /**
      * 解析业务标识
@@ -127,9 +151,7 @@ public abstract class AbstractMqContext<T extends Serializable>
      * @param message 厂商原始消息
      * @return 业务标识，不为空
      */
-    protected String resolveBusinessId(T message) {
-        return null;
-    }
+    protected abstract String resolveBusinessId(R message);
 
     /**
      * 校验消息VO
@@ -139,7 +161,7 @@ public abstract class AbstractMqContext<T extends Serializable>
      *
      * @param messageVo 待校验的消息VO
      */
-    protected void validateMessageVo(MqMessageVO<T> messageVo) {
+    protected void validateMessageVo(MqMessageVO<R, T> messageVo) {
         AssertUtil.isTrueSystemError(messageVo == null).message("messageVo cannot be null").throwIt();
         AssertUtil.isTrueSystemError(StrUtil.isEmpty(messageVo.getBusinessId()))
             .message("businessId cannot be null, override resolveBusinessId in subclass").throwIt();
@@ -156,15 +178,15 @@ public abstract class AbstractMqContext<T extends Serializable>
      * @param messages 厂商原始消息批次，可含 null 元素（被忽略）
      */
     @Override
-    public void messageReceived(List<T> messages) {
+    public void messageReceived(List<R> messages) {
         if (CollUtil.isEmpty(messages)) {
             log.warn("messages is empty");
             return;
         }
-        var pendingVos = new LinkedList<MqMessageVO<T>>();
-        var ackMsgs = new LinkedList<T>();
-        var nakMsgs = new LinkedList<T>();
-        for (T message : messages) {
+        var pendingVos = new LinkedList<MqMessageVO<R, T>>();
+        var ackMsgs = new LinkedList<R>();
+        var nakMsgs = new LinkedList<R>();
+        for (R message : messages) {
             if (message == null) {
                 log.warn("ignore null message in batch");
                 continue;
@@ -188,7 +210,7 @@ public abstract class AbstractMqContext<T extends Serializable>
                     }
                 }
             }
-            for (MqMessageVO<T> messageVO : pendingVos) {
+            for (MqMessageVO<R, T> messageVO : pendingVos) {
                 var record = resultMap.get(messageVO.getMessageId());
                 if (record == null || !record.isSuccess()) {
                     log.warn("record message failed,messageId={}", messageVO.getMessageId(),
@@ -200,10 +222,10 @@ public abstract class AbstractMqContext<T extends Serializable>
                 ackMsgs.add(messageVO.getRawMessage());
             }
         }
-        for (T message : ackMsgs) {
+        for (R message : ackMsgs) {
             ackMessage(message);
         }
-        for (T message : nakMsgs) {
+        for (R message : nakMsgs) {
             nakMessage(message);
         }
     }
@@ -218,7 +240,36 @@ public abstract class AbstractMqContext<T extends Serializable>
      * @param message 厂商原始消息
      */
     @Override
-    public void handleMessage(T message) {
+    public void handleMessage(MqMessageVO<R, T> messageVo) {
+        if (messageVo == null) {
+            log.warn("message vo is null, messageId={}", messageVo.getMessageId());
+            return;
+        }
+        log.debug("message vo: {}", messageVo);
+        List<IMqConsumer<T>> consumers = consumerRegistry.getConsumers(getMessagePayloadType());
+        AssertUtil.isTrueSystemError(CollUtil.isEmpty(consumers)).as(e -> {
+            return MqConsumeException.retryable(e, "no consumer registered for message type: {}", getMessageType());
+        }).throwIt();
+        List<MqConsumeVO<T>> consumeVos = new LinkedList<>();
+        for (IMqConsumer<T> consumer : consumers) {
+            Date startTime = new Date();
+            try {
+                consumer.consume(messageVo.getPayload());
+                consumeVos.add(
+                    MqConsumeVO.<T>builder().messageId(messageVo.getMessageId()).businessId(messageVo.getBusinessId())
+                        .consumeId(consumer.consumeId()).consumeStartTime(startTime).consumeEndTime(new Date())
+                        .build());
+                consumeVos.add(
+                    MqConsumeVO.<T>builder().messageId(messageVo.getMessageId()).businessId(messageVo.getBusinessId())
+                        .build());
+            } catch (Exception e) {
+                log.warn("consumer {} consume error", consumer.getClass().getName(), e);
+                consumeVos.add(
+                    MqConsumeVO.<T>builder().messageId(messageVo.getMessageId()).consumeId(consumer.consumeId())
+                        .consumeStartTime(startTime).consumeEndTime(new Date()).businessId(messageVo.getBusinessId())
+                        .flag(MqMessageConsumeStatusEnum.FAIL.getCode()).exception(e).build());
+            }
+        }
 
     }
 
@@ -233,6 +284,7 @@ public abstract class AbstractMqContext<T extends Serializable>
     @Override
     public void destroy() throws Exception {
         started.set(false);
+        messageHandlerThread.interrupt();
     }
 
     /**
@@ -248,8 +300,9 @@ public abstract class AbstractMqContext<T extends Serializable>
     public void afterPropertiesSet() throws Exception {
         started.set(true);
         messageHandlerThread = new Thread(() -> {
+            log.info("message handler thread started");
             while (started.get()) {
-                MqMessageVO<T> message = null;
+                MqMessageVO<R, T> message = null;
                 try {
                     message = messageQueue.poll(90, java.util.concurrent.TimeUnit.SECONDS);
                 } catch (InterruptedException e) {
@@ -268,7 +321,7 @@ public abstract class AbstractMqContext<T extends Serializable>
                     }
                     log.info("poll message: {}", msgText);
                     recorder.updateFlag(message.getMessageId(), MqMessageStatusEnum.PROCESSING);
-                    handleMessage(message.getRawMessage());
+                    handleMessage(message);
                     recorder.updateFlag(message.getMessageId(), MqMessageStatusEnum.PROCESSED);
                 } catch (Exception e) {
                     log.warn("handle message {} error", message.getMessageId());
@@ -283,6 +336,7 @@ public abstract class AbstractMqContext<T extends Serializable>
                 }
 
             }
+            log.info("message handler thread stopped");
 
         });
         messageHandlerThread.start();

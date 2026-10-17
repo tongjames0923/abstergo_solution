@@ -17,7 +17,7 @@ import java.util.List;
  *
  * @param <T> 厂商原始消息类型
  */
-public interface IMqRecorder<T extends Serializable> {
+public interface IMqRecorder<R, T extends Serializable> {
     /**
      * 批量记录消息
      * <p>
@@ -28,7 +28,7 @@ public interface IMqRecorder<T extends Serializable> {
      * @param messages 待建档的消息VO批次，不为空
      * @return 逐条建档结果列表，支持部分成功
      */
-    List<MqRecordVO<T>> record(List<MqMessageVO<T>> messages);
+    List<MqRecordVO<T>> record(List<MqMessageVO<R, T>> messages);
 
     /**
      * 更新消息状态
@@ -45,5 +45,13 @@ public interface IMqRecorder<T extends Serializable> {
      * @param e         失败原因异常
      */
     void errorFlag(String messageId, Exception e);
+
+    /**
+     * 根据消息获取消息VO
+     *
+     * @param message 厂商消息
+     * @return 消息VO
+     */
+    MqMessageVO<R, T> get(String messageId);
 
 }

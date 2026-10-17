@@ -1,6 +1,5 @@
 package com.tbs.mq.v2.consume;
 
-import com.tbs.mq.v2.core.IMqContext;
 import com.tbs.mq.v2.exception.MqConsumeException;
 
 import java.io.Serializable;
@@ -25,6 +24,6 @@ public interface IMqConsumer<T extends Serializable> {
      * @param message
      * @param context
      */
-    void consume(T message, IMqContext<T> context) throws MqConsumeException;
+    void consume(T message) throws MqConsumeException;
 
 }
