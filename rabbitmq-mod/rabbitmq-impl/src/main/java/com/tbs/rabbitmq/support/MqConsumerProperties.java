@@ -80,6 +80,24 @@ public class MqConsumerProperties {
     private int prefetchCount = 250;
 
     /**
+     * 是否启用消费端批量拉取（对接 Spring AMQP 原生 batch listener）
+     * <p>
+     * 开启后容器在单个消费线程内按 {@link #batchSize} 收集消息，一次性回调批量接收入口完成批量建档； 逐条确认语义不变。默认关闭，保持单条投递行为。
+     * </p>
+     */
+    private boolean consumerBatchEnabled = false;
+
+    /**
+     * 单批最大消息数，仅在 {@link #consumerBatchEnabled} 为 true 时生效
+     */
+    private int batchSize = 1;
+
+    /**
+     * 单批最大等待时间，单位毫秒，0表示不限制
+     */
+    private long batchReceiveTimeout = 1500L;
+
+    /**
      * 是否在PostConstruct阶段自动启动消费者
      */
     private boolean autoStart = true;
@@ -273,6 +291,28 @@ public class MqConsumerProperties {
          */
         public Builder prefetchCount(int prefetchCount) {
             props.setPrefetchCount(prefetchCount);
+            return this;
+        }
+
+        /**
+         * 设置是否启用消费端批量拉取
+         *
+         * @param consumerBatchEnabled 是否启用
+         * @return 当前Builder实例
+         */
+        public Builder consumerBatchEnabled(boolean consumerBatchEnabled) {
+            props.setConsumerBatchEnabled(consumerBatchEnabled);
+            return this;
+        }
+
+        /**
+         * 设置单批最大消息数
+         *
+         * @param batchSize 批量大小
+         * @return 当前Builder实例
+         */
+        public Builder batchSize(int batchSize) {
+            props.setBatchSize(batchSize);
             return this;
         }
 
