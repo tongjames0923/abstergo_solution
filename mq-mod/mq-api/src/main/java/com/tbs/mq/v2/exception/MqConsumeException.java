@@ -15,15 +15,17 @@ import com.tbs.common.i18n.I18nUtil;
  * </ul>
  * 使用方式：
  * <pre>
- * // 可重试的瞬时故障
- * throw MqConsumeException.retryable(consumeId, businessId);
+ * // 可重试的瞬时故障（默认系统错误级别，retryFlag=true）
+ * throw MqConsumeException.retryable("下游RPC超时").consumeId(consumeId).businessId(businessId);
  *
- * // 不可重试，直接终态留痕
- * throw MqConsumeException.discard(cause, "订单{}状态非法", orderId).consumeId(consumeId).businessId(businessId);
+ * // 带原因、不可重试，直接终态留痕
+ * throw MqConsumeException.discard(cause, "订单{}状态非法", orderId).consumeId(consumeId);
  *
  * // i18n 消息
  * throw MqConsumeException.retryableI18n("mq.consume.rpc.timeout").consumeId(consumeId);
  * </pre>
+ * 身份键类型与消费台账对齐：{@code consumeId} 取 {@code IMqConsumer.consumeId()}（Integer），
+ * {@code businessId} 为业务主键字符串。
  *
  * @author tongj
  * @since 2.0.0
@@ -38,9 +40,9 @@ public class MqConsumeException extends FormattedRuntimeException {
     private static final boolean DEFAULT_RETRY_FLAG = true;
 
     /**
-     * 消费者id
+     * 消费者id，与 {@code IMqConsumer.consumeId()}、{@code MqConsumeVO.consumeId} 同型
      */
-    private String consumeId;
+    private Integer consumeId;
 
     /**
      * 消费业务id
@@ -92,7 +94,7 @@ public class MqConsumeException extends FormattedRuntimeException {
      * @param consumeId 失败发生的消费者标识
      * @return 当前异常对象
      */
-    public MqConsumeException consumeId(String consumeId) {
+    public MqConsumeException consumeId(Integer consumeId) {
         this.consumeId = consumeId;
         return this;
     }
@@ -124,7 +126,7 @@ public class MqConsumeException extends FormattedRuntimeException {
      *
      * @return 失败发生的那个消费者标识，可能为空
      */
-    public String getConsumeId() {
+    public Integer getConsumeId() {
         return consumeId;
     }
 

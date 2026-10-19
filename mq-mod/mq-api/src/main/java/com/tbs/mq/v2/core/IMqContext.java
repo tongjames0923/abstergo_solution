@@ -1,6 +1,7 @@
 package com.tbs.mq.v2.core;
 
-import com.tbs.mq.v2.vo.MqMessageVO;
+import org.springframework.beans.factory.DisposableBean;
+import org.springframework.beans.factory.InitializingBean;
 
 import java.io.Serializable;
 import java.util.List;
@@ -10,12 +11,25 @@ import java.util.List;
  * <p>
  * 一个上下文实例对应一个队列/一个消费环境，职责详见 {@link AbstractMqContext} 的链路说明。
  * 上下文负责建档、分发与台账推进；业务消费由注册到 {@code IConsumerRegistry} 的 {@code IMqConsumer} 承担。
+ * 上下文同时作为作用域身份（{@link #getContextId()}）传入接收/记录/抢占层，使这些协作 Bean 可按队列隔离归属；
+ * 业务消费者仍不感知上下文（{@code consume} 只接收负载）。
  * </p>
  *
  * @param <R> 厂商原始消息类型（传输层）
  * @param <T> 业务负载类型（消费者面对的类型）
  */
-public interface IMqContext<R, T extends Serializable> {
+public interface IMqContext<R, T extends Serializable> extends InitializingBean, DisposableBean {
+
+    /**
+     * 获取上下文ID
+     * <p>
+     * 上下文（队列/消费环境）的身份标识；记录层以此隔离不同队列的消息与台账归属，
+     * 使同一组协作 Bean 可服务多个上下文而不串数据。
+     * </p>
+     *
+     * @return 上下文ID，全局唯一
+     */
+    Long getContextId();
 
     /**
      * 消息接收处理
@@ -26,17 +40,6 @@ public interface IMqContext<R, T extends Serializable> {
      * @param messages 厂商原始消息批次
      */
     void messageReceived(List<R> messages);
-
-    /**
-     * 业务消费分发
-     * <p>
-     * 由处理线程在单飞保护内调用：对当前负载类型注册的全部消费者广播执行，
-     * 逐消费者结果写入消费台账，单消费者失败不影响其他消费者与主记录终态。
-     * </p>
-     *
-     * @param message 消息主记录VO
-     */
-    void handleMessage(MqMessageVO<R,T> message);
 
     /**
      * 结清厂商侧投递确认

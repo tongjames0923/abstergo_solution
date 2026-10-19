@@ -20,7 +20,8 @@ import java.util.List;
  * <p>
  * 承接厂商监听回调的建档与确认职责，从 {@link AbstractMqContext} 拆出：组装消息VO → 批量建档 → 逐条结果按 messageId 配对 → 成功者入内存待处理队列并 ack
  * 结清厂商投递，失败与结果缺席者一律 nak 拒收（宁拒勿漏，每条至多一次，null 元素忽略）。建档失败 nak 兜底是全链路唯一依赖厂商能力的位置， nak 后消息由厂商重投，记录层持续不可用时会反复重投，属预期的背压行为。
- * 组装/校验/确认等钩子仍归属上下文（子类可覆盖），本类只负责编排收口。一个上下文实例配一个接收器。
+ * 组装/校验钩子（genMessageId/assembleMessageVO/getPayload/resolveBusinessId/validateMessageVo）为本类可覆盖方法，由厂商子类实现；
+ * recorder 经构造注入，本类只负责接收编排。建档以传入的上下文为作用域，接收器可一对一也可共享给多上下文，由装配决定。
  * </p>
  *
  * @param <R> 厂商原始消息类型（传输层）
@@ -42,6 +43,7 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
      * 消息身份由框架自行生成而非取自厂商投递元数据，后续记录、抢占、重试均以该ID为主键。 子类可覆盖以接入自定义发号策略（如雪花ID、业务前缀）。
      * </p>
      *
+     * @param message 厂商原始消息
      * @return 全局唯一的消息ID，不为空
      */
     protected String genMessageId(R message) {
@@ -94,10 +96,10 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
      * @param messageVo 待校验的消息VO
      */
     protected void validateMessageVo(MqMessageVO<R, T> messageVo) {
-        AssertUtil.isTrueSystemError(messageVo == null).message("messageVo cannot be null").throwIt();
-        AssertUtil.isTrueSystemError(StrUtil.isEmpty(messageVo.getBusinessId()))
-            .message("businessId cannot be null, override resolveBusinessId in subclass").throwIt();
-        AssertUtil.isTrueSystemError(messageVo.getRawMessage() == null).message("rawMessage cannot be null").throwIt();
+        AssertUtil.isTrueSystemError(messageVo == null).i18n("mq.v2.message.vo.required").throwIt();
+        AssertUtil.isTrueSystemError(StrUtil.isEmpty(messageVo.getBusinessId())).i18n("mq.v2.business.id.required")
+            .throwIt();
+        AssertUtil.isTrueSystemError(messageVo.getRawMessage() == null).i18n("mq.v2.raw.message.required").throwIt();
     }
 
     /**
@@ -110,15 +112,19 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
     }
 
     /**
-     * 接收消息
+     * 接收并建档一批厂商消息
+     * <p>
+     * 逐条组装校验后批量建档，建档成功项进结果集并回调 onInqueueSuccess，组装异常/建档失败/结果缺席均回调 onInqueueFail。
+     * </p>
      *
-     * @param messages
-     * @param onInqueueSuccess
-     * @param onInqueueFail
-     * @return
+     * @param context          接收建档归属的消费上下文（队列级作用域）
+     * @param messages         厂商原始消息批次，null 元素被忽略
+     * @param onInqueueSuccess 建档成功后的回调（一般为厂商 ack），可空
+     * @param onInqueueFail    建档失败或结果缺席后的回调（一般为厂商 nak），可空
+     * @return 建档成功、可进入处理链路的消息主记录VO列表
      */
     @Override
-    public List<MqMessageVO<R, T>> receive(List<R> messages, SConsumer<R> onInqueueSuccess,
+    public List<MqMessageVO<R, T>> receive(IMqContext<R, T> context, List<R> messages, SConsumer<R> onInqueueSuccess,
         SConsumer<R> onInqueueFail) {
         List<MqMessageVO<R, T>> result = new LinkedList<>();
         if (CollUtil.isEmpty(messages)) {
@@ -143,7 +149,7 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
             }
         }
         if (!CollUtil.isEmpty(pendingVos)) {
-            var recordResult = recorder.record(pendingVos);
+            var recordResult = recorder.record(context, pendingVos);
             var resultMap = new HashMap<String, MqRecordVO<T>>();
             recordResult.stream().filter(record -> record != null && StrUtil.isNotEmpty(record.getMessageId()))
                 .forEach(record -> resultMap.put(record.getMessageId(), record));
