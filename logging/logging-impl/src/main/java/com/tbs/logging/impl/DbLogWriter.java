@@ -170,7 +170,13 @@ public class DbLogWriter extends AbstractRabbitMqLogRecordWriter {
         if (operateResultJson == null || operateResultJson.isEmpty()) {
             return false;
         }
-        Map<String, Object> root = JsonUtils.parseMap(operateResultJson);
+        // AjaxResult 包装体恒为 JSON 对象 {"map":{...}}；数组/标量等非对象结果不含 map.code，
+        // 直接判为非业务失败，并从源头避免把非对象 JSON 喂给 JsonUtils.parseMap 触发其内部 ERROR 日志
+        String trimmed = operateResultJson.trim();
+        if (trimmed.isEmpty() || trimmed.charAt(0) != '{') {
+            return false;
+        }
+        Map<String, Object> root = JsonUtils.parseMap(trimmed);
         Object mapObj = root == null ? null : root.get("map");
         if (mapObj instanceof Map) {
             Object code = ((Map<?, ?>) mapObj).get("code");

@@ -8,13 +8,19 @@ import com.tbs.mq.v2.consume.IMqConsumer;
 import com.tbs.mq.v2.exception.MqConsumeException;
 import com.tbs.shared.mapper.SystemOperateMapper;
 import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
+import jakarta.annotation.PostConstruct;
+import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 日志记录消费者（MQ v2 记录驱动模型 · 承载缓冲+批量入库的业务消费单元）
@@ -46,6 +52,11 @@ public class LoggingRecordConsumer implements IMqConsumer<LoggingRecordForm> {
     private static final int BUFFER_CAPACITY = 100;
 
     /**
+     * 定时刷新间隔（毫秒）：低于批量阈值滞留的记录，最迟经此间隔落库，兼顾吞吐与新鲜度
+     */
+    private static final long FLUSH_INTERVAL_MILLIS = 5000L;
+
+    /**
      * 刷新标志值：{@link LoggingRecordForm#getFlushFlag()} 等于该值表示请求立即落库
      */
     private static final int FLUSH_FLAG_VALUE = 1;
@@ -71,9 +82,14 @@ public class LoggingRecordConsumer implements IMqConsumer<LoggingRecordForm> {
     private final SystemOperateMapper mapper;
 
     /**
-     * 本地缓冲队列，暂存待写入的日志实体
+     * 缓冲队列，暂存待写入的日志实体
      */
     private final BlockingQueue<SystemOperateRecordEntity> bufferQueue = new LinkedBlockingQueue<>(BUFFER_CAPACITY);
+
+    /**
+     * 定时刷库调度器：单守护线程，固定间隔触发 {@link #flushBuffer}，避免未满批记录无限滞留
+     */
+    private ScheduledExecutorService flushScheduler;
 
     /**
      * 构造日志记录消费者
@@ -82,6 +98,45 @@ public class LoggingRecordConsumer implements IMqConsumer<LoggingRecordForm> {
      */
     public LoggingRecordConsumer(SystemOperateMapper mapper) {
         this.mapper = mapper;
+    }
+
+    /**
+     * 启动定时刷库调度器：以固定间隔轮询刷新缓冲区，保障未满批的记录不至于长期滞留
+     */
+    @PostConstruct
+    public void startFlushScheduler() {
+        ThreadFactory daemonFactory = runnable -> {
+            Thread thread = new Thread(runnable, "mq-v2-log-flush");
+            thread.setDaemon(true);
+            return thread;
+        };
+        flushScheduler = Executors.newSingleThreadScheduledExecutor(daemonFactory);
+        flushScheduler.scheduleWithFixedDelay(this::flushBufferQuietly, FLUSH_INTERVAL_MILLIS, FLUSH_INTERVAL_MILLIS,
+            TimeUnit.MILLISECONDS);
+        log.debug("[MQ-v2][log] flush scheduler started, intervalMs={}", FLUSH_INTERVAL_MILLIS);
+    }
+
+    /**
+     * 停止定时刷库调度器，并尽力刷尽残留
+     */
+    @PreDestroy
+    public void stopFlushScheduler() {
+        if (flushScheduler != null) {
+            flushScheduler.shutdown();
+        }
+        flushBufferQuietly();
+        log.debug("[MQ-v2][log] flush scheduler stopped");
+    }
+
+    /**
+     * 调度线程入口：屏蔽 flushBuffer 可能抱出的意外异常，避免异常导致周期任务静默终止
+     */
+    private void flushBufferQuietly() {
+        try {
+            flushBuffer();
+        } catch (Exception e) {
+            log.error("定时刷新日志缓冲区失败", e);
+        }
     }
 
     /**
@@ -222,7 +277,13 @@ public class LoggingRecordConsumer implements IMqConsumer<LoggingRecordForm> {
         if (operateResultJson == null || operateResultJson.isEmpty()) {
             return false;
         }
-        Map<String, Object> root = JsonUtils.parseMap(operateResultJson);
+        // AjaxResult 包装体恒为 JSON 对象 {"map":{...}}；数组/标量等非对象结果不含 map.code，
+        // 直接判为非业务失败，并从源头避免把非对象 JSON 喂给 JsonUtils.parseMap 触发其内部 ERROR 日志
+        String trimmed = operateResultJson.trim();
+        if (trimmed.isEmpty() || trimmed.charAt(0) != '{') {
+            return false;
+        }
+        Map<String, Object> root = JsonUtils.parseMap(trimmed);
         Object mapObj = root == null ? null : root.get("map");
         if (mapObj instanceof Map) {
             Object code = ((Map<?, ?>) mapObj).get("code");
