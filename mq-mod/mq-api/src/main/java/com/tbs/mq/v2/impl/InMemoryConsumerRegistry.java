@@ -2,6 +2,7 @@ package com.tbs.mq.v2.impl;
 
 import com.tbs.mq.v2.consume.IConsumerRegistry;
 import com.tbs.mq.v2.consume.IMqConsumer;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.Collections;
@@ -25,6 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author tongj
  * @since 2.0.0
  */
+@Slf4j
 public class InMemoryConsumerRegistry implements IConsumerRegistry {
 
     /**
@@ -42,9 +44,12 @@ public class InMemoryConsumerRegistry implements IConsumerRegistry {
     @Override
     public <T extends Serializable> void register(IMqConsumer<T> consumer, Class<T> messageType) {
         if (consumer == null || messageType == null) {
+            log.debug("[MQ-v2] registry.register skip, null consumer/messageType");
             return;
         }
         registry.computeIfAbsent(messageType, k -> new CopyOnWriteArrayList<>()).add(consumer);
+        log.debug("[MQ-v2] registry.register consumer, payloadType={}, consumeId={}, consumer={}",
+            messageType.getName(), consumer.consumeId(), consumer.getClass().getName());
     }
 
     /**
@@ -57,14 +62,19 @@ public class InMemoryConsumerRegistry implements IConsumerRegistry {
     @Override
     public <T extends Serializable> void unregister(Class<T> messageType, IMqConsumer<T> consumer) {
         if (messageType == null || consumer == null) {
+            log.debug("[MQ-v2] registry.unregister skip, null messageType/consumer");
             return;
         }
         List<IMqConsumer<?>> consumers = registry.get(messageType);
         if (consumers != null) {
-            consumers.remove(consumer);
+            boolean removed = consumers.remove(consumer);
             if (consumers.isEmpty()) {
                 registry.remove(messageType, consumers);
             }
+            log.debug("[MQ-v2] registry.unregister consumer, payloadType={}, consumeId={}, removed={}",
+                messageType.getName(), consumer.consumeId(), removed);
+        } else {
+            log.debug("[MQ-v2] registry.unregister miss, no bucket for payloadType={}", messageType.getName());
         }
     }
 
@@ -80,8 +90,12 @@ public class InMemoryConsumerRegistry implements IConsumerRegistry {
     public <T extends Serializable> List<IMqConsumer<T>> getConsumers(Class<T> payloadType) {
         List<IMqConsumer<?>> consumers = registry.get(payloadType);
         if (consumers == null) {
+            log.debug("[MQ-v2] registry.getConsumers empty, payloadType={}",
+                payloadType == null ? null : payloadType.getName());
             return Collections.emptyList();
         }
+        log.debug("[MQ-v2] registry.getConsumers hit {} consumer(s), payloadType={}", consumers.size(),
+            payloadType == null ? null : payloadType.getName());
         return (List<IMqConsumer<T>>) (List<?>) Collections.unmodifiableList(consumers);
     }
 }

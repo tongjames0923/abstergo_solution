@@ -56,6 +56,8 @@ public abstract class RabbitMqListenerContext<T extends Serializable> extends Ab
      * @param channel 投递通道，用于逐条确认
      */
     public final void handleMessage(Message message, Channel channel) {
+        log.debug("[MQ-v2] @RabbitListener single handle, contextId={}, deliveryTag={}", getContextId(),
+            message == null ? null : message.getMessageProperties().getDeliveryTag());
         ingest(Collections.singletonList(message), channel);
     }
 
@@ -70,6 +72,8 @@ public abstract class RabbitMqListenerContext<T extends Serializable> extends Ab
      * @param channel  投递通道，批内消息均来自该通道
      */
     public final void handleMessageBatch(List<Message> messages, Channel channel) {
+        log.debug("[MQ-v2] @RabbitListener batch handle, contextId={}, batchSize={}", getContextId(),
+            messages == null ? 0 : messages.size());
         ingest(messages, channel);
     }
 }

@@ -77,6 +77,8 @@ public abstract class RabbitMqContext<T extends Serializable> extends AbstractRa
      */
     @Override
     public void onMessage(Message message, Channel channel) {
+        log.debug("[MQ-v2] onMessage single, contextId={}, deliveryTag={}", getContextId(),
+            message == null ? null : message.getMessageProperties().getDeliveryTag());
         onMessageBatch(Collections.singletonList(message), channel);
     }
 
@@ -88,6 +90,8 @@ public abstract class RabbitMqContext<T extends Serializable> extends AbstractRa
      */
     @Override
     public void onMessageBatch(List<Message> messages, Channel channel) {
+        log.debug("[MQ-v2] onMessageBatch, contextId={}, batchSize={}", getContextId(),
+            messages == null ? 0 : messages.size());
         ingest(messages, channel);
     }
 
@@ -99,6 +103,8 @@ public abstract class RabbitMqContext<T extends Serializable> extends AbstractRa
         super.afterPropertiesSet();
         MqConsumerProperties props = getMqConsumerProperties();
         if (props.isAutoDeclare()) {
+            log.debug("[MQ-v2] autoDeclare resources, contextId={}, queue={}, exchange={}, routingKey={}",
+                getContextId(), props.getQueueName(), props.getExchangeName(), props.getRoutingKey());
             MqResourceDeclarer.declare(amqpAdmin, props);
         }
         container = createContainer(props);
@@ -106,6 +112,9 @@ public abstract class RabbitMqContext<T extends Serializable> extends AbstractRa
             container.start();
             log.info("RabbitMQ v2 consumer started, queue={}, concurrency={}", props.getQueueName(),
                 props.getConcurrency());
+        } else {
+            log.debug("[MQ-v2] container created but autoStart disabled, contextId={}, queue={}", getContextId(),
+                props.getQueueName());
         }
     }
 
@@ -143,6 +152,9 @@ public abstract class RabbitMqContext<T extends Serializable> extends AbstractRa
             listenerContainer.setBatchSize(Math.max(1, props.getBatchSize()));
             listenerContainer.setBatchReceiveTimeout(props.getBatchReceiveTimeout());
         }
+        log.debug("[MQ-v2] container created, contextId={}, queue={}, ackMode={}, concurrency={}, prefetch={}, "
+            + "batchEnabled={}, batchSize={}", getContextId(), props.getQueueName(), props.getAcknowledgeMode(),
+            props.getConcurrency(), props.getPrefetchCount(), props.isConsumerBatchEnabled(), props.getBatchSize());
         return listenerContainer;
     }
 }

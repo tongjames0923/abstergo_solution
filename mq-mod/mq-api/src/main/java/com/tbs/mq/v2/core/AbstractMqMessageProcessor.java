@@ -75,26 +75,38 @@ public abstract class AbstractMqMessageProcessor<R, T extends Serializable> impl
 
     @Override
     public List<MqConsumeVO<T>> process(IMqContext<R, T> context, MqMessageVO<R, T> messageVo) {
+        Long contextId = context == null ? null : context.getContextId();
         if (messageVo == null) {
-            log.warn("message vo is null");
+            log.warn("[MQ-v2] process skip, message vo is null, contextId={}", contextId);
             return CollUtil.emptyList();
         }
-        log.debug("message vo: {}", messageVo);
+        log.debug("[MQ-v2] process start, contextId={}, messageId={}, businessId={}, payloadType={}", contextId,
+            messageVo.getMessageId(), messageVo.getBusinessId(), context.getMessagePayloadType().getName());
         List<IMqConsumer<T>> consumers = getConsumerRegistry().getConsumers(context.getMessagePayloadType());
+        log.debug("[MQ-v2] resolved consumers, contextId={}, messageId={}, count={}", contextId,
+            messageVo.getMessageId(), consumers == null ? 0 : consumers.size());
         // 无消费者的消息不视为成功：抛可重试异常，由上下文置主记录 FAILED，待消费者注册后回灌
         AssertUtil.isTrueSystemError(CollUtil.isEmpty(consumers)).as(e -> MqConsumeException.retryable(e,
             I18nUtil.get("mq.v2.consume.no.consumer", context.getMessagePayloadType().getName()))).throwIt();
         List<MqConsumeVO<T>> consumeVos = new LinkedList<>();
         for (IMqConsumer<T> consumer : consumers) {
             Date startTime = new Date();
+            log.debug("[MQ-v2] consume start, contextId={}, messageId={}, consumeId={}, businessId={}, consumer={}",
+                contextId, messageVo.getMessageId(), consumer.consumeId(), consumer.businessId(),
+                consumer.getClass().getName());
             try {
                 consumer.consume(messageVo.getPayload());
+                log.debug("[MQ-v2] consume success, contextId={}, messageId={}, consumeId={}, costMs={}", contextId,
+                    messageVo.getMessageId(), consumer.consumeId(), new Date().getTime() - startTime.getTime());
                 consumeVos.add(buildConsumeSuccess(startTime, context, consumer, messageVo));
             } catch (Exception e) {
-                log.warn("consumer {} consume error", consumer.getClass().getName(), e);
+                log.warn("[MQ-v2] consume failed, contextId={}, messageId={}, consumeId={}, costMs={}", contextId,
+                    messageVo.getMessageId(), consumer.consumeId(), new Date().getTime() - startTime.getTime(), e);
                 consumeVos.add(buildConsumeFail(startTime, context, consumer, messageVo, e));
             }
         }
+        log.debug("[MQ-v2] process done, contextId={}, messageId={}, ledgerRows={}", contextId, messageVo.getMessageId(),
+            consumeVos.size());
         return consumeVos;
     }
 }

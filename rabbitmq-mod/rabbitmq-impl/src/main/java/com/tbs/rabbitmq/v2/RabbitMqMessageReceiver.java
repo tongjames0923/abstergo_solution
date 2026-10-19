@@ -56,7 +56,10 @@ public abstract class RabbitMqMessageReceiver<T extends Serializable> extends Ab
     @Override
     @SuppressWarnings("unchecked")
     protected T getPayload(Message message) {
-        return (T)messageConverter.fromMessage(message);
+        T payload = (T)messageConverter.fromMessage(message);
+        log.debug("[MQ-v2] deserialize payload, deliveryTag={}, payloadType={}",
+            message.getMessageProperties().getDeliveryTag(), payload == null ? null : payload.getClass().getName());
+        return payload;
     }
 
     /**
@@ -71,8 +74,13 @@ public abstract class RabbitMqMessageReceiver<T extends Serializable> extends Ab
     @Override
     protected String genMessageId(Message message) {
         String brokerMessageId = message.getMessageProperties().getMessageId();
-        return StrUtil.isNotEmpty(brokerMessageId) ? brokerMessageId
-            : String.valueOf(message.getMessageProperties().getDeliveryTag());
+        if (StrUtil.isNotEmpty(brokerMessageId)) {
+            log.debug("[MQ-v2] genMessageId reuse broker messageId={}", brokerMessageId);
+            return brokerMessageId;
+        }
+        String fallback = String.valueOf(message.getMessageProperties().getDeliveryTag());
+        log.debug("[MQ-v2] genMessageId broker messageId absent, fallback to deliveryTag={}", fallback);
+        return fallback;
     }
 
     /**
@@ -88,9 +96,11 @@ public abstract class RabbitMqMessageReceiver<T extends Serializable> extends Ab
     protected String resolveBusinessId(Message message) {
         Object businessId = message.getMessageProperties().getHeaders().get(BUSINESS_ID_HEADER);
         if (businessId != null && StrUtil.isNotEmpty(String.valueOf(businessId))) {
+            log.debug("[MQ-v2] resolveBusinessId from header={}", businessId);
             return String.valueOf(businessId);
         }
-        log.warn("Business ID not found in message headers, falling back to consumer queue name.");
-        return message.getMessageProperties().getConsumerQueue();
+        String consumerQueue = message.getMessageProperties().getConsumerQueue();
+        log.debug("[MQ-v2] businessId header absent, fallback to consumerQueue={}", consumerQueue);
+        return consumerQueue;
     }
 }

@@ -8,6 +8,7 @@ import com.tbs.mq.v2.enums.MqMessageStatusEnum;
 import com.tbs.mq.v2.vo.MqConsumeVO;
 import com.tbs.mq.v2.vo.MqMessageVO;
 import com.tbs.mq.v2.vo.MqRecordVO;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.LinkedList;
@@ -37,6 +38,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @author tongj
  * @since 2.0.0
  */
+@Slf4j
 public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorder<R, T> {
 
     /**
@@ -94,9 +96,12 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
     public List<MqRecordVO<T>> record(IMqContext<R, T> context, List<MqMessageVO<R, T>> messages) {
         List<MqRecordVO<T>> results = new LinkedList<>();
         if (CollUtil.isEmpty(messages)) {
+            log.debug("[MQ-v2] recorder.record skip empty batch, scope={}", scopeKey(context));
             return results;
         }
         Map<String, MqMessageVO<R, T>> store = mainStoreOf(context);
+        int created = 0;
+        int duplicated = 0;
         for (MqMessageVO<R, T> vo : messages) {
             MqRecordVO<T> result = new MqRecordVO<>();
             if (vo == null || StrUtil.isEmpty(vo.getMessageId())) {
@@ -104,14 +109,24 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
                 result.setSuccess(false);
                 result.setException(new IllegalStateException("in-memory record requires a non-empty messageId"));
                 results.add(result);
+                log.debug("[MQ-v2] recorder.record reject blank messageId, scope={}", scopeKey(context));
                 continue;
             }
-            store.putIfAbsent(vo.getMessageId(), vo);
+            boolean isNew = store.putIfAbsent(vo.getMessageId(), vo) == null;
+            if (isNew) {
+                created++;
+            } else {
+                duplicated++;
+            }
             result.setMessageId(vo.getMessageId());
             result.setBody(vo.getPayload());
             result.setSuccess(true);
             results.add(result);
+            log.debug("[MQ-v2] recorder.record {}, scope={}, messageId={}", isNew ? "created" : "duplicated",
+                scopeKey(context), vo.getMessageId());
         }
+        log.debug("[MQ-v2] recorder.record done, scope={}, total={}, created={}, duplicated={}", scopeKey(context),
+            messages.size(), created, duplicated);
         return results;
     }
 
@@ -125,11 +140,16 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
     @Override
     public void updateFlag(IMqContext<R, T> context, String messageId, MqMessageStatusEnum flag) {
         if (flag == null || StrUtil.isEmpty(messageId)) {
+            log.debug("[MQ-v2] recorder.updateFlag skip, blank flag/messageId, scope={}, messageId={}", scopeKey(context),
+                messageId);
             return;
         }
         MqMessageVO<R, T> vo = mainStoreOf(context).get(messageId);
         if (vo != null) {
             vo.setFlag(flag.getCode());
+            log.debug("[MQ-v2] recorder.updateFlag to {}, scope={}, messageId={}", flag, scopeKey(context), messageId);
+        } else {
+            log.debug("[MQ-v2] recorder.updateFlag miss, scope={}, messageId={}", scopeKey(context), messageId);
         }
     }
 
@@ -143,6 +163,7 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
     @Override
     public void errorFlag(IMqContext<R, T> context, String messageId, Exception e) {
         if (StrUtil.isEmpty(messageId)) {
+            log.debug("[MQ-v2] recorder.errorFlag skip, blank messageId, scope={}", scopeKey(context));
             return;
         }
         MqMessageVO<R, T> vo = mainStoreOf(context).get(messageId);
@@ -150,6 +171,7 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
             vo.setFlag(MqMessageStatusEnum.FAILED.getCode());
         }
         errorStoreOf(context).put(messageId, e);
+        log.debug("[MQ-v2] recorder.errorFlag to FAILED, scope={}, messageId={}", scopeKey(context), messageId, e);
     }
 
     /**
@@ -162,11 +184,14 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
     @Override
     public int recordConsume(IMqContext<R, T> context, List<MqConsumeVO<T>> record) {
         if (CollUtil.isEmpty(record)) {
+            log.debug("[MQ-v2] recorder.recordConsume skip empty ledger, scope={}", scopeKey(context));
             return 0;
         }
         List<MqConsumeVO<T>> ledger = consumeLedgers.computeIfAbsent(scopeKey(context),
             k -> new CopyOnWriteArrayList<>());
         ledger.addAll(record);
+        log.debug("[MQ-v2] recorder.recordConsume append {} rows, scope={}, ledgerSize={}", record.size(),
+            scopeKey(context), ledger.size());
         return record.size();
     }
 
@@ -180,9 +205,13 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
     @Override
     public MqMessageVO<R, T> get(IMqContext<R, T> context, String messageId) {
         if (StrUtil.isEmpty(messageId)) {
+            log.debug("[MQ-v2] recorder.get skip, blank messageId, scope={}", scopeKey(context));
             return null;
         }
-        return mainStoreOf(context).get(messageId);
+        MqMessageVO<R, T> vo = mainStoreOf(context).get(messageId);
+        log.debug("[MQ-v2] recorder.get {}, scope={}, messageId={}", vo == null ? "miss" : "hit", scopeKey(context),
+            messageId);
+        return vo;
     }
 
     /**

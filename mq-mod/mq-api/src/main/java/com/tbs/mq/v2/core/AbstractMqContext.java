@@ -1,6 +1,5 @@
 package com.tbs.mq.v2.core;
 
-import com.tbs.common.util.base.JsonUtils;
 import com.tbs.mq.v2.enums.MqMessageStatusEnum;
 import com.tbs.mq.v2.vo.MqMessageVO;
 import jakarta.annotation.Resource;
@@ -102,7 +101,12 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
      */
     @Override
     public void messageReceived(List<R> messages) {
-        messageQueue.addAll(receiver.receive(this, messages, this::ackMessage, this::nakMessage));
+        int rawSize = messages == null ? 0 : messages.size();
+        log.debug("[MQ-v2] receive batch start, contextId={}, rawSize={}", getContextId(), rawSize);
+        List<MqMessageVO<R, T>> inqueued = receiver.receive(this, messages, this::ackMessage, this::nakMessage);
+        messageQueue.addAll(inqueued);
+        log.debug("[MQ-v2] receive batch done, contextId={}, rawSize={}, inqueueSize={}, queueSize={}", getContextId(),
+            rawSize, inqueued.size(), messageQueue.size());
     }
 
     /**
@@ -126,6 +130,8 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
      */
     @Override
     public void destroy() throws Exception {
+        log.info("[MQ-v2] context destroying, stopping handler thread, contextId={}, queueSize={}", getContextId(),
+            messageQueue.size());
         started.set(false);
         if (handlerThread != null) {
             handlerThread.interrupt();
@@ -140,46 +146,62 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
      * </p>
      */
     private void loop() {
-        log.info("message handler thread started");
+        Long contextId = getContextId();
+        log.info("[MQ-v2] message handler thread started, contextId={}", contextId);
         while (started.get()) {
             MqMessageVO<R, T> message = null;
             try {
                 message = messageQueue.poll(POLL_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                log.error("InterruptedException", e);
+                log.error("[MQ-v2] handler thread interrupted while polling, contextId={}", contextId, e);
             }
             if (message == null) {
                 continue;
             }
+            log.debug("[MQ-v2] poll message, contextId={}, messageId={}, queueSize={}", contextId,
+                message.getMessageId(), messageQueue.size());
             boolean monopolized = false;
             Integer transactionId = null;
             try {
-                String msgText = JsonUtils.toJSONString(message);
                 monopolized = mqMessageMonopolizer.monopolize(this, message);
                 if (!monopolized) {
-                    log.info("monopolized failed message: {}", msgText);
+                    log.debug("[MQ-v2] monopolize failed (held by others), skip, contextId={}, messageId={}",
+                        contextId, message.getMessageId());
                     continue;
                 }
-                log.info("poll message: {}", msgText);
+                log.debug("[MQ-v2] monopolize success, contextId={}, messageId={}", contextId, message.getMessageId());
                 transactionId = recorder.beginTransaction(this);
+                log.debug("[MQ-v2] begin transaction, contextId={}, messageId={}, transactionId={}", contextId,
+                    message.getMessageId(), transactionId);
                 recorder.updateFlag(this, message.getMessageId(), MqMessageStatusEnum.PROCESSING);
+                log.debug("[MQ-v2] update flag PROCESSING, contextId={}, messageId={}", contextId,
+                    message.getMessageId());
                 var consumeResult = processor.process(this, message);
-                recorder.recordConsume(this, consumeResult);
+                log.debug("[MQ-v2] dispatched message, contextId={}, messageId={}, consumeRows={}", contextId,
+                    message.getMessageId(), consumeResult == null ? 0 : consumeResult.size());
+                int ledgerRows = recorder.recordConsume(this, consumeResult);
+                log.debug("[MQ-v2] record consume ledger, contextId={}, messageId={}, persistedRows={}", contextId,
+                    message.getMessageId(), ledgerRows);
                 recorder.updateFlag(this, message.getMessageId(), MqMessageStatusEnum.PROCESSED);
+                log.debug("[MQ-v2] update flag PROCESSED, contextId={}, messageId={}", contextId,
+                    message.getMessageId());
             } catch (Exception e) {
-                log.warn("handle message {} error", message.getMessageId());
-                log.error("error", e);
+                log.warn("[MQ-v2] handle message error, mark FAILED, contextId={}, messageId={}", contextId,
+                    message.getMessageId(), e);
                 recorder.errorFlag(this, message.getMessageId(), e);
             } finally {
                 if (monopolized) {
                     mqMessageMonopolizer.release(this, message);
+                    log.debug("[MQ-v2] release monopoly, contextId={}, messageId={}", contextId, message.getMessageId());
                 }
                 if (transactionId != null) {
                     recorder.endTransaction(this, transactionId);
+                    log.debug("[MQ-v2] end transaction, contextId={}, messageId={}, transactionId={}", contextId,
+                        message.getMessageId(), transactionId);
                 }
             }
         }
-        log.info("message handler thread stopped");
+        log.info("[MQ-v2] message handler thread stopped, contextId={}", contextId);
     }
 
     /**
@@ -196,5 +218,7 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
         started.set(true);
         handlerThread = new Thread(this::loop);
         handlerThread.start();
+        log.info("[MQ-v2] context initialized, handler thread launched, contextId={}, payloadType={}", getContextId(),
+            getMessagePayloadType().getName());
     }
 }

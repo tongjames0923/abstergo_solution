@@ -3,6 +3,7 @@ package com.tbs.mq.v2.impl;
 import com.tbs.mq.v2.core.IMqContext;
 import com.tbs.mq.v2.core.IMqMessageMonopolizer;
 import com.tbs.mq.v2.vo.MqMessageVO;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @author tongj
  * @since 2.0.0
  */
+@Slf4j
 public class InMemoryMqMessageMonopolizer implements IMqMessageMonopolizer {
 
     /**
@@ -40,9 +42,13 @@ public class InMemoryMqMessageMonopolizer implements IMqMessageMonopolizer {
     @Override
     public <R, T extends Serializable> boolean monopolize(IMqContext<R, T> context, MqMessageVO<R, T> message) {
         if (message == null || message.getMessageId() == null) {
+            log.debug("[MQ-v2] monopolize reject, null message/messageId");
             return false;
         }
-        return heldKeys.add(buildKey(context, message.getMessageId()));
+        String key = buildKey(context, message.getMessageId());
+        boolean acquired = heldKeys.add(key);
+        log.debug("[MQ-v2] monopolize {}, key={}", acquired ? "success" : "failed(held by others)", key);
+        return acquired;
     }
 
     /**
@@ -57,7 +63,9 @@ public class InMemoryMqMessageMonopolizer implements IMqMessageMonopolizer {
     @Override
     public <R, T extends Serializable> MqMessageVO<R, T> release(IMqContext<R, T> context, MqMessageVO<R, T> message) {
         if (message != null && message.getMessageId() != null) {
-            heldKeys.remove(buildKey(context, message.getMessageId()));
+            String key = buildKey(context, message.getMessageId());
+            boolean removed = heldKeys.remove(key);
+            log.debug("[MQ-v2] release, key={}, removed={}", key, removed);
         }
         return message;
     }

@@ -60,8 +60,12 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
      * @return 初始状态的消息主记录VO，不为空
      */
     protected MqMessageVO<R, T> assembleMessageVO(R message) {
-        return MqMessageVO.<R, T>builder().messageId(genMessageId(message)).businessId(resolveBusinessId(message))
-            .flag(MqMessageStatusEnum.RECEIVED.getCode()).rawMessage(message).payload(getPayload(message)).build();
+        MqMessageVO<R, T> messageVo = MqMessageVO.<R, T>builder().messageId(genMessageId(message))
+            .businessId(resolveBusinessId(message)).flag(MqMessageStatusEnum.RECEIVED.getCode()).rawMessage(message)
+            .payload(getPayload(message)).build();
+        log.debug("[MQ-v2] assemble vo, messageId={}, businessId={}", messageVo.getMessageId(),
+            messageVo.getBusinessId());
+        return messageVo;
     }
 
     /**
@@ -126,17 +130,19 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
     @Override
     public List<MqMessageVO<R, T>> receive(IMqContext<R, T> context, List<R> messages, SConsumer<R> onInqueueSuccess,
         SConsumer<R> onInqueueFail) {
+        Long contextId = context == null ? null : context.getContextId();
         List<MqMessageVO<R, T>> result = new LinkedList<>();
         if (CollUtil.isEmpty(messages)) {
-            log.warn("messages is empty");
+            log.warn("[MQ-v2] receive skip, messages empty, contextId={}", contextId);
             return result;
         }
+        log.debug("[MQ-v2] receive start, contextId={}, rawSize={}", contextId, messages.size());
         var pendingVos = new LinkedList<MqMessageVO<R, T>>();
         var ackMsgs = new LinkedList<R>();
         var nakMsgs = new LinkedList<R>();
         for (R message : messages) {
             if (message == null) {
-                log.warn("ignore null message in batch");
+                log.warn("[MQ-v2] ignore null message in batch, contextId={}", contextId);
                 continue;
             }
             try {
@@ -144,20 +150,24 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
                 validateMessageVo(messageVO);
                 pendingVos.add(messageVO);
             } catch (Exception e) {
-                log.error("assemble message vo error", e);
+                log.error("[MQ-v2] assemble/validate vo failed, will nak, contextId={}", contextId, e);
                 nakMsgs.add(message);
             }
         }
+        log.debug("[MQ-v2] assembled vo done, contextId={}, pending={}, nak={}", contextId, pendingVos.size(),
+            nakMsgs.size());
         if (!CollUtil.isEmpty(pendingVos)) {
             var recordResult = recorder.record(context, pendingVos);
+            log.debug("[MQ-v2] recorder.record done, contextId={}, pending={}, recordResults={}", contextId,
+                pendingVos.size(), recordResult == null ? 0 : recordResult.size());
             var resultMap = new HashMap<String, MqRecordVO<T>>();
             recordResult.stream().filter(record -> record != null && StrUtil.isNotEmpty(record.getMessageId()))
                 .forEach(record -> resultMap.put(record.getMessageId(), record));
             for (MqMessageVO<R, T> messageVO : pendingVos) {
                 var record = resultMap.get(messageVO.getMessageId());
                 if (record == null || !record.isSuccess()) {
-                    log.warn("record message failed,messageId={}", messageVO.getMessageId(),
-                        record == null ? null : record.getException());
+                    log.warn("[MQ-v2] record failed or absent, will nak, contextId={}, messageId={}", contextId,
+                        messageVO.getMessageId(), record == null ? null : record.getException());
                     nakMsgs.add(messageVO.getRawMessage());
                     continue;
                 }
@@ -165,6 +175,8 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
                 ackMsgs.add(messageVO.getRawMessage());
             }
         }
+        log.debug("[MQ-v2] confirm dispatch, contextId={}, ackCount={}, nakCount={}", contextId, ackMsgs.size(),
+            nakMsgs.size());
         if (onInqueueSuccess != null) {
             for (R message : ackMsgs) {
                 onInqueueSuccess.accept(message);

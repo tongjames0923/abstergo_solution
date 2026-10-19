@@ -47,8 +47,11 @@ public abstract class AbstractRabbitMqContext<T extends Serializable> extends Ab
      */
     protected final void ingest(List<Message> messages, Channel channel) {
         if (CollUtil.isEmpty(messages)) {
+            log.debug("[MQ-v2] ingest skip, empty batch, contextId={}", getContextId());
             return;
         }
+        log.debug("[MQ-v2] ingest batch, contextId={}, size={}, channelOpen={}", getContextId(), messages.size(),
+            channel != null && channel.isOpen());
         currentChannel.set(channel);
         try {
             messageReceived(messages);
@@ -67,13 +70,15 @@ public abstract class AbstractRabbitMqContext<T extends Serializable> extends Ab
         Channel channel = currentChannel.get();
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         if (channel == null) {
-            log.error("ack failed: channel not bound to current thread, deliveryTag={}", deliveryTag);
+            log.error("[MQ-v2] ack failed: channel not bound to current thread, contextId={}, deliveryTag={}",
+                getContextId(), deliveryTag);
             return;
         }
         try {
             channel.basicAck(deliveryTag, false);
+            log.debug("[MQ-v2] basicAck success, contextId={}, deliveryTag={}", getContextId(), deliveryTag);
         } catch (Exception e) {
-            log.error("basicAck error, deliveryTag={}", deliveryTag, e);
+            log.error("[MQ-v2] basicAck error, contextId={}, deliveryTag={}", getContextId(), deliveryTag, e);
         }
     }
 
@@ -87,13 +92,15 @@ public abstract class AbstractRabbitMqContext<T extends Serializable> extends Ab
         Channel channel = currentChannel.get();
         long deliveryTag = message.getMessageProperties().getDeliveryTag();
         if (channel == null) {
-            log.error("nak failed: channel not bound to current thread, deliveryTag={}", deliveryTag);
+            log.error("[MQ-v2] nak failed: channel not bound to current thread, contextId={}, deliveryTag={}",
+                getContextId(), deliveryTag);
             return;
         }
         try {
             channel.basicNack(deliveryTag, false, false);
+            log.debug("[MQ-v2] basicNack success (no requeue), contextId={}, deliveryTag={}", getContextId(), deliveryTag);
         } catch (Exception e) {
-            log.error("basicNack error, deliveryTag={}", deliveryTag, e);
+            log.error("[MQ-v2] basicNack error, contextId={}, deliveryTag={}", getContextId(), deliveryTag, e);
         }
     }
 
