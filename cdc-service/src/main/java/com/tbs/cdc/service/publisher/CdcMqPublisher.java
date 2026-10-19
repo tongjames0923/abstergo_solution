@@ -20,7 +20,7 @@ import org.springframework.beans.factory.ObjectProvider;
  * CDC变更事件MQ发出监听器
  * <p>
  * 订阅全部库表与全部变更类型，将{@code CdcEvent}按路由键模板渲染后， 经v2统一发送契约{@code IMqMessageProducer}发出，
- * {@code eventId}同时作为messageId（去重锚点）与businessId（业务锚点）。
+ * {@code eventId}作为messageId（去重锚点）；businessId固定为{@code cdc}业务域标识（人工排查/按业务归组锚点，与messageId解耦）。
  * 发送失败仅记录日志，不影响CDC总线上的其他监听器与捕获链路。 启动阶段按{@code autoDeclare}配置自动声明交换机与可选的队列绑定。
  * </p>
  *
@@ -44,6 +44,11 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
      * 路由键模板占位符：变更类型
      */
     private static final String PLACEHOLDER_CHANGE_TYPE = "{changeType}";
+
+    /**
+     * 信封业务标识：CDC 业务域锚点（与消费端 {@code CdcEventConsumer.businessId()} 保持一致）
+     */
+    private static final String BUSINESS_ID = "cdc";
 
     /**
      * v2消息发送契约，信封→厂商消息的组装与投递由其承担
@@ -100,7 +105,7 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
             log.info("CDC事件MQ发送中,{} eventId:{}, routingKey:{}, payload:{}", property.getExchange(),
                 event.getEventId(), routingKey, JSON.toJSONString(event));
             mqMessageProducer.send(MqMessageOutcomeVO.<CdcEvent>builder().messageId(event.getEventId())
-                .businessId(event.getEventId()).topic(property.getExchange()).routeKey(routingKey).payload(event)
+                .businessId(BUSINESS_ID).topic(property.getExchange()).routeKey(routingKey).payload(event)
                 .build());
         } catch (Exception e) {
             log.error("CDC事件MQ发送失败, eventId:{}, table:{}", event.getEventId(), event.getTable(), e);
