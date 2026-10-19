@@ -106,8 +106,9 @@ public interface IMqRecorder<R, T extends Serializable> {
      * </p>
      *
      * @param messageId 消息ID
+     * @param context   当前上下文
      * @return 消息主记录VO，不存在时由实现方决定返回空或抛异常
      */
-    MqMessageVO<R, T> get(String messageId);
+    MqMessageVO<R, T> get(IMqContext<R, T> context, String messageId);
 
 }
