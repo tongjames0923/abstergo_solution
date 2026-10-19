@@ -26,6 +26,19 @@ public interface IMqMessagePayloadConverter {
     String payloadFormat();
 
     /**
+     * 序列化产物的 MIME 内容类型（可选声明）
+     * <p>
+     * 生产端组装厂商消息时写入 {@code contentType} 属性，供不感知 payloadType 头的旧链路（如厂商转换器兼容分支）
+     * 判定能否反序列化；返回 {@code null} 表示不写入。如 JDK 序列化对应 {@code application/x-java-serialized-object}。
+     * </p>
+     *
+     * @return 内容类型，默认不声明
+     */
+    default String contentType() {
+        return null;
+    }
+
+    /**
      * 将业务负载序列化为字节
      *
      * @param payload 业务负载对象

@@ -26,9 +26,20 @@ import java.io.ObjectOutputStream;
  */
 public class JdkMqPayloadConverter implements IMqMessagePayloadConverter {
 
+    /**
+     * JDK 序列化产物的 MIME 内容类型，与 Spring AMQP {@code SerializerMessageConverter} 写读的值一致，
+     * 保证不带 payloadType 头的旧链路（厂商转换器）也能识别并反序列化
+     */
+    private static final String JAVA_SERIALIZED_CONTENT_TYPE = "application/x-java-serialized-object";
+
     @Override
     public String payloadFormat() {
         return MqPayloadConverterRegistry.DEFAULT_PAYLOAD_FORMAT;
+    }
+
+    @Override
+    public String contentType() {
+        return JAVA_SERIALIZED_CONTENT_TYPE;
     }
 
     /**

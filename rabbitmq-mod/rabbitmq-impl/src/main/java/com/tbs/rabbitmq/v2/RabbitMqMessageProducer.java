@@ -94,6 +94,10 @@ public class RabbitMqMessageProducer implements IMqMessageProducer {
         byte[] body = converter.convert(payload, (Class<Object>)payload.getClass());
         MessageProperties properties = new MessageProperties();
         properties.setMessageId(messageId);
+        String contentType = converter.contentType();
+        if (StrUtil.isNotEmpty(contentType)) {
+            properties.setContentType(contentType);
+        }
         properties.setHeader(MqHeaderConstants.PAYLOAD_TYPE, payloadType);
         properties.setHeader(MqHeaderConstants.PAYLOAD_FORMAT, converter.payloadFormat());
         if (StrUtil.isNotEmpty(message.getBusinessId())) {

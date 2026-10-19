@@ -72,6 +72,8 @@ class RabbitMqV2ProducerRoundTripTest {
         MessageProperties props = message.getMessageProperties();
 
         assertNotNull(props.getMessageId(), "messageId 为空时应框架发号");
+        assertEquals("application/x-java-serialized-object", props.getContentType(),
+            "jdk 转换器声明的 contentType 应写入，供厂商转换器（v1 链路）兜底识别");
         assertEquals("java.lang.String", props.getHeaders().get(MqHeaderConstants.PAYLOAD_TYPE));
         assertEquals(MqPayloadConverterRegistry.DEFAULT_PAYLOAD_FORMAT, props.getHeaders().get(MqHeaderConstants.PAYLOAD_FORMAT));
         assertEquals("biz-1", props.getHeaders().get(MqHeaderConstants.BUSINESS_ID));
@@ -125,6 +127,17 @@ class RabbitMqV2ProducerRoundTripTest {
 
         String decoded = receiver.getPayload(legacy);
         assertEquals("legacy-payload", decoded, "无 payloadType 头应回退厂商转换器");
+    }
+
+    @Test
+    void vendorConverterShouldReadV2MessageForLegacyConsumers() {
+        RabbitMqMessageProducer producer = new RabbitMqMessageProducer(null, jdkRegistry());
+        MqMessageOutcomeVO<String> envelope = MqMessageOutcomeVO.<String>builder().payload("for-v1").topic("v2.exchange")
+            .routeKey("v2.rk").build();
+
+        Message message = producer.toVendorMessage(envelope);
+        Object decoded = new SerializerMessageConverter().fromMessage(message);
+        assertEquals("for-v1", decoded, "v2 生产消息应可被 v1 厂商转换器凭 contentType 反序列化");
     }
 
     @Test

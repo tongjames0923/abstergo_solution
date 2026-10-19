@@ -26,7 +26,7 @@ public class LoggingRecordRabbitMqContext extends RabbitMqContext<LoggingRecordF
     /**
      * v2 并行消费队列名：独立于 v1 的 {@code systemLog}，绑定同一交换机与路由键以获取复制投递
      */
-    private static final String V2_QUEUE_NAME = "systemLog";
+    private static final String V2_QUEUE_NAME = "systemLog.v2";
 
     /**
      * 复用 v1 的既有交换机与路由键，仅新增独立队列，不改动生产端
