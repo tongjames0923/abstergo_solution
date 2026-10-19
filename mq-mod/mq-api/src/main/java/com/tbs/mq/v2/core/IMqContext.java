@@ -75,4 +75,12 @@ public interface IMqContext<R, T extends Serializable> {
      */
     Class<T> getMessagePayloadType();
 
+    /**
+     * 获取队列大小,当前队列中待消费消息数量
+     *
+     * @return 队列大小
+     */
+    Integer getQueueSize();
+
+
 }
