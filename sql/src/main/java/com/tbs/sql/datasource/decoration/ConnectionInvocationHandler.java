@@ -1,10 +1,13 @@
 package com.tbs.sql.datasource.decoration;
 
+import com.tbs.sql.datasource.model.JdbcConnectionContext;
+
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.sql.Connection;
 import java.sql.Statement;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Connection 动态代理调用处理器：拦截语句创建方法，将返回的
@@ -34,16 +37,29 @@ public class ConnectionInvocationHandler implements InvocationHandler {
     private final String dataSourceId;
 
     /**
+     * 连接获取上下文，用于 close() 时回调 onConnectionRelease
+     */
+    private final JdbcConnectionContext connectionContext;
+
+    /**
+     * 归还回调幂等守卫：重复 close() 仅触发一次释放
+     */
+    private final AtomicBoolean released = new AtomicBoolean(false);
+
+    /**
      * 构造连接代理处理器。
      *
-     * @param target       真实连接
-     * @param chain        拦截器链
-     * @param dataSourceId 数据源标识
+     * @param target            真实连接
+     * @param chain             拦截器链
+     * @param dataSourceId      数据源标识
+     * @param connectionContext 连接获取上下文
      */
-    public ConnectionInvocationHandler(Connection target, InterceptorChain chain, String dataSourceId) {
+    public ConnectionInvocationHandler(Connection target, InterceptorChain chain, String dataSourceId,
+                                       JdbcConnectionContext connectionContext) {
         this.target = target;
         this.chain = chain;
         this.dataSourceId = dataSourceId;
+        this.connectionContext = connectionContext;
     }
 
     @Override
@@ -69,7 +85,12 @@ public class ConnectionInvocationHandler implements InvocationHandler {
             }
             return statement;
         }
-        return method.invoke(target, args);
+        Object result = method.invoke(target, args);
+        if ("close".equals(methodName) && released.compareAndSet(false, true)) {
+            // 连接真正归还后，恰好一次地通知拦截链释放在准入阶段占用的资源
+            chain.releaseConnection(connectionContext);
+        }
+        return result;
     }
 
     /**

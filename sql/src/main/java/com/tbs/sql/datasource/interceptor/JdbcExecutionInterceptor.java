@@ -9,9 +9,11 @@ import org.springframework.core.Ordered;
  * JDBC 执行拦截器 SPI，注册为 Spring Bean 后由 DataSource 装饰框架按
  * {@link #getOrder()} 升序链式调用。
  *
- * <h3>双钩子设计</h3>
+ * <h3>三钩子设计</h3>
  * <ul>
  *   <li>{@link #interceptConnection}：连接获取阶段，仅作拦截点，不承担数据源路由职责</li>
+ *   <li>{@link #onConnectionRelease}：连接归还（{@code close()}）阶段，与 {@link #interceptConnection} 成对，
+ *       用于归还该连接在准入阶段占用的资源（如并发许可）</li>
  *   <li>{@link #interceptExecution}：SQL 执行前，放行或拒绝</li>
  * </ul>
  *
@@ -59,6 +61,18 @@ public interface JdbcExecutionInterceptor extends Ordered {
      */
     default InterceptVerdict interceptConnection(JdbcConnectionContext context) {
         return InterceptVerdict.allow();
+    }
+
+    /**
+     * 连接归还阶段回调，与 {@link #interceptConnection} 成对出现。
+     *
+     * <p>当代理连接的 {@code close()} 被调用（池化语义即“归还连接”）时，
+     * 由框架恰好一次地触发本回调，供拦截器释放在 {@link #interceptConnection}
+     * 中为该连接占用的资源（如并发许可）。默认空实现。</p>
+     *
+     * @param context 与 {@link #interceptConnection} 相同的连接上下文
+     */
+    default void onConnectionRelease(JdbcConnectionContext context) {
     }
 
     /**

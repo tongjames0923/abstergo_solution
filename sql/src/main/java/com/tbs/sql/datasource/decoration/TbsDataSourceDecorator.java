@@ -61,14 +61,12 @@ public class TbsDataSourceDecorator implements DataSource {
 
     @Override
     public Connection getConnection() throws SQLException {
-        checkConnectionAllowed(null);
-        return wrapConnection(target.getConnection());
+        return acquireConnection(null, () -> target.getConnection());
     }
 
     @Override
     public Connection getConnection(String username, String password) throws SQLException {
-        checkConnectionAllowed(username);
-        return wrapConnection(target.getConnection(username, password));
+        return acquireConnection(username, () -> target.getConnection(username, password));
     }
 
     @Override
@@ -122,27 +120,52 @@ public class TbsDataSourceDecorator implements DataSource {
     }
 
     /**
-     * 连接级裁决，拒绝时经拦截器链抛出 i18n 异常。
+     * 连接获取统一流程：准入裁决 → 取真实连接 → 包装代理。
      *
-     * @param userName 连接用户名，无参获取时为 null
+     * <p>若取真实连接阶段抛异常，连接不会创建、{@code close()} 也不会触发，
+     * 此处主动归还准入阶段已占用的资源，避免许可泄漏。</p>
+     *
+     * @param userName   连接用户名，无参获取时为 null
+     * @param connectionSupplier 真实取连接动作
+     * @return 代理连接
+     * @throws SQLException 取连接失败
      */
-    private void checkConnectionAllowed(String userName) {
-        chain.checkConnection(new JdbcConnectionContext(dataSourceId, userName,
-                Thread.currentThread().getName(), System.currentTimeMillis()));
+    private Connection acquireConnection(String userName, ConnectionSupplier connectionSupplier)
+            throws SQLException {
+        JdbcConnectionContext context = new JdbcConnectionContext(dataSourceId, userName,
+                Thread.currentThread().getName(), System.currentTimeMillis());
+        chain.checkConnection(context);
+        Connection connection;
+        try {
+            connection = connectionSupplier.get();
+        } catch (SQLException | RuntimeException e) {
+            chain.releaseConnection(context);
+            throw e;
+        }
+        return wrapConnection(connection, context);
     }
 
     /**
      * 将真实连接包装为携带语句级拦截的动态代理。
      *
      * @param connection 真实连接
+     * @param context    连接获取上下文，供 close() 时回调归还
      * @return 代理连接
      */
-    private Connection wrapConnection(Connection connection) {
+    private Connection wrapConnection(Connection connection, JdbcConnectionContext context) {
         Class<?>[] interfaces = connection.getClass().getInterfaces();
         if (interfaces.length == 0) {
             interfaces = new Class<?>[]{Connection.class};
         }
         return (Connection) Proxy.newProxyInstance(connection.getClass().getClassLoader(),
-                interfaces, new ConnectionInvocationHandler(connection, chain, dataSourceId));
+                interfaces, new ConnectionInvocationHandler(connection, chain, dataSourceId, context));
+    }
+
+    /**
+     * 真实取连接动作，允许抛出 {@link SQLException}。
+     */
+    @FunctionalInterface
+    private interface ConnectionSupplier {
+        Connection get() throws SQLException;
     }
 }

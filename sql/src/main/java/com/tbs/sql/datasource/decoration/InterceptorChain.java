@@ -60,14 +60,35 @@ public class InterceptorChain {
     /**
      * 连接获取阶段裁决。
      *
+     * <p>按 order 升序遍历；若某个拦截器拒绝，则先回滚前序已放行（可能已占用资源）
+     * 的拦截器，再抛出 i18n 异常，避免连接许可泄漏。</p>
+     *
      * @param context 连接获取上下文
      */
     public void checkConnection(JdbcConnectionContext context) {
-        for (JdbcExecutionInterceptor interceptor : resolveInterceptors()) {
-            InterceptVerdict verdict = interceptor.interceptConnection(context);
+        List<JdbcExecutionInterceptor> chain = resolveInterceptors();
+        for (int i = 0; i < chain.size(); i++) {
+            InterceptVerdict verdict = chain.get(i).interceptConnection(context);
             if (verdict.isDenied()) {
+                // [0, i) 已放行并可能占用资源，逐个归还；第 i 个拒绝者未占用，不回滚
+                for (int j = 0; j < i; j++) {
+                    chain.get(j).onConnectionRelease(context);
+                }
                 throwDenied(verdict);
             }
+        }
+    }
+
+    /**
+     * 连接归还阶段回调，触发全部拦截器的 {@link JdbcExecutionInterceptor#onConnectionRelease}。
+     *
+     * <p>由代理连接在 {@code close()} 时恰好一次地调用，与 {@link #checkConnection} 放行成对。</p>
+     *
+     * @param context 与获取阶段相同的连接上下文
+     */
+    public void releaseConnection(JdbcConnectionContext context) {
+        for (JdbcExecutionInterceptor interceptor : resolveInterceptors()) {
+            interceptor.onConnectionRelease(context);
         }
     }
 
