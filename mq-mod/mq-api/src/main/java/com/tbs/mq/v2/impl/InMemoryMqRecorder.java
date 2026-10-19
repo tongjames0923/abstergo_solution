@@ -6,7 +6,7 @@ import com.tbs.mq.v2.core.IMqContext;
 import com.tbs.mq.v2.core.IMqRecorder;
 import com.tbs.mq.v2.enums.MqMessageStatusEnum;
 import com.tbs.mq.v2.vo.MqConsumeVO;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import com.tbs.mq.v2.vo.MqRecordVO;
 import lombok.extern.slf4j.Slf4j;
 
@@ -54,7 +54,7 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
     /**
      * 主记录存储：上下文ID → (messageId → 消息主记录VO)
      */
-    private final Map<Long, Map<String, MqMessageVO<R, T>>> mainRecords = new ConcurrentHashMap<>();
+    private final Map<Long, Map<String, MqMessageIncomeVO<R, T>>> mainRecords = new ConcurrentHashMap<>();
 
     /**
      * 失败留痕：上下文ID → (messageId → 最近一次失败异常)
@@ -93,16 +93,16 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
      * @return 逐条建档结果列表；messageId 缺失的条目回失败结果（宁拒勿漏）
      */
     @Override
-    public List<MqRecordVO<T>> record(IMqContext<R, T> context, List<MqMessageVO<R, T>> messages) {
+    public List<MqRecordVO<T>> record(IMqContext<R, T> context, List<MqMessageIncomeVO<R, T>> messages) {
         List<MqRecordVO<T>> results = new LinkedList<>();
         if (CollUtil.isEmpty(messages)) {
             log.debug("[MQ-v2] recorder.record skip empty batch, scope={}", scopeKey(context));
             return results;
         }
-        Map<String, MqMessageVO<R, T>> store = mainStoreOf(context);
+        Map<String, MqMessageIncomeVO<R, T>> store = mainStoreOf(context);
         int created = 0;
         int duplicated = 0;
-        for (MqMessageVO<R, T> vo : messages) {
+        for (MqMessageIncomeVO<R, T> vo : messages) {
             MqRecordVO<T> result = new MqRecordVO<>();
             if (vo == null || StrUtil.isEmpty(vo.getMessageId())) {
                 result.setMessageId(vo == null ? null : vo.getMessageId());
@@ -144,7 +144,7 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
                 messageId);
             return;
         }
-        MqMessageVO<R, T> vo = mainStoreOf(context).get(messageId);
+        MqMessageIncomeVO<R, T> vo = mainStoreOf(context).get(messageId);
         if (vo != null) {
             vo.setFlag(flag.getCode());
             log.debug("[MQ-v2] recorder.updateFlag to {}, scope={}, messageId={}", flag, scopeKey(context), messageId);
@@ -166,7 +166,7 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
             log.debug("[MQ-v2] recorder.errorFlag skip, blank messageId, scope={}", scopeKey(context));
             return;
         }
-        MqMessageVO<R, T> vo = mainStoreOf(context).get(messageId);
+        MqMessageIncomeVO<R, T> vo = mainStoreOf(context).get(messageId);
         if (vo != null) {
             vo.setFlag(MqMessageStatusEnum.FAILED.getCode());
         }
@@ -203,12 +203,12 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
      * @return 消息主记录VO，不存在时返回 null
      */
     @Override
-    public MqMessageVO<R, T> get(IMqContext<R, T> context, String messageId) {
+    public MqMessageIncomeVO<R, T> get(IMqContext<R, T> context, String messageId) {
         if (StrUtil.isEmpty(messageId)) {
             log.debug("[MQ-v2] recorder.get skip, blank messageId, scope={}", scopeKey(context));
             return null;
         }
-        MqMessageVO<R, T> vo = mainStoreOf(context).get(messageId);
+        MqMessageIncomeVO<R, T> vo = mainStoreOf(context).get(messageId);
         log.debug("[MQ-v2] recorder.get {}, scope={}, messageId={}", vo == null ? "miss" : "hit", scopeKey(context),
             messageId);
         return vo;
@@ -231,7 +231,7 @@ public class InMemoryMqRecorder<R, T extends Serializable> implements IMqRecorde
      * @param context 当前上下文
      * @return messageId → 主记录VO 的并发子表
      */
-    private Map<String, MqMessageVO<R, T>> mainStoreOf(IMqContext<R, T> context) {
+    private Map<String, MqMessageIncomeVO<R, T>> mainStoreOf(IMqContext<R, T> context) {
         return mainRecords.computeIfAbsent(scopeKey(context), k -> new ConcurrentHashMap<>());
     }
 

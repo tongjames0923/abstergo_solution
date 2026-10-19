@@ -1,8 +1,13 @@
 package com.tbs.rabbitmq.v2;
 
+import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.mq.constants.MqHeaderConstants;
 import com.tbs.mq.v2.core.AbstractMqMessageReceiver;
+import com.tbs.mq.v2.core.IMqMessagePayloadConverter;
 import com.tbs.mq.v2.core.IMqRecorder;
+import com.tbs.mq.v2.core.MqPayloadConverterRegistry;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
@@ -15,7 +20,9 @@ import java.io.Serializable;
  * <p>
  * 把厂商传输层固定为 Spring AMQP 的 {@link Message}（R），只补齐 RabbitMQ 特有的三个接收钩子：
  * <ul>
- *     <li>{@link #getPayload} —— 经容器内的 {@link MessageConverter} 把消息体反序列化为业务负载（T）；</li>
+ *     <li>{@link #getPayload} —— 对称于 v2 生产端：消息头携带 {@code payloadType} 时走 {@link MqPayloadConverterRegistry}
+ *         按 {@code payloadFormat} 选定的 {@link IMqMessagePayloadConverter} 将字节还原为业务负载（T）；
+ *         无 {@code payloadType} 头（如 v1 生产端经厂商 {@link MessageConverter} 投递）时沿用厂商转换器兜底；</li>
  *     <li>{@link #genMessageId} —— 优先复用厂商投递携带的 messageId 作为记录主键（跨节点同 ID 天然去重），缺失时回落框架 UUID；</li>
  *     <li>{@link #resolveBusinessId} —— 默认按消息头 {@code businessId} 取值，其次回落厂商 messageId，均无时返回空由基类拒收。</li>
  * </ul>
@@ -31,12 +38,19 @@ import java.io.Serializable;
 public abstract class RabbitMqMessageReceiver<T extends Serializable> extends AbstractMqMessageReceiver<Message, T> {
 
     /**
-     * 业务标识消息头键，生产者需在消息头写入该字段作为幂等去重与人工排查的锚点
+     * 业务标识消息头键，生产者需在消息头写入该字段作为幂等去重与人工排查的锚点；
+     * 与生产端写入的 {@link MqHeaderConstants#BUSINESS_ID} 保持单一真源
      */
-    public static final String BUSINESS_ID_HEADER = "businessId";
+    public static final String BUSINESS_ID_HEADER = MqHeaderConstants.BUSINESS_ID;
 
     @Resource
     private MessageConverter messageConverter;
+
+    /**
+     * 负载转换器注册表，当消息头携带 payloadType 时按 payloadFormat 选取转换器反序列化
+     */
+    @Resource
+    private MqPayloadConverterRegistry mqPayloadConverterRegistry;
 
     /**
      * 构造 RabbitMQ 消息接收器
@@ -49,6 +63,11 @@ public abstract class RabbitMqMessageReceiver<T extends Serializable> extends Ab
 
     /**
      * 反序列化业务负载
+     * <p>
+     * 消息头携带 {@code payloadType} 时走 v2 原生负载转换器（与生产端对称）：按 {@code payloadFormat}
+     * 选定转换器，以 {@code payloadType} 为目标类将消息体字节还原；无 {@code payloadType} 头时沿用厂商
+     * {@link MessageConverter} 兜底（兼容 v1 生产端直投）。
+     * </p>
      *
      * @param message 厂商原始消息
      * @return 业务负载对象
@@ -56,10 +75,24 @@ public abstract class RabbitMqMessageReceiver<T extends Serializable> extends Ab
     @Override
     @SuppressWarnings("unchecked")
     protected T getPayload(Message message) {
-        T payload = (T)messageConverter.fromMessage(message);
-        log.debug("[MQ-v2] deserialize payload, deliveryTag={}, payloadType={}",
-            message.getMessageProperties().getDeliveryTag(), payload == null ? null : payload.getClass().getName());
-        return payload;
+        Object payloadTypeHeader = message.getMessageProperties().getHeaders().get(MqHeaderConstants.PAYLOAD_TYPE);
+        if (payloadTypeHeader == null) {
+            T legacy = (T)messageConverter.fromMessage(message);
+            log.debug("[MQ-v2] deserialize via vendor converter (no payloadType header), deliveryTag={}, payloadType={}",
+                message.getMessageProperties().getDeliveryTag(), legacy == null ? null : legacy.getClass().getName());
+            return legacy;
+        }
+        String payloadType = String.valueOf(payloadTypeHeader);
+        Object formatHeader = message.getMessageProperties().getHeaders().get(MqHeaderConstants.PAYLOAD_FORMAT);
+        String payloadFormat = formatHeader == null ? null : String.valueOf(formatHeader);
+        IMqMessagePayloadConverter converter = mqPayloadConverterRegistry.resolve(payloadFormat);
+        try {
+            T payload = (T)converter.convert(message.getBody(), Class.forName(payloadType));
+            log.debug("[MQ-v2] deserialize via payload converter, format={}, payloadType={}", payloadFormat, payloadType);
+            return payload;
+        } catch (ClassNotFoundException e) {
+            throw new FormattedRuntimeException(e, I18nUtil.get("mq.v2.payload.deserialize.failed", payloadType));
+        }
     }
 
     /**

@@ -2,7 +2,7 @@ package com.tbs.mq.v2.impl;
 
 import com.tbs.mq.v2.core.IMqContext;
 import com.tbs.mq.v2.core.IMqMessageMonopolizer;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -40,7 +40,7 @@ public class InMemoryMqMessageMonopolizer implements IMqMessageMonopolizer {
      * @return true 表示抢占成功，调用方负责处理完成后 release；false 表示他人持有
      */
     @Override
-    public <R, T extends Serializable> boolean monopolize(IMqContext<R, T> context, MqMessageVO<R, T> message) {
+    public <R, T extends Serializable> boolean monopolize(IMqContext<R, T> context, MqMessageIncomeVO<R, T> message) {
         if (message == null || message.getMessageId() == null) {
             log.debug("[MQ-v2] monopolize reject, null message/messageId");
             return false;
@@ -61,7 +61,7 @@ public class InMemoryMqMessageMonopolizer implements IMqMessageMonopolizer {
      * @return 释放后的消息主记录VO（原样返回）
      */
     @Override
-    public <R, T extends Serializable> MqMessageVO<R, T> release(IMqContext<R, T> context, MqMessageVO<R, T> message) {
+    public <R, T extends Serializable> MqMessageIncomeVO<R, T> release(IMqContext<R, T> context, MqMessageIncomeVO<R, T> message) {
         if (message != null && message.getMessageId() != null) {
             String key = buildKey(context, message.getMessageId());
             boolean removed = heldKeys.remove(key);

@@ -6,7 +6,7 @@ import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.UuidUtil;
 import com.tbs.mq.v2.enums.MqMessageStatusEnum;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import com.tbs.mq.v2.vo.MqRecordVO;
 import lombok.extern.slf4j.Slf4j;
 
@@ -59,8 +59,8 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
      * @param message 厂商原始消息
      * @return 初始状态的消息主记录VO，不为空
      */
-    protected MqMessageVO<R, T> assembleMessageVO(R message) {
-        MqMessageVO<R, T> messageVo = MqMessageVO.<R, T>builder().messageId(genMessageId(message))
+    protected MqMessageIncomeVO<R, T> assembleMessageVO(R message) {
+        MqMessageIncomeVO<R, T> messageVo = MqMessageIncomeVO.<R, T>builder().messageId(genMessageId(message))
             .businessId(resolveBusinessId(message)).flag(MqMessageStatusEnum.RECEIVED.getCode()).rawMessage(message)
             .payload(getPayload(message)).build();
         log.debug("[MQ-v2] assemble vo, messageId={}, businessId={}", messageVo.getMessageId(),
@@ -99,7 +99,7 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
      *
      * @param messageVo 待校验的消息VO
      */
-    protected void validateMessageVo(MqMessageVO<R, T> messageVo) {
+    protected void validateMessageVo(MqMessageIncomeVO<R, T> messageVo) {
         AssertUtil.isTrueSystemError(messageVo == null).i18n("mq.v2.message.vo.required").throwIt();
         AssertUtil.isTrueSystemError(StrUtil.isEmpty(messageVo.getBusinessId())).i18n("mq.v2.business.id.required")
             .throwIt();
@@ -128,16 +128,16 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
      * @return 建档成功、可进入处理链路的消息主记录VO列表
      */
     @Override
-    public List<MqMessageVO<R, T>> receive(IMqContext<R, T> context, List<R> messages, SConsumer<R> onInqueueSuccess,
+    public List<MqMessageIncomeVO<R, T>> receive(IMqContext<R, T> context, List<R> messages, SConsumer<R> onInqueueSuccess,
         SConsumer<R> onInqueueFail) {
         Long contextId = context == null ? null : context.getContextId();
-        List<MqMessageVO<R, T>> result = new LinkedList<>();
+        List<MqMessageIncomeVO<R, T>> result = new LinkedList<>();
         if (CollUtil.isEmpty(messages)) {
             log.warn("[MQ-v2] receive skip, messages empty, contextId={}", contextId);
             return result;
         }
         log.debug("[MQ-v2] receive start, contextId={}, rawSize={}", contextId, messages.size());
-        var pendingVos = new LinkedList<MqMessageVO<R, T>>();
+        var pendingVos = new LinkedList<MqMessageIncomeVO<R, T>>();
         var ackMsgs = new LinkedList<R>();
         var nakMsgs = new LinkedList<R>();
         for (R message : messages) {
@@ -163,7 +163,7 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
             var resultMap = new HashMap<String, MqRecordVO<T>>();
             recordResult.stream().filter(record -> record != null && StrUtil.isNotEmpty(record.getMessageId()))
                 .forEach(record -> resultMap.put(record.getMessageId(), record));
-            for (MqMessageVO<R, T> messageVO : pendingVos) {
+            for (MqMessageIncomeVO<R, T> messageVO : pendingVos) {
                 var record = resultMap.get(messageVO.getMessageId());
                 if (record == null || !record.isSuccess()) {
                     log.warn("[MQ-v2] record failed or absent, will nak, contextId={}, messageId={}", contextId,

@@ -26,4 +26,20 @@ public final class MqHeaderConstants {
      */
     public static final String FIRST_FAIL_TIME = "x-first-fail-time";
 
+    /**
+     * 业务标识头：生产者发送时显式写入的业务主键（如订单号），
+     * 供消费端解析为记录业务标识，作为幂等去重与人工排查的锚点；缺失时由消费端回落队列名
+     */
+    public static final String BUSINESS_ID = "businessId";
+
+    /**
+     * 负载格式头：标识消息体 bytes 的序列化格式（如 jdk），消费端据此选择对应的负载转换器；缺失时回落默认格式
+     */
+    public static final String PAYLOAD_FORMAT = "payloadFormat";
+
+    /**
+     * 负载类型头：业务负载的全限定类名，供消费端将 bytes 反序列化回目标类型（自建序列化链路的目标类来源）
+     */
+    public static final String PAYLOAD_TYPE = "payloadType";
+
 }

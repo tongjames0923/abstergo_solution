@@ -1,7 +1,7 @@
 package com.tbs.mq.v2.core;
 
 import com.tbs.mq.v2.vo.MqConsumeVO;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 
 import java.io.Serializable;
 import java.util.List;
@@ -25,6 +25,6 @@ public interface IMqMessageProcessor<R, T extends Serializable> {
      * @param message 已建档的消息主记录VO
      * @return 逐消费者的台账行（SUCCESS/FAIL）；message 为 null 时返回空集合
      */
-    List<MqConsumeVO<T>> process(IMqContext<R, T> context, MqMessageVO<R, T> message);
+    List<MqConsumeVO<T>> process(IMqContext<R, T> context, MqMessageIncomeVO<R, T> message);
 
 }

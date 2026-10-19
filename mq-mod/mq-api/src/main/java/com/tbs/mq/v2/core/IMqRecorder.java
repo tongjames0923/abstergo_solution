@@ -2,7 +2,7 @@ package com.tbs.mq.v2.core;
 
 import com.tbs.mq.v2.enums.MqMessageStatusEnum;
 import com.tbs.mq.v2.vo.MqConsumeVO;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import com.tbs.mq.v2.vo.MqRecordVO;
 
 import java.io.Serializable;
@@ -45,7 +45,7 @@ public interface IMqRecorder<R, T extends Serializable> {
      * @param messages 待建档的消息VO批次，不为空
      * @return 逐条建档结果列表，支持部分成功
      */
-    List<MqRecordVO<T>> record(IMqContext<R, T> context, List<MqMessageVO<R, T>> messages);
+    List<MqRecordVO<T>> record(IMqContext<R, T> context, List<MqMessageIncomeVO<R, T>> messages);
 
     /**
      * 开始事务
@@ -109,6 +109,6 @@ public interface IMqRecorder<R, T extends Serializable> {
      * @param context   当前上下文
      * @return 消息主记录VO，不存在时由实现方决定返回空或抛异常
      */
-    MqMessageVO<R, T> get(IMqContext<R, T> context, String messageId);
+    MqMessageIncomeVO<R, T> get(IMqContext<R, T> context, String messageId);
 
 }

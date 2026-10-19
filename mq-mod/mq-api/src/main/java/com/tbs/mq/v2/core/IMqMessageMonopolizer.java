@@ -1,6 +1,6 @@
 package com.tbs.mq.v2.core;
 
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 
 import java.io.Serializable;
 
@@ -20,7 +20,7 @@ public interface IMqMessageMonopolizer {
      * @param message 待抢占的消息主记录VO
      * @return true表示抢占成功，调用方负责处理完成后 release；false表示他人持有，不得触碰 release
      */
-    <R, T extends Serializable> boolean monopolize(IMqContext<R, T> context, MqMessageVO<R, T> message);
+    <R, T extends Serializable> boolean monopolize(IMqContext<R, T> context, MqMessageIncomeVO<R, T> message);
 
     /**
      * 释放消息的占有，仅限抢占成功的那个持有者调用
@@ -29,6 +29,6 @@ public interface IMqMessageMonopolizer {
      * @param message 已分发完成的消息主记录VO
      * @return 释放后的消息主记录VO
      */
-    <R, T extends Serializable> MqMessageVO<R, T> release(IMqContext<R, T> context, MqMessageVO<R, T> message);
+    <R, T extends Serializable> MqMessageIncomeVO<R, T> release(IMqContext<R, T> context, MqMessageIncomeVO<R, T> message);
 
 }

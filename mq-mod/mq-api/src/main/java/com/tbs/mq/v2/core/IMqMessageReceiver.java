@@ -1,7 +1,7 @@
 package com.tbs.mq.v2.core;
 
 import com.tbs.common.function.SConsumer;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 
 import java.io.Serializable;
 import java.util.List;
@@ -27,7 +27,7 @@ public interface IMqMessageReceiver<R, T extends Serializable> {
      * @param onInqueueFail    建档失败或结果缺席后的回调（一般为厂商 nak），可空
      * @return 建档成功、可进入处理链路的消息主记录VO列表
      */
-    List<MqMessageVO<R, T>> receive(IMqContext<R, T> context, List<R> messages, SConsumer<R> onInqueueSuccess,
+    List<MqMessageIncomeVO<R, T>> receive(IMqContext<R, T> context, List<R> messages, SConsumer<R> onInqueueSuccess,
         SConsumer<R> onInqueueFail);
 
 }

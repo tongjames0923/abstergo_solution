@@ -1,7 +1,7 @@
 package com.tbs.mq.v2.core;
 
 import com.tbs.mq.v2.enums.MqMessageStatusEnum;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactoryAware;
@@ -65,7 +65,7 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
     /**
      * 内存待处理队列，接收段建档成功消息的去处与处理线程的来源，两端共享；进程重启后队列清空，未处理消息由记录层扫描回灌
      */
-    private BlockingQueue<MqMessageVO<R, T>> messageQueue = new LinkedBlockingQueue<>();
+    private BlockingQueue<MqMessageIncomeVO<R, T>> messageQueue = new LinkedBlockingQueue<>();
 
     /**
      * 消息接收器，接收段（组装/建档/配对/确认）编排协作类
@@ -103,7 +103,7 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
     public void messageReceived(List<R> messages) {
         int rawSize = messages == null ? 0 : messages.size();
         log.debug("[MQ-v2] receive batch start, contextId={}, rawSize={}", getContextId(), rawSize);
-        List<MqMessageVO<R, T>> inqueued = receiver.receive(this, messages, this::ackMessage, this::nakMessage);
+        List<MqMessageIncomeVO<R, T>> inqueued = receiver.receive(this, messages, this::ackMessage, this::nakMessage);
         messageQueue.addAll(inqueued);
         log.debug("[MQ-v2] receive batch done, contextId={}, rawSize={}, inqueueSize={}, queueSize={}", getContextId(),
             rawSize, inqueued.size(), messageQueue.size());
@@ -149,7 +149,7 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
         Long contextId = getContextId();
         log.info("[MQ-v2] message handler thread started, contextId={}", contextId);
         while (started.get()) {
-            MqMessageVO<R, T> message = null;
+            MqMessageIncomeVO<R, T> message = null;
             try {
                 message = messageQueue.poll(POLL_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             } catch (InterruptedException e) {

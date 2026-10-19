@@ -5,7 +5,7 @@ import com.tbs.mq.v2.core.IMqContext;
 import com.tbs.mq.v2.enums.MqMessageConsumeStatusEnum;
 import com.tbs.mq.v2.enums.MqMessageStatusEnum;
 import com.tbs.mq.v2.vo.MqConsumeVO;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import com.tbs.mq.v2.vo.MqRecordVO;
 import org.junit.jupiter.api.Test;
 
@@ -85,8 +85,8 @@ class InMemoryImplTest {
     /**
      * 构造主记录VO
      */
-    private static MqMessageVO<Object, String> vo(String messageId, String payload) {
-        return MqMessageVO.<Object, String>builder().messageId(messageId).businessId("biz").payload(payload)
+    private static MqMessageIncomeVO<Object, String> vo(String messageId, String payload) {
+        return MqMessageIncomeVO.<Object, String>builder().messageId(messageId).businessId("biz").payload(payload)
             .rawMessage(new Object()).flag(MqMessageStatusEnum.RECEIVED.getCode()).build();
     }
 
@@ -94,7 +94,7 @@ class InMemoryImplTest {
     void recorderShouldRecordReadAndUpdateFlag() {
         InMemoryMqRecorder<Object, String> recorder = new InMemoryMqRecorder<>();
         StubContext context = new StubContext(1L);
-        MqMessageVO<Object, String> message = vo("m1", "p1");
+        MqMessageIncomeVO<Object, String> message = vo("m1", "p1");
 
         List<MqRecordVO<String>> results = recorder.record(context, Collections.singletonList(message));
         assertEquals(1, results.size(), "入参逐条应各回一个结果");
@@ -113,8 +113,8 @@ class InMemoryImplTest {
     void recorderShouldDedupByIdempotentMessageId() {
         InMemoryMqRecorder<Object, String> recorder = new InMemoryMqRecorder<>();
         StubContext context = new StubContext(1L);
-        MqMessageVO<Object, String> first = vo("dup", "first");
-        MqMessageVO<Object, String> second = vo("dup", "second");
+        MqMessageIncomeVO<Object, String> first = vo("dup", "first");
+        MqMessageIncomeVO<Object, String> second = vo("dup", "second");
 
         recorder.record(context, Collections.singletonList(first));
         List<MqRecordVO<String>> again = recorder.record(context, Collections.singletonList(second));
@@ -151,7 +151,7 @@ class InMemoryImplTest {
     void monopolizerShouldEnforceSingleFlightPerMessage() {
         InMemoryMqMessageMonopolizer monopolizer = new InMemoryMqMessageMonopolizer();
         StubContext context = new StubContext(1L);
-        MqMessageVO<Object, String> message = vo("m1", "p1");
+        MqMessageIncomeVO<Object, String> message = vo("m1", "p1");
 
         assertTrue(monopolizer.monopolize(context, message), "首次抢占应成功");
         assertFalse(monopolizer.monopolize(context, message), "他人持有期间再抢占应失败");

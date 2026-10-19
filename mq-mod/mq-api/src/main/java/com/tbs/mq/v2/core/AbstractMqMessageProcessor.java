@@ -8,7 +8,7 @@ import com.tbs.mq.v2.consume.IMqConsumer;
 import com.tbs.mq.v2.enums.MqMessageConsumeStatusEnum;
 import com.tbs.mq.v2.exception.MqConsumeException;
 import com.tbs.mq.v2.vo.MqConsumeVO;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
@@ -50,7 +50,7 @@ public abstract class AbstractMqMessageProcessor<R, T extends Serializable> impl
      * @return flag=SUCCESS 的台账行
      */
     protected MqConsumeVO<T> buildConsumeSuccess(Date startTime, IMqContext<R, T> context, IMqConsumer<T> consumer,
-        MqMessageVO<R, T> messageVo) {
+        MqMessageIncomeVO<R, T> messageVo) {
         return MqConsumeVO.<T>builder().messageId(messageVo.getMessageId()).businessId(messageVo.getBusinessId())
             .consumeId(consumer.consumeId()).consumeStartTime(startTime).consumeEndTime(new Date())
             .flag(MqMessageConsumeStatusEnum.SUCCESS.getCode()).build();
@@ -67,14 +67,14 @@ public abstract class AbstractMqMessageProcessor<R, T extends Serializable> impl
      * @return flag=FAIL 且携带 exception 的台账行
      */
     protected MqConsumeVO<T> buildConsumeFail(Date startTime, IMqContext<R, T> context, IMqConsumer<T> consumer,
-        MqMessageVO<R, T> messageVo, Exception e) {
+        MqMessageIncomeVO<R, T> messageVo, Exception e) {
         return MqConsumeVO.<T>builder().messageId(messageVo.getMessageId()).businessId(messageVo.getBusinessId())
             .consumeId(consumer.consumeId()).consumeStartTime(startTime).consumeEndTime(new Date())
             .flag(MqMessageConsumeStatusEnum.FAIL.getCode()).exception(e).build();
     }
 
     @Override
-    public List<MqConsumeVO<T>> process(IMqContext<R, T> context, MqMessageVO<R, T> messageVo) {
+    public List<MqConsumeVO<T>> process(IMqContext<R, T> context, MqMessageIncomeVO<R, T> messageVo) {
         Long contextId = context == null ? null : context.getContextId();
         if (messageVo == null) {
             log.warn("[MQ-v2] process skip, message vo is null, contextId={}", contextId);

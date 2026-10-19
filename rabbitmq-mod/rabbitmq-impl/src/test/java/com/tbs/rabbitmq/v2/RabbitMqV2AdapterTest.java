@@ -5,7 +5,7 @@ import com.tbs.common.function.SConsumer;
 import com.tbs.mq.v2.consume.IConsumerRegistry;
 import com.tbs.mq.v2.core.IMqContext;
 import com.tbs.mq.v2.core.IMqMessageReceiver;
-import com.tbs.mq.v2.vo.MqMessageVO;
+import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import com.tbs.rabbitmq.support.MqConsumerProperties;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.core.Message;
@@ -147,7 +147,7 @@ class RabbitMqV2AdapterTest {
      */
     private static final class AckReceiver implements IMqMessageReceiver<Message, String> {
         @Override
-        public List<MqMessageVO<Message, String>> receive(IMqContext<Message, String> context,
+        public List<MqMessageIncomeVO<Message, String>> receive(IMqContext<Message, String> context,
             List<Message> messages, SConsumer<Message> onInqueueSuccess, SConsumer<Message> onInqueueFail) {
             messages.forEach(onInqueueSuccess);
             return new LinkedList<>();
@@ -159,7 +159,7 @@ class RabbitMqV2AdapterTest {
      */
     private static final class NakReceiver implements IMqMessageReceiver<Message, String> {
         @Override
-        public List<MqMessageVO<Message, String>> receive(IMqContext<Message, String> context,
+        public List<MqMessageIncomeVO<Message, String>> receive(IMqContext<Message, String> context,
             List<Message> messages, SConsumer<Message> onInqueueSuccess, SConsumer<Message> onInqueueFail) {
             messages.forEach(onInqueueFail);
             return new LinkedList<>();
