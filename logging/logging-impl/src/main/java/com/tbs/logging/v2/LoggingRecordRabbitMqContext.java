@@ -8,9 +8,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 日志记录消费上下文（MQ v2 记录驱动模型 · 容器推送/原生批量监听形态的日志落地）
  * <p>
- * 复用 {@link RabbitMqContext} 的自装配监听容器 + 建档确认全链路，负载类型固定为 {@link LoggingRecordForm}。 与存量 v1 消费者（{@code DbLogWriter}，队列
- * {@code systemLog}）并行运行：本上下文绑定一条<b>独立队列</b> {@code systemLog.v2} 到<b>同一交换机</b>{@code tbs.log.queue}
- * 的<b>同一路由键</b>{@code systemLog}。 直连交换机对同一路由键的多条队列绑定是"复制投递"语义——日志生产者每次发送会同时进入 v1 与 v2 两条队列， 各自独立消费、互不抢占，故 v1 行为完全不受影响。
+ * 复用 {@link RabbitMqContext} 的自装配监听容器 + 建档确认全链路，负载类型固定为 {@link LoggingRecordForm}。
+ * 存量 v1 消费者（{@code DbLogWriter}）已随 v2 全面替换下线，本上下文直接接管原队列 {@code systemLog}
+ * （交换机 {@code tbs.log.queue} / 路由键 {@code systemLog} 均不变，投递端无需改动）；
+ * 投递端携带 payloadType/payloadFormat/contentType 头，接收段走 v2 原生负载转换器精确反序列化。
  * </p>
  * <p>
  * 非 Spring 注解类，由日志模块 config 以 {@code @Bean} 装配；父类的协作 Bean（receiver/processor/recorder/
@@ -24,22 +25,22 @@ import lombok.extern.slf4j.Slf4j;
 public class LoggingRecordRabbitMqContext extends RabbitMqContext<LoggingRecordForm> {
 
     /**
-     * v2 并行消费队列名：独立于 v1 的 {@code systemLog}，绑定同一交换机与路由键以获取复制投递
+     * 消费队列名：v1 消费者已下线，直接接管原 {@code systemLog} 队列，无并行、无双写
      */
-    private static final String V2_QUEUE_NAME = "systemLog.v2";
+    private static final String QUEUE_NAME = "systemLog";
 
     /**
-     * 复用 v1 的既有交换机与路由键，仅新增独立队列，不改动生产端
+     * 沿用既有交换机，不改动生产端
      */
     private static final String EXCHANGE_NAME = "tbs.log.queue";
 
     /**
-     * 路由键，与 v1 保持一致以便同一份日志被复制到 v2 队列
+     * 路由键，与投递端保持一致
      */
     private static final String ROUTING_KEY = "systemLog";
 
     /**
-     * 上下文ID：记录层按此隔离 v2 队列的消息与台账归属，全局唯一
+     * 上下文ID：记录层按此隔离本队列的消息与台账归属，全局唯一
      */
     private static final Long CONTEXT_ID = 2L;
 
@@ -64,13 +65,13 @@ public class LoggingRecordRabbitMqContext extends RabbitMqContext<LoggingRecordF
     }
 
     /**
-     * 提供 v2 并行消费的传输层配置：独立队列 + 复用交换机/路由键，手动 ack（父类默认），保持单条投递语义
+     * 提供消费传输层配置：接管原队列 {@code systemLog}，复用既有交换机/路由键，手动 ack（父类默认），保持单条投递语义
      *
      * @return 消费者传输配置
      */
     @Override
     protected MqConsumerProperties getMqConsumerProperties() {
-        return MqConsumerProperties.builder(V2_QUEUE_NAME).exchange(EXCHANGE_NAME).routingKey(ROUTING_KEY)
+        return MqConsumerProperties.builder(QUEUE_NAME).exchange(EXCHANGE_NAME).routingKey(ROUTING_KEY)
             .prefetchCount(250).build();
     }
 }

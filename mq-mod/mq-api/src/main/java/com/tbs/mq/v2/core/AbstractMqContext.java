@@ -5,6 +5,7 @@ import com.tbs.mq.v2.vo.MqMessageIncomeVO;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.BeanFactoryAware;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.Serializable;
 import java.util.List;
@@ -69,8 +70,13 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
 
     /**
      * 消息接收器，接收段（组装/建档/配对/确认）编排协作类
+     * <p>
+     * 用 {@code @Autowired} 而非 {@code @Resource}：容器内存在多个 {@code IMqMessageReceiver} Bean（按负载类型区分），
+     * 需在具体上下文 Bean 类上解析 {@code R/T} 泛型方能唯一命中，而 {@code @Resource} 按类型回退时以声明类为
+     * containingClass，泛型退化为通配导致多候选歧义。
+     * </p>
      */
-    @Resource
+    @Autowired
     private IMqMessageReceiver<R, T> receiver;
 
     /**
@@ -82,13 +88,13 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
     /**
      * 消息记录器，推进主记录状态、落库消费台账与失败留痕
      */
-    @Resource
+    @Autowired
     private IMqRecorder<R, T> recorder;
 
     /**
      * 消息分发器，分发段（广播消费/构建台账）协作类
      */
-    @Resource
+    @Autowired
     private IMqMessageProcessor<R, T> processor;
 
     /**

@@ -22,6 +22,9 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:admin}
     password: ${RABBITMQ_PASSWORD:admin123}
+    listener:
+      simple:
+        acknowledge-mode: manual
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

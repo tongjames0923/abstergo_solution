@@ -55,7 +55,7 @@ public class LoggingServiceConfig {
         return new RemoteTableDataOperator();
     }
 
-    // ==================== MQ v2 记录驱动模型 · 日志消费并行接入（不影响存量 v1 DbLogWriter） ====================
+    // ==================== MQ v2 记录驱动模型 · 日志消费链路（v1 DbLogWriter 已下线，v2 全面接管） ====================
     // 说明：以下协作者均为进程内内存实现且刻意不加 @Component，集中由本 config 装配，避免与未来 DB/Redis 实现重复注册；
     // 记录层内存实现重启即清空，定位为链路验证/开发环境用，生产替换为 DB 记录器即可，消费上下文与各段无需改动。
 
@@ -127,7 +127,7 @@ public class LoggingServiceConfig {
     }
 
     /**
-     * 日志 v2 消费上下文：自装配监听容器 + 建档确认全链路，独立队列 {@code systemLog.v2} 与 v1 并行、互不影响
+     * 日志 v2 消费上下文：自装配监听容器 + 建档确认全链路，接管原队列 {@code systemLog}
      *
      * @return 消费上下文
      */

@@ -1,6 +1,5 @@
 package com.tbs.rabbitmq.support;
 
-import com.tbs.mq.api.retry.IRetryDelayPolicy;
 import lombok.Data;
 import org.springframework.amqp.core.AcknowledgeMode;
 
@@ -117,11 +116,6 @@ public class MqConsumerProperties {
      * 最大重试次数，超过后消息进入死信留痕
      */
     private int maxRetryCount = 3;
-
-    /**
-     * 重试延迟策略，为null时使用容器默认的档位策略（30秒→2分钟→10分钟）
-     */
-    private IRetryDelayPolicy retryDelayPolicy;
 
     // ======================== 幂等控制 ========================
 
@@ -335,17 +329,6 @@ public class MqConsumerProperties {
          */
         public Builder maxRetryCount(int maxRetryCount) {
             props.setMaxRetryCount(maxRetryCount);
-            return this;
-        }
-
-        /**
-         * 设置重试延迟策略
-         *
-         * @param retryDelayPolicy 重试延迟策略
-         * @return 当前Builder实例
-         */
-        public Builder retryDelayPolicy(IRetryDelayPolicy retryDelayPolicy) {
-            props.setRetryDelayPolicy(retryDelayPolicy);
             return this;
         }
 

@@ -3,14 +3,9 @@ package com.tbs.app.config;
 import com.tbs.app.service.impl.token.CookieRefreshTokenService;
 import com.tbs.app.web.DefaultUserLoginInfoService;
 import com.tbs.broadcast.rabbitmq.support.SimpleRabbitMqSupport;
-import com.tbs.cdc.model.CdcEvent;
 import com.tbs.common.i18n.AbstractMessageSourceProvider;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.rabbitmq.RabbitMqLoggingRecorder;
-import com.tbs.mq.RedisFaildMessageStore;
-import com.tbs.mq.api.retry.IFailedMessageStore;
-import com.tbs.rabbitmq.support.AbstractMqConsumer;
-import com.tbs.rabbitmq.support.MqConsumerProperties;
 import com.tbs.schedule.RedisTaskStore;
 import com.tbs.schedule.api.ScheduleTrigger;
 import com.tbs.schedule.api.TaskStore;
@@ -18,7 +13,6 @@ import com.tbs.schedule.xxl.XxlJobScheduleTrigger;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
-import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.Codec;
 import org.redisson.codec.Kryo5Codec;
 import org.springframework.context.annotation.Bean;
@@ -50,11 +44,6 @@ public class AppConfig {
     @Bean
     SimpleRabbitMqSupport rabbitMqSupport() {
         return new SimpleRabbitMqSupport();
-    }
-
-    @Bean
-    public IFailedMessageStore systemFailedMessageStore(RedissonClient client) {
-        return new RedisFaildMessageStore(client);
     }
 
     @Bean
@@ -182,21 +171,6 @@ public class AppConfig {
 //            }
 //        };
 //    }
-
-    @Bean
-    public AbstractMqConsumer<CdcEvent> sqlServerConsumer() {
-        return new AbstractMqConsumer<CdcEvent>() {
-            @Override
-            protected MqConsumerProperties getProperties() {
-                return MqConsumerProperties.builder("cdc.erp.e10").build();
-            }
-
-            @Override
-            protected void handleMessage(CdcEvent message) throws Exception {
-                log.info("Received message: {}", message);
-            }
-        };
-    }
 
     @Bean
     public ScheduleTrigger xxlJobTrigger() {

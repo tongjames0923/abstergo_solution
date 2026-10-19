@@ -9,7 +9,8 @@ import com.tbs.cdc.service.property.CdcMqProperty;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.mq.api.producer.IMqProducer;
+import com.tbs.mq.v2.producer.IMqMessageProducer;
+import com.tbs.mq.v2.vo.MqMessageOutcomeVO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpAdmin;
 import org.springframework.beans.factory.InitializingBean;
@@ -18,7 +19,8 @@ import org.springframework.beans.factory.ObjectProvider;
 /**
  * CDC变更事件MQ发出监听器
  * <p>
- * 订阅全部库表与全部变更类型，将{@code CdcEvent}按路由键模板渲染后， 以JSON载荷经{@code IMqProducer}发出，{@code eventId}作为messageId幂等键。
+ * 订阅全部库表与全部变更类型，将{@code CdcEvent}按路由键模板渲染后， 经v2统一发送契约{@code IMqMessageProducer}发出，
+ * {@code eventId}同时作为messageId（去重锚点）与businessId（业务锚点）。
  * 发送失败仅记录日志，不影响CDC总线上的其他监听器与捕获链路。 启动阶段按{@code autoDeclare}配置自动声明交换机与可选的队列绑定。
  * </p>
  *
@@ -44,9 +46,9 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
     private static final String PLACEHOLDER_CHANGE_TYPE = "{changeType}";
 
     /**
-     * MQ消息发送契约
+     * v2消息发送契约，信封→厂商消息的组装与投递由其承担
      */
-    private final IMqProducer mqProducer;
+    private final IMqMessageProducer mqMessageProducer;
 
     /**
      * MQ发出配置
@@ -61,14 +63,13 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
     /**
      * 构造CDC MQ发出监听器
      *
-     * @param mqProducer        MQ消息发送契约
+     * @param mqMessageProducer v2消息发送契约
      * @param property          MQ发出配置
-     * @param objectMapper      JSON序列化器
      * @param amqpAdminProvider AMQP管理器提供者
      */
-    public CdcMqPublisher(IMqProducer mqProducer, CdcMqProperty property,
+    public CdcMqPublisher(IMqMessageProducer mqMessageProducer, CdcMqProperty property,
         ObjectProvider<AmqpAdmin> amqpAdminProvider) {
-        this.mqProducer = mqProducer;
+        this.mqMessageProducer = mqMessageProducer;
         this.property = property;
         this.amqpAdminProvider = amqpAdminProvider;
     }
@@ -98,7 +99,9 @@ public class CdcMqPublisher implements CdcChangeListener, InitializingBean {
             String routingKey = renderRoutingKey(event);
             log.info("CDC事件MQ发送中,{} eventId:{}, routingKey:{}, payload:{}", property.getExchange(),
                 event.getEventId(), routingKey, JSON.toJSONString(event));
-            mqProducer.send(property.getExchange(), routingKey, event, event.getEventId());
+            mqMessageProducer.send(MqMessageOutcomeVO.<CdcEvent>builder().messageId(event.getEventId())
+                .businessId(event.getEventId()).topic(property.getExchange()).routeKey(routingKey).payload(event)
+                .build());
         } catch (Exception e) {
             log.error("CDC事件MQ发送失败, eventId:{}, table:{}", event.getEventId(), event.getTable(), e);
         }

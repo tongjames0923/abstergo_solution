@@ -74,9 +74,6 @@ tbs:
   knife4j:
     enable: true
     show-url: true
-  mq:
-    retry:
-      scheduler: job
   oss:
     enable: ${OSS_ENABLE:false}
     type: ${OSS_TYPE:minio}

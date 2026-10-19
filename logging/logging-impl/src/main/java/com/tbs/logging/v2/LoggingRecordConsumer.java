@@ -26,13 +26,13 @@ import java.util.concurrent.TimeUnit;
  * 日志记录消费者（MQ v2 记录驱动模型 · 承载缓冲+批量入库的业务消费单元）
  * <p>
  * 实现 {@link IMqConsumer}，由日志 v2 上下文在其处理线程内、单飞保护与 PROCESSING 状态下调用 {@link #consume}。
- * 沿用存量 v1 {@code DbLogWriter} 的高吞吐写入范式：本地缓冲队列 + 满批/刷新信号触发批量入库，
+ * 沿用原 v1 日志写入器的高吞吐范式：本地缓冲队列 + 满批/刷新信号触发批量入库，
  * 单条失败降级逐条写入，不因个别异常阻断整体（日志链路容忍丢失）。消费只面向负载 {@link LoggingRecordForm}，
  * 不感知厂商通道、不做任何 ack/nak（确认由框架在接收段完成）。
  * </p>
  * <p>
- * 与 v1 {@code DbLogWriter} 的区别仅在接入模型：v1 直接继承 {@code AbstractMqConsumer}（v1），本类是注册进
- * {@code IConsumerRegistry} 的 v2 消费者，可与其他消费者按负载类型广播共存。非 Spring 注解类，由 config 装配并注册。
+ * 接入模型为 v2：本类是注册进 {@code IConsumerRegistry} 的 v2 消费者，可与其他消费者按负载类型广播共存。
+ * 非 Spring 注解类，由 config 装配并注册。
  * </p>
  *
  * @author tongj
