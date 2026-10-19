@@ -8,6 +8,7 @@ import com.tbs.sql.datasource.interceptor.impl.FullTableUpdateBlockInterceptor;
 import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.impl.SimpleEntityQueryWrapper;
+import com.tbs.sql.i18n.SqlMessageSourceProvider;
 import com.tbs.sql.interceptor.SqlAutoFillInterceptor;
 import com.tbs.sql.interceptor.SqlLoggingInterceptor;
 import com.tbs.sql.logger.ISqlLogger;
@@ -83,6 +84,14 @@ public class SqlAutoConfiguration {
 
     @Resource
     SqlProperty sqlProperty;
+
+    /**
+     * 注册 sql 模块消息源，使 datasource.intercept.* 拒绝文案可被全局 MessageSource 解析。
+     */
+    @Bean
+    public SqlMessageSourceProvider sqlMessageSourceProvider() {
+        return new SqlMessageSourceProvider();
+    }
 
     @Bean
     FetchMapper fetchMapper() { return new FetchMapper(); }

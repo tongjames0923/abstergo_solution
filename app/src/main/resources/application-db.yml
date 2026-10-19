@@ -21,14 +21,26 @@ spring:
       minimum-idle: 5
       # 最大连接数
       maximum-pool-size: 20
-      # 连接超时时间(毫秒)
-      connection-timeout: 30000
+      # 连接超时时间(毫秒)——现在由 Hikari 作为「获取连接等待」的唯一权威（限流器不再自己超时），
+      # 调小即 fail-fast：排队超过该时长仍拿不到连接就抛异常，避免请求挂满 30s
+      connection-timeout: 5000
       # 空闲连接超时时间(毫秒)
       idle-timeout: 600000
       # 连接最大存活时间(毫秒)
       max-lifetime: 1800000
       # 连接测试查询
       connection-test-query: SELECT 1
+tbs:
+  sql:
+    enable-datasource-intercept: true
+    enable-full-table-update-block: false
+    # 连接准入限流（ConnectionAdmissionLimiter）：职责已收窄为「只做一个 Hikari 给不了的闸门——在途数上限 + 秒拒」。
+    # 连接数上限交给 Hikari maximum-pool-size，获取连接的等待超时交给 Hikari connection-timeout。
+    conn-limit:
+      # 同时在途（已放行、尚未归还）的连接请求数上限，超过则立即快速拒绝（负载 shedding，0 等待）。
+      # 语义 ≈ Hikari 正在服务(≈pool-size) + 允许排在 Hikari 获取队列里的总量；建议 pool-size + 一定余量。
+      # 例：pool=20 → 100 表示最多允许 100 个连接请求同时"在途"，第 101 个直接秒拒。
+      max-waiters: 50
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
