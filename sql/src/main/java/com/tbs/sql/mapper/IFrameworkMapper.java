@@ -9,7 +9,7 @@ import tk.mybatis.mapper.additional.idlist.IdListMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateMapper;
 import tk.mybatis.mapper.additional.update.batch.BatchUpdateSelectiveMapper;
 import tk.mybatis.mapper.common.BaseMapper;
-import tk.mybatis.mapper.common.special.InsertListMapper;
+import tk.mybatis.mapper.additional.insert.InsertListMapper;
 
 /**
  * 框架通用Mapper接口，提供基于查询条件的通用CRUD操作。
@@ -20,7 +20,8 @@ import tk.mybatis.mapper.common.special.InsertListMapper;
  * <h3>主要功能</h3>
  * <ul>
  *   <li>继承BaseMapper，提供基础CRUD操作</li>
- *   <li>继承InsertListMapper，提供批量插入功能</li>
+ *   <li>继承InsertListMapper（tk additional.insert 变体），提供批量插入功能：该变体会写入应用侧赋值的
+ *   主键（如雪花），适用于非自增主键表；自增主键表传入 null 主键时由数据库生成</li>
  *   <li>继承BatchUpdateMapper，提供批量更新功能</li>
  *   <li>继承BatchUpdateSelectiveMapper，提供选择性批量更新功能</li>
  *   <li>继承IdListMapper，提供根据ID列表查询功能</li>
