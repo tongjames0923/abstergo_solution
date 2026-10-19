@@ -3,6 +3,8 @@ package com.tbs.sql.autoconfig;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.datasource.interceptor.JdbcExecutionInterceptor;
+import com.tbs.sql.datasource.interceptor.impl.FullTableUpdateBlockInterceptor;
 import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.impl.SimpleEntityQueryWrapper;
@@ -22,6 +24,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.PlatformTransactionManager;
 import tk.mybatis.spring.annotation.MapperScan;
@@ -75,6 +78,7 @@ import jakarta.annotation.Resource;
  * @see com.tbs.sql.annotation.core.EnableTbsSql
  */
 @MapperScan(basePackages = "com.tbs.sql.mapper", annotationClass = Mapper.class)
+@Import(DataSourceDecorationConfiguration.class)
 public class SqlAutoConfiguration {
 
     @Resource
@@ -96,6 +100,12 @@ public class SqlAutoConfiguration {
     @Bean
     @ConditionalOnProperty(name = "tbs.sql.enable-log-interceptor", havingValue = "true")
     SqlLoggingInterceptor sqlLoggingInterceptor() { return new SqlLoggingInterceptor(); }
+
+    @Bean
+    @ConditionalOnProperty(name = "tbs.sql.enable-full-table-update-block", havingValue = "true")
+    JdbcExecutionInterceptor fullTableUpdateBlockInterceptor() {
+        return new FullTableUpdateBlockInterceptor();
+    }
 
     @Bean
     SqlAutoFillInterceptor autoFillInterceptor() { return new SqlAutoFillInterceptor(); }

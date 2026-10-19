@@ -12,7 +12,7 @@ SQL 模块（`com.tbs:sql`）是基于 MyBatis + tk.mybatis 增强的**注解驱
 | **注解查询对象（QO）** | `Mapper.queryByQO(qo, page, Xxx.class)` | 前端多条件筛选、固定查询契约 |
 | **资源 SQL 文件** | 继承 `AbstractResourceCriteria` | 复杂 JOIN / 自定义 SQL |
 
-其他能力：**字段自动填充**（ID/时间）、**SQL 执行日志**、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**编程式事务**。
+其他能力：**字段自动填充**（ID/时间）、**SQL 执行日志**、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
 
 技术底座：tk.mybatis `mapper-spring-boot-starter` + `mapper-extra`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据）、`mysql-connector-java`、`p6spy`、`com.tbs:common`。
 
@@ -34,6 +34,7 @@ sql/
     ├── dsl/                      # 流式查询接口 + impl/
     ├── builder/                  # SqlDriver / EntitySqlDriver / ISqlBuildContext 等
     ├── criteria/                 # IQueryCriteria / IPage / Abstract*Criteria + impl/
+    ├── datasource/               # DataSource 装饰与 JDBC 执行拦截：decoration / interceptor / model
     ├── mapper/                   # IFrameworkMapper / SmartQueryMapper / IRawSqlSelectMapper + impl/
     ├── model/                    # where / select / order / limit / group / query / runtime 模型
     ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/
@@ -361,7 +362,75 @@ public class TenantInterceptor implements SqlComposeInterceptor {
 }
 ```
 
-## 六、数据库方言
+## 六、DataSource 装饰与 JDBC 执行拦截
+
+在 JDBC 执行层对**全部经过数据源的流量**（含绕过 MyBatis 的 Quartz、批量任务等原生 JDBC 调用）提供执行前拦截扩展点，与其余三层拦截并存各司其职：
+
+| 层次 | 组件 | 职责 |
+|------|------|------|
+| 构建期 | `SqlComposeInterceptor` | WHERE 条件树改写（数据权限/逻辑删除） |
+| MyBatis 执行期 | `SqlLoggingInterceptor` / `SqlAutoFillInterceptor` | Executor 层日志与参数回填 |
+| **JDBC 执行期** | DataSource 装饰器（`TbsDataSourceDecorator`） | 全量 JDBC 流量的执行阻断/放行、连接获取拦截 |
+| 驱动层 | p6spy | SQL 格式化观测（保留不动） |
+
+### 启用
+
+```yaml
+tbs:
+  sql:
+    enable-datasource-intercept: false        # DataSource 装饰总开关，默认关闭
+    exclude-sql: []                           # SQL 排除前缀列表，命中即跳过拦截器链
+    enable-full-table-update-block: false     # 内置全表 UPDATE/DELETE 防护拦截器开关，默认关闭
+```
+
+开启后，容器内的数据源 Bean 被 `DataSourceDecorationPostProcessor` 装饰为 `TbsDataSourceDecorator`
+（唯一候选直接装饰；多候选时仅装饰标注 `@Primary` 的；多候选且无 Primary 则跳过并告警）。
+此后每次 `getConnection` 均经连接级裁决，每个 Statement 的 execute 系方法均经执行级裁决。
+
+### 自定义拦截器（SPI）
+
+```java
+@Component
+public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
+
+    @Override
+    public InterceptVerdict interceptConnection(JdbcConnectionContext context) {
+        // 连接获取阶段钩子（仅拦截，不做数据源路由）
+        return InterceptVerdict.allow();
+    }
+
+    @Override
+    public InterceptVerdict interceptExecution(JdbcExecuteContext context) {
+        if (context.getCommandKind() == SqlCommandKind.DDL) {
+            return InterceptVerdict.deny("datasource.intercept.ddl.forbidden");
+        }
+        return InterceptVerdict.allow();
+    }
+
+    @Override
+    public int getOrder() { return 0; }   // 值越小越先执行
+}
+```
+
+要点：
+
+- 注册为 Spring Bean 即生效，按 `getOrder()` 升序链式调用，首个拒绝立即短路
+- 拒绝只需返回 `InterceptVerdict.deny(i18nKey, params...)`，框架统一经 `AssertUtil` 抛 i18n 异常（`messages-sql.properties` / `messages-sql_en_US.properties`）
+- 内置参考实现 `FullTableUpdateBlockInterceptor`（`enable-full-table-update-block=true` 启用）：拒绝无 WHERE 的 UPDATE / DELETE
+
+### 能力边界（重要）
+
+1. **仅见 SQL 文本**：上下文只含最终 SQL（含 `?` 占位符），不捕获 PreparedStatement 参数值
+2. **不改写 SQL**：拦截器只能裁决放行/拒绝，框架不提供 SQL 改写能力
+3. **不做路由**：连接级钩子仅作拦截点，不承担多数据源路由职责
+4. **覆盖全部 JDBC 流量**：含框架自身语句（连接池健康检查等），误伤时用 `tbs.sql.exclude-sql` 前缀排除
+5. **排除规则前置短路**：命中的 SQL 跳过整个拦截器链，亦是性能保护
+6. **固有开销**：每个 Connection / Statement 增加一层 JDK 动态代理；无拦截器时仅此开销
+7. **批量执行**：`executeBatch` 按 `addBatch` 记录的 SQL 逐条裁决；无记录且有预编译 SQL 时按预编译 SQL 裁决
+8. **多数据源**：多候选且未标注 `@Primary` 时跳过装饰并告警，不会误伤次要数据源
+9. **与 p6spy / Executor 层日志并存**：SQL 日志与耗时观测仍由二者承担，本 SPI 不强制观测回调
+
+## 七、数据库方言
 
 框架通过 `SqlDialect`（五个 Extractor：Select / Where / Order / Group / Limit）抽象数据库差异：
 
@@ -374,7 +443,7 @@ public class TenantInterceptor implements SqlComposeInterceptor {
 
 除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。扩展新数据库：实现 `SqlDialect` + 各 Extractor，参照 `MysqlDialectAutoConfiguration` 编写配置类并配套 `@UseXxx` 注解。
 
-## 七、编程式事务
+## 八、编程式事务
 
 `TransactionUtil`（单例，构造时注入 `PlatformTransactionManager`）：
 
@@ -400,6 +469,9 @@ tbs:
     sql-logger-type: com.tbs.sql.logger.impl.NoSqlLogger   # 日志器（默认无操作）
     use-raw-value: false             # true 时参数值内联进 SQL（不安全），默认 false 走预编译占位符
     sql-assembler-type: com.tbs.sql.assembler.impl.DefaultSqlAssembler   # 【当前未生效】
+    enable-datasource-intercept: false        # DataSource 装饰与 JDBC 执行拦截总开关，默认 false
+    exclude-sql: []                           # SQL 排除前缀列表（忽略大小写），命中即跳过拦截器链
+    enable-full-table-update-block: false     # 内置全表 UPDATE/DELETE 防护拦截器开关，默认 false
 ```
 
 > **未生效配置说明**：`sql-assembler-type` 已定义但代码中无任何读取点——`ISqlAssembler` Bean 由各**方言自动配置类**固定创建 `DefaultSqlAssembler`。如需自定义组装逻辑，请直接注册 `ISqlAssembler` 类型的 Bean 覆盖。
@@ -454,6 +526,9 @@ public class TenantIdProvider implements IAutoValueProvider {
 9. **`QueryEngine.getInstance()` 依赖启动顺序**：静态单例在 `startUp()` 中赋值，过早调用（如其他 `IStartup` 先于本模块执行）会抛"QueryEngine尚未初始化"
 10. **`count()` 返回 `Integer`**：超大数据量计数注意溢出
 11. **`ICustomWhereProvider` 需自行防注入**：返回的 SQL 片段直接拼接进 WHERE
+12. **DataSource 装饰默认关闭**：`tbs.sql.enable-datasource-intercept` 默认 `false`；开启后仅装饰主数据源（唯一候选或标注 `@Primary` 的 Bean），多候选且无 Primary 时跳过装饰并告警
+13. **JDBC 执行拦截不拿参数值、不改写 SQL**：拦截上下文仅含 SQL 文本与命令类型推断，观测（SQL 日志/耗时）仍由 p6spy 与 Executor 层日志承担
+14. **排除规则建议显式配置**：装饰覆盖全部 JDBC 流量，连接池健康检查、批量任务框架自身语句等应通过 `tbs.sql.exclude-sql` 前缀排除
 
 ## 许可证
 
@@ -461,5 +536,5 @@ public class TenantIdProvider implements IAutoValueProvider {
 
 ---
 
-**最后更新**: 2026年9月
+**最后更新**: 2026年10月
 **版本**: 1.0-SNAPSHOT

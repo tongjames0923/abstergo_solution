@@ -7,6 +7,9 @@ import com.tbs.sql.logger.impl.NoSqlLogger;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * SQL模块配置属性类，封装SQL模块的所有配置信息。
  *
@@ -81,4 +84,27 @@ public class SqlProperty {
      * 默认使用 {@link DefaultSqlAssembler}。
      */
     private Class<? extends ISqlAssembler> sqlAssemblerType = DefaultSqlAssembler.class;
+
+    /**
+     * 是否启用 DataSource 装饰与 JDBC 执行拦截。
+     * 启用后容器内的 DataSource 将被装饰，注册为 Spring Bean 的
+     * {@link com.tbs.sql.datasource.interceptor.JdbcExecutionInterceptor} 按 order 升序链式生效。
+     * 默认值为 {@code false}。
+     */
+    private boolean enableDatasourceIntercept = false;
+
+    /**
+     * 是否启用内置的全表 UPDATE/DELETE 防护拦截器。
+     * 启用后拒绝无 WHERE 条件的 UPDATE / DELETE 语句。
+     * 默认值为 {@code false}。
+     */
+    private boolean enableFullTableUpdateBlock = false;
+
+    /**
+     * SQL 排除前缀列表（忽略大小写，匹配前剥离头部注释与空白）。
+     * 命中的 SQL 直接透传执行，跳过 JDBC 执行拦截器链，
+     * 用于排除连接池健康检查、批量任务框架自身语句等场景。
+     * 默认为空列表，即不排除任何 SQL。
+     */
+    private List<String> excludeSql = new ArrayList<>();
 }
