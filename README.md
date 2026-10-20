@@ -29,7 +29,7 @@
 - **国际化全链路**：后端 `AssertUtil.i18n(key)` 断言 + 模块化资源文件（`messages-{module}.properties`，中英双语自动注册）；前端 vue-i18n + `Accept-Language` 请求头联动
 - **蓝绿部署验证**：`/public/gateway/version` 版本探针（构建信息 + 视图路由版本号），支撑前端动态路由缓存比对与流量切换验证
 - **append-only 版本化配置**：动态视图路由/表单配置支持版本历史与一键回滚（版本表为唯一事实来源）
-- **消息可靠性骨架**：厂商无关 MQ 抽象层（幂等三态、失败快照存储、档位延迟重投递、毒消息死信），RabbitMQ 实现开箱可用
+- **消息可靠性（v2 记录驱动模型）**：厂商无关 MQ 契约层——不信任厂商、信任自建落库记录，投递可靠性（主记录）与消费可靠性（逐消费者台账）分层承载，消息级单飞互斥、负载格式可插拔转换；提供内存基本实现，RabbitMQ 传输层适配器开箱可用
 - **SQL 观测**：p6spy 代理驱动全量 SQL 日志（慢 SQL 阈值 2s 检测）
 
 ## 架构总览
@@ -65,7 +65,7 @@ flowchart LR
     APP -.->|定时调度| XXL
 ```
 
-三个服务均以 Nacos 为注册中心（Dubbo Triple 协议）与配置中心；操作日志经 RabbitMQ 异步流入 logging-service 落库；xxl-job 集中驱动定时任务（树重建、日志刷盘、MQ 重投递等）。
+三个服务均以 Nacos 为注册中心（Dubbo Triple 协议）与配置中心；操作日志经 RabbitMQ（MQ v2 记录驱动链路）异步流入 logging-service 落库；xxl-job 集中驱动定时任务（树重建、日志刷盘等）。
 
 ## 技术栈
 
@@ -105,7 +105,7 @@ flowchart LR
 
 | 模块 | 契约 | 文档 |
 |------|------|------|
-| [mq-mod](mq-mod/README.md) | `mq-api`：厂商无关 MQ 契约（生产/消费编排/幂等三态/失败重投递） | [README](mq-mod/README.md) |
+| [mq-mod](mq-mod/README.md) | `mq-api`：厂商无关 MQ v2 契约（记录驱动消费：接收/分发/双层记录/单飞/路由/负载转换 + 内存实现） | [README](mq-mod/README.md) |
 | [cache](cache/README.md) | `cache-api`：TTL 缓存、多级缓存、`@ExpireOn` 过期、`@CacheTransform` 序列化 | [README](cache/README.md) |
 | [shared](shared/README.md) | `shared-api`/`shared-pojo`：全功能 Service 模板、24 个系统实体、27 个 Mapper、逻辑删除、校验框架 | [README](shared/README.md) |
 | [tree-struct](tree-struct/README.md) | `tree-api`：内存多叉树 + 闭包表持久化契约 | [README](tree-struct/README.md) |
@@ -120,8 +120,8 @@ flowchart LR
 
 | 模块 | 提供的实现 | 文档 |
 |------|------|------|
-| [redis-mod](redis-mod/README.md) | Redisson：分布式锁、缓存 L2、DataHolder、任务存储、MQ 幂等/失败存储 | [README](redis-mod/README.md) |
-| [rabbitmq-mod](rabbitmq-mod/README.md) | RabbitMQ：收发实现、事件广播、日志通道（Java 序列化转换器） | [README](rabbitmq-mod/README.md) |
+| [redis-mod](redis-mod/README.md) | Redisson：分布式锁、缓存 L2、DataHolder、任务存储（MQ v1 幂等/失败存储已随 v2 下线） | [README](redis-mod/README.md) |
+| [rabbitmq-mod](rabbitmq-mod/README.md) | RabbitMQ：MQ v2 传输层适配（自建容器 / @RabbitListener 两种接入）、v2 统一发送、事件广播、日志通道 | [README](rabbitmq-mod/README.md) |
 | [xxl-job-mod](xxl-job-mod/README.md) | XXL-Job 执行器装配、JSON 任务执行器、后台任务批量驱动、async 内核外部驱动 | [README](xxl-job-mod/README.md) |
 | [open-api-starter](open-api-starter/README.md) | Knife4j 文档装配 + `@AjaxResponseType` 响应 Schema 定制 | [README](open-api-starter/README.md) |
 | [updater](updater/README.md) | 自动更新库（多文件下载/部署脚本）+ `updater-gui` Swing 演示程序（统一文档） | [README](updater/README.md) |
@@ -144,7 +144,7 @@ flowchart LR
 | `@EnableTbsSql` + `@UseMysql` | sql | `@UseKnife4jPack` | open-api-starter |
 | `@EnableWebPack` | web | `@EnableViewControl` | dynamic-view-route |
 | `@EnableTbsCache` | cache | `@EnableSharedLibBean` | shared |
-| `@EnableTbsMq` | mq-mod | `@UseClosureTableTree` | tree-struct |
+| `@EnableTbsCdc` | cdc-mod | `@UseClosureTableTree` | tree-struct |
 | `@EnableTbsRedis` | redis-mod | `@EnableTbsOss` | oss |
 | `@EnableScriptEngine` | script-engine | | |
 
@@ -288,7 +288,7 @@ curl http://127.0.0.1:8080/public/gateway/version
 1. **前端**：`npm run build:prod` → `dist/`；Nginx 参考配置见 `app-ui-vue/nginx.conf`（监听 8866，`/api/` rewrite 后代理后端，history 模式回落 `index.html`，静态资源 7 天缓存）
 2. **后端**：可执行 jar + 环境变量注入（或将配置迁入 Nacos）；建议 `ddl-auto` 改为 `validate`，用迁移脚本管理表结构
 3. **拓扑**：Nginx → app-service（可多实例）；dic/logging 服务按需横向扩容；全部服务注册到生产 Nacos
-4. **调度**：xxl-job 控制台注册执行器（`app-name: mainSystemApplication`），配置 `department_tree_rebuild`、`flushLogData`、`runningBackGroundJobHandler`（含 MQ 重投递）等任务
+4. **调度**：xxl-job 控制台注册执行器（`app-name: mainSystemApplication`），配置 `department_tree_rebuild`、`flushLogData`、`runningBackGroundJobHandler` 等任务
 
 详细规范见 [docs/guideline/06-部署与运维规范.md](docs/guideline/06-部署与运维规范.md) 与 [app-ui-vue/DEPLOYMENT.md](app-ui-vue/DEPLOYMENT.md)。
 

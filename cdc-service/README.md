@@ -7,12 +7,12 @@ CDC MQ发出服务：独立可运行的 Spring Boot 服务，基于 cdc-mod 捕�
 ```
 SQL Server ──Debezium Embedded──> cdc-sqlserver-impl 捕获
           ──> CdcEventBus 进程内总线
-          ──> CdcMqPublisher（本服务胶水：模板渲染路由键 + JSON 载荷）
-          ──> IMqProducer/RabbitMqProducer ──> RabbitMQ 交换机 ──> 下游消费者
+          ──> CdcMqPublisher（本服务胶水：模板渲染路由键 + 组装 v2 信封）
+          ──> IMqMessageProducer（v2 统一发送契约，RabbitMqMessageProducer 落地） ──> RabbitMQ 交换机 ──> 下游消费者
 ```
 
 - 职责边界：只做 **捕获 + MQ 发出**；进程内监听器能力保留（cdc-mod 原生支持），业务消费由下游 MQ 消费者对接
-- 投递语义：至少一次；`CdcEvent.eventId` 写入消息 `messageId`，消费端以之作幂等去重键
+- 投递语义：至少一次；`CdcEvent.eventId` 作为 v2 信封 `messageId`（消费端接收段以之作**建档去重**的记录主键），`businessId` 固定为 `cdc`；负载由 v2 默认 `JdkMqPayloadConverter` 序列化（非 JSON，JSON 仅用于发送日志）
 - 可靠性：发送失败仅记录日志（含 eventId/table），不影响捕获链路与其他监听器；`auto-declare` 启动时自动声明交换机/队列/绑定，避免发送侧 404
 
 ## 启用方式

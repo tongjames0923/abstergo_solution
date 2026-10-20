@@ -13,9 +13,10 @@ Redis 模块（`com.tbs:redis`）是基于 **Redisson**（`redisson-spring-boot-
 | 分布式锁 | `RedissonLockProvider` / `RedissonLock` | lock（async 模块）：`ILockProvider` |
 | 事件广播 | `AbstractRedisEventSupport` / `SimpleRedisEventSupport` | broadcast（async 模块）：`IDistributedBusSupport` 等 |
 | 任务持久化 | `RedisTaskStore` | schedule（async 模块）：`TaskStore` |
-| MQ 支撑 | `AbstractRedisIdempotentStore` / `RedisFaildMessageStore` | mq-api：`IIdempotentStore` / `IFailedMessageStore` |
 
-**单 Maven 模块**（artifactId `redis`，19 个源文件），依赖 `com.tbs:common`、`com.tbs:cache-api`、`com.tbs:mq-api`、`redisson-spring-boot-starter`。
+> MQ 支撑说明：v1 时代的 `AbstractRedisIdempotentStore` / `RedisFaildMessageStore`（对接 mq-api `IIdempotentStore`/`IFailedMessageStore`）已随 **MQ v2 重构下线**；v2 的存储/协作契约（`IMqRecorder` 主记录+台账、`IMqMessageMonopolizer` 分布式单飞）尚无 Redis 落地，当前各链路使用 mq-api 内置内存实现，生产级 Redis/DB 实现为待闭环项（见 [mq-v2 设计大纲 §7.2](../docs/mq-v2-design-outline.md)）。
+
+**单 Maven 模块**（artifactId `redis`，19 个源文件），依赖 `com.tbs:common`、`com.tbs:cache-api`、`com.tbs:mq-api`（v1 存储下线后代码已不再引用，待随依赖清理移除）、`redisson-spring-boot-starter`。
 
 Redisson 客户端本身由 `redisson-spring-boot-starter` 基于 Spring Boot 标准 `spring.redis.*` 配置自动创建，本模块通过 `RedissonAutoConfigurationCustomizer` 定制编解码与线程参数。
 
@@ -34,8 +35,7 @@ redis-mod/
     ├── com.tbs.cache.redis/          # 缓存侧（经 tbs.cache.* 配置或宿主扫描生效）
     ├── com.tbs.lock.redis/           # 锁侧（经 tbs.lock.lock-provider-type 配置生效）
     ├── com.tbs.broadcast.redis/      # 广播侧（需注册为 Bean）
-    ├── com.tbs.schedule/             # 调度持久化（注册为 Bean 后供调度内核收集）
-    └── com.tbs.mq/                   # MQ 幂等/失败消息存储（手动注册使用）
+    └── com.tbs.schedule/             # 调度持久化（注册为 Bean 后供调度内核收集）
 ```
 
 ## 启用方式
@@ -80,7 +80,7 @@ tbs:
 
 > `RedisProperty` javadoc 中"默认 JdkSerializationRedisSerializer"为过期注释，代码实际兜底为 Jackson JSON。
 
-**DefaultSystemCodec**：将 Spring `RedisSerializer` 包装为 Redisson `BaseCodec`（编码 `serializer.serialize` → ByteBuf，解码反向）。注意：`GenericJackson2JsonRedisSerializer` 会为对象写入 `@class` 类型信息，**对 Redis key 也会带 JSON 包装**（mq 组件因此改用 StringCodec，见下文）。
+**DefaultSystemCodec**：将 Spring `RedisSerializer` 包装为 Redisson `BaseCodec`（编码 `serializer.serialize` → ByteBuf，解码反向）。注意：`GenericJackson2JsonRedisSerializer` 会为对象写入 `@class` 类型信息，**对 Redis key 也会带 JSON 包装**（调度 TaskStore 等需纯文本 key 的组件因此改用 `StringCodec`，见下文）。
 
 ### 2. 配置说明
 
@@ -183,39 +183,7 @@ public class OrderEventSupport extends SimpleRedisEventSupport {
 - `save`：`isPersistable()==false` 的内存态任务跳过落盘（warn）；
 - `loadUnfinished`：进程重启后逐条还原，单条损坏数据记 error（截断 128 字符摘要）并跳过，不阻断整体恢复。
 
-### 9. MQ 幂等与失败消息存储（com.tbs.mq）
-
-rabbitmq-mod 消费者的 Redis 落地（**需手动注册 Bean**，模块内无自动装配）：
-
-**`AbstractRedisIdempotentStore`**（抽象类，扩展 mq-api `AbstractIdempotentStore`，子类提供 `RedissonClient`）：
-
-- 幂等键两态生命周期（RBucket value 即状态）：`PROCESSING`（占位）/ `DONE`（完成）；
-- `tryAcquire`：`setIfAbsent(PROCESSING, ttl)` 单命令原子占位（防"崩溃后键无 TTL 永久残留"）；
-- `markDone`：覆盖为 `DONE` 并延续 TTL；
-- `release`：Lua 脚本**仅当值仍为 PROCESSING 时删除**——失败释放不会误删完成态记录。
-
-**`RedisFaildMessageStore`**（类名拼写如此，扩展 mq-api `AbstractFailedMessageStore`，仅存储职责、无调度逻辑）：
-
-- 数据结构：`failed:message:index`（ZSet，score = nextRetryTime 毫秒）+ `failed:message:status`（Hash，PROCESSING 标记）+ `failed:message:{id}`（Hash，FailedMessage JSON）；
-- 全部 Redis 操作经 **Lua 脚本 + `StringCodec`** 原子执行——规避 `DefaultSystemCodec`（Jackson）为 key 附加类型前缀导致的 key 不一致问题；`FailedMessage` 的序列化在 Java 侧由 `ObjectMapper` 完成，Lua 只传递原始字符串；
-- `doFetchDue`：原子地"取到期 → 标记 PROCESSING → 移出索引"；单条反序列化失败跳过，内容缺失时清理状态标记。
-
-```java
-@Configuration
-public class MqRedisStoreConfig {
-
-    @Bean
-    public IFailedMessageStore failedMessageStore(RedissonClient client) {
-        return new RedisFaildMessageStore(client);   // rabbitmq 消费者重试持久化依赖此 Bean
-    }
-
-    @Bean
-    public IIdempotentStore idempotentStore(RedissonClient client) {
-        // AbstractRedisIdempotentStore 为抽象类，需按需提供轻量子类实现 getRedissonClient()
-        return new SimpleRedisIdempotentStore(client);
-    }
-}
-```
+> 原第 9 节「MQ 幂等与失败消息存储」已随 MQ v2 重构删除（`com.tbs.mq` 包与两个存储类不再存在），参见模块概述处的 MQ 支撑说明。
 
 ## 装配途径说明
 
@@ -225,13 +193,13 @@ public class MqRedisStoreConfig {
 |------|------|------|
 | `@EnableTbsRedis` 自动扫描 | `BasicRedisConfig`、`RedissonCacheConfig`、codec、常量 | 扫描范围仅 `com.tbs.redis` 包，注册 `Feature.REDIS` |
 | 宿主组件扫描（`@ComponentScan` 覆盖 `com.tbs`） | `RedissonTtlCacheDecorator`（`@Component`） | 宿主仅扫描自身包时不会生效 |
-| 配置指定类名 / 手动注册 Bean | `RedisDataHolder`（`tbs.data.data-holder`）、`RedissonLockProvider`（`tbs.lock.lock-provider-type`）、`RedisTaskStore`、mq 存储、广播支持 | 按需接入 |
+| 配置指定类名 / 手动注册 Bean | `RedisDataHolder`（`tbs.data.data-holder`）、`RedissonLockProvider`（`tbs.lock.lock-provider-type`）、`RedisTaskStore`、广播支持 | 按需接入 |
 
 ## 使用注意事项
 
 1. **`clear()` = `flushall()`**：`RedisDataHolder.clear()` 清空整个 Redis 实例，共享实例环境严禁调用
 2. **必须 `tbs.redis.enable=true`**：Customizer 中 `orElse(new DefaultSystemCodec(SpringUtil.getBean(REDIS_VALUE_SERIALIZER, ...)))` 为急切求值——`enable=false` 时 Bean 不存在，`getBean` 抛异常导致 Redisson 初始化失败（当前实现行为，启用模块即意味着置 true）
-3. **Jackson key 包装**：`GenericJackson2JsonRedisSerializer` 序列化的 key 带 `@class` 类型信息，与本模块 mq 组件（StringCodec 纯文本 key）共存时注意键空间隔离；mq 组件的 StringCodec 方案即为此设计
+3. **Jackson key 包装**：`GenericJackson2JsonRedisSerializer` 序列化的 key 带 `@class` 类型信息，与本模块 StringCodec 纯文本 key 组件（如 `RedisTaskStore`）共存时注意键空间隔离；StringCodec 方案即为此设计
 4. **序列化器跨服务一致**：读写两端（多个微服务）应配置相同 `value-serializer`，否则反序列化失败
 5. **广播无确认/TTL**：Redis Pub/Sub 为即发即失，节点离线期间的广播事件不会补投；可靠事件请使用 rabbitmq-mod 的 MQ 广播
 6. **条件锁 signalAll 语义弱化**：基于 CountDownLatch，`signalAll()` 等价 `signal()`，仅唤醒一次等待；多等待者场景需自行循环 signal

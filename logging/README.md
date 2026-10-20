@@ -14,21 +14,22 @@ Logging 模块（`com.tbs:logging`）是一个**独立的日志 Dubbo 微服务*
 | `logging-api` | 契约层：`ILogRecorder` / `ILogExtractor` 接口、日志表单与 VO（无额外业务依赖） |
 | `logging-impl` | 服务实现：Dubbo 服务提供者、DB 读写器、独立 Spring Boot 进程（boot repackage 可执行 jar） |
 
-`logging-impl` 依赖：`logging-api`、`cache-impl`、`redis`、`shared-api`（存储实体与 Mapper）、`system-api`（`ISystemLogService` 契约）、`rabbitmq-logging`（MQ 消费基类）、Nacos Config、spring-dotenv。
+`logging-impl` 依赖：`logging-api`、`cache-impl`、`redis`、`shared-api`（存储实体与 Mapper）、`system-api`（`ISystemLogService` 契约）、`rabbitmq-logging`（MQ 日志投递端，传递引入 `rabbitmq-impl`/`mq-api` v2 消费链路契约）、Nacos Config、spring-dotenv。
 
 ## 全链路架构
 
 ```
 [业务应用侧]（如 app 模块，AppConfig 注册 ILogRecorder Bean）
     │  RabbitMqLoggingRecorder("tbs.log.queue", "systemLog")
-    │    record(form) → RabbitTemplate.convertAndSend（失败仅记日志，不阻断业务）
+    │    record(form) → 组装 v2 信封经 IMqMessageProducer 发送（失败仅记日志，不阻断业务）
     │    flush()     → 发送 flushFlag=1 的空表单，通知服务端刷写缓冲
     ▼
 RabbitMQ（exchange "tbs.log.queue" / routingKey "systemLog"）
     ▼
-[logging 服务]（本模块）
-    DbLogWriter（继承 rabbitmq-logging 的 AbstractRabbitMqLogRecordWriter）
-    │  消费消息 → 转 SystemOperateRecordEntity（systemLogFlag=1）
+[logging 服务]（本模块，MQ v2 记录驱动消费链路）
+    LoggingRecordRabbitMqContext（RabbitMqContext<LoggingRecordForm>，contextId=2）
+    │  接收建档 → LoggingRecordConsumer（consumeId=1）消费
+    │  → 转 SystemOperateRecordEntity（systemLogFlag=1）
     │  本地缓冲 LinkedBlockingQueue(100) → 批量 100 条 insertList
     │  批量失败降级逐条 insertSelective
     ▼
@@ -52,9 +53,11 @@ logging/
 └── logging-impl/                     # 服务实现
     └── com.tbs.logging/
         ├── LoggingServiceApplication # 启动类
-        ├── config/                   # LoggingServiceConfig（Bean 装配）
-        └── impl/                     # SimpleSystemLogServiceImpl / DbLogWriter /
-                                      #   DbLogExtractor / CacheNamesConstants
+        ├── config/                   # LoggingServiceConfig（v2 消费链路 Bean 集中装配）
+        ├── v2/                       # LoggingRecordRabbitMqContext / LoggingRecordMessageReceiver /
+        │                             #   LoggingRecordMessageProcessor / LoggingRecordConsumer
+        └── impl/                     # SimpleSystemLogServiceImpl / DbLogExtractor /
+                                      #   CacheNamesConstants / RemoteTableDataOperator
     └── resources/
         ├── application.yml           # 主配置（Nacos/Dubbo，server.port=8081）
         ├── application-db.yml        # 数据源（p6spy + HikariCP）
@@ -74,7 +77,7 @@ public interface ILogRecorder {
 }
 ```
 
-默认实现 `RabbitMqLoggingRecorder`（位于 rabbitmq-mod 的 `rabbitmq-logging` 子模块）：构造时指定 exchange 与 routingKey，`record` 经 `RabbitTemplate` 发布，异常仅记录日志不抛出；`flush` 发送 `flushFlag=1` 的空表单。业务应用侧的注册示例（app 模块 `AppConfig`）：
+默认实现 `RabbitMqLoggingRecorder`（位于 rabbitmq-mod 的 `rabbitmq-logging` 子模块）：构造时指定 exchange 与 routingKey，`record` 组装 v2 信封（`MqMessageOutcomeVO`：topic=交换机 / routeKey=路由键 / payload=表单）经 `IMqMessageProducer` 发布，异常仅记录日志不抛出；`flush` 发送 `flushFlag=1` 的空表单。业务应用侧的注册示例（app 模块 `AppConfig`）：
 
 ```java
 @Bean
@@ -163,18 +166,17 @@ PageVO<LogRecordVO> page = systemLogService.getLogRecordList(form);
 List<LogOperateTypeView> report = systemLogService.getLogOperateTypeList(7);
 ```
 
-## 消费端实现（DbLogWriter）
+## 消费端实现（MQ v2 链路）
 
-继承 `AbstractRabbitMqLogRecordWriter`（rabbitmq-logging 提供，泛型 `LoggingRecordForm`），后者继承 rabbitmq-impl 的 `AbstractMqConsumer`（自动声明队列/交换机绑定、启动 `SimpleMessageListenerContainer`、按分派结果路由 ACK/重试/死信，幂等存储由 redis-mod 等可选提供）。本消费者配置：
+存量 v1 消费者（`DbLogWriter`）已随 v2 全面替换下线，消费端由 `com.tbs.logging.v2` 四个类承担，全部由 `LoggingServiceConfig` 以 `@Bean` 集中装配（不加 `@Component`），链路见 [rabbitmq-mod README](../rabbitmq-mod/README.md)：
 
-- 消费者名 `systemLog`，exchange `tbs.log.queue`，routingKey `systemLog`，`prefetchCount=250`，`retryEnabled=false`
-- 处理逻辑：
-  - `flushFlag=1` → 立即刷写缓冲；
-  - 否则转换为实体（`systemLogFlag=1`，耗时 = `operateFinishTime - operateTime`）放入本地缓冲队列 `LinkedBlockingQueue(100)`；
-  - 队列满 → 强制刷写后再入队；
-- 刷写 `flushBuffer()`：`drainTo` 至多 100 条（`BATCH_SIZE`）→ `mapper.insertList` 批量插入 → 失败降级逐条 `insertSelective`（单条失败仅记日志，不中断）。
+- `LoggingRecordRabbitMqContext`：`RabbitMqContext<LoggingRecordForm>` 子类，**直接接管原 `systemLog` 队列**（交换机 `tbs.log.queue` / 路由键 `systemLog` 均不变，投递端无需改动；无并行、无双写），`getContextId()=2`，`prefetchCount=250`，手动 ack（父类默认）、单条投递语义；
+- `LoggingRecordMessageReceiver` / `LoggingRecordMessageProcessor`：接收/分发段薄壳，仅绑定 `<Message, LoggingRecordForm>` 泛型；
+- `LoggingRecordConsumer`（`IMqConsumer<LoggingRecordForm>`，`consumeId=1`）：沿用 v1 高吞吐范式——本地缓冲 `LinkedBlockingQueue(100)`，满批（100 条）/ flush 消息 / 定时（5s）触发 `insertList` 批量入库，批量失败降级逐条 `insertSelective`（单条失败仅记日志，日志链路容忍丢失）；转换为实体时 `systemLogFlag=1`，耗时 = `operateFinishTime - operateTime`；消费不感知厂商通道、不做 ack/nak。
 
-> `flush()`（生产端发 flushFlag 消息）是主动触发刷盘的手段；缓冲未满且未收到 flush 消息时，日志会滞留缓冲直至下一次触发。
+协作层（`IMqRecorder`/`IMqMessageMonopolizer`/`IConsumerRegistry`）当前为内存实现（进程重启即清空，定位链路验证/开发环境），生产替换为 DB 记录器 Bean 即可，上下文无需改动。
+
+> `flush()`（生产端发 flushFlag 消息）仍是主动触发刷盘的手段；另有 5 秒定时刷新兜底，缓冲未满且未收到 flush 消息时日志最迟经一个刷新周期落库。
 
 ## 查询端实现（DbLogExtractor）
 
@@ -297,11 +299,11 @@ tbs:
 
 ### 消息队列（application-mq.yml）
 
-RabbitMQ 连接配置，监听器 `acknowledge-mode: manual`（手动 ACK，由 `AbstractMqConsumer` 按分派结果确认/重试/死信）。
+RabbitMQ 连接配置；v2 消费上下文的确认模式由 `MqConsumerProperties` 默认 `AcknowledgeMode.MANUAL` 承担（建档成功才 ack，失败恢复走记录层，不依赖厂商重投/死信）。
 
 ## 使用注意事项
 
-1. **刷写依赖 flush 消息**：缓冲未满时日志滞留内存，生产端需在合适时机（如请求结束/定时任务）调用 `ILogRecorder.flush()` 触发落库；服务异常重启会丢失缓冲中未落库的日志
+1. **刷写时机**：批量入库由满批（100 条）/ flush 消息 / 5 秒定时刷新三路触发；服务异常重启会丢失缓冲中未落库的日志，生产端仍可在合适时机（如请求结束/定时任务）调用 `ILogRecorder.flush()` 主动刷盘
 2. **count 为内存统计**：`LoggingRecordExtractForm` 无时间范围时 `count` 会全表加载，前端查询务必携带时间范围
 3. **统计报表为内存聚合**：`getLogOperateTypeList` 会拉取 `lastDay` 全量日志做内存聚合，`lastDay` 过大时开销显著
 4. **操作类型搜索需传关键词**：`getOperateTypeList` 的 `keyword` 为空返回空列表

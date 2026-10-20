@@ -38,7 +38,7 @@ Abstergo Solution 的**主应用入口**（pom 描述：后端 web 运行包）�
 | `default-system-impl` | 系统管理全套实现：用户/角色/角色组/公司/部门/版本/泛化 API/功能开关服务、`DefaultTokenSignCenter` 令牌签发、认证 SPI 落地 |
 | `cache-impl` + `cache-caffeine-impl` | TTL 缓存 + 多级缓存（Caffeine L1） |
 | `view-route-default-impl` | 动态视图路由（数据库实现） |
-| `redis` | Redisson：分布式锁、缓存 L2、DataHolder、任务存储、幂等存储 |
+| `redis` | Redisson：分布式锁、缓存 L2、DataHolder、任务存储（MQ v1 幂等/失败存储已随 v2 下线） |
 | `rabbitmq-broadcast` + `rabbitmq-logging` | RabbitMQ 事件广播、日志通道 |
 | `closure-list-impl` | 闭包表树结构（公司/部门树） |
 | `open-api-starter` | Knife4j OpenAPI 文档（doc.html） |
@@ -209,7 +209,7 @@ tbs:
     show-url: true
   mq:
     retry:
-      scheduler: job        # MQ 失败重投递由 xxl-job 驱动（MqRetryDispatchJob）
+      scheduler: job        # v1 遗留配置：MQ v2 重构后无代码消费此属性（失败恢复基于自建记录层），可随配置清理移除
   oss:
     enable: ${OSS_ENABLE:false}
     type: ${OSS_TYPE:minio}
@@ -289,8 +289,7 @@ app:
 | --- | --- |
 | `appMessageSourceProvider` | 注册 `i18n/messages-app`（前端菜单文案） |
 | `rabbitMqSupport` | `SimpleRabbitMqSupport`：RabbitMQ 事件广播支持（频道 `tbs.event.channel`） |
-| `systemFailedMessageStore` | `RedisFaildMessageStore`：MQ 失败消息的 Redis 持久化（重投递） |
-| `loggerRecoreder` | `RabbitMqLoggingRecorder("tbs.log.queue", "systemLog")`：操作日志生产端（→ logging 服务消费落库） |
+| `loggerRecoreder` | `RabbitMqLoggingRecorder("tbs.log.queue", "systemLog")`：操作日志生产端（组装 v2 信封经 `IMqMessageProducer` 发送 → logging 服务消费落库） |
 | `userLoginInfoService` | `DefaultUserLoginInfoService`（system 模块）：令牌↔用户详情映射 |
 | `refreshTokenService` | `CookieRefreshTokenService`（system 模块）：刷新令牌服务 |
 | `logCacheListenner` | 全量缓存操作日志监听（debug 观测用） |
@@ -329,7 +328,7 @@ app:
 | `department_tree_rebuild` | 部门树重建（`DepartmentTreeStructService.rebuildTree()`，闭包表关系重建） |
 | `flushLogData` | 操作日志刷盘：`ILogRecorder.flush()`（将 `tbs.log.queue` 缓冲日志推入 MQ） |
 
-另有 xxl-job-mod 提供的三个通用 Handler：`jsonJobHandler`（JSON 任务）、`runningBackGroundJobHandler`（批量 `IBackgroundJob` 驱动，含 MQ 重投递 `MqRetryDispatchJob`）、`available`/`help_json`（查询已注册 Handler）。
+另有 xxl-job-mod 提供的三个通用 Handler：`jsonJobHandler`（JSON 任务）、`runningBackGroundJobHandler`（批量 `IBackgroundJob` 驱动）、`available`/`help_json`（查询已注册 Handler）。
 
 ## 特殊机制
 
