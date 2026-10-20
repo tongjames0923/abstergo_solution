@@ -38,6 +38,11 @@ public class RabbitMqProperty {
 	private String nodeId;
 
 	/**
+	 * v2消费上下文ID：记录层按此隔离广播队列的消息与台账归属，多广播实例时必须各不相同
+	 */
+	private Long contextId = 1L;
+
+	/**
 	 * 消息TTL（毫秒），默认60秒
 	 */
 	private long messageTtl = 60000;
