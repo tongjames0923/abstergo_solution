@@ -203,6 +203,26 @@ public class PushConnectionOrchestrator {
     }
 
     /**
+     * 全量广播：向当前全部在线会话下发同一帧（跨传输统一，会话自行投递）
+     * <p>
+     * 用于停机通知等需一次性触达所有连接的服务端下行；单个会话发送失败
+     * 不影响其余会话（{@link IConnectionSession#send} 吞异常返回false）。
+     * </p>
+     *
+     * @param frame 待广播的协议帧
+     * @return 成功送达的会话数
+     */
+    public int broadcast(PushFrame frame) {
+        int sent = 0;
+        for (IConnectionSession session : new ArrayList<>(sessionRegistry.all())) {
+            if (session.send(frame)) {
+                sent++;
+            }
+        }
+        return sent;
+    }
+
+    /**
      * 清理链唯一实现：注册表原子注销为幂等门禁，首次注销方执行订阅清理与断开拦截器链
      *
      * @param session 待清理会话

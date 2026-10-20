@@ -138,6 +138,16 @@ export function unsubscribeTopics(topics) {
 }
 
 /**
+ * 手动重连推送连接（自动重连次数耗尽置 reconnect_failed 后由用户触发）
+ * <p>
+ * 复位退避计数后立即重新换票建连；幂等：已连接/连接中时无副作用。
+ * </p>
+ */
+export function reconnectPush() {
+  sseClient.manualReconnect()
+}
+
+/**
  * 关闭推送连接（登出/页面卸载），阻止自动重连
  */
 export function closePush() {

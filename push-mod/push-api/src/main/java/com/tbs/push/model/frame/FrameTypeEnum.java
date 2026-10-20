@@ -5,7 +5,7 @@ import com.tbs.common.BaseEnum;
 /**
  * 协议帧类型枚举
  * <p>
- * 定义推送协议的全部帧类型，控制帧（HELLO/PING/PONG/SUBSCRIBE/UNSUBSCRIBE/ERROR） 由协议层统一处理，业务数据帧为DATA。
+ * 定义推送协议的全部帧类型，控制帧（HELLO/PING/PONG/SUBSCRIBE/UNSUBSCRIBE/ERROR/SHUTDOWN） 由协议层统一处理，业务数据帧为DATA。
  * </p>
  *
  * @author abstergo
@@ -51,7 +51,12 @@ public enum FrameTypeEnum implements BaseEnum<String> {
     /**
      * 错误帧：协议层校验失败（版本不兼容/帧损坏/topic非法等），可携带关闭意图
      */
-    ERROR("error");
+    ERROR("error"),
+
+    /**
+     * 停机通知帧：服务端优雅停机前主动下发，告知客户端连接即将关闭（可在宽限期内完成上行后重连），客户端不得上行
+     */
+    SHUTDOWN("shutdown");
 
     /**
      * 帧类型小写值（同时用作SSE事件名）

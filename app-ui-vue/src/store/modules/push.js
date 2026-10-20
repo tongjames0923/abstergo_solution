@@ -1,7 +1,8 @@
-import { initPush, closePush, CONNECTION_STATUS, notifyMessage, dispatchMessage } from '@/push'
+import { initPush, closePush, reconnectPush, CONNECTION_STATUS, notifyMessage, dispatchMessage } from '@/push'
 import { getToken } from '@/utils/auth'
 import { TOPIC_PREFIX, normalizeFetchedMessage } from '@/push/push-message'
 import { fetchMessages, markRead } from '@/api/push-message'
+import settings from '@/settings'
 
 /**
  * 推送消息 Vuex 模块
@@ -161,6 +162,8 @@ const actions = {
       token,
       userId,
       topics: [TOPIC_PREFIX + userId].filter(Boolean),
+      // 重连/心跳参数由 settings.push 集中配置（覆盖 PUSH_DEFAULTS 缺省值）
+      config: settings.push,
       onStatus: status => commit('SET_STATUS', status),
       onSignal: triggerPull
     })
@@ -184,6 +187,13 @@ const actions = {
     firstPullDone = false
     commit('RESET')
     commit('SET_STATUS', CONNECTION_STATUS.CLOSED)
+  },
+  /**
+   * 手动重连：自动重连次数耗尽（reconnect_failed）后由用户触发，
+   * 复位退避计数重新换票建连；状态由连接层 onStatus 回调回写
+   */
+  manualReconnect() {
+    reconnectPush()
   },
   /**
    * 拉取当前用户消息第一页并合并入列（SIGNAL 信令/hello 兜底触发）

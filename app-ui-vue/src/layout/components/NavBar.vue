@@ -18,6 +18,16 @@
         </el-badge>
       </div>
 
+      <!-- 自动重连次数耗尽：醒目提示并提供手动重连入口 -->
+      <el-button
+        v-if="connectionStatus === 'reconnect_failed'"
+        class="push-reconnect-btn"
+        size="mini"
+        type="danger"
+        icon="el-icon-refresh"
+        @click="handleReconnect"
+      >{{ $t('push.reconnect') }}</el-button>
+
       <push-notification-center :visible.sync="centerVisible" />
 
       <!-- 语言切换 -->
@@ -264,9 +274,25 @@ export default {
       return this.pushUnreadCount
     }
   },
+  watch: {
+    // 自动重连次数耗尽：弹常驻错误通知（用户关闭或重连成功前不消失），醒目提示推送已停
+    connectionStatus(status) {
+      if (status === 'reconnect_failed') {
+        this.$notify.error({
+          title: this.$t('push.reconnectFailedTitle'),
+          message: this.$t('push.reconnectFailedTip'),
+          duration: 0
+        })
+      }
+    }
+  },
   methods: {
     toggleSideBar() {
       this.$store.dispatch('app/toggleSideBar')
+    },
+    // 手动重连推送连接（重连按钮/错误通知处触发）
+    handleReconnect() {
+      this.$store.dispatch('push/manualReconnect')
     },
     // 打开消息中心抽屉
     openCenter() {
@@ -422,7 +448,7 @@ export default {
         font-size: 18px;
       }
 
-      /* 连接状态圆点：绿=已连 / 黄=重连中 / 灰=断开 / 蓝=连接中 */
+      /* 连接状态圆点：绿=已连 / 黄=重连中 / 灰=断开 / 蓝=连接中 / 红闪烁=重连失败待手动 */
       .push-bell__status {
         position: absolute;
         top: 6px;
@@ -436,6 +462,11 @@ export default {
         &.is-connected {
           background: #34c759;
           box-shadow: 0 0 0 3px rgba(52, 199, 89, 0.18);
+        }
+
+        &.is-reconnect_failed {
+          background: #ff3b30;
+          animation: push-bell-pulse-red 1.2s infinite;
         }
 
         &.is-connecting,
@@ -463,6 +494,25 @@ export default {
       100% {
         box-shadow: 0 0 0 0 rgba(255, 149, 0, 0);
       }
+    }
+
+    @keyframes push-bell-pulse-red {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.45);
+      }
+
+      70% {
+        box-shadow: 0 0 0 5px rgba(255, 59, 48, 0);
+      }
+
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+      }
+    }
+
+    /* 重连失败后的手动重连按钮：导航栏内联，红色醒目 */
+    .push-reconnect-btn {
+      margin-left: -4px;
     }
 
     .user-info {

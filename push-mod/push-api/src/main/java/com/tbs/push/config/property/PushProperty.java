@@ -39,6 +39,11 @@ public class PushProperty {
     public static final int DEFAULT_MEMORY_RECORD_CAPACITY = 10_000;
 
     /**
+     * 默认停机优雅关闭宽限期（毫秒）
+     */
+    public static final long DEFAULT_SHUTDOWN_GRACE_MILLIS = 5_000L;
+
+    /**
      * 默认公开可订阅主题白名单
      */
     public static final List<String> DEFAULT_GRANT_PUBLIC_TOPICS = Collections.unmodifiableList(
@@ -82,5 +87,15 @@ public class PushProperty {
      * </p>
      */
     private List<String> grantPublicTopics = new ArrayList<>(DEFAULT_GRANT_PUBLIC_TOPICS);
+
+    /**
+     * 停机优雅关闭宽限期（毫秒）
+     * <p>
+     * 停机时先向全部在线会话下发 SHUTDOWN 通知帧，等待本时长（预留上行窗口供客户端
+     * 反应/收尾上行，尤其兼容未来 WS 的上行能力）后再强制关闭全部推送连接；
+     * 非正数表示不留宽限期，通知后立即关闭。
+     * </p>
+     */
+    private long shutdownGraceMillis = DEFAULT_SHUTDOWN_GRACE_MILLIS;
 
 }

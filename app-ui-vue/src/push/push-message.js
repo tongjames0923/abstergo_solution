@@ -38,7 +38,8 @@ export const FRAME_EVENTS = {
   PING: 'ping',
   PONG: 'pong',
   SUBSCRIBE: 'subscribe',
-  UNSUBSCRIBE: 'unsubscribe'
+  UNSUBSCRIBE: 'unsubscribe',
+  SHUTDOWN: 'shutdown'
 }
 
 /**
@@ -101,7 +102,12 @@ export const PUSH_DEFAULTS = {
   /**
    * 重连退避随机抖动上限（毫秒），防惊群
    */
-  reconnectJitter: 1_000
+  reconnectJitter: 1_000,
+  /**
+   * 最大自动重连次数：连续重连达此数仍未成功则停止自动重连，
+   * 置 reconnect_failed 待用户手动重连（非正数表示不限次）
+   */
+  reconnectMaxAttempts: 8
 }
 
 /**

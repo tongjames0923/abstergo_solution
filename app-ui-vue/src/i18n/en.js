@@ -964,8 +964,12 @@ export default {
       connecting: 'Connecting',
       connected: 'Connected',
       reconnecting: 'Reconnecting',
+      reconnect_failed: 'Live connection lost',
       closed: 'Closed'
     },
+    reconnectFailedTitle: 'Live connection lost',
+    reconnectFailedTip: 'Automatic reconnection reached the max attempts and live push has stopped. Click reconnect to restore it, or refresh the page later.',
+    reconnect: 'Reconnect now',
     type: {
       notify: 'Notice',
       warning: 'Alert',

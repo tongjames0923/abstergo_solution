@@ -968,8 +968,12 @@ export default {
       connecting: '连接中',
       connected: '已连接',
       reconnecting: '重连中',
+      reconnect_failed: '实时连接已断开',
       closed: '已关闭'
     },
+    reconnectFailedTitle: '实时连接已断开',
+    reconnectFailedTip: '自动重连已达最大次数，实时消息推送已停止。您可以点击重连恢复推送，或稍后刷新页面。',
+    reconnect: '立即重连',
     type: {
       notify: '通知',
       warning: '告警',
