@@ -15,6 +15,7 @@ import com.tbs.schedule.RedisTaskStore;
 import com.tbs.schedule.api.ScheduleTrigger;
 import com.tbs.schedule.api.TaskStore;
 import com.tbs.schedule.xxl.XxlJobScheduleTrigger;
+import com.tbs.sql.datasource.interceptor.impl.ConnectionAdmissionLimiter;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,10 +40,11 @@ import org.springframework.context.annotation.Configuration;
 public class AppConfig {
 
     /**
-     * 数据库连接准入限流器：把同时打开的连接数硬上限锁定为 {@code maxPermits}。
+     * 数据库连接准入限流器：把同时在途（已放行、尚未归还）的连接请求数硬上限锁定为 {@code maxWaiters}。
      * <p>
-     * 三个阈值均可通过配置项 {@code tbs.sql.conn-limit.*} 覆盖（改后需重启），示例见 application-db.yml。
-     * 返回具名类型以便压测接口按拒绝原因（排队超限 / 等待超时）读取计数。
+     * 阈值由 {@code tbs.sql.conn-limit.max-waiters} 配置（构造入参为启动初始值）；运行期热更新
+     * 交由 sql 侧字段上的 {@code @DynamicConfig} 注解与 common 的 DynamicConfigBinder 统一完成，无需重启。
+     * 返回具名类型以便压测接口按拒绝原因读取计数。
      * </p>
      */
     @Bean
