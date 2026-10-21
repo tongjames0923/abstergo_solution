@@ -135,6 +135,10 @@ import { dispatchLoginCallback, readCallbackQuery } from '@/login/callback'
 // 引入登录能力模块入口，确保内置 Provider 注册副作用执行
 import '@/login'
 
+// SSO 跳出前暂存回跳目标的 sessionStorage 键
+// 整页跳转（redirect 模式）会丢失 ?redirect= query，故在离开前落盘、登录后恢复
+const POST_LOGIN_REDIRECT_KEY = 'postLoginRedirect'
+
 export default {
   name: 'Login',
   components: {
@@ -320,6 +324,10 @@ export default {
         return
       }
       if (provider.interactionMode === 'redirect') {
+        // 整页跳出会丢失路由 query，先暂存登录前被拦截的目标页供回跳后恢复
+        if (this.redirect && this.redirect !== '/login') {
+          sessionStorage.setItem(POST_LOGIN_REDIRECT_KEY, this.redirect)
+        }
         this.ssoProcessingText = this.$t('login.ssoRedirecting')
         this.ssoProcessingSubText = this.$t('login.ssoRedirectingSub')
         this.ssoProcessing = true
@@ -357,6 +365,9 @@ export default {
       // 等待一小段时间确保token已经设置到请求拦截器中
       await new Promise(resolve => setTimeout(resolve, 100))
 
+      // 优先回跳登录前被拦截的目标页，无则进首页
+      const target = this.resolveLoginTarget()
+
       try {
         // 先获取用户信息，再更新路由
         await this.$store.dispatch('user/getInfo')
@@ -364,13 +375,28 @@ export default {
         await updateRouter()
         // 确保路由更新完成后才跳转
         await this.$nextTick()
-        // 登录后始终跳转到dashboard
-        this.$router.push({ path: '/Welcome' })
+        this.$router.push(target)
       } catch (error) {
         console.error('路由更新失败:', error)
-        // 即使路由更新失败，也允许跳转到dashboard
-        this.$router.push({ path: '/Welcome' })
+        // 即使路由更新失败，也允许跳转
+        this.$router.push(target)
       }
+    },
+    // 解析登录成功后的回跳目标：
+    // - redirect 模式 SSO 跳出过（ssoProcessing）：query 已被回调 URL 污染，只信任跳出前暂存的目标
+    // - 未跳出整页（账号密码 / 内嵌扫码）：直接用路由 query 上的 redirect
+    // - 都没有则进首页；回跳目标一经使用即清除暂存，避免下次误用
+    resolveLoginTarget() {
+      const stored = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY)
+      sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY)
+
+      if (stored && stored !== '/login') {
+        return stored
+      }
+      if (!this.ssoProcessing && this.redirect && this.redirect !== '/login') {
+        return this.redirect
+      }
+      return '/Welcome'
     }
   }
 }
