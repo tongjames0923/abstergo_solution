@@ -1,18 +1,16 @@
 package com.tbs.common.provider.impl;
 
-import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 import com.tbs.common.provider.IObjectProvider;
 import com.tbs.common.provider.IObjectResolver;
+import com.tbs.common.provider.IRegistryCenter;
 import com.tbs.common.provider.ObjectResolveContext;
 import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.ResolvedObject;
@@ -24,11 +22,10 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * 统一对象提供器默认实现
  * <p>
- * 聚合全部 {@link IObjectResolver}（按 Ordered 排序）形成解析链：
- * 单实例解析逐个询问解析器的 {@link IObjectResolver#resolveOne(ObjectResolveContext)} 取首个命中来源的最优实例，
- * 按来源解析只访问该来源对应的解析器，getObjects 聚合全部来源结果实现多实现枚举；
- * getRoutingProxy 构建并缓存多来源路由代理，供依赖注入场景使用。
- * 单个解析器抛出异常时仅跳过该来源并记录日志，不影响其余来源解析。
+ * 过渡期门面：{@code getObject}/{@code getObjects}/{@code getResolvedObject(按来源)} 仍走旧解析链
+ * （逐个询问 {@link IObjectResolver}），供阶段 3-δ 切换过程中与新中心链路并列观察对比；
+ * 路由代理构建已改派 {@link IRegistryCenter#getRoutingProxy}，由中心按 business/version 择一路由目标（Dubbo 为集群引用）。
+ * 单个解析器抛异常时仅跳过该来源并记录日志，不影响其余来源解析。
  * 路由代理自身由各来源解析器按 {@link RoutingServiceProxy#isRoutingProxy(Object)} 排除，
  * 因为代理是「通道」而非实现，否则代理转发时会再次解析到自己造成无限递归。
  * </p>
@@ -40,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 public class DefaultObjectProvider implements IObjectProvider {
 
     /**
-     * 有序解析链
+     * 有序解析链（旧链，仅服务于尚未迁移到中心的单实例/枚举/按来源解析）
      */
     private final List<IObjectResolver> resolvers;
 
@@ -50,20 +47,22 @@ public class DefaultObjectProvider implements IObjectProvider {
     private final Map<ObjectSource, IObjectResolver> resolversBySource;
 
     /**
-     * 路由代理缓存，键为 接口全限定名 + 路由策略
+     * 统一注册中心，路由代理构建委派于此
      */
-    private final ConcurrentMap<String, Object> proxyCache = new ConcurrentHashMap<>();
+    private final IRegistryCenter registryCenter;
 
     /**
      * 构造统一对象提供器
      *
-     * @param resolvers 解析器集合，不能为null，内部按 Ordered 排序
+     * @param resolvers      解析器集合，不能为null，内部按 Ordered 排序
+     * @param registryCenter 统一注册中心，不能为null
      */
-    public DefaultObjectProvider(List<IObjectResolver> resolvers) {
+    public DefaultObjectProvider(List<IObjectResolver> resolvers, IRegistryCenter registryCenter) {
         var sorted = new ArrayList<>(resolvers);
         sorted.sort(Comparator.comparingInt(IObjectResolver::getOrder));
         this.resolvers = sorted;
-        this.resolversBySource = new EnumMap<>(ObjectSource.class);
+        this.registryCenter = registryCenter;
+        this.resolversBySource = new HashMap<>();
         for (IObjectResolver resolver : sorted) {
             if (resolver.getSource() != null) {
                 this.resolversBySource.putIfAbsent(resolver.getSource(), resolver);
@@ -160,9 +159,10 @@ public class DefaultObjectProvider implements IObjectProvider {
     }
 
     /**
-     * 构建或获取缓存的路由代理
+     * 构建多来源路由代理
      * <p>
-     * 代理缓存键为接口全限定名与路由策略组合，同接口同策略复用同一代理实例。
+     * 阶段 3-δ 起委派统一注册中心构建与缓存：代理每次调用经 {@code center.resolveFirst} 按策略与 business/version
+     * 择一路由目标（Dubbo 命中坐标级集群引用、保留负载均衡/failover）。本门面不指定 business/version，传 null 不约束。
      * </p>
      *
      * @param interfaceType 目标接口类型，不能为null
@@ -170,19 +170,8 @@ public class DefaultObjectProvider implements IObjectProvider {
      * @param <T>           目标接口类型
      * @return 路由代理实例
      */
-    @SuppressWarnings("unchecked")
-    private <T> T getOrCreateProxy(Class<T> interfaceType, RoutingStrategy strategy) {
-        var cacheKey = interfaceType.getName() + "#" + strategy.name();
-        return (T) proxyCache.computeIfAbsent(cacheKey,
-            key -> {
-                log.debug("[ObjectProvider] 构建路由代理, 接口: {}, 策略: {}", interfaceType.getName(), strategy);
-                return Proxy.newProxyInstance(interfaceType.getClassLoader(), new Class<?>[] {interfaceType},
-                    new RoutingServiceProxy<>(interfaceType, strategy, this));
-            });
-    }
-
     @Override
     public <T> T getRoutingProxy(Class<T> interfaceType, RoutingStrategy strategy) {
-        return getOrCreateProxy(interfaceType, strategy);
+        return registryCenter.getRoutingProxy(interfaceType, strategy, null, null);
     }
 }

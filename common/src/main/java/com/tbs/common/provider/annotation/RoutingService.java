@@ -7,8 +7,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import com.tbs.common.provider.RoutingStrategy;
-
 /**
  * 多来源路由服务注解
  * <p>
@@ -19,7 +17,7 @@ import com.tbs.common.provider.RoutingStrategy;
  *
  * @author abstergo
  * @since 1.0.0
- * @see RoutingStrategy 路由策略
+ * @see com.tbs.common.provider.RoutingStrategy 路由策略
  */
 @Documented
 @Inherited
@@ -28,11 +26,12 @@ import com.tbs.common.provider.RoutingStrategy;
 public @interface RoutingService {
 
     /**
-     * 路由策略，默认本地优先（Spring 来源优先，Dubbo 来源兜底）
+     * 路由策略名，取值为 {@code LOCAL_FIRST}/{@code REMOTE_FIRST}/{@code SPRING_ONLY}/{@code DUBBO_ONLY} 之一，
+     * 默认本地优先（Spring 来源优先，Dubbo 来源兜底）；由注册器经 RoutingStrategy.byName 还原为策略值对象
      *
-     * @return 路由策略
+     * @return 路由策略名
      */
-    RoutingStrategy strategy() default RoutingStrategy.LOCAL_FIRST;
+    String strategy() default "LOCAL_FIRST";
 
     /**
      * 代理 Bean 名称，为空时按接口简单名首字母小写并附加固定后缀 RoutingProxy 生成，避免与本地实现 Bean 同名

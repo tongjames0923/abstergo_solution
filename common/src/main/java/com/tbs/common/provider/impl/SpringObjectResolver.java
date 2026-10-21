@@ -23,12 +23,14 @@ import lombok.extern.slf4j.Slf4j;
  * 路由代理以接口类型注册进容器后同样会被 getBeansOfType 枚举到，但它是转发通道而非实现，
  * 必须排除，否则代理转发时会递归解析到自己。
  * 容器不可用或类型无对应 Bean 时降级为空集合，不影响解析链中后续来源。
+ * 阶段 3 起经 {@link ObjectResolverAsSource} 桥接为注册中心贡献来源，本类作为存量实现保留。
  * </p>
  *
  * @author abstergo
  * @since 1.0.0
  */
 @Slf4j
+@Deprecated
 public class SpringObjectResolver implements IObjectResolver {
 
     /**

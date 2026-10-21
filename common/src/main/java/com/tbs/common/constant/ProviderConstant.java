@@ -37,6 +37,16 @@ public final class ProviderConstant {
     public static final String DUBBO_CLUSTER_INSTANCE_KEY = "cluster";
 
     /**
+     * 单业务 provider 的默认 business 派生值（未显式声明 group 时落入该坐标，避免碰撞且无需强制全量声明）
+     */
+    public static final String DEFAULT_BUSINESS = "default";
+
+    /**
+     * Dubbo3 服务发现模式下每实例唯一标识的 URL 参数名，存在时优先作为 instanceKey
+     */
+    public static final String DUBBO_INSTANCE_ID_PARAM = "dubbo.instance.id";
+
+    /**
      * 路由代理默认 Bean 名称后缀，避免与业务侧同名的本地实现 Bean 冲突
      */
     public static final String ROUTING_PROXY_BEAN_NAME_SUFFIX = "RoutingProxy";

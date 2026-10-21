@@ -26,6 +26,7 @@ import com.tbs.common.provider.IObjectResolver;
 import com.tbs.common.provider.ObjectResolveContext;
 import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.ResolvedObject;
+import com.tbs.common.provider.SourceCoordinate;
 import com.tbs.common.provider.impl.support.InterfaceProviderState;
 import com.tbs.common.util.framework.SpringUtil;
 
@@ -41,6 +42,9 @@ import lombok.extern.slf4j.Slf4j;
  * 非空快照按配置间隔过期，使扩容与重启能被后续解析发现；引用缓存复用避免重复订阅建连，
  * 实例下线后其直连引用随即销毁，进程关闭时统一释放全部引用（DisposableBean）。
  * 按实例标识（host:port）解析时只返回匹配实例，不会降级到其他实例或整体引用。
+ * 阶段 3 增量：提供者条目的来源坐标携带 group→business（未声明 group 兜底 default）与 version，
+ * 直连引用按「坐标+地址」去重缓存，修复同一 host:port 上不同 business/version  provider 被合并吐掉的碰撞。
+ * 阶段 3 起经 {@link ObjectResolverAsSource} 桥接为注册中心的读即重贡献来源，本类作为存量实现保留。
  * </p>
  *
  * @author abstergo
@@ -48,6 +52,7 @@ import lombok.extern.slf4j.Slf4j;
  * @see InterfaceProviderState 接口级实例状态
  */
 @Slf4j
+@Deprecated
 public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
 
     /**
@@ -194,6 +199,38 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
     }
 
     /**
+     * 构建提供者实例的来源坐标
+     * <p>
+     * group 承载 business，未声明 group 时兜底 default（避免同机默认 provider 与显式业务 provider 碰撞）；
+     * URL 未声明 version 时为空串表示不约束。
+     * </p>
+     *
+     * @param providerUrl 提供者实例 URL，不能为null
+     * @return 来源坐标（DUBBO + business + version）
+     */
+    private SourceCoordinate coordinateOf(URL providerUrl) {
+        var group = providerUrl.getParameter(CommonConstants.GROUP_KEY);
+        var business = StringUtils.hasText(group) ? group : ProviderConstant.DEFAULT_BUSINESS;
+        var version = providerUrl.getParameter(CommonConstants.VERSION_KEY);
+        return SourceCoordinate.of(ObjectSource.DUBBO, business, version == null ? "" : version);
+    }
+
+    /**
+     * 计算直连引用的去重键
+     * <p>
+     * 同一物理地址上不同 business/version 的 provider 必须各自持有独立引用，去重键 = 坐标 + 实例标识，
+     * 仅用 host:port 会把同机多业务 provider 合并成一个引用（历史碰撞 bug 的根因）。
+     * </p>
+     *
+     * @param providerUrl 提供者实例 URL，不能为null
+     * @return 引用去重键
+     */
+    private String referenceDedupeKeyOf(URL providerUrl) {
+        var coordinate = coordinateOf(providerUrl);
+        return coordinate.getBusiness() + '#' + coordinate.getVersion() + '#' + instanceKeyOf(providerUrl);
+    }
+
+    /**
      * 获取或初始化接口的实例状态，并在快照过期时重新发现实例
      * <p>
      * 空快照按固定回退间隔重查，因此服务后上线场景下不会被首次发现结果永久锁死，
@@ -213,7 +250,7 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
             return state;
         }
         state.refresh(lookupProviderUrls(interfaceType), refreshMillis);
-        var aliveKeys = state.getProviderUrls().stream().map(this::instanceKeyOf).collect(Collectors.toSet());
+        var aliveKeys = state.getProviderUrls().stream().map(this::referenceDedupeKeyOf).collect(Collectors.toSet());
         state.retainInstanceReferences(aliveKeys);
         log.debug("[DubboResolver] 接口[{}]实例发现刷新完成, 提供者实例数: {}", interfaceType.getName(),
             state.getProviderUrls().size());
@@ -254,17 +291,29 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
      * 构建整体负载均衡引用
      * <p>
      * 不指定实例地址，由 Dubbo 依据注册中心在全部实例间负载均衡。
+     * 传入坐标时按 business/version 限定该引用（group=非默认 business，version=坐标版本），使路由可按维度定向；
+     * 传 null 表示不限定（匹配无分组、无版本的默认 provider）。
      * </p>
      *
      * @param interfaceType 接口类型，不能为null
+     * @param coordinate    来源坐标，可为null表示不限定
      * @param <T>           接口类型
      * @return 整体引用
      */
-    private <T> ReferenceConfig<T> buildClusterReference(Class<T> interfaceType) {
+    private <T> ReferenceConfig<T> buildClusterReference(Class<T> interfaceType, SourceCoordinate coordinate) {
         ReferenceConfig<T> reference = new ReferenceConfig<>();
         reference.setInterface(interfaceType);
         reference.setTimeout(property.getDubboTimeout());
         reference.setCheck(false);
+        if (coordinate != null) {
+            var business = coordinate.getBusiness();
+            if (StringUtils.hasText(business) && !ProviderConstant.DEFAULT_BUSINESS.equals(business)) {
+                reference.setGroup(business);
+            }
+            if (StringUtils.hasText(coordinate.getVersion())) {
+                reference.setVersion(coordinate.getVersion());
+            }
+        }
         findApplicationConfig().ifPresent(reference::setApplication);
         findRegistryConfig().ifPresent(reference::setRegistry);
         return reference;
@@ -286,10 +335,11 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
             if (!context.matchesInstanceKey(instanceKey)) {
                 continue;
             }
+            var coordinate = coordinateOf(providerUrl);
             try {
-                var reference = state.getOrCreateInstanceReference(instanceKey,
+                var reference = state.getOrCreateInstanceReference(referenceDedupeKeyOf(providerUrl),
                     () -> buildInstanceReference(providerUrl, context.getTargetType()));
-                result.add(ResolvedObject.of(reference.get(), ObjectSource.DUBBO, instanceKey));
+                result.add(ResolvedObject.of(reference.get(), coordinate, instanceKey));
             } catch (Exception e) {
                 log.warn("构建Dubbo实例[{}]直连引用失败, 接口: {}, 原因: {}", instanceKey, context.getTargetType().getName(),
                     e.getMessage());
@@ -322,13 +372,63 @@ public class DubboInstanceResolver implements IObjectResolver, DisposableBean {
             return Optional.empty();
         }
         try {
-            var reference = state.getOrCreateClusterReference(() -> buildClusterReference(context.getTargetType()));
+            var reference = state.getOrCreateClusterReference(ProviderConstant.DUBBO_CLUSTER_INSTANCE_KEY,
+                () -> buildClusterReference(context.getTargetType(), null));
             return Optional.of(ResolvedObject.of(reference.get(), ObjectSource.DUBBO,
                 ProviderConstant.DUBBO_CLUSTER_INSTANCE_KEY));
         } catch (Exception e) {
             log.warn("构建Dubbo整体负载均衡引用失败, 接口: {}, 原因: {}", context.getTargetType().getName(), e.getMessage());
             return IObjectResolver.super.resolveOne(context);
         }
+    }
+
+    /**
+     * 解析路由目标：按 business/version 坐标聚合的整体集群引用
+     * <p>
+     * 同一坐标下的多个物理实例收敛为一个限定到该坐标的集群引用（不设地址，由 Dubbo 在该坐标的实例间负载均衡），
+     * 使择一路由既不钉死单机、又保留 failover；business 为兜底 default 时不附加 group（匹配无分组 provider）。
+     * </p>
+     *
+     * @param context 解析上下文，不能为null
+     * @param <T>     目标实例类型
+     * @return 每个存活坐标一个集群引用结果
+     */
+    @Override
+    public <T> Collection<ResolvedObject<T>> resolveRoutableTargets(ObjectResolveContext<T> context) {
+        if (!property.isDubboDiscoveryEnabled()) {
+            return Collections.emptyList();
+        }
+        var state = getState(context.getTargetType());
+        var providers = state.getProviderUrls();
+        if (providers.isEmpty()) {
+            return Collections.emptyList();
+        }
+        Map<SourceCoordinate, URL> firstUrlByCoordinate = new java.util.LinkedHashMap<>();
+        for (URL providerUrl : providers) {
+            firstUrlByCoordinate.putIfAbsent(coordinateOf(providerUrl), providerUrl);
+        }
+        List<ResolvedObject<T>> result = new ArrayList<>(firstUrlByCoordinate.size());
+        firstUrlByCoordinate.forEach((coordinate, providerUrl) -> {
+            try {
+                var reference = state.getOrCreateClusterReference(clusterKeyOf(coordinate),
+                    () -> buildClusterReference(context.getTargetType(), coordinate));
+                result.add(ResolvedObject.of(reference.get(), coordinate, ProviderConstant.DUBBO_CLUSTER_INSTANCE_KEY));
+            } catch (Exception e) {
+                log.warn("构建Dubbo坐标[{}]集群引用失败, 接口: {}, 原因: {}", coordinate, context.getTargetType().getName(),
+                    e.getMessage());
+            }
+        });
+        return result;
+    }
+
+    /**
+     * 计算集群引用的坐标去重缓存键
+     *
+     * @param coordinate 来源坐标，不能为null
+     * @return 坐标键
+     */
+    private String clusterKeyOf(SourceCoordinate coordinate) {
+        return coordinate.getBusiness() + '#' + coordinate.getVersion();
     }
 
     @Override

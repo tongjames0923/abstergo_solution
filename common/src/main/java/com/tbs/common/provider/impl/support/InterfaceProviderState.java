@@ -55,12 +55,12 @@ public class InterfaceProviderState<T> {
     private volatile long lastRefreshAt;
 
     /**
-     * 整体负载均衡引用（懒构建）
+     * 整体负载均衡引用缓存，键为坐标去重键（同一接口下不同 business/version 各持一个限定的集群引用）
      */
-    private volatile ReferenceConfig<T> clusterReference;
+    private final ConcurrentMap<String, ReferenceConfig<T>> clusterReferences = new ConcurrentHashMap<>();
 
     /**
-     * 实例直连引用缓存，键为 host:port
+     * 实例直连引用缓存，键为「坐标+地址」去重键（同机不同 business/version 各自独立引用）
      */
     private final ConcurrentMap<String, ReferenceConfig<T>> instanceReferences = new ConcurrentHashMap<>();
 
@@ -117,29 +117,26 @@ public class InterfaceProviderState<T> {
     /**
      * 获取或创建指定实例的直连引用
      *
-     * @param instanceKey 实例标识（host:port），不能为null
-     * @param factory     引用构建工厂，不能为null
+     * @param dedupeKey 实例引用去重键（坐标+地址），不能为null
+     * @param factory   引用构建工厂，不能为null
      * @return 直连引用
      */
-    public ReferenceConfig<T> getOrCreateInstanceReference(String instanceKey, Supplier<ReferenceConfig<T>> factory) {
-        return instanceReferences.computeIfAbsent(instanceKey, key -> factory.get());
+    public ReferenceConfig<T> getOrCreateInstanceReference(String dedupeKey, Supplier<ReferenceConfig<T>> factory) {
+        return instanceReferences.computeIfAbsent(dedupeKey, key -> factory.get());
     }
 
     /**
-     * 获取或创建整体负载均衡引用
+     * 获取或创建指定坐标的整体负载均衡引用
+     * <p>
+     * 按坐标去重键缓存，使同一接口的不同 business/version 各自持有限定的集群引用，路由时按维度定向命中。
+     * </p>
      *
-     * @param factory 引用构建工厂，不能为null
+     * @param coordinateKey 集群引用坐标去重键，不能为null
+     * @param factory       引用构建工厂，不能为null
      * @return 整体引用
      */
-    public ReferenceConfig<T> getOrCreateClusterReference(Supplier<ReferenceConfig<T>> factory) {
-        if (clusterReference == null) {
-            synchronized (this) {
-                if (clusterReference == null) {
-                    clusterReference = factory.get();
-                }
-            }
-        }
-        return clusterReference;
+    public ReferenceConfig<T> getOrCreateClusterReference(String coordinateKey, Supplier<ReferenceConfig<T>> factory) {
+        return clusterReferences.computeIfAbsent(coordinateKey, key -> factory.get());
     }
 
     /**
@@ -148,11 +145,11 @@ public class InterfaceProviderState<T> {
      * 快照刷新后调用，销毁不再存在的实例引用，避免服务重启换端口后引用与连接无限堆积。
      * </p>
      *
-     * @param aliveInstanceKeys 当前存活的实例标识集合，不能为null
+     * @param aliveDedupeKeys 当前存活实例的引用去重键集合，不能为null
      */
-    public void retainInstanceReferences(Collection<String> aliveInstanceKeys) {
+    public void retainInstanceReferences(Collection<String> aliveDedupeKeys) {
         var deadKeys = new ArrayList<>(instanceReferences.keySet());
-        deadKeys.removeAll(aliveInstanceKeys);
+        deadKeys.removeAll(aliveDedupeKeys);
         deadKeys.forEach(key -> {
             var reference = instanceReferences.remove(key);
             if (reference != null) {
@@ -181,10 +178,8 @@ public class InterfaceProviderState<T> {
      * </p>
      */
     public void destroy() {
-        if (clusterReference != null) {
-            destroyQuietly(clusterReference);
-            clusterReference = null;
-        }
+        clusterReferences.values().forEach(this::destroyQuietly);
+        clusterReferences.clear();
         instanceReferences.values().forEach(this::destroyQuietly);
         instanceReferences.clear();
     }

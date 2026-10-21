@@ -177,7 +177,7 @@ public class RoutingServiceRegistrar
                     if (annotation == null) {
                         continue;
                     }
-                    var strategy = annotation.strategy();
+                    var strategy = RoutingStrategy.byName(annotation.strategy());
                     var beanName = resolveBeanName(interfaceType, annotation.beanName());
                     if (registry.containsBeanDefinition(beanName)) {
                         log.warn("路由代理Bean[{}]与已有BeanDefinition同名, 接口: {}, 跳过注册",
