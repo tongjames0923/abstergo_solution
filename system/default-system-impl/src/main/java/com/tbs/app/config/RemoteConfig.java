@@ -6,6 +6,7 @@ import com.tbs.app.remote.company.ICompanyRemoteService;
 import com.tbs.app.remote.company.impl.DefaultCompanyRemoteServiceImpl;
 import com.tbs.app.remote.user.IUserRemoteService;
 import com.tbs.app.remote.user.impl.DefaultUserRemoteServiceImpl;
+import com.tbs.common.constant.ProviderConstant;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.api.persistence.impl.NoImplTreeStore;
@@ -39,28 +40,28 @@ public class RemoteConfig {
      * @return 闭包树服务实例
      */
     @Bean
-    @DubboService
+    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
     ITreeStore treeStore() {
         return BeanUtil.buildBeanFromProperties(NoImplTreeStore::new, property.getTreeStoreImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
-    @DubboService
+    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
     IAuthRemoteService authRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultAuthRemoteServiceImpl::new, property.getAuthRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
-    @DubboService
+    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
     IUserRemoteService userRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultUserRemoteServiceImpl::new, property.getUserRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
-    @DubboService
+    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
     ICompanyRemoteService companyRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultCompanyRemoteServiceImpl::new, property.getCompanyRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);

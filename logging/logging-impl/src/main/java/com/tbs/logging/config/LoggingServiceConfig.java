@@ -1,6 +1,7 @@
 package com.tbs.logging.config;
 
 import com.tbs.app.service.log.ISystemLogService;
+import com.tbs.common.constant.ProviderConstant;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordForm;
@@ -35,7 +36,7 @@ public class LoggingServiceConfig {
     }
 
     @Bean
-    @DubboService
+    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
     public ISystemLogService logService() {
         return new SimpleSystemLogServiceImpl();
     }
@@ -50,7 +51,7 @@ public class LoggingServiceConfig {
      * @return 表格数据处理器远程实现
      */
     @Bean
-    @DubboService
+    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
     public ITableDataHandler remoteTableDataOperator() {
         return new RemoteTableDataOperator();
     }

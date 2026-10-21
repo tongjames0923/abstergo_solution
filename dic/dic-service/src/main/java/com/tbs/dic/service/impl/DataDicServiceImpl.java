@@ -1,5 +1,6 @@
 package com.tbs.dic.service.impl;
 
+import com.tbs.common.constant.ProviderConstant;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
@@ -22,7 +23,14 @@ import org.springframework.cache.annotation.Cacheable;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@DubboService
+/**
+ * 数据字典服务 Dubbo 发布实现
+ * <p>
+ * group 显式声明为默认业务分区（{@code default}），使发布坐标自说明，
+ * 与发现侧「未声明 group 兜底 default」的语义保持一致。
+ * </p>
+ */
+@DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
 public class DataDicServiceImpl implements IDataDicService {
 
     @Resource
