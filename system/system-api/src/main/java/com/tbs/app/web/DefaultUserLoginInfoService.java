@@ -3,7 +3,9 @@ package com.tbs.app.web;
 import cn.hutool.core.date.DateUtil;
 import com.alibaba.fastjson2.JSON;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.app.service.user.serial.DefaultSystemUserDetailsDto;
+import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.cache.serialize.utils.ValueTransformUtils;
 import com.tbs.common.error.AssertUtil;
@@ -42,9 +44,10 @@ import static com.tbs.app.web.CacheNamesConstants.USER_SESSIONS_CACHE;
  * 缓存设计说明：
  * <ul>
  *     <li>缓存键：以业务原始 token / username 作为 key（token 为一次性随机串，天然无冲突，无需额外命名空间）</li>
- *     <li>失效路径：登出（removeUserLoginInfo）与置换（replaceUserDetails）入口主动 evict；TTL 作为最终兜底</li>
- *     <li>一致性：insertUserLoginInfo 走新 token，无旧缓存可脏；写路径均先落库后失效，失败不误删</li>
- *     <li>防膨胀：null 与空集合结果一律不缓存，避免无效 token / 空会话长期占据缓存并产生脏读</li>
+ *     <li>失效路径：登出（removeUserLoginInfo）、置换（replaceUserDetails）、切部门（changeCurrentDepartment）入口主动 evict；TTL 作为最终兜底</li>
+ *     <li>一致性：insertUserLoginInfo 走新 token，无旧缓存可脏；写前校验直接读库真源，不受缓存影响</li>
+ *     <li>防穿透：{@link #getUserDetails} 的空集合结果同样缓存，避免无效 token 反复回源数据库</li>
+ *     <li>防空脏读：{@link #listUserSessions} 的空会话列表不缓存，避免用户刚产生新会话时在 TTL 内读到旧的空列表</li>
  * </ul>
  * </p>
  *
@@ -168,8 +171,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
      * <ul>
      *     <li>condition 过滤空令牌，避免以空串为 key 产生无效缓存；</li>
      *     <li>空集合参与缓存：无效令牌首次回源后写入空集合，TTL 内不再穿透数据库，抵御令牌探测类攻击；</li>
-     *     <li>写入路径（登录、置换）均先落库再主动 evict，补数据后下一次读取即可回源，不会被空集合挡住；</li>
-     *     <li>未启用 sync 防击穿：回源仅为单条索引查询，且空集合已消除重复穿透，代价可控；</li>
+     *     <li>写入路径：登录使用全新 token（缓存无旧值），置换先落库再主动 evict；补数据后下一次读取即可回源，不会被空集合挡住；</li>
+     *     <li>未启用 sync 合并并发回源：回源仅为单条索引查询，且空集合已消除重复穿透，代价可控；</li>
      *     <li>TTL 5 分钟兜底：用户禁用等状态变更在主动 evict 缺位时最长延迟 5 分钟生效。</li>
      * </ul>
      * </p>
@@ -179,6 +182,35 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @ExpireOn(cacheNames = USER_LOGIN_INFO_CACHE, value = 5, timeUnit = TimeUnit.MINUTES)
     public List<UserDetails> getUserDetails(String token) {
         return super.getUserDetails(token);
+    }
+
+    /**
+     * 切换当前会话的当前部门。
+     * <p>
+     * 从存储真源读取用户详情：该实例与缓存隔离，修改后写回不会污染缓存。
+     * 若直接修改缓存实例，落库失败时 evict 不执行，脏值会滞留至 TTL 过期。
+     * </p>
+     */
+    @Override
+    @CacheEvict(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token.token",
+        condition = "#token!=null and #token.token!=null and #token.token.length()>0")
+    public void changeCurrentDepartment(ITokenModel token, Long departmentId) {
+        AssertUtil.notNull(token, "登录令牌不能为空");
+        AssertUtil.hasText(token.getToken(), "登录令牌内容不能为空");
+        AssertUtil.notNull(departmentId, "目标部门标识不能为空");
+        UserDetails details = readUserDetails(token.getToken());
+        AssertUtil.notNull(details, "令牌{}，登录用户信息不存在", token.getToken());
+        AssertUtil.isTrue(!(details instanceof ISystemUserDetails),
+            "用户{}的用户信息数据不兼容，请联系后端开发查看用户登录信息配置。", details.getUsername());
+        ISystemUserDetails systemDetails = (ISystemUserDetails) details;
+        AssertUtil.isTrue(CollUtil.isEmpty(systemDetails.getDepartments()),
+            "用户{}未设置部门", systemDetails.getUsername());
+        boolean joined = systemDetails.getDepartments().stream()
+            .map(DepartmentInfoVO::getDepartmentId)
+            .anyMatch(id -> Objects.equals(id, departmentId));
+        AssertUtil.isTrue(!joined, "用户{}未加入部门{}", systemDetails.getUsername(), departmentId);
+        systemDetails.setCurrentDepartment(departmentId);
+        writeUserDetails(token, systemDetails);
     }
 
     @Override
@@ -194,7 +226,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
      */
     @Override
     @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#username",
-        condition = "#username != null and !#username.isEmpty()")
+        condition = "#username != null and !#username.isEmpty()", unless = "#result == null || #result.isEmpty()")
     @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 2, timeUnit = TimeUnit.MINUTES)
     public List<LoginSessionVO> listUserSessions(String username) {
         // 使用 listSessions 方法一次性获取用户的所有会话令牌，避免多次查询

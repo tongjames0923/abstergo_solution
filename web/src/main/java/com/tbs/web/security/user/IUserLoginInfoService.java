@@ -53,6 +53,18 @@ public interface IUserLoginInfoService {
     void replaceUserDetails(UserDetails userDetails, ITokenModel token);
 
     /**
+     * 切换当前会话的当前部门
+     * <p>
+     * 以令牌定位会话，校验目标部门属于该用户后写回存储并失效缓存。
+     * 仅影响当前令牌对应的会话，同一用户的其他登录会话不受影响。
+     * </p>
+     *
+     * @param token        令牌模型，不能为空
+     * @param departmentId 目标部门标识，不能为空
+     */
+    void changeCurrentDepartment(ITokenModel token, Long departmentId);
+
+    /**
      * 根据令牌获取用户详情
      * <p>
      * 一个令牌至多关联一个用户，返回列表恒为 0 或 1 个元素，且不会出现 null 元素；

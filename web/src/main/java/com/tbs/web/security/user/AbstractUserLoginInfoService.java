@@ -70,6 +70,17 @@ public abstract class AbstractUserLoginInfoService implements IUserLoginInfoServ
         removeUserDetails(token);
     }
 
+    /**
+     * 置换当前会话的用户详情
+     * <p>
+     * 调用方必须完成对目标对象的修改后再调用本方法；禁止直接传入缓存中的实例并就地修改——
+     * 落库失败时 {@code @CacheEvict} 不会执行，脏值会残留至 TTL 过期。
+     * 按会话维度变更个别属性时，优先使用专用方法（如 {@link IUserLoginInfoService#changeCurrentDepartment}）。
+     * </p>
+     *
+     * @param userDetails 新的用户详情，不能为空
+     * @param token       登录令牌，不能为空
+     */
     @Override
     public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {
         UserDetails details = readUserDetails(token.getToken());

@@ -9,13 +9,13 @@ import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.app.vo.UserInfoVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.enums.SystemUserStatusEnum;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.web.BaseController;
+import com.tbs.web.constant.WebI18nConstant;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.token.IRefreshTokenService;
 import com.tbs.web.security.token.ITokenModel;
@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 登录后用户相关控制器
@@ -160,27 +159,11 @@ public class PrivateUserController extends BaseController {
     @PreAuthorize("@preAuthUtils.accountActived")
     public AjaxResult setCurrentDepartment(@PathVariable Long departmentId) {
         var auth = AuthUtil.getInstance().getAuthentication();
-        AssertUtil.isTrue(auth.isEmpty()).message("登录信息不存在").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
-        var authentication = auth.get();
-        var userDetails = authentication.getUserDetails();
-        AssertUtil.isTrue(userDetails == null).message("用户信息不存在").errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
-        AssertUtil.isTrue(!(userDetails instanceof ISystemUserDetails))
-            .message("用户{}的用户信息数据不兼容，请联系后端开发查看用户登录信息配置。",
-                userDetails.getUsername()).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
-
-        var ud = (ISystemUserDetails)userDetails;
-        AssertUtil.isTrue(CollUtil.isEmpty(ud.getDepartments()))
-            .message("用户{}未设置部门", ud.getUsername())
-            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(
-            !ud.getDepartments().stream().map(DepartmentInfoVO::getDepartmentId).collect(Collectors.toSet())
-                .contains(departmentId))
-            .message("用户{}未加入部门{}", ud.getUsername(), departmentId)
-            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        ((ISystemUserDetails)userDetails).setCurrentDepartment(departmentId);
-        userLoginInfoService.replaceUserDetails(ud, authentication.getTokenModel());
+        AssertUtil.isTrue(auth.isEmpty()).i18n(WebI18nConstant.AUTH_INFO_EMPTY)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        // 部门归属校验与持久化统一在服务层完成，控制器只负责取当前令牌并委托
+        userLoginInfoService.changeCurrentDepartment(auth.get().getTokenModel(), departmentId);
         return successResult(null);
-
     }
 
 
