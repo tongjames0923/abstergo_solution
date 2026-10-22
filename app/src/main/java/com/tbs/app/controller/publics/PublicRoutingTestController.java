@@ -136,7 +136,7 @@ public class PublicRoutingTestController extends BaseController {
         @Parameter(name = "strategy", description = "路由策略名，可空默认 LOCAL_FIRST") String strategy) {
         RoutingStrategy routing = StrUtil.isEmpty(strategy)
             ? RoutingStrategy.LOCAL_FIRST : RoutingStrategy.byName(strategy);
-        IDataDicService proxy = objectProvider.getRoutingProxy(IDataDicService.class, routing);
+        IDataDicService proxy = registryCenter.getRoutingProxy(IDataDicService.class, routing, null, null);
         Map<String, Object> view = new LinkedHashMap<>();
         view.put("strategy", routing.name());
         view.put("primarySource", routing.primarySource().id());

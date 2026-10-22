@@ -7,8 +7,8 @@ import java.util.Optional;
  * 统一对象提供器门面
  * <p>
  * 提供多来源（Spring 容器 + Dubbo 注册中心）对象实例的统一访问与枚举能力：
- * 按类型获取实例、按类型枚举全部来源的全部可用实现（携带来源与实例标识元数据）、
- * 以及构建可在两种来源间动态路由的代理。
+ * 按类型获取实例、按类型枚举全部来源的全部可用实现（携带来源与实例标识元数据）。
+ * 本门面统一委派 {@link IRegistryCenter}，与路由代理共用同一份来源数据，两条读取路径结果一致。
  * 实例不存在或来源不可用时统一返回空集合/空 Optional/null，由调用方自行判断，不强制抛出业务异常。
  * </p>
  *
@@ -59,8 +59,8 @@ public interface IObjectProvider {
     /**
      * 枚举当前上下文中目标类型的全部可用实现
      * <p>
-     * 聚合全部解析器的结果：容器内全部同类型 Bean（Spring 来源，含 @DubboReference 引用 Bean）
-     * 与 Dubbo 注册中心发现的全部服务提供者实例（Dubbo 来源，逐实例直连），每个结果携带来源与实例标识。
+     * 枚举该接口在中心的全部 {@code enumerable} 条目，按本地优先排序：容器内全部同类型 Bean（Spring 来源，含 @DubboReference 引用 Bean）
+     * 与 Dubbo 注册中心发现的全部服务提供者实例（Dubbo 来源，逐实例直连）依次排列，每个结果携带来源与实例标识。
      * 路由代理作为「通道」而非实现，不会出现在枚举结果中。
      * </p>
      *
@@ -73,7 +73,7 @@ public interface IObjectProvider {
     /**
      * 从指定来源解析单个最优实例
      * <p>
-     * 只访问该来源对应的解析器，不会枚举其余来源；Dubbo 来源返回负载均衡后的整体引用。
+     * 只取该来源的条目，不会混入其余来源；Spring 来源返回本地 Bean，Dubbo 来源返回负载均衡后的整体引用。
      * 来源无对应解析器或未命中时返回 {@link Optional#empty()}，不抛异常。
      * </p>
      *
@@ -83,18 +83,4 @@ public interface IObjectProvider {
      * @return 该来源的最优实例，未命中时为 {@link Optional#empty()}
      */
     <T> Optional<ResolvedObject<T>> getResolvedObject(Class<T> type, ObjectSource source);
-
-    /**
-     * 构建多来源路由代理
-     * <p>
-     * 为目标接口构建 JDK 动态代理，每次方法调用按指定策略在 Spring 来源与 Dubbo 来源间选择实例转发。
-     * 代理可注册为普通 Spring Bean 供依赖注入（参照 RoutingServiceFactoryBean）。
-     * </p>
-     *
-     * @param interfaceType 目标接口类型，必须为接口，不能为null
-     * @param strategy      路由策略，不能为null
-     * @param <T>           目标接口类型
-     * @return 路由代理实例
-     */
-    <T> T getRoutingProxy(Class<T> interfaceType, RoutingStrategy strategy);
 }

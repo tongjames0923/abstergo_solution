@@ -40,7 +40,7 @@ tbs:
       # 同时在途（已放行、尚未归还）的连接请求数上限，超过则立即快速拒绝（负载 shedding，0 等待）。
       # 语义 ≈ Hikari 正在服务(≈pool-size) + 允许排在 Hikari 获取队列里的总量；建议 pool-size + 一定余量。
       # 例：pool=20 → 100 表示最多允许 100 个连接请求同时"在途"，第 101 个直接秒拒。
-      max-waiters: 50
+      max-waiters: 150
 mybatis:
   configuration:
     map-underscore-to-camel-case: true

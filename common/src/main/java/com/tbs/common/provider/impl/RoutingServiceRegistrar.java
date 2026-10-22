@@ -24,7 +24,7 @@ import org.springframework.util.ClassUtils;
 
 import com.tbs.common.annotation.EnableTbsRoutingService;
 import com.tbs.common.constant.ProviderConstant;
-import com.tbs.common.provider.IObjectProvider;
+import com.tbs.common.provider.IRegistryCenter;
 import com.tbs.common.provider.RoutingStrategy;
 import com.tbs.common.provider.annotation.RoutingService;
 
@@ -219,7 +219,7 @@ public class RoutingServiceRegistrar
     /**
      * 注册单个路由代理工厂 Bean 定义
      * <p>
-     * 注入接口类型、路由策略与 IObjectProvider 的运行时 Bean 引用；
+     * 注入接口类型、路由策略与 IRegistryCenter 的运行时 Bean 引用；
      * 标为 primary 使按类型注入在「本地实现 + 路由代理」两个候选中确定性地命中代理。
      * </p>
      *
@@ -233,7 +233,7 @@ public class RoutingServiceRegistrar
         var definition = BeanDefinitionBuilder.genericBeanDefinition(RoutingServiceFactoryBean.class);
         definition.addConstructorArgValue(interfaceType);
         definition.addConstructorArgValue(strategy);
-        definition.addConstructorArgValue(new RuntimeBeanReference(IObjectProvider.class));
+        definition.addConstructorArgValue(new RuntimeBeanReference(IRegistryCenter.class));
         var beanDefinition = definition.getBeanDefinition();
         // 声明FactoryBean产物类型，使按接口类型的依赖注入可在实例化前完成类型匹配
         beanDefinition.setAttribute(FactoryBean.OBJECT_TYPE_ATTRIBUTE, interfaceType);

@@ -55,7 +55,7 @@ com.tbs.common.provider          多来源路由域层（构建于上，接口�
 `SourceCoordinate = {source, business, version}`：
 
 - Dubbo 来源：`business` 取自服务注册 URL 的 **group**，group 为空时兜底 `ProviderConstant.DEFAULT_BUSINESS`（`"default"`）；`version` 取自 URL 的 version；
-- Spring 来源：当前实现 business 恒为空串（`IRouteMeta` 自声明钩子已定义但解析器尚未接线，见 §七 未接线项）；
+- Spring 来源：`SpringObjectResolver` 读 `IRouteMeta` 自声明的 business/version；未实现该钩子时以实现类简单名兜底 business、version 留空，使同一接口的多个本地实现凭 business 区分；
 - 空串维度在过滤时语义为「不约束」，非空时要求逐字相等。
 
 ### 3.3 条目（RegistryEntry）：身份、坐标、角色
@@ -84,24 +84,27 @@ com.tbs.common.provider          多来源路由域层（构建于上，接口�
 1. 每个来源（`IRegistrationSource`）在 `contribute(center)` 时仅把自己登记为 `ILazyEntriesContributor`；
 2. 中心首次读到某接口的空桶时，回调贡献者现场 `resolveAll` / `resolveRoutableTargets`，
    按身份合并两类结果并标注角色，经 `replaceEntriesBySource` 整段推送；
-3. 新鲜度由贡献者自声明：静态来源（Spring）每接口贡献一次；动态来源（Dubbo）声明 `refreshOnRead`，
-   读即重贡献——真实重查由解析器的快照时效节流（`dubboDiscoveryRefreshMillis`），
-   与现存同源条目同集幂等时跳过替换，避免无谓换位与监听噪音。
+3. 新鲜度由贡献者自声明：静态来源（Spring）每接口贡献一次；动态来源（业务自定义 `IRegistrationSource`）
+   声明 `refreshOnRead`，读即重贡献——真实重查由贡献者自身节流，与现存同源条目同集幂等时跳过替换，
+   避免无谓换位与监听噪音。Dubbo 自 3-ε 起不再走此枚举贡献模型，改由 `IRemoteTargetResolver` 承担（见 §3.6）。
 
 取舍：相对「装配期全量预扫 + 事件推送」，零新增后台线程/订阅、回归面最小；将来接 Dubbo
 `NotifyListener` 真事件推送只需多一个推送方，不返工。
 
-### 3.6 Dubbo 语义保真：逐实例与集群引用并存（3-δ 决策）
+### 3.6 Dubbo 原生发现：不在中心枚举（3-ε 决策）
 
-直接拿逐实例直连引用做路由会在多实例时钉死单点、丢失负载均衡与 failover。解法是角色分离：
+早期 Dubbo 来源经 `registry.lookup` 接口级枚举逐实例入中心，但 Dubbo 3.2+ 默认仅应用级注册
+（`register-mode=instance`），接口级目录为空，且 group 被编入 Nacos 服务名导致无分组 lookup 无法枚举多 business。
+为此 Dubbo 退出中心枚举，改由 `IRemoteTargetResolver`（`DubboRemoteTargetResolver`）承担：
 
-| 条目 | 身份 | 角色 | 用途 |
-|------|------|------|------|
-| 逐实例直连引用 | `(key, 坐标, host:port)` | 仅 enumerable | 枚举观测、精确直连某实例 |
-| 坐标级集群引用 | `(key, 坐标, "cluster")` | 仅 routable | `resolveFirst` 路由命中，保留 Dubbo 原生 LB/failover |
+- 路由代理按 `strategy.preference()` 遍历到 DUBBO 时，直接按绑定的 (business, version) 构造一个
+  Dubbo 原生集群引用（`ReferenceConfig`，`business` 非默认时映射为 `group`，不钉实例地址，check=false），
+  **发现/迁移/负载均衡全权交给 Dubbo**，因而与 provider 的注册模式（接口级/应用级/双注册）无关。
+- **逐实例可观测枚举下线**：中心不再持有 Dubbo 条目，`getObjects`/`resolve(ALL)` 看不到 Dubbo 实例。
+- **未命中语义变化**：目标存在性由 Dubbo 在调用期保障，无可用提供者时调用抛 Dubbo 框架异常，
+  而非在中心判空后走 `noProvider`（仅当未装配/不可用返回 null 时降级或报 noProvider）。
 
-集群引用按 `(business, version)` 坐标各建一个且缓存复用（`InterfaceProviderState`），
-business 为 `default` 时不设 group（匹配无分组 provider）。两类条目身份三元组不同，故同桶并存互不顶掉。
+Spring 与其他自定义枚举来源仍走中心条目；代理在“枚举条目”与“远程引用”两类通道间按偏好序统一择一。
 
 ### 3.7 三条不变量
 
@@ -118,17 +121,18 @@ business 为 `default` 时不设 group（匹配无分组 provider）。两类条
 | 配置键（前缀 `tbs.common.object-provider`） | 默认 | 说明 |
 |--------------------------------------------|------|------|
 | `enable` | true（缺失即开） | 功能总开关，关闭则门面/中心/注册器全部不装配 |
-| `dubbo-discovery-enabled` | true | 关闭后仅剩 Spring 来源，路由自动退化本地直取 |
-| `dubbo-timeout` | 常量缺省 | Dubbo 引用超时（集群与逐实例引用通用） |
-| `dubbo-discovery-refresh-millis` | 常量缺省 | 实例快照刷新间隔；非正数=发现后不主动过期（空快照按固定回退间隔重试） |
+| `dubbo-discovery-enabled` | true | 关闭后 `DubboRemoteTargetResolver` 直接返回 null，远程路由下线，仅剩 Spring 来源 |
+| `dubbo-timeout` | 常量缺省 | Dubbo 集群引用超时 |
+
+> `dubbo-discovery-refresh-millis` 随枚举发现下线不再参与路由（快照刷新已废除，待人工确认后续可移除该属性）。
 
 Bean 装配顺序（同一 Config 内）：
 
-1. `SpringObjectResolver`（order 靠前）与 `DubboInstanceResolver`（`@ConditionalOnClass(ReferenceConfig)` 守卫，Dubbo 缺失静默退化）注册为 `IObjectResolver`；
-2. `DefaultObjectProvider` 收解析链 + 中心引用，作过渡门面；
-3. `DefaultRegistryCenter`：存量解析器经 `ObjectResolverAsSource` 桥接为贡献来源（Dubbo 声明读即重贡献），
-   业务方自定义 `IRegistrationSource` Bean 一并收集贡献；**最后** `attachRoutingProxyFactory(new RoutingProxyFactory())`
-   挂接代理工厂——中心先建成再挂工厂，规避「工厂造代理需中心、中心装配需工厂」的构造期循环。
+1. `SpringObjectResolver`（order 靠前）注册为 `IObjectResolver`；`DubboRemoteTargetResolver`（`@ConditionalOnClass(ReferenceConfig)` 守卫，Dubbo 缺失静默退化）注册为 `IRemoteTargetResolver`；
+2. `DefaultObjectProvider` 收统一注册中心引用，全部读取委派中心（门面签名不变）；
+3. `DefaultRegistryCenter`：存量解析器经 `ObjectResolverAsSource` 桥接为贡献来源（现仅 Spring），
+   业务方自定义 `IRegistrationSource` Bean 一并收集贡献；**最后** `attachRoutingProxyFactory(new RoutingProxyFactory(remoteResolvers))`
+   挂接代理工厂（注入远程解析器集合）——中心先建成再挂工厂，规避构造期循环。
 
 ### 4.2 `@RoutingService` 接口的代理生成
 
@@ -145,12 +149,13 @@ Bean 装配顺序（同一 Config 内）：
 
 ```
 业务方法调用 → RoutingServiceProxy.invoke
-  → center.resolveFirst(iface, business, version, strategy)
-      → 懒填充（若该键首读） → 角色过滤(routable) → business/version 过滤 → strategy.reorder → 取首个
-  → entry.resolve() 得到目标实例 → Method.invoke(target, args)
+  → 按 strategy.preference() 逐级遍历来源：
+      ├─ 远程来源（DUBBO）→ remoteResolver.resolveTarget(iface, business, version) → Dubbo 原生集群引用
+      └─ 枚举来源（Spring/自定义）→ center.resolveFirst(iface, business, version, of(source)) → entry.resolve()
+  → 命中目标 → Method.invoke(target, args)
 ```
 
-未命中任何 routable 条目时抛业务异常（不静默返回 null）；代理工厂未挂接即取代理同样快速失败。
+枚举来源均无命中时记框架级 warn 后交由 `@RoutingService.noProvider()` 声明的 `INoProviderHandler` 处理，处理器返回后代理返回 null（默认 `LoggingNoProviderHandler` 仅记日志；`ErrorThrowNoProviderHandler` 抛业务异常）；代理工厂未挂接即取代理同样快速失败。**注**：远程目标一旦返回非 null 引用即视为命中（实际调用无提供者时由 Dubbo 抛框架异常），因此 Dubbo 接受策略下 ErrorThrow 不再在解析期触发。
 
 ## 五、使用指南
 
@@ -179,12 +184,12 @@ private IXxxService xxxService;   // 命中的是路由代理（primary）
 @Resource
 private IRegistryCenter registryCenter;
 
-// 1) 择一路由目标（返回 routable 条目；Dubbo 命中坐标级集群引用）
+// 1) 择一路由目标（返回 routable 枚举条目；现仅含 Spring/自定义来源，Dubbo 不经中心）
 Optional<RegistryEntry> target =
     registryCenter.resolveFirst(IXxxService.class, "order", "1.0", RoutingStrategy.REMOTE_FIRST);
 Object instance = target.map(RegistryEntry::resolve).orElse(null);
 
-// 2) 枚举全部可用实现（返回 enumerable 条目：逐实例视图，含 host:port 与坐标）
+// 2) 枚举全部可用实现（返回 enumerable 条目：现仅 Spring/自定义来源；Dubbo 逐实例枚举已下线）
 List<RegistryEntry> all =
     registryCenter.resolve(IXxxService.class, null, null, DispatchPolicy.ALL, RoutingStrategy.LOCAL_FIRST);
 
@@ -209,9 +214,9 @@ business/version 过滤语义：**null 或空串 = 该维度不约束**；非空
 
 ### 5.4 过渡门面 `IObjectProvider`
 
-`getObject/getObjectOptional/getObjects/getResolvedObject(type, source)` 仍走**旧解析链**（过渡期保留的对照路径，
-方向上随 `IObjectResolver` 一并 `@Deprecated`）；唯 `getRoutingProxy(type, strategy)` 已委派中心。
-新代码直接使用 `IRegistryCenter`，不建议新增对旧链方法的调用。
+`getObject/getObjectOptional/getObjects/getResolvedObject/getRoutingProxy` **全部委派 `IRegistryCenter`**，
+与路由代理共用同一份来源数据，不存在「门面看不到某来源而中心看得到」的过渡期不一致。
+门面 API 签名保持不变，存量调用方无需改动；新代码亦可直接使用 `IRegistryCenter`。
 
 ## 六、拓展指南
 
@@ -246,7 +251,7 @@ public class NacosRegistrationSource implements IRegistrationSource {
 ### 6.2 兼容旧 SPI：`IObjectResolver`（存量路径，已 @Deprecated）
 
 容器中只有 `IObjectResolver` Bean 而某来源尚无显式 `IRegistrationSource` 时，Config 自动经
-`ObjectResolverAsSource` 桥接入中心（Dubbo 来源桥为读即重贡献，其余为静态贡献）。
+`ObjectResolverAsSource` 桥接入中心（静态贡献）。
 存量解析器需正确实现 `resolveRoutableTargets`——默认实现等于 `resolveAll`（本地实例天然双角色）；
 只有「路由目标 ≠ 逐实例集合」的来源（如集群引用型 RPC）才需要覆写。
 
@@ -282,10 +287,11 @@ matcher 即可，路由域无需改动。
 
 | 项 | 现状 | 计划位 |
 |----|------|--------|
-| Spring 来源 business 派生 | `SpringObjectResolver` 未读 `IRouteMeta` 自声明，Spring 条目 business 恒空串，多本地实现暂不能按 business 区分 | 阶段 3-ε/4 接线坐标推导 |
-| 字段级业务绑定 `@RoutingRef` | 未落地，business 定向现阶段经 `center.getRoutingProxy(..., business, version)` 程序化获取 | 阶段 4 |
+| Spring 来源 business 派生 | 已接线：`SpringObjectResolver` 读 `IRouteMeta` 自声明 business/version，未实现时以实现类简单名兜底 business（见 §3.2） | 阶段 4 已落地 |
+| 字段级业务绑定 `@RoutingRef` | 已落地：`RoutingRefBeanPostProcessor` 扫描 `@RoutingRef` 字段注入绑定 (business, version) 的坐标代理；仍可经 `center.getRoutingProxy(..., business, version)` 程序化获取 | 阶段 4 已落地 |
 | 广播 invoke-all 语义 | `DispatchPolicy.ALL` 仅枚举条目集，中心不代做「逐个调用」；广播执行由使用方遍历条目自行分派 | 按需评估 |
-| Dubbo 真事件推送 | 动态新鲜度走「读即重贡献 + 快照时效节流」，未接 `NotifyListener` | 可平滑追加，不返工 |
+| Dubbo 发现模型 | 3-ε 已迁 `IRemoteTargetResolver` 原生发现，不再中心枚举；逐实例可观测下线，未命中改调用期 Dubbo 报错 | 如需逐实例观测另行评估 |
+| Dubbo 真事件推送 | 发现交给 Dubbo 自身（引用常驻），不再需框架侧快照重查 | 已由 Dubbo 承担 |
 | 多 business 不约束路由 | general 路由（business=null）命中 reorder 后第一坐标，无跨 business 加权 | 设计内行为 |
 
 ## 八、关键类速查
@@ -298,10 +304,13 @@ matcher 即可，路由域无需改动。
 | `RoutingStrategy` | provider | 来源偏好值对象；`reorder` 排序唯一真相源 |
 | `DispatchPolicy` | registry | FIRST/ALL 分派语义（复用为角色选择器） |
 | `IRegistrationSource` / `ILazyEntriesContributor` | provider | 来源贡献 SPI / 懒填充契约 |
+| `IRemoteTargetResolver` / `DubboRemoteTargetResolver` | provider(.impl) | 远程来源目标解析契约 / Dubbo 原生集群引用实现 |
 | `ObjectResolverAsSource` | provider.impl | 旧 `IObjectResolver` → 新来源桥 |
-| `SpringObjectResolver` / `DubboInstanceResolver` | provider.impl | 两内置来源存量解析器（@Deprecated 保留） |
+| `SpringObjectResolver` | provider.impl | Spring 存量解析器（@Deprecated 保留） |
 | `RoutingServiceProxy` / `RoutingProxyFactory` / `RoutingServiceFactoryBean` | provider.impl(.support) | 路由代理处理器 / 工厂插槽 / Bean 工厂 |
 | `RoutingServiceRegistrar` | provider.impl | `@RoutingService` 扫描与 primary 代理注册 |
+| `@RoutingRef` / `RoutingRefBeanPostProcessor` | provider.annotation(.impl) | 字段级坐标装配注解 / 注入绑定 business/version 的代理 |
+| `IRouteMeta` | provider | 本地实现自声明 business/version 的钩子（`SpringObjectResolver` 读取） |
 | `ObjectProviderConfig` / `ObjectProviderProperty` | config(.property) | 自动装配与配置收拢 |
 
 ## 九、自检用例索引（`common/src/test`）
@@ -311,5 +320,6 @@ matcher 即可，路由域无需改动。
 | `RegistryCenterContractTest` | 坐标归一/必填断言、条目身份等值、懒解析只建一次 |
 | `DefaultRegistryCenterTest` | 来源偏好排序、business/version 过滤、FIRST/ALL、整段替换+监听、代理工厂缺失快速失败 |
 | `RegistrySourceContributionTest` | 桥接贡献、静态/动态新鲜度、**路由走集群条目而枚举保留逐实例**（角色分离回归防线） |
+| `RoutingProxyRemoteTargetTest` | 代理按偏好跨枚举来源与远程来源（`IRemoteTargetResolver`）择一、降级与 noProvider |
 
 编译与测试执行按项目约定由人工 `mvn -pl common test` 验证。

@@ -4,25 +4,29 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Optional;
+import java.util.Map;
 
-import com.tbs.common.constant.CommonI18nConstant;
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.provider.INoProviderHandler;
 import com.tbs.common.provider.IRegistryCenter;
-import com.tbs.common.provider.RegistryEntry;
+import com.tbs.common.provider.IRemoteTargetResolver;
+import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.RoutingStrategy;
+import com.tbs.common.provider.annotation.RoutingService;
+import com.tbs.common.provider.impl.LoggingNoProviderHandler;
+import com.tbs.common.util.framework.SpringUtil;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 多来源路由代理调用处理器
  * <p>
- * JDK 动态代理的核心转发逻辑：每次方法调用经统一注册中心 {@link IRegistryCenter#resolveFirst} 按策略与绑定的
- * business/version 择一命中路由目标条目后转发。中心内 Dubbo 来源以按坐标限定的集群引用作为路由目标，
- * 转发时由 Dubbo 在实例间负载均衡、保留 failover；Spring 来源命中本地 Bean。
- * 未命中时按统一失败语义返回 null 并记录 warn 日志；但方法返回值为基本类型时
- * 返回 null 会在调用方拆箱时抛出难以定位的 NullPointerException，故显式抛出带 i18n 文案的异常。
+ * JDK 动态代理的核心转发逻辑：每次方法调用按 {@link RoutingStrategy#preference()} 的来源偏好逐级择一，
+ * 命中目标后转发。来源分两类通道：注册中心内以条目枚举的来源（如 Spring 本地 Bean）经
+ * {@link IRegistryCenter#resolveFirst} 按绑定 business/version 维度过滤命中；不在中心枚举、交由框架自身发现
+ * 的远程来源（如 Dubbo）经 {@link IRemoteTargetResolver} 直接索取绑定维度的远程目标。远程目标的存在性由
+ * 框架在调用期保障（无提供者时调用抛框架异常，而非解析期判空）。
+ * 全部偏好来源均未命中时记录框架级 warn 日志后，交由接口 {@link RoutingService#noProvider()} 声明的
+ * {@link INoProviderHandler} 处理（默认仅记日志，可切换为抛异常等策略）；处理器返回后代理一律返回 null。
  * </p>
  *
  * @param <T> 目标接口类型
@@ -58,6 +62,16 @@ public class RoutingServiceProxy<T> implements InvocationHandler {
     private final IRegistryCenter registryCenter;
 
     /**
+     * 无提供者处理器：取自接口 {@link RoutingService#noProvider()}，未标注时回退默认记日志处理器
+     */
+    private final INoProviderHandler noProviderHandler;
+
+    /**
+     * 远程来源目标解析器，按来源索引；空表示无远程来源参与路由
+     */
+    private final Map<ObjectSource, IRemoteTargetResolver> remoteResolvers;
+
+    /**
      * 构造路由代理调用处理器
      *
      * @param interfaceType  目标接口类型，不能为null
@@ -65,14 +79,45 @@ public class RoutingServiceProxy<T> implements InvocationHandler {
      * @param strategy       路由策略，不能为null
      * @param business       绑定业务分区，可为null表示不约束
      * @param version        绑定发布版本，可为null表示不约束
+     * @param remoteResolvers 远程来源目标解析器集合，按来源索引，可为空
      */
     public RoutingServiceProxy(Class<T> interfaceType, IRegistryCenter registryCenter, RoutingStrategy strategy,
-        String business, String version) {
+        String business, String version, Map<ObjectSource, IRemoteTargetResolver> remoteResolvers) {
         this.interfaceType = interfaceType;
         this.registryCenter = registryCenter;
         this.strategy = strategy;
         this.business = business;
         this.version = version;
+        this.remoteResolvers = remoteResolvers == null ? Map.of() : remoteResolvers;
+        this.noProviderHandler = resolveNoProviderHandler(interfaceType);
+    }
+
+    /**
+     * 解析接口的无提供者处理器实例
+     * <p>
+     * 读取 {@link RoutingService#noProvider()} 声明的处理类（接口未标注注解时回退默认记日志处理器），
+     * 优先从 Spring 容器按类型获取（内置处理器均为 {@code @Component}），取不到再反射实例化兜底，
+     * 反射失败最终回退默认处理器，保证代理构建不因处理器解析失败而中断。
+     * </p>
+     *
+     * @param interfaceType 目标接口类型，不能为null
+     * @return 无提供者处理器实例，不会为null
+     */
+    private static INoProviderHandler resolveNoProviderHandler(Class<?> interfaceType) {
+        RoutingService routing = interfaceType.getAnnotation(RoutingService.class);
+        Class<? extends INoProviderHandler> handlerClass =
+            routing != null ? routing.noProvider() : LoggingNoProviderHandler.class;
+        var bean = SpringUtil.getBeanOptional(handlerClass);
+        if (bean.isPresent()) {
+            return bean.get();
+        }
+        try {
+            return handlerClass.getDeclaredConstructor().newInstance();
+        } catch (Exception e) {
+            log.warn("无提供者处理器实例化失败, 回退默认记日志处理器, 处理类: {}, 原因: {}",
+                handlerClass.getName(), e.getMessage());
+            return new LoggingNoProviderHandler();
+        }
     }
 
     /**
@@ -117,16 +162,31 @@ public class RoutingServiceProxy<T> implements InvocationHandler {
     }
 
     /**
-     * 经中心按策略与绑定维度择一解析路由目标
+     * 按策略偏好逐级择一路由目标
      * <p>
-     * 策略的来源优先序与主备降级由中心的 {@code resolveFirst} 统一承接（排序委派 RoutingStrategy.reorder），
-     * business/version 为代理创建时绑定的定向维度，null/空表示不约束。
+     * 遵 {@link RoutingStrategy#preference()} 的优先序逐个来源尝试：命中 {@link #remoteResolvers} 登记的远程来源
+     * 那么向远程解析器索取目标（返回 null 表示来源不可用，降级下一优先级）；否则经中心按单来源策略与绑定维度
+     * 取首个枚举条目。business/version 为代理创建时绑定的定向维度，null/空表示不约束。
      * </p>
      *
-     * @return 命中的路由目标条目，策略接受且维度匹配的来源均无命中时为 empty
+     * @return 命中的路由目标实例，全部偏好来源均未命中时为 null
      */
-    private Optional<RegistryEntry> resolveTarget() {
-        return registryCenter.resolveFirst(interfaceType, business, version, strategy);
+    private Object selectTarget() {
+        for (ObjectSource source : strategy.preference()) {
+            var resolver = remoteResolvers.get(source);
+            if (resolver != null) {
+                var remote = resolver.resolveTarget(interfaceType, business, version);
+                if (remote != null) {
+                    return remote;
+                }
+                continue;
+            }
+            var hit = registryCenter.resolveFirst(interfaceType, business, version, RoutingStrategy.of(source));
+            if (hit.isPresent()) {
+                return hit.get().resolve();
+            }
+        }
+        return null;
     }
 
     @Override
@@ -134,21 +194,17 @@ public class RoutingServiceProxy<T> implements InvocationHandler {
         if (method.getDeclaringClass() == Object.class) {
             return handleObjectMethod(proxy, method, args);
         }
-        var target = resolveTarget();
-        if (target.isEmpty()) {
+        var target = selectTarget();
+        if (target == null) {
             log.warn("路由代理未命中任何来源实例, 接口: {}, 策略: {}, 方法: {}", interfaceType.getName(), strategy,
                 method.getName());
-            AssertUtil.isTrue(method.getReturnType().isPrimitive())
-                .i18n(CommonI18nConstant.ROUTING_TARGET_NOT_FOUND, interfaceType.getName(), strategy.name(),
-                    method.getName())
-                .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
+            noProviderHandler.handle(interfaceType, method.getName(), args);
             return null;
         }
-        var entry = target.get();
         try {
-            log.debug("[RoutingProxy] 路由转发, 接口: {}, 方法: {}, 来源: {}, 实例: {}", interfaceType.getName(),
-                method.getName(), entry.coordinate().getSource(), entry.instanceKey());
-            return method.invoke(entry.resolve(), args);
+            log.debug("[RoutingProxy] 路由转发, 接口: {}, 方法: {}, 策略: {}, 目标: {}", interfaceType.getName(),
+                method.getName(), strategy, target.getClass().getName());
+            return method.invoke(target, args);
         } catch (InvocationTargetException e) {
             throw e.getCause() == null ? e : e.getCause();
         }
