@@ -20,6 +20,7 @@ import com.tbs.app.service.impl.push.PushNotifyServiceImpl;
 import com.tbs.app.service.impl.role.SimpleRoleGroupServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
+import com.tbs.app.service.impl.user.DefaultUserIdentityService;
 import com.tbs.app.service.impl.user.SimpleSystemUserServiceImpl;
 import com.tbs.app.service.impl.version.AppPackageServiceImpl;
 import com.tbs.app.service.impl.version.AppVersionCompatibilityPolicyServiceImpl;
@@ -31,6 +32,7 @@ import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.token.ISystemTokenService;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.user.IUserIdentityService;
 import com.tbs.app.service.version.IAppPackageService;
 import com.tbs.app.service.version.IAppVersionCompatibilityPolicyService;
 import com.tbs.app.service.version.IAppVersionService;
@@ -138,6 +140,23 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IUserLoginInfoService userLoginInfoService() {
         return new DefaultUserLoginInfoService();
+    }
+
+    /**
+     * 用户身份聚合服务（本地装配）
+     * <p>
+     * 单体部署下的默认实现；若系统模块开启远程导出，容器中会额外存在远程导出 Bean，
+     * 标记 {@code @Primary} 以保证按类型注入优先选中本地实例。
+     * </p>
+     *
+     * @return 身份聚合服务实例
+     */
+    @Bean
+    @Primary
+    @ConditionalOnMissingBean(IUserIdentityService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IUserIdentityService userIdentityService() {
+        return new DefaultUserIdentityService();
     }
 
     @Bean

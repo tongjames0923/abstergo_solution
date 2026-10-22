@@ -47,6 +47,18 @@ public interface ITokenAuthentication extends Authentication {
     UserDetails getUserDetails();
 
     /**
+     * 设置认证关联的用户详情
+     * <p>
+     * 由认证中心在认证阶段一次性注入。注入后本次认证对象即冻结为该用户详情的快照，
+     * 同一请求内多次读取返回同一对象，不再回源，以满足 Spring Security 对
+     * {@link Authentication} 作为认证结果快照的语义。
+     * </p>
+     *
+     * @param userDetails 用户详情，可以为 {@code null}（认证失败时）
+     */
+    void setUserDetails(UserDetails userDetails);
+
+    /**
      * 获取认证过程中产生的异常
      *
      * @return 认证异常；无异常时为 {@code null}

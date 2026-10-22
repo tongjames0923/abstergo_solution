@@ -47,10 +47,14 @@ description: 在本项目中进行任何代码开发、修改或评审时遵循 
 9. **接口分区**：`/public/**` 免认证，`/private/**` 必须认证；私有管理接口统一放在 `controller/privates` 包下。
 10. **评审前置**：任何 MR/提交在合并前必须通过 07 分册检查清单。
 11. **方法改造兼容**：改造或重构公共契约方法（api 模块接口、Dubbo 接口、对外 Service 接口）时，禁止直接修改原方法签名或语义，必须在同一接口下新增方法承载新逻辑，并对原方法标注 `@Deprecated`（注释注明替代方法与计划移除版本），促进缓慢迁移、保持向前兼容；仅安全/严重缺陷或调用方已全量切换可例外（见 03 分册 3.9）。
+12. **规范分包**：类按单一职责归入语义化命名的包；禁止平铺大包，也禁止无语义的单类包与无意义深层嵌套（见 02 分册 2.1.2）。
+13. **缓存名称常量**：`@Cacheable`/`@CachePut`/`@CacheEvict` 的 `cacheNames`/`value` 必须引用模块内 `CacheNamesConstants` 常量，禁止硬编码字符串。
+14. **存储层不承担业务规则**：唯一性、非空、默认值、外键与级联、状态合法性一律在业务代码中用断言校验，禁止依赖数据库的 `UNIQUE`/`NOT NULL`/`DEFAULT`/`FOREIGN KEY`/`ON DELETE CASCADE`/`CHECK`/触发器兜底；`@Table` 只声明 `@Index`；并发由业务层加锁或幂等键保证，主键生成策略除外（见 03 分册 3.3.3）。
 
 ## 后端高频要点速查
 
 - 实体实现 `IBaseEntity<Long>`，含 `serialVersionUID` 与 Lombok 注解；删除语义走逻辑删除（flag + `@LogicDeleteEntity` + FlagEnum）。
+- 实体只声明 `@Index`，不声明 `uniqueConstraints`/`nullable = false`/默认值/外键；唯一性与必填校验用 `AssertUtil` 在 Service 层断言。
 - 标准 CRUD 继承 shared-api 服务模板；多步写操作加 `@Transactional(rollbackFor = Exception.class)`。
 - Controller 注解组合完整：`@Tag`、`@Operation`、`@ApiResponse`、`@AjaxResponseType`、`@Parameter`；继承 `BaseController` 并覆写 `getBusinessName()`。
 - 中间件模块自动配置带 `@ConditionalOnProperty(prefix="tbs.{module}", name="enable")` 开关；Property 类不加 `@Component`，由 Config 中 `@EnableConfigurationProperties` 激活。

@@ -53,6 +53,9 @@
 | [必须] | 常用查询字段在 `@Table(indexes=...)` 声明索引；显式 `@Column` 蛇形映射 |
 | [必须] | 删除语义走逻辑删除（flag + `@LogicDeleteEntity` + FlagEnum），物理删除有正当理由 |
 | [必须] | 表结构变更脚本同步到 `etc/sql_file/` |
+| [必须] | 唯一性/非空/默认值等约束在 Service 断言中表达，`@Table` 只声明 `@Index`，建表脚本只建普通索引（总纲铁律 14 / 03 分册 3.3.3） |
+| [禁止] | 用 `uniqueConstraints`、`nullable = false`、`columnDefinition` 默认值、`@JoinColumn` 外键替代业务校验 |
+| [禁止] | 建表脚本用 `UNIQUE KEY` / `NOT NULL` / `DEFAULT` / `FOREIGN KEY` / `ON DELETE CASCADE` / `CHECK` / 触发器承接业务规则（主键除外） |
 | [禁止] | 字符串拼接 SQL；手写 limit 分页；绕过框架 new JdbcTemplate |
 | [建议] | 条件查询优先 QueryEngine 链式；复杂 JOIN 用 `@SelectSQL` 专用模型 |
 
@@ -155,6 +158,7 @@
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 1.4.0 | 2026-10 | 7.4 新增「不依赖数据库能力」三条检查项：实体不声明约束、建表脚本不用 UNIQUE/NOT NULL/DEFAULT/外键/级联/CHECK 承接业务规则（配合总纲铁律 14 / 03 分册 3.3.3） |
 | 1.3.1 | 2026-10 | 7.2 语言检查项更新：项目已全面 Java 化，禁止新增 Kotlin 代码与 Kotlin 依赖 |
 | 1.3.0 | 2026-08 | 7.5 新增缓存名称常量检查项（配合总纲铁律 13） |
 | 1.2.0 | 2026-08 | 7.2 扩展为「语言、注释与包结构」并新增分包检查项；7.7 新增模块包结构粒度检查（配合总纲铁律 12 / 02 分册 2.1.2.1） |

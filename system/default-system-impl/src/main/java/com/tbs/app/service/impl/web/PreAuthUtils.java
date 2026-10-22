@@ -1,6 +1,7 @@
 package com.tbs.app.service.impl.web;
 
 import com.tbs.app.config.AppSettingProperty;
+import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 
 import jakarta.annotation.Resource;
 import java.util.Objects;
+import java.util.Set;
 import com.tbs.app.constant.SystemI18nConstant;
 
 /**
@@ -49,6 +51,11 @@ public class PreAuthUtils {
         var vo = AuthUtil.getInstance().getCurrentUser();
         if (!isAccountActived(vo)) {
             return false;
+        }
+        // 请求级快照已携带扁平权限编码，直接等值匹配，无需追溯角色组与权限项
+        if (vo instanceof ISystemUserDetails) {
+            Set<String> apiPermissions = ((ISystemUserDetails)vo).getApiPermissions();
+            return apiPermissions != null && apiPermissions.contains(permission);
         }
         var authorities = vo.getAuthorities();
         if (CollUtil.isEmpty(authorities)) {
