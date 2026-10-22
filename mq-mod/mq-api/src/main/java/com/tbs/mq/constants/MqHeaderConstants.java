@@ -42,4 +42,11 @@ public final class MqHeaderConstants {
      */
     public static final String PAYLOAD_TYPE = "payloadType";
 
+    /**
+     * 操作人头：发起本次消息的业务用户ID（字符串形式），供消费端还原审计主体；
+     * 缺失时消费端按系统主体处理。由生产端在信封 headers 中声明，经厂商发送实现落为消息头；
+     * 消费端分发时读取并以该身份执行消费
+     */
+    public static final String OPERATOR_ID = "x-operator-id";
+
 }

@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
+import java.util.Map;
 
 /**
  * 消息主记录VO（v2 记录驱动模型）
@@ -46,6 +47,11 @@ public class MqMessageIncomeVO<R, T extends Serializable> implements Serializabl
      */
     private T payload;
 
+    /**
+     * 消息头，自定义属性的键见 {@link com.tbs.mq.constants.MqHeaderConstants}（如操作人），
+     * 供消费链路还原发起端上下文
+     */
+    private Map<String, String> headers;
 
     /**
      * 消息标志

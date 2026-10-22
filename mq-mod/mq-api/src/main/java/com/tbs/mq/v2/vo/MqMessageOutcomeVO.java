@@ -57,7 +57,7 @@ public class MqMessageOutcomeVO<T extends Serializable> implements Serializable 
     private T payload;
 
     /**
-     * 消息头
+     * 消息头，自定义属性的键见 {@link com.tbs.mq.constants.MqHeaderConstants}（如业务标识、操作人）
      */
     private Map<String, String> headers;
 

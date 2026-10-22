@@ -14,13 +14,14 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 消息接收器（v2 记录驱动模型 · 接收段）
  * <p>
  * 承接厂商监听回调的建档与确认职责，从 {@link AbstractMqContext} 拆出：组装消息VO → 批量建档 → 逐条结果按 messageId 配对 → 成功者入内存待处理队列并 ack
  * 结清厂商投递，失败与结果缺席者一律 nak 拒收（宁拒勿漏，每条至多一次，null 元素忽略）。建档失败 nak 兜底是全链路唯一依赖厂商能力的位置， nak 后消息由厂商重投，记录层持续不可用时会反复重投，属预期的背压行为。
- * 组装/校验钩子（genMessageId/assembleMessageVO/getPayload/resolveBusinessId/validateMessageVo）为本类可覆盖方法，由厂商子类实现；
+ * 组装/校验钩子（genMessageId/assembleMessageVO/getPayload/resolveBusinessId/resolveHeaders/validateMessageVo）为本类可覆盖方法，由厂商子类实现；
  * recorder 经构造注入，本类只负责接收编排。建档以传入的上下文为作用域，接收器可一对一也可共享给多上下文，由装配决定。
  * </p>
  *
@@ -53,7 +54,7 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
     /**
      * 组装消息VO
      * <p>
-     * 构建待落库的初始主记录：框架生成的消息ID + 业务标识 + 厂商原始消息 + 转换后的业务负载 + RECEIVED 初始状态。
+     * 构建待落库的初始主记录：框架生成的消息ID + 业务标识 + 厂商原始消息 + 转换后的业务负载 + 消息头 + RECEIVED 初始状态。
      * </p>
      *
      * @param message 厂商原始消息
@@ -62,7 +63,7 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
     protected MqMessageIncomeVO<R, T> assembleMessageVO(R message) {
         MqMessageIncomeVO<R, T> messageVo = MqMessageIncomeVO.<R, T>builder().messageId(genMessageId(message))
             .businessId(resolveBusinessId(message)).flag(MqMessageStatusEnum.RECEIVED.getCode()).rawMessage(message)
-            .payload(getPayload(message)).build();
+            .payload(getPayload(message)).headers(resolveHeaders(message)).build();
         log.debug("[MQ-v2] assemble vo, messageId={}, businessId={}", messageVo.getMessageId(),
             messageVo.getBusinessId());
         return messageVo;
@@ -90,6 +91,20 @@ public abstract class AbstractMqMessageReceiver<R, T extends Serializable> imple
      * @return 业务标识，不为空
      */
     protected abstract String resolveBusinessId(R message);
+
+    /**
+     * 解析消息头
+     * <p>
+     * 消息头是携带操作人等自定义属性的通道，基类不感知厂商消息结构，由子类提取为字符串键值；
+     * 默认不携带。
+     * </p>
+     *
+     * @param message 厂商原始消息
+     * @return 消息头键值，不为空
+     */
+    protected Map<String, String> resolveHeaders(R message) {
+        return Map.of();
+    }
 
     /**
      * 校验消息VO

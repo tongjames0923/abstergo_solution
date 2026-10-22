@@ -4,8 +4,10 @@ import com.tbs.broadcast.bus.IDistributedBusSupport;
 import com.tbs.broadcast.dispatcher.IDistributedDispatcherSupport;
 import com.tbs.broadcast.dispatcher.IEventDispatcher;
 import com.tbs.broadcast.publisher.IPublishResult;
+import com.tbs.common.context.IOperatorContext;
 import com.tbs.common.data.IDataBridge;
 import com.tbs.broadcast.rabbitmq.property.RabbitMqProperty;
+import com.tbs.mq.constants.MqHeaderConstants;
 import com.tbs.mq.v2.consume.IConsumerRegistry;
 import com.tbs.mq.v2.consume.IMqConsumer;
 import com.tbs.mq.v2.producer.IMqMessageProducer;
@@ -15,11 +17,14 @@ import com.tbs.rabbitmq.v2.RabbitMqContext;
 import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AcknowledgeMode;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.ResolvableType;
 
 import jakarta.annotation.Resource;
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * RabbitMQ广播支持抽象类（v2 记录驱动模型）
@@ -51,6 +56,12 @@ public abstract class AbstractRabbitMqSupport<T extends Serializable> extends Ra
      */
     @Resource
     private IMqMessageProducer mqMessageProducer;
+
+    /**
+     * 当前操作人上下文，由业务模块装配；缺失时不写入操作人头
+     */
+    @Autowired(required = false)
+    private IOperatorContext operatorContext;
 
     @Resource
     @Lazy
@@ -149,15 +160,21 @@ public abstract class AbstractRabbitMqSupport<T extends Serializable> extends Ra
      * 广播事件
      * <p>
      * 经v2统一发送契约 {@link IMqMessageProducer} 以信封形式发送到配置的交换机与路由键，
-     * 由框架自动补齐messageId，负载经转换器携带 payloadType/payloadFormat 头与接收端对称。
+     * 由框架自动补齐messageId，负载经转换器携带 payloadType/payloadFormat 头与接收端对称；
+     * 当前存在操作人时附带 {@link MqHeaderConstants#OPERATOR_ID} 头，供消费端还原审计主体。
      * </p>
      *
      * @param result 要广播的事件对象
      */
     @Override
     public void broadcastEvent(T result) {
+        Map<String, String> headers = new HashMap<>(2);
+        if (operatorContext != null) {
+            operatorContext.getCurrentOperatorId()
+                .ifPresent(operatorId -> headers.put(MqHeaderConstants.OPERATOR_ID, String.valueOf(operatorId)));
+        }
         mqMessageProducer.send(MqMessageOutcomeVO.<T>builder().topic(property.getExchangeName())
-            .routeKey(property.getRoutingKey()).payload(result).build());
+            .routeKey(property.getRoutingKey()).payload(result).headers(headers).build());
     }
 
     /**

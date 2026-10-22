@@ -6,6 +6,7 @@ import com.tbs.app.intercept.SystemOperateInterceptor;
 import com.tbs.app.security.grant.DefaultThirdPartyGrantProvider;
 import com.tbs.app.security.grant.PasswordGrantProviderAdapter;
 import com.tbs.app.security.grant.RefreshGrantProviderAdapter;
+import com.tbs.app.service.AuditUserResolver;
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.service.identity.IExternalIdentityResolver;
 import com.tbs.app.service.identity.IThirdPartyAppService;
@@ -15,6 +16,7 @@ import com.tbs.app.service.impl.identity.DefaultThirdPartyServiceImpl;
 import com.tbs.app.service.impl.identity.SimpleUserExternalIdentityServiceImpl;
 import com.tbs.app.service.impl.identity.UniqueKeyMatchResolver;
 import com.tbs.app.service.impl.user.DefaultUserInfoService;
+import com.tbs.common.context.IOperatorContext;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.logging.core.*;
 import com.tbs.shared.interfaces.constraint.IUserNamePasswordValidator;
@@ -40,6 +42,7 @@ import org.springframework.context.annotation.Configuration;
 
 import jakarta.annotation.Resource;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * @author abstergo
@@ -217,6 +220,32 @@ public class DefaultAppConfig {
         matchIfMissing = true)
     SystemOperateInterceptor systemOperAop() {
         return new SystemOperateInterceptor();
+    }
+
+    /**
+     * 当前操作人上下文配置
+     * <p>
+     * 向基础设施模块（如 MQ）暴露审计主体能力，使其在不反向依赖业务模块的前提下既能读取
+     * 发起人写入消息头，又能在消费链路还原发起人；解析口径与审计字段填充一致。
+     * </p>
+     *
+     * @return 当前操作人上下文
+     */
+    @Bean
+    @ConditionalOnMissingBean(IOperatorContext.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true", matchIfMissing = false)
+    public IOperatorContext operatorContext() {
+        return new IOperatorContext() {
+            @Override
+            public Optional<Long> getCurrentOperatorId() {
+                return Optional.of(AuditUserResolver.resolveCurrentUserId());
+            }
+
+            @Override
+            public void runAs(Long operatorId, Runnable action) {
+                AuditUserResolver.runAs(operatorId, action);
+            }
+        };
     }
 
     /**

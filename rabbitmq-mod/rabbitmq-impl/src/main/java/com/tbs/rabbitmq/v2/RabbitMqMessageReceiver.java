@@ -14,6 +14,8 @@ import org.springframework.amqp.core.Message;
 import org.springframework.amqp.support.converter.MessageConverter;
 
 import java.io.Serializable;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * RabbitMQ 消息接收器（v2 记录驱动模型 · 接收段的 RabbitMQ 落地）
@@ -135,5 +137,27 @@ public abstract class RabbitMqMessageReceiver<T extends Serializable> extends Ab
         String consumerQueue = message.getMessageProperties().getConsumerQueue();
         log.debug("[MQ-v2] businessId header absent, fallback to consumerQueue={}", consumerQueue);
         return consumerQueue;
+    }
+
+    /**
+     * 提取消息头
+     * <p>
+     * 把 AMQP 头的任意类型值统一转为字符串，供消费链路按 {@link MqHeaderConstants} 中的键读取
+     * （如 {@link MqHeaderConstants#OPERATOR_ID} 操作人）；空值不保留。
+     * </p>
+     *
+     * @param message 厂商原始消息
+     * @return 消息头键值
+     */
+    @Override
+    protected Map<String, String> resolveHeaders(Message message) {
+        Map<String, Object> rawHeaders = message.getMessageProperties().getHeaders();
+        Map<String, String> headers = new HashMap<>(rawHeaders.size());
+        rawHeaders.forEach((key, value) -> {
+            if (value != null) {
+                headers.put(key, String.valueOf(value));
+            }
+        });
+        return headers;
     }
 }
