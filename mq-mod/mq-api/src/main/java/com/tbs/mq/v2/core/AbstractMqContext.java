@@ -159,7 +159,10 @@ public abstract class AbstractMqContext<R, T extends Serializable> implements IM
             try {
                 message = messageQueue.poll(POLL_TIMEOUT_SECONDS, TimeUnit.SECONDS);
             } catch (InterruptedException e) {
-                log.error("[MQ-v2] handler thread interrupted while polling, contextId={}", contextId, e);
+                // 中断是停机信号（destroy 触发），非故障：恢复中断标志并退出循环，避免把正常关闭打成错误堆栈
+                Thread.currentThread().interrupt();
+                log.info("[MQ-v2] handler thread interrupted, stop polling, contextId={}", contextId);
+                break;
             }
             if (message == null) {
                 continue;
