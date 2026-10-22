@@ -2,7 +2,7 @@ package com.tbs.common.provider.impl;
 
 import org.springframework.beans.factory.FactoryBean;
 
-import com.tbs.common.provider.IObjectProvider;
+import com.tbs.common.provider.IRegistryCenter;
 import com.tbs.common.provider.RoutingStrategy;
 
 import lombok.Getter;
@@ -10,7 +10,7 @@ import lombok.Getter;
 /**
  * 多来源路由服务工厂 Bean
  * <p>
- * 将多来源路由代理注册为指定接口类型的 Spring Bean：getObject 返回经 IObjectProvider
+ * 将多来源路由代理注册为指定接口类型的 Spring Bean：getObject 返回经 {@link IRegistryCenter}
  * 构建的 JDK 动态路由代理，业务侧通过 @Resource/@Autowired 注入该接口时，使用方式与普通 Bean 完全一致，
  * 调用时由代理按路由策略在 Spring Bean 与 Dubbo 实例间动态选择目标。
  * </p>
@@ -35,21 +35,21 @@ public class RoutingServiceFactoryBean<T> implements FactoryBean<T> {
     private final RoutingStrategy strategy;
 
     /**
-     * 统一对象提供器
+     * 统一注册中心
      */
-    private final IObjectProvider objectProvider;
+    private final IRegistryCenter registryCenter;
 
     /**
      * 构造路由服务工厂 Bean
      *
      * @param interfaceType  目标接口类型，不能为null
      * @param strategy       路由策略，不能为null
-     * @param objectProvider 统一对象提供器，不能为null
+     * @param registryCenter 统一注册中心，不能为null
      */
-    public RoutingServiceFactoryBean(Class<T> interfaceType, RoutingStrategy strategy, IObjectProvider objectProvider) {
+    public RoutingServiceFactoryBean(Class<T> interfaceType, RoutingStrategy strategy, IRegistryCenter registryCenter) {
         this.interfaceType = interfaceType;
         this.strategy = strategy;
-        this.objectProvider = objectProvider;
+        this.registryCenter = registryCenter;
     }
 
     /**
@@ -59,7 +59,7 @@ public class RoutingServiceFactoryBean<T> implements FactoryBean<T> {
      */
     @Override
     public T getObject() {
-        return objectProvider.getRoutingProxy(interfaceType, strategy);
+        return registryCenter.getRoutingProxy(interfaceType, strategy, null, null);
     }
 
     /**

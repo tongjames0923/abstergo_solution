@@ -32,7 +32,7 @@ import lombok.extern.slf4j.Slf4j;
  * 统一注册中心默认实现。
  * <p>
  * 坐落通用 {@link KeyedRegistry}（键=接口类型，多值桶）之上，实现「注册 + 解析 + 分派 + 生命周期」：
- * 读多写少——{@link #resolve} 命中空桶时先触发已登记的 {@link ILazyEntriesContributor} 按需懒填充
+ * 读多写少——{@link #resolve} 读取时先触发已登记的 {@link ILazyEntriesContributor} 按需懒填充
  * （静态来源每接口首读贡献一次，动态来源读即重贡献并在同集幂等时跳过换位），动态变更经
  * {@link #replaceEntriesBySource} 事件增量刷新；路由代理作为「通道」而非实现，{@link #register} 予以拒绝，防解析自递归。条目按唯一坐标
  * (接口, {@link SourceCoordinate}, instanceKey) 区分，使同一 host:port 上不同 business/version 的实例各自并存。
@@ -269,24 +269,27 @@ public class DefaultRegistryCenter implements IRegistryCenter {
     /**
      * 触发某接口的按需懒填充
      * <p>
-     * 桶内已有任意条目即视为已完成贡献（静态来源启动后才实例化的懒 Bean 仍能首读命中，
-     * 动态来源的新鲜度由贡献者自身节流保障）；未贡献过的接口逐个回调贡献者现场推送。
+     * 逐个回调已登记的贡献者：一次性贡献者（{@code refreshOnRead()} 为 false）每接口只贡献一次，
+     * 由 {@code contributedKeys} 记录免重复；读即重贡献者（{@code refreshOnRead()} 为 true）每次读取都回调，
+     * 新鲜度由贡献者自身节流保障，同集幂等由 {@link #replaceEntriesBySource} 跳过换位。
+     * 不再以「桶内已有条目」整体短路，使启动后才实例化的懒 Bean 仍能首读命中。
      * 贡献者异常在桥接层吞掉降级为空贡献，不影响读取主线。
      * </p>
      *
      * @param key 接口类型，不能为null
      */
     private void lazyFill(Class<?> key) {
-        if (lazyContributors.isEmpty() || !table.getAll(key).isEmpty()) {
+        if (lazyContributors.isEmpty()) {
             return;
         }
         for (ILazyEntriesContributor contributor : lazyContributors) {
-            if (!contributor.refreshOnRead() && contributedKeys.computeIfAbsent(contributor,
-                c -> ConcurrentHashMap.newKeySet()).contains(key)) {
+            var doneKeys = contributedKeys.computeIfAbsent(contributor,
+                c -> ConcurrentHashMap.newKeySet());
+            if (!contributor.refreshOnRead() && doneKeys.contains(key)) {
                 continue;
             }
             contributor.contributeEntries(this, key);
-            contributedKeys.computeIfAbsent(contributor, c -> ConcurrentHashMap.newKeySet()).add(key);
+            doneKeys.add(key);
         }
     }
 

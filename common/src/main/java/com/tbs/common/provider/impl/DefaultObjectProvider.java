@@ -1,33 +1,27 @@
 package com.tbs.common.provider.impl;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.tbs.common.provider.IObjectProvider;
-import com.tbs.common.provider.IObjectResolver;
 import com.tbs.common.provider.IRegistryCenter;
-import com.tbs.common.provider.ObjectResolveContext;
 import com.tbs.common.provider.ObjectSource;
+import com.tbs.common.provider.RegistryEntry;
 import com.tbs.common.provider.ResolvedObject;
 import com.tbs.common.provider.RoutingStrategy;
-import com.tbs.common.provider.impl.support.RoutingServiceProxy;
+import com.tbs.common.registry.DispatchPolicy;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * 统一对象提供器默认实现
  * <p>
- * 过渡期门面：{@code getObject}/{@code getObjects}/{@code getResolvedObject(按来源)} 仍走旧解析链
- * （逐个询问 {@link IObjectResolver}），供阶段 3-δ 切换过程中与新中心链路并列观察对比；
- * 路由代理构建已改派 {@link IRegistryCenter#getRoutingProxy}，由中心按 business/version 择一路由目标（Dubbo 为集群引用）。
- * 单个解析器抛异常时仅跳过该来源并记录日志，不影响其余来源解析。
- * 路由代理自身由各来源解析器按 {@link RoutingServiceProxy#isRoutingProxy(Object)} 排除，
- * 因为代理是「通道」而非实现，否则代理转发时会再次解析到自己造成无限递归。
+ * 门面委派统一注册中心 {@link IRegistryCenter}：单实例/枚举/按来源解析全部读中心条目表，与路由代理共用同一份
+ * 来源数据，消除「门面只看到解析链、中心看到全部来源」的过渡期不一致。门面 API 签名保持不变，存量调用方无需改动。
+ * 枚举取 {@code enumerable} 条目（按本地优先排序，Spring 在前、Dubbo 逐实例在后）；择一取 {@code routable} 条目
+ * （本地 Bean 优先，仅远程时命中 Dubbo 按 business/version 聚合的整体集群引用），与旧解析链 {@code resolveOne} 语义一致。
  * </p>
  *
  * @author abstergo
@@ -37,70 +31,17 @@ import lombok.extern.slf4j.Slf4j;
 public class DefaultObjectProvider implements IObjectProvider {
 
     /**
-     * 有序解析链（旧链，仅服务于尚未迁移到中心的单实例/枚举/按来源解析）
-     */
-    private final List<IObjectResolver> resolvers;
-
-    /**
-     * 来源到解析器的映射，同一来源多个解析器时保留优先级最高的一个
-     */
-    private final Map<ObjectSource, IObjectResolver> resolversBySource;
-
-    /**
-     * 统一注册中心，路由代理构建委派于此
+     * 统一注册中心：门面所有读取的底层数据源
      */
     private final IRegistryCenter registryCenter;
 
     /**
      * 构造统一对象提供器
      *
-     * @param resolvers      解析器集合，不能为null，内部按 Ordered 排序
      * @param registryCenter 统一注册中心，不能为null
      */
-    public DefaultObjectProvider(List<IObjectResolver> resolvers, IRegistryCenter registryCenter) {
-        var sorted = new ArrayList<>(resolvers);
-        sorted.sort(Comparator.comparingInt(IObjectResolver::getOrder));
-        this.resolvers = sorted;
+    public DefaultObjectProvider(IRegistryCenter registryCenter) {
         this.registryCenter = registryCenter;
-        this.resolversBySource = new HashMap<>();
-        for (IObjectResolver resolver : sorted) {
-            if (resolver.getSource() != null) {
-                this.resolversBySource.putIfAbsent(resolver.getSource(), resolver);
-            }
-        }
-        log.debug("[ObjectProvider] 多来源解析链初始化: {}",
-            sorted.stream().map(r -> r.getSource() + "(order=" + r.getOrder() + ")")
-                .collect(java.util.stream.Collectors.joining(" -> ")));
-    }
-
-    /**
-     * 链式解析单个实例
-     * <p>
-     * 依次询问解析链，各解析器自行返回自身语义下的最优实例（如 Dubbo 的负载均衡整体引用）；
-     * 全部来源未命中返回 empty。
-     * </p>
-     *
-     * @param context 解析上下文，不能为null
-     * @param <T>     目标类型
-     * @return 首个命中的解析结果
-     */
-    private <T> Optional<ResolvedObject<T>> resolveFirst(ObjectResolveContext<T> context) {
-        for (IObjectResolver resolver : resolvers) {
-            try {
-                var resolved = resolver.resolveOne(context);
-                if (resolved.isPresent()) {
-                    log.debug("[ObjectProvider] 单实例解析命中, 接口: {}, 来源: {}, 实例: {}",
-                        context.getTargetType().getName(), resolved.get().getSource(), resolved.get().getInstanceKey());
-                    return resolved;
-                }
-            } catch (Exception e) {
-                log.warn("解析器[{}]解析失败, type: {}, 原因: {}", resolver.getClass().getSimpleName(),
-                    context.getTargetType().getName(), e.getMessage());
-            }
-        }
-        log.debug("[ObjectProvider] 全部来源均未命中, 接口: {}, beanName: {}", context.getTargetType().getName(),
-            context.getBeanName());
-        return Optional.empty();
     }
 
     @Override
@@ -108,14 +49,33 @@ public class DefaultObjectProvider implements IObjectProvider {
         return getObject(type, null);
     }
 
+    /**
+     * 解析单个实例（委派中心）
+     * <p>
+     * beanName 为空时按本地优先取首个 {@code routable} 条目：本地 Bean 优先，仅远程时命中 Dubbo 整体集群引用；
+     * beanName 非空时在 {@code enumerable} 条目中按实例标识精确定位。无命中返回 null。
+     * </p>
+     *
+     * @param type     目标类型，不能为null
+     * @param beanName 实例标识，可为null
+     * @param <T>      目标类型
+     * @return 命中的实例，未命中返回 null
+     */
     @Override
+    @SuppressWarnings("unchecked")
     public <T> T getObject(Class<T> type, String beanName) {
-        return resolveFirst(ObjectResolveContext.of(type, beanName)).map(ResolvedObject::getInstance).orElse(null);
+        if (beanName == null || beanName.isEmpty()) {
+            return (T) registryCenter.resolveFirst(type, null, null, RoutingStrategy.LOCAL_FIRST)
+                .map(RegistryEntry::resolve).orElse(null);
+        }
+        return (T) enumerableEntries(type).stream()
+            .filter(entry -> beanName.equals(entry.instanceKey()))
+            .map(RegistryEntry::resolve).findFirst().orElse(null);
     }
 
     @Override
     public <T> Optional<T> getObjectOptional(Class<T> type) {
-        return Optional.ofNullable(getObject(type, null));
+        return Optional.ofNullable(getObject(type));
     }
 
     @Override
@@ -125,53 +85,60 @@ public class DefaultObjectProvider implements IObjectProvider {
 
     @Override
     public <T> Collection<ResolvedObject<T>> getObjects(Class<T> type) {
-        List<ResolvedObject<T>> result = new ArrayList<>();
-        var context = ObjectResolveContext.of(type);
-        for (IObjectResolver resolver : resolvers) {
-            try {
-                resolver.resolveAll(context).forEach(result::add);
-            } catch (Exception e) {
-                log.warn("解析器[{}]枚举失败, type: {}, 原因: {}", resolver.getClass().getSimpleName(), type.getName(),
-                    e.getMessage());
-            }
-        }
-        if (log.isDebugEnabled()) {
-            log.debug("[ObjectProvider] 多来源枚举接口: {}, 共 {} 个实例: {}", type.getName(), result.size(),
-                result.stream().map(o -> o.getSource() + ":" + o.getInstanceKey())
-                    .collect(java.util.stream.Collectors.toList()));
-        }
-        return result;
-    }
-
-    @Override
-    public <T> Optional<ResolvedObject<T>> getResolvedObject(Class<T> type, ObjectSource source) {
-        var resolver = resolversBySource.get(source);
-        if (resolver == null) {
-            return Optional.empty();
-        }
-        try {
-            return resolver.resolveOne(ObjectResolveContext.of(type));
-        } catch (Exception e) {
-            log.warn("解析器[{}]按来源[{}]解析失败, type: {}, 原因: {}", resolver.getClass().getSimpleName(), source,
-                type.getName(), e.getMessage());
-            return Optional.empty();
-        }
+        return toResolvedObjects(enumerableEntries(type));
     }
 
     /**
-     * 构建多来源路由代理
+     * 按来源定向解析：取该来源的首个 {@code routable} 条目
      * <p>
-     * 阶段 3-δ 起委派统一注册中心构建与缓存：代理每次调用经 {@code center.resolveFirst} 按策略与 business/version
-     * 择一路由目标（Dubbo 命中坐标级集群引用、保留负载均衡/failover）。本门面不指定 business/version，传 null 不约束。
+     * 以单来源偏好策略定向到指定来源；Spring 返回本地 Bean，Dubbo 返回按 business/version 聚合的整体集群引用，
+     * 与旧解析链 {@code resolveOne} 语义一致。
      * </p>
      *
-     * @param interfaceType 目标接口类型，不能为null
-     * @param strategy      路由策略，不能为null
-     * @param <T>           目标接口类型
-     * @return 路由代理实例
+     * @param type   目标类型，不能为null
+     * @param source 目标来源，不能为null
+     * @param <T>    目标类型
+     * @return 该来源的最优解析结果，无命中返回 empty
      */
     @Override
-    public <T> T getRoutingProxy(Class<T> interfaceType, RoutingStrategy strategy) {
-        return registryCenter.getRoutingProxy(interfaceType, strategy, null, null);
+    public <T> Optional<ResolvedObject<T>> getResolvedObject(Class<T> type, ObjectSource source) {
+        if (source == null) {
+            return Optional.empty();
+        }
+        return registryCenter.resolveFirst(type, null, null, RoutingStrategy.of(source))
+            .map(entry -> this.<T>toResolved(entry));
+    }
+
+    /**
+     * 读取该接口全部 {@code enumerable} 条目，按本地优先排序（Spring 在前、Dubbo 逐实例在后）
+     *
+     * @param type 目标类型，不能为null
+     * @return 可枚举条目列表
+     */
+    private List<RegistryEntry> enumerableEntries(Class<?> type) {
+        return registryCenter.resolve(type, null, null, DispatchPolicy.ALL, RoutingStrategy.LOCAL_FIRST);
+    }
+
+    /**
+     * 条目列表映射为解析结果列表
+     *
+     * @param entries 条目列表
+     * @param <T>     目标类型
+     * @return 解析结果列表
+     */
+    private <T> List<ResolvedObject<T>> toResolvedObjects(List<RegistryEntry> entries) {
+        return entries.stream().map(entry -> this.<T>toResolved(entry)).collect(Collectors.toList());
+    }
+
+    /**
+     * 单条目映射为解析结果载体
+     *
+     * @param entry 注册条目
+     * @param <T>   目标类型
+     * @return 解析结果
+     */
+    @SuppressWarnings("unchecked")
+    private <T> ResolvedObject<T> toResolved(RegistryEntry entry) {
+        return ResolvedObject.of((T) entry.resolve(), entry.coordinate(), entry.instanceKey());
     }
 }

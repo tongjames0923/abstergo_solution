@@ -4,6 +4,8 @@ import com.tbs.app.form.DicItemSaveForm;
 import com.tbs.app.form.DicItemSearchForm;
 import com.tbs.app.form.DicSaveForm;
 import com.tbs.app.form.DicSearchForm;
+import com.tbs.common.constant.ProviderConstant;
+import com.tbs.common.provider.annotation.RoutingRef;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.dic.entity.SystemDataDicEntity;
@@ -47,7 +49,7 @@ public class SystemDataDicController extends BaseController {
     /**
      * 数据字典服务：{@code @RoutingService} 路由代理，本地优先、Dubbo 兜底
      */
-    @Resource
+    @RoutingRef(business = ProviderConstant.DEFAULT_BUSINESS)
     private IDataDicService dataDicService;
 
     /**
