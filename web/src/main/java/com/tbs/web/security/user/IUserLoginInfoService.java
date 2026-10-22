@@ -54,9 +54,13 @@ public interface IUserLoginInfoService {
 
     /**
      * 根据令牌获取用户详情
+     * <p>
+     * 一个令牌至多关联一个用户，返回列表恒为 0 或 1 个元素，且不会出现 null 元素；
+     * 无匹配时返回空集合。空集合同样会进入缓存，用于抵御无效令牌的重复回源。
+     * </p>
      *
      * @param token 令牌串，不能为空
-     * @return 令牌对应的用户详情集合（同一令牌可能映射多个来源），无匹配时返回空集合
+     * @return 令牌对应的用户详情集合，无匹配时返回空集合
      */
     List<UserDetails> getUserDetails(String token);
 

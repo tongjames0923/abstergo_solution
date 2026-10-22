@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 
 /**
  * 集合工具类
@@ -156,6 +155,9 @@ public class CollUtil extends cn.hutool.core.collection.CollUtil {
      * @return 只包含该元素的 {@link ArrayList}
      */
     public static <T> List<T> singletonList(T item) {
+        if (item == null) {
+            return new ArrayList<>();
+        }
         List<T> list = new ArrayList<>(1);
         list.add(item);
         return list;

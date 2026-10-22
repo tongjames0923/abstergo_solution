@@ -167,9 +167,9 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
      * 缓存策略：
      * <ul>
      *     <li>condition 过滤空令牌，避免以空串为 key 产生无效缓存；</li>
-     *     <li>null 结果不缓存（unless）：防止「令牌已签发、登录信息尚未落库」窗口期写入脏 null，
-     *     同时避免依赖底层缓存实现的 null 值语义；</li>
-     *     <li>未启用 sync 防击穿：与 unless 互斥，且回源仅为单条索引查询，击穿代价可控；</li>
+     *     <li>空集合参与缓存：无效令牌首次回源后写入空集合，TTL 内不再穿透数据库，抵御令牌探测类攻击；</li>
+     *     <li>写入路径（登录、置换）均先落库再主动 evict，补数据后下一次读取即可回源，不会被空集合挡住；</li>
+     *     <li>未启用 sync 防击穿：回源仅为单条索引查询，且空集合已消除重复穿透，代价可控；</li>
      *     <li>TTL 5 分钟兜底：用户禁用等状态变更在主动 evict 缺位时最长延迟 5 分钟生效。</li>
      * </ul>
      * </p>
