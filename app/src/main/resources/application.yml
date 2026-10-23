@@ -6,6 +6,7 @@ spring:
       - db
       - redis
       - mq
+      - log
   application:
     name: app-service
   # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）

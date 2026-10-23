@@ -2,7 +2,8 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
+    # 生产环境建议 -DJPA_SHOW_SQL=false 关闭，SQL 排查交给 p6spy 按需开启
+    show-sql: ${JPA_SHOW_SQL:true}
     generate-ddl: false
     database: mysql
   datasource:

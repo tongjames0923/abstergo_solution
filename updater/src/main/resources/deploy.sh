@@ -74,9 +74,10 @@ fi
 echo "[deploy] 启动主JAR包: $JAR_FILE"
 echo "[deploy] 执行命令: java -jar $JAR_FILE"
 
-# 后台启动，日志输出到同目录下的 app.log
+# 后台启动，控制台输出追加到同目录下的 app.log（用 >> 避免重启覆盖历史日志）
+# 应用日志由 logback 落盘并滚动（-DLOG_PATH 指定目录），app.log 仅作 JVM 级启动/崩溃兜底
 JAR_DIR=$(dirname "$JAR_FILE")
-nohup java -jar "$JAR_FILE" > "${JAR_DIR}/app.log" 2>&1 &
+nohup java -DLOG_PATH="${JAR_DIR}/logs" -jar "$JAR_FILE" >> "${JAR_DIR}/app.log" 2>&1 &
 
 NEW_PID=$!
 echo "[deploy] 新服务已启动, PID: $NEW_PID"

@@ -1,0 +1,18 @@
+# 日志纵切配置：文件落盘 + 滚动归档
+# 统一使用 Spring Boot 原生 Logback 能力，不引入 logback-spring.xml；
+# 仅当出现按包分文件、异步 appender、MDC 链路追踪等高级需求时再考虑 XML 配置。
+logging:
+  file:
+    # 落盘路径：启动参数 -DLOG_PATH=/data/logs 可覆盖，默认相对启动目录的 logs/
+    name: ${LOG_PATH:logs}/logging-service.log
+  pattern:
+    # 文件 pattern 不含 %clr 等 Spring 扩展关键字，避免非 Spring 上下文初始化失败，也不写入 ANSI 颜色码
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{50} - %msg%n"
+  logback:
+    rollingpolicy:
+      # 单文件超过 100MB 或跨天即滚动，归档自动 gzip 压缩
+      max-file-size: 100MB
+      # 历史日志保留 7 天
+      max-history: 7
+      # 归档总容量上限 2GB，超出后按时间淘汰最旧文件
+      total-size-cap: 2GB
