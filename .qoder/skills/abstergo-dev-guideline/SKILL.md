@@ -54,6 +54,10 @@ description: 在本项目中进行任何代码开发、修改或评审时遵循 
 ## 后端高频要点速查
 
 - 实体实现 `IBaseEntity<Long>`，含 `serialVersionUID` 与 Lombok 注解；删除语义走逻辑删除（flag + `@LogicDeleteEntity` + FlagEnum）。
+- 实体主键用 `@Id` + `@SqlAutoValue(value = IdAutoProvider.class, insertOnly = true)`（应用侧雪花），**禁止 `@GeneratedValue`**；`@Table` 只写在最终实体上，不抽带字段的实体基类（继承字段无法用于 DSL 条件与排序）。
+- 数据层分工：Hibernate 只建表，读写全走自研 sql 框架；条件查询优先 QueryEngine 链式，**`@LogicDeleteEntity` 实体禁止调 `GenericMapper` 的 `select`/`selectCount`/`delete`**（不注入 flag 过滤）。
+- `insertList`/`deleteByIdList` 分批执行非原子（适配 SQL Server/Oracle 上限），**需整体回滚的**写路径必须 `@Transactional(rollbackFor = Exception.class)`；单批方法（`*Batch`）不得业务直调。明确容忍部分成功的批量写入（日志/埋点/上报）可不加事务，但要在写入处块注释写明理由。
+- 自定义 SQL：复杂 JOIN 优先 `AbstractResourceCriteria`（classpath 资源文件）；`@SelectSQL` 只标在**类**上，且 SQL 内不得自带 WHERE（框架会追加条件）。
 - 实体只声明 `@Index`，不声明 `uniqueConstraints`/`nullable = false`/默认值/外键；唯一性与必填校验用 `AssertUtil` 在 Service 层断言。
 - 标准 CRUD 继承 shared-api 服务模板；多步写操作加 `@Transactional(rollbackFor = Exception.class)`。
 - Controller 注解组合完整：`@Tag`、`@Operation`、`@ApiResponse`、`@AjaxResponseType`、`@Parameter`；继承 `BaseController` 并覆写 `getBusinessName()`。

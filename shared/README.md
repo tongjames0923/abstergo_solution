@@ -2,7 +2,7 @@
 
 ## 模块概述
 
-Shared 模块（`com.tbs:shared`）是平台的核心共享组件库（Java 11），提供系统级实体、枚举、CRUD 服务模板、审计体系、逻辑删除、校验框架等跨模块复用组件。模块本身**不含业务逻辑**，业务模块（system/logging/dic/view-route 等）的实体与 Mapper 均落地于此。
+Shared 模块（`com.tbs:shared`）是平台的核心共享组件库（Java 21），提供系统级实体、枚举、CRUD 服务模板、审计体系、逻辑删除、校验框架等跨模块复用组件。模块本身**不含业务逻辑**，业务模块（system/logging/dic/view-route 等）的实体与 Mapper 均落地于此。
 
 | 子模块 | 职责 | 核心依赖 |
 |--------|------|----------|
@@ -23,7 +23,7 @@ shared/
 │       ├── pojo/               # 契约接口（IBaseEntity / 审计 / 数据权限 / 部门）
 │       │   ├── criteria/       # 9 个查询条件类
 │       │   ├── entity/         # 系统实体（12）+ entity.version（3）+ entity.view（5）
-│       │   └── model/          # BaseEntity / ClassBaseQueryCriteria + view 视图模型
+│       │   └── model/          # ClassBaseQueryCriteria + view 视图模型
 │       ├── serialize/          # OrderedModelSerializer / OrderedModelDeserializer
 │       └── util/               # SqlLogicDeleteIntercepter
 └── shared-api/
@@ -68,7 +68,7 @@ ICustomDataScopeEntity（dataScopeType/dataScopeValue：数据权限范围）
 IDeptBelongEntity<K>（deptId：部门归属）
 ```
 
-**要点**：`IBaseEntity` 仅含 id 与 flag，**不含时间审计字段**——审计字段按需实现对应接口（如 `SystemUserEntity` 实现 `ICommonCreateAuditable` + `ICommonUpdateAuditable`）。
+**要点**：`IBaseEntity` 仅含 id 与 flag，**不含时间审计字段**——审计字段按需实现对应接口（如 `SystemUserEntity` 实现 `ICommonCreateAuditable` + `ICommonUpdateAuditable`）。实体间共享行为一律用接口表达，**不得引入带字段的实体基类**（历史上的 `BaseEntity` 已删除；DSL 无法引用继承字段，详见 03 分册 3.2 第 9 条）。
 
 ### @LogicDeleteEntity 与 SQL 拦截器
 
@@ -264,7 +264,7 @@ public class DemoAuditService extends AbstractAuditService<DemoEntity, Long, Lon
 ## 使用注意事项
 
 1. **宿主必须开启 AOP 代理暴露**：服务模板经 `AopContext.currentProxy()` 自调用以保证事务生效，启动类需 `@EnableAspectJAutoProxy(exposeProxy = true)`（平台各服务已默认开启）
-2. **`IBaseEntity` 不含审计字段**：需要审计的实体请实现 `ICommonAuditableEntity` / `ICommonDeleteAuditable` 等
+2. **`IBaseEntity` 不含审计字段**：需要审计的实体请实现 `ICommonAuditableEntity` / `ICommonDeleteAuditable` 等；共享行为用接口，不抽带字段的实体基类
 3. **两套 flag 语义不一致**：通用 `CommonFlagEnum`（DELETED=0）与用户状态 `SystemUserStatusEnum`（DELETE=-1）相反，跨实体比较 flag 时以实体 `@LogicDeleteEntity` 注解为准
 4. **`entity.version` 未被默认 EntityScan 覆盖**：需 JPA 管理 App 版本三实体时在宿主补充 `@EntityScan`
 5. **包名拼写**：`shared-pojo` 的注解包为 `annotations`（复数），`shared-api` 校验注解包为 `interfaces.annoation`（拼写如此），import 时注意

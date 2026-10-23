@@ -41,7 +41,8 @@ import java.util.List;
  *   <li>主键由应用侧生成（雪花），本接口不开启数据库主键回填</li>
  *   <li>{@link #insertList}、{@link #selectByIdList}、{@link #deleteByIdList} 收到空集合时直接返回，
  *       不会生成非法的空 IN 或空 VALUES 语句</li>
- *   <li>分批方法按方言上限拆成多次执行，不是原子操作；需要整体回滚时由调用方开启事务</li>
+ *   <li>分批方法按方言上限拆成多次执行，不是原子操作；需要整体回滚时由调用方开启事务，
+ *       业务上明确容忍部分成功的批量写入（日志/埋点）可不开事务，但需在写入处注释说明理由</li>
  *   <li>{@link #select} 与 {@link #delete} 只按非空、非空串且非集合类型的字段拼接条件</li>
  * </ul>
  *

@@ -25,7 +25,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <ul>
  *   <li>从实体类中提取表名和字段信息</li>
  *   <li>从实体类中提取写操作所需的表元数据</li>
- *   <li>支持 {@link SelectSQL} 注解的自定义SQL</li>
+ *   <li>支持类级 {@link SelectSQL} 注解直接指定 SELECT 语句</li>
  *   <li>支持 {@link Table} 注解的表名提取与 {@link Id} 注解的主键识别</li>
  *   <li>缓存已提取的元数据，提高性能</li>
  * </ul>
@@ -47,9 +47,9 @@ import java.util.concurrent.ConcurrentHashMap;
  *
  * <h3>注意事项</h3>
  * <ul>
- *   <li>实体类必须添加 {@link Table} 注解</li>
+ *   <li>实体类必须添加 {@link Table} 注解，标注了类级 {@link SelectSQL} 的查询模型除外</li>
  *   <li>父类声明的字段同样参与元数据提取，与 Hibernate 的映射范围一致</li>
- *   <li>支持 {@link SelectSQL} 注解的自定义SQL</li>
+ *   <li>{@link SelectSQL} 走原始 SQL 通道：不产出字段清单，列投影对其无效，WHERE 仍由框架追加</li>
  *   <li>元数据会被缓存，修改实体类后需要清除缓存</li>
  * </ul>
  *
@@ -86,13 +86,20 @@ public class EntityMetadataExtractor {
     /**
      * 从实体类中提取SQL查询元数据。
      *
+     * <p>类上标注 {@link SelectSQL} 时只回填 {@code rawSql} 并提前返回：既不校验 {@link Table}，
+     * 也不产出字段清单，因此该模式下列投影（include/exclude）不生效，而 WHERE、ORDER BY、LIMIT
+     * 仍由框架追加，注解中的 SQL 不应自带 WHERE 子句。</p>
+     *
      * @param c 实体类类型，不能为空
-     * @return SELECT信息模型，包含表名、字段列表等信息
+     * @return SELECT信息模型，包含表名、字段列表等信息；命中类级 {@link SelectSQL} 时仅含 {@code rawSql}
      */
     public static SelectInfoModel pullFromClass(Class<?> c) {
         AssertUtil.notNull(c, "根据实体类型提取查询语句，实体类型不能为空");
         return cache.computeIfAbsent(c, entityClass -> {
             SelectInfoModel selectInfoModel = new SelectInfoModel();
+            /*
+             * 自定义 SQL 优先于元数据推导：注解只认类自身声明，父类上的 @SelectSQL 对子类不生效。
+             */
             SelectSQL selectSQL = entityClass.getDeclaredAnnotation(SelectSQL.class);
             if (selectSQL != null && StrUtil.isNotEmpty(selectSQL.value())) {
                 selectInfoModel.setRawSql(selectSQL.value());

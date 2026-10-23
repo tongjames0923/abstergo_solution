@@ -54,7 +54,6 @@ import jakarta.annotation.Resource;
  *     enable-datasource-intercept: true        # 启用 DataSource 装饰与 JDBC 执行拦截
  *     log-sql: true                            # 输出全量 SQL 执行日志
  *     slow-sql-threshold-millis: 2000          # 慢 SQL 告警阈值（毫秒）
- *     sql-assembler-type: DefaultSqlAssembler  # SQL组装器类型
  * }</pre>
  *
  * <h3>使用场景</h3>

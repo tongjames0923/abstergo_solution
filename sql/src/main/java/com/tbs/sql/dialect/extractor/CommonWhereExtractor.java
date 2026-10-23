@@ -5,16 +5,12 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.sql.converter.IValueConverter;
 import com.tbs.sql.dialect.IWhereExtractor;
 import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.model.where.WhereCompose;
 import com.tbs.sql.model.where.WhereInfo;
 import com.tbs.sql.model.where.WhereNode;
-import com.tbs.sql.properties.SqlProperty;
-import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
@@ -27,6 +23,8 @@ import java.util.*;
  * 参数化绑定均通过MyBatis的 {@code #{_prs.p0}} 机制处理（与数据库无关），
  * 因此使用单一公共实现，通过构造函数传入方言名称用于日志标识。</p>
  *
+ * <p>条件值一律经 MyBatis 预处理参数绑定，不会以字面量形式拼入 SQL 文本。</p>
+ *
  * @author abstergo
  * @since 2.0.0
  * @see IWhereExtractor
@@ -36,11 +34,6 @@ import java.util.*;
 public class CommonWhereExtractor implements IWhereExtractor {
 
     private final String dialectName;
-
-    @Resource
-    private SqlProperty sqlProperty;
-
-    private volatile List<IValueConverter> valueConverters;
 
     /**
      * 构造函数，指定方言名称用于日志输出。
@@ -97,26 +90,19 @@ public class CommonWhereExtractor implements IWhereExtractor {
             && val instanceof Collection) {
             Collection<?> collection = (Collection<?>) val;
             if (!collection.isEmpty()) {
-                if ((info.getUseSafe() != null && info.getUseSafe()) || !sqlProperty.isUseRawValue()) {
-                    List<String> placeholders = new ArrayList<>();
-                    int index = 0;
-                    for (Object item : collection) {
-                        String itemKey = key + "_" + index++;
-                        placeholders.add("#{_prs." + itemKey + "}");
-                        paramMap.put(itemKey, item);
-                    }
-                    return String.format(" (%s %s %s) ", fieldName,
-                        contrast(info.getContrast()),
-                        "(" + String.join(",", placeholders) + ")");
-                } else {
-                    List<String> values = new ArrayList<>();
-                    for (Object item : collection) {
-                        values.add("'" + escapeSqlString(convert(item)) + "'");
-                    }
-                    return String.format(" (%s %s %s) ", fieldName,
-                        contrast(info.getContrast()),
-                        "(" + String.join(",", values) + ")");
+                /*
+                 * IN / NOT IN 集合的每个元素各占一个预处理参数，取值不进入 SQL 文本。
+                 */
+                List<String> placeholders = new ArrayList<>();
+                int index = 0;
+                for (Object item : collection) {
+                    String itemKey = key + "_" + index++;
+                    placeholders.add("#{_prs." + itemKey + "}");
+                    paramMap.put(itemKey, item);
                 }
+                return String.format(" (%s %s %s) ", fieldName,
+                    contrast(info.getContrast()),
+                    "(" + String.join(",", placeholders) + ")");
             } else {
                 return "(1=1)";
             }
@@ -126,16 +112,12 @@ public class CommonWhereExtractor implements IWhereExtractor {
             return String.format(" (%s %s) ", fieldName, contrast(info.getContrast()));
         }
 
-        String valStr;
-        if ((info.getUseSafe() != null && info.getUseSafe()) || !sqlProperty.isUseRawValue()) {
-            valStr = String.format("#{_prs.%s}", key);
-            if (val != null && val instanceof String) val = contrastStrSet(info.getContrast(), val.toString());
-            paramMap.put(key, val);
-        } else {
-            valStr = String.format("'%s'", escapeSqlString(convert(val)));
-            valStr = contrastStrSet(info.getContrast(), valStr);
-            paramMap.put(key, valStr);
-        }
+        /*
+         * 单值条件同样只下标占位符：LIKE 类比较先给参数值补上 % 再绑定，SQL 文本里不出现字面值。
+         */
+        String valStr = String.format("#{_prs.%s}", key);
+        if (val != null && val instanceof String) val = contrastStrSet(info.getContrast(), val.toString());
+        paramMap.put(key, val);
         return String.format(" (%s %s %s) ", fieldName, contrast(info.getContrast()), valStr);
     }
 
@@ -174,42 +156,6 @@ public class CommonWhereExtractor implements IWhereExtractor {
     public String extract(WhereCompose sqlWhereCompose, Map<String, Object> paramMap) {
         String where = extraWhereSql(sqlWhereCompose, new Long[]{0L}, paramMap).trim();
         return StrUtil.isEmpty(where) ? "" : " WHERE " + where;
-    }
-
-    static String escapeSqlString(String value) {
-        if (value == null) return null;
-        return value.replace("'", "''");
-    }
-
-    String convert(Object value) {
-        for (IValueConverter converter : valueConverters) {
-            if (value == null) {
-                if (converter.support(null, null)) return converter.convert(null, null);
-            } else {
-                if (converter.support(value.getClass(), value)) return converter.convert(value.getClass(), value);
-            }
-        }
-        return "";
-    }
-
-    @Override
-    public List<IValueConverter> getValueConverters() {
-        if (valueConverters != null) {
-            return valueConverters;
-        }
-        synchronized (this) {
-            if (valueConverters != null) {
-                return valueConverters;
-            }
-            try {
-                valueConverters = SpringUtil.getBeansOfType(IValueConverter.class).values().stream()
-                    .sorted(Comparator.comparingInt(IValueConverter::getPriority))
-                    .collect(java.util.stream.Collectors.toList());
-            } catch (Exception e) {
-                valueConverters = new ArrayList<>();
-            }
-        }
-        return valueConverters;
     }
 
     String makeParamKey(Long id) {

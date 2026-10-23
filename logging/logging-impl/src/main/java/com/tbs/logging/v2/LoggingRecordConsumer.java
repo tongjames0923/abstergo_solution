@@ -193,7 +193,11 @@ public class LoggingRecordConsumer implements IMqConsumer<LoggingRecordForm> {
     }
 
     /**
-     * 刷新缓冲区，批量写入数据库；批写失败降级为逐条写入
+     * 刷新缓冲区，批量写入数据库；批写失败降级为逐条写入。
+     *
+     * <p>本方法<b>有意不加事务</b>：{@code insertList} 按方言上限分批执行、不构成原子操作，而操作日志链路
+     * 容忍部分丢失。若把整批纳入事务，一条脏数据会连带回滚已成功的批次，把失败半径放大到整批日志；
+     * 故保留「批写失败即降级逐条、单条失败仅记日志」的尽力写入语义（见 03 分册 3.3.2 第 2 条例外口径）。</p>
      */
     private void flushBuffer() {
         if (bufferQueue.isEmpty()) {

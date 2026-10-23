@@ -15,15 +15,17 @@ import org.springframework.context.annotation.Bean;
  * MySQL方言自动配置类，注册MySQL数据库特有的SQL提取器和方言实现。
  *
  * <p>该类负责配置MySQL数据库的方言支持，包括SELECT、WHERE、ORDER BY、GROUP BY、
- * LIMIT等SQL片段的提取器，以及MySQL方言的完整实现。</p>
+ * LIMIT等SQL片段的提取器，以及MySQL方言的完整实现。其中只有 LIMIT 提取器与方言实现是
+ * MySQL 专有的，SELECT / WHERE / ORDER BY / GROUP BY 复用 Common 系列实现。</p>
  *
  * <h3>主要功能</h3>
  * <ul>
- *   <li>注册MySQL SELECT提取器 {@link MysqlSelectExtractor}</li>
- *   <li>注册MySQL WHERE提取器 {@link MysqlWhereExtractor}</li>
- *   <li>注册MySQL ORDER BY提取器 {@link MysqlOrderExtractor}</li>
- *   <li>注册MySQL GROUP BY提取器 {@link MysqlGroupExtractor}</li>
- *   <li>注册MySQL LIMIT提取器 {@link MysqlLimitExtractor}</li>
+ *   <li>注册SELECT提取器 {@link CommonSelectExtractor}（各方言共用实现）</li>
+ *   <li>注册WHERE提取器 {@link CommonWhereExtractor}（共用实现，以"MySQL"作为方言标识构造）</li>
+ *   <li>注册ORDER BY提取器 {@link CommonOrderExtractor}（各方言共用实现）</li>
+ *   <li>注册GROUP BY提取器 {@link CommonGroupExtractor}（各方言共用实现）</li>
+ *   <li>注册LIMIT提取器 {@link MysqlLimitExtractor}（MySQL 专有的 LIMIT 语法）</li>
+ *   <li>注册SQL组装器 {@link DefaultSqlAssembler}</li>
  *   <li>注册MySQL方言实现 {@link MysqlDialect}</li>
  * </ul>
  *
@@ -53,7 +55,7 @@ public class MysqlDialectAutoConfiguration {
     @Bean public IWhereExtractor whereExtractor() { return new CommonWhereExtractor("MySQL"); }
 
     @Bean
-    public ISqlAssembler systemSqlAssembler() throws Throwable {
+    public ISqlAssembler systemSqlAssembler() {
         return new DefaultSqlAssembler();
     }
 

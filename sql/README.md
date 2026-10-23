@@ -4,13 +4,14 @@
 
 SQL 模块（`com.tbs:sql`）是基于 MyBatis 的**注解驱动 SQL 构建框架**（Java 21），核心目标是消除手写 SQL 与 XML 映射：通过注解描述查询语义，框架自动完成 SQL 生成、参数绑定、结果映射与分页排序。
 
-三种查询方式覆盖不同场景：
+四种查询方式覆盖不同场景：
 
 | 方式 | 入口 | 适用场景 |
 |------|------|----------|
 | **DSL 流式查询** | `QueryEngine.getEntityQueryWrapper(Xxx.class).query()` | 类型安全、条件动态的编程式查询 |
 | **注解查询对象（QO）** | `Mapper.queryByQO(qo, page, Xxx.class)` | 前端多条件筛选、固定查询契约 |
-| **资源 SQL 文件** | 继承 `AbstractResourceCriteria` | 复杂 JOIN / 自定义 SQL |
+| **资源 SQL 文件** | 继承 `AbstractResourceCriteria` | 复杂 JOIN / 多方言 SQL，需外置维护 |
+| **类级自定义 SQL** | 查询模型标注 `@SelectSQL` | 与实体强绑定的简短固定 SQL |
 
 其他能力：**字段自动填充**（ID/时间）、**SQL 执行观测**（日志/耗时/慢 SQL 告警）、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
 
@@ -21,10 +22,10 @@ SQL 模块（`com.tbs:sql`）是基于 MyBatis 的**注解驱动 SQL 构建框�
 ```
 sql/
 └── src/main/java/com/tbs/sql/
-    ├── annotation/               # 全部注解（15 个）
+    ├── annotation/               # 全部注解（14 个）
     │   ├── core/                 #   @EnableTbsSql（启用）/ @SelectSQL（自定义SQL）
     │   ├── condition/            #   @QueryField / @QueryFields / @OrField / @QueryIndex
-    │   ├── mapping/              #   @QueryMapping（列名映射）/ @SecretField（脱敏标记）
+    │   ├── mapping/              #   @QueryMapping（列名映射）
     │   ├── autofill/             #   @SqlAutoValue / @AutoSetDate
     │   ├── order/                #   @QueryOrderField
     │   └── dialect/              #   @UseMysql / @UseOracle / @UsePostgreSql / @UseSqlServer
@@ -95,7 +96,7 @@ Integer total = QueryEngine.getEntityQueryWrapper(User.class).query().where()
     .equal(User::getStatus, 1).pour().count();
 ```
 
-实体需标注 JPA `@Table`（表名）与 `@Column`（列名），框架据此生成 SELECT。
+实体需标注 JPA `@Table`（表名）与 `@Column`（列名），框架据此生成 SELECT。未声明列名时按驼峰转下划线推导，与 Hibernate 物理命名策略一致；父类声明的字段同样参与映射。
 
 ## SQL 构建流水线
 
@@ -114,7 +115,7 @@ ISqlAssembler 按 SELECT → WHERE → GROUP BY → ORDER BY → LIMIT 顺序拼
 FetchMapper → IRawSqlSelectMapper 执行 → Map 转实体（BeanUtil.mapToBean）
 ```
 
-参数绑定默认走**预编译占位符** `#{_prs.xxx}`（安全，防注入）。
+参数绑定一律走**预编译占位符** `#{_prs.xxx}`：条件值只进入参数映射，不会以字面量出现在 SQL 文本中（日志里的语句因而也不含业务值）。
 
 ## 一、DSL 流式查询
 
@@ -191,10 +192,9 @@ QueryEngine.getEntityQueryWrapper(existingUser);            // 复用已有对�
 | `@OrField` | 字段 | — | 与前一条件以 OR 连接（默认 AND） |
 | `@QueryIndex` | 字段 | `index(1000)` | 条件在 WHERE 中的顺序，越小越靠前 |
 | `@QueryOrderField` | 字段 | `mappedName("")`、`order(OrderConstants.ASC)` | 排序字段；字段值为 null 时跳过 |
-| `@SelectSQL` | — | `value("")` | 自定义完整 SQL（见"注意事项"） |
-| `@SecretField` | 字段 | — | 敏感字段标记（由日志/序列化实现消费，框架本身不处理） |
+| `@SelectSQL` | 类 | `value("")` | 直接指定 SELECT，命中后不再自动生成、也不要求 `@Table`（边界见"使用注意事项"） |
 
-列名解析优先级（`SqlUtils.getFieldNameWithMapping`）：**`@Column` > `@QueryMapping` > 字段名**（注意与工具方法 javadoc 描述相反，以代码为准）。
+列名解析优先级（`SqlUtils.getFieldNameWithMapping`）：**`@Column` > `@QueryMapping` > 驼峰转下划线**。最后一级与 Hibernate 的 `CamelCaseToUnderscoresNamingStrategy` 完全一致，未显式声明列名时运行期 SQL 与建表列名不会偏差。
 
 ### 查询条件类体系
 
@@ -207,7 +207,7 @@ IQueryCriteria（getSelectSQLInfo() → SelectInfoModel）
     └── NacosConfigQueryCriteria  # 从 Nacos 配置读取 SQL
 ```
 
-实体元数据由 `EntityMetadataExtractor.pullFromClass()` 提取（`@Table` 表名 + 非 static/final/非 `@Transient` 字段），带类级缓存（`clearCache()` 可清除）。
+实体元数据由 `EntityMetadataExtractor.pullFromClass()` 提取（`@Table` 表名 + 非 static/final/非 `@Transient` 字段，**含父类声明字段**），带类级缓存（`clearCache()` 可清除）。`pullFromClass` 要求实体必须有 `@Table`；`GenericMapper` 走的 `pullTableMetadata` 同样识别父类字段，且表名缺失 `@Table` 时按类名驼峰转下划线推导。
 
 ### 完整示例
 
@@ -284,11 +284,11 @@ public interface UserMapper extends IFrameworkMapper<User, Long> {
 | 方法 | 说明 |
 |------|------|
 | `insert(entity)` / `insertSelective(entity)` | 单条插入，后置方法跳过 null 字段 |
-| `insertList(records)` | 批量插入，按方言容量上限自动分批 |
+| `insertList(records)` | 批量插入，按方言容量上限自动分批（非原子，写路径需调用方事务） |
 | `selectByPrimaryKey(id)` / `selectByIdList(idList)` | 按主键查询，后者按 IN 上限自动分批 |
-| `select(entity)` / `selectCount(entity)` | 按非空字段等值查询与计数 |
+| `select(entity)` / `selectCount(entity)` | 按非空、非空串字段等值查询与计数（全空查全表） |
 | `updateByPrimaryKey(entity)` / `updateByPrimaryKeySelective(entity)` | 按主键全字段/非空字段更新 |
-| `deleteByPrimaryKey(id)` / `delete(entity)` / `deleteByIdList(idList)` | 按主键、条件、主键列表删除 |
+| `deleteByPrimaryKey(id)` / `delete(entity)` / `deleteByIdList(idList)` | 按主键、条件、主键列表删除（条件删除同样跳过空串，全空等价删全表） |
 | `queryByQO(qo, page, entityClass)` | 条件 + 分页查询 |
 | `queryByQO(context, qo, page, entityClass)` | 指定 SQL 上下文 |
 | `countByQO(qo, entityClass)` | 条件计数（返回 `Integer`） |
@@ -305,6 +305,17 @@ public interface UserMapper extends IFrameworkMapper<User, Long> {
 | 主键 | 应用侧雪花生成，不开 `useGeneratedKeys`，插入后实体上直接可取 |
 
 > 实体主键统一使用 `@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)`，不再使用 `@GeneratedValue`。雪花 Long 由 web 模块的 `JacksonCustomConfig` 全局序列化为字符串，前端无精度风险。
+
+#### GenericMapper 的语义约定
+
+| 约定 | 说明 |
+|------|------|
+| 条件字段 | `select` / `selectCount` / `delete` 只拼非 null、非空串、非集合/数组的字段；全空即无 WHERE 全表 |
+| 选择性写入 | `insertSelective` / `updateByPrimaryKeySelective` 只跳过 null，空串会被写入 |
+| 单批方法 | `insertBatch` / `selectByIdListBatch` / `deleteByIdListBatch` 仅供分批方法内部调用，传空集合直接断言中断 |
+| 分批原子性 | `insertList` / `deleteByIdList` 分批执行；需整体回滚时由调用方开事务，明确容忍部分成功的批量写入（日志/埋点）可不开，但需在写入处注释说明理由 |
+| 结果映射 | SELECT 统一带 `列名 AS 属性名` 别名，`@Column` 与属性名不一致也能映射 |
+| 逻辑删除 | `@LogicDeleteEntity` 实体不得用 `select` / `selectCount` / `delete`（不注入 flag 过滤），读写走 QueryEngine |
 
 ### IRawSqlSelectMapper
 
@@ -350,7 +361,7 @@ public class Demo {
 }
 ```
 
-实现细节：字段扫描递归父类并缓存；Provider 实例双重检查锁缓存；支持 MyBatis `Map` 入参（自动跳过 `param1`/`param2`/`collection`/`list`/`array` 内置 key）；`ThreadLocal` 上下文在 finally 中强制清除。
+实现细节：字段扫描递归父类并缓存；Provider 实例双重检查锁缓存；支持 MyBatis `Map` 入参（集合/数组递归下钻，按对象身份去重）；**填充抛异常时直接中断本次写入**（以 `sql.autofill.field.failed` 报错），不会降级为告警日志而插入主键为 null 的脏数据。
 
 > 注意：`SqlAutoFillInterceptor` 在 `SqlAutoConfiguration` 中**无条件注册**（无开关配置），启用 `@EnableTbsSql` 即生效。
 
@@ -483,7 +494,6 @@ TransactionUtil.getInstance().executeTransaction(
 ```yaml
 tbs:
   sql:
-    sql-assembler-type: com.tbs.sql.assembler.impl.DefaultSqlAssembler   # 【当前未生效】
     enable-datasource-intercept: false        # DataSource 装饰与 JDBC 执行拦截总开关，默认 false
     log-sql: true                             # 全量 SQL 执行日志（INFO），默认 true；生产可置 false
     slow-sql-threshold-millis: 2000           # 慢 SQL 告警阈值（毫秒），达到即 WARN，默认 2000
@@ -491,7 +501,16 @@ tbs:
     enable-full-table-update-block: false     # 内置全表 UPDATE/DELETE 防护拦截器开关，默认 false
 ```
 
-> **未生效配置说明**：`sql-assembler-type` 已定义但代码中无任何读取点——`ISqlAssembler` Bean 由各**方言自动配置类**固定创建 `DefaultSqlAssembler`。如需自定义组装逻辑，请直接注册 `ISqlAssembler` 类型的 Bean 覆盖。
+> **WHERE 条件值一律参数绑定**：不存在"把值内联成字面量"的开关。历史上曾有 `tbs.sql.use-raw-value`，但其内联分支依赖的
+> 值转换器列表从未被加载（开启即 NPE），且全仓无一处配置，已连同 `IValueConverter` SPI（含两个默认实现与
+> `IWhereExtractor#getValueConverters()`）、`@SecretField` 标记、`WhereInfo.useSafe` 豁免链一并下架；存量 yml 里若还写着
+> 这个键，绑定阶段会直接忽略（不报错也不生效）。
+
+> **组装器不可通过配置切换**：原 `tbs.sql.sql-assembler-type` 配置项无任何读取点，已作为僵尸配置从 `SqlProperty` 移除（存量 yml 里若还写着它，绑定阶段会直接忽略，不报错也不生效）。
+> 实际生效的组装器由各方言自动配置类**硬编码**：MySQL / PostgreSQL 用 `DefaultSqlAssembler`，Oracle 用 `OracleAssembler`、
+> SQL Server 用 `SqlServerAssembler`（后两者 `extends CommonAssembler`，仅覆写 `getDefaultOrderSql()` 提供分页必需的默认排序列）。
+> 如需自定义组装逻辑，注册 `ISqlAssembler` Bean 时**必须标 `@Primary`**：这些 `@Bean` 上没有 `@ConditionalOnMissingBean`，
+> 不加 `@Primary` 会得到两个候选，`SqlAutoConfiguration#queryEngine(SqlDialect, ISqlAssembler)` 的单参数注入会直接启动失败。
 
 ## 扩展开发
 
@@ -524,7 +543,7 @@ public class TenantIdProvider implements IAutoValueProvider {
 
 ### 自定义 SQL 组装器 / 方言
 
-注册 `ISqlAssembler` 或 `SqlDialect` 类型的 Bean 即可覆盖方言自动配置提供的默认实现。
+注册 `ISqlAssembler` 或 `SqlDialect` 类型的 Bean **并标注 `@Primary`** 才能生效：方言自动配置已注册了同类型 Bean，且它们的 `@Bean` 上没有 `@ConditionalOnMissingBean`，不加 `@Primary` 会得到两个候选而让 `QueryEngine` 注入失败。另需留意 Oracle / SQL Server 的默认组装器各自覆写了 `getDefaultOrderSql()`，自定义时需自行保留分页所需的默认排序列。
 
 ### 清除元数据缓存
 
@@ -534,10 +553,10 @@ public class TenantIdProvider implements IAutoValueProvider {
 
 1. **方言注解不可省略**：`@EnableTbsSql` 只导入核心配置，`SqlDialect` Bean 来自 `@UseXxx`；缺失会导致 `QueryEngine` 装配失败
 2. **自动填充无开关**：`SqlAutoFillInterceptor` 无条件注册，实体标注 `@SqlAutoValue`/`@AutoSetDate` 即生效（不存在 `tbs.sql.enable-auto-fill-value-interceptor` 配置项）
-3. **`@SelectSQL` 存在注解目标与读取位置不一致**：注解声明 `@Target(FIELD)`，但 `EntityMetadataExtractor` 从**类**上读取——类级使用无法通过编译，该自定义 SQL 能力实际不可用；复杂 SQL 请改用 `AbstractResourceCriteria`（classpath SQL 文件）
-4. **列名解析以 `@Column` 优先**：与工具方法 javadoc 的"@QueryMapping 优先"描述相反，若两注解同时存在，`@Column` 生效
+3. **`@SelectSQL` 只写在类上，且 SQL 内不得自带 WHERE**：`EntityMetadataExtractor.pullFromClass()` 读取类级注解，命中后只回填 `rawSql` 并跳过 `@Table` 与字段清单解析；装配器仍会在其后追加 WHERE / GROUP BY / ORDER BY / LIMIT，逻辑删除与数据权限拦截器产生的条件也会拼到该 SQL 尾部——JOIN 查询里没这个列或列名有歧义时直接报错；列投影（include/exclude）对自定义 SQL 无效；注解写在父类对子类不生效
+4. **列名解析优先级为 `@Column` > `@QueryMapping` > 驼峰转下划线**：前两者都不声明时按 Hibernate 规则转下划线，保证运行期列名与建表列名一致
 5. **SQL 观测默认开启**：`tbs.sql.log-sql=true` 时全量 SQL 以 INFO 输出；慢 SQL 与执行失败始终 WARN，阈值由 `slow-sql-threshold-millis` 控制
-6. **`sql-assembler-type` 不生效**：见"配置说明"
+6. **组装器由方言硬编码、无配置项**：`tbs.sql.sql-assembler-type` 已删除（无读取点的僵尸配置）；Oracle/SQL Server 各用方言专用实现，自定义须注册带 `@Primary` 的 `ISqlAssembler` Bean，详见"配置说明"
 7. **`@QueryOrderField` 字段值须非 null**：值为 null 的排序字段会被跳过；`mappedName` 为空同样跳过
 8. **实体必须有 `@Table`**：`EntityMetadataExtractor.pullFromClass()` 对缺少 `@Table` 的类直接断言失败（使用 `@SelectSQL` 或资源 SQL 的查询对象不受此限）
 9. **`QueryEngine.getInstance()` 依赖启动顺序**：静态单例在 `startUp()` 中赋值，过早调用（如其他 `IStartup` 先于本模块执行）会抛"QueryEngine尚未初始化"
@@ -546,6 +565,9 @@ public class TenantIdProvider implements IAutoValueProvider {
 12. **DataSource 装饰默认关闭**：`tbs.sql.enable-datasource-intercept` 默认 `false`；开启后仅装饰主数据源（唯一候选或标注 `@Primary` 的 Bean），多候选且无 Primary 时跳过装饰并告警
 13. **JDBC 执行拦截不拿参数值、不改写 SQL**：拦截上下文仅含 SQL 文本与命令类型推断，SQL 观测（日志/耗时/慢 SQL）经 `onExecutionCompleted` 回调输出
 14. **排除规则建议显式配置**：装饰覆盖全部 JDBC 流量，连接池健康检查、批量任务框架自身语句等应通过 `tbs.sql.exclude-sql` 前缀排除（排除同时作用于观测与裁决）
+15. **`map-underscore-to-camel-case` 必须为 true**：框架生成的 SQL 带属性名别名，不依赖它；手写 `@Select` 没有别名，靠它把下划线列名映射回驼峰属性。`SqlAutoConfiguration` 在启动期断言，漏配会直接启动失败
+16. **`@Table` 只写在最终实体上**：父类字段会进入 SELECT/INSERT 列，但 `Entity::getXxx` 只能引用实体自身声明的字段（`LambdaUtil` 用 `getDeclaredField` 查找），继承字段可用于读写，**不可用于条件与排序**
+17. **不存在"条件值内联"开关**：`CommonWhereExtractor` 对所有单值与 IN 集合条件只生成 `#{_prs.param_n}` 占位符，取值永不拼入 SQL 文本（日志里的语句因而也不含业务敏感值）；原 `tbs.sql.use-raw-value` 已随内联分支一同下架
 
 ## 许可证
 
