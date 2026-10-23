@@ -8,12 +8,12 @@ import com.tbs.mq.v2.core.IMqMessageProcessor;
 import com.tbs.mq.v2.core.IMqMessageReceiver;
 import com.tbs.mq.v2.core.IMqRecorder;
 import com.tbs.mq.v2.impl.InMemoryConsumerRegistry;
-import com.tbs.mq.v2.impl.InMemoryMqMessageMonopolizer;
-import com.tbs.mq.v2.impl.InMemoryMqRecorder;
 import com.tbs.rabbitmq.support.MqConsumerProperties;
 import com.tbs.rabbitmq.v2.RabbitMqContext;
 import com.tbs.rabbitmq.v2.RabbitMqMessageProcessor;
 import com.tbs.rabbitmq.v2.RabbitMqMessageReceiver;
+import com.tbs.redis.mq.RedisMqMessageMonopolizer;
+import com.tbs.redis.mq.RedisMqRecorder;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.Message;
 import org.springframework.context.annotation.Bean;
@@ -24,8 +24,9 @@ import org.springframework.context.annotation.DependsOn;
  * CDC 事件 v2 消费链路装配（替代 v1 {@code AbstractMqConsumer} 直连消费）
  * <p>
  * 按 v2 记录驱动模型组装接收→台账→分发全链路，消费队列 {@code cdc.erp.e10}（交换机与绑定由
- * cdc-service 生产端声明，本侧仅挂队列，与 v1 形态一致）。协作者均为进程内内存实现且刻意不加
- * {@code @Component}，集中由本 config 装配；消费动作为 log 输出（沿用原 {@code sqlServerConsumer} 行为），
+ * cdc-service 生产端声明，本侧仅挂队列，与 v1 形态一致）。记录器与单飞抢占器选用 Redis 实现
+ * （多实例共享主记录/台账、跨实例单飞），消费者注册表仍为进程内实现（路由对象无法跨实例序列化）；
+ * 协作者均刻意不加 {@code @Component}，集中由本 config 装配；消费动作为 log 输出（沿用原 {@code sqlServerConsumer} 行为），
  * 业务消费者实现 {@link IMqConsumer} 注册进注册表即可替换。
  * </p>
  *
@@ -41,23 +42,23 @@ public class CdcV2ConsumerConfig {
     private static final Long CDC_CONTEXT_ID = 3L;
 
     /**
-     * CDC 消息记录器（内存实现，可靠性真源）
+     * CDC 消息记录器（Redis 实现，可靠性真源）
      *
-     * @return 记录器，作用域按上下文ID隔离
+     * @return 记录器，主记录与台账落 Redis，作用域按上下文ID隔离
      */
     @Bean
     public IMqRecorder<Message, CdcEvent> cdcRecordRecorder() {
-        return new InMemoryMqRecorder<>();
+        return new RedisMqRecorder<>();
     }
 
     /**
-     * CDC 消息单飞抢占器（内存实现，保证同一消息不被并行重处理）
+     * CDC 消息单飞抢占器（Redis 实现，保证同一消息在集群内不被并行重处理）
      *
-     * @return 抢占器
+     * @return 抢占器，按上下文ID + messageId 加分布式锁
      */
     @Bean
     public IMqMessageMonopolizer cdcRecordMonopolizer() {
-        return new InMemoryMqMessageMonopolizer();
+        return new RedisMqMessageMonopolizer();
     }
 
     /**

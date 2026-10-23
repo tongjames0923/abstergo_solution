@@ -15,7 +15,7 @@ SQL 模块（`com.tbs:sql`）是基于 MyBatis 的**注解驱动 SQL 构建框�
 
 其他能力：**字段自动填充**（ID/时间）、**SQL 执行观测**（日志/耗时/慢 SQL 告警）、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
 
-技术底座：`mybatis-spring-boot-starter`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据与建表）、`mysql-connector-java`、`com.tbs:common`。通用 CRUD 由 `GenericMapper` 自实现，不依赖外部通用 Mapper 框架。
+技术底座：`mybatis-spring-boot-starter`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据与建表）、`com.mysql:mysql-connector-j`（版本由根 pom 管控，已排除仅 X DevAPI 需要的 `protobuf-java`）、`com.tbs:common`。通用 CRUD 由 `GenericMapper` 自实现，不依赖外部通用 Mapper 框架。
 
 ## 模块结构
 

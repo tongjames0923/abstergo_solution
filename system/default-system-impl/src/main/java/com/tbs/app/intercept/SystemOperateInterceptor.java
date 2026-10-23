@@ -15,6 +15,7 @@ import com.tbs.shared.pojo.entity.SystemOperateRecordEntity;
 import com.tbs.web.BaseController;
 import com.tbs.web.gate.intercept.IApiInvokeInterceptor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.extern.slf4j.Slf4j;
 
 import jakarta.annotation.Resource;
@@ -81,6 +82,7 @@ public class SystemOperateInterceptor implements IApiInvokeInterceptor {
      * @see Data Lombok数据注解
      */
     @Data
+    @EqualsAndHashCode(callSuper = true)
     public static class SystemOperContext extends ApiInvokeContext {
         /**
          * 系统操作记录实体

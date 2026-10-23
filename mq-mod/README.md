@@ -147,9 +147,11 @@ v2 摆脱厂商消息转换器（如 Spring AMQP `SerializerMessageConverter`）
 
 自检 `InMemoryImplTest` 覆盖建档 / 去重 / 作用域隔离 / 单飞互斥 / 路由增删。
 
+生产级 Redis 落地已在 `redis-mod` 提供：`com.tbs.redis.mq.RedisMqRecorder`（主记录 + 台账 + 失败留痕落 Redis）与 `com.tbs.redis.mq.RedisMqMessageMonopolizer`（Redisson 带租约分布式单飞），装配后契约层与各段代码零改动（见 [redis-mod README 第 9 节](../redis-mod/README.md)）。`IConsumerRegistry` 存的是本地消费者实例，不支持也无必要 Redis 化。
+
 ## 快速开始
 
-以下装配形态与 `app` 模块 `CdcV2ConsumerConfig`（CDC 消费链路）一致：协作者全部 `@Bean` 集中装配（内存实现类本身不加 `@Component`，装配选择权留给使用方）。
+以下装配形态与 `app` 模块 `CdcV2ConsumerConfig`（CDC 消费链路）一致：协作者全部 `@Bean` 集中装配（实现类本身不加 `@Component`，装配选择权留给使用方；该链路记录器/抢占器已换为 Redis 实现，其余链路可按同样方式替换）。
 
 ```java
 @Configuration
@@ -232,13 +234,13 @@ public void publish(MyEvent event) {
 ## 扩展指南
 
 1. **接入新 MQ 厂商**：继承 `AbstractMqContext<R,T>` 实现 `ackMessage`/`nakMessage`（确认语义唯一厂商相关点）与 `getMessageType`；按厂商容器提供接收入口；再落地绑定 `<R,T>` 的 `IMqMessageReceiver` / `IMqMessageProcessor` 子类与 `IMqMessageProducer` 实现。参照 `rabbitmq-mod` 的 `com.tbs.rabbitmq.v2` 包（现成范本）。
-2. **生产级存储**：实现 `IMqRecorder`（DB 主记录 + 台账两张表）、`IMqMessageMonopolizer`（分布式单飞，如 Redis）、`IConsumerRegistry`，替换内存 Bean 即可，契约层代码零改动。表结构与重试扫描/回灌组件尚未落地（见设计大纲 §7.2 待闭环清单）。
+2. **生产级存储**：实现 `IMqRecorder`（DB 主记录 + 台账两张表）、`IMqMessageMonopolizer`（分布式单飞，如 Redis）、`IConsumerRegistry`，替换内存 Bean 即可，契约层代码零改动。Redis 版记录器与分布式单飞已由 `redis-mod` 提供（`com.tbs.redis.mq`），DB 版仍待落地；表结构与重试扫描/回灌组件尚未落地（见设计大纲 §7.2 待闭环清单）。
 3. **新负载格式**：注册 `IMqMessagePayloadConverter` Bean（声明新 `payloadFormat()`），`MqPayloadConverterRegistry` 自动汇集接管。
 
 ## 注意事项
 
 1. **消费者必须幂等**：台账为事后记录，分发中途崩溃恢复依赖整体重放，重复投递是设计内行为。
-2. **协作层 Bean 需自行装配**：契约层无启用注解、无自动配置；内存实现适合单机/开发，**生产环境必须换 DB/Redis 持久化实现**，否则进程重启记录即丢、v2 可靠性承诺不成立。
+2. **协作层 Bean 需自行装配**：契约层无启用注解、无自动配置；内存实现适合单机/开发，生产环境应换用 `redis-mod` 的 Redis 实现（或后续 DB 实现），否则进程重启记录即丢、v2 可靠性承诺不成立。
 3. **重试扫描与回灌尚未落地**：FAILED/FAIL 记录的自动重放是规划中的独立组件（不内嵌于记录层），当前版本消费失败仅留痕。
 4. **消费者不得触碰厂商确认**：`consume(T)` 只收负载、不给 context，ack/nak 语义止于传输层，这是"消费环节无厂商确认"原则的结构性保证。
 5. **`consumeId` 全局唯一规划**：台账以 `messageId + consumeId` 为身份键，同一负载类型内新增消费者须分配不冲突的 id。

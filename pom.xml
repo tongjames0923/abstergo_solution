@@ -68,7 +68,14 @@
         <spring.dotenv.version>4.0.0</spring.dotenv.version>
 
         <!-- 数据库 / ORM -->
-        <mysql.version>8.0.32</mysql.version>
+        <!--
+          MySQL Connector/J 驱动版本（新坐标 com.mysql:mysql-connector-j）。
+          选 9.7.0：属 9.x 最后一个版本，官方兼容性声明覆盖 MySQL Server 8.0 及以后（开发机 8.0 与容器 8.4 均覆盖）；
+          26.x 系列只声明支持 8.4+，服务端一旦存在 8.0 实例会踩空，故不取。
+          下限约束：不得降到 8.4.0 ~ 9.1.x 区间——该区间每次建连都对主机 IP 做反向 DNS（Bug #115586），9.2.0 才修。
+          属性名沿用 Boot 管控同一个构件的 key，保证与 spring-boot-dependencies 不会解析出两个版本。
+        -->
+        <mysql.version>9.7.0</mysql.version>
         <mybatis.spring.boot.version>3.0.5</mybatis.spring.boot.version>
 
         <!-- 中间件 -->
@@ -369,10 +376,20 @@
                 <artifactId>knife4j-openapi3-jakarta-spring-boot-starter</artifactId>
                 <version>${knife4j.version}</version>
             </dependency>
+            <!-- MySQL 驱动：旧坐标 mysql:mysql-connector-java 自 8.0.31 起仅为重定位壳（本地仓库里只有 pom 无 jar），
+                 并封顶于 8.0.33，统一改用新坐标；此处显式声明可直接盖过 spring-boot-dependencies 管控的 8.3.0。
+                 protobuf-java 仅供 X DevAPI（mysqlx）使用，纯 JDBC 路径不加载，排除后避免把 Nacos/grpc 线的
+                 protobuf 3.25.x 抬到驱动声明的 4.x（Debezium 自身的 pom 也做了同样排除） -->
             <dependency>
-                <groupId>mysql</groupId>
-                <artifactId>mysql-connector-java</artifactId>
+                <groupId>com.mysql</groupId>
+                <artifactId>mysql-connector-j</artifactId>
                 <version>${mysql.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>com.google.protobuf</groupId>
+                        <artifactId>protobuf-java</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>org.mybatis.spring.boot</groupId>
