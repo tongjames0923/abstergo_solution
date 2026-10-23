@@ -666,7 +666,8 @@ export default {
     403: 'Sorry, you do not have permission to access this page',
     404: 'Sorry, the page you visited does not exist',
     backHome: 'Back to Home',
-    backPrev: 'Back to Previous'
+    backPrev: 'Back to Previous',
+    tip404: 'Please check that the URL you entered is correct, or click the button below to return to the home page.'
   },
 
   // Generic API Management
