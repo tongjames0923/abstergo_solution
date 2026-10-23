@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
  * 与发现侧「未声明 group 兜底 default」的语义保持一致。
  * </p>
  */
-@DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+@DubboService
 public class DataDicServiceImpl implements IDataDicService {
 
     @Resource

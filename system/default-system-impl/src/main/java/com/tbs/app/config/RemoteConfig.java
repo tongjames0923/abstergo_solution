@@ -8,16 +8,14 @@ import com.tbs.app.remote.user.IUserRemoteService;
 import com.tbs.app.remote.user.impl.DefaultUserRemoteServiceImpl;
 import com.tbs.app.service.impl.user.DefaultUserIdentityService;
 import com.tbs.app.service.user.IUserIdentityService;
-import com.tbs.common.constant.ProviderConstant;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.api.persistence.impl.NoImplTreeStore;
+import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import jakarta.annotation.Resource;
 
 /**
  * <p>
@@ -42,28 +40,28 @@ public class RemoteConfig {
      * @return 闭包树服务实例
      */
     @Bean
-    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+    @DubboService
     ITreeStore treeStore() {
         return BeanUtil.buildBeanFromProperties(NoImplTreeStore::new, property.getTreeStoreImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
-    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+    @DubboService
     IAuthRemoteService authRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultAuthRemoteServiceImpl::new, property.getAuthRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
-    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+    @DubboService
     IUserRemoteService userRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultUserRemoteServiceImpl::new, property.getUserRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
     }
 
     @Bean
-    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+    @DubboService
     ICompanyRemoteService companyRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultCompanyRemoteServiceImpl::new, property.getCompanyRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
@@ -79,7 +77,7 @@ public class RemoteConfig {
      * @return 身份聚合服务实例
      */
     @Bean
-    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+    @DubboService
     IUserIdentityService userIdentityRemoteService() {
         return new DefaultUserIdentityService();
     }

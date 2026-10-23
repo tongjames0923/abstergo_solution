@@ -36,7 +36,7 @@ public class LoggingServiceConfig {
     }
 
     @Bean
-    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+    @DubboService
     public ISystemLogService logService() {
         return new SimpleSystemLogServiceImpl();
     }
@@ -51,7 +51,7 @@ public class LoggingServiceConfig {
      * @return 表格数据处理器远程实现
      */
     @Bean
-    @DubboService(group = ProviderConstant.DEFAULT_BUSINESS)
+    @DubboService
     public ITableDataHandler remoteTableDataOperator() {
         return new RemoteTableDataOperator();
     }
