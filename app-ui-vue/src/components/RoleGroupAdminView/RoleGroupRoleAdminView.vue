@@ -841,5 +841,18 @@ export default {
     opacity: 0;
     transform: translateX(20px);
   }
+
+  /* 平板及以下：双栏改为上下堆叠，避免两个面板在窄屏被压到无法阅读 */
+  @media (max-width: 992px) {
+    .main-content {
+      flex-direction: column;
+      min-height: auto;
+    }
+
+    .header-bar {
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+  }
 }
 </style>

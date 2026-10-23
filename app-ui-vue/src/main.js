@@ -13,6 +13,7 @@ import i18n from './i18n'
 import '@/icons' // icon
 import '@/permission'
 import getServiceRouter from '@/router' // permission control
+import installResponsiveGuard from '@/utils/responsive-guard'
 
 // set ElementUI lang to EN
 // Vue.use(ElementUI, { locale })
@@ -27,6 +28,8 @@ var router = null
 
 async function bootstrap() {
   router = await getServiceRouter()
+  // 开发环境溢出守卫：检测未适配窄屏的横向溢出元素
+  installResponsiveGuard(router)
   const vueInstance = new Vue({
     el: '#app',
     router: router,

@@ -648,108 +648,122 @@ export default {
     }
 
     .dropdown-user-detail {
+      display: flex;
+      flex-direction: column;
+
+      .dropdown-user-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #333;
+      }
+
+      .dropdown-user-username {
+        font-size: 12px;
+        color: #999;
+      }
+    }
+  }
+}
+
+/* 移动端适配：平板收纳部门/角色信息，手机进一步精简导航，触摸目标 >= 44px */
+@media only screen and (max-width: #{$bp-tablet}) {
+  // 导航栏改 flex 布局：面包屑占据剩余宽度并按需裁切。
+  // 原实现用 fixed right 预留值给右侧菜单让位，但右侧宽度随用户名/语言切换变化，预留值必然失准导致重叠
+  .navbar-macos {
     display: flex;
-    flex-direction: column;
+    align-items: center;
 
-    .dropdown-user-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: #333;
-    }
-
-    .dropdown-user-username {
-      font-size: 12px;
-      color: #999;
-    }
-    }
-    }
-    }
-
-    /* 移动端适配：平板收纳部门/角色信息，手机进一步精简导航，触摸目标 >= 44px */
-    @media only screen and (max-width: #{$bp-tablet}) {
-    .navbar-macos {
     // 部门/角色标签小屏收纳进头像下拉，避免导航溢出
     .right-menu .user-info {
-    display: none;
+      display: none;
     }
 
-    // 面包屑超长截断，为右侧菜单让出空间
     .breadcrumb-container {
-    float: none;
-    position: absolute;
-    left: 52px;
-    right: 128px;
-    line-height: 44px;
-    margin-left: 0;
-    overflow: hidden;
-    white-space: nowrap;
-    text-overflow: ellipsis;
+      float: none;
+      flex: 1 1 auto;
+      min-width: 0;
+      display: block;
+      line-height: 44px;
+      margin-left: 0;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
     }
 
     .right-menu {
-    position: relative;
-    float: right;
-    z-index: 1;
+      float: none;
+      position: static;
+      flex: 0 0 auto;
+      margin-left: auto;
+      z-index: 1;
     }
 
-    // 触摸目标扩展：汉堡按钮与语言切换保持 >= 44px 可点击区域
+    // 长用户名不应撑开右侧菜单
+    .user-name-wrapper {
+      max-width: 96px;
+      overflow: hidden;
+    }
+
+    // 触摸目标扩展：汉堡按钮保持 >= 44px 可点击区域
     .hamburger-container {
-    padding: 0 14px;
+      float: none;
+      flex: 0 0 auto;
+      padding: 0 14px;
     }
-    }
-    }
+  }
+}
 
-    @media only screen and (max-width: #{$bp-phone}) {
-    .navbar-macos {
+@media only screen and (max-width: #{$bp-phone}) {
+  .navbar-macos {
     .right-menu {
-    gap: 2px;
+      gap: 2px;
     }
 
     // 手机端隐藏语言切换与展开箭头，仅保留头像入口
     .right-menu .lang-select-container,
     .avatar-container .el-icon-caret-bottom {
-    display: none;
+      display: none;
     }
 
     .avatar-container {
-    margin-right: 4px;
+      margin-right: 4px;
 
-    .avatar-wrapper {
-      // 44px 触摸目标
-      min-height: 36px;
-      padding: 6px 10px;
-    }
+      .avatar-wrapper {
+        // 44px 触摸目标
+        min-height: 36px;
+        padding: 6px 10px;
+      }
 
-    .user-name-wrapper {
-      max-width: 72px;
-      overflow: hidden;
-
-      .user-display-name {
+      .user-name-wrapper {
+        max-width: 72px;
         overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+
+        .user-display-name {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
       }
     }
-    }
-    }
-    }
+  }
+}
 
-    // 手机横屏：导航栏压缩为浮层式，最大化内容高度
-    @media only screen and (orientation: landscape) and (max-width: #{$bp-phone-landscape}) {
-    .navbar-macos {
+// 手机横屏：导航栏压缩为浮层式，最大化内容高度
+@media only screen and (orientation: landscape) and (max-width: #{$bp-phone-landscape}) {
+  .navbar-macos {
     height: 38px;
 
     .breadcrumb-container {
-    line-height: 38px;
+      line-height: 38px;
     }
 
     .right-menu .avatar-container .avatar-wrapper {
-    min-height: 30px;
-    padding: 4px 8px;
+      min-height: 30px;
+      padding: 4px 8px;
     }
-    }
-    }
-    </style>
+  }
+}
+</style>
 
 <style lang="scss">
 .user-tooltip {

@@ -9,7 +9,7 @@
     />
 
     <el-row :gutter="20">
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="开始日期占位符">
           <el-input
             :value="value && value['start-placeholder']"
@@ -18,7 +18,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="结束日期占位符">
           <el-input
             :value="value && value['end-placeholder']"
@@ -27,7 +27,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="日期格式">
           <el-input
             :value="value && value.format"
@@ -36,7 +36,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="值格式">
           <el-input
             :value="value && value['value-format']"
@@ -45,7 +45,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="选择类型">
           <el-select
             :value="value && value.type"
@@ -64,7 +64,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="尺寸">
           <el-select
             :value="value && value.size"
@@ -78,7 +78,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="范围分隔符">
           <el-input
             :value="value && value['range-separator']"
@@ -87,7 +87,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="清除按钮">
           <el-switch
             :value="value && value.clearable"
@@ -95,7 +95,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="只读">
           <el-switch
             :value="value && value.readonly"
@@ -103,7 +103,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="禁用">
           <el-switch
             :value="value && value.disabled"
@@ -111,7 +111,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="可编辑">
           <el-switch
             :value="value && value.editable"
@@ -119,7 +119,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="显示箭头">
           <el-switch
             :value="value && value['arrow-control']"
@@ -127,7 +127,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="默认时间">
           <el-input
             :value="value && value['default-time']"
@@ -136,7 +136,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="确认按钮">
           <el-switch
             :value="value && value['confirm-button']"
@@ -144,7 +144,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="显示格式化">
           <el-input
             :value="value && value['format-display']"
@@ -153,7 +153,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="弹出定位">
           <el-select
             :value="value && value['placement']"
@@ -176,7 +176,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="弹出类名">
           <el-input
             :value="value && value['popper-class']"

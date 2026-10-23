@@ -139,6 +139,7 @@
 <script>
 import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi'
 import DynamicTable from '@/components/DynamicTable'
+import ResponsiveMixin from '@/mixins/responsive'
 import { exportTableToExcel } from '@/utils/excel' // 导入Excel导出工具函数
 
 export default {
@@ -147,6 +148,8 @@ export default {
     DynamicFormWithApi,
     DynamicTable
   },
+  // 设备档位由响应式契约 mixin 提供，与全站判定同源
+  mixins: [ResponsiveMixin],
   // 关闭根元素属性透传：$attrs 全部转发给内部 DynamicTable（如 cardFields/titleField/responsive）
   inheritAttrs: false,
   props: {
@@ -281,10 +284,12 @@ export default {
     }
   },
   computed: {
+    // 手机档统一由响应式契约 mixin 判定（与 store 的 device 真源一致）
     isMobile() {
-      return this.windowWidth <= 768
+      return this.isPhone
     },
 
+    // 弹窗宽度按精确视口宽度分档（四档，非设备档位，保留像素判定）
     dialogWidth() {
       if (this.windowWidth < 768) {
         return '90%'

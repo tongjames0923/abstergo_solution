@@ -45,7 +45,7 @@
           <el-avatar :size="88" fit="fill" :src="user.avatar" class="basic-avatar">
             <i class="el-icon-user-solid" />
           </el-avatar>
-          <el-descriptions :column="3" border size="medium" class="basic-descriptions">
+          <el-descriptions :column="isPhone ? 1 : 3" border size="medium" class="basic-descriptions">
             <el-descriptions-item :label="$t('user.username')">{{ user.userName }}</el-descriptions-item>
             <el-descriptions-item :label="$t('user.nickname')">{{ user.nickName || '-' }}</el-descriptions-item>
             <el-descriptions-item :label="$t('user.status')">
@@ -160,6 +160,8 @@
 </template>
 
 <script>
+import ResponsiveMixin from '@/mixins/responsive'
+
 /**
  * 用户详情纯展示组件
  *
@@ -168,6 +170,8 @@
  */
 export default {
   name: 'UserDetailView',
+  // 设备档位由响应式契约 mixin 提供：手机上描述列表改为单列，避免三列挤压
+  mixins: [ResponsiveMixin],
   props: {
     /* 用户基本信息（SystemUserEntity） */
     user: {
@@ -278,6 +282,21 @@ export default {
 
   .basic-descriptions {
     flex: 1;
+  }
+
+  /* 手机：头像与描述列表上下堆叠，避免头像挤占描述区宽度 */
+  @media (max-width: 768px) {
+    flex-direction: column;
+    align-items: center;
+
+    .basic-avatar {
+      margin-right: 0;
+      margin-bottom: 16px;
+    }
+
+    .basic-descriptions {
+      width: 100%;
+    }
   }
 }
 

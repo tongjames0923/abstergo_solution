@@ -141,6 +141,8 @@ export default {
 .ph-panel {
   display: flex;
   flex-direction: column;
+  /* 组件级自适应锚点：面板放进窄容器时按自身宽度切换布局 */
+  container-type: inline-size;
 }
 
 .ph-head {
@@ -365,6 +367,45 @@ export default {
 
   &:hover {
     background: rgba(255, 59, 48, 0.08);
+  }
+}
+
+/* 窄容器（手机/平板分栏）：固定 7 列网格改为可换行的卡片式行，避免横向溢出 */
+@container (max-width: 700px) {
+  .ph-head {
+    flex-wrap: wrap;
+  }
+
+  /* 提示文字降为第二行，不挤压标题与清空按钮 */
+  .ph-tip {
+    flex: 1 1 100%;
+    order: 2;
+  }
+
+  .ph-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px 10px;
+    padding: 10px;
+  }
+
+  /* 表头在卡片式布局下无对应列，隐藏 */
+  .ph-row--head {
+    display: none;
+  }
+
+  /* 标题独占首行，作为卡片主信息 */
+  .ph-cell-title {
+    flex: 1 1 100%;
+    order: -1;
+    white-space: normal;
+    font-weight: 600;
+  }
+
+  /* 删除操作靠右，与回执同行 */
+  .ph-ops {
+    margin-left: auto;
   }
 }
 </style>

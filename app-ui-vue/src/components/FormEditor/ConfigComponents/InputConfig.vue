@@ -9,7 +9,7 @@
     />
 
     <el-row :gutter="20">
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="输入框类型">
           <el-select
             :value="value && value.type"
@@ -27,7 +27,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="尺寸">
           <el-select
             :value="value && value.size"
@@ -41,7 +41,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="占位符">
           <el-input
             :value="value && value.placeholder"
@@ -50,7 +50,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="最大长度">
           <el-input-number
             :value="value && value.maxlength"
@@ -61,7 +61,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="最小长度">
           <el-input-number
             :value="value && value.minlength"
@@ -72,7 +72,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否禁用">
           <el-switch
             :value="value && value.disabled"
@@ -80,7 +80,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否只读">
           <el-switch
             :value="value && value.readonly"
@@ -88,7 +88,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否可清除">
           <el-switch
             :value="value && value.clearable"
@@ -96,7 +96,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否显示密码切换">
           <el-switch
             :value="value && value['show-password']"
@@ -104,7 +104,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否显示字数统计">
           <el-switch
             :value="value && value['show-word-limit']"
@@ -112,7 +112,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="自动补全">
           <el-select
             :value="value && value.autocomplete"
@@ -125,7 +125,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="前缀图标">
           <el-input
             :value="value && value.prefix"
@@ -134,7 +134,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="后缀图标">
           <el-input
             :value="value && value.suffix"
@@ -143,7 +143,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="前置文本">
           <el-input
             :value="value && value['prefix-label']"
@@ -152,7 +152,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="后置文本">
           <el-input
             :value="value && value['suffix-label']"

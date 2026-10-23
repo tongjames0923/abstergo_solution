@@ -27,7 +27,7 @@
             @submit.native.prevent
           >
             <el-row :gutter="14">
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <el-form-item :label="$t('notifyAdmin.form.type')">
                   <div class="na-seg">
                     <button
@@ -44,7 +44,7 @@
                   </div>
                 </el-form-item>
               </el-col>
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <el-form-item :label="$t('notifyAdmin.form.priority')">
                   <div class="na-seg">
                     <button

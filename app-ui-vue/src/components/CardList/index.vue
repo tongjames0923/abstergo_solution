@@ -455,6 +455,11 @@ export default {
     flex: 1;
     overflow: auto;
     position: relative;
+    /*
+     * 组件级响应式锚点：卡片网格按自身容器宽度降列，不依赖视口。
+     * 同一组件放进弹窗/分栏等窄容器时同样生效
+     */
+    container-type: inline-size;
 
     // 美化滚动条样式
     &::-webkit-scrollbar {
@@ -638,20 +643,20 @@ export default {
   }
 }
 
-// 响应式设计
-@media (max-width: 1200px) {
+// 响应式设计：按容器宽度降列（组件放进弹窗/分栏等窄容器同样生效）
+@container (max-width: 1200px) {
   .card-list {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
 }
 
-@media (max-width: 992px) {
+@container (max-width: 992px) {
   .card-list {
     grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
   }
 }
 
-@media (max-width: 768px) {
+@container (max-width: 768px) {
   .card-list {
     grid-template-columns: repeat(1, minmax(0, 1fr)) !important;
     gap: 15px !important;

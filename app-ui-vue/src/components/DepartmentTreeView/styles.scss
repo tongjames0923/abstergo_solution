@@ -332,6 +332,21 @@
   transform: translateX(0);
 }
 
+/*
+ * 触摸设备没有 hover 态：行内操作入口必须常显，
+ * 否则编辑/更多/移除永远无法被触发（不只是体验问题，是功能不可用）
+ */
+@media (hover: none) {
+  .tree-row-actions {
+    opacity: 1;
+    transform: translateX(0);
+  }
+
+  .emp-remove-btn {
+    opacity: 1;
+  }
+}
+
 .action-btn {
   display: inline-flex;
   align-items: center;
@@ -1137,6 +1152,16 @@
 }
 
 /* ==================== Responsive ==================== */
+/*
+ * 平板（769~992）：保留左右分栏，但左树 420px 固定宽度会把右侧员工面板压到 300px 以下，
+ * 改为可收缩宽度，右侧保持可读
+ */
+@media (max-width: 992px) {
+  .dept-left {
+    flex: 0 0 300px;
+  }
+}
+
 @media (max-width: 768px) {
   .dept-view {
     padding: 16px;

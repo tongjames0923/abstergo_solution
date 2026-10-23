@@ -267,12 +267,12 @@
           <el-input v-model="routeForm.redirect" :placeholder="$t('routeManager.inputRedirect')" />
         </el-form-item>
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item :label="$t('routeManager.hidden')">
               <el-switch v-model="routeForm.hidden" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item :label="$t('routeManager.alwaysShow')">
               <el-switch v-model="routeForm.alwaysShow" />
             </el-form-item>
@@ -310,7 +310,7 @@
           </el-select>
         </el-form-item>
         <el-row :gutter="16">
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item :label="$t('routeManager.breadcrumb')">
               <el-switch v-model="routeForm.meta.breadcrumb" />
             </el-form-item>
@@ -904,6 +904,7 @@ export default {
 
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+@import "~@/styles/variables.scss";
 
 /* ── Palette ── */
 $bg: #f5f5f7;
@@ -1642,6 +1643,103 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   p {
     margin: 0;
     font-size: 13px;
+  }
+}
+
+/* ── 窄屏适配：路由组侧栏转为横向 chip 条，内容区单列堆叠 ── */
+@media only screen and (max-width: #{$bp-tablet}) {
+  .studio-inner {
+    padding: 12px;
+    gap: 12px;
+  }
+
+  .header-content {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px 18px;
+  }
+
+  .header-title {
+    font-size: 22px;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .group-rail {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .rail-head {
+    flex: 0 0 auto;
+    border-bottom: none;
+    border-right: 1px solid $border;
+    padding: 10px 12px;
+  }
+
+  /* 窄屏只保留图标，节省横向空间 */
+  .rail-title {
+    font-size: 0;
+
+    i {
+      margin-right: 0;
+      font-size: 14px;
+    }
+  }
+
+  .rail-list {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .rail-item {
+    flex: 0 0 auto;
+    padding: 8px 12px;
+  }
+
+  .rail-item__name {
+    flex: 0 1 auto;
+    max-width: 140px;
+  }
+
+  /* 触摸设备常显删除入口，不依赖 hover */
+  .rail-item__del {
+    opacity: 1;
+  }
+
+  .pane-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}
+
+@media only screen and (max-width: #{$bp-phone}) {
+  .studio-inner {
+    padding: 10px 10px 16px;
+  }
+
+  .header-icon {
+    width: 44px;
+    height: 44px;
+    font-size: 18px;
+  }
+
+  .header-title {
+    font-size: 20px;
+  }
+
+  .header-actions {
+    width: 100%;
+  }
+
+  .rail-item__name {
+    max-width: 110px;
   }
 }
 </style>

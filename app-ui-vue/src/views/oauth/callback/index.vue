@@ -100,6 +100,8 @@ export default {
 
   .callback-card {
     width: 320px;
+    /* 窄视口（320px 屏）下随容器收缩，避免卡片被裁切 */
+    max-width: 100%;
     padding: 40px 24px;
     border-radius: 20px;
     background: #fff;

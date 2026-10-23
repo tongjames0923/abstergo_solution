@@ -27,6 +27,12 @@ export default {
   padding: 0;
   /* 浅灰底色使白色卡片具备层次感，与侧边栏 #f0f0f0 同系 */
   background: #f5f5f7;
+  /*
+   * 组件级响应式锚点：后代可用 @container 按内容区宽度适配，
+   * 不依赖视口。声明等价于 contain:layout，页面内 position:fixed 浮层
+   * 会改为相对内容区定位（背景装饰层符合预期，弹层请用 append-to-body）
+   */
+  container-type: inline-size;
 }
 
 .fixed-header + .app-main {
