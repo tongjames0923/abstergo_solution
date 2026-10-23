@@ -28,10 +28,10 @@
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
         </dependency>
-        <!-- Mybatis CRUD -->
+        <!-- MyBatis 持久层，通用 CRUD 由 GenericMapper 自实现 -->
         <dependency>
-            <groupId>tk.mybatis</groupId>
-            <artifactId>mapper-spring-boot-starter</artifactId>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -40,11 +40,6 @@
         <dependency>
             <groupId>com.tbs</groupId>
             <artifactId>common</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>tk.mybatis</groupId>
-            <artifactId>mapper-extra</artifactId>
-            <version>${tk.mybatis.version}</version>
         </dependency>
     </dependencies>
 </project>

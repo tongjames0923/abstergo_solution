@@ -69,7 +69,7 @@
 
         <!-- 数据库 / ORM -->
         <mysql.version>8.0.32</mysql.version>
-        <tk.mybatis.version>5.0.0</tk.mybatis.version>
+        <mybatis.spring.boot.version>3.0.5</mybatis.spring.boot.version>
 
         <!-- 中间件 -->
         <redisson.version>3.52.0</redisson.version>
@@ -375,14 +375,9 @@
                 <version>${mysql.version}</version>
             </dependency>
             <dependency>
-                <groupId>tk.mybatis</groupId>
-                <artifactId>mapper-spring-boot-starter</artifactId>
-                <version>${tk.mybatis.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>tk.mybatis</groupId>
-                <artifactId>mapper-extra</artifactId>
-                <version>${tk.mybatis.version}</version>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis.spring.boot.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.redisson</groupId>

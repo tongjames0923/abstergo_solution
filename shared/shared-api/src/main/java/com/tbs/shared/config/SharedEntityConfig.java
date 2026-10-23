@@ -4,7 +4,7 @@ import com.tbs.common.i18n.AbstractMessageSourceProvider;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import tk.mybatis.spring.annotation.MapperScan;
+import org.mybatis.spring.annotation.MapperScan;
 
 /**
  * 配置实体类扫描

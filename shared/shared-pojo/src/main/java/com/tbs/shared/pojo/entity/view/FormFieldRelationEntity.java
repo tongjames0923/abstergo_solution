@@ -1,6 +1,8 @@
 package com.tbs.shared.pojo.entity.view;
 
 import com.tbs.shared.pojo.IIdentifiable;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import org.hibernate.annotations.Comment;
 import lombok.Data;
 
@@ -29,9 +31,9 @@ public class FormFieldRelationEntity implements IIdentifiable<Long>, Serializabl
     /**
      * 主键ID
      */
-    @Comment("主键ID（自增）")
+    @Comment("主键ID（雪花算法生成）")
     @jakarta.persistence.Id
-    @jakarta.persistence.GeneratedValue(strategy = jakarta.persistence.GenerationType.IDENTITY)
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
 
     /**

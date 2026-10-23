@@ -670,7 +670,7 @@ public class PushNotifyServiceImpl implements IPushNotifyService {
     }
 
     /**
-     * 构造接收关系探针（tk.mybatis selectCount 按非空字段计数）
+     * 构造接收关系探针（GenericMapper 的 selectCount 按非空字段计数）
      *
      * @param receiverId 接收用户ID
      * @return 探针实体

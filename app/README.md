@@ -230,7 +230,7 @@ app:
 
 | 文件 | 内容 |
 | --- | --- |
-| `application-db.yml` | 数据源：MySQL 驱动、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、tk.mybatis 驼峰映射、`tbs.sql` SQL 观测配置 |
+| `application-db.yml` | 数据源：MySQL 驱动、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、MyBatis 驼峰映射、`tbs.sql` SQL 观测配置 |
 | `application-redis.yml` | Redis 连接 |
 | `application-mq.yml` | RabbitMQ + 手动 ACK |
 | `view-route.yml` | **视图路由 YML 兜底配置**（common/admin/develop 三组菜单，含角色 `MENU.ADMIN`/`MENU.DEV`）；数据库实现启用时此文件不生效 |
@@ -385,7 +385,7 @@ DB_HOST=mysql.internal NACOS_ADDRESS=nacos.internal:8848 java -jar app-*.jar
 
 ## 注意事项
 
-1. **JPA + tk.mybatis 双 ORM 并存**：JPA 负责 DDL 生成（`ddl-auto: update`），业务 CRUD 走 tk.mybatis；生产环境建议把 `ddl-auto` 改为 `validate`/`none`，用迁移脚本管理表结构。
+1. **JPA + MyBatis 双 ORM 并存**：JPA 负责 DDL 生成（`ddl-auto: update`），业务 CRUD 走 MyBatis 的 `GenericMapper`；生产环境建议把 `ddl-auto` 改为 `validate`/`none`，用迁移脚本管理表结构。
 2. **`enable-test-controller` 默认 none，本模块配置为 `pri`**：`PrivateTestController`（`/private/test`、`/private/testAuth`）默认注册；生产部署应改回 `none` 关闭全部测试控制器。
 3. **`dubbo.consumer.filter: -ContextHolderAuthenticationPrepareFilter`**：显式移除 web 模块的 Dubbo 消费端认证上下文过滤器，本应用作为消费端调用时不注入用户身份头。
 4. **上传大小限制 1024MB/2048MB**：远大于 Spring Boot 默认（1MB/10MB），网关/反向代理层需同步放开限制，且 Undertow 缓冲区会占用内存。

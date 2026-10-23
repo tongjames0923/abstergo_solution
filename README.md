@@ -77,7 +77,7 @@ flowchart LR
 | 微服务 | Spring Cloud / Spring Cloud Alibaba | 2023.0.3 / 2023.0.1.2 |
 | RPC | Dubbo（Triple 协议） | 3.3.4 |
 | 注册/配置中心 | Nacos | v2.5.3 |
-| ORM | tk.mybatis + Spring Data JPA（DDL） | 5.0.0 / - |
+| ORM | MyBatis + Spring Data JPA（DDL） | 3.0.5 starter / - |
 | 数据库 | MySQL | 8.4（驱动 8.0.32） |
 | SQL 观测 | tbs.sql JDBC 装饰层（内置） | - |
 | 缓存 | Redisson + Caffeine 多级缓存 | 3.52.0 |

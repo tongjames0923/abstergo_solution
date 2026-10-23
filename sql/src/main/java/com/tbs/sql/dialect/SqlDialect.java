@@ -1,5 +1,7 @@
 package com.tbs.sql.dialect;
 
+import com.tbs.sql.dialect.extractor.CommonInsertExtractor;
+
 /**
  * SQL方言接口，定义了不同数据库方言的标准方法。
  *
@@ -13,6 +15,7 @@ package com.tbs.sql.dialect;
  *   <li>获取ORDER BY提取器 {@link #getOrderExtractor()}</li>
  *   <li>获取GROUP BY提取器 {@link #getGroupExtractor()}</li>
  *   <li>获取LIMIT提取器 {@link #getLimitExtractor()}</li>
+ *   <li>获取INSERT提取器 {@link #getInsertExtractor()}</li>
  *   <li>获取方言名称 {@link #name()}</li>
  * </ul>
  *
@@ -78,6 +81,18 @@ public interface SqlDialect {
      * @return WHERE语句提取器实例
      */
     IWhereExtractor getWhereExtractor();
+
+    /**
+     * 获取INSERT语句提取器。
+     *
+     * <p>以默认方法提供通用实现，既有方言实现无需改动即可获得标准多行 VALUES 支持。
+     * 语法或容量上限有差异的方言（Oracle、SQL Server）覆写本方法返回专用实现。</p>
+     *
+     * @return INSERT语句提取器实例，默认返回通用实现
+     */
+    default IInsertExtractor getInsertExtractor() {
+        return new CommonInsertExtractor();
+    }
 
     /**
      * 获取方言名称标识。

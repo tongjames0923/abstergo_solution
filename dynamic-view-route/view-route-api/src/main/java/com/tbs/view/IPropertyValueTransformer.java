@@ -30,6 +30,10 @@ public interface IPropertyValueTransformer extends ITransformer<Object> {
      * @return
      */
     default <T> T reverseTransformStr(String value, Class<T> clazz) {
+        // 库中属性值可能为空，空值直接返回 null，避免 NPE
+        if (value == null) {
+            return null;
+        }
         return reverseTransform(value.getBytes(StandardCharsets.UTF_8), clazz);
     }
 

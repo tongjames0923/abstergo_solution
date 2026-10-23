@@ -5,28 +5,20 @@ import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.mapper.impl.ConditionBuilder;
 import com.tbs.sql.mapper.impl.FetchMapper;
 import com.tbs.sql.service.QueryEngine;
-import tk.mybatis.mapper.additional.idlist.IdListMapper;
-import tk.mybatis.mapper.additional.update.batch.BatchUpdateMapper;
-import tk.mybatis.mapper.additional.update.batch.BatchUpdateSelectiveMapper;
-import tk.mybatis.mapper.common.BaseMapper;
-import tk.mybatis.mapper.additional.insert.InsertListMapper;
 
 /**
  * 框架通用Mapper接口，提供基于查询条件的通用CRUD操作。
  *
- * <p>该接口继承了tk.mybatis的多个Mapper接口，提供了通用的CRUD操作方法，
- * 并扩展了基于 {@link IQueryCriteria} 查询条件的查询和统计方法。</p>
+ * <p>该接口继承 {@link GenericMapper} 获得单表增删改查能力，并扩展基于
+ * {@link IQueryCriteria} 查询条件的查询和统计方法。</p>
  *
  * <h3>主要功能</h3>
  * <ul>
- *   <li>继承BaseMapper，提供基础CRUD操作</li>
- *   <li>继承InsertListMapper（tk additional.insert 变体），提供批量插入功能：该变体会写入应用侧赋值的
- *   主键（如雪花），适用于非自增主键表；自增主键表传入 null 主键时由数据库生成</li>
- *   <li>继承BatchUpdateMapper，提供批量更新功能</li>
- *   <li>继承BatchUpdateSelectiveMapper，提供选择性批量更新功能</li>
- *   <li>继承IdListMapper，提供根据ID列表查询功能</li>
+ *   <li>继承 {@link GenericMapper}，提供单表增删改查与批量操作能力</li>
+ *   <li>批量插入按方言容量上限自动分批，超出 SQL Server 1000 行或 Oracle IN 1000 项时不会报错</li>
  *   <li>提供基于查询条件的查询方法 {@link #queryByQO}</li>
  *   <li>提供基于查询条件的统计方法 {@link #countByQO}</li>
+ *   <li>提供基于实体类型的查询构建器 {@link #query(Class)}</li>
  * </ul>
  *
  * <h3>使用场景</h3>
@@ -51,19 +43,19 @@ import tk.mybatis.mapper.additional.insert.InsertListMapper;
  *
  * <h3>注意事项</h3>
  * <ul>
- *   <li>需要正确配置tk.mybatis</li>
+ *   <li>实体映射沿用 {@code jakarta.persistence} 注解，与查询引擎共用同一套元数据规则</li>
  *   <li>查询条件需要实现 {@link IQueryCriteria} 接口</li>
  *   <li>分页参数可以为null，表示不分页</li>
  * </ul>
  *
  * @author abstergo
  * @since 2.0.0
+ * @see GenericMapper
  * @see IQueryCriteria
  * @see ConditionBuilder
  * @see FetchMapper
  */
-public interface IFrameworkMapper<T, K> extends BaseMapper<T>, InsertListMapper<T>, BatchUpdateMapper<T>,
-    BatchUpdateSelectiveMapper<T>, IdListMapper<T, K>, SmartQueryMapper {
+public interface IFrameworkMapper<T, K> extends GenericMapper<T, K>, SmartQueryMapper {
 
     /**
      * 根据实体类类型获取查询构建器。

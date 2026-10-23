@@ -3,6 +3,8 @@ package com.tbs.shared.pojo.entity.push;
 import com.tbs.shared.pojo.ICreateTimeAuditable;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.IUpdateTimeAuditable;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -37,9 +39,9 @@ public class PushMessageEntity
     /**
      * 主键（即业务消息标识）
      */
-    @Comment("主键（即业务消息标识，自增）")
+    @Comment("主键（即业务消息标识，雪花算法生成）")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
 
     /**

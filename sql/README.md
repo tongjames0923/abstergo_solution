@@ -2,7 +2,7 @@
 
 ## 模块概述
 
-SQL 模块（`com.tbs:sql`）是基于 MyBatis + tk.mybatis 增强的**注解驱动 SQL 构建框架**（Java 11），核心目标是消除手写 SQL 与 XML 映射：通过注解描述查询语义，框架自动完成 SQL 生成、参数绑定、结果映射与分页排序。
+SQL 模块（`com.tbs:sql`）是基于 MyBatis 的**注解驱动 SQL 构建框架**（Java 21），核心目标是消除手写 SQL 与 XML 映射：通过注解描述查询语义，框架自动完成 SQL 生成、参数绑定、结果映射与分页排序。
 
 三种查询方式覆盖不同场景：
 
@@ -14,7 +14,7 @@ SQL 模块（`com.tbs:sql`）是基于 MyBatis + tk.mybatis 增强的**注解驱
 
 其他能力：**字段自动填充**（ID/时间）、**SQL 执行观测**（日志/耗时/慢 SQL 告警）、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
 
-技术底座：tk.mybatis `mapper-spring-boot-starter` + `mapper-extra`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据）、`mysql-connector-java`、`com.tbs:common`。
+技术底座：`mybatis-spring-boot-starter`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据与建表）、`mysql-connector-java`、`com.tbs:common`。通用 CRUD 由 `GenericMapper` 自实现，不依赖外部通用 Mapper 框架。
 
 ## 模块结构
 
@@ -35,14 +35,14 @@ sql/
     ├── builder/                  # SqlDriver / EntitySqlDriver / ISqlBuildContext 等
     ├── criteria/                 # IQueryCriteria / IPage / Abstract*Criteria + impl/
     ├── datasource/               # DataSource 装饰、JDBC 执行拦截与 SQL 观测：decoration / interceptor / model
-    ├── mapper/                   # IFrameworkMapper / SmartQueryMapper / IRawSqlSelectMapper + impl/
+    ├── mapper/                   # IFrameworkMapper / GenericMapper（通用CRUD）/ SmartQueryMapper / IRawSqlSelectMapper + impl/
     ├── model/                    # where / select / order / limit / group / query 模型
-    ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/
+    ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/（含 SELECT 与 INSERT 提取器）
     ├── assembler/                # ISqlAssembler / DefaultSqlAssembler（SQL 片段拼装）
     ├── interceptor/              # SqlAutoFillInterceptor / SqlComposeInterceptor
     ├── provider/                 # IAutoValueProvider / ICustomWhereProvider + impl/
     ├── order/                    # IQueryOrderBy 排序策略 + impl/（Asc/Desc/OrderedModel）
-    ├── metadata/                 # EntityMetadataExtractor / FieldMetadataCache（反射缓存）
+    ├── metadata/                 # EntityMetadataExtractor / EntityTableMetadata（写操作元数据）/ FieldMetadataCache
     ├── constants/                # OrderConstants
     ├── enums/                    # ContrastEnum / ConnectorEnum / OrderEnum
     └── util/                     # SqlUtils（表名/列名解析）/ TransactionUtil（编程式事务）
@@ -72,7 +72,7 @@ public class Application {
 }
 ```
 
-`@EnableTbsSql` = `@Import(SqlAutoConfiguration)` + `@EnableTransactionManagement` + `@EnableConfigurationProperties(SqlProperty)`；方言由 `@UseMysql` / `@UseOracle` / `@UsePostgreSql` / `@UseSqlServer` 单独导入（方言配置类同时提供 `SqlDialect`、五个 Extractor 与 `ISqlAssembler` Bean）。
+`@EnableTbsSql` = `@Import(SqlAutoConfiguration)` + `@EnableTransactionManagement` + `@EnableConfigurationProperties(SqlProperty)`；方言由 `@UseMysql` / `@UseOracle` / `@UsePostgreSql` / `@UseSqlServer` 单独导入（方言配置类同时提供 `SqlDialect`、六个 Extractor 与 `ISqlAssembler` Bean）。
 
 ### 3. DSL 流式查询
 
@@ -270,7 +270,7 @@ public class AgeRangeProvider implements ICustomWhereProvider<Integer> {
 
 ### IFrameworkMapper
 
-业务 Mapper 统一继承（`@RegisterMapper`）：
+业务 Mapper 统一继承：
 
 ```java
 @Repository
@@ -279,14 +279,32 @@ public interface UserMapper extends IFrameworkMapper<User, Long> {
 }
 ```
 
-继承的能力：tk.mybatis `BaseMapper`（CRUD）、`InsertListMapper`（批量插入）、`BatchUpdateMapper` / `BatchUpdateSelectiveMapper`（批量更新）、`IdListMapper`（按 ID 列表查询/删除）、`SmartQueryMapper`（条件查询）：
+继承的能力：`GenericMapper`（自研通用 CRUD，基于 `@Table`/`@Column`/`@Id`/`@Transient` 元数据生成 SQL）、`SmartQueryMapper`（条件查询）：
 
 | 方法 | 说明 |
 |------|------|
+| `insert(entity)` / `insertSelective(entity)` | 单条插入，后置方法跳过 null 字段 |
+| `insertList(records)` | 批量插入，按方言容量上限自动分批 |
+| `selectByPrimaryKey(id)` / `selectByIdList(idList)` | 按主键查询，后者按 IN 上限自动分批 |
+| `select(entity)` / `selectCount(entity)` | 按非空字段等值查询与计数 |
+| `updateByPrimaryKey(entity)` / `updateByPrimaryKeySelective(entity)` | 按主键全字段/非空字段更新 |
+| `deleteByPrimaryKey(id)` / `delete(entity)` / `deleteByIdList(idList)` | 按主键、条件、主键列表删除 |
 | `queryByQO(qo, page, entityClass)` | 条件 + 分页查询 |
 | `queryByQO(context, qo, page, entityClass)` | 指定 SQL 上下文 |
 | `countByQO(qo, entityClass)` | 条件计数（返回 `Integer`） |
 | `query(entityClass)` | 直接获得 `IQueryBuilder`（DSL 入口） |
+
+#### GenericMapper 的四库兼容策略
+
+| 能力 | 策略 |
+|------|------|
+| 单行 INSERT/UPDATE/DELETE | 四库语法一致，无分支 |
+| 批量 INSERT | `IInsertExtractor` 分支：标准多行 `VALUES`（MySQL/PG/SQL Server）与 Oracle 的 `INSERT ALL` |
+| 容量上限 | 按方言声明：SQL Server 1000 行 / 2100 参数，Oracle 500 行 / 999 参数，超限自动分批 |
+| IN 列表 | 统一按 1000 项分批（Oracle 的 ORA-01795 硬限制） |
+| 主键 | 应用侧雪花生成，不开 `useGeneratedKeys`，插入后实体上直接可取 |
+
+> 实体主键统一使用 `@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)`，不再使用 `@GeneratedValue`。雪花 Long 由 web 模块的 `JacksonCustomConfig` 全局序列化为字符串，前端无精度风险。
 
 ### IRawSqlSelectMapper
 
@@ -302,7 +320,7 @@ Integer count = rawSqlSelectMapper.count(sql, params);
 
 ## 四、字段自动填充
 
-MyBatis 插件 `SqlAutoFillInterceptor`，拦截 `Executor#update` 获取 SQL 类型（INSERT/UPDATE），再在 `ParameterHandler#setParameters` 阶段回填字段值（仅 INSERT/UPDATE 触发，SELECT/DELETE 跳过）。
+MyBatis 插件 `SqlAutoFillInterceptor`，拦截 `Executor#update` 获取 SQL 类型（INSERT/UPDATE），在 SQL 生成前回填参数对象字段值（仅 INSERT/UPDATE 触发，SELECT/DELETE 跳过）。
 
 | 注解 | 说明 |
 |------|------|
@@ -432,7 +450,7 @@ public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
 
 ## 七、数据库方言
 
-框架通过 `SqlDialect`（五个 Extractor：Select / Where / Order / Group / Limit）抽象数据库差异：
+框架通过 `SqlDialect`（六个 Extractor：Select / Where / Order / Group / Limit / Insert）抽象数据库差异：
 
 | 启用注解 | 方言 | 分页实现 |
 |----------|------|----------|
@@ -441,7 +459,7 @@ public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
 | `@UsePostgreSql` | `PostgreSqlDialect` | `PostgreSqlLimitExtractor` |
 | `@UseSqlServer` | `SqlServerDialect` | `SqlServerLimitExtractor`（OFFSET/FETCH） |
 
-除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。扩展新数据库：实现 `SqlDialect` + 各 Extractor，参照 `MysqlDialectAutoConfiguration` 编写配置类并配套 `@UseXxx` 注解。
+除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。批量 INSERT 只在 Oracle 上有语法差异（`INSERT ALL`），SQL Server 仅收紧容量上限，两者各自覆写 `getInsertExtractor()`。扩展新数据库：实现 `SqlDialect` + 各 Extractor，参照 `MysqlDialectAutoConfiguration` 编写配置类并配套 `@UseXxx` 注解。
 
 ## 八、编程式事务
 

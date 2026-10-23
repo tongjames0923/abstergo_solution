@@ -22,8 +22,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>填充发生在 {@link Executor#update} 拦截层、{@code invocation.proceed()} 之前。
  * 原因：MyBatis 在 {@code newStatementHandler} 内调用 {@link MappedStatement#getBoundSql(Object)}
  * 拼装最终SQL（含动态列清单），随后才执行 {@code ParameterHandler.setParameters}。若在后者填充，
- * 则 tk.mybatis {@code insertSelective} 的 {@code <if test="id != null">id,</if>} 早在填充前就判定
- * 为false而丢弃该列，导致雪花主键无法写入。只有在SQL生成前填充，字段才会进入列清单。</p>
+ * 则选择性插入在生成SQL时就按非空字段判定列清单，主键因当时为null而被排除，导致雪花主键无法写入。
+ * 只有在SQL生成前填充，字段才会进入列清单。</p>
  *
  * @author abstergo
  * @see SqlAutoValue

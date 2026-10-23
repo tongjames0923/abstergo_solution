@@ -1,5 +1,7 @@
 package com.tbs.struct.tree.closure.impl.entity;
 
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.Data;
 import org.hibernate.annotations.Comment;
 
@@ -25,10 +27,10 @@ public class TreeNodeEntity implements Serializable {
     /**
      * 主键ID
      */
-    @Comment("主键ID（自增）")
+    @Comment("主键ID（雪花算法生成）")
     @Id
     @Column(name = "id")
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
 
     /**

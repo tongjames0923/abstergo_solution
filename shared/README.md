@@ -162,7 +162,7 @@ IServiceTemplate<E,K> = ISaveableService（save→List<E>）
 
 ### Mapper 清单（27 个）
 
-均继承 `IFrameworkMapper<E, K>`（sql 模块：tk.mybatis `BaseMapper` + `InsertListMapper` + 批量更新 + `IdListMapper` + `SmartQueryMapper` 条件查询），`@Repository` 标注：
+均继承 `IFrameworkMapper<E, K>`（sql 模块：`GenericMapper` 通用 CRUD + `SmartQueryMapper` 条件查询），`@Repository` 标注：
 
 - **系统（15）**：SystemUser / SystemRole / SystemRoleGroup / SystemRoleGroupRelation / SystemRoleGroupUserRelation / SystemCompany / SystemDepartment / SystemUserDepartmentRelation（含 `queryDepartmentUsers` / `queryUserDepartmentRelation` 自定义 SQL）/ SystemToken / SystemOperate / SystemGenericApi / LoginInfo
 - **动态路由（4）**：ViewRouteConfigration / ViewRouteMeta / ViewRouteRole / ViewRouteVersion
