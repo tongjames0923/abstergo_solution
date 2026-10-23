@@ -23,10 +23,10 @@
     </properties>
 
     <dependencies>
-        <!--MySQL-->
+        <!--MySQL Connector/J（版本与 protobuf-java 排除由根 pom 依赖管理统一收拢）-->
         <dependency>
-            <groupId>mysql</groupId>
-            <artifactId>mysql-connector-java</artifactId>
+            <groupId>com.mysql</groupId>
+            <artifactId>mysql-connector-j</artifactId>
         </dependency>
         <!-- MyBatis 持久层，通用 CRUD 由 GenericMapper 自实现 -->
         <dependency>

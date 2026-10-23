@@ -78,7 +78,7 @@ flowchart LR
 | RPC | Dubbo（Triple 协议） | 3.3.4 |
 | 注册/配置中心 | Nacos | v2.5.3 |
 | ORM | MyBatis + Spring Data JPA（DDL） | 3.0.5 starter / - |
-| 数据库 | MySQL | 8.4（驱动 8.0.32） |
+| 数据库 | MySQL | 8.4（驱动 com.mysql:mysql-connector-j 9.7.0） |
 | SQL 观测 | tbs.sql JDBC 装饰层（内置） | - |
 | 缓存 | Redisson + Caffeine 多级缓存 | 3.52.0 |
 | 消息队列 | RabbitMQ（服务端；amqp-client 由 Spring Boot 管理） | 4.3 |

@@ -1,12 +1,21 @@
 package com.tbs.sql.mapper;
 
+import com.tbs.sql.annotation.core.SelectSQL;
 import com.tbs.sql.dialect.extractor.CommonInsertExtractor;
+import com.tbs.sql.dialect.extractor.CommonSelectExtractor;
+import com.tbs.sql.dialect.extractor.CommonWhereExtractor;
 import com.tbs.sql.dialect.oracle.extractor.OracleInsertExtractor;
 import com.tbs.sql.dialect.sqlserver.extractor.SqlServerInsertExtractor;
+import com.tbs.sql.enums.ConnectorEnum;
+import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.mapper.impl.GenericSqlProvider;
 import com.tbs.sql.metadata.EntityColumnMetadata;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.metadata.EntityTableMetadata;
+import com.tbs.sql.model.select.SelectInfoModel;
+import com.tbs.sql.model.where.WhereCompose;
+import com.tbs.sql.model.where.WhereInfo;
+import com.tbs.sql.model.where.WhereNode;
 import com.tbs.sql.util.SqlUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
@@ -18,6 +27,7 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -34,6 +44,8 @@ import java.util.Map;
  *   <li>列名推导：显式 {@code @Column} 优先，未声明时按 Hibernate 规则转下划线</li>
  *   <li>与 Hibernate / tk.mybatis 对齐：父类字段参与映射、无 {@code @Table} 时表名转下划线、
  *       空串条件被跳过、中间泛型父接口可解析</li>
+ *   <li>类级 {@code @SelectSQL} 自定义 SQL：被元数据采信并原样输出，且不要求 {@code @Table}</li>
+ *   <li>WHERE 取值绑定：等值 / LIKE / IN 集合均只产出预处理占位符，业务字面值不入 SQL 文本</li>
  *   <li>单行插入、按主键查询、条件查询、计数、按主键更新、条件删除</li>
  *   <li>Mapper 泛型解析：仅按主键操作的语句依赖 {@link ProviderContext#getMapperType()}</li>
  *   <li>批量插入的通用、SQL Server、Oracle 三种语法与容量上限</li>
@@ -52,6 +64,11 @@ import java.util.Map;
 public class GenericMapperSelfCheck {
 
     /**
+     * 自定义 SQL 文本，同时作为 {@link RawSqlEntity} 上 {@code @SelectSQL} 的取值。
+     */
+    private static final String RAW_SQL = "SELECT id, user_name AS userName FROM t_demo";
+
+    /**
      * 自检入口。
      *
      * @param args 未使用
@@ -60,6 +77,8 @@ public class GenericMapperSelfCheck {
         checkMetadata();
         checkNaming();
         checkAlignment();
+        checkCustomSql();
+        checkWhereBinding();
         checkSingleInsert();
         checkSelect();
         checkUpdate();
@@ -132,6 +151,99 @@ public class GenericMapperSelfCheck {
             () -> provider.selectByIdListBatch(context(DemoMapper.class), Map.of("idList", List.of())));
         expectRejected("空批量删除", "idList不能为空",
             () -> provider.deleteByIdListBatch(context(DemoMapper.class), Map.of("idList", List.of())));
+    }
+
+    /**
+     * 校验类级 {@code @SelectSQL} 的自定义 SQL 通道。
+     *
+     * <p>本注解的 {@code @Target} 曾被误写为 {@code FIELD}：写在类上无法编译，写在字段上读点又在类，
+     * 自定义 SQL 能力整体失效。此处锁定三件事：类上注解被元数据采信、rawSql 原样输出、
+     * 该模式不要求 {@code @Table}，防止再次退化。</p>
+     */
+    private static void checkCustomSql() {
+        SelectInfoModel info = EntityMetadataExtractor.pullFromClass(RawSqlEntity.class);
+        expect("类级自定义SQL被采信", RAW_SQL, info.getRawSql());
+        expect("自定义SQL模式下不解析表名", "null", String.valueOf(info.getTableName()));
+        expect("自定义SQL模式下无字段清单", "null", String.valueOf(info.getFieldList()));
+        expect("自定义SQL直通输出", RAW_SQL, new CommonSelectExtractor().extract(info));
+    }
+
+    /**
+     * 校验 WHERE 条件值一律走预处理参数绑定，SQL 文本里不出现业务字面值。
+     *
+     * <p>框架曾有 {@code tbs.sql.use-raw-value} 开关把值转义后内联成字面量，但该分支读取的值转换器
+     * 列表从未被加载（开启即 NPE），且全仓无一处配置，已整体下架。本自检锁定四件事：等值与 IN
+     * 集合只产出 {@code #{_prs.param_n}} 占位符、LIKE 的通配符补在参数值而非 SQL 文本上、
+     * {@code rawSql} 条件仍原样直通，防止内联能力被重新引入时无人察觉。</p>
+     */
+    private static void checkWhereBinding() {
+        CommonWhereExtractor extractor = new CommonWhereExtractor("MySQL");
+
+        Map<String, Object> equalParams = new HashMap<>();
+        String equal = extractor.extract(compose(where("user_name", ContrastEnum.EQUAL, "secret-abc")), equalParams);
+        expectTrue("等值条件产出占位符", equal.contains("#{_prs.param_0}"));
+        expectTrue("等值条件不内联字面值", !equal.contains("secret-abc"));
+        expect("等值条件参数值", "secret-abc", String.valueOf(equalParams.get("param_0")));
+
+        Map<String, Object> likeParams = new HashMap<>();
+        String like = extractor.extract(compose(where("user_name", ContrastEnum.LIKE, "secret-abc")), likeParams);
+        expectTrue("LIKE条件不内联通配符", !like.contains("%"));
+        expect("LIKE条件参数补全通配符", "%secret-abc%", String.valueOf(likeParams.get("param_0")));
+
+        Map<String, Object> inParams = new HashMap<>();
+        String in = extractor.extract(
+            compose(where("user_name", ContrastEnum.IN, Arrays.asList("secret-a", "secret-b"))), inParams);
+        expectTrue("IN集合每元素一个占位符",
+            in.contains("#{_prs.param_0_0}") && in.contains("#{_prs.param_0_1}"));
+        expectTrue("IN集合不内联字面值", !in.contains("secret-a") && !in.contains("secret-b"));
+        expect("IN集合参数个数", "2", String.valueOf(inParams.size()));
+
+        WhereInfo raw = new WhereInfo();
+        raw.setRawSql("(1=0)");
+        expectTrue("rawSql条件原样直通",
+            extractor.extract(compose(raw), new HashMap<>()).contains("(1=0)"));
+    }
+
+    /**
+     * 构造单个 WHERE 条件模型。
+     *
+     * @param column   列名
+     * @param contrast 比较方式
+     * @param value    条件值
+     * @return WHERE 条件模型
+     */
+    private static WhereInfo where(String column, ContrastEnum contrast, Object value) {
+        WhereInfo whereInfo = new WhereInfo();
+        whereInfo.setFieldName(column);
+        whereInfo.setContrast(contrast);
+        whereInfo.setFieldValue(value);
+        return whereInfo;
+    }
+
+    /**
+     * 把若干条件组装成一层 AND 组合。
+     *
+     * @param infos 条件列表
+     * @return 条件组合
+     */
+    private static WhereCompose compose(WhereInfo... infos) {
+        WhereCompose compose = new WhereCompose();
+        for (WhereInfo info : infos) {
+            compose.getChildren().add(new WhereNode<>(ConnectorEnum.AND, info));
+        }
+        return compose;
+    }
+
+    /**
+     * 断言条件成立，用于不便逐字比对的 SQL 文本片段。
+     *
+     * @param name      断言名
+     * @param condition 待断言的条件
+     */
+    private static void expectTrue(String name, boolean condition) {
+        if (!condition) {
+            throw new IllegalStateException(name + " 断言失败");
+        }
     }
 
     /**
@@ -394,5 +506,15 @@ public class GenericMapperSelfCheck {
     static class PlainEntity {
         @Id
         private Long id;
+    }
+
+    /**
+     * 自检用自定义 SQL 查询模型：无 {@code @Table}，SELECT 完全由类级注解提供。
+     */
+    @SelectSQL(RAW_SQL)
+    static class RawSqlEntity {
+        private Long id;
+
+        private String userName;
     }
 }

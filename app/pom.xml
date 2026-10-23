@@ -106,10 +106,6 @@
             <artifactId>spring-boot-configuration-processor</artifactId>
             <optional>true</optional>
         </dependency>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>cdc-api</artifactId>
-        </dependency>
     </dependencies>
 
     <build>
