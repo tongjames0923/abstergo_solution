@@ -1,6 +1,7 @@
 package com.tbs.sql.dialect.sqlserver;
 
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.sqlserver.extractor.SqlServerInsertExtractor;
 
 /**
  * SQL Server方言实现类。
@@ -43,5 +44,6 @@ public class SqlServerDialect implements SqlDialect {
     @Override public ILimitExtractor getLimitExtractor() { return limitExtractor; }
     @Override public ISelectExtractor getSelectExtractor() { return selectExtractor; }
     @Override public IWhereExtractor getWhereExtractor() { return whereExtractor; }
+    @Override public IInsertExtractor getInsertExtractor() { return new SqlServerInsertExtractor(); }
     @Override public String name() { return "sqlserver"; }
 }

@@ -28,6 +28,7 @@ import com.tbs.push.impl.session.DefaultSessionRegistry;
 import com.tbs.push.impl.session.DefaultTopicRegistry;
 import com.tbs.push.impl.session.HeartbeatMonitor;
 import com.tbs.push.impl.transport.PushConnectionOrchestrator;
+import com.tbs.push.impl.transport.PushGracefulShutdownLifecycle;
 import com.tbs.push.impl.store.InMemoryCredentialStore;
 import com.tbs.push.impl.store.InMemoryDeliveryRecordStore;
 import com.tbs.push.impl.store.InMemoryPushMessageStore;
@@ -275,6 +276,24 @@ public class PushSupportConfig {
         PushFrameProcessor frameProcessor, PushCredentialService credentialService) {
         return new PushConnectionOrchestrator(sessionRegistry, topicRegistry, interceptorChain, frameProcessor,
             credentialService);
+    }
+
+    /**
+     * 推送连接优雅停机器（跨传输统一）
+     * <p>
+     * 以最高相位接入容器关闭：停机时先广播SHUTDOWN通知帧、留宽限期后全量关闭，
+     * 且早于Web服务器优雅停机排水，避免长连接把停机拖满超时。
+     * </p>
+     *
+     * @param orchestrator 连接生命周期编排器
+     * @param property     推送基础配置属性
+     * @return 优雅停机器
+     */
+    @Bean
+    @ConditionalOnMissingBean(PushGracefulShutdownLifecycle.class)
+    public PushGracefulShutdownLifecycle pushGracefulShutdownLifecycle(PushConnectionOrchestrator orchestrator,
+        PushProperty property) {
+        return new PushGracefulShutdownLifecycle(orchestrator, property.getShutdownGraceMillis());
     }
 
     /**

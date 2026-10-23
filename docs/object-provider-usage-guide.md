@@ -16,9 +16,9 @@
 
 | 层次 | 代码 | 回答的问题 |
 |------|------|------------|
-| 解析器链 | `IObjectResolver`（`SpringObjectResolver` / `DubboInstanceResolver`） | 实例**哪里有**：每个来源一个解析器，按 `Ordered` 排成链 |
-| 统一门面 | `IObjectProvider`（`DefaultObjectProvider`） | 怎么**统一拿**：单实例、按来源、全量枚举、构建代理 |
-| 路由代理 | `RoutingServiceProxy` + `RoutingServiceFactoryBean` + `@RoutingService` | 怎么**像普通 Bean 一样用**：注入即调用，运行时按策略选实现 |
+| 来源解析/贡献 | `IObjectResolver`（`SpringObjectResolver`，过渡）、`IRegistrationSource`（自定义枚举来源）、`IRemoteTargetResolver`（`DubboRemoteTargetResolver`，Dubbo 原生发现） | 实例**哪里有**：Spring 经旧解析器桥接入中心；Dubbo 不再枚举入中心，由路由代理按 business/version 直接向远程解析器索取 Dubbo 原生引用 |
+| 统一门面 | `IObjectProvider`（`DefaultObjectProvider`） | 怎么**统一拿**：单实例、按来源、全量枚举 |
+| 路由代理 | `RoutingServiceProxy` + `RoutingServiceFactoryBean` + `@RoutingService`（接口主代理）、`RoutingRefBeanPostProcessor` + `@RoutingRef`（按坐标字段装配） | 怎么**像普通 Bean 一样用**：注入即调用，运行时按策略选实现；`@RoutingRef` 进一步按 business/version 分类装配 |
 
 ### 1.3 适用与不适用
 
@@ -45,7 +45,7 @@
 | `@EnableCommonPack` | 直接启用 common 包（扫描 `com.tbs.common`） |
 | `@EnableWebPack` / `@EnableTbsCache` / `@EnableTbsSchedule` 等 | 内部均复用 `@EnableCommonPack`，随之生效 |
 
-`ObjectProviderConfig` 同时 `@Import(RoutingServiceRegistrar.class)`，因此 `@RoutingService` 接口的代理注册也是开箱可用。
+`ObjectProviderConfig` 同时 `@Import(RoutingServiceRegistrar.class)`，因此 `@RoutingService` 接口的代理注册也是开箱可用；`RoutingRefBeanPostProcessor` 也随之注册，业务字段标 `@RoutingRef` 即自动注入绑定坐标的路由代理，无需额外配置。
 
 ### 2.3 关闭开关的连锁后果（重要）
 
@@ -138,11 +138,50 @@ public void demo() {
 
 策略在**每次方法调用时**决策，不是启动时固化：provider 后上线、本地实现后注册、临时关闭发现等场景，下一次调用即生效，无需重启。
 
+### 3.6 无提供者处理（`noProvider`）
+
+代理在某次调用按策略择一后仍未命中任何来源时，交由 `@RoutingService.noProvider()` 声明的 [INoProviderHandler](../common/src/main/java/com/tbs/common/provider/INoProviderHandler.java) 处理，方法签名为 `handle(Class<?> clazz, String method, Object[] args)`：
+
+| 处理类 | 行为 | 适用 |
+|--------|------|------|
+| `LoggingNoProviderHandler`（默认） | 仅记 warn 日志，代理随后返回 `null` | 容忍缺失、降级返回空 |
+| `ErrorThrowNoProviderHandler` | 抛系统级异常（文案 key `provider.no.provider.found`） | 必须有实现，缺失即失败 |
+
+- 处理类优先按类型从 Spring 容器取 Bean（内置两个处理器均为 `@Component`），取不到再反射实例化，均失败回退默认处理器。
+- 处理器返回 `void`，无法给方法提供兜底返回值；非抛错型处理器下，代理对**任何**返回类型（含基本类型）都返回 `null`。
+- 接口未标注 `@RoutingService`（如手动 `getRoutingProxy` 构建的代理）时，回退默认 `LoggingNoProviderHandler`。
+
+```java
+@RoutingService(strategy = "DUBBO_ONLY", noProvider = ErrorThrowNoProviderHandler.class)
+public interface OrderPriceService { /* ... */ }
+```
+
+### 3.7 `@RoutingRef`：按坐标分类装配字段
+
+`@RoutingService` 给接口注册的是「不绑定维度」的主代理；当需要在同一个业务类里按 **业务分区(business) / 发布版本(version)** 分别注入不同 provider 时，用 [RoutingRef](../common/src/main/java/com/tbs/common/provider/annotation/RoutingRef.java) 标在字段上——理念正来自 [SourceCoordinate](../common/src/main/java/com/tbs/common/provider/SourceCoordinate.java) 的三元组（来源 + business + version）。[RoutingRefBeanPostProcessor](../common/src/main/java/com/tbs/common/provider/impl/RoutingRefBeanPostProcessor.java) 在 Bean 初始化前，按「字段类型(接口) + business + version + strategy」经中心构建绑定代理并注入，等价于手动调用 `getRoutingProxy(接口, 策略, business, version)`。
+
+```java
+@Resource
+private OrderPriceService anyVersionService;                 // 主代理（需接口标 @RoutingService），不约束维度
+
+@RoutingRef(business = "order", version = "1.0")
+private OrderPriceService orderV1;                            // 绑定 business=order, version=1.0
+
+@RoutingRef(business = "${tbs.route.inventory-biz:inventory}", version = "2.0", strategy = "DUBBO_ONLY")
+private OrderPriceService inventoryV2;                        // 占位符按环境解析，可指定策略
+```
+
+- **正交**：不要求字段类型接口先标注 `@RoutingService`；两者可共存（主代理按类型注入命中，`@RoutingRef` 只写自己的字段）。
+- **占位符**：`business`/`version`/`strategy` 支持 `${...:默认值}`，经容器 Environment 解析；留空表示该维度不约束。`strategy` 取值同 3.5，缺名快速失败。
+- **business 落到哪儿**：Dubbo 侧，`@RoutingRef` 的 business 非空即直接映射为 Dubbo 原生引用的 `group`（含默认业务 `default`，对应 provider 侧普遍显式 `@DubboService(group = "default")`；仅当 business 为空才不限定分组），由 Dubbo 完成发现与定向；本地 Spring 侧，实现类可实现 [IRouteMeta](../common/src/main/java/com/tbs/common/provider/IRouteMeta.java) 自声明 business/version，未声明时 `SpringObjectResolver` 以实现类简单名兜底 business，因此 `@RoutingRef(business = "orderPriceServiceImpl")` 可精确定位某个本地实现。
+- **缓存复用**：同一 (接口, 策略, business, version) 在中心缓存同一代理实例，多字段同坐标不重复构建。
+- **调用语义**：注入的仍是路由代理，未命中来源时的行为遵循 3.6：接口若标注 `@RoutingService` 则用其 `noProvider`，否则默认记日志并返回 null。
+
 ---
 
 ## 四、用法二：编程式门面
 
-需要枚举多实现、定向到某个实例、或运行时决定策略时才用门面；能用注解注入的不要用门面。
+需要枚举多实现、定向到某个实例时才用门面；能用注解注入的不要用门面。
 
 ```java
 @Resource
@@ -153,12 +192,13 @@ private IObjectProvider objectProvider;
 
 | 方法 | 语义 | 未命中 |
 |------|------|--------|
-| `<T> T getObject(Class<T> type)` | 解析链首个命中来源的最优实例（Spring 优先；Dubbo 侧返回负载均衡整体引用） | `null` |
-| `<T> T getObject(Class<T> type, String beanName)` | 精确实例标识：Spring 侧为 Bean 名，Dubbo 侧为 `host:port` | `null` |
+| `<T> T getObject(Class<T> type)` | 委派中心择一路由（本地优先）：有本地 Bean 时返回 Bean。**注：Dubbo 不再入中心，纯远程接口经门面 `getObject` 返回 null——取 Dubbo 目标请用路由代理（§三）** | `null` |
+| `<T> T getObject(Class<T> type, String beanName)` | 精确实例标识：Spring 侧为 Bean 名（Dubbo 逐实例枚举已下线，不再按 `host:port` 命中） | `null` |
 | `<T> Optional<T> getObjectOptional(Class<T> type[, String beanName])` | 同上，Optional 语义 | `Optional.empty()` |
-| `<T> Collection<ResolvedObject<T>> getObjects(Class<T> type)` | 枚举全部来源的全部实现，顺序为 Spring 在前、Dubbo 在后 | 空集合 |
-| `<T> Optional<ResolvedObject<T>> getResolvedObject(Class<T> type, ObjectSource source)` | 只访问指定来源的解析器，不枚举其余来源 | `Optional.empty()` |
-| `<T> T getRoutingProxy(Class<T> interfaceType, RoutingStrategy strategy)` | 手动构建路由代理（同接口同策略复用同一实例） | — |
+| `<T> Collection<ResolvedObject<T>> getObjects(Class<T> type)` | 枚举中心内全部实现（现仅 Spring 与自定义枚举来源；**Dubbo 不再枚举**，走代理原生发现） | 空集合 |
+| `<T> Optional<ResolvedObject<T>> getResolvedObject(Class<T> type, ObjectSource source)` | 只取指定来源在中心的条目（Dubbo 已不在中心，取 DUBBO 恒空） | `Optional.empty()` |
+
+> 门面与路由代理均委派 `IRegistryCenter`，读同一份来源数据，不存在「门面看不到某来源而中心看得到」的过渡期不一致。需要手动构建代理时注入 `IRegistryCenter`，调用 `getRoutingProxy(interfaceType, strategy, business, version)`（按 (接口, 策略, business, version) 复用同一实例，`business`/`version` 传 `null` 表示不约束）。`RoutingServiceFactoryBean` 同样直接依赖该中心。
 
 `ResolvedObject<T>` 携带三样信息：`getInstance()` 实例本体、`getSource()` 来源、`getInstanceKey()` 实例标识。这个载体的完整使用边界见 4.5。
 
@@ -218,8 +258,7 @@ Dubbo 来源返回的是**负载均衡后的整体引用**（由 Dubbo 在集群
 | 来源 | instanceKey 取值 | 示例 | 判定方法 |
 |------|------------------|------|----------|
 | `SPRING` | Bean 名称 | `orderPriceServiceImpl` | `isSource(ObjectSource.SPRING)` |
-| `DUBBO`（`getObjects` 逐实例） | 提供者地址 `host:port` | `192.168.80.12:20880` | `isSource(DUBBO) && !isClusterReference()` |
-| `DUBBO`（`getResolvedObject` / `getObject` 整体引用） | 固定标识 `cluster` | `cluster` | `isClusterReference()` |
+| `DUBBO` | （逐实例/集群枚举已下线）Dubbo 不再作为中心条目供门面获取 | — | 取 Dubbo 目标请用路由代理 |
 
 使用时注意三条边界：
 
@@ -250,12 +289,12 @@ objectProvider.getResolvedObject(OrderPriceService.class, ObjectSource.DUBBO)
 |------|------|
 | 门面单实例获取未命中 | 返回 `null` / `Optional.empty()`，不抛异常 |
 | 门面枚举未命中 | 返回空集合，不为 `null` |
-| 路由代理两来源均未命中 | 记 warn 日志，方法返回类型为引用类型时返回 `null` |
-| 路由代理未命中且方法返回**基本类型** | 抛 `FormattedRuntimeException`（`SYSTEM_ERROR` 级别），文案 key `provider.routing.target.not.found` |
+| 路由代理未命中任何来源 | 记框架级 warn 日志后交由 `@RoutingService.noProvider()` 处理器处理；处理器返回后一律返回 `null`（默认 `LoggingNoProviderHandler`，基本类型会在调用方拆箱处 NPE） |
+| 路由代理未命中且声明了抛错型处理器 | 处理器内抛出的异常原样透出（如 `ErrorThrowNoProviderHandler` 抛系统级异常，文案 key `provider.no.provider.found`，引用/基本类型都抛） |
 | Dubbo 引用构建失败 | 记 warn，跳过该实例/降级为直连首个实例 |
 | 目标实现自身抛异常 | 原样透出（代理解包 `InvocationTargetException`，抛的是 cause） |
 
-**接口方法返回值请优先用包装类型**（`Integer`/`Boolean`/`Long`）。基本类型在无实现时返回 `null` 会在调用方拆箱处炸出一个与业务无关的 NPE，难以定位——因此框架选择显式抛错，而不是让你线上猜。
+**接口方法返回值请优先用包装类型**（`Integer`/`Boolean`/`Long`），或对必须失败的接口声明 `noProvider = ErrorThrowNoProviderHandler.class`。自 `noProvider` 接线起，未命中不再由框架对基本类型自动抛错，而是完全交由处理器决定——默认处理器只记日志并返回 `null`，基本类型会在调用方拆箱处炸出一个与业务无关的 NPE，难以定位。
 
 排查用的日志关键字：
 
@@ -277,8 +316,8 @@ objectProvider.getResolvedObject(OrderPriceService.class, ObjectSource.DUBBO)
 |--------|------|--------|------|
 | `enable` | boolean | `true` | 总开关，关闭后整个能力不装配（后果见 2.3） |
 | `dubbo-discovery-enabled` | boolean | `true` | Dubbo 来源开关。关闭后解析链只剩 Spring，`REMOTE_FIRST`/`DUBBO_ONLY` 恒未命中 |
-| `dubbo-timeout` | int | `10000` | Dubbo 引用超时（毫秒），整体引用与实例直连引用都生效 |
-| `dubbo-discovery-refresh-millis` | long | `5000` | 已发现到实例时的快照刷新间隔（毫秒）；非正数表示不再主动过期 |
+| `dubbo-timeout` | int | `10000` | Dubbo 集群引用超时（毫秒） |
+| `dubbo-discovery-refresh-millis` | long | `5000` | 已废弃：随枚举发现下线不再参与路由，保留仅为配置兼容（待人工确认后可移除） |
 
 ```yaml
 tbs:
@@ -290,28 +329,29 @@ tbs:
       dubbo-discovery-refresh-millis: 5000
 ```
 
-`dubbo-discovery-refresh-millis` 调小 → 更快发现扩容/重启，代价是更频繁 lookup；纯消费方稳定集群可放宽到 30000。
+`dubbo-discovery-refresh-millis` 自 Dubbo 原生发现改造（3-ε）后不再参与路由（快照刷新已废除）；保留只为避免存量配置报错。
 
 ---
 
 ## 七、Dubbo 来源的行为细节
 
+自 Dubbo 原生发现改造（3-ε）起，Dubbo **不再由框架逐实例 `lookup` 枚举进注册中心**，而由路由代理按 business/version 直接构造 Dubbo 原生集群引用，发现/迁移/负载均衡交由 Dubbo 自身：
+
 | 方面 | 行为 |
 |------|------|
-| 发现方式 | 首次解析时向注册中心 `lookup` 该接口 providers 目录，**懒加载**，不提前订阅 |
-| 快照时效 | 空快照按固定 1 秒回退间隔重查（不受刷新间隔配置影响），非空快照按 `dubbo-discovery-refresh-millis` 过期 |
-| 为什么这样设计 | 发现早于服务上线时若不重查，该来源会被永久锁死；若无间隔则无 provider 环境下每次解析都打注册中心 |
-| 感知延迟 | 轮询语义：provider 上下线**最迟一个间隔后**被感知，非实时订阅 |
-| 引用管理 | 整体引用与逐实例直连引用均缓存复用（避免重复建连与订阅）；实例从快照消失后其直连引用随即销毁；进程关闭时统一释放（`DisposableBean`） |
-| 单实例语义 | `resolveOne` 返回不带地址的整体引用，由 Dubbo 做集群负载均衡与 failover，不会钉死发现列表第一个节点 |
-| 分组/版本 | 逐实例直连引用会从 provider URL 上读取 `group`/`version` 并带入引用构建，多分组服务下枚举与定向调用无需额外配置；整体负载均衡引用不指定分组，若服务只以特定 group 导出，请用 `getObjects` 按实例调用（该行为待真实 Dubbo 环境联调验证） |
-| `@DubboReference` 的 Bean | 已注册进容器的引用 Bean 属于 **Spring 来源**，走本地 Bean 路径，与 Dubbo 发现来源是两条独立通道，会同时出现在 `getObjects` 结果中 |
+| 发现方式 | 交由 Dubbo 应用级/接口级发现（`ReferenceConfig` 常驻引用），框架不主动 `lookup`；**与 provider 的注册模式无关**（`register-mode` 任意取值均可路由） |
+| business 定向 | 代理把 business 非空时映射为 Dubbo 分组（含 `default`，与 provider 显式 `@DubboService(group = "default")` 一致；business 为空才不限定分组），version 作 `version`，由 Dubbo 按维度发现对应 provider |
+| 可观测枚举 | **下线**：`getObjects` / `resolve(ALL)` 不再返回 Dubbo 实例（中心无 Dubbo 条目）；Dubbo 目标只经路由代理获取 |
+| 未命中语义 | 远程引用一旦可构建即视为命中；**无可用提供者时由 Dubbo 在调用期抛框架异常**（如 no provider），不再由框架在解析期判空走 `noProvider` |
+| 引用管理 | 集群引用按「接口+business+version」缓存复用，避免重复订阅建连；进程关闭时统一释放（`DisposableBean`） |
+| 开关 | `dubbo-discovery-enabled=false` 时解析器直接返回 null，远程路由下线；Dubbo 依赖缺失时 `@ConditionalOnClass` 守卫使解析器不装配 |
+| `@DubboReference` 的 Bean | 已注册进容器的引用 Bean 属于 **Spring 来源**，走本地 Bean 路径，可被 `getObjects` 枚举，与 Dubbo 原生发现是两条独立通道 |
 
 ---
 
 ## 八、扩展新的对象来源（SPI）
 
-新增来源只需实现 `IObjectResolver` 并注册为 Spring Bean，门面对 `List<IObjectResolver>` 的收集会自动纳入。
+新增来源有两种接入位：若来源需逐实例枚举进中心，首选继任 SPI `IRegistrationSource`（+ `ILazyEntriesContributor`）；若来源不需逐实例枚举、交由中间件自身发现（如 Dubbo 的 `IRemoteTargetResolver`/`DubboRemoteTargetResolver`），则实现 `IRemoteTargetResolver`。旧 `IObjectResolver`（阶段 3 起已标 `@Deprecated`）仅用于把存量实现经 `ObjectResolverAsSource` 桥接入中心，新增来源不建议再实现它。下文以旧 `IObjectResolver` 为例（装配时会被中心对 `List<IObjectResolver>` 的收集自动桥接纳入）：
 
 ```java
 public class XxxInstanceResolver implements IObjectResolver {

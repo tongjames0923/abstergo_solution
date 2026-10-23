@@ -1,16 +1,22 @@
 package com.tbs.struct.tree.api.persistence;
 
 import com.tbs.struct.tree.model.TreeNodeModel;
+import com.tbs.common.provider.annotation.RoutingService;
 
 import java.util.List;
 import java.util.Objects;
 
 /**
  * 树存储接口
+ * <p>
+ * 标注 {@code @RoutingService} 后由路由注册器自动产出多来源路由代理 Bean（本地优先、Dubbo 兜底），
+ * 消费方注入经统一注册中心按策略择一转发；本地实现 Bean 存在时直取，无则降级远端。
+ * </p>
  *
  * @author tbs
  * @date 2022/3/23 11:05
  */
+@RoutingService
 public interface ITreeStore<ID> {
     /**
      * 存储树

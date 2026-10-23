@@ -170,6 +170,7 @@
 
 <script>
 import MobileCardList from './MobileCardList.vue'
+import ResponsiveMixin from '@/mixins/responsive'
 
 // 定义render组件用于渲染函数
 const Render = {
@@ -190,6 +191,8 @@ export default {
     Render,
     MobileCardList
   },
+  // 设备档位统一由响应式契约 mixin 提供（device / isPhone / isTouch 等）
+  mixins: [ResponsiveMixin],
   props: {
     // 数据获取函数，必须返回Promise
     dataFetcher: {
@@ -400,13 +403,9 @@ export default {
     computedActionsLabel() {
       return this.actionsLabel || this.$t('common.operation')
     },
-    // 当前设备档位（phone/tablet/desktop），由 store 全局驱动
-    device() {
-      return this.$store.state.app.device
-    },
     // 手机端是否切换为卡片视图（responsive 关闭或非手机档仍用表格）
     isMobileView() {
-      return this.responsive && this.device === 'phone'
+      return this.responsive && this.isPhone
     },
     // 卡片视图需要转发的列作用域插槽（父组件已提供对应插槽的列）
     mobileSlotColumns() {

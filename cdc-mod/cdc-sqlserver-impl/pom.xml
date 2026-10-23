@@ -13,8 +13,12 @@
     <description>CDC SQL Server实现：基于Debezium嵌入式引擎读取SQL Server CDC变更的捕获源、ChangeEvent到CdcEvent转换器、Debezium配置工厂与装配注解</description>
 
     <properties>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <dependencies>

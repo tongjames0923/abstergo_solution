@@ -13,8 +13,12 @@
     <description>CDC通用运行时：配置绑定、进程内事件总线（同步/异步/背压/批量）、监听器注册路由、过滤链、生命周期编排与i18n资源</description>
 
     <properties>
+        <maven.compiler.parameters>true</maven.compiler.parameters>
         <maven.compiler.release>21</maven.compiler.release>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
     </properties>
 
     <dependencies>

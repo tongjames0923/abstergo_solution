@@ -3,6 +3,8 @@ package com.tbs.shared.pojo.entity.push;
 import com.tbs.shared.pojo.ICreateTimeAuditable;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.shared.pojo.IUpdateTimeAuditable;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -36,11 +38,11 @@ public class PushMessageReceiverEntity
     private static final long serialVersionUID = 1L;
 
     /**
-     * 主键（兼游标分页排序键，自增即到达序）
+     * 主键（兼游标分页排序键，雪花值按时间递增，即到达序）
      */
-    @Comment("主键（兼游标分页排序键，自增即到达序）")
+    @Comment("主键（兼游标分页排序键，雪花值按时间递增，即到达序）")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
 
     /**

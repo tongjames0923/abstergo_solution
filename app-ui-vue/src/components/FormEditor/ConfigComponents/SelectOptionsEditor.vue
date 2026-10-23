@@ -5,7 +5,7 @@
     <ul class="options-list">
       <li v-for="(option, index) in localOptions" :key="index" class="option-item">
         <el-row :gutter="10" align="middle">
-          <el-col :span="10">
+          <el-col :xs="12" :sm="10">
             <el-input
               v-model="option.label"
               size="small"
@@ -13,7 +13,7 @@
               @input="onOptionsChange"
             />
           </el-col>
-          <el-col :span="10">
+          <el-col :xs="12" :sm="10">
             <el-input
               v-model="option.value"
               size="small"
@@ -21,7 +21,7 @@
               @input="onOptionsChange"
             />
           </el-col>
-          <el-col :span="4">
+          <el-col :xs="24" :sm="4">
             <el-button
               type="danger"
               size="mini"

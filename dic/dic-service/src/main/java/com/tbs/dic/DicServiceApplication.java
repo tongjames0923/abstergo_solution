@@ -11,7 +11,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import tk.mybatis.spring.annotation.MapperScan;
+import org.mybatis.spring.annotation.MapperScan;
 
 @SpringBootApplication(scanBasePackages = "com.tbs.dic")
 @EnableTbsSql

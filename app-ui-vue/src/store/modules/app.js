@@ -1,11 +1,18 @@
 import Cookies from 'js-cookie'
+import { resolveDevice } from '@/utils/device'
+
+// 首屏即按实际视口给出正确档位，不让设备态从 desktop 开始再被 mounted 纠正
+const initialDevice = resolveDevice()
 
 const state = {
   sidebar: {
-    opened: Cookies.get('sidebarStatus') ? !!+Cookies.get('sidebarStatus') : true,
+    // 非桌面档侧边栏是抽屉，首屏应为收起态，否则手机会先闪一下桌面双栏布局
+    opened: initialDevice === 'desktop'
+      ? (Cookies.get('sidebarStatus') ? !!+Cookies.get('sidebarStatus') : true)
+      : false,
     withoutAnimation: false
   },
-  device: 'desktop',
+  device: initialDevice,
   // 当前横竖屏方向：portrait（竖屏）/ landscape（横屏）
   orientation: 'portrait',
   language: Cookies.get('language') || 'zh'

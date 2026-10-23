@@ -105,6 +105,8 @@ export default {
 .forbidden-box {
   display: flex;
   width: 900px;
+  /* 视口容不下 900px 时随宽度收缩，避免 769~940 区间横向溢出 */
+  max-width: 100%;
   height: 500px;
   background: #fff;
   border-radius: 12px;

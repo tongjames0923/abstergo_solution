@@ -1,12 +1,10 @@
 package com.tbs.view.route.impl;
 
-import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.AuditUserResolver;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.i18n.I18nUtil;
-import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.mapper.ViewRouteConfigrationMapper;
 import com.tbs.shared.mapper.ViewRouteMetaMapper;
 import com.tbs.shared.mapper.ViewRouteRoleMapper;
@@ -20,7 +18,6 @@ import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.view.route.model.ViewRouteVersionModel;
 import com.tbs.view.route.constant.ViewRouteI18nConstant;
-import com.tbs.web.uitl.AuthUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -80,7 +77,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
         try {
-            Long userId = getCurrentUserId();
+            Long userId = AuditUserResolver.resolveCurrentUserId();
 
             // 1. 产生新的版本记录
             ViewRouteVersionEntity versionEntity = createVersionRecord(group, description, userId);
@@ -119,7 +116,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             }
 
             // 插入一条不含任何路由行的版本记录（清空分组），历史数据原样保留
-            createVersionRecord(group, I18nUtil.get(ViewRouteI18nConstant.CLEAR_GROUP), getCurrentUserId());
+            createVersionRecord(group, I18nUtil.get(ViewRouteI18nConstant.CLEAR_GROUP),
+                AuditUserResolver.resolveCurrentUserId());
 
             // 清除缓存，该分组从列表中消失
             routeCache.remove(group);
@@ -151,7 +149,7 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
                 .message(I18nUtil.get(ViewRouteI18nConstant.VERSION_NOT_FOUND_OR_NOT_IN_GROUP))
                 .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
-            Long userId = getCurrentUserId();
+            Long userId = AuditUserResolver.resolveCurrentUserId();
 
             // 2. 产生新的版本记录（说明自动填"回滚自 vN"）
             ViewRouteVersionEntity newVersion =
@@ -495,31 +493,6 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
             for (ViewRouteModel child : routeModel.getChildren()) {
                 saveRouteModel(child, routeEntity.getId(), routeGroup, versionId, userId);
             }
-        }
-    }
-
-    /**
-     * 获取当前登录用户ID（审计用）
-     * <p>
-     * 沿用 AuthUtil + ISystemUserService 模式，取不到时返回 null 不阻断业务
-     * </p>
-     *
-     * @return 当前用户ID，无法获取时返回null
-     */
-    private Long getCurrentUserId() {
-        try {
-            var systemUserService = SpringUtil.getBeanOptional(ISystemUserService.class);
-            if (systemUserService.isEmpty()) {
-                return null;
-            }
-            var currentUser = AuthUtil.getInstance().getCurrentUser();
-            if (currentUser == null || currentUser.getUsername() == null) {
-                return null;
-            }
-            return CollUtil.getFirst(systemUserService.get().queryUserIdsByUserName(currentUser.getUsername()));
-        } catch (Exception e) {
-            log.warn("获取当前登录用户ID失败，审计信息留空: {}", e.getMessage());
-            return null;
         }
     }
 

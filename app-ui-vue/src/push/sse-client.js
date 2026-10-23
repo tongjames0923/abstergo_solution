@@ -15,6 +15,8 @@ export const CONNECTION_STATUS = {
   CONNECTING: 'connecting',
   CONNECTED: 'connected',
   RECONNECTING: 'reconnecting',
+  // 自动重连次数耗尽：不再后台重试，醒目提示并等待用户手动重连
+  RECONNECT_FAILED: 'reconnect_failed',
   CLOSED: 'closed'
 }
 
@@ -194,6 +196,14 @@ class SsePushClient {
       // 服务端对 PING 的应答，确认链路存活；此处仅作为活性观测点
     })
 
+    es.addEventListener(FRAME_EVENTS.SHUTDOWN, (ev) => {
+      // 服务端优雅停机通知：连接将在宽限期后被主动关闭。
+      // 停心跳避免宽限期内上行心跳失败误判会话已死而抢先重连（此刻服务端仍在停机中），
+      // 关流交由服务端完成后触发的 error 回调按退避换票重连（服务恢复后自动接回）。
+      console.warn('[push] 收到服务端停机通知，连接将在宽限期后关闭，服务恢复后自动重连', ev.data)
+      this._stopHeartbeat()
+    })
+
     es.addEventListener(FRAME_EVENTS.ERROR, () => {
       // 一次性 ticket 已被消费，原生自动重连必然失败，必须换票重连
       console.warn('[push] SSE 连接异常，准备重连')
@@ -274,6 +284,14 @@ class SsePushClient {
       this._setStatus(CONNECTION_STATUS.CLOSED)
       return
     }
+    // 自动重连次数耗尽：停止后台重试，置失败态醒目提示，由用户手动重连
+    const max = this.config.reconnectMaxAttempts
+    if (max > 0 && this.reconnectAttempts >= max) {
+      console.warn(`[push] 自动重连已达最大次数(${max})，停止重连，等待手动重连`)
+      this._stopHeartbeat()
+      this._setStatus(CONNECTION_STATUS.RECONNECT_FAILED)
+      return
+    }
     this._stopHeartbeat()
     this.heartbeatFailures = 0
     this._setStatus(CONNECTION_STATUS.RECONNECTING)
@@ -311,6 +329,22 @@ class SsePushClient {
     if (typeof this.onStatus === 'function') {
       this.onStatus(status)
     }
+  }
+
+  /**
+   * 手动重连（自动重连次数耗尽后由用户触发）：
+   * 复位退避计数与主动关闭标记，关旧流后立即重新换票建连；
+   * 成功后 hello 回调会把 reconnectAttempts 归零，重新拥有完整的自动重连配额
+   */
+  manualReconnect() {
+    if (this.status === CONNECTION_STATUS.CONNECTED || this.status === CONNECTION_STATUS.CONNECTING) {
+      return
+    }
+    this.manualClose = false
+    this.reconnectAttempts = 0
+    this._clearReconnect()
+    this._closeStream()
+    this._open()
   }
 
   /**

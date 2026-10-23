@@ -821,6 +821,17 @@ export default {
   }
 }
 
+/*
+ * 触摸设备没有 hover 态：行内操作入口必须常显，
+ * 否则必须先把条目选中才能露出操作按钮，多一步且不易发现
+ */
+@media (hover: none) {
+  .dic-item-actions {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .dic-item-main {
   display: flex;
   justify-content: space-between;

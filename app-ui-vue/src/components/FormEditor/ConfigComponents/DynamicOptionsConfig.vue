@@ -18,7 +18,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="标签字段">
           <el-input
             :value="value && value.labelField"
@@ -27,7 +27,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="值字段">
           <el-input
             :value="value && value.valueField"
@@ -36,7 +36,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="请求方法">
           <el-select
             :value="value && value.method"
@@ -51,7 +51,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="自动加载">
           <el-switch
             :value="value && value.autoLoad"
@@ -59,7 +59,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="缓存结果">
           <el-switch
             :value="value && value.cache"
@@ -67,7 +67,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="多选支持">
           <el-switch
             :value="value && value.multiple"
@@ -75,7 +75,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="可清除">
           <el-switch
             :value="value && value.clearable"
@@ -83,7 +83,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="可过滤">
           <el-switch
             :value="value && value.filterable"
@@ -91,7 +91,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="远程搜索">
           <el-switch
             :value="value && value.remote"
@@ -99,7 +99,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="占位符">
           <el-input
             :value="value && value.placeholder"
@@ -108,7 +108,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="尺寸">
           <el-select
             :value="value && value.size"

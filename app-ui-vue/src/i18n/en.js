@@ -101,7 +101,7 @@ export default {
     externalId: 'External Identity',
     userId: 'System User ID',
     userName: 'System Username',
-    userNamePlaceholder: 'Enter the system username',
+    userNamePlaceholder: 'Search by name or account',
     bindTime: 'Bound At',
     actions: 'Actions',
     noData: 'No bindings yet',
@@ -116,12 +116,13 @@ export default {
     bindFailed: 'Binding failed',
     processing: 'Processing authorization result...',
     type: {
-      wecom: 'WeCom'
+      wecom: 'WeCom',
+      mes: 'MES'
     },
     rules: {
       identityType: 'Please select an identity type',
       externalId: 'Please enter the external identity',
-      userName: 'Please enter the system username'
+      userName: 'Please select a system user'
     },
     admin: {
       addBind: 'Add Binding'
@@ -665,7 +666,8 @@ export default {
     403: 'Sorry, you do not have permission to access this page',
     404: 'Sorry, the page you visited does not exist',
     backHome: 'Back to Home',
-    backPrev: 'Back to Previous'
+    backPrev: 'Back to Previous',
+    tip404: 'Please check that the URL you entered is correct, or click the button below to return to the home page.'
   },
 
   // Generic API Management
@@ -963,8 +965,12 @@ export default {
       connecting: 'Connecting',
       connected: 'Connected',
       reconnecting: 'Reconnecting',
+      reconnect_failed: 'Live connection lost',
       closed: 'Closed'
     },
+    reconnectFailedTitle: 'Live connection lost',
+    reconnectFailedTip: 'Automatic reconnection reached the max attempts and live push has stopped. Click reconnect to restore it, or refresh the page later.',
+    reconnect: 'Reconnect now',
     type: {
       notify: 'Notice',
       warning: 'Alert',

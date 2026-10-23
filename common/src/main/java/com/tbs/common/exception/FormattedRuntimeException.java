@@ -79,6 +79,10 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
      */
     public <T extends Throwable> FormattedRuntimeException(T cause, String message, Object... params) {
         super(causeByExceptionMessage(cause, message, params));
+        // 保留原始异常链，否则转换后只剩拼接的消息文本，真实堆栈与出错位置全部丢失
+        if (cause != null) {
+            initCause(cause);
+        }
     }
 
     public FormattedRuntimeException() {

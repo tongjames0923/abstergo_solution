@@ -4,7 +4,6 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.function.SFunction;
 import com.tbs.common.util.function.LambdaUtil;
-import com.tbs.sql.annotation.mapping.SecretField;
 import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.dsl.IWhereClause;
 import com.tbs.sql.dsl.clause.*;
@@ -215,6 +214,5 @@ public class EntityWhereClause<T> implements IWhereClause<T> {
         whereInfo.setValueType(field.getType());
         whereInfo.setTableName(SqlUtils.getTableName(targetType));
         whereInfo.setFieldValue(val);
-        whereInfo.setUseSafe(field.isAnnotationPresent(SecretField.class));
     }
 }

@@ -6,6 +6,7 @@ spring:
       - db
       - redis
       - mq
+      - log
   application:
     name: app-service
   # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
@@ -38,6 +39,10 @@ logging:
     com.alibaba: warn
     org.apache: warn
     com.tbs.cache: warn
+    # 连接准入限流全链路日志（准入/放行/拒绝/归还）
+    datasource.connection.limiter: debug
+    # 数据源装饰与 JDBC 拦截框架日志
+    com.tbs.sql.datasource: debug
 # Actuator：仅暴露必要端点，减少自动装配与内存/攻击面开销
 management:
   endpoints:
@@ -54,7 +59,7 @@ app:
     # 视图路由分组配置（PublicGatewayVersionController使用）
     route-groups:
       - default
-    enable-test-controller: pri
+    enable-test-controller: pub
 
 dubbo:
   application:

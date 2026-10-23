@@ -3,6 +3,7 @@ spring:
   profiles:
     include:
       - tbs
+      - log
   application:
     name: cdc-service
   # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
@@ -22,6 +23,9 @@ spring:
     port: ${RABBITMQ_PORT:5672}
     username: ${RABBITMQ_USERNAME:admin}
     password: ${RABBITMQ_PASSWORD:admin123}
+    listener:
+      simple:
+        acknowledge-mode: manual
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8

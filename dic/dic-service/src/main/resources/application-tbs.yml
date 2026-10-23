@@ -38,3 +38,11 @@ tbs:
   knife4j:
     enable: true
     show-url: true
+  sql:
+    # 原 p6spy 观测已收敛到 JDBC 装饰层：输出 SQL、耗时与慢 SQL 告警
+    enable-datasource-intercept: true
+    log-sql: true
+    slow-sql-threshold-millis: 2000
+    # 命中即跳过观测与拦截链，用于健康检查等框架语句
+    exclude-sql:
+      - select 1

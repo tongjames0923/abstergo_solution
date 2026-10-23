@@ -15,11 +15,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
-
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 公开用户控制器
@@ -38,8 +37,8 @@ import jakarta.servlet.http.HttpServletRequest;
  */
 @RestController
 @RequestMapping("/public/user")
-@Deprecated
-@Tag(name = "公开用户控制器", description = "公开用户控制器")
+@Deprecated(forRemoval = true)
+@Tag(name = "公开用户控制器(弃用)", description = "公开用户控制器(已废弃)")
 @Slf4j
 public class PublicUserController extends BaseController {
 

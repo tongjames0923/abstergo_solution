@@ -1,16 +1,17 @@
 spring:
   jpa:
     hibernate:
-      ddl-auto: validate
-    show-sql: true
+      ddl-auto: update
+    # 生产环境建议 -DJPA_SHOW_SQL=false 关闭，SQL 排查交给 tbs.sql 装饰层的 SQL 观测日志
+    show-sql: ${JPA_SHOW_SQL:true}
     generate-ddl: false
     database: mysql
   datasource:
-    driver-class-name: com.p6spy.engine.spy.P6SpyDriver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     # nullCatalogMeansCurrent=true：修正 MySQL 8.x 驱动默认行为——让 JDBC 元数据只扫描当前连接的库，
     # 否则 Hibernate 的 ddl-auto:update 会误把同服务器上其它库（如 core_app）已有的同名表当作“已存在”而跳过建表，
     # 进而对当前库执行 create index 时报 “Table 'xxx.yyy' doesn't exist”
-    url: jdbc:p6spy:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:core_app}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true&nullCatalogMeansCurrent=true
+    url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:core_app}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true&nullCatalogMeansCurrent=true
     username: ${DB_USERNAME:root}
     password: ${DB_PASSWORD:123456789}
     type: com.zaxxer.hikari.HikariDataSource
@@ -21,14 +22,36 @@ spring:
       minimum-idle: 5
       # 最大连接数
       maximum-pool-size: 20
-      # 连接超时时间(毫秒)
-      connection-timeout: 30000
+      # 连接超时时间(毫秒)——现在由 Hikari 作为「获取连接等待」的唯一权威（限流器不再自己超时），
+      # 调小即 fail-fast：排队超过该时长仍拿不到连接就抛异常，避免请求挂满 30s
+      connection-timeout: 5000
       # 空闲连接超时时间(毫秒)
       idle-timeout: 600000
       # 连接最大存活时间(毫秒)
       max-lifetime: 1800000
       # 连接测试查询
       connection-test-query: SELECT 1
+tbs:
+  sql:
+    enable-datasource-intercept: true
+    # SQL 执行观测（替代原 p6spy 驱动代理）：由 JDBC 装饰层统一输出 SQL、耗时与慢 SQL 告警
+    # 全量 SQL 日志为 INFO 级别，生产环境可置 false，仅保留慢 SQL 告警
+    log-sql: true
+    # 慢 SQL 告警阈值（毫秒），执行耗时达到该值以 WARN 输出
+    slow-sql-threshold-millis: 2000
+    # SQL 排除前缀列表（忽略大小写）：命中即跳过观测与拦截链，用于健康检查等框架语句
+    exclude-sql:
+      - select 1
+      - select @@version
+      - select @@version_comment
+    enable-full-table-update-block: false
+    # 连接准入限流（ConnectionAdmissionLimiter）：职责已收窄为「只做一个 Hikari 给不了的闸门——在途数上限 + 秒拒」。
+    # 连接数上限交给 Hikari maximum-pool-size，获取连接的等待超时交给 Hikari connection-timeout。
+    conn-limit:
+      # 同时在途（已放行、尚未归还）的连接请求数上限，超过则立即快速拒绝（负载 shedding，0 等待）。
+      # 语义 ≈ Hikari 正在服务(≈pool-size) + 允许排在 Hikari 获取队列里的总量；建议 pool-size + 一定余量。
+      # 例：pool=20 → 100 表示最多允许 100 个连接请求同时"在途"，第 101 个直接秒拒。
+      max-waiters: 150
 mybatis:
   configuration:
     map-underscore-to-camel-case: true

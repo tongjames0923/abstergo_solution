@@ -1,25 +1,25 @@
 package com.tbs.app.controller.publics;
 
 import com.alibaba.nacos.api.config.ConfigService;
-import com.tbs.common.util.base.StrUtil;
 import com.tbs.app.config.condition.ConditionalOnTestControllerMode;
 import com.tbs.app.config.property.TestControllerMode;
+import com.tbs.common.annotation.DynamicConfig;
+import com.tbs.common.provider.IObjectProvider;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.script.api.compiler.impl.SpelCompiler;
 import com.tbs.script.api.engine.IScriptEngine;
-import com.tbs.common.provider.IObjectProvider;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.uitl.AjaxUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import lombok.Data;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-
 import jakarta.annotation.Resource;
+import lombok.Data;
+import org.springframework.web.bind.annotation.*;
+
 import java.io.Serializable;
 
 /**
@@ -153,19 +153,14 @@ public class PublicTestController extends BaseController {
         return AjaxUtil.getInstance().success(result);
     }
 
-    //	@Resource
-    //	TestService service;
-    //
-    //	@Cacheable(key = "#value", value = CacheNamesConstants.DEMO_TEST)
-    //	@ExpireOn(value = 5)
-    //	@GetMapping("/test")
-    //	@Operation(summary = "测试缓存", description = "测试缓存功能")
-    //	@ApiResponse(responseCode = "200", description = "测试成功",
-    //		content = @Content(mediaType = "application/json",
-    //			schema = @Schema(implementation = AjaxResult.class)))
-    //	public AjaxResult test(@Parameter(name = "value", description = "测试值") String value) throws InterruptedException {
-    //		return AjaxUtil.getInstance().success(service.test());
-    //	}
+    @DynamicConfig("tbs.app.test")
+    private String test;
+
+    @GetMapping("/test")
+    @Operation(summary = "测试缓存", description = "测试缓存功能")
+    public AjaxResult test(@Parameter(name = "value", description = "测试值") String value) {
+        return AjaxUtil.getInstance().success(test);
+    }
     //
     //	@GetMapping("/test1")
     //	@Operation(summary = "简单测试", description = "简单测试功能")

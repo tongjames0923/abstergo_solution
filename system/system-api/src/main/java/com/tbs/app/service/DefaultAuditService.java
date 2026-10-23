@@ -1,23 +1,19 @@
 package com.tbs.app.service;
 
-import com.tbs.app.service.user.ISystemUserService;
-import com.tbs.common.error.AssertUtil;
-import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.interfaces.service.AbstractAuditService;
-import com.tbs.web.uitl.AuthUtil;
 
 /**
+ * 默认审计服务
+ * <p>
+ * 审计主体统一由 {@link AuditUserResolver} 解析：登录态记录真实用户ID，非登录态记录系统主体，
+ * 避免字段留空后无法区分「系统行为」与「来源未知」。
+ * </p>
+ *
  * @author abstergo
  */
 public class DefaultAuditService<E, K> extends AbstractAuditService<E, K, Long> {
     @Override
     public Long getCurrentUserId() {
-        var systemUserService = SpringUtil.getBeanOptional(ISystemUserService.class);
-        AssertUtil.isTrue(systemUserService.isEmpty()).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-            .message("系统用户服务未初始化").throwIt();
-        var us = systemUserService.get();
-        return CollUtil.getFirst(us.queryUserIdsByUserName(AuthUtil.getInstance().getCurrentUser().getUsername()));
+        return AuditUserResolver.resolveCurrentUserId();
     }
 }

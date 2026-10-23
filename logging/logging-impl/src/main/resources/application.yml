@@ -6,6 +6,7 @@ spring:
       - db
       - tbs
       - mq
+      - log
   application:
     name: logging-service
   # Nacos配置中心：从配置中心导入远程配置（optional前缀表示Nacos不可用时仍可本地启动）
@@ -29,6 +30,13 @@ logging:
   level:
     com.alibaba: warn
     org.apache: warn
+    # MQ v2 记录驱动模型全链路 debug（接收/分发/处理线程/内存协作层/RabbitMQ 传输层/日志消费者，统一 [MQ-v2] 前缀）
+    com.tbs.mq.v2: debug
+    com.tbs.rabbitmq.v2: debug
+    com.tbs.logging.v2: debug
+    # 自动填充能力验证：开启后可在 insertList/insertSelective 前看到“自动填充字段[..id], 填充值=..”日志，证明填充逐条生效
+    com.tbs.sql.interceptor: debug
+    com.tbs.sql.provider: debug
 
 dubbo:
   application:

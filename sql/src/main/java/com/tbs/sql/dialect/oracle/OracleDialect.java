@@ -1,6 +1,7 @@
 package com.tbs.sql.dialect.oracle;
 
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.oracle.extractor.OracleInsertExtractor;
 
 /**
  * Oracle方言实现类。
@@ -19,7 +20,7 @@ import com.tbs.sql.dialect.*;
  * @author abstergo
  * @since 2.0.0
  * @see SqlDialect
- * @see com.tbs.sql.dialect.oracle.extractor.OracleSelectExtractor
+ * @see OracleInsertExtractor
  * @see com.tbs.sql.dialect.oracle.extractor.OracleLimitExtractor
  */
 public class OracleDialect implements SqlDialect {
@@ -45,5 +46,10 @@ public class OracleDialect implements SqlDialect {
     @Override public ILimitExtractor getLimitExtractor() { return limitExtractor; }
     @Override public ISelectExtractor getSelectExtractor() { return selectExtractor; }
     @Override public IWhereExtractor getWhereExtractor() { return whereExtractor; }
+
+    @Override
+    public IInsertExtractor getInsertExtractor() {
+        return new OracleInsertExtractor();
+    }
     @Override public String name() { return "oracle"; }
 }

@@ -13,19 +13,14 @@ import com.tbs.shared.pojo.entity.SystemUserDepartmentRelationEntity;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.sql.dsl.clause.JoinCondition;
 import com.tbs.sql.service.QueryEngine;
-import org.jetbrains.annotations.NotNull;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import jakarta.annotation.Resource;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
-import org.springframework.stereotype.Service;
 
-import static com.tbs.app.service.impl.CacheNamesConstants.USER_DEPARTMENTS;
-
-import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import com.tbs.app.constant.SystemI18nConstant;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.USER_DEPARTMENTS;
 
 public class SimpleDepartmentUserRelationService implements IDepartmentUserRelationService {
 

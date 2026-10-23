@@ -303,13 +303,13 @@
         <div class="test-dialog-content">
           <div class="test-info">
             <el-row :gutter="16">
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <div class="info-item-block">
                   <label class="info-label">{{ $t('genericApi.apiId') }}</label>
                   <div class="info-value">{{ currentApi.apiId }}</div>
                 </div>
               </el-col>
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <div class="info-item-block">
                   <label class="info-label">{{ $t('genericApi.needAuth') }}</label>
                   <div class="info-value">
@@ -319,25 +319,25 @@
                   </div>
                 </div>
               </el-col>
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <div class="info-item-block">
                   <label class="info-label">{{ $t('genericApi.appName') }}</label>
                   <div class="info-value">{{ currentApi.appName }}</div>
                 </div>
               </el-col>
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <div class="info-item-block">
                   <label class="info-label">{{ $t('genericApi.version') }}</label>
                   <div class="info-value">{{ currentApi.version || '-' }}</div>
                 </div>
               </el-col>
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <div class="info-item-block">
                   <label class="info-label">{{ $t('genericApi.interfaceName') }}</label>
                   <div class="info-value interface-value">{{ currentApi.interfaceName }}</div>
                 </div>
               </el-col>
-              <el-col :span="12">
+              <el-col :xs="24" :sm="12">
                 <div class="info-item-block">
                   <label class="info-label">{{ $t('genericApi.methodName') }}</label>
                   <div class="info-value method-value">{{ currentApi.methodName }}</div>

@@ -2,8 +2,6 @@ package com.tbs.struct.tree.closure.impl.config;
 
 import com.tbs.common.AbstractAutoBeanRegister;
 import com.tbs.common.Feature;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
-import tk.mybatis.spring.annotation.MapperScan;
 
 /**
  * 闭包表自动注册类

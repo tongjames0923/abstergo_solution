@@ -12,6 +12,17 @@ export function myExternalIdentities() {
 }
 
 /**
+ * 导出当前系统支持的外部身份类型清单（后端能力驱动，前端零硬编码）
+ * @returns {Promise} 类型元数据数组：[{ identityType, labelKey, selfBindable }]
+ */
+export function externalIdentityTypes() {
+  return request({
+    url: '/private/external-identity/types',
+    method: 'get'
+  })
+}
+
+/**
  * 自助绑定当前登录用户
  * @param {string} identityType - 外部身份类型（如 'wecom'）
  * @param {Object} credential - 平台凭证键值（如 { code: 企微授权码 }）

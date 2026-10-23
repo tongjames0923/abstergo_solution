@@ -81,7 +81,7 @@ public class WecomLoginGrantProvider extends AbstractExternalLoginGrantProvider<
     }
 
     @Override
-    protected String getIdentityType() {
+    public String getIdentityType() {
         return IDENTITY_TYPE;
     }
 

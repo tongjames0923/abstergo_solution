@@ -1,26 +1,8 @@
 import store from '@/store'
+import { resolveDevice } from '@/utils/device'
 
-const { body } = document
-// 手机档上限（<= 768 为手机）、平板档上限（<= 992 为平板），与 styles/variables.scss 断点保持一致
-const PHONE_WIDTH = 768
-const TABLET_WIDTH = 992
 // resize 防抖延迟，避免横竖屏切换/拖拽窗口时高频触发
 const RESIZE_DEBOUNCE = 150
-
-/**
- * 根据 body 宽度解析设备档位
- * @returns {string} phone / tablet / desktop
- */
-function resolveDevice() {
-  const width = body.getBoundingClientRect().width
-  if (width - 1 < PHONE_WIDTH) {
-    return 'phone'
-  }
-  if (width - 1 < TABLET_WIDTH) {
-    return 'tablet'
-  }
-  return 'desktop'
-}
 
 /**
  * 防抖包装

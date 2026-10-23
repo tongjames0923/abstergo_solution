@@ -1,15 +1,17 @@
 package com.tbs.app.web;
 
 import cn.hutool.core.date.DateUtil;
-import com.alibaba.fastjson2.JSON;
 import com.tbs.app.service.user.ISystemUserService;
-import com.tbs.app.service.user.serial.DefaultSystemUserDetailsDto;
+import com.tbs.app.service.user.IUserIdentityService;
+import com.tbs.app.service.user.model.ISystemUserDetails;
+import com.tbs.app.service.user.model.UserIdentity;
+import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
+import com.tbs.app.service.user.model.impl.DefaultSystemUserDetails;
+import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.cache.expire.annotation.ExpireOn;
-import com.tbs.cache.serialize.utils.ValueTransformUtils;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
-import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
@@ -24,7 +26,6 @@ import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserLoginInfoService;
 import com.tbs.web.security.user.vo.LoginSessionVO;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -33,18 +34,20 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-import static com.tbs.app.web.CacheNamesConstants.USER_LOGIN_INFO_CACHE;
 import static com.tbs.app.web.CacheNamesConstants.USER_SESSIONS_CACHE;
 
 /**
  * 默认用户登录信息服务
  * <p>
+ * 存储职责收敛为「会话」本身：一行只记录令牌、用户标识、会话标识、当前选中的部门与状态，
+ * 不再保存用户详情、部门归属与权限。用户维度数据在认证时经 {@link IUserIdentityService}
+ * 一次性装配为请求级快照，因此权限变更、部门调整无需清理会话即可在下次认证时生效。
+ * </p>
+ * <p>
  * 缓存设计说明：
  * <ul>
- *     <li>缓存键：以业务原始 token / username 作为 key（token 为一次性随机串，天然无冲突，无需额外命名空间）</li>
- *     <li>失效路径：登出（removeUserLoginInfo）与置换（replaceUserDetails）入口主动 evict；TTL 作为最终兜底</li>
- *     <li>一致性：insertUserLoginInfo 走新 token，无旧缓存可脏；写路径均先落库后失效，失败不误删</li>
- *     <li>防膨胀：null 与空集合结果一律不缓存，避免无效 token / 空会话长期占据缓存并产生脏读</li>
+ *     <li>用户详情不做令牌级缓存：它已是请求级快照，再缓存只会让权限变更延后生效；</li>
+ *     <li>缓存仅保留按用户名的会话列表（{@link #listUserSessions}），空列表不缓存，避免新会话产生后的脏读。</li>
  * </ul>
  * </p>
  *
@@ -62,6 +65,9 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     @Resource
     private ITokenIssuanceCenter tokenIssuanceCenter;
 
+    @Resource
+    private IUserIdentityService userIdentityService;
+
     /**
      * 获取可用的token查询条件
      *
@@ -76,9 +82,13 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
     /**
      * 根据token获取用户登陆信息
+     * <p>
+     * 存储层不建唯一约束，因此即使出现同令牌多行也只取最新一行，保证读路径与写入路径命中同一行。
+     * 令牌唯一性由 {@link #existsLoginInfo(String)} 在写入前把关。
+     * </p>
      *
-     * @param token
-     * @return
+     * @param token 登录令牌，不能为空
+     * @return 会话行；不存在时返回 {@code null}
      */
     SystemLoginInfoEntity getEntityByToken(String token) {
         var queryWrapper = getAvailableTokensQuery();
@@ -90,49 +100,135 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         return queryWrapper.fetchOne();
     }
 
-    SystemLoginInfoEntity setUserDetails(SystemLoginInfoEntity loginInfoEntity, UserDetails userDetails) {
-        AssertUtil.notNull(userDetails, () -> new FormattedRuntimeException("用户详情不能为空"));
-        AssertUtil.notNull(loginInfoEntity, () -> new FormattedRuntimeException("用户登陆信息不能为空"));
-        loginInfoEntity.setUserDetails(JsonUtils.toJSONBytes(
-            ValueTransformUtils.valueTransform(userDetails, ValueTransformUtils.TRANSFORM_WRITE)));
-        return loginInfoEntity;
-    }
-
+    /**
+     * 按令牌装配用户详情
+     * <p>
+     * 先定位会话行，再以会话行上的用户标识一次性拉取身份视图，最后叠加会话级的当前部门。
+     * 每次调用都重新装配并返回新实例，不在令牌维度缓存，保证权限与部门变更在下次认证时即可见。
+     * </p>
+     *
+     * @param token 登录令牌，不能为空
+     * @return 用户详情；会话不存在或用户已不存在时返回 {@code null}
+     */
     @Override
     protected UserDetails readUserDetails(String token) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
-        // 未命中缓存的回源路径：实体或明细字段缺失时直接短路，避免无意义的 JSON 反序列化开销
-        if (loginInfoEntity == null || loginInfoEntity.getUserDetails() == null) {
+        if (loginInfoEntity == null || loginInfoEntity.getUserId() == null) {
             return null;
         }
-        return (UserDetails)ValueTransformUtils.valueTransform(
-            JSON.parseObject(loginInfoEntity.getUserDetails(), DefaultSystemUserDetailsDto.class),
-            ValueTransformUtils.TRANSFORM_READ);
+        UserIdentity identity = userIdentityService.loadUserIdentity(loginInfoEntity.getUserId());
+        if (identity == null) {
+            return null;
+        }
+        DefaultSystemUserDetails details = toUserDetails(identity);
+        applyCurrentDepartment(loginInfoEntity, details);
+        return details;
+    }
+
+    /**
+     * 叠加会话级当前部门
+     * <p>
+     * 仅在会话选中的部门仍属于该用户时生效：用户被移出部门后会话仍可继续使用，
+     * 只是当前部门置空、由前端引导重新选择，避免历史选择变成认证失败的硬阻断。
+     * </p>
+     *
+     * @param loginInfoEntity 会话行，不能为空
+     * @param details         待填充的用户详情，不能为空
+     */
+    private void applyCurrentDepartment(SystemLoginInfoEntity loginInfoEntity, DefaultSystemUserDetails details) {
+        Long currentDepartmentId = loginInfoEntity.getCurrentDepartmentId();
+        if (currentDepartmentId == null || CollUtil.isEmpty(details.getDepartments())) {
+            return;
+        }
+        boolean joined = details.getDepartments().stream()
+            .map(DepartmentInfoVO::getDepartmentId)
+            .anyMatch(id -> Objects.equals(id, currentDepartmentId));
+        if (!joined) {
+            log.debug("令牌{}选中的部门{}已不属于用户，忽略当前部门设置", loginInfoEntity.getToken(), currentDepartmentId);
+            return;
+        }
+        details.setCurrentDepartment(currentDepartmentId);
     }
 
     @Override
+    protected boolean existsLoginInfo(String token) {
+        return getEntityByToken(token) != null;
+    }
+
+    /**
+     * 将身份视图转换为用户详情
+     * <p>
+     * 只搬运鉴权需要的字段：角色组名称展开为扁平 authority，权限编码直接透传；
+     * 权限项名称、描述、数据范围等展示字段不进请求级快照。
+     * </p>
+     *
+     * @param identity 身份视图，不能为空
+     * @return 装配好的用户详情
+     */
+    private DefaultSystemUserDetails toUserDetails(UserIdentity identity) {
+        List<DefaultGrantedAuthority> authorities = CollUtil.isEmpty(identity.getRoleGroupNames())
+            ? new ArrayList<>()
+            : identity.getRoleGroupNames().stream().map(DefaultGrantedAuthority::new).collect(Collectors.toList());
+        return DefaultSystemUserDetails.builder()
+            .userName(identity.getUsername())
+            .accountNonExpired(identity.isAccountNonExpired())
+            .accountNonLocked(identity.isAccountNonLocked())
+            .credentialsNonExpired(identity.isCredentialsNonExpired())
+            .enabled(identity.isEnabled())
+            .departments(identity.getDepartments())
+            .authorities(authorities)
+            .apiPermissions(identity.getApiPermissions())
+            .menuPermissions(identity.getMenuPermissions())
+            .build();
+    }
+
+    /**
+     * 写入会话行
+     * <p>
+     * 仅记录会话自身的数据，用户详情不进库。当前部门只在详情携带选中部门时更新，
+     * 避免刷新等场景因详情未携带部门而把已有选择清空。
+     * </p>
+     *
+     * @param token       登录令牌，不能为空
+     * @param userDetails 用户详情，不能为空
+     */
+    @Override
     protected void writeUserDetails(ITokenModel token, UserDetails userDetails) {
         SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token.getToken());
-        if (loginInfoEntity != null) {
-            loginInfoEntity = setUserDetails(loginInfoEntity, userDetails);
-            loginInfoEntity.setTokenExpireTime(token.getExpireTime());
-            loginInfoEntity.setUpdateTime(new Date());
-            mapper.updateByPrimaryKey(loginInfoEntity);
-        } else {
+        boolean isNew = loginInfoEntity == null;
+        if (isNew) {
             loginInfoEntity = new SystemLoginInfoEntity();
-            loginInfoEntity = setUserDetails(loginInfoEntity, userDetails);
             loginInfoEntity.setToken(token.getToken());
-            loginInfoEntity.setTokenExpireTime(token.getExpireTime());
-            loginInfoEntity.setUserId(Optional.ofNullable(
-                    CollUtil.of(systemUserService.queryByUserName(userDetails.getUsername())).findFirstOrNull())
-                .map(SystemUserEntity::getId).orElseThrow(() -> {
-                    return new FormattedRuntimeException("用户{}不存在无法生成用户登陆信息", userDetails.getUsername());
-                }));
             loginInfoEntity.setSessionId(token.getSessionId());
+            loginInfoEntity.setUserId(resolveUserId(userDetails.getUsername()));
             loginInfoEntity.setFlag(LoginInfoFlagEnum.ACTIVE.getCode());
             loginInfoEntity.setCreateTime(new Date());
-            mapper.insert(loginInfoEntity);
         }
+        loginInfoEntity.setTokenExpireTime(token.getExpireTime());
+        loginInfoEntity.setUpdateTime(new Date());
+        if (userDetails instanceof ISystemUserDetails) {
+            DepartmentInfoVO current = ((ISystemUserDetails)userDetails).getCurrentDepartment();
+            if (current != null) {
+                loginInfoEntity.setCurrentDepartmentId(current.getDepartmentId());
+            }
+        }
+        if (isNew) {
+            mapper.insert(loginInfoEntity);
+        } else {
+            mapper.updateByPrimaryKey(loginInfoEntity);
+        }
+    }
+
+    /**
+     * 按用户名解析用户标识
+     *
+     * @param username 用户名，不能为空
+     * @return 用户标识
+     */
+    private Long resolveUserId(String username) {
+        SystemUserEntity user = CollUtil.of(systemUserService.queryByUserName(username)).findFirstOrNull();
+        AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在无法生成用户登陆信息", username));
+        return user.getId();
     }
 
     @Override
@@ -162,23 +258,33 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
     }
 
     /**
-     * 按令牌获取用户详情（认证高频路径）。
+     * 切换当前会话的当前部门
      * <p>
-     * 缓存策略：
-     * <ul>
-     *     <li>condition 过滤空令牌，避免以空串为 key 产生无效缓存；</li>
-     *     <li>null 结果不缓存（unless）：防止「令牌已签发、登录信息尚未落库」窗口期写入脏 null，
-     *     同时避免依赖底层缓存实现的 null 值语义；</li>
-     *     <li>未启用 sync 防击穿：与 unless 互斥，且回源仅为单条索引查询，击穿代价可控；</li>
-     *     <li>TTL 5 分钟兜底：用户禁用等状态变更在主动 evict 缺位时最长延迟 5 分钟生效。</li>
-     * </ul>
+     * 部门归属从聚合服务实时读取，校验通过后只更新会话行上的当前部门，不触碰任何用户维度数据。
+     * 因此同一用户的其他会话不受影响，权限与部门的其他变更也不会被本次写入覆盖。
      * </p>
+     *
+     * @param token        令牌模型，不能为空
+     * @param departmentId 目标部门标识，不能为空
      */
     @Override
-    @Cacheable(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token", condition = "#token != null and !#token.isEmpty()")
-    @ExpireOn(cacheNames = USER_LOGIN_INFO_CACHE, value = 5, timeUnit = TimeUnit.MINUTES)
-    public List<UserDetails> getUserDetails(String token) {
-        return super.getUserDetails(token);
+    public void changeCurrentDepartment(ITokenModel token, Long departmentId) {
+        AssertUtil.notNull(token, "登录令牌不能为空");
+        AssertUtil.hasText(token.getToken(), "登录令牌内容不能为空");
+        AssertUtil.notNull(departmentId, "目标部门标识不能为空");
+        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token.getToken());
+        AssertUtil.notNull(loginInfoEntity, "令牌{}，登录用户信息不存在", token.getToken());
+        AssertUtil.notNull(loginInfoEntity.getUserId(), "令牌{}，登录用户信息不完整", token.getToken());
+        UserIdentity identity = userIdentityService.loadUserIdentity(loginInfoEntity.getUserId());
+        AssertUtil.notNull(identity, "令牌{}，登录用户信息不存在", token.getToken());
+        AssertUtil.isTrue(CollUtil.isEmpty(identity.getDepartments()), "用户{}未设置部门", identity.getUsername());
+        boolean joined = identity.getDepartments().stream()
+            .map(DepartmentInfoVO::getDepartmentId)
+            .anyMatch(id -> Objects.equals(id, departmentId));
+        AssertUtil.isTrue(!joined, "用户{}未加入部门{}", identity.getUsername(), departmentId);
+        loginInfoEntity.setCurrentDepartmentId(departmentId);
+        loginInfoEntity.setUpdateTime(new Date());
+        mapper.updateByPrimaryKey(loginInfoEntity);
     }
 
     @Override
@@ -194,7 +300,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
      */
     @Override
     @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#username",
-        condition = "#username != null and !#username.isEmpty()")
+        condition = "#username != null and !#username.isEmpty()", unless = "#result == null || #result.isEmpty()")
     @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 2, timeUnit = TimeUnit.MINUTES)
     public List<LoginSessionVO> listUserSessions(String username) {
         // 使用 listSessions 方法一次性获取用户的所有会话令牌，避免多次查询
@@ -289,26 +395,6 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
             return 0;
         }).collect(Collectors.toList());
-    }
-
-    /**
-     * 登出：先落库（置 CANCELLED）再失效缓存（evict 默认 afterInvocation， 落库失败不误删缓存，保证读端一致性）。
-     */
-    @CacheEvict(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token",condition =
-    "#token!=null and #token.length()>0")
-    @Override
-    public void removeUserLoginInfo(String token) {
-        super.removeUserLoginInfo(token);
-    }
-
-    /**
-     * 置换用户详情：先落库再失效缓存，下次读取回源获取新值，避免 evict-then-write 竞态下的旧值回填。
-     */
-    @CacheEvict(cacheNames = USER_LOGIN_INFO_CACHE, key = "#token.token",condition =
-    "#token!=null and #token.token!=null and #token.token.length()>0")
-    @Override
-    public void replaceUserDetails(UserDetails userDetails, ITokenModel token) {
-        super.replaceUserDetails(userDetails, token);
     }
 
 }

@@ -5,11 +5,15 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.util.ClassUtils;
+
 import com.tbs.common.constant.ProviderConstant;
 import com.tbs.common.provider.IObjectResolver;
+import com.tbs.common.provider.IRouteMeta;
 import com.tbs.common.provider.ObjectResolveContext;
 import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.ResolvedObject;
+import com.tbs.common.provider.SourceCoordinate;
 import com.tbs.common.provider.impl.support.RoutingServiceProxy;
 import com.tbs.common.util.framework.SpringUtil;
 
@@ -23,12 +27,16 @@ import lombok.extern.slf4j.Slf4j;
  * 路由代理以接口类型注册进容器后同样会被 getBeansOfType 枚举到，但它是转发通道而非实现，
  * 必须排除，否则代理转发时会递归解析到自己。
  * 容器不可用或类型无对应 Bean 时降级为空集合，不影响解析链中后续来源。
+ * 阶段 3 起经 {@link ObjectResolverAsSource} 桥接为注册中心贡献来源，本类作为存量实现保留。
+ * 阶段 4 起为解析结果派生来源坐标：优先取 {@link IRouteMeta} 自声明的 business/version，未声明时以实现类简单名兜底
+ * business（供 {@code @RoutingRef} 按业务分区分类装配本地实现）。
  * </p>
  *
  * @author abstergo
  * @since 1.0.0
  */
 @Slf4j
+@Deprecated
 public class SpringObjectResolver implements IObjectResolver {
 
     /**
@@ -49,7 +57,8 @@ public class SpringObjectResolver implements IObjectResolver {
             }
             log.debug("[SpringResolver] 按名称[{}]命中Bean, 接口: {}", context.getBeanName(),
                 context.getTargetType().getName());
-            return Collections.singletonList(ResolvedObject.of(bean, ObjectSource.SPRING, context.getBeanName()));
+            return Collections.singletonList(
+                ResolvedObject.of(bean, springCoordinate(bean), context.getBeanName()));
         } catch (Exception e) {
             log.debug("Spring容器按名称解析Bean失败, beanName: {}, type: {}", context.getBeanName(),
                 context.getTargetType().getName());
@@ -75,7 +84,8 @@ public class SpringObjectResolver implements IObjectResolver {
             }
             var results = beans.entrySet().stream()
                 .filter(entry -> !RoutingServiceProxy.isRoutingProxy(entry.getValue()))
-                .map(entry -> ResolvedObject.of(entry.getValue(), ObjectSource.SPRING, entry.getKey()))
+                .map(entry -> ResolvedObject.of(entry.getValue(), springCoordinate(entry.getValue()),
+                    entry.getKey()))
                 .collect(java.util.stream.Collectors.toList());
             if (log.isDebugEnabled()) {
                 log.debug("[SpringResolver] 容器命中 {} 个Bean, 接口: {}, Bean: {}", results.size(),
@@ -101,6 +111,24 @@ public class SpringObjectResolver implements IObjectResolver {
     public <T> Optional<ResolvedObject<T>> resolveOne(ObjectResolveContext<T> context) {
         var results = resolveAll(context);
         return results.isEmpty() ? Optional.empty() : Optional.of(results.iterator().next());
+    }
+
+    /**
+     * 推导 Spring 实例的来源坐标
+     * <p>
+     * 优先读取 {@link IRouteMeta} 自声明的 business/version；未实现该钩子时以实现类简单名兜底 business、
+     * version 留空，使同一接口下的多个本地实现天然凭 business 区分、互不碰撞。经
+     * {@link ClassUtils#getUserClass(Class)} 取原始类，规避 CGLIB 代理类名后缀污染坐标。
+     * </p>
+     *
+     * @param bean 容器实例，不能为null
+     * @return Spring 来源坐标
+     */
+    private SourceCoordinate springCoordinate(Object bean) {
+        if (bean instanceof IRouteMeta meta) {
+            return SourceCoordinate.of(ObjectSource.SPRING, meta.business(), meta.version());
+        }
+        return SourceCoordinate.of(ObjectSource.SPRING, ClassUtils.getUserClass(bean).getSimpleName(), "");
     }
 
     @Override

@@ -123,18 +123,19 @@ public class AuthUtil {
     }
 
     /**
-     * 检查用户详情
+     * 检查用户身份状态
      * <p>
-     * 验证用户详细信息是否有效，包括用户是否存在、是否启用、是否过期、是否被锁定等状态检查。
+     * 校验用户详情是否存在，以及用户名、启用状态、账号有效期、凭证有效期是否满足认证条件。
+     * 密码不在校验范围内：认证成功后组装的会话视图不携带密码，凭证正确性由凭证提供方
+     * （如用户名密码登录）自行比对，避免会话视图为了通过校验而被迫携带凭证。
      * </p>
      *
      * @param details 用户详细信息
-     * @throws FormattedRuntimeException 当用户详情验证失败时抛出相应异常： - 用户详情不存在 - 用户已禁用 - 用户已过期 - 用户已锁定
+     * @throws FormattedRuntimeException 当用户详情验证失败时抛出相应异常：用户详情不存在、用户名为空、用户已禁用、用户已过期、用户凭证已过期
      */
     public static void checkUserDetails(UserDetails details) throws FormattedRuntimeException {
         AssertUtil.isTrue(details == null).errorLevel(ErrorLevelEnum.SYSTEM_ERROR).message("用户详情不存在").throwIt();
         AssertUtil.hasText(details.getUsername(), "用户信息中用户名不能为空");
-        AssertUtil.hasText(details.getPassword(), "用户信息中密码不能为空");
         AssertUtil.isTrue(!details.isEnabled()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).message("用户已禁用")
             .throwIt();
         AssertUtil.isTrue(!details.isAccountNonExpired()).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)

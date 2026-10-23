@@ -16,7 +16,7 @@ import com.tbs.sql.model.select.SelectItemModel;
  *
  * <h3>为什么需要单独实现</h3>
  * <p>通用提取器生成 {@code user_name AS userName} 这类驼峰别名。在 MySQL 中结果集列名保留为
- * {@code userName}，tk.mybatis 可按实体属性名 {@code userName} 正常映射；但 PostgreSQL 会把未加引号的
+ * {@code userName}，MyBatis 可按实体属性名 {@code userName} 正常映射；但 PostgreSQL 会把未加引号的
  * 别名折叠成小写 {@code username}，导致驼峰属性（userName/nickName/createTime/deptId 等）无法映射、
  * 字段值为 {@code null}，表现为「SQL 能查出数据、应用却拿到残缺对象」。</p>
  *

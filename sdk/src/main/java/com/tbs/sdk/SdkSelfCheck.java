@@ -2,6 +2,8 @@ package com.tbs.sdk;
 
 import com.tbs.sdk.auth.ThirdPartyAuthCode;
 import com.tbs.sdk.exception.SdkClientException;
+import com.tbs.sdk.http.SdkObjectMappers;
+import com.tbs.sdk.model.TokenModel;
 import com.tbs.sdk.push.SsePushSubscriber;
 import java.util.Locale;
 
@@ -43,6 +45,7 @@ public final class SdkSelfCheck {
         checkAuthCodeAlgorithm();
         checkAuthCodeInputValidation();
         checkReconnectBackoff();
+        checkDateDeserialization();
         if (failures > 0) {
             System.err.println("[SdkSelfCheck] 存在失败项: " + failures);
             System.exit(1);
@@ -94,6 +97,23 @@ public final class SdkSelfCheck {
         assertEquals("退避attempts=5封顶", max, SsePushSubscriber.computeBaseReconnectDelayMs(base, max, 5));
         assertEquals("退避attempts=10封顶", max, SsePushSubscriber.computeBaseReconnectDelayMs(base, max, 10));
         assertEquals("退避负attempts按0", base, SsePushSubscriber.computeBaseReconnectDelayMs(base, max, -1));
+    }
+
+    /**
+     * 校验SDK的ObjectMapper能按后端全局格式（yyyy-MM-dd HH:mm:ss GMT+8）反序列化Date字段，
+     * 复现登录TokenModel.expireTime场景并与序列化端往返一致（防止回退到Jackson默认ISO格式）。
+     */
+    private static void checkDateDeserialization() {
+        String json = "{\"token\":\"t\",\"expireTime\":\"2026-10-13 16:54:07\"}";
+        try {
+            TokenModel model = SdkObjectMappers.newMapper().readValue(json, TokenModel.class);
+            assertTrue("expireTime反序列化非空", model.getExpireTime() != null);
+            String rewritten = SdkObjectMappers.newMapper().writeValueAsString(model);
+            assertTrue("Date往返序列化对齐后端格式", rewritten.contains("\"expireTime\":\"2026-10-13 16:54:07\""));
+        } catch (Exception e) {
+            failures++;
+            System.err.println("[FAIL] Date反序列化异常: " + e.getMessage());
+        }
     }
 
     private static void assertEquals(String name, long expected, long actual) {

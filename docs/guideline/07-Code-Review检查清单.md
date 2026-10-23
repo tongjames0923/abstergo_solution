@@ -51,10 +51,18 @@
 |------|--------|
 | [必须] | 实体实现 `IBaseEntity<Long>`，`serialVersionUID` 声明，Lombok 三注解齐全 |
 | [必须] | 常用查询字段在 `@Table(indexes=...)` 声明索引；显式 `@Column` 蛇形映射 |
+| [必须] | `@Table` 只写在最终实体上；未被继承带字段的基类（继承字段无法用于 DSL 条件与排序） |
+| [必须] | 实体主键用 `@SqlAutoValue(value = IdAutoProvider.class, insertOnly = true)`，不使用 `@GeneratedValue` |
 | [必须] | 删除语义走逻辑删除（flag + `@LogicDeleteEntity` + FlagEnum），物理删除有正当理由 |
+| [必须] | `@LogicDeleteEntity` 实体未调用 `GenericMapper` 的 `select` / `selectCount` / `delete`（不注入 flag 过滤，走 QueryEngine） |
+| [必须] | 需整体回滚的 `insertList` / `deleteByIdList` 写路径已加事务（分批执行非原子）；明确容忍部分成功的批量写入（日志/埋点/上报）可豁免，但写入处有块注释说明理由 |
 | [必须] | 表结构变更脚本同步到 `etc/sql_file/` |
+| [必须] | 唯一性/非空/默认值等约束在 Service 断言中表达，`@Table` 只声明 `@Index`，建表脚本只建普通索引（总纲铁律 14 / 03 分册 3.3.3） |
+| [禁止] | 用 `uniqueConstraints`、`nullable = false`、`columnDefinition` 默认值、`@JoinColumn` 外键替代业务校验 |
+| [禁止] | 建表脚本用 `UNIQUE KEY` / `NOT NULL` / `DEFAULT` / `FOREIGN KEY` / `ON DELETE CASCADE` / `CHECK` / 触发器承接业务规则（主键除外） |
 | [禁止] | 字符串拼接 SQL；手写 limit 分页；绕过框架 new JdbcTemplate |
-| [建议] | 条件查询优先 QueryEngine 链式；复杂 JOIN 用 `@SelectSQL` 专用模型 |
+| [禁止] | 用 batch 单批方法（`insertBatch`/`selectByIdListBatch`/`deleteByIdListBatch`）直调业务，传入空集合会中断执行 |
+| [建议] | 条件查询优先 QueryEngine 链式；复杂 JOIN 用 `AbstractResourceCriteria` 或 Mapper 专用 `@Select`；用 `@SelectSQL` 时注解写在类上、SQL 内不自带 WHERE |
 
 ## 7.5 后端 - Service 层
 
@@ -120,10 +128,16 @@
 | [必须] | 新页面：views 目录组件存在 + 后端菜单权限（type=1）登记 + component 路径正确 |
 | [必须] | URL/参数结构与后端契约一致（分页 pageNum/pageSize 走 query） |
 | [必须] | 错误分支处理验证（成功提示、失败展示 res.message、401/403 行为） |
+| [必须] | 新增/修改页面在 375 / 768 / 820 / 992 / 1440 五档无横向溢出、无内容被裁切（05 分册 5.8） |
+| [必须] | 固定宽度容器有 `max-width: 100%`；多列网格与左右双栏在平板及以下降列或堆叠 |
+| [必须] | 依赖 `:hover` 显示的操作入口，在 `@media (hover: none)` 下常显（否则触摸设备不可达） |
+| [禁止] | 组件内写死 768/992 断点或自行监听 resize 判断设备（应走 `utils/device.js` / `ResponsiveMixin`） |
+| [禁止] | 重复实现 `element-ui.scss` 已覆盖的全局兜底（对话框/抽屉/表单标签堆叠/表格横滚/固定列隐藏等） |
 | [禁止] | 绕过 request.js 自建 axios；硬编码后端地址；硬编码业务菜单路由 |
 | [禁止] | Vue 3 语法混入；引入第二套 UI 框架；提交新增 console.log/debugger |
 | [禁止] | 页面内自行实现登录态/权限判断（应走 permission.js 与 utils/permission） |
 | [建议] | 删除/危险操作有二次确认；列表页遵循 查询表单+表格+分页 标准结构 |
+| [建议] | 列表优先 `DynamicTable`（手机自动切卡片）；`el-descriptions` 手机档降为 1 列 |
 | [建议] | 样式使用 styles 变量；组件声明 PascalCase name；scoped 样式 |
 
 ## 7.10 配置与发布
@@ -155,6 +169,10 @@
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 1.7.0 | 2026-10 | 7.4 批量事务检查项补充豁免口径：容忍部分成功的批量写入可不加事务，改以「写入处块注释留痕」为可评审证据（配合 03 分册 3.3.2 第 2 条） |
+| 1.6.0 | 2026-10 | 7.4 自定义 SQL 检查项更新：`@SelectSQL` 的 `@Target` 已由 FIELD 修正为 TYPE，能力可用，改为校验「注解写在类上 + SQL 内不自带 WHERE」（配合 03 分册 3.3.1） |
+| 1.5.0 | 2026-10 | 7.9 新增响应式检查项 6 条：五档宽度无溢出、固定宽度/多列/双栏适配、hover-only 操作常显、禁止自建断点与 resize 判定、禁止重复实现全局兜底（配合 05 分册 5.8） |
+| 1.4.0 | 2026-10 | 7.4 新增「不依赖数据库能力」三条检查项：实体不声明约束、建表脚本不用 UNIQUE/NOT NULL/DEFAULT/外键/级联/CHECK 承接业务规则（配合总纲铁律 14 / 03 分册 3.3.3） |
 | 1.3.1 | 2026-10 | 7.2 语言检查项更新：项目已全面 Java 化，禁止新增 Kotlin 代码与 Kotlin 依赖 |
 | 1.3.0 | 2026-08 | 7.5 新增缓存名称常量检查项（配合总纲铁律 13） |
 | 1.2.0 | 2026-08 | 7.2 扩展为「语言、注释与包结构」并新增分包检查项；7.7 新增模块包结构粒度检查（配合总纲铁律 12 / 02 分册 2.1.2.1） |

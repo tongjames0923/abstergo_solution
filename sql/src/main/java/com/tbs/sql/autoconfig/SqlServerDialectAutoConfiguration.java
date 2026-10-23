@@ -15,18 +15,19 @@ import org.springframework.context.annotation.Bean;
  * SQL Server方言自动配置类。
  *
  * <p>该类负责配置SQL Server数据库的方言支持，包括SELECT、WHERE、ORDER BY、GROUP BY、
- * OFFSET/FETCH等SQL片段的提取器，以及SQL Server方言的完整实现。</p>
+ * OFFSET/FETCH等SQL片段的提取器，以及SQL Server方言的完整实现。其中只有分页提取器、组装器与
+ * 方言实现是 SQL Server 专有的，SELECT / WHERE / ORDER BY / GROUP BY 复用 Common 系列实现。</p>
  *
  * <p>通过 {@link com.tbs.sql.annotation.dialect.UseSqlServer} 注解导入此配置类，
  * 自动注册所有SQL Server所需的组件到Spring容器中。</p>
  *
  * <h3>注册的Bean</h3>
  * <ul>
- *   <li>{@link SqlServerSelectExtractor} — SELECT语句提取器</li>
- *   <li>{@link SqlServerWhereExtractor} — WHERE条件提取器</li>
- *   <li>{@link SqlServerOrderExtractor} — ORDER BY语句提取器</li>
- *   <li>{@link SqlServerGroupExtractor} — GROUP BY语句提取器</li>
- *   <li>{@link SqlServerLimitExtractor} — OFFSET/FETCH分页提取器</li>
+ *   <li>{@link CommonSelectExtractor} — SELECT语句提取器（各方言共用实现）</li>
+ *   <li>{@link CommonWhereExtractor} — WHERE条件提取器（共用实现，以"SQL Server"作为方言标识构造）</li>
+ *   <li>{@link CommonOrderExtractor} — ORDER BY语句提取器（各方言共用实现）</li>
+ *   <li>{@link CommonGroupExtractor} — GROUP BY语句提取器（各方言共用实现）</li>
+ *   <li>{@link SqlServerLimitExtractor} — OFFSET/FETCH分页提取器（SQL Server 专有）</li>
  *   <li>{@link SqlServerAssembler} — SQL Server专用组装器（处理分页时自动补充ORDER BY）</li>
  *   <li>{@link SqlServerDialect} — SQL Server方言实现</li>
  * </ul>

@@ -210,3 +210,6 @@ http-client.private.env.json
 *.vsix
 
 */.idea
+
+data/*
+/data/

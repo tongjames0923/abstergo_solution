@@ -1,6 +1,7 @@
 package com.tbs.sql.interceptor;
 
 import cn.hutool.core.collection.CollUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.IAutoValueProvider;
@@ -22,8 +23,11 @@ import java.util.concurrent.ConcurrentHashMap;
  * <p>填充发生在 {@link Executor#update} 拦截层、{@code invocation.proceed()} 之前。
  * 原因：MyBatis 在 {@code newStatementHandler} 内调用 {@link MappedStatement#getBoundSql(Object)}
  * 拼装最终SQL（含动态列清单），随后才执行 {@code ParameterHandler.setParameters}。若在后者填充，
- * 则 tk.mybatis {@code insertSelective} 的 {@code <if test="id != null">id,</if>} 早在填充前就判定
- * 为false而丢弃该列，导致雪花主键无法写入。只有在SQL生成前填充，字段才会进入列清单。</p>
+ * 则选择性插入在生成SQL时就按非空字段判定列清单，主键因当时为null而被排除，导致雪花主键无法写入。
+ * 只有在SQL生成前填充，字段才会进入列清单。</p>
+ *
+ * <p>填充失败直接中断当前写入：主键填充异常被吞掉时会插入一条主键为null的记录，
+ * 事后无法定位也无法补录，因此这里不降级为告警日志。</p>
  *
  * @author abstergo
  * @see SqlAutoValue
@@ -122,8 +126,9 @@ public class SqlAutoFillInterceptor implements Interceptor {
                         originalVal, newVal);
                 }
             } catch (Exception e) {
-                logger.warn("自动填充字段{}失败，异常信息：{}#{}", field.getName(), e.getClass().getSimpleName(),
-                    e.getMessage());
+                logger.error("自动填充字段[{}.{}]失败", clazz.getSimpleName(), field.getName(), e);
+                AssertUtil.isTrue(true).i18n("sql.autofill.field.failed", clazz.getSimpleName(), field.getName(),
+                    e.getMessage()).throwIt();
             }
         }
     }

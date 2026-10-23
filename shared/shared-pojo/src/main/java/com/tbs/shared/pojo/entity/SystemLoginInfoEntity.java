@@ -19,6 +19,14 @@ import java.util.Date;
 
 /**
  * 系统登录信息
+ * <p>
+ * 一行只承载会话自身的数据：令牌、用户标识、会话标识、当前选中的部门与状态。
+ * 用户详情、部门归属与权限不落本表，由认证阶段实时装配。
+ * </p>
+ * <p>
+ * 本表不依赖数据库唯一约束与默认值：令牌的唯一性由写入前的存在性断言保证，
+ * 各列均允许为空，避免把业务规则下沉到存储层。
+ * </p>
  *
  * @author abstergo
  */
@@ -60,13 +68,17 @@ public class SystemLoginInfoEntity implements IBaseEntity<Long>, ICreateTimeAudi
     private String token;
 
     /**
-     * 用户详情
+     * 当前部门标识
+     * <p>
+     * 会话级状态：记录本次登录会话选中的部门。它属于会话选择而非用户属性，
+     * 因此保留在会话表中；用户的部门归属、权限等内容不在本表存储。
+     * </p>
      */
-    @Comment("用户详情（序列化字节数组）")
-    @jakarta.persistence.Column(name = "user_details", columnDefinition = "MEDIUMBLOB")
+    @Comment("当前会话选择的部门ID")
+    @jakarta.persistence.Column(name = "current_department_id")
     @Getter
     @Setter
-    private byte[] userDetails;
+    private Long currentDepartmentId;
 
     /**
      * 状态

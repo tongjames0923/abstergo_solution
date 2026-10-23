@@ -694,6 +694,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "~@/styles/variables.scss";
+@import "~@/styles/mixin.scss";
+
 .oss-container {
   padding: 20px;
   background-color: #f5f7fa;
@@ -724,6 +727,7 @@ export default {
     .header-actions {
       display: flex;
       align-items: center;
+      flex-wrap: wrap;
     }
   }
 
@@ -908,6 +912,38 @@ export default {
 
   ::-webkit-scrollbar-track {
     background-color: transparent;
+  }
+}
+
+// 平板/手机：头部操作区换行，搜索框占满一行
+@include respond-to(mobile) {
+  .oss-container {
+    padding: 12px;
+
+    .card-header .header-actions {
+      width: 100%;
+      margin-top: 8px;
+
+      // 搜索框占据剩余宽度，按钮自然换行
+      ::v-deep .el-input {
+        flex: 1 1 160px;
+        width: auto !important;
+        margin-right: 0 !important;
+      }
+    }
+
+    .oss-toolbar {
+      gap: 8px;
+
+      ::v-deep .el-input {
+        width: 100% !important;
+      }
+    }
+
+    .oss-footer {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
   }
 }
 </style>

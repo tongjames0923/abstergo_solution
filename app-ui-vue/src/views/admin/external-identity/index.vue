@@ -4,17 +4,29 @@
       <el-form :inline="true" :model="queryForm" class="query-form" @submit.native.prevent>
         <el-form-item :label="$t('identity.identityType')">
           <el-select v-model="queryForm.identityType" clearable :placeholder="$t('identity.all')" style="width: 160px">
-            <el-option :label="$t('identity.type.wecom')" value="wecom" />
+            <el-option
+              v-for="type in identityTypes"
+              :key="type.identityType"
+              :label="identityTypeLabel(type.identityType)"
+              :value="type.identityType"
+            />
           </el-select>
         </el-form-item>
         <el-form-item :label="$t('identity.userName')">
-          <el-input
-            v-model.trim="queryForm.userName"
+          <el-select
+            v-model="queryForm.userName"
+            filterable
             clearable
+            remote
+            reserve-keyword
+            :loading="userLoading"
+            :remote-method="searchUsers"
             :placeholder="$t('identity.userNamePlaceholder')"
-            style="width: 200px"
-            @keyup.enter.native="handleSearch"
-          />
+            style="width: 220px"
+            @change="handleSearch"
+          >
+            <el-option v-for="item in userOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
         </el-form-item>
         <el-form-item>
           <el-button type="primary" icon="el-icon-search" @click="handleSearch">{{ $t('identity.search') }}</el-button>
@@ -63,14 +75,30 @@
       <el-form ref="bindForm" :model="bindForm" :rules="bindRules" label-width="110px">
         <el-form-item :label="$t('identity.identityType')" prop="identityType">
           <el-select v-model="bindForm.identityType" style="width: 100%">
-            <el-option :label="$t('identity.type.wecom')" value="wecom" />
+            <el-option
+              v-for="type in identityTypes"
+              :key="type.identityType"
+              :label="identityTypeLabel(type.identityType)"
+              :value="type.identityType"
+            />
           </el-select>
         </el-form-item>
         <el-form-item :label="$t('identity.externalId')" prop="externalId">
           <el-input v-model.trim="bindForm.externalId" />
         </el-form-item>
         <el-form-item :label="$t('identity.userName')" prop="userName">
-          <el-input v-model.trim="bindForm.userName" />
+          <el-select
+            v-model="bindForm.userName"
+            filterable
+            remote
+            reserve-keyword
+            :loading="userLoading"
+            :remote-method="searchUsers"
+            :placeholder="$t('identity.userNamePlaceholder')"
+            style="width: 100%"
+          >
+            <el-option v-for="item in userOptions" :key="item.value" :label="item.label" :value="item.value" />
+          </el-select>
         </el-form-item>
       </el-form>
       <div slot="footer">
@@ -83,14 +111,14 @@
 
 <script>
 import {
+  externalIdentityTypes,
   pageExternalIdentities,
   bindExternalIdentity,
   unbindExternalIdentity
 } from '@/api/external-identity'
+import { adminQueryUser } from '@/api/admin_user'
 
-const IDENTITY_TYPE_LABELS = {
-  wecom: 'identity.type.wecom'
-}
+const USER_OPTION_PAGE_SIZE = 20
 
 export default {
   name: 'ExternalIdentityManage',
@@ -98,6 +126,9 @@ export default {
     return {
       loading: false,
       submitting: false,
+      userLoading: false,
+      identityTypes: [],
+      userOptions: [],
       pageData: [],
       total: 0,
       queryForm: {
@@ -108,7 +139,7 @@ export default {
       },
       bindDialogVisible: false,
       bindForm: {
-        identityType: 'wecom',
+        identityType: '',
         externalId: '',
         userName: ''
       },
@@ -120,9 +151,44 @@ export default {
     }
   },
   created() {
+    this.loadTypes()
     this.loadPage()
+    this.searchUsers('')
   },
   methods: {
+    // 远程搜索系统用户：先按姓名模糊匹配，无结果再按登录账号兜底；选项累积去重，保证已选值回显
+    searchUsers(query) {
+      const keyword = (query || '').trim()
+      this.userLoading = true
+      adminQueryUser(keyword ? { nickNameLike: keyword } : {}, 1, USER_OPTION_PAGE_SIZE)
+        .then(res => {
+          const list = (res.data && res.data.data) || []
+          if (keyword && list.length === 0) {
+            return adminQueryUser({ userNameLike: keyword }, 1, USER_OPTION_PAGE_SIZE).then(r => (r.data && r.data.data) || [])
+          }
+          return list
+        })
+        .then(list => {
+          const merged = this.userOptions.slice()
+          const exists = new Set(merged.map(o => o.value))
+          list.forEach(u => {
+            if (u && u.userName && !exists.has(u.userName)) {
+              exists.add(u.userName)
+              merged.push({ value: u.userName, label: `${u.nickName || u.userName} (${u.userName})` })
+            }
+          })
+          this.userOptions = merged
+          this.userLoading = false
+        })
+        .catch(() => {
+          this.userLoading = false
+        })
+    },
+    loadTypes() {
+      externalIdentityTypes().then(res => {
+        this.identityTypes = (res && res.data) || []
+      })
+    },
     loadPage() {
       this.loading = true
       pageExternalIdentities({
@@ -145,14 +211,24 @@ export default {
     handleReset() {
       this.queryForm.identityType = ''
       this.queryForm.userName = ''
-      this.handleSearch()
+      this.queryForm.pageNum = 1
+      this.loadPage()
     },
     identityTypeLabel(identityType) {
-      const labelKey = IDENTITY_TYPE_LABELS[identityType]
-      return labelKey ? this.$t(labelKey) : identityType
+      if (!identityType) {
+        return ''
+      }
+      const type = this.identityTypes.find(t => t.identityType === identityType)
+      if (!type) {
+        return identityType
+      }
+      const label = this.$t(type.labelKey)
+      // vue-i18n 未登记 key 时原样返回 key，降级展示身份类型本身
+      return label === type.labelKey ? identityType : label
     },
     openBindDialog() {
-      this.bindForm = { identityType: 'wecom', externalId: '', userName: '' }
+      const first = this.identityTypes[0]
+      this.bindForm = { identityType: first ? first.identityType : '', externalId: '', userName: '' }
       this.bindDialogVisible = true
       this.$nextTick(() => {
         if (this.$refs.bindForm) {

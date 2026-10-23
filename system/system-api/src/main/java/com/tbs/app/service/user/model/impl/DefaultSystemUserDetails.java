@@ -1,18 +1,23 @@
 package com.tbs.app.service.user.model.impl;
 
 import com.tbs.app.service.user.model.ISystemUserDetails;
-import com.tbs.app.service.user.serial.DefaultSystemUserDetailsBridge;
 import com.tbs.app.vo.DepartmentInfoVO;
-import com.tbs.cache.serialize.annotation.CacheTransform;
 import com.tbs.common.error.AssertUtil;
 import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
+/**
+ * 默认用户详情
+ * <p>
+ * 请求级用户视图：由认证阶段按会话行装配，装配后不再回源，本次请求内权限、部门等读取均为同一快照。 不参与持久化与缓存序列化，因此不需要形态转换桥接。
+ * </p>
+ */
 @Data
-@CacheTransform(bridgeType = DefaultSystemUserDetailsBridge.class)
 public class DefaultSystemUserDetails implements ISystemUserDetails {
     private List<DepartmentInfoVO> departments;
     private DepartmentInfoVO currentDepartment;
@@ -23,6 +28,8 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
     private boolean credentialsNonExpired = true;
     private boolean enabled = true;
     private List<DefaultGrantedAuthority> authorities;
+    private Set<String> apiPermissions = new HashSet<>();
+    private Set<String> menuPermissions = new HashSet<>();
 
     public DefaultSystemUserDetails(List<DepartmentInfoVO> departments, DepartmentInfoVO currentDepartment,
         String username, String password, boolean accountNonExpired, boolean accountNonLocked,
@@ -108,6 +115,8 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
         private boolean credentialsNonExpired;
         private boolean enabled;
         private List<DefaultGrantedAuthority> authorities;
+        private Set<String> apiPermissions;
+        private Set<String> menuPermissions;
 
         public Builder() {
         }
@@ -157,9 +166,27 @@ public class DefaultSystemUserDetails implements ISystemUserDetails {
             return this;
         }
 
+        public Builder apiPermissions(Set<String> apiPermissions) {
+            this.apiPermissions = apiPermissions;
+            return this;
+        }
+
+        public Builder menuPermissions(Set<String> menuPermissions) {
+            this.menuPermissions = menuPermissions;
+            return this;
+        }
+
         public DefaultSystemUserDetails build() {
-            return new DefaultSystemUserDetails(departments, currentDepartment, username, password, accountNonExpired,
-                accountNonLocked, credentialsNonExpired, enabled, authorities);
+            DefaultSystemUserDetails details =
+                new DefaultSystemUserDetails(departments, currentDepartment, username, password, accountNonExpired,
+                    accountNonLocked, credentialsNonExpired, enabled, authorities);
+            if (apiPermissions != null) {
+                details.setApiPermissions(apiPermissions);
+            }
+            if (menuPermissions != null) {
+                details.setMenuPermissions(menuPermissions);
+            }
+            return details;
         }
     }
 

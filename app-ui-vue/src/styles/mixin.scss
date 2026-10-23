@@ -84,3 +84,30 @@
     }
   }
 }
+
+/**
+ * 组件级响应式容器：声明后，后代可用 @container 按"自身容器宽度"适配，
+ * 不再依赖视口宽度，同一组件放进窄容器（弹窗/分栏/侧栏）也能自动切换形态。
+ * 注意：声明等价于 contain: layout，会成为 position:fixed 后代的 containing block，
+ *       容器内弹层请使用 append-to-body 的 el-dialog，不要写页面级 fixed 浮层。
+ * @param $name: 可选容器名，配合 @container name (max-width) 精确定位
+ */
+@mixin responsive-container($name: null) {
+  container-type: inline-size;
+
+  @if $name {
+    container-name: $name;
+  }
+}
+
+/**
+ * 容器断点查询：按父容器宽度而非视口宽度切档（组件级自然适配）
+ * 用法：@include container-down(480px) { flex-direction: column; }
+ * 不支持容器查询的旧内核会整体忽略，需保留 @media 作为骨架兜底
+ * @param $width: 容器宽度阈值
+ */
+@mixin container-down($width) {
+  @container (max-width: #{$width}) {
+    @content;
+  }
+}

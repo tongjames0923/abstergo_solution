@@ -6,15 +6,16 @@ import com.tbs.app.remote.company.ICompanyRemoteService;
 import com.tbs.app.remote.company.impl.DefaultCompanyRemoteServiceImpl;
 import com.tbs.app.remote.user.IUserRemoteService;
 import com.tbs.app.remote.user.impl.DefaultUserRemoteServiceImpl;
+import com.tbs.app.service.impl.user.DefaultUserIdentityService;
+import com.tbs.app.service.user.IUserIdentityService;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.api.persistence.impl.NoImplTreeStore;
+import jakarta.annotation.Resource;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-
-import jakarta.annotation.Resource;
 
 /**
  * <p>
@@ -64,5 +65,20 @@ public class RemoteConfig {
     ICompanyRemoteService companyRemoteService() {
         return BeanUtil.buildBeanFromProperties(DefaultCompanyRemoteServiceImpl::new, property.getCompanyRemoteServiceImpl(),
             BeanUtil::buildByEmptyArgs);
+    }
+
+    /**
+     * 用户身份聚合服务
+     * <p>
+     * 对外暴露统一的身份装配入口：消费方一次调用即可拿到状态位、权限编码与部门归属，
+     * 不必分别调用用户、角色、部门三个源服务，避免模块拆分后认证链路退化为多次串行远程调用。
+     * </p>
+     *
+     * @return 身份聚合服务实例
+     */
+    @Bean
+    @DubboService
+    IUserIdentityService userIdentityRemoteService() {
+        return new DefaultUserIdentityService();
     }
 }

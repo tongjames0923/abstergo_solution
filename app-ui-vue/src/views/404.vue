@@ -9,24 +9,29 @@
       </div>
       <div class="bullshit">
         <div class="bullshit__oops">OOPS!</div>
-        <div class="bullshit__info">All rights reserved
-          <a style="color:#20a0ff" href="https://wallstreetcn.com" target="_blank">wallstreetcn</a>
-        </div>
+        <div class="bullshit__info">© {{ year }} {{ systemTitle }}. 保留所有权利</div>
         <div class="bullshit__headline">{{ message }}</div>
-        <div class="bullshit__info">Please check that the URL you entered is correct, or click the button below to return to the homepage.</div>
-        <a href="" class="bullshit__return-home">Back to home</a>
+        <div class="bullshit__info">{{ $t('error.tip404') }}</div>
+        <router-link to="/" class="bullshit__return-home">{{ $t('error.backHome') }}</router-link>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+import settings from '@/settings'
 
 export default {
   name: 'Page404',
+  data() {
+    return {
+      systemTitle: settings.title || '企业管理平台',
+      year: new Date().getFullYear()
+    }
+  },
   computed: {
     message() {
-      return 'The webmaster said that you can not enter this page...'
+      return this.$t('error.404')
     }
   }
 }

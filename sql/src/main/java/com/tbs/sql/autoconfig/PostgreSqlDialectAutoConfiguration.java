@@ -15,15 +15,16 @@ import org.springframework.context.annotation.Bean;
  * PostgreSQL方言自动配置类，注册PostgreSQL数据库特有的SQL提取器和方言实现。
  *
  * <p>该类负责配置PostgreSQL数据库的方言支持，包括SELECT、WHERE、ORDER BY、GROUP BY、
- * LIMIT等SQL片段的提取器，以及PostgreSQL方言的完整实现。</p>
+ * LIMIT等SQL片段的提取器，以及PostgreSQL方言的完整实现。其中 SELECT 与分页提取器为
+ * PostgreSQL 专有实现，WHERE / ORDER BY / GROUP BY 复用 Common 系列实现。</p>
  *
  * <h3>注册的Bean</h3>
  * <ul>
- *   <li>{@link PostgreSqlSelectExtractor} — SELECT语句提取器</li>
- *   <li>{@link PostgreSqlWhereExtractor} — WHERE条件提取器</li>
- *   <li>{@link PostgreSqlOrderExtractor} — ORDER BY语句提取器</li>
- *   <li>{@link PostgreSqlGroupExtractor} — GROUP BY语句提取器</li>
- *   <li>{@link PostgreSqlLimitExtractor} — LIMIT/OFFSET分页提取器</li>
+ *   <li>{@link PostgreSqlSelectExtractor} — SELECT语句提取器（PostgreSQL 专有实现）</li>
+ *   <li>{@link CommonWhereExtractor} — WHERE条件提取器（共用实现，以"PostgreSQL"作为方言标识构造）</li>
+ *   <li>{@link CommonOrderExtractor} — ORDER BY语句提取器（各方言共用实现）</li>
+ *   <li>{@link CommonGroupExtractor} — GROUP BY语句提取器（各方言共用实现）</li>
+ *   <li>{@link PostgreSqlLimitExtractor} — LIMIT/OFFSET分页提取器（PostgreSQL 专有实现）</li>
  *   <li>{@link DefaultSqlAssembler} — 默认SQL组装器</li>
  *   <li>{@link PostgreSqlDialect} — PostgreSQL方言实现</li>
  * </ul>

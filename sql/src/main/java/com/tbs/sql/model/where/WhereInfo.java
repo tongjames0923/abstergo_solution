@@ -33,8 +33,6 @@ public class WhereInfo implements Serializable {
     private String tableAlias;
     /** 原始SQL（若存在则直接使用） */
     private String rawSql;
-    /** 是否使用安全模式 */
-    private Boolean useSafe;
 
     /**
      * 创建Builder实例
@@ -142,20 +140,6 @@ public class WhereInfo implements Serializable {
          */
         public Builder rawSql(String rawSql) {
             info.rawSql = rawSql;
-            return this;
-        }
-
-        /**
-         * 设置是否使用安全模式
-         * <p>
-         * 安全模式下将使用参数化查询，防止SQL注入
-         * </p>
-         *
-         * @param useSafe 是否使用安全模式
-         * @return 当前Builder实例
-         */
-        public Builder useSafe(Boolean useSafe) {
-            info.useSafe = useSafe;
             return this;
         }
 

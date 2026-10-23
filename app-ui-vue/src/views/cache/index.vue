@@ -1,8 +1,8 @@
 <template>
   <div class="cache-container">
     <el-row :gutter="20" class="cache-main">
-      <!-- 左侧：缓存名称列表 -->
-      <el-col :span="7">
+      <!-- 左侧：缓存名称列表（手机/平板全宽堆叠，桌面分栏） -->
+      <el-col :xs="24" :sm="24" :md="7">
         <el-card class="cache-names-card" shadow="hover">
           <div slot="header" class="card-header">
             <span class="card-title">缓存名称</span>
@@ -43,7 +43,7 @@
       </el-col>
 
       <!-- 右侧：缓存键列表 -->
-      <el-col :span="17">
+      <el-col :xs="24" :sm="24" :md="17">
         <el-card class="cache-keys-card" shadow="hover">
           <div slot="header" class="card-header">
             <span class="card-title">
@@ -355,6 +355,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+@import "~@/styles/variables.scss";
+@import "~@/styles/mixin.scss";
+
 .cache-container {
   padding: 20px;
   background-color: #f5f7fa;
@@ -539,6 +542,42 @@ export default {
 
   ::-webkit-scrollbar-track {
     background-color: transparent;
+  }
+}
+
+// 平板/手机：上下堆叠后解除固定高度，名称列表限高避免占满整屏
+@include respond-to(mobile) {
+  .cache-container {
+    padding: 12px;
+
+    .cache-main {
+      height: auto;
+    }
+
+    .cache-names-card,
+    .cache-keys-card {
+      height: auto;
+    }
+
+    .cache-names-list {
+      max-height: 220px;
+    }
+
+    .card-header {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .cache-keys-card .header-actions {
+      flex-wrap: wrap;
+      gap: 8px;
+
+      // 搜索框占满一行，按钮自然换行
+      ::v-deep .el-input {
+        width: 100% !important;
+        margin-right: 0 !important;
+      }
+    }
   }
 }
 </style>

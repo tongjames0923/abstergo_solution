@@ -2,6 +2,7 @@ package com.tbs.sql.mapper;
 
 import com.tbs.sql.mapper.impl.RawSqlSelectProvider;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.SelectProvider;
 
 import java.util.List;
@@ -51,8 +52,8 @@ import java.util.Map;
 @Mapper
 public interface IRawSqlSelectMapper {
     @SelectProvider(type = RawSqlSelectProvider.class, method = "dynamicSql")
-    List<Map<String, Object>> fetch(String sql, Map<String, Object> _prs);
+    List<Map<String, Object>> fetch(@Param("sql") String sql, @Param("_prs") Map<String, Object> _prs);
 
     @SelectProvider(type = RawSqlSelectProvider.class, method = "dynamicCountSql")
-    Integer count(String sql, Map<String, Object> _prs);
+    Integer count(@Param("sql") String sql, @Param("_prs") Map<String, Object> _prs);
 }

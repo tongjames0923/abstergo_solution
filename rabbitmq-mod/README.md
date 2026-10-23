@@ -1,43 +1,23 @@
-# RabbitMQ 模块 - 消息队列能力聚合
+# RabbitMQ 模块 - MQ v2 厂商传输层实现
 
 ## 模块概述
 
-RabbitMQ 模块（`com.tbs:rabbitmq`）提供基于 Spring AMQP 的消息队列能力，围绕 `mq-mod/mq-api`（MQ 契约层）实现：
+RabbitMQ 模块（`com.tbs:rabbitmq`）是 **mq-mod/mq-api v2 契约层**（记录驱动消费模型）在 RabbitMQ 上的厂商实现，基于 Spring AMQP：
 
-- **消费者框架**：`AbstractMqConsumer` 抽象基类——自动声明资源、启动监听容器、分派结果路由（成功/重试/死信/丢弃）、手动 ACK、幂等控制、失败消息持久化重投
-- **统一发送**：`IMqProducer` 契约的 RabbitMQ 落地（messageId 自动补齐），配合 mq-api 的重试调度器形成闭环
-- **分布式事件广播**：`rabbitmq-broadcast` 将 async 模块的进程内事件系统桥接到 RabbitMQ，实现跨节点事件分发
-- **日志采集通道**：`rabbitmq-logging` 提供 `ILogRecorder` 的 MQ 生产端实现与日志消费者基类
+- **v2 消费链路**：`com.tbs.rabbitmq.v2` 提供"厂商无关公共基类 + 两种接入基类"——`AbstractRabbitMqContext`（确认语义）+ `RabbitMqContext`（自建容器）/ `RabbitMqListenerContext`（`@RabbitListener` 注解），业务子类绑定负载类型声明为 Bean 即用
+- **v2 统一发送**：`RabbitMqMessageProducer` 落地 `IMqMessageProducer` 契约（信封 → 厂商消息：messageId/payloadType/payloadFormat/businessId 落消息头，payload 按格式序列化）
+- **分布式事件广播**：`rabbitmq-broadcast` 将 async 模块的进程内事件系统桥接到 RabbitMQ（消费侧继承 v2 `RabbitMqContext`，发送侧走 `IMqMessageProducer`）
+- **日志采集通道**：`rabbitmq-logging` 提供 `ILogRecorder` 的 v2 生产端实现（消费端在 logging-impl 的 `com.tbs.logging.v2`）
 
 ### 模块结构
 
 | 子模块 | 坐标 | 职责 | 依赖 |
 |--------|------|------|------|
-| `rabbitmq-impl` | `com.tbs:rabbitmq-impl` | 消费者基类、资源声明、发送实现、重投实现、自动装配 | `mq-api`、`spring-boot-starter-amqp`、`async`、`common` |
+| `rabbitmq-impl` | `com.tbs:rabbitmq-impl` | v2 传输层适配器、v2 发送实现、基础设施装配、资源声明器 | `mq-api`、`spring-boot-starter-amqp`、`common` |
 | `rabbitmq-broadcast` | `com.tbs:rabbitmq-broadcast` | 基于 RabbitMQ 的分布式事件广播与接收 | `rabbitmq-impl`、`async`、`common` |
-| `rabbitmq-logging` | `com.tbs:rabbitmq-logging` | 操作日志的 MQ 记录器与消费者基类 | `rabbitmq-impl`、`logging-api`、`common` |
+| `rabbitmq-logging` | `com.tbs:rabbitmq-logging` | 操作日志的 v2 MQ 记录器 | `rabbitmq-impl`、`logging-api`、`common` |
 
-> 契约层（`IMqProducer`/`AbstractMqProducer`、`AbstractMessageDispatcher`、`DispatchOutcome`、`IIdempotentStore`、`IFailedMessageStore`、`IRetryDelayPolicy`、`SteppedRetryDelayPolicy`、`MqHeaderConstants`、`FailedMessage` 及 `MqSupportConfig` 默认装配）位于 **mq-mod/mq-api** 模块，本模块是其在 RabbitMQ 上的厂商实现。
-
-## 模块结构
-
-```
-rabbitmq-mod/
-├── rabbitmq-impl/                    # 快速使用实现包
-│   └── com.tbs.rabbitmq/
-│       ├── annotation/               # @EnableRabbitMq
-│       ├── config/                   # RabbitMqAutoRegister / RabbitMqSupportConfig /
-│       │                             #   TbsRabbitMqConfig / RabbitMqMessageSourceProvider
-│       ├── producer/                 # RabbitMqProducer（IMqProducer 实现）
-│       ├── retry/                    # RabbitMqMessageRepublisher（重投递实现）
-│       └── support/                  # AbstractMqConsumer / MqConsumerProperties / MqResourceDeclarer
-├── rabbitmq-broadcast/               # 分布式事件广播支持包
-│   └── com.tbs.broadcast.rabbitmq/
-│       ├── property/                 # RabbitMqProperty（tbs.rabbitmq）
-│       └── support/                  # AbstractRabbitMqSupport / SimpleRabbitMqSupport
-└── rabbitmq-logging/                 # 日志支持包
-    └── com.tbs.logging.rabbitmq/     # AbstractRabbitMqLogRecordWriter / RabbitMqLoggingRecorder
-```
+> v2 契约（`IMqContext`/`IMqMessageReceiver`/`IMqMessageProcessor`/`IMqRecorder`/`IMqMessageMonopolizer`/`IMqConsumer`/`IConsumerRegistry`/`IMqMessageProducer`/`IMqMessagePayloadConverter` 及各 VO/枚举/异常）与内存基本实现位于 **mq-mod/mq-api**，详见 [mq-mod README](../mq-mod/README.md)；本模块只承担"字节收发 + 厂商确认"的传输层。设计动机与整体模型见 [docs/mq-v2-design-outline.md](../docs/mq-v2-design-outline.md)。
 
 ## 启用方式
 
@@ -48,260 +28,156 @@ rabbitmq-mod/
 @EnableRabbitMq   // @Import(RabbitMqAutoRegister)：扫描 com.tbs.rabbitmq 与 com.tbs.mq 两个包，注册 Feature.RABBITMQ
 public class Application {
     public static void main(String[] args) {
-        SpringApplication.run(Application.class, args);
+        SpringApplication.run(Application, args);
     }
 }
 ```
 
-`RabbitMqAutoRegister` 同时扫描 `com.tbs.mq`（mq-api 契约层默认装配包），一次注解即可完成"厂商实现 + 契约层默认组件"的装配。
+`@EnableRabbitMq` 引入的默认装配（全部 `@ConditionalOnMissingBean`，可被使用方覆盖）：
 
-## 核心组件
+| 装配类 | 提供内容 |
+|--------|----------|
+| `TbsRabbitMqConfig` | 基础设施四件套：`ConnectionFactory` / `RabbitTemplate` / `AmqpAdmin` / `MessageConverter`（厂商原生 `SerializerMessageConverter`，仅作 v1 旧链路兜底，v2 负载序列化不经过它） |
+| `RabbitMqV2SupportConfig` | v2 生产段：`JdkMqPayloadConverter`（默认格式 `jdk`）、`MqPayloadConverterRegistry`、`RabbitMqMessageProducer`（`IMqMessageProducer` 实现） |
+| `RabbitMqMessageSourceProvider` | 模块 i18n 资源（`mq` 相关文案 key）注册 |
 
-### 1. TbsRabbitMqConfig - 基础设施装配
+> 消费段协作者（`IMqRecorder` / `IMqMessageMonopolizer` / `IConsumerRegistry`）与上下文 Bean **不在本模块自动装配**：存储选择（内存 / DB / Redis）是使用方决策，按 mq-mod README 快速开始的形式以 `@Bean` 集中装配（现成参照：`app` 模块 `CdcV2ConsumerConfig`、logging-impl `LoggingServiceConfig`）。
 
-基于 Spring Boot 标准 `spring.rabbitmq.*` 配置（`RabbitProperties`）创建基础 Bean，**全部 `@ConditionalOnMissingBean`**（容器已有对应 Bean 时不重复创建）：
+## 核心组件（com.tbs.rabbitmq.v2）
 
-| Bean | 实现与关键参数 |
-|------|----------------|
-| `ConnectionFactory` | `CachingConnectionFactory`：host 缺省 `localhost`、vhost 缺省 `/`；发布确认 **CORRELATED**（硬编码）；连接/关闭超时 10000ms |
-| `RabbitTemplate` | 绑定消息转换器；发布确认回调中 NACK 仅记录错误日志 |
-| `AmqpAdmin` | `RabbitAdmin` |
-| `MessageConverter` | **`SerializerMessageConverter`（Java 序列化）**，`allowedListPatterns=["*"]` 解除 Spring AMQP 2.4+ 反序列化白名单限制 |
+### 1. AbstractRabbitMqContext&lt;T&gt; - 公共基类（确认语义）
 
-> 注意：默认转换器是 Java 序列化而非 JSON；消息对象需实现 `Serializable`，或自行注册 JSON 转换器覆盖（生产环境建议收紧 `allowedListPatterns`，当前为通配）。
+`extends AbstractMqContext<Message, T>`，承载易错且唯一的厂商确认逻辑：
 
-### 2. RabbitMqProducer - 统一发送实现
+- `R` 固定为 Spring AMQP `Message`；投递通道以 `ThreadLocal` 承载——ack/nak 只在投递线程内被同步调用（接收段内联回调），处理线程不触碰厂商确认，无需跨线程映射；
+- `protected final ingest(List<Message>, Channel)`：统一接收入口（写入 currentChannel → `messageReceived` → finally 清理），两种接入方式共用；
+- `ackMessage` = `basicAck(tag, false)`；`nakMessage` = `basicNack(tag, false, false)`——**不 requeue**：建档失败恢复只走记录层，不依赖厂商重投风暴。
 
-`IMqProducer` 契约的 RabbitMQ 落地（经 `RabbitMqSupportConfig` 装配，`@ConditionalOnMissingBean` 可覆盖）：
+### 2. RabbitMqContext&lt;T&gt; - 接入方式①：自建监听容器
 
-- payload 为业务对象 → 经 `MessageConverter.toMessage` 转换后发送；
-- payload 已是原始 `Message` → 直接发送，仅 messageId 缺失时补齐；
-- messageId 统一写入消息属性（生产端由 `AbstractMqProducer` 生成 UUID，消费端据此解析幂等键）；
-- routingKey 为 null 时按空串发送（适配扇出交换机）。
+子类只需实现 `getMessagePayloadType()`（负载类型，注册路由键）、`getContextId()`（队列级作用域身份，全局唯一）、`getMqConsumerProperties()`（传输配置）：
 
-业务侧发送示例：
+- `afterPropertiesSet`：先启父类处理线程，再按配置自动声明资源（`MqResourceDeclarer`，`autoDeclare=true` 时）并拉起 `SimpleMessageListenerContainer`；
+- `destroy`：先停容器再停处理线程，避免停机丢消息；
+- **批量消费**：实现 Spring AMQP 原生 `ChannelAwareBatchMessageListener`，开启 `consumerBatchEnabled` 后容器自动识别，同线程收集至多 `batchSize` 条回调 `onMessageBatch` **批量建档、仍逐条 ack**（`onMessage` 单条亦委托批量入口）。
+
+### 3. RabbitMqListenerContext&lt;T&gt; - 接入方式②：@RabbitListener 注解
+
+不自建容器，依托 Spring AMQP 注解接入。子类声明 `@RabbitListener` 方法并在方法体内灌入：
 
 ```java
-@Resource
-private IMqProducer mqProducer;
+@RabbitListener(queues = "demo.queue")
+public void listen(Message message, Channel channel) {
+    handleMessage(message, channel);        // 单条 → ingest
+}
 
-public void sendOrderCreated(OrderCreatedEvent event) {
-    mqProducer.send("order.exchange", "order.created", event);
+@RabbitListener(queues = "demo.queue")
+public void listenBatch(List<Message> messages, Channel channel) {
+    handleMessageBatch(messages, channel);  // 批量 → ingest
 }
 ```
 
-### 3. AbstractMqConsumer - 消费者基类（核心）
+> 所用 `RabbitListenerContainerFactory` 必须 `AcknowledgeMode.MANUAL`（批量需 `setBatchListener(true)`），否则框架自动确认将架空 v2"建档成功才 ack"的铁律。
 
-继承 mq-api 的 `AbstractMessageDispatcher<T>`，实现 `ChannelAwareMessageListener` 与 `IMqConsumerLifecycle`。子类只需实现两个方法：
+### 4. RabbitMqMessageReceiver&lt;T&gt; / RabbitMqMessageProcessor&lt;T&gt; - 接收/分发段薄壳
 
-```java
-@Component
-public class OrderCreatedConsumer extends AbstractMqConsumer<OrderCreatedEvent> {
+- 接收器：`getPayload` 经容器 `MessageConverter` 反序列化负载、`genMessageId` 优先复用厂商 messageId、`resolveBusinessId` 读消息头 `businessId` 回落 messageId；构造注入 `IMqRecorder<Message,T>`；
+- 分发器：仅绑定 `<Message,T>` 使泛型可注入，广播逻辑厂商无关（父类 `AbstractMqMessageProcessor` 承担）；
+- 业务侧通常无需覆写，各建一个泛型固定子类（或匿名内部类）即可（见上文装配示例）。
 
-    @Override
-    protected MqConsumerProperties getProperties() {
-        return MqConsumerProperties.builder("order.created.queue")
-            .exchange("order.exchange")
-            .routingKey("order.created")
-            .concurrency("2-5")
-            .prefetchCount(100)
-            .retryEnabled(true)
-            .maxRetryCount(3)
-            .deadLetterEnabled(true)          // 自动声明 order.created.queue.dlx/.dlq
-            .build();
-    }
+### 5. RabbitMqMessageProducer - v2 统一发送
 
-    @Override
-    protected void handleMessage(OrderCreatedEvent message) throws Exception {
-        // 业务处理；抛出异常的类型决定后续策略（见 mq-api MqConsumeException）
-    }
-}
-```
+`IMqMessageProducer` 的 RabbitMQ 落地：信封 `topic`/`routeKey` → 交换机/路由键；`messageId` 空则框架发号并写入厂商消息属性；`payload` 按 `payloadFormat` 经 `MqPayloadConverterRegistry` 选定转换器序列化为字节；`payloadType`/`payloadFormat`/`businessId` 与自定义 headers 落消息头——与消费端反序列化路径严格对称。
 
-**初始化流程**（`@PostConstruct init()`）：装配分派依赖（重试策略/失败存储/幂等存储）→ `autoDeclare=true` 时经 `MqResourceDeclarer` 声明资源 → 创建 `SimpleMessageListenerContainer` → `autoStart=true` 时启动。
+### 6. MqConsumerProperties - 消费传输配置（Builder）
 
-**消费编排**（`onMessage`）：反序列化 → `execute(payload)`（mq-api 分派模板：幂等检查 + 异常分类）→ 按分派结果路由 → **finally 中一律 ACK**（`ackSilently`，ACK 失败仅记日志）：
-
-| DispatchOutcome | 后续动作 |
-|-----------------|----------|
-| `SUCCESS` / `DUPLICATE_SKIPPED` | 直接 ACK |
-| `BUSINESS_DISCARDED` | `deadLetterOnBusinessError=true`（默认）→ 转死信；否则丢弃 |
-| `DEAD_LETTER` | 转死信留痕，触发 `handleDeadLetter` 钩子 |
-| `RETRY_SCHEDULED` | 未超 `maxRetryCount` 且 `IFailedMessageStore` 可用 → 持久化失败快照等待重投调度；超限/存储未注入/入库失败 → 降级转死信（不静默丢失） |
-
-**重试机制**：全程不使用 Broker 原生 requeue 与 x-death 头，重试次数由自定义消息头 `x-retry-count`（`MqHeaderConstants.RETRY_COUNT`）维护；失败快照（`FailedMessage`：body/headers/contentType/messageId/retryCount/firstFailTime/errorMessage 截断 500 字符/nextRetryTime）由 mq-api 的重投递调度器到期调用 `RabbitMqMessageRepublisher` 原样还原重发。默认延迟档位 `SteppedRetryDelayPolicy`：30 秒 → 2 分钟 → 10 分钟。
-
-**幂等控制**（`idempotentEnabled=true` 时生效，依赖容器中 `IIdempotentStore` 实现——如 redis-mod 提供的 Redis 实现，缺失时自动降级关闭并 warn）：
-
-- 幂等键三级兜底：`resolveBusinessIdempotentKey(message)` 业务键 → 消息 `messageId` → 消息体 MD5 摘要，统一加 `队列名:` 前缀防跨队列碰撞；
-- 幂等键 TTL：未配置时取最大重试窗口（各档位延迟之和）的 3 倍。
-
-**可选扩展点**：
-
-| 方法 | 用途 |
-|------|------|
-| `handleMessageFailure(T, Throwable)` | 失败回调（默认记日志），可覆盖做告警/持久化 |
-| `handleDeadLetter(Message, Throwable)` | 死信钩子（默认记日志），可覆盖做告警台账 |
-| `resolveBusinessIdempotentKey(T)` | 提供业务幂等键（默认 null 走 messageId 兜底） |
-| `createContainer()` | 自定义监听容器配置 |
-| `deserialize(Message)` | 自定义反序列化（默认走 `MessageConverter`） |
-
-**生命周期**：`start()` / `stop()` / `isRunning()`（`IMqConsumerLifecycle`），AtomicBoolean 守卫保证幂等；`@PreDestroy` 自动停止。
-
-**已废弃方法**：`send(T)` / `send(String, String, T)` 已标注 `@Deprecated`——请改用统一发送出口 `IMqProducer`，以保证 messageId 自动补齐。
-
-### 4. MqConsumerProperties - 消费者配置
-
-Builder 模式按实例独立配置，全部属性与默认值：
-
-| 分组 | 属性 | 默认值 | 说明 |
-|------|------|--------|------|
-| 队列 | `queueName` | 必填 | 队列名称 |
-| | `exchangeName` / `routingKey` | null | 为 null 时不声明交换机 / 不建绑定 |
-| | `exchangeType` | `DIRECT` | DIRECT / FANOUT / TOPIC / HEADERS |
-| 队列属性 | `durable` / `exclusive` / `autoDelete` | true / false / false | 队列声明属性 |
-| | `autoDeclare` | true | 启动时自动声明队列/交换机/绑定/死信资源 |
-| | `messageTtl` / `maxLength` | 0 / 0 | 消息 TTL（毫秒）/ 队列最大长度，0 不限制 |
-| 消费行为 | `acknowledgeMode` | `MANUAL` | ACK 模式 |
-| | `concurrency` | `"1-1"` | 并发度，格式 `"min-max"` |
-| | `prefetchCount` | 250 | 预取数量，0 不限制 |
-| | `autoStart` | true | PostConstruct 自动启动 |
-| 重试 | `retryEnabled` | true | 启用持久化重试（不使用 Broker requeue） |
-| | `maxRetryCount` | 3 | 超限转死信 |
-| | `retryDelayPolicy` | null | null 用容器默认 `SteppedRetryDelayPolicy`（30s→2min→10min） |
-| 幂等 | `idempotentEnabled` | false | 启用消费幂等（需 IIdempotentStore） |
-| | `idempotentTtl` | null | null 取最大重试窗口 ×3 |
-| 死信 | `deadLetterEnabled` | false | 自动声明死信资源 |
-| | `deadLetterOnBusinessError` | true | 业务性失败是否同样转死信（false 直接丢弃） |
-| | `deadLetterQueue` / `deadLetterExchange` / `deadLetterRoutingKey` | null | 缺省命名为 `队列名.dlq` / `队列名.dlx` |
-
-### 5. MqResourceDeclarer - 资源自动声明
-
-启动时按配置声明队列、交换机（4 种类型）、绑定关系与死信资源：
-
-- **死信留痕**：`deadLetterEnabled=true` 且未指定 `deadLetterExchange` 时，框架托管声明扇出型死信交换机 `队列名.dlx` 与死信队列 `队列名.dlq`（均持久化），主队列 `x-dead-letter-exchange` 指向该交换机；**死信资源先于主队列声明**，避免引用不存在的交换机；自行指定死信交换机的存量配置由使用方自行管理；
-- 队列参数：`x-message-ttl`（>0 时）、`x-max-length`（>0 时）、死信参数；
-- `AmqpAdmin` 未注入时跳过声明并 warn（不影响消费已存在的队列）。
-
-### 6. RabbitMqMessageRepublisher - 失败重投递实现
-
-`IMessageRepublisher` 契约的 RabbitMQ 落地（经 `RabbitMqSupportConfig` 装配）：将 `FailedMessage` 快照还原为原始消息（body/headers/contentType/messageId 原样恢复），经 `RabbitTemplate` 重发到原交换机与路由键；重试次数头递增与存储记账由 mq-api 基类模板统一完成。
-
-### 7. 国际化
-
-`RabbitMqMessageSourceProvider`（order=-500）自动注册 mq-api 模块的 `i18n/messages-mq.properties`（中）/ `messages-mq_en_US.properties`（英）资源文件，经 common 模块 MessageSource 合并机制生效。
-
-## 分布式事件广播（rabbitmq-broadcast）
-
-将 async 模块进程内事件系统（`IEventBus`/`IEventDispatcher`）桥接到 RabbitMQ，实现跨节点事件分发。
-
-### RabbitMqProperty - 广播全局配置
-
-`@ConfigurationProperties("tbs.rabbitmq")`：
+`RabbitMqContext` 子类经 `getMqConsumerProperties()` 按实例独立提供（`MqConsumerProperties.builder(queueName)…build()`），v2 生效项：
 
 | 属性 | 默认值 | 说明 |
 |------|--------|------|
-| `exchange-name` | `tbs.broadcast.exchange` | 广播交换机 |
-| `queue-name` | `tbs.broadcast.queue` | 广播队列 |
-| `routing-key` | `tbs.broadcast.routing.key` | 路由键 |
-| `node-id` | null | 节点标识（分布式环境区分节点） |
-| `message-ttl` | 60000 | 广播消息 TTL 60 秒 |
-| `max-retry-count` | 3 | 消费重试上限 |
-| `consumer-concurrency` | `"1-1"` | 消费并发度 |
-| `dead-letter-exchange` / `dead-letter-queue` | null | 为空则不启用死信队列 |
+| `queueName` | （必填） | 队列名 |
+| `exchangeName` / `routingKey` | null | 自动声明时使用的交换机与绑定；null 则只挂队列（交换机/绑定由生产端声明，如 cdc-service） |
+| `exchangeType` | `DIRECT` | direct / topic / fanout / headers |
+| `durable` / `exclusive` / `autoDelete` | `true` / `false` / `false` | 队列与交换机声明属性 |
+| `autoDeclare` | `true` | 启动时经 `MqResourceDeclarer` 幂等声明资源 |
+| `acknowledgeMode` | `MANUAL` | v2 必须手动确认（建档成功才 ack） |
+| `concurrency` | `"1-1"` | 容器消费者并发 |
+| `prefetchCount` | `250` | 预取（≤0 不设置） |
+| `consumerBatchEnabled` / `batchSize` / `batchReceiveTimeout` | `false` / `1` / `1500`ms | 原生批量建档开关与参数 |
+| `autoStart` | `true` | 容器创建后是否立即启动 |
+| `deadLetterEnabled` / `deadLetterExchange` / `deadLetterQueue` / `deadLetterRoutingKey` | `false` / null | 队列声明参数（`x-dead-letter-*`，仅厂商侧兜底声明，v2 恢复不依赖之） |
+| `messageTtl` / `maxLength` | `0` | 队列声明参数（`x-message-ttl` / `x-max-length`，0 不设置） |
 
-```yaml
-tbs:
-  rabbitmq:
-    node-id: node-1
-    message-ttl: 60000
-    dead-letter-exchange: tbs.broadcast.dlx   # 可选：启用死信
-```
+> `retryEnabled` / `maxRetryCount` / `idempotentEnabled` / `idempotentTtl` 为 v1 遗留字段，v2 链路不消费（重试与幂等语义已上移至记录层与消费者契约）。
 
-### AbstractRabbitMqSupport - 广播支持基类
+## 快速开始（完整消费链路示例）
 
-`AbstractMqConsumer<T>` 子类，同时实现 async 事件系统的 `IDistributedBusSupport<T>`、`IDistributedDispatcherSupport` 与 common 的 `IDataBridge<T, IPublishResult>`：
-
-- **消费侧**：`getProperties()` 由 `RabbitMqProperty` 适配生成（手动 ACK、TTL、死信交换机透传）；`handleMessage` → `receiveEvent(data)` → `handleEvent` → **先 `unbridge` 再交 `IEventDispatcher` 分发**到本地订阅者；
-- **发布侧**：`broadcastEvent(result)` 经统一出口 `IMqProducer` 发送到 `tbs.broadcast.exchange`/routingKey（messageId 自动补齐）；
-- `nodeId()` 返回 `RabbitMqProperty.getNodeId()`。
-
-### SimpleRabbitMqSupport - 默认桥接实现
-
-事件对象桥接（进程内 `IPublishResult` ↔ 跨节点传输对象 `SimpleDistributedAcceptedPublishResult`，传输内容为 event / publisherId / handleMode）：
-
-- `bridge(IPublishResult)` → `new SimpleDistributedAcceptedPublishResult(event, publisher.getPushlisherId(), handleMode)`
-- `unbridge(SimpleDistributedAcceptedPublishResult)` → `new SpringManagedListenablePublishResult(event, publisher, handleMode)`
-
-自定义事件类型时，继承 `AbstractRabbitMqSupport<T>` 并实现自己的 bridge/unbridge 即可。
-
-## 日志采集通道（rabbitmq-logging）
-
-为 logging 模块提供 MQ 传输支撑（全链路见 logging 模块 README）：
-
-- **`RabbitMqLoggingRecorder`**：`ILogRecorder` 生产端实现——构造时指定 exchange/routingKey（app 模块注册为 `new RabbitMqLoggingRecorder("tbs.log.queue", "systemLog")`）；`record(form)` 经 `RabbitTemplate.convertAndSend` 发送（失败仅记日志不抛出）；`flush()` 发送 `flushFlag=1` 空表单通知服务端刷写缓冲；
-- **`AbstractRabbitMqLogRecordWriter`**：`AbstractMqConsumer<LoggingRecordForm>` 空壳基类，日志服务（logging-impl 的 `DbLogWriter`）继承它并实现 `getProperties()`/`handleMessage()`，自动获得本模块全部消费基础设施（手动 ACK、重试、死信、幂等）。
-
-## 与 Spring Boot 自动配置的关系
-
-`TbsRabbitMqConfig` 读取 Spring Boot 标准 `spring.rabbitmq.*` 配置（`RabbitProperties`），且全部 Bean 带 `@ConditionalOnMissingBean`：
-
-```yaml
-spring:
-  rabbitmq:
-    host: 127.0.0.1
-    port: 5672
-    username: admin
-    password: admin123
-    virtual-host: /
-```
-
-容器中已存在 `ConnectionFactory`/`RabbitTemplate`/`AmqpAdmin`/`MessageConverter` 时，模块配置让位——可直接复用 Spring Boot AMQP 自动配置或自定义 Bean。
-
-## 扩展开发
-
-### 自定义消费者
-
-见上文 `AbstractMqConsumer` 示例；按需覆盖扩展点（失败回调/死信钩子/业务幂等键/容器定制）。
-
-### 替换消息转换器为 JSON
+与 `app` 模块 `CdcV2ConsumerConfig` 同构，协作者（记录器/抢占器/注册表）装配参照 [mq-mod README 快速开始](../mq-mod/README.md#快速开始)：
 
 ```java
-@Configuration
-public class JsonMessageConverterConfig {
+// 接收/分发段薄壳：固定 <Message, MyEvent> 泛型
+static class MyMessageReceiver extends RabbitMqMessageReceiver<MyEvent> {
+    MyMessageReceiver(IMqRecorder<Message, MyEvent> recorder) { super(recorder); }
+}
 
-    @Bean
-    public MessageConverter messageConverter() {
-        Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
-        // 默认转换器与消费端反序列化需一致
-        return converter;
+static class MyMessageProcessor extends RabbitMqMessageProcessor<MyEvent> {
+}
+
+// 消费上下文：自建容器接入
+static class MyRabbitMqContext extends RabbitMqContext<MyEvent> {
+    @Override
+    public Class<MyEvent> getMessagePayloadType() { return MyEvent.class; }
+
+    @Override
+    public Long getContextId() { return 9L; }   // 队列级作用域身份，全局唯一规划
+
+    @Override
+    protected MqConsumerProperties getMqConsumerProperties() {
+        return MqConsumerProperties.builder("demo.queue")
+            .exchangeName("tbs.demo").routingKey("demo.event")
+            .prefetchCount(250)
+            .build();
     }
 }
 ```
 
-> 注意：替换后所有生产/消费端必须使用同一转换器，且历史 Java 序列化消息将无法消费。
+发送侧注入 `IMqMessageProducer`（`@EnableRabbitMq` 即得默认装配）：
 
-### 自定义重试延迟策略
+```java
+@Resource
+IMqMessageProducer mqMessageProducer;
 
-实现 `IRetryDelayPolicy`（mq-api）并注册为 Bean（`defaultRetryDelayPolicy`），或在消费者 `MqConsumerProperties.builder().retryDelayPolicy(...)` 按实例指定。
+MqMessageOutcomeVO<MyEvent> envelope = MqMessageOutcomeVO.<MyEvent>builder()
+    .topic("tbs.demo").routeKey("demo.event").payload(event).build();
+mqMessageProducer.send(envelope);
+```
 
-### 自定义失败消息存储 / 幂等存储
+自检：`RabbitMqV2AdapterTest`（JDK 动态代理伪造 Channel，断言两种接入的单条/批量 ack/nak）、`RabbitMqV2ProducerRoundTripTest`（发送→接收信封往返对称性）。
 
-实现 `IFailedMessageStore` / `IIdempotentStore`（mq-api）并注册为 Bean；redis-mod 已提供 Redis 实现，注册后消费者的重试持久化与幂等控制自动启用。
+## rabbitmq-broadcast - 分布式事件广播
 
-### 覆盖发送/重投实现
+将 async 模块的进程内事件系统桥接到 RabbitMQ 实现跨节点分发，**已整体运行在 v2 链路**：
 
-注册自定义 `IMqProducer` / `IMessageRepublisher` Bean 即可让位 `RabbitMqSupportConfig` 的默认装配（如迁移到其他 MQ 厂商时仅替换实现层）。
+- `AbstractRabbitMqSupport<T>`：`extends RabbitMqContext<T>`（复用 v2 自装配容器与接收→建档→分发→确认全链路），同时实现 async 的 `IDistributedBusSupport<T>`、`IDistributedDispatcherSupport` 与 common 的 `IDataBridge<T, IPublishResult>`——消费动作即把负载交回分布式事件系统；
+- **发送经 v2 统一契约 `IMqMessageProducer`**：以信封（topic=交换机 / routeKey=路由键）投递，与消费端 payloadType/payloadFormat 头严格对称；
+- `SimpleRabbitMqSupport`：内置 `SimpleDistributedAcceptedPublishResult` 负载的开箱实现；
+- `RabbitMqProperty`（前缀 `tbs.rabbitmq`）：`exchangeName`（默认 `tbs.broadcast.exchange`）、`queueName`（默认 `tbs.broadcast.queue`）、`routingKey`、`nodeId`、`contextId`（默认 1，广播链路的记录层作用域身份）、`messageTtl`（默认 60000）、`consumerConcurrency`、`deadLetterExchange/Queue`。
 
-## 使用注意事项
+## rabbitmq-logging - 日志采集通道
 
-1. **默认转换器为 Java 序列化**：消息对象需实现 `Serializable`；跨语言/跨版本场景建议替换为 JSON 并保持两端一致
-2. **反序列化白名单为通配**：`SerializerMessageConverter` 的 `allowedListPatterns=["*"]` 便于开发，生产环境建议收紧为可信包前缀
-3. **重试不走 Broker requeue**：失败消息持久化到 `IFailedMessageStore` 由调度器重投；未注册 `IFailedMessageStore` 时 `RETRY_SCHEDULED` 消息会丢弃（warn 日志），生产环境务必提供（redis-mod 实现或自建 DB 实现）
-4. **死信依赖声明顺序**：框架自动声明的死信资源先于主队列创建；修改队列参数（TTL/maxLength/死信指向）后需删除旧队列重新声明（AMQP 特性）
-5. **发送务必用 IMqProducer**：`AbstractMqConsumer.send()` 已废弃，直接用 `RabbitTemplate` 发送会丢失 messageId，影响消费端幂等
-6. **广播消息 TTL 默认 60 秒**：离线节点的广播队列积压消息过期后转入死信/丢弃，分布式事件不保证补投
+- `RabbitMqLoggingRecorder`（`ILogRecorder` 实现）：**投递走 v2 统一发送契约 `IMqMessageProducer`**，信封以 `topic`=交换机、`routeKey`=路由键描述目标，负载 `LoggingRecordForm` 由 v2 负载转换器序列化并携带 payloadType/payloadFormat/contentType 头；与接收端对称：v2 链路按 payloadType 头精确反序列化，v1 旧链路（厂商 `SerializerMessageConverter`）凭 contentType 兜底兼容，两代消费者均可读。
+- 消费端不在本子模块：logging-impl 的 `com.tbs.logging.v2`（`LoggingRecordRabbitMqContext` 等）以 v2 记录驱动模型消费日志队列，装配见其 `LoggingServiceConfig`。
 
-## 许可证
+## 扩展指南
 
-本项目采用 Apache License 2.0 许可证，详情请参阅 [LICENSE](../LICENSE) 文件。
+1. **新增一条 v2 消费链路**：四个 Bean——记录器/抢占器/注册表（或复用既有）、接收/分发薄壳各一、`RabbitMqContext<T>` 子类（或 `@RabbitListener` 接入）、`IMqConsumer<T>` 注册进注册表；`@DependsOn` 保证消费者注册先于上下文启动。
+2. **换负载序列化格式**：注册自定义 `IMqMessagePayloadConverter` Bean（新 `payloadFormat()` 标识），收发两端自动接管；注意与仍在运行的 v1 旧消费者之间的 contentType 兜底兼容性。
+3. **生产级记录存储**：以 DB/Redis 实现的 `IMqRecorder`/`IMqMessageMonopolizer` Bean 覆盖内存实现即可（本模块无内置存储实现）。
+
+## 注意事项
+
+1. **确认模式只能 MANUAL**：v2 的可靠性基石是"建档成功才 ack"；任何自动确认（容器 AUTO、`@RabbitListener` 默认工厂）都会架空该语义。
+2. **nak 不 requeue**：建档失败即拒收，依赖厂商背压重投队列恢复；持续建档失败表现为消费侧背压，而非消息丢失到死信。
+3. **上下文记录层不落库即无重试**：当前版本重试扫描/回灌组件尚未落地（mq-mod README 注意事项 3），`IMqRecorder` 内存实现重启即清空——生产部署必须配持久化记录实现。
+4. **`getContextId()` 全局唯一规划**：记录/台账按上下文作用域隔离，多条链路撞 id 会互相污染记录归属（现占用：广播链路 1，日志链路 2，CDC 链路 3）。
+5. **批量建档仍逐条 ack**：`consumerBatchEnabled` 只合并建档写入，确认粒度不变。

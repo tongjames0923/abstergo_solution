@@ -46,12 +46,13 @@ public abstract class AbstractExternalLoginGrantProvider<FORM extends Serializab
     /**
      * 获取外部身份类型
      * <p>
-     * 与绑定表 identity_type 及 {@code IExternalIdentityExchanger#getIdentityType()} 对齐。
+     * 与绑定表 identity_type 及 {@code IExternalIdentityExchanger#getIdentityType()} 对齐；
+     * 公开可见以便外部身份类型元数据导出（继承本模板即声明该平台支持绑定）。
      * </p>
      *
      * @return 外部身份类型（如 wecom）
      */
-    protected abstract String getIdentityType();
+    public abstract String getIdentityType();
 
     /**
      * 平台凭证换取外部用户信息钩子

@@ -9,7 +9,7 @@
     />
 
     <el-row :gutter="20">
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="图片宽度">
           <el-input
             :value="value && value.width"
@@ -18,7 +18,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="图片高度">
           <el-input
             :value="value && value.height"
@@ -27,7 +27,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="适应方式">
           <el-select
             :value="value && value.fit"
@@ -43,7 +43,7 @@
           </el-select>
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="备用文本">
           <el-input
             :value="value && value.alt"
@@ -52,7 +52,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="预览功能">
           <el-switch
             :value="value && value.preview"
@@ -60,7 +60,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="懒加载">
           <el-switch
             :value="value && value.lazy"
@@ -68,7 +68,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否隐藏">
           <el-switch
             :value="value && value.hide"
@@ -76,7 +76,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否阻塞加载">
           <el-switch
             :value="value && value['load-before-show']"
@@ -84,7 +84,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="加载中占位">
           <el-input
             :value="value && value['loading-src']"
@@ -93,7 +93,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="错误占位">
           <el-input
             :value="value && value['error-src']"
@@ -102,7 +102,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="图片标题">
           <el-input
             :value="value && value.title"
@@ -111,7 +111,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否可拖拽">
           <el-switch
             :value="value && value.draggable"
@@ -119,7 +119,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否显示工具栏">
           <el-switch
             :value="value && value['show-toolbar']"
@@ -127,7 +127,7 @@
           />
         </el-form-item>
       </el-col>
-      <el-col :span="12">
+      <el-col :xs="24" :sm="12">
         <el-form-item label="是否显示标题">
           <el-switch
             :value="value && value['show-title']"

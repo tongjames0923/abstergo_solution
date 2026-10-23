@@ -5,6 +5,7 @@ import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.redis.codec.DefaultSystemCodec;
 import com.tbs.redis.config.property.RedisProperty;
 import com.tbs.redis.constants.RedisBeanNameConstants;
+import jakarta.annotation.Resource;
 import org.redisson.client.codec.Codec;
 import org.redisson.config.Config;
 import org.redisson.spring.starter.RedissonAutoConfigurationCustomizer;
@@ -16,8 +17,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
-
-import jakarta.annotation.Resource;
 
 /**
  * Redis基础配置类
@@ -32,13 +31,13 @@ import jakarta.annotation.Resource;
 @EnableConfigurationProperties(RedisProperty.class)
 public class BasicRedisConfig {
 
-    @Value("${spring.redis.host:localhost}")
+    @Value("${spring.data.redis.host:localhost}")
     private String host;
-    @Value("${spring.redis.port:6379}")
+    @Value("${spring.data.redis.port:6379}")
     private Integer port;
-    @Value("${spring.redis.timeout:30000}")
+    @Value("${spring.data.redis.timeout:30000}")
     private long timeout;
-    @Value("${spring.redis.password:123456}")
+    @Value("${spring.data.redis.password:123456}")
     private String password;
 
     @Resource

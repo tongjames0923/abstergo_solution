@@ -33,7 +33,9 @@
 </dependency>
 ```
 
-直接依赖：`xxl-job-core`、`common`（Feature/SpringUtil/AssertUtil/IBackgroundJob）、`mq-api`、`async`（async 为**可选**依赖，用于 `XxlJobScheduleTrigger` 对接其调度内核）。
+直接依赖：`xxl-job-core`、`common`（Feature/SpringUtil/AssertUtil/IBackgroundJob）、`async`（async 为**可选**依赖，用于 `XxlJobScheduleTrigger` 对接其调度内核）。
+
+> `IBackgroundJob` 位于 `common`（`com.tbs.common.delegate`），非 mq-api；根 pom 中遗留的 `mq-api` 依赖已无代码引用，可随依赖清理一并移除。
 
 > `xxl-job` 即 xxl-job-mod 的 `artifactId`，可直接作为依赖坐标。
 
@@ -168,7 +170,7 @@ public interface IJsonJobHandler<T> {
 | --- | --- |
 | `runningBackGroundJobHandler` | 取容器内全部 `IBackgroundJob` Bean，逐个调用 `execute()`；单任务异常被捕获记日志后继续执行下一个，不影响整体 |
 
-典型用途：把多个定时后台任务注册为 `IBackgroundJob`，在 XXL-Job 控制台仅配置一个 cron 触发 `runningBackGroundJobHandler`，统一驱动（与 mq-mod 的 `RetryDispatchBackgroundJob`、logging 等场景配合）。
+典型用途：把多个定时后台任务注册为 `IBackgroundJob`，在 XXL-Job 控制台仅配置一个 cron 触发 `runningBackGroundJobHandler`，统一驱动（与 logging 等定时刷盘场景配合）。
 
 ## async 任务调度外部驱动
 
@@ -178,7 +180,7 @@ public interface IJsonJobHandler<T> {
 - `start(Tickable)` 仅缓存内核视图，`stop()`/`wakeup()` 为**空实现**（外部调度模式不持有线程/信号量）；
 - `execute()` 由 XXL-Job 调度中心按 cron 触发，单次调用被驱动内核的 `tick()` 执行一轮到期任务派发（区别于 async 内置的 `LocalThreadScheduleTrigger` 自启轮询循环）。
 
-这是 async `tbs.schedule.*` 策略选 `job` 时的调度源。由于模块依赖 `mq-api`（含 `IBackgroundJob` 使用的背景任务框架），该触发器注册为 Bean 后即可被 `RunningBackGroundExecutor` 周期性驱动。
+这是 async `tbs.schedule.*` 策略选 `job` 时的调度源。`IBackgroundJob` 由 common 提供，该触发器注册为 Bean 后即可被 `RunningBackGroundExecutor` 周期性驱动。
 
 ## 在 XXL-Job 控制台配置任务
 

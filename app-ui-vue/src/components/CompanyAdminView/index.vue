@@ -918,6 +918,17 @@ export default {
   transform: translateX(0);
 }
 
+/*
+ * 触摸设备没有 hover 态：行内操作入口必须常显，
+ * 否则编辑/删除按钮永远无法被触发（功能不可用，不只是体验问题）
+ */
+@media (hover: none) {
+  .ca-tree-actions {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
 .ca-action-btn {
   display: inline-flex;
   align-items: center;

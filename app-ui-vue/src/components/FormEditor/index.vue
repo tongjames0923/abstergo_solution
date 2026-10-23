@@ -16,22 +16,22 @@
               <el-input v-model="localConfig.title" placeholder="请输入表单标题" @input="onConfigChange" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="是否可展开">
               <el-switch v-model="localConfig.expandable" @change="onConfigChange" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="默认展开">
               <el-switch v-model="localConfig.expanded" @change="onConfigChange" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="标签宽度">
               <el-input v-model="localConfig.labelWidth" placeholder="例如: 100px" @input="onConfigChange" />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="栅格间距">
               <el-input-number
                 v-model="localConfig.gutter"
@@ -42,7 +42,7 @@
               />
             </el-form-item>
           </el-col>
-          <el-col :span="12">
+          <el-col :xs="24" :sm="12">
             <el-form-item label="栅格列数">
               <el-slider v-model="localConfig.span" :min="1" :max="24" show-input @change="onConfigChange" />
             </el-form-item>
@@ -77,17 +77,17 @@
 
             <el-form label-width="120px" label-position="left" size="small">
               <el-row :gutter="20">
-                <el-col :span="12">
+                <el-col :xs="24" :sm="12">
                   <el-form-item label="字段属性名(prop)">
                     <el-input v-model="field.prop" placeholder="字段在数据中的属性名" @input="onConfigChange" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :xs="24" :sm="12">
                   <el-form-item label="字段标签(label)">
                     <el-input v-model="field.label" placeholder="字段显示名称" @input="onConfigChange" />
                   </el-form-item>
                 </el-col>
-                <el-col :span="12">
+                <el-col :xs="24" :sm="12">
                   <el-form-item label="字段类型(type)">
                     <el-select
                       v-model="field.type"

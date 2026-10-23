@@ -2,6 +2,8 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.constant.SystemI18nConstant;
 import com.tbs.app.form.ExternalIdentityBindForm;
+import com.tbs.app.security.grant.AbstractExternalLoginGrantProvider;
+import com.tbs.app.service.identity.ExternalIdentityTypeDescriptor;
 import com.tbs.app.service.identity.ExternalUserProfile;
 import com.tbs.app.service.identity.IExternalIdentityExchanger;
 import com.tbs.app.service.identity.IUserExternalIdentityService;
@@ -33,9 +35,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import jakarta.annotation.Resource;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -64,15 +69,20 @@ public class PrivateExternalIdentityController extends BaseController {
 
     private final Map<String, IExternalIdentityExchanger> exchangerMap;
 
+    private final List<AbstractExternalLoginGrantProvider<?>> externalLoginProviders;
+
     /**
      * 构建控制器并按身份类型索引平台凭证换取实现
      *
-     * @param exchangers 容器中全部平台凭证换取实现，可为空
+     * @param exchangers             容器中全部平台凭证换取实现，可为空
+     * @param externalLoginProviders 容器中全部外部身份登录 Provider，可为空（身份类型能力来源之一）
      */
-    public PrivateExternalIdentityController(List<IExternalIdentityExchanger> exchangers) {
+    public PrivateExternalIdentityController(List<IExternalIdentityExchanger> exchangers,
+        List<AbstractExternalLoginGrantProvider<?>> externalLoginProviders) {
         this.exchangerMap = exchangers == null ? new HashMap<>()
             : exchangers.stream()
                 .collect(Collectors.toMap(IExternalIdentityExchanger::getIdentityType, Function.identity(), (a, b) -> a));
+        this.externalLoginProviders = externalLoginProviders == null ? new ArrayList<>() : externalLoginProviders;
     }
 
     /**
@@ -88,6 +98,40 @@ public class PrivateExternalIdentityController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public AjaxResult my() {
         return successResult(externalIdentityService.queryByUserId(resolveCurrentUserId()));
+    }
+
+    /**
+     * 导出当前系统支持的外部身份类型清单
+     * <p>
+     * 能力由 Bean 存在性推导，无显式开关：外部登录 Provider（继承
+     * {@link AbstractExternalLoginGrantProvider}）与凭证换取实现
+     * （{@link IExternalIdentityExchanger}）两个来源按 identityType 去重合并；
+     * selfBindable 即存在对应 Exchanger（与 {@link #selfBind} 的准入判断同源）。
+     * 展示文案 key 约定 {@code identity.type.{identityType}}，由前端翻译。
+     * </p>
+     *
+     * @return 可绑定的外部身份类型元数据列表
+     */
+    @GetMapping("/types")
+    @AjaxResponseType(ExternalIdentityTypeDescriptor.class)
+    @PreAuthorize("@preAuthUtils.accountActived")
+    @Operation(summary = "外部身份类型清单", description = "导出当前支持绑定的外部身份类型元数据（供前端下拉渲染）")
+    @ApiResponse(responseCode = "200", description = "成功查询",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    public AjaxResult types() {
+        Set<String> identityTypes = new LinkedHashSet<>();
+        for (AbstractExternalLoginGrantProvider<?> provider : externalLoginProviders) {
+            if (StrUtil.isNotEmpty(provider.getIdentityType())) {
+                identityTypes.add(provider.getIdentityType());
+            }
+        }
+        identityTypes.addAll(exchangerMap.keySet());
+        List<ExternalIdentityTypeDescriptor> descriptors = new ArrayList<>(identityTypes.size());
+        for (String identityType : identityTypes) {
+            descriptors.add(new ExternalIdentityTypeDescriptor(identityType,
+                "identity.type." + identityType, exchangerMap.containsKey(identityType)));
+        }
+        return successResult(descriptors);
     }
 
     /**

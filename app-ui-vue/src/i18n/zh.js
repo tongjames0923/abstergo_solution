@@ -99,7 +99,7 @@ export default {
     externalId: '外部身份标识',
     userId: '系统用户ID',
     userName: '系统用户名',
-    userNamePlaceholder: '请输入系统用户名',
+    userNamePlaceholder: '输入姓名或登录账号搜索',
     bindTime: '绑定时间',
     actions: '操作',
     noData: '暂无绑定关系',
@@ -114,12 +114,13 @@ export default {
     bindFailed: '绑定失败',
     processing: '正在处理授权结果...',
     type: {
-      wecom: '企业微信'
+      wecom: '企业微信',
+      mes: 'MES 系统'
     },
     rules: {
       identityType: '请选择身份类型',
       externalId: '请输入外部身份标识',
-      userName: '请输入系统用户名'
+      userName: '请选择系统用户'
     },
     admin: {
       addBind: '新增绑定'
@@ -669,7 +670,8 @@ export default {
     403: '抱歉，您没有权限访问此页面',
     404: '抱歉，您访问的页面不存在',
     backHome: '返回首页',
-    backPrev: '返回上一页'
+    backPrev: '返回上一页',
+    tip404: '请检查您输入的网址是否正确，或点击下方按钮返回首页。'
   },
 
   // 泛化API管理
@@ -967,8 +969,12 @@ export default {
       connecting: '连接中',
       connected: '已连接',
       reconnecting: '重连中',
+      reconnect_failed: '实时连接已断开',
       closed: '已关闭'
     },
+    reconnectFailedTitle: '实时连接已断开',
+    reconnectFailedTip: '自动重连已达最大次数，实时消息推送已停止。您可以点击重连恢复推送，或稍后刷新页面。',
+    reconnect: '立即重连',
     type: {
       notify: '通知',
       warning: '告警',

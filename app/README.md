@@ -38,7 +38,7 @@ Abstergo Solution 的**主应用入口**（pom 描述：后端 web 运行包）�
 | `default-system-impl` | 系统管理全套实现：用户/角色/角色组/公司/部门/版本/泛化 API/功能开关服务、`DefaultTokenSignCenter` 令牌签发、认证 SPI 落地 |
 | `cache-impl` + `cache-caffeine-impl` | TTL 缓存 + 多级缓存（Caffeine L1） |
 | `view-route-default-impl` | 动态视图路由（数据库实现） |
-| `redis` | Redisson：分布式锁、缓存 L2、DataHolder、任务存储、幂等存储 |
+| `redis` | Redisson：分布式锁、缓存 L2、DataHolder、任务存储（MQ v1 幂等/失败存储已随 v2 下线） |
 | `rabbitmq-broadcast` + `rabbitmq-logging` | RabbitMQ 事件广播、日志通道 |
 | `closure-list-impl` | 闭包表树结构（公司/部门树） |
 | `open-api-starter` | Knife4j OpenAPI 文档（doc.html） |
@@ -209,7 +209,7 @@ tbs:
     show-url: true
   mq:
     retry:
-      scheduler: job        # MQ 失败重投递由 xxl-job 驱动（MqRetryDispatchJob）
+      scheduler: job        # v1 遗留配置：MQ v2 重构后无代码消费此属性（失败恢复基于自建记录层），可随配置清理移除
   oss:
     enable: ${OSS_ENABLE:false}
     type: ${OSS_TYPE:minio}
@@ -230,10 +230,9 @@ app:
 
 | 文件 | 内容 |
 | --- | --- |
-| `application-db.yml` | 数据源：**p6spy 代理驱动**（SQL 日志）、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、tk.mybatis 驼峰映射 |
+| `application-db.yml` | 数据源：MySQL 驱动、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、MyBatis 驼峰映射、`tbs.sql` SQL 观测配置 |
 | `application-redis.yml` | Redis 连接 |
 | `application-mq.yml` | RabbitMQ + 手动 ACK |
-| `spy.properties` | p6spy：慢 SQL 检测（>2s）、Slf4J 输出、排除健康检查语句 |
 | `view-route.yml` | **视图路由 YML 兜底配置**（common/admin/develop 三组菜单，含角色 `MENU.ADMIN`/`MENU.DEV`）；数据库实现启用时此文件不生效 |
 | `i18n/messages-app*.properties` | 前端菜单文案（`view.menu.*` key，中英文） |
 
@@ -289,8 +288,7 @@ app:
 | --- | --- |
 | `appMessageSourceProvider` | 注册 `i18n/messages-app`（前端菜单文案） |
 | `rabbitMqSupport` | `SimpleRabbitMqSupport`：RabbitMQ 事件广播支持（频道 `tbs.event.channel`） |
-| `systemFailedMessageStore` | `RedisFaildMessageStore`：MQ 失败消息的 Redis 持久化（重投递） |
-| `loggerRecoreder` | `RabbitMqLoggingRecorder("tbs.log.queue", "systemLog")`：操作日志生产端（→ logging 服务消费落库） |
+| `loggerRecoreder` | `RabbitMqLoggingRecorder("tbs.log.queue", "systemLog")`：操作日志生产端（组装 v2 信封经 `IMqMessageProducer` 发送 → logging 服务消费落库） |
 | `userLoginInfoService` | `DefaultUserLoginInfoService`（system 模块）：令牌↔用户详情映射 |
 | `refreshTokenService` | `CookieRefreshTokenService`（system 模块）：刷新令牌服务 |
 | `logCacheListenner` | 全量缓存操作日志监听（debug 观测用） |
@@ -329,7 +327,7 @@ app:
 | `department_tree_rebuild` | 部门树重建（`DepartmentTreeStructService.rebuildTree()`，闭包表关系重建） |
 | `flushLogData` | 操作日志刷盘：`ILogRecorder.flush()`（将 `tbs.log.queue` 缓冲日志推入 MQ） |
 
-另有 xxl-job-mod 提供的三个通用 Handler：`jsonJobHandler`（JSON 任务）、`runningBackGroundJobHandler`（批量 `IBackgroundJob` 驱动，含 MQ 重投递 `MqRetryDispatchJob`）、`available`/`help_json`（查询已注册 Handler）。
+另有 xxl-job-mod 提供的三个通用 Handler：`jsonJobHandler`（JSON 任务）、`runningBackGroundJobHandler`（批量 `IBackgroundJob` 驱动）、`available`/`help_json`（查询已注册 Handler）。
 
 ## 特殊机制
 
@@ -365,7 +363,7 @@ JPA `spring.jpa.hibernate.ddl-auto: update`：shared/tree-struct 等模块的实
 
 ### SQL 观测
 
-p6spy 代理驱动（`spy.properties`）：所有 SQL 经 Slf4J 输出（含执行时间）、慢 SQL 阈值 2 秒、排除 `select 1` 等健康检查。
+SQL 观测由 `sql` 模块的 JDBC 装饰层统一承担（`tbs.sql.enable-datasource-intercept: true`）：全量 SQL 经 `datasource.sql.execution` 日志器输出（含耗时），执行耗时达到 `tbs.sql.slow-sql-threshold-millis`（默认 2000ms）以 WARN 输出慢 SQL 告警，`tbs.sql.exclude-sql` 排除健康检查语句。
 
 ## 构建与部署
 
@@ -387,7 +385,7 @@ DB_HOST=mysql.internal NACOS_ADDRESS=nacos.internal:8848 java -jar app-*.jar
 
 ## 注意事项
 
-1. **JPA + tk.mybatis 双 ORM 并存**：JPA 负责 DDL 生成（`ddl-auto: update`），业务 CRUD 走 tk.mybatis；生产环境建议把 `ddl-auto` 改为 `validate`/`none`，用迁移脚本管理表结构。
+1. **JPA + MyBatis 双 ORM 并存**：JPA 负责 DDL 生成（`ddl-auto: update`），业务 CRUD 走 MyBatis 的 `GenericMapper`；生产环境建议把 `ddl-auto` 改为 `validate`/`none`，用迁移脚本管理表结构。
 2. **`enable-test-controller` 默认 none，本模块配置为 `pri`**：`PrivateTestController`（`/private/test`、`/private/testAuth`）默认注册；生产部署应改回 `none` 关闭全部测试控制器。
 3. **`dubbo.consumer.filter: -ContextHolderAuthenticationPrepareFilter`**：显式移除 web 模块的 Dubbo 消费端认证上下文过滤器，本应用作为消费端调用时不注入用户身份头。
 4. **上传大小限制 1024MB/2048MB**：远大于 Spring Boot 默认（1MB/10MB），网关/反向代理层需同步放开限制，且 Undertow 缓冲区会占用内存。
@@ -424,10 +422,9 @@ com.tbs.app
 resources/
 ├── application.yml             主配置（profiles/Nacos导入/Dubbo/app.gateway）
 ├── application-tbs.yml          平台 tbs.* 配置聚合
-├── application-db.yml           数据源（p6spy/HikariCP/JPA）
+├── application-db.yml           数据源（MySQL 驱动/HikariCP/JPA + tbs.sql 观测）
 ├── application-redis.yml        Redis
 ├── application-mq.yml           RabbitMQ
 ├── view-route.yml               视图路由 YML 兜底配置
-├── spy.properties               p6spy SQL 日志
 └── i18n/messages-app*.properties  前端菜单文案（中英文）
 ```

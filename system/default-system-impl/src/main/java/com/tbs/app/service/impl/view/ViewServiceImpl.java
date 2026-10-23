@@ -4,6 +4,7 @@ import com.tbs.app.service.view.IViewService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.constant.CommonConstant;
 import com.tbs.shared.enums.DynamicFormConfigFlagEnum;
@@ -47,16 +48,29 @@ public class ViewServiceImpl implements IViewService {
 
     /**
      * 将属性值实体列表转换为 Map（name -> 反序列化后的值）
+     * <p>
+     * 无存储值（prop_value 为空）、无目标类型或转换结果为 null 的属性直接跳过，不下发给前端，
+     * 让组件保留自身默认值。另不能使用 Collectors.toMap：其内部 HashMap.merge 不允许 null 值。
+     * </p>
      */
     private Map<String, Object> convertPropertyValuesToMap(List<PropertyValueEntity> propertyValueEntities,
         IPropertyValueTransformer transformer) {
-        return propertyValueEntities.stream().collect(Collectors.toMap(PropertyValueEntity::getName, v -> {
-            try {
-                return transformer.reverseTransformStr(v.getValue(), Class.forName(v.getValueClass()));
-            } catch (ClassNotFoundException e) {
-                throw new RuntimeException("属性值转换失败: " + v.getValue(), e);
+        Map<String, Object> result = new LinkedHashMap<>();
+        for (PropertyValueEntity propertyValue : propertyValueEntities) {
+            if (StrUtil.isBlank(propertyValue.getValue()) || StrUtil.isBlank(propertyValue.getValueClass())) {
+                continue;
             }
-        }));
+            try {
+                Object value = transformer.reverseTransformStr(propertyValue.getValue(),
+                    Class.forName(propertyValue.getValueClass()));
+                if (value != null) {
+                    result.put(propertyValue.getName(), value);
+                }
+            } catch (ClassNotFoundException e) {
+                throw new RuntimeException("属性值转换失败: " + propertyValue.getValue(), e);
+            }
+        }
+        return result;
     }
 
     /**
@@ -101,10 +115,11 @@ public class ViewServiceImpl implements IViewService {
             return new LinkedList<>();
         }
         List<PropertyValueEntity> propertyValueEntities = props.entrySet().stream().map(entry -> {
+            Object value = entry.getValue();
             PropertyValueEntity entity = new PropertyValueEntity();
             entity.setName(entry.getKey());
-            entity.setValue(transformer.transformStr(entry.getValue()));
-            entity.setValueClass(entry.getValue().getClass().getName());
+            entity.setValue(value == null ? null : transformer.transformStr(value));
+            entity.setValueClass(value == null ? null : value.getClass().getName());
             entity.setTransformerType(transformer.getClass().getName());
             return entity;
         }).collect(Collectors.toList());

@@ -1,13 +1,9 @@
 package com.tbs.cdc.service.config;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tbs.cdc.service.property.CdcMqProperty;
 import com.tbs.cdc.service.publisher.CdcMqPublisher;
-import com.tbs.mq.api.producer.IMqProducer;
-import com.tbs.rabbitmq.producer.RabbitMqProducer;
+import com.tbs.mq.v2.producer.IMqMessageProducer;
 import org.springframework.amqp.core.AmqpAdmin;
-import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.amqp.support.converter.MessageConverter;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -30,32 +26,16 @@ import org.springframework.context.annotation.Configuration;
 public class CdcServiceConfig {
 
     /**
-     * 创建MQ消息发送实现
-     * <p>
-     * 复用RabbitMQ装配提供的RabbitTemplate与消息转换器，落地统一发送契约。
-     * </p>
-     *
-     * @param rabbitTemplate   RabbitMQ发送模板
-     * @param messageConverter 消息转换器
-     * @return MQ消息发送实现
-     */
-    @Bean
-    public IMqProducer cdcMqProducer(RabbitTemplate rabbitTemplate, MessageConverter messageConverter) {
-        return new RabbitMqProducer(rabbitTemplate, messageConverter);
-    }
-
-    /**
      * 创建CDC MQ发出监听器
      *
-     * @param cdcMqProducer     MQ消息发送契约
+     * @param mqMessageProducer v2统一消息发送契约（由 {@code @EnableRabbitMq} 装配提供）
      * @param cdcMqProperty     MQ发出配置
-     * @param objectMapper      JSON序列化器
      * @param amqpAdminProvider AMQP管理器提供者
      * @return CDC MQ发出监听器
      */
     @Bean
-    public CdcMqPublisher cdcMqPublisher(IMqProducer cdcMqProducer, CdcMqProperty cdcMqProperty,
-                                         ObjectMapper objectMapper, ObjectProvider<AmqpAdmin> amqpAdminProvider) {
-        return new CdcMqPublisher(cdcMqProducer, cdcMqProperty, objectMapper, amqpAdminProvider);
+    public CdcMqPublisher cdcMqPublisher(IMqMessageProducer mqMessageProducer, CdcMqProperty cdcMqProperty,
+        ObjectProvider<AmqpAdmin> amqpAdminProvider) {
+        return new CdcMqPublisher(mqMessageProducer, cdcMqProperty, amqpAdminProvider);
     }
 }

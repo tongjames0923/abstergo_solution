@@ -1,6 +1,7 @@
 package com.tbs.app.controller.privates.dev;
 
 import com.tbs.app.config.property.GatewayProperty;
+import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.common.i18n.I18nUtil;
@@ -179,15 +180,20 @@ public class ViewController extends BaseController {
     }
 
     /**
-     * 从当前用户的权限组中提取菜单权限（type=1）的编码集合
+     * 从当前用户的权限快照中提取菜单权限（type=1）的编码集合
      * <p>
-     * 新权限架构下，用户关联的是权限组，每个权限组包含多个权限项。 菜单路由过滤应仅使用 type=MENU_ROLE 的权限项编码进行匹配。
+     * 认证阶段已将菜单权限编码展开为扁平集合，直接取用即可。
+     * 非 {@link ISystemUserDetails} 的实现回退到追溯角色组的方式，保证旧实现仍能工作。
      * </p>
      *
      * @return 菜单权限编码集合
      */
     private Set<String> extractMenuPermissionCodes() {
-        var authorities = AuthUtil.getInstance().getCurrentUser().getAuthorities();
+        var currentUser = AuthUtil.getInstance().getCurrentUser();
+        if (currentUser instanceof ISystemUserDetails) {
+            return ((ISystemUserDetails)currentUser).getMenuPermissions();
+        }
+        var authorities = currentUser.getAuthorities();
         if (CollUtil.isEmpty(authorities)) {
             return Set.of();
         }

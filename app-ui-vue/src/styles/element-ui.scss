@@ -51,6 +51,17 @@
 /* ===================== Element UI 移动端全局适配 ===================== */
 /* 所有覆盖规则收敛于此处并包在媒体查询内，桌面端零回归 */
 
+// 内联固定宽度的表单控件：保留设计宽度作为上限，容器变窄时自动收缩，
+// 避免各页面散落的 style="width:280px" 在平板/窄容器中横向溢出
+.el-input[style*='width'],
+.el-select[style*='width'],
+.el-input-number[style*='width'],
+.el-date-editor[style*='width'],
+.el-cascader[style*='width'],
+.el-autocomplete[style*='width'] {
+  max-width: 100%;
+}
+
 // 平板及以下：对话框宽度自适应、弹层宽度约束
 @media only screen and (max-width: 992px) {
   // 对话框宽度统一收敛，覆盖各页面硬编码的固定 px 宽度
@@ -95,7 +106,28 @@
   .el-table {
     .el-table__body-wrapper {
       overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
     }
+  }
+
+  // 抽屉宽度来自内联 size="600px" 之类的固定值，以视口宽度为上限避免超出屏幕
+  .el-drawer.ltr,
+  .el-drawer.rtl {
+    max-width: 100%;
+  }
+}
+
+// 页面级横向容器（标题+操作、筛选+按钮）：窄屏允许换行，
+// 避免固定不换行时两侧内容互相挤压溢出。row-gap 只作用于换行后的行间距，不影响原有列间距
+@media only screen and (max-width: 992px) {
+  .card-header,
+  .page-header,
+  .header-actions,
+  .table-header-actions,
+  .panel-toolbar,
+  .dialog-footer {
+    flex-wrap: wrap;
+    row-gap: 8px;
   }
 }
 
@@ -170,6 +202,34 @@
 
   .el-form-item__error {
     padding-top: 2px;
+  }
+
+  // 固定列（多为操作列，宽 80~340px）在手机上会盖住大半个表格，
+  // 隐藏固定层让操作列回归主体横向滚动，避免其余列被完全遮挡
+  .el-table__fixed,
+  .el-table__fixed-right,
+  .el-table__fixed-right-patch {
+    display: none !important;
+  }
+
+  // 日期范围选择器：双月并排约 646px，手机端改为上下堆叠才能完整显示
+  .el-date-range-picker {
+    width: auto !important;
+    max-width: 96vw;
+
+    .el-picker-panel__body {
+      min-width: 0;
+    }
+
+    .el-date-range-picker__content {
+      float: none;
+      width: 100%;
+
+      &.is-left {
+        border-right: none;
+        border-bottom: 1px solid #ebeef5;
+      }
+    }
   }
 
   // 触摸目标放大：表单控件与按钮

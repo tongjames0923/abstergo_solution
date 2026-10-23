@@ -13,12 +13,18 @@ import org.springframework.core.Ordered;
  * 声明该来源，供门面按来源定向解析；来源扩展只需新增实现，
  * 聚合门面 {@link IObjectProvider} 会按 {@link Ordered} 顺序依次询问全部解析器。
  * </p>
+ * <p>
+ * 阶段 3 起由 {@link IRegistrationSource}（经 {@code ObjectResolverAsSource} 桥接存量实现）取代：
+ * 解析链逐个询问的拉取式语义收敛为「来源贡献条目 + 中心统一解析分派」，计划于下一个大版本移除。
+ * </p>
  *
  * @author abstergo
  * @since 1.0.0
- * @see SpringObjectResolver Spring 容器解析器
+ * @see com.tbs.common.provider.impl.SpringObjectResolver Spring 容器解析器
  * @see IObjectProvider 聚合门面
+ * @see IRegistrationSource 继任的来源贡献 SPI
  */
+@Deprecated
 public interface IObjectResolver extends Ordered {
 
     /**
@@ -58,5 +64,21 @@ public interface IObjectResolver extends Ordered {
     default <T> Optional<ResolvedObject<T>> resolveOne(ObjectResolveContext<T> context) {
         var all = resolveAll(context);
         return all.isEmpty() ? Optional.empty() : Optional.of(all.iterator().next());
+    }
+
+    /**
+     * 解析当前来源下可作为「路由目标」的实例集合
+     * <p>
+     * 与 {@link #resolveAll(ObjectResolveContext)}（枚举视图，逐物理实例）正交：择一路由命中此集合。
+     * 默认与 {@code resolveAll} 一致（本地 Bean 既可枚举也可直接调用，自身即路由目标）；
+     * 来源若希望路由落到「集群负载均衡代表」（如 Dubbo 按 business/version 聚合的整体引用），覆写本方法。
+     * </p>
+     *
+     * @param context 解析上下文，不能为null
+     * @param <T>     目标实例类型
+     * @return 路由目标解析结果集合，不会为null
+     */
+    default <T> Collection<ResolvedObject<T>> resolveRoutableTargets(ObjectResolveContext<T> context) {
+        return resolveAll(context);
     }
 }

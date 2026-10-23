@@ -1,6 +1,8 @@
 package com.tbs.dic.entity;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.sql.annotation.autofill.SqlAutoValue;
+import com.tbs.sql.provider.impl.IdAutoProvider;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -23,9 +25,9 @@ public class SystemDataDicItemEntity implements IBaseEntity<Long> {
     /**
      * 主键
      */
-    @Comment("主键ID（自增）")
+    @Comment("主键ID（雪花算法生成）")
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
 
     /**

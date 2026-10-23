@@ -1,6 +1,5 @@
 package com.tbs.rabbitmq.support;
 
-import com.tbs.mq.api.retry.IRetryDelayPolicy;
 import lombok.Data;
 import org.springframework.amqp.core.AcknowledgeMode;
 
@@ -9,7 +8,7 @@ import java.time.Duration;
 /**
  * MQ消费者配置属性
  * <p>
- * 集中管理AbstractMqConsumer的所有可配置维度，支持通过Builder模式按实例独立配置。 每个属性均有合理默认值，子类只需覆盖关心的配置项。
+ * 集中管理 v2 消费上下文（{@code RabbitMqContext} 自建容器接入）的所有可配置传输维度，支持通过Builder模式按实例独立配置。 每个属性均有合理默认值，子类只需覆盖关心的配置项。
  * </p>
  *
  * @author tongj
@@ -80,44 +79,61 @@ public class MqConsumerProperties {
     private int prefetchCount = 250;
 
     /**
+     * 是否启用消费端批量拉取（对接 Spring AMQP 原生 batch listener）
+     * <p>
+     * 开启后容器在单个消费线程内按 {@link #batchSize} 收集消息，一次性回调批量接收入口完成批量建档； 逐条确认语义不变。默认关闭，保持单条投递行为。
+     * </p>
+     */
+    private boolean consumerBatchEnabled = false;
+
+    /**
+     * 单批最大消息数，仅在 {@link #consumerBatchEnabled} 为 true 时生效
+     */
+    private int batchSize = 1;
+
+    /**
+     * 单批最大等待时间，单位毫秒，0表示不限制
+     */
+    private long batchReceiveTimeout = 1500L;
+
+    /**
      * 是否在PostConstruct阶段自动启动消费者
      */
     private boolean autoStart = true;
 
-    // ======================== 重试策略 ========================
+    // ======================== 重试策略（v1 遗留字段：v2 链路不使用，重试恢复走记录层） ========================
 
     /**
      * 是否启用重试机制
      * <p>
-     * 开启后消费失败的消息将持久化到失败存储，由重投递调度器到期重新投递；
-     * 不再使用Broker原生requeue，避免消息在队首反复阻塞。
+     * v1 遗留字段：v2 记录驱动模型不再消费此项（失败恢复基于自建落库记录，不依赖厂商重投递）。
      * </p>
      */
     private boolean retryEnabled = true;
 
     /**
-     * 最大重试次数，超过后消息进入死信留痕
+     * 最大重试次数
+     * <p>
+     * v1 遗留字段：v2 链路不消费，重试上限由记录层重试扫描组件裁决。
+     * </p>
      */
     private int maxRetryCount = 3;
 
-    /**
-     * 重试延迟策略，为null时使用容器默认的档位策略（30秒→2分钟→10分钟）
-     */
-    private IRetryDelayPolicy retryDelayPolicy;
-
-    // ======================== 幂等控制 ========================
+    // ======================== 幂等控制（v1 遗留字段：v2 以建档去重与消费者幂等契约取代） ========================
 
     /**
      * 是否启用消费幂等
      * <p>
-     * 开启后依赖容器中的IIdempotentStore实现（如redis-mod提供的Redis实现），
-     * 未提供实现时自动降级为不启用。默认关闭，存量消费者行为不受影响。
+     * v1 遗留字段：v2 链路不再使用独立幂等存储，接收段以 messageId 建档去重、消费者按契约保证幂等。
      * </p>
      */
     private boolean idempotentEnabled = false;
 
     /**
-     * 幂等键有效期，为null时默认取最大重试窗口（各档位延迟之和）的3倍
+     * 幂等键有效期
+     * <p>
+     * v1 遗留字段：v2 链路不消费。
+     * </p>
      */
     private Duration idempotentTtl;
 
@@ -277,6 +293,28 @@ public class MqConsumerProperties {
         }
 
         /**
+         * 设置是否启用消费端批量拉取
+         *
+         * @param consumerBatchEnabled 是否启用
+         * @return 当前Builder实例
+         */
+        public Builder consumerBatchEnabled(boolean consumerBatchEnabled) {
+            props.setConsumerBatchEnabled(consumerBatchEnabled);
+            return this;
+        }
+
+        /**
+         * 设置单批最大消息数
+         *
+         * @param batchSize 批量大小
+         * @return 当前Builder实例
+         */
+        public Builder batchSize(int batchSize) {
+            props.setBatchSize(batchSize);
+            return this;
+        }
+
+        /**
          * 设置是否启用重试
          *
          * @param retryEnabled 是否启用
@@ -295,17 +333,6 @@ public class MqConsumerProperties {
          */
         public Builder maxRetryCount(int maxRetryCount) {
             props.setMaxRetryCount(maxRetryCount);
-            return this;
-        }
-
-        /**
-         * 设置重试延迟策略
-         *
-         * @param retryDelayPolicy 重试延迟策略
-         * @return 当前Builder实例
-         */
-        public Builder retryDelayPolicy(IRetryDelayPolicy retryDelayPolicy) {
-            props.setRetryDelayPolicy(retryDelayPolicy);
             return this;
         }
 

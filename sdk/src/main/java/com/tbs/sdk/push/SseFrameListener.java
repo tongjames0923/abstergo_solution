@@ -44,7 +44,11 @@ public interface SseFrameListener {
     }
 
     /**
-     * 收到下行协议帧回调（data/pong等业务帧在此处理）
+     * 收到下行协议帧回调（data/pong/error等业务帧在此处理）
+     * <p>
+     * 协议层error帧（订阅未授权/上行被拒等）为对某一上行帧的异步反馈，不断开连接，
+     * 经此回调透传 type={@link FrameType#ERROR}、payload为错误描述，宿主据此处置（如停订该主题）。
+     * </p>
      *
      * @param type  帧类型
      * @param frame 协议帧
@@ -53,7 +57,10 @@ public interface SseFrameListener {
     }
 
     /**
-     * 连接异常回调（认证失败、建连失败或收到error帧，随后将自动换票重连）
+     * 连接异常回调（认证失败、建连失败或下行流中断，随后将自动换票重连）
+     * <p>
+     * 协议层error帧不触发本回调（其为不断连的业务反馈，经{@link #onFrame}透传）。
+     * </p>
      *
      * @param cause 异常
      */

@@ -1,15 +1,15 @@
 package com.tbs.sql.autoconfig;
 
-import com.tbs.common.util.base.BeanUtil;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.constants.OrderConstants;
+import com.tbs.sql.datasource.interceptor.JdbcExecutionInterceptor;
+import com.tbs.sql.datasource.interceptor.impl.FullTableUpdateBlockInterceptor;
 import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.impl.SimpleEntityQueryWrapper;
+import com.tbs.sql.i18n.SqlMessageSourceProvider;
 import com.tbs.sql.interceptor.SqlAutoFillInterceptor;
-import com.tbs.sql.interceptor.SqlLoggingInterceptor;
-import com.tbs.sql.logger.ISqlLogger;
-import com.tbs.sql.logger.impl.NoSqlLogger;
 import com.tbs.sql.mapper.impl.FetchMapper;
 import com.tbs.sql.order.impl.AscStaticOrder;
 import com.tbs.sql.order.impl.DescStaticOrder;
@@ -17,14 +17,15 @@ import com.tbs.sql.order.impl.OrderedModelOrderImpl;
 import com.tbs.sql.properties.SqlProperty;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.TransactionUtil;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.session.SqlSessionFactory;
+import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.SmartInitializingSingleton;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.PlatformTransactionManager;
-import tk.mybatis.spring.annotation.MapperScan;
 
 import jakarta.annotation.Resource;
 
@@ -39,8 +40,9 @@ import jakarta.annotation.Resource;
  *   <li>注册SQL查询引擎 {@link QueryEngine}</li>
  *   <li>注册SQL组装器 {@link ISqlAssembler}</li>
  *   <li>注册实体查询包装器 {@link IEntityQueryWrapper}</li>
- *   <li>配置SQL日志拦截器 {@link SqlLoggingInterceptor}</li>
+ *   <li>注册 DataSource 装饰与 JDBC 执行拦截配置 {@link DataSourceDecorationConfiguration}</li>
  *   <li>配置自动填充值拦截器 {@link SqlAutoFillInterceptor}</li>
+ *   <li>启动期校验 MyBatis 下划线转驼峰开关</li>
  *   <li>注册排序策略Bean</li>
  * </ul>
  *
@@ -49,10 +51,9 @@ import jakarta.annotation.Resource;
  * <pre>{@code
  * tbs:
  *   sql:
- *     enable-log-interceptor: true          # 启用SQL日志拦截器
- *     enable-auto-fill-value-interceptor: true  # 启用自动填充值拦截器
- *     sql-assembler-type: DefaultSqlAssembler  # SQL组装器类型
- *     sql-logger-type: SimpleSqlLogger       # SQL日志记录器类型
+ *     enable-datasource-intercept: true        # 启用 DataSource 装饰与 JDBC 执行拦截
+ *     log-sql: true                            # 输出全量 SQL 执行日志
+ *     slow-sql-threshold-millis: 2000          # 慢 SQL 告警阈值（毫秒）
  * }</pre>
  *
  * <h3>使用场景</h3>
@@ -75,10 +76,19 @@ import jakarta.annotation.Resource;
  * @see com.tbs.sql.annotation.core.EnableTbsSql
  */
 @MapperScan(basePackages = "com.tbs.sql.mapper", annotationClass = Mapper.class)
+@Import(DataSourceDecorationConfiguration.class)
 public class SqlAutoConfiguration {
 
     @Resource
     SqlProperty sqlProperty;
+
+    /**
+     * 注册 sql 模块消息源，使 datasource.intercept.* 拒绝文案可被全局 MessageSource 解析。
+     */
+    @Bean
+    public SqlMessageSourceProvider sqlMessageSourceProvider() {
+        return new SqlMessageSourceProvider();
+    }
 
     @Bean
     FetchMapper fetchMapper() { return new FetchMapper(); }
@@ -94,17 +104,28 @@ public class SqlAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "tbs.sql.enable-log-interceptor", havingValue = "true")
-    SqlLoggingInterceptor sqlLoggingInterceptor() { return new SqlLoggingInterceptor(); }
+    @ConditionalOnProperty(name = "tbs.sql.enable-full-table-update-block", havingValue = "true")
+    JdbcExecutionInterceptor fullTableUpdateBlockInterceptor() {
+        return new FullTableUpdateBlockInterceptor();
+    }
 
     @Bean
     SqlAutoFillInterceptor autoFillInterceptor() { return new SqlAutoFillInterceptor(); }
 
+    /**
+     * 校验 MyBatis 下划线转驼峰开关，关闭时启动即中断。
+     *
+     * <p>框架生成的 SQL 均带属性名别名，不依赖该开关；手写 {@code @Select} 语句没有别名，
+     * 依赖它把下划线列名映射回驼峰属性。开关关闭不会报错，只会让字段静默为 null，
+     * 因此在启动期提前暴露。该校验为启动期断言，不面向接口调用方，故不做国际化。</p>
+     *
+     * @param sqlSessionFactory MyBatis 会话工厂
+     * @return 所有单例初始化完成后执行的校验器
+     */
     @Bean
-    @ConditionalOnMissingBean(ISqlLogger.class)
-    @ConditionalOnBean(SqlLoggingInterceptor.class)
-    public ISqlLogger defaultSqlLogger() throws Throwable {
-        return BeanUtil.buildBeanFromProperties(NoSqlLogger::new, sqlProperty.getSqlLoggerType(), BeanUtil::buildByEmptyArgs);
+    SmartInitializingSingleton mybatisNamingSwitchValidator(SqlSessionFactory sqlSessionFactory) {
+        return () -> AssertUtil.isTrue(!sqlSessionFactory.getConfiguration().isMapUnderscoreToCamelCase(),
+            "MyBatis配置map-underscore-to-camel-case必须为true，否则手写SQL的下划线列名无法映射到实体属性");
     }
 
     @Bean(OrderConstants.ASC) public AscStaticOrder ascOrder() { return new AscStaticOrder(); }
