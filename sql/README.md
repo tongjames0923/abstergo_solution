@@ -369,7 +369,7 @@ public class TenantInterceptor implements SqlComposeInterceptor {
 | 构建期 | `SqlComposeInterceptor` | WHERE 条件树改写（数据权限/逻辑删除） |
 | MyBatis 执行期 | `SqlAutoFillInterceptor` | Executor 层参数回填 |
 | **JDBC 执行期** | DataSource 装饰器（`TbsDataSourceDecorator`） | 全量 JDBC 流量的执行阻断/放行、连接获取拦截 |
-| **JDBC 观测** | `SqlExecutionLogInterceptor` | SQL 日志、参数、执行耗时与慢 SQL 告警（替代原 p6spy 驱动代理） |
+| **JDBC 观测** | `SqlExecutionLogInterceptor` | SQL 日志、执行耗时与慢 SQL 告警（替代原 p6spy 驱动代理） |
 
 ### 启用
 
@@ -379,7 +379,6 @@ tbs:
     enable-datasource-intercept: false        # DataSource 装饰总开关，默认关闭
     log-sql: true                             # 全量 SQL 执行日志（INFO），默认 true
     slow-sql-threshold-millis: 2000           # 慢 SQL 告警阈值（毫秒），达到即 WARN
-    log-parameters: true                      # 日志是否输出 PreparedStatement 参数值，默认 true
     exclude-sql: []                           # SQL 排除前缀列表，命中即跳过观测与拦截器链
     enable-full-table-update-block: false     # 内置全表 UPDATE/DELETE 防护拦截器开关，默认关闭
 ```
@@ -421,15 +420,15 @@ public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
 
 ### 能力边界（重要）
 
-1. **裁决不见参数、观测可见参数**：裁决上下文只含最终 SQL（含 `?` 占位符）与命令类型；参数值由 Statement 代理采集 `setXxx` 影子副本，仅在 `onExecutionCompleted` 观测阶段以 `parameterGroups` 提供
+1. **仅见 SQL 文本**：上下文只含最终 SQL（含 `?` 占位符），不捕获 PreparedStatement 参数值
 2. **不改写 SQL**：拦截器只能裁决放行/拒绝，框架不提供 SQL 改写能力
 3. **不做路由**：连接级钩子仅作拦截点，不承担多数据源路由职责
 4. **覆盖全部 JDBC 流量**：含框架自身语句（连接池健康检查等），误伤时用 `tbs.sql.exclude-sql` 前缀排除
 5. **排除规则前置短路**：命中的 SQL 跳过整个拦截器链，亦是性能保护
 6. **固有开销**：每个 Connection / Statement 增加一层 JDK 动态代理；无拦截器时仅此开销
-7. **批量执行**：`executeBatch` 按 `addBatch` 记录的 SQL 逐条裁决；无记录且有预编译 SQL 时按预编译 SQL 裁决；观测阶段参数按 `addBatch` 顺序逐组输出
+7. **批量执行**：`executeBatch` 按 `addBatch` 记录的 SQL 逐条裁决；无记录且有预编译 SQL 时按预编译 SQL 裁决
 8. **多数据源**：多候选且未标注 `@Primary` 时跳过装饰并告警，不会误伤次要数据源
-9. **观测与裁决分离**：SQL 日志、参数、耗时与慢 SQL 告警由 `onExecutionCompleted` 回调承担，裁决拦截器无须实现观测逻辑
+9. **观测与裁决分离**：SQL 日志、耗时与慢 SQL 告警由 `onExecutionCompleted` 回调承担，裁决拦截器无须实现观测逻辑
 
 ## 七、数据库方言
 
@@ -470,7 +469,6 @@ tbs:
     enable-datasource-intercept: false        # DataSource 装饰与 JDBC 执行拦截总开关，默认 false
     log-sql: true                             # 全量 SQL 执行日志（INFO），默认 true；生产可置 false
     slow-sql-threshold-millis: 2000           # 慢 SQL 告警阈值（毫秒），达到即 WARN，默认 2000
-    log-parameters: true                      # 日志是否输出参数值，默认 true；含敏感字段时建议关闭
     exclude-sql: []                           # SQL 排除前缀列表（忽略大小写），命中即跳过观测与拦截器链
     enable-full-table-update-block: false     # 内置全表 UPDATE/DELETE 防护拦截器开关，默认 false
 ```
@@ -520,7 +518,7 @@ public class TenantIdProvider implements IAutoValueProvider {
 2. **自动填充无开关**：`SqlAutoFillInterceptor` 无条件注册，实体标注 `@SqlAutoValue`/`@AutoSetDate` 即生效（不存在 `tbs.sql.enable-auto-fill-value-interceptor` 配置项）
 3. **`@SelectSQL` 存在注解目标与读取位置不一致**：注解声明 `@Target(FIELD)`，但 `EntityMetadataExtractor` 从**类**上读取——类级使用无法通过编译，该自定义 SQL 能力实际不可用；复杂 SQL 请改用 `AbstractResourceCriteria`（classpath SQL 文件）
 4. **列名解析以 `@Column` 优先**：与工具方法 javadoc 的"@QueryMapping 优先"描述相反，若两注解同时存在，`@Column` 生效
-5. **SQL 观测默认开启**：`tbs.sql.log-sql=true` 时全量 SQL 以 INFO 输出；慢 SQL 与执行失败始终 WARN，阈值由 `slow-sql-threshold-millis` 控制；参数值由 `log-parameters` 控制，包含密码、证件号等敏感字段时建议关闭
+5. **SQL 观测默认开启**：`tbs.sql.log-sql=true` 时全量 SQL 以 INFO 输出；慢 SQL 与执行失败始终 WARN，阈值由 `slow-sql-threshold-millis` 控制
 6. **`sql-assembler-type` 不生效**：见"配置说明"
 7. **`@QueryOrderField` 字段值须非 null**：值为 null 的排序字段会被跳过；`mappedName` 为空同样跳过
 8. **实体必须有 `@Table`**：`EntityMetadataExtractor.pullFromClass()` 对缺少 `@Table` 的类直接断言失败（使用 `@SelectSQL` 或资源 SQL 的查询对象不受此限）
@@ -528,7 +526,7 @@ public class TenantIdProvider implements IAutoValueProvider {
 10. **`count()` 返回 `Integer`**：超大数据量计数注意溢出
 11. **`ICustomWhereProvider` 需自行防注入**：返回的 SQL 片段直接拼接进 WHERE
 12. **DataSource 装饰默认关闭**：`tbs.sql.enable-datasource-intercept` 默认 `false`；开启后仅装饰主数据源（唯一候选或标注 `@Primary` 的 Bean），多候选且无 Primary 时跳过装饰并告警
-13. **裁决不拿参数值、观测可拿参数值、均不改写 SQL**：裁决上下文仅含 SQL 文本与命令类型推断；参数值由 Statement 代理的 `setXxx` 影子副本采集，仅在 `onExecutionCompleted` 观测回调中提供（含慢 SQL 与失败日志）
+13. **JDBC 执行拦截不拿参数值、不改写 SQL**：拦截上下文仅含 SQL 文本与命令类型推断，SQL 观测（日志/耗时/慢 SQL）经 `onExecutionCompleted` 回调输出
 14. **排除规则建议显式配置**：装饰覆盖全部 JDBC 流量，连接池健康检查、批量任务框架自身语句等应通过 `tbs.sql.exclude-sql` 前缀排除（排除同时作用于观测与裁决）
 
 ## 许可证

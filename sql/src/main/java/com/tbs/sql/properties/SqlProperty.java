@@ -19,7 +19,6 @@ import java.util.List;
  *   <li>{@code enableDatasourceIntercept}: 是否启用 DataSource 装饰与 JDBC 执行拦截，默认false</li>
  *   <li>{@code logSql}: 是否输出全量 SQL 执行日志，默认true</li>
  *   <li>{@code slowSqlThresholdMillis}: 慢 SQL 告警阈值（毫秒），默认2000</li>
- *   <li>{@code logParameters}: 是否在 SQL 执行日志中输出参数值，默认true</li>
  *   <li>{@code sqlAssemblerType}: SQL组装器类型，默认 {@link DefaultSqlAssembler}</li>
  * </ul>
  *
@@ -38,7 +37,6 @@ import java.util.List;
  *     enable-datasource-intercept: true
  *     log-sql: true
  *     slow-sql-threshold-millis: 2000
- *     log-parameters: true
  *     sql-assembler-type: com.tbs.sql.assembler.impl.DefaultSqlAssembler
  * }</pre>
  *
@@ -69,13 +67,6 @@ public class SqlProperty {
      * 默认值为 {@code 2000}。
      */
     private long slowSqlThresholdMillis = 2000L;
-
-    /**
-     * 是否在 SQL 执行日志中输出 PreparedStatement 参数值。
-     * 开启后可定位具体数据行，但可能将敏感信息写入日志，生产环境可按需关闭。
-     * 默认值为 {@code true}。
-     */
-    private boolean logParameters = true;
 
     /**
      * 是否启用原始 SQL 模式。

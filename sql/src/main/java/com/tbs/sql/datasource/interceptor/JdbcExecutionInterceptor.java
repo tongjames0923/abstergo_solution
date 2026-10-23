@@ -15,13 +15,12 @@ import org.springframework.core.Ordered;
  *   <li>{@link #onConnectionRelease}：连接归还（{@code close()}）阶段，与 {@link #interceptConnection} 成对，
  *       用于归还该连接在准入阶段占用的资源（如并发许可）</li>
  *   <li>{@link #interceptExecution}：SQL 执行前，放行或拒绝</li>
- *   <li>{@link #onExecutionCompleted}：SQL 执行完成后，用于参数观测、耗时统计、SQL 日志与慢 SQL 告警</li>
+ *   <li>{@link #onExecutionCompleted}：SQL 执行完成后，用于耗时统计、SQL 日志与慢 SQL 告警</li>
  * </ul>
  *
  * <h3>能力边界</h3>
  * <ul>
- *   <li>拦截器只能裁决（放行/拒绝），不能改写 SQL；裁决阶段不提供参数值，
- *       参数值仅在 {@link #onExecutionCompleted} 观测阶段可获取</li>
+ *   <li>拦截器只能裁决（放行/拒绝），不能改写 SQL，也拿不到参数值</li>
  *   <li>SQL 日志、耗时与慢 SQL 观测统一经 {@link #onExecutionCompleted} 回调获取，
  *       不再依赖驱动层 p6spy 代理</li>
  *   <li>拒绝时返回 {@link InterceptVerdict#deny}，由框架统一走 AssertUtil 抛 i18n 异常</li>
@@ -81,7 +80,7 @@ public interface JdbcExecutionInterceptor extends Ordered {
     /**
      * SQL 执行前拦截。
      *
-     * @param context 执行上下文（含 SQL 文本与命令类型推断；参数分组为空，裁决不感知参数值）
+     * @param context 执行上下文（含 SQL 文本与命令类型推断，不含参数值）
      * @return 裁决结果，拒绝时携带 i18n 资源 key 与参数
      */
     InterceptVerdict interceptExecution(JdbcExecuteContext context);
@@ -90,11 +89,11 @@ public interface JdbcExecutionInterceptor extends Ordered {
      * SQL 执行完成回调，在语句真正执行结束后触发（成功与失败均触发）。
      *
      * <p>与 {@link #interceptExecution} 成对出现：仅当执行前裁决放行且存在可识别的 SQL 文本时回调，
-     * 命中排除规则的 SQL 不触发。适用于参数观测、耗时统计、SQL 日志与慢 SQL 告警等场景。</p>
+     * 命中排除规则的 SQL 不触发。适用于耗时统计、SQL 日志与慢 SQL 告警等观测场景。</p>
      *
      * <p>回调异常由框架吞掉，不影响业务执行，也不改变语句返回结果。</p>
      *
-     * @param context       与执行前裁决相同的上下文，额外携带 PreparedStatement 参数分组
+     * @param context       与执行前裁决相同的上下文
      * @param elapsedMillis 本次语句执行耗时（毫秒）
      * @param error         语句执行抛出的异常，成功时为 null
      */

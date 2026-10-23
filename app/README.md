@@ -363,7 +363,7 @@ JPA `spring.jpa.hibernate.ddl-auto: update`：shared/tree-struct 等模块的实
 
 ### SQL 观测
 
-SQL 观测由 `sql` 模块的 JDBC 装饰层统一承担（`tbs.sql.enable-datasource-intercept: true`）：全量 SQL 经 `datasource.sql.execution` 日志器输出（含耗时与 PreparedStatement 参数值），执行耗时达到 `tbs.sql.slow-sql-threshold-millis`（默认 2000ms）以 WARN 输出慢 SQL 告警，`tbs.sql.exclude-sql` 排除健康检查语句；参数含敏感字段时可用 `tbs.sql.log-parameters: false` 关闭。
+SQL 观测由 `sql` 模块的 JDBC 装饰层统一承担（`tbs.sql.enable-datasource-intercept: true`）：全量 SQL 经 `datasource.sql.execution` 日志器输出（含耗时），执行耗时达到 `tbs.sql.slow-sql-threshold-millis`（默认 2000ms）以 WARN 输出慢 SQL 告警，`tbs.sql.exclude-sql` 排除健康检查语句。
 
 ## 构建与部署
 

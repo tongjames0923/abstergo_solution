@@ -57,15 +57,14 @@ public class DataSourceDecorationConfiguration {
     }
 
     /**
-     * 注册内置 SQL 执行观测拦截器：输出 SQL、参数、执行耗时与慢 SQL 告警。
+     * 注册内置 SQL 执行观测拦截器：输出 SQL、执行耗时与慢 SQL 告警。
      *
      * @param sqlProperty SQL 模块配置属性
      * @return SQL 执行观测拦截器
      */
     @Bean
     SqlExecutionLogInterceptor sqlExecutionLogInterceptor(SqlProperty sqlProperty) {
-        return new SqlExecutionLogInterceptor(sqlProperty.isLogSql(), sqlProperty.getSlowSqlThresholdMillis(),
-                sqlProperty.isLogParameters());
+        return new SqlExecutionLogInterceptor(sqlProperty.isLogSql(), sqlProperty.getSlowSqlThresholdMillis());
     }
 
     /**

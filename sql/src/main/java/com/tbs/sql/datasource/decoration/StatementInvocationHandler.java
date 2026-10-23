@@ -8,23 +8,19 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
 import java.util.concurrent.TimeUnit;
 
 /**
  * Statement 动态代理调用处理器：在 execute 系方法调用前执行 SQL 级拦截裁决，
- * 并在执行结束后回调观测钩子（SQL、参数、耗时、异常），同时维护批量语句
- * （addBatch / executeBatch）的 SQL 与参数快照。
+ * 并在执行结束后回调观测钩子（SQL、耗时、异常），同时维护批量语句
+ * （addBatch / executeBatch）的 SQL 记录。
  *
  * <h3>拦截点</h3>
  * <ul>
  *   <li>{@code execute / executeQuery / executeUpdate / executeLargeUpdate}：直接裁决</li>
  *   <li>{@code executeBatch / executeLargeBatch}：按记录的批量 SQL 逐条裁决</li>
- *   <li>{@code addBatch(String)} / {@code addBatch()}：记录 SQL 与当前参数快照，不裁决</li>
- *   <li>{@code setXxx(int, ...)} / {@code clearParameters()}：维护参数影子副本，不影响真实语句</li>
+ *   <li>{@code addBatch(String)} / {@code addBatch()}：仅记录 SQL，不裁决</li>
  * </ul>
  *
  * <h3>说明</h3>
@@ -62,16 +58,6 @@ public class StatementInvocationHandler implements InvocationHandler {
     private final List<String> batchSqls = new ArrayList<>();
 
     /**
-     * PreparedStatement 当前参数影子副本，仅用于观测，不参与真实语句调用
-     */
-    private final Map<Integer, Object> currentParameters = new TreeMap<>();
-
-    /**
-     * 批量执行时按 addBatch 顺序记录的各组参数快照
-     */
-    private final List<Map<Integer, Object>> batchParameterGroups = new ArrayList<>();
-
-    /**
      * 构造语句代理处理器。
      *
      * @param target       真实语句对象
@@ -96,44 +82,30 @@ public class StatementInvocationHandler implements InvocationHandler {
         if ("hashCode".equals(methodName)) {
             return target.hashCode();
         }
-        if ("clearParameters".equals(methodName)) {
-            currentParameters.clear();
-            return invokeTarget(method, args);
-        }
-        if (isParameterSetter(methodName, args)) {
-            recordParameter(methodName, (Integer) args[0], args[1]);
-            return invokeTarget(method, args);
-        }
         if ("addBatch".equals(methodName)) {
             if (args != null && args.length > 0 && args[0] instanceof String) {
                 batchSqls.add((String) args[0]);
-                batchParameterGroups.add(Collections.emptyMap());
             } else if (preparedSql != null) {
                 batchSqls.add(preparedSql);
-                batchParameterGroups.add(new TreeMap<>(currentParameters));
             }
             return invokeTarget(method, args);
         }
         if ("clearBatch".equals(methodName)) {
             batchSqls.clear();
-            batchParameterGroups.clear();
             return invokeTarget(method, args);
         }
         if ("executeBatch".equals(methodName) || "executeLargeBatch".equals(methodName)) {
             checkBatchExecution();
-            String sql = batchSql();
-            List<Map<Integer, Object>> parameterGroups = new ArrayList<>(batchParameterGroups);
-            Object result = executeWithTiming(method, args, sql, true, parameterGroups);
+            Object result = executeWithTiming(method, args, batchSql(), true);
             // JDBC 规范：executeBatch 成功后批次被清空；异常时保留影子记录，与实际批次状态保持一致
             batchSqls.clear();
-            batchParameterGroups.clear();
             return result;
         }
         if (isExecuteMethod(methodName)) {
             String sql = extractSql(args);
             boolean batch = isBatchContext();
             checkExecution(sql, batch);
-            return executeWithTiming(method, args, sql, batch, null);
+            return executeWithTiming(method, args, sql, batch);
         }
         return invokeTarget(method, args);
     }
@@ -141,23 +113,21 @@ public class StatementInvocationHandler implements InvocationHandler {
     /**
      * 执行语句并记录耗时，执行结束后回调观测钩子。
      *
-     * @param method          被调用的语句方法
-     * @param args            方法入参
-     * @param sql             本次执行的 SQL 文本，未知时为 null
-     * @param batch           是否批量上下文
-     * @param parameterGroups 批量执行的参数分组，非批量时传 null 表示取当前参数
+     * @param method 被调用的语句方法
+     * @param args   方法入参
+     * @param sql    本次执行的 SQL 文本，未知时为 null
+     * @param batch  是否批量上下文
      * @return 方法返回值
      * @throws Throwable 语句执行抛出的真实异常
      */
-    private Object executeWithTiming(Method method, Object[] args, String sql, boolean batch,
-                                     List<Map<Integer, Object>> parameterGroups) throws Throwable {
+    private Object executeWithTiming(Method method, Object[] args, String sql, boolean batch) throws Throwable {
         long startNanos = System.nanoTime();
         try {
             Object result = invokeTarget(method, args);
-            completeExecution(sql, batch, parameterGroups, startNanos, null);
+            completeExecution(sql, batch, startNanos, null);
             return result;
         } catch (Throwable error) {
-            completeExecution(sql, batch, parameterGroups, startNanos, error);
+            completeExecution(sql, batch, startNanos, error);
             throw error;
         }
     }
@@ -182,72 +152,18 @@ public class StatementInvocationHandler implements InvocationHandler {
     /**
      * 回调执行完成钩子，SQL 未知时跳过。
      *
-     * @param sql             本次执行的 SQL 文本
-     * @param batch           是否批量上下文
-     * @param parameterGroups 批量执行的参数分组，非批量时传 null
-     * @param startNanos      执行起始时间（纳秒）
-     * @param error           执行异常，成功时为 null
+     * @param sql        本次执行的 SQL 文本
+     * @param batch      是否批量上下文
+     * @param startNanos 执行起始时间（纳秒）
+     * @param error      执行异常，成功时为 null
      */
-    private void completeExecution(String sql, boolean batch, List<Map<Integer, Object>> parameterGroups,
-                                   long startNanos, Throwable error) {
+    private void completeExecution(String sql, boolean batch, long startNanos, Throwable error) {
         if (sql == null) {
             return;
         }
         long elapsedMillis = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanos);
         chain.completeExecution(new JdbcExecuteContext(sql, SqlCommandKind.of(sql),
-                dataSourceId, Thread.currentThread().getName(), batch,
-                resolveParameterGroups(parameterGroups)), elapsedMillis, error);
-    }
-
-    /**
-     * 解析本次执行的参数分组：批量执行使用执行前快照，非批量执行使用当前参数副本。
-     *
-     * <p>返回的列表只在本次观测回调内消费，不做深拷贝。</p>
-     *
-     * @param parameterGroups 批量执行的参数分组，非批量时为 null
-     * @return 参数分组列表，无参数时返回空列表
-     */
-    private List<Map<Integer, Object>> resolveParameterGroups(List<Map<Integer, Object>> parameterGroups) {
-        if (parameterGroups != null) {
-            return parameterGroups;
-        }
-        if (currentParameters.isEmpty()) {
-            return Collections.emptyList();
-        }
-        return List.of(currentParameters);
-    }
-
-    /**
-     * 判断是否为 PreparedStatement 参数设值方法。
-     *
-     * <p>形如 {@code setXxx(int, ...)}；{@code setFetchSize(int)}、{@code setQueryTimeout(int)}
-     * 等单参语句级方法因入参不足两个而被排除。</p>
-     *
-     * @param methodName 方法名
-     * @param args       方法入参
-     * @return true 表示参数设值方法
-     */
-    private boolean isParameterSetter(String methodName, Object[] args) {
-        return methodName.startsWith("set")
-                && args != null && args.length >= 2
-                && args[0] instanceof Integer;
-    }
-
-    /**
-     * 记录参数影子副本。
-     *
-     * <p>{@code setNull(int, int)} 的第二个入参是 SQL 类型而非参数值，按 null 记录。</p>
-     *
-     * @param methodName 参数设值方法名
-     * @param index      JDBC 参数索引（从 1 开始）
-     * @param value      设置的参数值
-     */
-    private void recordParameter(String methodName, int index, Object value) {
-        if ("setNull".equals(methodName)) {
-            currentParameters.put(index, null);
-            return;
-        }
-        currentParameters.put(index, value);
+                dataSourceId, Thread.currentThread().getName(), batch), elapsedMillis, error);
     }
 
     /**
