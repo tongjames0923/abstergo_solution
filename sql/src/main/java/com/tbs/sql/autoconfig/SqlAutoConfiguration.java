@@ -1,6 +1,5 @@
 package com.tbs.sql.autoconfig;
 
-import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.constants.OrderConstants;
 import com.tbs.sql.datasource.interceptor.JdbcExecutionInterceptor;
@@ -10,9 +9,6 @@ import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.impl.SimpleEntityQueryWrapper;
 import com.tbs.sql.i18n.SqlMessageSourceProvider;
 import com.tbs.sql.interceptor.SqlAutoFillInterceptor;
-import com.tbs.sql.interceptor.SqlLoggingInterceptor;
-import com.tbs.sql.logger.ISqlLogger;
-import com.tbs.sql.logger.impl.NoSqlLogger;
 import com.tbs.sql.mapper.impl.FetchMapper;
 import com.tbs.sql.order.impl.AscStaticOrder;
 import com.tbs.sql.order.impl.DescStaticOrder;
@@ -20,8 +16,6 @@ import com.tbs.sql.order.impl.OrderedModelOrderImpl;
 import com.tbs.sql.properties.SqlProperty;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.TransactionUtil;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.context.annotation.Bean;
@@ -43,7 +37,7 @@ import jakarta.annotation.Resource;
  *   <li>注册SQL查询引擎 {@link QueryEngine}</li>
  *   <li>注册SQL组装器 {@link ISqlAssembler}</li>
  *   <li>注册实体查询包装器 {@link IEntityQueryWrapper}</li>
- *   <li>配置SQL日志拦截器 {@link SqlLoggingInterceptor}</li>
+ *   <li>注册 DataSource 装饰与 JDBC 执行拦截配置 {@link DataSourceDecorationConfiguration}</li>
  *   <li>配置自动填充值拦截器 {@link SqlAutoFillInterceptor}</li>
  *   <li>注册排序策略Bean</li>
  * </ul>
@@ -53,10 +47,10 @@ import jakarta.annotation.Resource;
  * <pre>{@code
  * tbs:
  *   sql:
- *     enable-log-interceptor: true          # 启用SQL日志拦截器
- *     enable-auto-fill-value-interceptor: true  # 启用自动填充值拦截器
+ *     enable-datasource-intercept: true        # 启用 DataSource 装饰与 JDBC 执行拦截
+ *     log-sql: true                            # 输出全量 SQL 执行日志
+ *     slow-sql-threshold-millis: 2000          # 慢 SQL 告警阈值（毫秒）
  *     sql-assembler-type: DefaultSqlAssembler  # SQL组装器类型
- *     sql-logger-type: SimpleSqlLogger       # SQL日志记录器类型
  * }</pre>
  *
  * <h3>使用场景</h3>
@@ -107,10 +101,6 @@ public class SqlAutoConfiguration {
     }
 
     @Bean
-    @ConditionalOnProperty(name = "tbs.sql.enable-log-interceptor", havingValue = "true")
-    SqlLoggingInterceptor sqlLoggingInterceptor() { return new SqlLoggingInterceptor(); }
-
-    @Bean
     @ConditionalOnProperty(name = "tbs.sql.enable-full-table-update-block", havingValue = "true")
     JdbcExecutionInterceptor fullTableUpdateBlockInterceptor() {
         return new FullTableUpdateBlockInterceptor();
@@ -118,13 +108,6 @@ public class SqlAutoConfiguration {
 
     @Bean
     SqlAutoFillInterceptor autoFillInterceptor() { return new SqlAutoFillInterceptor(); }
-
-    @Bean
-    @ConditionalOnMissingBean(ISqlLogger.class)
-    @ConditionalOnBean(SqlLoggingInterceptor.class)
-    public ISqlLogger defaultSqlLogger() throws Throwable {
-        return BeanUtil.buildBeanFromProperties(NoSqlLogger::new, sqlProperty.getSqlLoggerType(), BeanUtil::buildByEmptyArgs);
-    }
 
     @Bean(OrderConstants.ASC) public AscStaticOrder ascOrder() { return new AscStaticOrder(); }
     @Bean(OrderConstants.DESC) public DescStaticOrder descOrder() { return new DescStaticOrder(); }

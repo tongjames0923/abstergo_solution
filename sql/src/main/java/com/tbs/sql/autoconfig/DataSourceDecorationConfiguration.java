@@ -4,6 +4,7 @@ import com.tbs.sql.datasource.decoration.DataSourceDecorationPostProcessor;
 import com.tbs.sql.datasource.decoration.InterceptorChain;
 import com.tbs.sql.datasource.decoration.SqlExcludeRule;
 import com.tbs.sql.datasource.interceptor.JdbcExecutionInterceptor;
+import com.tbs.sql.datasource.interceptor.impl.SqlExecutionLogInterceptor;
 import com.tbs.sql.properties.SqlProperty;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationContext;
@@ -24,6 +25,9 @@ import java.util.Objects;
  *
  * <p>拦截器列表经 {@link InterceptorChain} 的 Supplier 惰性解析，
  * 用户自定义的 {@link JdbcExecutionInterceptor}（Spring Bean）无需关心装配顺序。</p>
+ *
+ * <p>同时注册内置观测拦截器 {@link SqlExecutionLogInterceptor}，以 JDBC 装饰层为观测点
+ * 输出 SQL、执行耗时与慢 SQL 告警，替代驱动层 p6spy 代理驱动。</p>
  *
  * @author abstergo
  * @since 1.0.0
@@ -50,6 +54,18 @@ public class DataSourceDecorationConfiguration {
                 () -> resolveInterceptors(applicationContext),
                 new SqlExcludeRule(sqlProperty.getExcludeSql()));
         return new DataSourceDecorationPostProcessor(chain);
+    }
+
+    /**
+     * 注册内置 SQL 执行观测拦截器：输出 SQL、参数、执行耗时与慢 SQL 告警。
+     *
+     * @param sqlProperty SQL 模块配置属性
+     * @return SQL 执行观测拦截器
+     */
+    @Bean
+    SqlExecutionLogInterceptor sqlExecutionLogInterceptor(SqlProperty sqlProperty) {
+        return new SqlExecutionLogInterceptor(sqlProperty.isLogSql(), sqlProperty.getSlowSqlThresholdMillis(),
+                sqlProperty.isLogParameters());
     }
 
     /**

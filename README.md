@@ -31,7 +31,7 @@
 - **append-only 版本化配置**：动态视图路由/表单配置支持版本历史与一键回滚（版本表为唯一事实来源）
 - **消息可靠性（v2 记录驱动模型）**：厂商无关 MQ 契约层——不信任厂商、信任自建落库记录，投递可靠性（主记录）与消费可靠性（逐消费者台账）分层承载，消息级单飞互斥、负载格式可插拔转换；提供内存基本实现，RabbitMQ 传输层适配器开箱可用
 - **多语言客户端 SDK**：Java（`sdk`，纯 OkHttp 无 Spring 依赖）与 C#（`sdk-csharp`，netstandard2.0）两套能力对齐的接入 SDK，封装统一登录（密码/企微/第三方）、推送消息中心与 SSE 长连接订阅、应用升级检查与安装包下载，供第三方/桌面端快速对接
-- **SQL 观测**：p6spy 代理驱动全量 SQL 日志（慢 SQL 阈值 2s 检测）
+- **SQL 观测**：JDBC 装饰层全量 SQL 日志（含耗时），慢 SQL 阈值可配置告警（默认 2s）
 
 ## 架构总览
 
@@ -79,7 +79,7 @@ flowchart LR
 | 注册/配置中心 | Nacos | v2.5.3 |
 | ORM | tk.mybatis + Spring Data JPA（DDL） | 5.0.0 / - |
 | 数据库 | MySQL | 8.4（驱动 8.0.32） |
-| SQL 观测 | p6spy | 3.8.2 |
+| SQL 观测 | tbs.sql JDBC 装饰层（内置） | - |
 | 缓存 | Redisson + Caffeine 多级缓存 | 3.52.0 |
 | 消息队列 | RabbitMQ（服务端；amqp-client 由 Spring Boot 管理） | 4.3 |
 | 任务调度 | XXL-Job | 2.5.0 |

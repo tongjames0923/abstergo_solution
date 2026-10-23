@@ -22,6 +22,7 @@ import java.util.function.Supplier;
  * <ol>
  *   <li>执行级裁决前先走 {@link SqlExcludeRule} 短路（命中即透传，保护性能与框架自身语句）</li>
  *   <li>按 order 升序遍历拦截器，首个拒绝裁决立即抛出异常（短路语义）</li>
+ *   <li>执行结束后回调 {@link #completeExecution}，供观测拦截器输出 SQL、耗时与慢 SQL 告警</li>
  *   <li>拦截器列表延迟解析（首次使用时从 Supplier 获取），避免装配期依赖用户 Bean 的实例化顺序</li>
  * </ol>
  *
@@ -105,6 +106,30 @@ public class InterceptorChain {
             InterceptVerdict verdict = interceptor.interceptExecution(context);
             if (verdict.isDenied()) {
                 throwDenied(verdict);
+            }
+        }
+    }
+
+    /**
+     * SQL 执行完成回调，触发全部拦截器的
+     * {@link JdbcExecutionInterceptor#onExecutionCompleted}。
+     *
+     * <p>与 {@link #checkExecution} 对称：命中排除规则的 SQL 同样跳过。
+     * 单个拦截器的观测异常被吞掉，避免观测逻辑反向影响业务执行。</p>
+     *
+     * @param context       执行上下文
+     * @param elapsedMillis 语句执行耗时（毫秒）
+     * @param error         语句执行异常，成功时为 null
+     */
+    public void completeExecution(JdbcExecuteContext context, long elapsedMillis, Throwable error) {
+        if (excludeRule.excludes(context.getSql())) {
+            return;
+        }
+        for (JdbcExecutionInterceptor interceptor : resolveInterceptors()) {
+            try {
+                interceptor.onExecutionCompleted(context, elapsedMillis, error);
+            } catch (Throwable ignored) {
+                // 观测回调异常不得中断业务执行；不在回调中记录日志，避免异常递归
             }
         }
     }

@@ -38,7 +38,6 @@ import java.lang.annotation.*;
  *
  * @author abstergo
  * @since 1.0.0
- * @see com.tbs.sql.logger.ISqlLogger
  */
 @Target(ElementType.FIELD)
 @Documented

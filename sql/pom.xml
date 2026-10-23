@@ -41,11 +41,6 @@
             <groupId>com.tbs</groupId>
             <artifactId>common</artifactId>
         </dependency>
-        <!-- p6spy Format Sql -->
-        <dependency>
-            <groupId>p6spy</groupId>
-            <artifactId>p6spy</artifactId>
-        </dependency>
         <dependency>
             <groupId>tk.mybatis</groupId>
             <artifactId>mapper-extra</artifactId>

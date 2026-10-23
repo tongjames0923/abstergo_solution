@@ -70,7 +70,6 @@
         <!-- 数据库 / ORM -->
         <mysql.version>8.0.32</mysql.version>
         <tk.mybatis.version>5.0.0</tk.mybatis.version>
-        <p6spy.version>3.8.2</p6spy.version>
 
         <!-- 中间件 -->
         <redisson.version>3.52.0</redisson.version>
@@ -384,11 +383,6 @@
                 <groupId>tk.mybatis</groupId>
                 <artifactId>mapper-extra</artifactId>
                 <version>${tk.mybatis.version}</version>
-            </dependency>
-            <dependency>
-                <groupId>p6spy</groupId>
-                <artifactId>p6spy</artifactId>
-                <version>${p6spy.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.redisson</groupId>

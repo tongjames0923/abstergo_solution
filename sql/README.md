@@ -12,9 +12,9 @@ SQL 模块（`com.tbs:sql`）是基于 MyBatis + tk.mybatis 增强的**注解驱
 | **注解查询对象（QO）** | `Mapper.queryByQO(qo, page, Xxx.class)` | 前端多条件筛选、固定查询契约 |
 | **资源 SQL 文件** | 继承 `AbstractResourceCriteria` | 复杂 JOIN / 自定义 SQL |
 
-其他能力：**字段自动填充**（ID/时间）、**SQL 执行日志**、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
+其他能力：**字段自动填充**（ID/时间）、**SQL 执行观测**（日志/耗时/慢 SQL 告警）、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
 
-技术底座：tk.mybatis `mapper-spring-boot-starter` + `mapper-extra`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据）、`mysql-connector-java`、`p6spy`、`com.tbs:common`。
+技术底座：tk.mybatis `mapper-spring-boot-starter` + `mapper-extra`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据）、`mysql-connector-java`、`com.tbs:common`。
 
 ## 模块结构
 
@@ -34,14 +34,13 @@ sql/
     ├── dsl/                      # 流式查询接口 + impl/
     ├── builder/                  # SqlDriver / EntitySqlDriver / ISqlBuildContext 等
     ├── criteria/                 # IQueryCriteria / IPage / Abstract*Criteria + impl/
-    ├── datasource/               # DataSource 装饰与 JDBC 执行拦截：decoration / interceptor / model
+    ├── datasource/               # DataSource 装饰、JDBC 执行拦截与 SQL 观测：decoration / interceptor / model
     ├── mapper/                   # IFrameworkMapper / SmartQueryMapper / IRawSqlSelectMapper + impl/
-    ├── model/                    # where / select / order / limit / group / query / runtime 模型
+    ├── model/                    # where / select / order / limit / group / query 模型
     ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/
     ├── assembler/                # ISqlAssembler / DefaultSqlAssembler（SQL 片段拼装）
-    ├── interceptor/              # SqlAutoFillInterceptor / SqlLoggingInterceptor / SqlComposeInterceptor
+    ├── interceptor/              # SqlAutoFillInterceptor / SqlComposeInterceptor
     ├── provider/                 # IAutoValueProvider / ICustomWhereProvider + impl/
-    ├── logger/                   # ISqlLogger + NoOp/Json/Sql 三种实现
     ├── order/                    # IQueryOrderBy 排序策略 + impl/（Asc/Desc/OrderedModel）
     ├── metadata/                 # EntityMetadataExtractor / FieldMetadataCache（反射缓存）
     ├── constants/                # OrderConstants
@@ -115,7 +114,7 @@ ISqlAssembler 按 SELECT → WHERE → GROUP BY → ORDER BY → LIMIT 顺序拼
 FetchMapper → IRawSqlSelectMapper 执行 → Map 转实体（BeanUtil.mapToBean）
 ```
 
-参数绑定默认走**预编译占位符** `#{_prs.xxx}`（`tbs.sql.use-raw-value=false` 默认，安全）；置 `true` 时改为值内联（**存在 SQL 注入风险**）。
+参数绑定默认走**预编译占位符** `#{_prs.xxx}`（安全，防注入）。
 
 ## 一、DSL 流式查询
 
@@ -342,8 +341,7 @@ public class Demo {
 | 组件 | 用途 |
 |------|------|
 | `SqlComposeInterceptor` | WHERE 条件树改写（`intercept(WhereCompose, ISqlBuildContext)`，`Ordered` 排序）。典型用法：数据权限、租户隔离、逻辑删除（shared 模块的 `SqlLogicDeleteIntercepter` 即为其实现） |
-| `SqlLoggingInterceptor` | SQL 执行日志（需 `tbs.sql.enable-log-interceptor=true` 才注册） |
-| `ISqlLogger` | 日志输出策略：`NoSqlLogger`（默认无操作）、`SimpleSqlLogger`、`SimpleJsonLogger`；无其他 `ISqlLogger` Bean 时按 `tbs.sql.sql-logger-type` 创建 |
+| `SqlExecutionLogInterceptor` | JDBC 执行期 SQL 观测：SQL、耗时与慢 SQL 告警（经 `onExecutionCompleted` 回调输出，见第六节） |
 
 自定义拦截器示例：
 
@@ -369,9 +367,9 @@ public class TenantInterceptor implements SqlComposeInterceptor {
 | 层次 | 组件 | 职责 |
 |------|------|------|
 | 构建期 | `SqlComposeInterceptor` | WHERE 条件树改写（数据权限/逻辑删除） |
-| MyBatis 执行期 | `SqlLoggingInterceptor` / `SqlAutoFillInterceptor` | Executor 层日志与参数回填 |
+| MyBatis 执行期 | `SqlAutoFillInterceptor` | Executor 层参数回填 |
 | **JDBC 执行期** | DataSource 装饰器（`TbsDataSourceDecorator`） | 全量 JDBC 流量的执行阻断/放行、连接获取拦截 |
-| 驱动层 | p6spy | SQL 格式化观测（保留不动） |
+| **JDBC 观测** | `SqlExecutionLogInterceptor` | SQL 日志、参数、执行耗时与慢 SQL 告警（替代原 p6spy 驱动代理） |
 
 ### 启用
 
@@ -379,7 +377,10 @@ public class TenantInterceptor implements SqlComposeInterceptor {
 tbs:
   sql:
     enable-datasource-intercept: false        # DataSource 装饰总开关，默认关闭
-    exclude-sql: []                           # SQL 排除前缀列表，命中即跳过拦截器链
+    log-sql: true                             # 全量 SQL 执行日志（INFO），默认 true
+    slow-sql-threshold-millis: 2000           # 慢 SQL 告警阈值（毫秒），达到即 WARN
+    log-parameters: true                      # 日志是否输出 PreparedStatement 参数值，默认 true
+    exclude-sql: []                           # SQL 排除前缀列表，命中即跳过观测与拦截器链
     enable-full-table-update-block: false     # 内置全表 UPDATE/DELETE 防护拦截器开关，默认关闭
 ```
 
@@ -420,15 +421,15 @@ public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
 
 ### 能力边界（重要）
 
-1. **仅见 SQL 文本**：上下文只含最终 SQL（含 `?` 占位符），不捕获 PreparedStatement 参数值
+1. **裁决不见参数、观测可见参数**：裁决上下文只含最终 SQL（含 `?` 占位符）与命令类型；参数值由 Statement 代理采集 `setXxx` 影子副本，仅在 `onExecutionCompleted` 观测阶段以 `parameterGroups` 提供
 2. **不改写 SQL**：拦截器只能裁决放行/拒绝，框架不提供 SQL 改写能力
 3. **不做路由**：连接级钩子仅作拦截点，不承担多数据源路由职责
 4. **覆盖全部 JDBC 流量**：含框架自身语句（连接池健康检查等），误伤时用 `tbs.sql.exclude-sql` 前缀排除
 5. **排除规则前置短路**：命中的 SQL 跳过整个拦截器链，亦是性能保护
 6. **固有开销**：每个 Connection / Statement 增加一层 JDK 动态代理；无拦截器时仅此开销
-7. **批量执行**：`executeBatch` 按 `addBatch` 记录的 SQL 逐条裁决；无记录且有预编译 SQL 时按预编译 SQL 裁决
+7. **批量执行**：`executeBatch` 按 `addBatch` 记录的 SQL 逐条裁决；无记录且有预编译 SQL 时按预编译 SQL 裁决；观测阶段参数按 `addBatch` 顺序逐组输出
 8. **多数据源**：多候选且未标注 `@Primary` 时跳过装饰并告警，不会误伤次要数据源
-9. **与 p6spy / Executor 层日志并存**：SQL 日志与耗时观测仍由二者承担，本 SPI 不强制观测回调
+9. **观测与裁决分离**：SQL 日志、参数、耗时与慢 SQL 告警由 `onExecutionCompleted` 回调承担，裁决拦截器无须实现观测逻辑
 
 ## 七、数据库方言
 
@@ -465,12 +466,12 @@ TransactionUtil.getInstance().executeTransaction(
 ```yaml
 tbs:
   sql:
-    enable-log-interceptor: false    # 是否注册 SQL 日志拦截器，默认 false
-    sql-logger-type: com.tbs.sql.logger.impl.NoSqlLogger   # 日志器（默认无操作）
-    use-raw-value: false             # true 时参数值内联进 SQL（不安全），默认 false 走预编译占位符
     sql-assembler-type: com.tbs.sql.assembler.impl.DefaultSqlAssembler   # 【当前未生效】
     enable-datasource-intercept: false        # DataSource 装饰与 JDBC 执行拦截总开关，默认 false
-    exclude-sql: []                           # SQL 排除前缀列表（忽略大小写），命中即跳过拦截器链
+    log-sql: true                             # 全量 SQL 执行日志（INFO），默认 true；生产可置 false
+    slow-sql-threshold-millis: 2000           # 慢 SQL 告警阈值（毫秒），达到即 WARN，默认 2000
+    log-parameters: true                      # 日志是否输出参数值，默认 true；含敏感字段时建议关闭
+    exclude-sql: []                           # SQL 排除前缀列表（忽略大小写），命中即跳过观测与拦截器链
     enable-full-table-update-block: false     # 内置全表 UPDATE/DELETE 防护拦截器开关，默认 false
 ```
 
@@ -519,7 +520,7 @@ public class TenantIdProvider implements IAutoValueProvider {
 2. **自动填充无开关**：`SqlAutoFillInterceptor` 无条件注册，实体标注 `@SqlAutoValue`/`@AutoSetDate` 即生效（不存在 `tbs.sql.enable-auto-fill-value-interceptor` 配置项）
 3. **`@SelectSQL` 存在注解目标与读取位置不一致**：注解声明 `@Target(FIELD)`，但 `EntityMetadataExtractor` 从**类**上读取——类级使用无法通过编译，该自定义 SQL 能力实际不可用；复杂 SQL 请改用 `AbstractResourceCriteria`（classpath SQL 文件）
 4. **列名解析以 `@Column` 优先**：与工具方法 javadoc 的"@QueryMapping 优先"描述相反，若两注解同时存在，`@Column` 生效
-5. **`use-raw-value: true` 有注入风险**：参数值直接内联，仅在调试或完全可信入参场景使用
+5. **SQL 观测默认开启**：`tbs.sql.log-sql=true` 时全量 SQL 以 INFO 输出；慢 SQL 与执行失败始终 WARN，阈值由 `slow-sql-threshold-millis` 控制；参数值由 `log-parameters` 控制，包含密码、证件号等敏感字段时建议关闭
 6. **`sql-assembler-type` 不生效**：见"配置说明"
 7. **`@QueryOrderField` 字段值须非 null**：值为 null 的排序字段会被跳过；`mappedName` 为空同样跳过
 8. **实体必须有 `@Table`**：`EntityMetadataExtractor.pullFromClass()` 对缺少 `@Table` 的类直接断言失败（使用 `@SelectSQL` 或资源 SQL 的查询对象不受此限）
@@ -527,8 +528,8 @@ public class TenantIdProvider implements IAutoValueProvider {
 10. **`count()` 返回 `Integer`**：超大数据量计数注意溢出
 11. **`ICustomWhereProvider` 需自行防注入**：返回的 SQL 片段直接拼接进 WHERE
 12. **DataSource 装饰默认关闭**：`tbs.sql.enable-datasource-intercept` 默认 `false`；开启后仅装饰主数据源（唯一候选或标注 `@Primary` 的 Bean），多候选且无 Primary 时跳过装饰并告警
-13. **JDBC 执行拦截不拿参数值、不改写 SQL**：拦截上下文仅含 SQL 文本与命令类型推断，观测（SQL 日志/耗时）仍由 p6spy 与 Executor 层日志承担
-14. **排除规则建议显式配置**：装饰覆盖全部 JDBC 流量，连接池健康检查、批量任务框架自身语句等应通过 `tbs.sql.exclude-sql` 前缀排除
+13. **裁决不拿参数值、观测可拿参数值、均不改写 SQL**：裁决上下文仅含 SQL 文本与命令类型推断；参数值由 Statement 代理的 `setXxx` 影子副本采集，仅在 `onExecutionCompleted` 观测回调中提供（含慢 SQL 与失败日志）
+14. **排除规则建议显式配置**：装饰覆盖全部 JDBC 流量，连接池健康检查、批量任务框架自身语句等应通过 `tbs.sql.exclude-sql` 前缀排除（排除同时作用于观测与裁决）
 
 ## 许可证
 

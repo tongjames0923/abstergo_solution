@@ -26,6 +26,11 @@ public final class SqlTextUtils {
      */
     private static final Pattern WHERE_PATTERN = Pattern.compile("\\bwhere\\b");
 
+    /**
+     * 匹配连续空白字符（含换行、制表符）
+     */
+    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+
     private SqlTextUtils() {
         // 工具类，禁止实例化
     }
@@ -82,5 +87,18 @@ public final class SqlTextUtils {
      */
     public static boolean containsWhere(String sql) {
         return WHERE_PATTERN.matcher(normalize(sql)).find();
+    }
+
+    /**
+     * 将 SQL 压缩为单行：连续空白（含换行、制表符）折叠为单个空格。
+     *
+     * @param sql 原始 SQL，允许为 null
+     * @return 单行 SQL，null 或空串时返回空串
+     */
+    public static String singleLine(String sql) {
+        if (sql == null || sql.isEmpty()) {
+            return "";
+        }
+        return WHITESPACE_PATTERN.matcher(sql).replaceAll(" ").trim();
     }
 }

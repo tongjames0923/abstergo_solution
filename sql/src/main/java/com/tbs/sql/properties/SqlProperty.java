@@ -2,8 +2,6 @@ package com.tbs.sql.properties;
 
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.assembler.impl.DefaultSqlAssembler;
-import com.tbs.sql.logger.ISqlLogger;
-import com.tbs.sql.logger.impl.NoSqlLogger;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
@@ -18,10 +16,10 @@ import java.util.List;
  *
  * <h3>配置属性</h3>
  * <ul>
- *   <li>{@code enableLogInterceptor}: 是否启用SQL日志拦截器，默认false</li>
- *   <li>{@code enableAutoFillValueInterceptor}: 是否启用自动填充拦截器，默认false</li>
- *   <li>{@code sqlLoggerType}: SQL日志记录器类型，默认 {@link NoSqlLogger}</li>
- *   <li>{@code useRawValue}: 是否使用原始值，默认false</li>
+ *   <li>{@code enableDatasourceIntercept}: 是否启用 DataSource 装饰与 JDBC 执行拦截，默认false</li>
+ *   <li>{@code logSql}: 是否输出全量 SQL 执行日志，默认true</li>
+ *   <li>{@code slowSqlThresholdMillis}: 慢 SQL 告警阈值（毫秒），默认2000</li>
+ *   <li>{@code logParameters}: 是否在 SQL 执行日志中输出参数值，默认true</li>
  *   <li>{@code sqlAssemblerType}: SQL组装器类型，默认 {@link DefaultSqlAssembler}</li>
  * </ul>
  *
@@ -37,9 +35,10 @@ import java.util.List;
  * # application.yml
  * tbs:
  *   sql:
- *     enable-log-interceptor: true
- *     enable-auto-fill-value-interceptor: true
- *     sql-logger-type: com.tbs.sql.logger.impl.SimpleSqlLogger
+ *     enable-datasource-intercept: true
+ *     log-sql: true
+ *     slow-sql-threshold-millis: 2000
+ *     log-parameters: true
  *     sql-assembler-type: com.tbs.sql.assembler.impl.DefaultSqlAssembler
  * }</pre>
  *
@@ -58,22 +57,29 @@ import java.util.List;
 @ConfigurationProperties("tbs.sql")
 public class SqlProperty {
     /**
-     * 是否启用SQL日志拦截器。
-     * 启用后，SQL执行时会记录日志信息。
-     * 默认值为 {@code false}。
+     * 是否输出全量 SQL 执行日志（INFO 级别，含执行耗时）。
+     * 慢 SQL 与执行失败的日志不受该开关控制，始终输出。
+     * 默认值为 {@code true}。
      */
-    private boolean enableLogInterceptor = false;
+    private boolean logSql = true;
 
     /**
-     * SQL日志记录器类型。
-     * 用于指定实现 {@link ISqlLogger} 接口的类，负责记录SQL执行日志。
-     * 默认使用 {@link NoSqlLogger}，即不记录任何日志。
+     * 慢 SQL 告警阈值（毫秒）。
+     * 语句执行耗时达到该值时以 WARN 级别输出慢 SQL 告警。
+     * 默认值为 {@code 2000}。
      */
-    private Class<? extends ISqlLogger> sqlLoggerType = NoSqlLogger.class;
+    private long slowSqlThresholdMillis = 2000L;
 
     /**
-     * 是否使用原始值。
-     * 启用后，SQL参数将使用原始值而不是预编译语句的参数。
+     * 是否在 SQL 执行日志中输出 PreparedStatement 参数值。
+     * 开启后可定位具体数据行，但可能将敏感信息写入日志，生产环境可按需关闭。
+     * 默认值为 {@code true}。
+     */
+    private boolean logParameters = true;
+
+    /**
+     * 是否启用原始 SQL 模式。
+     * 启用后将禁用所有 SQL 片段组装，直接使用原始 SQL 字符串。
      * 默认值为 {@code false}。
      */
     private boolean useRawValue = false;

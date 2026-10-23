@@ -35,12 +35,11 @@ dic/
     │   └── service/impl/             # DataDicServiceImpl（@DubboService）
     └── src/main/resources/
         ├── application.yml           # 主配置（Nacos/Dubbo）
-        ├── application-db.yml        # 数据源（p6spy + HikariCP）
+        ├── application-db.yml        # 数据源（MySQL 驱动 + HikariCP）
         ├── application-redis.yml     # Redis
         ├── application-tbs.yml       # tbs.* 模块配置
         ├── application-mq.yml        # RabbitMQ
         ├── .env                      # 环境变量（spring-dotenv 加载）
-        ├── spy.properties            # p6spy SQL 日志配置
         └── i18n/                     # messages-dic.properties（中）/ messages-dic_en_US.properties（英）
 ```
 
@@ -253,7 +252,7 @@ tbs:
 
 ### 数据访问（application-db.yml）
 
-- 驱动为 `com.p6spy.engine.spy.P6SpyDriver`（SQL 打印，格式见 `spy.properties`），URL 形如 `jdbc:p6spy:mysql://...`；
+- 驱动为 `com.mysql.cj.jdbc.Driver`，URL 形如 `jdbc:mysql://...`；SQL 观测由 `sql` 模块的 JDBC 装饰层承担（`application-tbs.yml` 的 `tbs.sql` 配置）；
 - 连接池 HikariCP：最小空闲 5 / 最大 20 / 连接超时 30s / 空闲超时 600s / 最大存活 1800s；
 - JPA `ddl-auto: update` + `generate-ddl: true`（自动建表），MyBatis 开启驼峰映射。
 

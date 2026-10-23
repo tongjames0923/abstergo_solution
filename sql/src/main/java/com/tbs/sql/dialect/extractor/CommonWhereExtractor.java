@@ -14,10 +14,10 @@ import com.tbs.sql.model.where.WhereCompose;
 import com.tbs.sql.model.where.WhereInfo;
 import com.tbs.sql.model.where.WhereNode;
 import com.tbs.sql.properties.SqlProperty;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
-import jakarta.annotation.Resource;
 import java.util.*;
 
 /**

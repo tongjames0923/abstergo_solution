@@ -230,10 +230,9 @@ app:
 
 | 文件 | 内容 |
 | --- | --- |
-| `application-db.yml` | 数据源：**p6spy 代理驱动**（SQL 日志）、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、tk.mybatis 驼峰映射 |
+| `application-db.yml` | 数据源：MySQL 驱动、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、tk.mybatis 驼峰映射、`tbs.sql` SQL 观测配置 |
 | `application-redis.yml` | Redis 连接 |
 | `application-mq.yml` | RabbitMQ + 手动 ACK |
-| `spy.properties` | p6spy：慢 SQL 检测（>2s）、Slf4J 输出、排除健康检查语句 |
 | `view-route.yml` | **视图路由 YML 兜底配置**（common/admin/develop 三组菜单，含角色 `MENU.ADMIN`/`MENU.DEV`）；数据库实现启用时此文件不生效 |
 | `i18n/messages-app*.properties` | 前端菜单文案（`view.menu.*` key，中英文） |
 
@@ -364,7 +363,7 @@ JPA `spring.jpa.hibernate.ddl-auto: update`：shared/tree-struct 等模块的实
 
 ### SQL 观测
 
-p6spy 代理驱动（`spy.properties`）：所有 SQL 经 Slf4J 输出（含执行时间）、慢 SQL 阈值 2 秒、排除 `select 1` 等健康检查。
+SQL 观测由 `sql` 模块的 JDBC 装饰层统一承担（`tbs.sql.enable-datasource-intercept: true`）：全量 SQL 经 `datasource.sql.execution` 日志器输出（含耗时与 PreparedStatement 参数值），执行耗时达到 `tbs.sql.slow-sql-threshold-millis`（默认 2000ms）以 WARN 输出慢 SQL 告警，`tbs.sql.exclude-sql` 排除健康检查语句；参数含敏感字段时可用 `tbs.sql.log-parameters: false` 关闭。
 
 ## 构建与部署
 
@@ -423,10 +422,9 @@ com.tbs.app
 resources/
 ├── application.yml             主配置（profiles/Nacos导入/Dubbo/app.gateway）
 ├── application-tbs.yml          平台 tbs.* 配置聚合
-├── application-db.yml           数据源（p6spy/HikariCP/JPA）
+├── application-db.yml           数据源（MySQL 驱动/HikariCP/JPA + tbs.sql 观测）
 ├── application-redis.yml        Redis
 ├── application-mq.yml           RabbitMQ
 ├── view-route.yml               视图路由 YML 兜底配置
-├── spy.properties               p6spy SQL 日志
 └── i18n/messages-app*.properties  前端菜单文案（中英文）
 ```
