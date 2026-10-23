@@ -39,8 +39,10 @@ import java.util.List;
  * <h3>注意事项</h3>
  * <ul>
  *   <li>主键由应用侧生成（雪花），本接口不开启数据库主键回填</li>
- *   <li>空集合的批量操作直接返回，不会生成非法的空 IN 或空 VALUES 语句</li>
- *   <li>{@link #select} 与 {@link #delete} 只按非空且非集合类型的字段拼接条件</li>
+ *   <li>{@link #insertList}、{@link #selectByIdList}、{@link #deleteByIdList} 收到空集合时直接返回，
+ *       不会生成非法的空 IN 或空 VALUES 语句</li>
+ *   <li>分批方法按方言上限拆成多次执行，不是原子操作；需要整体回滚时由调用方开启事务</li>
+ *   <li>{@link #select} 与 {@link #delete} 只按非空、非空串且非集合类型的字段拼接条件</li>
  * </ul>
  *
  * @param <T> 实体类型
@@ -80,6 +82,9 @@ public interface GenericMapper<T, K> {
     /**
      * 批量插入记录，按方言容量上限自动分批。
      *
+     * <p>超出单条SQL上限时拆成多次执行，<b>不是原子操作</b>：中途失败会留下已提交的前几批数据。
+     * 需要整体成功或整体回滚时，调用方必须在本方法外层开启事务。</p>
+     *
      * @param records 待插入实体列表，为空时直接返回0
      * @return 受影响行数
      */
@@ -104,7 +109,7 @@ public interface GenericMapper<T, K> {
     /**
      * 批量插入单批记录，由 {@link #insertList} 按上限拆分后调用。
      *
-     * @param records 单批待插入实体列表，行数与参数数必须在上限内
+     * @param records 单批待插入实体列表，行数与参数数必须在上限内且不得为空，业务侧请使用 {@link #insertList}
      * @return 受影响行数
      */
     @InsertProvider(type = GenericSqlProvider.class, method = "insertBatch")
@@ -121,6 +126,8 @@ public interface GenericMapper<T, K> {
 
     /**
      * 按主键批量查询，按 IN 列表上限自动分批后合并结果。
+     *
+     * <p>分批查询之间不构成一致性快照，分批期间数据变更可能被部分命中。</p>
      *
      * @param idList 主键值列表，为空时返回空列表
      * @return 实体列表
@@ -203,6 +210,9 @@ public interface GenericMapper<T, K> {
     /**
      * 按主键批量删除，按 IN 列表上限自动分批。
      *
+     * <p>超出单条SQL上限时拆成多次执行，<b>不是原子操作</b>：中途失败会留下已删除的前几批数据。
+     * 需要整体成功或整体回滚时，调用方必须在本方法外层开启事务。</p>
+     *
      * @param idList 主键值列表，为空时直接返回0
      * @return 受影响行数
      */
@@ -221,7 +231,8 @@ public interface GenericMapper<T, K> {
     /**
      * 按主键批量删除单批记录，由 {@link #deleteByIdList} 按上限拆分后调用。
      *
-     * @param idList 单批主键值列表，数量必须在 {@link #MAX_IN_ITEMS} 以内
+     * @param idList 单批主键值列表，数量必须在 {@link #MAX_IN_ITEMS} 以内且不得为空，业务侧请使用
+     *                {@link #deleteByIdList}
      * @return 受影响行数
      */
     @DeleteProvider(type = GenericSqlProvider.class, method = "deleteByIdListBatch")

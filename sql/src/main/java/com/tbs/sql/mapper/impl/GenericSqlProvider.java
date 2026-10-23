@@ -13,8 +13,11 @@ import org.apache.ibatis.builder.annotation.ProviderContext;
 
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.TypeVariable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +39,7 @@ import java.util.Map;
  * <h3>注意事项</h3>
  * <ul>
  *   <li>本类不开启 {@code useGeneratedKeys}，主键由应用侧生成，四库行为一致</li>
- *   <li>条件拼接只取非空且非集合、非数组的字段，全空时退化为无 WHERE 的全表语句</li>
+ *   <li>条件拼接只取非空、非空串、非集合、非数组的字段，全空时退化为无 WHERE 的全表语句</li>
  *   <li>方言实例在语句生成时从 Spring 容器获取，此时容器必然已就绪</li>
  * </ul>
  *
@@ -85,6 +88,7 @@ public class GenericSqlProvider {
      */
     public String insertBatch(Map<String, Object> params) {
         List<?> records = (List<?>)params.get("records");
+        AssertUtil.isTrue(records == null || records.isEmpty(), "批量插入的records不能为空，请使用insertList");
         EntityTableMetadata metadata = EntityMetadataExtractor.pullTableMetadata(records.get(0).getClass());
         List<String> columns = new ArrayList<>(metadata.getColumns().size());
         List<String> properties = new ArrayList<>(metadata.getColumns().size());
@@ -115,6 +119,7 @@ public class GenericSqlProvider {
      */
     public String selectByIdListBatch(ProviderContext context, Map<String, Object> params) {
         List<?> idList = (List<?>)params.get("idList");
+        AssertUtil.isTrue(idList == null || idList.isEmpty(), "分批查询的idList不能为空，请使用selectByIdList");
         EntityTableMetadata metadata = resolveMetadata(context, null);
         return buildSelect(metadata, buildInCondition(metadata, idList.size()));
     }
@@ -211,6 +216,7 @@ public class GenericSqlProvider {
      */
     public String deleteByIdListBatch(ProviderContext context, Map<String, Object> params) {
         List<?> idList = (List<?>)params.get("idList");
+        AssertUtil.isTrue(idList == null || idList.isEmpty(), "分批删除的idList不能为空，请使用deleteByIdList");
         EntityTableMetadata metadata = resolveMetadata(context, null);
         return "DELETE FROM " + metadata.getTableName() + " WHERE " + buildInCondition(metadata, idList.size());
     }
@@ -235,20 +241,50 @@ public class GenericSqlProvider {
     /**
      * 解析 Mapper 接口声明的实体类型。
      *
+     * <p>沿泛型父接口递归向下查找，逐层绑定类型变量，因此 {@code XxxMapper extends BaseMapper<Xxx>}
+     * 这类中间抽象层也能解析出实体类型。</p>
+     *
      * @param mapperType 当前 Mapper 接口类型
      * @return 实体类型，未按约定声明泛型时返回null
      */
     private Class<?> resolveEntityClass(Class<?> mapperType) {
         for (Type type : mapperType.getGenericInterfaces()) {
-            if (!(type instanceof ParameterizedType parameterized)) {
-                continue;
+            Class<?> entityClass = resolveEntityClass(type, Collections.emptyMap());
+            if (entityClass != null) {
+                return entityClass;
             }
-            Class<?> raw = (Class<?>)parameterized.getRawType();
-            if (raw != IFrameworkMapper.class && raw != GenericMapper.class) {
-                continue;
-            }
-            Type entityType = parameterized.getActualTypeArguments()[0];
-            if (entityType instanceof Class<?> entityClass) {
+        }
+        return null;
+    }
+
+    /**
+     * 在给定类型变量绑定关系下递归解析实体类型。
+     *
+     * @param type     待解析的父接口类型
+     * @param bindings 外层接口已绑定的类型变量
+     * @return 实体类型，无法解析时返回null
+     */
+    private Class<?> resolveEntityClass(Type type, Map<TypeVariable<?>, Type> bindings) {
+        if (!(type instanceof ParameterizedType parameterized)) {
+            return null;
+        }
+        Class<?> raw = (Class<?>)parameterized.getRawType();
+        TypeVariable<?>[] variables = raw.getTypeParameters();
+        Type[] arguments = parameterized.getActualTypeArguments();
+        Map<TypeVariable<?>, Type> scope = new HashMap<>(bindings);
+        for (int i = 0; i < variables.length && i < arguments.length; i++) {
+            Type argument = arguments[i];
+            scope.put(variables[i],
+                argument instanceof TypeVariable<?> variable && bindings.containsKey(variable) ? bindings.get(variable)
+                    : argument);
+        }
+        if (raw == IFrameworkMapper.class || raw == GenericMapper.class) {
+            Type entityType = scope.get(variables[0]);
+            return entityType instanceof Class<?> entityClass ? entityClass : null;
+        }
+        for (Type parent : raw.getGenericInterfaces()) {
+            Class<?> entityClass = resolveEntityClass(parent, scope);
+            if (entityClass != null) {
                 return entityClass;
             }
         }
@@ -365,7 +401,9 @@ public class GenericSqlProvider {
     /**
      * 构建按实体非空字段等值匹配的条件。
      *
-     * <p>集合与数组类型的字段不参与条件拼接，避免生成无法绑定的占位符。</p>
+     * <p>集合与数组类型的字段不参与条件拼接，避免生成无法绑定的占位符；空串同样跳过，
+     * 与 tk.mybatis 的 {@code whereAllIfColumns(isNotEmpty)} 语义一致，前端用空串表示“不限”时不会拼出
+     * {@code column = ''} 而查不到数据。</p>
      *
      * @param metadata  实体表元数据
      * @param paramName 参数名，用于生成占位符前缀
@@ -379,7 +417,8 @@ public class GenericSqlProvider {
         StringBuilder builder = new StringBuilder();
         for (EntityColumnMetadata column : metadata.getColumns()) {
             Object value = readValue(column, entity);
-            if (value == null || value instanceof Collection || value.getClass().isArray()) {
+            if (value == null || value instanceof Collection || value.getClass().isArray()
+                || value instanceof CharSequence text && text.isEmpty()) {
                 continue;
             }
             if (builder.length() > 0) {

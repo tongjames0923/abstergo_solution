@@ -1,5 +1,6 @@
 package com.tbs.sql.autoconfig;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.constants.OrderConstants;
 import com.tbs.sql.datasource.interceptor.JdbcExecutionInterceptor;
@@ -17,7 +18,9 @@ import com.tbs.sql.properties.SqlProperty;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.TransactionUtil;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.annotation.MapperScan;
+import org.springframework.beans.factory.SmartInitializingSingleton;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
@@ -39,6 +42,7 @@ import jakarta.annotation.Resource;
  *   <li>注册实体查询包装器 {@link IEntityQueryWrapper}</li>
  *   <li>注册 DataSource 装饰与 JDBC 执行拦截配置 {@link DataSourceDecorationConfiguration}</li>
  *   <li>配置自动填充值拦截器 {@link SqlAutoFillInterceptor}</li>
+ *   <li>启动期校验 MyBatis 下划线转驼峰开关</li>
  *   <li>注册排序策略Bean</li>
  * </ul>
  *
@@ -108,6 +112,22 @@ public class SqlAutoConfiguration {
 
     @Bean
     SqlAutoFillInterceptor autoFillInterceptor() { return new SqlAutoFillInterceptor(); }
+
+    /**
+     * 校验 MyBatis 下划线转驼峰开关，关闭时启动即中断。
+     *
+     * <p>框架生成的 SQL 均带属性名别名，不依赖该开关；手写 {@code @Select} 语句没有别名，
+     * 依赖它把下划线列名映射回驼峰属性。开关关闭不会报错，只会让字段静默为 null，
+     * 因此在启动期提前暴露。该校验为启动期断言，不面向接口调用方，故不做国际化。</p>
+     *
+     * @param sqlSessionFactory MyBatis 会话工厂
+     * @return 所有单例初始化完成后执行的校验器
+     */
+    @Bean
+    SmartInitializingSingleton mybatisNamingSwitchValidator(SqlSessionFactory sqlSessionFactory) {
+        return () -> AssertUtil.isTrue(!sqlSessionFactory.getConfiguration().isMapUnderscoreToCamelCase(),
+            "MyBatis配置map-underscore-to-camel-case必须为true，否则手写SQL的下划线列名无法映射到实体属性");
+    }
 
     @Bean(OrderConstants.ASC) public AscStaticOrder ascOrder() { return new AscStaticOrder(); }
     @Bean(OrderConstants.DESC) public DescStaticOrder descOrder() { return new DescStaticOrder(); }

@@ -7,6 +7,7 @@ import com.tbs.sql.mapper.impl.GenericSqlProvider;
 import com.tbs.sql.metadata.EntityColumnMetadata;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.metadata.EntityTableMetadata;
+import com.tbs.sql.util.SqlUtils;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -16,6 +17,7 @@ import org.apache.ibatis.builder.annotation.ProviderContext;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -29,6 +31,9 @@ import java.util.Map;
  * <h3>覆盖范围</h3>
  * <ul>
  *   <li>元数据提取：静态字段、{@code @Transient} 字段被排除，{@code @Column} 映射生效</li>
+ *   <li>列名推导：显式 {@code @Column} 优先，未声明时按 Hibernate 规则转下划线</li>
+ *   <li>与 Hibernate / tk.mybatis 对齐：父类字段参与映射、无 {@code @Table} 时表名转下划线、
+ *       空串条件被跳过、中间泛型父接口可解析</li>
  *   <li>单行插入、按主键查询、条件查询、计数、按主键更新、条件删除</li>
  *   <li>Mapper 泛型解析：仅按主键操作的语句依赖 {@link ProviderContext#getMapperType()}</li>
  *   <li>批量插入的通用、SQL Server、Oracle 三种语法与容量上限</li>
@@ -53,6 +58,8 @@ public class GenericMapperSelfCheck {
      */
     public static void main(String[] args) {
         checkMetadata();
+        checkNaming();
+        checkAlignment();
         checkSingleInsert();
         checkSelect();
         checkUpdate();
@@ -79,6 +86,55 @@ public class GenericMapperSelfCheck {
     }
 
     /**
+     * 校验列名推导：显式 {@code @Column} 优先，未声明时按 Hibernate 规则转下划线。
+     *
+     * <p>覆盖多单词字段漏写 {@code @Column} 的场景，防止运行期列名与建表结果偏差。</p>
+     */
+    private static void checkNaming() {
+        EntityTableMetadata metadata = EntityMetadataExtractor.pullTableMetadata(NamingEntity.class);
+        for (EntityColumnMetadata column : metadata.getColumns()) {
+            if ("createTime".equals(column.getProperty())) {
+                expect("未声明@Column的驼峰字段", "create_time", column.getColumn());
+            }
+            if ("userName".equals(column.getProperty())) {
+                expect("显式@Column列名", "user_name", column.getColumn());
+            }
+        }
+        expect("命名转换后的查询语句",
+            "SELECT id AS id, user_name AS userName, create_time AS createTime FROM t_naming WHERE id = #{id}",
+            new GenericSqlProvider().selectByPrimaryKey(context(NamingMapper.class), Map.of("id", 1L)));
+    }
+
+    /**
+     * 校验与 Hibernate / tk.mybatis 对齐后的行为。
+     *
+     * <p>覆盖四类易回归点：父类字段参与映射、无 {@code @Table} 时的表名推导、空串条件跳过、
+     * 中间泛型父接口的实体解析，以及单批方法传空集合时中断执行。</p>
+     */
+    private static void checkAlignment() {
+        GenericSqlProvider provider = new GenericSqlProvider();
+        DemoEntity condition = new DemoEntity();
+        condition.userName = "";
+        expect("空串条件被跳过",
+            "SELECT id AS id, user_name AS userName, age AS age FROM t_demo",
+            provider.select(null, Map.of("entity", condition)));
+
+        EntityTableMetadata child = EntityMetadataExtractor.pullTableMetadata(ChildEntity.class);
+        expect("父类字段参与映射", "2", String.valueOf(child.getColumns().size()));
+        expect("父类字段列名", "remark", child.getColumns().get(1).getColumn());
+        expect("无@Table时表名转下划线", "plain_entity", SqlUtils.getTableName(PlainEntity.class));
+        expect("间接Mapper继承解析",
+            "SELECT id AS id, user_name AS userName, age AS age FROM t_demo WHERE id = #{id}",
+            provider.selectByPrimaryKey(context(IndirectDemoMapper.class), Map.of("id", 1L)));
+
+        expectRejected("空批量插入", "records不能为空", () -> provider.insertBatch(Map.of("records", List.of())));
+        expectRejected("空批量查询", "idList不能为空",
+            () -> provider.selectByIdListBatch(context(DemoMapper.class), Map.of("idList", List.of())));
+        expectRejected("空批量删除", "idList不能为空",
+            () -> provider.deleteByIdListBatch(context(DemoMapper.class), Map.of("idList", List.of())));
+    }
+
+    /**
      * 校验单行插入语句。
      */
     private static void checkSingleInsert() {
@@ -101,15 +157,16 @@ public class GenericMapperSelfCheck {
         GenericSqlProvider provider = new GenericSqlProvider();
         ProviderContext context = context(DemoMapper.class);
         expect("按主键查询",
-            "SELECT id, user_name, age FROM t_demo WHERE id = #{id}",
+            "SELECT id AS id, user_name AS userName, age AS age FROM t_demo WHERE id = #{id}",
             provider.selectByPrimaryKey(context, Map.of("id", 1L)));
         expect("按主键批量查询",
-            "SELECT id, user_name, age FROM t_demo WHERE id IN (#{idList[0]}, #{idList[1]})",
+            "SELECT id AS id, user_name AS userName, age AS age FROM t_demo "
+                + "WHERE id IN (#{idList[0]}, #{idList[1]})",
             provider.selectByIdListBatch(context, Map.of("idList", Arrays.asList(1L, 2L))));
         DemoEntity condition = new DemoEntity();
         condition.userName = "u";
         expect("条件查询",
-            "SELECT id, user_name, age FROM t_demo WHERE user_name = #{entity.userName}",
+            "SELECT id AS id, user_name AS userName, age AS age FROM t_demo WHERE user_name = #{entity.userName}",
             provider.select(null, Map.of("entity", condition)));
         expect("条件计数",
             "SELECT COUNT(*) FROM t_demo WHERE user_name = #{entity.userName}",
@@ -222,6 +279,26 @@ public class GenericMapperSelfCheck {
     }
 
     /**
+     * 断言操作中断执行，且提示包含关键片段。
+     *
+     * @param name    断言项名称
+     * @param keyword 期望出现在异常信息中的关键片段
+     * @param action  待执行的操作
+     */
+    private static void expectRejected(String name, String keyword, Runnable action) {
+        try {
+            action.run();
+        } catch (RuntimeException e) {
+            String message = e.getMessage();
+            if (message != null && message.contains(keyword)) {
+                return;
+            }
+            throw new IllegalStateException(name + " 提示异常：" + message, e);
+        }
+        throw new IllegalStateException(name + " 应中断执行");
+    }
+
+    /**
      * 断言实际值与期望值一致。
      *
      * @param name     断言项名称
@@ -257,5 +334,65 @@ public class GenericMapperSelfCheck {
 
         @Transient
         private String cache;
+    }
+
+    /**
+     * 自检用 Mapper 接口，用于验证命名转换实体的泛型解析。
+     */
+    interface NamingMapper extends IFrameworkMapper<NamingEntity, Long> {
+    }
+
+    /**
+     * 自检用实体，覆盖“未声明 {@code @Column} 的驼峰字段”与“显式列名”两种列名推导。
+     */
+    @Table(name = "t_naming")
+    static class NamingEntity {
+        @Id
+        private Long id;
+
+        @Column(name = "user_name")
+        private String userName;
+
+        private Date createTime;
+    }
+
+    /**
+     * 自检用 Mapper 中间抽象层，验证泛型父接口逐层绑定。
+     *
+     * @param <T> 实体类型
+     */
+    interface BaseDemoMapper<T> extends IFrameworkMapper<T, Long> {
+    }
+
+    /**
+     * 自检用间接 Mapper，验证 {@code XxxMapper extends BaseMapper<Xxx>} 的实体解析。
+     */
+    interface IndirectDemoMapper extends BaseDemoMapper<DemoEntity> {
+    }
+
+    /**
+     * 自检用父类，仅声明一个持久化字段。
+     */
+    static class ParentEntity {
+        private String remark;
+    }
+
+    /**
+     * 自检用子类，验证父类字段参与映射且静态字段被排除。
+     */
+    @Table(name = "t_child")
+    static class ChildEntity extends ParentEntity {
+        private static final long serialVersionUID = 1L;
+
+        @Id
+        private Long id;
+    }
+
+    /**
+     * 自检用无 {@code @Table} 实体，验证表名 fallback 的驼峰转下划线。
+     */
+    static class PlainEntity {
+        @Id
+        private Long id;
     }
 }

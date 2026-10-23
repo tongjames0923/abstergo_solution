@@ -52,11 +52,14 @@
 | [必须] | 实体实现 `IBaseEntity<Long>`，`serialVersionUID` 声明，Lombok 三注解齐全 |
 | [必须] | 常用查询字段在 `@Table(indexes=...)` 声明索引；显式 `@Column` 蛇形映射 |
 | [必须] | 删除语义走逻辑删除（flag + `@LogicDeleteEntity` + FlagEnum），物理删除有正当理由 |
+| [必须] | `@LogicDeleteEntity` 实体未调用 `GenericMapper` 的 `select` / `selectCount` / `delete`（不注入 flag 过滤，走 QueryEngine） |
+| [必须] | 调 `insertList` / `selectByIdList` / `deleteByIdList` 的写路径已加事务（分批执行非原子） |
 | [必须] | 表结构变更脚本同步到 `etc/sql_file/` |
 | [必须] | 唯一性/非空/默认值等约束在 Service 断言中表达，`@Table` 只声明 `@Index`，建表脚本只建普通索引（总纲铁律 14 / 03 分册 3.3.3） |
 | [禁止] | 用 `uniqueConstraints`、`nullable = false`、`columnDefinition` 默认值、`@JoinColumn` 外键替代业务校验 |
 | [禁止] | 建表脚本用 `UNIQUE KEY` / `NOT NULL` / `DEFAULT` / `FOREIGN KEY` / `ON DELETE CASCADE` / `CHECK` / 触发器承接业务规则（主键除外） |
 | [禁止] | 字符串拼接 SQL；手写 limit 分页；绕过框架 new JdbcTemplate |
+| [禁止] | 用 batch 单批方法（`insertBatch`/`selectByIdListBatch`/`deleteByIdListBatch`）直调业务，传入空集合会中断执行 |
 | [建议] | 条件查询优先 QueryEngine 链式；复杂 JOIN 用 `@SelectSQL` 专用模型 |
 
 ## 7.5 后端 - Service 层

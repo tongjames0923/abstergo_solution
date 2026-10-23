@@ -48,6 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <h3>注意事项</h3>
  * <ul>
  *   <li>实体类必须添加 {@link Table} 注解</li>
+ *   <li>父类声明的字段同样参与元数据提取，与 Hibernate 的映射范围一致</li>
  *   <li>支持 {@link SelectSQL} 注解的自定义SQL</li>
  *   <li>元数据会被缓存，修改实体类后需要清除缓存</li>
  * </ul>
@@ -102,12 +103,7 @@ public class EntityMetadataExtractor {
             AssertUtil.notNull(table, "实体类" + entityClass.getName() + "没有添加@Table注解");
             selectInfoModel.setTableName(table.name());
             List<SelectItemModel> items = new LinkedList<>();
-            Field[] fields = entityClass.getDeclaredFields();
-            for (int i = 0; i < fields.length; i++) {
-                Field field = fields[i];
-                if (SqlUtils.isSkipField(field)) {
-                    continue;
-                }
+            for (Field field : SqlUtils.getPersistentFields(entityClass)) {
                 SelectItemModel item =
                     new SelectItemModel(SqlUtils.getFieldNameWithMapping(field), field.getName());
                 items.add(item);
@@ -131,10 +127,7 @@ public class EntityMetadataExtractor {
         AssertUtil.notNull(entityClass, "根据实体类型提取表元数据，实体类型不能为空");
         return tableMetadataCache.computeIfAbsent(entityClass, c -> {
             List<EntityColumnMetadata> columns = new LinkedList<>();
-            for (Field field : c.getDeclaredFields()) {
-                if (SqlUtils.isSkipField(field)) {
-                    continue;
-                }
+            for (Field field : SqlUtils.getPersistentFields(c)) {
                 field.setAccessible(true);
                 columns.add(new EntityColumnMetadata(field.getName(), SqlUtils.getFieldNameWithMapping(field),
                     field.isAnnotationPresent(Id.class), field));
