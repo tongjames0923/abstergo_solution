@@ -1,0 +1,346 @@
+{
+  "configVersion": 2,
+  "packages": [
+    {
+      "name": "_fe_analyzer_shared",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/_fe_analyzer_shared-109.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "analyzer",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/analyzer-14.5.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "args",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/args-2.7.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "async",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/async-2.13.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "boolean_selector",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/boolean_selector-2.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "cli_config",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/cli_config-0.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "cli_util",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/cli_util-0.6.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.7"
+    },
+    {
+      "name": "collection",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/collection-1.19.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "convert",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/convert-3.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "coverage",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/coverage-1.16.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "crypto",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/crypto-3.0.7",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "dio",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/dio-5.11.1",
+      "packageUri": "lib/",
+      "languageVersion": "2.18"
+    },
+    {
+      "name": "dio_web_adapter",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/dio_web_adapter-2.2.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "fetch_api",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/fetch_api-2.3.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.6"
+    },
+    {
+      "name": "fetch_client",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/fetch_client-1.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "ffi",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/ffi-2.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.7"
+    },
+    {
+      "name": "file",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/file-7.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "frontend_server_client",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/frontend_server_client-4.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
+    },
+    {
+      "name": "glob",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/glob-2.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "http",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/http-1.6.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "http_multi_server",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/http_multi_server-3.2.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "http_parser",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/http_parser-4.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "io",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/io-1.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "lints",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/lints-4.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "logging",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/logging-1.3.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "matcher",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/matcher-0.12.20",
+      "packageUri": "lib/",
+      "languageVersion": "3.10"
+    },
+    {
+      "name": "meta",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/meta-1.19.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "mime",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/mime-2.1.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.2"
+    },
+    {
+      "name": "node_preamble",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/node_preamble-2.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.12"
+    },
+    {
+      "name": "package_config",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/package_config-3.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "path",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/path-1.9.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "pool",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/pool-1.5.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "pub_semver",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/pub_semver-2.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "shelf",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/shelf-1.4.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "shelf_packages_handler",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/shelf_packages_handler-3.0.2",
+      "packageUri": "lib/",
+      "languageVersion": "2.17"
+    },
+    {
+      "name": "shelf_static",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/shelf_static-1.2.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.9"
+    },
+    {
+      "name": "shelf_web_socket",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/shelf_web_socket-3.0.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "source_map_stack_trace",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/source_map_stack_trace-2.1.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "source_maps",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/source_maps-0.10.14",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "source_span",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/source_span-1.10.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "stack_trace",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/stack_trace-1.12.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "stream_channel",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/stream_channel-2.1.4",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "string_scanner",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/string_scanner-1.4.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "term_glyph",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/term_glyph-1.2.2",
+      "packageUri": "lib/",
+      "languageVersion": "3.1"
+    },
+    {
+      "name": "test",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/test-1.33.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "test_api",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/test_api-0.7.15",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "test_core",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/test_core-0.6.21",
+      "packageUri": "lib/",
+      "languageVersion": "3.11"
+    },
+    {
+      "name": "typed_data",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/typed_data-1.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "vm_service",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/vm_service-15.4.0",
+      "packageUri": "lib/",
+      "languageVersion": "3.5"
+    },
+    {
+      "name": "watcher",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/watcher-1.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "web",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/web-1.1.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "web_socket",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/web_socket-1.0.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "web_socket_channel",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/web_socket_channel-3.0.3",
+      "packageUri": "lib/",
+      "languageVersion": "3.3"
+    },
+    {
+      "name": "webkit_inspection_protocol",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/webkit_inspection_protocol-1.2.1",
+      "packageUri": "lib/",
+      "languageVersion": "3.0"
+    },
+    {
+      "name": "yaml",
+      "rootUri": "file:///Users/abstergo/.pub-cache/hosted/pub.flutter-io.cn/yaml-3.1.4",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    },
+    {
+      "name": "tbs_client",
+      "rootUri": "../",
+      "packageUri": "lib/",
+      "languageVersion": "3.4"
+    }
+  ],
+  "generator": "pub",
+  "generatorVersion": "3.12.2",
+  "flutterRoot": "file:///Users/abstergo/Downloads/flutter",
+  "flutterVersion": "3.44.2",
+  "pubCache": "file:///Users/abstergo/.pub-cache"
+}
