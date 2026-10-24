@@ -1,13 +1,14 @@
-import 'package:flutter/material.dart';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
 import 'package:tbs_client/tbs_client.dart';
 
 import '../../di/providers.dart';
-
 import '../../di/messages.dart';
 import '../../di/session.dart';
+import '../../shared/design/app_theme.dart';
 import '../../shared/l10n/app_localizations.dart';
+import '../../shared/widgets/app_nav_bar.dart';
 
 /// 消息中心：筛选、游标无限滚动、批量已读与详情
 class MessagesPage extends ConsumerStatefulWidget {
@@ -49,156 +50,95 @@ class _MessagesPageState extends ConsumerState<MessagesPage> {
     final l10n = AppLocalizations.of(context);
     final state = ref.watch(messagesProvider);
     final status = ref.watch(connectionStatusProvider);
-    return Column(
-      children: [
-        _FilterBar(l10n: l10n, state: state, status: status),
-        if (status != ConnectionStatus.connected && status != ConnectionStatus.idle)
-          _ReconnectBanner(l10n: l10n),
-        Expanded(
-          child: state.loading
-              ? const Center(child: CircularProgressIndicator())
-              : RefreshIndicator(
-                  onRefresh: () =>
-                      ref.read(messagesProvider.notifier).refresh(),
-                  child: state.messages.isEmpty
-                      ? ListView(
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(48),
-                              child: Center(
-                                child: Text(
-                                  l10n.messagesEmpty,
-                                  style: TextStyle(
-                                    color:
-                                        context.theme.colors.mutedForeground,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        )
-                      : ListView.builder(
-                          controller: _scroll,
-                          padding: const EdgeInsets.all(16),
-                          itemCount: state.messages.length +
-                              (state.hasMore || state.loadingMore ? 1 : 0),
-                          itemBuilder: (context, index) {
-                            if (index >= state.messages.length) {
-                              return const Padding(
-                                padding: EdgeInsets.all(16),
-                                child: Center(
-                                  child: SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }
-                            return _MessageCard(
-                              message: state.messages[index],
-                            );
-                          },
-                        ),
-                ),
-        ),
-      ],
-    );
-  }
-}
-
-/// 过滤栏：全部/未读切换与全部已读
-class _FilterBar extends ConsumerWidget {
-  final AppLocalizations l10n;
-
-  final MessagesState state;
-
-  final ConnectionStatus status;
-
-  const _FilterBar({
-    required this.l10n,
-    required this.state,
-    required this.status,
-  });
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-      child: Row(
-        children: [
-          _FilterChip(
-            label: l10n.messagesFilterAll,
-            selected: state.readFlag == readFlagAll,
-            onTap: () => ref
-                .read(messagesProvider.notifier)
-                .setReadFlag(readFlagAll),
-          ),
-          const SizedBox(width: 8),
-          _FilterChip(
-            label: l10n.messagesFilterUnread,
-            selected: state.readFlag == readFlagUnread,
-            onTap: () => ref
-                .read(messagesProvider.notifier)
-                .setReadFlag(readFlagUnread),
-          ),
-          const Spacer(),
-          TextButton(
-            onPressed: () =>
-                ref.read(messagesProvider.notifier).markAllRead(),
-            child: Text(
-              l10n.messagesMarkAllRead,
-              style: TextStyle(
-                fontSize: 12,
-                color: context.theme.colors.mutedForeground,
+    final disconnected = status != ConnectionStatus.connected &&
+        status != ConnectionStatus.idle;
+    return CupertinoPageScaffold(
+      child: CustomScrollView(
+        controller: _scroll,
+        slivers: [
+          AppNavBar(title: l10n.navMessages),
+          SliverToBoxAdapter(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: CupertinoSlidingSegmentedControl<String>(
+                      groupValue: state.readFlag,
+                      onValueChanged: (flag) {
+                        if (flag != null) {
+                          ref
+                              .read(messagesProvider.notifier)
+                              .setReadFlag(flag);
+                        }
+                      },
+                      children: {
+                        readFlagAll: Text(l10n.messagesFilterAll),
+                        readFlagUnread: Text(l10n.messagesFilterUnread),
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(36, 36),
+                    onPressed: () =>
+                        ref.read(messagesProvider.notifier).markAllRead(),
+                    child: const Icon(
+                      CupertinoIcons.checkmark_rectangle,
+                      size: 22,
+                      color: AppTheme.primary,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
-        ],
-      ),
-    );
-  }
-}
-
-/// 筛选片
-class _FilterChip extends StatelessWidget {
-  final String label;
-
-  final bool selected;
-
-  final VoidCallback onTap;
-
-  const _FilterChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected
-          ? context.theme.colors.primary
-          : context.theme.colors.secondary,
-      borderRadius: BorderRadius.circular(999),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(999),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 7),
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: selected
-                  ? context.theme.colors.primaryForeground
-                  : context.theme.colors.foreground,
+          if (disconnected)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: _ReconnectBanner(l10n: l10n),
+              ),
             ),
+          CupertinoSliverRefreshControl(
+            onRefresh: () => ref.read(messagesProvider.notifier).refresh(),
           ),
-        ),
+          if (state.loading)
+            const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CupertinoActivityIndicator()),
+            )
+          else if (state.messages.isEmpty)
+            SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(
+                child: Text(
+                  l10n.messagesEmpty,
+                  style: TextStyle(color: AppTheme.secondaryLabel(context)),
+                ),
+              ),
+            )
+          else
+            SliverList.builder(
+              itemCount: state.messages.length +
+                  (state.hasMore || state.loadingMore ? 1 : 0),
+              itemBuilder: (context, index) {
+                if (index >= state.messages.length) {
+                  return const Padding(
+                    padding: EdgeInsets.all(16),
+                    child: Center(
+                      child: CupertinoActivityIndicator(),
+                    ),
+                  );
+                }
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+                  child: _MessageCard(message: state.messages[index]),
+                );
+              },
+            ),
+        ],
       ),
     );
   }
@@ -212,25 +152,32 @@ class _ReconnectBanner extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    const amber = CupertinoColors.systemOrange;
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 4, 16, 4),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: const Color(0xFFD97706).withValues(alpha: 0.12),
+        color: CupertinoDynamicColor.resolve(amber, context)
+            .withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Row(
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 16, color: Color(0xFFD97706)),
+          const Icon(CupertinoIcons.wifi_slash, size: 16, color: amber),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               l10n.messagesDisconnected,
-              style: const TextStyle(fontSize: 12, color: Color(0xFF92400E)),
+              style: const TextStyle(
+                fontSize: 13,
+                color: amber,
+              ),
             ),
           ),
-          TextButton(
-            onPressed: () => ref.read(tbsClientProvider).sse.manualReconnect(),
+          CupertinoButton(
+            padding: EdgeInsets.zero,
+            minimumSize: const Size(36, 36),
+            onPressed: () =>
+                ref.read(tbsClientProvider).sse.manualReconnect(),
             child: Text(l10n.messagesReconnect),
           ),
         ],
@@ -239,7 +186,7 @@ class _ReconnectBanner extends ConsumerWidget {
   }
 }
 
-/// 消息卡片（优先级色条 + 未读点 + 已读操作 + 详情）
+/// 消息卡片：优先级色条 + 未读点 + 已读操作 + 详情弹层
 class _MessageCard extends ConsumerWidget {
   final PushNotifyMessage message;
 
@@ -249,96 +196,115 @@ class _MessageCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
     final priorityColor = switch (message.priority) {
-      'urgent' => const Color(0xFFDC2626),
-      'high' => const Color(0xFFD97706),
-      'low' => const Color(0xFF71717A),
-      _ => const Color(0xFF2563EB),
+      'urgent' => CupertinoColors.systemRed,
+      'high' => CupertinoColors.systemOrange,
+      'low' => CupertinoColors.systemGrey,
+      _ => CupertinoColors.systemBlue,
     };
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      decoration: BoxDecoration(
-        color: context.theme.colors.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.theme.colors.border),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(12),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+    final theme = CupertinoTheme.of(context);
+    return GestureDetector(
+      onTap: () => _openDetail(context, ref, l10n),
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: AppTheme.secondaryBackground(context),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(width: 3, color: priorityColor),
-            Expanded(
-              child: InkWell(
-                onTap: () => _openDetail(context, ref, l10n),
-                child: Padding(
-                  padding: const EdgeInsets.all(14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          if (!message.readFlag)
-                            Container(
-                              width: 7,
-                              height: 7,
-                              margin: const EdgeInsets.only(right: 8),
-                              decoration: BoxDecoration(
-                                color: context.theme.colors.primary,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                          Expanded(
-                            child: Text(
-                              message.title ?? '',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                fontWeight: message.readFlag
-                                    ? FontWeight.w400
-                                    : FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          _TypeBadge(msgType: message.msgType ?? ''),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      Text(
-                        message.content ?? '',
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: context.theme.colors.mutedForeground,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            message.createTime ?? '',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: context.theme.colors.mutedForeground,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (!message.readFlag)
-                            TextButton(
-                              onPressed: () => ref
-                                  .read(messagesProvider.notifier)
-                                  .markRead([message.messageId]),
-                              child: Text(
-                                l10n.messagesMarkRead,
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ],
+            Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 14,
+                  decoration: BoxDecoration(
+                    color: CupertinoDynamicColor.resolve(
+                      priorityColor,
+                      context,
+                    ),
+                    borderRadius: BorderRadius.circular(2),
                   ),
                 ),
+                const SizedBox(width: 8),
+                if (!message.readFlag)
+                  Container(
+                    width: 7,
+                    height: 7,
+                    margin: const EdgeInsets.only(right: 8),
+                    decoration: const BoxDecoration(
+                      color: AppTheme.primary,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                Expanded(
+                  child: Text(
+                    message.title ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.textStyle.copyWith(
+                      fontWeight: message.readFlag
+                          ? FontWeight.w400
+                          : FontWeight.w600,
+                    ),
+                  ),
+                ),
+                if (message.msgType?.isNotEmpty ?? false) ...[
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.primaryColor.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      message.msgType!,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: AppTheme.secondaryLabel(context),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              message.content ?? '',
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 13,
+                color: AppTheme.secondaryLabel(context),
               ),
+            ),
+            const SizedBox(height: 4),
+            Row(
+              children: [
+                Text(
+                  message.createTime ?? '',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.secondaryLabel(context),
+                  ),
+                ),
+                const Spacer(),
+                if (!message.readFlag)
+                  CupertinoButton(
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(36, 36),
+                    onPressed: () => ref
+                        .read(messagesProvider.notifier)
+                        .markRead([message.messageId]),
+                    child: Text(
+                      l10n.messagesMarkRead,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
             ),
           ],
         ),
@@ -346,7 +312,7 @@ class _MessageCard extends ConsumerWidget {
     );
   }
 
-  /// 打开详情弹层并回传已读
+  /// 打开详情弹层（底部模态）并回传已读
   Future<void> _openDetail(
     BuildContext context,
     WidgetRef ref,
@@ -356,19 +322,40 @@ class _MessageCard extends ConsumerWidget {
     if (!message.readFlag) {
       controller.markRead([message.messageId]);
     }
-    await showModalBottomSheet<void>(
+    await showCupertinoModalPopup<void>(
       context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+      builder: (sheetContext) => Container(
+        decoration: BoxDecoration(
+          color: CupertinoTheme.of(sheetContext).scaffoldBackgroundColor,
+          borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(12)),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          20 + MediaQuery.paddingOf(sheetContext).bottom,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Center(
+              child: Container(
+                width: 40,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: AppTheme.separator(sheetContext),
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             Text(
               message.title ?? '',
-              style: sheetContext.theme.typography.body.lg
-                  .copyWith(fontWeight: FontWeight.w600),
+              style: CupertinoTheme.of(sheetContext)
+                  .textTheme
+                  .navTitleTextStyle,
             ),
             const SizedBox(height: 12),
             Text(message.content ?? ''),
@@ -377,38 +364,10 @@ class _MessageCard extends ConsumerWidget {
               '${l10n.messagesSender}：${message.sender ?? '-'} · ${message.createTime ?? '-'}',
               style: TextStyle(
                 fontSize: 12,
-                color: sheetContext.theme.colors.mutedForeground,
+                color: AppTheme.secondaryLabel(sheetContext),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// 消息类型徽标
-class _TypeBadge extends StatelessWidget {
-  final String msgType;
-
-  const _TypeBadge({required this.msgType});
-
-  @override
-  Widget build(BuildContext context) {
-    if (msgType.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: context.theme.colors.secondary,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        msgType,
-        style: TextStyle(
-          fontSize: 10,
-          color: context.theme.colors.mutedForeground,
         ),
       ),
     );

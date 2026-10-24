@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../di/session.dart';
@@ -58,27 +58,26 @@ class _OAuthCallbackPageState extends ConsumerState<OAuthCallbackPage> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return Scaffold(
-      body: Center(
+    return CupertinoPageScaffold(
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (_error == null) ...[
-              const CircularProgressIndicator(),
+              const CupertinoActivityIndicator(),
               const SizedBox(height: 16),
               Text(l10n.oauthProcessing),
             ] else ...[
-              Icon(
-                Icons.error_outline_rounded,
+              const Icon(
+                CupertinoIcons.exclamationmark_circle,
                 size: 40,
-                color: context.theme.colors.destructive,
+                color: CupertinoColors.systemRed,
               ),
               const SizedBox(height: 12),
               Text(_error!),
               const SizedBox(height: 16),
-              FButton(
-                variant: .outline,
-                onPress: () => context.go('/login'),
+              CupertinoButton(
+                onPressed: () => context.go('/login'),
                 child: Text(l10n.commonRetry),
               ),
             ],

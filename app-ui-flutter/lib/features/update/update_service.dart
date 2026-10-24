@@ -1,7 +1,7 @@
 import 'dart:io';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:tbs_client/tbs_client.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -52,20 +52,28 @@ class UpdateService {
         : (action == 'recommend'
             ? l10n.profileUpdateRecommend
             : l10n.profileUpdateNotify);
-    await showDialog<void>(
+    await showCupertinoDialog<void>(
       context: context,
       barrierDismissible: !forced,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CupertinoAlertDialog(
         title: Text(
-          l10n.profileNewVersion(result.latestVersionName ?? '${result.latestVersionCode ?? ''}'),
+          l10n.profileNewVersion(
+            result.latestVersionName ?? '${result.latestVersionCode ?? ''}',
+          ),
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Chip(
-              label: Text(badge),
-              visualDensity: VisualDensity.compact,
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              decoration: BoxDecoration(
+                color: CupertinoTheme.of(dialogContext)
+                    .primaryColor
+                    .withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(badge, style: const TextStyle(fontSize: 11)),
             ),
             const SizedBox(height: 8),
             Flexible(
@@ -77,11 +85,11 @@ class UpdateService {
         ),
         actions: [
           if (!forced)
-            TextButton(
+            CupertinoDialogAction(
               onPressed: () => Navigator.of(dialogContext).pop(),
               child: Text(l10n.profileUpdateLater),
             ),
-          FilledButton(
+          CupertinoDialogAction(
             onPressed: () {
               Navigator.of(dialogContext).pop();
               _startDownload(context, result);
@@ -102,8 +110,8 @@ class UpdateService {
     AppUpdateCheckResult result,
   ) async {
     final l10n = AppLocalizations.of(context);
-    final messenger = ScaffoldMessenger.of(context);
-    if (kIsWeb || !(Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
+    if (kIsWeb ||
+        !(Platform.isWindows || Platform.isMacOS || Platform.isLinux)) {
       final url = result.downloadUrls.firstOrNull;
       if (url != null) {
         await launchUrl(
@@ -123,14 +131,30 @@ class UpdateService {
           onProgressChanged: (received, total) {},
         ),
       );
-      messenger.showSnackBar(
-        SnackBar(content: Text('${l10n.profileUpdateDone}: $file')),
-      );
+      if (context.mounted) {
+        _showTip(context, '${l10n.profileUpdateDone}: $file');
+      }
     } on TbsException {
-      messenger.showSnackBar(
-        SnackBar(content: Text(l10n.profileUpdateFailed)),
-      );
+      if (context.mounted) {
+        _showTip(context, l10n.profileUpdateFailed);
+      }
     }
+  }
+
+  /// 轻提示
+  void _showTip(BuildContext context, String message) {
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (dialogContext) => CupertinoAlertDialog(
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(AppLocalizations.of(context).commonConfirm),
+          ),
+        ],
+      ),
+    );
   }
 
   /// 当前平台标识（无对应平台时为 null）

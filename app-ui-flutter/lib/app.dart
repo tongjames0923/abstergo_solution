@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show ThemeMode;
+import 'package:flutter_localizations/flutter_localizations.dart'
+;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
-import 'package:tbs_client/tbs_client.dart';
 
 import 'di/providers.dart';
 import 'di/session.dart';
@@ -21,44 +21,32 @@ class TbsApp extends ConsumerWidget {
     final locale = ref.watch(localeProvider);
     final router = ref.watch(appRouterProvider);
     _listenClientEvents(ref);
-    return MaterialApp.router(
+    final dark = themeMode == ThemeMode.dark ||
+        (themeMode == ThemeMode.system &&
+            WidgetsBinding.instance.platformDispatcher.platformBrightness ==
+                Brightness.dark);
+    return CupertinoApp.router(
       title: 'TBS Workspace',
       debugShowCheckedModeBanner: false,
-      themeMode: themeMode,
-      theme: AppTheme.materialData(Brightness.light),
-      darkTheme: AppTheme.materialData(Brightness.dark),
+      theme: AppTheme.data(dark ? Brightness.dark : Brightness.light),
       locale: locale,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate,
-        ...FLocalizations.localizationsDelegates,
       ],
       supportedLocales: const [
         Locale('zh'),
         Locale('en'),
-        ...FLocalizations.supportedLocales,
       ],
       routerConfig: router,
-      builder: (context, child) => FTheme(
-        data: AppTheme.foruiData(
-          Theme.of(context).brightness,
-          touch: MediaQuery.sizeOf(context).width < 720,
-        ),
-        child: FToaster(child: FTooltipGroup(child: child!)),
-      ),
     );
   }
 
   /// 订阅 SDK 全局事件（会话失效引导重登）
   void _listenClientEvents(WidgetRef ref) {
     final client = ref.read(tbsClientProvider);
-    _bindOnce(client, ref);
-  }
-
-  /// 事件流一次性绑定（Provider 重建时防重复）
-  void _bindOnce(TbsClient client, WidgetRef ref) {
     client.onSessionExpired.listen((event) {
       ref.read(sessionProvider.notifier).logout();
     });

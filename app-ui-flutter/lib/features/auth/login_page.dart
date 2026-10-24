@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:tbs_client/tbs_client.dart';
 
@@ -8,6 +8,7 @@ import '../../di/providers.dart';
 import '../../di/session.dart';
 import '../../platform/oauth_launcher.dart';
 import '../../routing/app_router.dart';
+import '../../shared/design/app_theme.dart';
 import '../../shared/l10n/app_localizations.dart';
 
 /// 可用登录方式 Provider
@@ -61,50 +62,55 @@ class _LoginPageState extends ConsumerState<LoginPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final grants = ref.watch(loginGrantsProvider);
-    return Scaffold(
-      body: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 420),
-          child: Padding(
+    return CupertinoPageScaffold(
+      child: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
             padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                _BrandHeader(l10n: l10n),
-                const SizedBox(height: 32),
-                grants.when(
-                  data: (list) => _GrantTabs(
-                    grants: list,
-                    activeGrant: _activeGrant,
-                    onSelect: (grant) => setState(() => _activeGrant = grant),
-                  ),
-                  loading: () => const Center(child: CircularProgressIndicator()),
-                  error: (_, _) => _GrantTabs(
-                    grants: const [],
-                    activeGrant: _activeGrant,
-                    onSelect: (grant) => setState(() => _activeGrant = grant),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                if (_error != null)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: Text(
-                      _error!,
-                      style: TextStyle(
-                        color: context.theme.colors.destructive,
-                        fontSize: 13,
-                      ),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  _BrandHeader(l10n: l10n),
+                  const SizedBox(height: 32),
+                  grants.when(
+                    data: (list) => _GrantSegmented(
+                      grants: list,
+                      activeGrant: _activeGrant,
+                      onSelect: (grant) =>
+                          setState(() => _activeGrant = grant),
+                    ),
+                    loading: () =>
+                        const Center(child: CupertinoActivityIndicator()),
+                    error: (_, _) => _GrantSegmented(
+                      grants: const [],
+                      activeGrant: _activeGrant,
+                      onSelect: (grant) =>
+                          setState(() => _activeGrant = grant),
                     ),
                   ),
-                AnimatedSwitcher(
-                  duration: const Duration(milliseconds: 200),
-                  child: _buildGrantForm(context, l10n),
-                ),
-                const SizedBox(height: 24),
-                _GatewayFooter(l10n: l10n),
-              ],
+                  const SizedBox(height: 20),
+                  if (_error != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: Text(
+                        _error!,
+                        style: TextStyle(
+                          color: CupertinoTheme.of(context).primaryColor,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 200),
+                    child: _buildGrantForm(context, l10n),
+                  ),
+                  const SizedBox(height: 24),
+                  _GatewayFooter(l10n: l10n),
+                ],
+              ),
             ),
           ),
         ),
@@ -183,6 +189,7 @@ class _BrandHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = CupertinoTheme.of(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -192,44 +199,53 @@ class _BrandHeader extends StatelessWidget {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: context.theme.colors.primary,
-                borderRadius: BorderRadius.circular(14),
+                color: theme.primaryColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(12),
               ),
               alignment: Alignment.center,
               child: Icon(
-                Icons.bolt_rounded,
-                size: 26,
-                color: context.theme.colors.primaryForeground,
+                CupertinoIcons.bolt_fill,
+                size: 24,
+                color: theme.primaryColor,
               ),
             ),
             const SizedBox(width: 12),
-            Text(l10n.appName, style: context.theme.typography.body.xl2),
+            Text(
+              l10n.appName,
+              style: theme.textTheme.navLargeTitleTextStyle,
+            ),
           ],
         ),
         const SizedBox(height: 16),
         Text(
           l10n.loginWelcome,
-          style: context.theme.typography.body.lg.copyWith(fontWeight: FontWeight.w600),
+          style: theme.textTheme.textStyle.copyWith(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
         ),
         const SizedBox(height: 4),
         Text(
           l10n.loginSubtitle,
-          style: TextStyle(color: context.theme.colors.mutedForeground, fontSize: 13),
+          style: TextStyle(
+            fontSize: 13,
+            color: AppTheme.secondaryLabel(context),
+          ),
         ),
       ],
     );
   }
 }
 
-/// 授权方式切换（登录方式元数据驱动）
-class _GrantTabs extends StatelessWidget {
+/// 授权方式分段控件（登录方式元数据驱动）
+class _GrantSegmented extends StatelessWidget {
   final List<LoginGrantModel> grants;
 
   final String activeGrant;
 
   final ValueChanged<String> onSelect;
 
-  const _GrantTabs({
+  const _GrantSegmented({
     required this.grants,
     required this.activeGrant,
     required this.onSelect,
@@ -237,29 +253,22 @@ class _GrantTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final known = <String>{for (final grant in grants) grant.grantType};
     if (!known.contains('password')) {
       known.add('password');
     }
     final tabs = known.toList(growable: false);
-    final l10n = AppLocalizations.of(context);
     String labelOf(String grant) => switch (grant) {
           'password' => l10n.loginGrantPassword,
           'wecom' => l10n.loginGrantWecom,
           'third_party' => l10n.loginGrantThirdParty,
           _ => grant,
         };
-    return Wrap(
-      spacing: 8,
-      children: [
-        for (final tab in tabs)
-          FButton(
-            variant: tab == activeGrant ? .primary : .outline,
-            size: .sm,
-            onPress: () => onSelect(tab),
-            child: Text(labelOf(tab)),
-          ),
-      ],
+    return CupertinoSlidingSegmentedControl<String>(
+      groupValue: activeGrant,
+      onValueChanged: (value) => onSelect(value ?? 'password'),
+      children: {for (final tab in tabs) tab: Text(labelOf(tab))},
     );
   }
 }
@@ -295,35 +304,37 @@ class _PasswordForm extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FTextField(
-          control: .managed(controller: username),
-          label: Text(l10n.loginUsername),
-          hint: l10n.loginUsernameHint,
+        CupertinoTextField(
+          controller: username,
+          placeholder: l10n.loginUsername,
+          autofocus: true,
         ),
         const SizedBox(height: 14),
-        FTextField(
-          control: .managed(controller: password),
-          label: Text(l10n.loginPassword),
-          hint: l10n.loginPasswordHint,
+        CupertinoTextField(
+          controller: password,
+          placeholder: l10n.loginPassword,
           obscureText: true,
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 12),
         Row(
           children: [
-            FSwitch(value: rememberMe, onChange: onRememberMe),
+            CupertinoSwitch(
+              value: rememberMe,
+              onChanged: onRememberMe,
+            ),
             const SizedBox(width: 8),
             Text(
               l10n.loginRememberMe,
               style: TextStyle(
                 fontSize: 13,
-                color: context.theme.colors.mutedForeground,
+                color: AppTheme.secondaryLabel(context),
               ),
             ),
           ],
         ),
         const SizedBox(height: 18),
-        FButton(
-          onPress: submitting ? null : () => onSubmit(l10n),
+        CupertinoButton.filled(
+          onPressed: submitting ? null : () => onSubmit(l10n),
           child: Text(submitting ? l10n.loginSubmitting : l10n.loginSubmit),
         ),
       ],
@@ -348,18 +359,17 @@ class _WecomForm extends ConsumerWidget {
           l10n.loginUnsupportedGrant,
           style: TextStyle(
             fontSize: 13,
-            color: context.theme.colors.mutedForeground,
+            color: AppTheme.secondaryLabel(context),
           ),
         ),
         const SizedBox(height: 14),
-        FButton(
-          variant: .outline,
-          onPress: submitting ? null : () => _launchWecom(context, ref),
+        CupertinoButton(
+          onPressed: submitting ? null : () => _launchWecom(context, ref),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.open_in_new_rounded, size: 18),
+              const Icon(CupertinoIcons.arrow_up_right, size: 18),
               const SizedBox(width: 8),
               Text(l10n.loginWecomButton),
             ],
@@ -407,19 +417,19 @@ class _ThirdPartyForm extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FTextField(
-          control: .managed(controller: appId),
-          label: Text(l10n.loginAppId),
+        CupertinoTextField(
+          controller: appId,
+          placeholder: l10n.loginAppId,
         ),
         const SizedBox(height: 14),
-        FTextField(
-          control: .managed(controller: appSecret),
-          label: Text(l10n.loginAppSecret),
+        CupertinoTextField(
+          controller: appSecret,
+          placeholder: l10n.loginAppSecret,
           obscureText: true,
         ),
         const SizedBox(height: 18),
-        FButton(
-          onPress: submitting ? null : () => _submit(context, ref),
+        CupertinoButton.filled(
+          onPressed: submitting ? null : () => _submit(context, ref),
           child: Text(l10n.loginSubmit),
         ),
       ],
@@ -437,15 +447,25 @@ class _ThirdPartyForm extends ConsumerWidget {
       }
     } on TbsException catch (error) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              error.message.isEmpty ? l10n.loginFailed : error.message,
-            ),
-          ),
-        );
+        _showError(context, error.message.isEmpty ? l10n.loginFailed : error.message);
       }
     }
+  }
+
+  /// 错误提示
+  void _showError(BuildContext context, String message) {
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (dialogContext) => CupertinoAlertDialog(
+        content: Text(message),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(AppLocalizations.of(context).commonConfirm),
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -467,7 +487,7 @@ class _GatewayFooter extends ConsumerWidget {
         ),
         style: TextStyle(
           fontSize: 11,
-          color: context.theme.colors.mutedForeground,
+          color: AppTheme.secondaryLabel(context),
         ),
       ),
     );

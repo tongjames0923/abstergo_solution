@@ -1,15 +1,14 @@
-import 'package:flutter/material.dart';
-import 'package:forui/forui.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:go_router/go_router.dart';
 
+import '../shared/design/app_theme.dart';
 import '../shared/l10n/app_localizations.dart';
-import 'app_top_bar.dart';
 import 'navigation_model.dart';
 
 /// 自适应外壳
 ///
-/// 宽屏（>=720 逻辑像素）：左侧导航栏 + 顶栏 + 内容区，承接管理端迁移；
-/// 窄屏（移动端）：顶栏 + 内容区 + 底部导航，单栏卡片流。
+/// 窄屏（<900）：CupertinoTabScaffold 底部 Tab 栏，页面各自承载 Large Title 导航栏；
+/// 宽屏（>=900）：浮岛侧栏 + 内容区，承接管理端迁移。
 class AdaptiveScaffold extends StatelessWidget {
   /// 分支导航壳
   final StatefulNavigationShell navigationShell;
@@ -24,41 +23,35 @@ class AdaptiveScaffold extends StatelessWidget {
     final items = AppNavItem.defaults();
     final l10n = AppLocalizations.of(context);
     final currentIndex = _resolveIndex(items);
-    final wide = MediaQuery.sizeOf(context).width >= 720;
-    final title = items[currentIndex].label(l10n);
+    final wide = MediaQuery.sizeOf(context).width >= 900;
     if (wide) {
-      return Scaffold(
-        body: Row(
-          children: [
-            _SideRail(
+      return Row(
+        children: [
+          SizedBox(
+            width: 260,
+            child: _Sidebar(
               items: items,
               currentIndex: currentIndex,
               onSelect: _goBranch,
             ),
-            Expanded(
-              child: Column(
-                children: [
-                  AppTopBar(title: title),
-                  Expanded(child: navigationShell),
-                ],
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-    return Scaffold(
-      body: Column(
-        children: [
-          AppTopBar(title: title),
+          ),
           Expanded(child: navigationShell),
         ],
-      ),
-      bottomNavigationBar: _BottomNav(
-        items: items,
+      );
+    }
+    return CupertinoTabScaffold(
+      tabBar: CupertinoTabBar(
         currentIndex: currentIndex,
-        onSelect: _goBranch,
+        onTap: _goBranch,
+        items: [
+          for (var i = 0; i < items.length; i++)
+            BottomNavigationBarItem(
+              icon: Icon(items[i].icon(i == currentIndex)),
+              label: items[i].label(l10n),
+            ),
+        ],
       ),
+      tabBuilder: (context, index) => navigationShell,
     );
   }
 
@@ -84,208 +77,102 @@ class AdaptiveScaffold extends StatelessWidget {
   }
 }
 
-class _SideRail extends StatelessWidget {
+/// 宽屏侧栏：分组背景 + 发丝分割线
+class _Sidebar extends StatelessWidget {
   final List<AppNavItem> items;
 
   final int currentIndex;
 
   final ValueChanged<int> onSelect;
 
-  const _SideRail({
+  const _Sidebar({
     required this.items,
     required this.currentIndex,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 224,
-      decoration: BoxDecoration(
-        color: context.theme.colors.card,
-        border: Border(right: BorderSide(color: context.theme.colors.border)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 16, 12),
-            child: Row(
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: context.theme.colors.primary,
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.bolt_rounded,
-                    size: 20,
-                    color: context.theme.colors.primaryForeground,
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Text(
-                  'TBS',
-                  style: context.theme.typography.body.md.copyWith(
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 1.2,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 8),
-          for (var i = 0; i < items.length; i++)
-            _RailItem(
-              item: items[i],
-              selected: i == currentIndex,
-              onSelect: () => onSelect(i),
-            ),
-          const Spacer(),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'v1.0.0',
-              style: TextStyle(
-                fontSize: 11,
-                color: context.theme.colors.mutedForeground,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _RailItem extends StatelessWidget {
-  final AppNavItem item;
-
-  final bool selected;
-
-  final VoidCallback onSelect;
-
-  const _RailItem({
-    required this.item,
-    required this.selected,
     required this.onSelect,
   });
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    final fg = selected
-        ? context.theme.colors.primary
-        : context.theme.colors.mutedForeground;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: Material(
-        color: selected ? context.theme.colors.secondary : Colors.transparent,
-        borderRadius: BorderRadius.circular(10),
-        child: InkWell(
-          borderRadius: BorderRadius.circular(10),
-          onTap: onSelect,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            child: Row(
-              children: [
-                Icon(item.icon(selected), size: 20, color: fg),
-                const SizedBox(width: 10),
-                Text(
-                  item.label(l10n),
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                    color: fg,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomNav extends StatelessWidget {
-  final List<AppNavItem> items;
-
-  final int currentIndex;
-
-  final ValueChanged<int> onSelect;
-
-  const _BottomNav({
-    required this.items,
-    required this.currentIndex,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: context.theme.colors.card,
-        border: Border(top: BorderSide(color: context.theme.colors.border)),
-      ),
+    final theme = CupertinoTheme.of(context);
+    return ColoredBox(
+      color: AppTheme.secondaryBackground(context),
       child: SafeArea(
-        child: Row(
-          children: [
-            for (var i = 0; i < items.length; i++)
-              Expanded(
-                child: _BottomNavItem(
-                  item: items[i],
-                  selected: i == currentIndex,
-                  onSelect: () => onSelect(i),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 8, 8, 16),
+                child: Row(
+                  children: [
+                    Icon(CupertinoIcons.bolt_fill,
+                        size: 22, color: theme.primaryColor),
+                    const SizedBox(width: 8),
+                    Text(
+                      'TBS',
+                      style: theme.textTheme.navTitleTextStyle
+                          .copyWith(fontSize: 17),
+                    ),
+                  ],
                 ),
               ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _BottomNavItem extends StatelessWidget {
-  final AppNavItem item;
-
-  final bool selected;
-
-  final VoidCallback onSelect;
-
-  const _BottomNavItem({
-    required this.item,
-    required this.selected,
-    required this.onSelect,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-    final fg = selected
-        ? context.theme.colors.primary
-        : context.theme.colors.mutedForeground;
-    return InkWell(
-      onTap: onSelect,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(item.icon(selected), size: 22, color: fg),
-            const SizedBox(height: 4),
-            Text(
-              item.label(l10n),
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                color: fg,
+              for (var i = 0; i < items.length; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: CupertinoButton(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 12,
+                    ),
+                    color: i == currentIndex
+                        ? theme.primaryColor.withValues(alpha: 0.12)
+                        : CupertinoColors.transparent,
+                    borderRadius: BorderRadius.circular(10),
+                    onPressed: () => onSelect(i),
+                    child: Row(
+                      children: [
+                        Icon(
+                          items[i].icon(i == currentIndex),
+                          size: 20,
+                          color: i == currentIndex
+                              ? theme.primaryColor
+                              : AppTheme.secondaryLabel(context),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          items[i].label(l10n),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: i == currentIndex
+                                ? FontWeight.w600
+                                : FontWeight.w400,
+                            color: i == currentIndex
+                                ? theme.primaryColor
+                                : CupertinoTheme.of(context)
+                                    .textTheme
+                                    .textStyle
+                                    .color,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              const Spacer(),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                child: Text(
+                  'v1.0.0',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.secondaryLabel(context),
+                  ),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

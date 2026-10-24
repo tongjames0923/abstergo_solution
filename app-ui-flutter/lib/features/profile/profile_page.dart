@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart' show ThemeMode;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:forui/forui.dart';
-import 'package:tbs_client/tbs_client.dart';
 
 import '../../di/providers.dart';
 import '../../di/session.dart';
 import '../../features/update/update_service.dart';
 import '../../shared/l10n/app_localizations.dart';
+import '../../shared/widgets/app_nav_bar.dart';
 
 /// 个人中心：用户卡、部门切换、偏好、登出与更新入口
 class ProfilePage extends ConsumerWidget {
@@ -18,314 +18,296 @@ class ProfilePage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     final session = ref.watch(sessionProvider);
     final user = session.value;
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(20),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 640),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _UserCard(user: user),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: l10n.profileDepartment,
-                child: _DepartmentSelector(user: user),
+    return CupertinoPageScaffold(
+      child: CustomScrollView(
+        slivers: [
+          AppNavBar(title: l10n.navProfile),
+          SliverList(
+            delegate: SliverChildListDelegate([
+              CupertinoListSection.insetGrouped(
+                children: [
+                  CupertinoListTile(
+                    title: Text(
+                      '${user?.nickName ?? user?.userName ?? '?'}',
+                      style: CupertinoTheme
+                          .of(context)
+                          .textTheme
+                          .textStyle
+                          .copyWith(fontWeight: FontWeight.w600),
+                    ),
+                    subtitle: user?.userName != null
+                        ? Text('${user?.userName}')
+                        : null,
+                    leading: Container(
+                      width: 56,
+                      height: 56,
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: CupertinoTheme
+                            .of(context)
+                            .primaryColor
+                            .withValues(alpha: 0.12),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        (('${user?.nickName ?? user?.userName ?? '?'}'))
+                            .characters
+                            .first
+                            .toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w700,
+                          color: CupertinoTheme
+                              .of(context)
+                              .primaryColor,
+                        ),
+                      ),
+                    ),
+                    trailing: user?.accountStatusStr != null
+                        ? Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: CupertinoTheme
+                            .of(context)
+                            .primaryColor
+                            .withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                      child: Text(
+                        '${user?.accountStatusStr}',
+                        style: const TextStyle(fontSize: 11),
+                      ),
+                    )
+                        : null,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: l10n.profileTheme,
-                child: const _ThemeSelector(),
+              CupertinoListSection.insetGrouped(
+                header: Text(l10n.profileDepartment),
+                children: [
+                  CupertinoListTile(
+                    title: Text(
+                      user?.currentDepartment?.resolvedName ?? '-',
+                    ),
+                    trailing:
+                    const Icon(CupertinoIcons.chevron_forward),
+                    onTap: () => _pickDepartment(context, ref, l10n),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: l10n.profileLanguage,
-                child: const _LanguageSelector(),
+              CupertinoListSection.insetGrouped(
+                header: Text(l10n.profileTheme),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: CupertinoSlidingSegmentedControl<ThemeMode>(
+                      groupValue: ref.watch(themeModeProvider),
+                      onValueChanged: (mode) =>
+                          ref
+                              .read(themeModeProvider.notifier)
+                              .setMode(mode!),
+                      children: {
+                        ThemeMode.system: Text(l10n.profileThemeSystem),
+                        ThemeMode.light: Text(l10n.profileThemeLight),
+                        ThemeMode.dark: Text(l10n.profileThemeDark),
+                      },
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _SectionCard(
-                title: l10n.profileVersion,
-                child: const _UpdateEntry(),
+              CupertinoListSection.insetGrouped(
+                header: Text(l10n.profileLanguage),
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    child: CupertinoSlidingSegmentedControl<bool>(
+                      groupValue: ref
+                          .watch(localeProvider)
+                          ?.languageCode != 'en',
+                      onValueChanged: (isZh) =>
+                          ref
+                              .read(localeProvider.notifier)
+                              .setLocale(
+                              isZh == true ? null : const Locale('en')),
+                      children: {
+                        true: const Text('中文'),
+                        false: const Text('English'),
+                      },
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 24),
-              FButton(
-                variant: .destructive,
-                onPress: () => _confirmLogout(context, ref, l10n),
-                child: Text(l10n.profileLogout),
+              CupertinoListSection.insetGrouped(
+                header: Text(l10n.profileVersion),
+                children: [
+                  CupertinoListTile(
+                    title: const Text('v1.0.0'),
+                    trailing: CupertinoButton(
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(36, 36),
+                      onPressed: () async {
+                        final result = await UpdateService(
+                          ref.read(tbsClientProvider),
+                        ).checkAndPrompt(context);
+                        if (result != null &&
+                            !result.needUpdate &&
+                            context.mounted) {
+                          _showTip(context, l10n.profileUpToDate);
+                        }
+                      },
+                      child: Text(l10n.profileCheckUpdate),
+                    ),
+                  ),
+                ],
               ),
-            ],
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: CupertinoButton(
+                  color: CupertinoColors.systemRed,
+                  onPressed: () => _confirmLogout(context, ref, l10n),
+                  child: Text(l10n.profileLogout),
+                ),
+              ),
+            ]),
           ),
-        ),
+        ],
       ),
     );
   }
 
-  /// 登出确认
-  Future<void> _confirmLogout(
-    BuildContext context,
-    WidgetRef ref,
-    AppLocalizations l10n,
-  ) async {
-    final confirmed = await showDialog<bool>(
+  /// 部门选择（CupertinoPicker 滚轮）
+  Future<void> _pickDepartment(BuildContext context,
+      WidgetRef ref,
+      AppLocalizations l10n,) async {
+    final user = ref
+        .read(sessionProvider)
+        .value;
+    final departments =
+        (user?.avaliableDepartments as List<dynamic>? ?? const [])
+            .cast<dynamic>();
+    if (departments.isEmpty) {
+      return;
+    }
+    var selected = departments.indexWhere(
+          (d) => '${d.resolvedId}' == '${user?.currentDepartment?.resolvedId}',
+    );
+    if (selected < 0) {
+      selected = 0;
+    }
+    await showCupertinoModalPopup<void>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        content: Text(l10n.profileLogoutConfirm),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: Text(l10n.commonCancel),
+      builder: (sheetContext) =>
+          Container(
+            height: 280,
+            decoration: BoxDecoration(
+              color: CupertinoTheme
+                  .of(sheetContext)
+                  .scaffoldBackgroundColor,
+              borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(12)),
+            ),
+            child: SafeArea(
+              top: false,
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      CupertinoButton(
+                        child: Text(l10n.commonCancel),
+                        onPressed: () =>
+                            Navigator.of(sheetContext).pop(),
+                      ),
+                      CupertinoButton(
+                        child: Text(l10n.commonConfirm),
+                        onPressed: () {
+                          final dept = departments[selected];
+                          final id = '${dept.resolvedId}';
+                          if (id.isNotEmpty) {
+                            ref
+                                .read(sessionProvider.notifier)
+                                .switchDepartment(id);
+                          }
+                          Navigator.of(sheetContext).pop();
+                        },
+                      ),
+                    ],
+                  ),
+                  Expanded(
+                    child: CupertinoPicker(
+                      itemExtent: 36,
+                      scrollController: FixedExtentScrollController(
+                        initialItem: selected,
+                      ),
+                      onSelectedItemChanged: (index) => selected = index,
+                      children: [
+                        for (final dept in departments)
+                          Center(
+                            child: Text('${dept.resolvedName ?? dept
+                                .resolvedId}'),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            child: Text(l10n.commonConfirm),
+    );
+  }
+
+  /// 登出确认
+  Future<void> _confirmLogout(BuildContext context,
+      WidgetRef ref,
+      AppLocalizations l10n,) async {
+    final confirmed = await showCupertinoDialog<bool>(
+      context: context,
+      builder: (dialogContext) =>
+          CupertinoAlertDialog(
+            content: Text(l10n.profileLogoutConfirm),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                child: Text(l10n.commonCancel),
+              ),
+              CupertinoDialogAction(
+                isDestructiveAction: true,
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                child: Text(l10n.commonConfirm),
+              ),
+            ],
           ),
-        ],
-      ),
     );
     if (confirmed == true) {
       await ref.read(sessionProvider.notifier).logout();
     }
   }
-}
 
-/// 用户信息卡
-class _UserCard extends StatelessWidget {
-  final dynamic user;
-
-  const _UserCard({required this.user});
-
-  @override
-  Widget build(BuildContext context) {
-    final name = (user?.nickName ?? user?.userName ?? '?') as String;
-    final statusText = user?.accountStatusStr;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: context.theme.colors.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.theme.colors.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: context.theme.colors.primary.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              name.characters.first.toUpperCase(),
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                color: context.theme.colors.primary,
+  /// 轻提示（无更新/更新完成等）
+  void _showTip(BuildContext context, String message) {
+    showCupertinoDialog<void>(
+      context: context,
+      builder: (dialogContext) =>
+          CupertinoAlertDialog(
+            content: Text(message),
+            actions: [
+              CupertinoDialogAction(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text(AppLocalizations
+                    .of(context)
+                    .commonConfirm),
               ),
-            ),
+            ],
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  name,
-                  style: context.theme.typography.body.lg
-                      .copyWith(fontWeight: FontWeight.w600),
-                ),
-                if (user?.userName != null)
-                  Text(
-                    '${user.userName}',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: context.theme.colors.mutedForeground,
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          if (statusText != null)
-            FBadge(variant: .secondary, child: Text('$statusText')),
-        ],
-      ),
-    );
-  }
-}
-
-/// 分组卡片
-class _SectionCard extends StatelessWidget {
-  final String title;
-
-  final Widget child;
-
-  const _SectionCard({required this.title, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: context.theme.colors.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.theme.colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: context.theme.colors.mutedForeground,
-            ),
-          ),
-          const SizedBox(height: 12),
-          child,
-        ],
-      ),
-    );
-  }
-}
-
-/// 部门切换器（FSelect 承载多部门）
-class _DepartmentSelector extends ConsumerWidget {
-  final dynamic user;
-
-  const _DepartmentSelector({required this.user});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final departments =
-        (user?.avaliableDepartments as List<dynamic>? ?? const [])
-            .cast<dynamic>();
-    if (departments.isEmpty) {
-      return Text(
-        '-',
-        style: TextStyle(color: context.theme.colors.mutedForeground),
-      );
-    }
-    final items = <String, String>{
-      for (final dept in departments)
-        dept.resolvedName ?? '${dept.resolvedId}': '${dept.resolvedId}',
-    };
-    return FSelect<String>(
-      items: items,
-      control: .managed(
-        onChange: (value) {
-          if (value != null && value.isNotEmpty) {
-            ref.read(sessionProvider.notifier).switchDepartment(value);
-          }
-        },
-      ),
-    );
-  }
-}
-
-/// 外观选择（三态切换组）
-class _ThemeSelector extends ConsumerWidget {
-  const _ThemeSelector();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    final mode = ref.watch(themeModeProvider);
-    final options = [
-      (ThemeMode.system, l10n.profileThemeSystem),
-      (ThemeMode.light, l10n.profileThemeLight),
-      (ThemeMode.dark, l10n.profileThemeDark),
-    ];
-    return Row(
-      children: [
-        for (final option in options) ...[
-          Expanded(
-            child: FButton(
-              variant: mode == option.$1 ? .primary : .outline,
-              size: .sm,
-              onPress: () =>
-                  ref.read(themeModeProvider.notifier).setMode(option.$1),
-              child: Text(option.$2),
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ],
-    );
-  }
-}
-
-/// 语言选择
-class _LanguageSelector extends ConsumerWidget {
-  const _LanguageSelector();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final locale = ref.watch(localeProvider);
-    final isZh = locale?.languageCode != 'en';
-    return Row(
-      children: [
-        Expanded(
-          child: FButton(
-            variant: isZh ? .primary : .outline,
-            size: .sm,
-            onPress: () => ref.read(localeProvider.notifier).setLocale(null),
-            child: const Text('中文'),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: FButton(
-            variant: isZh ? .outline : .primary,
-            size: .sm,
-            onPress: () =>
-                ref.read(localeProvider.notifier).setLocale(const Locale('en')),
-            child: const Text('English'),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// 版本与更新入口
-class _UpdateEntry extends ConsumerWidget {
-  const _UpdateEntry();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context);
-    return Row(
-      children: [
-        Expanded(
-          child: Text(
-            'v1.0.0',
-            style: TextStyle(color: context.theme.colors.mutedForeground),
-          ),
-        ),
-        FButton(
-          variant: .outline,
-          size: .sm,
-          onPress: () async {
-            final messenger = ScaffoldMessenger.of(context);
-            final client = ref.read(tbsClientProvider);
-            try {
-              final result =
-                  await UpdateService(client).checkAndPrompt(context);
-              if (result != null && !result.needUpdate && context.mounted) {
-                messenger.showSnackBar(
-                  SnackBar(content: Text(l10n.profileUpToDate)),
-                );
-              }
-            } on TbsException catch (error) {
-              messenger.showSnackBar(
-                SnackBar(content: Text(error.message)),
-              );
-            }
-          },
-          child: Text(l10n.profileCheckUpdate),
-        ),
-      ],
     );
   }
 }
