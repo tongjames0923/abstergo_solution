@@ -172,7 +172,7 @@ PROCESSING ──(分发完成)──▶ PROCESSED        PROCESSING/分发异�
 
 | # | 类型 | 事项 |
 |---|------|------|
-| 1 | 落地 | 存储/协作实现与装配：`IMqRecorder`（DB 主记录+台账）、`IMqMessageMonopolizer`（分布式单飞，如 Redis）、`IConsumerRegistry`（消费者路由表）及 `tbs.mq.v2.enable` 开关与自动配置（填 `config/`）。内存基本实现已在 `com.tbs.mq.v2.impl` 落地（可作单机/开发默认 Bean），生产需另提供 DB/Redis 实现并在 config 装配；RabbitMQ 传输层适配器已在 `com.tbs.rabbitmq.v2` 落地 |
+| 1 | 落地 | 存储/协作实现与装配：`IMqRecorder`（DB 主记录+台账）、`IMqMessageMonopolizer`（分布式单飞）、`IConsumerRegistry`（消费者路由表）及 `tbs.mq.v2.enable` 开关与自动配置（填 `config/`）。内存基本实现已在 `com.tbs.mq.v2.impl` 落地（可作单机/开发默认 Bean）；**Redis 版记录器与分布式单飞已落地**（`redis-mod` 的 `com.tbs.redis.mq.RedisMqRecorder` / `RedisMqMessageMonopolizer`，app 的 CDC/广播链路已切换）；DB 版记录器、消费者路由表与 enable 开关/自动配置待落地。RabbitMQ 传输层适配器已在 `com.tbs.rabbitmq.v2` 落地 |
 | 2 | 落地 | 主记录/台账两张表的实体与建表（表名、索引、`consumeId` 分配可入 `constants/`） |
 | 3 | 落地 | 重试扫描 + 回灌入口：独立组件消费台账 FAIL 行与主记录 FAILED，`IMqRecorder.get` 回查后按 messageId(+consumeId) 重放；重试上限与死信终态在此层裁决 |
 | 4 | 正确性 | `retryFlag` 落地：处理器把异常存入台账 `exception`，回灌需从异常读取 `retryFlag`/重试次数，与 #5 落库序列化一并定 |

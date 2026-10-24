@@ -13,10 +13,11 @@ Redis 模块（`com.tbs:redis`）是基于 **Redisson**（`redisson-spring-boot-
 | 分布式锁 | `RedissonLockProvider` / `RedissonLock` | lock（async 模块）：`ILockProvider` |
 | 事件广播 | `AbstractRedisEventSupport` / `SimpleRedisEventSupport` | broadcast（async 模块）：`IDistributedBusSupport` 等 |
 | 任务持久化 | `RedisTaskStore` | schedule（async 模块）：`TaskStore` |
+| MQ v2 协作 | `RedisMqRecorder` / `RedisMqMessageMonopolizer` | mq-api：`IMqRecorder` / `IMqMessageMonopolizer` |
 
-> MQ 支撑说明：v1 时代的 `AbstractRedisIdempotentStore` / `RedisFaildMessageStore`（对接 mq-api `IIdempotentStore`/`IFailedMessageStore`）已随 **MQ v2 重构下线**；v2 的存储/协作契约（`IMqRecorder` 主记录+台账、`IMqMessageMonopolizer` 分布式单飞）尚无 Redis 落地，当前各链路使用 mq-api 内置内存实现，生产级 Redis/DB 实现为待闭环项（见 [mq-v2 设计大纲 §7.2](../docs/mq-v2-design-outline.md)）。
+> MQ 支撑说明：v1 时代的 `AbstractRedisIdempotentStore` / `RedisFaildMessageStore`（对接 mq-api `IIdempotentStore`/`IFailedMessageStore`）已随 **MQ v2 重构下线**；v2 的存储契约 `IMqRecorder`（主记录 + 消费台账、失败留痕）与协作契约 `IMqMessageMonopolizer`（跨实例消息单飞）已由 `com.tbs.redis.mq` 提供 Redis 落地（见第 9 节）。`IConsumerRegistry` 仍使用 mq-api 内存实现——它存的是本地 `IMqConsumer` 实例，无法跨实例序列化。
 
-**单 Maven 模块**（artifactId `redis`，19 个源文件），依赖 `com.tbs:common`、`com.tbs:cache-api`、`com.tbs:mq-api`（v1 存储下线后代码已不再引用，待随依赖清理移除）、`redisson-spring-boot-starter`。
+**单 Maven 模块**（artifactId `redis`，21 个源文件），依赖 `com.tbs:common`、`com.tbs:cache-api`、`com.tbs:mq-api`（MQ v2 协作契约）、`com.tbs:oss-api`、`redisson-spring-boot-starter`。
 
 Redisson 客户端本身由 `redisson-spring-boot-starter` 基于 Spring Boot 标准 `spring.redis.*` 配置自动创建，本模块通过 `RedissonAutoConfigurationCustomizer` 定制编解码与线程参数。
 
@@ -34,6 +35,7 @@ redis-mod/
     │   └── holder/                   # RedisDataHolder
     ├── com.tbs.cache.redis/          # 缓存侧（经 tbs.cache.* 配置或宿主扫描生效）
     ├── com.tbs.lock.redis/           # 锁侧（经 tbs.lock.lock-provider-type 配置生效）
+    ├── com.tbs.redis.mq/             # MQ v2 协作实现（RedisMqRecorder / RedisMqMessageMonopolizer，手动注册 Bean）
     ├── com.tbs.broadcast.redis/      # 广播侧（需注册为 Bean）
     └── com.tbs.schedule/             # 调度持久化（注册为 Bean 后供调度内核收集）
 ```
@@ -183,7 +185,35 @@ public class OrderEventSupport extends SimpleRedisEventSupport {
 - `save`：`isPersistable()==false` 的内存态任务跳过落盘（warn）；
 - `loadUnfinished`：进程重启后逐条还原，单条损坏数据记 error（截断 128 字符摘要）并跳过，不阻断整体恢复。
 
-> 原第 9 节「MQ 幂等与失败消息存储」已随 MQ v2 重构删除（`com.tbs.mq` 包与两个存储类不再存在），参见模块概述处的 MQ 支撑说明。
+> 原第 9 节「MQ 幂等与失败消息存储」已随 MQ v2 重构删除（`com.tbs.mq` 包与两个存储类不再存在）。
+
+### 9. MQ v2 协作实现（com.tbs.redis.mq）
+
+mq-api v2 记录驱动模型的两个协作契约的 Redis 落地，均**不加 `@Component`**（装配权留给使用方，与内存实现二选一，避免重复注册）：
+
+| 实现 | 契约 | 存储/机制 |
+|------|------|-----------|
+| `RedisMqRecorder<R,T>` | `IMqRecorder` | 主记录 Hash `mq:recorder:{recorderId}:{contextId}:main`、失败留痕 Hash `...:error`、消费台账 List `...:ledger`；`record` 以 `HSETNX` 幂等建档，记录不设 TTL（重试扫描的唯一依据） |
+| `RedisMqMessageMonopolizer` | `IMqMessageMonopolizer` | 经 `ILockProvider` 取锁，键 `mq:monopoly:{contextId}:{messageId}`，`tryLock(Duration.ZERO)` 不等待抢占；锁实现由宿主 `tbs.lock.lock-provider-type` 决定（本模块配套 `RedissonLockProvider`） |
+
+```java
+@Bean
+public IMqRecorder<Message, MyEvent> myRecorder() {
+    return new RedisMqRecorder<>();
+}
+
+@Bean
+public IMqMessageMonopolizer myMonopolizer() {
+    return new RedisMqMessageMonopolizer();
+}
+```
+
+实现要点：
+
+- **序列化偏离模块常规 JSON**：键用 `StringCodec`（冒号分层可巡检），值用 `SerializationCodec`（JDK 序列化）。原因是契约层 VO 已强制 `Serializable`，且台账行携带 `Exception` 对象——JSON 无法无损往返异常实例。
+- **厂商原始消息不落库**：建档前剥离 `rawMessage`（如 Spring AMQP `Message` 不保证可序列化且体积大），`get` 回查得到的是 `payload`/`headers`/`flag` 可用的副本，重试回灌据此还原。
+- **单飞按线程持有**：锁可重入，`monopolize`/`release` 必须同线程配对（`AbstractMqContext` 处理循环已保证）；抢占器不做 Redisson 直连，统一走 `ILockProvider`，锁生命周期由 provider 决定（Redisson 看门狗续期、进程崩溃自动释放）。
+- **事务方法沿用默认 no-op**：Redis 无跨命令事务，崩溃恢复依赖主记录 `PROCESSING` 滞留扫描 + 整体重放（消费者必须幂等）。
 
 ## 装配途径说明
 
@@ -193,7 +223,7 @@ public class OrderEventSupport extends SimpleRedisEventSupport {
 |------|------|------|
 | `@EnableTbsRedis` 自动扫描 | `BasicRedisConfig`、`RedissonCacheConfig`、codec、常量 | 扫描范围仅 `com.tbs.redis` 包，注册 `Feature.REDIS` |
 | 宿主组件扫描（`@ComponentScan` 覆盖 `com.tbs`） | `RedissonTtlCacheDecorator`（`@Component`） | 宿主仅扫描自身包时不会生效 |
-| 配置指定类名 / 手动注册 Bean | `RedisDataHolder`（`tbs.data.data-holder`）、`RedissonLockProvider`（`tbs.lock.lock-provider-type`）、`RedisTaskStore`、广播支持 | 按需接入 |
+| 配置指定类名 / 手动注册 Bean | `RedisDataHolder`（`tbs.data.data-holder`）、`RedissonLockProvider`（`tbs.lock.lock-provider-type`）、`RedisTaskStore`、广播支持、`RedisMqRecorder` / `RedisMqMessageMonopolizer` | 按需接入 |
 
 ## 使用注意事项
 
@@ -204,6 +234,7 @@ public class OrderEventSupport extends SimpleRedisEventSupport {
 5. **广播无确认/TTL**：Redis Pub/Sub 为即发即失，节点离线期间的广播事件不会补投；可靠事件请使用 rabbitmq-mod 的 MQ 广播
 6. **条件锁 signalAll 语义弱化**：基于 CountDownLatch，`signalAll()` 等价 `signal()`，仅唤醒一次等待；多等待者场景需自行循环 signal
 7. **锁键即 `target.toString()`**：`getLocker(Object)` 直接调用 toString 作为 Redis 锁键，自定义对象请实现有区分度的 toString（或直接传 String）
+8. **MQ 记录不设 TTL**：`RedisMqRecorder` 的主记录/台账是重试扫描与人工补消费的唯一依据，过期即等于丢消息；容量治理需由归档/清理任务负责，切勿在 Redis 侧随意按前缀清理 `mq:recorder:*`
 
 ## 许可证
 

@@ -49,7 +49,7 @@ public class SystemDataDicController extends BaseController {
     /**
      * 数据字典服务：{@code @RoutingService} 路由代理，本地优先、Dubbo 兜底
      */
-    @RoutingRef(business = ProviderConstant.DEFAULT_BUSINESS)
+    @RoutingRef
     private IDataDicService dataDicService;
 
     /**
