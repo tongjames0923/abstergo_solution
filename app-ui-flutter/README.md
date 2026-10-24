@@ -24,6 +24,23 @@ lib/
 └── platform/                   平台条件实现（令牌存储：native 安全存储 / Web localStorage；OAuth 启动器）
 ```
 
+## Web 同源开发代理（根治 CORS）
+
+跨域直连开发时，dio 会打印预检提示（仅 debug 构建出现，`kReleaseMode` 门控，dio 暂无开关），且受后端 CORS `allowCredentials` 限制。根治方式与 Vue 端 devServer 代理完全同构——同源反代：
+
+```bash
+# 1. 构建 Web 产物
+flutter build web --release --dart-define=TBS_BASE_URL=/api --dart-define=TBS_APP_KEY=my-app
+
+# 2. 启动同源代理（静态托管 build/web + /api/** 透传后端，SSE 流式）
+cd tool/web_proxy
+TBS_BACKEND=http://192.168.80.32:8082 dart run
+
+# 3. 浏览器访问 http://localhost:8280 —— 全部请求同源，CORS 与预检彻底消失
+```
+
+同源后 Web 端可使用 `SessionPolicy.web` 的 Cookie 刷新流（`TbsClientConfig.forWeb`）。
+
 ## 多端运行
 
 ```bash
