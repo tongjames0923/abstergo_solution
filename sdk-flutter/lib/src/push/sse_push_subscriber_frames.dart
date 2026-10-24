@@ -38,11 +38,16 @@ extension _SsePushFrames on SsePushSubscriber {
 
   /// 处理握手帧
   ///
+  /// 服务端经协议编解码器下发帧封装（data 为 PushFrame JSON，sessionId 位于
+  /// payload 字段的二次 JSON 内，见 SseSessionWrapper）；同时兼容外层直接
+  /// 携带 sessionId 的直连载荷形态。
+  ///
   /// @param event SSE 下行事件
   void _handleHello(SseServerEvent event) {
     final payload = event.tryDataAsJson();
-    final hello = payload == null ? null : HelloInfo.tryFromJson(payload);
+    final hello = payload == null ? null : _resolveHello(payload);
     if (hello == null) {
+      SsePushSubscriber._log.warning('hello 帧无法解析 sessionId：${event.data}');
       _listener?.onError(const TbsClientException('hello 帧缺少 sessionId'));
       return;
     }
@@ -63,6 +68,32 @@ extension _SsePushFrames on SsePushSubscriber {
     _startHeartbeat();
     _listener?.onHello(hello);
     _listener?.onSignal();
+  }
+
+  /// 从握手帧载荷解析 HelloInfo（外层直连 / payload 二次 JSON 双兼容）
+  ///
+  /// @param payload 帧载荷 Map
+  /// @return 握手信息，无法解析时为 null
+  HelloInfo? _resolveHello(Map<String, dynamic> payload) {
+    final direct = HelloInfo.tryFromJson(payload);
+    if (direct != null) {
+      return direct;
+    }
+    final inner = payload['payload'];
+    if (inner is String && inner.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(inner);
+        if (decoded is Map) {
+          return HelloInfo.tryFromJson(Map<String, dynamic>.from(decoded));
+        }
+      } on FormatException {
+        return null;
+      }
+    }
+    if (inner is Map) {
+      return HelloInfo.tryFromJson(Map<String, dynamic>.from(inner));
+    }
+    return null;
   }
 
   /// 处理数据帧

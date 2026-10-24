@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:logging/logging.dart';
 
@@ -85,7 +86,8 @@ class SsePushSubscriber {
 
   final TbsClientConfig _config;
 
-  final SseTransport _transport = createSseTransport();
+  late final SseTransport _transport =
+      createSseTransport(withCredentials: _config.sessionPolicy.refreshCodes.isNotEmpty);
 
   SseFrameListener? _listener;
 

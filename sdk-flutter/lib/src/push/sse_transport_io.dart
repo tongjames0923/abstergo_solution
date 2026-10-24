@@ -15,9 +15,14 @@ abstract class SseTransport {
   /// 建立 SSE 下行流
   ///
   /// @param url     建连地址（含 push-ticket 参数）
-  /// @param headers 请求头（携带 Authorization 令牌）
+  /// @param headers         请求头（携带 Authorization 令牌）
+  /// @param withCredentials 是否携带跨域凭证（native 不涉及）
   /// @return UTF-8 解码后的文本行流
-  Stream<String> connect(Uri url, Map<String, String> headers);
+  Stream<String> connect(
+    Uri url,
+    Map<String, String> headers, {
+    bool withCredentials = false,
+  });
 
   /// 关闭底层连接（幂等）
   void close();
@@ -25,14 +30,20 @@ abstract class SseTransport {
 
 /// 创建平台 SSE 传输（native 实现）
 ///
+/// @param withCredentials 是否携带跨域凭证（native 不涉及）
 /// @return SSE 传输实例
-SseTransport createSseTransport() => _IoSseTransport();
+SseTransport createSseTransport({bool withCredentials = false}) =>
+    _IoSseTransport();
 
 class _IoSseTransport implements SseTransport {
   http.Client? _client;
 
   @override
-  Stream<String> connect(Uri url, Map<String, String> headers) async* {
+  Stream<String> connect(
+    Uri url,
+    Map<String, String> headers, {
+    bool withCredentials = false,
+  }) async* {
     final client = http.Client();
     _client = client;
     final request = http.Request('GET', url)

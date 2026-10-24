@@ -26,17 +26,32 @@ abstract class SseTransport {
 
 /// 创建平台 SSE 传输（Web 实现）
 ///
+/// @param withCredentials 是否携带跨域凭证（仅 Web Cookie 刷新预设为 true）
 /// @return SSE 传输实例
-SseTransport createSseTransport() => _WebSseTransport();
+SseTransport createSseTransport({bool withCredentials = false}) =>
+    _WebSseTransport(withCredentials: withCredentials);
 
 class _WebSseTransport implements SseTransport {
+  final bool withCredentials;
+
   http.Client? _client;
 
+  /// 创建 Web 传输
+  ///
+  /// @param withCredentials 是否携带跨域凭证
+  _WebSseTransport({this.withCredentials = false});
+
   @override
-  Stream<String> connect(Uri url, Map<String, String> headers) async* {
+  Stream<String> connect(
+    Uri url,
+    Map<String, String> headers, {
+    bool withCredentials = false,
+  }) async* {
     final client = FetchClient(
       mode: RequestMode.cors,
-      credentials: RequestCredentials.cors,
+      credentials: withCredentials
+          ? RequestCredentials.cors
+          : RequestCredentials.sameOrigin,
       streamRequests: true,
     );
     _client = client;

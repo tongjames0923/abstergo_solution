@@ -125,6 +125,10 @@ lib/
 7. **重连**：断线指数退避换票重连，超限转 `manualReconnect`；
 8. **释放**：`close()` 幂等。
 
+## Web 凭证模式说明
+
+SSE 建连与 HTTP 主通道的凭证模式均跟随 `SessionPolicy`：仅 `web` 预设（Cookie 刷新流）携带跨域凭证（`credentials: include`）；`native` 预设为 `same-origin`。后端 CORS 为 `*` 通配时浏览器禁止凭证请求（`Access-Control-Allow-Origin` 不可为 `*`），跨域直连请保持 native 预设或后端开启 `allowCredentials` 并收敛来源；生产 Web 走同源反代后两种预设均可。
+
 ## 异常处理
 
 | 异常 | 触发场景 | 调用方处置 |

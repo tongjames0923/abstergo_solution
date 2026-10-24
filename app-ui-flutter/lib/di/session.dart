@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:logging/logging.dart';
 import 'package:tbs_client/tbs_client.dart';
 
 import 'providers.dart';
@@ -114,6 +115,8 @@ class SessionController extends AsyncNotifier<UserInfoModel?> {
 
 /// SSE 监听桥：状态与信令映射到 Riverpod
 class _SseBridge extends SseFrameListener {
+  static final Logger _log = Logger('tbs.session');
+
   final Ref _ref;
 
   /// 创建桥接器
@@ -129,6 +132,11 @@ class _SseBridge extends SseFrameListener {
   @override
   void onSignal() {
     _ref.read(unreadCountProvider.notifier).refresh();
+  }
+
+  @override
+  void onError(Object error) {
+    _log.warning('SSE 连接异常：$error');
   }
 }
 

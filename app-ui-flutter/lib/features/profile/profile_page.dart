@@ -208,7 +208,7 @@ class _DepartmentSelector extends ConsumerWidget {
     }
     final items = <String, String>{
       for (final dept in departments)
-        '${dept.resolvedId}': dept.resolvedName ?? '${dept.resolvedId}',
+        dept.resolvedName ?? '${dept.resolvedId}': '${dept.resolvedId}',
     };
     return FSelect<String>(
       items: items,

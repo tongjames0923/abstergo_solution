@@ -57,6 +57,14 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "1.19.1"
+  convert:
+    dependency: transitive
+    description:
+      name: convert
+      sha256: b30acd5944035672bc15c6b7a8b47d773e41e2f17de064350988c5d02adb1c68
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "3.1.2"
   crypto:
     dependency: transitive
     description:
@@ -581,6 +589,30 @@ packages:
       url: "https://pub.flutter-io.cn"
     source: hosted
     version: "2.4.1"
+  shelf:
+    dependency: "direct dev"
+    description:
+      name: shelf
+      sha256: e75e9cf311d7fd712048038cc17c25199c38536c20330d53e7db058b543d5a48
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.4.3"
+  shelf_proxy:
+    dependency: "direct dev"
+    description:
+      name: shelf_proxy
+      sha256: "0c3a7b2b4c111cae8a6d9077701e0622c6013d38a780373ac359d6d45b3aa10b"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.0.5"
+  shelf_static:
+    dependency: "direct dev"
+    description:
+      name: shelf_static
+      sha256: "480504af9e5323899c5be26a4f6c2fc4437d50954d39842f0290f4ae733d57b4"
+      url: "https://pub.flutter-io.cn"
+    source: hosted
+    version: "1.2.0"
   sky_engine:
     dependency: transitive
     description: flutter
