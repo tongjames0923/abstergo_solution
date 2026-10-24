@@ -18,7 +18,7 @@ import com.tbs.struct.tree.api.persistence.ITreeStore;
 
 public class CompanyTreeStructService extends AbstractTreeStructService<SystemCompanyEntity> {
 
-    @RoutingRef(business = "prod")
+    @RoutingRef
     private ITreeStore<Long> treeStore;
 
     @Override
