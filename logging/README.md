@@ -174,7 +174,7 @@ List<LogOperateTypeView> report = systemLogService.getLogOperateTypeList(7);
 - `LoggingRecordMessageReceiver` / `LoggingRecordMessageProcessor`：接收/分发段薄壳，仅绑定 `<Message, LoggingRecordForm>` 泛型；
 - `LoggingRecordConsumer`（`IMqConsumer<LoggingRecordForm>`，`consumeId=1`）：沿用 v1 高吞吐范式——本地缓冲 `LinkedBlockingQueue(100)`，满批（100 条）/ flush 消息 / 定时（5s）触发 `insertList` 批量入库，批量失败降级逐条 `insertSelective`（单条失败仅记日志，日志链路容忍丢失）；转换为实体时 `systemLogFlag=1`，耗时 = `operateFinishTime - operateTime`；消费不感知厂商通道、不做 ack/nak。
 
-协作层（`IMqRecorder`/`IMqMessageMonopolizer`/`IConsumerRegistry`）当前为内存实现（进程重启即清空，定位链路验证/开发环境），生产替换为 DB 记录器 Bean 即可，上下文无需改动。
+协作层：`IMqRecorder` / `IMqMessageMonopolizer` 选用 Redis 实现（`RedisMqRecorder` / `RedisMqMessageMonopolizer`，主记录 Hash `mq:recorder:0:2:main`、台账 List `...:ledger`、失败留痕 Hash `...:error`、完成归档 Hash `...:done:{yyyyMMddHH}`，单飞锁 `mq:monopoly:2:{messageId}` 经 `RedissonLockProvider` 获取），跨实例共享且重启不丢；已消费完成（PROCESSED）的记录迁入完成层随小时桶 3 天后过期，失败留痕与台账永久保留；`IConsumerRegistry` 仍为内存实现（注册的是宿主消费者对象，无法跨实例序列化），上下文无需改动。
 
 > `flush()`（生产端发 flushFlag 消息）仍是主动触发刷盘的手段；另有 5 秒定时刷新兜底，缓冲未满且未收到 flush 消息时日志最迟经一个刷新周期落库。
 

@@ -193,7 +193,7 @@ mq-api v2 记录驱动模型的两个协作契约的 Redis 落地，均**不加 
 
 | 实现 | 契约 | 存储/机制 |
 |------|------|-----------|
-| `RedisMqRecorder<R,T>` | `IMqRecorder` | 主记录 Hash `mq:recorder:{recorderId}:{contextId}:main`、失败留痕 Hash `...:error`、消费台账 List `...:ledger`；`record` 以 `HSETNX` 幂等建档，记录不设 TTL（重试扫描的唯一依据） |
+| `RedisMqRecorder<R,T>` | `IMqRecorder` | 主记录 Hash `mq:recorder:{recorderId}:{contextId}:main`、失败留痕 Hash `...:error`、消费台账 List `...:ledger`、完成归档 Hash `...:done:{yyyyMMddHH}`；`record` 以 `HSETNX` 幂等建档；PROCESSED 时记录迁入完成层并随桶 3 天过期，其余层不设 TTL |
 | `RedisMqMessageMonopolizer` | `IMqMessageMonopolizer` | 经 `ILockProvider` 取锁，键 `mq:monopoly:{contextId}:{messageId}`，`tryLock(Duration.ZERO)` 不等待抢占；锁实现由宿主 `tbs.lock.lock-provider-type` 决定（本模块配套 `RedissonLockProvider`） |
 
 ```java
@@ -212,6 +212,7 @@ public IMqMessageMonopolizer myMonopolizer() {
 
 - **序列化偏离模块常规 JSON**：键用 `StringCodec`（冒号分层可巡检），值用 `SerializationCodec`（JDK 序列化）。原因是契约层 VO 已强制 `Serializable`，且台账行携带 `Exception` 对象——JSON 无法无损往返异常实例。
 - **厂商原始消息不落库**：建档前剥离 `rawMessage`（如 Spring AMQP `Message` 不保证可序列化且体积大），`get` 回查得到的是 `payload`/`headers`/`flag` 可用的副本，重试回灌据此还原。
+- **过期策略**：`updateFlag(PROCESSED)` 时先把记录写入按小时分桶的完成层（`...:done:{yyyyMMddHH}`）并设 3 天 TTL，再从主记录层删除；主记录层因此只留 RECEIVED/PROCESSING/FAILED，失败留痕 `...:error` 与台账 `...:ledger` 永不主动过期。`get` 只读主记录层，不回查完成层。
 - **单飞按线程持有**：锁可重入，`monopolize`/`release` 必须同线程配对（`AbstractMqContext` 处理循环已保证）；抢占器不做 Redisson 直连，统一走 `ILockProvider`，锁生命周期由 provider 决定（Redisson 看门狗续期、进程崩溃自动释放）。
 - **事务方法沿用默认 no-op**：Redis 无跨命令事务，崩溃恢复依赖主记录 `PROCESSING` 滞留扫描 + 整体重放（消费者必须幂等）。
 
@@ -234,7 +235,7 @@ public IMqMessageMonopolizer myMonopolizer() {
 5. **广播无确认/TTL**：Redis Pub/Sub 为即发即失，节点离线期间的广播事件不会补投；可靠事件请使用 rabbitmq-mod 的 MQ 广播
 6. **条件锁 signalAll 语义弱化**：基于 CountDownLatch，`signalAll()` 等价 `signal()`，仅唤醒一次等待；多等待者场景需自行循环 signal
 7. **锁键即 `target.toString()`**：`getLocker(Object)` 直接调用 toString 作为 Redis 锁键，自定义对象请实现有区分度的 toString（或直接传 String）
-8. **MQ 记录不设 TTL**：`RedisMqRecorder` 的主记录/台账是重试扫描与人工补消费的唯一依据，过期即等于丢消息；容量治理需由归档/清理任务负责，切勿在 Redis 侧随意按前缀清理 `mq:recorder:*`
+8. **MQ 记录过期口径**：仅已处理（PROCESSED）的主记录随完成层小时桶 3 天后自动过期；主记录层的未完成/失败记录、失败留痕 `...:error`、台账 `...:ledger` 不设 TTL——它们是重试扫描与人工补消费的唯一依据，切勿在 Redis 侧随意按前缀清理 `mq:recorder:*`，台账容量需由归档/清理任务另行治理
 
 ## 许可证
 

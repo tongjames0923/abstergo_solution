@@ -19,6 +19,9 @@ import org.redisson.codec.CompositeCodec;
 import org.redisson.codec.SerializationCodec;
 
 import java.io.Serializable;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -33,8 +36,17 @@ import java.util.List;
  *     <li>消费台账：List {@code ...:ledger}，{@link #recordConsume} 追加每次分发的成/败行；
  *     失败留痕独立存放在 {@code ...:error} Hash。</li>
  * </ul>
- * 记录不设 TTL：主记录与台账是重试扫描、人工补消费的唯一依据，过期即等于丢消息；
- * 容量治理由后续归档/清理组件负责，不在记录层内嵌。
+ * 主记录与台账是重试扫描、人工补消费的依据：已处理记录按 3 天过期，其余均不设 TTL。
+ * </p>
+ * <p>
+ * 过期策略：
+ * <ul>
+ *     <li>已处理（PROCESSED）的主记录在推进终态时迁入按小时分桶的完成层 {@code ...:done:{yyyyMMddHH}}，
+ *     桶键 TTL 3 天，单条记录实际存活 72~73 小时后自动释放；</li>
+ *     <li>未完成（RECEIVED/PROCESSING）与失败（FAILED）的主记录、失败留痕 {@code ...:error}、
+ *     消费台账 {@code ...:ledger} 均不设 TTL——它们是重试扫描、人工补消费的唯一依据，过期即等于丢消息。</li>
+ * </ul>
+ * 完成层不参与回查（{@link #get} 只读主记录层），已处理消息无需重试/回灌。
  * </p>
  * <p>
  * 序列化说明：键用 {@link StringCodec} 保持冒号分层的纯文本、可巡检；值用 {@link SerializationCodec}
@@ -76,13 +88,36 @@ public class RedisMqRecorder<R, T extends Serializable> implements IMqRecorder<R
     private static final String LEDGER_SUFFIX = ":ledger";
 
     /**
-     * 键纯文本、值 JDK 序列化的复合编解码器
+     * 完成归档层后缀，后接按小时分桶的时间戳
+     */
+    private static final String DONE_SUFFIX = ":done:";
+
+    /**
+     * 完成记录保留时长：按小时分桶的桶键 TTL，单条记录实际存活 72~73 小时
+     */
+    private static final Duration DONE_TTL = Duration.ofDays(3);
+
+    /**
+     * 完成归档分桶时间格式：按小时分桶，避免整层 TTL 被后续写入不断刷新而永不淘汰
+     */
+    private static final DateTimeFormatter DONE_BUCKET_FORMAT = DateTimeFormatter.ofPattern("yyyyMMddHH");
+
+    /**
+     * 值编解码器：JDK 序列化
      * <p>
      * 显式传入本类所在类加载器，避免 Netty 线程上下文类加载器解析不到业务负载类型。
      * </p>
      */
-    private static final Codec CODEC =
-        new CompositeCodec(StringCodec.INSTANCE, new SerializationCodec(RedisMqRecorder.class.getClassLoader()));
+    private static final Codec VALUE_CODEC = new SerializationCodec(RedisMqRecorder.class.getClassLoader());
+
+    /**
+     * 键纯文本、值 JDK 序列化的复合编解码器
+     * <p>
+     * 三段参数不可省：Redisson 3.x 的 {@code CompositeCodec(Codec, Codec)} 两参构造只填 mapKey/mapValue，
+     * {@code valueCodec} 留空，导致 List（台账）取 {@code getValueEncoder()} 时 NPE；故显式传三参使 value 段与非 Map 结构共用同一序列化器。
+     * </p>
+     */
+    private static final Codec CODEC = new CompositeCodec(StringCodec.INSTANCE, VALUE_CODEC, VALUE_CODEC);
 
     /**
      * 缺省作用域：上下文未提供上下文ID时归入此桶，避免以 null 参与键拼接
@@ -170,6 +205,7 @@ public class RedisMqRecorder<R, T extends Serializable> implements IMqRecorder<R
      * 推进主记录状态
      * <p>
      * 读改写非原子，但同一 messageId 的处理由单飞抢占器串行保护（见 {@code IMqMessageMonopolizer}）， 状态推进不会并发交错。
+     * PROCESSED 为正常消费完成的终态：记录迁入完成层（3 天过期）并从主记录层移除，主记录层只保留未完成与失败记录。
      * </p>
      *
      * @param context   当前上下文
@@ -189,8 +225,33 @@ public class RedisMqRecorder<R, T extends Serializable> implements IMqRecorder<R
             return;
         }
         vo.setFlag(flag.getCode());
+        if (MqMessageStatusEnum.PROCESSED == flag) {
+            archiveProcessed(context, messageId, vo);
+            return;
+        }
         main.put(messageId, vo);
         log.debug("[MQ-v2] redis recorder.updateFlag to {}, key={}, messageId={}", flag, mainKey(context), messageId);
+    }
+
+    /**
+     * 归档已处理记录：先写入完成层并设 TTL，再从主记录层删除
+     * <p>
+     * 顺序不可颠倒：先立后删，两命令间崩溃时记录同时存在于两层（无害）；反序一旦崩溃则记录丢失。
+     * 每次写入重置桶 TTL，同小时内写入的记录最多多存活 1 小时。
+     * </p>
+     *
+     * @param context   当前上下文
+     * @param messageId 消息ID
+     * @param vo        已推进为 PROCESSED 的主记录
+     */
+    private void archiveProcessed(IMqContext<R, T> context, String messageId, MqMessageIncomeVO<R, T> vo) {
+        String doneKey = doneKey(context);
+        RMap<String, MqMessageIncomeVO<R, T>> done = redissonClient.getMap(doneKey, CODEC);
+        done.put(messageId, vo);
+        done.expire(DONE_TTL);
+        mainRecords(context).remove(messageId);
+        log.debug("[MQ-v2] redis recorder.archive PROCESSED, key={}, messageId={}, ttlDays={}", doneKey, messageId,
+            DONE_TTL.toDays());
     }
 
     /**
@@ -255,6 +316,7 @@ public class RedisMqRecorder<R, T extends Serializable> implements IMqRecorder<R
      * 按消息ID回查主记录
      * <p>
      * 返回的是 Redis 反序列化副本，{@code rawMessage} 已在建档时剥离（厂商原始消息不落库）， 重试回灌应使用 {@code payload} 与 {@code headers}。
+     * 只读主记录层：已处理（PROCESSED）的记录已迁入完成层，此处返回 null（它们无需重试/回灌）。
      * </p>
      *
      * @param context   当前上下文
@@ -335,6 +397,16 @@ public class RedisMqRecorder<R, T extends Serializable> implements IMqRecorder<R
      */
     private String ledgerKey(IMqContext<R, T> context) {
         return scopeKey(context) + LEDGER_SUFFIX;
+    }
+
+    /**
+     * 完成归档键：作用域前缀 + 当前小时桶
+     *
+     * @param context 当前上下文
+     * @return Redis 键
+     */
+    private String doneKey(IMqContext<R, T> context) {
+        return scopeKey(context) + DONE_SUFFIX + LocalDateTime.now().format(DONE_BUCKET_FORMAT);
     }
 
     /**

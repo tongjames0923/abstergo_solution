@@ -1,7 +1,6 @@
 package com.tbs.logging.config;
 
 import com.tbs.app.service.log.ISystemLogService;
-import com.tbs.common.constant.ProviderConstant;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordForm;
@@ -19,8 +18,8 @@ import com.tbs.mq.v2.core.IMqMessageProcessor;
 import com.tbs.mq.v2.core.IMqMessageReceiver;
 import com.tbs.mq.v2.core.IMqRecorder;
 import com.tbs.mq.v2.impl.InMemoryConsumerRegistry;
-import com.tbs.mq.v2.impl.InMemoryMqMessageMonopolizer;
-import com.tbs.mq.v2.impl.InMemoryMqRecorder;
+import com.tbs.redis.mq.RedisMqMessageMonopolizer;
+import com.tbs.redis.mq.RedisMqRecorder;
 import com.tbs.shared.mapper.SystemOperateMapper;
 import org.apache.dubbo.config.annotation.DubboService;
 import org.springframework.amqp.core.Message;
@@ -57,27 +56,28 @@ public class LoggingServiceConfig {
     }
 
     // ==================== MQ v2 记录驱动模型 · 日志消费链路（v1 DbLogWriter 已下线，v2 全面接管） ====================
-    // 说明：以下协作者均为进程内内存实现且刻意不加 @Component，集中由本 config 装配，避免与未来 DB/Redis 实现重复注册；
-    // 记录层内存实现重启即清空，定位为链路验证/开发环境用，生产替换为 DB 记录器即可，消费上下文与各段无需改动。
+    // 说明：以下协作者刻意不加 @Component，集中由本 config 装配，避免与框架侧扫描注册重复；
+    // 记录器与单飞抢占器选用 Redis 实现（主记录/台账跨实例共享、单飞跨实例互斥），重启不丢消息；
+    // 消费者注册表仍为进程内实现（注册的是宿主消费者对象，无法跨实例序列化）。
 
     /**
-     * 日志 v2 消息记录器（内存实现，可靠性真源）
+     * 日志 v2 消息记录器（Redis 实现，可靠性真源）
      *
-     * @return 记录器，作用域按 {@code LoggingRecordRabbitMqContext} 的上下文ID隔离
+     * @return 记录器，主记录与台账落 Redis，作用域按 {@code LoggingRecordRabbitMqContext} 的上下文ID隔离
      */
     @Bean
     public IMqRecorder<Message, LoggingRecordForm> loggingRecordRecorder() {
-        return new InMemoryMqRecorder<>();
+        return new RedisMqRecorder<>();
     }
 
     /**
-     * 日志 v2 消息单飞抢占器（内存实现）
+     * 日志 v2 消息单飞抢占器（Redis 实现，保证同一消息在集群内不被并行重处理）
      *
-     * @return 抢占器，保证同一消息不被并行重处理
+     * @return 抢占器，按上下文ID + messageId 加分布式锁
      */
     @Bean
     public IMqMessageMonopolizer loggingRecordMonopolizer() {
-        return new InMemoryMqMessageMonopolizer();
+        return new RedisMqMessageMonopolizer();
     }
 
     /**
@@ -91,7 +91,7 @@ public class LoggingServiceConfig {
     }
 
     /**
-     * 日志 v2 消息接收器（接收段），绑定内存记录器
+     * 日志 v2 消息接收器（接收段），绑定 Redis 记录器
      *
      * @param loggingRecordRecorder 日志记录器
      * @return 接收器
