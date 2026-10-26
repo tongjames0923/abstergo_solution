@@ -188,20 +188,22 @@ public class OssDownloadCodeServiceImpl implements IOssDownloadCodeService {
      * 归一化分页参数并将条件翻译为存储层查询模型，组装总数与当前页数据
      * </p>
      *
-     * @param form 查询表单（条件与分页参数）
+     * @param form     查询条件表单（可为空，为空表示不限条件）
+     * @param pageNum  页码（可选，从1开始，缺省1）
+     * @param pageSize 每页条数（可选，缺省10，上限100）
      * @return 分页结果（总数与当前页数据）
      */
     @Override
-    public PageVO<OssDownloadCodeInfo> queryPage(OssDownloadCodeSearchForm form) {
-        long pageNum = resolvePageNum(form);
-        long pageSize = resolvePageSize(form);
+    public PageVO<OssDownloadCodeInfo> queryPage(OssDownloadCodeSearchForm form, Long pageNum, Long pageSize) {
+        long resolvedPageNum = resolvePageNum(pageNum);
+        long resolvedPageSize = resolvePageSize(pageSize);
         OssDownloadCodeQuery query = OssDownloadCodeQuery.builder()
             .code(form == null ? null : form.getCode())
             .objectKey(form == null ? null : form.getObjectKey())
             .keyword(form == null ? null : form.getKeyword())
             .status(resolveStatus(form))
-            .offset((int)((pageNum - 1) * pageSize))
-            .limit((int)pageSize)
+            .offset((int)((resolvedPageNum - 1) * resolvedPageSize))
+            .limit((int)resolvedPageSize)
             .build();
         List<OssDownloadCodeInfo> data = downloadCodeStorage.list(query);
         long total = downloadCodeStorage.count(query);
@@ -234,25 +236,24 @@ public class OssDownloadCodeServiceImpl implements IOssDownloadCodeService {
     /**
      * 解析归一化页码
      *
-     * @param form 查询表单（可为空）
+     * @param pageNum 调用方传入的页码（可为空）
      * @return 页码（从1开始）
      */
-    private long resolvePageNum(OssDownloadCodeSearchForm form) {
-        return form == null || form.getPageNum() == null || form.getPageNum() < 1 ? DEFAULT_PAGE_NUM
-            : form.getPageNum();
+    private long resolvePageNum(Long pageNum) {
+        return pageNum == null || pageNum < 1 ? DEFAULT_PAGE_NUM : pageNum;
     }
 
     /**
      * 解析归一化每页条数
      *
-     * @param form 查询表单（可为空）
+     * @param pageSize 调用方传入的每页条数（可为空）
      * @return 每页条数（不超过上限）
      */
-    private long resolvePageSize(OssDownloadCodeSearchForm form) {
-        if (form == null || form.getPageSize() == null || form.getPageSize() < 1) {
+    private long resolvePageSize(Long pageSize) {
+        if (pageSize == null || pageSize < 1) {
             return DEFAULT_PAGE_SIZE;
         }
-        return Math.min(form.getPageSize(), MAX_PAGE_SIZE);
+        return Math.min(pageSize, MAX_PAGE_SIZE);
     }
 
     /**

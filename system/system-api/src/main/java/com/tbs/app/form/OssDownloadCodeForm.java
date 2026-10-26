@@ -7,7 +7,7 @@ import java.io.Serializable;
 /**
  * OSS公开下载码创建/更新表单
  * <p>
- * HTTP层专属入参对象，创建时objectKey必填；更新时仅传需要修改的字段
+ * HTTP层专属入参对象，创建时objectKey必填；更新时 code 为待修改的下载码（必填），其余字段仅在需要修改时传入
  * </p>
  *
  * @author abstergo
@@ -24,7 +24,7 @@ public class OssDownloadCodeForm implements Serializable {
     private String objectKey;
 
     /**
-     * 下载唯一码（可选，创建时传入则使用自定义码，须为4~64位Base64字符；缺省由服务端自动生成）
+     * 下载唯一码（创建时可选，传入则使用自定义码，须为4~64位Base64字符；更新时为待修改的下载码，必填）
      */
     private String code;
 

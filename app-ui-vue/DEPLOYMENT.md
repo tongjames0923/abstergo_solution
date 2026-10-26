@@ -49,6 +49,32 @@ location /api {
 }
 ```
 
+### 公开下载码短链（可选，仅 nginx 层）
+
+把后端长链 `GET /public/oss/download-code/download?code={code}` 缩成 `/{前缀}/{code}`，
+由 nginx 做路径映射，不改后端、**也不改前端代码**：
+
+```nginx
+location ^~ /d/ {
+    rewrite ^/d/(.*)$ /public/oss/download-code/download?code=$1 break;
+    proxy_pass http://127.0.0.1:8082;  # 与 /api 反向代理同一后端地址
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_buffering off;               # 文件直出，不缓冲到磁盘
+}
+```
+
+使用边界：
+
+- **下载码面板复制/展示的仍然是长链**（`buildPublicDownloadUrl` 不感知短链），长短链指向同一个后端接口。
+- 短链用于对外口头传播、短信、文档等场合，自行拼 `<域名或IP:端口>/d/{code}` 即可。
+- 若将来需要前端直接产出短链，再单独评估，不属本配置范围。
+- 前缀不要与前端路由撞车：`/d/` 只匹配 `/d/` 开头路径，`/dashboard` 等不受影响。
+- 必须用 `^~` 前缀匹配，否则会被上面的静态资源正则 `~* \.(js|css|…)$` 抢走。
+- 下载码只含 `[A-Za-z0-9_-]`，放进路径段安全；码不存在/已过期仍由后端返回业务错误。
+
 ## 3. 部署步骤
 
 ### 方式一：直接部署到Nginx
@@ -94,6 +120,9 @@ location /api {
 1. `nginx.conf` 中的 `proxy_pass` 配置
 2. `src/settings.js` 中的 `backend` 配置（开发环境）
 3. `.env.production` 中的 `VUE_APP_BASE_API`（如果API路径变化）
+
+若启用了公开下载码短链，后端地址变更时 `location ^~ /d/` 里的 `proxy_pass` 需与 `/api/` 反向代理一并修改；
+短链前缀变更时只改 nginx 的 `location` 与 `rewrite`，前端无需改动。
 
 ### 修改域名
 

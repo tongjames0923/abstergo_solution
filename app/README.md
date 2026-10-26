@@ -268,7 +268,7 @@ app:
 | `ViewController` | `/private/view` | **动态表单 + 动态路由管理**：表单 CRUD（`GET form/{id}`、`GET listForms`、`POST saveForm`、`DELETE/PUT form`）+ 路由管理（`GET /routes`、`POST /routes/{group}`、`DELETE /routes/{group}`、`GET route-groups`、`POST /routes/refresh`、`GET /routes/{group}/versions`、`POST /routes/{group}/rollback/{versionId}`） |
 | `CacheController` | `/private/cache` | 缓存管理：`GET names`、`POST keys`、`POST get`、`POST evict` |
 | `OssController` | `/private/oss` | 对象存储：`POST upload`（multipart，最大 1024MB）、`GET upload/progress`（轮询进度）、`GET download`、`GET metadata`、`GET exist`、`GET list`、`GET presigned-url`、`DELETE batch` |
-| `OssDownloadCodeController` | `/private/oss/download-code` | 公开下载码管理：`POST`（生成，可自定义4~64位Base64码）、`GET`（查询）、`PUT`（续期/备注）、`DELETE`；`PublicOssDownloadCodeController` 提供 `/public/oss/download-code/download?code=` 免认证下载 |
+| `OssDownloadCodeController` | `/private/oss/download-code` | 公开下载码管理（遵循接口设计规范）：`save`（POST，生成，可自定义4~64位Base64码）、`get/{code}`（GET）、`update`（POST，码由请求体承载）、`delete/{code}`（POST）、`query`（POST 分页，`pageNum`/`pageSize` 走 query）、`statistics`（GET）；`PublicOssDownloadCodeController` 提供 `/public/oss/download-code/download?code=` 免认证下载 |
 | `PrivateDataHandleController` | `/private/data` | 数据处理：`GET handler/list`、`GET handler/validate/{handlerId}`、`POST handle/csv/{handlerId}`（CSV 解析→ITableDataHandler） |
 | `AppVersionController` | `/private/admin/app-version` | 应用版本状态机：CRUD + `POST submit/release/offline/rollback/archive/{id}` + `GET latest` + `GET appKeys` |
 | `AppVersionCompatibilityPolicyController` | `/private/admin/app-version-policy` | 版本兼容策略：CRUD + `POST enable/disable/{id}` + `POST check` |

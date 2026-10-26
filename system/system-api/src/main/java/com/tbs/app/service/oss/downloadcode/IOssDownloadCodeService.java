@@ -83,10 +83,12 @@ public interface IOssDownloadCodeService {
      * 分页参数非法时归一化为默认值（页码1、每页10、上限100），状态取值非法时报用户输入错误
      * </p>
      *
-     * @param form 查询表单（条件与分页参数）
+     * @param form     查询条件表单（可为空，为空表示不限条件）
+     * @param pageNum  页码（可选，从1开始，缺省1）
+     * @param pageSize 每页条数（可选，缺省10，上限100）
      * @return 分页结果（总数与当前页数据）
      */
-    PageVO<OssDownloadCodeInfo> queryPage(OssDownloadCodeSearchForm form);
+    PageVO<OssDownloadCodeInfo> queryPage(OssDownloadCodeSearchForm form, Long pageNum, Long pageSize);
 
     /**
      * 统计下载码概览
