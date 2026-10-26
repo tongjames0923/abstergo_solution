@@ -92,9 +92,11 @@ module.exports = {
      */
     reconnectJitter: 1000,
     /**
-     * 心跳上行周期（毫秒）
+     * 心跳上行周期（毫秒）：服务端对每个 PING 会在 SSE 下行流回一个 PONG，
+     * 故本值同时决定下行流的字节间隔——须足够小以撑过 dev 代理与 nginx 的空闲读超时
+     * （过长会被中间层掐断静默流导致周期性重连），同时远小于后端 heartbeat-timeout-millis(600s)
      */
-    heartbeatInterval: 200000,
+    heartbeatInterval: 30000,
     /**
      * 心跳连续失败阈值：达到即判定会话已死，主动关流换票重连
      */

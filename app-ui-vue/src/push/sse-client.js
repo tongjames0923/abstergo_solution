@@ -356,6 +356,9 @@ class SsePushClient {
     this._stopHeartbeat()
     this._closeStream()
     this.heartbeatFailures = 0
+    // 复位退避计数：close 是会话终结（登出/卸载），下一次 connect 属全新会话，
+    // 若残留 >0 会让 _open 把首下建连误标为 RECONNECTING（重连中）而非 CONNECTING（连接中）
+    this.reconnectAttempts = 0
     this._setStatus(CONNECTION_STATUS.CLOSED)
   }
 }

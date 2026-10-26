@@ -18,9 +18,11 @@
         </el-badge>
       </div>
 
-      <!-- 自动重连次数耗尽：醒目提示并提供手动重连入口 -->
+      <!-- 非健康/过渡态且会话仍有效（有 token）时提供手动重连入口：
+           reconnect_failed（自动重连耗尽）与 idle/closed（未连/断线）均可点；
+           登录失效（无 token）不展示，由全局鉴权流程引导重新登录 -->
       <el-button
-        v-if="connectionStatus === 'reconnect_failed'"
+        v-if="canReconnect"
         class="push-reconnect-btn"
         size="mini"
         type="danger"
@@ -184,6 +186,7 @@ import LangSelect from '@/components/LangSelect'
 import PushNotificationCenter from '@/components/PushNotificationCenter'
 import sidebar from '@/layout/components/Sidebar/index.vue'
 import { getGatewayVersion } from '@/api/system'
+import { getToken } from '@/utils/auth'
 import routeCacheService from '@/utils/route-cache'
 import { refreshRoutes } from '@/router'
 import settings from '@/settings'
@@ -269,6 +272,24 @@ export default {
     ]),
     connectionStatus() {
       return this.pushConnectionStatus
+    },
+    /**
+     * 是否展示手动重连按钮：连接处于非健康且非过渡态时给予用户手动救回的入口。
+     * <p>
+     * reconnect_failed（自动重连耗尽）恒可重连；idle/closed 仅当登录态仍在
+     * （有 token）才展示，避免登出/会话失效时空按钮误导（那种情况应重新登录）。
+     * </p>
+     */
+    canReconnect() {
+      const status = this.connectionStatus
+      if (status === 'connected' || status === 'connecting' || status === 'reconnecting') {
+        return false
+      }
+      if (status === 'reconnect_failed') {
+        return true
+      }
+      // idle / closed：会话仍有效才允许手动重连
+      return !!getToken()
     },
     unreadCount() {
       return this.pushUnreadCount
