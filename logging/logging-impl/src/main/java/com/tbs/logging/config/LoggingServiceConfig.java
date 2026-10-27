@@ -43,8 +43,9 @@ public class LoggingServiceConfig {
     /**
      * 远程表格数据操作器
      * <p>
-     * 导出 {@link ITableDataHandler} 供主应用经 IObjectProvider 多来源枚举发现，
-     * 验证「本地 Bean + 远程 Dubbo 实例」统一处理链路。
+     * 以 Dubbo 服务形式导出 {@link ITableDataHandler}。Dubbo 不参与逐实例枚举，
+     * 因此 {@code IObjectProvider.getObjects} 看不到该实现；主应用当前也未引用此服务，
+     * 仅当消费方按 (接口, business, version) 构建 Dubbo 集群引用时才会被调用。
      * </p>
      *
      * @return 表格数据处理器远程实现

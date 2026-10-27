@@ -2,7 +2,6 @@ package com.tbs.app.data;
 
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.provider.IObjectProvider;
-import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.ResolvedObject;
 import org.springframework.stereotype.Component;
 
@@ -11,11 +10,11 @@ import java.util.Collection;
 import java.util.Optional;
 
 /**
- * 表格数据处理器注册中心
+ * 表格数据处理器选择层
  * <p>
- * 基于 {@link IObjectProvider#getObjects(Class)} 统一枚举 Spring 本地 Bean 与 Dubbo 远程实例，
- * 按 {@link ITableDataHandler#getId()} 精确匹配目标处理器。来源解析链天然 Spring 优先，
- * 本地有实现时直取（零协议开销），无本地实现时自动降级到 Dubbo 发现。
+ * 基于 {@link IObjectProvider#getObjects(Class)} 枚举容器内的 {@link ITableDataHandler} 实现，
+ * 按 {@link ITableDataHandler#getId()} 精确匹配目标处理器。枚举结果即统一注册中心中的 Spring 来源条目，
+ * Dubbo 不参与逐实例枚举，故命中来源恒为本地。
  * </p>
  *
  * @author abstergo
@@ -24,13 +23,18 @@ import java.util.Optional;
 @Component
 public class TableDataHandlerRegistry {
 
+    /**
+     * 命中来源标识：本地处理器，前端据此展示「处理器可用（本地）」
+     */
+    private static final String SOURCE_LOCAL = "local";
+
     @Resource
     private IObjectProvider objectProvider;
 
     /**
-     * 枚举全部来源的处理器（含来源元数据）
+     * 枚举全部处理器（含来源元数据）
      * <p>
-     * 返回 Spring 本地 Bean 与 Dubbo 注册中心发现实例的完整集合，顺序为 Spring 在前、Dubbo 在后。
+     * 返回容器内全部 {@link ITableDataHandler} 实现，按本地来源优先排序。
      * </p>
      *
      * @return 带来源元数据的处理器集合
@@ -42,8 +46,7 @@ public class TableDataHandlerRegistry {
     /**
      * 按 ID 查找处理器
      * <p>
-     * 遍历全部来源解析结果，匹配 {@link ITableDataHandler#getId()}。
-     * 由于 getObjects 按 Spring → Dubbo 顺序返回，同 ID 本地实现优先命中。
+     * 遍历全部枚举结果，匹配 {@link ITableDataHandler#getId()}，同 ID 取首个命中。
      * </p>
      *
      * @param id 处理器 ID
@@ -54,13 +57,17 @@ public class TableDataHandlerRegistry {
     }
 
     /**
-     * 按 ID 查找处理器并判定来源
+     * 按 ID 查找处理器并判定命中来源
+     * <p>
+     * 当前枚举结果仅含本地来源，命中即返回 {@link #SOURCE_LOCAL}；保留来源维度用于前端校验提示，
+     * 并为后续接入其他来源留位。
+     * </p>
      *
      * @param id 处理器 ID
-     * @return "local" 或 "remote"，未找到返回 null
+     * @return 命中时返回 "local"，未找到返回 null
      */
     public String getHandlerSource(String id) {
-        return findResolved(id).map(r -> r.isSource(ObjectSource.SPRING) ? "local" : "remote").orElse(null);
+        return findResolved(id).isPresent() ? SOURCE_LOCAL : null;
     }
 
     /**

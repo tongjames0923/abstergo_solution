@@ -10,10 +10,10 @@ import java.util.List;
 /**
  * 远程表格数据操作器
  * <p>
- * 日志服务经 Dubbo 导出的 {@link ITableDataHandler} 实现，用于验证
- * {@code IObjectProvider.getObjects} 多来源枚举与远程直连调用链路：
- * 收到表格数据后调用 {@link TableDataOperators} 简单数据操作库，
- * 将结构摘要、数值列统计与行采样结果输出到本服务日志。
+ * 日志服务经 Dubbo 导出的 {@link ITableDataHandler} 实现：收到表格数据后调用
+ * {@link TableDataOperators} 简单数据操作库，将结构摘要、数值列统计与行采样结果输出到本服务日志。
+ * 该实现不会出现在 {@code IObjectProvider.getObjects} 的枚举结果中（Dubbo 不参与逐实例枚举），
+ * 主应用亦未引用此服务，仅在使用方按坐标构建 Dubbo 集群引用时才会被调用。
  * </p>
  *
  * @author abstergo

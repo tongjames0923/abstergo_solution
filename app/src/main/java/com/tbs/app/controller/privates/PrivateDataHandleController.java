@@ -45,7 +45,7 @@ import java.util.stream.Collectors;
 public class PrivateDataHandleController extends BaseController {
 
     /**
-     * 处理器注册中心（支持本地 Spring 与 Dubbo 远程双模式查找）
+     * 处理器选择层（按业务 ID 从容器内全部实现中选实例）
      */
     @Resource
     private TableDataHandlerRegistry handlerRegistry;
@@ -59,7 +59,7 @@ public class PrivateDataHandleController extends BaseController {
     /**
      * 获取处理器选项列表
      * <p>
-     * 返回全部来源（Spring 本地 + Dubbo 远程）的 {@link ITableDataHandler} 选项，供前端下拉选择。
+     * 返回容器内全部 {@link ITableDataHandler} 选项，供前端下拉选择。
      * </p>
      *
      * @return 处理器选项列表
@@ -67,7 +67,7 @@ public class PrivateDataHandleController extends BaseController {
     @NoLog
     @AjaxResponseType(value = List.class, genericArgs = {HandlerOptionVO.class})
     @PreAuthorize("@preAuthUtils.accountActived")
-    @Operation(summary = "获取处理器选项列表", description = "返回全部来源的数据处理器选项列表，含本地与远程")
+    @Operation(summary = "获取处理器选项列表", description = "返回全部可用的数据处理器选项列表")
     @ApiResponse(responseCode = "200", description = "处理器选项列表")
     @GetMapping("/handler/list")
     public AjaxResult listHandlers() {
@@ -81,7 +81,7 @@ public class PrivateDataHandleController extends BaseController {
      * 校验处理器ID有效性
      * <p>
      * 用于前端"可选可输入"模式下校验自定义输入的 handlerId：
-     * 通过 ObjectProvider 多来源枚举查找，返回可用性与命中来源。
+     * 经处理器选择层按 ID 查找，返回可用性与命中来源。
      * </p>
      *
      * @param handlerId 处理器ID
@@ -90,7 +90,7 @@ public class PrivateDataHandleController extends BaseController {
     @NoLog
     @AjaxResponseType(HandlerValidateVO.class)
     @PreAuthorize("@preAuthUtils.accountActived")
-    @Operation(summary = "校验处理器ID有效性", description = "校验自定义输入的处理器ID是否可用，返回可用性与命中来源（local/remote）")
+    @Operation(summary = "校验处理器ID有效性", description = "校验自定义输入的处理器ID是否可用，返回可用性与命中来源（当前恒为 local）")
     @ApiResponse(responseCode = "200", description = "校验结果")
     @GetMapping("/handler/validate/{handlerId}")
     public AjaxResult validateHandler(
