@@ -9,10 +9,12 @@ import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
 import com.tbs.app.service.user.model.impl.DefaultSystemUserDetails;
 import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.cache.expire.annotation.ExpireOn;
+import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
@@ -25,11 +27,13 @@ import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.AbstractUserLoginInfoService;
 import com.tbs.web.security.user.vo.LoginSessionVO;
+import jakarta.annotation.Resource;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -54,7 +58,7 @@ import static com.tbs.app.web.CacheNamesConstants.USER_SESSIONS_CACHE;
  * @author abstergo
  */
 @Slf4j
-public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
+public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService implements IStartup {
 
     @Resource
     private LoginInfoMapper mapper;
@@ -67,6 +71,23 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
     @Resource
     private IUserIdentityService userIdentityService;
+
+    @Resource
+    private CacheManager cacheManager;
+
+    /**
+     * 单例实例
+     */
+    @Getter
+    private static DefaultUserLoginInfoService instance;
+
+    private void postConstruct() {
+        instance = SpringUtil.getBean(DefaultUserLoginInfoService.class);
+    }
+
+
+
+
 
     /**
      * 获取可用的token查询条件
@@ -90,14 +111,17 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
      * @param token 登录令牌，不能为空
      * @return 会话行；不存在时返回 {@code null}
      */
-    SystemLoginInfoEntity getEntityByToken(String token) {
+
+    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#token")
+    @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 5, timeUnit = TimeUnit.MINUTES)
+    public List<SystemLoginInfoEntity> getEntityByToken(String token) {
         var queryWrapper = getAvailableTokensQuery();
         queryWrapper.where().equal(SystemLoginInfoEntity::getToken, token);
         queryWrapper.getOrderSupport().ifPresent((order) -> {
             order.orderByDesc(SystemLoginInfoEntity::getCreateTime);
             order.orderByDesc(SystemLoginInfoEntity::getUpdateTime);
         });
-        return queryWrapper.fetchOne();
+        return CollUtil.singletonList(queryWrapper.fetchOne());
     }
 
     /**
@@ -112,7 +136,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
      */
     @Override
     protected UserDetails readUserDetails(String token) {
-        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
+        SystemLoginInfoEntity loginInfoEntity = CollUtil.getFirst(getInstance().getEntityByToken(token));
         if (loginInfoEntity == null || loginInfoEntity.getUserId() == null) {
             return null;
         }
@@ -152,7 +176,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
     @Override
     protected boolean existsLoginInfo(String token) {
-        return getEntityByToken(token) != null;
+        return CollUtil.isNotEmpty(getInstance().getEntityByToken(token));
     }
 
     /**
@@ -194,7 +218,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
      */
     @Override
     protected void writeUserDetails(ITokenModel token, UserDetails userDetails) {
-        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token.getToken());
+        SystemLoginInfoEntity loginInfoEntity = CollUtil.getFirst(getInstance().getEntityByToken(token.getToken()));
         boolean isNew = loginInfoEntity == null;
         if (isNew) {
             loginInfoEntity = new SystemLoginInfoEntity();
@@ -217,6 +241,9 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         } else {
             mapper.updateByPrimaryKey(loginInfoEntity);
         }
+        // 写库后必须清除会话缓存：token 键对应 getEntityByToken，username 键对应 getUserAvaliableSessionId（新增会话会使其结果集过期）；
+        // 不清则 TTL 窗口内认证仍读旧行/空列表，且本地缓存返回同一实例会污染缓存内容
+        evictSessionCache(token.getToken(), userDetails.getUsername());
     }
 
     /**
@@ -233,16 +260,38 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
 
     @Override
     protected void removeUserDetails(String token) {
-        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token);
+        SystemLoginInfoEntity loginInfoEntity = CollUtil.getFirst(getInstance().getEntityByToken(token));
         if (loginInfoEntity == null) {
             log.info("clean up expired login info");
             return;
         }
         loginInfoEntity.setFlag(LoginInfoFlagEnum.CANCELLED.getCode());
         mapper.updateByPrimaryKey(loginInfoEntity);
+        evictSessionCache(token);
     }
 
-    private List<String> getUserAvaliableSessionIdsByUserName(String username) {
+    /**
+     * 清除指定令牌的会话缓存
+     * <p>
+     * {@link #writeUserDetails}/{@link #removeUserDetails} 由父类模板方法内部调用（同类调用不过代理）， 注解式 {@code @CacheEvict} 不会生效，故统一走
+     * CacheManager 显式清除。
+     * </p>
+     *
+     * @param keys 缓存键（令牌或用户名），逐个清除
+     */
+    private void evictSessionCache(Object... keys) {
+        var cache = cacheManager.getCache(USER_SESSIONS_CACHE);
+        if (cache == null) {
+            return;
+        }
+        for (var key : keys) {
+            if (key != null) {
+                cache.evict(key);
+            }
+        }
+    }
+
+    private List<String> getUserAvailableSessionIdsByUserName(String username) {
         SystemUserEntity user = CollUtil.of(systemUserService.queryByUserName(username)).findFirstOrNull();
         AssertUtil.notNull(user, () -> new FormattedRuntimeException("用户{}不存在。", username));
         var query = getAvailableTokensQuery();
@@ -272,7 +321,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         AssertUtil.notNull(token, "登录令牌不能为空");
         AssertUtil.hasText(token.getToken(), "登录令牌内容不能为空");
         AssertUtil.notNull(departmentId, "目标部门标识不能为空");
-        SystemLoginInfoEntity loginInfoEntity = getEntityByToken(token.getToken());
+        SystemLoginInfoEntity loginInfoEntity = CollUtil.getFirst(getInstance().getEntityByToken(token.getToken()));
         AssertUtil.notNull(loginInfoEntity, "令牌{}，登录用户信息不存在", token.getToken());
         AssertUtil.notNull(loginInfoEntity.getUserId(), "令牌{}，登录用户信息不完整", token.getToken());
         UserIdentity identity = userIdentityService.loadUserIdentity(loginInfoEntity.getUserId());
@@ -285,11 +334,14 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         loginInfoEntity.setCurrentDepartmentId(departmentId);
         loginInfoEntity.setUpdateTime(new Date());
         mapper.updateByPrimaryKey(loginInfoEntity);
+        evictSessionCache(token.getToken());
     }
 
     @Override
+    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#username")
+    @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 2, timeUnit = TimeUnit.MINUTES)
     public List<String> getUserAvaliableSessionId(String username) {
-        return getUserAvaliableSessionIdsByUserName(username);
+        return getUserAvailableSessionIdsByUserName(username);
     }
 
     /**
@@ -397,4 +449,16 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService {
         }).collect(Collectors.toList());
     }
 
+    /**
+     * 启动执行方法
+     * <p>
+     * 应用启动后需要执行的具体任务逻辑
+     * </p>
+     *
+     * @throws RuntimeException 执行过程中可能抛出的运行时异常
+     */
+    @Override
+    public void startUp() throws RuntimeException {
+        this.postConstruct();
+    }
 }
