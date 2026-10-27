@@ -153,6 +153,37 @@ function positiveNumber(value) {
 }
 
 /**
+ * 解析 PONG 应答帧携带的推荐心跳值
+ * <p>
+ * 心跳方向仍为客户端主动 PING，服务端在 PONG 应答中回带当前推荐心跳周期与最迟期限，
+ * 使客户端在连接存活期内可按服务端繁忙度持续自适应（而非仅 hello 一次性）。老服务端
+ * PONG 无载荷时返回 null，客户端保持现有节奏不变（向后兼容）。
+ * </p>
+ *
+ * @param {string} rawPayload PONG 帧的 payload 字符串
+ * @returns {Object|null} { heartbeatInterval, heartbeatDeadline } 或无推荐值时 null
+ */
+export function parseHeartbeatAdvice(rawPayload) {
+  if (!rawPayload) {
+    return null
+  }
+  try {
+    const obj = JSON.parse(rawPayload)
+    if (!obj) {
+      return null
+    }
+    const heartbeatInterval = positiveNumber(obj.heartbeatInterval)
+    const heartbeatDeadline = positiveNumber(obj.heartbeatDeadline)
+    if (heartbeatInterval == null && heartbeatDeadline == null) {
+      return null
+    }
+    return { heartbeatInterval, heartbeatDeadline }
+  } catch (e) {
+    return null
+  }
+}
+
+/**
  * 解析并校验 SIGNAL 信令帧（payload 为空，仅表达某频道有新消息）
  * <p>
  * 信令只承载频道提示，不携带消息标识；解析仅作合法性校验与轻量事件提取。

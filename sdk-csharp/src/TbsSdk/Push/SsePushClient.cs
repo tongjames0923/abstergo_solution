@@ -74,10 +74,10 @@ namespace TbsSdk.Push
         private Task _connectLoop;
         private Timer _heartbeatTimer;
 
-        /// <summary>服务端 hello 下发的推荐心跳周期（毫秒，null 表示未下发，沿用本地默认）。</summary>
+        /// <summary>服务端 hello/PONG 下发的推荐心跳周期（毫秒，null 表示未下发，沿用本地默认）。</summary>
         private volatile long? _recommendedHeartbeatMillis;
 
-        /// <summary>服务端 hello 下发的最迟心跳期限（毫秒，null 表示未下发，不启用陈旧守卫）。</summary>
+        /// <summary>服务端 hello/PONG 下发的最迟心跳期限（毫秒，null 表示未下发，不启用陈旧守卫）。</summary>
         private volatile long? _recommendedHeartbeatDeadlineMillis;
 
         /// <summary>上次收到服务端 PONG 的时间戳（Unix 毫秒），用于最迟期限陈旧判定。</summary>
@@ -417,9 +417,11 @@ namespace TbsSdk.Push
                     SignalReceived?.Invoke();
                     break;
                 case PushConstants.EventPong:
-                    // 服务端对 PING 的应答，刷新活性时间戳供最迟期限守卫使用
+                    // 服务端对 PING 的应答：刷新活性时间戳，并采纳回带的推荐心跳值实现运行期自适应
                     _lastPongAt = NowMs();
-                    FrameReceived?.Invoke(ParseFrame(sseEvent));
+                    var pongFrame = ParseFrame(sseEvent);
+                    ApplyPongHeartbeatAdvice(pongFrame?.Payload);
+                    FrameReceived?.Invoke(pongFrame);
                     break;
                 case PushConstants.EventData:
                     FrameReceived?.Invoke(ParseFrame(sseEvent));
@@ -620,7 +622,7 @@ namespace TbsSdk.Push
         }
 
         /// <summary>
-        /// 心跳周期：优先用服务端 hello 下发的推荐值，未下发时回退本地配置。
+        /// 心跳周期：优先用服务端 hello/PONG 下发的推荐值，未下发时回退本地配置。
         /// </summary>
         private TimeSpan ResolveHeartbeatInterval()
         {
@@ -630,6 +632,58 @@ namespace TbsSdk.Push
                 return TimeSpan.FromMilliseconds(recommended.Value);
             }
             return _options.Push.HeartbeatInterval;
+        }
+
+        /// <summary>
+        /// 采纳 PONG 回带的推荐心跳值：服务端在每次 PONG 应答中回带当前繁忙度推导的推荐值，
+        /// 使长连接全生命周期可持续自适应周期（不仅限 hello）。仅在推荐周期实际变化时重建定时器
+        ///（避免每个 PONG 重置导致节奏漂移）；老服务端 PONG 无载荷时不处理，保持现有节奏（向后兼容）。
+        /// </summary>
+        /// <param name="rawPayload">PONG 帧 payload（可含 heartbeatInterval/heartbeatDeadline）。</param>
+        private void ApplyPongHeartbeatAdvice(string rawPayload)
+        {
+            if (string.IsNullOrEmpty(rawPayload))
+            {
+                return;
+            }
+            long? interval;
+            long? deadline;
+            try
+            {
+                using (var document = JsonDocument.Parse(rawPayload))
+                {
+                    var root = document.RootElement;
+                    if (root.ValueKind != JsonValueKind.Object)
+                    {
+                        return;
+                    }
+                    interval = PositiveInt64(root, "heartbeatInterval");
+                    deadline = PositiveInt64(root, "heartbeatDeadline");
+                }
+            }
+            catch (JsonException)
+            {
+                return;
+            }
+            if (interval == null && deadline == null)
+            {
+                return;
+            }
+            var previous = _recommendedHeartbeatMillis;
+            if (interval.HasValue)
+            {
+                _recommendedHeartbeatMillis = interval;
+            }
+            if (deadline.HasValue)
+            {
+                _recommendedHeartbeatDeadlineMillis = deadline;
+            }
+            if (interval.HasValue && interval.Value != previous)
+            {
+                _options.Log(TbsSdkLogLevel.Info,
+                    "[TbsSdk][push] 服务端 PONG 下发新心跳周期 " + interval.Value + "ms，重建心跳定时器");
+                StartHeartbeat();
+            }
         }
 
         private void OnHeartbeatTick(object state)

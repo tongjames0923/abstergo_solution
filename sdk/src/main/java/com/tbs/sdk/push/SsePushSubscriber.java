@@ -349,8 +349,9 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             PushFrame frame = parseFrame(data);
             FrameType resolved = resolveType(type, frame);
             if (resolved == FrameType.PONG) {
-                // 服务端对 PING 的应答，刷新活性时间戳供最迟期限守卫使用
+                // 服务端对 PING 的应答：刷新活性时间戳供最迟期限守卫，并采纳回带的推荐心跳值
                 lastPongAt = System.currentTimeMillis();
+                applyPongHeartbeatAdvice(frame);
             }
             if (resolved == FrameType.HELLO) {
                 handleHello(frame);
@@ -653,7 +654,7 @@ public class SsePushSubscriber implements ISsePushSubscriber {
     }
 
     /**
-     * 启动心跳定时上行PING帧（周期优先取 hello 推荐值，未下发时回退配置，<=0关闭）
+     * 启动心跳定时上行PING帧（周期优先取服务端 hello/PONG 推荐值，未下发时回退配置，<=0关闭）
      */
     private void startPing() {
         cancelPing();
@@ -665,7 +666,7 @@ public class SsePushSubscriber implements ISsePushSubscriber {
     }
 
     /**
-     * 心跳周期（秒）：优先用服务端 hello 下发的推荐值（毫秒转秒，至少 1 秒），未下发时回退本地配置
+     * 心跳周期（秒）：优先用服务端 hello/PONG 下发的推荐值（毫秒转秒，至少 1 秒），未下发时回退本地配置
      *
      * @return 心跳周期（秒），非正数表示关闭心跳
      */
@@ -690,6 +691,47 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             return;
         }
         sendPing();
+    }
+
+    /**
+     * 采纳 PONG 回带的推荐心跳值：心跳方向仍客户端主动，但服务端在每次 PONG 应答中
+     * 回带当前繁忙度推导的推荐值，使长连接全生命周期可持续自适应周期（不仅限 hello）。
+     * 仅在推荐周期实际变化时重建调度（避免每个 PONG 重置导致的节奏漂移）；
+     * 老服务端 PONG 无载荷时不处理，保持现有节奏（向后兼容）
+     *
+     * @param frame PONG 帧（payload 可含 heartbeatInterval/heartbeatDeadline）
+     */
+    private void applyPongHeartbeatAdvice(PushFrame frame) {
+        String payload = frame == null ? null : frame.getPayload();
+        if (payload == null || payload.isEmpty()) {
+            return;
+        }
+        JsonNode root;
+        try {
+            root = mapper.readTree(payload);
+        } catch (Exception e) {
+            return;
+        }
+        if (root == null || !root.isObject()) {
+            return;
+        }
+        Long interval = positiveLong(root.get("heartbeatInterval"));
+        Long deadline = positiveLong(root.get("heartbeatDeadline"));
+        if (interval == null && deadline == null) {
+            return;
+        }
+        Long previous = recommendedHeartbeatMillis;
+        if (interval != null) {
+            recommendedHeartbeatMillis = interval;
+        }
+        if (deadline != null) {
+            recommendedHeartbeatDeadlineMillis = deadline;
+        }
+        if (interval != null && !interval.equals(previous)) {
+            log.info("服务端PONG下发新心跳周期{}ms，重建心跳调度", interval);
+            // 调度到 scheduler 线程串行重建，避免与 heartbeatTick/pingFuture 读写竞态
+            scheduler.execute(this::startPing);
+        }
     }
 
     /**

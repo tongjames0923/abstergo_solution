@@ -4,7 +4,8 @@ import { pushAuth, pushSubscribe, pushUnsubscribe, pushPing } from '@/api/push'
 import {
   PUSH_DEFAULTS,
   FRAME_EVENTS,
-  parseHelloPayload
+  parseHelloPayload,
+  parseHeartbeatAdvice
 } from '@/push/push-message'
 
 /**
@@ -201,8 +202,14 @@ class SsePushClient {
       }
     })
 
-    es.addEventListener(FRAME_EVENTS.PONG, () => {
-      // 服务端对 PING 的应答，确认链路存活；此处仅作为活性观测点
+    es.addEventListener(FRAME_EVENTS.PONG, (ev) => {
+      // 服务端对 PING 的应答：除活性观测外，回带当前推荐心跳值，使连接存活期内可随服务端
+      // 繁忙度自适应心跳节奏（无推荐载荷的老服务端解析为 null，保持现有节奏不变）
+      const frame = this._safeParse(ev.data)
+      const advice = frame && parseHeartbeatAdvice(frame.payload)
+      if (advice) {
+        this._applyHeartbeatAdvice(advice)
+      }
     })
 
     es.addEventListener(FRAME_EVENTS.SHUTDOWN, (ev) => {
@@ -253,16 +260,23 @@ class SsePushClient {
   }
 
   /**
-   * 采纳服务端 hello 下发的推荐心跳值：有推荐周期则覆盖本地心跳间隔，
-   * 并记录最迟心跳期限供陈旧守卫使用（均在建心跳前生效）
+   * 采纳服务端下发的推荐心跳值（hello 握手与 pong 应答共用）：有推荐周期则覆盖本地心跳间隔，
+   * 并记录最迟心跳期限供陈旧守卫使用。pong 运行期下发且周期发生变化时重建定时器以采纳新节奏
+   *（hello 阶段定时器尚未启动，不会误触发重建）
    *
-   * @param {Object} hello 解析后的 hello 帧信息
+   * @param {Object} advice 含 heartbeatInterval/heartbeatDeadline 的推荐值（hello 帧或 pong 解析结果）
    */
-  _applyHeartbeatAdvice(hello) {
-    if (hello.heartbeatInterval) {
-      this.config.heartbeatInterval = hello.heartbeatInterval
+  _applyHeartbeatAdvice(advice) {
+    const nextInterval = advice.heartbeatInterval
+    const intervalChanged = nextInterval && nextInterval !== this.config.heartbeatInterval
+    if (nextInterval) {
+      this.config.heartbeatInterval = nextInterval
     }
-    this.heartbeatDeadline = hello.heartbeatDeadline || 0
+    this.heartbeatDeadline = advice.heartbeatDeadline || 0
+    if (intervalChanged && this.heartbeatTimer) {
+      console.info(`[push] 服务端 pong 下发新心跳周期 ${nextInterval}ms，重建心跳定时器`)
+      this._startHeartbeat()
+    }
   }
 
   _startHeartbeat() {

@@ -144,7 +144,7 @@ public class PushFrameProcessor {
                 handleHello(session, frame);
                 break;
             case PING:
-                reply(session, pong(frame));
+                reply(session, pong(session, frame));
                 break;
             case PONG:
                 session.touch();
@@ -246,10 +246,11 @@ public class PushFrameProcessor {
     }
 
     /**
-     * 追加推荐心跳值到握手载荷：SPI缺失或返回null（如关闭监控）时不追加，客户端沿用自身默认
+     * 追加推荐心跳值到载荷（HELLO 握手与 PONG 心跳应答共用）：SPI缺失或返回null（如关闭监控）时不追加，
+     * 客户端沿用自身默认；因推荐周期随服务端繁忙度变化，PONG 回带使长连接全生命周期可持续自适应
      *
      * @param session 目标会话
-     * @param payload 握手载荷（就地追加heartbeatInterval与heartbeatDeadline）
+     * @param payload 待追加载荷（就地追加heartbeatInterval与heartbeatDeadline）
      */
     private void appendHeartbeatAdvice(IConnectionSession session, Map<String, Object> payload) {
         if (heartbeatRecommender == null) {
@@ -265,8 +266,8 @@ public class PushFrameProcessor {
         if (advice == null || advice.getIntervalMillis() <= 0) {
             return;
         }
-        payload.put(PushFrameConstants.HELLO_KEY_HEARTBEAT_INTERVAL, advice.getIntervalMillis());
-        payload.put(PushFrameConstants.HELLO_KEY_HEARTBEAT_DEADLINE, advice.getDeadlineMillis());
+        payload.put(PushFrameConstants.HEARTBEAT_KEY_INTERVAL, advice.getIntervalMillis());
+        payload.put(PushFrameConstants.HEARTBEAT_KEY_DEADLINE, advice.getDeadlineMillis());
     }
 
     /**
@@ -364,14 +365,24 @@ public class PushFrameProcessor {
 
     /**
      * 构造心跳应答帧
+     * <p>
+     * 除作为链路活性应答外，同时回带服务端当前推荐心跳值（周期/最迟期限），
+     * 使客户端在连接建立后仍能按服务端繁忙度持续自适应心跳节奏，而不仅限于 hello 握手一次性下发。
+     * </p>
      *
-     * @param ping 收到的PING帧
-     * @return PONG帧（保留原messageId便于应答关联）
+     * @param session 目标会话
+     * @param ping    收到的PING帧
+     * @return PONG帧（保留原messageId便于应答关联，载荷可含推荐心跳值）
      */
-    private PushFrame pong(PushFrame ping) {
+    private PushFrame pong(IConnectionSession session, PushFrame ping) {
         PushFrame frame = new PushFrame(FrameTypeEnum.PONG);
         frame.setVersion(PushFrameConstants.PROTOCOL_VERSION);
         frame.setMessageId(ping.getMessageId());
+        Map<String, Object> payload = new LinkedHashMap<>();
+        appendHeartbeatAdvice(session, payload);
+        if (!payload.isEmpty()) {
+            frame.setPayload(codec.serializePayload(payload));
+        }
         return frame;
     }
 
