@@ -37,6 +37,12 @@ namespace TbsSdk.Push
 
         /// <summary>协议版本（可空）。</summary>
         public int? Version { get; set; }
+
+        /// <summary>服务端推荐心跳周期（毫秒，可空；空表示未下发，沿用本地 <c>Push.HeartbeatInterval</c>）。</summary>
+        public long? HeartbeatIntervalMillis { get; set; }
+
+        /// <summary>服务端最迟心跳期限（毫秒，可空；距上次心跳超过此值判定链路陈旧应主动重连）。</summary>
+        public long? HeartbeatDeadlineMillis { get; set; }
     }
 
     /// <summary>
@@ -67,6 +73,18 @@ namespace TbsSdk.Push
         private CancellationTokenSource _lifetimeCts;
         private Task _connectLoop;
         private Timer _heartbeatTimer;
+
+        /// <summary>服务端 hello/PONG 下发的推荐心跳周期（毫秒，null 表示未下发，沿用本地默认）。</summary>
+        private volatile long? _recommendedHeartbeatMillis;
+
+        /// <summary>服务端 hello/PONG 下发的最迟心跳期限（毫秒，null 表示未下发，不启用陈旧守卫）。</summary>
+        private volatile long? _recommendedHeartbeatDeadlineMillis;
+
+        /// <summary>上次收到服务端 PONG 的时间戳（Unix 毫秒），用于最迟期限陈旧判定。</summary>
+        private volatile long _lastPongAt;
+
+        /// <summary>本次建连尝试的取消源（心跳陈旧守卫据此打断阻塞的下行读以触发换票重连）。</summary>
+        private volatile CancellationTokenSource _attemptCts;
 
         /// <summary>连接状态变更回调（对齐前端 onStatus）。</summary>
         public event Action<ConnectionStatus> StatusChanged;
@@ -262,11 +280,15 @@ namespace TbsSdk.Push
         {
             while (!_manualClose && !cancellationToken.IsCancellationRequested)
             {
+                CancellationTokenSource attemptCts = null;
                 try
                 {
+                    // 每次建连一个独立取消源（链接到全局），供心跳陈旧守卫打断阻塞下行读而不动全局取消
+                    attemptCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+                    _attemptCts = attemptCts;
                     SetStatus(_reconnectAttempts > 0 ? ConnectionStatus.Reconnecting : ConnectionStatus.Connecting);
 
-                    await OpenOnceAsync(cancellationToken).ConfigureAwait(false);
+                    await OpenOnceAsync(attemptCts.Token).ConfigureAwait(false);
                     // OpenOnce 正常返回 = 服务端关闭了流，视为连接异常以触发换票重连
                     if (!_manualClose)
                     {
@@ -289,6 +311,8 @@ namespace TbsSdk.Push
                 finally
                 {
                     StopHeartbeat();
+                    _attemptCts = null;
+                    attemptCts?.Dispose();
                 }
 
                 if (_manualClose || cancellationToken.IsCancellationRequested)
@@ -393,8 +417,11 @@ namespace TbsSdk.Push
                     SignalReceived?.Invoke();
                     break;
                 case PushConstants.EventPong:
-                    // 服务端对 PING 的应答，仅作活性观测
-                    FrameReceived?.Invoke(ParseFrame(sseEvent));
+                    // 服务端对 PING 的应答：刷新活性时间戳，并采纳回带的推荐心跳值实现运行期自适应
+                    _lastPongAt = NowMs();
+                    var pongFrame = ParseFrame(sseEvent);
+                    ApplyPongHeartbeatAdvice(pongFrame?.Payload);
+                    FrameReceived?.Invoke(pongFrame);
                     break;
                 case PushConstants.EventData:
                     FrameReceived?.Invoke(ParseFrame(sseEvent));
@@ -419,6 +446,9 @@ namespace TbsSdk.Push
             }
 
             _sessionId = hello.SessionId;
+            _recommendedHeartbeatMillis = hello.HeartbeatIntervalMillis;
+            _recommendedHeartbeatDeadlineMillis = hello.HeartbeatDeadlineMillis;
+            _lastPongAt = NowMs();
             SubscribeAllRegistered();
             StartHeartbeat();
             _reconnectAttempts = 0;
@@ -474,13 +504,43 @@ namespace TbsSdk.Push
                         version = versionValue;
                     }
 
-                    return new HelloInfo { SessionId = sessionId, Version = version };
+                    long? heartbeatInterval = PositiveInt64(root, "heartbeatInterval");
+                    long? heartbeatDeadline = PositiveInt64(root, "heartbeatDeadline");
+
+                    return new HelloInfo
+                    {
+                        SessionId = sessionId,
+                        Version = version,
+                        HeartbeatIntervalMillis = heartbeatInterval,
+                        HeartbeatDeadlineMillis = heartbeatDeadline
+                    };
                 }
             }
             catch (JsonException)
             {
                 return null;
             }
+        }
+
+        /// <summary>
+        /// 从 JSON 对象提取正数长整型毫秒值：缺失/非数字/非正数返回 null（视为服务端未下发）。
+        /// </summary>
+        private static long? PositiveInt64(JsonElement root, string name)
+        {
+            if (root.TryGetProperty(name, out var element) &&
+                element.ValueKind == JsonValueKind.Number &&
+                element.TryGetInt64(out var value) &&
+                value > 0)
+            {
+                return value;
+            }
+            return null;
+        }
+
+        /// <summary>当前 Unix 毫秒时间戳。</summary>
+        private static long NowMs()
+        {
+            return DateTimeOffset.Now.ToUnixTimeMilliseconds();
         }
 
         private static PushFrame ParseFrame(SseEvent sseEvent)
@@ -553,12 +613,77 @@ namespace TbsSdk.Push
         private void StartHeartbeat()
         {
             StopHeartbeat();
-            var interval = _options.Push.HeartbeatInterval;
+            var interval = ResolveHeartbeatInterval();
             if (interval <= TimeSpan.Zero)
             {
                 return;
             }
             _heartbeatTimer = new Timer(OnHeartbeatTick, null, interval, interval);
+        }
+
+        /// <summary>
+        /// 心跳周期：优先用服务端 hello/PONG 下发的推荐值，未下发时回退本地配置。
+        /// </summary>
+        private TimeSpan ResolveHeartbeatInterval()
+        {
+            var recommended = _recommendedHeartbeatMillis;
+            if (recommended.HasValue && recommended.Value > 0)
+            {
+                return TimeSpan.FromMilliseconds(recommended.Value);
+            }
+            return _options.Push.HeartbeatInterval;
+        }
+
+        /// <summary>
+        /// 采纳 PONG 回带的推荐心跳值：服务端在每次 PONG 应答中回带当前繁忙度推导的推荐值，
+        /// 使长连接全生命周期可持续自适应周期（不仅限 hello）。仅在推荐周期实际变化时重建定时器
+        ///（避免每个 PONG 重置导致节奏漂移）；老服务端 PONG 无载荷时不处理，保持现有节奏（向后兼容）。
+        /// </summary>
+        /// <param name="rawPayload">PONG 帧 payload（可含 heartbeatInterval/heartbeatDeadline）。</param>
+        private void ApplyPongHeartbeatAdvice(string rawPayload)
+        {
+            if (string.IsNullOrEmpty(rawPayload))
+            {
+                return;
+            }
+            long? interval;
+            long? deadline;
+            try
+            {
+                using (var document = JsonDocument.Parse(rawPayload))
+                {
+                    var root = document.RootElement;
+                    if (root.ValueKind != JsonValueKind.Object)
+                    {
+                        return;
+                    }
+                    interval = PositiveInt64(root, "heartbeatInterval");
+                    deadline = PositiveInt64(root, "heartbeatDeadline");
+                }
+            }
+            catch (JsonException)
+            {
+                return;
+            }
+            if (interval == null && deadline == null)
+            {
+                return;
+            }
+            var previous = _recommendedHeartbeatMillis;
+            if (interval.HasValue)
+            {
+                _recommendedHeartbeatMillis = interval;
+            }
+            if (deadline.HasValue)
+            {
+                _recommendedHeartbeatDeadlineMillis = deadline;
+            }
+            if (interval.HasValue && interval.Value != previous)
+            {
+                _options.Log(TbsSdkLogLevel.Info,
+                    "[TbsSdk][push] 服务端 PONG 下发新心跳周期 " + interval.Value + "ms，重建心跳定时器");
+                StartHeartbeat();
+            }
         }
 
         private void OnHeartbeatTick(object state)
@@ -568,6 +693,17 @@ namespace TbsSdk.Push
                 // 会话不存在（尚未握手/已重连中）时跳过本轮心跳
                 if (string.IsNullOrEmpty(_sessionId))
                 {
+                    return;
+                }
+                // 最迟心跳期限守卫：距上次收到 PONG 已超过后端回收点(deadline)，判定链路已陈旧
+                // （下行流半开而阻塞读未报错时尤为有效），打断本次连接以触发换票重连；deadline 未下发时不守卫
+                var deadline = _recommendedHeartbeatDeadlineMillis;
+                var last = _lastPongAt;
+                if (deadline.HasValue && deadline.Value > 0 && last > 0 &&
+                    NowMs() - last > deadline.Value)
+                {
+                    _options.Log(TbsSdkLogLevel.Warn, "[TbsSdk][push] 距上次心跳超过最迟期限，判定链路陈旧，换票重连");
+                    _attemptCts?.Cancel();
                     return;
                 }
                 UploadFrame(new PushFrame

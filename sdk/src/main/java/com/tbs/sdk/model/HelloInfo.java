@@ -26,11 +26,29 @@ public class HelloInfo {
      */
     private Integer version;
 
+    /**
+     * 服务端推荐心跳周期（毫秒，可空；空表示服务端未下发，客户端沿用自身默认）
+     */
+    private Long heartbeatIntervalMillis;
+
+    /**
+     * 服务端最迟心跳期限（毫秒，可空；距上次心跳超过此值判定链路陈旧应主动重连）
+     */
+    private Long heartbeatDeadlineMillis;
+
     public HelloInfo() {
     }
 
     public HelloInfo(String sessionId, Integer version) {
         this.sessionId = sessionId;
         this.version = version;
+    }
+
+    public HelloInfo(String sessionId, Integer version, Long heartbeatIntervalMillis,
+                     Long heartbeatDeadlineMillis) {
+        this.sessionId = sessionId;
+        this.version = version;
+        this.heartbeatIntervalMillis = heartbeatIntervalMillis;
+        this.heartbeatDeadlineMillis = heartbeatDeadlineMillis;
     }
 }

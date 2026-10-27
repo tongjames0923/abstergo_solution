@@ -176,14 +176,14 @@ export function buildPublicDownloadUrl(code) {
 
 /**
  * 创建公开下载码（code 缺省时由后端自动生成）
- * @param {Object} form - { objectKey, code?, bucket?, expireSeconds?, remark? }
+ * @param {Object} data - { objectKey, code?, bucket?, expireSeconds?, remark? }
  * @returns {Promise} 创建成功的下载码信息
  */
-export function createDownloadCode(form) {
+export function saveDownloadCode(data) {
   return request({
-    url: '/private/oss/download-code',
+    url: '/private/oss/download-code/save',
     method: 'post',
-    data: form
+    data
   })
 }
 
@@ -194,24 +194,21 @@ export function createDownloadCode(form) {
  */
 export function getDownloadCode(code) {
   return request({
-    url: '/private/oss/download-code',
-    method: 'get',
-    params: { code }
+    url: `/private/oss/download-code/get/${code}`,
+    method: 'get'
   })
 }
 
 /**
- * 更新下载码（续期/改备注）
- * @param {string} code - 下载唯一码
- * @param {Object} form - { expireSeconds?, remark? }
+ * 更新下载码（续期/改备注），待更新的码由请求体承载
+ * @param {Object} data - { code, expireSeconds?, remark? }
  * @returns {Promise} 操作结果
  */
-export function updateDownloadCode(code, form) {
+export function updateDownloadCode(data) {
   return request({
-    url: '/private/oss/download-code',
-    method: 'put',
-    params: { code },
-    data: form
+    url: '/private/oss/download-code/update',
+    method: 'post',
+    data
   })
 }
 
@@ -222,22 +219,24 @@ export function updateDownloadCode(code, form) {
  */
 export function deleteDownloadCode(code) {
   return request({
-    url: '/private/oss/download-code',
-    method: 'delete',
-    params: { code }
+    url: `/private/oss/download-code/delete/${code}`,
+    method: 'post'
   })
 }
 
 /**
  * 分页查询下载码
- * @param {Object} form - { code?, objectKey?, keyword?, status?, pageNum?, pageSize? }
+ * @param {Object} data - 查询条件 { code?, objectKey?, keyword?, status? }
+ * @param {number} pageNum - 页码（从1开始）
+ * @param {number} pageSize - 每页条数
  * @returns {Promise} 分页结果（total + data）
  */
-export function queryDownloadCodePage(form) {
+export function queryDownloadCodePage(data, pageNum, pageSize) {
   return request({
-    url: '/private/oss/download-code/page',
+    url: '/private/oss/download-code/query',
     method: 'post',
-    data: form
+    params: { pageNum, pageSize },
+    data
   })
 }
 

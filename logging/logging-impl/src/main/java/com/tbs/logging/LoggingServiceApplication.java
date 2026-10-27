@@ -33,7 +33,7 @@ import org.mybatis.spring.annotation.MapperScan;
 @EnableTbsRedis
 @EnableDubbo
 @EnableRabbitMq
-@MapperScan("com.tbs.logging.mapper")
+@MapperScan("com.tbs.shared.mapper")
 public class LoggingServiceApplication {
 
     public static void main(String[] args) {

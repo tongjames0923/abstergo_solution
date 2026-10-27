@@ -100,6 +100,32 @@ public final class PushFrameConstants {
      */
     public static final String TICKET_PARAM = "push-ticket";
 
+    /**
+     * HELLO 握手载荷键：预分配的会话标识
+     */
+    public static final String HELLO_KEY_SESSION_ID = "sessionId";
+
+    /**
+     * HELLO 握手载荷键：协议版本号
+     */
+    public static final String HELLO_KEY_VERSION = "version";
+
+    /**
+     * 推荐心跳载荷键：服务端推荐心跳周期（毫秒）
+     * <p>
+     * HELLO 握手帧与 PONG 心跳应答帧共用：客户端据此在连接全生命周期动态采纳新周期。
+     * </p>
+     */
+    public static final String HEARTBEAT_KEY_INTERVAL = "heartbeatInterval";
+
+    /**
+     * 推荐心跳载荷键：服务端最迟心跳期限（毫秒）
+     * <p>
+     * 与 {@link #HEARTBEAT_KEY_INTERVAL} 同属 HELLO/PONG 共用的推荐心跳载荷键。
+     * </p>
+     */
+    public static final String HEARTBEAT_KEY_DEADLINE = "heartbeatDeadline";
+
     private PushFrameConstants() {
     }
 

@@ -15,7 +15,7 @@ import org.springframework.amqp.core.Message;
  * 头时，业务标识自动回落为 v2 队列名，非空即可通过建档校验，无需本类覆盖任何钩子。
  * </p>
  * <p>
- * 非 Spring 注解类，由日志模块 config 以 {@code @Bean} 装配（recorder 经构造器传入），保持与内存协作实现一致的
+ * 非 Spring 注解类，由日志模块 config 以 {@code @Bean} 装配（recorder 经构造器传入），保持与协作实现一致的
  * "注册交 config 层"约定。
  * </p>
  *
@@ -28,7 +28,7 @@ public class LoggingRecordMessageReceiver extends RabbitMqMessageReceiver<Loggin
     /**
      * 构造日志记录消息接收器
      *
-     * @param recorder 消息记录器，接收段建档的执行方（内存实现由 config 注入）
+     * @param recorder 消息记录器，接收段建档的执行方（Redis 实现由 config 注入）
      */
     public LoggingRecordMessageReceiver(IMqRecorder<Message, LoggingRecordForm> recorder) {
         super(recorder);

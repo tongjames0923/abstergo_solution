@@ -4,7 +4,8 @@ import { pushAuth, pushSubscribe, pushUnsubscribe, pushPing } from '@/api/push'
 import {
   PUSH_DEFAULTS,
   FRAME_EVENTS,
-  parseHelloPayload
+  parseHelloPayload,
+  parseHeartbeatAdvice
 } from '@/push/push-message'
 
 /**
@@ -56,6 +57,14 @@ class SsePushClient {
      * 心跳上行连续失败计数（成功后清零，达阈值判定会话已死）
      */
     this.heartbeatFailures = 0
+    /**
+     * 服务端 hello 下发的最迟心跳期限（毫秒，0 表示未下发不启用陈旧守卫）
+     */
+    this.heartbeatDeadline = 0
+    /**
+     * 上次成功心跳时间戳（毫秒），用于最迟期限陈旧判定
+     */
+    this.lastHeartbeatAt = 0
     /**
      * 当前订阅主题集合
      */
@@ -175,6 +184,7 @@ class SsePushClient {
         return
       }
       this.sessionId = hello.sessionId
+      this._applyHeartbeatAdvice(hello)
       this._subscribeAll()
       this._startHeartbeat()
       this.reconnectAttempts = 0
@@ -192,8 +202,14 @@ class SsePushClient {
       }
     })
 
-    es.addEventListener(FRAME_EVENTS.PONG, () => {
-      // 服务端对 PING 的应答，确认链路存活；此处仅作为活性观测点
+    es.addEventListener(FRAME_EVENTS.PONG, (ev) => {
+      // 服务端对 PING 的应答：除活性观测外，回带当前推荐心跳值，使连接存活期内可随服务端
+      // 繁忙度自适应心跳节奏（无推荐载荷的老服务端解析为 null，保持现有节奏不变）
+      const frame = this._safeParse(ev.data)
+      const advice = frame && parseHeartbeatAdvice(frame.payload)
+      if (advice) {
+        this._applyHeartbeatAdvice(advice)
+      }
     })
 
     es.addEventListener(FRAME_EVENTS.SHUTDOWN, (ev) => {
@@ -243,15 +259,46 @@ class SsePushClient {
     pushUnsubscribe(this.sessionId, topic).catch(e => console.warn('[push] 退订上行失败', topic, e))
   }
 
+  /**
+   * 采纳服务端下发的推荐心跳值（hello 握手与 pong 应答共用）：有推荐周期则覆盖本地心跳间隔，
+   * 并记录最迟心跳期限供陈旧守卫使用。pong 运行期下发且周期发生变化时重建定时器以采纳新节奏
+   *（hello 阶段定时器尚未启动，不会误触发重建）
+   *
+   * @param {Object} advice 含 heartbeatInterval/heartbeatDeadline 的推荐值（hello 帧或 pong 解析结果）
+   */
+  _applyHeartbeatAdvice(advice) {
+    const nextInterval = advice.heartbeatInterval
+    const intervalChanged = nextInterval && nextInterval !== this.config.heartbeatInterval
+    if (nextInterval) {
+      this.config.heartbeatInterval = nextInterval
+    }
+    this.heartbeatDeadline = advice.heartbeatDeadline || 0
+    if (intervalChanged && this.heartbeatTimer) {
+      console.info(`[push] 服务端 pong 下发新心跳周期 ${nextInterval}ms，重建心跳定时器`)
+      this._startHeartbeat()
+    }
+  }
+
   _startHeartbeat() {
     this._stopHeartbeat()
     this.heartbeatFailures = 0
+    this.lastHeartbeatAt = Date.now()
     this.heartbeatTimer = setInterval(() => {
       if (!this.sessionId) {
         return
       }
+      // 最迟心跳期限守卫：距上次成功心跳已超过后端回收点(deadline)，判定链路已陈旧
+      // （后台标签页定时器被浏览器节流拉伸、或半开连接而下行未报错时尤为有效），
+      // 主动换票重连而非再发一次注定失败的 ping
+      if (this.heartbeatDeadline > 0 && Date.now() - this.lastHeartbeatAt > this.heartbeatDeadline) {
+        console.warn('[push] 距上次心跳超过最迟期限，判定链路陈旧，关流换票重连')
+        this._closeStream()
+        this._scheduleReconnect()
+        return
+      }
       pushPing(this.sessionId).then(() => {
         this.heartbeatFailures = 0
+        this.lastHeartbeatAt = Date.now()
       }).catch(e => {
         console.warn('[push] 心跳上行失败', e)
         this.heartbeatFailures++
@@ -356,6 +403,9 @@ class SsePushClient {
     this._stopHeartbeat()
     this._closeStream()
     this.heartbeatFailures = 0
+    // 复位退避计数：close 是会话终结（登出/卸载），下一次 connect 属全新会话，
+    // 若残留 >0 会让 _open 把首下建连误标为 RECONNECTING（重连中）而非 CONNECTING（连接中）
+    this.reconnectAttempts = 0
     this._setStatus(CONNECTION_STATUS.CLOSED)
   }
 }

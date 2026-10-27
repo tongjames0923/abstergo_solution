@@ -15,7 +15,8 @@ import lombok.extern.slf4j.Slf4j;
  * </p>
  * <p>
  * 非 Spring 注解类，由日志模块 config 以 {@code @Bean} 装配；父类的协作 Bean（receiver/processor/recorder/
- * monopolizer）与传输层依赖（ConnectionFactory/AmqpAdmin）按类型注入。记录层采用内存协作实现，进程重启即清空， 定位为链路验证/开发环境用；生产替换为 DB 记录器即可，本上下文无需改动。
+ * monopolizer）与传输层依赖（ConnectionFactory/AmqpAdmin）按类型注入。记录器与单飞抢占器采用 Redis 协作实现，
+ * 主记录/台账跨实例共享且重启不丢，与 CDC、广播链路共用同一套 MQ v2 协作件。
  * </p>
  *
  * @author tongj

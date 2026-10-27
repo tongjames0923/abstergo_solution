@@ -232,7 +232,11 @@ const actions = {
         console.info(`[push] 拉取新增 ${added} 条消息`)
       }
     } catch (e) {
-      commit('SET_LOAD_ERROR', true)
+      // 仅首屏尚未成功加载过时才呈现错误态：已有过一次成功（哪怕列表为空）后，
+      // 信令/hello 兜底的后台刷新失败不应把合法的空/已加载列表伪装成"加载失败"错误屏
+      if (!firstPullDone) {
+        commit('SET_LOAD_ERROR', true)
+      }
       console.warn('[push] 拉取消息失败', e)
     } finally {
       commit('SET_LOADING', false)

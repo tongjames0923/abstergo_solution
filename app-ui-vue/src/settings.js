@@ -92,9 +92,10 @@ module.exports = {
      */
     reconnectJitter: 1000,
     /**
-     * 心跳上行周期（毫秒）
+     * 心跳上行周期兜底默认值（毫秒）：仅用于 hello 握手到达前的引导；
+     * 稳态心跳周期与最迟期限由后端经 IHeartbeatRecommender 生成随 hello 下发并覆盖本值
      */
-    heartbeatInterval: 200000,
+    heartbeatInterval: 30000,
     /**
      * 心跳连续失败阈值：达到即判定会话已死，主动关流换票重连
      */

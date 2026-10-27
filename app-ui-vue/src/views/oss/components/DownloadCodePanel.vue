@@ -254,7 +254,7 @@
 
 <script>
 import {
-  createDownloadCode,
+  saveDownloadCode,
   updateDownloadCode,
   deleteDownloadCode,
   queryDownloadCodePage,
@@ -321,14 +321,14 @@ export default {
 
     loadPage() {
       this.loading = true
-      const form = { pageNum: this.query.pageNum, pageSize: this.query.pageSize }
+      const form = {}
       if (this.query.keyword) {
         form.keyword = this.query.keyword
       }
       if (this.query.status) {
         form.status = this.query.status
       }
-      queryDownloadCodePage(form)
+      queryDownloadCodePage(form, this.query.pageNum, this.query.pageSize)
         .then(res => {
           const page = res.data || {}
           this.rows = page.data || []
@@ -384,7 +384,7 @@ export default {
         payload.remark = form.remark
       }
       this.createLoading = true
-      createDownloadCode(payload)
+      saveDownloadCode(payload)
         .then(res => {
           this.createResult = res.data || null
           this.createLoading = false
@@ -414,7 +414,7 @@ export default {
       const form = this.renewForm
       const expireSeconds = this.resolveExpireSeconds(form.mode, form.seconds, true)
       this.renewSaving = true
-      updateDownloadCode(form.code, { expireSeconds, remark: form.remark })
+      updateDownloadCode({ code: form.code, expireSeconds, remark: form.remark })
         .then(() => {
           this.renewSaving = false
           this.renewVisible = false
