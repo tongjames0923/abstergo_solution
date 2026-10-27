@@ -238,8 +238,8 @@ public class PushFrameProcessor {
         ack.setVersion(PushFrameConstants.PROTOCOL_VERSION);
         ack.setMessageId(messageId);
         Map<String, Object> payload = new LinkedHashMap<>();
-        payload.put("sessionId", session.getSessionId());
-        payload.put("version", PushFrameConstants.PROTOCOL_VERSION);
+        payload.put(PushFrameConstants.HELLO_KEY_SESSION_ID, session.getSessionId());
+        payload.put(PushFrameConstants.HELLO_KEY_VERSION, PushFrameConstants.PROTOCOL_VERSION);
         appendHeartbeatAdvice(session, payload);
         ack.setPayload(codec.serializePayload(payload));
         reply(session, ack);
@@ -265,8 +265,8 @@ public class PushFrameProcessor {
         if (advice == null || advice.getIntervalMillis() <= 0) {
             return;
         }
-        payload.put("heartbeatInterval", advice.getIntervalMillis());
-        payload.put("heartbeatDeadline", advice.getDeadlineMillis());
+        payload.put(PushFrameConstants.HELLO_KEY_HEARTBEAT_INTERVAL, advice.getIntervalMillis());
+        payload.put(PushFrameConstants.HELLO_KEY_HEARTBEAT_DEADLINE, advice.getDeadlineMillis());
     }
 
     /**
