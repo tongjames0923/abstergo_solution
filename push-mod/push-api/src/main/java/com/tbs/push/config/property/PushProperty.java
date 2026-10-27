@@ -29,6 +29,11 @@ public class PushProperty {
     public static final long DEFAULT_HEARTBEAT_TIMEOUT_MILLIS = 90_000L;
 
     /**
+     * 默认繁忙饱和会话数（在线会话达到该量视为 100% 繁忙）
+     */
+    public static final int DEFAULT_HEARTBEAT_BUSY_CAPACITY = 5_000;
+
+    /**
      * 默认内存消息源容量
      */
     public static final int DEFAULT_MEMORY_MESSAGE_CAPACITY = 10_000;
@@ -62,6 +67,16 @@ public class PushProperty {
      * </p>
      */
     private long heartbeatTimeoutMillis = DEFAULT_HEARTBEAT_TIMEOUT_MILLIS;
+
+    /**
+     * 繁忙饱和会话数
+     * <p>
+     * 仅默认的按会话数度量繁忙度的指示器生效：本节点在线会话数与该值的比作为归一化
+     * 繁忙度（上限 1.0），繁忙度越高则 hello 下发的推荐心跳周期越长（抑制海量终端上行风暴）。
+     * 部署方若换用自定义 {@link com.tbs.push.api.protocol.IServerBusyIndicator} 则本值无效。
+     * </p>
+     */
+    private int heartbeatBusyCapacity = DEFAULT_HEARTBEAT_BUSY_CAPACITY;
 
     /**
      * 内存消息源容量上限

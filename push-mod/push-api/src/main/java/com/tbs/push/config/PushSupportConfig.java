@@ -7,6 +7,8 @@ import com.tbs.push.api.coordinator.IRouteCoordinator;
 import com.tbs.push.api.dispatch.IPushDispatcher;
 import com.tbs.push.api.frame.IPushCodec;
 import com.tbs.push.api.intercept.IConnectionInterceptor;
+import com.tbs.push.api.protocol.IHeartbeatRecommender;
+import com.tbs.push.api.protocol.IServerBusyIndicator;
 import com.tbs.push.api.record.IDeliveryRecordStore;
 import com.tbs.push.api.session.ISessionRegistry;
 import com.tbs.push.api.session.ISubscriptionAuthorizer;
@@ -24,6 +26,8 @@ import com.tbs.push.impl.auth.PushCredentialService;
 import com.tbs.push.impl.endpoint.*;
 import com.tbs.push.impl.protocol.JsonPushCodec;
 import com.tbs.push.impl.protocol.PushFrameProcessor;
+import com.tbs.push.impl.protocol.DefaultHeartbeatRecommender;
+import com.tbs.push.impl.protocol.SessionCountBusyIndicator;
 import com.tbs.push.impl.session.DefaultSessionRegistry;
 import com.tbs.push.impl.session.DefaultTopicRegistry;
 import com.tbs.push.impl.session.HeartbeatMonitor;
@@ -208,15 +212,52 @@ public class PushSupportConfig {
      * @param listenerProvider      上行监听器实现提供者
      * @param authorizerProvider    订阅授权校验器提供者（多实现时取唯一Bean，无实现时全放行）
      * @param guardProvider         上行守卫实现提供者（多实现链式叠加，无实现时全放行）
+     * @param recommenderProvider   心跳推荐值SPI提供者（无自定义实现时回退默认推导器）
      * @return 协议帧处理器
      */
     @Bean
     @ConditionalOnMissingBean(PushFrameProcessor.class)
     public PushFrameProcessor pushFrameProcessor(IPushCodec codec, ITopicRegistry topicRegistry,
         ObjectProvider<IUpstreamListener> listenerProvider, ObjectProvider<ISubscriptionAuthorizer> authorizerProvider,
-        ObjectProvider<IUploadGuard> guardProvider) {
+        ObjectProvider<IUploadGuard> guardProvider, ObjectProvider<IHeartbeatRecommender> recommenderProvider) {
         return new PushFrameProcessor(codec, topicRegistry, listenerProvider.stream().collect(Collectors.toList()),
-            authorizerProvider.getIfAvailable(), guardProvider.stream().collect(Collectors.toList()));
+            authorizerProvider.getIfAvailable(), guardProvider.stream().collect(Collectors.toList()),
+            recommenderProvider.getIfAvailable());
+    }
+
+    /**
+     * 默认繁忙度指示器
+     * <p>
+     * 以本节点在线会话数除以饱和容量归一化为 [0,1] 繁忙度。业务方可注册自定义
+     * {@link IServerBusyIndicator} Bean（如改用系统负载/队列深度）覆盖。
+     * </p>
+     *
+     * @param sessionRegistry 会话注册表
+     * @param property        推送基础配置属性
+     * @return 繁忙度指示器
+     */
+    @Bean
+    @ConditionalOnMissingBean(IServerBusyIndicator.class)
+    public IServerBusyIndicator serverBusyIndicator(ISessionRegistry sessionRegistry, PushProperty property) {
+        return new SessionCountBusyIndicator(sessionRegistry, property.getHeartbeatBusyCapacity());
+    }
+
+    /**
+     * 默认心跳推荐器
+     * <p>
+     * 最迟期限直接取服务端心跳空闲回收点，推荐周期按 {@link IServerBusyIndicator} 的繁忙度
+     * 自适应（越忙周期越长以抑制上行风暴）。业务方可注册自定义 {@link IHeartbeatRecommender}
+     * Bean 覆盖整个推导策略。
+     * </p>
+     *
+     * @param property      推送基础配置属性
+     * @param busyIndicator 繁忙度信号源
+     * @return 心跳推荐器
+     */
+    @Bean
+    @ConditionalOnMissingBean(IHeartbeatRecommender.class)
+    public IHeartbeatRecommender heartbeatRecommender(PushProperty property, IServerBusyIndicator busyIndicator) {
+        return new DefaultHeartbeatRecommender(property.getHeartbeatTimeoutMillis(), busyIndicator);
     }
 
     /**

@@ -4,6 +4,7 @@ import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.push.api.exception.PushProtocolException;
 import com.tbs.push.api.frame.IPushCodec;
+import com.tbs.push.api.protocol.IHeartbeatRecommender;
 import com.tbs.push.api.session.IConnectionSession;
 import com.tbs.push.api.session.ISubscriptionAuthorizer;
 import com.tbs.push.api.session.ITopicRegistry;
@@ -14,6 +15,7 @@ import com.tbs.push.constants.PushI18nConstant;
 import com.tbs.push.model.frame.FrameTypeEnum;
 import com.tbs.push.model.frame.PushErrorCodeEnum;
 import com.tbs.push.model.frame.PushFrame;
+import com.tbs.push.model.protocol.HeartbeatAdvice;
 import com.tbs.push.model.session.ConnectionStateEnum;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +30,8 @@ import java.util.UUID;
  * <p>
  * 协议层控制帧的统一处理中枢，全部传输适配层共用本处理器，保证协议行为跨传输一致：
  * <ul>
- *     <li>HELLO — 版本协商：版本一致时回发握手确认帧（载荷含sessionId与版本）并置会话可用；
+ *     <li>HELLO — 版本协商：版本一致时回发握手确认帧（载荷含sessionId与版本，以及由
+ *     {@link IHeartbeatRecommender} 生成的推荐心跳周期与最迟期限）并置会话可用；
  *     不一致时回发ERROR帧后关闭连接</li>
  *     <li>PING/PONG — 心跳应答与活性刷新</li>
  *     <li>SUBSCRIBE/UNSUBSCRIBE — 订阅关系维护并回发确认帧；注册了
@@ -74,6 +77,11 @@ public class PushFrameProcessor {
     private final List<IUploadGuard> uploadGuards;
 
     /**
+     * 心跳推荐值 SPI（可为null，缺失时hello不下发推荐心跳，客户端沿用自身默认）
+     */
+    private final IHeartbeatRecommender heartbeatRecommender;
+
+    /**
      * 构造协议帧处理器
      *
      * @param codec                   协议编解码器，不能为空
@@ -81,15 +89,17 @@ public class PushFrameProcessor {
      * @param upstreamListeners       上行监听器列表，允许为null或空
      * @param subscriptionAuthorizer  订阅授权校验器，允许为null（无鉴权部署全放行）
      * @param uploadGuards            上行守卫链，允许为null或空（缺失时上行全放行）
+     * @param heartbeatRecommender    心跳推荐值SPI，允许为null（缺失时hello不下发推荐心跳）
      */
     public PushFrameProcessor(IPushCodec codec, ITopicRegistry topicRegistry,
         List<IUpstreamListener> upstreamListeners, ISubscriptionAuthorizer subscriptionAuthorizer,
-        List<IUploadGuard> uploadGuards) {
+        List<IUploadGuard> uploadGuards, IHeartbeatRecommender heartbeatRecommender) {
         this.codec = codec;
         this.topicRegistry = topicRegistry;
         this.upstreamListeners = upstreamListeners;
         this.subscriptionAuthorizer = subscriptionAuthorizer;
         this.uploadGuards = uploadGuards;
+        this.heartbeatRecommender = heartbeatRecommender;
     }
 
     /**
@@ -230,8 +240,33 @@ public class PushFrameProcessor {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("sessionId", session.getSessionId());
         payload.put("version", PushFrameConstants.PROTOCOL_VERSION);
+        appendHeartbeatAdvice(session, payload);
         ack.setPayload(codec.serializePayload(payload));
         reply(session, ack);
+    }
+
+    /**
+     * 追加推荐心跳值到握手载荷：SPI缺失或返回null（如关闭监控）时不追加，客户端沿用自身默认
+     *
+     * @param session 目标会话
+     * @param payload 握手载荷（就地追加heartbeatInterval与heartbeatDeadline）
+     */
+    private void appendHeartbeatAdvice(IConnectionSession session, Map<String, Object> payload) {
+        if (heartbeatRecommender == null) {
+            return;
+        }
+        HeartbeatAdvice advice;
+        try {
+            advice = heartbeatRecommender.recommend(session);
+        } catch (Throwable error) {
+            log.warn("心跳推荐值生成异常, sessionId:{}", session.getSessionId(), error);
+            return;
+        }
+        if (advice == null || advice.getIntervalMillis() <= 0) {
+            return;
+        }
+        payload.put("heartbeatInterval", advice.getIntervalMillis());
+        payload.put("heartbeatDeadline", advice.getDeadlineMillis());
     }
 
     /**

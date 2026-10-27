@@ -111,10 +111,15 @@ export const PUSH_DEFAULTS = {
 }
 
 /**
- * 解析并校验 hello 帧 payload（字符串需二次 JSON.parse），提取会话标识
+ * 解析并校验 hello 帧 payload（字符串需二次 JSON.parse），提取会话标识与服务端推荐心跳值
+ * <p>
+ * 心跳方向仍由客户端主动上行 PING，服务端仅经 SPI 生成推荐值随 hello 下发：
+ * heartbeatInterval 为推荐心跳周期、heartbeatDeadline 为最迟心跳期限（均为相对毫秒）。
+ * 老服务端不下发这两个字段时解析为 null，客户端沿用本地默认（向后兼容）。
+ * </p>
  *
  * @param {string} rawPayload hello 帧的 payload 字符串
- * @returns {Object|null} { sessionId, version } 或解析失败时 null
+ * @returns {Object|null} { sessionId, version, heartbeatInterval, heartbeatDeadline } 或解析失败时 null
  */
 export function parseHelloPayload(rawPayload) {
   if (!rawPayload) {
@@ -125,11 +130,26 @@ export function parseHelloPayload(rawPayload) {
     if (!obj || !obj.sessionId) {
       return null
     }
-    return { sessionId: obj.sessionId, version: obj.version }
+    return {
+      sessionId: obj.sessionId,
+      version: obj.version,
+      heartbeatInterval: positiveNumber(obj.heartbeatInterval),
+      heartbeatDeadline: positiveNumber(obj.heartbeatDeadline)
+    }
   } catch (e) {
     console.warn('[push] hello 帧 payload 解析失败', e)
     return null
   }
+}
+
+/**
+ * 提取正数毫秒值：非数字或非正数归一为 null（视为未下发，交由本地默认兜底）
+ *
+ * @param {*} value 原始值
+ * @returns {number|null} 正数毫秒或 null
+ */
+function positiveNumber(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? value : null
 }
 
 /**

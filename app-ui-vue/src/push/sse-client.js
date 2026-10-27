@@ -57,6 +57,14 @@ class SsePushClient {
      */
     this.heartbeatFailures = 0
     /**
+     * 服务端 hello 下发的最迟心跳期限（毫秒，0 表示未下发不启用陈旧守卫）
+     */
+    this.heartbeatDeadline = 0
+    /**
+     * 上次成功心跳时间戳（毫秒），用于最迟期限陈旧判定
+     */
+    this.lastHeartbeatAt = 0
+    /**
      * 当前订阅主题集合
      */
     this.topics = []
@@ -175,6 +183,7 @@ class SsePushClient {
         return
       }
       this.sessionId = hello.sessionId
+      this._applyHeartbeatAdvice(hello)
       this._subscribeAll()
       this._startHeartbeat()
       this.reconnectAttempts = 0
@@ -243,15 +252,39 @@ class SsePushClient {
     pushUnsubscribe(this.sessionId, topic).catch(e => console.warn('[push] 退订上行失败', topic, e))
   }
 
+  /**
+   * 采纳服务端 hello 下发的推荐心跳值：有推荐周期则覆盖本地心跳间隔，
+   * 并记录最迟心跳期限供陈旧守卫使用（均在建心跳前生效）
+   *
+   * @param {Object} hello 解析后的 hello 帧信息
+   */
+  _applyHeartbeatAdvice(hello) {
+    if (hello.heartbeatInterval) {
+      this.config.heartbeatInterval = hello.heartbeatInterval
+    }
+    this.heartbeatDeadline = hello.heartbeatDeadline || 0
+  }
+
   _startHeartbeat() {
     this._stopHeartbeat()
     this.heartbeatFailures = 0
+    this.lastHeartbeatAt = Date.now()
     this.heartbeatTimer = setInterval(() => {
       if (!this.sessionId) {
         return
       }
+      // 最迟心跳期限守卫：距上次成功心跳已超过后端回收点(deadline)，判定链路已陈旧
+      // （后台标签页定时器被浏览器节流拉伸、或半开连接而下行未报错时尤为有效），
+      // 主动换票重连而非再发一次注定失败的 ping
+      if (this.heartbeatDeadline > 0 && Date.now() - this.lastHeartbeatAt > this.heartbeatDeadline) {
+        console.warn('[push] 距上次心跳超过最迟期限，判定链路陈旧，关流换票重连')
+        this._closeStream()
+        this._scheduleReconnect()
+        return
+      }
       pushPing(this.sessionId).then(() => {
         this.heartbeatFailures = 0
+        this.lastHeartbeatAt = Date.now()
       }).catch(e => {
         console.warn('[push] 心跳上行失败', e)
         this.heartbeatFailures++

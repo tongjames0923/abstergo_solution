@@ -172,6 +172,21 @@ public class SsePushSubscriber implements ISsePushSubscriber {
     private volatile ScheduledFuture<?> pingFuture;
 
     /**
+     * 服务端 hello 下发的推荐心跳周期（毫秒，null 表示未下发，沿用本地 PushOptions 默认）
+     */
+    private volatile Long recommendedHeartbeatMillis;
+
+    /**
+     * 服务端 hello 下发的最迟心跳期限（毫秒，null 表示未下发，不启用陈旧守卫）
+     */
+    private volatile Long recommendedHeartbeatDeadlineMillis;
+
+    /**
+     * 上次收到服务端 PONG 的时间戳（毫秒），用于最迟期限陈旧判定
+     */
+    private volatile long lastPongAt;
+
+    /**
      * 构造SSE订阅器
      *
      * @param httpClient   统一HTTP客户端
@@ -333,6 +348,10 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             }
             PushFrame frame = parseFrame(data);
             FrameType resolved = resolveType(type, frame);
+            if (resolved == FrameType.PONG) {
+                // 服务端对 PING 的应答，刷新活性时间戳供最迟期限守卫使用
+                lastPongAt = System.currentTimeMillis();
+            }
             if (resolved == FrameType.HELLO) {
                 handleHello(frame);
                 return;
@@ -401,6 +420,9 @@ public class SsePushSubscriber implements ISsePushSubscriber {
         }
         sessionIdRef.set(hello.getSessionId());
         reconnectAttempts.set(0);
+        this.recommendedHeartbeatMillis = hello.getHeartbeatIntervalMillis();
+        this.recommendedHeartbeatDeadlineMillis = hello.getHeartbeatDeadlineMillis();
+        this.lastPongAt = System.currentTimeMillis();
         subscribeAllRegistered();
         startPing();
         setStatus(ConnectionStatus.CONNECTED);
@@ -433,10 +455,26 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             }
             JsonNode versionNode = root.get("version");
             Integer version = versionNode != null && versionNode.isNumber() ? versionNode.intValue() : null;
-            return new HelloInfo(sessionId, version);
+            Long heartbeatInterval = positiveLong(root.get("heartbeatInterval"));
+            Long heartbeatDeadline = positiveLong(root.get("heartbeatDeadline"));
+            return new HelloInfo(sessionId, version, heartbeatInterval, heartbeatDeadline);
         } catch (Exception e) {
             return null;
         }
+    }
+
+    /**
+     * 从 JSON 节点提取正数毫秒值：非数字或非正数返回 null（视为服务端未下发）
+     *
+     * @param node 节点（可为null）
+     * @return 正数毫秒或null
+     */
+    private static Long positiveLong(JsonNode node) {
+        if (node == null || !node.isNumber()) {
+            return null;
+        }
+        long value = node.longValue();
+        return value > 0 ? value : null;
     }
 
     /**
@@ -615,15 +653,43 @@ public class SsePushSubscriber implements ISsePushSubscriber {
     }
 
     /**
-     * 启动心跳定时上行PING帧（周期取自配置，<=0关闭）
+     * 启动心跳定时上行PING帧（周期优先取 hello 推荐值，未下发时回退配置，<=0关闭）
      */
     private void startPing() {
         cancelPing();
-        int interval = pushOptions.getHeartbeatIntervalSeconds();
-        if (interval <= 0) {
+        long intervalSeconds = resolveHeartbeatIntervalSeconds();
+        if (intervalSeconds <= 0) {
             return;
         }
-        pingFuture = scheduler.scheduleAtFixedRate(this::sendPing, interval, interval, TimeUnit.SECONDS);
+        pingFuture = scheduler.scheduleAtFixedRate(this::heartbeatTick, intervalSeconds, intervalSeconds, TimeUnit.SECONDS);
+    }
+
+    /**
+     * 心跳周期（秒）：优先用服务端 hello 下发的推荐值（毫秒转秒，至少 1 秒），未下发时回退本地配置
+     *
+     * @return 心跳周期（秒），非正数表示关闭心跳
+     */
+    private long resolveHeartbeatIntervalSeconds() {
+        Long recommended = recommendedHeartbeatMillis;
+        if (recommended != null && recommended > 0) {
+            return Math.max(1L, recommended / 1000L);
+        }
+        return pushOptions.getHeartbeatIntervalSeconds();
+    }
+
+    /**
+     * 心跳任务：先过最迟期限陈旧守卫（距上次PONG超过deadline判定链路已死，主动换票重连），
+     * 未过期再上行PING；deadline 未下发时不做守卫（保持历史行为）
+     */
+    private void heartbeatTick() {
+        Long deadline = recommendedHeartbeatDeadlineMillis;
+        long last = lastPongAt;
+        if (deadline != null && deadline > 0 && last > 0 &&
+            System.currentTimeMillis() - last > deadline) {
+            handleFailure(new SdkClientException("心跳超过最迟期限未收到PONG，判定链路陈旧"));
+            return;
+        }
+        sendPing();
     }
 
     /**
