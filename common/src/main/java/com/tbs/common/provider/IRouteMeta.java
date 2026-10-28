@@ -1,27 +1,15 @@
 package com.tbs.common.provider;
 
+import com.tbs.common.provider.vo.InstanceMeta;
+
 /**
  * 路由元信息接口
  */
 public interface IRouteMeta {
     /**
-     * 获取业务线
+     * 获取元信息
      */
-    default String business() {
-        return "";
-    }
-
-    /**
-     * 获取版本号
-     */
-    default String version() {
-        return "";
-    }
-
-    /**
-     * 获取类型全限定名
-     */
-    default String getTypeFullName() {
-        return "";
+    default InstanceMeta getMeta() {
+        return new InstanceMeta();
     }
 }

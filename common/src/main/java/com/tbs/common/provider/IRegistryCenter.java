@@ -48,7 +48,7 @@ public interface IRegistryCenter {
                 continue;
             }
             for (var proxy : proxys) {
-                var b = coordinator == null || coordinator.route(proxy.getClass(), type, business, version);
+                var b = coordinator == null || coordinator.route(proxy.getInstance().getClass(), type, business, version);
                 if (b) {
                     result = proxy;
                     break;

@@ -1,6 +1,7 @@
 package com.tbs.common.provider;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.provider.vo.InstanceMeta;
 import com.tbs.common.provider.vo.InstanceProxy;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
@@ -55,14 +56,18 @@ public abstract class AbstractRegisterContributor implements IRegisterContributo
             instanceProxy.setTargetTypeFullName(targetTypeName);
             if (instanceProxy.getInstance() instanceof IRouteMeta) {
                 IRouteMeta routeMeta = (IRouteMeta)(instanceProxy.getInstance());
-                if (StrUtil.isNotEmpty(routeMeta.business())) {
-                    instanceProxy.setBusiness(routeMeta.business());
+                var meta = routeMeta.getMeta();
+                if (meta == null) {
+                    meta = new InstanceMeta();
                 }
-                if (StrUtil.isNotEmpty(routeMeta.version())) {
-                    instanceProxy.setVersion(routeMeta.version());
+                if (StrUtil.isNotEmpty(meta.getBusiness())) {
+                    instanceProxy.setBusiness(meta.getBusiness());
                 }
-                if (StrUtil.isNotEmpty(routeMeta.getTypeFullName())) {
-                    instanceProxy.setTargetTypeFullName(routeMeta.getTypeFullName());
+                if (StrUtil.isNotEmpty(meta.getVersion())) {
+                    instanceProxy.setVersion(meta.getVersion());
+                }
+                if (StrUtil.isNotEmpty(meta.getClassFullName())) {
+                    instanceProxy.setTargetTypeFullName(meta.getClassFullName());
                 }
             }
             log.debug("实例{}，业务线{}，版本{}", instanceProxy.getInstance(), instanceProxy.getBusiness(),

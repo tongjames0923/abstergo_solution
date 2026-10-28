@@ -3,7 +3,7 @@ package com.tbs.logging.impl;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.data.TableDataOperators;
 import com.tbs.common.data.structs.TableData;
-import com.tbs.common.provider.IRouteMeta;
+import com.tbs.common.provider.vo.InstanceMeta;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -72,26 +72,11 @@ public class RemoteTableDataOperator implements ITableDataHandler {
     }
 
     /**
-     * 获取业务线
+     * 获取元信息
      */
     @Override
-    public String business() {
-        return "";
-    }
-
-    /**
-     * 获取版本号
-     */
-    @Override
-    public String version() {
-        return "";
-    }
-
-    /**
-     * 获取类型全限定名
-     */
-    @Override
-    public String getTypeFullName() {
-        return RemoteTableDataOperator.class.getName();
+    public InstanceMeta getMeta() {
+        return ITableDataHandler.super.getMeta().setClassFullName(this.getClass().getName()).setBusiness("remote")
+            .setVersion("1.0");
     }
 }
