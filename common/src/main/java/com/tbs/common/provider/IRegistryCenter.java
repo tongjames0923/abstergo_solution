@@ -28,8 +28,6 @@ public interface IRegistryCenter {
      */
     void unregister(IRegisterContributor contributor);
 
-
-
     /**
      * 获取实例代理
      *
@@ -39,20 +37,30 @@ public interface IRegistryCenter {
      * @param <T>      实例类型
      * @return 实例代理
      */
-    default <T> InstanceProxy<T> getInstanceProxy(Class<T> type, String business, String version) {
+    default <T> InstanceProxy<T> getInstanceProxy(Class<T> type, String business, String version,
+        IRouteCoordinator coordinator) {
         var contributors = getAllContributors();
+        InstanceProxy<T> result = null;
+        IRegisterContributor sContributor = null;
         for (var contributor : contributors) {
             var proxys = contributor.getAllInstanceByTypeAndBusinessAndVersion(type, business, version);
-            if (CollUtil.isNotEmpty(proxys)) {
-                InstanceProxy<T> proxy = new InstanceProxy<>();
-                proxy.setContributor(contributor);
-                proxy.setInstance(proxys.get(0));
-                proxy.setVersion(version);
-                proxy.setBusiness(business);
-                proxy.setRegistryCenter(this);
-                return proxy;
+            if (CollUtil.isEmpty(proxys)) {
+                continue;
+            }
+            for (var proxy : proxys) {
+                var b = coordinator == null || coordinator.route(proxy.getClass(), type, business, version);
+                if (b) {
+                    result = proxy;
+                    break;
+                }
+            }
+            if (result != null) {
+                break;
             }
         }
-        return null;
+        if (result != null) {
+            result.setRegistryCenter(this);
+        }
+        return result;
     }
 }

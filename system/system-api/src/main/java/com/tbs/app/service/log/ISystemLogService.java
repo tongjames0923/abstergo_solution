@@ -13,7 +13,7 @@ import java.util.List;
  *
  *
  * @author abstergo*/
-@RoutingService
+
 public interface ISystemLogService {
 
     /**

@@ -1,17 +1,17 @@
 package com.tbs.app.controller.privates.admin;
 
-import com.tbs.logging.annotation.NoLog;
 import com.tbs.app.service.log.ISystemLogService;
+import com.tbs.common.data.PageVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
+import com.tbs.logging.annotation.NoLog;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordExtractForm;
-import com.tbs.common.data.PageVO;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
+import jakarta.annotation.Resource;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.annotation.Resource;
 
 /**
  * 系统日志管理控制器
@@ -26,7 +26,7 @@ import jakarta.annotation.Resource;
 @RequestMapping("/private/log/")
 public class AdminSystemLogController extends BaseController {
 
-    @Resource
+    @DubboReference(lazy = true, check = false)
     private ISystemLogService systemLogService;
 
     @Resource

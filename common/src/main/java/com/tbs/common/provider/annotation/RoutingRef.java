@@ -1,10 +1,9 @@
 package com.tbs.common.provider.annotation;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import com.tbs.common.provider.INoProviderHandler;
+import com.tbs.common.provider.impl.LoggingNoProviderHandler;
+
+import java.lang.annotation.*;
 
 /**
  * 多来源路由引用注解（分类装配）
@@ -48,10 +47,9 @@ public @interface RoutingRef {
     String version() default "";
 
     /**
-     * 路由策略名，取值为 {@code LOCAL_FIRST}/{@code REMOTE_FIRST}/{@code SPRING_ONLY}/{@code DUBBO_ONLY} 之一，
-     * 默认本地优先；支持 {@code ${...}} 占位符，由装配器经 {@code RoutingStrategy.byName} 还原
+     * 无提供者处理类
      *
-     * @return 路由策略名
+     * @return 无提供者处理类
      */
-    String strategy() default "LOCAL_FIRST";
+    Class<? extends INoProviderHandler> noProvider() default LoggingNoProviderHandler.class;
 }

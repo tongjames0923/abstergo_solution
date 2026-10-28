@@ -1,11 +1,9 @@
 package com.tbs.dic.service;
 
-import com.tbs.common.provider.impl.ErrorThrowNoProviderHandler;
 import com.tbs.dic.entity.SystemDataDicEntity;
 import com.tbs.dic.entity.SystemDataDicItemEntity;
 import com.tbs.dic.enums.DataDicCompareEnum;
 import com.tbs.dic.model.DicModel;
-import com.tbs.common.provider.annotation.RoutingService;
 
 import java.util.List;
 
@@ -14,7 +12,6 @@ import java.util.List;
  *
  * @author abstergo
  */
-@RoutingService(noProvider = ErrorThrowNoProviderHandler.class)
 public interface IDataDicService {
 
     /**

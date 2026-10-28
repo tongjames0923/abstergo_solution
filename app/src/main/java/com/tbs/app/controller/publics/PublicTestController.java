@@ -4,7 +4,9 @@ import com.alibaba.nacos.api.config.ConfigService;
 import com.tbs.app.config.condition.ConditionalOnTestControllerMode;
 import com.tbs.app.config.property.TestControllerMode;
 import com.tbs.common.annotation.DynamicConfig;
-import com.tbs.common.provider.IObjectProvider;
+import com.tbs.common.data.ITableDataHandler;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.provider.IRegisterContributor;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.script.api.compiler.impl.SpelCompiler;
@@ -18,9 +20,15 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.Data;
+import org.apache.dubbo.config.annotation.DubboReference;
+import org.springframework.core.annotation.OrderUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 公共测试控制器
@@ -37,15 +45,29 @@ import java.io.Serializable;
 @ConditionalOnTestControllerMode({TestControllerMode.ALL, TestControllerMode.PUB})
 public class PublicTestController extends BaseController {
 
-    @Resource
-    private IObjectProvider objectProvider;
+    /**
+     * i18n key：探针接口类型无法解析
+     */
+    private static final String I18N_PROBE_TYPE_NOT_FOUND = "provider.probe.type.not-found";
+
+    @DubboReference
+    private ITreeStore treeStore;
 
     @Resource
     private ConfigService configService;
 
+    /**
+     * 注册贡献者链
+     * <p>
+     * 容器内全部来源贡献者，由 Spring 按 {@code Ordered} 排序注入，顺序即来源优先级。
+     * </p>
+     */
+    @Resource
+    private List<IRegisterContributor> registerContributors;
+
     @SuppressWarnings("unchecked")
     private ITreeStore getTreeStore() {
-        return objectProvider.getObject(ITreeStore.class);
+        return treeStore;
     }
 
     public static final String TEST_GROUP = "Test Tree Group";
@@ -206,6 +228,76 @@ public class PublicTestController extends BaseController {
     //	public AjaxResult createRole(@Parameter(description = "角色实体") @RequestBody SystemRoleEntity role) {
     //		return AjaxUtil.getInstance().success("保存成功", roleService.save(role));
     //	}
+
+    /**
+     * 多来源贡献者探针
+     * <p>
+     * 逐个调用注册贡献者按类型盘点可路由实例，输出各来源的命中数量、实例类型与按优先级首个命中的来源，
+     * 用于确认 Spring 与 Dubbo 两个贡献者已装配且按坐标生效。business/version 留空表示不约束该维度，
+     * 填上即可验证坐标收窄是否命中。
+     * </p>
+     *
+     * @param type     接口全限定名，空则取表格数据处理器接口
+     * @param business 业务分区，空表示不约束
+     * @param version  发布版本，空表示不约束
+     * @return 各来源的盘点结果与首个命中的来源
+     */
+    @GetMapping("/provider/contributors")
+    @AjaxResponseType(Object.class)
+    @Operation(summary = "多来源贡献者探针", description = "逐来源盘点实例，验证 Spring 与 Dubbo 贡献者是否生效")
+    public AjaxResult contributors(
+        @Parameter(name = "type", description = "接口全限定名，空则取表格数据处理器接口") String type,
+        @Parameter(name = "business", description = "业务分区，空表示不约束") String business,
+        @Parameter(name = "version", description = "发布版本，空表示不约束") String version) {
+        Class<?> targetType = resolveProbeType(type);
+        List<Map<String, Object>> details = new ArrayList<>(registerContributors.size());
+        String firstHit = null;
+        for (IRegisterContributor contributor : registerContributors) {
+            Map<String, Object> detail = new LinkedHashMap<>();
+            detail.put("contributorId", contributor.getContributorId());
+            detail.put("order", OrderUtils.getOrder(contributor.getClass(), null));
+            try {
+                List<?> instances = contributor.getAllInstanceByTypeAndBusinessAndVersion(targetType, business,
+                    version);
+                detail.put("count", instances.size());
+                detail.put("instanceTypes", instances.stream().map(instance -> instance.getClass().getName()).toList());
+                if (firstHit == null && !instances.isEmpty()) {
+                    firstHit = contributor.getContributorId();
+                }
+            } catch (Exception e) {
+                // 单个来源失败不影响其余来源的盘点结果，失败原因原样带出便于定位
+                detail.put("count", 0);
+                detail.put("error", e.getMessage());
+            }
+            details.add(detail);
+        }
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("type", targetType.getName());
+        view.put("business", business);
+        view.put("version", version);
+        view.put("contributorIds", registerContributors.stream().map(IRegisterContributor::getContributorId).toList());
+        view.put("firstHit", firstHit);
+        view.put("contributors", details);
+        return AjaxUtil.getInstance().success(view);
+    }
+
+    /**
+     * 解析探针目标接口类型
+     *
+     * @param type 接口全限定名，空则取表格数据处理器接口
+     * @return 目标接口类型
+     */
+    private Class<?> resolveProbeType(String type) {
+        String className = StrUtil.isEmpty(type) ? ITableDataHandler.class.getName() : type;
+        Class<?> targetType = null;
+        try {
+            targetType = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            // 类型不存在交由下方断言统一转为业务异常，测试接口不抛受检异常
+        }
+        AssertUtil.isTrue(targetType == null).i18n(I18N_PROBE_TYPE_NOT_FOUND).params(className).throwIt();
+        return targetType;
+    }
 
     @Override
     public String getBusinessName() {

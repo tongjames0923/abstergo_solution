@@ -1,5 +1,8 @@
 package com.tbs.common.provider;
 
+import com.tbs.common.provider.vo.InstanceProxy;
+import org.springframework.core.Ordered;
+
 import java.util.List;
 
 /**
@@ -7,7 +10,7 @@ import java.util.List;
  *
  * @author Boolean
  */
-public interface IRegisterContributor {
+public interface IRegisterContributor extends Ordered {
 
     /**
      * 获取注册贡献者ID
@@ -25,18 +28,23 @@ public interface IRegisterContributor {
      * @param <T>      类型
      * @return 所有实例
      */
-    <T> List<T> getAllInstanceByTypeAndBusinessAndVersion(Class<T> type, String business, String version);
+    <T> List<InstanceProxy<T>> getAllInstanceByTypeAndBusinessAndVersion(Class<T> type, String business,
+        String version);
 
     /**
-     * 获取代理
+     * Get the order value of this object.
+     * <p>Higher values are interpreted as lower priority. As a consequence,
+     * the object with the lowest value has the highest priority (somewhat analogous to Servlet {@code load-on-startup}
+     * values).
+     * <p>Same order values will result in arbitrary sort positions for the
+     * affected objects.
      *
-     * @param type
-     * @param business
-     * @param version
-     * @param <T>
-     * @param <TI>
-     * @return
+     * @return the order value
+     * @see #HIGHEST_PRECEDENCE
+     * @see #LOWEST_PRECEDENCE
      */
-    <T, TI> TI proxy(Class<T> type, String business, String version, Class<TI> instanceType);
-
+    @Override
+    default int getOrder() {
+        return Ordered.LOWEST_PRECEDENCE;
+    }
 }
