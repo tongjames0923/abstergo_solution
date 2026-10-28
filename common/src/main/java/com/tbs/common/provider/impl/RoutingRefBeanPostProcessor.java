@@ -1,9 +1,11 @@
 package com.tbs.common.provider.impl;
 
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.constant.ProviderConstant;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.provider.INoProviderHandler;
 import com.tbs.common.provider.IRegistryCenter;
+import com.tbs.common.provider.IRouteCoordinator;
 import com.tbs.common.provider.annotation.RoutingRef;
 import com.tbs.common.provider.vo.InstanceProxy;
 import com.tbs.common.util.base.StrUtil;
@@ -43,16 +45,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
 
     /**
-     * i18n key：字段类型不是接口
-     */
-    private static final String I18N_FIELD_NOT_INTERFACE = "provider.routing.ref.target.not.interface";
-
-    /**
-     * i18n key：绑定代理装配失败
-     */
-    private static final String I18N_INJECT_FAILED = "provider.routing.ref.inject.failed";
-
-    /**
      * 注册中心提供器，调用期才取实例
      */
     private final ObjectProvider<IRegistryCenter> registryCenterProvider;
@@ -76,6 +68,12 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
      * 无提供者处理器缓存，同一处理类只装配一次
      */
     private final Map<Class<? extends INoProviderHandler>, INoProviderHandler> noProviderCache =
+        new ConcurrentHashMap<>();
+
+    /**
+     * 路由协调器缓存，同一协调器类型只装配一次
+     */
+    private final Map<Class<? extends IRouteCoordinator>, IRouteCoordinator> coordinatorCache =
         new ConcurrentHashMap<>();
 
     /**
@@ -112,7 +110,8 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
                 field.set(bean, proxy);
             } catch (IllegalAccessException | IllegalArgumentException e) {
                 AssertUtil.isTrueSystemError(true)
-                    .i18n(I18N_INJECT_FAILED, field.getDeclaringClass().getName(), field.getName(), e.getMessage())
+                    .i18n(CommonI18nConstant.ROUTING_REF_INJECT_FAILED, field.getDeclaringClass().getName(),
+                        field.getName(), e.getMessage())
                     .throwIt();
             }
         }
@@ -146,15 +145,17 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
     private Object proxyOf(Field field) {
         Class<?> targetType = field.getType();
         AssertUtil.isTrueSystemError(!targetType.isInterface())
-            .i18n(I18N_FIELD_NOT_INTERFACE, field.getDeclaringClass().getName(), field.getName()).throwIt();
+            .i18n(CommonI18nConstant.ROUTING_REF_TARGET_NOT_INTERFACE, field.getDeclaringClass().getName(),
+                field.getName()).throwIt();
         RoutingRef routingRef = field.getAnnotation(RoutingRef.class);
         String business = coordinateOf(routingRef.business());
         String version = coordinateOf(routingRef.version());
         RoutingRefInvocationHandler handler =
-            new RoutingRefInvocationHandler(targetType, business, version, registryCenterProvider,
-                noProviderOf(routingRef.noProvider()));
-        log.debug("[RoutingRef] 字段[{}.{}]已装配绑定代理，坐标: business=[{}], version=[{}]",
-            field.getDeclaringClass().getName(), field.getName(), business, version);
+            new RoutingRefInvocationHandler(targetType, business, version, coordinatorOf(routingRef.coordinator()),
+                registryCenterProvider, noProviderOf(routingRef.noProvider()));
+        log.debug("[RoutingRef] 字段[{}.{}]已装配绑定代理，坐标: business=[{}], version=[{}], 协调器=[{}]",
+            field.getDeclaringClass().getName(), field.getName(), business, version,
+            routingRef.coordinator().getName());
         return Proxy.newProxyInstance(targetType.getClassLoader(), new Class<?>[] {targetType}, handler);
     }
 
@@ -185,17 +186,31 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
     }
 
     /**
-     * 反射构造无提供者处理器
+     * 取路由协调器：优先用容器内的 Bean，缺失时反射构造
      *
-     * @param type 处理类，不能为null
-     * @return 处理器实例
+     * @param coordinatorClass 协调器类型，不能为null
+     * @return 协调器实例
      */
-    private INoProviderHandler instantiate(Class<? extends INoProviderHandler> type) {
+    private IRouteCoordinator coordinatorOf(Class<? extends IRouteCoordinator> coordinatorClass) {
+        return coordinatorCache.computeIfAbsent(coordinatorClass, type -> {
+            IRouteCoordinator coordinator = beanFactory.getBeanProvider(type).getIfAvailable();
+            return coordinator == null ? instantiate(type) : coordinator;
+        });
+    }
+
+    /**
+     * 反射构造无参对象
+     *
+     * @param type 目标类型，不能为null
+     * @param <T>  目标类型
+     * @return 新实例
+     */
+    private <T> T instantiate(Class<T> type) {
         try {
             return type.getDeclaredConstructor().newInstance();
         } catch (ReflectiveOperationException e) {
             throw AssertUtil.isTrueSystemError(true)
-                .i18n(I18N_INJECT_FAILED, type.getName(), "noProvider", e.getMessage()).build();
+                .i18n(CommonI18nConstant.ROUTING_REF_INSTANTIATE_FAILED, type.getName(), e.getMessage()).build();
         }
     }
 
@@ -236,6 +251,11 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
         private final String version;
 
         /**
+         * 候选裁决协调器
+         */
+        private final IRouteCoordinator coordinator;
+
+        /**
          * 注册中心提供器
          */
         private final ObjectProvider<IRegistryCenter> registryCenterProvider;
@@ -246,10 +266,12 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
         private final INoProviderHandler noProviderHandler;
 
         private RoutingRefInvocationHandler(Class<?> targetType, String business, String version,
-            ObjectProvider<IRegistryCenter> registryCenterProvider, INoProviderHandler noProviderHandler) {
+            IRouteCoordinator coordinator, ObjectProvider<IRegistryCenter> registryCenterProvider,
+            INoProviderHandler noProviderHandler) {
             this.targetType = targetType;
             this.business = business;
             this.version = version;
+            this.coordinator = coordinator;
             this.registryCenterProvider = registryCenterProvider;
             this.noProviderHandler = noProviderHandler;
         }
@@ -269,7 +291,7 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor {
                 return invokeObjectMethod(proxy, method, args);
             }
             InstanceProxy instanceProxy =
-                registryCenterProvider.getObject().getInstanceProxy(targetType, business, version, null);
+                registryCenterProvider.getObject().getInstanceProxy(targetType, business, version, coordinator);
             if (instanceProxy == null || instanceProxy.getInstance() == null) {
                 noProviderHandler.handle(business, version, targetType);
                 return defaultValueOf(method.getReturnType());

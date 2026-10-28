@@ -2,6 +2,7 @@ package com.tbs.app.controller.privates.admin;
 
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.common.data.PageVO;
+import com.tbs.common.provider.annotation.RoutingRef;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.logging.annotation.NoLog;
 import com.tbs.logging.core.ILogRecorder;
@@ -9,7 +10,6 @@ import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.web.BaseController;
 import com.tbs.web.result.AjaxResult;
 import jakarta.annotation.Resource;
-import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/private/log/")
 public class AdminSystemLogController extends BaseController {
 
-    @DubboReference(lazy = true, check = false)
+    @RoutingRef
     private ISystemLogService systemLogService;
 
     @Resource

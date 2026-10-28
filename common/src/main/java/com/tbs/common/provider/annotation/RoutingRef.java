@@ -1,6 +1,7 @@
 package com.tbs.common.provider.annotation;
 
 import com.tbs.common.provider.INoProviderHandler;
+import com.tbs.common.provider.IRouteCoordinator;
 import com.tbs.common.provider.impl.LoggingNoProviderHandler;
 
 import java.lang.annotation.*;
@@ -15,7 +16,8 @@ import java.lang.annotation.*;
  * </p>
  * <p>
  * 本注解不要求接口预先登记，直接对中心产出按坐标绑定的注入点代理。
- * 三个属性均支持 {@code ${...}} 占位符（经容器 Environment 解析），留空表示该维度不约束。
+ * business 与 version 支持 {@code ${...}} 占位符（经容器 Environment 解析），留空表示该维度不约束；
+ * 需要叠加包前缀等额外策略时再声明 {@link #coordinator()}。
  * </p>
  * <p>
  * 装配发生在 Bean 初始化前，字段由代理覆盖写入，无需再叠加 {@code @Resource} / {@code @DubboReference}。
@@ -48,6 +50,16 @@ public @interface RoutingRef {
      * @return 发布版本
      */
     String version() default "";
+
+    /**
+     * 候选裁决协调器，缺省为全接受；声明后对本次寻址的每个候选执行
+     * <p>
+     * 装配时优先取容器内同类型 Bean，缺失则反射无参构造，因此实现类需登记为 Bean 或具备无参构造。
+     * </p>
+     *
+     * @return 协调器类型
+     */
+    Class<? extends IRouteCoordinator> coordinator() default IRouteCoordinator.Default.class;
 
     /**
      * 无提供者处理类
