@@ -17,7 +17,7 @@ public abstract class AbstractRegisterContributor implements IRegisterContributo
      * @param type 类型
      * @return 实例
      */
-    protected abstract <T> List<InstanceProxy<T>> getInstanceByType(Class<T> type);
+    protected abstract <T> List<InstanceProxy> getInstanceByType(Class<T> type);
 
     /**
      * 获取所有实例
@@ -28,7 +28,7 @@ public abstract class AbstractRegisterContributor implements IRegisterContributo
      * @return 所有实例
      */
     @Override
-    public <T> List<InstanceProxy<T>> getAllInstanceByTypeAndBusinessAndVersion(Class<T> type, String business,
+    public List<InstanceProxy> getAllInstanceByTypeAndBusinessAndVersion(Class<?> type, String business,
         String version) {
         AssertUtil.isTrueSystemError(type == null).message("type不能为空").throwIt();
         var instanceProxies = getInstanceByType(type);

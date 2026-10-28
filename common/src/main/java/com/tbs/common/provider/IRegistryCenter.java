@@ -37,10 +37,10 @@ public interface IRegistryCenter {
      * @param <T>      实例类型
      * @return 实例代理
      */
-    default <T> InstanceProxy<T> getInstanceProxy(Class<T> type, String business, String version,
+    default <T> InstanceProxy getInstanceProxy(Class<T> type, String business, String version,
         IRouteCoordinator coordinator) {
         var contributors = getAllContributors();
-        InstanceProxy<T> result = null;
+        InstanceProxy result = null;
         IRegisterContributor sContributor = null;
         for (var contributor : contributors) {
             var proxys = contributor.getAllInstanceByTypeAndBusinessAndVersion(type, business, version);

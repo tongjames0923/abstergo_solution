@@ -125,18 +125,18 @@ public class DubboRegisterContributor extends AbstractRegisterContributor implem
      * @return 携带注册坐标的实例列表，无匹配时返回空列表
      */
     @Override
-    protected <T> List<InstanceProxy<T>> getInstanceByType(Class<T> type) {
+    protected <T> List<InstanceProxy> getInstanceByType(Class<T> type) {
         List<DubboCoordinate> coordinates = coordinatesOf(type);
         if (CollUtil.isEmpty(coordinates)) {
             return CollUtil.emptyList();
         }
-        List<InstanceProxy<T>> instanceProxies = new ArrayList<>(coordinates.size());
+        List<InstanceProxy> instanceProxies = new ArrayList<>(coordinates.size());
         for (DubboCoordinate coordinate : coordinates) {
             T instance = referenceOf(type, coordinate);
             if (instance == null) {
                 continue;
             }
-            InstanceProxy<T> proxy = new InstanceProxy<>();
+            InstanceProxy proxy = new InstanceProxy();
             proxy.setInstance(instance);
             proxy.setBusiness(coordinate.getBusiness());
             proxy.setVersion(coordinate.getVersion());

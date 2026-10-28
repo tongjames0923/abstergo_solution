@@ -7,7 +7,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class InstanceProxy<T> {
+public class InstanceProxy {
     /**
      * 注册中心
      */
@@ -19,7 +19,7 @@ public class InstanceProxy<T> {
     /**
      * 服务实例
      */
-    private T instance;
+    private Object instance;
     /**
      * 服务版本
      */

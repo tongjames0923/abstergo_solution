@@ -81,12 +81,12 @@ public class SpringRegisterContributor extends AbstractRegisterContributor imple
      * @return 携带注册坐标的实例列表，无匹配时返回空列表
      */
     @Override
-    protected <T> List<InstanceProxy<T>> getInstanceByType(Class<T> type) {
+    protected <T> List<InstanceProxy> getInstanceByType(Class<T> type) {
         String[] beanNames = beanFactory.getBeanNamesForType(type, true, false);
         if (CollUtil.isEmpty(beanNames)) {
             return CollUtil.emptyList();
         }
-        List<InstanceProxy<T>> instanceProxies = new ArrayList<>(beanNames.length);
+        List<InstanceProxy> instanceProxies = new ArrayList<>(beanNames.length);
         for (String beanName : beanNames) {
             RoutingService routingService = beanFactory.findAnnotationOnBean(beanName, RoutingService.class);
             if (routingService == null) {
@@ -96,7 +96,7 @@ public class SpringRegisterContributor extends AbstractRegisterContributor imple
             if (identity != void.class && !type.isAssignableFrom(identity)) {
                 continue;
             }
-            InstanceProxy<T> proxy = new InstanceProxy<>();
+            InstanceProxy proxy = new InstanceProxy();
             proxy.setInstance(type.cast(beanFactory.getBean(beanName)));
             proxy.setBusiness(routingService.business());
             proxy.setVersion(routingService.version());
