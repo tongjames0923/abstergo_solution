@@ -99,7 +99,7 @@ flowchart LR
 
 | 模块 | 职责 | 文档 |
 |------|------|------|
-| [common](common/README.md) | 断言/异常分级、i18n、UUID（雪花）、DataHolder、delegate 代理模式、分页、工具矩阵 | [README](common/README.md) |
+| [common](common/README.md) | 断言/异常分级、i18n、UUID（雪花）、DataHolder、delegate 代理模式、多来源路由（provider）、分页、工具矩阵 | [README](common/README.md) |
 | [async](async/README.md) | 线程池管理、事件广播、任务调度（时间轮/延迟队列）、本地锁 | [README](async/README.md) |
 | [sql](sql/README.md) | QueryEngine SQL 构建引擎：注解驱动 QO → DSL → 多方言 SQL，自动填充、逻辑删除拦截 | [README](sql/README.md) |
 | [web](web/README.md) | 令牌认证（Spring Security）、路径网关、统一响应 AjaxResult、请求上下文（Dubbo 传播）、泛化 API 调用 | [README](web/README.md) |
@@ -165,7 +165,7 @@ flowchart LR
 | `@EnableTbsRedis` | redis-mod | `@EnableTbsOss` | oss |
 | `@EnableScriptEngine` | script-engine | `@EnableTbsPush` | push-mod |
 
-> `push-mod` 另有传输适配注解 `@EnableTbsPushSse` / `@EnableTbsPushWebSocket`（引入即含协议层 `@EnableTbsPush`），总开关 `tbs.push.enable`。另有 `@EnableTbsRoutingService`（provider 多来源路由）、`@EnableTbsSchedule`（时间轮/延迟调度）、`@EnableCdcMysql` / `@EnableCdcSqlserver`（CDC MySQL / SQL Server 实现）按需启用。
+> `push-mod` 另有传输适配注解 `@EnableTbsPushSse` / `@EnableTbsPushWebSocket`（引入即含协议层 `@EnableTbsPush`），总开关 `tbs.push.enable`。另有 `@EnableTbsSchedule`（时间轮/延迟调度）、`@EnableCdcMysql` / `@EnableCdcSqlserver`（CDC MySQL / SQL Server 实现）按需启用；provider 多来源路由随 `@EnableCommonPack` 生效，无需单独注解。
 
 聚合入口见 [app/README.md](app/README.md) 的「启动类与注解装配」。
 
