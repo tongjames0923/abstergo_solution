@@ -18,6 +18,11 @@ import java.lang.annotation.*;
  * 三个属性均支持 {@code ${...}} 占位符（经容器 Environment 解析），留空表示该维度不约束。
  * </p>
  * <p>
+ * 装配发生在 Bean 初始化前，字段由代理覆盖写入，无需再叠加 {@code @Resource} / {@code @DubboReference}。
+ * 代理不缓存实例，每次调用按坐标取当前可用实例；未命中时交由 {@link #noProvider()} 处理并返回 {@code null}
+ * （基本类型返回默认值）。
+ * </p>
+ * <p>
  * business/version 的分类对本地 Spring Bean 生效依赖来源侧坐标推导：本地实现类可实现
  * {@link com.tbs.common.provider.IRouteMeta} 自声明其 business/version。
  * </p>
