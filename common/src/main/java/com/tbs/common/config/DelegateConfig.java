@@ -11,12 +11,11 @@ import com.tbs.common.delegate.provider.impl.CompletableFutureFlagProvider;
 import com.tbs.common.delegate.provider.impl.SimpleCallerDelegateTargetProvider;
 import com.tbs.common.delegate.provider.impl.SpringManagedTypeBaseInvokerProvider;
 import com.tbs.common.util.base.BeanUtil;
+import jakarta.annotation.Resource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Scope;
-
-import jakarta.annotation.Resource;
 
 /**
  * @author tongj

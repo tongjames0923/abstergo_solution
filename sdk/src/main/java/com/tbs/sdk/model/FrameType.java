@@ -50,7 +50,12 @@ public enum FrameType {
     /**
      * 错误帧
      */
-    ERROR("error");
+    ERROR("error"),
+
+    /**
+     * 停机通知帧（服务端优雅停机前广播，载荷含reason与graceMillis，客户端禁止上行）
+     */
+    SHUTDOWN("shutdown");
 
     /**
      * 帧类型小写值

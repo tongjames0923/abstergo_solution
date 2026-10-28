@@ -37,7 +37,9 @@
 **两套表达，勿混**：
 
 - 上行帧 `type` = 后端 `FrameTypeEnum` **大写枚举名**：`SUBSCRIBE` / `UNSUBSCRIBE` / `PING`（`DATA` 编程用）。
-- 下行 SSE **事件名** = 帧类型 **小写值**：`hello` / `signal` / `pong` / `data` / `error`。
+- 下行 SSE **事件名** = 帧类型 **小写值**：`hello` / `signal` / `pong` / `data` / `error` / `shutdown`。
+  - `error` 帧是服务端对某一上行帧的异步拒绝反馈（订阅未授权/上行被拒/topic 非法），**不断流**；`payload` 仅为 i18n 错误文案，不含错误码。
+  - `shutdown` 是服务端优雅停机通知（宽限期默认 5s），`payload` 为 `{"reason":"server-shutdown","graceMillis":5000}`：收到后应停心跳，待宽限期结束再换票重连。
 
 ### 2.2 消息中心（6 个，基路径 `/private/push/message`，注意 message 单数）
 
@@ -308,11 +310,14 @@ try (TbsClient client = TbsClient.create("http://localhost:8083")) {
     PushSendResult r = client.push().notify(form);
     System.out.println("接收人=" + r.getReceiverCount() + ", 信令=" + r.getSignalCount());
 
-    // 3) 订阅本人信令频道；收 SIGNAL 后拉取正文
+    // 3) 订阅本人信令频道；hello 握手后 SDK 会兜底触发一次 onSignal
     client.sse().subscribe(List.of("tbs.push.channel.1"), "1", null, new SseFrameListener() {
-        @Override public void onConnected(String sessionId) { pull(client); }   // hello 兑底
-        @Override public void onFrame(FrameType type, PushFrame frame) {
-            if (type == FrameType.SIGNAL) pull(client);                          // 收信令→拉
+        @Override public void onHello(HelloInfo hello) {
+            System.out.println("推送已就绪 sessionId=" + hello.getSessionId());
+        }
+        @Override public void onSignal() { pull(client); }                     // 兜底/新信令都在此拉取（建议 300ms 防抖）
+        @Override public void onShutdown(String reason, long graceMillis) {    // 停机通知：SDK 已停心跳并待宽限期后重连
+            System.out.println("服务端停机 reason=" + reason + ", " + graceMillis + "ms 后自动重连");
         }
         @Override public void onError(Throwable cause) { cause.printStackTrace(); }
     });

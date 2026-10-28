@@ -44,8 +44,9 @@ import org.slf4j.LoggerFactory;
  * 全流程对齐C#端：HTTP认证签发一次性push-ticket（TTL 60秒，每次建连重签，禁止复用）→
  * OkHttp EventSource携ticket作query与同源Authorization令牌头建立下行流 → 收到hello帧
  * 从其payload解析sessionId（以握手为准，非签票预分配值）→ 登记主题统一上行SUBSCRIBE →
- * 后台定时上行PING心跳 → 断线（含服务端error帧/关闭流）换票重连，退避为指数退避叠加随机抖动
- * （防惊群，1秒起上限30秒）。连接就绪前动态追加的主题仅登记，待hello后随全量主题统一订阅。
+ * 后台定时上行PING心跳 → 断线（含关闭流）换票重连，退避为指数退避叠加随机抖动
+ * （防惊群，1秒起上限30秒）；收到服务端SHUTDOWN停机通知时停心跳并按宽限期延迟重连。
+ * 连接就绪前动态追加的主题仅登记，待hello后随全量主题统一订阅。
  * 帧上行采用fire-and-forget（独立线程池），失败仅告警不阻断；回调在单线程执行器中有序分发且异常隔离。
  * </p>
  *
@@ -172,6 +173,12 @@ public class SsePushSubscriber implements ISsePushSubscriber {
     private volatile ScheduledFuture<?> pingFuture;
 
     /**
+     * 停机宽限期到期时刻（毫秒，0表示未处于停机窗口）：
+     * 收到SHUTDOWN后置位，关流时据此延迟重连且窗口只消费一次
+     */
+    private volatile long shutdownReconnectAt;
+
+    /**
      * 服务端 hello 下发的推荐心跳周期（毫秒，null 表示未下发，沿用本地 PushOptions 默认）
      */
     private volatile Long recommendedHeartbeatMillis;
@@ -245,6 +252,7 @@ public class SsePushSubscriber implements ISsePushSubscriber {
         this.defaultTopicsDerived = (topics == null || topics.isEmpty());
         this.closed.set(false);
         this.reconnectAttempts.set(0);
+        this.shutdownReconnectAt = 0L;
         scheduler.execute(this::connect);
     }
 
@@ -255,11 +263,18 @@ public class SsePushSubscriber implements ISsePushSubscriber {
         if (closed.get()) {
             return;
         }
+        // 本地已无令牌（登出或宿主清理）：无凭证可换，置终态停止重连，避免认证持续401的无限退避
+        if (!tokenManager.hasToken()) {
+            log.warn("本地无可用令牌，停止推送重连，等待重新登录后再次subscribe");
+            closed.set(true);
+            cancelPing();
+            sessionIdRef.set(null);
+            setStatus(ConnectionStatus.CLOSED);
+            return;
+        }
         setStatus(reconnectAttempts.get() > 0 ? ConnectionStatus.RECONNECTING : ConnectionStatus.CONNECTING);
         // 每次建连刷新令牌（可能已随宿主重新登录而轮换）
-        if (tokenManager.hasToken()) {
-            this.token = tokenManager.peek().getToken();
-        }
+        this.token = tokenManager.peek().getToken();
         PushCredential credential;
         try {
             credential = authenticate();
@@ -275,7 +290,7 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             return;
         }
         // 缺省派生订阅时以服务端授权集为准：本人频道由服务端按数字身份签发，
-        // 直接采用 auth 响应的 grantedTopics 可消除"userId传成登录名→频道被拒1008"的口径不一致
+        // 直接采用 auth 响应的 grantedTopics 可消除"userId传成登录名→频道被拒（服务端回发error帧）"的口径不一致
         if (defaultTopicsDerived) {
             applyGrantedTopics(credential.getGrantedTopics());
         }
@@ -357,10 +372,14 @@ public class SsePushSubscriber implements ISsePushSubscriber {
                 handleHello(frame);
                 return;
             }
-            // error帧是协议层对某一上行帧的异步反馈（订阅未授权1008/上行被拒1009/topic非法1003等），
-            // 后端回发后保持连接不断开；连接真异常经onFailure/onClosed独立触发换票重连。
+            if (resolved == FrameType.SHUTDOWN) {
+                handleShutdown(frame);
+                return;
+            }
+            // error帧是协议层对某一上行帧的异步反馈（订阅未授权/上行被拒/topic非法等），
+            // 后端回发后保持连接不断开（仅帧格式损坏才关流）；连接真异常经onFailure/onClosed独立触发换票重连。
             // 此处不得拆流重连，否则被拒主题会在"订阅→error→重连→再订阅"间形成auth风暴。
-            // 仅记录并透传给宿主处置（如停订该主题）。
+            // payload仅为服务端i18n错误文案、不携带错误码，仅记录并原样透传给宿主处置（如停订该主题）。
             if (resolved == FrameType.ERROR) {
                 log.warn("收到SSE error帧(连接保持不断开): {}", frame != null ? frame.getPayload() : data);
             }
@@ -431,6 +450,42 @@ public class SsePushSubscriber implements ISsePushSubscriber {
         if (current != null) {
             dispatch(() -> current.onHello(hello));
             dispatch(current::onSignal);
+        }
+    }
+
+    /**
+     * 服务端停机通知处理：停止心跳（宽限期内不再上行PING）、回调onShutdown，并记录宽限期到期时刻；
+     * 流被服务端关闭后由handleFailure按该时刻延迟换票重连，避免与服务端停机窗口重叠
+     *
+     * @param frame SHUTDOWN帧（payload为含reason与graceMillis的JSON文本）
+     */
+    private void handleShutdown(PushFrame frame) {
+        cancelPing();
+        String reason = null;
+        long graceMillis = 0L;
+        String payload = frame == null ? null : frame.getPayload();
+        if (payload != null && !payload.isEmpty()) {
+            try {
+                JsonNode root = mapper.readTree(payload);
+                if (root != null && root.isObject()) {
+                    JsonNode reasonNode = root.get("reason");
+                    reason = reasonNode != null && reasonNode.isTextual() ? reasonNode.textValue() : null;
+                    Long grace = positiveLong(root.get("graceMillis"));
+                    graceMillis = grace == null ? 0L : grace;
+                }
+            } catch (Exception e) {
+                log.warn("停机通知载荷解析失败，按无宽限期重连: {}", payload);
+            }
+        }
+        final String shutdownReason = reason;
+        final long grace = graceMillis;
+        long jitter = pushOptions.getReconnectJitterSeconds() * 1000L;
+        long delay = grace + (jitter > 0 ? ThreadLocalRandom.current().nextLong(jitter) : 0L);
+        shutdownReconnectAt = System.currentTimeMillis() + delay;
+        log.info("收到服务端停机通知 reason={}, 宽限期{}ms, 预计{}ms后换票重连", shutdownReason, grace, delay);
+        SseFrameListener current = listener;
+        if (current != null) {
+            dispatch(() -> current.onShutdown(shutdownReason, grace));
         }
     }
 
@@ -534,14 +589,30 @@ public class SsePushSubscriber implements ISsePushSubscriber {
             dispatch(() -> current.onError(cause));
         }
         if (!pushOptions.isReconnectEnabled()) {
+            shutdownReconnectAt = 0L;
             setStatus(ConnectionStatus.CLOSED);
             return;
         }
-        long delay = computeReconnectDelay();
+        long delay = consumeReconnectDelay();
         reconnectAttempts.incrementAndGet();
         setStatus(ConnectionStatus.RECONNECTING);
         log.info("SSE将在{}ms后进行第{}次换票重连", delay, reconnectAttempts.get());
         scheduler.schedule(this::connect, delay, TimeUnit.MILLISECONDS);
+    }
+
+    /**
+     * 计算本次重连延时：处于停机宽限期窗口时按剩余宽限期延迟（窗口只消费一次，
+     * onFailure与onClosed双入口仅首方调度），否则回到指数退避叠加抖动
+     *
+     * @return 延时（毫秒）
+     */
+    private long consumeReconnectDelay() {
+        long shutdownAt = shutdownReconnectAt;
+        if (shutdownAt > 0L) {
+            shutdownReconnectAt = 0L;
+            return Math.max(0L, shutdownAt - System.currentTimeMillis());
+        }
+        return computeReconnectDelay();
     }
 
     /**
@@ -683,6 +754,9 @@ public class SsePushSubscriber implements ISsePushSubscriber {
      * 未过期再上行PING；deadline 未下发时不做守卫（保持历史行为）
      */
     private void heartbeatTick() {
+        if (shutdownReconnectAt > 0L) {
+            return;
+        }
         Long deadline = recommendedHeartbeatDeadlineMillis;
         long last = lastPongAt;
         if (deadline != null && deadline > 0 && last > 0 &&
@@ -954,6 +1028,7 @@ public class SsePushSubscriber implements ISsePushSubscriber {
         cancelCurrentEventSource();
         sessionIdRef.set(null);
         reconnectAttempts.set(0);
+        shutdownReconnectAt = 0L;
         setStatus(ConnectionStatus.CLOSED);
     }
 }
