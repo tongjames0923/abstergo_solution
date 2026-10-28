@@ -5,8 +5,10 @@ import com.tbs.common.provider.vo.InstanceProxy;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 @Slf4j
 public abstract class AbstractRegisterContributor implements IRegisterContributor {
@@ -36,7 +38,7 @@ public abstract class AbstractRegisterContributor implements IRegisterContributo
             log.debug("没有找到类型为{}的实例", type.getName());
             return CollUtil.emptyList();
         }
-        var stream = instanceProxies.stream();
+        var stream = getStream(type, instanceProxies);
         if (StrUtil.isNotEmpty(business)) {
             stream = stream.filter(instanceProxy -> business.equals(instanceProxy.getBusiness()));
         }
@@ -44,6 +46,22 @@ public abstract class AbstractRegisterContributor implements IRegisterContributo
             stream = stream.filter(instanceProxy -> version.equals(instanceProxy.getVersion()));
         }
         return stream.toList();
+    }
+
+    private static @NotNull Stream<InstanceProxy> getStream(Class<?> type, List<InstanceProxy> instanceProxies) {
+        return instanceProxies.stream().peek(instanceProxy -> {
+            instanceProxy.setInterfaceFullName(type.getName());
+            String targetTypeName = instanceProxy.getInstance().getClass().getName();
+            instanceProxy.setTargetTypeFullName(targetTypeName);
+            if (instanceProxy.getInstance() instanceof IRouteMeta) {
+                IRouteMeta routeMeta = (IRouteMeta)(instanceProxy.getInstance());
+                instanceProxy.setBusiness(routeMeta.business());
+                instanceProxy.setVersion(routeMeta.version());
+                instanceProxy.setTargetTypeFullName(routeMeta.getTypeFullName());
+            }
+            log.debug("实例{}，业务线{}，版本{}", instanceProxy.getInstance(), instanceProxy.getBusiness(),
+                instanceProxy.getVersion());
+        }).toList().stream();
     }
 
 }

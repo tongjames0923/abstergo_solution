@@ -39,4 +39,28 @@ public class SimpleJsonLogDataHandler implements ITableDataHandler {
     public void handle(TableData table) {
         log.info("SimpleJsonLogDataHandler: {}", JsonUtils.toJSONString(table));
     }
+
+    /**
+     * 获取业务线
+     */
+    @Override
+    public String business() {
+        return "";
+    }
+
+    /**
+     * 获取版本号
+     */
+    @Override
+    public String version() {
+        return "";
+    }
+
+    /**
+     * 获取类型全限定名
+     */
+    @Override
+    public String getTypeFullName() {
+        return this.getClass().getName();
+    }
 }

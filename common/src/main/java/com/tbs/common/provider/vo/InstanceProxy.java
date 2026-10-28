@@ -28,4 +28,14 @@ public class InstanceProxy {
      * 业务线
      */
     private String business;
+
+    /**
+     * 目标类型全限定名
+     */
+    private String targetTypeFullName;
+
+    /**
+     * 接口全限定名
+     */
+    private String interfaceFullName;
 }
