@@ -1,14 +1,12 @@
 package com.tbs.common.provider;
 
-/**
- * 没有提供者处理接口
- */
 public interface INoProviderHandler {
     /**
-     * 处理没有提供者的情况
+     * 无提供者处理
      *
-     * @param service 服务名
-     * @param method  方法名
+     * @param business 业务线
+     * @param ver      版本号
+     * @param targetInterface 目标接口
      */
-    void handle(Class<?> clazz, String method, Object[] args);
+    void handle(String business, String ver, Class<?> targetInterface);
 }

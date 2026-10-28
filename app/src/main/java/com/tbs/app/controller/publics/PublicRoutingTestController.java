@@ -19,7 +19,6 @@ import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.RegistryEntry;
 import com.tbs.common.provider.ResolvedObject;
 import com.tbs.common.provider.RoutingStrategy;
-import com.tbs.common.registry.DispatchPolicy;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.dic.model.DicModel;
 import com.tbs.dic.service.IDataDicService;

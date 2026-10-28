@@ -23,19 +23,17 @@ import java.lang.annotation.*;
 public @interface RoutingService {
 
     /**
-     * 路由策略名，取值为 {@code LOCAL_FIRST}/{@code REMOTE_FIRST}/{@code SPRING_ONLY}/{@code DUBBO_ONLY} 之一， 默认本地优先（Spring
-     * 来源优先，Dubbo 来源兜底）；由注册器经 RoutingStrategy.byName 还原为策略值对象
-     *
-     * @return 路由策略名
+     * 业务线
+     * @return
      */
-    String strategy() default "LOCAL_FIRST";
+    String business() default "";
 
     /**
-     * 代理 Bean 名称，为空时按接口简单名首字母小写并附加固定后缀 RoutingProxy 生成，避免与本地实现 Bean 同名
-     *
-     * @return Bean 名称
+     * 版本
+     * @return
      */
-    String beanName() default "";
+    String version() default "";
+
 
     /**
      * 无提供者处理类
