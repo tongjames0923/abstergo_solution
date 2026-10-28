@@ -14,7 +14,7 @@ export function listHandlers() {
 /**
  * 校验数据处理器ID有效性
  * @param {string} handlerId - 处理器ID
- * @returns {Promise} 校验结果：available（是否可用）、source（命中来源，当前恒为 local）
+ * @returns {Promise} 校验结果：available（是否可用）、source（命中来源：local 本地 / remote 远程）
  */
 export function validateHandler(handlerId) {
   return request({

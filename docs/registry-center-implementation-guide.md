@@ -86,25 +86,27 @@ com.tbs.common.provider          多来源路由域层（构建于上，接口�
    按身份合并两类结果并标注角色，经 `replaceEntriesBySource` 整段推送；
 3. 新鲜度由贡献者自声明：静态来源（Spring）每接口贡献一次；动态来源（业务自定义 `IRegistrationSource`）
    声明 `refreshOnRead`，读即重贡献——真实重查由贡献者自身节流，与现存同源条目同集幂等时跳过替换，
-   避免无谓换位与监听噪音。Dubbo 自 3-ε 起不再走此枚举贡献模型，改由 `IRemoteTargetResolver` 承担（见 §3.6）。
+   避免无谓换位与监听噪音。Dubbo 的枚举半边同样走此贡献模型（`DubboInstanceRegistrationSource`，读即重贡献），
+   择一路由仍由 `IRemoteTargetResolver` 承担（见 §3.6）。
 
 取舍：相对「装配期全量预扫 + 事件推送」，零新增后台线程/订阅、回归面最小；将来接 Dubbo
 `NotifyListener` 真事件推送只需多一个推送方，不返工。
 
-### 3.6 Dubbo 原生发现：不在中心枚举（3-ε 决策）
+### 3.6 Dubbo 双半边：枚举入中心，路由走原生发现
 
-早期 Dubbo 来源经 `registry.lookup` 接口级枚举逐实例入中心，但 Dubbo 3.2+ 默认仅应用级注册
-（`register-mode=instance`），接口级目录为空，且 group 被编入 Nacos 服务名导致无分组 lookup 无法枚举多 business。
-为此 Dubbo 退出中心枚举，改由 `IRemoteTargetResolver`（`DubboRemoteTargetResolver`）承担：
+Dubbo 在中心里拆成两个半边，二者身份不同、同接口桶内并存：
 
-- 路由代理按 `strategy.preference()` 遍历到 DUBBO 时，直接按绑定的 (business, version) 构造一个
-  Dubbo 原生集群引用（`ReferenceConfig`，`business` 非默认时映射为 `group`，不钉实例地址，check=false），
-  **发现/迁移/负载均衡全权交给 Dubbo**，因而与 provider 的注册模式（接口级/应用级/双注册）无关。
-- **逐实例可观测枚举下线**：中心不再持有 Dubbo 条目，`getObjects`/`resolve(ALL)` 看不到 Dubbo 实例。
-- **未命中语义变化**：目标存在性由 Dubbo 在调用期保障，无可用提供者时调用抛 Dubbo 框架异常，
-  而非在中心判空后走 `noProvider`（仅当未装配/不可用返回 null 时降级或报 noProvider）。
+- **枚举半边**（`DubboInstanceRegistrationSource`）：经 `registry.lookup` 查接口级提供者目录，为每个实例建
+  直连引用，落为 `enumerable=true / routable=false` 条目，使 `getObjects`/`resolve(ALL)` 能列出远程实例。
+  依赖 provider 以接口级注册（`register-mode` 含 interface）；仅应用级注册时接口级目录为空，枚举为空集，
+  路由不受影响——这是可选的观测能力，不是路由前提。
+- **路由半边**（`DubboRemoteTargetResolver`，即 `IRemoteTargetResolver`）：路由代理按 `strategy.preference()`
+  遍历到 DUBBO 时，直接按绑定的 (business, version) 构造 Dubbo 原生集群引用（`business` 非默认时映射为 `group`，
+  不钉实例地址，check=false），**发现/迁移/负载均衡全权交给 Dubbo**，因而与 provider 的注册模式无关。
 
-Spring 与其他自定义枚举来源仍走中心条目；代理在“枚举条目”与“远程引用”两类通道间按偏好序统一择一。
+由此带来的语义差异：枚举命中是「某台具体实例」，可观测、可定向；路由命中是「一个集群引用」，
+目标存在性由 Dubbo 在调用期保障，无可用提供者时调用抛 Dubbo 框架异常，而非在中心判空后走 `noProvider`
+（仅当未装配/不可用返回 null 时降级或报 noProvider）。
 
 ### 3.7 三条不变量
 
@@ -121,17 +123,19 @@ Spring 与其他自定义枚举来源仍走中心条目；代理在“枚举条�
 | 配置键（前缀 `tbs.common.object-provider`） | 默认 | 说明 |
 |--------------------------------------------|------|------|
 | `enable` | true（缺失即开） | 功能总开关，关闭则门面/中心/注册器全部不装配 |
-| `dubbo-discovery-enabled` | true | 关闭后 `DubboRemoteTargetResolver` 直接返回 null，远程路由下线，仅剩 Spring 来源 |
-| `dubbo-timeout` | 常量缺省 | Dubbo 集群引用超时 |
+| `dubbo-discovery-enabled` | true | 关闭后 Dubbo 枚举与远程路由同时下线，仅剩 Spring 来源 |
+| `dubbo-timeout` | 常量缺省 | Dubbo 集群引用与实例直连引用超时 |
 
-> `dubbo-discovery-refresh-millis` 随枚举发现下线不再参与路由（快照刷新已废除，待人工确认后续可移除该属性）。
+> `dubbo-discovery-refresh-millis` 为 Dubbo 逐实例枚举的重发现节流间隔（非正数表示每次读取都重查），
+> 同一接口的新鲜度由本值控制，实例下线在一个间隔内被后续读取发现。
 
 Bean 装配顺序（同一 Config 内）：
 
 1. `SpringObjectResolver`（order 靠前）注册为 `IObjectResolver`；`DubboRemoteTargetResolver`（`@ConditionalOnClass(ReferenceConfig)` 守卫，Dubbo 缺失静默退化）注册为 `IRemoteTargetResolver`；
+   `DubboInstanceRegistrationSource`（同守卫）注册为 `IRegistrationSource`，承载 Dubbo 枚举半边；
 2. `DefaultObjectProvider` 收统一注册中心引用，全部读取委派中心（门面签名不变）；
-3. `DefaultRegistryCenter`：存量解析器经 `ObjectResolverAsSource` 桥接为贡献来源（现仅 Spring），
-   业务方自定义 `IRegistrationSource` Bean 一并收集贡献；**最后** `attachRoutingProxyFactory(new RoutingProxyFactory(remoteResolvers))`
+3. `DefaultRegistryCenter`：存量解析器经 `ObjectResolverAsSource` 桥接为贡献来源（Spring），
+   原生 `IRegistrationSource`（Dubbo 枚举）与业务自定义来源一并收集贡献；**最后** `attachRoutingProxyFactory(new RoutingProxyFactory(remoteResolvers))`
    挂接代理工厂（注入远程解析器集合）——中心先建成再挂工厂，规避构造期循环。
 
 ### 4.2 `@RoutingService` 接口的代理生成
@@ -184,12 +188,12 @@ private IXxxService xxxService;   // 命中的是路由代理（primary）
 @Resource
 private IRegistryCenter registryCenter;
 
-// 1) 择一路由目标（返回 routable 枚举条目；现仅含 Spring/自定义来源，Dubbo 不经中心）
+// 1) 择一路由目标（返回 routable 条目；Dubbo 以集群引用身份走 IRemoteTargetResolver，不入中心）
 Optional<RegistryEntry> target =
     registryCenter.resolveFirst(IXxxService.class, "order", "1.0", RoutingStrategy.REMOTE_FIRST);
 Object instance = target.map(RegistryEntry::resolve).orElse(null);
 
-// 2) 枚举全部可用实现（返回 enumerable 条目：现仅 Spring/自定义来源；Dubbo 逐实例枚举已下线）
+// 2) 枚举全部可用实现（返回 enumerable 条目：Spring 本地 Bean 与 Dubbo 逐实例条目）
 List<RegistryEntry> all =
     registryCenter.resolve(IXxxService.class, null, null, DispatchPolicy.ALL, RoutingStrategy.LOCAL_FIRST);
 
@@ -290,7 +294,7 @@ matcher 即可，路由域无需改动。
 | Spring 来源 business 派生 | 已接线：`SpringObjectResolver` 读 `IRouteMeta` 自声明 business/version，未实现时以实现类简单名兜底 business（见 §3.2） | 阶段 4 已落地 |
 | 字段级业务绑定 `@RoutingRef` | 已落地：`RoutingRefBeanPostProcessor` 扫描 `@RoutingRef` 字段注入绑定 (business, version) 的坐标代理；仍可经 `center.getRoutingProxy(..., business, version)` 程序化获取 | 阶段 4 已落地 |
 | 广播 invoke-all 语义 | `DispatchPolicy.ALL` 仅枚举条目集，中心不代做「逐个调用」；广播执行由使用方遍历条目自行分派 | 按需评估 |
-| Dubbo 发现模型 | 3-ε 已迁 `IRemoteTargetResolver` 原生发现，不再中心枚举；逐实例可观测下线，未命中改调用期 Dubbo 报错 | 如需逐实例观测另行评估 |
+| Dubbo 发现模型 | 路由走 `IRemoteTargetResolver` 原生集群引用；枚举由 `DubboInstanceRegistrationSource` 逐实例入中心（需 provider 接口级注册） | 仅应用级注册时枚举为空，路由不受影响 |
 | Dubbo 真事件推送 | 发现交给 Dubbo 自身（引用常驻），不再需框架侧快照重查 | 已由 Dubbo 承担 |
 | 多 business 不约束路由 | general 路由（business=null）命中 reorder 后第一坐标，无跨 business 加权 | 设计内行为 |
 

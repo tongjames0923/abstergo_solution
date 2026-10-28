@@ -21,6 +21,7 @@ import com.tbs.common.provider.IRegistryCenter;
 import com.tbs.common.provider.ObjectSource;
 import com.tbs.common.provider.impl.DefaultObjectProvider;
 import com.tbs.common.provider.impl.DefaultRegistryCenter;
+import com.tbs.common.provider.impl.DubboInstanceRegistrationSource;
 import com.tbs.common.provider.impl.DubboRemoteTargetResolver;
 import com.tbs.common.provider.impl.ObjectResolverAsSource;
 import com.tbs.common.provider.impl.RoutingProxyFactory;
@@ -32,9 +33,9 @@ import com.tbs.common.provider.impl.SpringObjectResolver;
  * 对象提供器自动装配
  * <p>
  * 装配统一对象提供器门面与多来源解析器链：Spring 来源解析器默认注册；
- * Dubbo 由 DubboRemoteTargetResolver 作为远程来源目标解析器（经 @ConditionalOnClass 守卫），
- * 不再逐实例枚举进中心，而是按 business/version 直接构造 Dubbo 原生集群引用，发现交给 Dubbo 自身，
- * 从而不依赖 provider 的注册模式（接口级/应用级/双注册均可路由）；Dubbo 依赖缺失时静默降级为仅 Spring 来源。
+ * Dubbo 在注册中心中承担两个半边（均经 @ConditionalOnClass 守卫，Dubbo 依赖缺失时静默降级为仅 Spring 来源）：
+ * 枚举半边由 DubboInstanceRegistrationSource 逐实例查注册中心并落为可枚举条目，让「列出某接口的全部远程实例」可用；
+ * 路由半边由 DubboRemoteTargetResolver 按 business/version 直接构造 Dubbo 原生集群引用，发现与负载均衡交给 Dubbo 自身。
  * 同时装配统一注册中心：Spring 存量解析器经 ObjectResolverAsSource 桥接为贡献来源（静态贡献），
  * 装配期只登记贡献者不预扫，条目由中心首次读取按需填充。
  * 同时导入路由服务注册器，使标注 @RoutingService 的接口自动注册为路由代理 Bean。
@@ -93,6 +94,24 @@ public class ObjectProviderConfig {
     @ConditionalOnClass(ReferenceConfig.class)
     IRemoteTargetResolver dubboRemoteTargetResolver(ObjectProviderProperty property) {
         return new DubboRemoteTargetResolver(property);
+    }
+
+    /**
+     * 注册 Dubbo 逐实例枚举来源
+     * <p>
+     * 使 {@code IObjectProvider.getObjects} 与枚举型解析能看到接口的全部远程实例：按接口查询注册中心的
+     * 提供者地址，为每个实例建直连引用后落为可枚举条目；择一路由不经过本源（由 {@link DubboRemoteTargetResolver} 承担）。
+     * 需要 provider 以接口级注册，仅应用级注册时枚举为空但路由仍可用。
+     * </p>
+     *
+     * @param property 对象提供器配置
+     * @return Dubbo 逐实例枚举来源
+     */
+    @Bean
+    @ConditionalOnMissingBean(DubboInstanceRegistrationSource.class)
+    @ConditionalOnClass(ReferenceConfig.class)
+    IRegistrationSource dubboInstanceRegistrationSource(ObjectProviderProperty property) {
+        return new DubboInstanceRegistrationSource(property);
     }
 
     /**

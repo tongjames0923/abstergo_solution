@@ -12,8 +12,8 @@ import java.util.List;
  * <p>
  * 日志服务经 Dubbo 导出的 {@link ITableDataHandler} 实现：收到表格数据后调用
  * {@link TableDataOperators} 简单数据操作库，将结构摘要、数值列统计与行采样结果输出到本服务日志。
- * 该实现不会出现在 {@code IObjectProvider.getObjects} 的枚举结果中（Dubbo 不参与逐实例枚举），
- * 主应用亦未引用此服务，仅在使用方按坐标构建 Dubbo 集群引用时才会被调用。
+ * 服务以接口级注册发布，消费方经注册中心的逐实例枚举可将其列入处理器选项，
+ * 也可按坐标构建 Dubbo 集群引用后直接调用。
  * </p>
  *
  * @author abstergo

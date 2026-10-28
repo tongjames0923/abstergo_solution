@@ -16,7 +16,7 @@
 
 | 层次 | 代码 | 回答的问题 |
 |------|------|------------|
-| 来源解析/贡献 | `IObjectResolver`（`SpringObjectResolver`，过渡）、`IRegistrationSource`（自定义枚举来源）、`IRemoteTargetResolver`（`DubboRemoteTargetResolver`，Dubbo 原生发现） | 实例**哪里有**：Spring 经旧解析器桥接入中心；Dubbo 不再枚举入中心，由路由代理按 business/version 直接向远程解析器索取 Dubbo 原生引用 |
+| 来源解析/贡献 | `IObjectResolver`（`SpringObjectResolver`，过渡）、`IRegistrationSource`（自定义枚举来源、`DubboInstanceRegistrationSource`）、`IRemoteTargetResolver`（`DubboRemoteTargetResolver`，Dubbo 原生路由） | 实例**哪里有**：Spring 经旧解析器桥接入中心；Dubbo 拆两个半边——枚举半边逐实例入中心（`enumerable`），路由半边按 business/version 直接构造 Dubbo 原生集群引用（`routable` 不入中心） |
 | 统一门面 | `IObjectProvider`（`DefaultObjectProvider`） | 怎么**统一拿**：单实例、按来源、全量枚举 |
 | 路由代理 | `RoutingServiceProxy` + `RoutingServiceFactoryBean` + `@RoutingService`（接口主代理）、`RoutingRefBeanPostProcessor` + `@RoutingRef`（按坐标字段装配） | 怎么**像普通 Bean 一样用**：注入即调用，运行时按策略选实现；`@RoutingRef` 进一步按 business/version 分类装配 |
 
@@ -192,11 +192,11 @@ private IObjectProvider objectProvider;
 
 | 方法 | 语义 | 未命中 |
 |------|------|--------|
-| `<T> T getObject(Class<T> type)` | 委派中心择一路由（本地优先）：有本地 Bean 时返回 Bean。**注：Dubbo 不再入中心，纯远程接口经门面 `getObject` 返回 null——取 Dubbo 目标请用路由代理（§三）** | `null` |
-| `<T> T getObject(Class<T> type, String beanName)` | 精确实例标识：Spring 侧为 Bean 名（Dubbo 逐实例枚举已下线，不再按 `host:port` 命中） | `null` |
+| `<T> T getObject(Class<T> type)` | 委派中心择一路由（本地优先）：有本地 Bean 时返回 Bean。**注：Dubbo 枚举条目 `routable=false`，不参与择一，纯远程接口经门面 `getObject` 返回 null——取 Dubbo 目标请用路由代理（§三）** | `null` |
+| `<T> T getObject(Class<T> type, String beanName)` | 精确实例标识：Spring 侧为 Bean 名，Dubbo 侧为 `host:port`（需 provider 接口级注册才会出现在枚举中） | `null` |
 | `<T> Optional<T> getObjectOptional(Class<T> type[, String beanName])` | 同上，Optional 语义 | `Optional.empty()` |
-| `<T> Collection<ResolvedObject<T>> getObjects(Class<T> type)` | 枚举中心内全部实现（现仅 Spring 与自定义枚举来源；**Dubbo 不再枚举**，走代理原生发现） | 空集合 |
-| `<T> Optional<ResolvedObject<T>> getResolvedObject(Class<T> type, ObjectSource source)` | 只取指定来源在中心的条目（Dubbo 已不在中心，取 DUBBO 恒空） | `Optional.empty()` |
+| `<T> Collection<ResolvedObject<T>> getObjects(Class<T> type)` | 枚举中心内全部 `enumerable` 条目（Spring 本地 Bean + Dubbo 逐实例条目，本地优先排序） | 空集合 |
+| `<T> Optional<ResolvedObject<T>> getResolvedObject(Class<T> type, ObjectSource source)` | 只取指定来源的 `routable` 条目；Dubbo 枚举条目不可路由，取 DUBBO 恒空（集群引用走路由代理） | `Optional.empty()` |
 
 > 门面与路由代理均委派 `IRegistryCenter`，读同一份来源数据，不存在「门面看不到某来源而中心看得到」的过渡期不一致。需要手动构建代理时注入 `IRegistryCenter`，调用 `getRoutingProxy(interfaceType, strategy, business, version)`（按 (接口, 策略, business, version) 复用同一实例，`business`/`version` 传 `null` 表示不约束）。`RoutingServiceFactoryBean` 同样直接依赖该中心。
 
@@ -258,7 +258,7 @@ Dubbo 来源返回的是**负载均衡后的整体引用**（由 Dubbo 在集群
 | 来源 | instanceKey 取值 | 示例 | 判定方法 |
 |------|------------------|------|----------|
 | `SPRING` | Bean 名称 | `orderPriceServiceImpl` | `isSource(ObjectSource.SPRING)` |
-| `DUBBO` | （逐实例/集群枚举已下线）Dubbo 不再作为中心条目供门面获取 | — | 取 Dubbo 目标请用路由代理 |
+| `DUBBO` | `host:port`（逐实例枚举条目）；集群引用固定 `cluster` 且不出现在枚举结果中 | `192.168.80.12:20880` | `isSource(ObjectSource.DUBBO)` |
 
 使用时注意三条边界：
 
@@ -315,9 +315,9 @@ objectProvider.getResolvedObject(OrderPriceService.class, ObjectSource.DUBBO)
 | 配置键 | 类型 | 默认值 | 说明 |
 |--------|------|--------|------|
 | `enable` | boolean | `true` | 总开关，关闭后整个能力不装配（后果见 2.3） |
-| `dubbo-discovery-enabled` | boolean | `true` | Dubbo 来源开关。关闭后解析链只剩 Spring，`REMOTE_FIRST`/`DUBBO_ONLY` 恒未命中 |
-| `dubbo-timeout` | int | `10000` | Dubbo 集群引用超时（毫秒） |
-| `dubbo-discovery-refresh-millis` | long | `5000` | 已废弃：随枚举发现下线不再参与路由，保留仅为配置兼容（待人工确认后可移除） |
+| `dubbo-discovery-enabled` | boolean | `true` | Dubbo 来源开关。关闭后枚举与远程路由同时下线，只剩 Spring，`REMOTE_FIRST`/`DUBBO_ONLY` 恒未命中 |
+| `dubbo-timeout` | int | `10000` | Dubbo 集群引用与实例直连引用超时（毫秒） |
+| `dubbo-discovery-refresh-millis` | long | `5000` | Dubbo 逐实例枚举的重发现节流间隔（毫秒）；非正数表示每次读取都重查 |
 
 ```yaml
 tbs:
@@ -329,23 +329,23 @@ tbs:
       dubbo-discovery-refresh-millis: 5000
 ```
 
-`dubbo-discovery-refresh-millis` 自 Dubbo 原生发现改造（3-ε）后不再参与路由（快照刷新已废除）；保留只为避免存量配置报错。
+`dubbo-discovery-refresh-millis` 只影响枚举的新鲜度（实例上下线在一个间隔内被后续读取发现），不影响路由——路由目标由 Dubbo 自己的订阅通知驱动。
 
 ---
 
 ## 七、Dubbo 来源的行为细节
 
-自 Dubbo 原生发现改造（3-ε）起，Dubbo **不再由框架逐实例 `lookup` 枚举进注册中心**，而由路由代理按 business/version 直接构造 Dubbo 原生集群引用，发现/迁移/负载均衡交由 Dubbo 自身：
+Dubbo 在中心里是**双半边**：枚举半边由 `DubboInstanceRegistrationSource` 经 `registry.lookup` 逐实例入中心（`enumerable=true / routable=false`），路由半边由 `DubboRemoteTargetResolver` 按 business/version 构造原生集群引用（不入中心，供择一命中）：
 
-| 方面 | 行为 |
-|------|------|
-| 发现方式 | 交由 Dubbo 应用级/接口级发现（`ReferenceConfig` 常驻引用），框架不主动 `lookup`；**与 provider 的注册模式无关**（`register-mode` 任意取值均可路由） |
-| business 定向 | 代理把 business 非空时映射为 Dubbo 分组（含 `default`，与 provider 显式 `@DubboService(group = "default")` 一致；business 为空才不限定分组），version 作 `version`，由 Dubbo 按维度发现对应 provider |
-| 可观测枚举 | **下线**：`getObjects` / `resolve(ALL)` 不再返回 Dubbo 实例（中心无 Dubbo 条目）；Dubbo 目标只经路由代理获取 |
-| 未命中语义 | 远程引用一旦可构建即视为命中；**无可用提供者时由 Dubbo 在调用期抛框架异常**（如 no provider），不再由框架在解析期判空走 `noProvider` |
-| 引用管理 | 集群引用按「接口+business+version」缓存复用，避免重复订阅建连；进程关闭时统一释放（`DisposableBean`） |
-| 开关 | `dubbo-discovery-enabled=false` 时解析器直接返回 null，远程路由下线；Dubbo 依赖缺失时 `@ConditionalOnClass` 守卫使解析器不装配 |
-| `@DubboReference` 的 Bean | 已注册进容器的引用 Bean 属于 **Spring 来源**，走本地 Bean 路径，可被 `getObjects` 枚举，与 Dubbo 原生发现是两条独立通道 |
+| 方面 | 枚举半边 | 路由半边 |
+|------|----------|----------|
+| 发现方式 | 框架按接口 `lookup` 提供者目录，为每个实例建直连引用；**依赖 provider 接口级注册**（`register-mode` 含 interface） | 交给 Dubbo 自身（`ReferenceConfig` 集群引用），**与 provider 注册模式无关** |
+| business 定向 | 逐实例条目坐标取自 provider URL 的 `group`（未声明兜底 `default`）与 `version` | business 非空映射为 `group`（含 `default`），version 作 `version` |
+| 可观测枚举 | `getObjects` / `resolve(ALL)` **能看到**逐实例条目，`instanceKey` 为 `host:port` | 集群引用不进中心，不出现在枚举结果中 |
+| 未命中语义 | 建引用失败的实例直接跳过，列表只呈现可达实例 | 远程引用一旦可构建即视为命中；**无可用提供者时由 Dubbo 在调用期抛框架异常**，不在解析期判空走 `noProvider` |
+| 引用管理 | 直连引用按「接口+坐标+地址」缓存，实例下线后立即销毁 | 集群引用按「接口+business+version」缓存复用 |
+| 开关 | `dubbo-discovery-enabled=false` 时两半边同时下线；`@ConditionalOnClass` 守卫使 Dubbo 缺失时不装配 | 同左 |
+| `@DubboReference` 的 Bean | 已注册进容器的引用 Bean 属于 **Spring 来源**，走本地 Bean 路径，与上述两条通道相互独立 | 同左 |
 
 ---
 
@@ -414,7 +414,8 @@ public class XxxInstanceResolver implements IObjectResolver {
 | 明明有本地实现却打到远程 | 策略写成了 `REMOTE_FIRST`/`DUBBO_ONLY`；或本地实现 Bean 名与代理重名冲突被跳过 |
 | 本地实现被路由代理「吃掉」不好排查 | 显式按本地 Bean 名注入（`@Resource(name = "...")`）临时旁路代理验证 |
 | provider 上线很久仍调不通 | 首次发现早于服务上线，最长等一个刷新/回退间隔；确认注册中心配置存在（`未发现Dubbo注册中心配置` 日志） |
-| `getObjects` 数量比预期多 | 检查是否同时存在 `@DubboReference` 引用 Bean（Spring 来源）与发现实例（Dubbo 来源），二者是两条通道 |
+| `getObjects` 数量比预期多 | 正常现象：Spring 本地 Bean 与 Dubbo 逐实例条目各占一条，按 `getSource()` 过滤即可；若出现重复的 Spring 条目，检查是否存在 `@DubboReference` 引用 Bean |
+| `handler/list` 里看不到远程实现 | 先确认 Nacos 中存在 `providers:<接口全限定名>::` 接口级目录（provider 需 `register-mode` 含 interface），再查日志关键字 `跳过接口[...]的实例枚举` |
 | 需要临时全部走本地 | 直接 `tbs.common.object-provider.dubbo-discovery-enabled: false`，无需改代码 |
 | 拿到的 Dubbo 实例不确定打到哪台 | 整体引用（`isClusterReference()` 为 true）本来就是集群负载均衡语义，要定点请用 `getObjects` 枚举后按 `host:port` 选实例 |
 

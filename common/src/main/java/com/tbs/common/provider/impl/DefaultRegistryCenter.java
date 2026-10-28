@@ -1,32 +1,20 @@
 package com.tbs.common.provider.impl;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.stream.Collectors;
-
 import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.provider.ILazyEntriesContributor;
-import com.tbs.common.provider.IRegistrationSource;
-import com.tbs.common.provider.IRegistryCenter;
-import com.tbs.common.provider.IRegistryChangeListener;
-import com.tbs.common.provider.IRoutingProxyFactory;
-import com.tbs.common.provider.ObjectSource;
-import com.tbs.common.provider.RegistryEntry;
-import com.tbs.common.provider.RoutingStrategy;
-import com.tbs.common.provider.SourceCoordinate;
+import com.tbs.common.provider.*;
 import com.tbs.common.provider.impl.support.RoutingServiceProxy;
 import com.tbs.common.registry.DispatchPolicy;
 import com.tbs.common.registry.KeyedRegistry;
-
+import com.tbs.common.util.base.StrUtil;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 统一注册中心默认实现。
@@ -195,11 +183,17 @@ public class DefaultRegistryCenter implements IRegistryCenter {
         RoutingStrategy strategy) {
         lazyFill(key);
         var routing = policy == DispatchPolicy.FIRST;
-        List<RegistryEntry> candidates = table.getAll(key).stream()
-            .filter(entry -> routing ? entry.routable() : entry.enumerable())
-            .filter(entry -> dimensionMatches(business, entry.coordinate().getBusiness()))
-            .filter(entry -> dimensionMatches(version, entry.coordinate().getVersion()))
-            .collect(Collectors.toList());
+        Stream<RegistryEntry> registryEntryStream =
+            table.getAll(key).stream().filter(entry -> routing ? entry.routable() : entry.enumerable());
+        if (StrUtil.isNotEmpty(business)) {
+            registryEntryStream =
+                registryEntryStream.filter(entry -> dimensionMatches(business, entry.coordinate().getBusiness()));
+        }
+        if (StrUtil.isNotEmpty(version)) {
+            registryEntryStream =
+                registryEntryStream.filter(entry -> dimensionMatches(version, entry.coordinate().getVersion()));
+        }
+        List<RegistryEntry> candidates = registryEntryStream.collect(Collectors.toList());
         List<RegistryEntry> ordered = strategy.reorder(candidates);
         if (routing && ordered.size() > 1) {
             return new ArrayList<>(ordered.subList(0, 1));

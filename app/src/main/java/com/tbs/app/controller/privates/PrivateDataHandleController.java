@@ -59,7 +59,7 @@ public class PrivateDataHandleController extends BaseController {
     /**
      * 获取处理器选项列表
      * <p>
-     * 返回容器内全部 {@link ITableDataHandler} 选项，供前端下拉选择。
+     * 返回注册中心内全部 {@link ITableDataHandler} 选项（本地 Bean 与 Dubbo 远程实例），供前端下拉选择。
      * </p>
      *
      * @return 处理器选项列表
@@ -90,7 +90,7 @@ public class PrivateDataHandleController extends BaseController {
     @NoLog
     @AjaxResponseType(HandlerValidateVO.class)
     @PreAuthorize("@preAuthUtils.accountActived")
-    @Operation(summary = "校验处理器ID有效性", description = "校验自定义输入的处理器ID是否可用，返回可用性与命中来源（当前恒为 local）")
+    @Operation(summary = "校验处理器ID有效性", description = "校验自定义输入的处理器ID是否可用，返回可用性与命中来源（local 本地 / remote 远程）")
     @ApiResponse(responseCode = "200", description = "校验结果")
     @GetMapping("/handler/validate/{handlerId}")
     public AjaxResult validateHandler(
