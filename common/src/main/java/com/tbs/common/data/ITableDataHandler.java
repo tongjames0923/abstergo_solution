@@ -2,6 +2,7 @@ package com.tbs.common.data;
 
 import com.tbs.common.data.structs.TableData;
 import com.tbs.common.provider.IRouteMeta;
+import com.tbs.common.provider.vo.InstanceMeta;
 
 /**
  * 表格数据处理器
@@ -30,4 +31,11 @@ public interface ITableDataHandler extends IRouteMeta {
      */
     void handle(TableData table);
 
+    /**
+     * 获取元信息
+     */
+    @Override
+    default InstanceMeta getMeta() {
+        return IRouteMeta.super.getMeta().setBusiness(getId());
+    }
 }

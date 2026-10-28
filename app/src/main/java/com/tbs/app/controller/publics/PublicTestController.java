@@ -7,6 +7,8 @@ import com.tbs.common.annotation.DynamicConfig;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.provider.IRegisterContributor;
+import com.tbs.common.provider.IRegistryCenter;
+import com.tbs.common.provider.vo.InstanceProxy;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.script.api.compiler.impl.SpelCompiler;
@@ -21,7 +23,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.Data;
 import org.apache.dubbo.config.annotation.DubboReference;
-import org.springframework.core.annotation.OrderUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
@@ -57,13 +58,13 @@ public class PublicTestController extends BaseController {
     private ConfigService configService;
 
     /**
-     * 注册贡献者链
+     * 注册中心
      * <p>
-     * 容器内全部来源贡献者，由 Spring 按 {@code Ordered} 排序注入，顺序即来源优先级。
+     * 贡献者由容器注入中心，探针经中心读取贡献者链并取首命中实例。
      * </p>
      */
     @Resource
-    private List<IRegisterContributor> registerContributors;
+    private IRegistryCenter registryCenter;
 
     @SuppressWarnings("unchecked")
     private ITreeStore getTreeStore() {
@@ -232,38 +233,35 @@ public class PublicTestController extends BaseController {
     /**
      * 多来源贡献者探针
      * <p>
-     * 逐个调用注册贡献者按类型盘点可路由实例，输出各来源的命中数量、实例类型与按优先级首个命中的来源，
-     * 用于确认 Spring 与 Dubbo 两个贡献者已装配且按坐标生效。business/version 留空表示不约束该维度，
+     * 先经注册中心取贡献者链逐个来源盘点实例，再走 {@code IRegistryCenter#getInstanceProxy} 取首命中，
+     * 用于确认注册中心、Spring 贡献者与 Dubbo 贡献者三者已按坐标串通。business/version 留空表示不约束该维度，
      * 填上即可验证坐标收窄是否命中。
      * </p>
      *
      * @param type     接口全限定名，空则取表格数据处理器接口
      * @param business 业务分区，空表示不约束
      * @param version  发布版本，空表示不约束
-     * @return 各来源的盘点结果与首个命中的来源
+     * @return 各来源的盘点结果与注册中心的首命中详情
      */
     @GetMapping("/provider/contributors")
     @AjaxResponseType(Object.class)
-    @Operation(summary = "多来源贡献者探针", description = "逐来源盘点实例，验证 Spring 与 Dubbo 贡献者是否生效")
+    @Operation(summary = "多来源贡献者探针", description = "经注册中心逐来源盘点实例并取首命中，验证贡献者链是否生效")
     public AjaxResult contributors(
         @Parameter(name = "type", description = "接口全限定名，空则取表格数据处理器接口") String type,
         @Parameter(name = "business", description = "业务分区，空表示不约束") String business,
         @Parameter(name = "version", description = "发布版本，空表示不约束") String version) {
         Class<?> targetType = resolveProbeType(type);
-        List<Map<String, Object>> details = new ArrayList<>(registerContributors.size());
-        String firstHit = null;
-        for (IRegisterContributor contributor : registerContributors) {
+        List<IRegisterContributor> contributors = registryCenter.getAllContributors();
+        List<Map<String, Object>> details = new ArrayList<>(contributors.size());
+        for (IRegisterContributor contributor : contributors) {
             Map<String, Object> detail = new LinkedHashMap<>();
             detail.put("contributorId", contributor.getContributorId());
-            detail.put("order", OrderUtils.getOrder(contributor.getClass(), null));
+            detail.put("order", contributor.getOrder());
             try {
-                List<?> instances = contributor.getAllInstanceByTypeAndBusinessAndVersion(targetType, business,
-                    version);
+                List<InstanceProxy> instances =
+                    contributor.getAllInstanceByTypeAndBusinessAndVersion(targetType, business, version);
                 detail.put("count", instances.size());
-                detail.put("instanceTypes", instances.stream().map(instance -> instance.getClass().getName()).toList());
-                if (firstHit == null && !instances.isEmpty()) {
-                    firstHit = contributor.getContributorId();
-                }
+                detail.put("instances", instances.stream().map(this::probeViewOf).toList());
             } catch (Exception e) {
                 // 单个来源失败不影响其余来源的盘点结果，失败原因原样带出便于定位
                 detail.put("count", 0);
@@ -275,10 +273,43 @@ public class PublicTestController extends BaseController {
         view.put("type", targetType.getName());
         view.put("business", business);
         view.put("version", version);
-        view.put("contributorIds", registerContributors.stream().map(IRegisterContributor::getContributorId).toList());
-        view.put("firstHit", firstHit);
+        view.put("contributorIds", contributors.stream().map(IRegisterContributor::getContributorId).toList());
         view.put("contributors", details);
+        view.put("centerHit", centerViewOf(registryCenter.getInstanceProxy(targetType, business, version, null)));
         return AjaxUtil.getInstance().success(view);
+    }
+
+    /**
+     * 组装单个实例的探针视图
+     *
+     * @param instanceProxy 实例代理，不能为null
+     * @return 目标类型全限定名与注册坐标
+     */
+    private Map<String, Object> probeViewOf(InstanceProxy instanceProxy) {
+        Map<String, Object> instanceView = new LinkedHashMap<>();
+        instanceView.put("targetTypeFullName", instanceProxy.getTargetTypeFullName());
+        instanceView.put("business", instanceProxy.getBusiness());
+        instanceView.put("version", instanceProxy.getVersion());
+        return instanceView;
+    }
+
+    /**
+     * 组装注册中心命中视图
+     *
+     * @param instanceProxy 注册中心返回的实例代理，未命中为null
+     * @return 命中标记与命中详情
+     */
+    private Map<String, Object> centerViewOf(InstanceProxy instanceProxy) {
+        Map<String, Object> centerView = new LinkedHashMap<>();
+        centerView.put("hit", instanceProxy != null);
+        if (instanceProxy == null) {
+            return centerView;
+        }
+        IRegisterContributor contributor = instanceProxy.getContributor();
+        centerView.put("contributorId", contributor == null ? null : contributor.getContributorId());
+        centerView.put("interfaceFullName", instanceProxy.getInterfaceFullName());
+        centerView.putAll(probeViewOf(instanceProxy));
+        return centerView;
     }
 
     /**

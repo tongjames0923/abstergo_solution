@@ -95,7 +95,9 @@ tbs:
     heartbeat-timeout-millis: 600000
     dispatch:
       scheduler: job
-
+  common:
+    object-provider:
+      enable: true
 # 应用自定义配置
 app:
   # CDC事件MQ消费（消费cdc-service发出的数据库变更事件）
