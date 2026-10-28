@@ -4,7 +4,6 @@ import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
 import com.tbs.common.data.PageVO;
-import com.tbs.common.provider.annotation.RoutingService;
 
 import java.util.List;
 

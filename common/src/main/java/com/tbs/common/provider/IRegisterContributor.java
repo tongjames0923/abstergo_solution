@@ -25,7 +25,6 @@ public interface IRegisterContributor extends Ordered {
      * @param type     类型
      * @param business 业务线
      * @param version  版本
-     * @param <T>      类型
      * @return 所有实例
      */
     List<InstanceProxy> getAllInstanceByTypeAndBusinessAndVersion(Class<?> type, String business,

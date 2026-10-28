@@ -55,9 +55,15 @@ public abstract class AbstractRegisterContributor implements IRegisterContributo
             instanceProxy.setTargetTypeFullName(targetTypeName);
             if (instanceProxy.getInstance() instanceof IRouteMeta) {
                 IRouteMeta routeMeta = (IRouteMeta)(instanceProxy.getInstance());
-                instanceProxy.setBusiness(routeMeta.business());
-                instanceProxy.setVersion(routeMeta.version());
-                instanceProxy.setTargetTypeFullName(routeMeta.getTypeFullName());
+                if (StrUtil.isNotEmpty(routeMeta.business())) {
+                    instanceProxy.setBusiness(routeMeta.business());
+                }
+                if (StrUtil.isNotEmpty(routeMeta.version())) {
+                    instanceProxy.setVersion(routeMeta.version());
+                }
+                if (StrUtil.isNotEmpty(routeMeta.getTypeFullName())) {
+                    instanceProxy.setTargetTypeFullName(routeMeta.getTypeFullName());
+                }
             }
             log.debug("实例{}，业务线{}，版本{}", instanceProxy.getInstance(), instanceProxy.getBusiness(),
                 instanceProxy.getVersion());

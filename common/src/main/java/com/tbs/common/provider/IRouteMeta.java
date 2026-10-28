@@ -7,15 +7,21 @@ public interface IRouteMeta {
     /**
      * 获取业务线
      */
-    String business();
+    default String business() {
+        return "";
+    }
 
     /**
      * 获取版本号
      */
-    String version();
+    default String version() {
+        return "";
+    }
 
     /**
      * 获取类型全限定名
      */
-    String getTypeFullName();
+    default String getTypeFullName() {
+        return "";
+    }
 }

@@ -2,12 +2,10 @@ package com.tbs.common.data;
 
 import com.tbs.common.data.structs.TableData;
 import com.tbs.common.provider.IRouteMeta;
-import com.tbs.common.provider.annotation.RoutingService;
 
 /**
  * 表格数据处理器
  */
-@RoutingService
 public interface ITableDataHandler extends IRouteMeta {
 
     /**
