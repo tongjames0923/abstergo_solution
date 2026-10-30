@@ -95,7 +95,7 @@ com.tbs.sdk/
 ├── SdkSelfCheck         可运行 main 自检：第三方授权码 SHA-256 算法 + SSE 重连指数退避
 ├── http/                IBaseHttpClient 契约（send/全动词/请求选项/会话失效监听）+ OkHttp 实现 + AjaxResponse 解析/异常映射 + 流式下载 + SdkRequestOptions/SessionExpiredListener
 ├── auth/                ILoginApi/LoginApi（多授权/用户信息/登出）+ TokenManager（volatile 无锁读取）+ ThirdPartyAuthCode（SHA-256 授权码）
-├── push/                IPushMessageApi/PushMessageApi + ISsePushSubscriber/SsePushSubscriber + SseFrameListener（状态/握手/信令/帧/异常）+ ConnectionStatus
+├── push/                IPushMessageApi/PushMessageApi + ISsePushSubscriber/SsePushSubscriber + SseFrameListener（状态/握手/信令/帧/停机通知/异常）+ ConnectionStatus
 ├── update/              IUpdateApi/UpdateApi（公开/管理端检查重载 + 多镜像下载）+ UpdateDownloadListener
 ├── model/               与服务端契约一一对应的模型（TokenModel/UserInfoModel/PushFrame/HelloInfo/AppUpdateCheckResult/AppUpdateAction/AppPlatform 等）
 ├── exception/           SdkException + SdkAuthException(401) + SdkReloginRequiredException(405/468) + SdkServerException + SdkClientException
@@ -111,10 +111,10 @@ com.tbs.sdk/
 4. **信令**：收到 `signal` 事件回调 `onSignal`（无载荷，提示频道有新消息，宿主据此拉取）；`data`/`pong` 等业务帧经 `onFrame` 分发；
 5. **动态订阅**：`subscribeTopics(...)`/`unsubscribeTopics(...)` 连接就绪时立即上行帧，未就绪时仅登记，待 hello 后随全量主题统一订阅；
 6. **心跳**：后台按 `heartbeatIntervalSeconds` 上行 `PING` 帧；
-7. **重连**：断线（含服务端 `error` 帧/关闭流）**换票重连**，退避为 `min(max, base × 2^n)` 叠加随机抖动（防惊群），默认无限重连直到主动 `close()`；每次重连重新走 auth 换票（ticket 一次性）；
+7. **重连**：断线（服务端关闭流/网络中断）**换票重连**，退避为 `min(max, base × 2^n)` 叠加随机抖动（防惊群），默认无限重连直到主动 `close()`；每次重连重新走 auth 换票（ticket 一次性）；收到 `shutdown` 停机通知时停心跳并按宽限期（`graceMillis`）延迟重连；协议层 `error` 帧仅为单帧拒绝反馈、**不断流不触发重连**；本地无可用令牌时置 `CLOSED` 并停止重连（重新登录后再次 `subscribe`）；
 8. **释放**：`close()` 幂等，取消事件流与心跳并停止重连（守护线程随实例回收，实例可再次 `subscribe` 复用）。
 
-**授权集（可订清单）**：auth 响应里的 `PushCredential.getGrantedTopics()` 为服务端签票时点算出的可订阅主题模式列表（支持订阅侧通配）；不在清单内的主题上行 SUBSCRIBE 会被服务端拒绝（收到 `error` 帧，code 1008）。字段为 `null`/空表示服务端未启用订阅鉴权（全放行）；授权变更需重新签票重连才生效。
+**授权集（可订清单）**：auth 响应里的 `PushCredential.getGrantedTopics()` 为服务端签票时点算出的可订阅主题模式列表（支持订阅侧通配）；不在清单内的主题上行 SUBSCRIBE 会被服务端拒绝（收到 `error` 帧，payload 为 i18n 错误文案，不携带错误码）。字段为 `null`/空表示服务端未启用订阅鉴权（全放行）；授权变更需重新签票重连才生效。
 
 ## 异常处理
 
