@@ -1,6 +1,6 @@
 package com.tbs.shared.pojo.entity.oss;
 
-import com.tbs.shared.annotations.LogicDeleteEntity;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.sql.annotation.autofill.AutoSetDate;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;

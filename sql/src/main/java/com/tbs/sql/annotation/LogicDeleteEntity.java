@@ -1,4 +1,4 @@
-package com.tbs.shared.annotations;
+package com.tbs.sql.annotation;
 
 import java.lang.annotation.*;
 

@@ -4,7 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.annotations.LogicDeleteEntity;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.enums.ContrastEnum;
