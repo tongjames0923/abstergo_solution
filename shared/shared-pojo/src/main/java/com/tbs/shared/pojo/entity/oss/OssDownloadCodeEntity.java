@@ -22,7 +22,7 @@ import java.util.Date;
  * OSS公开下载码实体
  * <p>
  * 对应表oss_download_code；下载码按code全局唯一，
- * 删除语义走flag逻辑删除，查询由{@code SqlLogicDeleteIntercepter}自动过滤已删除记录
+ * 删除语义走flag逻辑删除，查询由{@code com.tbs.sql.interceptor.SqlLogicDeleteIntercepter}自动过滤已删除记录
  * </p>
  *
  * @author abstergo

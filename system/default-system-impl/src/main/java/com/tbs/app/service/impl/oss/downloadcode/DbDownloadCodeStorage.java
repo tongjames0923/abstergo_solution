@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
  * 下载码数据库存储实现
  * <p>
  * 基于Mapper与QueryEngine持久化下载码记录到表oss_download_code；
- * 删除语义为flag逻辑删除，已删除记录由{@code SqlLogicDeleteIntercepter}自动过滤。
+ * 删除语义为flag逻辑删除，已删除记录由{@code com.tbs.sql.interceptor.SqlLogicDeleteIntercepter}自动过滤。
  * 由 {@code com.tbs.app.config.OssDownloadCodeStorageConfig} 按
  * {@code tbs.oss.download-code.storage=db} 条件装配
  * </p>
