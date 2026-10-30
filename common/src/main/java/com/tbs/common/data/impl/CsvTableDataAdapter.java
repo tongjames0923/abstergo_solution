@@ -4,6 +4,7 @@ import cn.hutool.core.text.csv.CsvReadConfig;
 import cn.hutool.core.text.csv.CsvReader;
 import cn.hutool.core.text.csv.CsvRow;
 import cn.hutool.core.text.csv.CsvWriter;
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.data.ITableDataAdapter;
 import com.tbs.common.data.structs.TableData;
 import com.tbs.common.error.AssertUtil;
@@ -71,7 +72,7 @@ public class CsvTableDataAdapter implements ITableDataAdapter {
             if (e instanceof FormattedRuntimeException) {
                 throw (FormattedRuntimeException)e;
             }
-            throw AssertUtil.isTrue(true).i18n("table.adapter.csv.parse.error", e.getMessage())
+            throw AssertUtil.isTrue(true).i18n(CommonI18nConstant.TABLE_ADAPTER_CSV_PARSE_FAILED)
                 .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).cause(e).build();
         }
     }
@@ -101,7 +102,7 @@ public class CsvTableDataAdapter implements ITableDataAdapter {
                 csvWriter.write(cells.toArray(new String[0]));
             }
         } catch (Exception e) {
-            throw AssertUtil.isTrue(true).i18n("table.adapter.write.error", e.getMessage())
+            throw AssertUtil.isTrue(true).i18n(CommonI18nConstant.TABLE_ADAPTER_WRITE_FAILED)
                 .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).cause(e).build();
         }
         return out.toByteArray();

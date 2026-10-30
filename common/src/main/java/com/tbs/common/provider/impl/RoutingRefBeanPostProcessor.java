@@ -118,9 +118,10 @@ public class RoutingRefBeanPostProcessor implements BeanPostProcessor, Applicati
             log.debug("[RoutingRef] 注入绑定代理, 字段: {}#{}, 接口: {}, business: {}, version: {}, 策略: {}",
                 bean.getClass().getName(), field.getName(), interfaceType.getName(), business, version, strategy);
         } catch (Exception e) {
+            // 不把外部异常原文拼进消息（该消息属对外文案），真实原因作为 cause 交给日志
             AssertUtil.isTrue(true).i18n(KEY_INJECT_FAILED)
-                .params(bean.getClass().getName(), field.getName(), e.getMessage())
-                .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
+                .params(bean.getClass().getName(), field.getName())
+                .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).cause(e).throwIt();
         }
     }
 

@@ -113,6 +113,10 @@ public final class WebI18nConstant {
     public static final String GENERIC_API_NOT_LOGIN = "GENERIC.API.NOT_LOGIN";
     /** 接口版本过低提示：接口版本过低 */
     public static final String GENERIC_API_API_VERSION_NOT_FOUND = "GENERIC.API.API_VERSION_NOT_FOUND";
+    /** Dubbo泛化调用失败提示：不含底层异常原文 */
+    public static final String GENERIC_API_DUBBO_INVOKE_FAILED = "GENERIC.API.DUBBO_INVOKE_FAILED";
+    /** Triple HTTP调用失败提示：不含底层异常原文 */
+    public static final String GENERIC_API_TRIPLE_INVOKE_FAILED = "GENERIC.API.TRIPLE_INVOKE_FAILED";
 
     /* ===================== 枚举文案（enum） ===================== */
 

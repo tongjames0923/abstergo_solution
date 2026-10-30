@@ -16,6 +16,18 @@ public final class CommonI18nConstant {
     private CommonI18nConstant() {
     }
 
+    /* ===================== 通用提示 ===================== */
+
+    /**
+     * 参数非法通用提示：用于无法定位到具体字段校验消息的场景
+     */
+    public static final String COMMON_INVALID_PARAMETER = "common.invalid.parameter";
+
+    /**
+     * 服务器内部错误通用提示：用于无法向调用方说明具体原因的失败场景
+     */
+    public static final String COMMON_SERVER_ERROR = "common.server.error";
+
     /* ===================== 集合工具 ===================== */
 
     /**
@@ -180,4 +192,19 @@ public final class CommonI18nConstant {
      * 懒贡献者缺失校验提示：登记的懒条目贡献者不能为null
      */
     public static final String REGISTRY_CONTRIBUTOR_REQUIRED = "common.registry.contributor.required";
+
+    /**
+     * CSV解析失败提示：不含底层异常原文，内部细节只进日志
+     */
+    public static final String TABLE_ADAPTER_CSV_PARSE_FAILED = "table.adapter.csv.parse.failed";
+
+    /**
+     * JSON解析失败提示：不含底层异常原文，内部细节只进日志
+     */
+    public static final String TABLE_ADAPTER_JSON_PARSE_FAILED = "table.adapter.json.parse.failed";
+
+    /**
+     * 表格数据写入失败提示：不含底层异常原文，内部细节只进日志
+     */
+    public static final String TABLE_ADAPTER_WRITE_FAILED = "table.adapter.write.failed";
 }

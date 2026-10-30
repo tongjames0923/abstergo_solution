@@ -1,6 +1,7 @@
 package com.tbs.web.gate;
 
 import com.tbs.common.IStartup;
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.result.AjaxResult;
@@ -59,7 +60,9 @@ public class TokenHandleFilter extends OncePerRequestFilter implements IStartup 
             } catch (Throwable e) {
                 boolean willBroken = manager.onErrorWillBroken(e);
                 if (willBroken) {
-                    AjaxResult result = AjaxUtil.getInstance().createAjaxResultOnError(e);
+                    // 先经 IErrorTransformer 规范化，否则这里的原生异常消息（如 JDBC/Redis 连接失败原因）会直捣响应体
+                    AjaxResult result = AjaxUtil.getInstance()
+                        .createAjaxResultOnError(AssertUtil.toFormattedRuntimeException(e).orElse(e));
                     AjaxUtil.writeInfoResp(response, result);
                     return;
                 } else {

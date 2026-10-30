@@ -1,6 +1,7 @@
 package com.tbs.push.impl.protocol;
 
 import com.alibaba.fastjson2.JSONException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.push.api.exception.PushProtocolException;
 import com.tbs.push.api.frame.IPushCodec;
@@ -73,7 +74,10 @@ public class JsonPushCodec implements IPushCodec {
         try {
             frame = JsonUtils.parseObject(text, PushFrame.class);
         } catch (JSONException error) {
-            throw PushProtocolException.protocolI18n(PushI18nConstant.FRAME_DECODE_FAILED, text);
+            // 不回显原始报文：该消息会随ERROR帧回给连接方，原文可能含敏感内容；
+            // 只回传报文长度供定位，真实解析错误作为 cause 保留进服务端日志
+            throw new PushProtocolException(error,
+                I18nUtil.get(PushI18nConstant.FRAME_DECODE_FAILED, text == null ? 0 : text.length()));
         }
         if (frame == null || frame.getType() == null) {
             throw PushProtocolException.protocolI18n(PushI18nConstant.FRAME_TYPE_REQUIRED);

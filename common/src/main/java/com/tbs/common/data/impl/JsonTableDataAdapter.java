@@ -2,6 +2,7 @@ package com.tbs.common.data.impl;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.data.ITableDataAdapter;
 import com.tbs.common.data.structs.TableData;
 import com.tbs.common.error.AssertUtil;
@@ -55,7 +56,7 @@ public class JsonTableDataAdapter implements ITableDataAdapter {
             return doAdapt(stream);
         } catch (IOException e) {
             throw AssertUtil.isTrue(true)
-                .i18n("table.adapter.json.parse.error", e.getMessage())
+                .i18n(CommonI18nConstant.TABLE_ADAPTER_JSON_PARSE_FAILED)
                 .errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
                 .cause(e)
                 .build();
@@ -78,7 +79,7 @@ public class JsonTableDataAdapter implements ITableDataAdapter {
             return JsonUtils.getMapperInstance().writeValueAsBytes(tableData);
         } catch (IOException e) {
             throw AssertUtil.isTrue(true)
-                .i18n("table.adapter.write.error", e.getMessage())
+                .i18n(CommonI18nConstant.TABLE_ADAPTER_WRITE_FAILED)
                 .errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
                 .cause(e)
                 .build();

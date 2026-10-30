@@ -51,4 +51,12 @@ public class PushFrame {
      * 帧载荷（DATA为业务文本，HELLO含sessionId与版本，ERROR为错误描述）
      */
     private String payload;
+
+    /**
+     * 协议错误码（仅ERROR帧携带：1001版本不兼容 / 1002帧损坏 / 1003主题非法 / 1008订阅未授权 / 1009上行被拒等）
+     * <p>
+     * payload为面向人的描述，会随语言变化；按 code 分支处置更稳定。
+     * </p>
+     */
+    private Integer code;
 }

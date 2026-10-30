@@ -87,7 +87,9 @@ public class PrivateUserController extends BaseController {
             tokenRemover.inactiveToken(tokenModel);
             userLoginInfoService.removeUserLoginInfo(tokenModel.getToken());
         } catch (Exception e) {
-            return AjaxUtil.getInstance().error(e.getMessage(), e);
+            // 不得把异常对象放入响应 data（会被序列化成完整堆栈），也不得直接回传内部异常消息
+            log.warn("用户登出失败，令牌失效处理异常", e);
+            return AjaxUtil.getInstance().error(AjaxUtil.resolveErrorMessage(e), null);
         }
 
         try {

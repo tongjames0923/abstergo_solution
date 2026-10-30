@@ -29,37 +29,6 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
     private ErrorLevelEnum level = ErrorLevelEnum.SYSTEM_ERROR;
 
     /**
-     * 是否使用i18n key
-     */
-    private boolean useI18n = false;
-
-    /**
-     * i18n消息key
-     */
-    private String i18nKey;
-
-    /**
-     * 构建由原因异常引起的异常消息
-     *
-     * @param cause   原因异常
-     * @param message 自定义消息模板
-     * @param params  消息参数
-     * @param <T>     异常类型
-     * @return 格式化后的异常消息
-     */
-    private static <T extends Throwable> String causeByExceptionMessage(T cause, String message, Object... params) {
-        StringBuilder sb = new StringBuilder();
-        if (cause != null) {
-            sb.append(
-                StrUtil.format("异常类型:{},异常信息:{}.", cause.getClass().getName(), cause.getLocalizedMessage()));
-        }
-        if (StrUtil.isNotEmpty(message)) {
-            sb.append(" 更多信息:").append(StrUtil.format(message, params)).append(".");
-        }
-        return sb.toString();
-    }
-
-    /**
      * 构造带格式的运行时异常
      *
      * @param message 消息模板
@@ -71,6 +40,11 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
 
     /**
      * 构造带格式和原因的运行时异常
+     * <p>
+     * 消息模板格式化后作为异常消息，原因异常交给 JDK 标准异常链携带（堆栈打印时由 JDK 渲染
+     * {@code Caused by}），因此不再把内部异常类型拼进消息体。该消息会经全局异常处理原样返回给前端，
+     * 拼接内部类型会泄露实现细节。
+     * </p>
      *
      * @param cause   原因异常
      * @param message 消息模板
@@ -78,11 +52,7 @@ public class FormattedRuntimeException extends RuntimeException implements IExce
      * @param <T>     异常类型
      */
     public <T extends Throwable> FormattedRuntimeException(T cause, String message, Object... params) {
-        super(causeByExceptionMessage(cause, message, params));
-        // 保留原始异常链，否则转换后只剩拼接的消息文本，真实堆栈与出错位置全部丢失
-        if (cause != null) {
-            initCause(cause);
-        }
+        super(StrUtil.format(message, params), cause);
     }
 
     public FormattedRuntimeException() {

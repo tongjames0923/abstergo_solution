@@ -40,6 +40,13 @@ public final class SystemI18nConstant {
     public static final String USER_ALREADY_IN_DEPARTMENT = "user.already.in.department";
     /** 用户不在部门中提示：用户不在该部门中 */
     public static final String USER_NOT_IN_DEPARTMENT = "user.not.in.department";
+    /** 操作被拒提示：用户操作被拒绝（不含框架异常原文） */
+    public static final String AUTH_USER_ACCESS_DENIED = "auth.user.access.denied";
+
+    /* ==================== 数据访问 ==================== */
+
+    /** 数据访问失败提示：不含 SQL、表名、约束名等内部细节，原文只作为 cause 进日志 */
+    public static final String DATA_ACCESS_ERROR = "data.access.error";
 
     /* ===================== 公司 ===================== */
 
