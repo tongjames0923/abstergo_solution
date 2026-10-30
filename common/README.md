@@ -19,7 +19,7 @@ Common 模块（`com.tbs:common`）是 Abstergo Solution 平台的基础通用�
 - **UUID 生成**：雪花算法（CAS 无锁、时钟回退保护）与随机数实现，可配置切换
 - **分页封装**：`PageVO` 泛型分页实体 + `PageUtil` 三种构建方式（同步 / 延迟求值 / 异步并行）
 - **工具类矩阵**：字符串、集合、Bean、Lambda、Spring、JSON、时间、加密等工具
-- **多来源对象提供器**：`IObjectProvider` 统一获取 Spring 容器与 Dubbo 注册中心的实例，`@RoutingService` 接口按策略动态路由并像普通 Bean 一样注入
+- **多来源路由（provider）**：贡献者链 + 注册中心门面按坐标（business/version）在本地 Spring Bean 与 Dubbo 远端实例间寻址，字段标 `@RoutingRef` 即可注入
 
 ## 依赖引入
 
@@ -516,42 +516,32 @@ String hash512 = EncryptUitl.hash512Encrypt(data, salt);
 
 `NacosConfig` 提供兜底 `ConfigService` Bean（`@ConditionalOnMissingBean`），服务地址读取 `spring.cloud.nacos.config.server-addr`（默认 `127.0.0.1:8848`）。
 
-### 13. 多来源对象提供器与路由代理（provider）
+### 13. 多来源路由（provider）
 
-把「实例从哪里来」抽象掉：同一接口的实现可以来自 Spring 容器或 Dubbo 注册中心，业务侧按普通 Bean 使用。
+把「实例从哪里来」抽象掉：同一接口的实现可以来自 Spring 容器或 Dubbo 注册中心，业务侧用注解或注册中心 API 取用。
 
 | 角色 | 实现 | 职责 |
 |------|------|------|
-| 来源解析器（SPI） | `SpringObjectResolver` / `DubboInstanceResolver` | 按 `ObjectSource` 枚举该来源的可用实例，新来源只需新增实现 |
-| 统一门面 | `DefaultObjectProvider`（`IObjectProvider`） | 单实例获取、多实现枚举（带来源与实例标识）、按来源定向解析、构建路由代理 |
-| 路由代理 | `@RoutingService` + `RoutingServiceRegistrar` + `RoutingServiceFactoryBean` + `RoutingServiceProxy` | 接口在两个来源间按 `RoutingStrategy` 逐次调用动态路由，注入即用 |
+| 来源 SPI | `IRegisterContributor`（`AbstractRegisterContributor`） | 一个实现 = 一个来源；`getOrder()` 决定来源优先级（`spring` -1000 先于 `dubbo` 1000） |
+| 注册中心门面 | `IRegistryCenter` / `DefaultRegistryCenter` | 收拢贡献者、按坐标取首命中（`getInstanceProxy` 为接口 default 算法） |
+| 坐标模型 | `IRouteMeta` → `InstanceMeta` | 实例自述 business / version / classFullName；本地 Bean 不实现则无坐标 |
+| 字段装配 | `@RoutingRef` + `RoutingRefBeanPostProcessor` | 初始化前为字段写入按坐标寻址的 JDK 代理，每次调用实时解析 |
+| 候选裁决 / 未命中 | `IRouteCoordinator` / `INoProviderHandler` | 事后取舍（Default / PackagePrefix / Composite）、未命中策略（日志 / 抛错） |
 
 ```java
-@RoutingService(strategy = RoutingStrategy.LOCAL_FIRST)
-public interface OrderPriceService {
-
-    /**
-     * 计算订单价格
-     *
-     * @param orderNo 订单号
-     * @return 价格
-     */
-    String calcPrice(String orderNo);
-}
-
-@Resource
-private OrderPriceService orderPriceService;
+@RoutingRef(noProvider = ErrorThrowNoProviderHandler.class)
+private IDataDicService dataDicService;
 ```
 
 行为要点：
 
-- Dubbo 依赖在 common 中为 optional，未引入时解析链自动退化为仅 Spring 来源；
-- 代理 Bean 默认名为接口名首字母小写加 `RoutingProxy` 后缀并标 primary，本地实现可按 Bean 名显式注入旁路路由；
-- 路由代理是通道而非实现，不会出现在 `getObjects` 枚举结果中（否则递归转发到自己）；
-- 未命中统一返回 `null` / 空集合 / `Optional.empty()`，不抛异常；但代理方法返回基本类型时改抛 i18n 异常（`provider.routing.target.not.found`），避免调用方拆箱 NPE；
-- Dubbo 实例发现为懒加载 lookup 加快照时效，实例上下线最迟一个刷新间隔后被感知。
+- 不要求接口预先登记，坐标来自实例自述（`IRouteMeta`）或 Dubbo URL 的 `group` / `version`；
+- 代理不缓存实例，来源上下线在下一次调用生效；本地来源命中即返回，不触发远程发现；
+- 未实现 `IRouteMeta` 的本地 Bean 坐标为空，按 business 寻址不会命中；
+- Dubbo 依赖在 common 中为 optional，未引入时只剩 Spring 来源；
+- 未命中默认返回 `null`（基本类型返回默认值）并打 warn；`ErrorThrowNoProviderHandler` 改为抛 i18n 业务异常。
 
-完整接入步骤、路由策略选型、配置项、Dubbo 行为细节与排查手册见 [docs/object-provider-usage-guide.md](../docs/object-provider-usage-guide.md)。
+完整用法、坐标对齐规则、配置与排查看 [使用指南](../docs/object-provider-usage-guide.md)；实现原理与扩展方式见 [实现指南](../docs/registry-center-implementation-guide.md)。
 
 ## 配置说明
 
@@ -592,13 +582,12 @@ tbs:
     cache-seconds: 3600      # 0 不缓存，-1 永久缓存
     use-code-as-default-message: true
 
-  # 多来源对象提供器（provider，随 EnableCommonPack 生效）
+  # 多来源路由（provider，随 EnableCommonPack 生效）
   common:
     object-provider:
       enable: true                        # 总开关，默认 true
       dubbo-discovery-enabled: true       # Dubbo 来源开关，默认 true
-      dubbo-timeout: 10000                # Dubbo 引用超时（毫秒）
-      dubbo-discovery-refresh-millis: 5000  # 实例快照刷新间隔（毫秒）
+      # dubbo-timeout / dubbo-discovery-refresh-millis 属性类已定义，当前未接线（贡献者取常量）
 ```
 
 配置项与属性类对照：
@@ -610,7 +599,7 @@ tbs:
 | `tbs.delegate` | `DelegateProperty` | `delegateTargetProvider`（SimpleCallerDelegateTargetProvider）、`delegateFlagProvider`（CompletableFutureFlagProvider） |
 | `tbs.start-up` | `StartUpProperty` | `enabled`（true）、`async`（true）、`optionalExecute`（true） |
 | `tbs.i18n` | `I18nProperty` | `enabled`（true）、`basenames`（空）、`encoding`（UTF-8）、`defaultLocale`（zh_CN）、`cacheSeconds`（3600）、`useCodeAsDefaultMessage`（true） |
-| `tbs.common.object-provider` | `ObjectProviderProperty` | `enable`（true）、`dubboDiscoveryEnabled`（true）、`dubboTimeout`（10000）、`dubboDiscoveryRefreshMillis`（5000） |
+| `tbs.common.object-provider` | `ObjectProviderProperty` | `enable`（true）、`dubboDiscoveryEnabled`（true）生效；`dubboTimeout`（10000）、`dubboDiscoveryRefreshMillis`（5000）已定义但暂未接线 |
 
 ## 扩展开发
 
@@ -697,10 +686,9 @@ public class BizErrorTransformer implements IErrorTransformer {
 
 ```
 com.tbs.common
-├── annotation        # @EnableCommonPack / @EnableTbsRoutingService
+├── annotation        # @EnableCommonPack
 ├── config            # 自动配置：DataHolderConfig / DelegateConfig / StartUpConfig /
-│   │                 #   UuidConfig / I18nAutoConfiguration / NacosConfig /
-│   │                 #   ObjectProviderConfig / CommonPackAutoRegister
+│   │                 #   UuidConfig / I18nAutoConfiguration / NacosConfig / CommonPackAutoRegister
 │   └── property      # UuidProperty / DataHolderProperty / DelegateProperty /
 │                     #   StartUpProperty / I18nProperty / ObjectProviderProperty
 ├── constant          # CommonI18nConstant / DataHolderBeanNameConstant / ProviderConstant
@@ -720,12 +708,14 @@ com.tbs.common
 ├── function          # SSupplier / SFunction / SConsumer / SBiConsumer
 ├── i18n              # I18nUtil / IMessageSource / AbstractMessageSourceProvider /
 │                     #   I18nContextHolder / I18nContextPropagator 等
-├── provider          # IObjectProvider / IObjectResolver / ObjectResolveContext /
-│   │                 #   ResolvedObject / ObjectSource / RoutingStrategy
-│   ├── annotation    # @RoutingService
-│   ├── impl          # DefaultObjectProvider / SpringObjectResolver / DubboInstanceResolver /
-│   │                 #   RoutingServiceRegistrar / RoutingServiceFactoryBean
-│   └── impl.support  # RoutingServiceProxy / InterfaceProviderState
+├── provider          # IRegistryCenter / IRegisterContributor / AbstractRegisterContributor /
+│   │                 #   IRouteMeta / IRouteCoordinator / INoProviderHandler
+│   ├── annotation    # @RoutingRef
+│   ├── impl          # DefaultRegistryCenter / SpringRegisterContributor /
+│   │                 #   DubboRegisterContributor / RoutingRefBeanPostProcessor /
+│   │                 #   LoggingNoProviderHandler / ErrorThrowNoProviderHandler
+│   ├── impl.coordinator # AcceptAll / PackagePrefix / Composite
+│   └── vo            # InstanceProxy / InstanceMeta
 ├── util              # PageUtil
 │   ├── base          # StrUtil / CollUtil / CollWrapper / BeanUtil / JsonUtils / ReflectUtil / StructUtils
 │   ├── encrypt       # AESUtil / RSAUtil / EncryptUitl

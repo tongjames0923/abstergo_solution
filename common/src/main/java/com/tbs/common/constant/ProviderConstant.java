@@ -22,6 +22,11 @@ public final class ProviderConstant {
     public static final String ENABLE_PROPERTY_NAME = "enable";
 
     /**
+     * Dubbo 实例发现开关属性名
+     */
+    public static final String DUBBO_DISCOVERY_ENABLED_PROPERTY_NAME = "dubbo-discovery-enabled";
+
+    /**
      * Dubbo 引用默认超时时间（毫秒）
      */
     public static final int DEFAULT_DUBBO_TIMEOUT = 10000;
