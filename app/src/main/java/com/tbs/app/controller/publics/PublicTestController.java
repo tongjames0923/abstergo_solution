@@ -4,7 +4,11 @@ import com.alibaba.nacos.api.config.ConfigService;
 import com.tbs.app.config.condition.ConditionalOnTestControllerMode;
 import com.tbs.app.config.property.TestControllerMode;
 import com.tbs.common.annotation.DynamicConfig;
-import com.tbs.common.provider.IObjectProvider;
+import com.tbs.common.data.ITableDataHandler;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.provider.IRegisterContributor;
+import com.tbs.common.provider.IRegistryCenter;
+import com.tbs.common.provider.vo.InstanceProxy;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.script.api.compiler.impl.SpelCompiler;
@@ -18,9 +22,14 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.annotation.Resource;
 import lombok.Data;
+import org.apache.dubbo.config.annotation.DubboReference;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 公共测试控制器
@@ -37,15 +46,29 @@ import java.io.Serializable;
 @ConditionalOnTestControllerMode({TestControllerMode.ALL, TestControllerMode.PUB})
 public class PublicTestController extends BaseController {
 
-    @Resource
-    private IObjectProvider objectProvider;
+    /**
+     * i18n key：探针接口类型无法解析
+     */
+    private static final String I18N_PROBE_TYPE_NOT_FOUND = "provider.probe.type.not-found";
+
+    @DubboReference
+    private ITreeStore treeStore;
 
     @Resource
     private ConfigService configService;
 
+    /**
+     * 注册中心
+     * <p>
+     * 贡献者由容器注入中心，探针经中心读取贡献者链并取首命中实例。
+     * </p>
+     */
+    @Resource
+    private IRegistryCenter registryCenter;
+
     @SuppressWarnings("unchecked")
     private ITreeStore getTreeStore() {
-        return objectProvider.getObject(ITreeStore.class);
+        return treeStore;
     }
 
     public static final String TEST_GROUP = "Test Tree Group";
@@ -206,6 +229,106 @@ public class PublicTestController extends BaseController {
     //	public AjaxResult createRole(@Parameter(description = "角色实体") @RequestBody SystemRoleEntity role) {
     //		return AjaxUtil.getInstance().success("保存成功", roleService.save(role));
     //	}
+
+    /**
+     * 多来源贡献者探针
+     * <p>
+     * 先经注册中心取贡献者链逐个来源盘点实例，再走 {@code IRegistryCenter#getInstanceProxy} 取首命中，
+     * 用于确认注册中心、Spring 贡献者与 Dubbo 贡献者三者已按坐标串通。business/version 留空表示不约束该维度，
+     * 填上即可验证坐标收窄是否命中。
+     * </p>
+     *
+     * @param type     接口全限定名，空则取表格数据处理器接口
+     * @param business 业务分区，空表示不约束
+     * @param version  发布版本，空表示不约束
+     * @return 各来源的盘点结果与注册中心的首命中详情
+     */
+    @GetMapping("/provider/contributors")
+    @AjaxResponseType(Object.class)
+    @Operation(summary = "多来源贡献者探针", description = "经注册中心逐来源盘点实例并取首命中，验证贡献者链是否生效")
+    public AjaxResult contributors(
+        @Parameter(name = "type", description = "接口全限定名，空则取表格数据处理器接口") String type,
+        @Parameter(name = "business", description = "业务分区，空表示不约束") String business,
+        @Parameter(name = "version", description = "发布版本，空表示不约束") String version) {
+        Class<?> targetType = resolveProbeType(type);
+        List<IRegisterContributor> contributors = registryCenter.getAllContributors();
+        List<Map<String, Object>> details = new ArrayList<>(contributors.size());
+        for (IRegisterContributor contributor : contributors) {
+            Map<String, Object> detail = new LinkedHashMap<>();
+            detail.put("contributorId", contributor.getContributorId());
+            detail.put("order", contributor.getOrder());
+            try {
+                List<InstanceProxy> instances =
+                    contributor.getAllInstanceByTypeAndBusinessAndVersion(targetType, business, version);
+                detail.put("count", instances.size());
+                detail.put("instances", instances.stream().map(this::probeViewOf).toList());
+            } catch (Exception e) {
+                // 单个来源失败不影响其余来源的盘点结果，失败原因原样带出便于定位
+                detail.put("count", 0);
+                detail.put("error", e.getMessage());
+            }
+            details.add(detail);
+        }
+        Map<String, Object> view = new LinkedHashMap<>();
+        view.put("type", targetType.getName());
+        view.put("business", business);
+        view.put("version", version);
+        view.put("contributorIds", contributors.stream().map(IRegisterContributor::getContributorId).toList());
+        view.put("contributors", details);
+        view.put("centerHit", centerViewOf(registryCenter.getInstanceProxy(targetType, business, version, null)));
+        return AjaxUtil.getInstance().success(view);
+    }
+
+    /**
+     * 组装单个实例的探针视图
+     *
+     * @param instanceProxy 实例代理，不能为null
+     * @return 目标类型全限定名与注册坐标
+     */
+    private Map<String, Object> probeViewOf(InstanceProxy instanceProxy) {
+        Map<String, Object> instanceView = new LinkedHashMap<>();
+        instanceView.put("targetTypeFullName", instanceProxy.getTargetTypeFullName());
+        instanceView.put("business", instanceProxy.getBusiness());
+        instanceView.put("version", instanceProxy.getVersion());
+        return instanceView;
+    }
+
+    /**
+     * 组装注册中心命中视图
+     *
+     * @param instanceProxy 注册中心返回的实例代理，未命中为null
+     * @return 命中标记与命中详情
+     */
+    private Map<String, Object> centerViewOf(InstanceProxy instanceProxy) {
+        Map<String, Object> centerView = new LinkedHashMap<>();
+        centerView.put("hit", instanceProxy != null);
+        if (instanceProxy == null) {
+            return centerView;
+        }
+        IRegisterContributor contributor = instanceProxy.getContributor();
+        centerView.put("contributorId", contributor == null ? null : contributor.getContributorId());
+        centerView.put("interfaceFullName", instanceProxy.getInterfaceFullName());
+        centerView.putAll(probeViewOf(instanceProxy));
+        return centerView;
+    }
+
+    /**
+     * 解析探针目标接口类型
+     *
+     * @param type 接口全限定名，空则取表格数据处理器接口
+     * @return 目标接口类型
+     */
+    private Class<?> resolveProbeType(String type) {
+        String className = StrUtil.isEmpty(type) ? ITableDataHandler.class.getName() : type;
+        Class<?> targetType = null;
+        try {
+            targetType = Class.forName(className);
+        } catch (ClassNotFoundException e) {
+            // 类型不存在交由下方断言统一转为业务异常，测试接口不抛受检异常
+        }
+        AssertUtil.isTrue(targetType == null).i18n(I18N_PROBE_TYPE_NOT_FOUND).params(className).throwIt();
+        return targetType;
+    }
 
     @Override
     public String getBusinessName() {

@@ -6,6 +6,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.web.constant.WebI18nConstant;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
 import lombok.extern.slf4j.Slf4j;
@@ -138,11 +139,13 @@ public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializ
         } catch (FormattedRuntimeException e) {
             AssertUtil.isTrue(true).cause(e).throwIt();
         } catch (RuntimeException e) {
+            // 不回显底层异常原文（含目标地址、响应体等），真实原因交给 cause 进日志
             AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-                .message("Triple HTTP调用异常: {}", e.getMessage()).throwIt();
+                .i18n(WebI18nConstant.GENERIC_API_TRIPLE_INVOKE_FAILED).cause(e).throwIt();
         } catch (Exception e) {
+            // 同上
             AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-                .message("Triple HTTP调用异常: {}", e.getMessage()).throwIt();
+                .i18n(WebI18nConstant.GENERIC_API_TRIPLE_INVOKE_FAILED).cause(e).throwIt();
         }
     }
 

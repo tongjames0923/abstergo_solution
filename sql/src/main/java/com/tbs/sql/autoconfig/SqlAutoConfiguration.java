@@ -10,6 +10,7 @@ import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.impl.SimpleEntityQueryWrapper;
 import com.tbs.sql.i18n.SqlMessageSourceProvider;
 import com.tbs.sql.interceptor.SqlAutoFillInterceptor;
+import com.tbs.sql.interceptor.SqlLogicDeleteIntercepter;
 import com.tbs.sql.mapper.impl.FetchMapper;
 import com.tbs.sql.order.impl.AscStaticOrder;
 import com.tbs.sql.order.impl.DescStaticOrder;
@@ -17,6 +18,7 @@ import com.tbs.sql.order.impl.OrderedModelOrderImpl;
 import com.tbs.sql.properties.SqlProperty;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.TransactionUtil;
+import jakarta.annotation.Resource;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.annotation.MapperScan;
@@ -26,8 +28,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Scope;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import jakarta.annotation.Resource;
 
 /**
  * SQL模块自动配置类，负责注册和配置SQL框架的所有核心组件。
@@ -111,6 +111,11 @@ public class SqlAutoConfiguration {
 
     @Bean
     SqlAutoFillInterceptor autoFillInterceptor() { return new SqlAutoFillInterceptor(); }
+
+    @Bean
+    SqlLogicDeleteIntercepter sqlLogicDeleteIntercepter() {
+        return new SqlLogicDeleteIntercepter();
+    }
 
     /**
      * 校验 MyBatis 下划线转驼峰开关，关闭时启动即中断。

@@ -1,14 +1,14 @@
-package com.tbs.shared.util;
+package com.tbs.sql.interceptor;
 
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ExceptionUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.shared.annotations.LogicDeleteEntity;
+
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.sql.enums.ConnectorEnum;
 import com.tbs.sql.enums.ContrastEnum;
-import com.tbs.sql.interceptor.SqlComposeInterceptor;
 import com.tbs.sql.model.where.WhereCompose;
 import com.tbs.sql.model.where.WhereInfo;
 import com.tbs.sql.model.where.WhereNode;
@@ -26,7 +26,6 @@ import java.util.concurrent.ConcurrentHashMap;
 public class SqlLogicDeleteIntercepter implements SqlComposeInterceptor {
 
     private Map<Class<?>, List<WhereInfo>> flagWhereInfoMap = new ConcurrentHashMap<>(8);
-
 
     @Override
     public WhereCompose intercept(WhereCompose compose, ISqlBuildContext context) {

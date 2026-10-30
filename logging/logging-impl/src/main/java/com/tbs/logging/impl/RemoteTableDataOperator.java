@@ -3,6 +3,7 @@ package com.tbs.logging.impl;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.data.TableDataOperators;
 import com.tbs.common.data.structs.TableData;
+import com.tbs.common.provider.vo.InstanceMeta;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
@@ -10,10 +11,10 @@ import java.util.List;
 /**
  * 远程表格数据操作器
  * <p>
- * 日志服务经 Dubbo 导出的 {@link ITableDataHandler} 实现，用于验证
- * {@code IObjectProvider.getObjects} 多来源枚举与远程直连调用链路：
- * 收到表格数据后调用 {@link TableDataOperators} 简单数据操作库，
- * 将结构摘要、数值列统计与行采样结果输出到本服务日志。
+ * 日志服务经 Dubbo 导出的 {@link ITableDataHandler} 实现：收到表格数据后调用
+ * {@link TableDataOperators} 简单数据操作库，将结构摘要、数值列统计与行采样结果输出到本服务日志。
+ * 服务以接口级注册发布，消费方经注册中心的逐实例枚举可将其列入处理器选项，
+ * 也可按坐标构建 Dubbo 集群引用后直接调用。
  * </p>
  *
  * @author abstergo
@@ -68,5 +69,14 @@ public class RemoteTableDataOperator implements ITableDataHandler {
         });
         List<TableData.Row> sample = TableDataOperators.sampleRows(table, SAMPLE_LIMIT);
         log.info("RemoteTableDataOperator 采样前{}行: {}", sample.size(), sample);
+    }
+
+    /**
+     * 获取元信息
+     */
+    @Override
+    public InstanceMeta getMeta() {
+        return ITableDataHandler.super.getMeta().setClassFullName(this.getClass().getName()).setBusiness("remote")
+            .setVersion("1.0");
     }
 }

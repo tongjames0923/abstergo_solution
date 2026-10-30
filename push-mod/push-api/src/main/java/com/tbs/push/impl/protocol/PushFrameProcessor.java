@@ -350,6 +350,9 @@ public class PushFrameProcessor {
 
     /**
      * 构造ERROR帧
+     * <p>
+     * detail为面向人的描述，code为稳定错误码：客户端应按 code 分支处置，detail 仅供展示与排查。
+     * </p>
      *
      * @param code   协议错误码
      * @param detail 错误详情文本
@@ -359,6 +362,7 @@ public class PushFrameProcessor {
         PushFrame frame = new PushFrame(FrameTypeEnum.ERROR);
         frame.setVersion(PushFrameConstants.PROTOCOL_VERSION);
         frame.setMessageId(UUID.randomUUID().toString().replace("-", ""));
+        frame.setCode(code.getCode());
         frame.setPayload(detail);
         return frame;
     }

@@ -16,6 +16,25 @@ public final class CommonI18nConstant {
     private CommonI18nConstant() {
     }
 
+    /* ===================== 通用消息 ===================== */
+
+    /**
+     * 无效参数提示：无效参数
+     */
+    public static final String INVALID_PARAMETER = "common.invalid.parameter";
+
+    /* ===================== 通用提示 ===================== */
+
+    /**
+     * 参数非法通用提示：用于无法定位到具体字段校验消息的场景
+     */
+    public static final String COMMON_INVALID_PARAMETER = "common.invalid.parameter";
+
+    /**
+     * 服务器内部错误通用提示：用于无法向调用方说明具体原因的失败场景
+     */
+    public static final String COMMON_SERVER_ERROR = "common.server.error";
+
     /* ===================== 集合工具 ===================== */
 
     /**
@@ -96,6 +115,26 @@ public final class CommonI18nConstant {
      * 未找到可用的服务实现，接口：{0}，路由策略：{1}，方法：{2}
      */
     public static final String ROUTING_TARGET_NOT_FOUND = "provider.routing.target.not.found";
+
+    /**
+     * 坐标寻址未命中提供者提示：未找到服务提供者，接口：{0}，business：{1}，version：{2}
+     */
+    public static final String ROUTING_NO_PROVIDER_FOR_COORDINATE = "provider.no.provider.for.coordinate";
+
+    /**
+     * 路由引用字段类型非接口校验提示：@RoutingRef 标注的字段类型必须是接口，字段：{0}#{1}
+     */
+    public static final String ROUTING_REF_TARGET_NOT_INTERFACE = "provider.routing.ref.target.not.interface";
+
+    /**
+     * 路由引用字段装配失败提示：@RoutingRef 注入绑定代理失败，字段：{0}#{1}，原因：{2}
+     */
+    public static final String ROUTING_REF_INJECT_FAILED = "provider.routing.ref.inject.failed";
+
+    /**
+     * 路由引用组件实例化失败提示：路由引用组件实例化失败，类型：{0}，原因：{1}
+     */
+    public static final String ROUTING_REF_INSTANTIATE_FAILED = "provider.routing.ref.instantiate.failed";
 
     /* ===================== 键式注册表相关 ===================== */
 
@@ -180,4 +219,19 @@ public final class CommonI18nConstant {
      * 懒贡献者缺失校验提示：登记的懒条目贡献者不能为null
      */
     public static final String REGISTRY_CONTRIBUTOR_REQUIRED = "common.registry.contributor.required";
+
+    /**
+     * CSV解析失败提示：不含底层异常原文，内部细节只进日志
+     */
+    public static final String TABLE_ADAPTER_CSV_PARSE_FAILED = "table.adapter.csv.parse.failed";
+
+    /**
+     * JSON解析失败提示：不含底层异常原文，内部细节只进日志
+     */
+    public static final String TABLE_ADAPTER_JSON_PARSE_FAILED = "table.adapter.json.parse.failed";
+
+    /**
+     * 表格数据写入失败提示：不含底层异常原文，内部细节只进日志
+     */
+    public static final String TABLE_ADAPTER_WRITE_FAILED = "table.adapter.write.failed";
 }

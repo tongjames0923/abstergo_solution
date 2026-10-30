@@ -27,7 +27,7 @@ public class DefaultErrorTransformer implements IErrorTransformer {
         if (throwable instanceof FormattedRuntimeException) {
             return (FormattedRuntimeException)throwable;
         }
-        var formattedRuntimeException = new FormattedRuntimeException(throwable, "");
+        var formattedRuntimeException = new FormattedRuntimeException(throwable, throwable.getMessage());
         if (throwable instanceof IExceptionLevel) {
             formattedRuntimeException.errorLevel(((IExceptionLevel)throwable).getLevel());
         } else {

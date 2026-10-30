@@ -1,14 +1,15 @@
 package com.tbs.dic.entity;
 
 import com.tbs.shared.pojo.IBaseEntity;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Comment;
 
-import jakarta.persistence.*;
 import java.util.Date;
 
 @Entity
@@ -19,6 +20,7 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @Comment("数据字典项表")
+@LogicDeleteEntity(activeFlagValues = {1, -1})
 public class SystemDataDicItemEntity implements IBaseEntity<Long> {
     private static final long serialVersionUID = 1L;
 

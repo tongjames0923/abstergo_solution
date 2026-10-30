@@ -1,8 +1,11 @@
 package com.tbs.web.result;
 
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.error.IErrorTransformer;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
+import com.tbs.common.util.base.StrUtil;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 
@@ -27,8 +30,9 @@ public class MethodArgumentNotValidExceptionTransformer implements IErrorTransfo
     public FormattedRuntimeException toFormattedRuntimeException(Throwable throwable) {
         MethodArgumentNotValidException e = (MethodArgumentNotValidException)throwable;
         var fieldError = e.getBindingResult().getFieldError();
-        // 优先取字段级校验消息，无则回退到异常消息
-        String message = fieldError != null ? fieldError.getDefaultMessage() : e.getMessage();
+        // 优先取字段级校验消息（面向用户）；无字段错误时不得回退到框架异常原文（含方法签名与参数快照），改用通用提示
+        String message = fieldError != null && StrUtil.isNotEmpty(fieldError.getDefaultMessage())
+            ? fieldError.getDefaultMessage() : I18nUtil.get(CommonI18nConstant.COMMON_INVALID_PARAMETER);
         return new FormattedRuntimeException(message).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR);
     }
 

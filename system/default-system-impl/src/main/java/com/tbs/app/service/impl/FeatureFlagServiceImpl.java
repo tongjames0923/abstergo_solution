@@ -2,6 +2,7 @@ package com.tbs.app.service.impl;
 
 import com.tbs.app.service.IFeatureFlagService;
 import com.tbs.app.vo.SystemFeatureFlagVO;
+import com.tbs.common.provider.annotation.RoutingRef;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.dic.entity.SystemDataDicItemEntity;
 import com.tbs.dic.enums.DataDicFlagEnum;
@@ -11,7 +12,6 @@ import com.tbs.dic.service.IDataDicService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class FeatureFlagServiceImpl implements IFeatureFlagService {
 
-    @Resource
+    @RoutingRef
     private IDataDicService dicService;
 
     @Override

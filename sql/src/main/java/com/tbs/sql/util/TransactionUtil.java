@@ -1,7 +1,9 @@
 package com.tbs.sql.util;
 
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.*;
@@ -94,7 +96,7 @@ public class TransactionUtil {
             transactionManager.commit(status);
         } catch (TransactionSystemException tse) { logger.error("TransactionSystemException: {}", tse.getMessage(), tse); rollbackTransaction(status); AssertUtil.throwError(() -> tse); }
         catch (TransactionException te) { logger.error("TransactionException: {}", te.getMessage(), te); rollbackTransaction(status); AssertUtil.throwError(() -> te); }
-        catch (Exception e) { logger.error("General exception: {}", e.getMessage(), e); rollbackTransaction(status); AssertUtil.throwError(() -> new FormattedRuntimeException(e, e.getMessage())); }
+        catch (Exception e) { logger.error("General exception: {}", e.getMessage(), e); rollbackTransaction(status); AssertUtil.throwError(() -> new FormattedRuntimeException(e, I18nUtil.get(CommonI18nConstant.COMMON_SERVER_ERROR))); }
     }
 
     /**

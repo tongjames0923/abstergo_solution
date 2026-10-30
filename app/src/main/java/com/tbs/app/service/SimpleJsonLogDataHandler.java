@@ -2,6 +2,7 @@ package com.tbs.app.service;
 
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.data.structs.TableData;
+import com.tbs.common.provider.vo.InstanceMeta;
 import com.tbs.common.util.base.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -38,5 +39,13 @@ public class SimpleJsonLogDataHandler implements ITableDataHandler {
     @Override
     public void handle(TableData table) {
         log.info("SimpleJsonLogDataHandler: {}", JsonUtils.toJSONString(table));
+    }
+
+    /**
+     * 获取元信息
+     */
+    @Override
+    public InstanceMeta getMeta() {
+        return ITableDataHandler.super.getMeta().setClassFullName(this.getClass().getName());
     }
 }

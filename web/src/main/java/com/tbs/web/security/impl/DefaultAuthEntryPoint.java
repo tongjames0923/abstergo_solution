@@ -35,16 +35,16 @@ public class DefaultAuthEntryPoint implements AuthenticationEntryPoint {
                     response, AjaxUtil.builder()
                             .code(AjaxResult.RELOGIN_CODE)
                             .message(msg)
-                            .data(authException)
                             .build()
             );
             return;
         }
+        // 不把 AuthenticationException 塞进 data（会被序列化成堆栈写入响应），也不回显框架原始消息，
+        // 统一返回 i18n 未认证文案；真实原因已在上面由 error 日志记录
         AjaxUtil.writeInfoResp(
                 response, AjaxUtil.builder()
                         .code(AjaxResult.DEFAULT_UNAUTHORIZED_CODE)
-                        .message(authException.getLocalizedMessage())
-                        .data(authException)
+                        .message(AjaxResult.getDefaultUnauthorizedMessage())
                         .build()
         );
     }

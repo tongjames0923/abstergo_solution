@@ -35,6 +35,10 @@ namespace TbsSdk.Push
         /// <summary>载荷（hello 帧为 JSON 字符串，需二次解析取 sessionId）。</summary>
         [JsonPropertyName("payload")]
         public string Payload { get; set; }
+
+        /// <summary>协议错误码（仅 error 帧携带：1001 版本不兼容 / 1002 帧损坏 / 1003 主题非法 / 1008 订阅未授权 / 1009 上行被拒）。</summary>
+        [JsonPropertyName("code")]
+        public int? Code { get; set; }
     }
 
     /// <summary>

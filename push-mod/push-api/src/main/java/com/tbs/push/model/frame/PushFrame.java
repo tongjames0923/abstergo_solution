@@ -1,5 +1,6 @@
 package com.tbs.push.model.frame;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -56,6 +57,16 @@ public class PushFrame implements Serializable {
      * </p>
      */
     private String payload;
+
+    /**
+     * 协议错误码（仅ERROR帧填充，取值见 {@link PushErrorCodeEnum#getCode()}）
+     * <p>
+     * payload为面向人的错误描述，会随语言与文案调整变化；code才是稳定的判定依据。
+     * 非ERROR帧为空，序列化时省略，保持既有帧结构不变。
+     * </p>
+     */
+    @JsonInclude(JsonInclude.Include.NON_NULL)
+    private Integer code;
 
     /**
      * 构造空帧（时间戳取当前时间）

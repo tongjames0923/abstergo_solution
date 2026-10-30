@@ -1,21 +1,24 @@
 package com.tbs.app.data;
 
 import com.tbs.common.data.ITableDataHandler;
-import com.tbs.common.provider.IObjectProvider;
-import com.tbs.common.provider.ObjectSource;
-import com.tbs.common.provider.ResolvedObject;
+import com.tbs.common.provider.IRegisterContributor;
+import com.tbs.common.provider.IRegistryCenter;
+import com.tbs.common.provider.vo.InstanceProxy;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.Resource;
-import java.util.Collection;
-import java.util.Optional;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * 表格数据处理器注册中心
+ * 表格数据处理器选择层
  * <p>
- * 基于 {@link IObjectProvider#getObjects(Class)} 统一枚举 Spring 本地 Bean 与 Dubbo 远程实例，
- * 按 {@link ITableDataHandler#getId()} 精确匹配目标处理器。来源解析链天然 Spring 优先，
- * 本地有实现时直取（零协议开销），无本地实现时自动降级到 Dubbo 发现。
+ * 经注册中心取贡献者链逐来源盘点 {@link ITableDataHandler}，贡献者顺序即来源优先级：
+ * 本地来源在链首、远端来源在链尾，同一处理器 ID 在多来源并存时取靠前者。
+ * </p>
+ * <p>
+ * 处理器 ID 即 business 坐标（{@link ITableDataHandler#getMeta()} 默认映射），按 ID 查找直接走坐标寻址，
+ * 无需逐实例取 ID 比对。
  * </p>
  *
  * @author abstergo
@@ -24,49 +27,70 @@ import java.util.Optional;
 @Component
 public class TableDataHandlerRegistry {
 
+    /**
+     * 注册中心，贡献者链的唯一入口
+     */
     @Resource
-    private IObjectProvider objectProvider;
+    private IRegistryCenter registryCenter;
 
     /**
-     * 枚举全部来源的处理器（含来源元数据）
+     * 枚举全部处理器
      * <p>
-     * 返回 Spring 本地 Bean 与 Dubbo 注册中心发现实例的完整集合，顺序为 Spring 在前、Dubbo 在后。
+     * 坐标不约束：本选择层按业务 ID 而非 business/version 选用处理器。
      * </p>
      *
-     * @return 带来源元数据的处理器集合
+     * @return 全部处理器的实例代理，本地来源在前
      */
-    public Collection<ResolvedObject<ITableDataHandler>> getAllResolvedHandlers() {
-        return objectProvider.getObjects(ITableDataHandler.class);
+    public List<InstanceProxy> getAllHandlers() {
+        List<InstanceProxy> handlers = new ArrayList<>();
+        for (IRegisterContributor contributor : registryCenter.getAllContributors()) {
+            List<InstanceProxy> instances =
+                contributor.getAllInstanceByTypeAndBusinessAndVersion(ITableDataHandler.class, null, null);
+            handlers.addAll(instances);
+        }
+        return handlers;
     }
 
     /**
      * 按 ID 查找处理器
-     * <p>
-     * 遍历全部来源解析结果，匹配 {@link ITableDataHandler#getId()}。
-     * 由于 getObjects 按 Spring → Dubbo 顺序返回，同 ID 本地实现优先命中。
-     * </p>
      *
      * @param id 处理器 ID
      * @return 处理器实例，未找到返回 null
      */
     public ITableDataHandler getHandler(String id) {
-        return findResolved(id).map(ResolvedObject::getInstance).orElse(null);
+        InstanceProxy instanceProxy = resolve(id);
+        return instanceProxy == null ? null : (ITableDataHandler)instanceProxy.getInstance();
     }
 
     /**
-     * 按 ID 查找处理器并判定来源
+     * 按 ID 查找处理器并回带命中来源
      *
      * @param id 处理器 ID
-     * @return "local" 或 "remote"，未找到返回 null
+     * @return 命中时返回来源贡献者标识（spring / dubbo），未找到返回 null
      */
     public String getHandlerSource(String id) {
-        return findResolved(id).map(r -> r.isSource(ObjectSource.SPRING) ? "local" : "remote").orElse(null);
+        InstanceProxy instanceProxy = resolve(id);
+        if (instanceProxy == null || instanceProxy.getContributor() == null) {
+            return null;
+        }
+        return instanceProxy.getContributor().getContributorId();
     }
 
     /**
-     * 内部复用：按 ID 从全量枚举中定位首个匹配的 ResolvedObject
+     * 按处理器 ID 解析实例
+     * <p>
+     * 首选坐标寻址：处理器 ID 即 business 坐标，经注册中心按该坐标取首个命中，不必对每个实例回调 {@code getId()}； 未命中再退回逐来源盘点按 ID 匹配，覆盖 business 尚未对齐处理器 ID 的来源。
+     * </p>
+     *
+     * @param id 处理器 ID
+     * @return 命中的实例代理，未找到返回 null
      */
-    private Optional<ResolvedObject<ITableDataHandler>> findResolved(String id) {
-        return getAllResolvedHandlers().stream().filter(r -> id.equals(r.getInstance().getId())).findFirst();
+    private InstanceProxy resolve(String id) {
+        InstanceProxy instanceProxy = registryCenter.getInstanceProxy(ITableDataHandler.class, id, null, null);
+        if (instanceProxy != null) {
+            return instanceProxy;
+        }
+        return getAllHandlers().stream()
+            .filter(handler -> id.equals(((ITableDataHandler)handler.getInstance()).getId())).findFirst().orElse(null);
     }
 }

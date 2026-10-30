@@ -1,8 +1,10 @@
 package com.tbs.web.uitl;
 
 import com.tbs.common.IStartup;
+import com.tbs.common.error.IExceptionLevel;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.JsonUtils;
+import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.Comparators;
 import com.tbs.web.enums.WebMessageTypeEnum;
@@ -96,7 +98,32 @@ public class AjaxUtil implements IStartup {
                 }
             }
         }
-        return error(e.getLocalizedMessage(), e);
+        // 无提供者命中时的兜底：自建异常回传自身文案，其余异常只给通用提示，
+        // 且绝不把异常对象塞进响应 data（避免堆栈被序列化外泄）
+        return error(resolveErrorMessage(e), null);
+    }
+
+    /**
+     * 解析面向客户端的错误消息
+     * <p>
+     * 约定：自建异常（实现 {@link IExceptionLevel}，即 AssertUtil 构建的异常及其子类）的消息就是面向调用方的
+     * 文案，直接回传；框架/第三方抛出的原始异常一律回退通用提示——其消息常含 SQL 语句、连接串、内部类名
+     * 等实现细节，经响应体透出即信息泄露。真实原因不会丢失，全局异常处理以错误日志记录了含 cause 链的完整
+     * 堆栈，排查以日志与 traceId 为准。
+     * </p>
+     * <p>
+     * 由此推导出一条约束：自建异常的消息不得拼接外部异常原文（如 {@code e.getMessage()}），否则本条约定
+     * 会被绕过。
+     * </p>
+     *
+     * @param e 待转换异常，允许为null
+     * @return 响应消息，不会为null
+     */
+    public static String resolveErrorMessage(Throwable e) {
+        if (e instanceof IExceptionLevel) {
+            return StrUtil.emptyToDefault(e.getLocalizedMessage(), AjaxResult.getDefaultErrorMessage());
+        }
+        return AjaxResult.getDefaultErrorMessage();
     }
 
     /**
@@ -228,10 +255,9 @@ public class AjaxUtil implements IStartup {
     }
 
     /**
-     * 构建错误的Ajax响应结果，包含消息和数据
+     * 构建调试错误的Ajax响应结果，仅包含消息
      *
-     * @param msg  响应消息
-     * @param data 响应数据
+     * @param msg 响应消息
      * @return AjaxResult对象
      */
     public AjaxResult debugError(String msg) {
@@ -251,10 +277,12 @@ public class AjaxUtil implements IStartup {
     }
 
     /**
-     * 构建通知错误的Ajax响应结果，包含消息和数据
+     * 构建通知错误的Ajax响应结果，包含标题、消息、通知类型与持续时间
      *
-     * @param msg  响应消息
-     * @param data 响应数据
+     * @param title          通知标题
+     * @param msg            响应消息
+     * @param webNoticeType  通知类型
+     * @param duration       持续时间（毫秒）
      * @return AjaxResult对象
      */
     public AjaxResult noticeError(String title, String msg, WebMessageTypeEnum webNoticeType, Integer duration) {
@@ -262,10 +290,11 @@ public class AjaxUtil implements IStartup {
     }
 
     /**
-     * 构建通知错误的Ajax响应结果，包含消息和数据
+     * 构建通知错误的Ajax响应结果，包含标题、消息与通知类型
      *
-     * @param msg  响应消息
-     * @param data 响应数据
+     * @param title         通知标题
+     * @param msg           响应消息
+     * @param webNoticeType 通知类型
      * @return AjaxResult对象
      */
     public AjaxResult noticeError(String title, String msg, WebMessageTypeEnum webNoticeType) {
