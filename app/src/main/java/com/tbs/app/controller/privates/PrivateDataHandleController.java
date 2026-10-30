@@ -4,6 +4,7 @@ import com.tbs.app.constant.FileProcessI18nConstant;
 import com.tbs.app.data.TableDataHandlerRegistry;
 import com.tbs.app.vo.HandlerOptionVO;
 import com.tbs.app.vo.HandlerValidateVO;
+import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.common.data.impl.CsvTableDataAdapter;
 import com.tbs.common.data.structs.TableData;
@@ -139,9 +140,10 @@ public class PrivateDataHandleController extends BaseController {
             handler.handle(tableData);
             return successResult(tableData);
         } catch (IOException e) {
-            throw AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
-                .i18n(CommonI18nConstant.TABLE_ADAPTER_CSV_PARSE_FAILED).cause(e).build();
+            AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
+                .i18n(CommonI18nConstant.TABLE_ADAPTER_CSV_PARSE_FAILED).cause(e).throwIt();
         }
+        return errorResult(null);
     }
 
     /**
