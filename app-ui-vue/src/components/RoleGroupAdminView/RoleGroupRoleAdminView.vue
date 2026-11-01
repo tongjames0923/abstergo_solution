@@ -94,7 +94,7 @@
               <i class="el-icon-search" />
               <input
                 v-model="searchKeyword"
-                placeholder="搜索权限名称..."
+                :placeholder="$t('roleGroup.searchPlaceholder')"
                 class="search-input"
               >
               <i
@@ -125,15 +125,27 @@
 
           <!-- 操作栏 -->
           <div class="action-bar">
-            <el-button
-              size="mini"
-              type="text"
-              class="select-all-btn"
-              :disabled="filteredAvailableRoles.length === 0"
-              @click="handleSelectAll"
-            >
-              <i class="el-icon-check" /> 全选当前筛选结果
-            </el-button>
+            <div class="action-left">
+              <el-button
+                size="mini"
+                type="text"
+                class="select-all-btn"
+                :disabled="filteredAvailableRoles.length === 0"
+                @click="handleSelectAll"
+              >
+                <i class="el-icon-check" /> 全选当前筛选结果
+              </el-button>
+              <!-- 就地新建菜单权限：避免为建一条权限而关掉本面板去权限管理页往返 -->
+              <el-button
+                size="mini"
+                type="text"
+                class="add-perm-btn"
+                icon="el-icon-plus"
+                @click="openAddRoleDialog"
+              >
+                {{ $t('roleGroup.addPerm') }}
+              </el-button>
+            </div>
             <el-button
               size="mini"
               type="primary"
@@ -183,12 +195,51 @@
         </div>
       </transition>
     </div>
+
+    <!-- 内联新建菜单权限对话框：编码/名称/描述三项，类型固定菜单权限 -->
+    <el-dialog
+      :title="$t('roleGroup.addPermTitle')"
+      :visible.sync="roleDialogVisible"
+      width="480px"
+      :close-on-click-modal="false"
+      append-to-body
+    >
+      <el-alert
+        :title="$t('roleGroup.menuPermTip')"
+        type="info"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 16px"
+      />
+      <el-form ref="roleForm" :model="roleForm" :rules="roleRules" label-width="96px">
+        <el-form-item :label="$t('role.permissionCode')" prop="role">
+          <el-input v-model="roleForm.role" maxlength="128" :placeholder="$t('roleGroup.codePlaceholder')" />
+        </el-form-item>
+        <el-form-item :label="$t('role.name')" prop="name">
+          <el-input v-model="roleForm.name" maxlength="128" :placeholder="$t('roleGroup.namePlaceholder')" />
+        </el-form-item>
+        <el-form-item :label="$t('role.description')">
+          <el-input
+            v-model="roleForm.description"
+            type="textarea"
+            :rows="2"
+            maxlength="500"
+            show-word-limit
+            :placeholder="$t('roleGroup.descPlaceholder')"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="roleDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="roleSaving" @click="handleAddRoleConfirm">{{ $t('common.confirm') }}</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import { getRoleListByGroupId, appendRoleToGroup, removeRoleFromGroup } from '@/api/role_group'
-import { queryRoles } from '@/api/role'
+import { queryRoles, saveRole, activateRole } from '@/api/role'
 
 export default {
   name: 'RoleGroupRoleAdminView',
@@ -213,7 +264,19 @@ export default {
         { value: 1, label: '菜单' },
         { value: 2, label: '数据' },
         { value: 3, label: 'API' }
-      ]
+      ],
+      // 内联新建菜单权限
+      roleDialogVisible: false,
+      roleSaving: false,
+      roleForm: this.createEmptyRoleForm(),
+      // 编码格式对齐库中既有约定（MENU.ADMIN / MENU.ROUTE 等大写的点分编码），长度上限同 DB 字段 128
+      roleRules: {
+        role: [
+          { required: true, message: this.$t('roleGroup.codeRequired'), trigger: 'blur' },
+          { pattern: /^[A-Z][A-Z0-9_.-]{1,127}$/, message: this.$t('roleGroup.codePattern'), trigger: 'blur' }
+        ],
+        name: [{ required: true, message: this.$t('roleGroup.nameRequired'), trigger: 'blur' }]
+      }
     }
   },
   computed: {
@@ -232,7 +295,9 @@ export default {
       }
       if (this.searchKeyword) {
         const kw = this.searchKeyword.toLowerCase()
+        // 同时匹配权限编码：拿着刚建好的编码过来能直接命中，不必翻页找
         list = list.filter(p =>
+          p.role.toLowerCase().includes(kw) ||
           p.name.toLowerCase().includes(kw) ||
           (p.description && p.description.toLowerCase().includes(kw))
         )
@@ -290,6 +355,96 @@ export default {
       if (this.showAddPanel && this.availableRoles.length === 0) {
         this.fetchAvailableRoles()
       }
+    },
+
+    createEmptyRoleForm() {
+      return {
+        role: '',
+        name: '',
+        description: ''
+      }
+    },
+
+    openAddRoleDialog() {
+      this.roleForm = this.createEmptyRoleForm()
+      this.roleDialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.roleForm?.clearValidate()
+      })
+    },
+
+    async handleAddRoleConfirm() {
+      try {
+        await this.$refs.roleForm.validate()
+      } catch (e) {
+        return
+      }
+      const code = this.roleForm.role.trim()
+      const name = this.roleForm.name.trim()
+      this.roleSaving = true
+      try {
+        // 判重用 roleIn（IN 精确匹配）：roleEquals 虽名为“精确”，实际映射 ContrastEnum.LLIKE 左模糊，
+        // 传 MENU.A 会命中 MENU.ADMIN，据此判重会误报编码被占用
+        const response = await queryRoles({ roleIn: [code] }, 1, 10)
+        const matched = response.data?.data || []
+        // 同编码可能同时存在启用与禁用两条记录（服务层判重只比对启用态），优先取启用中的那条
+        const existed = matched.find(item => item.flag === 1) || matched[0]
+        if (existed) {
+          this.handleExistedRole(existed)
+        } else {
+          // 类型固定 1（菜单权限）；不传 flag/dataScope：新增由服务层强制置为激活，数据范围对菜单无意义
+          await saveRole({ role: code, name, type: 1, description: this.roleForm.description })
+          this.pickPermIntoSelection(code, name, this.$t('roleGroup.permCreated', { name }))
+        }
+      } catch (error) {
+        // 失败原因（如编码重复）由响应拦截器统一提示；此处不重复弹错，并保留弹窗与已填内容供修正
+        console.error('新建权限失败:', error)
+      } finally {
+        this.roleSaving = false
+      }
+    },
+
+    // 编码已存在的分支：启用中的菜单权限直接勾选，禁用中的确认后启用再勾选，
+    // 非菜单类型与系统内置权限一律拒绝，不擅自改动他人权限
+    handleExistedRole(existed) {
+      const code = existed.role
+      if (existed.flag === 2) {
+        this.$message.error(this.$t('roleGroup.permCodeSystem', { code }))
+        return
+      }
+      if (existed.type !== 1) {
+        this.$message.error(this.$t('roleGroup.permCodeOccupied', { code }))
+        return
+      }
+      if (existed.flag === 1) {
+        this.pickPermIntoSelection(code, existed.name, this.$t('roleGroup.permCodeExists', { code }))
+        return
+      }
+      // flag=0 禁用态：确认后才启用并勾选，取消则弹窗与填写内容保持原样
+      this.$confirm(this.$t('roleGroup.enablePermConfirm', { code }), this.$t('common.tip'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
+        type: 'warning'
+      }).then(async() => {
+        await activateRole(existed.id)
+        this.pickPermIntoSelection(code, existed.name, this.$t('roleGroup.permEnabled', { name: existed.name }))
+      }).catch(() => {})
+    },
+
+    // 刷新可添加列表并把该编码权限勾进待添加集合；
+    // 列表一次只拉 1000 条，超出上限时降级为提示手动勾选，不让用户重复创建
+    async pickPermIntoSelection(code, name, successMessage) {
+      await this.fetchAvailableRoles()
+      const target = this.availableRoles.find(p => p.role === code)
+      if (target) {
+        if (!this.selectedPermIds.includes(target.id)) {
+          this.selectedPermIds.push(target.id)
+        }
+        this.$message.success(successMessage)
+      } else {
+        this.$message.warning(this.$t('roleGroup.permNotListed', { name }))
+      }
+      this.roleDialogVisible = false
     },
 
     togglePermSelection(permId) {
@@ -631,8 +786,19 @@ export default {
     border-bottom: 1px solid #e8ecf1;
     background: #fafbfc;
 
+    .action-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
     .select-all-btn {
       color: #0071e3;
+      font-weight: 500;
+    }
+
+    .add-perm-btn {
+      color: #248a3d;
       font-weight: 500;
     }
 
@@ -852,6 +1018,12 @@ export default {
     .header-bar {
       flex-wrap: wrap;
       gap: 10px;
+    }
+
+    /* 操作栏多了新建入口，窄屏下允许换行避免按钮被挤压 */
+    .action-bar {
+      flex-wrap: wrap;
+      gap: 8px;
     }
   }
 }
