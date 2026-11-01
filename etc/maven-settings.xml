@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  国内优化 Maven settings.xml
+  用法：
+    1) 复制到 ~/.m2/settings.xml（Windows: C:\Users\<用户名>\.m2\settings.xml）
+    2) 或构建时指定：mvn -s etc/maven-settings.xml clean install
+  镜像策略：阿里云公共仓库代理 central + 全部仓库；如需要可切换为华为云/腾讯云（见注释）
+-->
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0"
+          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+          xsi:schemaLocation="http://maven.apache.org/SETTINGS/1.0.0 https://maven.apache.org/xsd/settings-1.0.0.xsd">
+
+    <!-- 本地仓库路径，按需取消注释修改；默认是 ~/.m2/repository -->
+    <!--
+    <localRepository>D:/maven-repo</localRepository>
+    -->
+
+    <!-- ==================== 私服 / 认证账号（按需填写） ==================== -->
+    <servers>
+        <!-- 例：公司内网 Nexus 私服，账号密码请改成实际值 -->
+        <!--
+        <server>
+            <id>nexus-internal</id>
+            <username>your-username</username>
+            <password>your-password</password>
+        </server>
+        -->
+        <!-- 例：发布到 Maven Central（ossrh），配合 deploy 使用 -->
+        <!--
+        <server>
+            <id>ossrh</id>
+            <username>your-sonatype-username</username>
+            <password>your-sonatype-password</password>
+        </server>
+        -->
+    </servers>
+
+    <!-- ==================== 国内镜像 ==================== -->
+    <mirrors>
+        <!-- 阿里云：代理 central，同时兜底所有未在私服上的仓库请求 -->
+        <mirror>
+            <id>aliyun-central</id>
+            <name>Aliyun Maven Central Mirror</name>
+            <url>https://maven.aliyun.com/repository/public</url>
+            <mirrorOf>central</mirrorOf>
+        </mirror>
+
+        <!-- 阿里云：聚合仓库（public + spring + gradle-plugin 等），用于 aliyun-public 无法解析的依赖 -->
+        <mirror>
+            <id>aliyun-all</id>
+            <name>Aliyun Maven All Repositories Mirror</name>
+            <url>https://maven.aliyun.com/repository/central</url>
+            <mirrorOf>*,!nexus-internal</mirrorOf>
+        </mirror>
+
+        <!-- 备选镜像（速度不佳时可换用，取消注释并注释上方阿里云镜像） -->
+        <!-- 华为云: https://repo.huaweicloud.com/repository/maven/ -->
+        <!-- 腾讯云: https://mirrors.cloud.tencent.com/nexus/repository/maven-public/ -->
+        <!-- 中科大: https://mirrors.ustc.edu.cn/maven/ -->
+    </mirrors>
+
+    <!-- ==================== Profile 配置 ==================== -->
+    <profiles>
+        <!-- 显式声明 central 走阿里云，双重保险（mirrorOf 已处理，这里保证插件仓库也一致） -->
+        <profile>
+            <id>aliyun-repos</id>
+            <repositories>
+                <repository>
+                    <id>aliyun-public</id>
+                    <url>https://maven.aliyun.com/repository/public</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                </repository>
+            </repositories>
+            <pluginRepositories>
+                <pluginRepository>
+                    <id>aliyun-plugin</id>
+                    <url>https://maven.aliyun.com/repository/public</url>
+                    <releases><enabled>true</enabled></releases>
+                    <snapshots><enabled>false</enabled></snapshots>
+                </pluginRepository>
+            </pluginRepositories>
+        </profile>
+
+        <!-- 项目基于 JDK 21（corretto-21），激活对应编译属性 -->
+        <profile>
+            <id>jdk21</id>
+            <activation>
+                <jdk>21</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.source>21</maven.compiler.source>
+                <maven.compiler.target>21</maven.compiler.target>
+                <maven.compiler.release>21</maven.compiler.release>
+                <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+                <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+            </properties>
+        </profile>
+    </profiles>
+
+    <activeProfiles>
+        <activeProfile>aliyun-repos</activeProfile>
+    </activeProfiles>
+
+</settings>
