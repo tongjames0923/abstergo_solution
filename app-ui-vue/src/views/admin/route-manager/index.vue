@@ -293,10 +293,10 @@
         </el-form-item>
         <el-form-item :label="$t('routeManager.roles')">
           <el-select
+            ref="roleSelect"
             v-model="routeForm.meta.roles"
             multiple
             filterable
-            allow-create
             default-first-option
             :placeholder="$t('routeManager.selectRoles')"
             style="width: 100%"
@@ -307,6 +307,12 @@
               :label="item.name"
               :value="item.role"
             />
+            <!-- 下拉底部常驻入口：非 el-option，不受 filterable 过滤影响。
+                 权限编码一律走内联新增落库，不再允许手输，避免写入 system_role 中不存在的脏编码 -->
+            <div class="roles-add-entry" @click.stop.prevent="openAddRoleDialog">
+              <i class="el-icon-plus" />
+              {{ $t('routeManager.addMenuRole') }}
+            </div>
           </el-select>
         </el-form-item>
         <el-row :gutter="16">
@@ -323,6 +329,46 @@
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
         <el-button type="primary" @click="handleDialogConfirm">{{ $t('common.confirm') }}</el-button>
+      </span>
+    </el-dialog>
+
+    <!-- 内联新增菜单权限对话框：编码/名称/描述三项，类型固定菜单权限、创建后默认启用 -->
+    <el-dialog
+      :title="$t('routeManager.addMenuRoleTitle')"
+      :visible.sync="roleDialogVisible"
+      width="480px"
+      custom-class="route-dialog"
+      :close-on-click-modal="false"
+      append-to-body
+    >
+      <el-alert
+        :title="$t('routeManager.menuRoleTip')"
+        type="info"
+        :closable="false"
+        show-icon
+        style="margin-bottom: 16px"
+      />
+      <el-form ref="roleForm" :model="roleForm" :rules="roleRules" label-width="96px">
+        <el-form-item :label="$t('role.permissionCode')" prop="role">
+          <el-input v-model="roleForm.role" maxlength="128" :placeholder="$t('routeManager.inputRoleCode')" />
+        </el-form-item>
+        <el-form-item :label="$t('role.name')" prop="name">
+          <el-input v-model="roleForm.name" maxlength="128" :placeholder="$t('routeManager.inputRoleName')" />
+        </el-form-item>
+        <el-form-item :label="$t('role.description')">
+          <el-input
+            v-model="roleForm.description"
+            type="textarea"
+            :rows="2"
+            maxlength="500"
+            show-word-limit
+            :placeholder="$t('routeManager.inputRoleDesc')"
+          />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="roleDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :loading="roleSaving" @click="handleAddRoleConfirm">{{ $t('common.confirm') }}</el-button>
       </span>
     </el-dialog>
 
@@ -412,7 +458,7 @@ import {
   getRouteVersions,
   rollbackRouteVersion
 } from '@/api/view'
-import { queryRoles } from '@/api/role'
+import { queryRoles, saveRole, activateRole } from '@/api/role'
 
 export default {
   name: 'RouteManager',
@@ -438,6 +484,18 @@ export default {
       },
       availableRoles: [],
       viewComponents: [],
+      // 内联新增菜单权限
+      roleDialogVisible: false,
+      roleSaving: false,
+      roleForm: this.createEmptyRoleForm(),
+      // 编码格式对齐库中既有约定（MENU.ADMIN / MENU.ROUTE 等大写的点分编码），长度上限同 DB 字段 128
+      roleRules: {
+        role: [
+          { required: true, message: this.$t('routeManager.roleCodeRequired'), trigger: 'blur' },
+          { pattern: /^[A-Z][A-Z0-9_.-]{1,127}$/, message: this.$t('routeManager.roleCodePattern'), trigger: 'blur' }
+        ],
+        name: [{ required: true, message: this.$t('routeManager.roleNameRequired'), trigger: 'blur' }]
+      },
       // 保存说明对话框
       saveDialogVisible: false,
       saveDescription: '',
@@ -493,6 +551,14 @@ export default {
       }
     },
 
+    createEmptyRoleForm() {
+      return {
+        role: '',
+        name: '',
+        description: ''
+      }
+    },
+
     countRoutes(routes) {
       return routes.reduce((acc, r) => {
         return acc + 1 + (r.children && r.children.length ? this.countRoutes(r.children) : 0)
@@ -536,6 +602,92 @@ export default {
         }))
       } catch (error) {
         console.error('获取菜单权限失败:', error)
+      }
+    },
+
+    // 打开内联新增弹窗；先收起下拉浮层，避免其残留并压在二级弹窗之上
+    openAddRoleDialog() {
+      this.$refs.roleSelect?.blur()
+      this.roleForm = this.createEmptyRoleForm()
+      this.roleDialogVisible = true
+      this.$nextTick(() => {
+        this.$refs.roleForm?.clearValidate()
+      })
+    },
+
+    async handleAddRoleConfirm() {
+      try {
+        await this.$refs.roleForm.validate()
+      } catch (e) {
+        return
+      }
+      const code = this.roleForm.role.trim()
+      const name = this.roleForm.name.trim()
+      this.roleSaving = true
+      try {
+        // 判重用 roleIn（IN 精确匹配）：roleEquals 虽名为"精确"，实际映射 ContrastEnum.LLIKE 左模糊，
+        // 传 MENU.A 会命中 MENU.ADMIN，据此判重会误报编码被占用
+        const response = await queryRoles({ roleIn: [code] }, 1, 10)
+        const matched = response.data?.data || []
+        // 同编码可能同时存在启用与禁用两条记录（服务层判重只比对启用态），优先取启用中的那条
+        const existed = matched.find(item => item.flag === 1) || matched[0]
+        if (existed) {
+          await this.handleExistedRole(existed)
+        } else {
+          // 类型固定 1（菜单权限）；不传 flag/dataScope：新增由服务层强制置为激活，数据范围对菜单无意义
+          await saveRole({ role: code, name, type: 1, description: this.roleForm.description })
+          await this.loadMenuRoles()
+          this.selectRoleCode(code, name)
+          this.roleDialogVisible = false
+          this.$message.success(this.$t('routeManager.roleAddSuccess', { name }))
+        }
+      } catch (error) {
+        // 失败原因（如编码重复）由响应拦截器统一提示；此处不重复弹错，且保留弹窗与已填内容供修正
+        console.error('新增菜单权限失败:', error)
+      } finally {
+        this.roleSaving = false
+      }
+    },
+
+    // 编码已存在的分支处理：启用中的菜单权限直接选中，禁用中的菜单权限确认后启用，
+    // 非菜单类型与系统内置权限一律拒绝，不擅自改动他人权限
+    handleExistedRole(existed) {
+      const code = existed.role
+      if (existed.flag === 2) {
+        this.$message.error(this.$t('routeManager.roleCodeSystem', { code }))
+        return
+      }
+      if (existed.type !== 1) {
+        this.$message.error(this.$t('routeManager.roleCodeOccupied', { code }))
+        return
+      }
+      if (existed.flag === 1) {
+        this.selectRoleCode(code, existed.name)
+        this.roleDialogVisible = false
+        this.$message.warning(this.$t('routeManager.roleCodeExists', { code }))
+        return
+      }
+      // flag=0 禁用态：确认后才启用并选中，取消则弹窗与填写内容保持原样
+      this.$confirm(this.$t('routeManager.enableRoleConfirm', { code }), this.$t('common.tip'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
+        type: 'warning'
+      }).then(async() => {
+        await activateRole(existed.id)
+        await this.loadMenuRoles()
+        this.selectRoleCode(code, existed.name)
+        this.roleDialogVisible = false
+        this.$message.success(this.$t('routeManager.roleEnableSuccess', { name: existed.name }))
+      }).catch(() => {})
+    },
+
+    // 选中指定权限编码，并在下拉选项中兜底补齐（超出加载上限时仍能显示名称）
+    selectRoleCode(code, name) {
+      if (!this.availableRoles.some(item => item.role === code)) {
+        this.availableRoles.push({ role: code, name: name || code })
+      }
+      if (!this.routeForm.meta.roles.includes(code)) {
+        this.routeForm.meta.roles.push(code)
       }
     },
 
@@ -1642,6 +1794,28 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 
   p {
     margin: 0;
+    font-size: 13px;
+  }
+}
+
+/* ── 权限角色下拉：内联新增入口 ── */
+.roles-add-entry {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 20px;
+  border-top: 1px solid $border;
+  color: $primary;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s $ease;
+
+  &:hover {
+    background: $primary-bg;
+  }
+
+  i {
     font-size: 13px;
   }
 }
