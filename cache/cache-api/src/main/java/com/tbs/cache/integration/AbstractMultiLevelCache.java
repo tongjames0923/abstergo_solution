@@ -1,5 +1,6 @@
 package com.tbs.cache.integration;
 
+import com.tbs.cache.IMultiLevelSupport;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 
@@ -12,8 +13,7 @@ import java.util.stream.Collectors;
 /**
  * 多层缓存编排抽象基类
  * <p>
- * 纯编排职责，不包含 TTL 能力（由装饰层 {@link AbstractAdaptTtlCache} 包装提供）。
- * 核心语义：
+ * 纯编排职责，不包含 TTL 能力（由装饰层 {@link AbstractAdaptTtlCache} 包装提供）。 核心语义：
  * <ul>
  *   <li><b>读取</b>：按层级顺序穿透（L1 → L2 → ...），命中后静默回填上层</li>
  *   <li><b>写入</b>：自底向上写入（L2 → L1），远层失败快速失败</li>
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
  * @since 1.0.0
  */
 @Slf4j
-public abstract class AbstractMultiLevelCache implements Cache {
+public abstract class AbstractMultiLevelCache implements Cache, IMultiLevelSupport {
 
     /**
      * 缓存层级列表（按 order 升序排列，index 0 为最快层）
@@ -78,6 +78,7 @@ public abstract class AbstractMultiLevelCache implements Cache {
      *
      * @return 不可变的层级列表
      */
+    @Override
     public List<Cache> getLevels() {
         return levels;
     }

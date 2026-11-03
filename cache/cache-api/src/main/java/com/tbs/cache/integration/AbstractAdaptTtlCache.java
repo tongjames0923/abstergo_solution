@@ -1,6 +1,7 @@
 package com.tbs.cache.integration;
 
 import com.tbs.cache.ICacheListenner;
+import com.tbs.cache.expire.ICacheExpiredActuator;
 import com.tbs.cache.expire.IExpireDetailsManager;
 import com.tbs.common.util.framework.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +13,7 @@ import java.util.stream.Collectors;
 
 /**
  * 抽象TTL缓存适配器类，提供基于Spring Cache的TTL（Time To Live）功能实现 该类扩展了AbstractTtlCache，提供了缓存过期机制的通用实现
+ *
  * @author abstergo
  */
 @Slf4j
@@ -32,6 +34,26 @@ public abstract class AbstractAdaptTtlCache extends AbstractTtlCache {
     private IExpireDetailsManager expireDetailsManager;
 
     /**
+     * 缓存过期执行器
+     */
+    private ICacheExpiredActuator cacheExpiredActuator;
+
+    /**
+     * 构造函数，初始化原始缓存
+     *
+     * @param orginCache 原始Spring Cache实例
+     */
+    public AbstractAdaptTtlCache(Cache orginCache, ICacheExpiredActuator cacheExpiredActuator) {
+        this.orginCache = orginCache;
+        this.cacheExpiredActuator = cacheExpiredActuator;
+    }
+
+    @Override
+    public ICacheExpiredActuator getTargetedCacheExpiredActuator() {
+        return cacheExpiredActuator;
+    }
+
+    /**
      * 获取过期时间管理器
      *
      * @return
@@ -49,21 +71,12 @@ public abstract class AbstractAdaptTtlCache extends AbstractTtlCache {
     }
 
     /**
-     * 构造函数，初始化原始缓存
-     *
-     * @param orginCache 原始Spring Cache实例
-     */
-    public AbstractAdaptTtlCache(Cache orginCache) {
-        this.orginCache = orginCache;
-    }
-
-    /**
      * 获取缓存监听器列表 通过Spring上下文获取所有实现了ICacheListenner接口的Bean实例 使用双重检查锁定确保线程安全的懒加载
      *
      * @return 缓存监听器列表
      */
     @Override
-    protected List<ICacheListenner> getListeners() {
+    public List<ICacheListenner> getListeners() {
         if (listeners == null) {
             synchronized (this) {
                 if (listeners == null) {

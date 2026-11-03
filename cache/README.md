@@ -77,6 +77,7 @@ cache/
 │       └── impl/                 # DefaultTtlAdaptCacheMananger / DefaultTtlCacheDecorator /
 │                                 #   AdaptScheduleExpireTtlCache / MultiLevelTtlCacheMananger /
 │                                 #   MultiLevelTtlCacheDecorator / MultiLevelAdaptTtlCache /
+│                                 #   MultiLevelCacheExpiredActuator（多级过期逐层下发） /
 │                                 #   NoMultiLevelCacheTtlInterceptor / TransactionAwareCacheUnwrapperExtension
 │
 └── cache-caffeine-impl/          # Caffeine 引擎实现
@@ -224,7 +225,7 @@ public @interface ExpireOn {
 
 - `AdaptScheduleExpireTtlCache`（默认路径）：向 async 调度模块提交 `cache-expire` 类型任务（`CacheExpireTaskExecutor`），到点后经 `CacheManager.evict(key)` / `clear()` 删除；
 - `RedissonAdaptTtlCache`：直接操作 Redisson 原生 TTL——单条目 `RMapCache.expireEntry(key, ttl, 0)`（已过期则 `remove`），全缓存 `expire(Duration)`；
-- `MultiLevelAdaptTtlCache`：逐层下发过期，各层过期时刻可经 `IMultiLevelCacheTtlInterceptor` 调整（默认实现 `NoMultiLevelCacheTtlInterceptor` 原样放行）。
+- `MultiLevelAdaptTtlCache`：逐层下发过期，各层过期时刻可经 `IMultiLevelCacheTtlInterceptor` 调整（默认实现 `NoMultiLevelCacheTtlInterceptor` 原样放行）；下发细节与日志字段见下文「多级缓存的逐层过期下发」。
 
 过期时间在登记时可经 `ITtlIntercepter` Bean 链调整（`onTtlExpired` 返回新时刻）。过期详情由 `IExpireDetailsManager` 管理，默认 `LocalMapExpireDetailsManager`（ConcurrentHashMap 内存实现，key=null 表示全缓存过期）。
 
@@ -241,6 +242,45 @@ public Report generateReport(String type) {
     // ...
 }
 ```
+
+#### 多级缓存的逐层过期下发（MultiLevelCacheExpiredActuator）
+
+`MultiLevelAdaptTtlCache` 自身不持有数据，过期动作全部由 `MultiLevelCacheExpiredActuator` 逐层下发给各层级缓存自己的执行器。入口仍是上文第 4 步的 `AbstractTtlCache.put` 过期标记检查：
+
+```
+AbstractTtlCache.put(key, value)
+    ├── isCallToExpireAll() 命中 → expireAll(顶层实例, 过期时刻)   // 整层过期
+    └── isCallToExpire(key) 命中 → expire(顶层实例, key, 过期时刻)  // 单键过期
+                    ↓ 两者是同一条链路：expireAll 即 key = null 的 expire
+        逐层（level 从 1 起，1 = 最靠近应用层的 L1）：
+            IMultiLevelCacheTtlInterceptor.intercept(层级实例, level, key, 原始时刻) → 本层最终时刻（返回 null 沿用原始时刻）
+            ↓ 交回层级实例自己的执行器
+            key == null → 层级 expireAll(层级实例, 本层时刻)；否则 → 层级 expire(层级实例, key, 本层时刻)
+```
+
+三条不可破坏的约定：
+
+| 约定 | 破坏后的现象 |
+|------|--------------|
+| 下发时传**层级缓存实例**，不传顶层 `MultiLevelAdaptTtlCache` | 层级执行器解包不出 `RedissonCache` 等原生缓存，只留一条 `not support expire` 告警后返回 false，缓存实际存活时间退化为引擎全局 TTL |
+| 下发时传**本层拦截后的时刻**，不传原始时刻 | `IMultiLevelCacheTtlInterceptor` 配置无效，各层落在同一个 TTL 上，做不到「L1 短、L2 长」 |
+| `key == null` 转调层级 `expireAll`，不把 null 当普通键下发 | Redisson 层级会把 null 传进 `RMapCache` 的按键 API 并抛异常，连带整条 `put` 失败 |
+
+- **失败语义**：单层登记失败只告警，不上抛、不重试，其余层级照常下发（尽力而为）；未登记成功的层级依赖该层引擎的 TTL 配置达到最终一致
+- **层级差异化的边界**：「各层落在不同 TTL」只在层级自己支持原生过期时才成立。走原生 TTL 的层级（`RedissonAdaptTtlCache`）可以单独设定过期；兜底装饰的 `AdaptScheduleExpireTtlCache`（典型如 Caffeine L1）登记的是到点后按 `cacheName` 回 `CacheManager` 执行 `evict`/`clear` 的任务，多级下该名字解析到的仍是顶层多级缓存，到点会连带其他层一起失效——要「L1 短、L2 长」请配引擎自身的 TTL（`tbs.cache.level.caffeine.expire-after-write` vs Redisson `cache-timeout`），不要指望拦截器把调度式层级调短
+- **返回值**：全部层级均登记成功才 `true`；调用方 `AbstractTtlCache.put` 忽略返回值，`false` 仅用于日志定位
+- **拦截器扩展**：默认 `NoMultiLevelCacheTtlInterceptor` 原样放行，业务自定义见「扩展开发 - 自定义多级过期拦截器」
+
+日志字段（前缀统一 `[MultiLevelTtl]`，字段顺序固定 `cacheName → key → level → cacheClass → interceptedExpireTime → finalExpireTime`）：
+
+| 日志 | 级别 | 出现时机与解读 |
+|------|------|----------------|
+| `过期下发开始` | DEBUG | 一次过期请求进入，`key=null` 即整层过期；`levelCount` 为本缓存的层级数 |
+| `层级过期登记成功` | DEBUG | 该层执行器返回 true；`interceptedExpireTime=null` 说明拦截器放行，`finalExpireTime` 为实际登记时刻 |
+| `层级过期登记失败，层级执行器未能按该方式过期` | WARN | 该层没过期成功，多为层级适配器不支持该过期方式或解包失败；`cacheClass` + `level` 指明是哪一层 |
+| `层级未经 TTL 装饰，跳过下发` | WARN | 层级实例不是 `AbstractAdaptTtlCache`（装饰链未生效），该层不会按时过期 |
+| `cache 不是 MultiLevelAdaptTtlCache 类型，无法逐层下发过期` | WARN | 顶层实例类型不符（装饰器 order / 执行器挂载有误），本次过期请求整体未下发 |
+| `过期下发完成` | DEBUG | `result=false` 表示至少一层登记失败，结合上面的 WARN 定位具体层级 |
 
 ### 5. 缓存监听器（ICacheListenner / IListenable）
 
@@ -524,7 +564,7 @@ ICacheTtlPolicy customTtlPolicy() {
 
 ### 自定义多级过期拦截器
 
-实现 `MultiLevelAdaptTtlCache.IMultiLevelCacheTtlInterceptor` 并注册为 Bean（覆盖默认 `NoMultiLevelCacheTtlInterceptor`），可按层级（`level`）与 key 调整各层的实际过期时刻。
+实现 `MultiLevelAdaptTtlCache.IMultiLevelCacheTtlInterceptor` 并注册为 Bean（覆盖默认 `NoMultiLevelCacheTtlInterceptor`），可按层级（`level`）与 key 调整各层的实际过期时刻。注意拦截器只能改变「登记哪个时刻」，不能让调度式层级（`AdaptScheduleExpireTtlCache`）变成只清一层，详见「多级缓存的逐层过期下发」的层级差异化边界。
 
 ### 自定义过期详情管理器
 
@@ -551,6 +591,8 @@ ICacheTtlPolicy customTtlPolicy() {
 | 装饰器未匹配 | 管理器抛出 `No TTL cache decorator found`（CRITICAL 级），检查引擎依赖是否引入 |
 | @ExpireOn 不触发 | 必须与 `@Cacheable`/`@CachePut` 组合；`value > 0`；过期在下一次 `put` 时触发（调度式路径还有调度延迟） |
 | L1/L2 数据不一致 | 确认 L1 `expire-after-write` < L2 TTL；写路径远层失败会快速失败，检查 Redis 连接 |
+| 多级 TTL 不生效 | 按 `[MultiLevelTtl]` 检索 WARN：`层级过期登记失败` 看是哪一层（`cacheClass`）；`层级未经 TTL 装饰`/`不是 MultiLevelAdaptTtlCache 类型` 说明装饰器与执行器未正确挂载；确认 `MultiLevelAdaptTtlCache` 构造时传入的执行器为 `MultiLevelCacheExpiredActuator` |
+| 整层过期报 NPE/异常 | 检查是否把 `key = null` 下发到了层级的按键过期 API（应转调层级 `expireAll`），参见「多级缓存的逐层过期下发」 |
 
 启用调试日志：
 
@@ -564,5 +606,5 @@ logging:
 
 ---
 
-**最后更新**: 2026年9月
+**最后更新**: 2026年11月
 **版本**: 1.0-SNAPSHOT
