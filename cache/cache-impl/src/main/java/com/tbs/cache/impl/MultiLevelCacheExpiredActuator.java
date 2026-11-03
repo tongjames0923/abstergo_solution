@@ -1,5 +1,6 @@
 package com.tbs.cache.impl;
 
+import com.tbs.cache.IMultiLevelSupport;
 import com.tbs.cache.expire.ICacheExpiredActuator;
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.common.util.framework.SpringUtil;
@@ -15,6 +16,9 @@ import java.util.List;
  * {@link MultiLevelAdaptTtlCache} 的过期落地入口。顶层自己不持有数据，所以本执行器不做过期，只负责把一次过期请求
  * <b>逐层下发</b>给各层级缓存自己的 {@link ICacheExpiredActuator}：每层用什么方式过期由该层的装饰结果决定
  * （典型组合下 L1 走 async 调度式过期，L2 走 Redisson 原生 TTL）。
+ * </p>
+ * <p>
+ * 本执行器只认 {@link IMultiLevelSupport}：凡能给出层级列表的缓存实例都可以下发，不绑定具体实现类。
  * </p>
  * <p>
  * 下发前对每一层调用一次 {@link MultiLevelAdaptTtlCache.IMultiLevelCacheTtlInterceptor#intercept(Cache, int, Object, Date)}
@@ -55,7 +59,7 @@ public class MultiLevelCacheExpiredActuator implements ICacheExpiredActuator {
      * 便于按「整层」维度调整 TTL。绝不把 {@code null} 当作普通缓存键传给层级的按键过期 API。
      * </p>
      *
-     * @param cache      多级缓存适配实例，非 {@link MultiLevelAdaptTtlCache} 类型时不处理
+     * @param cache      多级缓存实例（{@link IMultiLevelSupport}），不具备层级列表时不处理
      * @param expireTime 期望过期时刻
      * @return 所有层级均登记成功返回 true，任一层级下发失败返回 false
      */
@@ -71,19 +75,19 @@ public class MultiLevelCacheExpiredActuator implements ICacheExpiredActuator {
      * 不重试，其余层级照常下发（尽力而为），失败的层级依赖该层引擎的 TTL 配置达到最终一致。
      * </p>
      *
-     * @param cache      多级缓存适配实例，非 {@link MultiLevelAdaptTtlCache} 类型时不处理
+     * @param cache      多级缓存实例（{@link IMultiLevelSupport}），不具备层级列表时不处理
      * @param key        待过期的缓存键，{@code null} 表示整层过期
      * @param expireTime 期望过期时刻
      * @return 所有层级均登记成功返回 true，任一层级下发失败返回 false
      */
     @Override
     public boolean expire(Cache cache, Object key, Date expireTime) {
-        if (!(cache instanceof MultiLevelAdaptTtlCache)) {
-            log.warn("[MultiLevelTtl] cache 不是 MultiLevelAdaptTtlCache 类型，无法逐层下发过期: cacheName={}, key={}",
-                cache.getName(), key);
+        if (!(cache instanceof IMultiLevelSupport)) {
+            log.warn("[MultiLevelTtl] cache 不是多级缓存实例，无法逐层下发过期: cacheName={}, key={}, cacheClass={}",
+                cache.getName(), key, cache.getClass().getName());
             return false;
         }
-        List<Cache> levels = ((MultiLevelAdaptTtlCache)cache).getLevels();
+        List<Cache> levels = ((IMultiLevelSupport)cache).getLevels();
         log.debug("[MultiLevelTtl] 过期下发开始: cacheName={}, key={}, expireTime={}, levelCount={}", cache.getName(),
             key, expireTime, levels.size());
 

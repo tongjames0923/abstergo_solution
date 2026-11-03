@@ -169,6 +169,8 @@ public interface ITtlCacheDecorator extends Ordered {
 
 无装饰器匹配时，管理器抛出 `CRITICAL_SYSTEM_ERROR` 级异常（`No TTL cache decorator found for cache: {}`）。
 
+> `RedissonAdaptTtlCache` 包装的是装饰器入参的 `Cache`（保留 `TransactionAwareCacheDecorator` 等外层包装，不丢事务同步语义），而不是 unwrap 后的裸 `RedissonCache`；过期与特性获取靠 `FeatureWrapperHelper` 自动解包，不影响层级执行器识别。
+
 ### 2. 层级缓存 SPI（ILevelCacheProvider）
 
 ```java
@@ -219,7 +221,7 @@ public @interface ExpireOn {
 1. 方法执行后，从 `CacheAspectSupport` 获取该方法的缓存操作与生成的 key；
 2. 经 `IThreadPoolManager` 异步提交过期任务（线程名 `expire-task`）；
 3. 从管理器获取缓存，unwrap 出 `AbstractTtlCache`，调用 `callToExpire(key, expireTime)` / `callToExpireAll(expireTime)` 登记过期请求；
-4. 该缓存的**下一次 `put`** 时检查过期标记并触发实际过期（`AbstractTtlCache.put` 内置检查）。
+4. 该缓存的**下一次 `put`** 时检查过期标记并触发实际过期（`AbstractTtlCache.put` 内置检查）。标记是**一次性**的：下发完成后由 `put` 本身摘除过期详情并派发 `ICacheListenner.calledExpire`，所以同一次 `@ExpireOn` 只会真正下发一次，不会在后续每次 `put` 上反复重放。
 
 实际过期动作因适配器而异：
 
@@ -279,7 +281,7 @@ AbstractTtlCache.put(key, value)
 | `层级过期登记成功` | DEBUG | 该层执行器返回 true；`interceptedExpireTime=null` 说明拦截器放行，`finalExpireTime` 为实际登记时刻 |
 | `层级过期登记失败，层级执行器未能按该方式过期` | WARN | 该层没过期成功，多为层级适配器不支持该过期方式或解包失败；`cacheClass` + `level` 指明是哪一层 |
 | `层级未经 TTL 装饰，跳过下发` | WARN | 层级实例不是 `AbstractAdaptTtlCache`（装饰链未生效），该层不会按时过期 |
-| `cache 不是 MultiLevelAdaptTtlCache 类型，无法逐层下发过期` | WARN | 顶层实例类型不符（装饰器 order / 执行器挂载有误），本次过期请求整体未下发 |
+| `cache 不是多级缓存实例，无法逐层下发过期` | WARN | 顶层实例不具备层级列表（`IMultiLevelSupport`，装饰器 order / 执行器挂载有误），本次过期请求整体未下发；`cacheClass` 给出实际类型 |
 | `过期下发完成` | DEBUG | `result=false` 表示至少一层登记失败，结合上面的 WARN 定位具体层级 |
 
 ### 5. 缓存监听器（ICacheListenner / IListenable）
@@ -434,7 +436,7 @@ tbs:
 tbs:
   redission:
     cache:
-      cache-timeout: 3600     # 全局缓存超时（秒），RedissonTtlCacheDecorator 默认过期时长
+      cache-timeout: 3600     # 全局缓存超时（秒），RedissonTtlCacheDecorator 默认过期时长；整缓存过期未指定时刻时才走执行器内部的 1 小时兜底
       allow-null-values: false
       transaction: false
       max-idle-time: 1800     # 最大空闲时间（秒）
@@ -591,7 +593,8 @@ ICacheTtlPolicy customTtlPolicy() {
 | 装饰器未匹配 | 管理器抛出 `No TTL cache decorator found`（CRITICAL 级），检查引擎依赖是否引入 |
 | @ExpireOn 不触发 | 必须与 `@Cacheable`/`@CachePut` 组合；`value > 0`；过期在下一次 `put` 时触发（调度式路径还有调度延迟） |
 | L1/L2 数据不一致 | 确认 L1 `expire-after-write` < L2 TTL；写路径远层失败会快速失败，检查 Redis 连接 |
-| 多级 TTL 不生效 | 按 `[MultiLevelTtl]` 检索 WARN：`层级过期登记失败` 看是哪一层（`cacheClass`）；`层级未经 TTL 装饰`/`不是 MultiLevelAdaptTtlCache 类型` 说明装饰器与执行器未正确挂载；确认 `MultiLevelAdaptTtlCache` 构造时传入的执行器为 `MultiLevelCacheExpiredActuator` |
+| 多级 TTL 不生效 | 按 `[MultiLevelTtl]` 检索 WARN：`层级过期登记失败` 看是哪一层（`cacheClass`）；`层级未经 TTL 装饰`/`cache 不是多级缓存实例` 说明装饰器与执行器未正确挂载；确认 `MultiLevelAdaptTtlCache` 构造时传入的执行器为 `MultiLevelCacheExpiredActuator` |
+| 每次写入都被删/整缓存反复被清 | `@ExpireOn` 标记未被摘除（旧时刻被重复消费）。确认 `AbstractTtlCache.put` 在下发后调了 `onExpire(...)` 与 `getExpireDetailsManager().getExpireDetailsAndRemove(...)`，见第 4 节一次性语义 |
 | 整层过期报 NPE/异常 | 检查是否把 `key = null` 下发到了层级的按键过期 API（应转调层级 `expireAll`），参见「多级缓存的逐层过期下发」 |
 
 启用调试日志：

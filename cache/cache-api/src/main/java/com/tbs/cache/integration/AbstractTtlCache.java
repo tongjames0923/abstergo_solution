@@ -26,8 +26,6 @@ public abstract class AbstractTtlCache implements Cache, IFeatureWrapper<Cache>,
 
     private volatile List<ICacheListenner> listeners;
 
-    private ICacheExpiredActuator targetedCacheExpiredActuator;
-
     /**
      * 获取目标缓存过期执行器
      *
@@ -130,13 +128,20 @@ public abstract class AbstractTtlCache implements Cache, IFeatureWrapper<Cache>,
         onPut(this, key, wrapper);
         getOriginal().put(key, wrapper.get().orElse(null));
         com.tbs.common.data.ValueWrapper<Boolean> allExpired = com.tbs.common.data.ValueWrapper.of(false);
+        // 过期标记是「消费一次」的请求：下发给执行器后必须在本处摘除并派发过期事件，
+        // 否则标记永久驻留，后续每次 put 都会拿旧时刻重复下发（本地 Map 也会只增不减）。
+        // 摘除与派发属于 put 消费方的职责，不下放到各执行器实现，避免每个引擎都漏一遍。
         isCallToExpireAll().ifPresent((date) -> {
             getTargetedCacheExpiredActuator().expireAll(AbstractTtlCache.this, date);
+            onExpire(AbstractTtlCache.this, null, date);
+            getExpireDetailsManager().getExpireDetailsAndRemove(getName(), null);
             allExpired.set(true);
         });
         if (!allExpired.get().orElse(false)) {
             isCallToExpire(key).ifPresent((date) -> {
                 getTargetedCacheExpiredActuator().expire(AbstractTtlCache.this, key, date);
+                onExpire(AbstractTtlCache.this, key, date);
+                getExpireDetailsManager().getExpireDetailsAndRemove(getName(), key);
             });
         }
     }
@@ -286,11 +291,13 @@ public abstract class AbstractTtlCache implements Cache, IFeatureWrapper<Cache>,
     /**
      * 缓存过期事件回调
      * <p>
-     * 当缓存值过期时触发此方法
+     * 由 {@link #put(Object, Object)} 在消费掉过期标记、完成过期下发后派发，供监听器感知 TTL 已登记；
+     * 自然过期（引擎自己回收）不会进入本回调。
      * </p>
      *
      * @param cache 缓存实例
-     * @param key   缓存键
+     * @param key   缓存键，整缓存过期时为 null
+     * @param e     本次生效的过期时刻
      */
     @Override
     public void onExpire(Cache cache, Object key, Date e) {
