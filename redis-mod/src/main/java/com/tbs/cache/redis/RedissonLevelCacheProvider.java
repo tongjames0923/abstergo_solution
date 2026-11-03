@@ -13,14 +13,11 @@ import java.time.Duration;
 /**
  * Redisson 层级缓存提供者（多级缓存 L2）
  * <p>
- * 实现 {@link ILevelCacheProvider}，基于 {@link RedissonClient} 的
- * {@link RMapCache} 提供带原生 TTL 的分布式缓存层。
- * 每个 cacheName 对应独立的 {@link RedissonCache} 实例，创建时绑定
- * 业务 TTL（取业务 TTL 与 {@code tbs.redission.cache.cacheTimeout} 的较小值）。
+ * 实现 {@link ILevelCacheProvider}，基于 {@link RedissonClient} 的 {@link RMapCache} 提供带原生 TTL 的分布式缓存层。 每个 cacheName 对应独立的
+ * {@link RedissonCache} 实例，创建时绑定 业务 TTL（取业务 TTL 与 {@code tbs.redission.cache.cacheTimeout} 的较小值）。
  * </p>
  * <p>
- * 不直接标注 {@code @Component}，由 {@code RedissonCacheConfig} 在多级缓存
- * 启用时按条件注册为 Bean，避免未启用时产生无效实例。
+ * 不直接标注 {@code @Component}，由 {@code RedissonCacheConfig} 在多级缓存 启用时按条件注册为 Bean，避免未启用时产生无效实例。
  * </p>
  *
  * @author abstergo
@@ -44,8 +41,7 @@ public class RedissonLevelCacheProvider implements ILevelCacheProvider {
     /**
      * 获取层级顺序
      * <p>
-     * Redis 作为分布式共享层，慢于进程内缓存（如 Caffeine order=0），
-     * 与 {@link RedissonTtlCacheDecorator#getOrder()} 保持一致。
+     * Redis 作为分布式共享层，慢于进程内缓存（如 Caffeine order=0）， 与 {@link RedissonTtlCacheDecorator#getOrder()} 保持一致。
      * </p>
      *
      * @return 层级顺序 1000
@@ -78,7 +74,7 @@ public class RedissonLevelCacheProvider implements ILevelCacheProvider {
      */
     @Override
     public Cache getCache(String name, Duration ttl) {
-        log.warn("redisson level cache provider can not set ttl by businessTtl please use @ExpireOn");
+        log.debug("redisson level cache provider can not set ttl by businessTtl please use @ExpireOn");
         return springCacheManager.getCache(name);
     }
 
