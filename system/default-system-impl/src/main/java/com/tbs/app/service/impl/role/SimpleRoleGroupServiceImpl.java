@@ -32,10 +32,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.CacheManager;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -45,12 +47,19 @@ import static com.tbs.app.service.impl.CacheNamesConstants.ROLE_GROUP_USER_ID;
 /**
  * 角色组服务实现类
  * <p>
- * 权限数据的缓存失效统一收在本类的写入点，分两种：能静态取到键的（组权限列表按 groupId）仍由
- * {@code @CacheEvict} 注解声明；取不到键的只能反推——{@link #getUserRoleGroupVOList} 缓存的是
- * 「权限组 + 权限项」组装快照且以 userId 为键，而写入口握有的是 groupId，注解表达式无法反推待失效的
- * 键集合，这一层由 {@link CacheManager} 手动逐键清除（见 {@link #invalidateGroupCache(Long)}）。
- * 两者都在写入完成后通过 {@link IPermissionChangeListener} 向外部派发变更事件。
- * 新增权限组写入点时必须同时补上这两类失效（03 分册 3.4.3）。
+ * 缓存失效在本类统一收归为<b>编程式一处</b>，不与注解双轨并用：主失效（组权限列表按 groupId、
+ * 用户身份快照按 userId）由 {@link #evictCache(String, Object)} 在收口方法内完成；组权限缓存被清除时，
+ * 它派生出的用户身份快照由 {@code PermissionUserSnapshotEvictLink} 向缓存框架声明的关联失效连带清除，
+ * 本类不在各写入点重复展开。
+ * </p>
+ * <p>
+ * 不用 {@code @CacheEvict} 注解的理由是<b>时机</b>：注解在方法返回后才执行，而权限变更事件在方法体内派发，
+ * 挂在注解上会让监听器在派发瞬间读到旧权限；同处方法体内，失效与派发的顺序才是确定的。
+ * </p>
+ * <p>
+ * 新增权限组写入点时必须经 {@link #invalidateGroupCache(Long)} 或 {@link #onUserGroupChanged} 收口，
+ * 不要另写一处 evict；变更事件需显式调用 {@link #firePermissionChanged}，因为它要方法上下文才能确定
+ * 动作方向与操作人。
  * </p>
  *
  * @author abstergo
@@ -122,7 +131,6 @@ public class SimpleRoleGroupServiceImpl
      * @param roleId
      */
     @Override
-    @CacheEvict(value = ROLE_GROUP, key = "#groupId")
     public void appendRole(Long groupId, Long roleId) {
 
         var group = getInstance().queryById(groupId);
@@ -161,7 +169,6 @@ public class SimpleRoleGroupServiceImpl
      * @param roleId
      */
     @Override
-    @CacheEvict(value = ROLE_GROUP, key = "#groupId")
     public void removeRole(Long groupId, Long roleId) {
         // 绕过逻辑删除拦截器查询，确保能检测到已删除的记录并给出准确提示
         var old = relationMapper.selectByRoleIdAndGroupIdIncludeDeleted(roleId, groupId);
@@ -224,8 +231,8 @@ public class SimpleRoleGroupServiceImpl
     /**
      * 获取用户角色组VO列表
      * <p>
-     * 缓存的是「权限组 + 权限项」组装快照，其失效由本类各写入点手动逐键完成（见
-     * {@link #evictUserCache(Collection)}），在此新增缓存不等于完成失效。
+     * 缓存的是「权限组 + 权限项」组装快照，以 userId 为键；其失效由缓存框架的关联失效承担
+     * （组权限缓存被清除时连带清除本缓存），本类写入点不再逐键处理。
      * </p>
      *
      * @param userId
@@ -353,7 +360,6 @@ public class SimpleRoleGroupServiceImpl
      * @return 保存结果
      */
     @Override
-    @CacheEvict(value = ROLE_GROUP, key = "#entity.id", condition = "#entity != null && #entity.id != null")
     public List<SystemRoleGroupEntity> save(SystemRoleGroupEntity entity) {
         // 新建与更新的分界只能在落库前判断：插入会把雪花 id 回填到入参实体上
         var created = entity.getId() == null;
@@ -379,15 +385,12 @@ public class SimpleRoleGroupServiceImpl
      * @return 被删除的权限组
      */
     @Override
-    @CacheEvict(value = ROLE_GROUP, key = "#id")
     public SystemRoleGroupEntity deleteById(Long id) {
         // 组与关联行即将不可读，先取组信息与绑定用户，再删、再失效与派发
         var group = getInstance().queryById(id);
         var userIds = boundUserIds(id);
         var deleted = super.deleteById(id);
-        // 先于事件派发清除组权限缓存，方法上的注解随后对同一键幂等再清
         evictCache(ROLE_GROUP, id);
-        evictUserCache(userIds);
         firePermissionChanged(IPermissionChangeListener.ChangeType.GROUP_DELETED, id, group, userIds, null);
         return deleted;
     }
@@ -452,7 +455,7 @@ public class SimpleRoleGroupServiceImpl
     /**
      * 用户与权限组归属关系变更的收口动作
      * <p>
-     * 组内权限未变，只失效该用户的身份快照，不触碰组权限缓存。
+     * 组内权限未变，不触碰组权限缓存；受影响范围只有这一个用户，直接按 userId 清除其身份快照。
      * 权限变更采用静默生效：下一个请求重新认证即拿到新权限，不再吊销令牌强制下线。
      * </p>
      *
@@ -466,35 +469,33 @@ public class SimpleRoleGroupServiceImpl
     }
 
     /**
-     * 失效权限组维度的缓存：组内权限列表 + 组下全部用户的身份快照
+     * 清除组权限列表缓存，并返回受影响的用户列表
      * <p>
-     * 注解式 {@code @CacheEvict} 在写入方法返回后才执行，而事件派发在方法体内，所以此处先把组权限
-     * 缓存清一次，保证监听器回读到的是新值；写入方法上的注解随后会对同一键再清一次，同键重复
-     * evict 为幂等操作，保留注解是为了即使收口逻辑被绕过也不丢失效。组权限缓存在本类的唯一
-     * 声明式失效入口仍是注解，这里只补注解无法表达的反向失效。
+     * 只清组权限一层：用户身份快照由框架关联失效连带清除（见类注释）。清除必须发生在本方法内而不是
+     * 依赖方法上的注解：注解在方法返回后才执行，而紧随其后的事件派发需要看到「失效已发生」。
      * </p>
      *
      * @param groupId 权限组标识
-     * @return 受影响的用户标识列表，供事件派发复用，避免二次查库
+     * @return 受影响的用户标识列表，供事件派发使用
      */
     private List<Long> invalidateGroupCache(Long groupId) {
         evictCache(ROLE_GROUP, groupId);
-        var userIds = boundUserIds(groupId);
-        evictUserCache(userIds);
-        return userIds;
+        return boundUserIds(groupId);
     }
 
     /**
      * 查询权限组绑定的用户标识
      * <p>
      * 只取关联列，一次索引查询。不复用 {@link #getUserList(Long)}：后者为拼装用户名片会对每个绑定
-     * 用户再打一条主键查询，缓存失效用不到那些字段。
+     * 用户再打一条主键查询，失效与通知用不到那些字段。本方法同时供关联失效声明调用，
+     * 避免两处各写一份反查逻辑。
      * </p>
      *
      * @param groupId 权限组标识
      * @return 去重后的用户标识列表
      */
-    private List<Long> boundUserIds(Long groupId) {
+    @Override
+    public List<Long> boundUserIds(Long groupId) {
         var query = new SystemRoleGroupUserRelationEntity();
         query.setRoleGroupId(groupId);
         return roleGroupUserRelationMapper.select(query).stream()
@@ -503,23 +504,13 @@ public class SimpleRoleGroupServiceImpl
     }
 
     /**
-     * 批量清除用户身份快照缓存
-     *
-     * @param userIds 用户标识列表，可以为空
-     */
-    private void evictUserCache(Collection<Long> userIds) {
-        if (CollUtil.isEmpty(userIds)) {
-            return;
-        }
-        userIds.forEach(userId -> evictCache(ROLE_GROUP_USER_ID, userId));
-    }
-
-    /**
      * 按缓存名称与键清除一条缓存
      * <p>
-     * 注解式失效只能从方法参数上取键，无法按「组 → 用户」这类反向关系展开，故统一走
-     * {@link CacheManager} 显式清除（同 {@code DefaultUserLoginInfoService#evictSessionCache}）。
-     * 多级缓存的 evict 会逐层清除 L1（Caffeine）与 L2（Redis），无需另行处理本地层级残留。
+     * 本类的失效一律走 {@link CacheManager} 显式清除，不用 {@code @CacheEvict} 注解：注解在方法返回后才
+     * 执行，无法为方法体内的后续逻辑（关联失效与变更事件）提供顺序保证
+     * （同 {@code DefaultUserLoginInfoService#evictSessionCache}）。
+     * 同一缓存在本类内不混用两种失效机制；多级缓存的 evict 会逐层清除 L1（Caffeine）与 L2（Redis），
+     * 无需另行处理本地层级残留。
      * </p>
      *
      * @param cacheName 缓存名称，取自 {@link com.tbs.app.service.impl.CacheNamesConstants}

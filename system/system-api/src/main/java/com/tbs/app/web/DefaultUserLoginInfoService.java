@@ -49,9 +49,10 @@ import static com.tbs.app.web.CacheNamesConstants.USER_SESSIONS_CACHE;
  * </p>
  * <p>
  * 「下次认证即生效」的前提是装配链路上的缓存已被及时失效：身份装配依赖按用户的权限组快照
- * （{@code ROLE_GROUP_USER_ID}）与部门列表（{@code USER_DEPARTMENTS}），失效责任在各自的写入点
- * （{@code SimpleRoleGroupServiceImpl}、{@code SimpleDepartmentUserRelationService}）。给身份装配新增一层缓存时，
- * 必须同步在所有会改变装配结果的数据写入点补上失效，否则本类的实时性表述不成立。
+ * （{@code ROLE_GROUP_USER_ID}）与部门列表（{@code USER_DEPARTMENTS}）。前者不靠各写入点手工清除，而是由
+ * {@code PermissionUserSnapshotEvictLink} 向缓存框架声明「组权限缓存被清除时连带清除本缓存」；
+ * 后者由部门写入点注解失效。给身份装配新增一层派生缓存时，应补一条关联失效声明而不是在写入点
+ * 手写逐键 evict（03 分册 3.4.3 第 7 条），否则本类的实时性表述不成立。
  * </p>
  * <p>
  * 缓存设计说明：
