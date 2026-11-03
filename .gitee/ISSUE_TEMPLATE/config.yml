@@ -1,0 +1,16 @@
+# Gitee Issue 模板选择器配置
+# 本目录下的模板仅在「仓库默认分支（main）」生效，其他分支提交不生效。
+
+# 关闭空白 Issue：所有 Issue 必须走下方模板（后端 Bug / 功能建议 / 使用咨询）
+blank_issues_enabled: false
+
+contact_links:
+  - name: 开发规范总纲 DEVELOPMENT_GUIDELINE
+    url: https://gitee.com/tongjames/abstergo_solution/blob/main/DEVELOPMENT_GUIDELINE.md
+    about: 全局铁律（Java、注释、AssertUtil 断言、i18n、api/impl 拆分、统一响应、索引与存储层约束）与分册索引，提 Issue 前请先阅读。
+  - name: Code Review 检查清单
+    url: https://gitee.com/tongjames/abstergo_solution/blob/main/docs/guideline/07-Code-Review%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95.md
+    about: 提交/评审逐项清单（必须/建议/禁止三级），确认你反馈的问题不是清单已覆盖的既有约定。
+  - name: 项目 README（快速开始 / 环境要求 / 配置说明）
+    url: https://gitee.com/tongjames/abstergo_solution/blob/main/README.md
+    about: docker-compose 依赖服务、数据库初始化、启动命令、环境变量与 Nacos 配置分层，环境问题请先按此自查。

@@ -1,0 +1,123 @@
+name: 缺陷反馈（Bug Report）
+description: 反馈后端服务、中间件模块或前端页面的异常行为
+title: "[Bug]: "
+# labels 仅对仓库中已存在的标签有效，不存在的标签会被忽略；请先在仓库「标签」中建好 bug / help wanted
+labels: ["bug"]
+# assignees: 需为仓库成员用户名，否则忽略
+#   - abstergo
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢反馈缺陷。请填写下方表单，信息越完整定位越快。
+        提交前请先阅读 [DEVELOPMENT_GUIDELINE](https://gitee.com/tongjames/abstergo_solution/blob/main/DEVELOPMENT_GUIDELINE.md) 与 [07-Code Review 检查清单](https://gitee.com/tongjames/abstergo_solution/blob/main/docs/guideline/07-Code-Review%E6%A3%80%E6%9F%A5%E6%B8%85%E5%8D%95.md)：
+        若现象只是「违反了规范约定」（如行尾注释、散落 `@Value`、`throw new FormattedRuntimeException`、硬编码文案），那是评审应当打回的问题，不必开 Issue。
+        **禁止提交任何真实的密钥、密码、token、生产数据库连接信息**，日志请脱敏后粘贴。
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 涉及模块
+      description: 选择一个最主要的模块（可多选时在「关联模块」中补充），参照 01 分册模块地图
+      options:
+        - 基础层（common / shared / async / sql / web / logging）
+        - 框架能力（cache / tree-struct / open-api-starter / script-engine / dynamic-view-route）
+        - 中间件集成（redis-mod / rabbitmq-mod / mq-mod / push-mod / oss / xxl-job-mod / cdc-mod）
+        - 业务能力（system / dic）
+        - 可运行服务（app / cdc-service）
+        - 前端（app-ui-vue）
+        - 客户端 SDK（sdk / sdk-csharp / updater）
+        - 基础设施与文档（etc / docs / guideline）
+    validations:
+      required: true
+
+  - type: input
+    id: branch
+    attributes:
+      label: 分支与提交
+      description: 问题复现所在分支（main / develop / springboot3 等）及 commit 或构建产物版本
+      placeholder: "main @ ba40dbd"
+    validations:
+      required: true
+
+  - type: textarea
+    id: env
+    attributes:
+      label: 运行环境
+      description: 请按 `java -version`、`mvn -v`、`node -v` 实际输出填写；前端问题请补充浏览器与设备宽度（响应式问题需注明 375 / 768 / 820 / 992 / 1440 中的哪一档）
+      value: |
+        - JDK（要求 21）：
+        - Maven（要求 3.6.3+）：
+        - Node.js / npm：
+        - 操作系统：
+        - 数据库 / Redis / RabbitMQ / Nacos（本地 docker-compose 还是自有环境、版本）：
+        - 相关 tbs.* 配置开关（如 tbs.push.enable、tbs.cache.enable）：
+        - 浏览器与屏幕宽度（前端问题）：
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: 复现步骤
+      description: 请用可复制执行的最小步骤，避免只给「启动后点一下就报错」；接口问题请给出请求方法、路径（注意 `/public/**` 与 `/private/**` 分区）、请求体
+      value: |
+        1. 启动依赖服务：cd etc/docker && docker compose up -d
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望结果
+      description: 清晰描述你期望发生什么
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: 实际结果
+      description: 实际发生了什么。若是接口异常请给出 `AjaxResult` 的 `code` / `message`（错误码语义见 04 分册，如 401/403/405/468/500/601/701）；若是异常栈请给出关键片段与 `ErrorLevelEnum` 错误级别
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: 日志与 SQL 现场
+      description: 后端日志（logs/app-service.log）、SQL 观测日志（含耗时，慢 SQL 默认阈值 2s）、前端控制台输出；可拖拽上传截图；**务必脱敏**
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: 影响范围与规避手段
+      description: 影响哪些功能/用户，是否有阻塞，是否可用其他路径绕过，问题首次出现的版本
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已检索现有 Issue，确认这不是重复问题
+          required: true
+        - label: 我已按 README「快速开始」拉起依赖服务并初始化数据库，排除环境未就绪
+          required: true
+        - label: 我确认该现象不是 07 检查清单中已明确的既有规范约定
+          required: true
+        - label: 我贴出的日志、配置、截图已脱敏（无密钥/密码/token/生产连接串）
+          required: true
+
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        本 Issue 由模板生成，请勿删除表单结构，便于维护人按项核查。

@@ -1,0 +1,66 @@
+name: 使用咨询（Question / 规范疑问）
+description: 环境搭建、接口对接、SDK 接入、规范理解类问题（不用于反馈缺陷）
+title: "[咨询]: "
+# labels 仅对仓库中已存在的标签有效，不存在的标签会被忽略；请先在仓库「标签」中建好 question
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        使用咨询请先查文档：[README](https://gitee.com/tongjames/abstergo_solution/blob/main/README.md)（环境要求/快速开始/配置说明）、
+        [DEVELOPMENT_GUIDELINE](https://gitee.com/tongjames/abstergo_solution/blob/main/DEVELOPMENT_GUIDELINE.md) 与 docs/guideline 七个分册、各模块 README，
+        以及运行中的 Knife4j 文档（`http://127.0.0.1:8080/doc.html`）。
+        如果你确认是**异常行为**而不是不会用，请改用「缺陷反馈（Bug Report）」模板。
+
+  - type: dropdown
+    id: topic
+    attributes:
+      label: 咨询类型
+      options:
+        - 环境搭建与启动（docker-compose / 数据库初始化 / Nacos 配置）
+        - 规范解读（铁律、命名、分包、注释、断言与 i18n）
+        - 接口对接（认证授权、`/public/**` 与 `/private/**`、统一响应与错误码）
+        - 中间件用法（cache / mq v2 / push / oss / xxl-job / cdc）
+        - 客户端 SDK 接入（Java sdk / C# sdk-csharp / 应用更新 updater）
+        - 前端开发（动态路由与表单、request 封装、响应式适配）
+        - 部署与运维（Nginx / 蓝绿发布 / 版本探针 / 日志）
+        - 文档缺失或表述不清
+    validations:
+      required: true
+
+  - type: textarea
+    id: question
+    attributes:
+      label: 你想做什么、卡在哪一步
+      description: 描述目标场景与具体疑问，贴出相关代码/配置片段（脱敏），不要只写「怎么用」「有没有文档」
+    validations:
+      required: true
+
+  - type: textarea
+    id: tried
+    attributes:
+      label: 已查阅的文档与已尝试的方案
+      description: 列出你看过的文档章节/模块 README/已试过的方法与结果，便于判断是文档缺失还是需要示例
+    validations:
+      required: true
+
+  - type: input
+    id: doc-ref
+    attributes:
+      label: 相关文档章节
+      description: 若与某段文档冲突或缺失，请填写文件名与章节号
+      placeholder: "docs/guideline/02-中间件模块开发规范.md 2.1.2"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已检索现有 Issue 与文档，未找到答案
+          required: true
+        - label: 我已确认这不是缺陷（异常行为请走「缺陷反馈」模板）
+          required: true
+        - label: 若属于文档缺失，我愿意补充对应文档并提交 MR
+          required: false

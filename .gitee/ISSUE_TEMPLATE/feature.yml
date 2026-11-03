@@ -1,0 +1,102 @@
+name: 功能建议（Feature Request）
+description: 提出新能力、模块增强或规范/文档改进建议
+title: "[功能建议]: "
+# labels 仅对仓库中已存在的标签有效，不存在的标签会被忽略；请先在仓库「标签」中建好 enhancement
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢提出功能建议，我们会认真评估。
+        本项目有明确的架构约束（见 [DEVELOPMENT_GUIDELINE 全局铁律](https://gitee.com/tongjames/abstergo_solution/blob/main/DEVELOPMENT_GUIDELINE.md)），
+        请重点说明建议**与下列约束的关系**：Java 唯一语言（禁止新增 Kotlin）、api/impl 契约实现分离、`AssertUtil` 链式断言 + i18n、
+        `@ConfigurationProperties` + `tbs.{module}.enable` 总开关、统一 `AjaxResult` 响应、索引由查询驱动且只写 `@Table` 注解、存储层不承担业务规则、
+        公共契约改造走「新增方法 + 旧方法 `@Deprecated`」。与铁律冲突的建议大概率会被拒绝，请在提出前先对齐。
+
+  - type: dropdown
+    id: module
+    attributes:
+      label: 落点模块
+      description: 参照 01 分册模块地图，判断新能力应归属于哪个模块（或需要新建模块）
+      options:
+        - 基础层（common / shared / async / sql / web / logging）
+        - 框架能力（cache / tree-struct / open-api-starter / script-engine / dynamic-view-route）
+        - 中间件集成（redis-mod / rabbitmq-mod / mq-mod / push-mod / oss / xxl-job-mod / cdc-mod）
+        - 业务能力（system / dic）
+        - 可运行服务（app / cdc-service）
+        - 前端（app-ui-vue）
+        - 客户端 SDK（sdk / sdk-csharp / updater）
+        - 基础设施与文档（etc / docs / guideline）
+        - 需要新建模块
+    validations:
+      required: true
+
+  - type: textarea
+    id: related-problem
+    attributes:
+      label: 这个建议和某个痛点相关吗？
+      description: 清晰简洁地描述问题是什么，例如「我在做……时，每次都得手工……」
+    validations:
+      required: false
+
+  - type: textarea
+    id: desired-solution
+    attributes:
+      label: 你希望的解决方案
+      description: 描述期望的能力、使用方式（注解/配置项/接口路径/前端入口）与最终效果；涉及新模块时请说明 api/impl 拆分方式
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: 你考虑过的替代方案
+      description: 例如现有模块的扩展点、已有中间件（Hutool / Redisson / RabbitMQ / xxl-job）能否直接满足，说明为何不选用
+    validations:
+      required: false
+
+  - type: textarea
+    id: contract-impact
+    attributes:
+      label: 契约与接口影响
+      description: 是否改动 api 模块接口 / Dubbo 接口 / 对外 Service 接口；是否新增或变更 HTTP 接口（`/public/**` 免认证、`/private/**` 需认证、controller 包位置需与路径一致）；是否涉及错误码变更（需后端 `AjaxResult`、前端 `settings.js`、04 分册码表三处同步）
+    validations:
+      required: false
+
+  - type: textarea
+    id: data-impact
+    attributes:
+      label: 数据模型与配置影响
+      description: 是否新增/变更实体（唯一性、非空、默认值等约束需在 Service 断言中表达，不依赖数据库约束）；新增索引须能指出使用它的查询，且禁止唯一索引，建表脚本同步到 `etc/sql_file/`；是否新增配置项（Property 类字段 → Nacos 录入 → 文档同步）与 `tbs.{module}.enable` 开关；是否新增 i18n key（`messages-{module}.properties` 中英文两份）
+    validations:
+      required: false
+
+  - type: textarea
+    id: frontend-impact
+    attributes:
+      label: 前端与接入影响
+      description: 新页面需 views 组件 + 菜单权限点登记（type=1/2/3）+ component 路径一致；文案走 `$t()`；请求经 `@/utils/request`；并说明 375 / 768 / 820 / 992 / 1440 五档适配预期
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: 其他上下文或截图
+      description: 业务场景、数据量级、性能预期、参考实现链接等
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: 提交前确认
+      options:
+        - label: 我已确认该能力现有模块（含 README 记录的扩展点）无法满足，不是重复建设
+          required: true
+        - label: 我已阅读全局铁律，本建议不与「Java 唯一语言 / api-impl 拆分 / AssertUtil+i18n / 统一响应 / 索引与存储层约束」冲突
+          required: true
+        - label: 涉及公共契约变更时，我接受「新增方法 + 旧方法 @Deprecated」的渐进迁移方式，不改原签名
+          required: false
+        - label: 我有意向参与具体实现并提交 MR（合并前需通过 07 Code Review 检查清单）
+          required: false
