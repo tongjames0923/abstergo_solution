@@ -167,11 +167,39 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
     public void evict(Object key) {
         onEvict(this, key);
         getOriginal().evict(key);
+        // 必须在真正清除之后派发：监听器在此回读得到的是已失效状态，级联失效与变更通知都依赖这个顺序
+        onEvicted(this, key);
     }
 
     @Override
     public void clear() {
         onClear(this);
+        getOriginal().clear();
+        onCleared(this);
+    }
+
+    /**
+     * 静默清除：直达被包装的原始缓存，不触发任何监听回调
+     * <p>
+     * 供关联缓存级联失效使用。级联必须走这里，否则目标缓存的清除会再次触发
+     * {@link #onEvicted(Cache, Object)} 并展开它自身的关联声明，使声明链在运行期形成递归。
+     * 多级缓存下本方法同样有静默效果：原始缓存为多层编排实例，其遍历的层级是未经监听包装的
+     * 基础缓存实例，因此不会重新进入回调链。
+     * </p>
+     * <p>
+     * 代价是级联不传递：A 的关联只清 B，不会继续清 B 的关联，多级依赖须由声明方显式展开。
+     * </p>
+     *
+     * @param key 缓存键
+     */
+    public void evictSilently(Object key) {
+        getOriginal().evict(key);
+    }
+
+    /**
+     * 静默清空，语义同 {@link #evictSilently(Object)}
+     */
+    public void clearSilently() {
         getOriginal().clear();
     }
 
@@ -239,8 +267,30 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
 
     @Override
     public void onEvict(Cache cache, Object key) {
-        getListeners().forEach((listener) -> {
+        this.foreachListener((listener) -> {
             listener.onEvict(cache.getName(), key);
+        });
+    }
+
+    /**
+     * 删除完成回调
+     * <p>
+     * 与 {@link #onEvict(Cache, Object)} 同样经 {@link #foreachListener} 派发：异常隔离（单个监听器
+     * 失败不影响其他监听器，也不上抛中断业务写入）与 {@code support} 过滤两处语义必须一致，
+     * 不能只在删除路径上例外。
+     * </p>
+     */
+    @Override
+    public void onEvicted(Cache cache, Object key) {
+        this.foreachListener((listener) -> {
+            listener.onEvicted(cache.getName(), key);
+        });
+    }
+
+    @Override
+    public void onCleared(Cache cache) {
+        this.foreachListener((listener) -> {
+            listener.onCleared(cache.getName());
         });
     }
 
