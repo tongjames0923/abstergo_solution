@@ -9,7 +9,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:core_app}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true
     username: ${DB_USERNAME:root}
-    password: ${DB_PASSWORD:123456789}
+    password: ${DB_PASSWORD:123456}
     type: com.zaxxer.hikari.HikariDataSource
     hikari:
       # 连接池名称

@@ -5,12 +5,12 @@ import com.tbs.cache.integration.AbstractTtlCache;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.helper.FeatureWrapperHelper;
 import com.tbs.redis.config.property.RedissonCacheProperty;
+import jakarta.annotation.Resource;
 import org.redisson.spring.cache.RedissonCache;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.Resource;
 import java.time.Duration;
 
 /**
@@ -37,12 +37,22 @@ public class RedissonTtlCacheDecorator implements ITtlCacheDecorator {
         return FeatureWrapperHelper.unwrap(cache, RedissonCache.class).isPresent();
     }
 
+    /**
+     * 将 Redisson 缓存装饰为支持 TTL 的缓存
+     * <p>
+     * 传入的是原始入参 {@code cache}（保留 {@code TransactionAwareCacheDecorator} 等外层包装），
+     * unwrap 结果只用于判定是否命中 Redisson 引擎，不作为被包装对象。
+     * </p>
+     *
+     * @param cache   要装饰的缓存实例
+     * @param manager 缓存管理器
+     * @return 装饰后的 TTL 缓存实例，非 Redisson 缓存时断言报错
+     */
     @Override
     public AbstractTtlCache decorateCache(Cache cache, CacheManager manager) {
         var redissonCache = FeatureWrapperHelper.unwrap(cache, RedissonCache.class);
         if (redissonCache.isPresent()) {
-            return new RedissonAdaptTtlCache(redissonCache.get(), cache,
-                Duration.ofSeconds(redissonCacheProperty.getCacheTimeout()));
+            return new RedissonAdaptTtlCache(cache, Duration.ofSeconds(redissonCacheProperty.getCacheTimeout()));
         } else {
             AssertUtil.throwError(() -> new IllegalArgumentException("cache is not redisson cache"));
             return null;

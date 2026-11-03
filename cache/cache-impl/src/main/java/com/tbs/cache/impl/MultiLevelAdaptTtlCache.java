@@ -1,11 +1,11 @@
 package com.tbs.cache.impl;
 
+import com.tbs.cache.IMultiLevelSupport;
 import com.tbs.cache.ITtlCacheDecorator;
 import com.tbs.cache.integration.AbstractAdaptTtlCache;
 import com.tbs.cache.integration.AbstractMultiLevelCache;
 import com.tbs.cache.integration.AbstractTtlCache;
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.util.framework.SpringUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -16,24 +16,9 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
-public class MultiLevelAdaptTtlCache extends AbstractAdaptTtlCache {
+public class MultiLevelAdaptTtlCache extends AbstractAdaptTtlCache implements IMultiLevelSupport {
 
     private List<AbstractTtlCache> caches = null;
-
-    /**
-     * 多级缓存过期拦截器
-     */
-    public static interface IMultiLevelCacheTtlInterceptor {
-        /**
-         * 拦截缓存过期时间
-         *
-         * @param cache
-         * @param key
-         * @param expireTime
-         * @return
-         */
-        Date intercept(AbstractTtlCache cache, int level, Object key, Date expireTime);
-    }
 
     /**
      * 构造函数，初始化原始缓存
@@ -42,7 +27,7 @@ public class MultiLevelAdaptTtlCache extends AbstractAdaptTtlCache {
      */
     public MultiLevelAdaptTtlCache(AbstractMultiLevelCache orginCache, Collection<ITtlCacheDecorator> decorators,
         CacheManager cacheManager) {
-        super(orginCache);
+        super(orginCache, new MultiLevelCacheExpiredActuator());
         log.debug("[MultiLevelTtl] 初始化多级缓存: cacheName={}, levelCount={}, decoratorCount={}",
             orginCache.getName(), orginCache.getLevels().size(), decorators.size());
         caches = orginCache.getLevels().stream().map((cache) -> {
@@ -59,56 +44,24 @@ public class MultiLevelAdaptTtlCache extends AbstractAdaptTtlCache {
         log.debug("[MultiLevelTtl] 初始化完成: cacheName={}, 已装饰层级数={}", orginCache.getName(), caches.size());
     }
 
-    /**
-     * 缓存全部过期处理
-     *
-     * @param cache
-     * @param expireTime
-     * @return
-     */
     @Override
-    public boolean expireAll(Cache cache, Date expireTime) {
-        log.debug("[MultiLevelTtl] expireAll 开始: cacheName={}, expireTime={}, levelCount={}", cache.getName(),
-            expireTime, caches.size());
-        int i = 0;
-        for (AbstractTtlCache c : caches) {
-            int level = ++i;
-            Date o = SpringUtil.getBean(IMultiLevelCacheTtlInterceptor.class).intercept(c, level, null, expireTime);
-            Date finalExpireTime = o == null ? expireTime : o;
-            log.debug(
-                "[MultiLevelTtl] expireAll: cacheName={}, level={}, cacheClass={}, interceptedExpireTime={}, finalExpireTime={}",
-                cache.getName(), level, c.getClass().getSimpleName(), o, finalExpireTime);
-            c.expireAll(cache, finalExpireTime);
-        }
-        boolean result = super.expireAll(cache, expireTime);
-        log.debug("[MultiLevelTtl] expireAll 完成: cacheName={}, result={}", cache.getName(), result);
-        return result;
+    public List<Cache> getLevels() {
+        return caches.stream().map(cache -> (Cache)cache).toList();
     }
 
     /**
-     * 缓存过期处理
-     *
-     * @param cache
-     * @param key
-     * @param expireTime
-     * @return
+     * 多级缓存过期拦截器
      */
-    @Override
-    public boolean expire(Cache cache, Object key, Date expireTime) {
-        log.debug("[MultiLevelTtl] expire 开始: cacheName={}, key={}, expireTime={}, levelCount={}", cache.getName(),
-            key, expireTime, caches.size());
-        int i = 0;
-        for (AbstractTtlCache c : caches) {
-            int level = ++i;
-            Date o = SpringUtil.getBean(IMultiLevelCacheTtlInterceptor.class).intercept(c, level, key, expireTime);
-            Date finalExpireTime = o == null ? expireTime : o;
-            log.debug(
-                "[MultiLevelTtl] expire: cacheName={}, key={}, level={}, cacheClass={}, interceptedExpireTime={}, finalExpireTime={}",
-                cache.getName(), key, level, c.getClass().getSimpleName(), o, finalExpireTime);
-            c.expire(cache, key, finalExpireTime);
-        }
-        boolean result = super.expire(cache, key, expireTime);
-        log.debug("[MultiLevelTtl] expire 完成: cacheName={}, key={}, result={}", cache.getName(), key, result);
-        return result;
+    public static interface IMultiLevelCacheTtlInterceptor {
+        /**
+         * 拦截缓存过期时间
+         *
+         * @param cache
+         * @param key
+         * @param expireTime
+         * @return
+         */
+        Date intercept(Cache cache, int level, Object key, Date expireTime);
     }
+
 }

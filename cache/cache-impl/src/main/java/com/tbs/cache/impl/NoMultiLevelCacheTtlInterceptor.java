@@ -1,6 +1,6 @@
 package com.tbs.cache.impl;
 
-import com.tbs.cache.integration.AbstractTtlCache;
+import org.springframework.cache.Cache;
 
 import java.util.Date;
 
@@ -15,7 +15,7 @@ public class NoMultiLevelCacheTtlInterceptor implements MultiLevelAdaptTtlCache.
      * @return
      */
     @Override
-    public Date intercept(AbstractTtlCache cache, int level, Object key, Date expireTime) {
-        return null;
+    public Date intercept(Cache cache, int level, Object key, Date expireTime) {
+        return expireTime;
     }
 }

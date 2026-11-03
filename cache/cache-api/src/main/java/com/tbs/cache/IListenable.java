@@ -52,6 +52,20 @@ public interface IListenable {
     void onEvict(Cache cache, Object key);
 
     /**
+     * 缓存删除**完成后**回调
+     * <p>
+     * 在缓存值真正被清除之后向已注册的监听器派发 {@link ICacheListenner#onEvicted(String, Object)}。
+     * 与 {@link #onEvict(Cache, Object)} 的先后关系是级联失效正确性的前提，不可互换。
+     * 默认空实现，使非 TTL 缓存的实现类无需关心。
+     * </p>
+     *
+     * @param cache 缓存实例
+     * @param key   缓存键
+     */
+    default void onEvicted(Cache cache, Object key) {
+    }
+
+    /**
      * 缓存清空事件回调
      * <p>
      * 当清除缓存中的所有值时触发此方法
@@ -60,6 +74,17 @@ public interface IListenable {
      * @param cache 缓存实例
      */
     void onClear(Cache cache);
+
+    /**
+     * 缓存清空**完成后**回调
+     * <p>
+     * 语义与 {@link #onEvicted(Cache, Object)} 一致，仅作用域为整个缓存。默认空实现。
+     * </p>
+     *
+     * @param cache 缓存实例
+     */
+    default void onCleared(Cache cache) {
+    }
 
     /**
      * 缓存过期事件回调

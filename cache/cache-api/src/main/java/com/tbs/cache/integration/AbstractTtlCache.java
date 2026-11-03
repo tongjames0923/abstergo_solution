@@ -22,16 +22,23 @@ import java.util.stream.Collectors;
 import static com.tbs.cache.serialize.utils.ValueTransformUtils.*;
 
 @Slf4j
-public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, IFeatureWrapper<Cache>, IListenable {
+public abstract class AbstractTtlCache implements Cache, IFeatureWrapper<Cache>, IListenable {
+
+    private volatile List<ICacheListenner> listeners;
+
+    /**
+     * 获取目标缓存过期执行器
+     *
+     * @return
+     */
+    public abstract ICacheExpiredActuator getTargetedCacheExpiredActuator();
 
     /**
      * 获取监听器
      *
      * @return
      */
-    protected abstract List<ICacheListenner> getListeners();
-
-    private volatile List<ICacheListenner> listeners;
+    public abstract List<ICacheListenner> getListeners();
 
     List<ICacheListenner> getAvaliableListeners() {
         if (listeners == null) {
@@ -87,8 +94,6 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
         return getOriginal().getNativeCache();
     }
 
-
-
     @Override
     public ValueWrapper get(Object key) {
         var val = getOriginal().get(key);
@@ -123,55 +128,59 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
         onPut(this, key, wrapper);
         getOriginal().put(key, wrapper.get().orElse(null));
         com.tbs.common.data.ValueWrapper<Boolean> allExpired = com.tbs.common.data.ValueWrapper.of(false);
+        // 过期标记是「消费一次」的请求：下发给执行器后必须在本处摘除并派发过期事件，
+        // 否则标记永久驻留，后续每次 put 都会拿旧时刻重复下发（本地 Map 也会只增不减）。
+        // 摘除与派发属于 put 消费方的职责，不下放到各执行器实现，避免每个引擎都漏一遍。
         isCallToExpireAll().ifPresent((date) -> {
-            expireAll(AbstractTtlCache.this, date);
+            getTargetedCacheExpiredActuator().expireAll(AbstractTtlCache.this, date);
+            onExpire(AbstractTtlCache.this, null, date);
+            getExpireDetailsManager().getExpireDetailsAndRemove(getName(), null);
             allExpired.set(true);
         });
         if (!allExpired.get().orElse(false)) {
             isCallToExpire(key).ifPresent((date) -> {
-                expire(AbstractTtlCache.this, key, date);
+                getTargetedCacheExpiredActuator().expire(AbstractTtlCache.this, key, date);
+                onExpire(AbstractTtlCache.this, key, date);
+                getExpireDetailsManager().getExpireDetailsAndRemove(getName(), key);
             });
         }
-    }
-
-    /**
-     * 缓存过期处理
-     *
-     * @param cache
-     * @param key
-     * @param expireTime
-     * @return
-     */
-    @Override
-    public boolean expire(Cache cache, Object key, Date expireTime) {
-        onExpire(cache, key, expireTime);
-        this.getExpireDetailsManager().getExpireDetailsAndRemove(cache.getName(), key);
-        return true;
-    }
-
-    /**
-     * 缓存全部过期处理
-     *
-     * @param cache
-     * @param expireTime
-     * @return
-     */
-    @Override
-    public boolean expireAll(Cache cache, Date expireTime) {
-        onExpire(cache, null, expireTime);
-        this.getExpireDetailsManager().getExpireDetailsAndRemove(cache.getName(), null);
-        return true;
     }
 
     @Override
     public void evict(Object key) {
         onEvict(this, key);
         getOriginal().evict(key);
+        // 必须在真正清除之后派发：监听器在此回读得到的是已失效状态，级联失效与变更通知都依赖这个顺序
+        onEvicted(this, key);
     }
 
     @Override
     public void clear() {
         onClear(this);
+        getOriginal().clear();
+        onCleared(this);
+    }
+
+    /**
+     * 静默清除：直达被包装的原始缓存，不触发任何监听回调
+     * <p>
+     * 供关联缓存级联失效使用。级联必须走这里，否则目标缓存的清除会再次触发 {@link #onEvicted(Cache, Object)} 并展开它自身的关联声明，使声明链在运行期形成递归。
+     * 多级缓存下本方法同样有静默效果：原始缓存为多层编排实例，其遍历的层级是未经监听包装的 基础缓存实例，因此不会重新进入回调链。
+     * </p>
+     * <p>
+     * 代价是级联不传递：A 的关联只清 B，不会继续清 B 的关联，多级依赖须由声明方显式展开。
+     * </p>
+     *
+     * @param key 缓存键
+     */
+    public void evictSilently(Object key) {
+        getOriginal().evict(key);
+    }
+
+    /**
+     * 静默清空，语义同 {@link #evictSilently(Object)}
+     */
+    public void clearSilently() {
         getOriginal().clear();
     }
 
@@ -239,8 +248,29 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
 
     @Override
     public void onEvict(Cache cache, Object key) {
-        getListeners().forEach((listener) -> {
+        this.foreachListener((listener) -> {
             listener.onEvict(cache.getName(), key);
+        });
+    }
+
+    /**
+     * 删除完成回调
+     * <p>
+     * 与 {@link #onEvict(Cache, Object)} 同样经 {@link #foreachListener} 派发：异常隔离（单个监听器 失败不影响其他监听器，也不上抛中断业务写入）与
+     * {@code support} 过滤两处语义必须一致， 不能只在删除路径上例外。
+     * </p>
+     */
+    @Override
+    public void onEvicted(Cache cache, Object key) {
+        this.foreachListener((listener) -> {
+            listener.onEvicted(cache.getName(), key);
+        });
+    }
+
+    @Override
+    public void onCleared(Cache cache) {
+        this.foreachListener((listener) -> {
+            listener.onCleared(cache.getName());
         });
     }
 
@@ -261,11 +291,13 @@ public abstract class AbstractTtlCache implements Cache, ICacheExpiredActuator, 
     /**
      * 缓存过期事件回调
      * <p>
-     * 当缓存值过期时触发此方法
+     * 由 {@link #put(Object, Object)} 在消费掉过期标记、完成过期下发后派发，供监听器感知 TTL 已登记；
+     * 自然过期（引擎自己回收）不会进入本回调。
      * </p>
      *
      * @param cache 缓存实例
-     * @param key   缓存键
+     * @param key   缓存键，整缓存过期时为 null
+     * @param e     本次生效的过期时刻
      */
     @Override
     public void onExpire(Cache cache, Object key, Date e) {

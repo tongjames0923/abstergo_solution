@@ -79,6 +79,18 @@ public interface ISystemRoleGroupService extends IServiceTemplate<SystemRoleGrou
     List<RemoteUserInfoVO> getUserList(Long groupId);
 
     /**
+     * 获取角色组绑定的用户标识列表
+     * <p>
+     * 只返回关联列，供失效与变更通知反查受影响范围使用；不拼装用户名片字段，与
+     * {@link #getUserList(Long)} 的适用场景区分：需要展示用户信息用后者，只需要范围用本方法。
+     * </p>
+     *
+     * @param groupId 角色组标识
+     * @return 去重后的用户标识列表，组下无用户时返回空列表
+     */
+    List<Long> boundUserIds(Long groupId);
+
+    /**
      * 判断权限是否存在于任意角色组中
      *
      * @param roleId

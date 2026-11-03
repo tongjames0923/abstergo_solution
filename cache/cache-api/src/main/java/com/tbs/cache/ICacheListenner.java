@@ -55,7 +55,8 @@ public interface ICacheListenner {
     /**
      * 缓存删除事件回调
      * <p>
-     * 当从缓存中删除值时触发此方法
+     * 当从缓存中删除值时触发此方法。注意触发时机为**真正删除之前**，
+     * 此时回调方回读该缓存仍会拿到旧值。
      * </p>
      *
      * @param cacheName 缓存名称
@@ -64,14 +65,42 @@ public interface ICacheListenner {
     void onEvict(String cacheName, Object key);
 
     /**
-     * 缓存清除事件回调
+     * 缓存删除**完成后**回调
      * <p>
-     * 当清除缓存中的所有值时触发此方法
+     * 与 {@link #onEvict(String, Object)} 的区别只在时机：本方法在缓存值已被真正清除之后触发，
+     * 回调方在此回读得到的是「已不存在」的状态。需要「失效完成后再做后续动作」的逻辑
+     * （如关联缓存级联失效、变更事件通知）必须挂在本方法，挂在 {@code onEvict} 上会读到旧值。
+     * </p>
+     * <p>
+     * 默认空实现，保证既有监听器无需修改。
+     * </p>
+     *
+     * @param cacheName 缓存名称
+     * @param key       缓存键
+     */
+    default void onEvicted(String cacheName, Object key) {
+    }
+
+    /**
+     * 缓存清空事件回调
+     * <p>
+     * 当清除缓存中的所有值时触发此方法，触发时机为**真正清空之前**。
      * </p>
      *
      * @param cacheName 缓存名称
      */
     void onClear(String cacheName);
+
+    /**
+     * 缓存清空**完成后**回调
+     * <p>
+     * 语义与 {@link #onEvicted(String, Object)} 一致，仅作用域为整个缓存。默认空实现。
+     * </p>
+     *
+     * @param cacheName 缓存名称
+     */
+    default void onCleared(String cacheName) {
+    }
 
     /**
      * 缓存过期事件回调
