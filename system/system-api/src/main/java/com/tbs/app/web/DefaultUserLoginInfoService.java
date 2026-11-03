@@ -45,7 +45,13 @@ import static com.tbs.app.web.CacheNamesConstants.USER_SESSIONS_CACHE;
  * <p>
  * 存储职责收敛为「会话」本身：一行只记录令牌、用户标识、会话标识、当前选中的部门与状态，
  * 不再保存用户详情、部门归属与权限。用户维度数据在认证时经 {@link IUserIdentityService}
- * 一次性装配为请求级快照，因此权限变更、部门调整无需清理会话即可在下次认证时生效。
+ * 一次性装配为请求级快照，会话内不保留权限副本，因此权限与部门变更无需清理会话即可在下次认证时重新装配。
+ * </p>
+ * <p>
+ * 「下次认证即生效」的前提是装配链路上的缓存已被及时失效：身份装配依赖按用户的权限组快照
+ * （{@code ROLE_GROUP_USER_ID}）与部门列表（{@code USER_DEPARTMENTS}），失效责任在各自的写入点
+ * （{@code SimpleRoleGroupServiceImpl}、{@code SimpleDepartmentUserRelationService}）。给身份装配新增一层缓存时，
+ * 必须同步在所有会改变装配结果的数据写入点补上失效，否则本类的实时性表述不成立。
  * </p>
  * <p>
  * 缓存设计说明：

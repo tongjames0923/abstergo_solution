@@ -2,9 +2,11 @@ package com.tbs.app.service.impl.role;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
+import com.tbs.app.service.role.IPermissionChangeListener;
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.role.ISystemRoleService;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.vo.PermissionChangeContext;
 import com.tbs.app.vo.RemoteUserInfoVO;
 import com.tbs.app.vo.SystemRoleGroupVO;
 import com.tbs.cache.expire.annotation.ExpireOn;
@@ -25,14 +27,15 @@ import com.tbs.shared.pojo.entity.*;
 import com.tbs.sql.dsl.clause.JoinCondition;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.web.uitl.AuthUtil;
+import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
-import jakarta.annotation.Resource;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -41,9 +44,18 @@ import static com.tbs.app.service.impl.CacheNamesConstants.ROLE_GROUP_USER_ID;
 
 /**
  * 角色组服务实现类
+ * <p>
+ * 权限数据的缓存失效统一收在本类的写入点，分两种：能静态取到键的（组权限列表按 groupId）仍由
+ * {@code @CacheEvict} 注解声明；取不到键的只能反推——{@link #getUserRoleGroupVOList} 缓存的是
+ * 「权限组 + 权限项」组装快照且以 userId 为键，而写入口握有的是 groupId，注解表达式无法反推待失效的
+ * 键集合，这一层由 {@link CacheManager} 手动逐键清除（见 {@link #invalidateGroupCache(Long)}）。
+ * 两者都在写入完成后通过 {@link IPermissionChangeListener} 向外部派发变更事件。
+ * 新增权限组写入点时必须同时补上这两类失效（03 分册 3.4.3）。
+ * </p>
  *
  * @author abstergo
  */
+@Slf4j
 public class SimpleRoleGroupServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemRoleGroupEntity, Long, SystemRoleGroupMapper>
     implements ISystemRoleGroupService {
@@ -59,6 +71,15 @@ public class SimpleRoleGroupServiceImpl
 
     @Resource
     private AppSettingProperty property;
+
+    @Resource
+    private CacheManager cacheManager;
+
+    /**
+     * 权限变更监听器，容器内无实现时派发即为空操作
+     */
+    @Autowired
+    private ObjectProvider<IPermissionChangeListener> permissionChangeListeners;
 
     /**
      * 获取角色组下的权限列表
@@ -130,6 +151,7 @@ public class SimpleRoleGroupServiceImpl
             audit.onCreate(relation);
             relationMapper.insert(relation);
         }
+        onGroupPermissionChanged(IPermissionChangeListener.ChangeType.ROLE_APPENDED, groupId, List.of(roleId));
     }
 
     /**
@@ -149,6 +171,7 @@ public class SimpleRoleGroupServiceImpl
         old.setFlag(CommonFlagEnum.DELETED.getCode());
         audit.onDelete(old);
         relationMapper.updateByPrimaryKey(old);
+        onGroupPermissionChanged(IPermissionChangeListener.ChangeType.ROLE_REMOVED, groupId, List.of(roleId));
     }
 
     /**
@@ -174,7 +197,7 @@ public class SimpleRoleGroupServiceImpl
         AssertUtil.isTrue(CollUtil.isNotEmpty(ls)).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
             .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_USER_EXISTS).throwIt();
         roleGroupUserRelationMapper.insert(relation);
-        AuthUtil.getInstance().notifyUserAuthStatusChanged(user.getUserName());
+        onUserGroupChanged(IPermissionChangeListener.ChangeType.USER_APPENDED, groupId, userId);
     }
 
     /**
@@ -195,11 +218,15 @@ public class SimpleRoleGroupServiceImpl
         AssertUtil.isTrue(CollUtil.isEmpty(ls)).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
             .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_USER_NOT_EXISTS).throwIt();
         roleGroupUserRelationMapper.delete(relation);
-        AuthUtil.getInstance().notifyUserAuthStatusChanged(user.getUserName());
+        onUserGroupChanged(IPermissionChangeListener.ChangeType.USER_REMOVED, groupId, userId);
     }
 
     /**
      * 获取用户角色组VO列表
+     * <p>
+     * 缓存的是「权限组 + 权限项」组装快照，其失效由本类各写入点手动逐键完成（见
+     * {@link #evictUserCache(Collection)}），在此新增缓存不等于完成失效。
+     * </p>
      *
      * @param userId
      * @return
@@ -316,6 +343,56 @@ public class SimpleRoleGroupServiceImpl
     }
 
     /**
+     * 保存权限组（新增或更新）
+     * <p>
+     * 组的名称与状态直接进入用户身份快照，变更后必须让快照重建；组内权限列表同样依赖组状态
+     * （停用的组不应再产出权限），故一并失效。
+     * </p>
+     *
+     * @param entity 权限组实体
+     * @return 保存结果
+     */
+    @Override
+    @CacheEvict(value = ROLE_GROUP, key = "#entity.id", condition = "#entity != null && #entity.id != null")
+    public List<SystemRoleGroupEntity> save(SystemRoleGroupEntity entity) {
+        // 新建与更新的分界只能在落库前判断：插入会把雪花 id 回填到入参实体上
+        var created = entity.getId() == null;
+        var result = super.save(entity);
+        if (entity.getId() == null) {
+            return result;
+        }
+        var userIds = invalidateGroupCache(entity.getId());
+        firePermissionChanged(created ? IPermissionChangeListener.ChangeType.GROUP_CREATED
+            : IPermissionChangeListener.ChangeType.GROUP_UPDATED, entity.getId(),
+            getInstance().queryById(entity.getId()), userIds, null);
+        return result;
+    }
+
+    /**
+     * 删除权限组（逻辑删除）
+     * <p>
+     * 删除组不会清理组与用户的关联行，若只删组不清缓存，已登录用户在本缓存 TTL 内仍能拿到
+     * 该组的权限。组与绑定用户须在删除前取到：删除后按逻辑删除规则已查不到组本身。
+     * </p>
+     *
+     * @param id 权限组标识
+     * @return 被删除的权限组
+     */
+    @Override
+    @CacheEvict(value = ROLE_GROUP, key = "#id")
+    public SystemRoleGroupEntity deleteById(Long id) {
+        // 组与关联行即将不可读，先取组信息与绑定用户，再删、再失效与派发
+        var group = getInstance().queryById(id);
+        var userIds = boundUserIds(id);
+        var deleted = super.deleteById(id);
+        // 先于事件派发清除组权限缓存，方法上的注解随后对同一键幂等再清
+        evictCache(ROLE_GROUP, id);
+        evictUserCache(userIds);
+        firePermissionChanged(IPermissionChangeListener.ChangeType.GROUP_DELETED, id, group, userIds, null);
+        return deleted;
+    }
+
+    /**
      * 对比新值与旧值的区别后返回最终的值
      *
      * @param newOne
@@ -357,6 +434,152 @@ public class SimpleRoleGroupServiceImpl
     @Override
     protected SystemRoleGroupEntity newEntity() {
         return new SystemRoleGroupEntity();
+    }
+
+    /**
+     * 权限组内权限项增删的收口动作：先失效缓存，再派发变更事件
+     *
+     * @param type    变更类型（区分新增与移除）
+     * @param groupId 权限组标识
+     * @param roleIds 本次变更涉及的权限项标识
+     */
+    private void onGroupPermissionChanged(IPermissionChangeListener.ChangeType type, Long groupId,
+        List<Long> roleIds) {
+        var userIds = invalidateGroupCache(groupId);
+        firePermissionChanged(type, groupId, getInstance().queryById(groupId), userIds, roleIds);
+    }
+
+    /**
+     * 用户与权限组归属关系变更的收口动作
+     * <p>
+     * 组内权限未变，只失效该用户的身份快照，不触碰组权限缓存。
+     * 权限变更采用静默生效：下一个请求重新认证即拿到新权限，不再吊销令牌强制下线。
+     * </p>
+     *
+     * @param type   变更类型（区分加入与移出）
+     * @param groupId 权限组标识
+     * @param userId  受影响用户标识
+     */
+    private void onUserGroupChanged(IPermissionChangeListener.ChangeType type, Long groupId, Long userId) {
+        evictCache(ROLE_GROUP_USER_ID, userId);
+        firePermissionChanged(type, groupId, getInstance().queryById(groupId), List.of(userId), null);
+    }
+
+    /**
+     * 失效权限组维度的缓存：组内权限列表 + 组下全部用户的身份快照
+     * <p>
+     * 注解式 {@code @CacheEvict} 在写入方法返回后才执行，而事件派发在方法体内，所以此处先把组权限
+     * 缓存清一次，保证监听器回读到的是新值；写入方法上的注解随后会对同一键再清一次，同键重复
+     * evict 为幂等操作，保留注解是为了即使收口逻辑被绕过也不丢失效。组权限缓存在本类的唯一
+     * 声明式失效入口仍是注解，这里只补注解无法表达的反向失效。
+     * </p>
+     *
+     * @param groupId 权限组标识
+     * @return 受影响的用户标识列表，供事件派发复用，避免二次查库
+     */
+    private List<Long> invalidateGroupCache(Long groupId) {
+        evictCache(ROLE_GROUP, groupId);
+        var userIds = boundUserIds(groupId);
+        evictUserCache(userIds);
+        return userIds;
+    }
+
+    /**
+     * 查询权限组绑定的用户标识
+     * <p>
+     * 只取关联列，一次索引查询。不复用 {@link #getUserList(Long)}：后者为拼装用户名片会对每个绑定
+     * 用户再打一条主键查询，缓存失效用不到那些字段。
+     * </p>
+     *
+     * @param groupId 权限组标识
+     * @return 去重后的用户标识列表
+     */
+    private List<Long> boundUserIds(Long groupId) {
+        var query = new SystemRoleGroupUserRelationEntity();
+        query.setRoleGroupId(groupId);
+        return roleGroupUserRelationMapper.select(query).stream()
+            .map(SystemRoleGroupUserRelationEntity::getUserId).filter(Objects::nonNull).distinct()
+            .collect(Collectors.toList());
+    }
+
+    /**
+     * 批量清除用户身份快照缓存
+     *
+     * @param userIds 用户标识列表，可以为空
+     */
+    private void evictUserCache(Collection<Long> userIds) {
+        if (CollUtil.isEmpty(userIds)) {
+            return;
+        }
+        userIds.forEach(userId -> evictCache(ROLE_GROUP_USER_ID, userId));
+    }
+
+    /**
+     * 按缓存名称与键清除一条缓存
+     * <p>
+     * 注解式失效只能从方法参数上取键，无法按「组 → 用户」这类反向关系展开，故统一走
+     * {@link CacheManager} 显式清除（同 {@code DefaultUserLoginInfoService#evictSessionCache}）。
+     * 多级缓存的 evict 会逐层清除 L1（Caffeine）与 L2（Redis），无需另行处理本地层级残留。
+     * </p>
+     *
+     * @param cacheName 缓存名称，取自 {@link com.tbs.app.service.impl.CacheNamesConstants}
+     * @param key       缓存键
+     */
+    private void evictCache(String cacheName, Object key) {
+        var cache = cacheManager.getCache(cacheName);
+        if (cache == null) {
+            log.warn("缓存{}不存在，清除动作跳过，key:{}", cacheName, key);
+            return;
+        }
+        cache.evict(key);
+    }
+
+    /**
+     * 派发权限变更事件
+     * <p>
+     * 必须在缓存清除之后调用，保证监听器回读到的已是最新权限。单个监听器抛出的异常只记录不外抛，
+     * 一路监听器失败不影响其他监听器与业务主流程（同 {@code AbstractAuthManager} 对
+     * {@code ITokenCleanner} 的容错处理）。派发为同步同线程，监听器内不得执行耗时操作。
+     * </p>
+     *
+     * @param type    变更类型
+     * @param groupId 权限组标识
+     * @param group   权限组实体，组已删除时传删除前取到的实例
+     * @param userIds 受影响用户标识
+     * @param roleIds 涉及的权限项标识，可以为空
+     */
+    private void firePermissionChanged(IPermissionChangeListener.ChangeType type, Long groupId,
+        SystemRoleGroupEntity group, List<Long> userIds, List<Long> roleIds) {
+        var context = new PermissionChangeContext();
+        context.setType(type);
+        context.setGroupId(groupId);
+        context.setGroupName(group == null ? null : group.getRoleGroupName());
+        context.setUserIds(userIds);
+        context.setRoleIds(roleIds);
+        context.setOperateBy(currentOperator());
+        permissionChangeListeners.forEach(listener -> {
+            try {
+                listener.onPermissionChanged(context);
+            } catch (Exception e) {
+                log.error("权限变更监听器[{}]处理失败，权限组:{} 变更类型:{}", listener.getName(), groupId, type, e);
+            }
+        });
+    }
+
+    /**
+     * 获取当前操作人用户名
+     * <p>
+     * 权限变更也可能由启动任务或定时任务触发，此时没有登录会话，返回 {@code null} 而不是抛未登录异常。
+     * </p>
+     *
+     * @return 操作人用户名，无登录会话时返回 {@code null}
+     */
+    private String currentOperator() {
+        var authUtil = AuthUtil.getInstance();
+        if (authUtil == null || !authUtil.isUserLoggedIn()) {
+            return null;
+        }
+        return authUtil.getCurrentUser().getUsername();
     }
 
     private static final IAuditService<SystemRoleGroupEntity, Long, ?> auditService = new DefaultAuditService<>();
