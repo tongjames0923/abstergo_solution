@@ -56,7 +56,18 @@ public abstract class AbstractRegisterContributor implements IRegisterContributo
             instanceProxy.setTargetTypeFullName(targetTypeName);
             if (instanceProxy.getInstance() instanceof IRouteMeta) {
                 IRouteMeta routeMeta = (IRouteMeta)(instanceProxy.getInstance());
-                var meta = routeMeta.getMeta();
+                InstanceMeta meta;
+                try {
+                    meta = routeMeta.getMeta();
+                } catch (Exception e) {
+                    // 元信息拉取失败（远端实例版本落后于接口、调用异常等）时按空业务线与空版本退化导入，
+                    // 该实例不再受坐标约束仍参与选择，避免单个实例的元信息故障中断整条来源链
+                    log.warn("实例{}元信息获取失败，按空Business和空Version退化导入，原因: {}", instanceProxy.getInstance(),
+                        e.getMessage());
+                    instanceProxy.setBusiness(StrUtil.EMPTY);
+                    instanceProxy.setVersion(StrUtil.EMPTY);
+                    meta = null;
+                }
                 if (meta == null) {
                     meta = new InstanceMeta();
                 }

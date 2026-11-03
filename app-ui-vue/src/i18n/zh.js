@@ -306,6 +306,27 @@ export default {
     deleteConfirmText: '确认要删除权限"{name}"吗？'
   },
 
+  // 权限组权限管理
+  roleGroup: {
+    addPerm: '新建权限',
+    addPermTitle: '新建菜单权限',
+    menuPermTip: '权限类型固定为菜单权限，创建后默认启用；如需数据权限或 API 权限，请到权限管理页创建',
+    searchPlaceholder: '搜索权限名称或编码...',
+    codePlaceholder: '请输入权限编码，如 MENU.ADMIN',
+    codeRequired: '请输入权限编码',
+    codePattern: '权限编码需为大写字母开头，由字母、数字、下划线、点、短横线组成，长度 2-128',
+    namePlaceholder: '请输入权限名称',
+    nameRequired: '请输入权限名称',
+    descPlaceholder: '请输入权限描述（可选）',
+    permCreated: '菜单权限「{name}」已创建并勾选，点「批量添加」完成分配',
+    permEnabled: '菜单权限「{name}」已启用并勾选，点「批量添加」完成分配',
+    permCodeExists: '权限编码「{code}」已存在且处于启用状态，已直接为你勾选',
+    permCodeOccupied: '权限编码「{code}」已被非菜单权限占用，请更换编码',
+    permCodeSystem: '权限编码「{code}」是系统内置权限，不可占用，请更换编码',
+    enablePermConfirm: '权限编码「{code}」已存在但处于禁用状态，是否启用并勾选？',
+    permNotListed: '权限「{name}」已创建，但可添加列表已超出加载上限未展示，请刷新后手动勾选'
+  },
+
   // 部门管理
   department: {
     title: '部门管理',
@@ -626,7 +647,23 @@ export default {
     inputRedirect: '请输入重定向路径',
     inputTitle: '请输入路由标题',
     inputIcon: '请输入图标类名',
-    selectRoles: '请选择或输入权限角色',
+    selectRoles: '请选择权限角色',
+    // 内联新增菜单权限
+    addMenuRole: '新增菜单权限',
+    addMenuRoleTitle: '新增菜单权限',
+    menuRoleTip: '权限类型固定为菜单权限，创建后默认启用',
+    inputRoleCode: '请输入权限编码，如 MENU.ADMIN',
+    roleCodeRequired: '请输入权限编码',
+    roleCodePattern: '权限编码需为大写字母开头，由字母、数字、下划线、点、短横线组成，长度 2-128',
+    inputRoleName: '请输入权限名称',
+    roleNameRequired: '请输入权限名称',
+    inputRoleDesc: '请输入权限描述（可选）',
+    roleAddSuccess: '菜单权限「{name}」已创建并选中，需在权限组/用户中分配后菜单才可见',
+    roleCodeExists: '权限编码「{code}」已存在且处于启用状态，已直接为你选中',
+    roleCodeOccupied: '权限编码「{code}」已被非菜单权限占用，请更换编码',
+    roleCodeSystem: '权限编码「{code}」是系统内置权限，不可占用，请更换编码',
+    enableRoleConfirm: '权限编码「{code}」已存在但处于禁用状态，是否启用并选中？',
+    roleEnableSuccess: '菜单权限「{name}」已启用并选中，需在权限组/用户中分配后菜单才可见',
     inputActiveMenu: '请输入激活菜单路径',
     groupNameInput: '请输入分组名称',
     addGroupTitle: '新增分组',

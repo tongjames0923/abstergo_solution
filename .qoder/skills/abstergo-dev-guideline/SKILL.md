@@ -14,7 +14,9 @@ description: 在本项目中进行任何代码开发、修改或评审时遵循 
 2. **再读存量**：修改既有模块前，先读该模块 README 与相邻同类实现，保持风格一致。
 3. **生成代码自查**：产出代码后，对照 [07-Code Review 检查清单](../../../docs/guideline/07-Code-Review检查清单.md) 逐项自检，重点是断言写法、i18n、注释格式三个高频违规点。
 4. **不确定即询问**：涉及架构决策（新模块拆分方式、新中间件引入、接口契约变更）时，必须先向用户确认，不得擅自决定。
-5. **不执行编译验证**：编译/构建验证（`mvn compile`、`npm run lint`/`npm run build` 等）一律由人工执行与确认，AI 不得代为运行，仅做静态自查；涉及编译结果的结论需标注"待人工验证"。
+5. **交付校验边界**：AI 交付只做「静态校验 + 编译通过」（`mvn compile` / `npm run lint`），不碰运行期验证；启动、接口联调、页面实机操作、响应式五档实测一律由开发者本人完成，相关结论标注“待人工实机验证”。
+6. **不主动生成单元测试**：禁止主动新增 JUnit 单元测试/集成测试、jest 测试、自检类与断言式 demo 文件（ponytail 的“可运行自检”在本项目让位于本条）；仅用户明确要求时才按指定范围编写。
+7. **检查项沉淀到文档**：易漏点写入 guideline 对应分册与 07 检查清单，不写成自检/测试代码。
 
 ### 任务类型 → 分册映射
 
@@ -50,6 +52,7 @@ description: 在本项目中进行任何代码开发、修改或评审时遵循 
 12. **规范分包**：类按单一职责归入语义化命名的包；禁止平铺大包，也禁止无语义的单类包与无意义深层嵌套（见 02 分册 2.1.2）。
 13. **缓存名称常量**：`@Cacheable`/`@CachePut`/`@CacheEvict` 的 `cacheNames`/`value` 必须引用模块内 `CacheNamesConstants` 常量，禁止硬编码字符串。
 14. **存储层不承担业务规则**：唯一性、非空、默认值、外键与级联、状态合法性一律在业务代码中用断言校验，禁止依赖数据库的 `UNIQUE`/`NOT NULL`/`DEFAULT`/`FOREIGN KEY`/`ON DELETE CASCADE`/`CHECK`/触发器兜底；`@Table` 只声明 `@Index`；并发由业务层加锁或幂等键保证，主键生成策略除外（见 03 分册 3.3.3）。
+15. **索引由查询驱动，且只能写在 `@Table` 注解里**：索引只能从已存在的查询反推，每一条索引至少要有一处切实使用它的 WHERE/ORDER BY（能指出文件+方法/SQL），指不出即不建（禁止“看着像条件/以后可能要用”的预防性索引）。索引**只能通过实体 `@Table(indexes=...)` 声明**，建表脚本按注解同步，禁止绕过注解的手写 DDL；**禁止任何唯一索引**（`@Index(unique=true)`/`UNIQUE KEY`/`CREATE UNIQUE INDEX`，它们会把判重这部分业务逻辑放进库）。状态类字段（flag/type）**必须保留单列索引**，不以区分度低为理由省略；**小表不豁免**。能合并的必须合并（最左前缀覆盖的单列索引不保留、等值列在前范围/排序列在后、`(a,b)` 与 `(b,a)` 不两头建）。**改实体结构或改查询时必须重新校验索引**，调整走增量更新，**删除索引只能给建议**，代码与脚本中不主动 DROP（见 03 分册 3.3.4）。
 
 ## 后端高频要点速查
 
@@ -59,6 +62,8 @@ description: 在本项目中进行任何代码开发、修改或评审时遵循 
 - `insertList`/`deleteByIdList` 分批执行非原子（适配 SQL Server/Oracle 上限），**需整体回滚的**写路径必须 `@Transactional(rollbackFor = Exception.class)`；单批方法（`*Batch`）不得业务直调。明确容忍部分成功的批量写入（日志/埋点/上报）可不加事务，但要在写入处块注释写明理由。
 - 自定义 SQL：复杂 JOIN 优先 `AbstractResourceCriteria`（classpath 资源文件）；`@SelectSQL` 只标在**类**上，且 SQL 内不得自带 WHERE（框架会追加条件）。
 - 实体只声明 `@Index`，不声明 `uniqueConstraints`/`nullable = false`/默认值/外键；唯一性与必填校验用 `AssertUtil` 在 Service 层断言。
+- 建模阶段先列出表的访问路径（WHERE/ORDER BY 清单），再按 03 分册 3.3.4 反推索引：一条访问路径一条索引，能合并的合并；索引只写 `@Table` 注解，脚本按注解同步，不建唯一索引，状态列保留 `idx_flag` 这类单列索引。
+- 改动实体字段或查询条件时，同步复审该表索引集合；索引变更只写增量（补 `@Index` + 补 `CREATE INDEX`），需要删索引时在回复/MR 描述里**只给建议**，不主动生成 DROP 语句。
 - 标准 CRUD 继承 shared-api 服务模板；多步写操作加 `@Transactional(rollbackFor = Exception.class)`。
 - Controller 注解组合完整：`@Tag`、`@Operation`、`@ApiResponse`、`@AjaxResponseType`、`@Parameter`；继承 `BaseController` 并覆写 `getBusinessName()`。
 - 中间件模块自动配置带 `@ConditionalOnProperty(prefix="tbs.{module}", name="enable")` 开关；Property 类不加 `@Component`，由 Config 中 `@EnableConfigurationProperties` 激活。

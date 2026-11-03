@@ -302,6 +302,27 @@ export default {
     deleteConfirmText: 'Are you sure to delete permission "{name}"?'
   },
 
+  // Role Group Permission Management
+  roleGroup: {
+    addPerm: 'Add Permission',
+    addPermTitle: 'Add Menu Permission',
+    menuPermTip: 'The type is fixed as menu permission, and it is enabled right after creation; create data or API permissions on the permission management page',
+    searchPlaceholder: 'Search permission name or code...',
+    codePlaceholder: 'Enter permission code, e.g. MENU.ADMIN',
+    codeRequired: 'Please enter permission code',
+    codePattern: 'The code must start with an uppercase letter and contain letters, digits, underscores, dots or hyphens, 2-128 characters long',
+    namePlaceholder: 'Please enter permission name',
+    nameRequired: 'Please enter permission name',
+    descPlaceholder: 'Enter permission description (optional)',
+    permCreated: 'Menu permission "{name}" created and checked. Click "Batch Add" to finish the assignment',
+    permEnabled: 'Menu permission "{name}" enabled and checked. Click "Batch Add" to finish the assignment',
+    permCodeExists: 'Permission code "{code}" already exists and is active. It has been checked for you',
+    permCodeOccupied: 'Permission code "{code}" is occupied by a non-menu permission. Please use another code',
+    permCodeSystem: 'Permission code "{code}" is a built-in permission and cannot be occupied. Please use another code',
+    enablePermConfirm: 'Permission code "{code}" exists but is disabled. Enable and check it?',
+    permNotListed: 'Permission "{name}" created, but the available list exceeded its loading cap and does not show it. Refresh and check it manually'
+  },
+
   // Department Management
   department: {
     title: 'Department Management',
@@ -622,7 +643,23 @@ export default {
     inputRedirect: 'Please enter redirect path',
     inputTitle: 'Please enter route title',
     inputIcon: 'Please enter icon class name',
-    selectRoles: 'Please select or enter roles',
+    selectRoles: 'Please select roles',
+    // Inline menu permission creation
+    addMenuRole: 'Add Menu Permission',
+    addMenuRoleTitle: 'Add Menu Permission',
+    menuRoleTip: 'The type is fixed as menu permission, and it is enabled right after creation',
+    inputRoleCode: 'Enter permission code, e.g. MENU.ADMIN',
+    roleCodeRequired: 'Please enter permission code',
+    roleCodePattern: 'The code must start with an uppercase letter and contain letters, digits, underscores, dots or hyphens, 2-128 characters long',
+    inputRoleName: 'Please enter permission name',
+    roleNameRequired: 'Please enter permission name',
+    inputRoleDesc: 'Enter permission description (optional)',
+    roleAddSuccess: 'Menu permission "{name}" created and selected. Assign it to a role group or user to make the menu visible',
+    roleCodeExists: 'Permission code "{code}" already exists and is active. It has been selected for you',
+    roleCodeOccupied: 'Permission code "{code}" is occupied by a non-menu permission. Please use another code',
+    roleCodeSystem: 'Permission code "{code}" is a built-in permission and cannot be occupied. Please use another code',
+    enableRoleConfirm: 'Permission code "{code}" exists but is disabled. Enable and select it?',
+    roleEnableSuccess: 'Menu permission "{name}" enabled and selected. Assign it to a role group or user to make the menu visible',
     inputActiveMenu: 'Please enter active menu path',
     groupNameInput: 'Please enter group name',
     addGroupTitle: 'Add Group',
