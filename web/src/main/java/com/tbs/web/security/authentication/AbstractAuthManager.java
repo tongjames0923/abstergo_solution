@@ -3,16 +3,16 @@ package com.tbs.web.security.authentication;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
-import com.tbs.web.enums.TokenTypeEnum;
 import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import jakarta.annotation.Resource;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
 
 /**
  * 抽象认证管理器
@@ -21,8 +21,7 @@ import jakarta.annotation.Resource;
  * 并提供「用户权限变更时按会话维度批量吊销令牌」的能力。具体认证上下文的读写由子类实现。
  * </p>
  * <p>
- * 依赖：令牌颁发中心（查询会话令牌）、登录信息服务（清理缓存）、令牌吊销器（使令牌失效）。
- * 使用场景：认证拦截器在用户权限/角色发生变更后调用 {@link #notifyUserAuthStatusChanged} 强制下线。
+ * 依赖：令牌颁发中心（查询会话令牌）、登录信息服务（清理缓存）、令牌吊销器（使令牌失效）。 使用场景：认证拦截器在用户权限/角色发生变更后调用 {@link #notifyUserAuthStatusChanged} 强制下线。
  * </p>
  *
  * @author abstergo
@@ -30,6 +29,16 @@ import jakarta.annotation.Resource;
  */
 @Slf4j
 public abstract class AbstractAuthManager implements IAuthManager {
+
+    @Resource
+    private ITokenIssuanceCenter tokenIssuanceCenter;
+    @Resource
+    private IUserLoginInfoService loginInfoService;
+    @Resource
+    private ITokenRemover remover;
+
+    @Autowired
+    private ObjectProvider<ITokenCleanner> tokenCleannerProvider;
 
     @Override
     public boolean isUserLoggedIn() {
@@ -47,13 +56,6 @@ public abstract class AbstractAuthManager implements IAuthManager {
         AssertUtil.isTrue(!isUserLoggedIn(), () -> new NoLoginException("当前用户未登录"));
         return getCurrentAuthentication().getTokenModel();
     }
-
-    @Resource
-    private ITokenIssuanceCenter tokenIssuanceCenter;
-    @Resource
-    private IUserLoginInfoService loginInfoService;
-    @Resource
-    private ITokenRemover remover;
 
     public ITokenIssuanceCenter getTokenIssuanceCenter() {
         return tokenIssuanceCenter;
@@ -84,13 +86,22 @@ public abstract class AbstractAuthManager implements IAuthManager {
                 for (var token : tokens) {
                     try {
                         remover.revokeToken(token);
-                        if (TokenTypeEnum.WEB_ACCESS_TOKEN.getCode().equals(token.getTokenType().getCode())) {
-                            loginInfoService.removeUserLoginInfo(token.getToken());
-                        }
                     } catch (Exception e) {
-                        // 单条令牌吊销失败不影响其他会话，记录后继续
-                        log.warn("用户{}权限变更失败", userName, e);
+                        log.error("用户{} Session Id:{} [{}] 吊销失败", userName, sessionId, token.getToken(), e);
+                        continue;
                     }
+                    log.info("用户{} Session Id:{} [{}] 吊销成功", userName, sessionId, token.getToken());
+
+                    tokenCleannerProvider.forEach(cleanner -> {
+                        log.info("用户{} Session Id:{} [{}] {} 清理中", userName, sessionId, token.getToken(),
+                            cleanner.getName());
+                        try {
+                            cleanner.clean(token);
+                        } catch (Exception e) {
+                            log.error("用户{} Session Id:{} [{}] {}清理失败 ", userName, sessionId, token.getToken(),
+                                cleanner.getName(), e);
+                        }
+                    });
 
                 }
             }

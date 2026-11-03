@@ -7,12 +7,12 @@ import com.tbs.web.exception.NoLoginException;
 import com.tbs.web.security.authentication.IAuthManager;
 import com.tbs.web.security.authentication.model.ITokenAuthentication;
 import com.tbs.web.security.token.ITokenModel;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
-import jakarta.annotation.Resource;
 import java.util.Optional;
 
 /**
@@ -118,7 +118,6 @@ public class AuthUtil {
 
     @Async
     public void notifyUserAuthStatusChanged(String userName) {
-
         authManager.notifyUserAuthStatusChanged(userName);
     }
 
