@@ -172,7 +172,7 @@
 </template>
 
 <script>
-import { queryPolicies, savePolicy, deletePolicy, enablePolicy, disablePolicy, checkUpgrade } from '@/api/app-version'
+import {checkUpgrade, deletePolicy, disablePolicy, enablePolicy, queryPolicies, savePolicy} from '@/api/app-version'
 
 export default {
   name: 'PolicyList',
@@ -211,7 +211,7 @@ export default {
     async loadPolicies() {
       this.loading = true
       try {
-        const criteria = { createTimeOrder: { order: 'DESC' } }
+        const criteria = { createTimeOrder: { order: 'DESC' }}
         if (this.search.sourceAppKeyEquals) criteria.sourceAppKeyEquals = this.search.sourceAppKeyEquals
         if (this.search.targetAppKeyEquals) criteria.targetAppKeyEquals = this.search.targetAppKeyEquals
         if (this.search.targetPlatformEquals) criteria.targetPlatformEquals = this.search.targetPlatformEquals

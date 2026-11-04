@@ -16,7 +16,7 @@
       @add-success="(data)=>{}"
       @edit-success="(data)=>{}"
     >
-      <template #actions-dropdown="{ row, index }">
+      <template #actions-dropdown="{ row }">
         <el-dropdown-item command="toggleStatus" @click.native="handleToggleStatus(row)">
           {{ row.flag === 1 ? $t('user.disable') : $t('user.enable') }}
         </el-dropdown-item>
@@ -98,17 +98,15 @@
 <script>
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserLoginInfoView from '@/components/UserAdminView/UserLoginInfoView.vue'
-import DynamicTable from '@/components/DynamicTable/index.vue'
-import { activateUser, adminQueryUser, deleteUser, disableUser, saveUser } from '@/api/admin_user'
-import { rangeQueryTransform } from '@/utils/query-help'
-import { userAddFormKey, userEditFormKey, userSearchFormKey } from '@/settings'
+import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
+import {rangeQueryTransform} from '@/utils/query-help'
+import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
 
 export default {
   name: 'UserAdminView',
   components: {
     QuickUseManagementView,
-    UserLoginInfoView,
-    DynamicTable
+    UserLoginInfoView
   },
   data() {
     // 确认密码验证规则

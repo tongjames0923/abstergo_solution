@@ -82,7 +82,7 @@
                 {{ $t('dataHandle.dragText') }}<em>{{ $t('dataHandle.clickUpload') }}</em>
               </div>
             </div>
-            <div class="el-upload__tip upload-tip" slot="tip">{{ $t('dataHandle.uploadTip') }}</div>
+            <div slot="tip" class="el-upload__tip upload-tip">{{ $t('dataHandle.uploadTip') }}</div>
           </el-upload>
         </div>
 
@@ -126,9 +126,9 @@
 </template>
 
 <script>
-import { listHandlers, validateHandler, handleCsv } from '@/api/data-handle'
+import {handleCsv, listHandlers, validateHandler} from '@/api/data-handle'
 import ResultDataTable from './ResultDataTable'
-import { VALIDATE_DEBOUNCE_MS, isCsvFile } from './shared'
+import {isCsvFile, VALIDATE_DEBOUNCE_MS} from './shared'
 
 export default {
   name: 'DataHandlePanel',

@@ -8,7 +8,7 @@
 export default {
   enabledMethods: [
     'password',
-    'wecom-sso',
+    'wecom-sso'
     // 'wecom-qr'
   ],
   methods: {

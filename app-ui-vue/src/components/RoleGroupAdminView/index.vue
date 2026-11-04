@@ -16,7 +16,7 @@
       @add-success="(data)=>{}"
       @edit-success="(data)=>{}"
     >
-      <template #actions-dropdown="{ row, index }">
+      <template #actions-dropdown="{ row }">
         <el-dropdown-item command="manageRoles" @click.native="handleManageRoles(row)">
           管理权限
         </el-dropdown-item>
@@ -66,9 +66,9 @@
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import RoleGroupRoleAdminView from '@/components/RoleGroupAdminView/RoleGroupRoleAdminView.vue'
 import RoleGroupUserAdminView from '@/components/RoleGroupAdminView/RoleGroupUserAdminView.vue'
-import { queryRoleGroups, saveRoleGroup } from '@/api/role_group'
-import { rangeQueryTransform } from '@/utils/query-help'
-import { roleGroupAddFormKey, roleGroupEditFormKey, roleGroupSearchFormKey } from '@/settings'
+import {queryRoleGroups, saveRoleGroup} from '@/api/role_group'
+import {rangeQueryTransform} from '@/utils/query-help'
+import {roleGroupAddFormKey, roleGroupEditFormKey, roleGroupSearchFormKey} from '@/settings'
 
 export default {
   name: 'RoleGroupAdminView',

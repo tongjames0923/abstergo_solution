@@ -21,7 +21,7 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import {mapGetters} from 'vuex'
 
 export default {
   name: 'UserAvatar',
@@ -40,7 +40,7 @@ export default {
             type: 'warning'
           })
           await this.$store.dispatch('user/logout')
-          this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+          this.$router.push(`/login?redirect=${encodeURIComponent(this.$route.fullPath)}`)
         } catch (error) {
           // 用户取消操作
           console.log('用户取消退出操作')

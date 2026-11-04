@@ -1,16 +1,16 @@
 package com.tbs.shared.interfaces.service;
 
+import com.tbs.common.data.PageVO;
 import com.tbs.common.data.ValueWrapper;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.i18n.I18nUtil;
+import com.tbs.common.util.PageUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.constant.SharedI18nConstant;
 import com.tbs.shared.pojo.IIdentifiable;
-import com.tbs.common.data.PageVO;
-import com.tbs.common.util.PageUtil;
 import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.sql.builder.ImportedISqlBuildContext;
 import com.tbs.sql.criteria.IPage;
@@ -38,6 +38,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable<K>, K, M extends IFrameworkMapper<T, K>>
     extends AbstractService<T, K, M> implements IServiceTemplate<T, K> {
 
+    private static final int CREATE = 0;
+    private static final int UPDATE = 1;
+    private static final int DELETE = 2;
+
     /**
      * 获取PageVO构建类
      *
@@ -59,7 +63,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
      *
      * @param id
      */
-    protected abstract T handleDelete(K id);
+    protected abstract T handleDelete(T entity);
 
     /**
      * 新增逻辑处理
@@ -89,7 +93,8 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public T deleteById(K id) {
-        AssertUtil.isTrue(id == null).i18n(SharedI18nConstant.CRUD_DELETE_ID_EMPTY).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(id == null).i18n(SharedI18nConstant.CRUD_DELETE_ID_EMPTY)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var entity = getInstance().queryById(id);
         if (getInstance().isDeleted(entity)) {
             return null;
@@ -97,7 +102,7 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
         getInstance().deletePending(entity);
         var value = ValueWrapper.of(entity);
         this.auditFunction(value, DELETE);
-        entity = getInstance().handleDelete(id);
+        entity = getInstance().handleDelete(value.get().orElse(null));
         return entity;
     }
 
@@ -119,7 +124,8 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<T> save(T entity) {
-        AssertUtil.isTrue(entity == null).i18n(SharedI18nConstant.CRUD_SAVE_ENTITY_EMPTY).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(entity == null).i18n(SharedI18nConstant.CRUD_SAVE_ENTITY_EMPTY)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         var r = ValueWrapper.of(entity);
         if (entity.getId() == null) {
             auditFunction(r, CREATE);
@@ -137,7 +143,8 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
 
         } else {
             r.set(getInstance().queryById(entity.getId()));
-            AssertUtil.isTrue(r.get().isEmpty()).i18n(SharedI18nConstant.CRUD_UPDATE_ENTITY_NOT_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+            AssertUtil.isTrue(r.get().isEmpty()).i18n(SharedI18nConstant.CRUD_UPDATE_ENTITY_NOT_EXISTS)
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             r.set(getInstance().compareAndUpdateValue(entity, r.get().get()));
             auditFunction(r, UPDATE);
             if (r.get().isEmpty()) {
@@ -149,10 +156,6 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
             }
         }
     }
-
-    private static final int CREATE = 0;
-    private static final int UPDATE = 1;
-    private static final int DELETE = 2;
 
     private void auditFunction(ValueWrapper<T> r, int flag) {
         getAuditServiceSupport().ifPresent((s) -> {

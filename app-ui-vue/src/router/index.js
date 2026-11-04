@@ -3,11 +3,11 @@ import Router from 'vue-router'
 import store from '@/store'
 /* Layout */
 import Layout from '@/layout'
-import { detailRoutes } from './modules/detail-routes'
-import { getRoutes } from '@/api/view'
-import { getGatewayVersion } from '@/api/system'
-import { setUpRouterPermissions } from '@/permission'
-import { getToken } from '@/utils/auth'
+import {detailRoutes} from './modules/detail-routes'
+import {getRoutes} from '@/api/view'
+import {getGatewayVersion} from '@/api/system'
+import {setUpRouterPermissions} from '@/permission'
+import {getToken} from '@/utils/auth'
 import routeCacheService from '@/utils/route-cache'
 
 Vue.use(Router)
@@ -123,9 +123,6 @@ function mapComponent(route) {
 
 var currentRouter = null
 
-// 添加一个标志位，防止重复加载动态路由
-let hasLoadedDynamicRoutes = false
-
 // 路由更新锁，防止并发更新
 let isUpdatingRoutes = false
 
@@ -223,9 +220,6 @@ async function generateRoutesFromServer() {
           routes.push(res[i])
         }
         console.log('映射后的动态路由:', routes) // 调试日志
-
-        // 标记动态路由已加载
-        hasLoadedDynamicRoutes = true
       } catch (error) {
         console.error('获取动态路由失败:', error)
         // 如果获取动态路由失败，只返回静态路由
@@ -324,6 +318,8 @@ export async function updateRouter() {
     updateWaitQueue = []
     throw error
   } finally {
+    // 单飞锁标志置回字面量：并发调方已在入口分流到等待队列，不存在读改写竞态
+    // eslint-disable-next-line require-atomic-updates
     isUpdatingRoutes = false
   }
 }

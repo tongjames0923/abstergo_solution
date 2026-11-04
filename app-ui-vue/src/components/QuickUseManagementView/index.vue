@@ -125,7 +125,7 @@
         :config-name="currentFormConfigName"
         :value="editFormData"
       >
-        <template #actions="{formData ,submit,cancel}">
+        <template #actions="{ formData }">
           <div class="dialog-actions">
             <el-button @click="handleDialogClose">{{ $t('common.cancel') }}</el-button>
             <el-button type="primary" @click="handleDialogSubmit(formData)">{{ $t('common.save') }}</el-button>
@@ -140,7 +140,7 @@
 import DynamicFormWithApi from '@/components/DynamicForm/DynamicFormWithApi'
 import DynamicTable from '@/components/DynamicTable'
 import ResponsiveMixin from '@/mixins/responsive'
-import { exportTableToExcel } from '@/utils/excel' // 导入Excel导出工具函数
+import {exportTableToExcel} from '@/utils/excel' // 导入Excel导出工具函数
 
 export default {
   name: 'QuickUseManagementView',
@@ -473,7 +473,6 @@ export default {
       const handler = isAdd ? this.addHandler : this.editHandler
       const successEvent = isAdd ? 'add-success' : 'edit-success'
       const errorEvent = isAdd ? 'add-error' : 'edit-error'
-      const warningMsg = isAdd ? '未配置新增处理器' : '未配置编辑处理器'
 
       if (!handler || typeof handler !== 'function') {
         console.warn(`未提供 ${isAdd ? 'addHandler' : 'editHandler'} 方法`)

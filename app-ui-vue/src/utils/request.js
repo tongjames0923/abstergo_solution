@@ -8,7 +8,7 @@ import i18n from '@/i18n'
 // create an axios instance
 const service = axios.create({
   baseURL: process.env.VUE_APP_BASE_API, // url = base url + request url
-  withCredentials: true, // send cookies when cross-domain requests
+  withCredentials: true // send cookies when cross-domain requests
   // 全局超时：后端/网关无响应时请求必须能失败返回，
 })
 
@@ -108,6 +108,8 @@ const refreshTokenHandler = async(response) => {
     processQueue(err, null)
     throw err
   } finally {
+    // 单飞锁标志置回字面量：并发请求已在入口 isRefreshing 分支转入等待队列，不存在读改写竞态
+    // eslint-disable-next-line require-atomic-updates
     isRefreshing = false
     // 关闭加载提示
     if (refreshLoadingInstance) {

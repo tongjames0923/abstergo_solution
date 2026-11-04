@@ -179,16 +179,16 @@
 </template>
 
 <script>
-import { mapGetters } from 'vuex'
+import {mapGetters} from 'vuex'
 import Breadcrumb from '@/components/Breadcrumb'
 import Hamburger from '@/components/Hamburger'
 import LangSelect from '@/components/LangSelect'
 import PushNotificationCenter from '@/components/PushNotificationCenter'
 import sidebar from '@/layout/components/Sidebar/index.vue'
-import { getGatewayVersion } from '@/api/system'
-import { getToken } from '@/utils/auth'
+import {getGatewayVersion} from '@/api/system'
+import {getToken} from '@/utils/auth'
 import routeCacheService from '@/utils/route-cache'
-import { refreshRoutes } from '@/router'
+import {refreshRoutes} from '@/router'
 import settings from '@/settings'
 
 export default {
@@ -350,7 +350,7 @@ export default {
     },
     async logout() {
       await this.$store.dispatch('user/logout')
-      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+      this.$router.push(`/login?redirect=${encodeURIComponent(this.$route.fullPath)}`)
     },
     getRoleColor(index) {
       const colors = ['#0071e3', '#34c759', '#ff9500', '#5856d6', '#ff3b30', '#af52de']

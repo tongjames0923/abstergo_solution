@@ -19,7 +19,7 @@
           {{ $t('dataHandle.dragText') }}<em>{{ $t('dataHandle.clickUpload') }}</em>
         </div>
       </div>
-      <div class="el-upload__tip upload-tip" slot="tip">{{ uploadTipText }}</div>
+      <div slot="tip" class="el-upload__tip upload-tip">{{ uploadTipText }}</div>
     </el-upload>
 
     <div v-if="showActions" class="dhu-actions">
@@ -48,8 +48,8 @@
 </template>
 
 <script>
-import { handleCsv } from '@/api/data-handle'
-import { isCsvFile } from './shared'
+import {handleCsv} from '@/api/data-handle'
+import {isCsvFile} from './shared'
 
 /**
  * 预设处理器上传适配组件
