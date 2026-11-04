@@ -101,7 +101,7 @@
 <script>
 import Index from '@/components/FormEditor/index.vue'
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import { saveFormConfig, updateFormConfig, getFormById } from '@/api/view'
+import {getFormById, saveFormConfig, updateFormConfig} from '@/api/view'
 
 export default {
   name: 'FormCreator',
@@ -177,7 +177,7 @@ export default {
           // 更新现有表单
           updateFormConfig(this.$route.query.id, data).then(response => {
             // 消息提示由后端统一控制
-          }).catch(error => {
+          }).catch(() => {
             // 消息提示由后端统一控制
           })
         } else {
@@ -186,7 +186,7 @@ export default {
             // 消息提示由后端统一控制
             // 同时也保存到本地存储作为备份
             localStorage.setItem('formCreatorConfig', JSON.stringify(data))
-          }).catch(error => {
+          }).catch(() => {
             // 消息提示由后端统一控制
           })
         }

@@ -50,7 +50,7 @@
             <span class="empty-text">暂无字典数据</span>
           </div>
           <div
-            v-for="(dic, index) in filteredDicList"
+            v-for="dic in filteredDicList"
             :key="dic.dicCode"
             class="dic-item"
             :class="{ active: selectedDic && selectedDic.dicCode === dic.dicCode }"
@@ -322,15 +322,15 @@
 
 <script>
 import {
+  deleteDic,
+  deleteDicItem,
+  disableDic,
+  disableDicItem,
+  enableDic,
+  enableDicItem,
   queryDics,
   saveDic,
-  enableDic,
-  disableDic,
-  deleteDic,
-  saveDicItem,
-  enableDicItem,
-  disableDicItem,
-  deleteDicItem
+  saveDicItem
 } from '@/api/dic'
 
 export default {

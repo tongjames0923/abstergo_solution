@@ -54,7 +54,6 @@ export function getOperateTypeList(keyword) {
   })
 }
 
-
 /**
  * 强制刷新日志记录
  * @returns {Promise}

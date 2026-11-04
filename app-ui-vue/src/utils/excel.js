@@ -17,13 +17,11 @@ export function exportTableToExcel(tableData, columns, fileName) {
           // 处理日期格式
           if (column.prop.includes('Time') || column.prop.includes('Date')) {
             value = value ? new Date(value).toLocaleString() : ''
-          }
-          // 处理特殊值
-          else if (value === null || value === undefined) {
+          } else if (value === null || value === undefined) {
+            // 处理特殊值
             value = ''
-          }
-          // 处理状态列的特殊值转换
-          else if (column.label === '状态' && typeof value === 'number') {
+          } else if (column.label === '状态' && typeof value === 'number') {
+            // 处理状态列的特殊值转换
             switch (value) {
               case 1: value = '正常'; break
               case 0: value = '禁用'; break

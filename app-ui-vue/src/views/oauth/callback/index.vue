@@ -14,8 +14,8 @@
 </template>
 
 <script>
-import { readCallbackQuery, cleanCallbackSearch } from '@/login/callback'
-import { selfBindExternalIdentity } from '@/api/external-identity'
+import {cleanCallbackSearch, readCallbackQuery} from '@/login/callback'
+import {selfBindExternalIdentity} from '@/api/external-identity'
 
 /**
  * OAuth 授权回调处理页（静态路由 /oauth/callback）
@@ -62,7 +62,7 @@ export default {
         await this.handleSelfBind(identityType, query.code)
         return
       }
-      this.$router.replace({ path: '/login', query: { code: query.code, state: query.state } })
+      this.$router.replace({ path: '/login', query: { code: query.code, state: query.state }})
     },
     async handleSelfBind(identityType, code) {
       try {

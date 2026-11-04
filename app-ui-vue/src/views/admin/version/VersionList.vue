@@ -153,10 +153,17 @@
 
 <script>
 import {
-  queryVersions, saveVersion, deleteVersion, submitVersion, releaseVersion,
-  offlineVersion, rollbackVersion, archiveVersion, getVersionDetail
+  archiveVersion,
+  deleteVersion,
+  getVersionDetail,
+  offlineVersion,
+  queryVersions,
+  releaseVersion,
+  rollbackVersion,
+  saveVersion,
+  submitVersion
 } from '@/api/app-version'
-import { downloadObject } from '@/api/oss'
+import {downloadObject} from '@/api/oss'
 
 export default {
   name: 'VersionList',
@@ -190,7 +197,7 @@ export default {
     async loadVersions() {
       this.loading = true
       try {
-        const criteria = { createTimeOrder: { order: 'DESC' } }
+        const criteria = { createTimeOrder: { order: 'DESC' }}
         if (this.search.appKeyEquals) criteria.appKeyEquals = this.search.appKeyEquals
         if (this.search.versionNameLike) criteria.versionNameLike = this.search.versionNameLike
         if (this.search.platformEquals) criteria.platformEquals = this.search.platformEquals

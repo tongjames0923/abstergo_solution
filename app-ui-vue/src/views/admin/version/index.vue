@@ -46,7 +46,7 @@
 </template>
 
 <script>
-import { listAppKeys, queryVersions } from '@/api/app-version'
+import {listAppKeys, queryVersions} from '@/api/app-version'
 import VersionList from './VersionList'
 import PackageList from './PackageList'
 import PolicyList from './PolicyList'
@@ -75,9 +75,6 @@ export default {
       copyText: this.copyText
     }
   },
-  mounted() {
-    this.loadAppKeys()
-  },
   computed: {
     /** 使用帮助步骤数据 */
     helpSteps() {
@@ -90,6 +87,9 @@ export default {
       ]
     }
   },
+  mounted() {
+    this.loadAppKeys()
+  },
   methods: {
     async loadAppKeys() {
       try {
@@ -99,7 +99,7 @@ export default {
     },
     async loadAllVersions() {
       try {
-        const res = await queryVersions({ createTimeOrder: { order: 'DESC' } }, 1, 500)
+        const res = await queryVersions({ createTimeOrder: { order: 'DESC' }}, 1, 500)
         this.allVersions = (res.data || {}).data || []
       } catch (e) { console.error(e) }
     },

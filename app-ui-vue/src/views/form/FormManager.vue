@@ -111,7 +111,7 @@
 
 <script>
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import { deleteFormConfig, getFormById, listForms } from '@/api/view'
+import {deleteFormConfig, getFormById, listForms} from '@/api/view'
 
 export default {
   name: 'FormManager',
@@ -253,6 +253,7 @@ export default {
           // 重新获取全部数据
           this.fetchAllFormList()
         } catch (error) {
+          // 删除失败的提示由后端统一控制，此处仅阻断异常继续冒泡到调用方
         }
       }).catch(() => {
         // 用户取消删除

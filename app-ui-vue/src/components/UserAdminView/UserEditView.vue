@@ -111,7 +111,7 @@
 <script>
 import UrlImage from '@/components/UrlImage/index.vue'
 
-import { saveUser } from '@/api/admin_user'
+import {saveUser} from '@/api/admin_user'
 
 export default {
   name: 'UserEditView',
@@ -303,5 +303,3 @@ export default {
   }
 }
 </style>
-
-</file_content>

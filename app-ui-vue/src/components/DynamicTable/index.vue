@@ -104,8 +104,8 @@
             <slot name="actions" :row="scope.row" :$index="scope.$index" />
             <template v-if="actions && Array.isArray(actions)">
               <el-button
-                v-for="(action, index) in actions"
-                :key="index"
+                v-for="(action, btnIndex) in actions"
+                :key="btnIndex"
                 :type="action.type || 'text'"
                 :size="action.size || 'mini'"
                 :icon="action.icon"
@@ -233,9 +233,15 @@ export default {
       default: false
     },
     // 表格高度
-    height: [String, Number],
+    height: {
+      type: [String, Number],
+      default: undefined
+    },
     // 表格最大高度
-    maxHeight: [String, Number],
+    maxHeight: {
+      type: [String, Number],
+      default: undefined
+    },
     // 表格大小
     size: {
       type: String,
@@ -267,7 +273,10 @@ export default {
       default: false
     },
     // 选择列的 selectable 函数
-    selectable: Function,
+    selectable: {
+      type: Function,
+      default: undefined
+    },
     // 是否显示序号列
     index: {
       type: Boolean,

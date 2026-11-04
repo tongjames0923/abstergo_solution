@@ -40,7 +40,7 @@
 <script>
 import SystemLogReport from './SystemLogReport.vue'
 import SystemLogRecord from './SystemLogRecord.vue'
-import {flushLog} from "@/api/systemlog";
+import {flushLog} from '@/api/systemlog'
 
 export default {
   name: 'SystemLog',
@@ -48,17 +48,17 @@ export default {
     SystemLogReport,
     SystemLogRecord
   },
-  mounted() {
-    try {
-      flushLog();
-    } catch (e) {
-      console.error(e);
-    }
-  },
   data() {
     return {
       // 视图切换: 'report' 或 'record'
       currentView: 'report'
+    }
+  },
+  mounted() {
+    try {
+      flushLog()
+    } catch (e) {
+      console.error(e)
     }
   }
 }

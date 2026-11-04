@@ -36,10 +36,11 @@ export function initResponseTimeChart(chartElement, chartData, options = {}) {
     switch (type) {
       case 'stdDev':
         return parseFloat(item.operateTimeStdDev) || 0
-      case 'avg':
+      case 'avg': {
         const totalTime = parseFloat(item.operateTime) || 0
         const count = parseFloat(item.operateCount) || 0
         return count > 0 ? (totalTime / count) : 0
+      }
       case 'max':
         return parseFloat(item.operateTimeMax) || 0
       case 'min':
