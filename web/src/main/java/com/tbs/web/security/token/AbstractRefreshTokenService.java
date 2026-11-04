@@ -13,10 +13,9 @@ import com.tbs.web.security.user.IUserInfoService;
 import com.tbs.web.security.user.access.IRefreshAccessTokenProvider;
 import com.tbs.web.security.user.form.IRefreshTokenForm;
 import com.tbs.web.uitl.AuthUtil;
-import org.jetbrains.annotations.NotNull;
+import jakarta.annotation.Resource;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import jakarta.annotation.Resource;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -97,6 +96,7 @@ public abstract class AbstractRefreshTokenService implements IRefreshTokenServic
             new TokenRequestForm(currentTokenModel.getSessionId(), userDetails, TokenTypeEnum.REFRESH_TOKEN.getCode(),
                 TokenCreateTypeEnum.REFRESH.getCode()));
         pushRefreshToken(refreshToken);
+        // 签发落库后的派生缓存连带失效由令牌颁发中心统一回调清理器，本方法不再自行派发
         return refreshToken;
     }
 

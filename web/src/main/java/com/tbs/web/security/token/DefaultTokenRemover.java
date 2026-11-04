@@ -3,9 +3,8 @@ package com.tbs.web.security.token;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
-import org.jetbrains.annotations.NotNull;
-
 import jakarta.annotation.Resource;
+
 import java.util.Objects;
 
 /**
@@ -38,7 +37,7 @@ public class DefaultTokenRemover implements ITokenRemover {
     @Override
     public void inactiveToken( ITokenModel token) {
         validateToken(tokenIssuanceCenter, token);
-        // 置为非活跃状态（INACTIVE）
+        // 置为非活跃状态（INACTIVE）；落库后的派生缓存连带失效由令牌颁发中心统一回调清理器
         tokenIssuanceCenter.setTokenStatus(token.getToken(), TokenStatusEnum.INACTIVE);
     }
 

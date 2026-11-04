@@ -248,9 +248,13 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService im
         } else {
             mapper.updateByPrimaryKey(loginInfoEntity);
         }
-        // 写库后必须清除会话缓存：token 键对应 getEntityByToken，username 键对应 getUserAvaliableSessionId（新增会话会使其结果集过期）；
+        // 写库后必须清除会话缓存：token 键对应 getEntityByToken；username 派生键对应
+        // getUserAvaliableSessionId（sessionIds: 前缀）与 listUserSessions（sessions: 前缀）。
+        // 签发/状态迁移的统一事件已由令牌颁发中心回调 ITokenCleanner 连带失效派生键，
+        // 此处保留属主侧直清作为清理器未装配部署形态的兜底（重复清除幂等无害）；
         // 不清则 TTL 窗口内认证仍读旧行/空列表，且本地缓存返回同一实例会污染缓存内容
-        evictSessionCache(token.getToken(), userDetails.getUsername());
+        evictSessionCache(token.getToken(),
+            SESSION_IDS_KEY_PREFIX + userDetails.getUsername(), SESSION_LIST_KEY_PREFIX + userDetails.getUsername());
     }
 
     /**
@@ -296,6 +300,20 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService im
                 cache.evict(key);
             }
         }
+    }
+
+    /**
+     * 失效会话快照类派生缓存：供令牌签发/失效链路的 ITokenCleanner 协调器回调，
+     * 令牌模型自带 userName，无需反查库
+     *
+     * @param username 用户名，空则不处理
+     */
+    @Override
+    public void evictUserSessionSnapshot(String username) {
+        if (StrUtil.isEmpty(username)) {
+            return;
+        }
+        evictSessionCache(SESSION_IDS_KEY_PREFIX + username, SESSION_LIST_KEY_PREFIX + username);
     }
 
     private List<String> getUserAvailableSessionIdsByUserName(String username) {
@@ -344,8 +362,16 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService im
         evictSessionCache(token.getToken());
     }
 
+    /**
+     * 会话列表类缓存在 USER_SESSIONS_CACHE 中的键前缀：
+     * getUserAvaliableSessionId（List<String>）与 listUserSessions（List<LoginSessionVO>）
+     * 同为 username 键但结果类型不同，必须分键隔离，否则互相覆盖污染（注解里为 SpEL 字面量，修改须与本常量同步）
+     */
+    private static final String SESSION_IDS_KEY_PREFIX = "sessionIds:";
+    private static final String SESSION_LIST_KEY_PREFIX = "sessions:";
+
     @Override
-    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#username")
+    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "'sessionIds:' + #username")
     @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 2, timeUnit = TimeUnit.MINUTES)
     public List<String> getUserAvaliableSessionId(String username) {
         return getUserAvailableSessionIdsByUserName(username);
@@ -354,11 +380,13 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService im
     /**
      * 按用户名列出会话列表。
      * <p>
-     * 缓存策略：空用户名不缓存；null / 空会话列表不缓存（unless）—— 避免用户刚登录产生新会话时，2 分钟 TTL 内持续读到旧的空列表（脏读）。
+     * 缓存策略：键加 sessions: 前缀与 getUserAvaliableSessionId 的 sessionIds: 键隔离；
+     * 空用户名不缓存，null / 空会话列表不缓存（unless）—— 避免用户刚登录产生新会话时，
+     * 2 分钟 TTL 内持续读到旧的空列表（脏读）。
      * </p>
      */
     @Override
-    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "#username",
+    @Cacheable(cacheNames = USER_SESSIONS_CACHE, key = "'sessions:' + #username",
         condition = "#username != null and !#username.isEmpty()", unless = "#result == null || #result.isEmpty()")
     @ExpireOn(cacheNames = USER_SESSIONS_CACHE, value = 2, timeUnit = TimeUnit.MINUTES)
     public List<LoginSessionVO> listUserSessions(String username) {
@@ -399,10 +427,14 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService im
             // 设置额外信息
             vo.setTokenCount(accessTokens.size());
 
-            // 计算有效的刷新令牌数量
+            // 计算有效的刷新令牌数量。listSessions 返回存储原始状态（不做惰性过期修正），
+            // 自然到期但从未被读取的令牌在库中仍为 ACTIVE，须叠加到期时刻判定，
+            // 否则死令牌被计入活跃数、会话被误判为在线
+            long now = System.currentTimeMillis();
             long activeRefreshTokens = sessionTokens.stream()
                 .filter(token -> token.getTokenType() == TokenTypeEnum.REFRESH_TOKEN)
                 .filter(token -> token.getStatus() == TokenStatusEnum.ACTIVE)
+                .filter(token -> token.getExpireTime() == null || token.getExpireTime().getTime() >= now)
                 .count();
             vo.setActiveRefreshTokenCount((int) activeRefreshTokens);
 

@@ -1,33 +1,32 @@
 package com.tbs.app.controller.privates.admin;
 
-
 import com.tbs.app.form.DisableTokenForm;
 import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.web.AbstractCrudController;
+import com.tbs.common.data.PageVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.app.web.AbstractCrudController;
+import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.criteria.CommonSystemUserQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
-import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
+import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.vo.LoginSessionVO;
-import com.tbs.knife4j.annotation.AjaxResponseType;
-import com.tbs.common.data.PageVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
+import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
-import jakarta.validation.Valid;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -53,6 +52,9 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
 
     @Resource
     private ITokenIssuanceCenter center;
+
+    @Resource
+    private ITokenRemover tokenRemover;
 
     @Override
     public IServiceTemplate<SystemUserEntity, Long> getService() {
@@ -190,7 +192,9 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
             .throwIt();
         AssertUtil.isTrue(!Objects.equals(user.getUserName(), tokenModel.getUserName())).message("Token不属于该用户")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        center.setTokenStatus(form.getToken(), TokenStatusEnum.REVOKE);
+        // 经令牌移除器吊销而非直写状态：吊销后回调 ITokenCleanner 连带失效会话快照等派生缓存，
+        // 否则 TTL 窗口内管理面板计数不更新；重复吊销已由移除器校验为“令牌已失效”
+        tokenRemover.revokeToken(tokenModel);
         return successResult(null);
     }
 
