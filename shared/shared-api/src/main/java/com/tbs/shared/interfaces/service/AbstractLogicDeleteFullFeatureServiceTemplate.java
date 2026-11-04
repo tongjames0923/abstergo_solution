@@ -25,13 +25,12 @@ public abstract class AbstractLogicDeleteFullFeatureServiceTemplate<T extends II
     protected abstract Integer getFlagDeleted();
 
     @Override
-    protected T handleDelete(K entitys) {
-        T disableEntitys = getInstance().queryById(entitys);
-        AssertUtil.isTrue(disableEntitys == null).i18n(SharedI18nConstant.CRUD_DELETE_ENTITY_NOT_EXISTS).params(entitys)
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
-        disableEntitys.setFlag(getFlagDeleted());
-        getInstance().updateBy(disableEntitys);
-        return disableEntitys;
+    protected T handleDelete(T disableEntity) {
+        AssertUtil.isTrue(disableEntity == null).i18n(SharedI18nConstant.CRUD_DELETE_ENTITY_NOT_EXISTS)
+            .params(disableEntity).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        disableEntity.setFlag(getFlagDeleted());
+        getInstance().updateBy(disableEntity);
+        return disableEntity;
     }
 
     @Override

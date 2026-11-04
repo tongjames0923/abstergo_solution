@@ -15,11 +15,10 @@ public abstract class AbstractPhysicDeleteFullFeatureServiceTemplate<T extends I
     extends AbstractFullFeatureServiceTemplate<T, K, M> {
 
     @Override
-    protected T handleDelete(K entitys) {
-        T deleteEntity = getInstance().queryById(entitys);
-        AssertUtil.isTrue(deleteEntity == null).i18n(SharedI18nConstant.CRUD_DELETE_ENTITY_NOT_EXISTS).params(entitys)
-            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
-        getMapper().deleteByPrimaryKey(entitys);
+    protected T handleDelete(T deleteEntity) {
+        AssertUtil.isTrue(deleteEntity == null).i18n(SharedI18nConstant.CRUD_DELETE_ENTITY_NOT_EXISTS)
+            .params(deleteEntity).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        getMapper().deleteByPrimaryKey(deleteEntity.getId());
         return deleteEntity;
     }
 
