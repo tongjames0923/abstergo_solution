@@ -1,7 +1,7 @@
 import axios from 'axios'
-import { Loading, Message, MessageBox, Notification } from 'element-ui'
+import {Loading, Message, MessageBox, Notification} from 'element-ui'
 import store from '@/store'
-import { getToken } from '@/utils/auth'
+import {getToken} from '@/utils/auth'
 import settings from '@/settings'
 import i18n from '@/i18n'
 
@@ -88,8 +88,12 @@ const refreshTokenHandler = async(response) => {
 
   try {
     await store.dispatch('user/refreshToken')
+    const newToken = getToken()
+    // 触发刷新的请求自身也须换上新令牌重试：请求拦截器对已携带 Authorization 头的配置
+    // 不覆盖，留着旧令牌重试必再回未登录码（_retry 已置位），会被误判为刷新无效而强制重登
+    config.headers[settings.tokenHeader] = newToken
     // 处理队列中的请求
-    processQueue(null, getToken())
+    processQueue(null, newToken)
     // 修复：确保不会重复添加baseURL
     if (config.baseURL && config.url.startsWith(config.baseURL)) {
       // 如果URL已经包含了baseURL，则创建一个新的配置对象，避免重复
