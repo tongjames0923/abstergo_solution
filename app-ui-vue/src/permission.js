@@ -1,12 +1,11 @@
-import router from './router'
 import store from './store'
-import { Message } from 'element-ui'
+import {Message} from 'element-ui'
 import NProgress from 'nprogress' // progress bar
 import 'nprogress/nprogress.css' // progress bar style
-import { getToken } from '@/utils/auth' // get token from cookie
+import {getToken} from '@/utils/auth' // get token from cookie
 import getPageTitle from '@/utils/get-page-title'
-import { hasRole } from '@/utils/permission'
-import { isRouteUpdating, waitForRouteUpdate } from '@/router'
+import {hasRole} from '@/utils/permission'
+import {isRouteUpdating, waitForRouteUpdate} from '@/router'
 
 NProgress.configure({ showSpinner: false }) // NProgress Configuration
 
@@ -14,6 +13,17 @@ const whiteList = ['/login'] // no redirect whitelist
 
 // 标记是否已经在登录时加载过动态路由
 let dynamicRoutesLoaded = false
+
+/**
+ * 取被拦截时的原始访问地址，用于拼登录后的回跳目标
+ * 未匹配到任何路由（如未登录时动态路由尚未注册）会被通配路由 redirect 到 /404，
+ * 而该重定向在 matcher 阶段完成，守卫里的 to 已是 /404，真实地址保留在 to.redirectedFrom 上
+ * @param {Object} to 路由守卫解析后的目标路由
+ * @return {string} 原始访问地址（含 query 与 hash）
+ */
+function resolveOriginFullPath(to) {
+  return to.redirectedFrom || to.fullPath
+}
 
 /**
  * 重置动态路由加载状态
@@ -65,7 +75,7 @@ export function setUpRouterPermissions(router) {
             // remove token and go to login page to re-login
             await store.dispatch('user/resetToken')
             Message.error(error || '错误')
-            next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+            next(`/login?redirect=${encodeURIComponent(resolveOriginFullPath(to))}`)
             NProgress.done()
             return
           }
@@ -93,7 +103,7 @@ export function setUpRouterPermissions(router) {
         NProgress.done()
       } else {
         // other pages that do not have permission to access are redirected to the login page.
-        next(`/login?redirect=${encodeURIComponent(to.fullPath)}`)
+        next(`/login?redirect=${encodeURIComponent(resolveOriginFullPath(to))}`)
         NProgress.done()
       }
     }
