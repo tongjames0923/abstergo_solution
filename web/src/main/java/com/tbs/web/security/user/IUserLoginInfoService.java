@@ -94,6 +94,18 @@ public interface IUserLoginInfoService {
     List<String> getUserAvaliableSessionId(String username);
 
     /**
+     * 失效用户会话快照类派生缓存（会话列表与可用会话ID列表）。
+     * <p>
+     * 令牌签发/状态变更后的连带失效扩展点：会话快照缓存的键布局由实现方自持，
+     * 调用方只需给出用户名；无会话快照缓存的实现保持默认空实现。
+     * </p>
+     *
+     * @param username 用户名，空则不处理
+     */
+    default void evictUserSessionSnapshot(String username) {
+    }
+
+    /**
      * 获取用户的登录会话列表
      * <p>
      * 聚合该用户全部会话的令牌，按会话维度组织为 {@link LoginSessionVO} 列表，供前端展示与管理。

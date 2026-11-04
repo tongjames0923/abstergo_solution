@@ -298,7 +298,7 @@ AssertUtil.isTrue(dup, e -> new MyBizException(e, "重复提交"), "重复提交
 
 - `AssertUtil` 实现了 `IStartup`，启动时收集容器内全部 `IErrorTransformer`（按 `getOrder()` 升序）与 `IErrorThrowEvent`；
 - `throwError(Supplier)`：抛出前先询问所有 `IErrorThrowEvent#onAssertUtilThrow(Throwable)`，任一返回 `true` 则吞掉异常不再抛出；
-- `toFormattedRuntimeException(Throwable)`：按 `support()` 匹配转换器，将任意异常归一为 `FormattedRuntimeException`（无匹配时原样返回）。
+- `toFormattedRuntimeException(Throwable)`：按 `support()` 匹配转换器做**特化转换**（如 SQL/权限异常转 i18n 安全文案），未命中时原样返回、不做泛化包装。
 
 #### IErrorTransformer - 异常转换器
 
@@ -310,7 +310,9 @@ public interface IErrorTransformer extends Ordered {
 }
 ```
 
-默认实现 `DefaultErrorTransformer`：所有非空异常均支持；`IExceptionLevel` 实现类保留其级别，其余 `RuntimeException` 归为 `SYSTEM_ERROR`、受检异常归为 `CRITICAL_SYSTEM_ERROR`。
+模块不再提供全量兜底的默认转换器：转换链只处理有特化语义的异常，其余异常类型原样传递，
+由响应层的 `resolveErrorMessage` 分层兜底（自建异常原文回传、框架异常回退通用提示），
+避免包装丢失异常类型语义（如重登类异常被降级为通用 500）。
 
 #### ExceptionUtil - 异常工具
 
@@ -703,7 +705,7 @@ com.tbs.common
 │   ├── provider      # 目标/标记/执行器提供者接口
 │   └── provider.impl # SimpleCallerDelegateTargetProvider / CompletableFutureFlagProvider 等
 ├── error             # AssertUtil / ErrorLevelEnum / IErrorTransformer / IErrorThrowEvent 等
-│   └── impl          # DefaultErrorTransformer / SimpleErrorThrowEvent
+│   └── impl          # SimpleErrorThrowEvent
 ├── exception         # FormattedRuntimeException
 ├── function          # SSupplier / SFunction / SConsumer / SBiConsumer
 ├── i18n              # I18nUtil / IMessageSource / AbstractMessageSourceProvider /

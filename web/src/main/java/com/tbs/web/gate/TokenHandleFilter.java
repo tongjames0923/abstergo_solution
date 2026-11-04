@@ -4,19 +4,19 @@ import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
-import com.tbs.web.result.AjaxResult;
-import com.tbs.web.uitl.AjaxUtil;
 import com.tbs.web.gate.center.IGateWayCenter;
+import com.tbs.web.result.AjaxResult;
 import com.tbs.web.security.issuance.center.ITokenIssuanceCenter;
 import com.tbs.web.security.token.ITokenModel;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.filter.OncePerRequestFilter;
-
+import com.tbs.web.uitl.AjaxUtil;
 import jakarta.annotation.Resource;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.web.filter.OncePerRequestFilter;
+
 import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
@@ -60,7 +60,9 @@ public class TokenHandleFilter extends OncePerRequestFilter implements IStartup 
             } catch (Throwable e) {
                 boolean willBroken = manager.onErrorWillBroken(e);
                 if (willBroken) {
-                    // 先经 IErrorTransformer 规范化，否则这里的原生异常消息（如 JDBC/Redis 连接失败原因）会直捣响应体
+                    // 转换链仅特化处理已注册的 IErrorTransformer（SQL/权限拒绝等），未命中时原样传递；
+                    // 防泄露由 provider 链分层兜底：非自建异常经 resolveErrorMessage 回退通用提示，
+                    // 带专用语义的异常（如 ReLoginRequestException 回 405）类型得以保留、不被降级
                     AjaxResult result = AjaxUtil.getInstance()
                         .createAjaxResultOnError(AssertUtil.toFormattedRuntimeException(e).orElse(e));
                     AjaxUtil.writeInfoResp(response, result);

@@ -7,8 +7,12 @@ import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
+import com.tbs.web.security.authentication.ITokenCleanner;
 import com.tbs.web.security.issuance.form.TokenRequestForm;
 import com.tbs.web.security.token.ITokenModel;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -33,6 +37,7 @@ import java.util.concurrent.TimeUnit;
  * @author abstergo
  * @see ITokenIssuanceCenter 令牌颁发中心对外契约
  */
+@Slf4j
 public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCenter {
 
     /**
@@ -95,6 +100,14 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
         AssertUtil.isTrue(model.getTokenType() == null, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.TOKEN_TYPE_REQUIRED));
         center.saveManageInfo(model.getUserName(), model.getTokenType().getCode(), model.getToken());
         center.saveToken(model);
+        // 令牌状态迁移（签发/状态变更）落库后的统一事件出口：回调全部清理器
+        tokenCleannerProvider.forEach(cleanner -> {
+            try {
+                cleanner.clean(model);
+            } catch (Exception e) {
+                log.error("令牌 {} 落库后回调清理器 {} 失败", model.getToken(), cleanner.getName(), e);
+            }
+        });
     }
 
     /**
@@ -179,6 +192,16 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
      * </p>
      */
     private AbstractTokenIssuanceCenter center;
+
+    /**
+     * 令牌关联缓存清理器（ITokenCleanner SPI）：令牌落库后在此统一派发维护事件，
+     * 失效业务侧派生缓存（登录信息、会话快照等）。签发、状态变更、惰性过期修正均经
+     * {@link #saveModel} 落库，调用方（移除器/刷新服务/后台吊销）无需各自回调，
+     * 新增令牌写路径自动获得连带失效能力。清理器异常逐个隔离：令牌已落库，
+     * 回抛不改变事实且误导调用方
+     */
+    @Autowired
+    private ObjectProvider<ITokenCleanner> tokenCleannerProvider;
 
     /**
      * 获取当前实例引用

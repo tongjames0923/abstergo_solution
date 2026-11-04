@@ -10,8 +10,6 @@ import com.tbs.web.security.token.ITokenRemover;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 
 /**
@@ -36,9 +34,6 @@ public abstract class AbstractAuthManager implements IAuthManager {
     private IUserLoginInfoService loginInfoService;
     @Resource
     private ITokenRemover remover;
-
-    @Autowired
-    private ObjectProvider<ITokenCleanner> tokenCleannerProvider;
 
     @Override
     public boolean isUserLoggedIn() {
@@ -85,24 +80,14 @@ public abstract class AbstractAuthManager implements IAuthManager {
                 }
                 for (var token : tokens) {
                     try {
+                        // 吊销落库后令牌颁发中心统一回调 ITokenCleanner 清理关联缓存，
+                        // 本方法不再逐令牌手工派发；吊销失败（validate 拒绝）时中心未写入，也不会触发清理
                         remover.revokeToken(token);
                     } catch (Exception e) {
                         log.error("用户{} Session Id:{} [{}] 吊销失败", userName, sessionId, token.getToken(), e);
                         continue;
                     }
                     log.info("用户{} Session Id:{} [{}] 吊销成功", userName, sessionId, token.getToken());
-
-                    tokenCleannerProvider.forEach(cleanner -> {
-                        log.info("用户{} Session Id:{} [{}] {} 清理中", userName, sessionId, token.getToken(),
-                            cleanner.getName());
-                        try {
-                            cleanner.clean(token);
-                        } catch (Exception e) {
-                            log.error("用户{} Session Id:{} [{}] {}清理失败 ", userName, sessionId, token.getToken(),
-                                cleanner.getName(), e);
-                        }
-                    });
-
                 }
             }
         }
