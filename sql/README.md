@@ -203,9 +203,10 @@ IQueryCriteria（getSelectSQLInfo() → SelectInfoModel）
 ├── AbstractEntityCriteria        # 基于实体类元数据自动生成
 │   └── DefaultEntityCriteria     # 直接用 new DefaultEntityCriteria(User.class)
 ├── AbstractResourceCriteria      # 从 classpath SQL 文件加载（UTF-8，全局缓存）
-└── AbstractRemoteConfigQueryCriteria
-    └── NacosConfigQueryCriteria  # 从 Nacos 配置读取 SQL
+└── AbstractRemoteConfigQueryCriteria  # provider 中立的“远程配置读取 SQL”契约
 ```
+
+> 具体配置源的实现（如从 Nacos 读取 SQL）不落在 sql 框架模块，由使用方模块（shared-pojo 的 `NacosConfigQueryCriteria`）继承 `AbstractRemoteConfigQueryCriteria` 落地，避免框架硬绑定中间件客户端。
 
 实体元数据由 `EntityMetadataExtractor.pullFromClass()` 提取（`@Table` 表名 + 非 static/final/非 `@Transient` 字段，**含父类声明字段**），带类级缓存（`clearCache()` 可清除）。`pullFromClass` 要求实体必须有 `@Table`；`GenericMapper` 走的 `pullTableMetadata` 同样识别父类字段，且表名缺失 `@Table` 时按类名驼峰转下划线推导。
 

@@ -5,7 +5,6 @@ import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.annotation.order.QueryOrderField;
 import com.tbs.sql.constants.OrderConstants;
-import com.tbs.sql.criteria.impl.NacosConfigQueryCriteria;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.order.impl.OrderedModel;
 import lombok.Data;
