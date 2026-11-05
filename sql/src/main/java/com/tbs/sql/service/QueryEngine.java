@@ -3,15 +3,22 @@ package com.tbs.sql.service;
 import cn.hutool.extra.spring.SpringUtil;
 import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
+import com.tbs.sql.builder.EntitySqlDriver;
 import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.sql.builder.SqlDriver;
+import com.tbs.sql.criteria.IPage;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.dsl.IEntityQueryWrapper;
+import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.interceptor.SqlComposeInterceptor;
+import com.tbs.sql.mapper.impl.ConditionBuilder;
+import com.tbs.sql.mapper.impl.FetchMapper;
+import com.tbs.sql.model.limit.LimitModel;
 import com.tbs.sql.model.order.OrderInfo;
 import com.tbs.sql.model.where.WhereCompose;
 import com.tbs.sql.properties.SqlProperty;
@@ -29,7 +36,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * @since 2.0.0
  */
 @Slf4j
-public class QueryEngine implements IStartup {
+public class QueryEngine implements IStartup, IQueryEngine {
 
     @Getter
     private static volatile QueryEngine instance;
@@ -313,5 +320,78 @@ public class QueryEngine implements IStartup {
                 return null;
             }
         });
+    }
+
+    // ==================== IQueryEngine 门面实现 ====================
+
+    /**
+     * 按条件对象、分页与实体类型查询列表，编排 SQL 构建与执行取数。
+     *
+     * @param context     SQL 构建上下文，为 null 时由条件对象构建
+     * @param qo          查询条件对象
+     * @param page        分页参数，为 null 不分页
+     * @param entityClass 实体类型
+     * @param <T>         实体类型
+     * @return 查询结果列表
+     */
+    @Override
+    public <T> List<T> queryByQO(ISqlBuildContext context, IQueryCriteria qo, IPage page, Class<T> entityClass) {
+        if (context == null) {
+            context = ConditionBuilder.buildSqlContext(qo);
+        }
+        AssertUtil.isTrue(!context.isValid()).errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR)
+            .message("数据上下文环境非法，存在非法导入的数据上下文调用情况。请排查代码调用");
+        EntitySqlDriver driver = new EntitySqlDriver();
+        driver.setWhereInfo(ConditionBuilder.buildConditions(qo));
+        if (page != null) {
+            driver.setLimit(new LimitModel(page.from(), page.number()));
+        }
+        driver.setOrders(collectOrderInfos(qo));
+        return SpringUtil.getBean(FetchMapper.class).fetch(context, driver, entityClass);
+    }
+
+    /**
+     * 按条件对象统计记录数，编排 SQL 构建与执行统计。
+     *
+     * @param context SQL 构建上下文，为 null 时由条件对象构建
+     * @param qo      查询条件对象
+     * @param entity  实体类型
+     * @param <T>     实体类型
+     * @return 符合条件的记录数
+     */
+    @Override
+    public <T> Integer countByQO(ISqlBuildContext context, IQueryCriteria qo, Class<T> entity) {
+        if (context == null) {
+            context = ConditionBuilder.buildSqlContext(qo);
+        }
+        AssertUtil.isTrue(!context.isValid()).errorLevel(ErrorLevelEnum.CRITICAL_SYSTEM_ERROR)
+            .message("数据上下文环境非法，存在非法导入的数据上下文调用情况。请排查代码调用");
+        EntitySqlDriver driver = new EntitySqlDriver();
+        driver.setWhereInfo(ConditionBuilder.buildConditions(qo));
+        return SpringUtil.getBean(FetchMapper.class).count(context, driver);
+    }
+
+    /**
+     * 按实体类型获取查询构建器。
+     *
+     * @param entityClass 实体类型
+     * @param <T>         实体类型
+     * @return 查询构建器
+     */
+    @Override
+    public <T> IQueryBuilder<T> query(Class<T> entityClass) {
+        return getEntityQueryWrapper(entityClass).query();
+    }
+
+    /**
+     * 按实体对象获取查询构建器。
+     *
+     * @param entity 实体对象
+     * @param <T>    实体类型
+     * @return 查询构建器
+     */
+    @Override
+    public <T> IQueryBuilder<T> query(T entity) {
+        return getEntityQueryWrapper(entity).query();
     }
 }

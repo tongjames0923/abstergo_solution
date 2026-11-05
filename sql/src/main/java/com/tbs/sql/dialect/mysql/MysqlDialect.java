@@ -1,6 +1,9 @@
 package com.tbs.sql.dialect.mysql;
 
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.extractor.CommonDeleteExtractor;
+import com.tbs.sql.dialect.extractor.CommonInsertExtractor;
+import com.tbs.sql.dialect.extractor.CommonUpdateExtractor;
 
 public class MysqlDialect implements SqlDialect {
     private final IGroupExtractor groupExtractor;
@@ -23,5 +26,8 @@ public class MysqlDialect implements SqlDialect {
     @Override public ILimitExtractor getLimitExtractor() { return limitExtractor; }
     @Override public ISelectExtractor getSelectExtractor() { return selectExtractor; }
     @Override public IWhereExtractor getWhereExtractor() { return whereExtractor; }
+    @Override public IInsertExtractor getInsertExtractor() { return new CommonInsertExtractor(); }
+    @Override public IUpdateExtractor getUpdateExtractor() { return new CommonUpdateExtractor(); }
+    @Override public IDeleteExtractor getDeleteExtractor() { return new CommonDeleteExtractor(); }
     @Override public String name() { return "mysql"; }
 }

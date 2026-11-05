@@ -1,6 +1,8 @@
 package com.tbs.sql.dialect.oracle;
 
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.extractor.CommonDeleteExtractor;
+import com.tbs.sql.dialect.extractor.CommonUpdateExtractor;
 import com.tbs.sql.dialect.oracle.extractor.OracleInsertExtractor;
 
 /**
@@ -51,5 +53,7 @@ public class OracleDialect implements SqlDialect {
     public IInsertExtractor getInsertExtractor() {
         return new OracleInsertExtractor();
     }
+    @Override public IUpdateExtractor getUpdateExtractor() { return new CommonUpdateExtractor(); }
+    @Override public IDeleteExtractor getDeleteExtractor() { return new CommonDeleteExtractor(); }
     @Override public String name() { return "oracle"; }
 }

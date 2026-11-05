@@ -1,14 +1,12 @@
 package com.tbs.sql.order;
 
 import com.tbs.sql.enums.OrderEnum;
-import com.tbs.sql.order.impl.OrderedModel;
-import com.tbs.sql.order.impl.OrderedModelOrderImpl;
 
 /**
  * 有序模型接口，定义了获取排序方向的方法。
  *
  * <p>该接口定义了获取排序方向的方法，允许模型对象实现排序功能。
- * 通常与 {@link OrderedModelOrderImpl} 配合使用。</p>
+ * 通常与 {@link com.tbs.sql.order.impl.OrderedModelOrderImpl} 配合使用。</p>
  *
  * <h3>主要功能</h3>
  * <ul>
@@ -38,13 +36,13 @@ import com.tbs.sql.order.impl.OrderedModelOrderImpl;
  * <h3>注意事项</h3>
  * <ul>
  *   <li>返回null表示不应用排序</li>
- *   <li>通常与 {@link OrderedModelOrderImpl} 配合使用</li>
+ *   <li>通常与 {@link com.tbs.sql.order.impl.OrderedModelOrderImpl} 配合使用</li>
  * </ul>
  *
  * @author abstergo
  * @since 1.0.0
- * @see OrderedModel
- * @see OrderedModelOrderImpl
+ * @see com.tbs.sql.order.impl.OrderedModel
+ * @see com.tbs.sql.order.impl.OrderedModelOrderImpl
  */
 public interface IQueryOrderedModel {
     /**

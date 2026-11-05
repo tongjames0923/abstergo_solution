@@ -1,7 +1,5 @@
 package com.tbs.sql.dialect;
 
-import com.tbs.sql.dialect.extractor.CommonInsertExtractor;
-
 import java.util.List;
 
 /**
@@ -27,7 +25,7 @@ import java.util.List;
  *
  * @author abstergo
  * @since 3.0.0
- * @see CommonInsertExtractor
+ * @see com.tbs.sql.dialect.extractor.CommonInsertExtractor
  * @see com.tbs.sql.dialect.oracle.extractor.OracleInsertExtractor
  */
 public interface IInsertExtractor {

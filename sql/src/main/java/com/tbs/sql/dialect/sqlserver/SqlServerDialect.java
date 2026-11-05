@@ -1,6 +1,8 @@
 package com.tbs.sql.dialect.sqlserver;
 
 import com.tbs.sql.dialect.*;
+import com.tbs.sql.dialect.extractor.CommonDeleteExtractor;
+import com.tbs.sql.dialect.extractor.CommonUpdateExtractor;
 import com.tbs.sql.dialect.sqlserver.extractor.SqlServerInsertExtractor;
 
 /**
@@ -45,5 +47,7 @@ public class SqlServerDialect implements SqlDialect {
     @Override public ISelectExtractor getSelectExtractor() { return selectExtractor; }
     @Override public IWhereExtractor getWhereExtractor() { return whereExtractor; }
     @Override public IInsertExtractor getInsertExtractor() { return new SqlServerInsertExtractor(); }
+    @Override public IUpdateExtractor getUpdateExtractor() { return new CommonUpdateExtractor(); }
+    @Override public IDeleteExtractor getDeleteExtractor() { return new CommonDeleteExtractor(); }
     @Override public String name() { return "sqlserver"; }
 }

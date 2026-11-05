@@ -38,7 +38,7 @@ sql/
     ├── datasource/               # DataSource 装饰、JDBC 执行拦截与 SQL 观测：decoration / interceptor / model
     ├── mapper/                   # IFrameworkMapper / GenericMapper（通用CRUD）/ SmartQueryMapper / IRawSqlSelectMapper + impl/
     ├── model/                    # where / select / order / limit / group / query 模型
-    ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/（含 SELECT 与 INSERT 提取器）
+    ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/（含 SELECT/INSERT/UPDATE/DELETE 等提取器）
     ├── assembler/                # ISqlAssembler / DefaultSqlAssembler（SQL 片段拼装）
     ├── interceptor/              # SqlAutoFillInterceptor / SqlComposeInterceptor
     ├── provider/                 # IAutoValueProvider / ICustomWhereProvider + impl/
@@ -462,7 +462,7 @@ public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
 
 ## 七、数据库方言
 
-框架通过 `SqlDialect`（六个 Extractor：Select / Where / Order / Group / Limit / Insert）抽象数据库差异：
+框架通过 `SqlDialect`（八个 Extractor：Select / Where / Order / Group / Limit / Insert / Update / Delete）抽象数据库差异：
 
 | 启用注解 | 方言 | 分页实现 |
 |----------|------|----------|
@@ -471,7 +471,7 @@ public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
 | `@UsePostgreSql` | `PostgreSqlDialect` | `PostgreSqlLimitExtractor` |
 | `@UseSqlServer` | `SqlServerDialect` | `SqlServerLimitExtractor`（OFFSET/FETCH） |
 
-除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。批量 INSERT 只在 Oracle 上有语法差异（`INSERT ALL`），SQL Server 仅收紧容量上限，两者各自覆写 `getInsertExtractor()`。扩展新数据库：实现 `SqlDialect` + 各 Extractor，参照 `MysqlDialectAutoConfiguration` 编写配置类并配套 `@UseXxx` 注解。
+除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。批量 INSERT 只在 Oracle 上有语法差异（`INSERT ALL`），SQL Server 仅收紧容量上限，两者各自覆写 `getInsertExtractor()`。**所有语句的 SQL 生成一律经 `SqlDialect` 的提取器产出（统一管线）**：无方言差异的 SELECT/WHERE/ORDER/GROUP/UPDATE/DELETE 由 `Common*Extractor` 统一提供、各方言默认复用不覆写（UPDATE/DELETE 语法四库一致，仅留 `getUpdateExtractor()`/`getDeleteExtractor()` 与按库覆写的扩展位）；只有出现库间差异（如分页、批量 INSERT）才引入方言专有实现。扩展新数据库：实现 `SqlDialect` + 各 Extractor，参照 `MysqlDialectAutoConfiguration` 编写配置类并配套 `@UseXxx` 注解。
 
 ## 八、编程式事务
 

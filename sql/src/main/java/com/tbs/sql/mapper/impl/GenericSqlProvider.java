@@ -14,12 +14,7 @@ import org.apache.ibatis.builder.annotation.ProviderContext;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * 通用 Mapper 的 SQL 提供器，在运行时为 {@link GenericMapper} 生成增删改查语句。
@@ -191,7 +186,7 @@ public class GenericSqlProvider {
      */
     public String deleteByPrimaryKey(ProviderContext context, Map<String, Object> params) {
         EntityTableMetadata metadata = resolveMetadata(context, null);
-        return "DELETE FROM " + metadata.getTableName() + " WHERE " + buildPrimaryKeyCondition(metadata);
+        return getDialect().getDeleteExtractor().buildDelete(metadata.getTableName(), buildPrimaryKeyCondition(metadata));
     }
 
     /**
@@ -204,8 +199,7 @@ public class GenericSqlProvider {
         Object entity = params.get("entity");
         EntityTableMetadata metadata = resolveMetadata(context, entity);
         String condition = buildEntityCondition(metadata, "entity", entity);
-        String sql = "DELETE FROM " + metadata.getTableName();
-        return condition.isEmpty() ? sql : sql + " WHERE " + condition;
+        return getDialect().getDeleteExtractor().buildDelete(metadata.getTableName(), condition);
     }
 
     /**
@@ -218,7 +212,7 @@ public class GenericSqlProvider {
         List<?> idList = (List<?>)params.get("idList");
         AssertUtil.isTrue(idList == null || idList.isEmpty(), "分批删除的idList不能为空，请使用deleteByIdList");
         EntityTableMetadata metadata = resolveMetadata(context, null);
-        return "DELETE FROM " + metadata.getTableName() + " WHERE " + buildInCondition(metadata, idList.size());
+        return getDialect().getDeleteExtractor().buildDelete(metadata.getTableName(), buildInCondition(metadata, idList.size()));
     }
 
     /**
@@ -355,17 +349,14 @@ public class GenericSqlProvider {
         EntityColumnMetadata idColumn = requireIdColumn(metadata);
         AssertUtil.notNull(readValue(idColumn, entity),
             "更新" + metadata.getTableName() + "时主键" + idColumn.getProperty() + "不能为空");
-        StringBuilder builder = new StringBuilder("UPDATE ").append(metadata.getTableName()).append(" SET ");
-        for (int i = 0; i < columns.size(); i++) {
-            if (i > 0) {
-                builder.append(", ");
-            }
-            builder.append(columns.get(i).getColumn()).append(" = #{entity.")
-                .append(columns.get(i).getProperty()).append('}');
+        List<String> columnNames = new ArrayList<>(columns.size());
+        List<String> propertyNames = new ArrayList<>(columns.size());
+        for (EntityColumnMetadata column : columns) {
+            columnNames.add(column.getColumn());
+            propertyNames.add(column.getProperty());
         }
-        builder.append(" WHERE ").append(idColumn.getColumn()).append(" = #{entity.")
-            .append(idColumn.getProperty()).append('}');
-        return builder.toString();
+        return getDialect().getUpdateExtractor().buildUpdate(metadata.getTableName(), columnNames, propertyNames,
+            idColumn.getColumn(), idColumn.getProperty());
     }
 
     /**

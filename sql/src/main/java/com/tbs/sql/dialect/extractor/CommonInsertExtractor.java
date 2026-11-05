@@ -1,7 +1,6 @@
 package com.tbs.sql.dialect.extractor;
 
 import com.tbs.sql.dialect.IInsertExtractor;
-import com.tbs.sql.dialect.oracle.extractor.OracleInsertExtractor;
 
 import java.util.List;
 
@@ -41,8 +40,28 @@ public class CommonInsertExtractor implements IInsertExtractor {
                 builder.append(", ");
             }
             builder.append('(');
-            OracleInsertExtractor.buildProps(properties, builder, row);
+            buildProps(properties, builder, row);
         }
         return builder.toString();
+    }
+
+    /**
+     * 拼接一行内各属性的预编译占位符 {@code #{records[行下标].属性名}}。
+     *
+     * <p>标准多行 {@code VALUES} 与 Oracle {@code INSERT ALL} 共用此占位符生成规则，
+     * 故放在通用实现上，各方言提取器按需调用。</p>
+     *
+     * @param properties 属性名清单
+     * @param builder    目标拼接缓冲区
+     * @param row        行下标
+     */
+    public static void buildProps(List<String> properties, StringBuilder builder, int row) {
+        for (int i = 0; i < properties.size(); i++) {
+            if (i > 0) {
+                builder.append(", ");
+            }
+            builder.append("#{records[").append(row).append("].").append(properties.get(i)).append('}');
+        }
+        builder.append(')');
     }
 }

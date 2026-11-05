@@ -1,10 +1,9 @@
 package com.tbs.sql.mapper;
 
+import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.dsl.IQueryBuilder;
-import com.tbs.sql.mapper.impl.ConditionBuilder;
-import com.tbs.sql.mapper.impl.FetchMapper;
-import com.tbs.sql.service.QueryEngine;
+import com.tbs.sql.service.IQueryEngine;
 
 /**
  * 框架通用Mapper接口，提供基于查询条件的通用CRUD操作。
@@ -52,8 +51,6 @@ import com.tbs.sql.service.QueryEngine;
  * @since 2.0.0
  * @see GenericMapper
  * @see IQueryCriteria
- * @see ConditionBuilder
- * @see FetchMapper
  */
 public interface IFrameworkMapper<T, K> extends GenericMapper<T, K>, SmartQueryMapper {
 
@@ -64,7 +61,7 @@ public interface IFrameworkMapper<T, K> extends GenericMapper<T, K>, SmartQueryM
      * @return 查询构建器
      */
     default IQueryBuilder<T> query(Class<T> entityClass) {
-        return QueryEngine.getEntityQueryWrapper(entityClass).query();
+        return SpringUtil.getBean(IQueryEngine.class).query(entityClass);
     }
 
     /**
@@ -74,7 +71,7 @@ public interface IFrameworkMapper<T, K> extends GenericMapper<T, K>, SmartQueryM
      * @return 查询构建器
      */
     default IQueryBuilder<T> query(T entity) {
-        return QueryEngine.getEntityQueryWrapper(entity).query();
+        return SpringUtil.getBean(IQueryEngine.class).query(entity);
     }
 
 
