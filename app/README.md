@@ -86,13 +86,11 @@ java -jar app/target/app-1.0-SNAPSHOT.jar
 
 ## 启动类与注解装配
 
-`AppApplication` 共叠加 **16 个平台注解**（模块能力的启用开关）：
+`AppApplication` 共叠加 **14 个平台注解**（模块能力的启用开关；sql 已改为自动装配，不再占用注解）：
 
 ```java
 @SpringBootApplication(scanBasePackages = {"com.tbs.app"})
 @EnableWebPack                // web：Spring Security + 令牌认证 + 统一响应（含 @EnableCommonPack）
-@EnableTbsSql                 // sql：QueryEngine（需配合下方 @UseMysql 方言）
-@UseMysql                     // MySQL 方言（SqlDialect 装配）
 @EnableTbsAsyncPack           // async：线程池/事件广播/调度
 @EnableTbsCache               // cache：TTL/多级缓存
 @EnableRabbitMq               // rabbitmq：MQ 收发
@@ -107,6 +105,8 @@ java -jar app/target/app-1.0-SNAPSHOT.jar
 @EnableDubbo                  // Dubbo RPC（应用名 dubbo-app-system-service）
 @EnableScriptEngine           // script-engine：SpEL 引擎
 ```
+
+> **sql 无启用注解**：依赖 `sql-impl` + `sql-mysql-impl`（方言）到位后，由 Spring Boot `AutoConfiguration.imports` 自动装配 QueryEngine/SqlDialect/事务/Mapper 扫描，无需 `@EnableTbsSql`/`@UseMysql`。
 
 > 注意 `@SpringBootApplication(scanBasePackages = {"com.tbs.app"})`：组件扫描仅限本包，但各平台注解经 AutoRegister 机制注册各自包的 Bean（`com.tbs.web`、`com.tbs.cache` 等），因此无需扩大扫描范围。
 

@@ -129,15 +129,13 @@ public interface IDataDicService {
 
 ### 启用组件
 
-启动类 `DicServiceApplication` 启用的能力：
+启动类 `DicServiceApplication` 启用的能力（sql 与方言由 `sql-impl` + `sql-mysql-impl` 依赖自动装配，无需注解）：
 
 ```java
 @SpringBootApplication(scanBasePackages = "com.tbs.dic")
-@EnableTbsSql            // sql 模块（注解驱动查询框架）
 @EnableTbsAsyncPack      // async 模块（长期异步任务/调度，optional-execute=false）
 @EnableTbsCache          // cache 模块（Redisson 缓存管理器）
 @EnableSharedLibBean     // shared 共享库 Bean
-@UseMysql                // MySQL 方言
 @EnableTbsRedis          // Redisson（缓存/锁/DataHolder）
 @EnableDubbo             // Dubbo 服务暴露（@DubboService）
 @MapperScan("com.tbs.dic.mapper")
