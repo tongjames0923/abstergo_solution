@@ -47,8 +47,7 @@ tree-struct/
 
 ```java
 @SpringBootApplication
-@UseMysql              // 必须：sql 模块的数据库方言（@UseClosureTableTree 不含方言）
-@UseClosureTableTree   // = @EnableCommonPack + @EnableTbsSql + @Import(ClosureTableAutoRegister)
+@UseClosureTableTree   // = @EnableCommonPack + @Import(ClosureTableAutoRegister)
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -61,7 +60,7 @@ public class Application {
 - **表结构由 JPA `ddl-auto` 自动创建/更新**，无需手工执行建表 SQL；
 - 模块**无 `spring.factories`**，无 i18n 资源文件。
 
-> `@UseClosureTableTree` 内含 `@EnableTbsSql` 但**不含方言注解**，仍需 `@UseMysql`（或其他 `@UseXxx`）提供 `SqlDialect`。
+> sql 引擎与 `SqlDialect` 由 `sql-impl` + 方言模块（`sql-mysql-impl` 等）依赖经 Spring Boot 自动装配提供；`@UseClosureTableTree` 已不再内含 `@EnableTbsSql`，也无需 `@UseMysql`。
 
 ## 数据模型
 
@@ -276,7 +275,7 @@ public class DeptTreeService {
 ## 使用注意事项
 
 1. **依赖坐标不可写父 POM**：`com.tbs:tree-struct` 为聚合 POM，请依赖 `tree-api` 或 `closure-list-impl`
-2. **必须另配方言注解**：`@UseClosureTableTree` 不含 `@UseMysql`，缺失方言会导致 sql 模块 `QueryEngine` 装配失败
+2. **方言由模块提供**：sql 引擎与 `SqlDialect` 来自 `sql-impl` + 方言模块（`sql-mysql-impl` 等）自动装配，应用需依赖其一；缺失方言会导致 `QueryEngine` 装配失败（已不再使用 `@UseMysql` 注解）
 3. **`getChildren` 不存在**：取子节点用 `getDirectChildren`；重建用 `tryRebuildStructure`
 4. **`NoImplTreeStore` 不可直接实例化**：构造即抛异常，勿将其作为默认 Bean
 5. **节点不支持"升级为根"**：`store` 时对已存在节点传 `parentNodeId=null`（或查无父节点）只会记录日志并跳过，不会变为根节点

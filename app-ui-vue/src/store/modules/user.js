@@ -171,6 +171,9 @@ const actions = {
       // 清除路由缓存
       routeCacheService.clearCache()
 
+      // 清空页签，避免换账号后仍保留上一个用户的页签
+      commit('tagsView/DEL_ALL_VIEWS', null, { root: true })
+
       commit('RESET_STATE')
     }
   },
@@ -178,6 +181,7 @@ const actions = {
   // remove token
   async resetToken({ commit }) {
     removeToken() // must remove  token  first
+    commit('tagsView/DEL_ALL_VIEWS', null, { root: true })
     commit('RESET_STATE')
   },
 

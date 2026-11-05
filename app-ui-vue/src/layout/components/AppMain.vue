@@ -1,7 +1,9 @@
 <template>
   <section class="app-main">
     <transition name="fade-transform" mode="out-in">
-      <router-view :key="key" />
+      <keep-alive :max="10">
+        <router-view :key="viewKey" />
+      </keep-alive>
     </transition>
   </section>
 </template>
@@ -10,8 +12,15 @@
 export default {
   name: 'AppMain',
   computed: {
-    key() {
-      return this.$route.path
+    /**
+     * 页面实例缓存键：以 fullPath 为标识，与页签栏的页签一一对应，
+     * 切换页签时保留各自状态；拼上 tagsView 的刷新序号，
+     * 页签右键「刷新页面」递增序号即可强制重建组件实例。
+     * ponytail: 只按 max 上限回收缓存实例，关闭页签不即时销毁（升级路径：页面组件补 name 后改用 include）
+     */
+    viewKey() {
+      const seq = this.$store.state.tagsView.refreshSeq[this.$route.fullPath]
+      return `${this.$route.fullPath}@${seq || 0}`
     }
   }
 }
@@ -19,8 +28,8 @@ export default {
 
 <style scoped>
 .app-main {
-  /*44 = navbar height */
-  min-height: calc(100vh - 44px);
+  /*78 = navbar 44 + tags-view 34 */
+  min-height: calc(100vh - 78px);
   width: 100%;
   position: relative;
   overflow: hidden;
@@ -36,29 +45,29 @@ export default {
 }
 
 .fixed-header + .app-main {
-  padding-top: 44px; /* navbar height */
+  padding-top: 78px; /* navbar height + tags-view height */
 }
 
 /* 响应式设计 */
 @media (max-width: 768px) {
   .app-main {
     padding: 0;
-    min-height: calc(100vh - 44px);
+    min-height: calc(100vh - 78px);
   }
 
   .fixed-header + .app-main {
-    padding-top: 44px;
+    padding-top: 78px;
   }
 }
 
 /* 手机横屏：导航栏压缩为 38px，内容区同步偏移 */
 @media only screen and (orientation: landscape) and (max-width: 896px) {
   .app-main {
-    min-height: calc(100vh - 38px);
+    min-height: calc(100vh - 72px);
   }
 
   .fixed-header + .app-main {
-    padding-top: 38px;
+    padding-top: 72px;
   }
 }
 </style>

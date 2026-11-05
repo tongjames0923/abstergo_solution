@@ -137,7 +137,7 @@ flowchart LR
 
 | 模块 | 定位 | 文档 |
 |------|------|------|
-| [app](app/README.md) | 主应用运行包：16 注解装配全平台能力，34 个控制器，`app-service` :8080 | [README](app/README.md) |
+| [app](app/README.md) | 主应用运行包：14 注解装配全平台能力，34 个控制器，`app-service` :8080 | [README](app/README.md) |
 | [cdc-service](cdc-service/README.md) | CDC 发出服务（可运行）：基于 cdc-mod 捕获 SQL Server 变更，按可配置交换机/路由键发布 `CdcEvent` 到 RabbitMQ 供下游（如 app）消费 | [README](cdc-service/README.md) |
 | [app-ui-vue](app-ui-vue/README.md) | 管理前端：动态路由/表单、用户/角色/字典/缓存/OSS/日志/版本管理 | [README](app-ui-vue/README.md) |
 
@@ -158,7 +158,7 @@ flowchart LR
 |------|------|------|------|
 | `@EnableCommonPack` | common | `@EnableRabbitMq` | rabbitmq-mod |
 | `@EnableTbsAsyncPack` | async | `@UseXxlJob` | xxl-job-mod |
-| `@EnableTbsSql` + `@UseMysql` | sql | `@UseKnife4jPack` | open-api-starter |
+| —（sql 无启用注解，见下注） | sql | `@UseKnife4jPack` | open-api-starter |
 | `@EnableWebPack` | web | `@EnableViewControl` | dynamic-view-route |
 | `@EnableTbsCache` | cache | `@EnableSharedLibBean` | shared |
 | `@EnableTbsCdc` | cdc-mod | `@UseClosureTableTree` | tree-struct |
@@ -166,6 +166,8 @@ flowchart LR
 | `@EnableScriptEngine` | script-engine | `@EnableTbsPush` | push-mod |
 
 > `push-mod` 另有传输适配注解 `@EnableTbsPushSse` / `@EnableTbsPushWebSocket`（引入即含协议层 `@EnableTbsPush`），总开关 `tbs.push.enable`。另有 `@EnableTbsSchedule`（时间轮/延迟调度）、`@EnableCdcMysql` / `@EnableCdcSqlserver`（CDC MySQL / SQL Server 实现）按需启用；provider 多来源路由随 `@EnableCommonPack` 生效，无需单独注解。
+>
+> **sql 模块无启用注解**：拆分为 `sql-api` / `sql-impl` / 各方言模块（`sql-mysql-impl` 等），基于 Spring Boot `AutoConfiguration.imports` 自动装配——引入 `sql-impl` + 一个方言模块即生效，不再需要 `@EnableTbsSql` / `@UseMysql`。
 
 聚合入口见 [app/README.md](app/README.md) 的「启动类与注解装配」。
 

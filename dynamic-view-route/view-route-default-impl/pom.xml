@@ -31,7 +31,7 @@
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>
-            <artifactId>sql</artifactId>
+            <artifactId>sql-impl</artifactId>
         </dependency>
         <!-- YAML 解析依赖 -->
         <dependency>

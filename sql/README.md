@@ -2,7 +2,7 @@
 
 ## 模块概述
 
-SQL 模块（`com.tbs:sql`）是基于 MyBatis 的**注解驱动 SQL 构建框架**（Java 21），核心目标是消除手写 SQL 与 XML 映射：通过注解描述查询语义，框架自动完成 SQL 生成、参数绑定、结果映射与分页排序。
+SQL 模块（`com.tbs:sql-api` / `sql-impl` / 各方言实现模块）是基于 MyBatis 的**注解驱动 SQL 构建框架**（Java 21），核心目标是消除手写 SQL 与 XML 映射：通过注解描述查询语义，框架自动完成 SQL 生成、参数绑定、结果映射与分页排序。
 
 四种查询方式覆盖不同场景：
 
@@ -15,57 +15,71 @@ SQL 模块（`com.tbs:sql`）是基于 MyBatis 的**注解驱动 SQL 构建框�
 
 其他能力：**字段自动填充**（ID/时间）、**SQL 执行观测**（日志/耗时/慢 SQL 告警）、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
 
-技术底座：`mybatis-spring-boot-starter`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据与建表）、`com.mysql:mysql-connector-j`（版本由根 pom 管控，已排除仅 X DevAPI 需要的 `protobuf-java`）、`com.tbs:common`。通用 CRUD 由 `GenericMapper` 自实现，不依赖外部通用 Mapper 框架。
+技术底座：`sql-api` 依赖 `mybatis-spring-boot-starter`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据）与 `com.tbs:common`；具体 JDBC 驱动由各数据库方言实现模块携带（如 `sql-mysql-impl` 携带 `com.mysql:mysql-connector-j`，版本由根 pom 管控、已排除仅 X DevAPI 需要的 `protobuf-java`）。通用 CRUD 由 `GenericMapper` 自实现，不依赖外部通用 Mapper 框架。
 
 ## 模块结构
 
 ```
-sql/
-└── src/main/java/com/tbs/sql/
-    ├── annotation/               # 全部注解（14 个）
-    │   ├── core/                 #   @EnableTbsSql（启用）/ @SelectSQL（自定义SQL）
-    │   ├── condition/            #   @QueryField / @QueryFields / @OrField / @QueryIndex
-    │   ├── mapping/              #   @QueryMapping（列名映射）
-    │   ├── autofill/             #   @SqlAutoValue / @AutoSetDate
-    │   ├── order/                #   @QueryOrderField
-    │   └── dialect/              #   @UseMysql / @UseOracle / @UsePostgreSql / @UseSqlServer
-    ├── autoconfig/               # SqlAutoConfiguration + 4 个方言自动配置
-    ├── properties/               # SqlProperty（tbs.sql）
-    ├── service/                  # QueryEngine（查询引擎，原 QueryUtil）
-    ├── dsl/                      # 流式查询接口 + impl/
-    ├── builder/                  # SqlDriver / EntitySqlDriver / ISqlBuildContext 等
-    ├── criteria/                 # IQueryCriteria / IPage / Abstract*Criteria + impl/
-    ├── datasource/               # DataSource 装饰、JDBC 执行拦截与 SQL 观测：decoration / interceptor / model
-    ├── mapper/                   # IFrameworkMapper / GenericMapper（通用CRUD）/ SmartQueryMapper / IRawSqlSelectMapper + impl/
-    ├── model/                    # where / select / order / limit / group / query 模型
-    ├── dialect/                  # SqlDialect + 4 种数据库实现 + extractor/（含 SELECT 与 INSERT 提取器）
-    ├── assembler/                # ISqlAssembler / DefaultSqlAssembler（SQL 片段拼装）
-    ├── interceptor/              # SqlAutoFillInterceptor / SqlComposeInterceptor
-    ├── provider/                 # IAutoValueProvider / ICustomWhereProvider + impl/
-    ├── order/                    # IQueryOrderBy 排序策略 + impl/（Asc/Desc/OrderedModel）
-    ├── metadata/                 # EntityMetadataExtractor / EntityTableMetadata（写操作元数据）/ FieldMetadataCache
-    ├── constants/                # OrderConstants
-    ├── enums/                    # ContrastEnum / ConnectorEnum / OrderEnum
-    └── util/                     # SqlUtils（表名/列名解析）/ TransactionUtil（编程式事务）
+sql/                              # 聚合 pom
+├── sql-api/                      # 契约层（不携带 JDBC 驱动 / 中间件客户端）
+│   └── com/tbs/sql/
+│       ├── annotation/           #   全部注解（@SelectSQL/@QueryField/@SqlAutoValue/@LogicDeleteEntity…）
+│       ├── properties/           #   SqlProperty（tbs.sql）
+│       ├── service/              #   IQueryEngine（查询引擎门面）
+│       ├── dsl/                  #   流式查询接口 + clause/
+│       ├── builder/              #   SqlDriver / ISqlBuildContext / ImportedISqlBuildContext 等契约
+│       ├── criteria/             #   IQueryCriteria / IPage / Abstract*Criteria / DefaultEntityCriteria
+│       ├── mapper/               #   IFrameworkMapper / GenericMapper / SmartQueryMapper / IRawSqlSelectMapper + GenericSqlProvider / RawSqlSelectProvider / ConditionBuilder
+│       ├── dialect/              #   SqlDialect + I{Select,Where,Order,Group,Limit,Insert,Update,Delete}Extractor 接口
+│       ├── assembler/            #   ISqlAssembler
+│       ├── datasource/           #   JdbcExecutionInterceptor + model（裁决上下文/命令类型）
+│       ├── interceptor/          #   SqlComposeInterceptor（WHERE 改写 SPI）
+│       ├── provider/             #   IAutoValueProvider / ICustomWhereProvider + IdAutoProvider / DateValueAutoProvider
+│       ├── order/                #   IQueryOrderBy / IQueryOrderedModel / OrderedModel
+│       ├── metadata/ · model/ · enums/ · constants/ · exception/   # 元数据、模型、枚举、常量、异常
+│       └── util/                 #   SqlUtils（表名/列名解析）、SqlTextUtils（SQL 文本工具）
+├── sql-impl/                     # 核心引擎（依赖 sql-api）
+│   └── com/tbs/sql/
+│       ├── autoconfig/           #   SqlAutoConfiguration + DataSourceDecorationConfiguration（均 @AutoConfiguration）
+│       ├── service/              #   QueryEngine（实现 IQueryEngine）
+│       ├── dsl/impl/             #   EntityQueryBuilder / EntityWhereClause 等 DSL 实现
+│       ├── builder/              #   AbstractSqlDriver / EntitySqlDriver
+│       ├── assembler/impl/       #   DefaultSqlAssembler
+│       ├── dialect/extractor/    #   Common*Extractor（含 CommonAssembler）
+│       ├── datasource/           #   DataSource 装饰 + JDBC 执行拦截 impl
+│       ├── interceptor/          #   SqlAutoFillInterceptor / SqlLogicDeleteIntercepter
+│       ├── order/impl/           #   Asc/Desc/OrderedModelOrderImpl
+│       ├── util/                 #   TransactionUtil（编程式事务）
+│       └── i18n/ · resources     #   SqlMessageSourceProvider + messages-sql*.properties + AutoConfiguration.imports
+├── sql-mysql-impl/               # MySQL 方言：MysqlDialect + MysqlLimitExtractor + MysqlDialectAutoConfiguration + mysql 驱动
+├── sql-oracle-impl/              # Oracle 方言：OracleDialect + INSERT ALL/LIMIT 提取器 + OracleAssembler + 自动配置
+├── sql-postgresql-impl/          # PostgreSQL 方言：PostgreSqlDialect + SELECT/LIMIT 提取器 + 自动配置
+└── sql-sqlserver-impl/           # SQL Server 方言：SqlServerDialect + INSERT/LIMIT 提取器 + SqlServerAssembler + 自动配置
 ```
 
 ## 快速开始
 
 ### 1. 依赖引入
 
+引擎模块 + 一个数据库方言模块（决定 `SqlDialect` 与 JDBC 驱动）：
+
 ```xml
 <dependency>
     <groupId>com.tbs</groupId>
-    <artifactId>sql</artifactId>
+    <artifactId>sql-impl</artifactId>
+</dependency>
+<dependency>
+    <groupId>com.tbs</groupId>
+    <artifactId>sql-mysql-impl</artifactId>
 </dependency>
 ```
 
-### 2. 启用（必须同时指定数据库方言）
+### 2. 启用（自动配置，无需注解）
+
+引入 `sql-impl` 与某个方言模块即自动装配：`SqlAutoConfiguration` 注册引擎/拦截器/事务管理并扫描 `com.tbs.sql.mapper`；方言模块的 `*DialectAutoConfiguration` 提供 `SqlDialect`、八个 Extractor 与 `ISqlAssembler` Bean。应用启动类**不再需要** `@EnableTbsSql` / `@UseMysql` 等注解。
 
 ```java
 @SpringBootApplication
-@EnableTbsSql   // 导入 SqlAutoConfiguration，开启事务管理，扫描 com.tbs.sql.mapper
-@UseMysql       // 必须：提供 SqlDialect Bean，否则 QueryEngine 无法装配
 public class Application {
     public static void main(String[] args) {
         SpringApplication.run(Application.class, args);
@@ -73,7 +87,7 @@ public class Application {
 }
 ```
 
-`@EnableTbsSql` = `@Import(SqlAutoConfiguration)` + `@EnableTransactionManagement` + `@EnableConfigurationProperties(SqlProperty)`；方言由 `@UseMysql` / `@UseOracle` / `@UsePostgreSql` / `@UseSqlServer` 单独导入（方言配置类同时提供 `SqlDialect`、六个 Extractor 与 `ISqlAssembler` Bean）。
+> 换数据库只换方言模块（`sql-oracle-impl` / `sql-postgresql-impl` / `sql-sqlserver-impl`）；若同时引入多个方言模块，各方言 `SqlDialect` Bean 带 `@ConditionalOnMissingBean`，只装配先注册的一个。
 
 ### 3. DSL 流式查询
 
@@ -203,9 +217,10 @@ IQueryCriteria（getSelectSQLInfo() → SelectInfoModel）
 ├── AbstractEntityCriteria        # 基于实体类元数据自动生成
 │   └── DefaultEntityCriteria     # 直接用 new DefaultEntityCriteria(User.class)
 ├── AbstractResourceCriteria      # 从 classpath SQL 文件加载（UTF-8，全局缓存）
-└── AbstractRemoteConfigQueryCriteria
-    └── NacosConfigQueryCriteria  # 从 Nacos 配置读取 SQL
+└── AbstractRemoteConfigQueryCriteria  # provider 中立的“远程配置读取 SQL”契约
 ```
+
+> 具体配置源的实现（如从 Nacos 读取 SQL）不落在 sql 框架模块，由使用方模块（shared-pojo 的 `NacosConfigQueryCriteria`）继承 `AbstractRemoteConfigQueryCriteria` 落地，避免框架硬绑定中间件客户端。
 
 实体元数据由 `EntityMetadataExtractor.pullFromClass()` 提取（`@Table` 表名 + 非 static/final/非 `@Transient` 字段，**含父类声明字段**），带类级缓存（`clearCache()` 可清除）。`pullFromClass` 要求实体必须有 `@Table`；`GenericMapper` 走的 `pullTableMetadata` 同样识别父类字段，且表名缺失 `@Table` 时按类名驼峰转下划线推导。
 
@@ -363,7 +378,7 @@ public class Demo {
 
 实现细节：字段扫描递归父类并缓存；Provider 实例双重检查锁缓存；支持 MyBatis `Map` 入参（集合/数组递归下钻，按对象身份去重）；**填充抛异常时直接中断本次写入**（以 `sql.autofill.field.failed` 报错），不会降级为告警日志而插入主键为 null 的脏数据。
 
-> 注意：`SqlAutoFillInterceptor` 在 `SqlAutoConfiguration` 中**无条件注册**（无开关配置），启用 `@EnableTbsSql` 即生效。
+> 注意：`SqlAutoFillInterceptor` 在 `SqlAutoConfiguration` 中**无条件注册**（无开关配置），引入 `sql-impl` 后自动装配即生效。
 
 ## 五、拦截器与日志
 
@@ -461,16 +476,16 @@ public class DangerousDdlInterceptor implements JdbcExecutionInterceptor {
 
 ## 七、数据库方言
 
-框架通过 `SqlDialect`（六个 Extractor：Select / Where / Order / Group / Limit / Insert）抽象数据库差异：
+框架通过 `SqlDialect`（八个 Extractor：Select / Where / Order / Group / Limit / Insert / Update / Delete）抽象数据库差异：
 
-| 启用注解 | 方言 | 分页实现 |
+| 方言模块 | 方言 | 分页实现 |
 |----------|------|----------|
-| `@UseMysql` | `MysqlDialect` | `MysqlLimitExtractor`（LIMIT） |
-| `@UseOracle` | `OracleDialect` | `OracleLimitExtractor`（ROWNUM 嵌套） |
-| `@UsePostgreSql` | `PostgreSqlDialect` | `PostgreSqlLimitExtractor` |
-| `@UseSqlServer` | `SqlServerDialect` | `SqlServerLimitExtractor`（OFFSET/FETCH） |
+| `sql-mysql-impl` | `MysqlDialect` | `MysqlLimitExtractor`（LIMIT） |
+| `sql-oracle-impl` | `OracleDialect` | `OracleLimitExtractor`（ROWNUM 嵌套） |
+| `sql-postgresql-impl` | `PostgreSqlDialect` | `PostgreSqlLimitExtractor` |
+| `sql-sqlserver-impl` | `SqlServerDialect` | `SqlServerLimitExtractor`（OFFSET/FETCH） |
 
-除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。批量 INSERT 只在 Oracle 上有语法差异（`INSERT ALL`），SQL Server 仅收紧容量上限，两者各自覆写 `getInsertExtractor()`。扩展新数据库：实现 `SqlDialect` + 各 Extractor，参照 `MysqlDialectAutoConfiguration` 编写配置类并配套 `@UseXxx` 注解。
+除分页外，SELECT/WHERE/ORDER/GROUP 由 `dialect/extractor/` 下的 `Common*Extractor` 统一处理（WHERE 提取器按方言名构造以适配标识符引用差异）。批量 INSERT 只在 Oracle 上有语法差异（`INSERT ALL`），SQL Server 仅收紧容量上限，两者各自覆写 `getInsertExtractor()`。**所有语句的 SQL 生成一律经 `SqlDialect` 的提取器产出（统一管线）**：无方言差异的 SELECT/WHERE/ORDER/GROUP/UPDATE/DELETE 由 `Common*Extractor` 统一提供、各方言默认复用不覆写（UPDATE/DELETE 语法四库一致，仅留 `getUpdateExtractor()`/`getDeleteExtractor()` 与按库覆写的扩展位）；只有出现库间差异（如分页、批量 INSERT）才引入方言专有实现。扩展新数据库：新建独立方言模块（如 `sql-xxx-impl`，依赖 `sql-impl`），实现 `SqlDialect` + 差异 Extractor，参照 `MysqlDialectAutoConfiguration` 编写 `@AutoConfiguration` 配置类并在 `META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports` 登记，方言 `SqlDialect` Bean 加 `@ConditionalOnMissingBean(SqlDialect.class)`。
 
 ## 八、编程式事务
 
@@ -487,7 +502,7 @@ TransactionUtil.getInstance().executeTransaction(
     TransactionDefinition.PROPAGATION_REQUIRES_NEW, () -> { /* ... */ });
 ```
 
-异常自动回滚后重新抛出（`TransactionSystemException` / `TransactionException` 原样，其他包装为 `FormattedRuntimeException`）。声明式场景请直接用 `@Transactional`（`@EnableTbsSql` 已开启事务管理）。
+异常自动回滚后重新抛出（`TransactionSystemException` / `TransactionException` 原样，其他包装为 `FormattedRuntimeException`）。声明式场景请直接用 `@Transactional`（`SqlAutoConfiguration` 已开启事务管理）。
 
 ## 配置说明
 
@@ -543,7 +558,7 @@ public class TenantIdProvider implements IAutoValueProvider {
 
 ### 自定义 SQL 组装器 / 方言
 
-注册 `ISqlAssembler` 或 `SqlDialect` 类型的 Bean **并标注 `@Primary`** 才能生效：方言自动配置已注册了同类型 Bean，且它们的 `@Bean` 上没有 `@ConditionalOnMissingBean`，不加 `@Primary` 会得到两个候选而让 `QueryEngine` 注入失败。另需留意 Oracle / SQL Server 的默认组装器各自覆写了 `getDefaultOrderSql()`，自定义时需自行保留分页所需的默认排序列。
+自定义 `SqlDialect`：方言自动配置的 `sqlDialect` Bean 已带 `@ConditionalOnMissingBean`，你注册任意 `SqlDialect` Bean 即可让方言自动退避，无需 `@Primary`。自定义 `ISqlAssembler`：因各方言装配的 `@Bean` 上没有 `@ConditionalOnMissingBean`，需标注 `@Primary`，否则与方言默认组装器形成两个候选而让 `QueryEngine` 注入失败。另需留意 Oracle / SQL Server 的默认组装器各自覆写了 `getDefaultOrderSql()`，自定义时需自行保留分页所需的默认排序列。
 
 ### 清除元数据缓存
 
@@ -551,7 +566,7 @@ public class TenantIdProvider implements IAutoValueProvider {
 
 ## 使用注意事项
 
-1. **方言注解不可省略**：`@EnableTbsSql` 只导入核心配置，`SqlDialect` Bean 来自 `@UseXxx`；缺失会导致 `QueryEngine` 装配失败
+1. **必须引入一个方言模块**：`sql-impl` 提供引擎但不含 `SqlDialect`；`SqlDialect` Bean 来自方言模块（`sql-mysql-impl` 等）的自动配置，缺失会导致 `QueryEngine` 装配失败
 2. **自动填充无开关**：`SqlAutoFillInterceptor` 无条件注册，实体标注 `@SqlAutoValue`/`@AutoSetDate` 即生效（不存在 `tbs.sql.enable-auto-fill-value-interceptor` 配置项）
 3. **`@SelectSQL` 只写在类上，且 SQL 内不得自带 WHERE**：`EntityMetadataExtractor.pullFromClass()` 读取类级注解，命中后只回填 `rawSql` 并跳过 `@Table` 与字段清单解析；装配器仍会在其后追加 WHERE / GROUP BY / ORDER BY / LIMIT，逻辑删除与数据权限拦截器产生的条件也会拼到该 SQL 尾部——JOIN 查询里没这个列或列名有歧义时直接报错；列投影（include/exclude）对自定义 SQL 无效；注解写在父类对子类不生效
 4. **列名解析优先级为 `@Column` > `@QueryMapping` > 驼峰转下划线**：前两者都不声明时按 Hibernate 规则转下划线，保证运行期列名与建表列名一致
@@ -575,5 +590,5 @@ public class TenantIdProvider implements IAutoValueProvider {
 
 ---
 
-**最后更新**: 2026年10月
+**最后更新**: 2026年11月
 **版本**: 1.0-SNAPSHOT

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.tbs</groupId>
+        <artifactId>sql</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>sql-impl</artifactId>
+    <description>SQL 框架核心引擎实现：QueryEngine、DSL 实现、SQL 驱动与组装器、通用提取器、数据源装饰与 JDBC 拦截、自动填充/逻辑删除拦截、自动配置与 i18n</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>sql-api</artifactId>
+        </dependency>
+    </dependencies>
+</project>

@@ -5,14 +5,11 @@ import com.tbs.cache.annotation.EnableTbsCache;
 import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.shared.annotation.EnableSharedLibBean;
-import com.tbs.sql.annotation.core.EnableTbsSql;
-import com.tbs.sql.annotation.dialect.UseMysql;
-
 import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
+import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
-import org.mybatis.spring.annotation.MapperScan;
 
 /**
  * 日志服务启动类
@@ -24,11 +21,9 @@ import org.mybatis.spring.annotation.MapperScan;
  * @since 1.0.0
  */
 @SpringBootApplication(scanBasePackages = {"com.tbs.logging"})
-@EnableTbsSql
 @EnableTbsAsyncPack
 @EnableTbsCache
 @EnableSharedLibBean
-@UseMysql
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableTbsRedis
 @EnableDubbo

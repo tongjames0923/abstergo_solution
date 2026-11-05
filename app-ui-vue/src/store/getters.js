@@ -12,6 +12,7 @@ const getters = {
   currentDepartment: state => state.user.currentDepartment,
   accountStatus: state => state.user.accountStatus,
   accountStatusStr: state => state.user.accountStatusStr,
-  routes: state => state.user.routes
+  routes: state => state.user.routes,
+  visitedViews: state => state.tagsView.visitedViews
 }
 export default getters

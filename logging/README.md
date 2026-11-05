@@ -190,15 +190,13 @@ List<LogOperateTypeView> report = systemLogService.getLogOperateTypeList(7);
 
 ### 启用组件
 
-启动类 `LoggingServiceApplication`：
+启动类 `LoggingServiceApplication`（sql 与方言由 `sql-impl` + `sql-mysql-impl` 依赖自动装配，无需注解）：
 
 ```java
 @SpringBootApplication(scanBasePackages = {"com.tbs.logging"})
-@EnableTbsSql            // sql 模块（注解驱动查询框架）
 @EnableTbsAsyncPack      // async 模块
 @EnableTbsCache          // cache 模块（Redisson 缓存管理器）
 @EnableSharedLibBean     // shared 共享库 Bean（含 SystemOperateMapper）
-@UseMysql                // MySQL 方言
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableTbsRedis          // Redisson
 @EnableDubbo             // Dubbo 服务暴露

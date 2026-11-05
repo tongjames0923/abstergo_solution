@@ -10,36 +10,15 @@
     </parent>
 
     <artifactId>sql</artifactId>
+    <packaging>pom</packaging>
+    <description>SQL 查询框架聚合模块：契约(sql-api) + 核心引擎(sql-impl) + 各方言实现(sql-{db}-impl)</description>
 
-    <properties>
-        <java.version>21</java.version>
-        <maven.compiler.parameters>true</maven.compiler.parameters>
-        <maven.compiler.release>21</maven.compiler.release>
-        <maven.compiler.source>21</maven.compiler.source>
-        <maven.compiler.target>21</maven.compiler.target>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-
-    </properties>
-
-    <dependencies>
-        <!--MySQL Connector/J（版本与 protobuf-java 排除由根 pom 依赖管理统一收拢）-->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-        </dependency>
-        <!-- MyBatis 持久层，通用 CRUD 由 GenericMapper 自实现 -->
-        <dependency>
-            <groupId>org.mybatis.spring.boot</groupId>
-            <artifactId>mybatis-spring-boot-starter</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.tbs</groupId>
-            <artifactId>common</artifactId>
-        </dependency>
-    </dependencies>
+    <modules>
+        <module>sql-api</module>
+        <module>sql-impl</module>
+        <module>sql-mysql-impl</module>
+        <module>sql-oracle-impl</module>
+        <module>sql-postgresql-impl</module>
+        <module>sql-sqlserver-impl</module>
+    </modules>
 </project>

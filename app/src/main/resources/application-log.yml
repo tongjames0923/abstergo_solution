@@ -6,8 +6,8 @@ logging:
     # 落盘路径：启动参数 -DLOG_PATH=/data/logs 可覆盖，默认相对启动目录的 logs/
     name: ${LOG_PATH:logs}/app-service.log
   pattern:
-    # 文件 pattern 不含 %clr 等 Spring 扩展关键字，避免非 Spring 上下文初始化失败，也不写入 ANSI 颜色码
-    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{50} - %msg%n"
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} :%n%m%n%wEx"
+    file: "%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%thread] %logger{50} - %msg%n%wEx"
   logback:
     rollingpolicy:
       # 单文件超过 100MB 或跨天即滚动，归档自动 gzip 压缩
