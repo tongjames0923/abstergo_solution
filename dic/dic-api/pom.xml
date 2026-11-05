@@ -35,7 +35,7 @@
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>
-            <artifactId>sql</artifactId>
+            <artifactId>sql-api</artifactId>
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>

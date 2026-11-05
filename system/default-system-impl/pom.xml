@@ -45,6 +45,10 @@
             <groupId>com.tbs</groupId>
             <artifactId>push-api</artifactId>
         </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>sql-impl</artifactId>
+        </dependency>
     </dependencies>
 
 </project>

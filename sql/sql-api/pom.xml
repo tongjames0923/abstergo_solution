@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>com.tbs</groupId>
+        <artifactId>sql</artifactId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>sql-api</artifactId>
+    <description>SQL 框架契约层：注解、模型、条件与 DSL 接口、方言 SPI、Mapper 接口、元数据与查询引擎门面；不依赖任何数据库驱动</description>
+
+    <dependencies>
+        <!-- MyBatis 持久层：Mapper 接口注解与 Provider 契约所需（不含具体驱动） -->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+        </dependency>
+        <!-- JPA 注解(@Table/@Column/@Id)：实体元数据与建表契约 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.tbs</groupId>
+            <artifactId>common</artifactId>
+        </dependency>
+    </dependencies>
+</project>

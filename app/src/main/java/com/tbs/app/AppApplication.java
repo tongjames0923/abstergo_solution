@@ -10,8 +10,6 @@ import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.script.annotation.EnableScriptEngine;
 import com.tbs.shared.annotation.EnableSharedLibBean;
-import com.tbs.sql.annotation.core.EnableTbsSql;
-import com.tbs.sql.annotation.dialect.UseMysql;
 import com.tbs.struct.tree.closure.annotation.UseClosureTableTree;
 import com.tbs.view.annotation.EnableViewControl;
 import com.tbs.web.annotation.EnableWebPack;
@@ -32,7 +30,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
  */
 @EnableWebPack
 @SpringBootApplication(scanBasePackages = {"com.tbs.app"})
-@EnableTbsSql
 @EnableTbsAsyncPack
 @EnableTbsCache
 @EnableRabbitMq
@@ -40,7 +37,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @UseKnife4jPack
 @EnableViewControl
 @EnableSharedLibBean
-@UseMysql
 @UseClosureTableTree
 @EnableAspectJAutoProxy(exposeProxy = true)
 @EnableTbsRedis
