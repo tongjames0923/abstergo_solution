@@ -146,6 +146,16 @@ export default {
     about: '关于系统'
   },
 
+  // 多标签页签
+  tagsView: {
+    refresh: '刷新页面',
+    close: '关闭页签',
+    closeOthers: '关闭其他',
+    closeLeft: '关闭左侧',
+    closeRight: '关闭右侧',
+    closeAll: '全部关闭'
+  },
+
   // 关于系统
   about: {
     title: '关于系统',

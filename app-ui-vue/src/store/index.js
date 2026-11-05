@@ -7,6 +7,7 @@ import user from './modules/user'
 import formConfigs from './modules/FormConfig'
 import routes from './modules/routes'
 import push from './modules/push'
+import tagsView from './modules/tagsView'
 
 Vue.use(Vuex)
 
@@ -17,7 +18,8 @@ const store = new Vuex.Store({
     user,
     formConfigs,
     routes,
-    push
+    push,
+    tagsView
   },
   getters
 })

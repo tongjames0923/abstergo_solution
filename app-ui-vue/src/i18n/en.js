@@ -142,6 +142,16 @@ export default {
     about: 'About'
   },
 
+  // Tags view
+  tagsView: {
+    refresh: 'Refresh',
+    close: 'Close Tab',
+    closeOthers: 'Close Others',
+    closeLeft: 'Close Left',
+    closeRight: 'Close Right',
+    closeAll: 'Close All'
+  },
+
   // About System
   about: {
     title: 'About System',
