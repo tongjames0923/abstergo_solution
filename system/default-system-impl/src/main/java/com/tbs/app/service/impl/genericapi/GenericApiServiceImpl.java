@@ -1,6 +1,7 @@
 package com.tbs.app.service.impl.genericapi;
 
 import com.tbs.app.config.AppSettingProperty;
+import com.tbs.app.constant.SystemI18nConstant;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.common.delegate.IDelegateInvoker;
@@ -17,12 +18,11 @@ import com.tbs.shared.mapper.SystemGenericApiMapper;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.web.genric.IApiInstancePreAuth;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
-
-import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -30,7 +30,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.GENERIC_API;
-import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 泛化API配置服务实现类
@@ -189,6 +188,26 @@ public class GenericApiServiceImpl
     public SystemGenericApiEntity getByApiId(String apiId) {
         return QueryEngine.getEntityQueryWrapper(new SystemGenericApiEntity()).query().where()
             .equal(SystemGenericApiEntity::getApiId, apiId).pour().fetchOne();
+    }
+
+    @Override
+    public SystemGenericApiEntity getInvokableApi(String apiId) {
+        SystemGenericApiEntity apiConfig = ((IGenericApiService)getInstance()).getByApiId(apiId);
+        AssertUtil.isTrue(apiConfig == null).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .i18n(SystemI18nConstant.GENERIC_API_NOT_EXISTS).params(apiId).throwIt();
+        AssertUtil.isTrue(!Objects.equals(CommonFlagEnum.ACTIVE.getCode(), apiConfig.getFlag()))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).i18n(SystemI18nConstant.GENERIC_API_DISABLED)
+            .params(apiConfig.getApiName()).throwIt();
+        return apiConfig;
+    }
+
+    @Override
+    public SystemGenericApiEntity getPublicInvokableApi(String apiId) {
+        SystemGenericApiEntity apiConfig = getInvokableApi(apiId);
+        AssertUtil.isTrue(Boolean.TRUE.equals(apiConfig.getNeedAuth()))
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(SystemI18nConstant.GENERIC_API_NEED_AUTH)
+            .params(apiConfig.getApiName()).throwIt();
+        return apiConfig;
     }
 
     @CacheEvict(cacheNames = GENERIC_API, allEntries = true)

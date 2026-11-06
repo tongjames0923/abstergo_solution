@@ -1,0 +1,99 @@
+package com.tbs.web.genric;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.web.BaseController;
+import com.tbs.web.constant.WebI18nConstant;
+import com.tbs.web.genric.config.GenericApiConfig;
+import com.tbs.web.result.AjaxResult;
+import jakarta.annotation.Resource;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.*;
+
+/**
+ * 抽象泛化调用控制器（新版链路）
+ * <p>
+ * 只提供两个入口，与旧的信封式 {@code POST /invoke} 并存、互不影响：
+ * </p>
+ * <ol>
+ *     <li>{@code POST /call/{apiId}}：请求体是命名式 JSON 对象或位置式 JSON 数组，类型与顺序取登记定义；</li>
+ *     <li>{@code GET /meta/{apiId}}：透出登记的入参定义，供前端渲染表单与预填示例。</li>
+ * </ol>
+ * <p>
+ * 子类只负责两件事：从配置存储取出「可调用的泛化API」（含合法性判定），以及按认证维度给出当前用户。
+ * 响应沿用统一结构与双层成功标志（与旧链路一致，避免破坏性变更）。
+ * </p>
+ *
+ * @author abstergo
+ * @since 1.0.0
+ */
+public abstract class AbstractGenricInvokeController extends BaseController {
+
+    /**
+     * 泛化调用目标工厂
+     */
+    @Resource
+    protected GenericApiTargetFactory genericApiTargetFactory;
+
+    /**
+     * 取出可被泛化调用的 API 配置
+     * <p>
+     * 存在性、启用态、认证约束等规则在 Service 层断言，本方法只做取数与模型映射。
+     * </p>
+     *
+     * @param apiId API 唯一标识
+     * @return 泛化调用配置（含入参定义）
+     */
+    protected abstract GenericApiConfig loadApiConfig(String apiId);
+
+    /**
+     * 获取当前登录用户
+     *
+     * @return 当前用户详情；匿名入口返回 {@code null}
+     */
+    protected abstract UserDetails getCurrentUser();
+
+    /**
+     * 按登记定义泛化调用目标方法
+     *
+     * @param apiId   API 唯一标识
+     * @param version 请求版本，可空表示不约束
+     * @param body    请求体：命名式 JSON 对象或位置式 JSON 数组，无参方法可省略
+     * @return 统一响应，数据为调用结果视图
+     */
+    @PostMapping("/call/{apiId}")
+    public AjaxResult call(@PathVariable String apiId, @RequestParam(required = false) Integer version,
+        @RequestBody(required = false) JsonNode body) {
+        ConfiguredGenricApiInstance instance = resolveInstance(apiId, version);
+        return successResult(instance.invokeByConfig(body, getCurrentUser()));
+    }
+
+    /**
+     * 查询 API 登记的入参定义
+     *
+     * @param apiId   API 唯一标识
+     * @param version 请求版本，可空表示不约束
+     * @return 统一响应，数据为按签名顺序排列的参数定义
+     */
+    @GetMapping("/meta/{apiId}")
+    public AjaxResult meta(@PathVariable String apiId, @RequestParam(required = false) Integer version) {
+        ConfiguredGenricApiInstance instance = resolveInstance(apiId, version);
+        return successResult(instance.paramsMeta());
+    }
+
+    /**
+     * 取出配置并构建调用目标，同时校验请求版本与登记版本
+     *
+     * @param apiId   API 唯一标识
+     * @param version 请求版本，可以为 {@code null}
+     * @return 泛化调用目标
+     */
+    private ConfiguredGenricApiInstance resolveInstance(String apiId, Integer version) {
+        GenericApiConfig config = loadApiConfig(apiId);
+        AssertUtil.isTrue(version != null && config.getVersion() != null && !version.equals(config.getVersion()))
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).i18n(WebI18nConstant.GENERIC_API_API_VERSION_NOT_FOUND)
+            .throwIt();
+        return genericApiTargetFactory.create(config);
+    }
+}

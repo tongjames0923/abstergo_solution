@@ -3,6 +3,8 @@ package com.tbs.logging.config;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.common.data.ITableDataHandler;
 import com.tbs.logging.core.ILogExtractor;
+import com.tbs.logging.demo.IStandaloneDemoService;
+import com.tbs.logging.demo.StandaloneDemoServiceImpl;
 import com.tbs.logging.form.LoggingRecordForm;
 import com.tbs.logging.impl.DbLogExtractor;
 import com.tbs.logging.impl.RemoteTableDataOperator;
@@ -29,6 +31,12 @@ import org.springframework.context.annotation.DependsOn;
 
 @Configuration
 public class LoggingServiceConfig {
+
+    /**
+     * 泛化调用演示服务的业务分区（Dubbo group），与登记配置行的 business 取值一致
+     */
+    private static final String STANDALONE_DEMO_GROUP = "demo";
+
     @Bean
     public ILogExtractor logExtractor() {
         return new DbLogExtractor();
@@ -53,6 +61,22 @@ public class LoggingServiceConfig {
     @DubboService
     public ITableDataHandler remoteTableDataOperator() {
         return new RemoteTableDataOperator();
+    }
+
+    /**
+     * 泛化调用演示服务
+     * <p>
+     * 接口与实现都只在本模块（不进 {@code logging-api}），使网关 classpath 上看不到接口类，
+     * 以此验证「零 jar、仅配置」的泛化调用链路。以 {@code group=demo} 发布，
+     * 供配置行 {@code business} 坐标命中；登记时留空 business 同样能命中（该维度不约束）。
+     * </p>
+     *
+     * @return 泛化调用演示服务实现
+     */
+    @Bean
+    @DubboService(group = STANDALONE_DEMO_GROUP)
+    public IStandaloneDemoService standaloneDemoService() {
+        return new StandaloneDemoServiceImpl();
     }
 
     // ==================== MQ v2 记录驱动模型 · 日志消费链路（v1 DbLogWriter 已下线，v2 全面接管） ====================

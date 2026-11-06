@@ -307,6 +307,7 @@ CREATE TABLE `sys_generic_api` (
   `api_id` varchar(100) NOT NULL COMMENT 'API唯一标识',
   `api_name` varchar(200) NOT NULL COMMENT 'API名称',
   `app_name` varchar(100) NOT NULL COMMENT '服务应用名（用于服务发现）',
+  `business` varchar(100) DEFAULT NULL COMMENT '业务分区（Dubbo group），空表示不约束',
   `create_by` bigint DEFAULT NULL COMMENT '创建者用户ID',
   `create_time` datetime(6) DEFAULT NULL COMMENT '创建时间',
   `description` varchar(500) DEFAULT NULL COMMENT '描述信息',
@@ -323,6 +324,30 @@ CREATE TABLE `sys_generic_api` (
   KEY `idx_generic_api_app_name` (`app_name`),
   KEY `idx_generic_api_flag` (`flag`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='泛化API配置表';
+
+-- ----------------------------
+-- Table structure for sys_generic_api_param
+-- 与实体 SystemGenericApiParamEntity 的 @Table/@Index 声明一一对应
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_generic_api_param`;
+CREATE TABLE `sys_generic_api_param` (
+  `id` bigint NOT NULL COMMENT '主键ID（雪花算法生成）',
+  `api_id` varchar(100) DEFAULT NULL COMMENT '所属泛化API标识（援引 sys_generic_api.api_id）',
+  `create_by` bigint DEFAULT NULL COMMENT '创建者用户ID',
+  `create_time` datetime(6) DEFAULT NULL COMMENT '创建时间',
+  `description` varchar(500) DEFAULT NULL COMMENT '参数说明',
+  `example` varchar(500) DEFAULT NULL COMMENT '示例值（JSON字面量文本）',
+  `flag` int DEFAULT NULL COMMENT '状态标识：1-启用，-1-禁用，0-删除',
+  `param_name` varchar(100) DEFAULT NULL COMMENT '参数名，空表示只支持按位置传参',
+  `param_order` int DEFAULT NULL COMMENT '参数顺序，从0开始',
+  `param_type` varchar(300) DEFAULT NULL COMMENT '参数类型：擦除后的JVM类名或基本类型关键字，不写泛型',
+  `required_flag` bit(1) DEFAULT NULL COMMENT '是否必填',
+  `update_by` bigint DEFAULT NULL COMMENT '更新者用户ID',
+  `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_generic_api_param_api_id` (`api_id`),
+  KEY `idx_generic_api_param_flag` (`flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='泛化API入参定义表';
 
 -- ----------------------------
 -- Table structure for sys_login_info

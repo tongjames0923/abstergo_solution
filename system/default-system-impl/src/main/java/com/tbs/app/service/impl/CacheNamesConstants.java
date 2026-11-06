@@ -83,6 +83,11 @@ public final class CacheNamesConstants {
      */
     public static final String GENERIC_API = "app:generic_api";
 
+    /**
+     * 泛化API入参定义缓存（按 apiId 缓存整组参数，新版泛化调用链路的元信息来源）
+     */
+    public static final String GENERIC_API_PARAM = "app:generic_api_param";
+
     // ===== 企业微信 =====
     /**
      * 企业微信应用 access_token 缓存（单应用单 token）

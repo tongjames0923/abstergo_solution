@@ -1,22 +1,23 @@
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
-import lombok.*;
-
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.Comment;
+
 import java.util.Date;
 
 /**
  * 泛化API配置实体
  * <p>
  * 用于存储泛化API的配置信息，替代原有的字典配置方式。
- * 每个API配置包含：API标识、服务应用名、接口全限定名、方法名等信息。
+ * 每个API配置包含：API标识、服务应用名、业务分区、接口全限定名、方法名等信息。
+ * 入参明细不在本表，按 {@code api_id} 关联 sys_generic_api_param 登记。
  * </p>
  *
  * @author abstergo
@@ -66,6 +67,17 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
     @Comment("服务应用名（用于服务发现）")
     @Column(name = "app_name", nullable = false, length = 100)
     private String appName;
+
+    /**
+     * 业务分区坐标
+     * <p>
+     * 新版泛化调用链路据此构建 Dubbo 引用：映射到提供者注册 URL 的 {@code group}，
+     * 空值表示该维度不约束（与多来源路由中心的坐标口径同源）。
+     * </p>
+     */
+    @Comment("业务分区（Dubbo group），空表示不约束")
+    @Column(name = "business", length = 100)
+    private String business;
 
     /**
      * 接口全限定名（用于Triple HTTP调用）

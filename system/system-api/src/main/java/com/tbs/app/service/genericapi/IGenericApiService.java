@@ -32,6 +32,28 @@ public interface IGenericApiService extends IServiceTemplate<SystemGenericApiEnt
     SystemGenericApiEntity getByApiId(String apiId);
 
     /**
+     * 取可被泛化调用的 API 配置
+     * <p>
+     * 「配置存在」与「已启用」两条规则集中在服务层断言，新版泛化调用入口只做取数与映射。
+     * </p>
+     *
+     * @param apiId API唯一标识
+     * @return 已启用的泛化API配置，不会为 {@code null}
+     */
+    SystemGenericApiEntity getInvokableApi(String apiId);
+
+    /**
+     * 取可从匿名入口泛化调用的 API 配置
+     * <p>
+     * 在 {@link #getInvokableApi(String)} 基础上追加免认证约束：登记为需要认证的 API 禁止走匿名入口。
+     * </p>
+     *
+     * @param apiId API唯一标识
+     * @return 已启用且无需认证的泛化API配置，不会为 {@code null}
+     */
+    SystemGenericApiEntity getPublicInvokableApi(String apiId);
+
+    /**
      * 启用API配置
      *
      * @param apiId API唯一标识
