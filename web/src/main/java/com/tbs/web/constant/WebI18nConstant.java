@@ -122,6 +122,8 @@ public final class WebI18nConstant {
 
     /** 泛化引用构建失败提示：不含底层异常原文 */
     public static final String GENERIC_API_REFERENCE_FAILED = "GENERIC.API.REFERENCE_FAILED";
+    /** 远端业务异常透传提示：目标方法自己抛出的异常，描述内容回显给调用方 */
+    public static final String GENERIC_API_REMOTE_BIZ_ERROR = "GENERIC.API.REMOTE_BIZ_ERROR";
     /** 旧编排入口误用提示：泛化API {0} 不支持该调用入口 */
     public static final String GENERIC_API_ENTRY_UNSUPPORTED = "GENERIC.API.ENTRY_UNSUPPORTED";
     /** 泛化调用返回值不可序列化提示：返回值类型 {0} 不可序列化 */

@@ -11,6 +11,7 @@ import com.tbs.web.genric.config.GenericApiParamConfig;
 import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -35,6 +36,28 @@ import java.util.*;
  */
 @Slf4j
 public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Serializable> {
+
+    /**
+     * Dubbo 链路故障的错误码集合
+     * <p>
+     * 这类异常的描述里带目标地址、重试次数、方法签名等内部信息，不回显给调用方；
+     * 其余错误码（业务异常、校验、鉴权、限流、未知）承载的是远端方法自己抛出的异常描述，属于调用方要看的内容。
+     * </p>
+     */
+    private static final Set<Integer> LINK_ERROR_CODES = Set.of(RpcException.NETWORK_EXCEPTION,
+        RpcException.TIMEOUT_EXCEPTION, RpcException.SERIALIZATION_EXCEPTION,
+        RpcException.NO_INVOKER_AVAILABLE_AFTER_FILTER, RpcException.TIMEOUT_TERMINATE,
+        RpcException.REGISTRY_EXCEPTION, RpcException.ROUTER_CACHE_NOT_BUILD, RpcException.METHOD_NOT_FOUND);
+
+    /**
+     * 链路故障的文本特征
+     * <p>
+     * {@code ponytail:} 已知上限——Triple 协议下远端业务异常常以 {@code code=UNKNOWN} 的 {@link RpcException}
+     * 抵达网关，单靠错误码分不开，因此补一层文本特征兼容；升级路径是改用 Dubbo 异常附带的元信息判别。
+     * </p>
+     */
+    private static final String[] LINK_MESSAGE_HINTS = {"No provider", "Failed to invoke", "Tried", "providers [",
+        "Timed out", "time out", "Serialize", "serializ", "Connection", "Channel", "grpc-status", "not found"};
 
     /**
      * 泛化调用配置（接口/方法/坐标/参数定义）
@@ -100,7 +123,13 @@ public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Seria
             throw e;
         } catch (Exception e) {
             logFailure(begin, e);
-            // 不回显底层异常原文（含目标地址、方法签名等），完整堆栈只进日志
+            String remoteMessage = remoteErrorMessage(e);
+            if (remoteMessage != null) {
+                // 远端方法自己抛出的异常：描述本身就是调用方需要看到的内容，直接透传
+                throw AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+                    .i18n(WebI18nConstant.GENERIC_API_REMOTE_BIZ_ERROR).params(remoteMessage).cause(e).build();
+            }
+            // 链路故障（超时、无提供者、序列化、方法未找到等）：不回显底层原文，完整堆栈只进日志
             throw AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
                 .i18n(WebI18nConstant.GENERIC_API_DUBBO_INVOKE_FAILED).cause(e).build();
         }
@@ -131,6 +160,56 @@ public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Seria
      */
     public List<GenericApiParamConfig> paramsMeta() {
         return config.getParams();
+    }
+
+    /**
+     * 从调用异常链里提取可回显的远端异常描述
+     * <p>
+     * 沿 cause 链逐层判：先排掉链路故障（错误码命中或文本命中），剩下的第一个带消息的异常就是远端业务异常；
+     * 若网关 classpath 上有该异常类，Dubbo 会原样重建，此时拼成「类全名: 消息」与 Dubbo 侧描述格式一致。
+     * </p>
+     *
+     * @param e 泛化调用抛出的异常，不能为 null
+     * @return 可回显的异常描述；判定为纯链路故障时为 {@code null}
+     */
+    private static String remoteErrorMessage(Throwable e) {
+        for (Throwable cursor = e; cursor != null; cursor = cursor.getCause() == cursor ? null : cursor.getCause()) {
+            String message = cursor.getMessage();
+            if (cursor instanceof RpcException) {
+                if (LINK_ERROR_CODES.contains(((RpcException)cursor).getCode()) || isLinkHinted(message)) {
+                    continue;
+                }
+                if (StrUtil.isNotBlank(message)) {
+                    return message;
+                }
+                continue;
+            }
+            if (cursor instanceof FormattedRuntimeException) {
+                continue;
+            }
+            if (StrUtil.isNotBlank(message)) {
+                return cursor.getClass().getName() + ": " + message;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * 异常描述是否属于链路故障文本
+     *
+     * @param message 异常描述，可以为空
+     * @return 命中链路特征或描述为空时返回 {@code true}
+     */
+    private static boolean isLinkHinted(String message) {
+        if (StrUtil.isBlank(message)) {
+            return true;
+        }
+        for (String hint : LINK_MESSAGE_HINTS) {
+            if (message.contains(hint)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
