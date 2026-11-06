@@ -12,8 +12,7 @@ import java.util.List;
 /**
  * 独立泛化调用演示服务实现
  * <p>
- * 只做无副作用的换算与文本加工，结果同时打日志，便于从服务端确认「泛化调用真的进来了、参数还原成了什么」。
- * 所有入参都按可能为 {@code null} 处理：泛化调用不经过编译期检查，缺参、传空都是常态而非异常。
+ * 只做无副作用的换算与文本加工，结果同时打日志，便于从服务端确认「泛化调用真的进来了、参数还原成了什么」。 所有入参都按可能为 {@code null} 处理：泛化调用不经过编译期检查，缺参、传空都是常态而非异常。
  * </p>
  *
  * @author abstergo
@@ -52,7 +51,7 @@ public class StandaloneDemoServiceImpl implements IStandaloneDemoService {
         for (int i = 0; i < repeat; i++) {
             builder.append(StrUtil.nullToEmpty(message));
         }
-        return builder.toString();
+        throw new RuntimeException("故意抛出个异常");
     }
 
     @Override
@@ -73,8 +72,10 @@ public class StandaloneDemoServiceImpl implements IStandaloneDemoService {
         transformed.setCode(payload.getCode());
         transformed.setName(payload.getName() == null ? null : payload.getName().toUpperCase());
         transformed.setQty(payload.getQty() == null ? 1 : payload.getQty() + 1);
-        transformed.setAmount(payload.getAmount() == null ? BigDecimal.ZERO : payload.getAmount().multiply(BigDecimal.TWO));
-        transformed.setTags(CollUtil.isEmpty(payload.getTags()) ? new ArrayList<>() : new ArrayList<>(payload.getTags()));
+        transformed.setAmount(
+            payload.getAmount() == null ? BigDecimal.ZERO : payload.getAmount().multiply(BigDecimal.TWO));
+        transformed.setTags(
+            CollUtil.isEmpty(payload.getTags()) ? new ArrayList<>() : new ArrayList<>(payload.getTags()));
         return transformed;
     }
 

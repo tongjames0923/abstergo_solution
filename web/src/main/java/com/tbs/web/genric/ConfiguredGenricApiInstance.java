@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
-import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.web.constant.WebI18nConstant;
 import com.tbs.web.genric.config.GenericApiConfig;
@@ -15,15 +14,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.springframework.security.core.userdetails.UserDetails;
 
-import java.io.PrintWriter;
 import java.io.Serializable;
-import java.io.StringWriter;
 import java.util.*;
 
 /**
  * 配置驱动的泛化调用目标（新版链路）
  * <p>
- * 一次泛化调用的执行单元：坐标与参数定义全部来自登记（{@link GenericApiConfig}），调用走 Dubbo 泛化引用，
+ * 一次泛化调用的执行单元：目标接口与业务分区、参数定义全部来自登记（{@link GenericApiConfig}），调用走 Dubbo 泛化引用，
  * 因此网关不需要目标接口的 jar，服务方也不需要实现任何自定义契约。
  * </p>
  * <p>
@@ -77,50 +74,54 @@ public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Seria
     /**
      * 按登记定义执行一次泛化调用
      * <p>
-     * 编排顺序：登录校验 → 预认证链 → 实参装配 → 取泛化引用 → 执行。前三步任一失败都直接抛给全局异常处理，
-     * 因为只有远端执行失败才写进结果视图的双层成功标志（与旧链路语义保持一致）。
+     * 编排顺序：登录校验 → 预认证链 → 实参装配 → 取泛化引用 → 执行。任何一步失败都直接抛出，
+     * 由全局异常处理转成统一响应（{@code code≠200} + i18n 文案）；新入口不再往结果视图里套双层成功标志，
+     * 调用成功后 {@code AjaxResult.data} 就是远端方法的返回值本体。
      * </p>
      *
      * @param body        请求体 JSON 节点，命名式对象或位置式数组，可以为 {@code null}
      * @param userDetails 当前用户详情，需要认证时不为空
-     * @return 调用结果视图
+     * @return 远端方法的返回值，可以为 {@code null}
      */
-    public ApiInvokeResultVo<Serializable> invokeByConfig(JsonNode body, UserDetails userDetails) {
-        ApiInvokeResultVo<Serializable> resultVo = new ApiInvokeResultVo<>();
+    public Serializable invokeByConfig(JsonNode body, UserDetails userDetails) {
         AssertUtil.isTrue(isNeedAuth() && userDetails == null).i18n(WebI18nConstant.GENERIC_API_NOT_LOGIN)
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         executePreAuths(userDetails);
         GenericArgumentAssembler.AssembledArguments assembled = GenericArgumentAssembler.assemble(config, body);
         GenericService genericService =
-            referenceHolder.genericService(config.getInterfaceName(), config.getBusiness(), config.getVersion());
-        Date begin = new Date();
+            referenceHolder.genericService(config.getInterfaceName(), config.getBusiness());
+        long begin = System.currentTimeMillis();
+        Object result;
         try {
-            Object result =
-                genericService.$invoke(config.getMethodName(), assembled.getParameterTypes(),
-                    assembled.getArguments());
-            AssertUtil.isTrue(result != null && !(result instanceof Serializable))
-                .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).i18n(WebI18nConstant.GENERIC_API_RESULT_NOT_SERIALIZABLE)
-                .params(result.getClass().getName()).throwIt();
-            resultVo.setExecuteResult((Serializable)result);
-            resultVo.setSuccessFlag(1);
+            result = genericService.$invoke(config.getMethodName(), assembled.getParameterTypes(),
+                assembled.getArguments());
         } catch (FormattedRuntimeException e) {
-            resultVo.setSuccessFlag(0);
-            resultVo.setExceptionClassName(e.getClass().getName());
-            resultVo.setExceptionMessage(e.getMessage());
-            resultVo.setExceptionObject(e);
+            logFailure(begin, e);
+            throw e;
         } catch (Exception e) {
-            resultVo.setSuccessFlag(0);
-            // 不回显底层异常原文（含目标地址、方法签名等），真实原因交给日志
-            resultVo.setExceptionClassName(e.getClass().getName());
-            resultVo.setExceptionMessage(I18nUtil.get(WebI18nConstant.GENERIC_API_DUBBO_INVOKE_FAILED));
-            resultVo.setExceptionObject(stackTraceOf(e));
-            log.warn("泛化调用执行失败, apiId={}, 接口={}, 方法={}", getApiId(), config.getInterfaceName(),
-                config.getMethodName(), e);
+            logFailure(begin, e);
+            // 不回显底层异常原文（含目标地址、方法签名等），完整堆栈只进日志
+            throw AssertUtil.isTrue(true).errorLevel(ErrorLevelEnum.SYSTEM_ERROR)
+                .i18n(WebI18nConstant.GENERIC_API_DUBBO_INVOKE_FAILED).cause(e).build();
         }
-        Date end = new Date();
-        resultVo.setBeginTime(begin);
-        resultVo.setEndTime(end);
-        return resultVo;
+        AssertUtil.isTrue(result != null && !(result instanceof Serializable))
+            .errorLevel(ErrorLevelEnum.SYSTEM_ERROR).i18n(WebI18nConstant.GENERIC_API_RESULT_NOT_SERIALIZABLE)
+            .params(result.getClass().getName()).throwIt();
+        return (Serializable)result;
+    }
+
+    /**
+     * 记录一次失败调用（含耗时与完整堆栈）
+     * <p>
+     * 耗时不进响应体：去掉双层结果后没有可携带的元信息位，排错信息统一留在日志侧。
+     * </p>
+     *
+     * @param begin 调用起始时刻（毫秒）
+     * @param e     失败异常，不能为 null
+     */
+    private void logFailure(long begin, Throwable e) {
+        log.warn("泛化调用失败, apiId={}, 接口={}, 方法={}, 耗时={}ms", getApiId(), config.getInterfaceName(),
+            config.getMethodName(), System.currentTimeMillis() - begin, e);
     }
 
     /**
@@ -176,22 +177,5 @@ public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Seria
             preAuths.add(preAuth);
         }
         return preAuths;
-    }
-
-    /**
-     * 取异常堆栈文本
-     *
-     * @param e 异常，不能为空
-     * @return 堆栈文本
-     */
-    private static String stackTraceOf(Exception e) {
-        StringWriter sw = new StringWriter();
-        PrintWriter pw = new PrintWriter(sw);
-        try {
-            e.printStackTrace(pw);
-            return sw.toString();
-        } finally {
-            pw.close();
-        }
     }
 }

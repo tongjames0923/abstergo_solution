@@ -20,8 +20,8 @@ import java.util.concurrent.ConcurrentMap;
 /**
  * 泛化引用持有器（新版泛化调用链路专用）
  * <p>
- * 以「接口全限定名 + 业务分区 + 版本」为键复用 {@code generic=true} 的 {@link ReferenceConfig}：
- * 同一坐标只建一次引用，之后的调用复用其订阅与负载均衡，服务发现、实例选择、集群容错全部交给 Dubbo 原生能力，
+ * 以「接口全限定名 + 业务分区」为键复用 {@code generic=true} 的 {@link ReferenceConfig}：
+ * 同一分区只建一次引用，之后的调用复用其订阅与负载均衡，服务发现、实例选择、集群容错全部交给 Dubbo 原生能力，
  * 本类只负责引用的<b>创建、复用与停机释放</b>。
  * </p>
  * <p>
@@ -73,17 +73,19 @@ public class GenericReferenceHolder implements DisposableBean {
     }
 
     /**
-     * 取指定接口在指定坐标下的泛化引用
+     * 取指定接口在指定业务分区下的泛化引用
+     * <p>
+     * 只按 business（Dubbo group）约束引用：配置表的 {@code version} 是业务配置版本，不参与 Dubbo 坐标。
+     * </p>
      *
      * @param interfaceName 接口全限定名，不能为空
-     * @param business      业务分区（Dubbo group），空表示不约束
-     * @param version       发布版本，{@code null} 表示不约束
+     * @param business      业务分区（Dubbo group）；空=只匹配同样未声明 group 的提供者，{@code *} 才是不限
      * @return 泛化服务引用
      */
-    public GenericService genericService(String interfaceName, String business, Integer version) {
-        String key = referenceKeyOf(interfaceName, business, version);
+    public GenericService genericService(String interfaceName, String business) {
+        String key = referenceKeyOf(interfaceName, business);
         ReferenceConfig<GenericService> reference =
-            references.computeIfAbsent(key, k -> buildReference(interfaceName, business, version));
+            references.computeIfAbsent(key, k -> buildReference(interfaceName, business));
         try {
             return reference.get();
         } catch (Exception e) {
@@ -96,18 +98,21 @@ public class GenericReferenceHolder implements DisposableBean {
     }
 
     /**
-     * 构建指向指定坐标的泛化引用
+     * 构建指向指定业务分区的泛化引用
      * <p>
-     * 不填直连地址，由注册中心发现同坐标的提供者并交给 Dubbo 负载均衡；{@code check=false} 使提供者缺失时
-     * 调用侧得到明确错误而非阻塞启动。
+     * 不填直连地址与 Dubbo 版本：同分区下的多实例发现、负载均衡与集群容错全部交给 Dubbo 原生能力，
+     * {@code check=false} 使提供者缺失时调用侧得到明确错误而非阻塞启动。
+     * </p>
+     * <p>
+     * group 匹配按 Dubbo {@code UrlUtils.shouldMatch} 的语义：未声明 group 的消费者只匹配未声明 group 的提供者，
+     * 要匹配全部分区必须显式登记 {@code "*"}，因此“留空”不等于“不限”。
      * </p>
      *
      * @param interfaceName 接口全限定名，不能为空
      * @param business      业务分区，可以为空
-     * @param version       发布版本，可以为 {@code null}
      * @return 泛化引用
      */
-    private ReferenceConfig<GenericService> buildReference(String interfaceName, String business, Integer version) {
+    private ReferenceConfig<GenericService> buildReference(String interfaceName, String business) {
         ReferenceConfig<GenericService> reference = new ReferenceConfig<>();
         reference.setInterface(interfaceName);
         reference.setGeneric(GENERIC_FLAG);
@@ -115,9 +120,6 @@ public class GenericReferenceHolder implements DisposableBean {
         reference.setTimeout(ProviderConstant.DEFAULT_DUBBO_TIMEOUT);
         if (StrUtil.isNotBlank(business)) {
             reference.setGroup(business);
-        }
-        if (version != null) {
-            reference.setVersion(String.valueOf(version));
         }
         ApplicationConfig applicationConfig = applicationConfigProvider.getIfAvailable();
         if (applicationConfig != null) {
@@ -131,16 +133,14 @@ public class GenericReferenceHolder implements DisposableBean {
     }
 
     /**
-     * 计算引用缓存键：接口 + 坐标
+     * 计算引用缓存键：接口 + 业务分区
      *
      * @param interfaceName 接口全限定名，不能为空
      * @param business      业务分区，可以为空
-     * @param version       发布版本，可以为 {@code null}
      * @return 引用缓存键
      */
-    private String referenceKeyOf(String interfaceName, String business, Integer version) {
-        return interfaceName + KEY_DELIMITER + StrUtil.nullToEmpty(business) + KEY_DELIMITER + (version == null
-            ? StrUtil.EMPTY : version);
+    private String referenceKeyOf(String interfaceName, String business) {
+        return interfaceName + KEY_DELIMITER + StrUtil.nullToEmpty(business);
     }
 
     /**

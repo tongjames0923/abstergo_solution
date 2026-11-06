@@ -39,12 +39,12 @@ public class GenericApiConfig {
     private String methodName;
 
     /**
-     * 业务分区坐标，映射 Dubbo 引用的 {@code group}；空表示不约束
+     * 业务分区坐标，映射 Dubbo 引用的 {@code group}；空=只匹配未声明 group 的提供者，{@code *} 才是不限
      */
     private String business;
 
     /**
-     * 登记版本，映射 Dubbo 引用的 {@code version}；{@code null} 表示不约束
+     * 业务配置版本：用于区分同一 apiId 的不同登记，<b>不映射</b> Dubbo 服务版本
      */
     private Integer version;
 

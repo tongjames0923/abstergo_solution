@@ -4,7 +4,9 @@
 -- 演示对象的两个关键事实：
 --   1) 接口与实现都只在 logging-impl 模块，网关（app）的 classpath 上看不到 com.tbs.logging.demo.IStandaloneDemoService
 --      —— 这正是「零 jar、仅配置」要验证的场景；
---   2) 服务以 group=demo 发布，所以 business 填 demo；留空也能命中（空=该维度不约束）。
+--   2) 服务以 group=demo 发布，所以每一行的 business 都必须填 demo（实测证实：business 留空时调不通）。
+--      Dubbo 的 group 匹配规则（UrlUtils.shouldMatch）：未声明 group 的消费者只匹配未声明 group 的提供者，
+--      要不限分区必须显式登记 '*'；而 version 列是业务配置版本，不映射 Dubbo 服务版本。
 --
 -- 使用顺序：
 --   1) 先执行 upgrade_sys_generic_api.sql（加 business 列 + 建 sys_generic_api_param 表）；
@@ -13,12 +15,13 @@
 --   4) 按下面的样例调用（need_auth=0 的行可走 /public 免认证，便于 curl）。
 --
 -- 说明：flag=1 启用；create_by=1 借用超级管理员账号ID，仅为便于列表页可见，不参与鉴权判定。
+--       business 全部填 demo：目标服务带 group 发布，留空会因 group 不匹配而找不到提供者。
 -- ============================================================================
 
 -- ---------- 主表：API 声明 ----------
 INSERT INTO `sys_generic_api` (`id`, `api_id`, `api_name`, `app_name`, `business`, `interface_name`, `method_name`,
     `need_auth`, `version`, `pre_auth_beans`, `description`, `flag`, `create_by`, `create_time`)
-VALUES (820000000000000001, 'DEMO.STANDALONE.PING', '演示-无参应答', 'dubbo-logging-view-service', NULL,
+VALUES (820000000000000001, 'DEMO.STANDALONE.PING', '演示-无参应答', 'dubbo-logging-view-service', 'demo',
     'com.tbs.logging.demo.IStandaloneDemoService', 'ping', b'0', NULL, '', '无入参，验证不登记参数也能调用', 1, 1, now()),
     (820000000000000002, 'DEMO.STANDALONE.ECHO_ONE', '演示-回显单参', 'dubbo-logging-view-service', 'demo',
     'com.tbs.logging.demo.IStandaloneDemoService', 'echo', b'0', NULL, '', '同名重载之一：1个参数', 1, 1, now()),

@@ -25,9 +25,16 @@ import java.util.stream.Collectors;
  * <p>
  * 使用Dubbo的GenericService进行泛化调用，支持直连指定的服务实例
  * </p>
+ * <p>
+ * 本实现属于旧泛化调用链路：每次调用都新建并销毁 {@code ReferenceConfig}，且不携带 group/version 坐标；
+ * 这些能力已由新链路的 {@link ConfiguredGenricApiInstance} + {@link GenericReferenceHolder} 接管。
+ * </p>
  *
  * @author abstergo
+ * @deprecated 旧信封入口的调用实现。替代：{@link ConfiguredGenricApiInstance}（引用按坐标缓存复用、
+ * 参数类型取登记定义、响应单层）；旧入口无调用量后的首个发布版本移除。
  */
+@Deprecated
 @Slf4j
 public class DubboGenricApiInstance extends AbstractGenricApiInstance<Serializable> {
 

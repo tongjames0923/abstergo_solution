@@ -71,11 +71,12 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
     /**
      * 业务分区坐标
      * <p>
-     * 新版泛化调用链路据此构建 Dubbo 引用：映射到提供者注册 URL 的 {@code group}，
-     * 空值表示该维度不约束（与多来源路由中心的坐标口径同源）。
+     * 新版泛化调用链路据此构建 Dubbo 引用：映射到提供者注册 URL 的 {@code group}。
+     * 按 Dubbo {@code UrlUtils.shouldMatch} 语义：留空只命中同样未声明 group 的提供者，
+     * 要不限分区需显式登记 {@code *}。
      * </p>
      */
-    @Comment("业务分区（Dubbo group），空表示不约束")
+    @Comment("业务分区（Dubbo group），留空只匹配无 group 的提供者，* 表示不限")
     @Column(name = "business", length = 100)
     private String business;
 
@@ -102,8 +103,11 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
 
     /**
      * API版本
+     * <p>
+     * 业务配置版本，用于区分同一 {@code api_id} 的不同登记；<b>不</b>作为 Dubbo 服务版本参与调用。
+     * </p>
      */
-    @Comment("API版本号")
+    @Comment("API版本号（业务配置版本，非 Dubbo 服务版本）")
     @Column(name = "version", length = 10)
     private Integer version;
 

@@ -4,7 +4,8 @@
 -- 动机：新版链路要求「仅配置即可把 Dubbo 方法声明成 HTTP 接口」，网关不持有目标接口 jar，
 --       因此参数的顺序/名称/类型必须由库登记（元信息唯一真源）。
 -- 影响：
---   1) sys_generic_api 新增 business 列，存量数据按空值兜底（空=该维度不约束，与重构前行为一致，无需回填）；
+--   1) sys_generic_api 新增 business 列（Dubbo group），存量数据保持 NULL：新链路下 NULL 只命中未声明 group 的提供者，
+--      目标服务带 group 时必须补登 business（不限制则填 '*'），旧 /invoke 入口不受本列影响。
 --   2) 新增 sys_generic_api_param 表，存量 API 无参数登记时：无参方法照常调用，
 --      有参方法继续用旧的信封式 /invoke（新版 /call 会提示先登记入参定义）。
 -- 索引：按「api_id 取整组参数」这一条查询建 idx_generic_api_param_api_id；状态列保留 idx_generic_api_param_flag。
@@ -13,7 +14,7 @@
 -- ----------------------------------------------------------------------------
 
 ALTER TABLE `sys_generic_api`
-    ADD COLUMN `business` varchar(100) DEFAULT NULL COMMENT '业务分区（Dubbo group），空表示不约束' AFTER `app_name`;
+    ADD COLUMN `business` varchar(100) DEFAULT NULL COMMENT '业务分区（Dubbo group），留空只匹配无group的提供者，*表示不限' AFTER `app_name`;
 
 CREATE TABLE `sys_generic_api_param` (
   `id` bigint NOT NULL COMMENT '主键ID（雪花算法生成）',

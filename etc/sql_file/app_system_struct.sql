@@ -307,7 +307,7 @@ CREATE TABLE `sys_generic_api` (
   `api_id` varchar(100) NOT NULL COMMENT 'API唯一标识',
   `api_name` varchar(200) NOT NULL COMMENT 'API名称',
   `app_name` varchar(100) NOT NULL COMMENT '服务应用名（用于服务发现）',
-  `business` varchar(100) DEFAULT NULL COMMENT '业务分区（Dubbo group），空表示不约束',
+  `business` varchar(100) DEFAULT NULL COMMENT '业务分区（Dubbo group），留空只匹配无group的提供者，*表示不限',
   `create_by` bigint DEFAULT NULL COMMENT '创建者用户ID',
   `create_time` datetime(6) DEFAULT NULL COMMENT '创建时间',
   `description` varchar(500) DEFAULT NULL COMMENT '描述信息',

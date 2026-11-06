@@ -765,29 +765,25 @@ export default {
         return
       }
       this.testLoading = true
+      const begin = Date.now()
       try {
         const version = this.testTarget.version === null ? null : this.testTarget.version
         const res = await invokeGenericApi(this.testTarget.apiId, body, version)
-        const vo = res.data || {}
-        const success = vo.successFlag === 1
+        // 新入口只有一层：res.data 就是远端返回值本体，失败已由 request 拦截器按错误码抛出
         this.testResult = {
-          success,
-          cost: this.costOf(vo),
-          text: JSON.stringify(vo, null, 2)
+          success: true,
+          cost: Date.now() - begin,
+          text: JSON.stringify(res.data === undefined ? null : res.data, null, 2)
         }
       } catch (e) {
         this.testResult = {
           success: false,
-          cost: null,
+          cost: Date.now() - begin,
           text: (e && e.message) ? e.message : String(e)
         }
       } finally {
         this.testLoading = false
       }
-    },
-    costOf(vo) {
-      if (!vo.beginTime || !vo.endTime) return null
-      return new Date(vo.endTime).getTime() - new Date(vo.beginTime).getTime()
     },
     async copyRequestBody() {
       try {

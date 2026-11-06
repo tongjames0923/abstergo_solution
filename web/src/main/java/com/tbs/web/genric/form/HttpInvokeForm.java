@@ -13,6 +13,11 @@ import java.util.List;
  * 作为 {@code POST /invoke} 的请求体：携带目标 apiId/version 与参数列表，由
  * {@link com.tbs.web.genric.AbstractGenricApiController} 解析并路由到对应实例。
  * </p>
+ * <p>
+ * 仅旧链路使用：新入口 {@code POST /call/{apiId}} 不接收本结构（apiId 走路径变量，参数走命名/位置 JSON）。
+ * 尚未标 @Deprecated 是因为 {@link com.tbs.web.genric.IApiInstancePreAuth} 的活签名仍在引用它（新链路传 {@code null}），
+ * 需先改造 SPI 参数才谈得上删除；旧入口弃用范围见 {@link com.tbs.web.genric.AbstractGenricApiController}。
+ * </p>
  *
  * @author abstergo
  */

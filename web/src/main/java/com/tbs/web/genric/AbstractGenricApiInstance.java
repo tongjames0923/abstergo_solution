@@ -87,7 +87,11 @@ public abstract class AbstractGenricApiInstance<R extends Serializable> {
      * @param parameterForms 调用参数列表，可以为空
      * @param u 当前用户详情，需要认证时由控制器传入
      * @return 调用结果视图
+     * @deprecated 旧编排入口：它把实参按 {@code parameterName} 折成 {@code Map}，重名或未命名参数会静默互盖导致丢参，
+     * 执行失败也不上抛而写进内层 {@code successFlag}。替代：{@link ConfiguredGenricApiInstance#invokeByConfig}；
+     * 旧入口无调用量后的首个发布版本移除。
      */
+    @Deprecated
     public ApiInvokeResultVo<R> invokeApi(List<GenricParameterForm> parameterForms, UserDetails u) {
         var paramMap = new java.util.HashMap<String, GenricParameterForm>();
         ApiInvokeResultVo<R> resultVo = new ApiInvokeResultVo<>();

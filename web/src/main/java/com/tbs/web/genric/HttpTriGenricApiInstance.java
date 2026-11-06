@@ -27,9 +27,16 @@ import java.util.stream.Collectors;
  * <p>
  * 利用Dubbo 3.3+ Triple协议的HTTP支持，直接通过HTTP POST调用远程服务。 调用格式: POST http://{host}:{port}/{interfaceName}/{methodName}
  * </p>
+ * <p>
+ * 现状：无任何构造点（旧控制器也只建 Dubbo 泛化实例），且序列化会把 POJO 参数压成字符串，接线即错。
+ * </p>
  *
  * @author abstergo
+ * @deprecated 未接线的旧链路残留实现。若需要 Triple/HTTP 来源，参照新链路重做
+ * （{@link ConfiguredGenricApiInstance} + 新增一个装配复用 {@code GenericArgumentAssembler} 的协议实现）；
+ * 无接管者前建议直接删除，判定记录在 {@code docs/generic-api-architecture-rethink.md} 第四节遗留项。
  */
+@Deprecated
 @Slf4j
 public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializable> {
 

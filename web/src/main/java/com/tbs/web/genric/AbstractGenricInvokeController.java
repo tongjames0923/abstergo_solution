@@ -22,7 +22,8 @@ import org.springframework.web.bind.annotation.*;
  * </ol>
  * <p>
  * 子类只负责两件事：从配置存储取出「可调用的泛化API」（含合法性判定），以及按认证维度给出当前用户。
- * 响应沿用统一结构与双层成功标志（与旧链路一致，避免破坏性变更）。
+ * 响应只有一层：{@code AjaxResult.data} 就是远端返回值本体，执行失败不再写进内层成功标志，
+ * 而是抛给全局异常处理转成统一错误码（旧 {@code /invoke} 的双层结构保持原样不变）。
  * </p>
  *
  * @author abstergo
@@ -58,9 +59,9 @@ public abstract class AbstractGenricInvokeController extends BaseController {
      * 按登记定义泛化调用目标方法
      *
      * @param apiId   API 唯一标识
-     * @param version 请求版本，可空表示不约束
+     * @param version 业务配置版本，可空；与登记版本不一致时报错，不参与 Dubbo 坐标
      * @param body    请求体：命名式 JSON 对象或位置式 JSON 数组，无参方法可省略
-     * @return 统一响应，数据为调用结果视图
+     * @return 统一响应，{@code data} 直接是远端方法的返回值本体（失败时 code≠200）
      */
     @PostMapping("/call/{apiId}")
     public AjaxResult call(@PathVariable String apiId, @RequestParam(required = false) Integer version,
@@ -73,7 +74,7 @@ public abstract class AbstractGenricInvokeController extends BaseController {
      * 查询 API 登记的入参定义
      *
      * @param apiId   API 唯一标识
-     * @param version 请求版本，可空表示不约束
+     * @param version 业务配置版本，可空；只用于校验登记版本，不参与 Dubbo 坐标
      * @return 统一响应，数据为按签名顺序排列的参数定义
      */
     @GetMapping("/meta/{apiId}")
@@ -83,7 +84,10 @@ public abstract class AbstractGenricInvokeController extends BaseController {
     }
 
     /**
-     * 取出配置并构建调用目标，同时校验请求版本与登记版本
+     * 取出配置并构建调用目标，同时校验请求的业务配置版本与登记版本
+     * <p>
+     * 登记版本为空时不校验（一个 apiId 只有一行配置，版本只用于区分登记批次）；
+     * Dubbo 侧的分流只靠 business（group），本方法不读版本。
      *
      * @param apiId   API 唯一标识
      * @param version 请求版本，可以为 {@code null}

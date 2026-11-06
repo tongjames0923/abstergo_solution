@@ -49,7 +49,7 @@
 
 | 列 | 类型 | 语义 | 空值语义 |
 |----|------|------|----------|
-| `business` | `varchar(100)` | Dubbo group（业务分区），与 provider 中心坐标口径同源 | 空=该维度不约束 |
+| `business` | `varchar(100)` | Dubbo group（业务分区），与 provider 中心坐标口径同源 | 空=只匹配未声明 group 的提供者；`*` 才是不限（详见 §12.2） |
 
 **新增子表 `sys_generic_api_param`**（一行一个入参，Q2 结论）
 
@@ -103,25 +103,25 @@ com.tbs.web.genric.GenericArgumentAssembler 纯装配
     出参：String[] paramTypes + Object[] args
 ```
 分流全交 Dubbo 原生：服务发现（Directory，接口级/应用级皆可）、实例负载均衡（LoadBalance）、集群容错（`setCluster`）、
-group/version 匹配（`setGroup`/`setVersion`）、试机直连指定实例（`ReferenceConfigBase.setUrl("dubbo://h:p")`，可逗号多地址）、
-标签分流（`AbstractInterfaceConfig.setTag`）。因此**不需要** contribution 枚举与 `IRouteCoordinator` 裁决。
+group 匹配（`setGroup`；`version` 不映射 Dubbo 服务版本，见 §12.2）、试机直连指定实例（`ReferenceConfigBase.setUrl("dubbo://h:p")`，可逗号多地址）、
+标签分流（`AbstractInterfaceConfig.setTag`）。因此**不需要** contributor 枚举与 `IRouteCoordinator` 裁决。
 
 ### 4.3 目标与编排
 
 `com.tbs.web.genric.ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Serializable>`
 
 - 复用父类的 `apiId/apiVersion/needAuth/preAuths` 与 `equals/hashCode`，从而**不改 `IApiInstancePreAuth` 签名**即可跑既有预认证链；
-- 新增自有入口 `invokeByConfig(JsonNode body, UserDetails u)`：登录断言 → 预认证链 → 装配 → `$invoke` → 耗时/异常写 `ApiInvokeResultVo`；
+- 新增自有入口 `invokeByConfig(JsonNode body, UserDetails u)`：登录断言 → 预认证链 → 装配 → `$invoke` → **返回远端结果本体**；
 - **显式不调用父类 `invokeApi(...)`**：其「按参数名折成 Map」的实现会丢重名/null 名参数（旧链路缺陷 P2），新链路以有序装配替代；
 - 父类抽象方法 `invoke(Map, vo, Optional)` 实现为断言不支持（`GENERIC.API.UNSUPPORTED_ENTRY`），避免被误用为入口。
 
-响应结构沿用 `ApiInvokeResultVo`（D3：双层成功标志本轮不动）。
+响应只有一层：`AjaxResult.data` 即远端返回值本体；执行失败抛给全局异常处理转统一错误码（详见 §12.6，旧入口的双层结构不变）。
 
 ### 4.4 HTTP 契约
 
 | 方法 | 路径 | 入参 | 出参 |
 |------|------|------|------|
-| POST | `/private/genric/call/{apiId}`、`/public/genric/call/{apiId}` | `version`（query，可空）；body 命名式 `{"barCode":"A001"}` 或位置式 `["A001",3]`；无参方法可省略 body | `AjaxResult.data` = `ApiInvokeResultVo` |
+| POST | `/private/genric/call/{apiId}`、`/public/genric/call/{apiId}` | `version`（query，可空）；body 命名式 `{"barCode":"A001"}` 或位置式 `["A001",3]`；无参方法可省略 body | `AjaxResult.data` = 远端方法返回值本体（失败时 `code≠200` + i18n 文案） |
 | GET | `/private/genric/meta/{apiId}` | `version`（query，可空） | `AjaxResult.data` = `List<GenericApiParamConfig>`（前端据此渲染表单） |
 
 装配规则：
@@ -153,7 +153,7 @@ group/version 匹配（`setGroup`/`setVersion`）、试机直连指定实例（`
 
 - `com.tbs.logging.demo.IStandaloneDemoService` + `StandaloneDemoVo` + `StandaloneDemoServiceImpl`，经 `LoggingServiceConfig` 以 `@DubboService(group = "demo")` 发布；
 - 方法覆盖：无参、`String`、`long`（基本类型）、POJO 往返、`List<Vo>`+`int`、枚举、`BigDecimal`、同名不同参重载；
-- SQL：`etc/sql_file/demo_generic_api.sql` 给主表行（含 `business='demo'` 与留空两种坐标）+ 子表参数行；
+- SQL：`etc/sql_file/demo_generic_api.sql` 给主表行（`business` 均为 `demo`，与发布的 group 对齐）+ 子表参数行；
 - 试机三组：命名式 body、位置式 body、旧信封 `/invoke`（验证新旧并存）。
 
 ## 七、旧链路缺陷登记（本轮不修，迁移期处理）
@@ -208,7 +208,7 @@ group/version 匹配（`setGroup`/`setVersion`）、试机直连指定实例（`
 | default-system-impl | `GenericApiParamServiceImpl` | 新增：apiId 归属/顺序必填与不重复/类型必填均用断言，`@Cacheable(GENERIC_API_PARAM)` 与写路径成对失效 |
 | default-system-impl | `CacheNamesConstants`/`SystemI18nConstant`/`BuisnessBeanConfig` | 新增缓存名常量、5 个校验文案、服务 Bean 装配 |
 | web | `genric.config.GenericApiConfig`、`GenericApiParamConfig` | 新增中立模型（web 不依赖实体包） |
-| web | `genric.GenericReferenceHolder` | 新增：`interfaceName#business#version` → `generic=true` 引用，停机统一释放 |
+| web | `genric.GenericReferenceHolder` | 新增：`interfaceName#business` → `generic=true` 引用，停机统一释放（不映射 Dubbo 版本） |
 | web | `genric.GenericArgumentAssembler` | 新增：命名式/位置式 body → `paramTypes/args`，类型只取登记值 |
 | web | `genric.ConfiguredGenricApiInstance` | 新增：自有编排（避开旧 `invokeApi` 的参数名折叠） |
 | web | `genric.GenericApiTargetFactory` | 新增：预认证索引一次性构建，目标不做缓存 |
@@ -236,7 +236,7 @@ group/version 匹配（`setGroup`/`setVersion`）、试机直连指定实例（`
 2. 一个弹窗同时提交「API 声明 + 入参定义」：参数行可新增/删除/上下移，**保存时按行序重算 `paramOrder`**，避免手填错位；
    类型下拉选项含基本类型关键字（`long`/`int`/`boolean`…）并允许自定义输入 FQCN，集合选项明写“擦除、不写泛型”；
 3. 试调用：拉 `params/{apiId}` 自动渲染表单（预填 `example`），命名式/位置式可切，实时预览请求体；
-   调用走 `POST /private/genric/call/{apiId}`，按 `data.successFlag` 判成功并展示耗时与异常字段。
+   调用走 `POST /private/genric/call/{apiId}`，`data` 即结果本体直接展示，失败走统一错误码由拦截器弹提示，耗时由前端计时展示。
 
 ### 11.2 管理接口（均为新增，旧接口语义不变）
 
@@ -269,10 +269,122 @@ group/version 匹配（`setGroup`/`setVersion`）、试机直连指定实例（`
   仓内其他页面存量 127 个 `object-curly-spacing` 等错误**不属于本次变更范围**，未触及；
 - **未验证**（由开发者完成）：页面实机操作、五档宽度实测、保存/试调用接口联调、路由登记后的菜单渲染。
 
+## 十二、路由接入与坐标语义（实测定版）
+
+### 12.1 实例选择全部交给 Dubbo 原生链
+
+新链路不自己“选第一个”：`GenericReferenceHolder` 只按 `interfaceName#business` 缓存一个 `ReferenceConfig<GenericService>`，
+`reference.get()` 返回集群 Invoker，每次 `$invoke` 都走
+`Directory.list() → StateRouter 链 → LoadBalance → Cluster`。Dubbo 3.3.4 jar 内默认注册的 StateRouter 扩展已核实：
+`ConditionStateRouter` / `ServiceStateRouter` / `AppStateRouter` / `TagStateRouter`。
+旧链的 P3（N 个实例只执行第一个）在新链不存在。
+
+| 分流能力 | 现状 | 说明 |
+|---|---|---|
+| 多实例负载均衡 | ✅ 生效 | 默认 `random`，受 `dubbo.consumer.*` 全局控制；**暂不能按 API 配置** |
+| 集群容错 / 重试 | ✅ 生效 | 默认 `failover` + `retries=2`（重试会排除已调用实例）；非幂等接口需改成 `failfast` → 待补列 |
+| group 匹配 | ✅ 生效 | 来自登记行 `business`，语义见 12.2 |
+| 条件路由 / 应用路由规则 | ⚠️ 规则不生效 | 规则源在配置中心，网关 `application.yml` 未配 `dubbo.config-center` → router 空转 |
+| 标签灰度 | ❌ 未透传 | 需要 `RpcContext.getClientAttachment().setAttachment("dubbo.tag", …)` 的显式入口（待排期） |
+
+### 12.2 坐标语义定版
+
+**`business`（= Dubbo group）**，依据 Dubbo 3.3.4 `UrlUtils.shouldMatch`：
+
+```java
+boolean groupMatches = ANY_VALUE.equals(consumerGroup)
+        || StringUtils.isEquals(consumerGroup, providerGroup)
+        || StringUtils.isContains(consumerGroup, providerGroup);
+```
+
+- 登记为空 → 消费者 URL 不带 group → **只匹配同样未声明 group 的提供者**；
+- 要匹配全部分区必须显式登记 `*`（`ANY_VALUE`）；
+- “空=不约束”那句旧描述是错的（它把 provider 中心候选过滤阶段的语义当成了 Dubbo 引用语义），已全文修正。
+
+**`version`：业务配置版本，不映射 Dubbo 服务版本（已按此实现）**
+
+- `GenericReferenceHolder` 不再 `setVersion(...)`，引用缓存键降为 `interfaceName#business`；
+- 它只用于：新入口校验“请求 version 与登记 version 一致”（区分登记批次），以及旧链路的候选匹配；
+- 因此不会出现“存量行填了 version 而 provider 未发布该 version → 新入口 No provider”这个陷阱；
+- 不新增 `dubbo_version` 列：现阶段分流靠 group 已够，真有 Dubbo 版本需求时再加列（避免无使用者的坐标字段）。
+
+### 12.3 实测记录
+
+开发者已实测：`DEMO.STANDALONE.PING` 在 `business=NULL` 时调不通，改为 `demo` 后调通 → 与 12.2 的源码结论一致。
+登记脚本已改：demo 行 `business` 全部为 `demo`，注释重写为正确语义。
+
+### 12.4 新旧共存与迁移
+
+- 存量兼容：**存量 100% 不受影响**。旧链不读 `business`、不读参数子表，旧 `/invoke` 一字未改；
+  新列/新表只被新链读取，存量行留 NULL 也不会弄坏旧调用。
+- 关于“旧架构没有参数元数据，能行吗”：分入口回答：
+  1. 旧 `/invoke`：本来就不要元数据（调用方传 `exceptdClassName`），一行数据不用动照旧跑；
+  2. 新 `/call/{apiId}`：元数据是必需输入。无参方法无需登记（params 为空且 body 为空即可调）；
+     有参方法未登记则明确报错 `GENERIC.API.PARAM_DEF_MISSING`，绝不猜类型。
+     所以“登记参数”是使用新入口的一次性成本，也是新入口能甩掉 jar 依赖的全部代价。
+- 迁移步骤（可逐个 API、无窗口压力）：
+  1. 执行 `upgrade_sys_generic_api.sql`（旧链行为不变）；
+  2. 在新页面逐行补登记：参数定义 + `business`（带 group 的服务必须填，要不限填 `*`）；
+  3. 调用方按 API 粒度从 `/invoke` 切 `/call`；未切的继续走旧入口；
+  4. 全量切完再单独立项删旧链（旧 `/invoke`、`DubboGenricApiInstance` 的每次 new+destroy、与 provider 中心的重复引用缓存）；
+  5. 二期：「用 provider 真实签名核对登记」的体检接口，控制元数据腐化。
+- 迁移期代价：同一接口会被旧链（每次新建再销毁）与新链（长期缓存一个引用）各建引用，只有瞬时开销差异，不影响正确性。
+
+### 12.5 待你拍板的两个分流补强（本轮未做）
+
+1. `loadbalance` / `cluster` / `retries` 是否做成配置表可选项（泛化 API 目标特性差异大：有的必须 failfast，有的非幂等不可重试）；
+2. 是否做 tag 透传入口（按 HTTP 头灰度到指定实例）。
+
+### 12.6 新入口响应收敛（本轮）
+
+新入口 `/call/{apiId}` **只保留一层结果**，不再返回 `ApiInvokeResultVo`：
+
+| 项 | 收敛前（与其他入口一致） | 现行为 |
+|---|---|---|
+| `AjaxResult.data` | 结果视图（successFlag/beginTime/endTime/exception* 六字段） | 远端方法的返回值本体 |
+| 执行失败 | 外层 code=200，内层 `successFlag=0`，调用方要判两层 | 抛出，由全局异常处理转 `code≠200` + i18n 文案（符合 04 分册 4.3）|
+| 失败分类 | 仅远端执行吞进内层 | 登录/预认证/装配/引用构建/远端执行 五类均直接抛出 |
+| 耗时 | 随 `beginTime/endTime` 返回 | 不进响应体：失败时写入日志（`耗时=..ms` + 堆栈），前端试调用面板用本地计时 |
+
+边界说明：
+
+- 旧 `/invoke` 仍返回 `ApiInvokeResultVo`，**双层标志在旧入口保留**（D3 对其仍成立）；`ApiInvokeResultVo` 本身不能删除，旧链在用；
+- 新入口无存量调用方，因此本收敛不构成破坏性变更；新页面的 `executeTest` 已同步改为单层读取 `res.data`；
+- 远端抛出的业务异常（`FormattedRuntimeException`）原样上抛，最终呈现的 code/message 需开发者实机核对一次（属运行期验证）。
+
+## 十三、旧链路弃用标记（本轮）
+
+弃用口径：只标「仅旧入口在用」的入口层与实现类；仍被新链或 SPI 活签名引用的数据结构不改语义只补注释，
+避免“标了弃用但非弃用代码必须在签名里引用”的自相矛盾。每处均为 `@Deprecated` 注解 + `@deprecated` 块注释
+（替代方法 + 移除时机），符合 07 清单 7.5。
+
+| 已标弃用 | 层级 | 替代 |
+|---|---|---|
+| `AbstractGenricApiController` | 类 | `AbstractGenricInvokeController` |
+| `AbstractGenricApiController#invoke` | 方法 | `#call`（新控制器） |
+| `AbstractAuthGenricApiController` / `AbstractNoAuthGenricApiController` | 类 | 新控制器及其子类 |
+| `DubboGenricApiInstance` | 类 | `ConfiguredGenricApiInstance` + `GenericReferenceHolder` |
+| `HttpTriGenricApiInstance` | 类 | 无接管者（建议直接删除，见本节末尾） |
+| `AbstractGenricApiInstance#invokeApi(List, UserDetails)` | 方法 | `ConfiguredGenricApiInstance#invokeByConfig` |
+| app `GenricController` / `PublicGenricController` | 类 | `GenricInvokeController` / `PublicGenricInvokeController` |
+
+未标弃用但已注明“仅旧链路使用”的：`HttpInvokeForm`（被 `IApiInstancePreAuth` 活签名引用，新链传 `null`）、
+`ApiInvokeResultVo`（被旧链抽象方法 `invoke(Map, ApiInvokeResultVo, Optional)` 引用）、`GenricParameterForm`、
+`AbstractGenricApiInstance`（新链仍继承以复用预认证与字段，不改 SPI 代价最小的选择）。
+
+移除条件统一为：**旧 `/invoke` 监控到调用量归零后的首个发布版本**（当前版本线 `1.0-SNAPSHOT`）。
+在此之前旧入口行为一字不改，包括双层成功标志（D3 对其仍成立）。
+
+副作用（预期内）：旧控制器与旧基类仍在引用已弃用类型，编译会多出 “使用或覆盖了已过时的 API” 提示；
+这正是弃用标记要产生的信号，不属于新增缺陷。
+
 ## 变更记录
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 3.5.0 | 2026-11 | 旧链路打弃用标记（§十三）：旧 `/invoke` 入口与其基类/实现类/app 控制器均标 `@Deprecated` + `@deprecated` 块注释（替代方法与移除时机）；仍被活签名引用的 `HttpInvokeForm`/`ApiInvokeResultVo`/`GenricParameterForm` 只补“仅旧链路使用”注释而不标注解，避免自相矛盾；旧入口行为仍一字未改 |
+| 3.4.0 | 2026-11 | 新入口响应收敛（§12.6）：`/call/{apiId}` 去掉双层结果，`AjaxResult.data` 直接是远端返回值本体，执行失败统一抛错误码；耗时不再随响应返回（进日志 + 前端计时）；旧 `/invoke` 的双层结构不变，`ApiInvokeResultVo` 保留；新页面 `executeTest` 同步适配 |
+| 3.3.0 | 2026-11 | 坐标语义定版（实测校正）：`business` 留空只匹配未声明 group 的提供者、`*` 才是不限；`version` 定为业务配置版本并从 `ReferenceConfig` 构建中移除（引用键降为 `interfaceName#business`）；新增第十二节记录路由接入现状、新旧共存与逐 API 迁移步骤；demo 登记脚本与前端提示同步修正 |
 | 3.2.0 | 2026-11 | 管理面落地：新开 `views/admin/generic-api-config` 页面（旧页面一行未改）；新增 `params/{apiId}` 与 `saveWithParams` 管理接口；主表删除联动清除入参登记；修正参数服务的 Bean 循环依赖；补 `compareAndUpdateValue` 的 `business` 合并分支；菜单 key 与路由登记脚本入库 |
 | 3.1.0 | 2026-11 | 本轮实施完成：新增落地清单；`required` 列定名为 `required_flag`；演示服务接口不进 api 模块的偏离理由入档；旧链路保持不动 |
 | 3.0.0 | 2026-11 | **重写**：确立「既有能力与架构一律不动，新功能只新增文件」；参数元信息改独立子表 `sys_generic_api_param`（Q2）；`/call/{apiId}` 支持命名式 + 位置式双 body（Q3）；分流明确交 Dubbo 原生（发现/负载均衡/集群/group-version/`setUrl` 直连/`setTag`），不改 provider 中心，引用缓存重复一份并标注迁移路径（Q1 修正）；补 `param_type` 擦除登记口径与 Dubbo 3.3.4 API 依据；登记旧链路 P1–P7 供迁移期处理 |
