@@ -2,6 +2,7 @@ package com.tbs.app.service.genericapi;
 
 import com.tbs.shared.interfaces.service.IServiceTemplate;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
+import com.tbs.shared.pojo.entity.SystemGenericApiParamEntity;
 import com.tbs.web.genric.IApiInstancePreAuth;
 
 import java.util.List;
@@ -52,6 +53,20 @@ public interface IGenericApiService extends IServiceTemplate<SystemGenericApiEnt
      * @return 已启用且无需认证的泛化API配置，不会为 {@code null}
      */
     SystemGenericApiEntity getPublicInvokableApi(String apiId);
+
+    /**
+     * 保存泛化API配置，并整组替换其入参定义
+     * <p>
+     * 配置面一个表单同时提交「API 声明」与「入参定义」，两写必须在同一事务内：主表成功而参数失败会留下
+     * 无可调用元数据的半成品配置。参数采用整组替换（删旧插新）：参数行的语义全部由 {@code paramOrder}
+     * 承载，逐行比对与整组替换结果等价，而后者不会漏掉被删行。
+     * </p>
+     *
+     * @param apiConfig 主表配置（无 id 则新增，有 id 则更新）
+     * @param params    入参定义列表，可以为空（表示该方法无入参，同时清除旧登记）
+     * @return 保存后的主表配置
+     */
+    SystemGenericApiEntity saveWithParams(SystemGenericApiEntity apiConfig, List<SystemGenericApiParamEntity> params);
 
     /**
      * 启用API配置

@@ -4,10 +4,12 @@ import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.constant.SystemI18nConstant;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.genericapi.IGenericApiService;
+import com.tbs.app.service.genericapi.ISystemGenericApiParamService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.dic.enums.DataDicFlagEnum;
@@ -16,12 +18,14 @@ import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTe
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.SystemGenericApiMapper;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
+import com.tbs.shared.pojo.entity.SystemGenericApiParamEntity;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.web.genric.IApiInstancePreAuth;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
@@ -30,6 +34,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.GENERIC_API;
+import static com.tbs.app.service.impl.CacheNamesConstants.GENERIC_API_PARAM;
 
 /**
  * 泛化API配置服务实现类
@@ -46,6 +51,12 @@ public class GenericApiServiceImpl
 
     @Resource
     private AppSettingProperty property;
+
+    /**
+     * 入参定义服务（主表写路径整组替换参数、删除路径联动清理）
+     */
+    @Resource
+    private ISystemGenericApiParamService genericApiParamService;
 
     @Override
     protected Class<? extends IDelegateInvoker> pageVoBuildType() {
@@ -125,6 +136,10 @@ public class GenericApiServiceImpl
         if (StrUtil.isNotEmpty(newOne.getAppName())) {
             oldOne.setAppName(newOne.getAppName());
         }
+        // 更新业务分区坐标：传空串表示清除约束（回到不约束），不传则保持原值
+        if (newOne.getBusiness() != null) {
+            oldOne.setBusiness(StrUtil.isBlank(newOne.getBusiness()) ? null : newOne.getBusiness().trim());
+        }
         // 更新接口名
         if (StrUtil.isNotEmpty(newOne.getInterfaceName())) {
             oldOne.setInterfaceName(newOne.getInterfaceName());
@@ -167,10 +182,64 @@ public class GenericApiServiceImpl
         return super.save(entity);
     }
 
-    @CacheEvict(cacheNames = GENERIC_API, allEntries = true)
+    @CacheEvict(cacheNames = {GENERIC_API, GENERIC_API_PARAM}, allEntries = true)
     @Override
     public SystemGenericApiEntity deleteById(Long id) {
-        return super.deleteById(id);
+        SystemGenericApiEntity entity = super.queryById(id);
+        SystemGenericApiEntity deleted = super.deleteById(id);
+        // 主表行删除后联动清除其入参登记：否则重建同名 apiId 时会拿到上一代的参数定义
+        if (entity != null) {
+            removeParams(entity.getApiId());
+        }
+        return deleted;
+    }
+
+    @CacheEvict(cacheNames = {GENERIC_API, GENERIC_API_PARAM}, allEntries = true)
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public SystemGenericApiEntity saveWithParams(SystemGenericApiEntity apiConfig,
+        List<SystemGenericApiParamEntity> params) {
+        List<SystemGenericApiEntity> saved = super.save(apiConfig);
+        SystemGenericApiEntity result = CollUtil.isEmpty(saved) ? apiConfig : saved.get(0);
+        replaceParams(result.getApiId(), params);
+        return result;
+    }
+
+    /**
+     * 整组替换指定 API 的入参定义
+     * <p>
+     * 先清除现有登记再逐行新增：参数行的语义全在 {@code paramOrder} 上，整组替换不会漏掉被删行；
+     * 新行一律清空主键，避开前端回传的旧主键与已删行碰撞。
+     * </p>
+     *
+     * @param apiId  API唯一标识
+     * @param params 新的入参定义列表，可以为空
+     */
+    private void replaceParams(String apiId, List<SystemGenericApiParamEntity> params) {
+        removeParams(apiId);
+        if (CollUtil.isEmpty(params)) {
+            return;
+        }
+        for (SystemGenericApiParamEntity param : params) {
+            param.setId(null);
+            param.setApiId(apiId);
+            genericApiParamService.save(param);
+        }
+    }
+
+    /**
+     * 清除指定 API 的全部入参登记（逻辑删除）
+     *
+     * @param apiId API唯一标识
+     */
+    private void removeParams(String apiId) {
+        List<SystemGenericApiParamEntity> existing = genericApiParamService.listByApiId(apiId);
+        if (CollUtil.isEmpty(existing)) {
+            return;
+        }
+        for (SystemGenericApiParamEntity param : existing) {
+            genericApiParamService.deleteById(param.getId());
+        }
     }
 
     @Override

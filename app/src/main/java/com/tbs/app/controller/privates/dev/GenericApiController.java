@@ -1,11 +1,14 @@
 package com.tbs.app.controller.privates.dev;
 
+import com.tbs.app.form.GenericApiSaveForm;
 import com.tbs.app.service.genericapi.IGenericApiService;
+import com.tbs.app.service.genericapi.ISystemGenericApiParamService;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.common.data.PageVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.criteria.CommonGenericApiCriteria;
 import com.tbs.shared.pojo.entity.SystemGenericApiEntity;
+import com.tbs.shared.pojo.entity.SystemGenericApiParamEntity;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -13,10 +16,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -35,6 +39,12 @@ public class GenericApiController
 
     @Resource
     private IGenericApiService genericApiService;
+
+    /**
+     * 泛化API入参定义服务
+     */
+    @Resource
+    private ISystemGenericApiParamService genericApiParamService;
 
     @Override
     public IGenericApiService getService() {
@@ -164,6 +174,46 @@ public class GenericApiController
         return successResult(
             genericApiService.getAllAvaliablePreAuthList().stream().map(PreAuthorize -> PreAuthorize.getPreAuthId())
                 .collect(Collectors.toList()));
+    }
+
+    /**
+     * 查询指定泛化API的入参定义
+     * <p>
+     * 新版泛化调用链路以登记入参为唯一元信息来源，配置面编辑前先拉回整组定义。
+     * </p>
+     *
+     * @param apiId API唯一标识
+     * @return 按参数顺序升序排列的入参定义
+     */
+    @GetMapping("params/{apiId}")
+    @AjaxResponseType(value = List.class, genericArgs = {SystemGenericApiParamEntity.class})
+    @Operation(summary = "查询泛化API入参定义", description = "按API唯一标识查询已登记的入参定义列表")
+    @ApiResponse(responseCode = "200", description = "成功查询入参定义",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult listParams(
+        @Parameter(name = "apiId", description = "API唯一标识", required = true) @PathVariable String apiId) {
+        return successResult(genericApiParamService.listByApiId(apiId));
+    }
+
+    /**
+     * 保存泛化API配置并整组替换其入参定义
+     * <p>
+     * 与 {@code save} 的区别在于同一个事务内提交「API 声明 + 入参定义」，配置面一个弹窗即可保存完整可调用的 API。
+     * </p>
+     *
+     * @param form 整组保存表单
+     * @return 保存后的API配置
+     */
+    @PostMapping("saveWithParams")
+    @AjaxResponseType(SystemGenericApiEntity.class)
+    @Operation(summary = "保存泛化API及其入参定义", description = "同一事务内保存API声明并整组替换入参定义")
+    @ApiResponse(responseCode = "200", description = "成功保存泛化API与入参定义",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult saveWithParams(
+        @Parameter(name = "form", description = "API声明与入参定义", required = true) @RequestBody GenericApiSaveForm form) {
+        return successResult(genericApiService.saveWithParams(form.getApiConfig(), form.getParams()));
     }
 
     @Override

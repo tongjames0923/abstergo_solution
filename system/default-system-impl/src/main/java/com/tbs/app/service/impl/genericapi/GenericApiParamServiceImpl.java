@@ -1,7 +1,6 @@
 package com.tbs.app.service.impl.genericapi;
 
 import com.tbs.app.config.AppSettingProperty;
-import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.service.genericapi.ISystemGenericApiParamService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
@@ -49,9 +48,6 @@ public class GenericApiParamServiceImpl extends
 
     @Resource
     private AppSettingProperty property;
-
-    @Resource
-    private IGenericApiService genericApiService;
 
     @Override
     protected Class<? extends IDelegateInvoker> pageVoBuildType() {
@@ -157,13 +153,18 @@ public class GenericApiParamServiceImpl extends
 
     /**
      * 校验单条入参定义的必填项与归属
+     * <p>
+     * 归属存在性按主表业务键直查而不注入主表服务：主表服务的整组保存又要调用本服务，
+     * 反向注入会构成 Bean 循环依赖（Boot 3 默认不允许）；本校验只在登记时发生一次，不依赖主表缓存。
+     * </p>
      *
      * @param entity 待校验的入参定义
      */
     private void validate(SystemGenericApiParamEntity entity) {
         AssertUtil.isTrue(StrUtil.isEmpty(entity.getApiId())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
             .i18n(GENERIC_API_PARAM_API_ID_REQUIRED).throwIt();
-        SystemGenericApiEntity apiConfig = genericApiService.getByApiId(entity.getApiId());
+        SystemGenericApiEntity apiConfig = QueryEngine.getEntityQueryWrapper(new SystemGenericApiEntity()).query()
+            .where().equal(SystemGenericApiEntity::getApiId, entity.getApiId()).pour().fetchOne();
         AssertUtil.isTrue(apiConfig == null).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
             .i18n(GENERIC_API_PARAM_API_NOT_EXISTS).params(entity.getApiId()).throwIt();
         AssertUtil.isTrue(entity.getParamOrder() == null || entity.getParamOrder() < 0)

@@ -221,10 +221,59 @@ group/version 匹配（`setGroup`/`setVersion`）、试机直连指定实例（`
 未做（一期有意略过）：子表的管理端 UI 与 REST 接口（登记走 SQL 即可打通试机）、新接口的 Swagger 注解
 （`web` 不依赖 `open-api-starter`，自描述由 `GET /meta/{apiId}` 承担）、新路径的菜单/API 权限点登记（需你在权限管理里录入 type=3）。
 
+## 十一、管理面（本轮新增）
+
+### 11.1 页面划分：旧页面不动，新页面新开
+
+| 页面 | 位置 | 处置 |
+|------|------|------|
+| 旧「泛化API管理」 | `views/admin/generic-api/index.vue` + `api/generic-api.js` | **一行未改**，仍走旧 `/invoke` 信封与旧硬编码类型推导 |
+| 新「泛化API配置」 | `views/admin/generic-api-config/index.vue` + `api/generic-api-config.js` | 新增；新链路的配置与试调用入口 |
+
+新页面能力：
+
+1. 列表：表格/卡片双形态（档位走 `@/mixins/responsive`，不自写断点），次要列在手机档降为卡片；
+2. 一个弹窗同时提交「API 声明 + 入参定义」：参数行可新增/删除/上下移，**保存时按行序重算 `paramOrder`**，避免手填错位；
+   类型下拉选项含基本类型关键字（`long`/`int`/`boolean`…）并允许自定义输入 FQCN，集合选项明写“擦除、不写泛型”；
+3. 试调用：拉 `params/{apiId}` 自动渲染表单（预填 `example`），命名式/位置式可切，实时预览请求体；
+   调用走 `POST /private/genric/call/{apiId}`，按 `data.successFlag` 判成功并展示耗时与异常字段。
+
+### 11.2 管理接口（均为新增，旧接口语义不变）
+
+| 接口 | 作用 |
+|------|------|
+| `GET /private/admin/generic-api/params/{apiId}` | 读整组入参定义 |
+| `POST /private/admin/generic-api/saveWithParams` | 同一事务保存主表 + 整组替换参数（`GenericApiSaveForm`） |
+| `POST /private/admin/generic-api/delete/{id}` | 签名不变，新增“联动清除入参登记”副作用 |
+
+两条实现约束已处理：
+
+- **Bean 循环依赖**：`GenericApiParamServiceImpl` 不再注入 `IGenericApiService`（改为 QueryEngine 直查主表行），
+  否则与主服务的反向注入构成循环，Boot 3 默认不允许 → 启动会直接失败；
+- **手写拷贝点**：`compareAndUpdateValue` 补 `business` 合并分支（不补则管理页改了不生效）；
+  缓存读写成对：主表与参数各自 `@CacheEvict`，新缓存名 `app:generic_api_param` 走 `CacheNamesConstants`。
+
+### 11.3 菜单/路由登记
+
+路由是版本化的（`view_route_version` + `view_route_configration.version`），所以下述三种方式任选其一，**不要直接拿到 dump 里的旧 id 进插入**：
+
+1. 推荐：路由管理界面新增，`path=generic-api-config`，`component=/admin/generic-api-config/index.vue`，
+   `name=view.menu.develop.generic.api.config`；
+2. 脚本：`etc/sql_file/route_generic_api_config.sql`（以当前生效版本为锚点、按旧 generic-api 行定位父节点，可重复执行）；
+3. 菜单文案 key 已写入 `messages-app.properties` / `messages-app_en_US.properties` 两份。
+
+### 11.4 本轮验证结果
+
+- 后端：全 reactor `mvn -o compile` **BUILD SUCCESS**；IDE 诊断无错误；
+- 前端：`npx eslint` 对四个新/改文件 **exit=0**（无错无警告）；
+  仓内其他页面存量 127 个 `object-curly-spacing` 等错误**不属于本次变更范围**，未触及；
+- **未验证**（由开发者完成）：页面实机操作、五档宽度实测、保存/试调用接口联调、路由登记后的菜单渲染。
+
 ## 变更记录
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 3.2.0 | 2026-11 | 管理面落地：新开 `views/admin/generic-api-config` 页面（旧页面一行未改）；新增 `params/{apiId}` 与 `saveWithParams` 管理接口；主表删除联动清除入参登记；修正参数服务的 Bean 循环依赖；补 `compareAndUpdateValue` 的 `business` 合并分支；菜单 key 与路由登记脚本入库 |
 | 3.1.0 | 2026-11 | 本轮实施完成：新增落地清单；`required` 列定名为 `required_flag`；演示服务接口不进 api 模块的偏离理由入档；旧链路保持不动 |
 | 3.0.0 | 2026-11 | **重写**：确立「既有能力与架构一律不动，新功能只新增文件」；参数元信息改独立子表 `sys_generic_api_param`（Q2）；`/call/{apiId}` 支持命名式 + 位置式双 body（Q3）；分流明确交 Dubbo 原生（发现/负载均衡/集群/group-version/`setUrl` 直连/`setTag`），不改 provider 中心，引用缓存重复一份并标注迁移路径（Q1 修正）；补 `param_type` 擦除登记口径与 Dubbo 3.3.4 API 依据；登记旧链路 P1–P7 供迁移期处理 |
 | 2.0.0 | 2026-11 | （作废）改旧链路 + 抽公共 holder 的方案，与「保持现有」冲突 |
