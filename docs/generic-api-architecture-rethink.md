@@ -378,10 +378,48 @@ boolean groupMatches = ANY_VALUE.equals(consumerGroup)
 副作用（预期内）：旧控制器与旧基类仍在引用已弃用类型，编译会多出 “使用或覆盖了已过时的 API” 提示；
 这正是弃用标记要产生的信号，不属于新增缺陷。
 
+### 12.7 远端异常描述裁剪
+
+现象：provider 抛 `RuntimeException("故意抛出个异常")` 时，`/call` 回显的 `message` 里跟着整段服务端堆栈。
+
+成因（源码核对）：两处叠加——
+
+1. Triple 协议用 `org.apache.dubbo.rpc.protocol.tri.ExceptionUtils.buildVerboseMessage()` 把异常拼成
+   「类名: 消息 → 类名: 消息」并显式追加 `\n -> Stack traces:` + 前 10 行栈帧；外层 `RpcException` 的
+   消息就是这一整块；
+2. 更关键的是 `GenericException(Throwable cause)` 的构造：`super(StringUtils.toString(cause))`——
+   **堆栈被塞进父类消息，而干净的业务描述在 `exceptionClass` / `exceptionMessage` 两个字段里**。
+   上一版我读了 `getMessage()`，所以才去对文本动刀；这是读错字段，不是必须如此。
+
+`ExceptionFilter` 不是包装者：它对 JDK 异常（`getCodeBase()==null`）直接放行。
+结论：堆栈是协议层与兼容层附带的，服务方改抛法也绕不开；但**不需要解析文本**——Dubbo 已经把干净的业务描述
+以结构字段交给我们，读对字段即可。
+
+做法（结构化读取，不做文本手术）：`ConfiguredGenricApiInstance#remoteErrorMessage` 先整条扫异常链找
+`org.apache.dubbo.rpc.service.GenericException`（`com.alibaba.dubbo.rpc.service.GenericException` 继承自它，
+一个 `instanceof` 同时覆盖两套包名，`Dubbo2GenericExceptionUtils` 的 `isAssignableFrom` 检查已证实这一点），
+然后只读它的两个结构字段：`getExceptionClass()` + `getExceptionMessage()` → 拼成「类名: 消息」。
+链上找不到 GenericException 时才按 `RpcException.getCode()` 分类（链路类码不外显，其余取其消息）。
+文本侧只保留一个 `StrUtil.maxLength(msg, 512)` 定长防御，不再 split 换行、不再剔栈帧行、不再剥前缀。
+
+效果：
+
+```text
+改前：远端服务执行异常：com.alibaba.dubbo.rpc.service.GenericException: java.lang.RuntimeException: 故意抛出个异常
+            + 30+ 行服务端堆栈
+改后：远端服务执行异常：java.lang.RuntimeException: 故意抛出个异常
+```
+
+完整堆栈仍在网关日志（`泛化调用失败, apiId=..., 耗时=..ms` + 堆栈），排错信息不丢。
+已知上限：若远端只给文本而无 GenericException 结构（非泛化链路、或 Dubbo 版本不带该结构），
+则只能依赖 `RpcException.getMessage()`，届时可能仍含堆栈——定长截断兼并防撑爆，不再逐行解析。
+
 ## 变更记录
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 3.7.0 | 2026-11 | 改用结构化读取取代文本手术：先找异常链上的 `GenericException`（兼容层同类继承它，一个 instanceof 覆盖两套包名），读 `getExceptionClass()`/`getExceptionMessage()`；删除换行切分、`at `/`Caused by:` 过滤、包装前缀剔除与文本特征黑名单，仅保留 `StrUtil.maxLength` 定长防御；`RpcException` 回归纯 `getCode()` 分类 |
+| 3.6.0 | 2026-11 | 远端异常描述裁剪（§12.7）：确认堆栈来自 Triple 的 `buildVerboseMessage` 而非 `ExceptionFilter`；`/call` 回显只取描述首行、剥传输层包装前缀、限长 512，链路特征改为只看首行；完整堆栈保留在网关日志 |
 | 3.5.0 | 2026-11 | 旧链路打弃用标记（§十三）：旧 `/invoke` 入口与其基类/实现类/app 控制器均标 `@Deprecated` + `@deprecated` 块注释（替代方法与移除时机）；仍被活签名引用的 `HttpInvokeForm`/`ApiInvokeResultVo`/`GenricParameterForm` 只补“仅旧链路使用”注释而不标注解，避免自相矛盾；旧入口行为仍一字未改 |
 | 3.4.0 | 2026-11 | 新入口响应收敛（§12.6）：`/call/{apiId}` 去掉双层结果，`AjaxResult.data` 直接是远端返回值本体，执行失败统一抛错误码；耗时不再随响应返回（进日志 + 前端计时）；旧 `/invoke` 的双层结构不变，`ApiInvokeResultVo` 保留；新页面 `executeTest` 同步适配 |
 | 3.3.0 | 2026-11 | 坐标语义定版（实测校正）：`business` 留空只匹配未声明 group 的提供者、`*` 才是不限；`version` 定为业务配置版本并从 `ReferenceConfig` 构建中移除（引用键降为 `interfaceName#business`）；新增第十二节记录路由接入现状、新旧共存与逐 API 迁移步骤；demo 登记脚本与前端提示同步修正 |

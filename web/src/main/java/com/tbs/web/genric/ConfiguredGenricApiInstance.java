@@ -12,6 +12,7 @@ import com.tbs.web.genric.form.GenricParameterForm;
 import com.tbs.web.genric.vo.ApiInvokeResultVo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.service.GenericException;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.springframework.security.core.userdetails.UserDetails;
 
@@ -41,7 +42,7 @@ public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Seria
      * Dubbo 链路故障的错误码集合
      * <p>
      * 这类异常的描述里带目标地址、重试次数、方法签名等内部信息，不回显给调用方；
-     * 其余错误码（业务异常、校验、鉴权、限流、未知）承载的是远端方法自己抛出的异常描述，属于调用方要看的内容。
+     * 其余异常承载的是远端方法自己抛出的业务描述，属于调用方要看的内容。
      * </p>
      */
     private static final Set<Integer> LINK_ERROR_CODES = Set.of(RpcException.NETWORK_EXCEPTION,
@@ -50,14 +51,12 @@ public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Seria
         RpcException.REGISTRY_EXCEPTION, RpcException.ROUTER_CACHE_NOT_BUILD, RpcException.METHOD_NOT_FOUND);
 
     /**
-     * 链路故障的文本特征
+     * 远端异常描述的回显长度上限
      * <p>
-     * {@code ponytail:} 已知上限——Triple 协议下远端业务异常常以 {@code code=UNKNOWN} 的 {@link RpcException}
-     * 抵达网关，单靠错误码分不开，因此补一层文本特征兼容；升级路径是改用 Dubbo 异常附带的元信息判别。
+     * 防超长消息撑爆响应，超出部分由省略号收尾；完整堆栈已在日志里。
      * </p>
      */
-    private static final String[] LINK_MESSAGE_HINTS = {"No provider", "Failed to invoke", "Tried", "providers [",
-        "Timed out", "time out", "Serialize", "serializ", "Connection", "Channel", "grpc-status", "not found"};
+    private static final int MAX_REMOTE_MESSAGE_LENGTH = 512;
 
     /**
      * 泛化调用配置（接口/方法/坐标/参数定义）
@@ -163,53 +162,80 @@ public class ConfiguredGenricApiInstance extends AbstractGenricApiInstance<Seria
     }
 
     /**
-     * 从调用异常链里提取可回显的远端异常描述
+     * 提取可回显的远端异常描述
      * <p>
-     * 沿 cause 链逐层判：先排掉链路故障（错误码命中或文本命中），剩下的第一个带消息的异常就是远端业务异常；
-     * 若网关 classpath 上有该异常类，Dubbo 会原样重建，此时拼成「类全名: 消息」与 Dubbo 侧描述格式一致。
+     * 一律读结构字段，不对文本动刀：
+     * <ol>
+     *     <li>{@link GenericException} 是泛化调用回传远端异常的标准载体（{@code com.alibaba} 兼容层的同类
+     *         继承自它，一个 {@code instanceof} 同时覆盖两套包名）。它的构造把堆栈塞进了父类消息
+     *         （{@code super(StringUtils.toString(cause))}），业务描述本体在
+     *         {@code getExceptionClass()} 与 {@code getExceptionMessage()} 两个字段上——读错字段才会看到那堆栈；</li>
+     *     <li>{@link RpcException} 按错误码分类：链路故障不外显，其余取其消息；</li>
+     *     <li>其余异常按「类名: 消息」回显。</li>
+     * </ol>
+     * 三步都只做定长截断，不解析文本格式——换 Dubbo 版本或换协议（Triple 的异常描述由
+     * {@code ExceptionUtils.buildVerboseMessage} 拼接，带「类名: 消息 + 堆栈」）也不会失真。
      * </p>
      *
      * @param e 泛化调用抛出的异常，不能为 null
-     * @return 可回显的异常描述；判定为纯链路故障时为 {@code null}
+     * @return 可回显的远端异常描述；判定为纯链路故障时为 {@code null}
      */
     private static String remoteErrorMessage(Throwable e) {
+        GenericException remoteException = findGenericException(e);
+        if (remoteException != null) {
+            return describeRemoteException(remoteException);
+        }
         for (Throwable cursor = e; cursor != null; cursor = cursor.getCause() == cursor ? null : cursor.getCause()) {
-            String message = cursor.getMessage();
             if (cursor instanceof RpcException) {
-                if (LINK_ERROR_CODES.contains(((RpcException)cursor).getCode()) || isLinkHinted(message)) {
+                RpcException rpcException = (RpcException)cursor;
+                if (LINK_ERROR_CODES.contains(rpcException.getCode())) {
                     continue;
                 }
-                if (StrUtil.isNotBlank(message)) {
-                    return message;
-                }
-                continue;
+                return StrUtil.maxLength(rpcException.getMessage(), MAX_REMOTE_MESSAGE_LENGTH);
             }
             if (cursor instanceof FormattedRuntimeException) {
                 continue;
             }
-            if (StrUtil.isNotBlank(message)) {
-                return cursor.getClass().getName() + ": " + message;
+            if (StrUtil.isNotBlank(cursor.getMessage())) {
+                return StrUtil.maxLength(
+                    cursor.getClass().getName() + ": " + cursor.getMessage(), MAX_REMOTE_MESSAGE_LENGTH);
             }
         }
         return null;
     }
 
     /**
-     * 异常描述是否属于链路故障文本
+     * 在异常链里定位泛化调用回传的远端异常
+     * <p>
+     * 先整条扫一遍再分类：外层通常是 {@link RpcException}（它的消息已是拼好的整块描述），
+     * 结构化的 {@link GenericException} 在内层，从外层读只会拿到堆栈。
+     * </p>
      *
-     * @param message 异常描述，可以为空
-     * @return 命中链路特征或描述为空时返回 {@code true}
+     * @param e 异常链起点，可以为 {@code null}
+     * @return 链上第一个远端异常载体，没有时为 {@code null}
      */
-    private static boolean isLinkHinted(String message) {
-        if (StrUtil.isBlank(message)) {
-            return true;
-        }
-        for (String hint : LINK_MESSAGE_HINTS) {
-            if (message.contains(hint)) {
-                return true;
+    private static GenericException findGenericException(Throwable e) {
+        for (Throwable cursor = e; cursor != null; cursor = cursor.getCause() == cursor ? null : cursor.getCause()) {
+            if (cursor instanceof GenericException) {
+                return (GenericException)cursor;
             }
         }
-        return false;
+        return null;
+    }
+
+    /**
+     * 用远端异常的结构字段拼可读描述
+     *
+     * @param remoteException 泛化调用回传的远端异常，不能为 null
+     * @return 「远端异常类名: 远端异常消息」；两个字段都缺失时为 {@code null}
+     */
+    private static String describeRemoteException(GenericException remoteException) {
+        String remoteClass = remoteException.getExceptionClass();
+        String remoteMessage = StrUtil.maxLength(remoteException.getExceptionMessage(), MAX_REMOTE_MESSAGE_LENGTH);
+        if (StrUtil.isBlank(remoteClass)) {
+            return StrUtil.isBlank(remoteMessage) ? null : remoteMessage;
+        }
+        return StrUtil.isBlank(remoteMessage) ? remoteClass : remoteClass + ": " + remoteMessage;
     }
 
     /**
