@@ -140,11 +140,14 @@ Admin 测试调用与 Java 泛化调用共用 `GenericService.$invoke` 泛化机
 | `含泛型标记` | 类型串写擦除形式：`java.util.List`，不要写 `java.util.List<com.x.Foo>` |
 | `警告: 类型 ... 未匹配到已注册 POJO` | 类型串未命中任何 `JavaClassName()`：确认拼写，或该类型确以 Map 形态传输（警告不阻断） |
 | 泛化调用 string 无法 realize | 方法签名写成了 `[]interface{}`——必须用真实参数类型 |
+| `panic: protocol for [registry] is not existing` / `no metadata report factory of protocol nacos found` | 缺失 dubbo-go SPI 工厂的 blank import：使用本库不会出现；若改动 `server.go` 启动装配，须保留其中的精确导入集合 |
+| 读取 `service.json` 失败 | 传空路径时 `Run` 按当前工作目录取 `service.json`，IDE 运行配置的工作目录应设为服务模块目录，或在 `Run` 第一个参数传显式路径 |
 
 ## 七、实现说明（维护者向）
 
 - 目录：`config.go`（模型/加载/校验）、`registry.go`（绑定校验 + POJO 反射注册去重）、`metadata.go`（ServiceDefinition + Nacos 发布）、`server.go`（实例/服务端装配）、`starter.go`（Run 门面/信号监听）；
 - 元数据 dataId 规则：`interface:version:group:provider:application`，发布到 Nacos group `dubbo`（与原 dubbo-db-demo 实现逐字一致）；
 - 启动期顺序（硬约束）：`hessian.RegisterPOJO` 必须先于 `RegisterService` 与 `Serve`；
-- 仅发布 `dubbo://`：`WithMetadataServiceProtocol("dubbo")` 使 MetadataService 复用同一端口，注册 URL 不出现 `tri://`，Java 消费端不会误选 Triple；
+- 仅发布 `dubbo://`：`WithMetadataServiceProtocol("dubbo")` 使 MetadataService 复用同一端口；`server.WithServerProtocolIDs([]string{"dubbo"})` 显式锁定协议 ID，避免 dubbo-go 默认 `tri` 协议配置被一并导出，注册 URL 不出现 `tri://`，Java 消费端不会误选 Triple；
+- **SPI 工厂必须精确导入**：`server.go` 以 blank import 注册 `registry/protocol`、`registry/nacos`、`protocol/dubbo`、`metadata/report/nacos`、`filter/generic` 及默认 filter 链等最小集合。**不要改成 `_ "dubbo.apache.org/dubbo-go/v3/imports"` 整包**——它会连带注册 `protocol/triple` 与 `triple/reflection`，实测会额外暴露 `tri://:50051` 与 `grpc.reflection.v1alpha.ServerReflection` 服务，并把 Nacos 应用级实例端口带偏到 50051；反之若缺 SPI 导入则会出现 `protocol for [registry] is not existing` 的 panic 与 `no metadata report factory of protocol nacos found` 警告；
 - 单测 `metadata_test.go` 为纯逻辑测试（配置校验、dataId、元数据拼装、绑定校验、POJO 注册去重），不依赖 Nacos/网络：`go test ./...`。

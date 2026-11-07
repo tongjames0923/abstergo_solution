@@ -5,18 +5,39 @@ import (
 	"log"
 
 	"dubbo.apache.org/dubbo-go/v3"
+	_ "dubbo.apache.org/dubbo-go/v3/cluster/cluster/failover"
+	_ "dubbo.apache.org/dubbo-go/v3/cluster/loadbalance/random"
 	"dubbo.apache.org/dubbo-go/v3/common"
-	_ "dubbo.apache.org/dubbo-go/v3/imports"
+	_ "dubbo.apache.org/dubbo-go/v3/config_center/nacos"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/accesslog"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/echo"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/exec_limit"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/generic"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/graceful_shutdown"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/token"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/tps"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/tps/limiter"
+	_ "dubbo.apache.org/dubbo-go/v3/filter/tps/strategy"
 	"dubbo.apache.org/dubbo-go/v3/metadata"
+	_ "dubbo.apache.org/dubbo-go/v3/metadata/mapping/metadata"
+	_ "dubbo.apache.org/dubbo-go/v3/metadata/report/nacos"
 	"dubbo.apache.org/dubbo-go/v3/protocol"
+	_ "dubbo.apache.org/dubbo-go/v3/protocol/dubbo"
+	_ "dubbo.apache.org/dubbo-go/v3/proxy/proxy_factory"
 	"dubbo.apache.org/dubbo-go/v3/registry"
+	_ "dubbo.apache.org/dubbo-go/v3/registry/directory"
+	_ "dubbo.apache.org/dubbo-go/v3/registry/nacos"
+	_ "dubbo.apache.org/dubbo-go/v3/registry/protocol"
+	_ "dubbo.apache.org/dubbo-go/v3/registry/servicediscovery"
 	"dubbo.apache.org/dubbo-go/v3/server"
 )
 
-// dubbo-go 的 SPI 实现靠 blank import 触发各包 init 注册工厂：
+// dubbo-go 的 SPI 实现靠 blank import 触发各包 init 注册工厂，这里按最小集合精确导入：
 // registry/protocol（缺失会 panic: protocol for [registry] is not existing）、
-// registry/nacos、protocol/dubbo、metadata/report/nacos、filter/generic（泛化调用）
-// 等均由 imports 一站式注册。业务侧引入本库即自动具备，无需再自行 import。
+// registry/nacos + config_center/nacos、protocol/dubbo、metadata/report/nacos、
+// filter/generic（泛化调用）及默认 filter 链所需实现。
+// 刻意不导入 imports 整包：它会连带注册 protocol/triple 与 triple/reflection，
+// 导致服务额外暴露 tri://:50051 与 grpc.reflection 服务，Java 消费端会误选 Triple。
 
 /**
  * 按既有链路装配 dubbo 实例与服务端
@@ -48,6 +69,8 @@ func newServer(cfg *Config) (*server.Server, error) {
 		return nil, fmt.Errorf("创建 Dubbo 实例失败: %w", err)
 	}
 	srv, err := ins.NewServer(
+		// 显式锁定协议 ID，避免默认 tri 协议配置被一并导出
+		server.WithServerProtocolIDs([]string{"dubbo"}),
 		server.WithServerProtocol(
 			protocol.WithDubbo(),
 			protocol.WithPort(cfg.Port),
