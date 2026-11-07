@@ -2,7 +2,7 @@
 
 轻量 Dubbo(Go) 提供者快速开发套件：**一份 JSON 契约配置 + 业务实现结构体 + 一次 `starter.Run` 调用**，即完成 POJO 注册、服务装配、Nacos 注册与 ServiceDefinition 元数据发布，编译产出单二进制可直接运行。协议固定 `dubbo(TCP) + hessian2`、无 IDL 注册，供 **Java 泛化调用（`GenericService.$invoke`）与 Dubbo Admin** 直接消费——替代「为几个简单方法而接入 Spring Boot 工程」的重型方案。
 
-完整示例见仓库 `dubbo-db-demo/`（基于本库的 `go-user-provider`，端口 20001）。
+完整示例见仓库 `dubbo-db-demo/`（基于本库的 `go-user-provider`，端口 20001）。仓库级文档：[Go 轻量提供者指南](../docs/go-dubbo-provider-guide.md)（实现、类型口径、部署与验收）、[dubbo-db-demo/README.md](../dubbo-db-demo/README.md)（示例服务与测试样例）。
 
 ## 一、新服务三步
 
