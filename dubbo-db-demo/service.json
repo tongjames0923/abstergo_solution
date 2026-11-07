@@ -1,0 +1,26 @@
+{
+  "application": "go-user-provider",
+  "port": 20001,
+  "metadataGroup": "dubbo",
+  "services": [
+    {
+      "interface": "org.apache.dubbo.samples.api.UserProvider",
+      "version": "",
+      "group": "",
+      "methods": [
+        {
+          "name": "Echo",
+          "parameterTypes": ["java.lang.String"],
+          "returnType": "java.lang.String",
+          "parameters": [{ "index": 0, "name": "name", "type": "java.lang.String" }]
+        },
+        {
+          "name": "GetUser",
+          "parameterTypes": ["java.lang.String"],
+          "returnType": "org.apache.dubbo.samples.api.User",
+          "parameters": [{ "index": 0, "name": "name", "type": "java.lang.String" }]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+{
+  "application": "go-example-provider",
+  "port": 20001,
+  "metadataGroup": "dubbo",
+  "services": [
+    {
+      "interface": "com.example.OrderProvider",
+      "version": "",
+      "group": "order",
+      "methods": [
+        {
+          "name": "GetById",
+          "parameterTypes": ["long"],
+          "returnType": "com.example.Order",
+          "parameters": [{ "index": 0, "name": "orderId", "type": "long" }]
+        },
+        {
+          "name": "ListByCustomer",
+          "parameterTypes": ["java.lang.String", "int"],
+          "returnType": "java.util.List",
+          "parameters": [
+            { "index": 0, "name": "customerId", "type": "java.lang.String" },
+            { "index": 1, "name": "limit", "type": "int" }
+          ]
+        }
+      ]
+    },
+    {
+      "interface": "com.example.StockProvider",
+      "version": "1.0.0",
+      "group": "",
+      "methods": [
+        {
+          "name": "Deduct",
+          "parameterTypes": ["java.lang.String", "long"],
+          "returnType": "boolean"
+        }
+      ]
+    }
+  ]
+}
