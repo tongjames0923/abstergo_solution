@@ -113,14 +113,49 @@ go build -o my-provider.exe .
 
 ## 四、Dubbo Admin 查询与测试调用验证
 
-前提：`etc/docker/docker-compose.yml` 启动的 Nacos(8848) 与 Dubbo Admin(9600)。
+前提：`etc/docker/docker-compose.yml` 启动的 Nacos(8848) 与 Dubbo Admin(9600)。`dubbo-db-demo/service.json` 已声明 5 个方法，覆盖标量、List 与复杂对象：
 
-1. 启动 Go 服务（如 demo）：`go build -o dubbo-db-demo.exe . && .\dubbo-db-demo.exe`；
+| 方法 | 声明的 `parameterTypes` | 返回 | 覆盖场景 |
+|------|------------------------|------|----------|
+| `Echo` | `java.lang.String` | `java.lang.String` | 标量 |
+| `GetUser` | `java.lang.String` | `org.apache.dubbo.samples.api.User` | POJO 返回 |
+| `FindByNames` | `java.util.List` | `java.util.List` | `List<String>` 入参 + `List<POJO>` 返回 |
+| `FilterUsers` | `java.util.List`, `java.lang.String` | `java.util.List` | `List<复杂对象>` 入参（含嵌套 List 字段）+ 混合参数 |
+| `UpdateUser` | `org.apache.dubbo.samples.api.User` | 同 POJO | 复杂对象 Map → struct → Map 往返 |
+
+验证步骤：
+
+1. 启动 Go 服务：`go build -o dubbo-db-demo.exe . && .\dubbo-db-demo.exe`；
 2. **Nacos 控制台**（`http://127.0.0.1:8848/nacos`）→ 服务列表：出现 `go-user-provider`；
-3. **Dubbo Admin**（`http://127.0.0.1:9600`）→ 服务查询：可见 `org.apache.dubbo.samples.api.UserProvider`，方法签名 `Echo(java.lang.String)` / `GetUser(java.lang.String)` 来自启动时发布的 ServiceDefinition；
-4. **Admin 测试调用**：选 `GetUser`，参数 `zhangsan`（`parameters` 里的 `name`/`type` 即表单渲染依据）→ 返回 User 数据，Go 控制台打印 `[GetUser] name="zhangsan"`。
+3. **Dubbo Admin**（`http://127.0.0.1:9600`）→ 服务查询：可见 `org.apache.dubbo.samples.api.UserProvider` 及上表 5 个方法签名（来自启动时发布的 ServiceDefinition）；
+4. **Admin 测试调用**（表单由 `parameters` 的 name/type 渲染）或 app 泛化入口 `POST /private|public /genric/call/{apiId}`，用以下请求体验证：
 
-Admin 测试调用与 Java 泛化调用共用 `GenericService.$invoke` 泛化机制：`$invoke("GetUser", ["java.lang.String"], ["zhangsan"])`。
+```json
+// FindByNames：List<String> 入参
+{"names": ["zhangsan", "lisi"]}
+
+// FilterUsers：List<复杂对象> 入参，对象内嵌 tags 列表
+{"queries": [
+  {"keyword": "alice", "minAge": 20, "tags": ["vip", "active"]},
+  {"keyword": "bob",   "minAge": 30, "tags": ["active"]}
+], "tag": "vip"}
+
+// UpdateUser：复杂 POJO 入参
+{"user": {"id": "1001", "name": "zhangsan", "age": 28}}
+```
+
+对应 Java 泛化调用（类型串只登记擦除 FQCN，不带泛型）：
+
+```java
+genericService.$invoke("FindByNames", new String[]{"java.util.List"},
+    new Object[]{ Arrays.asList("zhangsan", "lisi") });
+genericService.$invoke("FilterUsers", new String[]{"java.util.List", "java.lang.String"},
+    new Object[]{ listOfMaps, "vip" });
+genericService.$invoke("UpdateUser", new String[]{"org.apache.dubbo.samples.api.User"},
+    new Object[]{ userMap });
+```
+
+**判定**：Go 控制台分别打印 `[FindByNames] 还原入参 names=["zhangsan","lisi"]`、`[FilterUsers] 还原入参 queries=[{"keyword":"alice",...}] tag="vip"`、`[UpdateUser] 还原入参 user={"id":"1001",...}` 即说明 Map/List 已按真实方法签名还原；返回值在 Java 泛化侧为 `List<Map>` / `Map`（POJO 的 `m` tag 决定字段名，默认带 `class` 键）。List 元素类型不写在配置里，由 Go 方法签名（`[]string` / `[]*UserQuery` / `[]*User`）决定。
 
 ## 五、与 app 泛化调用的兼容口径
 

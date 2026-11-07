@@ -22,6 +22,12 @@
             { "index": 0, "name": "customerId", "type": "java.lang.String" },
             { "index": 1, "name": "limit", "type": "int" }
           ]
+        },
+        {
+          "name": "BatchGet",
+          "parameterTypes": ["java.util.List"],
+          "returnType": "java.util.List",
+          "parameters": [{ "index": 0, "name": "orderIds", "type": "java.util.List" }]
         }
       ]
     },
