@@ -6,11 +6,17 @@ import (
 
 	"dubbo.apache.org/dubbo-go/v3"
 	"dubbo.apache.org/dubbo-go/v3/common"
+	_ "dubbo.apache.org/dubbo-go/v3/imports"
 	"dubbo.apache.org/dubbo-go/v3/metadata"
 	"dubbo.apache.org/dubbo-go/v3/protocol"
 	"dubbo.apache.org/dubbo-go/v3/registry"
 	"dubbo.apache.org/dubbo-go/v3/server"
 )
+
+// dubbo-go 的 SPI 实现靠 blank import 触发各包 init 注册工厂：
+// registry/protocol（缺失会 panic: protocol for [registry] is not existing）、
+// registry/nacos、protocol/dubbo、metadata/report/nacos、filter/generic（泛化调用）
+// 等均由 imports 一站式注册。业务侧引入本库即自动具备，无需再自行 import。
 
 /**
  * 按既有链路装配 dubbo 实例与服务端
