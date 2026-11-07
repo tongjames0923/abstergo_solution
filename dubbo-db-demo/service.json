@@ -1,0 +1,47 @@
+{
+  "application": "go-user-provider",
+  "port": 20001,
+  "metadataGroup": "dubbo",
+  "services": [
+    {
+      "interface": "org.apache.dubbo.samples.api.UserProvider",
+      "version": "",
+      "group": "",
+      "methods": [
+        {
+          "name": "Echo",
+          "parameterTypes": ["java.lang.String"],
+          "returnType": "java.lang.String",
+          "parameters": [{ "index": 0, "name": "name", "type": "java.lang.String" }]
+        },
+        {
+          "name": "GetUser",
+          "parameterTypes": ["java.lang.String"],
+          "returnType": "org.apache.dubbo.samples.api.User",
+          "parameters": [{ "index": 0, "name": "name", "type": "java.lang.String" }]
+        },
+        {
+          "name": "FindByNames",
+          "parameterTypes": ["java.util.List"],
+          "returnType": "java.util.List",
+          "parameters": [{ "index": 0, "name": "names", "type": "java.util.List" }]
+        },
+        {
+          "name": "FilterUsers",
+          "parameterTypes": ["java.util.List", "java.lang.String"],
+          "returnType": "java.util.List",
+          "parameters": [
+            { "index": 0, "name": "queries", "type": "java.util.List" },
+            { "index": 1, "name": "tag", "type": "java.lang.String" }
+          ]
+        },
+        {
+          "name": "UpdateUser",
+          "parameterTypes": ["org.apache.dubbo.samples.api.User"],
+          "returnType": "org.apache.dubbo.samples.api.User",
+          "parameters": [{ "index": 0, "name": "user", "type": "org.apache.dubbo.samples.api.User" }]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+// 这个 package 决定了 Triple 服务在协议层暴露的服务名
+// 最终服务路径会是: /org.apache.dubbo.samples.api.UserProvider/GetUser
+package org.apache.dubbo.samples.api;
+
+// go_package 控制生成的 Go 文件的包路径和包名
+option go_package = "dubbo-db-demo/api;api";
+
+// 如果你需要与 Java 端共享此 proto，建议加上 java_package
+// option java_package = "org.apache.dubbo.samples.api";
+
+message GetUserRequest {
+  string name = 1;
+}
+
+message User {
+  string id = 1;
+  string name = 2;
+  int32 age = 3;
+}
+
+message GetUserResponse {
+  User user = 1;
+}
+
+service UserProvider {
+  rpc GetUser(GetUserRequest) returns (GetUserResponse);
+}

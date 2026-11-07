@@ -13,6 +13,11 @@ import java.util.Date;
  * 承载单次泛化调用的整体执行信息：耗时区间、成功标志（仅 {@code 1} 表示成功）、异常明细，以及执行返回结果。
  * 由 {@link com.tbs.web.genric.AbstractGenricApiInstance#invokeApi} 填充，便于前端展示与排错。
  * </p>
+ * <p>
+ * 仅旧链路使用：新入口 {@code POST /call/{apiId}} 只返回一层结果，{@code AjaxResult.data} 就是远端返回值本体。
+ * 尚未标 @Deprecated 是因为旧链抽象方法 {@code invoke(Map, ApiInvokeResultVo, Optional)} 的活签名仍在引用它；
+ * 新入口响应收敛说明见 {@code docs/generic-api-architecture-rethink.md} 第十二节。
+ * </p>
  *
  * @param <R> 执行返回结果的序列化类型
  * @author abstergo

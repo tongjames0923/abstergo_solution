@@ -118,6 +118,31 @@ public final class WebI18nConstant {
     /** Triple HTTP调用失败提示：不含底层异常原文 */
     public static final String GENERIC_API_TRIPLE_INVOKE_FAILED = "GENERIC.API.TRIPLE_INVOKE_FAILED";
 
+    /* -------- 新版泛化调用链路（/call/{apiId}、/meta/{apiId}） -------- */
+
+    /** 泛化引用构建失败提示：不含底层异常原文 */
+    public static final String GENERIC_API_REFERENCE_FAILED = "GENERIC.API.REFERENCE_FAILED";
+    /** 远端业务异常透传提示：目标方法自己抛出的异常，描述内容回显给调用方 */
+    public static final String GENERIC_API_REMOTE_BIZ_ERROR = "GENERIC.API.REMOTE_BIZ_ERROR";
+    /** 旧编排入口误用提示：泛化API {0} 不支持该调用入口 */
+    public static final String GENERIC_API_ENTRY_UNSUPPORTED = "GENERIC.API.ENTRY_UNSUPPORTED";
+    /** 泛化调用返回值不可序列化提示：返回值类型 {0} 不可序列化 */
+    public static final String GENERIC_API_RESULT_NOT_SERIALIZABLE = "GENERIC.API.RESULT_NOT_SERIALIZABLE";
+    /** 入参未登记提示：未登记入参定义却传了请求体 */
+    public static final String GENERIC_API_PARAM_DEF_MISSING = "GENERIC.API.PARAM_DEF_MISSING";
+    /** 必填参数缺失提示：缺少必填参数 {0} */
+    public static final String GENERIC_API_PARAM_REQUIRED = "GENERIC.API.PARAM_REQUIRED";
+    /** 多余参数提示：未知参数 {0} */
+    public static final String GENERIC_API_PARAM_UNKNOWN = "GENERIC.API.PARAM_UNKNOWN";
+    /** 参数个数不匹配提示：登记 {0} 个，传入 {1} 个 */
+    public static final String GENERIC_API_PARAM_COUNT_MISMATCH = "GENERIC.API.PARAM_COUNT_MISMATCH";
+    /** 参数名未登记提示：参数 {0} 未登记名称，只能按位置传参 */
+    public static final String GENERIC_API_PARAM_NAME_UNREGISTERED = "GENERIC.API.PARAM_NAME_UNREGISTERED";
+    /** 参数类型未登记提示：参数 {0} 未登记类型 */
+    public static final String GENERIC_API_PARAM_TYPE_UNREGISTERED = "GENERIC.API.PARAM_TYPE_UNREGISTERED";
+    /** 请求体形态不支持提示：只接受JSON对象或JSON数组 */
+    public static final String GENERIC_API_BODY_FORMAT_UNSUPPORTED = "GENERIC.API.BODY_FORMAT_UNSUPPORTED";
+
     /* ===================== 枚举文案（enum） ===================== */
 
     /** 枚举：令牌创建类型-登录 */

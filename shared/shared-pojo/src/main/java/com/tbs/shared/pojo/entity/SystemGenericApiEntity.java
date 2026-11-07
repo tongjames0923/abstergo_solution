@@ -1,22 +1,23 @@
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
-import lombok.*;
-
 import jakarta.persistence.*;
+import lombok.*;
+import org.hibernate.annotations.Comment;
+
 import java.util.Date;
 
 /**
  * 泛化API配置实体
  * <p>
  * 用于存储泛化API的配置信息，替代原有的字典配置方式。
- * 每个API配置包含：API标识、服务应用名、接口全限定名、方法名等信息。
+ * 每个API配置包含：API标识、服务应用名、业务分区、接口全限定名、方法名等信息。
+ * 入参明细不在本表，按 {@code api_id} 关联 sys_generic_api_param 登记。
  * </p>
  *
  * @author abstergo
@@ -68,6 +69,18 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
     private String appName;
 
     /**
+     * 业务分区坐标
+     * <p>
+     * 新版泛化调用链路据此构建 Dubbo 引用：映射到提供者注册 URL 的 {@code group}。
+     * 按 Dubbo {@code UrlUtils.shouldMatch} 语义：留空只命中同样未声明 group 的提供者，
+     * 要不限分区需显式登记 {@code *}。
+     * </p>
+     */
+    @Comment("业务分区（Dubbo group），留空只匹配无 group 的提供者，* 表示不限")
+    @Column(name = "business", length = 100)
+    private String business;
+
+    /**
      * 接口全限定名（用于Triple HTTP调用）
      */
     @Comment("接口全限定名（用于Triple HTTP调用）")
@@ -90,8 +103,11 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
 
     /**
      * API版本
+     * <p>
+     * 业务配置版本，用于区分同一 {@code api_id} 的不同登记；<b>不</b>作为 Dubbo 服务版本参与调用。
+     * </p>
      */
-    @Comment("API版本号")
+    @Comment("API版本号（业务配置版本，非 Dubbo 服务版本）")
     @Column(name = "version", length = 10)
     private Integer version;
 

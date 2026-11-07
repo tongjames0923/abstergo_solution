@@ -10,6 +10,7 @@ import com.tbs.web.genric.AbstractAuthGenricApiController;
 import com.tbs.web.genric.AbstractGenricApiInstance;
 import com.tbs.web.genric.DubboGenricApiInstance;
 import com.tbs.web.uitl.DubboUtils;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.RegistryConfig;
@@ -17,7 +18,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -28,9 +28,16 @@ import java.util.Objects;
  * <p>
  * 提供需要认证的泛化API调用功能，配置信息从数据库实体中获取
  * </p>
+ * <p>
+ * 本控制器属于旧泛化调用链路（仅承载 {@code POST /private/genric/invoke}），与需登录的新入口
+ * {@code POST /private/genric/call/{apiId}} 并行存活。
+ * </p>
  *
  * @author abstergo
+ * @deprecated 旧认证信封入口。替代：{@link GenricInvokeController}（参数定义取自 sys_generic_api_param，
+ * 响应单层，坐标按 business 约束）；旧入口无调用量后的首个发布版本移除。
  */
+@Deprecated
 @Slf4j
 @RestController
 @RequestMapping("/private/genric")

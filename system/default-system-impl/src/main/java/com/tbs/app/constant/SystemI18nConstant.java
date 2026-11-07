@@ -151,6 +151,25 @@ public final class SystemI18nConstant {
     public static final String GENERIC_API_AUTH_DEVELOPER_PRE_AUTH_FAIL = "generic.api.auth.developer.pre.auth.fail";
     /** 通用接口超级管理员预授权失败提示：通用接口超级管理员预授权失败 */
     public static final String GENERIC_API_AUTH_SUPERADMIN_PRE_AUTH_FAIL = "generic.api.auth.superadmin.pre.auth.fail";
+    /** 泛化API配置不存在提示：API配置不存在：{0} */
+    public static final String GENERIC_API_NOT_EXISTS = "generic.api.not.exists";
+    /** 泛化API已禁用提示：API {0} 已禁用 */
+    public static final String GENERIC_API_DISABLED = "generic.api.disabled";
+    /** 泛化API需认证提示：API {0} 需要认证，不可走匿名入口 */
+    public static final String GENERIC_API_NEED_AUTH = "generic.api.need.auth";
+
+    /* -------- 泛化API入参定义（新版泛化调用链路元信息） -------- */
+
+    /** 入参定义未填API标识提示：入参定义的API标识不能为空 */
+    public static final String GENERIC_API_PARAM_API_ID_REQUIRED = "generic.api.param.api.id.required";
+    /** 入参定义归属API不存在提示：泛化API {0} 不存在，无法登记入参 */
+    public static final String GENERIC_API_PARAM_API_NOT_EXISTS = "generic.api.param.api.not.exists";
+    /** 入参顺序未填提示：入参顺序不能为空 */
+    public static final String GENERIC_API_PARAM_ORDER_REQUIRED = "generic.api.param.order.required";
+    /** 入参顺序重复提示：入参顺序 {0} 已存在 */
+    public static final String GENERIC_API_PARAM_ORDER_DUPLICATE = "generic.api.param.order.duplicate";
+    /** 入参类型未填提示：参数 {0} 的类型不能为空 */
+    public static final String GENERIC_API_PARAM_TYPE_REQUIRED = "generic.api.param.type.required";
 
     /* ===================== 兼容策略（Policy） ===================== */
 

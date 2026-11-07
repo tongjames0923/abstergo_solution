@@ -4,19 +4,15 @@ import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
 import com.tbs.app.service.genericapi.IGenericApiService;
+import com.tbs.app.service.genericapi.ISystemGenericApiParamService;
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
+import com.tbs.app.service.impl.genericapi.GenericApiParamServiceImpl;
 import com.tbs.app.service.impl.genericapi.GenericApiServiceImpl;
-import com.tbs.app.service.impl.push.GrantedTopicSubscriptionAuthorizer;
-import com.tbs.app.service.impl.push.PushSessionIdentityInterceptor;
-import com.tbs.app.service.impl.push.PushSessionUploadGuard;
-import com.tbs.app.service.impl.push.PushUserAuthenticator;
-import com.tbs.app.service.impl.push.SignalChannelTopicGranter;
-import com.tbs.app.service.impl.push.TopicPrefixNotifyReceiverResolver;
-import com.tbs.app.service.impl.push.PushNotifyServiceImpl;
+import com.tbs.app.service.impl.push.*;
 import com.tbs.app.service.impl.role.SimpleRoleGroupServiceImpl;
 import com.tbs.app.service.impl.role.SimpleSystemRoleServiceImpl;
 import com.tbs.app.service.impl.token.DefaultSystemTokenService;
@@ -49,13 +45,12 @@ import com.tbs.push.api.session.IUploadGuard;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.impl.NoEncryptPassword;
+import jakarta.annotation.Resource;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
-
-import jakarta.annotation.Resource;
 
 /**
  * @author abstergo
@@ -171,6 +166,21 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IGenericApiService genericApiService() {
         return new GenericApiServiceImpl();
+    }
+
+    /**
+     * 泛化API入参定义服务
+     * <p>
+     * 新版泛化调用链路的元信息真源：标准增删改查沿用服务模板，额外提供按 apiId 读取整组入参定义。
+     * </p>
+     *
+     * @return 泛化API入参定义服务实例
+     */
+    @Bean
+    @ConditionalOnMissingBean(ISystemGenericApiParamService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public ISystemGenericApiParamService systemGenericApiParamService() {
+        return new GenericApiParamServiceImpl();
     }
 
     @Bean
