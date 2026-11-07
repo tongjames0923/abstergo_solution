@@ -1,10 +1,11 @@
 # Abstergo Solution
 
-基于 **Spring Boot 3.3 + Dubbo 3 + Nacos** 的 Java 微服务快速开发平台（Java 21 / jakarta 命名空间）：以「契约/实现分离、注解驱动装配、模块化 i18n、统一响应」为核心设计，提供从认证授权、系统管理、动态路由/表单、缓存、消息队列、任务调度、对象存储到操作日志的全栈能力。配套 Vue 2 + Element UI 管理前端，开箱即用。
+基于 **Spring Boot 3.3 + Dubbo 3 + Nacos** 的 Java 微服务快速开发平台（Java 21 / jakarta 命名空间）：以「契约/实现分离、注解驱动装配、模块化 i18n、统一响应」为核心设计，提供从认证授权、系统管理、动态路由/表单、缓存、消息队列、任务调度、对象存储到操作日志的全栈能力。配套 Vue 2 + Element UI 管理前端，开箱即用；另提供 **Go 轻量 Dubbo 提供者套件**，以单二进制承载简单业务 RPC，接入同一 Nacos 与泛化调用体系，详见 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md)。
 
 ```
 后端 25 个 Maven 模块（含 Java 客户端 SDK `sdk`） + 1 个 C# 客户端工程（sdk-csharp）+ 1 个前端工程（app-ui-vue）
 └── 4 个可运行服务：app-service（主应用）、data-dic-service（字典）、logging-service（日志）、cdc-service（数据变更捕获）
+另含 2 个独立 Go module（不纳入 Maven）：dubbo-go-starter（可复用库）、dubbo-db-demo（示例提供者，单二进制）
 ```
 
 ## 目录
@@ -32,6 +33,7 @@
 - **消息可靠性（v2 记录驱动模型）**：厂商无关 MQ 契约层——不信任厂商、信任自建落库记录，投递可靠性（主记录）与消费可靠性（逐消费者台账）分层承载，消息级单飞互斥、负载格式可插拔转换；提供内存基本实现，RabbitMQ 传输层适配器开箱可用
 - **多语言客户端 SDK**：Java（`sdk`，纯 OkHttp 无 Spring 依赖）与 C#（`sdk-csharp`，netstandard2.0）两套能力对齐的接入 SDK，封装统一登录（密码/企微/第三方）、推送消息中心与 SSE 长连接订阅、应用升级检查与安装包下载，供第三方/桌面端快速对接
 - **SQL 观测**：JDBC 装饰层全量 SQL 日志（含耗时），慢 SQL 阈值可配置告警（默认 2s）
+- **轻量 Go 提供者**：`dubbo-go-starter` + 一份 JSON 契约配置即可编译出单二进制 Dubbo 服务，仅 `dubbo` TCP + hessian2、无 IDL，注册到同一 Nacos 后可被 Dubbo Admin 查询/测试调用与 app 泛化链路直接消费，零 Java 接口 jar
 
 ## 架构总览
 
@@ -43,10 +45,11 @@ flowchart LR
     subgraph GW["网关层"]
         NG["Nginx :8866<br/>/api 反向代理"]
     end
-    subgraph SVC["微服务集群（Dubbo Triple + Nacos 注册）"]
+    subgraph SVC["微服务集群（Dubbo RPC + Nacos 注册）"]
         APP["app-service :8080<br/>主应用:认证/系统管理/缓存/OSS/版本/泛化API"]
         DIC["data-dic-service :20779<br/>字典服务"]
         LOG["logging-service :8081/:20780<br/>日志采集统计"]
+        GO["go-provider :20001<br/>轻量 Go 提供者 dubbo TCP/hessian2"]
     end
     subgraph INFRA["基础设施（etc/docker）"]
         MYSQL[("MySQL 8.4<br/>:3306")]
@@ -58,15 +61,18 @@ flowchart LR
     end
     UI --> NG --> APP
     APP -->|Dubbo RPC| DIC
+    APP -->|Dubbo 泛化调用| GO
     APP -->|"MQ: tbs.log.queue"| LOG
     APP --> MYSQL & REDIS & MQ & MINIO
     LOG --> MYSQL & REDIS
     DIC --> MYSQL & REDIS
-    APP & DIC & LOG -.->|注册| NACOS
+    APP & DIC & LOG & GO -.->|注册| NACOS
     APP -.->|定时调度| XXL
 ```
 
 三个服务均以 Nacos 为注册中心与配置中心，字典/日志服务以 Dubbo Triple 协议暴露接口、主应用作为消费方经 Dubbo 调用；操作日志经 RabbitMQ（MQ v2 记录驱动链路）异步流入 logging-service 落库；xxl-job 集中驱动定时任务（树重建、日志刷盘等）。另可选部署 **cdc-service**（旁路数据摄取服务，不在上图主链路内）：基于 Debezium 嵌入式引擎捕获 SQL Server 数据变更，按可配置交换机/路由键发布到 RabbitMQ 供下游消费。
+
+**Go 轻量提供者**为独立可选进程：由 `dubbo-go-starter` 装配，仅以 `dubbo://`(TCP) + hessian2 注册到同一 Nacos，发布 Java 侧 `ServiceDefinition` 元数据供 Dubbo Admin 查询与测试调用；app 侧无需接口 jar，经既有泛化链路消费。它不依赖 MySQL/Redis/MQ，也不纳入 Maven 构建，详见 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md)。
 
 ## 技术栈
 
@@ -90,6 +96,7 @@ flowchart LR
 | 前端 | Vue / Element UI / vue-i18n / ECharts | 2.6.10 / 2.15.14 / 8.x / 6.x |
 | 客户端 SDK（Java） | OkHttp + okhttp-sse + Jackson（无 Spring 依赖） | - |
 | 客户端 SDK（C#） | netstandard2.0 + System.Text.Json | .NET 6/8 |
+| 轻量提供者（可选） | Go + dubbo-go v3 + hessian2 | 1.27 / 3.3.2 / 1.12.5 | 独立 Go module，仅 dubbo TCP，单二进制交付，不纳入 Maven |
 
 ## 模块结构说明
 
@@ -151,6 +158,15 @@ flowchart LR
 | [sdk-csharp](sdk-csharp/README.md) | C# 客户端 SDK（`TbsSdk`，netstandard2.0）：能力与 Java SDK / 前端契约对齐，供 .NET 桌面/Web 后端快速接入（HTTP/登录/SSE 推送/应用更新） | [README](sdk-csharp/README.md) |
 
 > 能力边界：两套 SDK 都只负责平台的**接入调用**（登录/HTTP/推送 SSE/应用更新）；其中**应用更新能力**（Java `update()` / C# `CheckUpdateAsync`）仅做升级检查与安装包下载——Java 侧的部署脚本执行、本地版本持久化等安装编排由 [updater](updater/README.md)（`AutoUpdater`）承担，C# 侧则交由宿主应用自行处理。
+
+### Go 轻量提供者（独立 Go module，不纳入 Maven）
+
+| 模块 | 定位 | 文档 |
+|------|------|------|
+| [dubbo-go-starter](dubbo-go-starter/README.md) | 可复用装配库：配置驱动契约、多接口/POJO 自动注册、Nacos 注册与 `ServiceDefinition` 元数据发布，仅 dubbo TCP + hessian2 | [库 README](dubbo-go-starter/README.md) |
+| [dubbo-db-demo](dubbo-db-demo/README.md) | 基于库的示例提供者（`go-user-provider` :20001，5 个方法覆盖标量 / List / 复杂对象） | [模块 README](dubbo-db-demo/README.md) |
+
+两个目录各自是独立 Go module（`dubbo-db-demo` 经本地 `replace` 引用库），**不在根 `pom.xml` 的 `<modules>` 中**；面向「少量简单方法、接入 Spring Boot 工程过重」的场景，编译产物为单二进制，接入同一 Nacos 后可由 Dubbo Admin 查询/测试调用与 app 泛化链路消费（零 Java 接口 jar）。完整实现、契约配置、类型口径、部署与验收见 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md)。套件不做数据库能力、不产出 `sys_generic_api` 登记辅助产物、不提供容器与部署脚本。
 
 ### 启用注解速查
 
@@ -232,6 +248,16 @@ mvn clean package -pl logging/logging-impl -am && java -jar logging/logging-impl
 mvn clean package -pl cdc-service -am && java -jar cdc-service/target/*.jar  # cdc-service（可选：需 SQL Server + Debezium，捕获变更→RabbitMQ）
 ```
 
+可选：启动 Go 轻量提供者（仅需 Nacos，单二进制，无需 Maven）：
+
+```powershell
+cd dubbo-db-demo
+go build -o dubbo-db-demo.exe .
+.\dubbo-db-demo.exe
+```
+
+启动后可在 Dubbo Admin（9600）查询 `org.apache.dubbo.samples.api.UserProvider` 并测试调用；详见 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md)。
+
 ### 第四步：启动前端
 
 ```bash
@@ -306,6 +332,7 @@ curl http://127.0.0.1:8080/public/gateway/version
 | 变量 | 默认值 | 说明 |
 |------|--------|------|
 | `NACOS_ADDRESS` | `127.0.0.1:8848` | Nacos 注册与配置中心 |
+| `DUBBO_PORT` | `service.json` 中的 `port`（示例 20001） | Go 轻量提供者的 dubbo TCP 端口 |
 | `DB_HOST` / `DB_PORT` / `DB_NAME` | `127.0.0.1` / `3306` / `core_app` | 数据库 |
 | `DB_USERNAME` / `DB_PASSWORD` | `root` / `123456789` | 数据库凭证 |
 | `REDIS_HOST` / `REDIS_PORT` / `REDIS_PASSWORD` | `127.0.0.1` / `6379` / `123456` | Redis |
@@ -328,6 +355,7 @@ curl http://127.0.0.1:8080/public/gateway/version
 2. **后端**：可执行 jar + 环境变量注入（或将配置迁入 Nacos）；建议 `ddl-auto` 改为 `validate`，用迁移脚本管理表结构
 3. **拓扑**：Nginx → app-service（可多实例）；dic/logging 服务按需横向扩容；全部服务注册到生产 Nacos
 4. **调度**：xxl-job 控制台注册执行器（`app-name: mainSystemApplication`，执行器端口默认 9999），配置 `company_tree_rebuild`、`department_tree_rebuild`、`flushLogData`、`runningBackGroundJobHandler` 等任务
+5. **Go 轻量提供者**：`go build` 产出单二进制，与 `service.json` 同目录运行，用 `NACOS_ADDRESS`/`DUBBO_PORT` 注入环境；不进 Maven/Jenkins fat jar 链路，不做容器化，Nacos 与 Dubbo Admin 验收见 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md)
 
 详细规范见 [docs/guideline/06-部署与运维规范.md](docs/guideline/06-部署与运维规范.md) 与 [app-ui-vue/DEPLOYMENT.md](app-ui-vue/DEPLOYMENT.md)。
 
@@ -335,7 +363,7 @@ curl http://127.0.0.1:8080/public/gateway/version
 
 开发规范总纲见 [DEVELOPMENT_GUIDELINE.md](DEVELOPMENT_GUIDELINE.md)（含 7 个分册：项目总览/中间件规范/功能模块规范/接口设计/前端规范/部署运维/Code Review 清单）。**全局铁律摘要**：
 
-1. 后端代码统一 **Java**（项目已全面 Java 化，不再使用 Kotlin）
+1. 后端代码统一 **Java**（项目已全面 Java 化，不再使用 Kotlin）；**例外**：`dubbo-go-starter` / `dubbo-db-demo` 两个独立 Go module 承载轻量 Dubbo 提供者，边界与约束见 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md)
 2. 类与函数使用块注释（`@param`/`@return`），**禁止行尾注释**
 3. 断言必须走 `AssertUtil.isTrue(条件).i18n("key").params(...).errorLevel(...).throwIt()`，禁止 `throw new FormattedRuntimeException`
 4. 所有用户可见文案走 i18n 资源 key（后端）/`$t()`（前端），禁止硬编码

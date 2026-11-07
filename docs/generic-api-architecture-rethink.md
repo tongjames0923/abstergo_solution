@@ -322,6 +322,18 @@ boolean groupMatches = ANY_VALUE.equals(consumerGroup)
   2. 新 `/call/{apiId}`：元数据是必需输入。无参方法无需登记（params 为空且 body 为空即可调）；
      有参方法未登记则明确报错 `GENERIC.API.PARAM_DEF_MISSING`，绝不猜类型。
      所以“登记参数”是使用新入口的一次性成本，也是新入口能甩掉 jar 依赖的全部代价。
+
+  ## 十三、Go 轻量提供者接入（补充章节）
+
+  > 本节只补充「Go 服务作为泛化调用的服务方」这一新增场景，**不改变上文 v3.0.0 的任何既有结论与链路**。实现与验收见 [Go 轻量提供者指南](go-dubbo-provider-guide.md)。
+
+  - **天然满足硬校验**：Go 提供者（`dubbo-go-starter` + `dubbo-db-demo`）只按标准 Dubbo 语义发布服务，不依赖本项目任何自定义接口，网关 classpath 本就没有 Go 服务的接口类——正是 §一判据 2/3 描述的「临时起的小模块也算数」；Java 侧无需任何改动。
+  - **坐标语义仍按 12.2**：Go 配置 `services[].group` 即 Dubbo group，必须与登记行 `business` 一致；**留空只匹配同样未声明 group 的提供者**，`*` 才是不限。`version` 仍是业务配置版本，不映射 Dubbo 服务版本。
+  - **参数类型串口径与 §3.2 同源**：基本类型写关键字（`long`/`int`/`boolean`），对象与集合写擦除 FQCN（`java.lang.String`、`java.util.List`、自定义 POJO FQCN），不带泛型串；POJO 以 Map 传入、列表以 Map 列表传入。
+  - **还原机制差异**：Java provider 由 `PojoUtils.realize` 依据真实方法 `getGenericParameterTypes()` 还原；**Go provider 的 `generic_service` filter 忽略 `$invoke` 的 `types` 数组**，直接用反射得到的 Go 方法参数类型（`ArgsType()`）经 `MapGeneralizer.Realize`（`mapstructure.Decode`）还原。因此配置类型串只用于 Java 侧登记与 Admin 表单，Go 侧必须写真实方法签名（禁止 `[]interface{}`），两侧是两份声明、改一处须同步另一处。
+  - **元数据来源**：Go 服务启动向同一 Nacos 发布 Java 风格 `ServiceDefinition`（dataId `interface:version:group:provider:application`，group `dubbo`），供 Dubbo Admin 服务查询与测试调用；app 新链路的参数元信息仍以**库内登记为唯一真源**（§三），Go 侧不产出 `sys_generic_api` / `sys_generic_api_param` 辅助产物。
+  - **协议边界**：Go 侧仅 `dubbo://`(TCP) + hessian2、无 IDL，注册 URL 不得出现 `tri://`（否则 Java 消费端会误选 Triple）；SPI 工厂精确导入并锁定协议 ID，见 [Go 轻量提供者指南](go-dubbo-provider-guide.md) 第四节。
+  - **验证状态**：§8 实测矩阵尚未回填 Java 网关 → Go provider 的端到端结果；当前已用 dubbo-go 泛化客户端直连 `dubbo://:20001` 实测标量 / `List<String>` / `List<复杂对象>` / POJO 往返的还原与返回（详见指南第九节），Java 侧 `/call/{apiId}` 实机联调仍由开发者完成。
 - 迁移步骤（可逐个 API、无窗口压力）：
   1. 执行 `upgrade_sys_generic_api.sql`（旧链行为不变）；
   2. 在新页面逐行补登记：参数定义 + `business`（带 group 的服务必须填，要不限填 `*`）；
