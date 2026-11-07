@@ -22,8 +22,7 @@ import (
 const (
 	appName       = "go-user-provider"
 	ifaceName     = "org.apache.dubbo.samples.api.UserProvider"
-	triPort       = 20001
-	dubboPort     = 20880
+	dubboPort     = 20001
 	svcVersion    = ""
 	svcGroup      = ""
 	metaDataGroup = "dubbo"
@@ -128,8 +127,8 @@ func publishProviderDefinition(nacosAddr string) error {
 			"version":       svcVersion,
 			"group":         svcGroup,
 			"methods":       "Echo,GetUser",
-			"protocol":      "tri",
-			"port":          fmt.Sprint(triPort),
+			"protocol":      "dubbo",
+			"port":          fmt.Sprint(dubboPort),
 			"serialization": "hessian2",
 		},
 	}
@@ -163,8 +162,10 @@ func main() {
 	ins, err := dubbo.NewInstance(
 		dubbo.WithName(appName),
 		dubbo.WithRemoteMetadata(),
-		dubbo.WithMetadataServiceProtocol("tri"),
-		dubbo.WithMetadataServicePort(triPort),
+		// 只发 dubbo(TCP)：MetadataService 也走 dubbo 协议并复用同一端口，
+		// 注册 URL 里不再出现 tri://，Java 消费端不会误选 Triple。
+		dubbo.WithMetadataServiceProtocol("dubbo"),
+		dubbo.WithMetadataServicePort(dubboPort),
 		dubbo.WithMetadataReport(
 			metadata.WithProtocol("nacos"),
 			metadata.WithAddress(nacosAddr),
@@ -179,12 +180,10 @@ func main() {
 		log.Fatalf("创建 Dubbo 实例失败: %v", err)
 	}
 
-	// tri 供 Triple 泛化调用；dubbo(TCP) 作为兜底，同样走 $invoke + hessian2。
+	// 只发布 dubbo(TCP) 协议：注册中心里只有 dubbo:// URL，
+	// Java 消费端走 TCP + hessian2，彻底绕开 Triple 的 HTTP/2、
+	// content-type 校验与 codec 分支。
 	srv, err := ins.NewServer(
-		server.WithServerProtocol(
-			protocol.WithTriple(),
-			protocol.WithPort(triPort),
-		),
 		server.WithServerProtocol(
 			protocol.WithDubbo(),
 			protocol.WithPort(dubboPort),
@@ -194,11 +193,9 @@ func main() {
 		log.Fatalf("创建 Server 失败: %v", err)
 	}
 
-	// 必须用 RegisterService（NONIDL）：createServiceInfoWithReflection 会
-	// 自动追加 $invoke 方法路由（protocol/triple/server.go:754-755），
-	// Java 的 GenericService.$invoke 请求 /{interface}/$invoke 才能命中。
-	// IDL/PB 模式只注册 GetUser，泛化调用必然落到 404 text/plain。
-	// hessian2 对应 Java 侧 TripleRequestWrapper 里的参数编码。
+	// 无 IDL 注册：dubbo 协议下 Java 的 GenericService.$invoke 由
+	// generic_service filter（默认 provider 链）按方法名还原成真实调用，
+	// 不需要 protobuf ServiceInfo，也不经过 Triple 的路径与 codec 判断。
 	if err := srv.RegisterService(
 		&UserProviderImpl{},
 		server.WithInterface(ifaceName),
@@ -211,13 +208,13 @@ func main() {
 		log.Fatalf("发布 provider 元数据失败: %v", err)
 	}
 
-	fmt.Println("Go Dubbo 服务已启动（NONIDL / 支持 Java 泛化调用）")
-	fmt.Printf("  Nacos:     %s\n", nacosAddr)
-	fmt.Printf("  接口:      %s\n", ifaceName)
-	fmt.Printf("  Triple:    %d    Dubbo(TCP): %d\n", triPort, dubboPort)
-	fmt.Println("  方法:      Echo(java.lang.String) -> java.lang.String")
-	fmt.Println("             GetUser(java.lang.String) -> org.apache.dubbo.samples.api.User")
-	fmt.Println("  泛化调用:  method=GetUser  parameterTypes=[\"java.lang.String\"]  args=[\"zhangsan\"]")
+	fmt.Println("Go Dubbo 服务已启动（仅 dubbo 协议 / 支持 Java 泛化调用）")
+	fmt.Printf("  Nacos:      %s\n", nacosAddr)
+	fmt.Printf("  接口:       %s\n", ifaceName)
+	fmt.Printf("  Dubbo(TCP): %d\n", dubboPort)
+	fmt.Println("  方法:       Echo(java.lang.String) -> java.lang.String")
+	fmt.Println("              GetUser(java.lang.String) -> org.apache.dubbo.samples.api.User")
+	fmt.Println("  泛化调用:   method=GetUser  parameterTypes=[\"java.lang.String\"]  args=[\"zhangsan\"]")
 	fmt.Println("  成功时控制台打印 [Echo] / [GetUser] 日志")
 
 	if err := srv.Serve(); err != nil {
