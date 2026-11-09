@@ -1122,6 +1122,7 @@ export default {
       loading: '加载中…',
       emptyContent: '（无正文）',
       markRead: '标记已读',
+      markReadFailed: '标记已读失败，请稍后重试',
       open: '查看详情',
       read: '已读',
       sentAt: '发送于 {time}',

@@ -11,6 +11,21 @@ import request from '@/utils/request'
  */
 
 /**
+ * 将响应业务体归一为非负整数
+ * <p>
+ * 后端全局把 Long 序列化为字符串以防雪花 ID 精度丢失，未读数等 Long 值可能是字符串；
+ * 写入条数是 Integer 数字。统一用 Number 收敛，避免 typeof 判断把合法的字符串值吞成 0。
+ * </p>
+ *
+ * @param {*} data 响应业务体
+ * @returns {number} 非负整数
+ */
+function toCount(data) {
+  const value = Number(data)
+  return Number.isFinite(value) && value > 0 ? Math.floor(value) : 0
+}
+
+/**
  * 分页拉取当前用户消息列表（到达序倒序，含已读）
  * <p>
  * GET /private/push/message/list，入参对齐 PushMessageQueryForm（cursor/limit/readFlag）。
@@ -33,7 +48,7 @@ export function fetchMessages(params) {
 /**
  * 查询当前用户未读数
  * <p>
- * GET /private/push/message/unread-count，业务体为 Long 数字（非包装对象）。
+ * GET /private/push/message/unread-count，业务体为 Long；经全局 Jackson 序列化后是字符串。
  * </p>
  *
  * @returns {Promise<number>} 未读数
@@ -42,17 +57,19 @@ export function fetchUnreadCount() {
   return request({
     url: '/private/push/message/unread-count',
     method: 'get'
-  }).then(res => (typeof res.data === 'number' ? res.data : 0))
+  }).then(res => toCount(res.data))
 }
 
 /**
  * 批量记录已读（写 READ 操作日志）
  * <p>
  * POST /private/push/message/read，请求体为 List&lt;Long&gt; 裸数组（非 {messageIds} 包装）；
- * 业务体为 Integer（实际记录条数）。
+ * 业务体为 Integer（实际记录条数），单次至多 100 个 ID。
+ * messageIds 必须是字符串形式的雪花 ID：19 位 ID 超出 2^53，前端转 Number 会失真，
+ * 后端据错误 ID 查不到接收关系将静默返回 0。后端 Jackson 已注册字符串/数字双向反序列化。
  * </p>
  *
- * @param {Array<number>} messageIds 消息ID列表
+ * @param {Array<string>} messageIds 消息ID列表（雪花ID字符串，单次 ≤ 100 条）
  * @returns {Promise<number>} 实际记录条数
  */
 export function markRead(messageIds) {
@@ -60,14 +77,14 @@ export function markRead(messageIds) {
     url: '/private/push/message/read',
     method: 'post',
     data: messageIds
-  }).then(res => (typeof res.data === 'number' ? res.data : 0))
+  }).then(res => toCount(res.data))
 }
 
 /**
  * 通用操作回传（CLICK 等，预留扩展）
  * <p>
  * POST /private/push/message/operate，请求体为 PushMessageOperateForm {messageId, opType, extInfo}；
- * 业务体为 Integer（实际写入日志条数）。
+ * messageId 同样须为字符串形式的雪花 ID。业务体为 Integer（实际写入日志条数）。
  * </p>
  *
  * @param {Object} payload 回传体 { messageId, opType, extInfo? }
@@ -78,7 +95,7 @@ export function operateMessage(payload) {
     url: '/private/push/message/operate',
     method: 'post',
     data: payload
-  }).then(res => (typeof res.data === 'number' ? res.data : 0))
+  }).then(res => toCount(res.data))
 }
 
 /**

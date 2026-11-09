@@ -1118,6 +1118,7 @@ export default {
       loading: 'Loading…',
       emptyContent: '(No content)',
       markRead: 'Mark read',
+      markReadFailed: 'Failed to mark as read, please try again',
       open: 'View detail',
       read: 'Read',
       sentAt: 'Sent {time}',
