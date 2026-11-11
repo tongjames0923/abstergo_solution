@@ -10,7 +10,7 @@
     </parent>
 
     <artifactId>sql-api</artifactId>
-    <description>SQL 框架契约层：注解、模型、条件与 DSL 接口、方言 SPI、Mapper 接口、元数据与查询引擎门面；不依赖任何数据库驱动</description>
+    <description>SQL 框架契约层：注解、模型、条件与 DSL 接口、方言 SPI、Mapper 接口、元数据与查询引擎门面；集成 jkit 启动期自动建表能力，不依赖任何数据库驱动</description>
 
     <dependencies>
         <!-- MyBatis 持久层：Mapper 接口注解与 Provider 契约所需（不含具体驱动） -->
@@ -18,10 +18,18 @@
             <groupId>org.mybatis.spring.boot</groupId>
             <artifactId>mybatis-spring-boot-starter</artifactId>
         </dependency>
-        <!-- JPA 注解(@Table/@Column/@Id)：实体元数据与建表契约 -->
+        <!-- 仅 JPA 注解 API（@Table/@Column/@Id/@Index 等）：实体元数据与建表契约的唯一来源。
+             不含 Hibernate Provider / Spring Data JPA，版本由 spring-boot-dependencies 管控 -->
         <dependency>
-            <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-data-jpa</artifactId>
+            <groupId>jakarta.persistence</groupId>
+            <artifactId>jakarta.persistence-api</artifactId>
+        </dependency>
+        <!-- 集成能力：启动期按 jakarta.persistence 实体注解自动建表/增量加列加索引。
+             作为 sql-api 的 compile 依赖随框架传递给所有下游模块，版本由根 pom 管控；
+             具体扫描包由各应用的 jkit.sql.auto.packages 配置，未配置时不会改动任何表 -->
+        <dependency>
+            <groupId>com.alianga</groupId>
+            <artifactId>jkit-sql-auto-spring-boot-3</artifactId>
         </dependency>
         <dependency>
             <groupId>com.tbs</groupId>

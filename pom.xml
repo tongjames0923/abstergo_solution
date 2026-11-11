@@ -77,6 +77,11 @@
         -->
         <mysql.version>9.7.0</mysql.version>
         <mybatis.spring.boot.version>3.0.5</mybatis.spring.boot.version>
+        <!-- Hibernate 仅保留版本管控（与 spring-boot-dependencies 3.3.5 同名属性，值保持一致）：
+             任何模块都不得声明 org.hibernate.* 依赖；启动期自动建表已由 jkit-sql-auto 承担 -->
+        <hibernate.version>6.5.3.Final</hibernate.version>
+        <!-- 启动期按实体注解自动建表/增量更新表结构 -->
+        <jkit.version>2.0.4</jkit.version>
 
         <!-- 中间件 -->
         <redisson.version>3.52.0</redisson.version>
@@ -425,6 +430,19 @@
                 <groupId>org.mybatis.spring.boot</groupId>
                 <artifactId>mybatis-spring-boot-starter</artifactId>
                 <version>${mybatis.spring.boot.version}</version>
+            </dependency>
+            <!-- Hibernate 仅做版本管控：dependencyManagement 不引入依赖，任何模块都不得声明它；
+                 原本的 ddl-auto 自动建表已由 jkit-sql-auto 取代 -->
+            <dependency>
+                <groupId>org.hibernate.orm</groupId>
+                <artifactId>hibernate-core</artifactId>
+                <version>${hibernate.version}</version>
+            </dependency>
+            <!-- 启动期按实体注解自动建表：由 sql-api 统一集成并向下游传递，此处仅管控版本 -->
+            <dependency>
+                <groupId>com.alianga</groupId>
+                <artifactId>jkit-sql-auto-spring-boot-3</artifactId>
+                <version>${jkit.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.redisson</groupId>

@@ -6,9 +6,9 @@ import com.tbs.sql.annotation.core.SelectSQL;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
 import com.tbs.sql.util.SqlUtils;
-
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+
 import java.lang.reflect.Field;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,7 +48,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * <h3>注意事项</h3>
  * <ul>
  *   <li>实体类必须添加 {@link Table} 注解，标注了类级 {@link SelectSQL} 的查询模型除外</li>
- *   <li>父类声明的字段同样参与元数据提取，与 Hibernate 的映射范围一致</li>
+ *   <li>父类声明的字段同样参与元数据提取，与 jkit-sql-auto 的实体字段扫描范围一致</li>
  *   <li>{@link SelectSQL} 走原始 SQL 通道：不产出字段清单，列投影对其无效，WHERE 仍由框架追加</li>
  *   <li>元数据会被缓存，修改实体类后需要清除缓存</li>
  * </ul>

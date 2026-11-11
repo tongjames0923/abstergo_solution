@@ -10,7 +10,6 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.hibernate.annotations.Comment;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -38,7 +37,6 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, -1}, onNullIsDeleted = false)
-@Comment("泛化API入参定义表")
 public class SystemGenericApiParamEntity
     implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>, Serializable {
 
@@ -47,7 +45,7 @@ public class SystemGenericApiParamEntity
     /**
      * 主键ID
      */
-    @Comment("主键ID（雪花算法生成）")
+    @Column(name = "id")
     @Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
@@ -55,21 +53,18 @@ public class SystemGenericApiParamEntity
     /**
      * 所属泛化API的业务标识
      */
-    @Comment("所属泛化API标识（援引 sys_generic_api.api_id）")
     @Column(name = "api_id", length = 100)
     private String apiId;
 
     /**
      * 参数在方法签名中的位置，从 0 开始连续不重复
      */
-    @Comment("参数顺序，从0开始")
     @Column(name = "param_order")
     private Integer paramOrder;
 
     /**
      * 参数名，供命名式入参匹配；留空表示该参数只允许按位置传入
      */
-    @Comment("参数名，空表示只支持按位置传参")
     @Column(name = "param_name", length = 100)
     private String paramName;
 
@@ -77,7 +72,6 @@ public class SystemGenericApiParamEntity
      * 声明类型：擦除后的 JVM 类名（{@code java.util.List}、{@code com.x.BarDTO}）或基本类型关键字（{@code long}），
      * 不写泛型串；集合元素类型由服务端按真实方法签名还原
      */
-    @Comment("参数类型：擦除后的JVM类名或基本类型关键字，不写泛型")
     @Column(name = "param_type", length = 300)
     private String paramType;
 
@@ -87,21 +81,18 @@ public class SystemGenericApiParamEntity
      * 列名取 {@code required_flag}：避开 {@code required} 关键字在不同方言下的引用差异。
      * </p>
      */
-    @Comment("是否必填")
     @Column(name = "required_flag")
     private Boolean requiredFlag;
 
     /**
      * 参数语义说明，随元数据接口透出给前端
      */
-    @Comment("参数说明")
     @Column(name = "description", length = 500)
     private String description;
 
     /**
      * 示例值（JSON 字面量文本），供前端表单预填
      */
-    @Comment("示例值（JSON字面量文本）")
     @Column(name = "example", length = 500)
     private String example;
 
@@ -110,35 +101,30 @@ public class SystemGenericApiParamEntity
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */
-    @Comment("状态标识：1-启用，-1-禁用，0-删除")
     @Column(name = "flag")
     private Integer flag;
 
     /**
      * 创建时间
      */
-    @Comment("创建时间")
     @Column(name = "create_time")
     private Date createTime;
 
     /**
      * 更新时间
      */
-    @Comment("更新时间")
     @Column(name = "update_time")
     private Date updateTime;
 
     /**
      * 创建者
      */
-    @Comment("创建者用户ID")
     @Column(name = "create_by")
     private Long createBy;
 
     /**
      * 更新者
      */
-    @Comment("更新者用户ID")
     @Column(name = "update_by")
     private Long updateBy;
 

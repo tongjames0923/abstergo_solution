@@ -1,15 +1,14 @@
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
+import jakarta.persistence.*;
 import lombok.*;
 
-import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -26,14 +25,13 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, 2, 0})
-@Comment("系统角色（权限）表")
 public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;
 
 	/**
 	 * 主键
 	 */
-	@Comment("主键ID")
+	@Column(name = "id")
 	@Id
 	@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
 	private Long id;
@@ -41,14 +39,12 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	/**
 	 * 权限编码
 	 */
-	@Comment("权限编码（唯一标识）")
 	@Column(name = "role", length = 128, nullable = false)
 	private String role;
 
 	/**
 	 * 权限名称
 	 */
-	@Comment("权限名称")
 	@Column(name = "name")
 	private String name;
 
@@ -57,28 +53,24 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 *
 	 * @see com.tbs.shared.enums.SystemRoleTypeEnum
 	 */
-	@Comment("权限类型：1-菜单权限，2-数据权限，3-API权限")
 	@Column(name = "type")
 	private Integer type;
 
 	/**
 	 * 描述信息
 	 */
-	@Comment("描述信息")
 	@Column(name = "description")
 	private String description;
 
 	/**
 	 * 创建时间
 	 */
-	@Comment("创建时间")
 	@Column(name = "create_time")
 	private Date createTime;
 
 	/**
 	 * 修改时间
 	 */
-	@Comment("修改时间")
 	@Column(name = "update_time")
 	private Date updateTime;
 
@@ -87,21 +79,18 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 *
 	 * @see com.tbs.shared.enums.SystemRoleFlagEnum
 	 */
-	@Comment("角色状态：1-激活，0-失效，-1-删除，2-系统内置")
 	@Column(name = "flag")
 	private Integer flag;
 
 	/**
 	 * 创建者用户ID
 	 */
-	@Comment("创建者用户ID")
 	@Column(name = "create_by")
 	private Long createBy;
 
 	/**
 	 * 更新者用户ID
 	 */
-	@Comment("更新者用户ID")
 	@Column(name = "update_by")
 	private Long updateBy;
 
@@ -110,7 +99,6 @@ public class SystemRoleEntity implements IBaseEntity<Long>, ICommonCreateAuditab
 	 *
 	 * @see com.tbs.shared.enums.SystemDataScopeEnum
 	 */
-	@Comment("数据权限范围：1-全部数据，2-部门数据，3-仅本人数据，4-自定义权限")
 	@Column(name = "data_scope")
 	private Integer dataScope;
 

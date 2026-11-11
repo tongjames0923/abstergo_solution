@@ -15,7 +15,7 @@ SQL 模块（`com.tbs:sql-api` / `sql-impl` / 各方言实现模块）是基于 
 
 其他能力：**字段自动填充**（ID/时间）、**SQL 执行观测**（日志/耗时/慢 SQL 告警）、**WHERE 拦截器**（数据权限/逻辑删除）、**多数据库方言**（MySQL/Oracle/PostgreSQL/SQL Server）、**DataSource 装饰与 JDBC 执行拦截**（阻断/放行）、**编程式事务**。
 
-技术底座：`sql-api` 依赖 `mybatis-spring-boot-starter`、`spring-boot-starter-data-jpa`（仅用于 `@Table`/`@Column` 元数据）与 `com.tbs:common`；具体 JDBC 驱动由各数据库方言实现模块携带（如 `sql-mysql-impl` 携带 `com.mysql:mysql-connector-j`，版本由根 pom 管控、已排除仅 X DevAPI 需要的 `protobuf-java`）。通用 CRUD 由 `GenericMapper` 自实现，不依赖外部通用 Mapper 框架。
+技术底座：`sql-api` 依赖 `mybatis-spring-boot-starter`、纯注解包 `jakarta.persistence-api`（仅用于 `@Table`/`@Column` 等元数据，不含 Hibernate）、集成自动建表能力的 `jkit-sql-auto-spring-boot-3` 与 `com.tbs:common`；具体 JDBC 驱动由各数据库方言实现模块携带（如 `sql-mysql-impl` 携带 `com.mysql:mysql-connector-j`，版本由根 pom 管控、已排除仅 X DevAPI 需要的 `protobuf-java`）。通用 CRUD 由 `GenericMapper` 自实现，不依赖外部通用 Mapper 框架。
 
 ## 模块结构
 
@@ -110,7 +110,7 @@ Integer total = QueryEngine.getEntityQueryWrapper(User.class).query().where()
     .equal(User::getStatus, 1).pour().count();
 ```
 
-实体需标注 JPA `@Table`（表名）与 `@Column`（列名），框架据此生成 SELECT。未声明列名时按驼峰转下划线推导，与 Hibernate 物理命名策略一致；父类声明的字段同样参与映射。
+实体需标注 JPA `@Table`（表名）与 `@Column`（列名），框架据此生成 SELECT。未声明列名时按驼峰转下划线推导，与 jkit-sql-auto 的默认列名推导不完全一致，故实体必须显式声明 `@Column`；父类声明的字段同样参与映射。
 
 ## SQL 构建流水线
 
@@ -208,7 +208,7 @@ QueryEngine.getEntityQueryWrapper(existingUser);            // 复用已有对�
 | `@QueryOrderField` | 字段 | `mappedName("")`、`order(OrderConstants.ASC)` | 排序字段；字段值为 null 时跳过 |
 | `@SelectSQL` | 类 | `value("")` | 直接指定 SELECT，命中后不再自动生成、也不要求 `@Table`（边界见"使用注意事项"） |
 
-列名解析优先级（`SqlUtils.getFieldNameWithMapping`）：**`@Column` > `@QueryMapping` > 驼峰转下划线**。最后一级与 Hibernate 的 `CamelCaseToUnderscoresNamingStrategy` 完全一致，未显式声明列名时运行期 SQL 与建表列名不会偏差。
+列名解析优先级（`SqlUtils.getFieldNameWithMapping`）：**`@Column` > `@QueryMapping` > 驼峰转下划线**。最后一级按自研框架规则转下划线；jkit-sql-auto 的默认推导与之不完全一致，因此实体必须显式声明 `@Column(name)`，才能确保运行期 SQL 与建表列名一致。
 
 ### 查询条件类体系
 
@@ -569,7 +569,7 @@ public class TenantIdProvider implements IAutoValueProvider {
 1. **必须引入一个方言模块**：`sql-impl` 提供引擎但不含 `SqlDialect`；`SqlDialect` Bean 来自方言模块（`sql-mysql-impl` 等）的自动配置，缺失会导致 `QueryEngine` 装配失败
 2. **自动填充无开关**：`SqlAutoFillInterceptor` 无条件注册，实体标注 `@SqlAutoValue`/`@AutoSetDate` 即生效（不存在 `tbs.sql.enable-auto-fill-value-interceptor` 配置项）
 3. **`@SelectSQL` 只写在类上，且 SQL 内不得自带 WHERE**：`EntityMetadataExtractor.pullFromClass()` 读取类级注解，命中后只回填 `rawSql` 并跳过 `@Table` 与字段清单解析；装配器仍会在其后追加 WHERE / GROUP BY / ORDER BY / LIMIT，逻辑删除与数据权限拦截器产生的条件也会拼到该 SQL 尾部——JOIN 查询里没这个列或列名有歧义时直接报错；列投影（include/exclude）对自定义 SQL 无效；注解写在父类对子类不生效
-4. **列名解析优先级为 `@Column` > `@QueryMapping` > 驼峰转下划线**：前两者都不声明时按 Hibernate 规则转下划线，保证运行期列名与建表列名一致
+4. **列名解析优先级为 `@Column` > `@QueryMapping` > 驼峰转下划线**：前两者都不声明时按驼峰转下划线兜底；实体必须显式声明 `@Column(name)`，保证运行期列名与建表列名一致
 5. **SQL 观测默认开启**：`tbs.sql.log-sql=true` 时全量 SQL 以 INFO 输出；慢 SQL 与执行失败始终 WARN，阈值由 `slow-sql-threshold-millis` 控制
 6. **组装器由方言硬编码、无配置项**：`tbs.sql.sql-assembler-type` 已删除（无读取点的僵尸配置）；Oracle/SQL Server 各用方言专用实现，自定义须注册带 `@Primary` 的 `ISqlAssembler` Bean，详见"配置说明"
 7. **`@QueryOrderField` 字段值须非 null**：值为 null 的排序字段会被跳过；`mappedName` 为空同样跳过

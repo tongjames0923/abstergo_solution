@@ -56,8 +56,8 @@ public class Application {
 ```
 
 - `ClosureTableAutoRegister`：扫描 `com.tbs.struct.tree.closure` 包，注册 `Feature.CLOSURE_TABLE`；
-- `TreeConfig`：`@EntityScan("com.tbs.struct.tree.closure.impl.entity")` + `@MapperScan("com.tbs.struct.tree.closure.impl.mapper")`；
-- **表结构由 JPA `ddl-auto` 自动创建/更新**，无需手工执行建表 SQL；
+- `TreeConfig`：`@MapperScan("com.tbs.struct.tree.closure.impl.mapper")`（实体由 `jkit.sql.auto.packages` 扫描）；
+- **表结构由 jkit-sql-auto（`mode: update`）自动创建/更新**，无需手工执行建表 SQL；
 - 模块**无 `spring.factories`**，无 i18n 资源文件。
 
 > sql 引擎与 `SqlDialect` 由 `sql-impl` + 方言模块（`sql-mysql-impl` 等）依赖经 Spring Boot 自动装配提供；`@UseClosureTableTree` 已不再内含 `@EnableTbsSql`，也无需 `@UseMysql`。
@@ -284,7 +284,7 @@ public class DeptTreeService {
 8. **`getInstance()` 依赖启动顺序**：静态实例由 `IStartup.startUp()` 赋值，容器未就绪时调用会 NPE
 9. **重建期间拒绝写入**：`store`/`delete`/`getParentNodes` 会检测重建锁并抛业务异常，重建完成后自动恢复
 10. **重建会检测环与重复 ID**：父指针成环或同组重复 `nodeId` 均直接抛异常（事务回滚）
-11. **表结构由 JPA 自动维护**：使用 `@UseClosureTableTree` 的应用需开启 `ddl-auto`（平台服务默认 `update`）
+11. **表结构由 jkit-sql-auto 自动维护**：使用 `@UseClosureTableTree` 的应用需在 `jkit.sql.auto.packages` 中包含 `com.tbs.struct.tree.closure.impl.entity`（平台服务默认 `mode: update`）
 
 ## 许可证
 

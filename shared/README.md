@@ -48,9 +48,9 @@ public class Application { ... }
 ```
 
 - `SharedAutoRegister`：扫描 `com.tbs.shared` 包，注册 `Feature.SHARED`；
-- `SharedEntityConfig`：`@MapperScan("com.tbs.shared.mapper")`（含 version/view 子包）+ `@EntityScan({"com.tbs.shared.pojo.entity", "com.tbs.shared.pojo.entity.view"})` + 注册 `messages-shared` i18n 资源提供者。
+- `SharedEntityConfig`：`@MapperScan("com.tbs.shared.mapper")`（含 version/view 子包）+ 注册 `messages-shared` i18n 资源提供者；实体包由各服务的 `jkit.sql.auto.packages` 配置。
 
-> 注意：`entity.version` 包（App 版本三实体）**不在**默认 `@EntityScan` 范围内，需 JPA 管理时宿主应自行补充扫描；`shared-api` 无 `spring.factories`，必须注解启用。
+> 注意：`entity.version` 包（App 版本三实体）原先**不在**默认实体扫描范围内，现已在 app 的 `jkit.sql.auto.packages` 中补齐；`shared-api` 无 `spring.factories`，必须注解启用。
 
 ## shared-pojo：契约与数据模型
 
@@ -266,7 +266,7 @@ public class DemoAuditService extends AbstractAuditService<DemoEntity, Long, Lon
 1. **宿主必须开启 AOP 代理暴露**：服务模板经 `AopContext.currentProxy()` 自调用以保证事务生效，启动类需 `@EnableAspectJAutoProxy(exposeProxy = true)`（平台各服务已默认开启）
 2. **`IBaseEntity` 不含审计字段**：需要审计的实体请实现 `ICommonAuditableEntity` / `ICommonDeleteAuditable` 等；共享行为用接口，不抽带字段的实体基类
 3. **两套 flag 语义不一致**：通用 `CommonFlagEnum`（DELETED=0）与用户状态 `SystemUserStatusEnum`（DELETE=-1）相反，跨实体比较 flag 时以实体 `@LogicDeleteEntity` 注解为准
-4. **`entity.version` 未被默认 EntityScan 覆盖**：需 JPA 管理 App 版本三实体时在宿主补充 `@EntityScan`
+4. **`entity.version` 原先未被默认实体扫描覆盖**：现已在 app 的 `jkit.sql.auto.packages` 中补齐；其它宿主服务如需管理 App 版本三实体，同样把该包加入自己的 `jkit.sql.auto.packages`
 5. **包名拼写**：`shared-pojo` 的注解包为 `annotations`（复数），`shared-api` 校验注解包为 `interfaces.annoation`（拼写如此），import 时注意
 6. **分页依赖代理模式**：`pageVoBuildType()` 需要容器内存在对应 `IDelegateInvoker` 提供者（`@EnableCommonPack` 已默认装配 `SimpleDelegateInvoker`）
 7. **`OrderedModelDeserializer` 不自动注册**：需要反序列化排序字段时，自行注册到 ObjectMapper（或 `@JsonDeserialize` 标注字段）

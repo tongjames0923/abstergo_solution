@@ -3,12 +3,11 @@ package com.tbs.shared.pojo.entity.view;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
-import lombok.Data;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
@@ -25,13 +24,12 @@ import java.io.Serializable;
     indexes = {@jakarta.persistence.Index(name = "property_relation_property_id_index", columnList = "property_id"),
         @jakarta.persistence.Index(name = "property_relation_relation_id_index",
             columnList = "relation_id,relation_type")})
-@Comment("属性关系表")
 public class PropertyRelationEntity implements IIdentifiable<Long>, Serializable {
 
     /**
      * 主键ID
      */
-    @Comment("主键ID（雪花算法生成）")
+    @Column(name = "id")
     @jakarta.persistence.Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
@@ -39,21 +37,18 @@ public class PropertyRelationEntity implements IIdentifiable<Long>, Serializable
     /**
      * 属性id
      */
-    @Comment("属性ID（援引 property_value.id）")
     @Column(name = "property_id")
     private Long propertyId;
 
     /**
      * 关联类型， 1-字段， 2-表单
      */
-    @Comment("关联类型（1:绑定到字段，2:绑定到表单）")
     @Column(name = "relation_type")
     private Integer relationType;
 
     /**
      * 关联id
      */
-    @Comment("关联对象ID（根据 relation_type 指向表单域ID或表单ID）")
     @Column(name = "relation_id")
     private Long relationId;
 }
