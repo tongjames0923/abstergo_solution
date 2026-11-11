@@ -93,7 +93,7 @@ public class CascadeEvictLinkRegistry {
                 log.warn("关联失效声明[{}]的目标[{}]自身还声明了关联，级联不传递：清除[{}]不会连带清除"
                     + "[{}]的关联，请把多级依赖显式展开", link.getName(), target, source, target);
             }
-            index.computeIfAbsent(source, key -> new ArrayList<>(4)).add(link);
+            index.computeIfAbsent(target, key -> new ArrayList<>(4)).add(link);
         }
         log.info("关联失效声明装载完成：声明数={}, 源缓存数={}", links.size(), index.size());
         return Collections.unmodifiableMap(index);

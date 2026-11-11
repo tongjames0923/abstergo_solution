@@ -98,7 +98,7 @@ public class CascadeEvictCacheListenner implements ICacheListenner {
      */
     @Override
     public void onEvicted(String cacheName, Object key) {
-        List<ICacheEvictLink> links = registry.linksOf(cacheName);
+        List<ICacheEvictLink> links = registry.linksOf(unwarpCacheName(cacheName));
         if (CollUtil.isEmpty(links)) {
             return;
         }
@@ -114,7 +114,7 @@ public class CascadeEvictCacheListenner implements ICacheListenner {
      */
     @Override
     public void onCleared(String cacheName) {
-        List<ICacheEvictLink> links = registry.linksOf(cacheName);
+        List<ICacheEvictLink> links = registry.linksOf(unwarpCacheName(cacheName));
         if (CollUtil.isEmpty(links)) {
             return;
         }
@@ -130,8 +130,7 @@ public class CascadeEvictCacheListenner implements ICacheListenner {
     /**
      * 执行一条声明：反查目标键后逐个静默清除
      * <p>
-     * {@link ICacheEvictLink#translate(Object)} 由业务实现、可能查库，异常在此捕获，
-     * 一条声明失败不影响其他声明，也不影响已完成的业务写入。
+     * {@link ICacheEvictLink#translate(Object)} 由业务实现、可能查库，异常在此捕获， 一条声明失败不影响其他声明，也不影响已完成的业务写入。
      * </p>
      */
     private void cascadeOne(ICacheEvictLink link, String cacheName, Object key) {
@@ -139,11 +138,13 @@ public class CascadeEvictCacheListenner implements ICacheListenner {
         try {
             targetKeys = link.translate(key);
         } catch (Exception e) {
-            log.error("关联失效声明[{}]映射目标键失败，源缓存:{} 源键:{}，本次连带失效跳过", link.getName(), cacheName, key,
-                e);
+            log.error("关联失效声明[{}]映射目标键失败，源缓存:{} 源键:{}，本次连带失效跳过", link.getName(), cacheName,
+                key, e);
             return;
         }
         if (CollUtil.isEmpty(targetKeys)) {
+            log.warn("关联失效清空全部：声明[{}]映射目标键为空，源缓存:{} 源键:{}", link.getName(), cacheName, key);
+            clearSilently(link.target(), link.getName());
             return;
         }
         for (Object targetKey : targetKeys) {

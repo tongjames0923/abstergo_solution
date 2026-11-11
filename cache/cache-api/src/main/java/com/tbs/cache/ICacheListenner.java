@@ -4,11 +4,12 @@ import org.springframework.cache.Cache;
 
 import java.util.Date;
 
+import static com.tbs.cache.integration.AbstractTtlAdaptCacheMananger.CACHE_NAME_PREFIX;
+
 /**
  * 缓存监听器接口
  * <p>
- * 用于监听缓存的各种操作，包括获取、设置、删除和清除
- * 实现此接口可以在缓存操作发生时执行自定义逻辑
+ * 用于监听缓存的各种操作，包括获取、设置、删除和清除 实现此接口可以在缓存操作发生时执行自定义逻辑
  * </p>
  *
  * @author abstergo
@@ -27,6 +28,13 @@ public interface ICacheListenner {
      * @return 如果支持则返回true，否则返回false
      */
     boolean support(Cache cache);
+
+    default String unwarpCacheName(String cacheName) {
+        if (cacheName.startsWith(CACHE_NAME_PREFIX)) {
+            return cacheName.substring(CACHE_NAME_PREFIX.length());
+        }
+        return cacheName;
+    }
 
     /**
      * 缓存获取事件回调
@@ -55,8 +63,7 @@ public interface ICacheListenner {
     /**
      * 缓存删除事件回调
      * <p>
-     * 当从缓存中删除值时触发此方法。注意触发时机为**真正删除之前**，
-     * 此时回调方回读该缓存仍会拿到旧值。
+     * 当从缓存中删除值时触发此方法。注意触发时机为**真正删除之前**， 此时回调方回读该缓存仍会拿到旧值。
      * </p>
      *
      * @param cacheName 缓存名称
@@ -67,8 +74,7 @@ public interface ICacheListenner {
     /**
      * 缓存删除**完成后**回调
      * <p>
-     * 与 {@link #onEvict(String, Object)} 的区别只在时机：本方法在缓存值已被真正清除之后触发，
-     * 回调方在此回读得到的是「已不存在」的状态。需要「失效完成后再做后续动作」的逻辑
+     * 与 {@link #onEvict(String, Object)} 的区别只在时机：本方法在缓存值已被真正清除之后触发， 回调方在此回读得到的是「已不存在」的状态。需要「失效完成后再做后续动作」的逻辑
      * （如关联缓存级联失效、变更事件通知）必须挂在本方法，挂在 {@code onEvict} 上会读到旧值。
      * </p>
      * <p>
