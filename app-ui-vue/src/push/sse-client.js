@@ -1,12 +1,7 @@
-import { EventSourcePolyfill } from 'event-source-polyfill'
-import { getToken } from '@/utils/auth'
-import { pushAuth, pushSubscribe, pushUnsubscribe, pushPing } from '@/api/push'
-import {
-  PUSH_DEFAULTS,
-  FRAME_EVENTS,
-  parseHelloPayload,
-  parseHeartbeatAdvice
-} from '@/push/push-message'
+import {EventSourcePolyfill} from 'event-source-polyfill'
+import {getToken} from '@/utils/auth'
+import {pushAuth, pushPing, pushSubscribe, pushUnsubscribe} from '@/api/push'
+import {FRAME_EVENTS, parseHeartbeatAdvice, parseHelloPayload, PUSH_DEFAULTS} from '@/push/push-message'
 
 /**
  * SSE 连接状态
@@ -62,9 +57,17 @@ class SsePushClient {
      */
     this.heartbeatDeadline = 0
     /**
-     * 上次成功心跳时间戳（毫秒），用于最迟期限陈旧判定
+     * 上次上行心跳被受理的时间戳（毫秒，只代表 HTTP 请求成功）
      */
     this.lastHeartbeatAt = 0
+    /**
+     * 最近一次收到服务端下行帧的时间戳（毫秒）
+     * <p>
+     * hello / pong / signal / 协议 error 帧都是链路双向存活的直接证据；上行 HTTP 失败时
+     * 只要下行仍可达，就不能判定会话已死而关流重连。
+     * </p>
+     */
+    this.lastDownlinkAt = 0
     /**
      * 当前订阅主题集合
      */
@@ -177,6 +180,7 @@ class SsePushClient {
     this.eventSource = es
 
     es.addEventListener(FRAME_EVENTS.HELLO, (ev) => {
+      this._touchDownlink()
       const frame = this._safeParse(ev.data)
       const hello = frame && parseHelloPayload(frame.payload)
       if (!hello) {
@@ -196,6 +200,7 @@ class SsePushClient {
     })
 
     es.addEventListener(FRAME_EVENTS.SIGNAL, () => {
+      this._touchDownlink()
       // 信令本身无载荷，仅提示"该频道有新消息"，由调用方触发拉取
       if (typeof this.onSignal === 'function') {
         this.onSignal()
@@ -203,8 +208,11 @@ class SsePushClient {
     })
 
     es.addEventListener(FRAME_EVENTS.PONG, (ev) => {
-      // 服务端对 PING 的应答：除活性观测外，回带当前推荐心跳值，使连接存活期内可随服务端
-      // 繁忙度自适应心跳节奏（无推荐载荷的老服务端解析为 null，保持现有节奏不变）
+      // PONG 本身就是「服务端还认这个会话」的最强证据：先无条件刷新下行活性，
+      // 不能只在解析出推荐心跳值时才算收到；上行 HTTP 失败也要靠它来免误判
+      this._touchDownlink()
+      // 回带当前推荐心跳值，使连接存活期内可随服务端繁忙度自适应心跳节奏
+      // （无推荐载荷的老服务端解析为 null，保持现有节奏不变）
       const frame = this._safeParse(ev.data)
       const advice = frame && parseHeartbeatAdvice(frame.payload)
       if (advice) {
@@ -213,14 +221,23 @@ class SsePushClient {
     })
 
     es.addEventListener(FRAME_EVENTS.SHUTDOWN, (ev) => {
+      this._touchDownlink()
       // 服务端优雅停机通知：连接将在宽限期后被主动关闭。
       // 停心跳避免宽限期内上行心跳失败误判会话已死而抢先重连（此刻服务端仍在停机中），
       // 关流交由服务端完成后触发的 error 回调按退避换票重连（服务恢复后自动接回）。
-      console.warn('[push] 收到服务端停机通知，连接将在宽限期后关闭，服务恢复后自动重连', ev.data)
+      console.warn('[push] 收到服务端停机通知，连接将在宽限期后关闭，服务恢复后自动接回', ev.data)
       this._stopHeartbeat()
     })
 
-    es.addEventListener(FRAME_EVENTS.ERROR, () => {
+    es.addEventListener(FRAME_EVENTS.ERROR, (ev) => {
+      // 'error' 同时是 EventSource 的连接级错误事件名和服务端协议层 ERROR 帧的 SSE 事件名。
+      // 服务端 reject()（订阅越权/上行守卫拒绝/topic 非法）只拒该次帧、明确不断流，这类消息事件带 data；
+      // 连接级 error 不带 data。混为一谈会让一次普通的协议拒绝直接关流换票重连。
+      if (ev && typeof ev.data === 'string' && ev.data) {
+        this._touchDownlink()
+        console.warn('[push] 协议层拒绝帧，连接保持', ev.data)
+        return
+      }
       // 一次性 ticket 已被消费，原生自动重连必然失败，必须换票重连
       console.warn('[push] SSE 连接异常，准备重连')
       this._closeStream()
@@ -260,6 +277,18 @@ class SsePushClient {
   }
 
   /**
+   * 记录一次服务端下行帧到达：刷新链路活性并清零上行心跳失败计数
+   * <p>
+   * 上行 /private/push/sse/upload 的 200 只代表「帧被受理」，PONG 与确认帧是异步经 SSE
+   * 下行下发的；判定链路存活应以下行帧为准，避免上行 HTTP 偶发失败被误判成会话已死。
+   * </p>
+   */
+  _touchDownlink() {
+    this.lastDownlinkAt = Date.now()
+    this.heartbeatFailures = 0
+  }
+
+  /**
    * 采纳服务端下发的推荐心跳值（hello 握手与 pong 应答共用）：有推荐周期则覆盖本地心跳间隔，
    * 并记录最迟心跳期限供陈旧守卫使用。pong 运行期下发且周期发生变化时重建定时器以采纳新节奏
    *（hello 阶段定时器尚未启动，不会误触发重建）
@@ -283,29 +312,38 @@ class SsePushClient {
     this._stopHeartbeat()
     this.heartbeatFailures = 0
     this.lastHeartbeatAt = Date.now()
+    // 不覆盖已有的下行时间戳：PONG 触发重建定时器时不能把「下行静默时长」抹掉
+    if (!this.lastDownlinkAt) {
+      this.lastDownlinkAt = Date.now()
+    }
     this.heartbeatTimer = setInterval(() => {
       if (!this.sessionId) {
         return
       }
-      // 最迟心跳期限守卫：距上次成功心跳已超过后端回收点(deadline)，判定链路已陈旧
-      // （后台标签页定时器被浏览器节流拉伸、或半开连接而下行未报错时尤为有效），
-      // 主动换票重连而非再发一次注定失败的 ping
-      if (this.heartbeatDeadline > 0 && Date.now() - this.lastHeartbeatAt > this.heartbeatDeadline) {
-        console.warn('[push] 距上次心跳超过最迟期限，判定链路陈旧，关流换票重连')
+      // 最迟期限守卫改看下行帧：距最近一次收到任何服务端帧超过回收点才判定链路陈旧。
+      // 上行定时器被后台标签页节流拉伸、但下行仍在收帧时不再误判
+      if (this.heartbeatDeadline > 0 && Date.now() - this.lastDownlinkAt > this.heartbeatDeadline) {
+        console.warn('[push] 长时间未收到任何下行帧，判定链路陈旧，关流换票重连')
         this._closeStream()
         this._scheduleReconnect()
         return
       }
+      const pingStartedAt = Date.now()
       pushPing(this.sessionId).then(() => {
         this.heartbeatFailures = 0
         this.lastHeartbeatAt = Date.now()
       }).catch(e => {
-        console.warn('[push] 心跳上行失败', e)
+        // 这次 ping 发出后若收到了 PONG 或其它下行帧，说明会话仍活着，失败只是这一路
+        // 上行 HTTP 的问题（超时/刷新令牌/网关），不能据此关流重连
+        if (this.lastDownlinkAt >= pingStartedAt) {
+          console.warn('[push] 心跳上行失败，但下行帧仍可达，保持连接', e)
+          return
+        }
+        console.warn('[push] 心跳上行失败且下行静默', e)
         this.heartbeatFailures++
-        // 连续失败达阈值：会话大概率已被服务端回收（如认证失效），下行流虽开着但上行全死，
-        // 不能停留在 CONNECTED，主动关流转换票重连自愈
+        // 连续失败且下行也无任何帧，才判定会话已死，主动关流换票重连
         if (this.heartbeatFailures >= this.config.heartbeatMaxFailures) {
-          console.warn('[push] 心跳连续失败达阈值，判定会话已死，关流换票重连')
+          console.warn('[push] 心跳连续失败且下行静默，判定会话已死，关流换票重连')
           this._closeStream()
           this._scheduleReconnect()
         }

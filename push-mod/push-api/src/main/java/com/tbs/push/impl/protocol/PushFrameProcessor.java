@@ -133,12 +133,14 @@ public class PushFrameProcessor {
             reject(session, PushErrorCodeEnum.FRAME_MALFORMED, PushI18nConstant.FRAME_TYPE_REQUIRED);
             return;
         }
+        // 收到可解析帧即刷新活性：客户端还能上行说明链路存活，不能因该帧被守卫/鉴权拒绝
+        // 就不 touch，否则持续拒绝时会被心跳监控误判为空闲超时强踢，表现为"会话频繁掉线重连"
+        session.touch();
         if (!guardsPermit(session, frame)) {
             reject(session, PushErrorCodeEnum.UPLOAD_DENIED,
                 I18nUtil.get(PushI18nConstant.UPLOAD_DENIED, session.getSessionId()));
             return;
         }
-        session.touch();
         switch (frame.getType()) {
             case HELLO:
                 handleHello(session, frame);
