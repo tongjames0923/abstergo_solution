@@ -219,7 +219,6 @@ public class BuisnessBeanConfig {
     }
 
     @Bean
-    @ConditionalOnMissingBean(INotifyReceiverResolver.class)
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public INotifyReceiverResolver notifyReceiverResolver() {
         return new TopicPrefixNotifyReceiverResolver();
