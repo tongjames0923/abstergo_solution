@@ -52,9 +52,9 @@
 </template>
 
 <script>
-import { mapGetters, mapActions } from 'vuex'
-import { operateMessage } from '@/api/push-message'
-import { resolveTypeKey, typeAccent, groupByDay } from '@/push/message-display'
+import {mapActions, mapGetters} from 'vuex'
+import {operateMessage} from '@/api/push-message'
+import {groupByDay, resolveTypeKey, typeAccent} from '@/push/message-display'
 import CenterHeader from './components/CenterHeader'
 import FilterBar from './components/FilterBar'
 import MessageList from './components/MessageList'
@@ -298,14 +298,14 @@ export default {
       }
     },
     /**
-     * 回传 CLICK 操作日志（仅新链路数字 id；异常隔离不影响跳转）
+     * 回传 CLICK 操作日志（仅新链路纯数字 id；雪花 ID 保持字符串直传，异常隔离不影响跳转）
      */
     reportClick(item) {
       if (item.id == null || !/^\d+$/.test(String(item.id))) {
         return
       }
       operateMessage({
-        messageId: Number(item.id),
+        messageId: String(item.id),
         opType: 'CLICK',
         extInfo: 'message-center'
       }).catch(e => console.warn('[push-center] 点击回传失败', e))

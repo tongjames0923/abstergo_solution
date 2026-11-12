@@ -3,10 +3,8 @@ package com.tbs.shared.pojo.entity;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
-import lombok.Data;
-
 import jakarta.persistence.*;
+import lombok.Data;
 
 /**
  * 系统用户部门关系实体
@@ -22,13 +20,12 @@ import jakarta.persistence.*;
     @Index(name = "idx_department_id", columnList = "department_id")},
     uniqueConstraints = {@UniqueConstraint(name = "uk_user_id_department_id", columnNames = {"user_id", "department_id"})})
 @Data
-@Comment("系统用户与部门关系表")
 public class SystemUserDepartmentRelationEntity implements IIdentifiable<Long> {
 
     /**
      * 主键
      */
-    @Comment("主键ID（雪花算法生成）")
+    @Column(name = "id")
     @Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
@@ -36,14 +33,12 @@ public class SystemUserDepartmentRelationEntity implements IIdentifiable<Long> {
     /**
      * 用户ID
      */
-    @Comment("用户ID（援引 sys_user.id）")
     @Column(name = "user_id")
     private Long userId;
 
     /**
      * 部门ID
      */
-    @Comment("部门ID（援引 sys_department.id）")
     @Column(name = "department_id")
     private Long departmentId;
 }

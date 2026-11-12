@@ -135,17 +135,24 @@ public class SseSessionWrapper implements IConnectionSession {
         if (closed) {
             return false;
         }
+        boolean sent;
         synchronized (emitter) {
             try {
                 emitter.send(SseEmitter.event().name(frame.getType().getValue())
                     .data(codec.encodeFrame(frame), MediaType.APPLICATION_JSON));
                 touch();
-                return true;
+                sent = true;
             } catch (Exception error) {
-                log.warn("SSE帧发送失败, sessionId:{}", sessionId, error);
-                return false;
+                sent = false;
+                // 客户端断链：只记一行摘要，不打印整段异常堆栈；close 后本会话不会再被写入，日志天然限流到一次
+                log.warn("SSE帧发送失败, 会话将关闭, sessionId:{}, cause:{}", sessionId, error.toString());
             }
         }
+        if (!sent) {
+            // 立即置失效并走完整清理链（emitter 完成回调注销会话与订阅），避免后续消息反复向断链写
+            close(PushFrameConstants.CLOSE_REASON_CHANNEL_CLOSED);
+        }
+        return sent;
     }
 
     /**

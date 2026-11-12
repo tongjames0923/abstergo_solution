@@ -45,7 +45,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * <h3>注意事项</h3>
  * <ul>
  *   <li>字段映射优先级：@Column > @QueryMapping > 驼峰转下划线列名</li>
- *   <li>父类声明的字段同样参与持久化，与 Hibernate 的映射范围一致</li>
+ *   <li>父类声明的字段同样参与持久化，与 jkit-sql-auto 的实体字段扫描范围一致</li>
+ *   <li>实体字段必须显式声明 @Column(name)，避免运行期列名与建表列名偏差</li>
  *   <li>静态字段和final字段会被跳过</li>
  *   <li>表名会被缓存</li>
  * </ul>
@@ -63,8 +64,8 @@ public class SqlUtils {
     /**
      * 获取字段名，支持从@Column和@QueryMapping注解中获取映射名称。
      *
-     * <p>优先级：@Column > @QueryMapping > 驼峰转下划线。未显式声明列名时按 Hibernate 的
-     * 物理命名策略转换，保证运行期 SQL 的列名与 {@code ddl-auto} 建出的表结构一致。</p>
+     * <p>优先级：@Column > @QueryMapping > 驼峰转下划线。实体字段必须显式声明 @Column(name)，
+     * 保证运行期 SQL 的列名与 jkit-sql-auto 按实体注解建出的表结构一致。</p>
      *
      * @param field 字段对象
      * @return 映射后的字段名，如果字段为null则返回null
@@ -150,7 +151,7 @@ public class SqlUtils {
      * 获取类对应的表名。
      *
      * @param clazz 实体类
-     * @return 表名，如果类为null则返回null；没有@Table注解时返回类名按Hibernate规则转下划线后的结果
+     * @return 表名，如果类为null则返回null；没有@Table注解时返回类名按驼峰转下划线规则转换后的结果
      */
     public static String getTableName(Class<?> clazz) {
         if (clazz == null) {

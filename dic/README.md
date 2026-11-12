@@ -139,7 +139,7 @@ public interface IDataDicService {
 @EnableTbsRedis          // Redisson（缓存/锁/DataHolder）
 @EnableDubbo             // Dubbo 服务暴露（@DubboService）
 @MapperScan("com.tbs.dic.mapper")
-@EntityScan("com.tbs.dic.entity")
+// 实体包由 application-db.yml 的 jkit.sql.auto.packages 配置
 ```
 
 ### 运行方式
@@ -166,7 +166,7 @@ mvn spring-boot:run
 | `RABBITMQ_USERNAME` / `RABBITMQ_PASSWORD` | `admin` / `admin123` | 同左 | RabbitMQ 凭证 |
 | `XXL_JOB_ADMIN_ADDRESS` | `http://127.0.0.1:9898/xxl-job-admin` | 同左 | 调度中心（app-name=`dataDicApplication`） |
 
-> 注意：`.env` 中 `DB_NAME=app_system` 与 yml 兜底 `core_app` 不同，以 `.env`（或实际环境变量）为准。数据库表结构由 JPA `ddl-auto: update` 自动建表/更新，无需手工执行 DDL。
+> 注意：`.env` 中 `DB_NAME=app_system` 与 yml 兜底 `core_app` 不同，以 `.env`（或实际环境变量）为准。数据库表结构由 jkit-sql-auto（`jkit.sql.auto.mode: update`）自动建表/更新，无需手工执行 DDL。
 
 ## 配置说明
 
@@ -252,7 +252,7 @@ tbs:
 
 - 驱动为 `com.mysql.cj.jdbc.Driver`，URL 形如 `jdbc:mysql://...`；SQL 观测由 `sql` 模块的 JDBC 装饰层承担（`application-tbs.yml` 的 `tbs.sql` 配置）；
 - 连接池 HikariCP：最小空闲 5 / 最大 20 / 连接超时 30s / 空闲超时 600s / 最大存活 1800s；
-- JPA `ddl-auto: update` + `generate-ddl: true`（自动建表），MyBatis 开启驼峰映射。
+- `jkit.sql.auto.mode: update`（自动建表，可用 `jkit.sql.auto.enabled: false` 关闭），MyBatis 开启驼峰映射。
 
 ### 消息队列（application-mq.yml）
 

@@ -15,16 +15,16 @@ import com.tbs.shared.pojo.model.view.FormField;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.view.IPropertyValueTransformer;
 import com.tbs.view.constant.ViewConstants;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.transaction.annotation.Transactional;
 
-import static com.tbs.app.service.impl.CacheNamesConstants.VIEW_FORM_CACHE;
-
-import jakarta.annotation.Resource;
-import jakarta.transaction.Transactional;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.VIEW_FORM_CACHE;
 
 @Slf4j
 public class ViewServiceImpl implements IViewService {
@@ -214,7 +214,7 @@ public class ViewServiceImpl implements IViewService {
         return formConfig;
     }
 
-    @Transactional(rollbackOn = RuntimeException.class)
+    @Transactional(rollbackFor = RuntimeException.class)
     @Override
     public DynamicFormConfigrationEntity saveForm(FormConfig formConfig) {
         AssertUtil.isTrue(formConfig == null).message("表单配置不能为空").errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
@@ -243,7 +243,7 @@ public class ViewServiceImpl implements IViewService {
     }
 
     @Override
-    @Transactional(rollbackOn = RuntimeException.class)
+    @Transactional(rollbackFor = RuntimeException.class)
     @CacheEvict(cacheNames = VIEW_FORM_CACHE, key = "#formConfigId")
     public DynamicFormConfigrationEntity updateForm(Long formConfigId, FormConfig formConfig) {
         AssertUtil.isTrue(formConfigId == null).message("表单配置ID不能为空")

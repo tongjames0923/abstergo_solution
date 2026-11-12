@@ -101,7 +101,7 @@ tbs:
 - 启动类标注 `@EnableTbsPush` + `@EnableTbsPushSse`（WebSocket 用对应启用注解）；
 - 引入 `push-sse-impl`（或 `push-websocket-impl`）与 `default-system-impl`；
 - 三张表建好：`push_message` / `push_message_receiver` / `push_message_operation_log`；
-- `PushMessageScanConfig` 已 `@MapperScan`/`@EntityScan` 指向 shared 的 push 包（引入即生效）。
+- `PushMessageScanConfig` 已 `@MapperScan` 指向 shared 的 push Mapper 包（引入即生效）；push 实体由 `jkit.sql.auto.packages` 扫描。
 
 ### 3.2 验证判据（跑通即达标）
 

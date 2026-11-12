@@ -1,17 +1,16 @@
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Comment;
 
-import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -31,7 +30,6 @@ import java.util.Date;
 @Setter
 @ToString
 @LogicDeleteEntity(activeFlagValues = { 1 })
-@Comment("系统用户外部身份绑定表")
 public class SystemUserExternalIdentityEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 	private static final long serialVersionUID = 1L;
@@ -39,8 +37,8 @@ public class SystemUserExternalIdentityEntity
 	/**
 	 * 绑定ID
 	 */
-	@Comment("绑定ID（雪花算法生成）")
 	@Setter
+	@Column(name = "id")
 	@Id
 	@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
 	private Long id;
@@ -50,56 +48,48 @@ public class SystemUserExternalIdentityEntity
 	 *
 	 * @see com.tbs.app.security.grant.wecom.WecomLoginGrantProvider#IDENTITY_TYPE
 	 */
-	@Comment("外部身份类型（如 wecom）")
 	@Column(name = "identity_type", length = 32, nullable = false)
 	private String identityType;
 
 	/**
 	 * 外部身份标识
 	 */
-	@Comment("外部身份标识（如企微 userid）")
 	@Column(name = "external_id", length = 128, nullable = false)
 	private String externalId;
 
 	/**
 	 * 绑定的系统用户ID
 	 */
-	@Comment("绑定的系统用户ID")
 	@Column(name = "user_id", nullable = false)
 	private Long userId;
 
 	/**
 	 * 创建时间
 	 */
-	@Comment("创建时间")
 	@Column(name = "create_time")
 	private Date createTime;
 
 	/**
 	 * 修改时间
 	 */
-	@Comment("修改时间")
 	@Column(name = "update_time")
 	private Date updateTime;
 
 	/**
 	 * 绑定状态
 	 */
-	@Comment("绑定状态（1为有效）")
 	@Column(name = "flag")
 	private Integer flag;
 
 	/**
 	 * 创建者用户ID
 	 */
-	@Comment("创建者用户ID")
 	@Column(name = "create_by")
 	private Long createBy;
 
 	/**
 	 * 最后更新者用户ID
 	 */
-	@Comment("最后更新者用户ID")
 	@Column(name = "update_by")
 	private Long updateBy;
 

@@ -1,15 +1,14 @@
 package com.tbs.shared.pojo.entity.view;
 
-import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.shared.pojo.IIdentifiable;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
-import lombok.Data;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
+import lombok.Data;
+
 import java.io.Serializable;
 
 /**
@@ -25,14 +24,13 @@ import java.io.Serializable;
         @jakarta.persistence.Index(columnList = "expandable,expanded")})
 @Data
 @LogicDeleteEntity(activeFlagValues = {0, 1})
-@Comment("动态表单配置表")
 public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
      * 主键ID
      */
-    @Comment("主键ID（雪花算法生成）")
+    @Column(name = "id")
     @jakarta.persistence.Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
@@ -40,42 +38,36 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
     /**
      * 表单字段是否展开（0:收起，1:展开）
      */
-    @Comment("表单字段是否展开（0:收起，1:展开）")
     @Column(name = "expanded")
     private Integer expanded;
 
     /**
      * 是否可展开（0:不可展开，1:可展开）
      */
-    @Comment("表单是否支持展开/收起（0:不可，1:可以）")
     @Column(name = "expandable")
     private Integer expandable;
 
     /**
      * 表单字段的间隔
      */
-    @Comment("表单字段之间的间隔（像素值）")
     @Column(name = "gutter")
     private Integer gutter;
 
     /**
      * 表单字段的宽度
      */
-    @Comment("表单标签宽度（如 100px）")
     @Column(name = "label_width")
     private String labelWidth;
 
     /**
      * 表单栅格占据的列数
      */
-    @Comment("表单栅格占据的列数（基于 24 栅格系统）")
     @Column(name = "span")
     private Integer span;
 
     /**
      * 表单标题
      */
-    @Comment("表单标题")
     @Column(name = "title", length = 128)
     private String title;
 
@@ -83,7 +75,6 @@ public class DynamicFormConfigrationEntity implements IIdentifiable<Long>, Seria
      * 标记
      * @see com.tbs.shared.enums.DynamicFormConfigFlagEnum
      */
-    @Comment("表单状态：1-已启用，0-未启用，-1-已删除")
     @Column(name = "flag")
     private Integer flag;
 

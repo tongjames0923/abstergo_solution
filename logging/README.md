@@ -215,7 +215,7 @@ cd logging/logging-impl
 mvn spring-boot:run
 ```
 
-表结构经 JPA `ddl-auto: update` 自动建表/更新，无需手工 DDL。模块未内置 `.env` 文件（依赖 spring-dotenv，可自行在运行目录提供），环境变量需经进程环境注入：
+表结构经 jkit-sql-auto（`jkit.sql.auto.mode: update`）自动建表/更新，无需手工 DDL。模块未内置 `.env` 文件（依赖 spring-dotenv，可自行在运行目录提供），环境变量需经进程环境注入：
 
 | 变量 | 兜底默认 | 说明 |
 |------|----------|------|
@@ -293,7 +293,7 @@ tbs:
 
 - 驱动 `com.p6spy.engine.spy.P6SpyDriver`（SQL 打印），URL `jdbc:p6spy:mysql://...`；
 - HikariCP：最小空闲 5 / 最大 20 / 连接超时 30s / 空闲超时 600s / 最大存活 1800s / 测试查询 `SELECT 1`；
-- JPA `ddl-auto: update`，MyBatis 驼峰映射。
+- `jkit.sql.auto.mode: update`，MyBatis 驼峰映射。
 
 ### 消息队列（application-mq.yml）
 

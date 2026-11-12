@@ -83,7 +83,7 @@ flowchart LR
 | 微服务 | Spring Cloud / Spring Cloud Alibaba | 2023.0.3 / 2023.0.1.2 |
 | RPC | Dubbo（Triple 协议） | 3.3.4 |
 | 注册/配置中心 | Nacos | v2.5.3 |
-| ORM | MyBatis + Spring Data JPA（DDL） | 3.0.5 starter / - |
+| ORM | MyBatis + jkit-sql-auto（仅启动期 DDL） | 3.0.5 starter / 2.0.4 |
 | 数据库 | MySQL | 8.4（驱动 com.mysql:mysql-connector-j 9.7.0） |
 | SQL 观测 | tbs.sql JDBC 装饰层（内置） | - |
 | 缓存 | Redisson + Caffeine 多级缓存 | 3.52.0 |
@@ -227,7 +227,7 @@ mysql -h127.0.0.1 -uroot -p123456 nacos_config < etc/sql_file/nacos_config.sql
 mysql -h127.0.0.1 -uroot -p123456 xxl_job < etc/sql_file/xxl-job/xxl_job_init.sql
 ```
 
-`core_app` 需先创建（见上），表结构由 JPA `ddl-auto: update` 在应用启动时自动生成；`etc/sql_file/app_system.sql` 提供完整表结构参考（含初始数据）。
+`core_app` 需先创建（见上），表结构由 jkit-sql-auto（`jkit.sql.auto.mode: update`）在应用启动时自动生成；`etc/sql_file/app_system.sql` 提供完整表结构参考（含初始数据）。
 
 ### 第三步：构建并启动后端主应用
 
@@ -352,7 +352,7 @@ curl http://127.0.0.1:8080/public/gateway/version
 ## 生产部署
 
 1. **前端**：`npm run build:prod` → `dist/`；Nginx 参考配置见 `app-ui-vue/nginx.conf`（监听 8866，`/api/` rewrite 后代理后端，history 模式回落 `index.html`，静态资源 7 天缓存）
-2. **后端**：可执行 jar + 环境变量注入（或将配置迁入 Nacos）；建议 `ddl-auto` 改为 `validate`，用迁移脚本管理表结构
+2. **后端**：可执行 jar + 环境变量注入（或将配置迁入 Nacos）；建议把 `jkit.sql.auto.enabled` 置 `false`（或 `mode: none`），用迁移脚本管理表结构
 3. **拓扑**：Nginx → app-service（可多实例）；dic/logging 服务按需横向扩容；全部服务注册到生产 Nacos
 4. **调度**：xxl-job 控制台注册执行器（`app-name: mainSystemApplication`，执行器端口默认 9999），配置 `company_tree_rebuild`、`department_tree_rebuild`、`flushLogData`、`runningBackGroundJobHandler` 等任务
 5. **Go 轻量提供者**：`go build` 产出单二进制，与 `service.json` 同目录运行，用 `NACOS_ADDRESS`/`DUBBO_PORT` 注入环境；不进 Maven/Jenkins fat jar 链路，不做容器化，Nacos 与 Dubbo Admin 验收见 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md)

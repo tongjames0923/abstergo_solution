@@ -1,7 +1,9 @@
-import { initPush, closePush, reconnectPush, CONNECTION_STATUS, notifyMessage, dispatchMessage } from '@/push'
-import { getToken } from '@/utils/auth'
-import { TOPIC_PREFIX, normalizeFetchedMessage } from '@/push/push-message'
-import { fetchMessages, markRead } from '@/api/push-message'
+import {Message} from 'element-ui'
+import i18n from '@/i18n'
+import {closePush, CONNECTION_STATUS, dispatchMessage, initPush, notifyMessage, reconnectPush} from '@/push'
+import {getToken} from '@/utils/auth'
+import {normalizeFetchedMessage, TOPIC_PREFIX} from '@/push/push-message'
+import {fetchMessages, markRead} from '@/api/push-message'
 import settings from '@/settings'
 
 /**
@@ -11,6 +13,7 @@ import settings from '@/settings'
  * 仅作幂等判断）避免重连/重发导致的重复弹窗与重复入列。未读计数由 messages 派生。
  * 新链路（信令+拉取）：SSE 仅触发 SIGNAL 拉取，消息内容由 pullLatest 拉取后去重入列，
  * 再经门面渲染器（默认弹窗）与业务处理器分发；本模块不直接依赖 SSE 数据帧。
+ * 消息 ID 一律以字符串形式保存与回传（雪花 ID 超出 2^53，转 Number 必然失真）。
  * </p>
  */
 
@@ -18,6 +21,24 @@ import settings from '@/settings'
  * 内存保留的最大消息条数（防止长期在线内存膨胀）
  */
 const MAX_MESSAGES = 200
+
+/**
+ * 单次已读回传上限，与后端 IPushNotifyService.MAX_READ_BATCH 对齐；
+ * 超限后端直接抛业务异常，全部已读必须由前端分批提交
+ */
+const MAX_READ_BATCH = 100
+
+/**
+ * 已读回传失败的用户可见反馈（本地状态回滚由调用方执行）
+ * <p>消息中心与在线弹窗共用，避免仅有 console.warn 的静默"假成功"。</p>
+ *
+ * @param {string} scope 失败场景描述
+ * @param {*} error 异常对象
+ */
+function reportReadFailure(scope, error) {
+  console.warn(`[push] ${scope}`, error)
+  Message.warning(i18n.t('push.center.markReadFailed'))
+}
 
 /**
  * 已见消息 id 集合（非响应式，仅用于去重）
@@ -88,6 +109,20 @@ const mutations = {
   },
   MARK_ALL_READ(state) {
     state.messages.forEach(item => { item.read = true })
+    persistRead(state.messages)
+  },
+  /**
+   * 批量设置指定消息的读态
+   * <p>用于回传失败回滚、成功确认，以及服务端 readFlag 对已入列消息的校正；
+   * key 统一为字符串形式的消息 ID。</p>
+   */
+  SET_READ_FLAGS(state, readFlags) {
+    state.messages.forEach(item => {
+      const key = String(item.id)
+      if (readFlags.has(key)) {
+        item.read = readFlags.get(key)
+      }
+    })
     persistRead(state.messages)
   },
   CLEAR_ALL(state) {
@@ -213,9 +248,15 @@ const actions = {
       const isFirst = !firstPullDone
       firstPullDone = true
       let added = 0
+      const readFlags = new Map()
       list.forEach(vo => {
         const message = normalizeFetchedMessage(vo)
-        if (!message || seenIds.has(message.id)) {
+        if (!message) {
+          return
+        }
+        // seenIds 只用于入列去重；读态始终以服务端 readFlag 为准，已入列的旧消息也要同步
+        readFlags.set(message.id, message.read)
+        if (seenIds.has(message.id)) {
           return
         }
         seenIds.add(message.id)
@@ -226,6 +267,7 @@ const actions = {
           dispatchMessage(message)
         }
       })
+      commit('SET_READ_FLAGS', readFlags)
       commit('SET_PAGE', { cursor: data.cursor, hasMore: data.hasMore })
       commit('SET_LOAD_ERROR', false)
       if (added > 0) {
@@ -265,15 +307,21 @@ const actions = {
       const data = await fetchMessages({ cursor: state.cursor, limit: 20, readFlag: 'all' })
       const list = (data && data.list) || []
       const normalized = []
+      const readFlags = new Map()
       list.forEach(vo => {
         const message = normalizeFetchedMessage(vo)
-        if (!message || seenIds.has(message.id)) {
+        if (!message) {
+          return
+        }
+        readFlags.set(message.id, message.read)
+        if (seenIds.has(message.id)) {
           return
         }
         seenIds.add(message.id)
         normalized.push(message)
       })
       commit('APPEND_MESSAGES', normalized)
+      commit('SET_READ_FLAGS', readFlags)
       commit('SET_PAGE', { cursor: data.cursor, hasMore: data.hasMore })
     } catch (e) {
       console.warn('[push] 加载更多消息失败', e)
@@ -282,31 +330,66 @@ const actions = {
     }
   },
   /**
-   * 记录单条已读：本地即时反馈，并异步回传后端写 READ 日志
+   * 记录单条已读：本地即时反馈，回传成功后确认读态，失败回滚并提示
+   * <p>雪花 ID 以字符串原样回传，不做 Number 转换（19 位 ID 超出 2^53 会失真）。</p>
    */
-  async markRead({ commit }, id) {
+  async markRead({ commit, dispatch }, id) {
     commit('MARK_READ', id)
-    if (id != null && /^\d+$/.test(String(id))) {
-      try {
-        await markRead([Number(id)])
-      } catch (e) {
-        console.warn('[push] 标记已读回传失败', id, e)
+    const messageId = id == null ? '' : String(id)
+    if (!/^\d+$/.test(messageId)) {
+      // 非新链路消息：仅维持本地态，不发请求
+      return true
+    }
+    try {
+      const recorded = await markRead([messageId])
+      if (recorded > 0) {
+        // 回传期间可能有拉取并发校正，成功后再次确认本地读态
+        commit('SET_READ_FLAGS', new Map([[messageId, true]]))
+      } else {
+        // 服务端未写入（幂等或 ID 不被认可）：以服务端 readFlag 为准，避免"假已读"
+        await dispatch('pullLatest')
       }
+      return true
+    } catch (e) {
+      commit('SET_READ_FLAGS', new Map([[messageId, false]]))
+      reportReadFailure('标记已读回传失败', e)
+      return false
     }
   },
   /**
-   * 全部已读：本地全标，并异步回传后端（仅数字 id 视为新链路消息）
+   * 全部已读：本地全标，按后端上限分批回传；失败批次回滚并提示
    */
-  async markAllRead({ commit, state }) {
-    const ids = state.messages.filter(item => !item.read && /^\d+$/.test(String(item.id))).map(item => Number(item.id))
+  async markAllRead({ commit, dispatch, state }) {
+    const ids = state.messages
+      .filter(item => !item.read && /^\d+$/.test(String(item.id)))
+      .map(item => String(item.id))
     commit('MARK_ALL_READ')
-    if (ids.length) {
+    if (!ids.length) {
+      return true
+    }
+    const failedIds = []
+    let needsSync = false
+    for (let offset = 0; offset < ids.length; offset += MAX_READ_BATCH) {
+      const batch = ids.slice(offset, offset + MAX_READ_BATCH)
       try {
-        await markRead(ids)
+        const recorded = await markRead(batch)
+        if (recorded < batch.length) {
+          needsSync = true
+        }
+        commit('SET_READ_FLAGS', new Map(batch.map(messageId => [messageId, true])))
       } catch (e) {
-        console.warn('[push] 全部已读回传失败', e)
+        failedIds.push(...batch)
+        reportReadFailure('全部已读回传失败', e)
       }
     }
+    if (failedIds.length) {
+      commit('SET_READ_FLAGS', new Map(failedIds.map(messageId => [messageId, false])))
+    }
+    if (needsSync) {
+      // 部分 ID 未被服务端记录：重新拉取校正，避免本地与服务端读态分叉
+      await dispatch('pullLatest')
+    }
+    return failedIds.length === 0
   },
   clearAll({ commit }) {
     commit('CLEAR_ALL')

@@ -3,13 +3,11 @@ package com.tbs.shared.pojo.entity;
 import com.tbs.shared.pojo.IIdentifiable;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
-import lombok.Data;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import lombok.Data;
 
 /**
  * 角色组与用户关系实体
@@ -25,13 +23,12 @@ import jakarta.persistence.Table;
     @jakarta.persistence.Index(name = "idx_system_role_group_user_relation_role_group_id", columnList = "role_group_id"),
     @jakarta.persistence.Index(name = "idx_system_role_group_user_relation_user_id", columnList = "user_id")})
 @Data
-@Comment("角色组与用户关系表")
 public class SystemRoleGroupUserRelationEntity implements IIdentifiable<Long> {
 
     /**
      * 主键ID
      */
-    @Comment("主键ID（雪花算法生成）")
+    @Column(name = "id")
     @Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
@@ -39,14 +36,12 @@ public class SystemRoleGroupUserRelationEntity implements IIdentifiable<Long> {
     /**
      * 角色组ID
      */
-    @Comment("角色组ID（援引 sys_role_group.id）")
     @Column(name = "role_group_id")
     private Long roleGroupId;
 
     /**
      * 用户ID
      */
-    @Comment("用户ID（援引 sys_user.id）")
     @Column(name = "user_id")
     private Long userId;
 }

@@ -22,7 +22,7 @@ public abstract class AbstractTtlAdaptCacheMananger extends AbstractCacheManager
         return getOriginal().getCacheNames().stream().map(this::getCache).collect(Collectors.toList());
     }
 
-    public static final String CACHE_NAME_PREFIX = "SYSTEM:CACHE:";
+    public static final String CACHE_NAME_PREFIX = "";
 
     @Override
     public @Nullable Cache getCache(String name) {

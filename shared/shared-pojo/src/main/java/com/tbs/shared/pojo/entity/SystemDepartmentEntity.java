@@ -1,19 +1,18 @@
 
 package com.tbs.shared.pojo.entity;
 
-import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.shared.pojo.IBaseEntity;
 import com.tbs.shared.pojo.ICommonCreateAuditable;
 import com.tbs.shared.pojo.ICommonUpdateAuditable;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
-import org.hibernate.annotations.Comment;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
-import jakarta.persistence.*;
 import java.util.Date;
 
 /**
@@ -31,14 +30,13 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, 2})
-@Comment("系统部门信息表")
 public class SystemDepartmentEntity
 	implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
 	/**
 	 * 部门ID
 	 */
-	@Comment("部门ID（雪花算法生成）")
+	@Column(name = "id")
 	@jakarta.persistence.Id
 	@SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
 	private Long id;
@@ -46,49 +44,42 @@ public class SystemDepartmentEntity
 	/**
 	 * 部门名称
 	 */
-	@Comment("部门名称")
 	@Column(name = "department_name", length = 128, nullable = false)
 	private String departmentName;
 
 	/**
 	 * 部门编码
 	 */
-	@Comment("部门编码")
 	@Column(name = "department_code", length = 64, unique = false)
 	private String departmentCode;
 
 	/**
 	 * 所属公司ID
 	 */
-	@Comment("所属公司ID")
 	@Column(name = "company_id", nullable = false)
 	private Long companyId;
 
 	/**
 	 * 部门负责人
 	 */
-	@Comment("部门负责人姓名")
 	@Column(name = "manager", length = 64)
 	private String manager;
 
 	/**
 	 * 部门描述
 	 */
-	@Comment("部门描述")
 	@Column(name = "description", columnDefinition = "text")
 	private String description;
 
 	/**
 	 * 部门创建时间
 	 */
-	@Comment("创建时间")
 	@Column(name = "create_time")
 	private Date createTime;
 
 	/**
 	 * 部门更新时间
 	 */
-	@Comment("更新时间")
 	@Column(name = "update_time")
     private Date updateTime;
 
@@ -97,7 +88,6 @@ public class SystemDepartmentEntity
 	 *
 	 * @see com.tbs.shared.enums.SystemDepartmentFlagEnum
 	 */
-	@Comment("部门状态：0-已删除，1-已激活，2-禁用")
 	@Column(name = "flag")
 	private Integer flag;
 
@@ -111,7 +101,6 @@ public class SystemDepartmentEntity
 	/**
 	 * 父部门ID
 	 */
-	@Comment("父部门ID（用于构建树形结构）")
 	@Column(name = "parent_id")
 	private Long parentId;
 
@@ -124,14 +113,12 @@ public class SystemDepartmentEntity
 	/**
 	 * 创建者
 	 */
-	@Comment("创建者用户ID")
 	@Column(name = "create_by")
 	private Long createBy;
 
 	/**
 	 * 更新者
 	 */
-	@Comment("更新者用户ID")
 	@Column(name = "update_by")
 	private Long updateBy;
 

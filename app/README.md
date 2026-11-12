@@ -63,7 +63,7 @@ docker compose up -d
 
 ### 2. 初始化数据库
 
-应用库默认 `core_app`（JPA `ddl-auto: update` 启动时自动建表）；业务数据表结构由 shared 模块实体承载。
+应用库默认 `core_app`（jkit-sql-auto `mode: update` 启动时自动建表）；业务数据表结构由 shared 模块实体承载。
 
 ### 3. 启动应用
 
@@ -230,7 +230,7 @@ app:
 
 | 文件 | 内容 |
 | --- | --- |
-| `application-db.yml` | 数据源：MySQL 驱动、HikariCP（max 20）、JPA `ddl-auto: update`（自动建表）、MyBatis 驼峰映射、`tbs.sql` SQL 观测配置 |
+| `application-db.yml` | 数据源：MySQL 驱动、HikariCP（max 20）、`jkit.sql.auto`（自动建表）、MyBatis 驼峰映射、`tbs.sql` SQL 观测配置 |
 | `application-redis.yml` | Redis 连接 |
 | `application-mq.yml` | RabbitMQ + 手动 ACK |
 | `view-route.yml` | **视图路由 YML 兜底配置**（common/admin/develop 三组菜单，含角色 `MENU.ADMIN`/`MENU.DEV`）；数据库实现启用时此文件不生效 |
@@ -359,7 +359,7 @@ GET /public/user/refresh（携带旧访问令牌）
 
 ### 表结构自动维护
 
-JPA `spring.jpa.hibernate.ddl-auto: update`：shared/tree-struct 等模块的实体表（`sys_user`、`tree_node` 等）在启动时自动创建/更新，无需手工 DDL。
+jkit-sql-auto（`jkit.sql.auto.mode: update`）：按 `jkit.sql.auto.packages` 扫描 shared/tree-struct/dic 等模块的实体表（`sys_user`、`tree_node` 等）并在启动时自动创建/更新，无需手工 DDL。
 
 ### SQL 观测
 
@@ -385,7 +385,7 @@ DB_HOST=mysql.internal NACOS_ADDRESS=nacos.internal:8848 java -jar app-*.jar
 
 ## 注意事项
 
-1. **JPA + MyBatis 双 ORM 并存**：JPA 负责 DDL 生成（`ddl-auto: update`），业务 CRUD 走 MyBatis 的 `GenericMapper`；生产环境建议把 `ddl-auto` 改为 `validate`/`none`，用迁移脚本管理表结构。
+1. **MyBatis 读写 + jkit 建表**：jkit-sql-auto 只负责启动期 DDL（`jkit.sql.auto.mode: update`），业务 CRUD 走自研 sql 框架/MyBatis 的 `GenericMapper`；生产环境建议把 `jkit.sql.auto.enabled` 置 `false`（或 `mode: none`），用迁移脚本管理表结构。
 2. **`enable-test-controller` 默认 none，本模块配置为 `pri`**：`PrivateTestController`（`/private/test`、`/private/testAuth`）默认注册；生产部署应改回 `none` 关闭全部测试控制器。
 3. **`dubbo.consumer.filter: -ContextHolderAuthenticationPrepareFilter`**：显式移除 web 模块的 Dubbo 消费端认证上下文过滤器，本应用作为消费端调用时不注入用户身份头。
 4. **上传大小限制 1024MB/2048MB**：远大于 Spring Boot 默认（1MB/10MB），网关/反向代理层需同步放开限制，且 Undertow 缓冲区会占用内存。
@@ -422,7 +422,7 @@ com.tbs.app
 resources/
 ├── application.yml             主配置（profiles/Nacos导入/Dubbo/app.gateway）
 ├── application-tbs.yml          平台 tbs.* 配置聚合
-├── application-db.yml           数据源（MySQL 驱动/HikariCP/JPA + tbs.sql 观测）
+├── application-db.yml           数据源（MySQL 驱动/HikariCP/jkit 建表配置 + tbs.sql 观测）
 ├── application-redis.yml        Redis
 ├── application-mq.yml           RabbitMQ
 ├── view-route.yml               视图路由 YML 兜底配置

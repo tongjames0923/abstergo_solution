@@ -1,10 +1,18 @@
+jkit:
+  sql:
+    auto:
+      # 生产环境可置 -DJKIT_SQL_AUTO_ENABLED=false 关闭自动建表，改用迁移脚本管理表结构
+      enabled: ${JKIT_SQL_AUTO_ENABLED:true}
+      # update：只补缺失的表/列/索引，不改已有列类型、不删列
+      mode: update
+      # 本服务原有实体扫描范围：字典实体 + shared 主实体包
+      packages:
+        - com.tbs.dic.entity
+        - com.tbs.shared.pojo.entity
+        - com.tbs.shared.pojo.entity.view
+      show-sql: ${JKIT_SHOW_SQL:true}
+      fail-fast: true
 spring:
-  jpa:
-    hibernate:
-      ddl-auto: update
-    show-sql: true
-    generate-ddl: true
-    database: mysql
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://${DB_HOST:127.0.0.1}:${DB_PORT:3306}/${DB_NAME:core_app}?serverTimezone=Asia/Shanghai&characterEncoding=UTF-8&useUnicode=true&allowMultiQueries=true

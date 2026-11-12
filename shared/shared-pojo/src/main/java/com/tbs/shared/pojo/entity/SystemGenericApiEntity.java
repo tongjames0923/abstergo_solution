@@ -8,7 +8,6 @@ import com.tbs.sql.annotation.autofill.SqlAutoValue;
 import com.tbs.sql.provider.impl.IdAutoProvider;
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.Comment;
 
 import java.util.Date;
 
@@ -34,7 +33,6 @@ import java.util.Date;
 @AllArgsConstructor
 @NoArgsConstructor
 @LogicDeleteEntity(activeFlagValues = {1, -1})
-@Comment("泛化API配置表")
 public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long> {
 
     private static final long serialVersionUID = 1L;
@@ -42,7 +40,7 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
     /**
      * 主键
      */
-    @Comment("主键ID")
+    @Column(name = "id")
     @Id
     @SqlAutoValue(insertOnly = true, value = IdAutoProvider.class)
     private Long id;
@@ -50,21 +48,18 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
     /**
      * API唯一标识
      */
-    @Comment("API唯一标识")
     @Column(name = "api_id", nullable = false, length = 100)
     private String apiId;
 
     /**
      * API名称
      */
-    @Comment("API名称")
     @Column(name = "api_name", nullable = false, length = 200)
     private String apiName;
 
     /**
      * 服务应用名（用于服务发现）
      */
-    @Comment("服务应用名（用于服务发现）")
     @Column(name = "app_name", nullable = false, length = 100)
     private String appName;
 
@@ -76,28 +71,24 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
      * 要不限分区需显式登记 {@code *}。
      * </p>
      */
-    @Comment("业务分区（Dubbo group），留空只匹配无 group 的提供者，* 表示不限")
     @Column(name = "business", length = 100)
     private String business;
 
     /**
      * 接口全限定名（用于Triple HTTP调用）
      */
-    @Comment("接口全限定名（用于Triple HTTP调用）")
     @Column(name = "interface_name", nullable = false, length = 300)
     private String interfaceName;
 
     /**
      * 方法名
      */
-    @Comment("方法名")
     @Column(name = "method_name", nullable = false, length = 100)
     private String methodName;
 
     /**
      * 是否需要认证
      */
-    @Comment("是否需要认证")
     @Column(name = "need_auth", nullable = false)
     private Boolean needAuth;
 
@@ -107,7 +98,6 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
      * 业务配置版本，用于区分同一 {@code api_id} 的不同登记；<b>不</b>作为 Dubbo 服务版本参与调用。
      * </p>
      */
-    @Comment("API版本号（业务配置版本，非 Dubbo 服务版本）")
     @Column(name = "version", length = 10)
     private Integer version;
 
@@ -116,49 +106,42 @@ public class SystemGenericApiEntity implements IBaseEntity<Long>, ICommonCreateA
      *
      * @see com.tbs.shared.enums.CommonFlagEnum
      */
-    @Comment("状态标识：1-启用，-1-禁用，0-删除")
     @Column(name = "flag")
     private Integer flag;
 
     /**
      * 描述信息
      */
-    @Comment("描述信息")
     @Column(name = "description", length = 500)
     private String description;
 
     /**
      * 预认证Bean列表,以逗号分隔
      */
-    @Comment("预认证Bean列表（逗号分隔）")
     @Column(name = "pre_auth_beans")
     private String preAuthBeans;
 
     /**
      * 创建时间
      */
-    @Comment("创建时间")
     @Column(name = "create_time")
     private Date createTime;
 
     /**
      * 更新时间
      */
-    @Comment("更新时间")
     @Column(name = "update_time")
     private Date updateTime;
 
     /**
      * 创建者
      */
-    @Comment("创建者用户ID")
     @Column(name = "create_by")
     private Long createBy;
 
     /**
      * 更新者
      */
-    @Comment("更新者用户ID")
     @Column(name = "update_by")
     private Long updateBy;
 }

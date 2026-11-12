@@ -57,7 +57,8 @@ public class TopicRouteCoordinator implements IRouteCoordinator {
         List<IConnectionSession> targets = new ArrayList<>(sessionIds.size());
         for (String sessionId : sessionIds) {
             IConnectionSession session = sessionRegistry.get(sessionId);
-            if (session != null) {
+            // 客户端断链但关闭回调未到达时会话仍可能在注册表里，先剔除，避免向失效通道写帧
+            if (session != null && !session.isClosed()) {
                 targets.add(session);
             }
         }

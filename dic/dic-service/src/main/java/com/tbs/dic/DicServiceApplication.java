@@ -8,7 +8,6 @@ import org.apache.dubbo.config.spring.context.annotation.EnableDubbo;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 @SpringBootApplication(scanBasePackages = "com.tbs.dic")
@@ -19,7 +18,6 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableTbsRedis
 @EnableDubbo
 @MapperScan("com.tbs.dic.mapper")
-@EntityScan("com.tbs.dic.entity")
 public class DicServiceApplication {
 
     public static void main(String[] args) {
