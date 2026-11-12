@@ -113,7 +113,8 @@ public abstract class AbstractPushDispatcher implements IPushDispatcher {
         }
         record(message, target, sent ? DeliveryResultEnum.DELIVERED : DeliveryResultEnum.FAILED, errorMessage);
         if (!sent) {
-            log.warn("消息投递失败, messageId:{}, topic:{}, sessionId:{}, transport:{}",
+            // 失败明细已在 record() 留痕；此处降为 debug，避免断链会话在消息洪峰下刷屏
+            log.debug("消息投递失败, messageId:{}, topic:{}, sessionId:{}, transport:{}",
                 message.getId(), message.getTopic(), target.getSessionId(), target.getTransportType());
         }
     }

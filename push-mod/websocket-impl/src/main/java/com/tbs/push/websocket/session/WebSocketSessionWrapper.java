@@ -136,16 +136,22 @@ public class WebSocketSessionWrapper implements IConnectionSession {
         if (closed || !webSocketSession.isOpen()) {
             return false;
         }
+        boolean sent;
         synchronized (webSocketSession) {
             try {
                 webSocketSession.sendMessage(new TextMessage(codec.encodeFrame(frame)));
                 touch();
-                return true;
+                sent = true;
             } catch (Exception error) {
-                log.warn("WebSocket帧发送失败, sessionId:{}", getSessionId(), error);
-                return false;
+                sent = false;
+                // 与 SSE 同口径：只记摘要，关闭后本会话不再写入，日志不会随消息量放大
+                log.warn("WebSocket帧发送失败, 会话将关闭, sessionId:{}, cause:{}", getSessionId(), error.toString());
             }
         }
+        if (!sent) {
+            close("send-failed");
+        }
+        return sent;
     }
 
     /**

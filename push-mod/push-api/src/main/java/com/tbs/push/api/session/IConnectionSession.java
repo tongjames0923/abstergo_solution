@@ -43,6 +43,19 @@ public interface IConnectionSession {
     ConnectionStateEnum getState();
 
     /**
+     * 会话是否已关闭
+     * <p>
+     * 供投递协调器在选目标时剔除已失效会话：客户端断链但物理关闭回调尚未到达时，
+     * 会话仍可能残留在注册表，继续向它写帧只会产生一次失败投递与一段堆栈日志。
+     * </p>
+     *
+     * @return true 表示会话已关闭，不应再作为投递目标
+     */
+    default boolean isClosed() {
+        return getState() == ConnectionStateEnum.CLOSED;
+    }
+
+    /**
      * 标记会话握手完成进入可用态
      * <p>
      * 仅允许协议层在握手校验通过后调用；重复调用无副作用。
