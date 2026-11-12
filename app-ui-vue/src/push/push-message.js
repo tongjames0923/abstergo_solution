@@ -107,7 +107,20 @@ export const PUSH_DEFAULTS = {
    * 最大自动重连次数：连续重连达此数仍未成功则停止自动重连，
    * 置 reconnect_failed 待用户手动重连（非正数表示不限次）
    */
-  reconnectMaxAttempts: 8
+  reconnectMaxAttempts: 8,
+  /**
+   * EventSourcePolyfill 的「下行流无数据」看门狗（毫秒）
+   * <p>
+   * polyfill 默认 45000ms，流上 45 秒没有任何字节就抛
+   * "No activity within ... Reconnecting." 主动断流；而本链路心跳上行由客户端定时器驱动，
+   * 后台标签页被浏览器节流、或服务端推荐周期被拉长时，两次 PONG 间隔很容易超过 45 秒，
+   * 连接明明还活着却被误杀。此处放宽到与服务端会话回收点
+   * （tbs.push.heartbeat-timeout-millis，默认 600000）及 hello 下发的 deadline 对齐；
+   * 真正的半开连接仍由服务端心跳监控、前端 deadline 与上行失败守卫兜底，
+   * TCP 层断链也不经过这个看门狗，会立即触发连接级 error。
+   * </p>
+   */
+  sseHeartbeatTimeout: 600_000
 }
 
 /**

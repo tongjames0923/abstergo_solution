@@ -250,7 +250,13 @@ registerRenderer((message, { onRead }) => { /* 自定义 UI */ })
 ### 配置覆盖
 
 `connect`/`initPush` 传入 `config` 可逐项覆盖 `PUSH_DEFAULTS`：
-`topicPrefix`、`heartbeatInterval`、`heartbeatMaxFailures`、`reconnectBaseDelay`、`reconnectMaxDelay`、`reconnectJitter`。
+`topicPrefix`、`heartbeatInterval`、`heartbeatMaxFailures`、`reconnectBaseDelay`、`reconnectMaxDelay`、`reconnectJitter`、`sseHeartbeatTimeout`。
+
+`sseHeartbeatTimeout` 是 `EventSourcePolyfill` 的「下行流无数据」看门狗：polyfill 默认 45 秒
+无字节就主动断流重连，而心跳上行由客户端定时器驱动，后台标签页被节流或服务端推荐周期被
+拉长时，两次 PONG 间隔很容易超过 45 秒。默认值放宽到 600000ms（与服务端会话回收点及
+hello 下发的 `heartbeatDeadline` 对齐），真正的半开连接由服务端心跳监控、前端 deadline 与
+上行失败守卫兜底；TCP 层断链不经过该看门狗，会立即触发连接级 error。
 
 ### 已读状态持久化（预留扩展点）
 

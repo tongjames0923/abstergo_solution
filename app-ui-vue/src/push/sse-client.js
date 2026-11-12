@@ -85,7 +85,7 @@ class SsePushClient {
    * @param {string} opts.token 当前登录令牌
    * @param {string|number} opts.userId 当前登录用户数字 id（用于缺省拼接 SIGNAL 频道 tbs.push.channel.{userId}）
    * @param {string|Array<string>} [opts.topics] 订阅主题（缺省为 topicPrefix + userId）
-   * @param {Object} [opts.config] 配置覆盖项（心跳周期/心跳失败阈值/退避参数/主题前缀，见 PUSH_DEFAULTS）
+   * @param {Object} [opts.config] 配置覆盖项（心跳周期/心跳失败阈值/退避参数/主题前缀/下行无数据看门狗，见 PUSH_DEFAULTS）
    * @param {Function} [opts.onStatus] 连接状态变更回调 (status) => void
    * @param {Function} [opts.onSignal] 收到 SIGNAL 信令或建连成功（hello 兜底）回调 () => void，用于触发拉取
    */
@@ -172,10 +172,13 @@ class SsePushClient {
     const base = process.env.VUE_APP_BASE_API || ''
     const url = `${base}/private/push/sse/connect?push-ticket=${encodeURIComponent(this.ticket)}`
     // 原生 EventSource 不支持自定义请求头，而后端网关对 /private/** 要求 Authorization 头；
-    // 采用 polyfill（XHR 流实现，API 与原生兼容）携带与 axios 拦截器同源的令牌头
+    // 采用 polyfill（XHR 流实现，API 与原生兼容）携带与 axios 拦截器同源的令牌头。
+    // heartbeatTimeout 必须显式放宽：polyfill 默认 45 秒无数据就主动断流重连，
+    // 而本链路在标签页节流/服务端推荐心跳周期拉长时，两次 PONG 间隔很容易超过 45 秒
     const es = new EventSourcePolyfill(url, {
       headers: { Authorization: this.token },
-      withCredentials: true
+      withCredentials: true,
+      heartbeatTimeout: this.config.sseHeartbeatTimeout
     })
     this.eventSource = es
 
