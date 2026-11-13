@@ -10,6 +10,7 @@ import com.tbs.rabbitmq.annotation.EnableRabbitMq;
 import com.tbs.redis.annotation.EnableTbsRedis;
 import com.tbs.script.annotation.EnableScriptEngine;
 import com.tbs.shared.annotation.EnableSharedLibBean;
+import com.tbs.sql.annotation.core.SqlEntityScan;
 import com.tbs.struct.tree.closure.annotation.UseClosureTableTree;
 import com.tbs.view.annotation.EnableViewControl;
 import com.tbs.web.annotation.EnableWebPack;
@@ -45,6 +46,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableScriptEngine
 @EnableTbsPush
 @EnableTbsPushSse
+@SqlEntityScan({"com.tbs.shared.pojo.entity"})
 public class AppApplication {
 
     public static void main(String[] args) {

@@ -3,16 +3,17 @@ package com.tbs.sql.metadata;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.annotation.core.SelectSQL;
+import com.tbs.sql.annotation.core.SqlEntityScan;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
 import com.tbs.sql.util.SqlUtils;
+import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 import java.lang.reflect.Field;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Modifier;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -51,6 +52,8 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>父类声明的字段同样参与元数据提取，与 jkit-sql-auto 的实体字段扫描范围一致</li>
  *   <li>{@link SelectSQL} 走原始 SQL 通道：不产出字段清单，列投影对其无效，WHERE 仍由框架追加</li>
  *   <li>元数据会被缓存，修改实体类后需要清除缓存</li>
+ *   <li>标注 {@link SqlEntityScan} 可在启动期扫描实体包、校验注解完整性
+ *       并预热写操作表元数据，见 {@link #register(Class)}</li>
  * </ul>
  *
  * @author abstergo
@@ -141,5 +144,51 @@ public class EntityMetadataExtractor {
             }
             return new EntityTableMetadata(SqlUtils.getTableName(c), c, columns);
         });
+    }
+
+    /**
+     * 校验实体注解完整性，并把写操作表元数据写入缓存（启动期预热）。
+     *
+     * <p>由 {@link SqlEntityScan} 在容器刷新阶段对每个候选实体调用。
+     * 校验口径与运行期 SQL 生成保持一致：{@code @Table} 只认类自身直接标注（与
+     * {@code SqlUtils#getTableName} 相同），主键数量按参与持久化的字段统计，因此把 {@code @Id}
+     * 标在 {@code static}、{@code final} 或 {@code @Transient} 字段上会被判为"缺少主键"。</p>
+     *
+     * <p>校验不通过时抛出携带具体原因的运行时异常，由初始化器汇总后中断启动；
+     * 校验通过后调用 {@link #pullTableMetadata(Class)}，后续写 SQL 直接命中缓存。
+     * 该方法不改动惰性加载路径，未启用扫描注解时框架行为不变。</p>
+     *
+     * @param entityClass 待校验并预热的实体类
+     * @return 已缓存的实体表元数据
+     * @see SqlEntityScan
+     */
+    public static EntityTableMetadata register(Class<?> entityClass) {
+        AssertUtil.notNull(entityClass, "注册实体表元数据，实体类型不能为空");
+        String className = entityClass.getName();
+        AssertUtil.isTrue(!entityClass.isAnnotationPresent(Entity.class),
+            "实体类" + className + "缺少@jakarta.persistence.Entity注解");
+        Table table = entityClass.getAnnotation(Table.class);
+        AssertUtil.notNull(table, "实体类" + className + "缺少@jakarta.persistence.Table注解");
+        AssertUtil.isTrue(StrUtil.isEmpty(table.name()), "实体类" + className + "的@Table未声明name");
+        AssertUtil.isTrue(entityClass.isInterface() || entityClass.isEnum()
+                || Modifier.isAbstract(entityClass.getModifiers()),
+            "实体类" + className + "不能是接口、枚举或抽象类");
+
+        EntityTableMetadata metadata = pullTableMetadata(entityClass);
+        List<EntityColumnMetadata> columns = metadata.getColumns();
+        AssertUtil.isTrue(columns == null || columns.isEmpty(), "实体类" + className + "没有可持久化字段");
+        long idCount = columns.stream().filter(EntityColumnMetadata::isId).count();
+        AssertUtil.isTrue(idCount != 1,
+            "实体类" + className + "必须且只能标注一个@Id主键，实际" + idCount + "个");
+        Set<String> seenColumns = new HashSet<>(columns.size());
+        Set<String> duplicatedColumns = new HashSet<>();
+        for (EntityColumnMetadata column : columns) {
+            if (!seenColumns.add(column.getColumn())) {
+                duplicatedColumns.add(column.getColumn());
+            }
+        }
+        AssertUtil.isTrue(!duplicatedColumns.isEmpty(),
+            "实体类" + className + "存在重复列名：" + duplicatedColumns);
+        return metadata;
     }
 }
