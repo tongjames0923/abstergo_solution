@@ -15,6 +15,8 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.TypeVariable;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * 通用 Mapper 的 SQL 提供器，在运行时为 {@link GenericMapper} 生成增删改查语句。
@@ -36,6 +38,7 @@ import java.util.*;
  *   <li>本类不开启 {@code useGeneratedKeys}，主键由应用侧生成，四库行为一致</li>
  *   <li>条件拼接只取非空、非空串、非集合、非数组的字段，全空时退化为无 WHERE 的全表语句</li>
  *   <li>方言实例在语句生成时从 Spring 容器获取，此时容器必然已就绪</li>
+ *   <li>静态语句（全字段插入、按主键查询/删除/更新）的 SQL 文本按实体类缓存，动态语句每次执行重建</li>
  * </ul>
  *
  * @author abstergo
@@ -44,6 +47,9 @@ import java.util.*;
  * @see ProviderContext
  */
 public class GenericSqlProvider {
+
+    /** 静态语句 SQL 缓存，键为“实体类全名#方法标识”，仅存放对同一实体类文本恒定的语句 */
+    private static final Map<String, String> staticSqlCache = new ConcurrentHashMap<>();
 
     /**
      * 生成全字段单行插入语句。
@@ -54,7 +60,8 @@ public class GenericSqlProvider {
     public String insert(ProviderContext context, Map<String, Object> params) {
         Object entity = params.get("entity");
         EntityTableMetadata metadata = resolveMetadata(context, entity);
-        return buildSingleInsert(metadata, metadata.getColumns(), "entity");
+        return cachedStaticSql(metadata, "insert",
+            () -> buildSingleInsert(metadata, metadata.getColumns(), "entity"));
     }
 
     /**
@@ -103,7 +110,8 @@ public class GenericSqlProvider {
      */
     public String selectByPrimaryKey(ProviderContext context, Map<String, Object> params) {
         EntityTableMetadata metadata = resolveMetadata(context, null);
-        return buildSelect(metadata, buildPrimaryKeyCondition(metadata));
+        return cachedStaticSql(metadata, "selectByPrimaryKey",
+            () -> buildSelect(metadata, buildPrimaryKeyCondition(metadata)));
     }
 
     /**
@@ -157,7 +165,11 @@ public class GenericSqlProvider {
     public String updateByPrimaryKey(ProviderContext context, Map<String, Object> params) {
         Object entity = params.get("entity");
         EntityTableMetadata metadata = resolveMetadata(context, entity);
-        return buildUpdate(metadata, metadata.getColumns(), entity);
+        EntityColumnMetadata idColumn = requireIdColumn(metadata);
+        AssertUtil.notNull(readValue(idColumn, entity),
+            "更新" + metadata.getTableName() + "时主键" + idColumn.getProperty() + "不能为空");
+        return cachedStaticSql(metadata, "updateByPrimaryKey",
+            () -> buildUpdate(metadata, metadata.getColumns()));
     }
 
     /**
@@ -169,13 +181,16 @@ public class GenericSqlProvider {
     public String updateByPrimaryKeySelective(ProviderContext context, Map<String, Object> params) {
         Object entity = params.get("entity");
         EntityTableMetadata metadata = resolveMetadata(context, entity);
+        EntityColumnMetadata idColumn = requireIdColumn(metadata);
+        AssertUtil.notNull(readValue(idColumn, entity),
+            "更新" + metadata.getTableName() + "时主键" + idColumn.getProperty() + "不能为空");
         List<EntityColumnMetadata> columns = new ArrayList<>();
         for (EntityColumnMetadata column : metadata.getColumns()) {
             if (readValue(column, entity) != null) {
                 columns.add(column);
             }
         }
-        return buildUpdate(metadata, columns, entity);
+        return buildUpdate(metadata, columns);
     }
 
     /**
@@ -186,7 +201,8 @@ public class GenericSqlProvider {
      */
     public String deleteByPrimaryKey(ProviderContext context, Map<String, Object> params) {
         EntityTableMetadata metadata = resolveMetadata(context, null);
-        return getDialect().getDeleteExtractor().buildDelete(metadata.getTableName(), buildPrimaryKeyCondition(metadata));
+        return cachedStaticSql(metadata, "deleteByPrimaryKey", () -> getDialect().getDeleteExtractor()
+            .buildDelete(metadata.getTableName(), buildPrimaryKeyCondition(metadata)));
     }
 
     /**
@@ -338,25 +354,47 @@ public class GenericSqlProvider {
     }
 
     /**
-     * 构建按主键更新的语句。
+     * 构建按主键更新的语句，SET 部分排除主键列：主键仅用于 WHERE 定位，
+     * 重复绑定只会徒增参数，批量路径逐行复用本语句时收益更明显。
+     *
+     * <p>主键非空校验由调用方在每次执行时完成，本方法只负责文本生成；全字段更新的构建结果会被缓存。</p>
      *
      * @param metadata 实体表元数据
      * @param columns  参与SET的列
-     * @param entity   待更新实体，用于校验主键非空
      * @return UPDATE语句
      */
-    private String buildUpdate(EntityTableMetadata metadata, List<EntityColumnMetadata> columns, Object entity) {
+    private String buildUpdate(EntityTableMetadata metadata, List<EntityColumnMetadata> columns) {
         EntityColumnMetadata idColumn = requireIdColumn(metadata);
-        AssertUtil.notNull(readValue(idColumn, entity),
-            "更新" + metadata.getTableName() + "时主键" + idColumn.getProperty() + "不能为空");
         List<String> columnNames = new ArrayList<>(columns.size());
         List<String> propertyNames = new ArrayList<>(columns.size());
         for (EntityColumnMetadata column : columns) {
+            if (column.isId()) {
+                continue;
+            }
             columnNames.add(column.getColumn());
             propertyNames.add(column.getProperty());
         }
+        AssertUtil.isTrue(columnNames.isEmpty(), "更新" + metadata.getTableName()
+            + "时除主键外没有任何参与SET的字段，无可更新内容");
         return getDialect().getUpdateExtractor().buildUpdate(metadata.getTableName(), columnNames, propertyNames,
             idColumn.getColumn(), idColumn.getProperty());
+    }
+
+    /**
+     * 获取静态语句的缓存 SQL，未命中时构建并写入缓存。
+     *
+     * <p>仅适用于对同一实体类文本恒定的语句（全字段插入、按主键查询/删除/更新）；构建过程依赖
+     * Spring 容器中的方言实例，仅在首次未命中时执行，此时容器必然已就绪。依赖运行时实体字段值的
+     * 动态语句不得使用本缓存。</p>
+     *
+     * @param metadata   实体表元数据
+     * @param method     方法标识，参与缓存键
+     * @param sqlBuilder 构建逻辑，仅在未命中时执行
+     * @return 缓存的 SQL 文本
+     */
+    private String cachedStaticSql(EntityTableMetadata metadata, String method, Supplier<String> sqlBuilder) {
+        return staticSqlCache.computeIfAbsent(metadata.getEntityClass().getName() + '#' + method,
+            key -> sqlBuilder.get());
     }
 
     /**

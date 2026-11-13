@@ -91,4 +91,14 @@ public class SqlProperty {
      * 默认为空列表，即不排除任何 SQL。
      */
     private List<String> excludeSql = new ArrayList<>();
+
+    /**
+     * 列表查询默认 fetchSize。
+     * 启动期写入 MyBatis {@code Configuration}，仅当用户未通过
+     * {@code mybatis.configuration.default-fetch-size} 显式设置时生效；
+     * 设为 {@code null} 或非正数时不干预。
+     * 默认值为 {@code 1000}，消除 Oracle JDBC 驱动默认 fetchSize=10
+     * 在大结果集查询时的网络往返放大。
+     */
+    private Integer defaultFetchSize = 1000;
 }
