@@ -16,10 +16,12 @@ import com.tbs.sql.order.impl.AscStaticOrder;
 import com.tbs.sql.order.impl.DescStaticOrder;
 import com.tbs.sql.order.impl.OrderedModelOrderImpl;
 import com.tbs.sql.properties.SqlProperty;
+import com.tbs.sql.service.BatchUpdateExecutor;
 import com.tbs.sql.service.QueryEngine;
 import com.tbs.sql.util.TransactionUtil;
 import jakarta.annotation.Resource;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.session.Configuration;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.SmartInitializingSingleton;
@@ -41,11 +43,13 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
  * <h3>主要功能</h3>
  * <ul>
  *   <li>注册SQL查询引擎 {@link QueryEngine}</li>
+ *   <li>注册批量更新执行器 {@link BatchUpdateExecutor}</li>
  *   <li>注册SQL组装器 {@link ISqlAssembler}</li>
  *   <li>注册实体查询包装器 {@link IEntityQueryWrapper}</li>
  *   <li>注册 DataSource 装饰与 JDBC 执行拦截配置 {@link DataSourceDecorationConfiguration}</li>
  *   <li>配置自动填充值拦截器 {@link SqlAutoFillInterceptor}</li>
  *   <li>启动期校验 MyBatis 下划线转驼峰开关</li>
+ *   <li>启动期写入默认 fetchSize（用户未显式设置时）</li>
  *   <li>注册排序策略Bean</li>
  * </ul>
  *
@@ -104,6 +108,17 @@ public class SqlAutoConfiguration {
         return new QueryEngine(dialect, sqlProperty, sqlAssembler);
     }
 
+    /**
+     * 注册批量更新执行器，供 {@code GenericMapper} 的批量更新 default 方法与直接注入使用。
+     *
+     * @param sqlSessionFactory MyBatis 会话工厂
+     * @return 批量更新执行器
+     */
+    @Bean
+    public BatchUpdateExecutor batchUpdateExecutor(SqlSessionFactory sqlSessionFactory) {
+        return new BatchUpdateExecutor(sqlSessionFactory);
+    }
+
     @Bean
     public TransactionUtil transactionUtil(PlatformTransactionManager transactionManager) {
         return new TransactionUtil(transactionManager);
@@ -137,6 +152,31 @@ public class SqlAutoConfiguration {
     SmartInitializingSingleton mybatisNamingSwitchValidator(SqlSessionFactory sqlSessionFactory) {
         return () -> AssertUtil.isTrue(!sqlSessionFactory.getConfiguration().isMapUnderscoreToCamelCase(),
             "MyBatis配置map-underscore-to-camel-case必须为true，否则手写SQL的下划线列名无法映射到实体属性");
+    }
+
+    /**
+     * 启动期写入默认 fetchSize，消除 Oracle JDBC 驱动默认 fetchSize=10
+     * 在大结果集查询时的网络往返放大。
+     *
+     * <p>仅当用户未通过 {@code mybatis.configuration.default-fetch-size} 显式设置
+     * （{@code Configuration.getDefaultFetchSize()} 为 null）时写入配置值；
+     * 配置为 {@code null} 或非正数时不干预。</p>
+     *
+     * @param sqlSessionFactory MyBatis 会话工厂
+     * @return 所有单例初始化完成后执行的写入器
+     */
+    @Bean
+    SmartInitializingSingleton mybatisDefaultFetchSizeInitializer(SqlSessionFactory sqlSessionFactory) {
+        return () -> {
+            Integer fetchSize = sqlProperty.getDefaultFetchSize();
+            if (fetchSize == null || fetchSize <= 0) {
+                return;
+            }
+            Configuration configuration = sqlSessionFactory.getConfiguration();
+            if (configuration.getDefaultFetchSize() == null) {
+                configuration.setDefaultFetchSize(fetchSize);
+            }
+        };
     }
 
     @Bean(OrderConstants.ASC) public AscStaticOrder ascOrder() { return new AscStaticOrder(); }

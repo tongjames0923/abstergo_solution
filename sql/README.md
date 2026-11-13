@@ -303,6 +303,7 @@ public interface UserMapper extends IFrameworkMapper<User, Long> {
 | `selectByPrimaryKey(id)` / `selectByIdList(idList)` | 按主键查询，后者按 IN 上限自动分批 |
 | `select(entity)` / `selectCount(entity)` | 按非空、非空串字段等值查询与计数（全空查全表） |
 | `updateByPrimaryKey(entity)` / `updateByPrimaryKeySelective(entity)` | 按主键全字段/非空字段更新 |
+| `updateByPrimaryKeyList(records)` / `updateByPrimaryKeySelectiveList(records)` | 按主键批量全字段/非空字段更新：JDBC BATCH 会话逐行复用单条更新语句，每 1000 行 flush 一次（非原子，事务内参与当前事务） |
 | `deleteByPrimaryKey(id)` / `delete(entity)` / `deleteByIdList(idList)` | 按主键、条件、主键列表删除（条件删除同样跳过空串，全空等价删全表） |
 | `queryByQO(qo, page, entityClass)` | 条件 + 分页查询 |
 | `queryByQO(context, qo, page, entityClass)` | 指定 SQL 上下文 |
@@ -314,6 +315,7 @@ public interface UserMapper extends IFrameworkMapper<User, Long> {
 | 能力 | 策略 |
 |------|------|
 | 单行 INSERT/UPDATE/DELETE | 四库语法一致，无分支 |
+| 批量 UPDATE | JDBC BATCH 执行器逐行复用单条更新语句，无 SQL 参数上限墙，flush 片大小控内存 |
 | 批量 INSERT | `IInsertExtractor` 分支：标准多行 `VALUES`（MySQL/PG/SQL Server）与 Oracle 的 `INSERT ALL` |
 | 容量上限 | 按方言声明：SQL Server 1000 行 / 2100 参数，Oracle 500 行 / 999 参数，超限自动分批 |
 | IN 列表 | 统一按 1000 项分批（Oracle 的 ORA-01795 硬限制） |
@@ -328,6 +330,11 @@ public interface UserMapper extends IFrameworkMapper<User, Long> {
 | 条件字段 | `select` / `selectCount` / `delete` 只拼非 null、非空串、非集合/数组的字段；全空即无 WHERE 全表 |
 | 选择性写入 | `insertSelective` / `updateByPrimaryKeySelective` 只跳过 null，空串会被写入 |
 | 单批方法 | `insertBatch` / `selectByIdListBatch` / `deleteByIdListBatch` 仅供分批方法内部调用，传空集合直接断言中断 |
+| 批量更新校验 | `updateByPrimaryKeyList` / `updateByPrimaryKeySelectiveList`：空列表返回 0；逐条主键判空（带下标）；同批重复主键断言中断 |
+| 批量更新事务 | 存在 Spring 事务时参与当前事务；无事务时逐 flush 片提交（非原子），需整体回滚由调用方开事务 |
+| UPDATE 主键列 | 单条与批量更新均不 SET 主键列，主键仅用于 WHERE 定位；`updateByPrimaryKeySelective` 除主键外无任何非空字段时断言中断 |
+| 批量插入同类型 | `insertList` 同批实体类型必须一致，异构实体断言中断 |
+| 默认 fetchSize | `tbs.sql.default-fetch-size`（默认 1000）在用户未显式设置 `mybatis.configuration.default-fetch-size` 时写入，消除 Oracle 驱动默认 10 行/往返 |
 | 分批原子性 | `insertList` / `deleteByIdList` 分批执行；需整体回滚时由调用方开事务，明确容忍部分成功的批量写入（日志/埋点）可不开，但需在写入处注释说明理由 |
 | 结果映射 | SELECT 统一带 `列名 AS 属性名` 别名，`@Column` 与属性名不一致也能映射 |
 | 逻辑删除 | `@LogicDeleteEntity` 实体不得用 `select` / `selectCount` / `delete`（不注入 flag 过滤），读写走 QueryEngine |
