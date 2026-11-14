@@ -13,6 +13,9 @@ import java.util.List;
  * 匹配前先剥离 SQL 头部注释与空白），既是防误伤手段也是性能保护：
  * 批量任务、连接池健康检查等框架自身语句可借此短路。</p>
  *
+ * <p>判定走 {@link SqlTextUtils#startsWithIgnoreCase(String, String)}，
+ * 只比较正文头部与前缀等长的片段，不做整串小写化。</p>
+ *
  * @author abstergo
  * @since 1.0.0
  */
@@ -51,9 +54,8 @@ public class SqlExcludeRule {
         if (excludePrefixes.isEmpty() || sql == null) {
             return false;
         }
-        String normalized = SqlTextUtils.normalize(sql);
         for (String prefix : excludePrefixes) {
-            if (normalized.startsWith(prefix)) {
+            if (SqlTextUtils.startsWithIgnoreCase(sql, prefix)) {
                 return true;
             }
         }
