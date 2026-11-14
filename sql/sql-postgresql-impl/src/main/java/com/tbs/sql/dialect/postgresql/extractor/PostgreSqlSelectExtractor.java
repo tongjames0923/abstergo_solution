@@ -35,10 +35,19 @@ public class PostgreSqlSelectExtractor implements ISelectExtractor {
 
     @Override
     public String extract(SelectInfoModel infoModel) {
-        // 断言改为「先判断、异常路径才构造 supplier」：正常路径不再为每个字段创建捕获 this 的 lambda
         if (infoModel == null) {
             AssertUtil.throwError(() -> new SqlExtractionException("SelectInfoModel can not be null", this));
         }
+        // 以本提取器实例为 owner：本类会给别名加双引号，绝不能复用通用提取器的片段
+        String cached = infoModel.cachedSelectSql(this);
+        if (cached != null) return cached;
+        String result = render(infoModel);
+        infoModel.cacheSelectSql(this, result);
+        return result;
+    }
+
+    private String render(SelectInfoModel infoModel) {
+        // 断言改为「先判断、异常路径才构造 supplier」：正常路径不再为每个字段创建捕获 this 的 lambda
         if (StrUtil.isNotEmpty(infoModel.getRawSql())) return infoModel.getRawSql();
         if (StrUtil.isEmpty(infoModel.getTableName())) {
             AssertUtil.throwError(() -> new SqlExtractionException("tableName can not be null", this));

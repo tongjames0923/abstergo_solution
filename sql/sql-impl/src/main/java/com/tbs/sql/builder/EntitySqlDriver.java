@@ -91,22 +91,27 @@ public class EntitySqlDriver extends AbstractSqlDriver {
 
     @Override
     protected SelectInfoModel getSelectInfo(ISqlBuildContext context) {
-        SelectInfoModel selectInfoModel;
         if (BeanUtil.isBaseFrom(context.getEntityClass(), IQueryCriteria.class)) {
-            selectInfoModel = ((IQueryCriteria) context.getSqlEntity()).getSelectSQLInfo();
-        } else {
-            // 创建副本，避免修改缓存中的对象
-            SelectInfoModel cached = EntityMetadataExtractor.pullFromClass(context.getEntityClass());
-            selectInfoModel = new SelectInfoModel(
-                cached.getRawSql(),
-                cached.getTableName(),
-                cached.getTableAlias(),
-                applyProjection(cached.getFieldList()),
-                cached.getEntityClass()
-            );
+            // 条件对象可能按状态动态生成 SELECT 信息，不参与片段缓存
+            SelectInfoModel dynamic = ((IQueryCriteria) context.getSqlEntity()).getSelectSQLInfo();
+            dynamic.setEntityClass(context.getEntityClass());
+            return dynamic;
         }
-        selectInfoModel.setEntityClass(context.getEntityClass());
-        return selectInfoModel;
+
+        SelectInfoModel cached = EntityMetadataExtractor.pullFromClass(context.getEntityClass());
+        List<SelectItemModel> projected = applyProjection(cached.getFieldList());
+        if (projected != cached.getFieldList()) {
+            // 有列投影：副本内容随投影变化，不可复用片段缓存
+            SelectInfoModel copy = new SelectInfoModel(cached.getRawSql(), cached.getTableName(),
+                cached.getTableAlias(), projected, cached.getEntityClass());
+            copy.setEntityClass(context.getEntityClass());
+            return copy;
+        }
+
+        // 无投影：直接复用元数据缓存对象（pullFromClass 已将其标记为可缓存），
+        // 既省去每次查询的副本分配，也让 SELECT 片段缓存能跨查询命中。
+        // 本路径对该对象只读，缓存写入的 transient 字段不改变业务语义。
+        return cached;
     }
 
     /**

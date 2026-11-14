@@ -98,7 +98,7 @@ public class EntityMetadataExtractor {
      */
     public static SelectInfoModel pullFromClass(Class<?> c) {
         AssertUtil.notNull(c, "根据实体类型提取查询语句，实体类型不能为空");
-        return cache.computeIfAbsent(c, entityClass -> {
+        SelectInfoModel model = cache.computeIfAbsent(c, entityClass -> {
             SelectInfoModel selectInfoModel = new SelectInfoModel();
             /*
              * 自定义 SQL 优先于元数据推导：注解只认类自身声明，父类上的 @SelectSQL 对子类不生效。
@@ -122,6 +122,11 @@ public class EntityMetadataExtractor {
             selectInfoModel.setFieldList(items);
             return selectInfoModel;
         });
+        // 本对象是按实体类长期缓存、结构不再变化的实例：允许提取器把已渲染的
+        // SELECT 片段挂在实例上跨查询复用。EntitySqlDriver 与 IQueryCriteria
+        // 的实体元数据实现都会拿到这同一个对象，两条主路径均可命中。
+        model.markSelectCacheable();
+        return model;
     }
 
     /**
