@@ -52,8 +52,10 @@ import java.util.concurrent.ConcurrentHashMap;
  *   <li>父类声明的字段同样参与元数据提取，与 jkit-sql-auto 的实体字段扫描范围一致</li>
  *   <li>{@link SelectSQL} 走原始 SQL 通道：不产出字段清单，列投影对其无效，WHERE 仍由框架追加</li>
  *   <li>元数据会被缓存，修改实体类后需要清除缓存</li>
- *   <li>标注 {@link SqlEntityScan} 可在启动期扫描实体包、校验注解完整性
- *       并预热写操作表元数据，见 {@link #register(Class)}</li>
+ *   <li>标注 {@link SqlEntityScan} 可在启动期扫描实体包、校验注解完整性，
+ *       预热写操作表元数据（见 {@link #register(Class)}），并由
+ *       {@link EntityTableMetadataInitializer} 预热按类缓存的 {@code SelectInfoModel}
+ *       与 SELECT 片段缓存</li>
  * </ul>
  *
  * @author abstergo
@@ -162,6 +164,9 @@ public class EntityMetadataExtractor {
      * <p>校验不通过时抛出携带具体原因的运行时异常，由初始化器汇总后中断启动；
      * 校验通过后调用 {@link #pullTableMetadata(Class)}，后续写 SQL 直接命中缓存。
      * 该方法不改动惰性加载路径，未启用扫描注解时框架行为不变。</p>
+     *
+     * <p>读 SQL 侧的 {@code SelectInfoModel} 与 SELECT 片段缓存不在本方法内预热，
+     * 由 {@link EntityTableMetadataInitializer} 在全部实体校验通过后统一处理。</p>
      *
      * @param entityClass 待校验并预热的实体类
      * @return 已缓存的实体表元数据

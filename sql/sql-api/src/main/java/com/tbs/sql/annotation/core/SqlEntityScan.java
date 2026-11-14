@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Import;
 import java.lang.annotation.*;
 
 /**
- * 启动期实体表元数据扫描注解。
+ * 启动期实体元数据扫描注解。
  *
  * <p>标注在启动类或 {@code @Configuration} 类上，Spring 容器刷新期间扫描指定包下带
  * {@link jakarta.persistence.Entity} 或 {@link jakarta.persistence.Table} 的类，
@@ -14,6 +14,10 @@ import java.lang.annotation.*;
  * {@link com.tbs.sql.metadata.EntityMetadataExtractor#register(Class)} 把
  * {@link com.tbs.sql.metadata.EntityTableMetadata} 提前写入缓存，避免首次写 SQL 时才惰性解析、
  * 也避免非法实体到运行期才暴露（如缺主键、重复列名）。</p>
+ *
+ * <p>同时预热读 SQL 侧的两级缓存：按类缓存的 {@code SelectInfoModel}，以及由
+ * {@link com.tbs.sql.dialect.SqlDialect} 的 SELECT 提取器渲染后写入模型的片段缓存。
+ * 预热与运行期使用同一个提取器实例，首次业务查询即可命中，不再重复遍历字段列表。</p>
  *
  * <h3>扫描包配置</h3>
  * <ul>
@@ -52,7 +56,13 @@ import java.lang.annotation.*;
  *       {@code jkit.sql.auto.packages} 负责</li>
  *   <li>校验在 {@link org.springframework.beans.factory.SmartInitializingSingleton} 阶段执行，
  *       属于启动期 fail-fast；未标注本注解时框架行为与原先完全一致，仍按类惰性加载元数据</li>
+ *   <li>片段预热失败只告警、不中断启动；没有 {@code SqlDialect} Bean 时自动跳过</li>
  * </ul>
+ *
+ * <h3>启动期日志</h3>
+ * <p>预热开始、完成汇总（实体数、命中缓存数、耗时）以 INFO 输出，失败明细以 WARN 输出，
+ * 逐个实体的片段长度以 DEBUG 输出。需要逐条明细时，把
+ * {@code com.tbs.sql.metadata.EntityTableMetadataInitializer} 的日志级别设为 DEBUG。</p>
  *
  * @author abstergo
  * @since 3.0.0
