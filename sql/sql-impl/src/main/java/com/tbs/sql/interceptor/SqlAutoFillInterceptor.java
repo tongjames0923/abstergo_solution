@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -42,8 +43,20 @@ public class SqlAutoFillInterceptor implements Interceptor {
     /** Provider实例缓存 */
     private static final Map<Class<? extends IAutoValueProvider>, IAutoValueProvider> providerCache =
         new ConcurrentHashMap<>(16);
-    /** Class-带注解字段缓存，减少反射遍历开销 */
-    private static final Map<Class<?>, List<Field>> classFieldCache = new ConcurrentHashMap<>(64);
+    /** 无操作Provider：@SqlAutoValue的value默认值为IAutoValueProvider接口本身（约定为无操作），此时直接跳过填充 */
+    private static final IAutoValueProvider NO_OP_PROVIDER = new IAutoValueProvider() {
+        @Override
+        public Object getValue(Object target, Field field) {
+            return null;
+        }
+
+        @Override
+        public boolean support(Class<?> type, Object oldValue) {
+            return false;
+        }
+    };
+    /** Class-带注解字段及注解元数据缓存，减少反射遍历与注解解析开销 */
+    private static final Map<Class<?>, List<AutoFillFieldMeta>> classFieldCache = new ConcurrentHashMap<>(64);
 
     @Override
     public Object intercept(Invocation invocation) throws Throwable {
@@ -96,17 +109,13 @@ public class SqlAutoFillInterceptor implements Interceptor {
     private void applyFill(Object entity, SqlCommandType commandType) {
         Class<?> clazz = entity.getClass();
         // 从缓存获取带注解字段，无则扫描并缓存
-        List<Field> autoFillFields = classFieldCache.computeIfAbsent(clazz, this::scanAllAutoFillField);
+        List<AutoFillFieldMeta> autoFillFields = classFieldCache.computeIfAbsent(clazz, this::scanAllAutoFillField);
         if (CollUtil.isEmpty(autoFillFields)) {
             return;
         }
-        for (Field field : autoFillFields) {
-            Set<SqlAutoValue> annoSet = AnnotatedElementUtils.getAllMergedAnnotations(field, SqlAutoValue.class);
-            if (CollUtil.isEmpty(annoSet)) {
-                continue;
-            }
-            // 去重，同一字段只取一个注解
-            SqlAutoValue sqlAutoValue = annoSet.iterator().next();
+        for (AutoFillFieldMeta meta : autoFillFields) {
+            Field field = meta.field;
+            SqlAutoValue sqlAutoValue = meta.anno;
             // 仅新增填充 && 当前不是INSERT，跳过
             if (sqlAutoValue.insertOnly() && SqlCommandType.INSERT != commandType) {
                 continue;
@@ -117,7 +126,7 @@ public class SqlAutoFillInterceptor implements Interceptor {
                 if (sqlAutoValue.fillWhenNull() && originalVal != null) {
                     continue;
                 }
-                // 获取Provider（双重检查锁防并发重复初始化）
+                // 获取Provider（computeIfAbsent原子操作防并发重复初始化）
                 IAutoValueProvider provider = getAutoValueProvider(sqlAutoValue.value());
                 if (provider.support(field.getType(), originalVal)) {
                     Object newVal = provider.getValue(entity, field);
@@ -133,37 +142,41 @@ public class SqlAutoFillInterceptor implements Interceptor {
         }
     }
 
-    /** 递归扫描当前类+所有父类，收集所有带@SqlAutoValue的字段 */
-    private List<Field> scanAllAutoFillField(Class<?> clazz) {
-        List<Field> fieldList = new ArrayList<>();
+    /** 递归扫描当前类+所有父类，收集所有带@SqlAutoValue的字段及其注解（扫描时一次解析，填充时直接复用） */
+    private List<AutoFillFieldMeta> scanAllAutoFillField(Class<?> clazz) {
+        List<AutoFillFieldMeta> metaList = new ArrayList<>();
         Class<?> tempCls = clazz;
-        while (tempCls != Object.class) {
-            Field[] declaredFields = tempCls.getDeclaredFields();
-            for (Field field : declaredFields) {
-                Set<SqlAutoValue> anno = AnnotatedElementUtils.getAllMergedAnnotations(field, SqlAutoValue.class);
-                if (CollUtil.isNotEmpty(anno)) {
+        // 判空防御异常类层级（如动态代理），正常类层级终止于Object
+        while (tempCls != null && tempCls != Object.class) {
+            for (Field field : tempCls.getDeclaredFields()) {
+                Set<SqlAutoValue> annoSet = AnnotatedElementUtils.getAllMergedAnnotations(field, SqlAutoValue.class);
+                if (CollUtil.isNotEmpty(annoSet)) {
                     field.setAccessible(true);
-                    fieldList.add(field);
+                    // 同一字段存在多个注解时只取第一个
+                    metaList.add(new AutoFillFieldMeta(field, annoSet.iterator().next()));
                 }
             }
             tempCls = tempCls.getSuperclass();
         }
-        return fieldList;
+        return metaList;
     }
 
-    /** 双重检查锁获取Provider，缓存复用 */
+    /** 原子化获取Provider实例并缓存复用；接口/抽象类无法实例化，直接返回无操作Provider */
     private IAutoValueProvider getAutoValueProvider(Class<? extends IAutoValueProvider> providerCls) {
-        IAutoValueProvider provider = providerCache.get(providerCls);
-        if (provider == null) {
-            synchronized (providerCache) {
-                provider = providerCache.get(providerCls);
-                if (provider == null) {
-                    provider = BeanUtil.buildBeanFromProperties(null, providerCls, BeanUtil::buildByEmptyArgs);
-                    providerCache.put(providerCls, provider);
-                }
-            }
+        return providerCache.computeIfAbsent(providerCls, this::createProvider);
+    }
+
+    /** 创建Provider实例，带注解默认值（接口本身）与抽象类的防御处理 */
+    private IAutoValueProvider createProvider(Class<? extends IAutoValueProvider> providerCls) {
+        // @SqlAutoValue的value默认值为IAutoValueProvider接口本身（约定为无操作），
+        // 接口/抽象类没有无参构造，直接反射实例化会抛异常并中断整条写入
+        if (providerCls.isInterface() || Modifier.isAbstract(providerCls.getModifiers())) {
+            return NO_OP_PROVIDER;
         }
-        return provider;
+        // cls与func均非null时buildBeanFromProperties不会调用defaultBean.get()，传null安全
+        // 显式类型见证，避免通配符捕获导致的泛型推断失败
+        return BeanUtil.<IAutoValueProvider>buildBeanFromProperties(null, providerCls,
+            BeanUtil::buildByEmptyArgs);
     }
 
     @Override
@@ -174,5 +187,16 @@ public class SqlAutoFillInterceptor implements Interceptor {
     @Override
     public void setProperties(Properties properties) {
         // 无需配置参数
+    }
+
+    /** 带@SqlAutoValue注解的字段元数据，扫描时缓存注解，避免每次填充重复解析合并注解 */
+    private static final class AutoFillFieldMeta {
+        final Field field;
+        final SqlAutoValue anno;
+
+        AutoFillFieldMeta(Field field, SqlAutoValue anno) {
+            this.field = field;
+            this.anno = anno;
+        }
     }
 }
