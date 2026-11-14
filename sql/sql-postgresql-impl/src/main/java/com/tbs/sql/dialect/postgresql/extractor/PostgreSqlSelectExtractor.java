@@ -8,6 +8,8 @@ import com.tbs.sql.exception.SqlExtractionException;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
 
+import java.util.List;
+
 /**
  * PostgreSQL SELECT 语句提取器。
  *
@@ -33,30 +35,46 @@ public class PostgreSqlSelectExtractor implements ISelectExtractor {
 
     @Override
     public String extract(SelectInfoModel infoModel) {
-        AssertUtil.notNull(infoModel, () -> new SqlExtractionException("SelectInfoModel can not be null", this));
+        if (infoModel == null) {
+            AssertUtil.throwError(() -> new SqlExtractionException("SelectInfoModel can not be null", this));
+        }
+        // 以本提取器实例为 owner：本类会给别名加双引号，绝不能复用通用提取器的片段
+        String cached = infoModel.cachedSelectSql(this);
+        if (cached != null) return cached;
+        String result = render(infoModel);
+        infoModel.cacheSelectSql(this, result);
+        return result;
+    }
+
+    private String render(SelectInfoModel infoModel) {
+        // 断言改为「先判断、异常路径才构造 supplier」：正常路径不再为每个字段创建捕获 this 的 lambda
         if (StrUtil.isNotEmpty(infoModel.getRawSql())) return infoModel.getRawSql();
-        AssertUtil.isTrue(StrUtil.isEmpty(infoModel.getTableName()),
-            () -> new SqlExtractionException("tableName can not be null", this));
+        if (StrUtil.isEmpty(infoModel.getTableName())) {
+            AssertUtil.throwError(() -> new SqlExtractionException("tableName can not be null", this));
+        }
 
-        String tableName = infoModel.getTableName();
-        String tableAlias = infoModel.getTableAlias();
-        String fromClause = buildFromClause(tableName, tableAlias);
+        String fromClause = buildFromClause(infoModel.getTableName(), infoModel.getTableAlias());
+        List<SelectItemModel> fields = infoModel.getFieldList();
+        if (CollUtil.isEmpty(fields)) return "SELECT * FROM " + fromClause;
 
-        if (CollUtil.isEmpty(infoModel.getFieldList())) return "SELECT * FROM " + fromClause;
-        StringBuilder sb = new StringBuilder("SELECT ");
-        for (SelectItemModel item : infoModel.getFieldList()) {
-            AssertUtil.notNull(item, () -> new SqlExtractionException("SelectItemModel can not be null", this));
-            AssertUtil.isTrue(StrUtil.isEmpty(item.getFieldName()),
-                () -> new SqlExtractionException("fieldName can not be null", this));
+        StringBuilder sb = new StringBuilder(16 + fromClause.length() + fields.size() * 26);
+        sb.append("SELECT ");
+        for (SelectItemModel item : fields) {
+            if (item == null) {
+                AssertUtil.throwError(() -> new SqlExtractionException("SelectItemModel can not be null", this));
+            }
+            if (StrUtil.isEmpty(item.getFieldName())) {
+                AssertUtil.throwError(() -> new SqlExtractionException("fieldName can not be null", this));
+            }
             sb.append(item.getFieldName());
             // 关键差异：别名加双引号，防止 PostgreSQL 折叠为小写
             if (StrUtil.isNotEmpty(item.getFieldAlias())) {
-                sb.append(" AS \"").append(item.getFieldAlias()).append("\"");
+                sb.append(" AS \"").append(item.getFieldAlias()).append('"');
             }
-            sb.append(",");
+            sb.append(',');
         }
-        String sql = sb.substring(0, sb.length() - 1);
-        return String.format("%s FROM %s", sql, fromClause);
+        sb.setLength(sb.length() - 1);
+        return sb.append(" FROM ").append(fromClause).toString();
     }
 
     /**

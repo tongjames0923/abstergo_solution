@@ -56,6 +56,6 @@ public class OracleLimitExtractor implements ILimitExtractor {
         Long count = model.getCount();
         if (count == null) return "";
         if (offset == null) offset = 0L;
-        return String.format(" OFFSET %d ROWS FETCH NEXT %d ROWS ONLY", offset, count);
+        return " OFFSET " + offset + " ROWS FETCH NEXT " + count + " ROWS ONLY";
     }
 }

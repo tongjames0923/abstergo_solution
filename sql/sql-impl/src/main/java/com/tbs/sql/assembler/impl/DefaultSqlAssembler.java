@@ -34,6 +34,8 @@ import java.util.StringJoiner;
  *   <li>该实现使用空格连接各个SQL片段</li>
  *   <li>空值或空字符串会被自动忽略</li>
  *   <li>如果需要自定义组装逻辑，可以实现 {@link ISqlAssembler} 接口</li>
+ *   <li>保留 StringJoiner：JDK 21 的逃逸分析能消除其扩容中间数组，
+ *       实测长 SQL 场景优于手写预容量 StringBuilder</li>
  * </ul>
  *
  * @author abstergo

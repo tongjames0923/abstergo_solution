@@ -54,29 +54,30 @@ public enum SqlCommandKind {
         if (keyword.isEmpty()) {
             return OTHER;
         }
+        // firstKeyword 已返回 Locale.ROOT 小写形式，直接比较可省去一次字符串分配
         switch (keyword) {
-            case "SELECT":
-            case "WITH":
-            case "SHOW":
-            case "DESCRIBE":
-            case "DESC":
-            case "EXPLAIN":
+            case "select":
+            case "with":
+            case "show":
+            case "describe":
+            case "desc":
+            case "explain":
                 return SELECT;
-            case "INSERT":
-            case "REPLACE":
+            case "insert":
+            case "replace":
                 return INSERT;
-            case "UPDATE":
+            case "update":
                 return UPDATE;
-            case "DELETE":
-            case "TRUNCATE":
+            case "delete":
+            case "truncate":
                 return DELETE;
-            case "CREATE":
-            case "ALTER":
-            case "DROP":
-            case "GRANT":
-            case "REVOKE":
-            case "COMMENT":
-            case "RENAME":
+            case "create":
+            case "alter":
+            case "drop":
+            case "grant":
+            case "revoke":
+            case "comment":
+            case "rename":
                 return DDL;
             default:
                 return OTHER;

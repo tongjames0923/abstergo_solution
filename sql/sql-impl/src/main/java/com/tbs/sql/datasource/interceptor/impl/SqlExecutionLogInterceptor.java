@@ -99,21 +99,26 @@ public class SqlExecutionLogInterceptor implements JdbcExecutionInterceptor {
     }
 
     /**
-     * 单行化并截断 SQL 文本。
+     * 截断后单行化 SQL 文本。
      *
-     * <p>仅在真正输出日志的分支中调用，避免关闭全量日志后仍做无谓的字符串处理。</p>
+     * <p>仅在真正输出日志的分支中调用，避免关闭全量日志后仍做无谓的字符串处理。
+     * 先截断原串再折叠空白：超长 IN 语句不会为注定被丢弃的部分付出全文扫描与复制的代价。</p>
      *
      * @param context 执行上下文
      * @return 可输出的 SQL 文本
      */
     private String sqlText(JdbcExecuteContext context) {
-        return truncate(SqlTextUtils.singleLine(context.getSql()));
+        String sql = context.getSql();
+        if (sql == null) {
+            return "";
+        }
+        return SqlTextUtils.singleLine(truncate(sql));
     }
 
     /**
-     * 截断超长 SQL 文本，避免单条日志过大。
+     * 截断超长 SQL 原串，避免单条日志过大。
      *
-     * @param sql 单行化后的 SQL
+     * @param sql 原始 SQL
      * @return 截断后的 SQL
      */
     private String truncate(String sql) {

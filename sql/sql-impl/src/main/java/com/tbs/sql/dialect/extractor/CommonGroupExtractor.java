@@ -12,6 +12,8 @@ import java.util.List;
  * <p>所有主流关系型数据库的GROUP BY语法完全一致，
  * 因此使用单一公共实现，避免各方言重复定义。</p>
  *
+ * <p>实现说明：与 {@link CommonOrderExtractor} 一致，一次成型避免中间串。</p>
+ *
  * @author abstergo
  * @since 2.0.0
  * @see IGroupExtractor
@@ -21,11 +23,11 @@ public class CommonGroupExtractor implements IGroupExtractor {
     @Override
     public String extract(List<GroupModel> groupModels) {
         if (CollUtil.isEmpty(groupModels)) return "";
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(10 + groupModels.size() * 16).append(" GROUP BY ");
         for (GroupModel model : groupModels) {
             sb.append(model.getFieldName()).append(",");
         }
-        if (sb.length() == 0) return "";
-        return " GROUP BY " + sb.substring(0, sb.length() - 1);
+        sb.setLength(sb.length() - 1);
+        return sb.toString();
     }
 }

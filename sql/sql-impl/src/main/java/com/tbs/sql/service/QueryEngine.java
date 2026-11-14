@@ -196,7 +196,7 @@ public class QueryEngine implements IStartup, IQueryEngine {
 //        Date date = new Date();
         SqlDriver.SqlQueryData data = queryDriver.getSqlQueryData(context);
         String selectSql = dialect.getSelectExtractor().extract(data.getSelectInfo());
-        String whereSql = dialect.getWhereExtractor().extract(getInstance().intercept(data.getSqlWhereInfo(), context),
+        String whereSql = dialect.getWhereExtractor().extract(intercept(data.getSqlWhereInfo(), context),
             context.getSqlParams());
         String orderSql = dialect.getOrderExtractor().extract(data.getSqlOrders());
         String groupSql = dialect.getGroupExtractor().extract(data.getSqlGroups());
