@@ -41,6 +41,6 @@ public class PostgreSqlLimitExtractor implements ILimitExtractor {
         Long count = model.getCount();
         if (count == null) return "";
         if (offset == null || offset == 0L) return " LIMIT " + count;
-        return String.format(" LIMIT %d OFFSET %d", count, offset);
+        return " LIMIT " + count + " OFFSET " + offset;
     }
 }

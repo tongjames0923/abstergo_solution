@@ -25,6 +25,10 @@ import java.util.*;
  *
  * <p>条件值一律经 MyBatis 预处理参数绑定，不会以字面量形式拼入 SQL 文本。</p>
  *
+ * <p>实现说明：条件树只遍历一次并直接写入 StringBuilder，不再为每层构造
+ * LinkedList/Map.Entry 中间集合；占位符与条件片段用直接拼接代替 String.format；
+ * 参数序号使用 long[] 避免 Long 拆装箱。生成的 SQL 文本与参数键序列与旧实现逐字节一致。</p>
+ *
  * @author abstergo
  * @since 2.0.0
  * @see IWhereExtractor
@@ -77,7 +81,7 @@ public class CommonWhereExtractor implements IWhereExtractor {
         return "";
     }
 
-    String singleWhereInfo(WhereInfo info, Long id, Map<String, Object> paramMap) {
+    String singleWhereInfo(WhereInfo info, long id, Map<String, Object> paramMap) {
         if (StrUtil.isNotEmpty(info.getRawSql())) {
             return info.getRawSql();
         }
@@ -85,80 +89,78 @@ public class CommonWhereExtractor implements IWhereExtractor {
         Object val = info.getFieldValue();
         if (StrUtil.isNotEmpty(info.getFieldValueStr())) val = info.getFieldValueStr();
         String fieldName = info.getFieldName();
+        ContrastEnum contrast = info.getContrast();
 
-        if ((info.getContrast() == ContrastEnum.IN || info.getContrast() == ContrastEnum.NOT_IN)
+        if ((contrast == ContrastEnum.IN || contrast == ContrastEnum.NOT_IN)
             && val instanceof Collection) {
             Collection<?> collection = (Collection<?>) val;
             if (!collection.isEmpty()) {
                 /*
                  * IN / NOT IN 集合的每个元素各占一个预处理参数，取值不进入 SQL 文本。
                  */
-                List<String> placeholders = new ArrayList<>();
+                StringBuilder placeholders = new StringBuilder(collection.size() * 16);
                 int index = 0;
                 for (Object item : collection) {
                     String itemKey = key + "_" + index++;
-                    placeholders.add("#{_prs." + itemKey + "}");
+                    if (index > 1) placeholders.append(',');
+                    placeholders.append("#{_prs.").append(itemKey).append('}');
                     paramMap.put(itemKey, item);
                 }
-                return String.format(" (%s %s %s) ", fieldName,
-                    contrast(info.getContrast()),
-                    "(" + String.join(",", placeholders) + ")");
-            } else {
-                return "(1=1)";
+                return " (" + fieldName + " " + contrast(contrast) + " (" + placeholders + ")) ";
             }
+            return "(1=1)";
         }
 
-        if (info.getContrast() == ContrastEnum.IS_NULL || info.getContrast() == ContrastEnum.IS_NOT_NULL) {
-            return String.format(" (%s %s) ", fieldName, contrast(info.getContrast()));
+        if (contrast == ContrastEnum.IS_NULL || contrast == ContrastEnum.IS_NOT_NULL) {
+            return " (" + fieldName + " " + contrast(contrast) + ") ";
         }
 
         /*
          * 单值条件同样只下标占位符：LIKE 类比较先给参数值补上 % 再绑定，SQL 文本里不出现字面值。
          */
-        String valStr = String.format("#{_prs.%s}", key);
-        if (val != null && val instanceof String) val = contrastStrSet(info.getContrast(), val.toString());
+        String valStr = "#{_prs." + key + "}";
+        if (val instanceof String) val = contrastStrSet(contrast, (String) val);
         paramMap.put(key, val);
-        return String.format(" (%s %s %s) ", fieldName, contrast(info.getContrast()), valStr);
+        return " (" + fieldName + " " + contrast(contrast) + " " + valStr + ") ";
     }
 
-    private String extraWhereSql(WhereCompose compose, Long[] id, Map<String, Object> paramMap) {
+    private String extraWhereSql(WhereCompose compose, long[] id, Map<String, Object> paramMap) {
         if (compose == null || CollUtil.isEmpty(compose.getChildren())) return "";
-        List<Map.Entry<ConnectorEnum, String>> whereNode = new LinkedList<>();
+        StringBuilder sb = new StringBuilder(64);
+        boolean first = true;
         for (WhereNode node : compose.getChildren()) {
             if (node.isWhereInfo()) {
-                WhereInfo info = (WhereInfo) node.getValue();
-                whereNode.add(new AbstractMap.SimpleEntry<>(node.getConnector(),
-                    singleWhereInfo(info, id[0]++, paramMap)));
+                first = appendNode(sb, node.getConnector(),
+                    singleWhereInfo((WhereInfo) node.getValue(), id[0]++, paramMap), first);
             }
             if (node.isCompose()) {
-                WhereCompose subCompose = (WhereCompose) node.getValue();
-                whereNode.add(new AbstractMap.SimpleEntry<>(node.getConnector(),
-                    extraWhereSql(subCompose, id, paramMap)));
+                first = appendNode(sb, node.getConnector(),
+                    extraWhereSql((WhereCompose) node.getValue(), id, paramMap), first);
             }
-        }
-        if (CollUtil.isEmpty(whereNode)) {
-            return "";
-        }
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (Map.Entry<ConnectorEnum, String> entry : whereNode) {
-            String value = entry.getValue();
-            if (StrUtil.isEmpty(value)) continue;
-            if (!first) sb.append(
-                entry.getKey() == null || entry.getKey() == ConnectorEnum.AND ? " AND " : " OR ");
-            sb.append(" ( ").append(value).append(" ) ");
-            first = false;
         }
         return sb.toString();
     }
 
+    /**
+     * 追加一个已生成的条件片段；返回更新后的「是否仍为首片段」标志。
+     * 空片段直接跳过且不消耗连接符，与原实现「先收集再拼装」的行为一致。
+     */
+    private static boolean appendNode(StringBuilder sb, ConnectorEnum connector, String value, boolean first) {
+        if (StrUtil.isEmpty(value)) return first;
+        if (!first) {
+            sb.append(connector == null || connector == ConnectorEnum.AND ? " AND " : " OR ");
+        }
+        sb.append(" ( ").append(value).append(" ) ");
+        return false;
+    }
+
     @Override
     public String extract(WhereCompose sqlWhereCompose, Map<String, Object> paramMap) {
-        String where = extraWhereSql(sqlWhereCompose, new Long[]{0L}, paramMap).trim();
+        String where = extraWhereSql(sqlWhereCompose, new long[]{0L}, paramMap).trim();
         return StrUtil.isEmpty(where) ? "" : " WHERE " + where;
     }
 
-    String makeParamKey(Long id) {
-        return String.format("param_%d", id);
+    String makeParamKey(long id) {
+        return "param_" + id;
     }
 }
