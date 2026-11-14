@@ -2,6 +2,8 @@ package com.tbs.sql.datasource.model;
 
 import com.tbs.sql.util.SqlTextUtils;
 
+import java.util.Locale;
+
 /**
  * SQL 命令类型枚举，按 SQL 文本的首个关键字推断语句类别。
  *
@@ -54,6 +56,7 @@ public enum SqlCommandKind {
         if (keyword.isEmpty()) {
             return OTHER;
         }
+        keyword = keyword.toUpperCase(Locale.ROOT);
         switch (keyword) {
             case "SELECT":
             case "WITH":
