@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollUtil;
 import com.tbs.sql.dialect.IOrderExtractor;
 import com.tbs.sql.enums.OrderEnum;
 import com.tbs.sql.model.order.OrderInfo;
+import com.tbs.sql.util.SqlIdentifierUtils;
 
 import java.util.List;
 
@@ -27,7 +28,7 @@ public class CommonOrderExtractor implements IOrderExtractor {
         if (CollUtil.isEmpty(orderInfos)) return "";
         StringBuilder sb = new StringBuilder(10 + orderInfos.size() * 16).append(" ORDER BY ");
         for (OrderInfo info : orderInfos) {
-            sb.append(info.getFieldName()).append(" ")
+            sb.append(SqlIdentifierUtils.column(info.getFieldName())).append(" ")
                 .append(OrderEnum.getOrder(info.getOrder() == null ? OrderEnum.ASC : info.getOrder()))
                 .append(",");
         }

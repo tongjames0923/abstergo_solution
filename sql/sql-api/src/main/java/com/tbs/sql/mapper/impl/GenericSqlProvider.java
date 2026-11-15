@@ -9,6 +9,7 @@ import com.tbs.sql.mapper.IFrameworkMapper;
 import com.tbs.sql.metadata.EntityColumnMetadata;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.metadata.EntityTableMetadata;
+import com.tbs.sql.util.SqlIdentifierUtils;
 import org.apache.ibatis.builder.annotation.ProviderContext;
 
 import java.lang.reflect.ParameterizedType;
@@ -95,7 +96,7 @@ public class GenericSqlProvider {
         List<String> columns = new ArrayList<>(metadata.getColumns().size());
         List<String> properties = new ArrayList<>(metadata.getColumns().size());
         for (EntityColumnMetadata column : metadata.getColumns()) {
-            columns.add(column.getColumn());
+            columns.add(SqlIdentifierUtils.column(column.getColumn()));
             properties.add(column.getProperty());
         }
         IInsertExtractor extractor = getDialect().getInsertExtractor();
@@ -315,7 +316,7 @@ public class GenericSqlProvider {
             if (i > 0) {
                 builder.append(", ");
             }
-            builder.append(columns.get(i).getColumn());
+            builder.append(SqlIdentifierUtils.column(columns.get(i).getColumn()));
         }
         builder.append(") VALUES (");
         for (int i = 0; i < columns.size(); i++) {
@@ -344,7 +345,8 @@ public class GenericSqlProvider {
             if (i > 0) {
                 builder.append(", ");
             }
-            builder.append(columns.get(i).getColumn()).append(" AS ").append(columns.get(i).getProperty());
+            builder.append(SqlIdentifierUtils.column(columns.get(i).getColumn()))
+                .append(" AS ").append(SqlIdentifierUtils.alias(columns.get(i).getProperty()));
         }
         builder.append(" FROM ").append(metadata.getTableName());
         if (!condition.isEmpty()) {
@@ -371,13 +373,13 @@ public class GenericSqlProvider {
             if (column.isId()) {
                 continue;
             }
-            columnNames.add(column.getColumn());
+            columnNames.add(SqlIdentifierUtils.column(column.getColumn()));
             propertyNames.add(column.getProperty());
         }
         AssertUtil.isTrue(columnNames.isEmpty(), "更新" + metadata.getTableName()
             + "时除主键外没有任何参与SET的字段，无可更新内容");
         return getDialect().getUpdateExtractor().buildUpdate(metadata.getTableName(), columnNames, propertyNames,
-            idColumn.getColumn(), idColumn.getProperty());
+            SqlIdentifierUtils.column(idColumn.getColumn()), idColumn.getProperty());
     }
 
     /**
@@ -405,7 +407,7 @@ public class GenericSqlProvider {
      */
     private String buildPrimaryKeyCondition(EntityTableMetadata metadata) {
         EntityColumnMetadata idColumn = requireIdColumn(metadata);
-        return idColumn.getColumn() + " = #{id}";
+        return SqlIdentifierUtils.column(idColumn.getColumn()) + " = #{id}";
     }
 
     /**
@@ -417,7 +419,7 @@ public class GenericSqlProvider {
      */
     private String buildInCondition(EntityTableMetadata metadata, int size) {
         EntityColumnMetadata idColumn = requireIdColumn(metadata);
-        StringBuilder builder = new StringBuilder(idColumn.getColumn()).append(" IN (");
+        StringBuilder builder = new StringBuilder(SqlIdentifierUtils.column(idColumn.getColumn())).append(" IN (");
         for (int i = 0; i < size; i++) {
             if (i > 0) {
                 builder.append(", ");
@@ -453,8 +455,8 @@ public class GenericSqlProvider {
             if (builder.length() > 0) {
                 builder.append(" AND ");
             }
-            builder.append(column.getColumn()).append(" = #{").append(paramName).append('.')
-                .append(column.getProperty()).append('}');
+            builder.append(SqlIdentifierUtils.column(column.getColumn())).append(" = #{").append(paramName)
+                .append('.').append(column.getProperty()).append('}');
         }
         return builder.toString();
     }

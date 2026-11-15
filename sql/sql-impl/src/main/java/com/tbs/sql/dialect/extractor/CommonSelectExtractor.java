@@ -7,6 +7,7 @@ import com.tbs.sql.dialect.ISelectExtractor;
 import com.tbs.sql.exception.SqlExtractionException;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
+import com.tbs.sql.util.SqlIdentifierUtils;
 
 import java.util.List;
 
@@ -58,8 +59,10 @@ public class CommonSelectExtractor implements ISelectExtractor {
             if (StrUtil.isEmpty(item.getFieldName())) {
                 AssertUtil.throwError(() -> new SqlExtractionException("fieldName can not be null", this));
             }
-            sb.append(item.getFieldName());
-            if (StrUtil.isNotEmpty(item.getFieldAlias())) sb.append(" AS ").append(item.getFieldAlias());
+            sb.append(SqlIdentifierUtils.column(item.getFieldName()));
+            if (StrUtil.isNotEmpty(item.getFieldAlias())) {
+                sb.append(" AS ").append(SqlIdentifierUtils.alias(item.getFieldAlias()));
+            }
             sb.append(',');
         }
         sb.setLength(sb.length() - 1);

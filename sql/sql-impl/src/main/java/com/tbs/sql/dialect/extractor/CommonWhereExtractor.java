@@ -11,10 +11,12 @@ import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.model.where.WhereCompose;
 import com.tbs.sql.model.where.WhereInfo;
 import com.tbs.sql.model.where.WhereNode;
+import com.tbs.sql.util.SqlIdentifierUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.*;
+import java.util.Collection;
+import java.util.Map;
 
 /**
  * 通用WHERE语句提取器，适用于MySQL、PostgreSQL、SQL Server、Oracle等数据库。
@@ -88,7 +90,7 @@ public class CommonWhereExtractor implements IWhereExtractor {
         String key = makeParamKey(id);
         Object val = info.getFieldValue();
         if (StrUtil.isNotEmpty(info.getFieldValueStr())) val = info.getFieldValueStr();
-        String fieldName = info.getFieldName();
+        String fieldName = SqlIdentifierUtils.column(info.getFieldName());
         ContrastEnum contrast = info.getContrast();
 
         if ((contrast == ContrastEnum.IN || contrast == ContrastEnum.NOT_IN)

@@ -7,6 +7,7 @@ import com.tbs.sql.dialect.ISelectExtractor;
 import com.tbs.sql.exception.SqlExtractionException;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
+import com.tbs.sql.util.SqlIdentifierUtils;
 
 import java.util.List;
 
@@ -66,10 +67,11 @@ public class PostgreSqlSelectExtractor implements ISelectExtractor {
             if (StrUtil.isEmpty(item.getFieldName())) {
                 AssertUtil.throwError(() -> new SqlExtractionException("fieldName can not be null", this));
             }
-            sb.append(item.getFieldName());
-            // 关键差异：别名加双引号，防止 PostgreSQL 折叠为小写
+            sb.append(SqlIdentifierUtils.column(item.getFieldName()));
+            // 关键差异：别名一律加引用符，防止 PostgreSQL 折叠为小写；
+            // 符号由 ANSI 引用器提供，与原先的双引号行为一致
             if (StrUtil.isNotEmpty(item.getFieldAlias())) {
-                sb.append(" AS \"").append(item.getFieldAlias()).append('"');
+                sb.append(" AS ").append(SqlIdentifierUtils.aliasAlways(item.getFieldAlias()));
             }
             sb.append(',');
         }
