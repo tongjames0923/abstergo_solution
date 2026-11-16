@@ -16,6 +16,10 @@ import java.lang.annotation.*;
  * <p>同时预热读 SQL 侧的两级缓存：按类缓存的 {@code SelectInfoModel}，以及由
  * {@link com.tbs.sql.dialect.SqlDialect} 的 SELECT 提取器渲染后写入模型的片段缓存。 预热与运行期使用同一个提取器实例，首次业务查询即可命中，不再重复遍历字段列表。</p>
  *
+ * <p>扫描完成后还会枚举容器内全部 {@link com.tbs.sql.mapper.IFrameworkMapper} Bean，
+ * 解析其泛型实体类型并写入 {@link com.tbs.sql.mapper.MapperEntityBindingRegistry}，
+ * 使 {@code mapper.query()} 无参拿到实体类型；实体不在扫描范围内或泛型无法解析时启动失败。</p>
+ *
  * <h3>扫描包配置</h3>
  * <ul>
  *   <li>{@link #value()} 与 {@link #basePackages()} 取并集，均可指定多个包；
@@ -54,6 +58,8 @@ import java.lang.annotation.*;
  *   <li>校验在 {@link org.springframework.beans.factory.SmartInitializingSingleton} 阶段执行，
  *       属于启动期 fail-fast；未标注本注解时框架行为与原先完全一致，仍按类惰性加载元数据</li>
  *   <li>片段预热失败只告警、不中断启动；没有 {@code SqlDialect} Bean 时自动跳过</li>
+ *   <li>Mapper 绑定校验属于启动期 fail-fast：泛型无法解析或实体未纳入扫描范围时汇总报错并中断启动；
+ *       未标注本注解时不校验，{@code mapper.query()} 按 Mapper 接口泛型惰性解析，行为与传参调用一致</li>
  * </ul>
  *
  * <h3>启动期日志</h3>

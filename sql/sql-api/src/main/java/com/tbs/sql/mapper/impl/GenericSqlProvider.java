@@ -5,17 +5,17 @@ import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.dialect.IInsertExtractor;
 import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.mapper.GenericMapper;
-import com.tbs.sql.mapper.IFrameworkMapper;
+import com.tbs.sql.mapper.MapperEntityTypeResolver;
 import com.tbs.sql.metadata.EntityColumnMetadata;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.metadata.EntityTableMetadata;
 import com.tbs.sql.util.SqlIdentifierUtils;
 import org.apache.ibatis.builder.annotation.ProviderContext;
 
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Supplier;
 
@@ -243,63 +243,11 @@ public class GenericSqlProvider {
      * @return 实体表元数据
      */
     private EntityTableMetadata resolveMetadata(ProviderContext context, Object entity) {
-        Class<?> entityClass = entity != null ? entity.getClass() : resolveEntityClass(context.getMapperType());
+        Class<?> entityClass = entity != null ? entity.getClass()
+            : MapperEntityTypeResolver.resolveEntityClass(context.getMapperType());
         AssertUtil.notNull(entityClass,
             "无法解析Mapper接口" + context.getMapperType().getName() + "的实体类型，请确认其继承GenericMapper或IFrameworkMapper");
         return EntityMetadataExtractor.pullTableMetadata(entityClass);
-    }
-
-    /**
-     * 解析 Mapper 接口声明的实体类型。
-     *
-     * <p>沿泛型父接口递归向下查找，逐层绑定类型变量，因此 {@code XxxMapper extends BaseMapper<Xxx>}
-     * 这类中间抽象层也能解析出实体类型。</p>
-     *
-     * @param mapperType 当前 Mapper 接口类型
-     * @return 实体类型，未按约定声明泛型时返回null
-     */
-    private Class<?> resolveEntityClass(Class<?> mapperType) {
-        for (Type type : mapperType.getGenericInterfaces()) {
-            Class<?> entityClass = resolveEntityClass(type, Collections.emptyMap());
-            if (entityClass != null) {
-                return entityClass;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * 在给定类型变量绑定关系下递归解析实体类型。
-     *
-     * @param type     待解析的父接口类型
-     * @param bindings 外层接口已绑定的类型变量
-     * @return 实体类型，无法解析时返回null
-     */
-    private Class<?> resolveEntityClass(Type type, Map<TypeVariable<?>, Type> bindings) {
-        if (!(type instanceof ParameterizedType parameterized)) {
-            return null;
-        }
-        Class<?> raw = (Class<?>)parameterized.getRawType();
-        TypeVariable<?>[] variables = raw.getTypeParameters();
-        Type[] arguments = parameterized.getActualTypeArguments();
-        Map<TypeVariable<?>, Type> scope = new HashMap<>(bindings);
-        for (int i = 0; i < variables.length && i < arguments.length; i++) {
-            Type argument = arguments[i];
-            scope.put(variables[i],
-                argument instanceof TypeVariable<?> variable && bindings.containsKey(variable) ? bindings.get(variable)
-                    : argument);
-        }
-        if (raw == IFrameworkMapper.class || raw == GenericMapper.class) {
-            Type entityType = scope.get(variables[0]);
-            return entityType instanceof Class<?> entityClass ? entityClass : null;
-        }
-        for (Type parent : raw.getGenericInterfaces()) {
-            Class<?> entityClass = resolveEntityClass(parent, scope);
-            if (entityClass != null) {
-                return entityClass;
-            }
-        }
-        return null;
     }
 
     /**

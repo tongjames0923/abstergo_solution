@@ -35,5 +35,11 @@
             <groupId>com.tbs</groupId>
             <artifactId>common</artifactId>
         </dependency>
+        <!-- 单元测试：Mapper 实体泛型解析与启动期绑定注册表 -->
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 </project>

@@ -29,7 +29,7 @@ sql/                              # 聚合 pom
 │       ├── dsl/                  #   流式查询接口 + clause/
 │       ├── builder/              #   SqlDriver / ISqlBuildContext / ImportedISqlBuildContext 等契约
 │       ├── criteria/             #   IQueryCriteria / IPage / Abstract*Criteria / DefaultEntityCriteria
-│       ├── mapper/               #   IFrameworkMapper / GenericMapper / SmartQueryMapper / IRawSqlSelectMapper + GenericSqlProvider / RawSqlSelectProvider / ConditionBuilder
+│       ├── mapper/               #   IFrameworkMapper / GenericMapper / SmartQueryMapper / IRawSqlSelectMapper + MapperEntityTypeResolver / MapperEntityBindingRegistry + GenericSqlProvider / RawSqlSelectProvider / ConditionBuilder
 │       ├── dialect/              #   SqlDialect + I{Select,Where,Order,Group,Limit,Insert,Update,Delete}Extractor 接口
 │       ├── assembler/            #   ISqlAssembler
 │       ├── datasource/           #   JdbcExecutionInterceptor + model（裁决上下文/命令类型）
@@ -308,7 +308,15 @@ public interface UserMapper extends IFrameworkMapper<User, Long> {
 | `queryByQO(qo, page, entityClass)` | 条件 + 分页查询 |
 | `queryByQO(context, qo, page, entityClass)` | 指定 SQL 上下文 |
 | `countByQO(qo, entityClass)` | 条件计数（返回 `Integer`） |
-| `query(entityClass)` | 直接获得 `IQueryBuilder`（DSL 入口） |
+| `query()` | 直接获得 `IQueryBuilder`（DSL 入口），实体类型由 Mapper 泛型推导，无需传参 |
+
+```java
+// 无需传实体类型或实体对象
+List<User> users = userMapper.query().where()
+    .equal(User::getStatus, 1).pour().fetch();
+```
+
+> **启动期绑定与校验**：启动类标注 `@SqlEntityScan(basePackages = "com.tbs.xxx.entity")` 后，除预热实体元数据与 SELECT 片段外，框架还会在启动期枚举所有 `IFrameworkMapper` Bean，解析其泛型实体类型并建立 Mapper→实体绑定；实体未落在扫描包内或泛型无法解析时汇总报错、中断启动。未标注该注解时不校验，`query()` 会按 Mapper 接口泛型惰性解析并缓存，行为与原先传参一致。旧入口 `query(Xxx.class)` / `query(new Xxx())` 保留但已标记废弃。
 
 #### GenericMapper 的四库兼容策略
 

@@ -2,6 +2,8 @@ package com.tbs.sql.metadata;
 
 import com.tbs.sql.dialect.ISelectExtractor;
 import com.tbs.sql.dialect.SqlDialect;
+import com.tbs.sql.mapper.IFrameworkMapper;
+import com.tbs.sql.mapper.MapperEntityBindingRegistry;
 import com.tbs.sql.model.select.SelectInfoModel;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
@@ -100,6 +102,40 @@ public class EntityTableMetadataInitializer implements SmartInitializingSingleto
         }
         log.info("@SqlEntityScan 启动期已校验并预热 {} 个 EntityTableMetadata，扫描包：{}", initialized, packages);
         warmSelectFragments(registered, packages);
+        bindMapperEntities(registered, packages);
+    }
+
+    /**
+     * 启动期把容器内所有 {@link IFrameworkMapper} 与其实体类型绑定，并校验实体是否已被扫描。
+     *
+     * <p>先用不触发 FactoryBean 初始化的方式枚举 Bean 类型；MyBatis 的 MapperFactoryBean
+     * 在部分 Spring 版本下需要允许初始化才能被识别，此时自动回退一次。绑定失败会汇总全部
+     * 问题 Mapper 并中断启动，口径与实体元数据校验一致。</p>
+     *
+     * @param registered 已通过校验并完成元数据预热的实体类
+     * @param packages   本次扫描包，用于日志定位
+     */
+    private void bindMapperEntities(List<Class<?>> registered, Set<String> packages) {
+        String[] beanNames = applicationContext.getBeanNamesForType(IFrameworkMapper.class, true, false);
+        if (beanNames.length == 0) {
+            beanNames = applicationContext.getBeanNamesForType(IFrameworkMapper.class);
+            if (beanNames.length > 0) {
+                log.debug("@SqlEntityScan 允许初始化方式枚举到 {} 个 Mapper Bean", beanNames.length);
+            }
+        }
+        Set<Class<?>> mapperTypes = new LinkedHashSet<>();
+        for (String beanName : beanNames) {
+            Class<?> type = applicationContext.getType(beanName);
+            if (type != null && type.isInterface() && IFrameworkMapper.class.isAssignableFrom(type)) {
+                mapperTypes.add(type);
+            }
+        }
+        if (mapperTypes.isEmpty()) {
+            log.warn("@SqlEntityScan 未发现 IFrameworkMapper Bean，跳过 Mapper 与实体绑定");
+            return;
+        }
+        MapperEntityBindingRegistry.bindAll(mapperTypes, new LinkedHashSet<>(registered), true);
+        log.info("@SqlEntityScan 已绑定 {} 个 Mapper 与实体，扫描包：{}", mapperTypes.size(), packages);
     }
 
     /**
