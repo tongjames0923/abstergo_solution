@@ -53,11 +53,6 @@ export const constantRoutes = [
     component: () => import('@/views/403'),
     hidden: true
   },
-  {
-    path: '/value-getter-tester',
-    component: () => import('@/views/dev/ValueGetterTester'),
-    meta: {title: '值获取器调试'}
-  },
 
   {
     path: '/oauth/callback',
@@ -75,7 +70,13 @@ export const constantRoutes = [
       name: '欢迎',
       component: () => import('@/views/dashboard/index'),
       meta: {title: '欢迎页', icon: 'el-icon-star-on'}
-    }
+    },
+      {
+        path: '/value-getter-tester',
+        component: () => import('@/views/dev/ValueGetterTester'),
+        meta: {title: '值获取器调试'}
+      },
+
     ]
   },
 

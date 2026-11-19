@@ -1220,17 +1220,47 @@ export default {
     }
   },
 
+  // 条件实验室
+  conditionLab: {
+    title: '值获取器调试',
+    library: '取值器列表',
+    searchPlaceholder: '按名称或 ID 搜索',
+    noGetters: '暂无可用的值获取器',
+    conditionTag: '条件',
+    emptyTitle: '请从左侧选择一个值获取器',
+    emptyDesc: '选择后可编排参数或布尔条件，并执行取值查看结果',
+    params: '参数配置',
+    execute: '执行取值',
+    output: '执行结果',
+    outputWait: '点击「执行取值」后在此展示结果',
+    left: '左操作数 A',
+    right: '右操作数 B',
+    op: '运算符',
+    selectOp: '请选择运算符',
+    hint: '左右操作数均可选字面量或嵌套 getter'
+  },
+
   // 值获取器调试
   valueGetter: {
     literal: '字面值',
     getterCall: 'Getter 调用',
     nestedDepth: '嵌套第 {depth} 层',
     literalPlaceholder: '请输入字面值',
+    literalDatePlaceholder: '请选择日期时间',
     selectGetter: '请选择 Getter',
     pleaseSelect: '请选择',
     pleaseInput: '请输入',
     pleaseInputNumber: '请输入数字',
     getterNotFound: '未找到 Getter：{id}'
+  },
+
+  // 取值结果展示
+  getterResult: {
+    empty: '暂无结果',
+    true: '条件成立',
+    false: '条件不成立',
+    array: '多条',
+    typeUnknown: '未知类型'
   },
 
   // 网络请求

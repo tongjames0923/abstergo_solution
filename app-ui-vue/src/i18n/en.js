@@ -1216,17 +1216,47 @@ export default {
     }
   },
 
+  // Condition Lab
+  conditionLab: {
+    title: 'Value Getter Debugger',
+    library: 'Getter Library',
+    searchPlaceholder: 'Search by name or ID',
+    noGetters: 'No getters available',
+    conditionTag: 'Condition',
+    emptyTitle: 'Select a getter from the left',
+    emptyDesc: 'Then configure parameters or a boolean condition and execute it',
+    params: 'Parameters',
+    execute: 'Execute',
+    output: 'Result',
+    outputWait: 'Click Execute to inspect the result',
+    left: 'Left operand A',
+    right: 'Right operand B',
+    op: 'Operator',
+    selectOp: 'Select an operator',
+    hint: 'Both operands accept a literal or a nested getter'
+  },
+
   // Value getter debugger
   valueGetter: {
     literal: 'Literal',
     getterCall: 'Getter call',
     nestedDepth: 'Nested level {depth}',
     literalPlaceholder: 'Enter a literal value',
+    literalDatePlaceholder: 'Select date and time',
     selectGetter: 'Select a getter',
     pleaseSelect: 'Please select',
     pleaseInput: 'Please enter',
     pleaseInputNumber: 'Please enter a number',
     getterNotFound: 'Getter not found: {id}'
+  },
+
+  // Getter result display
+  getterResult: {
+    empty: 'No result',
+    true: 'Condition met',
+    false: 'Condition not met',
+    array: 'Multiple',
+    typeUnknown: 'Unknown type'
   },
 
   // Network Request

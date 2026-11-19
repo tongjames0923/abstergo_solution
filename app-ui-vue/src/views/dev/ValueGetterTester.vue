@@ -1,148 +1,119 @@
 <template>
-  <div class="value-getter-tester">
+  <div class="app-container value-getter-tester">
     <el-row :gutter="16">
-      <!-- 左侧：值获取器列表 -->
-      <el-col :span="7">
+      <el-col :xs="24" :sm="24" :md="7" :lg="6">
         <el-card class="getter-panel" shadow="never">
           <div slot="header" class="panel-header">
-            <span>值获取器</span>
-            <el-button type="text" icon="el-icon-refresh" @click="fetchGetters">刷新</el-button>
+            <span>{{ $t('conditionLab.library') }}</span>
+            <el-button type="text" icon="el-icon-refresh" :loading="loading" @click="fetchGetters">
+              {{ $t('common.refresh') }}
+            </el-button>
           </div>
           <el-input
             v-model="keyword"
-            placeholder="按名称或 ID 搜索"
+            :placeholder="$t('conditionLab.searchPlaceholder')"
             clearable
             prefix-icon="el-icon-search"
             size="small"
             @input="debouncedFetch"
           />
           <div class="getter-list">
-            <div v-if="loading" class="hint">加载中...</div>
-            <div v-else-if="!getterList.length" class="hint">暂无可用的值获取器</div>
+            <div v-if="loading" class="hint">{{ $t('common.loading') }}</div>
+            <div v-else-if="!getterList.length" class="hint">{{ $t('conditionLab.noGetters') }}</div>
             <div
               v-for="g in getterList"
               :key="g.getterId"
               :class="['getter-item', { active: g.getterId === selectedGetterId }]"
               @click="selectGetter(g)"
             >
-              <div class="getter-name">{{ g.getterName }}</div>
-              <div class="getter-id">{{ g.getterId }}</div>
-              <div class="getter-desc">{{ g.description }}</div>
+              <i :class="['getter-icon', isCondition(g) ? 'el-icon-s-operation' : 'el-icon-cpu']" />
+              <div class="getter-body">
+                <div class="getter-name">{{ g.getterName }}</div>
+                <div class="getter-id">{{ g.getterId }}</div>
+              </div>
+              <el-tag v-if="isCondition(g)" size="mini" type="warning" effect="plain">
+                {{ $t('conditionLab.conditionTag') }}
+              </el-tag>
             </div>
           </div>
         </el-card>
       </el-col>
 
-      <!-- 右侧：参数 + 执行 -->
-      <el-col :span="17">
-        <el-card shadow="never">
+      <el-col :xs="24" :sm="24" :md="17" :lg="18">
+        <el-card shadow="never" class="work-card">
           <div slot="header" class="panel-header">
-            <span>
-              {{ currentGetter ? currentGetter.getterName : '未选择值获取器' }}
-              <el-tag v-if="currentGetter" size="mini" type="info" style="margin-left: 8px">
-                {{ currentGetter.getterId }}
-              </el-tag>
+            <span v-if="currentGetter">
+              {{ currentGetter.getterName }}
+              <el-tag size="mini" type="info" effect="plain" class="getter-id-tag">{{ currentGetter.getterId }}</el-tag>
             </span>
+            <span v-else>{{ $t('conditionLab.title') }}</span>
           </div>
 
-          <div v-if="!currentGetter" class="hint">请从左侧选择一个值获取器</div>
+          <div v-if="!currentGetter" class="empty-block">
+            <i class="el-icon-menu empty-icon" />
+            <p class="empty-title">{{ $t('conditionLab.emptyTitle') }}</p>
+            <p class="empty-desc">{{ $t('conditionLab.emptyDesc') }}</p>
+          </div>
 
           <template v-else>
-            <p class="getter-desc-large">{{ currentGetter.description }}</p>
+            <p class="getter-desc">{{ currentGetter.description }}</p>
+            <el-divider content-position="left">{{ $t('conditionLab.params') }}</el-divider>
 
-            <el-form
-              ref="paramForm"
-              :model="formData"
-              :rules="formRules"
-              label-width="150px"
-              size="small"
-            >
-              <el-form-item
-                v-for="field in paramFields"
-                :key="field.name"
-                :prop="field.name"
-              >
-                <template slot="label">
-                  {{ field.name }}
-                  <span v-if="field.required" class="required-flag">*</span>
-                </template>
+            <condition-builder
+              v-if="isCondition(currentGetter)"
+              v-model="condition"
+              :getters="getterList"
+            />
 
-                <!-- 枚举 -->
+            <el-form v-else label-width="140px" size="small" class="param-form">
+              <el-form-item v-for="field in paramFields" :key="field.name" :label="field.name">
                 <el-select
                   v-if="field.isEnum"
                   v-model="formData[field.name]"
-                  :placeholder="field.description || '请选择'"
+                  :placeholder="field.description || $t('valueGetter.pleaseSelect')"
                   clearable
-                  style="width: 100%"
+                  class="form-control"
                 >
-                  <el-option
-                    v-for="ev in field.enumValues"
-                    :key="ev.value"
-                    :label="ev.label || ev.value"
-                    :value="ev.value"
-                  />
+                  <el-option v-for="ev in field.enumValues" :key="ev.value" :label="ev.label || ev.value" :value="ev.value" />
                 </el-select>
-
-                <!-- 数字 -->
                 <el-input-number
                   v-else-if="field.uiType === 'number'"
                   v-model="formData[field.name]"
-                  :placeholder="field.description || '请输入数字'"
-                  style="width: 100%"
+                  controls-position="right"
+                  class="form-control"
                 />
-
-                <!-- 日期 -->
                 <el-date-picker
                   v-else-if="field.uiType === 'date'"
                   v-model="formData[field.name]"
                   type="datetime"
                   :value-format="field.dateFormat"
-                  :placeholder="field.description || '请选择时间'"
-                  style="width: 100%"
+                  :placeholder="field.description || $t('valueGetter.pleaseSelect')"
+                  class="form-control"
                 />
-
-                <!-- 嵌套 getter 操作数 -->
-                <value-getter-operand
-                  v-else-if="field.uiType === 'operand'"
-                  v-model="formData[field.name]"
-                  :getters="getterList"
-                />
-
-                <!-- 字符串（兜底） -->
                 <el-input
                   v-else
                   v-model="formData[field.name]"
-                  :placeholder="field.description || '请输入'"
+                  :placeholder="field.description || $t('valueGetter.pleaseInput')"
                   clearable
                 />
-              </el-form-item>
-
-              <el-form-item>
-                <el-button type="primary" :loading="submitting" @click="handleInvoke">
-                  执行
-                </el-button>
-                <el-button @click="resetForm">重置</el-button>
-                <span class="type-hint">当前支持类型：string / number / date</span>
+                <div v-if="field.description" class="field-desc">{{ field.description }}</div>
               </el-form-item>
             </el-form>
 
-            <el-divider />
-
-            <div class="result-header">
-              <span>执行结果</span>
-              <span v-if="result !== null && !resultError" class="result-meta">
-                耗时 {{ elapsedMs }} ms
-              </span>
+            <div class="action-bar">
+              <el-button type="primary" icon="el-icon-caret-right" :loading="submitting" @click="handleInvoke">
+                {{ $t('conditionLab.execute') }}
+              </el-button>
+              <el-button icon="el-icon-refresh-left" @click="resetForm">{{ $t('common.reset') }}</el-button>
             </div>
-            <el-alert
-              v-if="resultError"
-              :title="resultError"
-              type="error"
-              :closable="false"
-              show-icon
-            />
-            <pre v-else-if="result !== null" class="result-pre">{{ prettyResult }}</pre>
-            <div v-else class="hint">点击「执行」后在此展示结果</div>
+
+            <el-divider content-position="left">{{ $t('conditionLab.output') }}</el-divider>
+            <div class="result-block">
+              <div v-if="resultError" class="result-error">
+                <i class="el-icon-warning-outline" /> {{ resultError }}
+              </div>
+              <getter-result v-else :result="result" :elapsed-ms="elapsedMs" />
+            </div>
           </template>
         </el-card>
       </el-col>
@@ -152,12 +123,22 @@
 
 <script>
 import {getValueGetters, invokeValueGetter} from '@/api/script/valueGetter'
-import ValueGetterOperand from '@/components/ValueGetterOperand'
+import ConditionBuilder from '@/components/ConditionBuilder'
+import GetterResult from '@/components/GetterResult'
 import {buildFormData, toParamFields, toParamValues} from '@/utils/valueGetter'
 
+const CONDITION_GETTER_ID = 'ConditionGetter'
+
+/**
+ * 值获取器调试页面。
+ * <p>
+ * 左侧展示可用的值获取器，右侧按 getter 类型渲染普通参数表单或条件构建器，
+ * 并提供执行调用与结果展示。
+ * </p>
+ */
 export default {
   name: 'ValueGetterTester',
-  components: { ValueGetterOperand },
+  components: { ConditionBuilder, GetterResult },
   data() {
     return {
       keyword: '',
@@ -167,6 +148,7 @@ export default {
       selectedGetterId: null,
       currentGetter: null,
       formData: {},
+      condition: { left: '', op: 'eq', right: '' },
       result: null,
       resultError: '',
       elapsedMs: 0
@@ -174,37 +156,12 @@ export default {
   },
   computed: {
     /**
-     * 把 ParamType 转换成渲染描述：
-     * - 按 sort 升序对齐，保证与后端位置顺序一致
-     * - 推断 uiType / dateFormat
+     * 当前 getter 的参数字段描述
+     *
+     * @returns {Array} 字段描述列表
      */
     paramFields() {
       return this.currentGetter ? toParamFields(this.currentGetter.paramTypes, this.currentGetter.getterId) : []
-    },
-    formRules() {
-      const rules = {}
-      this.paramFields.forEach(f => {
-        if (f.required) {
-          rules[f.name] = [
-            {
-              required: true,
-              message: `请输入${f.name}`,
-              trigger: f.isEnum || f.uiType === 'date' ? 'change' : 'blur'
-            }
-          ]
-        }
-      })
-      return rules
-    },
-    prettyResult() {
-      if (this.result === null) {
-        return ''
-      }
-      try {
-        return JSON.stringify(this.result, null, 2)
-      } catch (e) {
-        return String(this.result)
-      }
     }
   },
   created() {
@@ -212,6 +169,13 @@ export default {
     this.fetchGetters()
   },
   methods: {
+    /**
+     * 防抖包装
+     *
+     * @param {Function} fn 目标函数
+     * @param {number} delay 延迟毫秒
+     * @returns {Function} 防抖函数
+     */
     debounce(fn, delay) {
       let timer = null
       return function(...args) {
@@ -220,6 +184,21 @@ export default {
       }
     },
 
+    /**
+     * 判断是否为布尔条件 getter
+     *
+     * @param {Object} getter getter 元信息
+     * @returns {boolean} 是否为条件 getter
+     */
+    isCondition(getter) {
+      return !!getter && getter.getterId === CONDITION_GETTER_ID
+    },
+
+    /**
+     * 加载 getter 列表
+     *
+     * @returns {Promise} 请求 Promise
+     */
     async fetchGetters() {
       this.loading = true
       try {
@@ -228,11 +207,7 @@ export default {
           idLike: this.keyword || undefined
         })
         this.getterList = (res && res.data) || []
-        // 当前选中的 getter 不在列表中则清空
-        if (
-          this.selectedGetterId &&
-          !this.getterList.some(g => g.getterId === this.selectedGetterId)
-        ) {
+        if (this.selectedGetterId && !this.getterList.some(g => g.getterId === this.selectedGetterId)) {
           this.selectedGetterId = null
           this.currentGetter = null
         }
@@ -243,181 +218,229 @@ export default {
       }
     },
 
+    /**
+     * 选中 getter
+     *
+     * @param {Object} getter getter 元信息
+     */
     selectGetter(getter) {
       this.selectedGetterId = getter.getterId
       this.currentGetter = getter
-      this.result = null
-      this.resultError = ''
-      this.elapsedMs = 0
+      this.condition = { left: '', op: 'eq', right: '' }
+      this.resetOutput()
       this.$nextTick(() => {
-        this.formData = this.buildFormData()
-        if (this.$refs.paramForm) {
-          this.$refs.paramForm.clearValidate()
-        }
+        this.formData = buildFormData(this.paramFields)
       })
     },
 
     /**
-     * 根据字段类型初始化表单默认值，避免 el-input-number 绑定 undefined 报错
+     * 清空输出区
      */
-    buildFormData() {
-      return buildFormData(this.paramFields)
-    },
-
-    resetForm() {
-      this.formData = this.buildFormData()
+    resetOutput() {
       this.result = null
       this.resultError = ''
       this.elapsedMs = 0
-      this.$nextTick(() => {
-        if (this.$refs.paramForm) {
-          this.$refs.paramForm.clearValidate()
-        }
-      })
     },
 
-    handleInvoke() {
-      if (!this.$refs.paramForm) {
+    /**
+     * 重置参数
+     */
+    resetForm() {
+      this.formData = buildFormData(this.paramFields)
+      this.condition = { left: '', op: 'eq', right: '' }
+      this.resetOutput()
+    },
+
+    /**
+     * 构造调用参数
+     *
+     * @returns {Array} ParamValue 列表
+     */
+    buildParams() {
+      if (this.isCondition(this.currentGetter)) {
+        const operands = this.paramFields.filter(f => f.uiType === 'operand')
+        const op = this.paramFields.find(f => f.isEnum)
+        return [
+          { type: 'operand', name: operands[0] ? operands[0].name : 'left', sort: 1, value: this.condition.left || null },
+          { type: 'string', name: op ? op.name : 'op', sort: 2, value: this.condition.op || null },
+          { type: 'operand', name: operands[1] ? operands[1].name : 'right', sort: 3, value: this.condition.right || null }
+        ]
+      }
+      return toParamValues(this.paramFields, this.formData)
+    },
+
+    /**
+     * 执行 getter 取值
+     *
+     * @returns {Promise} 请求 Promise
+     */
+    async handleInvoke() {
+      if (!this.currentGetter || this.submitting) {
         return
       }
-      this.$refs.paramForm.validate(async valid => {
-        if (!valid) {
-          return
-        }
-        this.submitting = true
-        this.resultError = ''
-        this.result = null
-        const start = Date.now()
-        try {
-          const paramValues = toParamValues(this.paramFields, this.formData)
-          const res = await invokeValueGetter({
-            getterId: this.selectedGetterId,
-            paramValues
-          })
-          this.result = (res && res.data) || null
-          this.elapsedMs = Date.now() - start
-        } catch (e) {
-          // 业务错误已由 request 拦截器统一 Message 提示，这里只做局部展示
-          this.resultError = (e && e.message) || '执行失败'
-          this.elapsedMs = Date.now() - start
-        } finally {
-          this.submitting = false
-        }
-      })
+      this.submitting = true
+      this.resultError = ''
+      this.result = null
+      const start = Date.now()
+      try {
+        const res = await invokeValueGetter({
+          getterId: this.selectedGetterId,
+          paramValues: this.buildParams()
+        })
+        this.result = (res && res.data) || null
+        this.elapsedMs = Date.now() - start
+      } catch (e) {
+        this.resultError = (e && e.message) || this.$t('common.fail')
+        this.elapsedMs = Date.now() - start
+      } finally {
+        this.submitting = false
+      }
     }
   }
 }
 </script>
 
-<style scoped>
+<style lang="scss" scoped>
+@import '~@/styles/variables.scss';
+@import '~@/styles/mixin.scss';
+
 .value-getter-tester {
-  padding: 16px;
-}
+  @include responsive-container;
 
-.panel-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
 
-.getter-list {
-  margin-top: 12px;
-  max-height: calc(100vh - 260px);
-  overflow-y: auto;
-}
+  .getter-id-tag {
+    margin-left: 8px;
+  }
 
-.getter-item {
-  padding: 10px 12px;
-  margin-bottom: 8px;
-  border: 1px solid #ebeef5;
-  border-radius: 4px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
+  .getter-list {
+    margin-top: 12px;
+    max-height: calc(100vh - 260px);
+    overflow-y: auto;
 
-.getter-item:hover {
-  border-color: #c0c4cc;
-  background: #fafafa;
-}
+    @include respond-to(mobile) {
+      max-height: 320px;
+    }
+  }
 
-.getter-item.active {
-  border-color: #409eff;
-  background: #ecf5ff;
-}
+  .getter-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s ease;
 
-.getter-name {
-  font-weight: 600;
-  font-size: 14px;
-  color: #303133;
-}
+    &:hover {
+      border-color: #c0c4cc;
+      background: #fafafa;
+    }
 
-.getter-id {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 2px;
-  font-family: Menlo, Consolas, monospace;
-}
+    &.active {
+      border-color: $menuActiveText;
+      background: #ecf5ff;
+    }
+  }
 
-.getter-desc {
-  font-size: 12px;
-  color: #909399;
-  margin-top: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
+  .getter-icon {
+    font-size: 16px;
+    color: #909399;
 
-.getter-desc-large {
-  font-size: 13px;
-  color: #606266;
-  margin: 0 0 12px 0;
-  line-height: 1.6;
-}
+    .getter-item.active & {
+      color: $menuActiveText;
+    }
+  }
 
-.required-flag {
-  color: #f56c6c;
-  margin-left: 2px;
-}
+  .getter-body {
+    flex: 1;
+    min-width: 0;
+  }
 
-.type-hint {
-  margin-left: 12px;
-  font-size: 12px;
-  color: #909399;
-}
+  .getter-name {
+    font-weight: 600;
+    font-size: 14px;
+    color: #303133;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-.result-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  font-weight: 600;
-  color: #303133;
-  margin-bottom: 8px;
-}
+  .getter-id {
+    font-size: 12px;
+    color: #909399;
+    margin-top: 2px;
+    font-family: Menlo, Consolas, monospace;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
-.result-meta {
-  font-size: 12px;
-  color: #909399;
-  font-weight: normal;
-}
+  .empty-block {
+    padding: 48px 0;
+    text-align: center;
 
-.result-pre {
-  margin: 0;
-  padding: 12px;
-  background: #1e1e1e;
-  color: #d4d4d4;
-  border-radius: 4px;
-  font-family: Menlo, Consolas, monospace;
-  font-size: 13px;
-  line-height: 1.6;
-  max-height: 420px;
-  overflow: auto;
-  white-space: pre-wrap;
-  word-break: break-all;
-}
+    .empty-icon {
+      font-size: 48px;
+      color: #dcdfe6;
+    }
 
-.hint {
-  color: #909399;
-  font-size: 13px;
-  padding: 8px 0;
+    .empty-title {
+      margin: 12px 0 4px;
+      font-size: 15px;
+      color: #606266;
+    }
+
+    .empty-desc {
+      margin: 0;
+      font-size: 13px;
+      color: #909399;
+    }
+  }
+
+  .getter-desc {
+    margin: 0;
+    font-size: 13px;
+    color: #606266;
+    line-height: 1.7;
+  }
+
+  .param-form {
+    margin-top: 4px;
+
+    .form-control {
+      width: 100%;
+    }
+
+    .field-desc {
+      font-size: 12px;
+      color: #909399;
+      line-height: 1.5;
+    }
+  }
+
+  .action-bar {
+    margin-top: 8px;
+  }
+
+  .result-error {
+    padding: 10px 12px;
+    color: #f56c6c;
+    background: #fef0f0;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+
+  .hint {
+    color: #909399;
+    font-size: 13px;
+    padding: 8px 0;
+  }
 }
 </style>
