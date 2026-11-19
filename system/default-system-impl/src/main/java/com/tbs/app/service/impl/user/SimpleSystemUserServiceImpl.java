@@ -24,23 +24,20 @@ import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.sql.builder.ISqlBuildContext;
 import com.tbs.web.security.user.IPasswordEncrypt;
 import com.tbs.web.uitl.AuthUtil;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 
-import static com.tbs.app.service.impl.CacheNamesConstants.SYSTEM_USER;
-import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_ID_MAP;
-import static com.tbs.app.service.impl.CacheNamesConstants.USER_NAME_TO_ID;
-
-import jakarta.annotation.Resource;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import com.tbs.app.constant.SystemI18nConstant;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.*;
 
 /**
  * 简单的系统用户服务实现
@@ -52,16 +49,15 @@ public class SimpleSystemUserServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemUserEntity, Long, SystemUserMapper>
     implements ISystemUserService {
 
+    private static final IAuditService<SystemUserEntity, Long, Long> auditService = new DefaultAuditService<>();
     @Resource
     IUserNamePasswordValidator userNamePasswordValidator;
     @Resource
     SystemUserMapper mapper;
     @Resource
     private IPasswordEncrypt encrypt;
-
     @Resource
     private IFeatureFlagService featureFlagService;
-
     @Resource
     private AppSettingProperty property;
 
@@ -75,24 +71,21 @@ public class SimpleSystemUserServiceImpl
         if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
             UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
             AssertUtil.isTrue(!userNamePasswordValidator.validateUserName(entity.getUserName()))
-                .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_NAME_INVALID)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_NAME_INVALID))
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(entity.getPassword()))
-                .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_PASSWORD_INVALID)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_PASSWORD_INVALID))
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         }
         AssertUtil.isTrue(
                 !CollUtil.isEmpty(SpringUtil.getBean(ISystemUserService.class).queryByUserName(entity.getUserName())))
-            .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_NAME_ALREADY_EXISTS, entity.getUserName()))
+            .message(
+                I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_NAME_ALREADY_EXISTS, entity.getUserName()))
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setPassword(encrypt.encrypt(entity.getPassword()));
         entity.setFlag(SystemUserStatusEnum.LOCKED.getCode());
         getMapper().insert(entity);
         return entity;
-    }
-
-    @Override
-    protected List<SystemUserEntity> updateBy(SystemUserEntity entity) {
-        getMapper().updateByPrimaryKey(entity);
-        return List.of(entity);
     }
 
     @Caching(
@@ -113,7 +106,8 @@ public class SimpleSystemUserServiceImpl
             if (featureFlagService.isEnableValue(UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR,
                 UserServiceFeatureFlagConstants.USER_NAME_PASSWORD_VALIDATOR_ENABLE_VALUE)) {
                 AssertUtil.isTrue(!userNamePasswordValidator.validatePassword(systemUserEntity.getPassword()))
-                    .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_PASSWORD_INVALID)).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                    .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_PASSWORD_INVALID))
+                    .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             }
 
             if (!systemUserEntity.getPassword().equals(oldSystemUserEntity.getPassword())) {
@@ -124,8 +118,8 @@ public class SimpleSystemUserServiceImpl
         if (systemUserEntity.getFlag() != null) {
             if (!Objects.equals(systemUserEntity.getFlag(), oldSystemUserEntity.getFlag())) {
                 AssertUtil.isTrue(!EnumUtil.isValidCode(SystemUserStatusEnum.class, systemUserEntity.getFlag()))
-                    .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_STATUS_INVALID, systemUserEntity.getFlag()))
-                    .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                    .message(I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.USER_STATUS_INVALID,
+                        systemUserEntity.getFlag())).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
                 oldSystemUserEntity.setFlag(systemUserEntity.getFlag());
                 AuthUtil.getInstance().notifyUserAuthStatusChanged(oldSystemUserEntity.getUserName());
             }
@@ -248,8 +242,9 @@ public class SimpleSystemUserServiceImpl
     @ExpireOn(value = 1, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<Long> queryAllActiveUserIds() {
-        var users = getQueryWrapper().query().where()
-            .equal(SystemUserEntity::getFlag, SystemUserStatusEnum.ACTIVE.getCode()).pour().fetch();
+        var users =
+            getQueryWrapper().query().where().equal(SystemUserEntity::getFlag, SystemUserStatusEnum.ACTIVE.getCode())
+                .pour().fetch();
         return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
     }
 
@@ -266,13 +261,10 @@ public class SimpleSystemUserServiceImpl
         if (StrUtil.isEmpty(prefix)) {
             return new ArrayList<>();
         }
-        var users = getQueryWrapper().query().where()
-            .leftLike(SystemUserEntity::getUserName, prefix)
+        var users = getQueryWrapper().query().where().leftLike(SystemUserEntity::getUserName, prefix)
             .equal(SystemUserEntity::getFlag, SystemUserStatusEnum.ACTIVE.getCode()).pour().fetch();
         return users.stream().map(SystemUserEntity::getId).collect(Collectors.toList());
     }
-
-    private static final IAuditService<SystemUserEntity, Long, Long> auditService = new DefaultAuditService<>();
 
     @Override
     protected Optional<IAuditService<SystemUserEntity, Long, ?>> getAuditServiceSupport() {
