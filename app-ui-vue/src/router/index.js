@@ -64,13 +64,19 @@ export const constantRoutes = [
     path: '/',
     component: Layout,
     redirect: '/Welcome',
-    meta: { title: '首页', icon: 'el-icon-s-home' },
+    meta: {title: '首页', icon: 'el-icon-s-home'},
     children: [{
       path: 'Welcome',
       name: '欢迎',
       component: () => import('@/views/dashboard/index'),
-      meta: { title: '欢迎页', icon: 'el-icon-star-on' }
-    }
+      meta: {title: '欢迎页', icon: 'el-icon-star-on'}
+    },
+      {
+        path: '/value-getter-tester',
+        component: () => import('@/views/dev/ValueGetterTester'),
+        meta: {title: '值获取器调试'}
+      },
+
     ]
   },
 
@@ -230,13 +236,13 @@ async function generateRoutesFromServer() {
     }
 
     // 添加404路由
-    routes.push({ path: '*', redirect: '/404', hidden: true })
+    routes.push({path: '*', redirect: '/404', hidden: true})
     console.log('合并后的所有路由:', routes) // 调试日志
     return routes
   } catch (error) {
     console.error('生成路由失败:', error)
     // 如果生成路由失败，返回基础路由（静态路由 + 404）
-    return [...constantRoutes, { path: '*', redirect: '/404', hidden: true }]
+    return [...constantRoutes, {path: '*', redirect: '/404', hidden: true}]
   }
 }
 
@@ -244,7 +250,7 @@ async function getServiceRouter() {
   const routes = await generateRoutesFromServer()
   currentRouter = new Router({
     mode: 'history',
-    scrollBehavior: () => ({ y: 0 }),
+    scrollBehavior: () => ({y: 0}),
     routes
   })
   setUpRouterPermissions(currentRouter)
@@ -269,7 +275,7 @@ export async function updateRouter() {
     // 2. 创建新 router 实例
     const newRouter = new Router({
       mode: 'history',
-      scrollBehavior: () => ({ y: 0 }),
+      scrollBehavior: () => ({y: 0}),
       routes: newRoutes
     })
 
