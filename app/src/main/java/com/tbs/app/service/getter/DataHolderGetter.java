@@ -4,6 +4,7 @@ import com.tbs.common.constant.DataHolderBeanNameConstant;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.IDataHolderManager;
 import com.tbs.script.api.expressible.vo.ParamType;
+import com.tbs.script.api.expressible.vo.ParamUiMeta;
 import com.tbs.script.api.expressible.vo.ParamValue;
 import com.tbs.script.api.expressible.vo.ResultValue;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,10 +68,17 @@ public class DataHolderGetter extends AbstractStringValueGetter {
      */
     @Override
     public List<ParamType> requestParamTypes() {
-        return List.of(ParamType.builder().type("string").name(text("value.getter.data-holder.param.holder.name"))
-            .description(text("value.getter.data-holder.param.holder.description")).sort(1).build(),
+        return List.of(ParamType.builder().type("string")
+            .name(text("value.getter.data-holder.param.holder.name"))
+            .description(text("value.getter.data-holder.param.holder.description")).sort(1)
+            .ui(ParamUiMeta.builder().inputType("text")
+                .placeholder(text("value.getter.data-holder.param.holder.placeholder")).build())
+            .build(),
             ParamType.builder().type("string").name(text("value.getter.data-holder.param.key.name"))
-                .description(text("value.getter.data-holder.param.key.description")).sort(2).build());
+                .description(text("value.getter.data-holder.param.key.description")).required(true).sort(2)
+                .ui(ParamUiMeta.builder().inputType("text")
+                    .placeholder(text("value.getter.data-holder.param.key.placeholder")).build())
+                .build());
     }
 
     /**

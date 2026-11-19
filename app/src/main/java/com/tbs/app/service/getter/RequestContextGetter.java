@@ -1,9 +1,6 @@
 package com.tbs.app.service.getter;
 
-import com.tbs.script.api.expressible.vo.EnumValue;
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ParamValue;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.*;
 import com.tbs.web.context.RequestContextHolder;
 import org.springframework.stereotype.Component;
 
@@ -77,9 +74,16 @@ public class RequestContextGetter extends AbstractStringValueGetter {
             "context-value"));
         return List.of(ParamType.builder().isEnum(true).type("string")
             .name(text("value.getter.request-context.param.type.name"))
-            .description(text("value.getter.request-context.param.type.description")).enumValues(enumValues).sort(1)
-            .build(), ParamType.builder().type("string").name(text("value.getter.request-context.param.key.name"))
-            .description(text("value.getter.request-context.param.key.description")).sort(2).build());
+            .description(text("value.getter.request-context.param.type.description")).enumValues(enumValues)
+            .required(true).sort(1)
+            .ui(ParamUiMeta.builder().inputType("select")
+                .placeholder(text("value.getter.request-context.param.type.placeholder")).build())
+            .build(),
+            ParamType.builder().type("string").name(text("value.getter.request-context.param.key.name"))
+                .description(text("value.getter.request-context.param.key.description")).sort(2)
+                .ui(ParamUiMeta.builder().inputType("text")
+                    .placeholder(text("value.getter.request-context.param.key.placeholder")).build())
+                .build());
     }
 
     /**

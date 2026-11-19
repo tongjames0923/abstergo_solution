@@ -177,11 +177,14 @@ public class ConditionGetter extends AbstractStringValueGetter {
             op(OP_STARTS_WITH, "starts-with"), op(OP_ENDS_WITH, "ends-with"), op(OP_IS_TRUE, "is-true"),
             op(OP_IS_FALSE, "is-false"), op(OP_IS_EMPTY, "is-empty"), op(OP_IS_NOT_EMPTY, "is-not-empty"));
         return List.of(ParamType.builder().type("operand").name(text("value.getter.condition.param.left.name"))
-            .description(text("value.getter.condition.param.left.description")).sort(1).build(),
+            .description(text("value.getter.condition.param.left.description")).sort(1)
+            .ui(ParamUiMeta.builder().inputType("operand").build()).build(),
             ParamType.builder().isEnum(true).type("string").name(text("value.getter.condition.param.op.name"))
-                .description(text("value.getter.condition.param.op.description")).enumValues(operators).sort(2).build(),
+                .description(text("value.getter.condition.param.op.description")).enumValues(operators).required(true)
+                .sort(2).ui(ParamUiMeta.builder().inputType("select").build()).build(),
             ParamType.builder().type("operand").name(text("value.getter.condition.param.right.name"))
-                .description(text("value.getter.condition.param.right.description")).sort(3).build());
+                .description(text("value.getter.condition.param.right.description")).sort(3)
+                .ui(ParamUiMeta.builder().inputType("operand").build()).build());
     }
 
     /**

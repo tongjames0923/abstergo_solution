@@ -1,9 +1,6 @@
 package com.tbs.app.service.getter;
 
-import com.tbs.script.api.expressible.vo.EnumValue;
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ParamValue;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.*;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.uitl.AuthUtil;
 import jakarta.annotation.Resource;
@@ -108,7 +105,10 @@ public class CurrentUserGetter extends AbstractStringValueGetter {
             enumValue(TYPE_STATUS, "status"));
         return List.of(ParamType.builder().isEnum(true).type("string")
             .name(text("value.getter.current-user.param.type.name"))
-            .description(text("value.getter.current-user.param.type.description")).enumValues(enumValues).sort(1)
+            .description(text("value.getter.current-user.param.type.description")).enumValues(enumValues)
+            .required(true).sort(1)
+            .ui(ParamUiMeta.builder().inputType("select")
+                .placeholder(text("value.getter.current-user.param.type.placeholder")).build())
             .build());
     }
 

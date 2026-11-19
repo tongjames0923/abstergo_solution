@@ -25,6 +25,11 @@ public class ParamType implements Serializable {
     private String name;
 
     /**
+     * 参数展示标签，为空时前端回退使用 name
+     */
+    private String label;
+
+    /**
      * 参数描述
      */
     private String description;
@@ -48,5 +53,10 @@ public class ParamType implements Serializable {
      * 枚举值
      */
     private Collection<EnumValue> enumValues;
+
+    /**
+     * 输入控件元信息，为空时前端按 type 推断控件
+     */
+    private ParamUiMeta ui;
 
 }

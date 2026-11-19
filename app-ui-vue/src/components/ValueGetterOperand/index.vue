@@ -1,10 +1,12 @@
 <template>
   <div class="value-getter-operand">
-    <el-radio-group v-model="mode" size="mini" @change="handleModeChange">
-      <el-radio-button label="literal">{{ $t('valueGetter.literal') }}</el-radio-button>
-      <el-radio-button label="getter">{{ $t('valueGetter.getterCall') }}</el-radio-button>
-    </el-radio-group>
-    <span v-if="depth > 0" class="depth-tag">{{ $t('valueGetter.nestedDepth', { depth }) }}</span>
+    <div class="operand-mode">
+      <el-radio-group v-model="mode" size="mini" @change="handleModeChange">
+        <el-radio-button label="literal">{{ $t('valueGetter.literal') }}</el-radio-button>
+        <el-radio-button label="getter">{{ $t('valueGetter.getterCall') }}</el-radio-button>
+      </el-radio-group>
+      <span v-if="depth > 0" class="depth-tag">{{ $t('valueGetter.nestedDepth', { depth }) }}</span>
+    </div>
 
     <div v-if="mode === 'literal'" class="literal-input">
       <el-input-number
@@ -25,122 +27,150 @@
         class="literal-control"
         @change="handleLiteralInput"
       />
+      <el-select
+        v-else-if="literalUiType === 'boolean'"
+        :value="literalValue"
+        :placeholder="$t('valueGetter.pleaseSelect')"
+        size="small"
+        clearable
+        class="literal-control"
+        @change="handleLiteralInput"
+      >
+        <el-option :label="$t('valueGetter.booleanTrue')" value="true" />
+        <el-option :label="$t('valueGetter.booleanFalse')" value="false" />
+      </el-select>
       <el-input
         v-else
         :value="literalValue"
         :placeholder="$t('valueGetter.literalPlaceholder')"
         size="small"
         clearable
+        class="literal-control"
         @input="handleLiteralInput"
       />
     </div>
 
-    <div v-else class="getter-config">
-      <el-select
-        v-model="selectedGetterId"
-        :placeholder="$t('valueGetter.selectGetter')"
-        size="small"
-        filterable
-        class="getter-select"
-        @change="handleGetterChange"
-      >
-        <el-option
-          v-for="g in availableGetters"
-          :key="g.getterId"
-          :label="g.getterName"
-          :value="g.getterId"
-        />
-      </el-select>
-
-      <div v-if="selectedGetter && paramFields.length" class="param-list">
-        <div v-for="field in paramFields" :key="field.name" class="param-item">
-          <div class="param-label">
-            <span>{{ field.name }}</span>
-            <span v-if="field.required" class="required-flag">*</span>
+    <div v-else class="getter-summary">
+      <template v-if="selectedGetter">
+        <div class="summary-body">
+          <div class="summary-title">
+            <i class="el-icon-cpu" />
+            <span class="summary-name">{{ selectedGetter.getterName }}</span>
+            <el-tag size="mini" type="info" effect="plain">{{ selectedGetter.getterId }}</el-tag>
           </div>
-          <div v-if="field.description" class="param-desc">{{ field.description }}</div>
+          <div class="summary-params">{{ paramsSummary }}</div>
+        </div>
+        <div class="summary-actions">
+          <el-button type="text" size="mini" @click="openDialog">{{ $t('common.edit') }}</el-button>
+          <el-button type="text" size="mini" @click="clearGetter">{{ $t('valueGetter.clearCall') }}</el-button>
+        </div>
+      </template>
+      <el-button
+        v-else
+        type="primary"
+        plain
+        size="small"
+        icon="el-icon-plus"
+        @click="openDialog"
+      >
+        {{ $t('valueGetter.selectGetter') }}
+      </el-button>
+    </div>
 
+    <el-dialog
+      :visible.sync="dialogVisible"
+      :title="dialogTitle"
+      :width="dialogWidth"
+      append-to-body
+      :close-on-click-modal="false"
+      custom-class="value-getter-operand-dialog"
+      @closed="handleDialogClosed"
+    >
+      <el-form label-width="120px" size="small" class="operand-dialog-form">
+        <el-form-item :label="$t('valueGetter.getter')" required>
+          <el-select
+            v-model="draftGetterId"
+            :placeholder="$t('valueGetter.selectGetter')"
+            filterable
+            class="dialog-getter-select"
+            @change="handleDraftGetterChange"
+          >
+            <el-option
+              v-for="g in availableGetters"
+              :key="g.getterId"
+              :label="g.getterName"
+              :value="g.getterId"
+            />
+          </el-select>
+        </el-form-item>
+
+        <el-form-item
+          v-for="field in draftFields"
+          :key="field.name"
+          :label="field.label"
+          :required="field.required"
+        >
           <value-getter-operand
             v-if="field.uiType === 'operand'"
-            :value="formData[field.name]"
+            :value="draftFormData[field.name]"
             :getters="getters"
             :depth="depth + 1"
             :value-type="field.type"
-            @input="setFieldValue(field.name, $event)"
+            @input="setDraftField(field.name, $event)"
           />
-
-          <el-select
-            v-else-if="field.isEnum"
-            :value="formData[field.name]"
-            :placeholder="field.description || $t('valueGetter.pleaseSelect')"
-            size="small"
-            clearable
-            class="param-control"
-            @change="setFieldValue(field.name, $event)"
-          >
-            <el-option v-for="ev in field.enumValues" :key="ev.value" :label="ev.label || ev.value" :value="ev.value" />
-          </el-select>
-
-          <el-input-number
-            v-else-if="field.uiType === 'number'"
-            :value="formData[field.name]"
-            size="small"
-            controls-position="right"
-            class="param-control"
-            @change="setFieldValue(field.name, $event)"
-          />
-
-          <el-date-picker
-            v-else-if="field.uiType === 'date'"
-            :value="formData[field.name]"
-            :type="field.type === 'time' ? 'time' : 'datetime'"
-            :value-format="field.dateFormat"
-            :placeholder="field.description || $t('valueGetter.pleaseSelect')"
-            size="small"
-            class="param-control"
-            @change="setFieldValue(field.name, $event)"
-          />
-
-          <el-input
+          <getter-param-field
             v-else
-            :value="formData[field.name]"
-            :placeholder="field.description || $t('valueGetter.pleaseInput')"
-            size="small"
-            clearable
-            @input="setFieldValue(field.name, $event)"
+            :field="field"
+            :value="draftFormData[field.name]"
+            :error="draftErrorOf(field)"
+            @input="setDraftField(field.name, $event)"
           />
-        </div>
-      </div>
+          <div v-if="field.description" class="field-desc">{{ field.description }}</div>
+        </el-form-item>
 
-      <div v-else-if="selectedGetterId && !selectedGetter" class="getter-missing">
-        {{ $t('valueGetter.getterNotFound', { id: selectedGetterId }) }}
+        <div v-if="!draftGetterId" class="dialog-empty">
+          <i class="el-icon-cpu" />
+          <span>{{ $t('valueGetter.selectGetterFirst') }}</span>
+        </div>
+      </el-form>
+
+      <div slot="footer">
+        <el-button size="small" @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button size="small" type="primary" @click="confirmDialog">{{ $t('common.confirm') }}</el-button>
       </div>
-    </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import {
   buildFormData,
+  isBlank,
+  isGetterOperand,
   parseGetterOperand,
   resolveUiType,
   stringifyGetterOperand,
   toParamFields,
-  toParamValues
+  toParamValues,
+  validateFields
 } from '@/utils/valueGetter'
+import GetterParamField from '@/components/GetterParamField'
+import ResponsiveMixin from '@/mixins/responsive'
 
 const CONDITION_GETTER_ID = 'ConditionGetter'
 
 /**
- * 嵌套 getter 操作数编辑器。
+ * 嵌套 getter 调用操作数编辑器。
  * <p>
- * 支持字面量与 getter 调用两种模式；选择 getter 后按其元信息渲染参数控件。
- * 组件通过 name 自引用实现递归，因此选中 ConditionGetter 时其左右操作数
- * （同为 operand 类型）会继续展开编辑器，形成任意深度的条件嵌套。
+ * 字面值直接内联输入；选择 getter 调用后在弹窗内选择 getter 并按参数类型配置，
+ * 确认后以「getter 名称 + 参数摘要」呈现，可再次进入弹窗修改。弹窗内操作数参数
+ * 通过组件自引用递归展开，每层各开一个弹窗，避免无限嵌套的内联表单。
  * </p>
  */
 export default {
   name: 'ValueGetterOperand',
+  components: { GetterParamField },
+  mixins: [ResponsiveMixin],
   props: {
     value: {
       type: String,
@@ -165,6 +195,10 @@ export default {
       literalValue: '',
       selectedGetterId: '',
       formData: {},
+      dialogVisible: false,
+      draftGetterId: '',
+      draftFormData: {},
+      showDraftErrors: false,
       pendingParams: null,
       emitting: false
     }
@@ -245,14 +279,84 @@ export default {
       return this.selectedGetter ? toParamFields(this.selectedGetter.paramTypes, this.selectedGetter.getterId) : []
     },
     /**
+     * 弹窗中选中的 getter 元信息
+     *
+     * @returns {Object|null} 元信息
+     */
+    draftGetter() {
+      if (!this.draftGetterId) {
+        return null
+      }
+      return this.getters.find(g => g.getterId === this.draftGetterId) || null
+    },
+    /**
+     * 弹窗中的参数字段
+     *
+     * @returns {Array} 字段列表
+     */
+    draftFields() {
+      return this.draftGetter ? toParamFields(this.draftGetter.paramTypes, this.draftGetter.getterId) : []
+    },
+    /**
+     * 弹窗中的参数校验结果
+     *
+     * @returns {Object} 参数名到失败规则的映射
+     */
+    draftErrors() {
+      return validateFields(this.draftFields, this.draftFormData)
+    },
+    /**
+     * 弹窗标题
+     *
+     * @returns {string} 标题文案
+     */
+    dialogTitle() {
+      return this.$t('valueGetter.configCall')
+    },
+    /**
+     * 弹窗宽度，手机端占满可视宽度
+     *
+     * @returns {string} CSS 宽度
+     */
+    dialogWidth() {
+      return this.isPhone ? '92%' : '560px'
+    },
+    /**
+     * 已配置参数的摘要文本
+     *
+     * @returns {string} 摘要
+     */
+    paramsSummary() {
+      const fields = this.paramFields
+      if (!fields.length) {
+        return this.$t('valueGetter.noArgs')
+      }
+      return fields.map(field => {
+        const raw = this.formData[field.name]
+        let text
+        if (isBlank(raw)) {
+          text = '—'
+        } else if (isGetterOperand(raw)) {
+          text = this.$t('valueGetter.nestedCall')
+        } else {
+          text = String(raw)
+        }
+        return field.name + '=' + text
+      }).join(' · ')
+    },
+    /**
      * 序列化后的操作数值
      *
      * @returns {string} 字面量或 getter 调用 JSON
      */
     serialized() {
-      return this.mode === 'getter'
-        ? stringifyGetterOperand(this.selectedGetterId, toParamValues(this.paramFields, this.formData))
-        : this.literalValue
+      if (this.mode !== 'getter') {
+        return this.literalValue
+      }
+      if (!this.selectedGetterId) {
+        return ''
+      }
+      return stringifyGetterOperand(this.selectedGetterId, toParamValues(this.paramFields, this.formData))
     }
   },
   watch: {
@@ -319,39 +423,107 @@ export default {
     },
 
     /**
-     * 切换模式
+     * 切换字面值 / getter 调用模式
      *
      * @param {string} mode 目标模式
      */
     handleModeChange(mode) {
-      if (mode === 'literal') {
-        this.selectedGetterId = ''
-        this.formData = {}
-      } else {
-        this.literalValue = ''
+      if (mode === 'getter' && !this.selectedGetterId) {
+        this.openDialog()
+        return
       }
       this.emitValue()
     },
 
     /**
-     * 选择 getter
-     *
-     * @param {string} getterId getter ID
+     * 打开 getter 配置弹窗
      */
-    handleGetterChange(getterId) {
-      const getter = this.getters.find(g => g.getterId === getterId)
-      this.formData = buildFormData(getter ? toParamFields(getter.paramTypes, getter.getterId) : [])
-      this.emitValue()
+    openDialog() {
+      this.draftGetterId = this.selectedGetterId || ''
+      const fields = this.draftGetter
+        ? toParamFields(this.draftGetter.paramTypes, this.draftGetter.getterId)
+        : []
+      const data = buildFormData(fields)
+      fields.forEach(field => {
+        const current = this.formData[field.name]
+        if (current !== undefined && current !== null) {
+          data[field.name] = current
+        }
+      })
+      this.draftFormData = data
+      this.showDraftErrors = false
+      this.dialogVisible = true
     },
 
     /**
-     * 设置参数值
+     * 弹窗内切换 getter
+     *
+     * @param {string} getterId getter ID
+     */
+    handleDraftGetterChange(getterId) {
+      const getter = this.getters.find(g => g.getterId === getterId)
+      this.draftFormData = buildFormData(getter ? toParamFields(getter.paramTypes, getter.getterId) : [])
+      this.showDraftErrors = false
+    },
+
+    /**
+     * 更新弹窗中的参数值
      *
      * @param {string} name 参数名
      * @param {*} val 参数值
      */
-    setFieldValue(name, val) {
-      this.$set(this.formData, name, val)
+    setDraftField(name, val) {
+      this.$set(this.draftFormData, name, val)
+    },
+
+    /**
+     * 弹窗字段错误提示
+     *
+     * @param {Object} field 字段描述
+     * @returns {string} 错误规则标识
+     */
+    draftErrorOf(field) {
+      return this.showDraftErrors ? this.draftErrors[field.name] || '' : ''
+    },
+
+    /**
+     * 确认 getter 配置
+     */
+    confirmDialog() {
+      if (!this.draftGetterId) {
+        this.$message.warning(this.$t('valueGetter.selectGetterFirst'))
+        return
+      }
+      this.showDraftErrors = true
+      if (Object.keys(this.draftErrors).length) {
+        this.$message.warning(this.$t('valueGetter.fixParams'))
+        return
+      }
+      this.selectedGetterId = this.draftGetterId
+      this.formData = { ...this.draftFormData }
+      this.mode = 'getter'
+      this.dialogVisible = false
+      this.emitValue()
+    },
+
+    /**
+     * 弹窗关闭后复位草稿状态
+     */
+    handleDialogClosed() {
+      this.draftGetterId = ''
+      this.draftFormData = {}
+      this.showDraftErrors = false
+      if (this.mode === 'getter' && !this.selectedGetterId) {
+        this.mode = 'literal'
+      }
+    },
+
+    /**
+     * 清除已配置的 getter 调用
+     */
+    clearGetter() {
+      this.selectedGetterId = ''
+      this.formData = {}
       this.emitValue()
     },
 
@@ -396,62 +568,98 @@ export default {
 .value-getter-operand {
   @include responsive-container;
 
+  .operand-mode {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
   .depth-tag {
-    margin-left: 8px;
     font-size: 12px;
     color: #909399;
   }
 
-  .getter-config {
+  .literal-input {
     margin-top: 8px;
-    padding: 10px;
-    background: #fafafa;
-    border: 1px solid #ebeef5;
-    border-radius: 4px;
   }
 
-  .getter-select,
-  .param-control,
   .literal-control {
     width: 100%;
   }
 
-  .param-list {
-    margin-top: 10px;
+  .getter-summary {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 8px;
+    padding: 8px 10px;
+    border: 1px solid #ebeef5;
+    border-radius: 4px;
+    background: #fafafa;
   }
 
-  .param-item {
-    padding-top: 10px;
-    border-top: 1px dashed #ebeef5;
+  .summary-body {
+    flex: 1;
+    min-width: 0;
+  }
 
-    &:first-child {
-      padding-top: 0;
-      border-top: none;
+  .summary-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+
+    i {
+      color: #909399;
     }
   }
 
-  .param-label {
+  .summary-name {
     font-size: 13px;
-    color: #606266;
-    margin-bottom: 4px;
+    font-weight: 600;
+    color: #303133;
   }
 
-  .required-flag {
-    color: #f56c6c;
-    margin-left: 2px;
-  }
-
-  .param-desc {
+  .summary-params {
+    margin-top: 4px;
     font-size: 12px;
+    line-height: 1.5;
     color: #909399;
-    margin-bottom: 6px;
-    line-height: 1.4;
+    word-break: break-word;
   }
 
-  .getter-missing {
-    margin-top: 8px;
+  .summary-actions {
+    flex: none;
+  }
+
+  .dialog-getter-select {
+    width: 100%;
+  }
+
+  .operand-dialog-form {
+    ::v-deep .el-form-item:last-child {
+      margin-bottom: 0;
+    }
+  }
+
+  .field-desc {
     font-size: 12px;
-    color: #f56c6c;
+    line-height: 1.5;
+    color: #909399;
+  }
+
+  .dialog-empty {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 18px 0;
+    font-size: 13px;
+    color: #909399;
+
+    i {
+      font-size: 16px;
+    }
   }
 }
 </style>

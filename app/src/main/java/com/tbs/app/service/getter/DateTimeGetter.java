@@ -1,9 +1,6 @@
 package com.tbs.app.service.getter;
 
-import com.tbs.script.api.expressible.vo.EnumValue;
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ParamValue;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.*;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
@@ -89,6 +86,12 @@ public class DateTimeGetter extends AbstractStringValueGetter {
     private static final String I18N_PREFIX = "value.getter.date-time.type.";
 
     /**
+     * 常用时区候选值，仅作为输入建议，用户可填写任意合法 ZoneId
+     */
+    private static final List<String> COMMON_ZONES = List.of("Asia/Shanghai", "Asia/Tokyo", "Asia/Singapore", "UTC",
+        "Europe/London", "Europe/Berlin", "America/New_York", "America/Los_Angeles", "Australia/Sydney");
+
+    /**
      * 获取取值器名称。
      *
      * @return 国际化后的取值器名称
@@ -131,9 +134,26 @@ public class DateTimeGetter extends AbstractStringValueGetter {
             enumValue(TYPE_HOUR, "hour"));
         return List.of(ParamType.builder().isEnum(true).type("string")
             .name(text("value.getter.date-time.param.type.name"))
-            .description(text("value.getter.date-time.param.type.description")).enumValues(enumValues).sort(1).build(),
+            .description(text("value.getter.date-time.param.type.description")).enumValues(enumValues)
+            .required(true).sort(1)
+            .ui(ParamUiMeta.builder().inputType("select")
+                .placeholder(text("value.getter.date-time.param.type.placeholder")).build())
+            .build(),
             ParamType.builder().type("string").name(text("value.getter.date-time.param.zone.name"))
-                .description(text("value.getter.date-time.param.zone.description")).sort(2).build());
+                .description(text("value.getter.date-time.param.zone.description")).enumValues(zoneCandidates())
+                .sort(2)
+                .ui(ParamUiMeta.builder().inputType("select").filterable(true).allowCreate(true)
+                    .placeholder(text("value.getter.date-time.param.zone.placeholder")).build())
+                .build());
+    }
+
+    /**
+     * 构造常用时区候选值。
+     *
+     * @return 时区候选值列表
+     */
+    private List<EnumValue> zoneCandidates() {
+        return COMMON_ZONES.stream().map(zone -> EnumValue.builder().value(zone).label(zone).build()).toList();
     }
 
     /**

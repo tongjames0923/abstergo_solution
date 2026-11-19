@@ -1,6 +1,7 @@
 package com.tbs.app.service.getter;
 
 import com.tbs.script.api.expressible.vo.ParamType;
+import com.tbs.script.api.expressible.vo.ParamUiMeta;
 import com.tbs.script.api.expressible.vo.ParamValue;
 import com.tbs.script.api.expressible.vo.ResultValue;
 import jakarta.annotation.Resource;
@@ -84,10 +85,18 @@ public class ConfigPropertyGetter extends AbstractStringValueGetter {
      */
     @Override
     public List<ParamType> requestParamTypes() {
-        return List.of(ParamType.builder().type("string").name(text("value.getter.config-property.param.key.name"))
-            .description(text("value.getter.config-property.param.key.description")).sort(1).build(),
+        return List.of(ParamType.builder().type("string")
+            .name(text("value.getter.config-property.param.key.name"))
+            .description(text("value.getter.config-property.param.key.description")).required(true).sort(1)
+            .ui(ParamUiMeta.builder().inputType("text")
+                .placeholder(text("value.getter.config-property.param.key.placeholder"))
+                .pattern("^(tbs|app|server|spring)\\..+$").build())
+            .build(),
             ParamType.builder().type("string").name(text("value.getter.config-property.param.default.name"))
-                .description(text("value.getter.config-property.param.default.description")).sort(2).build());
+                .description(text("value.getter.config-property.param.default.description")).sort(2)
+                .ui(ParamUiMeta.builder().inputType("text")
+                    .placeholder(text("value.getter.config-property.param.default.placeholder")).build())
+                .build());
     }
 
     /**

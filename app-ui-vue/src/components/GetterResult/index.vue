@@ -25,7 +25,7 @@
 
       <div class="result-meta">
         <el-tag size="mini" type="info" effect="plain">{{ typeName }}</el-tag>
-        <el-tag v-if="arrayValue" size="mini" type="warning" effect="plain" class="array-tag">
+        <el-tag v-if="arrayValue" size="mini" type="warning" effect="plain">
           {{ $t('getterResult.array') }} · {{ arrayValue.length }}
         </el-tag>
         <span v-if="elapsedMs !== null" class="elapsed">{{ elapsedMs }} ms</span>
@@ -39,7 +39,7 @@
  * 取值结果展示控件。
  * <p>
  * 依据后端 ResultType 声明的类型对 ResultValue 做语义化展示：布尔显示状态图标与判定文案，
- * 数值突出显示，字符串按文本展示；不再直接暴露原始返回体 JSON。
+ * 数值突出显示，字符串按文本展示；原始返回体由调用方切换查看。
  * </p>
  */
 export default {
@@ -84,7 +84,7 @@ export default {
      */
     typeName() {
       if (!this.result || !this.result.type) {
-        return this.$t('result.typeUnknown')
+        return this.$t('getterResult.typeUnknown')
       }
       return this.result.type.name || this.result.type.type || this.$t('getterResult.typeUnknown')
     },
@@ -161,7 +161,7 @@ export default {
     display: flex;
     align-items: center;
     gap: 12px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     border-radius: 4px;
     border: 1px solid;
 
@@ -178,7 +178,7 @@ export default {
     }
 
     .bool-icon {
-      font-size: 26px;
+      font-size: 24px;
     }
 
     .bool-value {
@@ -195,16 +195,17 @@ export default {
   }
 
   .result-number {
-    padding: 14px 16px;
+    padding: 12px 14px;
     background: #ecf5ff;
     border: 1px solid #d9ecff;
     border-radius: 4px;
 
     .number-value {
-      font-size: 24px;
+      font-size: 22px;
       font-weight: 600;
       color: $menuActiveText;
       font-family: Menlo, Consolas, monospace;
+      word-break: break-all;
     }
   }
 
@@ -212,7 +213,7 @@ export default {
     display: flex;
     align-items: flex-start;
     gap: 8px;
-    padding: 14px 16px;
+    padding: 12px 14px;
     background: #f5f7fa;
     border: 1px solid #ebeef5;
     border-radius: 4px;
@@ -237,21 +238,14 @@ export default {
   .result-meta {
     display: flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 8px;
     margin-top: 10px;
-
-    @include respond-to(phone) {
-      flex-wrap: wrap;
-    }
 
     .elapsed {
       margin-left: auto;
       font-size: 12px;
       color: #909399;
-    }
-
-    .array-tag {
-      margin-left: 0;
     }
   }
 }

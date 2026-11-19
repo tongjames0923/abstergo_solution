@@ -49,7 +49,7 @@ public class SystemInfoGetter implements IValueGetter, ApplicationListener<WebSe
 
     @Override
     public List<ParamType> requestParamTypes() {
-        return List.of(ParamType.builder().isEnum(true).type("string").name("系统信息类型").description(
+        return List.of(ParamType.builder().isEnum(true).type("string").required(true).name("系统信息类型").description(
             "选择需要获取的系统信息类型。" +
                 "hostname：主机名称；" +
                 "hostIp：主机 IP 地址（本机非回环 IPv4）；" +
@@ -64,7 +64,8 @@ public class SystemInfoGetter implements IValueGetter, ApplicationListener<WebSe
                 EnumValue.builder().value("hostport").label("主机端口（Web 服务监听端口）").build(),
                 EnumValue.builder().value("os").label("操作系统（名称/版本/架构）").build(),
                 EnumValue.builder().value("cpu").label("CPU 信息（核心数与使用率）").build(),
-                EnumValue.builder().value("memory").label("内存信息（总量/可用/已用）").build())).sort(1).build());
+                EnumValue.builder().value("memory").label("内存信息（总量/可用/已用）").build())).sort(1)
+            .ui(ParamUiMeta.builder().inputType("select").build()).build());
     }
 
     @Override
