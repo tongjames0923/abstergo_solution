@@ -30,12 +30,17 @@ export function resolveUiType(rawType) {
 }
 
 /**
- * 把 ParamType 列表转换为按 sort 升序排列的字段描述
+ * 把 ParamType 列表转换为按 sort 升序排列的字段描述。
+ * <p>
+ * 对 ConditionGetter 的左右操作数做兜底识别：即使后端仍返回 string 类型，
+ * 也按 operand 渲染嵌套编辑器，避免用户面对原始 JSON 输入框。
+ * </p>
  *
  * @param {Array} paramTypes 后端参数定义
+ * @param {string} getterId getter ID，用于兜底识别
  * @returns {Array} 字段描述列表
  */
-export function toParamFields(paramTypes) {
+export function toParamFields(paramTypes, getterId) {
   if (!Array.isArray(paramTypes)) {
     return []
   }
@@ -44,7 +49,12 @@ export function toParamFields(paramTypes) {
     const sb = b.sort == null ? Number.MAX_SAFE_INTEGER : b.sort
     return sa - sb
   }).map(pt => {
-    const { uiType, dateFormat } = resolveUiType(pt.type)
+    const resolved = resolveUiType(pt.type)
+    const dateFormat = resolved.dateFormat
+    let uiType = resolved.uiType
+    if (getterId === 'ConditionGetter' && !pt.isEnum) {
+      uiType = 'operand'
+    }
     return {
       ...pt,
       isEnum: !!pt.isEnum,

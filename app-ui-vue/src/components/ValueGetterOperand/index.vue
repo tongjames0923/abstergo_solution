@@ -164,7 +164,7 @@ export default {
       return this.getters.find(g => g.getterId === this.selectedGetterId) || null
     },
     paramFields() {
-      return this.selectedGetter ? toParamFields(this.selectedGetter.paramTypes) : []
+      return this.selectedGetter ? toParamFields(this.selectedGetter.paramTypes, this.selectedGetter.getterId) : []
     },
     serialized() {
       return this.mode === 'getter'

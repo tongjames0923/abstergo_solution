@@ -179,7 +179,7 @@ export default {
      * - 推断 uiType / dateFormat
      */
     paramFields() {
-      return this.currentGetter ? toParamFields(this.currentGetter.paramTypes) : []
+      return this.currentGetter ? toParamFields(this.currentGetter.paramTypes, this.currentGetter.getterId) : []
     },
     formRules() {
       const rules = {}
