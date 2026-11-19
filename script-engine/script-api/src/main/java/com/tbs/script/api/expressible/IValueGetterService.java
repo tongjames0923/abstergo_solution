@@ -70,6 +70,7 @@ public class IValueGetterService {
             .collect(Collectors.joining(", ", "[", values.size() > 10 ? ", ...]" : "]"));
         return "values(size=" + values.size() + ")=" + preview;
     }
+
     /* ------------------------------ 日志辅助方法 ------------------------------ */
 
     private static String safeGetterName(IValueGetter getter) {
@@ -96,7 +97,7 @@ public class IValueGetterService {
     /**
      * 获取所有值获取器
      */
-    List<IValueGetter> getValueGetters(String nameLike, String idLike) {
+    public List<IValueGetter> getValueGetters(String nameLike, String idLike) {
         if (log.isDebugEnabled()) {
             log.debug("查询值获取器列表, nameLike={}, idLike={}", nameLike, idLike);
         }
@@ -124,7 +125,7 @@ public class IValueGetterService {
      * @param paramValues 参数值
      * @return 结果值
      */
-    ResultValue invokeValueGetter(String getterId, Collection<ParamValue> paramValues) {
+    public ResultValue invokeValueGetter(String getterId, Collection<ParamValue> paramValues) {
         if (StrUtil.isBlank(getterId)) {
             log.warn("调用值获取器失败, getterId 为空");
             throw new IllegalArgumentException("getterId is empty");
@@ -146,7 +147,6 @@ public class IValueGetterService {
             try {
                 normalizedValues = validateAndNormalizeParams(valueGetter, paramValues);
             } catch (IllegalArgumentException e) {
-                // 校验失败属于调用方参数问题，warn 级别即可，上下文带上 getterId 方便排查
                 log.warn("值获取器参数校验失败, getterId={}, 参数摘要={}, 原因={}", getterId,
                     summarizeParams(paramValues), e.getMessage());
                 throw e;
@@ -158,7 +158,6 @@ public class IValueGetterService {
         try {
             resultValue = valueGetter.getValue(normalizedValues);
         } catch (Exception e) {
-            // getter 内部异常向上抛给调用方，这里记录完整上下文
             log.error("调用值获取器异常, getterId={}, getterName={}, 参数摘要={}, 耗时={}ms", getterId,
                 safeGetterName(valueGetter), summarizeParams(normalizedValues), System.currentTimeMillis() - start, e);
             throw e;
@@ -177,6 +176,7 @@ public class IValueGetterService {
      * 校验规则：
      * <ul>
      *     <li>传入参数数量不能超过声明参数数量；</li>
+     *     <li>输入参数若都带 sort，先按 sort 升序重排，保证与声明参数的 sort 顺序对齐；</li>
      *     <li>声明为枚举的参数，传入值必须命中某个枚举 value；</li>
      *     <li>声明了参数但调用方少传时，以 null 占位，保证 getter 内部按位置读取不错位。</li>
      * </ul>
@@ -184,7 +184,6 @@ public class IValueGetterService {
     private List<ParamValue> validateAndNormalizeParams(IValueGetter valueGetter, Collection<ParamValue> paramValues) {
         List<ParamType> paramTypes = valueGetter.requestParamTypes();
         if (CollUtil.isEmpty(paramTypes)) {
-            // 未声明任何参数，忽略调用方传入的值
             if (CollUtil.isNotEmpty(paramValues)) {
                 log.debug("值获取器未声明参数, 忽略传入的 {} 个参数, getterId={}", paramValues.size(),
                     valueGetter.getGetterId());
@@ -196,8 +195,18 @@ public class IValueGetterService {
             .sorted(Comparator.comparing(ParamType::getSort, Comparator.nullsLast(Integer::compareTo)))
             .collect(Collectors.toList());
 
-        // 过滤掉 null 元素后，按位置与声明参数一一对应
+        // 过滤掉 null 元素
         List<ParamValue> input = paramValues.stream().filter(Objects::nonNull).collect(Collectors.toList());
+
+        // 输入若都带 sort，按 sort 升序重排，避免调用方乱序传入导致位置错位
+        if (!input.isEmpty() && input.stream().allMatch(pv -> pv.getSort() != null)) {
+            input = input.stream()
+                .sorted(Comparator.comparing(ParamValue::getSort, Comparator.nullsLast(Integer::compareTo)))
+                .collect(Collectors.toList());
+        } else if (input.size() > 1) {
+            log.debug("输入参数未全部携带 sort, 将按传入顺序与声明参数对齐, getterId={}", valueGetter.getGetterId());
+        }
+
         if (input.size() > sortedTypes.size()) {
             String msg = "值获取器 [" +
                 valueGetter.getGetterId() +
