@@ -71,8 +71,6 @@ public class IValueGetterService {
         return "values(size=" + values.size() + ")=" + preview;
     }
 
-    /* ------------------------------ 日志辅助方法 ------------------------------ */
-
     private static String safeGetterName(IValueGetter getter) {
         try {
             return getter.getGetterName();
@@ -81,6 +79,8 @@ public class IValueGetterService {
             return "unknown";
         }
     }
+
+    /* ------------------------------ 日志辅助方法 ------------------------------ */
 
     private static String safeToString(Object obj) {
         if (obj == null) {
@@ -92,6 +92,19 @@ public class IValueGetterService {
         } catch (Exception e) {
             return "<toString异常:" + obj.getClass().getName() + ">";
         }
+    }
+
+    /**
+     * 按 ID 精确获取单个值获取器（供详情接口用）
+     */
+    public IValueGetter getValueGetter(String getterId) {
+        if (StrUtil.isBlank(getterId)) {
+            return null;
+        }
+        return registryCenter.getAllContributors().stream().flatMap(
+                contributor -> contributor.getAllInstanceByTypeAndBusinessAndVersion(IValueGetter.class, null, null)
+                    .stream()).filter(instance -> getterId.equals(instance.getBusiness()))
+            .map(instance -> (IValueGetter)instance.getInstance()).findFirst().orElse(null);
     }
 
     /**
@@ -132,11 +145,7 @@ public class IValueGetterService {
         }
         log.debug("调用值获取器开始, getterId={}, 参数数量={}", getterId, paramValues == null ? 0 : paramValues.size());
 
-        var contributors = registryCenter.getAllContributors().stream().flatMap(
-                contributor -> contributor.getAllInstanceByTypeAndBusinessAndVersion(IValueGetter.class, null, null)
-                    .stream()).filter(instance -> getterId.equals(instance.getBusiness()))
-            .map(instance -> (IValueGetter)instance.getInstance()).collect(Collectors.toList());
-        IValueGetter valueGetter = CollUtil.getFirst(contributors);
+        IValueGetter valueGetter = getValueGetter(getterId);
         if (valueGetter == null) {
             log.warn("调用值获取器失败, 未找到值获取器, getterId={}", getterId);
             throw new IllegalArgumentException("未找到值获取器: " + getterId);
