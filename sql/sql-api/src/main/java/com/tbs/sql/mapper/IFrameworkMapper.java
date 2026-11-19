@@ -17,7 +17,7 @@ import com.tbs.sql.service.IQueryEngine;
  *   <li>批量插入按方言容量上限自动分批，超出 SQL Server 1000 行或 Oracle IN 1000 项时不会报错</li>
  *   <li>提供基于查询条件的查询方法 {@link #queryByQO}</li>
  *   <li>提供基于查询条件的统计方法 {@link #countByQO}</li>
- *   <li>提供基于实体类型的查询构建器 {@link #query(Class)}</li>
+ *   <li>提供无需传类型的查询构建器 {@link #query()}，实体类型由 Mapper 泛型声明推导</li>
  * </ul>
  *
  * <h3>使用场景</h3>
@@ -38,6 +38,9 @@ import com.tbs.sql.service.IQueryEngine;
  * UserQuery query = new UserQuery();
  * query.setStatus(1);
  * List<User> users = userMapper.queryByQO(query, null, User.class);
+ *
+ * // DSL 查询无需再传实体类型
+ * List<User> active = userMapper.query().where().equal(User::getStatus, 1).pour().fetch();
  * }</pre>
  *
  * <h3>注意事项</h3>
@@ -55,11 +58,31 @@ import com.tbs.sql.service.IQueryEngine;
 public interface IFrameworkMapper<T, K> extends GenericMapper<T, K>, SmartQueryMapper {
 
     /**
+     * 获取查询构建器，实体类型由当前 Mapper 接口的泛型声明推导。
+     *
+     * <p>启用 {@code @SqlEntityScan} 时，实体类型在启动期已完成绑定与校验，运行期直接查表；
+     * 未启用时按接口泛型惰性解析并缓存，行为与原先传类型一致。</p>
+     *
+     * @return 查询构建器
+     */
+    @SuppressWarnings("unchecked")
+    default IQueryBuilder<T> query() {
+        Class<?> mapperType = MapperEntityTypeResolver.resolveMapperType(this);
+        if (mapperType == null) {
+            throw new IllegalStateException("无法从当前对象解析Mapper接口类型：" + this.getClass().getName());
+        }
+        Class<?> entityClass = MapperEntityBindingRegistry.getOrResolve(mapperType);
+        return (IQueryBuilder<T>)SpringUtil.getBean(IQueryEngine.class).query(entityClass);
+    }
+
+    /**
      * 根据实体类类型获取查询构建器。
      *
      * @param entityClass 实体类类型
      * @return 查询构建器
+     * @deprecated 实体类型已由 Mapper 泛型声明，请直接使用 {@link #query()}
      */
+    @Deprecated
     default IQueryBuilder<T> query(Class<T> entityClass) {
         return SpringUtil.getBean(IQueryEngine.class).query(entityClass);
     }
@@ -69,10 +92,11 @@ public interface IFrameworkMapper<T, K> extends GenericMapper<T, K>, SmartQueryM
      *
      * @param entity 实体类对象
      * @return 查询构建器
+     * @deprecated 实体类型已由 Mapper 泛型声明，请直接使用 {@link #query()}
      */
+    @Deprecated
     default IQueryBuilder<T> query(T entity) {
         return SpringUtil.getBean(IQueryEngine.class).query(entity);
     }
-
 
 }

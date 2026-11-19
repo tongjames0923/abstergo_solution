@@ -4,6 +4,7 @@ import com.tbs.sql.dialect.*;
 import com.tbs.sql.dialect.extractor.CommonDeleteExtractor;
 import com.tbs.sql.dialect.extractor.CommonInsertExtractor;
 import com.tbs.sql.dialect.extractor.CommonUpdateExtractor;
+import com.tbs.sql.enums.IdentifierQuoting;
 
 public class MysqlDialect implements SqlDialect {
     private final IGroupExtractor groupExtractor;
@@ -29,5 +30,6 @@ public class MysqlDialect implements SqlDialect {
     @Override public IInsertExtractor getInsertExtractor() { return new CommonInsertExtractor(); }
     @Override public IUpdateExtractor getUpdateExtractor() { return new CommonUpdateExtractor(); }
     @Override public IDeleteExtractor getDeleteExtractor() { return new CommonDeleteExtractor(); }
+    @Override public IIdentifierQuoter getIdentifierQuoter() { return IdentifierQuoting.MYSQL; }
     @Override public String name() { return "mysql"; }
 }

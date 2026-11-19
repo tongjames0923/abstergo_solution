@@ -15,15 +15,14 @@ import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.version.AppVersionMapper;
 import com.tbs.shared.pojo.entity.version.AppVersionEntity;
 import com.tbs.sql.service.QueryEngine;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 应用版本服务实现
@@ -38,9 +37,9 @@ public class AppVersionServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<AppVersionEntity, Long, AppVersionMapper>
     implements IAppVersionService {
 
+    private static final IAuditService<AppVersionEntity, Long, Long> auditService = new DefaultAuditService<>();
     @Resource
     private AppVersionMapper appVersionMapper;
-
     @Resource
     private AppSettingProperty property;
 
@@ -66,17 +65,23 @@ public class AppVersionServiceImpl
 
     @Override
     protected AppVersionEntity insertNew(AppVersionEntity entity) {
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getAppKey())).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_APP_KEY_REQUIRED)
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getAppKey()))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_APP_KEY_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(entity.getVersionCode() == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_CODE_REQUIRED)
+        AssertUtil.isTrue(entity.getVersionCode() == null)
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_CODE_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getVersionName())).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NAME_REQUIRED)
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getVersionName()))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NAME_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(entity.getVersionType() == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_TYPE_REQUIRED)
+        AssertUtil.isTrue(entity.getVersionType() == null)
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_TYPE_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(!EnumUtil.isValidCode(AppVersionTypeEnum.class, entity.getVersionType()))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_TYPE_INVALID).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getPlatform())).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_PLATFORM_REQUIRED)
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_TYPE_INVALID)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getPlatform()))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_PLATFORM_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
 
         validateDuplicateVersionCode(entity.getAppKey(), entity.getVersionCode(), entity.getPlatform(), null);
@@ -87,15 +92,10 @@ public class AppVersionServiceImpl
     }
 
     @Override
-    protected List<AppVersionEntity> updateBy(AppVersionEntity entity) {
-        getMapper().updateByPrimaryKey(entity);
-        return List.of(entity);
-    }
-
-    @Override
     protected AppVersionEntity compareAndUpdateValue(AppVersionEntity newOne, AppVersionEntity oldOne) {
         AssertUtil.isTrue(!AppVersionFlagEnum.DRAFT.getCode().equals(oldOne.getFlag()))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_ONLY_DRAFT_CAN_EDIT).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_ONLY_DRAFT_CAN_EDIT)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
 
         if (StrUtil.isNotEmpty(newOne.getAppKey())) {
             oldOne.setAppKey(newOne.getAppKey());
@@ -110,7 +110,8 @@ public class AppVersionServiceImpl
         }
         if (newOne.getVersionType() != null) {
             AssertUtil.isTrue(!EnumUtil.isValidCode(AppVersionTypeEnum.class, newOne.getVersionType()))
-                .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_TYPE_INVALID).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+                .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_TYPE_INVALID)
+                .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
             oldOne.setVersionType(newOne.getVersionType());
         }
         if (StrUtil.isNotEmpty(newOne.getPlatform())) {
@@ -128,16 +129,18 @@ public class AppVersionServiceImpl
     @Override
     protected void deletePending(AppVersionEntity entity) {
         AssertUtil.isTrue(!AppVersionFlagEnum.DRAFT.getCode().equals(entity.getFlag()))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_ONLY_DRAFT_CAN_DELETE).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_ONLY_DRAFT_CAN_DELETE)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
     }
 
     @Transactional(rollbackFor = Exception.class)
     @Override
     public AppVersionEntity submit(Long id) {
         AppVersionEntity entity = getInstance().queryById(id);
-        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .throwIt();
-        AssertUtil.isTrue(!AppVersionFlagEnum.DRAFT.getCode().equals(entity.getFlag())).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_DRAFT)
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(!AppVersionFlagEnum.DRAFT.getCode().equals(entity.getFlag()))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_DRAFT)
             .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         entity.setFlag(AppVersionFlagEnum.PENDING.getCode());
         getMapper().updateByPrimaryKey(entity);
@@ -148,10 +151,11 @@ public class AppVersionServiceImpl
     @Override
     public AppVersionEntity release(Long id) {
         AppVersionEntity entity = getInstance().queryById(id);
-        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .throwIt();
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(!AppVersionFlagEnum.PENDING.getCode().equals(entity.getFlag()))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_PENDING).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_PENDING)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         entity.setFlag(AppVersionFlagEnum.RELEASE.getCode());
         entity.setReleaseTime(new Date());
         getMapper().updateByPrimaryKey(entity);
@@ -162,10 +166,11 @@ public class AppVersionServiceImpl
     @Override
     public AppVersionEntity offline(Long id) {
         AppVersionEntity entity = getInstance().queryById(id);
-        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .throwIt();
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(!AppVersionFlagEnum.RELEASE.getCode().equals(entity.getFlag()))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_RELEASE).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_RELEASE)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         entity.setFlag(AppVersionFlagEnum.OFFLINE.getCode());
         entity.setOfflineTime(new Date());
         getMapper().updateByPrimaryKey(entity);
@@ -176,10 +181,11 @@ public class AppVersionServiceImpl
     @Override
     public AppVersionEntity rollback(Long id) {
         AppVersionEntity entity = getInstance().queryById(id);
-        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .throwIt();
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(!AppVersionFlagEnum.RELEASE.getCode().equals(entity.getFlag()))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_RELEASE).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_RELEASE)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         entity.setFlag(AppVersionFlagEnum.ROLLED_BACK.getCode());
         getMapper().updateByPrimaryKey(entity);
         return entity;
@@ -189,10 +195,11 @@ public class AppVersionServiceImpl
     @Override
     public AppVersionEntity archive(Long id) {
         AppVersionEntity entity = getInstance().queryById(id);
-        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR)
-            .throwIt();
+        AssertUtil.isTrue(entity == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(!AppVersionFlagEnum.OFFLINE.getCode().equals(entity.getFlag()))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_OFFLINE).errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_OFFLINE)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
         entity.setFlag(AppVersionFlagEnum.ARCHIVED.getCode());
         getMapper().updateByPrimaryKey(entity);
         return entity;
@@ -228,11 +235,10 @@ public class AppVersionServiceImpl
             .equal(AppVersionEntity::getAppKey, appKey).equal(AppVersionEntity::getVersionCode, versionCode)
             .equal(AppVersionEntity::getPlatform, platform)
             .notEqual(AppVersionEntity::getFlag, AppVersionFlagEnum.ARCHIVED.getCode()).pour().fetchOne();
-        AssertUtil.isTrue(existing != null && !existing.getId().equals(excludeId)).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_CODE_DUPLICATE)
-            .params(appKey, versionCode, platform).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(existing != null && !existing.getId().equals(excludeId))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_CODE_DUPLICATE).params(appKey, versionCode, platform)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
     }
-
-    private static final IAuditService<AppVersionEntity, Long, Long> auditService = new DefaultAuditService<>();
 
     @Override
     protected Optional<IAuditService<AppVersionEntity, Long, ?>> getAuditServiceSupport() {

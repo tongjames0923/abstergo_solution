@@ -3,9 +3,9 @@ package com.tbs.shared.interfaces.service;
 import com.tbs.sql.dsl.IEntityQueryWrapper;
 import com.tbs.sql.dsl.IQueryBuilder;
 import com.tbs.sql.mapper.IFrameworkMapper;
-
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
+
 import java.util.Optional;
 
 /**
@@ -39,7 +39,7 @@ public abstract class AbstractService<E, K, Mapper extends IFrameworkMapper<E, K
      * @return
      */
     protected IQueryBuilder<E> getQueryBuilder() {
-        return getMapper().query(getEntity());
+        return getMapper().query();
     }
 
 

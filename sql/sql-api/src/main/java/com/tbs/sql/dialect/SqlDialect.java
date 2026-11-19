@@ -1,5 +1,7 @@
 package com.tbs.sql.dialect;
 
+import com.tbs.sql.enums.IdentifierQuoting;
+
 /**
  * SQL方言接口，定义了不同数据库方言的标准方法。
  *
@@ -14,6 +16,7 @@ package com.tbs.sql.dialect;
  *   <li>获取GROUP BY提取器 {@link #getGroupExtractor()}</li>
  *   <li>获取LIMIT提取器 {@link #getLimitExtractor()}</li>
  *   <li>获取INSERT提取器 {@link #getInsertExtractor()}</li>
+ *   <li>获取标识符引用器 {@link #getIdentifierQuoter()}</li>
  *   <li>获取方言名称 {@link #name()}</li>
  * </ul>
  *
@@ -28,7 +31,7 @@ package com.tbs.sql.dialect;
  * <pre>{@code
  * // 获取MySQL方言
  * SqlDialect dialect = new MysqlDialect(...);
- * 
+ *
  * // 使用方言提取SQL片段
  * String selectSql = dialect.getSelectExtractor().extract(selectInfo);
  * String whereSql = dialect.getWhereExtractor().extract(whereCompose, params);
@@ -107,6 +110,16 @@ public interface SqlDialect {
      * @return DELETE语句提取器实例
      */
     IDeleteExtractor getDeleteExtractor();
+
+    /**
+     * 获取标识符引用器（SPI 扩展点）。
+     *
+     * <p>默认返回 ANSI 双引号，适用于 Oracle 与 PostgreSQL；MySQL / SQL Server
+     * 方言覆写本方法返回各自的引用符。自定义数据库可覆写本方法接入新的引用规则。</p>
+     *
+     * @return 当前方言的标识符引用器
+     */
+    default IIdentifierQuoter getIdentifierQuoter() { return IdentifierQuoting.ANSI; }
 
     /**
      * 获取方言名称标识。

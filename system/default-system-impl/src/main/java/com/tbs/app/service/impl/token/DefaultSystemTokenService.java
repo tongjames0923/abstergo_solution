@@ -15,21 +15,22 @@ import com.tbs.shared.mapper.SystemTokenMapper;
 import com.tbs.shared.pojo.criteria.CommonTokenQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
 import com.tbs.web.enums.TokenStatusEnum;
+import jakarta.annotation.Resource;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 
-import static com.tbs.app.service.impl.CacheNamesConstants.TOKEN_ENTITY;
-
-import jakarta.annotation.Resource;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+import static com.tbs.app.service.impl.CacheNamesConstants.TOKEN_ENTITY;
+
 public class DefaultSystemTokenService
     extends AbstractLogicDeleteFullFeatureServiceTemplate<SystemTokenEntity, Long, SystemTokenMapper>
     implements ISystemTokenService {
 
+    private static final DefaultAuditService<SystemTokenEntity, Long> auditService = new DefaultAuditService<>();
     @Resource
     private SystemTokenMapper systemTokenMapper;
 
@@ -61,13 +62,6 @@ public class DefaultSystemTokenService
     @Override
     public List<SystemTokenEntity> save(SystemTokenEntity entity) {
         return super.save(entity);
-    }
-
-    @Override
-    protected List<SystemTokenEntity> updateBy(SystemTokenEntity entity) {
-        entity.setUpdateTime(new Date());
-        getMapper().updateByPrimaryKey(entity);
-        return List.of(entity);
     }
 
     @Override
@@ -105,8 +99,6 @@ public class DefaultSystemTokenService
     public List<SystemTokenEntity> queryByToken(String token) {
         return getInstance().query(new CommonTokenQueryCriteria().setTokenEquals(token), null);
     }
-
-    private static final DefaultAuditService<SystemTokenEntity, Long> auditService = new DefaultAuditService<>();
 
     @Override
     protected Optional<IAuditService<SystemTokenEntity, Long, ?>> getAuditServiceSupport() {

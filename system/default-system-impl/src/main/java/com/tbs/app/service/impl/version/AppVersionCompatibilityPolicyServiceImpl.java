@@ -22,18 +22,17 @@ import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionCompatibilityPolicyEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionEntity;
 import com.tbs.sql.service.QueryEngine;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 
-import static com.tbs.app.service.impl.CacheNamesConstants.APP_VERSION_COMPATIBILITY;
-
-import jakarta.annotation.Resource;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import com.tbs.app.constant.SystemI18nConstant;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.APP_VERSION_COMPATIBILITY;
 
 /**
  * 应用版本兼容策略服务实现
@@ -93,12 +92,6 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
         return entity;
-    }
-
-    @Override
-    protected List<AppVersionCompatibilityPolicyEntity> updateBy(AppVersionCompatibilityPolicyEntity entity) {
-        getMapper().updateByPrimaryKey(entity);
-        return List.of(entity);
     }
 
     @Override

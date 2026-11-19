@@ -3,6 +3,7 @@ package com.tbs.sql.dialect.extractor;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.sql.dialect.IGroupExtractor;
 import com.tbs.sql.model.group.GroupModel;
+import com.tbs.sql.util.SqlIdentifierUtils;
 
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class CommonGroupExtractor implements IGroupExtractor {
         if (CollUtil.isEmpty(groupModels)) return "";
         StringBuilder sb = new StringBuilder(10 + groupModels.size() * 16).append(" GROUP BY ");
         for (GroupModel model : groupModels) {
-            sb.append(model.getFieldName()).append(",");
+            sb.append(SqlIdentifierUtils.column(model.getFieldName())).append(",");
         }
         sb.setLength(sb.length() - 1);
         return sb.toString();

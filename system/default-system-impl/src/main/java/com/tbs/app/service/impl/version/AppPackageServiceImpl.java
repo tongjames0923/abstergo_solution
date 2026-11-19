@@ -13,19 +13,16 @@ import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.version.AppVersionPackageMapper;
 import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.sql.service.QueryEngine;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.Optional;
-import com.tbs.app.constant.SystemI18nConstant;
 
 /**
  * 应用安装包服务实现
  * <p>
- * 提供应用版本下安装包产物的登记与查询能力，
- * 安装包通过 versionId 挂接到应用版本，支持多架构/多渠道包共存；
- * 文件实体的上传与下载由统一 OSS 门面承担
+ * 提供应用版本下安装包产物的登记与查询能力， 安装包通过 versionId 挂接到应用版本，支持多架构/多渠道包共存； 文件实体的上传与下载由统一 OSS 门面承担
  *
  * @author abstergo
  */
@@ -34,9 +31,9 @@ public class AppPackageServiceImpl
     extends AbstractLogicDeleteFullFeatureServiceTemplate<AppPackageEntity, Long, AppVersionPackageMapper>
     implements IAppPackageService {
 
+    private static final IAuditService<AppPackageEntity, Long, Long> auditService = new DefaultAuditService<>();
     @Resource
     private AppVersionPackageMapper appVersionPackageMapper;
-
     @Resource
     private AppSettingProperty property;
 
@@ -62,20 +59,16 @@ public class AppPackageServiceImpl
 
     @Override
     protected AppPackageEntity insertNew(AppPackageEntity entity) {
-        AssertUtil.isTrue(entity.getVersionId() == null).i18n(com.tbs.app.constant.SystemI18nConstant.PACKAGE_VERSION_ID_REQUIRED)
+        AssertUtil.isTrue(entity.getVersionId() == null)
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PACKAGE_VERSION_ID_REQUIRED)
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
-        AssertUtil.isTrue(StrUtil.isEmpty(entity.getDownloadUrl())
-                && (StrUtil.isEmpty(entity.getBucketName()) || StrUtil.isEmpty(entity.getObjectName())))
-            .i18n(com.tbs.app.constant.SystemI18nConstant.PACKAGE_DOWNLOAD_INFO_REQUIRED).errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(StrUtil.isEmpty(entity.getDownloadUrl()) &&
+                (StrUtil.isEmpty(entity.getBucketName()) || StrUtil.isEmpty(entity.getObjectName())))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PACKAGE_DOWNLOAD_INFO_REQUIRED)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
         return entity;
-    }
-
-    @Override
-    protected List<AppPackageEntity> updateBy(AppPackageEntity entity) {
-        getMapper().updateByPrimaryKey(entity);
-        return List.of(entity);
     }
 
     @Override
@@ -102,11 +95,8 @@ public class AppPackageServiceImpl
     public List<AppPackageEntity> listByVersionId(Long versionId) {
         return QueryEngine.getEntityQueryWrapper(new AppPackageEntity()).query().where()
             .equal(AppPackageEntity::getVersionId, versionId)
-            .equal(AppPackageEntity::getFlag, CommonFlagEnum.ACTIVE.getCode())
-            .pour().fetch();
+            .equal(AppPackageEntity::getFlag, CommonFlagEnum.ACTIVE.getCode()).pour().fetch();
     }
-
-    private static final IAuditService<AppPackageEntity, Long, Long> auditService = new DefaultAuditService<>();
 
     @Override
     protected Optional<IAuditService<AppPackageEntity, Long, ?>> getAuditServiceSupport() {

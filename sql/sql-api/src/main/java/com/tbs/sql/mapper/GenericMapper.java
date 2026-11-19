@@ -11,6 +11,7 @@ import com.tbs.sql.service.IBatchUpdateExecutor;
 import org.apache.ibatis.annotations.*;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -335,7 +336,7 @@ public interface GenericMapper<T, K> {
      * @param entities 待保存实体列表
      * @return 原实体列表
      */
-    default List<T> saveAll(List<T> entities) {
+    default Collection<T> saveAll(Collection<T> entities) {
         if (CollUtil.isEmpty(entities)) {
             return new ArrayList<>();
         }

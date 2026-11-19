@@ -79,7 +79,10 @@ public abstract class AbstractFullFeatureServiceTemplate<T extends IIdentifiable
      * @param entity
      * @return
      */
-    protected abstract List<T> updateBy(T entity);
+    protected List<T> updateBy(T entity) {
+        getMapper().updateByPrimaryKey(entity);
+        return List.of(entity);
+    }
 
     /**
      * 对比新值与旧值的区别后返回最终的值

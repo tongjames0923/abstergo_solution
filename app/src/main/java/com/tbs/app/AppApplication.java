@@ -46,7 +46,7 @@ import org.springframework.context.annotation.EnableAspectJAutoProxy;
 @EnableScriptEngine
 @EnableTbsPush
 @EnableTbsPushSse
-@SqlEntityScan({"com.tbs.shared.pojo.entity"})
+@SqlEntityScan({"com.tbs.shared.pojo.entity", "com.tbs.struct.tree.closure.impl.entity"})
 public class AppApplication {
 
     public static void main(String[] args) {
