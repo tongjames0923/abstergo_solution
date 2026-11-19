@@ -234,7 +234,7 @@ app:
 | `application-redis.yml` | Redis 连接 |
 | `application-mq.yml` | RabbitMQ + 手动 ACK |
 | `view-route.yml` | **视图路由 YML 兜底配置**（common/admin/develop 三组菜单，含角色 `MENU.ADMIN`/`MENU.DEV`）；数据库实现启用时此文件不生效 |
-| `i18n/messages-app*.properties` | 前端菜单文案（`view.menu.*` key，中英文） |
+| `i18n/messages-app*.properties` | 前端菜单文案（`view.menu.*` key）与取值器文案（`value.getter.*` key），中英文 |
 
 ## REST API 清单
 
@@ -310,6 +310,7 @@ app:
 | --- | --- |
 | `AppExecutor` | XXL-Job 任务执行器（见[定时任务](#定时任务)） |
 | `CacheListenner` | 缓存键收集器：`onPut`/`onEvict` 等事件把缓存键登记进 `CACHE_INFO_HOLDER` DataHolder（供 `CacheController` 的 keys 查询；经 Redis 持有，多实例共享） |
+| `getter/` | 值获取器集合（见[值获取器](#值获取器动态事件条件来源)）：系统信息/当前用户/日期时间/配置属性/数据持有者变量/请求上下文，供脚本与未来动态事件触发系统作为条件来源 |
 | `oss/UploadTaskProgressManager` | 内存上传进度注册表：`register/updateTransferred/markSuccess/markFailed/get`，条目 10 分钟过期自动清理，供前端轮询 `GET /private/oss/upload/progress` |
 
 > 业务服务实现（用户/角色/字典/版本/树结构等）位于 `default-system-impl` 模块（同包名 `com.tbs.app.service`），本模块仅做控制器层装配。
@@ -341,6 +342,21 @@ app:
 | `artifact` / `buildTime` | 构建信息（仅 Maven 打包后存在，IDE 运行为 unknown） |
 | `instancePort` | 当前实例端口（蓝绿切换时区分流量落点） |
 | `viewVersion` | 视图路由配置版本号（版本表 `MAX(id)`，YML 实现时为 0）——**前端菜单缓存比对依据**（app-ui-vue 拉取本地缓存的版本号与之比较，不一致则重新拉取动态路由） |
+
+### 值获取器（动态事件条件来源）
+
+`com.tbs.app.service.getter` 下的 `IValueGetter` 实现由 `IValueGetterService` 统一注册与调用，并经 `ValueGetterController`（`private/value-getter/list|detail|invoke`）暴露给前端调试。取值失败一律返回空字符串，不中断脚本执行。
+
+| Getter ID | 用途 |
+| --- | --- |
+| `SystemInfoGetter` | 主机/系统信息：主机名称、IP、MAC、端口、OS、CPU、内存 |
+| `CurrentUserGetter` | 当前登录会话：登录状态、用户名、会话 ID、令牌过期时间/类型/状态（不返回令牌原文） |
+| `DateTimeGetter` | 当前时间：时间戳、日期时间、日期、时间、年/月/日/星期/小时，可选 Java ZoneId 时区 |
+| `ConfigPropertyGetter` | 配置属性：仅允许 `tbs.`/`app.`/`server.` 前缀及 `spring.application.name`，含敏感词的 key 一律拒绝 |
+| `DataHolderGetter` | 运行时变量：按 holder 名与 key 只读访问本地/Redis DataHolder，默认 `defaultDataHolder` |
+| `RequestContextGetter` | 请求上下文：traceId 或自定义上下文变量 |
+
+`AbstractStringValueGetter` 收敛字符串结果构造、参数按下标读取与 i18n 文案解析。文案位于 `i18n/messages-app*.properties` 的 `value.getter.*` 命名空间。`@Component` 实现 `IValueGetter` 即被 `IRegistryCenter` 自动发现，新增 getter 无需改动注册代码。
 
 ### 登录与令牌链路
 
@@ -416,6 +432,8 @@ com.tbs.app
 ├── service/
 │   ├── AppExecutor             XXL-Job 任务执行器（树重建/日志刷盘）
 │   ├── CacheListenner          缓存键收集（DataHolder 登记）
+│   ├── getter/                 IValueGetter 实现：SystemInfo/CurrentUser/DateTime/
+│   │                           ConfigProperty/DataHolder/RequestContext（+抽象基类）
 │   └── oss/UploadTaskProgressManager   上传进度注册表
 └── vo/                         UserInfoVO/RoleVO/UploadTaskProgressVO
 
