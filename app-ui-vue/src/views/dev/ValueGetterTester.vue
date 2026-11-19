@@ -123,7 +123,14 @@
                   </el-tooltip>
                 </template>
                 <div class="param-control-row">
+                  <value-getter-operand
+                    v-if="field.uiType === 'operand'"
+                    :value="formData[field.name]"
+                    :getters="getterList"
+                    @input="setParam(field.name, $event)"
+                  />
                   <getter-param-field
+                    v-else
                     :field="field"
                     :value="formData[field.name]"
                     :error="errorOf(field)"
@@ -132,6 +139,9 @@
                   <el-tag size="mini" type="info" effect="plain" class="param-type">
                     {{ typeLabel(field) }}
                   </el-tag>
+                </div>
+                <div v-if="field.uiType === 'operand' && errorOf(field)" class="param-error">
+                  {{ $t('valueGetter.errRequired') }}
                 </div>
                 <div v-if="field.description" class="field-desc">{{ field.description }}</div>
               </el-form-item>
@@ -232,6 +242,7 @@ import {getValueGetters, invokeValueGetter} from '@/api/script/valueGetter'
 import ConditionBuilder from '@/components/ConditionBuilder'
 import GetterParamField from '@/components/GetterParamField'
 import GetterResult from '@/components/GetterResult'
+import ValueGetterOperand from '@/components/ValueGetterOperand'
 import ResponsiveMixin from '@/mixins/responsive'
 import {buildFormData, isBlank, toParamFields, toParamValues, validateFields} from '@/utils/valueGetter'
 
@@ -248,7 +259,7 @@ const HISTORY_LIMIT = 8
  */
 export default {
   name: 'ValueGetterTester',
-  components: { ConditionBuilder, GetterParamField, GetterResult },
+  components: { ConditionBuilder, GetterParamField, GetterResult, ValueGetterOperand },
   mixins: [ResponsiveMixin],
   data() {
     return {
@@ -1017,6 +1028,13 @@ export default {
     line-height: 1.5;
     color: #909399;
     word-break: break-word;
+  }
+
+  .param-error {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: #f56c6c;
   }
 
   .run-bar {
