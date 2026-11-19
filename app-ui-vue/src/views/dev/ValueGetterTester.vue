@@ -101,6 +101,13 @@
                   style="width: 100%"
                 />
 
+                <!-- 嵌套 getter 操作数 -->
+                <value-getter-operand
+                  v-else-if="field.uiType === 'operand'"
+                  v-model="formData[field.name]"
+                  :getters="getterList"
+                />
+
                 <!-- 字符串（兜底） -->
                 <el-input
                   v-else
@@ -119,7 +126,7 @@
               </el-form-item>
             </el-form>
 
-            <el-divider/>
+            <el-divider />
 
             <div class="result-header">
               <span>执行结果</span>
@@ -145,9 +152,12 @@
 
 <script>
 import {getValueGetters, invokeValueGetter} from '@/api/script/valueGetter'
+import ValueGetterOperand from '@/components/ValueGetterOperand'
+import {buildFormData, toParamFields, toParamValues} from '@/utils/valueGetter'
 
 export default {
   name: 'ValueGetterTester',
+  components: { ValueGetterOperand },
   data() {
     return {
       keyword: '',
@@ -169,27 +179,7 @@ export default {
      * - 推断 uiType / dateFormat
      */
     paramFields() {
-      const getter = this.currentGetter
-      if (!getter || !Array.isArray(getter.paramTypes)) {
-        return []
-      }
-      return [...getter.paramTypes]
-        .sort((a, b) => {
-          const sa = a.sort == null ? Number.MAX_SAFE_INTEGER : a.sort
-          const sb = b.sort == null ? Number.MAX_SAFE_INTEGER : b.sort
-          return sa - sb
-        })
-        .map(pt => {
-          const {uiType, dateFormat} = this.resolveUiType(pt.type)
-          return {
-            ...pt,
-            isEnum: !!pt.isEnum,
-            required: !!pt.required,
-            enumValues: pt.enumValues || [],
-            uiType,
-            dateFormat
-          }
-        })
+      return this.currentGetter ? toParamFields(this.currentGetter.paramTypes) : []
     },
     formRules() {
       const rules = {}
@@ -224,7 +214,7 @@ export default {
   methods: {
     debounce(fn, delay) {
       let timer = null
-      return function (...args) {
+      return function(...args) {
         clearTimeout(timer)
         timer = setTimeout(() => fn.apply(this, args), delay)
       }
@@ -271,19 +261,7 @@ export default {
      * 根据字段类型初始化表单默认值，避免 el-input-number 绑定 undefined 报错
      */
     buildFormData() {
-      const data = {}
-      this.paramFields.forEach(f => {
-        if (f.isEnum) {
-          data[f.name] = undefined
-        } else if (f.uiType === 'number') {
-          data[f.name] = undefined
-        } else if (f.uiType === 'date') {
-          data[f.name] = null
-        } else {
-          data[f.name] = ''
-        }
-      })
-      return data
+      return buildFormData(this.paramFields)
     },
 
     resetForm() {
@@ -311,20 +289,7 @@ export default {
         this.result = null
         const start = Date.now()
         try {
-          const paramValues = this.paramFields.map(f => {
-            const raw = this.formData[f.name]
-            let value = null
-            if (raw !== undefined && raw !== null && raw !== '') {
-              // number 可能是数字，统一转 string；date 已按 value-format 输出字符串
-              value = String(raw)
-            }
-            return {
-              type: f.type,
-              name: f.name,
-              sort: f.sort,
-              value
-            }
-          })
+          const paramValues = toParamValues(this.paramFields, this.formData)
           const res = await invokeValueGetter({
             getterId: this.selectedGetterId,
             paramValues
@@ -339,34 +304,6 @@ export default {
           this.submitting = false
         }
       })
-    },
-
-    /**
-     * 根据后端声明的 type 推断前端控件类型
-     * - number / int / integer / long / float / double / decimal -> el-input-number
-     * - date / time / datetime[:格式] -> el-date-picker
-     * - 其它 -> el-input
-     */
-    resolveUiType(rawType) {
-      const t = (rawType || 'string').toLowerCase()
-      const numberPrefixes = [
-        'number',
-        'int',
-        'integer',
-        'long',
-        'float',
-        'double',
-        'decimal'
-      ]
-      if (numberPrefixes.some(p => t.startsWith(p))) {
-        return {uiType: 'number', dateFormat: null}
-      }
-      if (t.startsWith('date') || t.startsWith('time') || t.startsWith('datetime')) {
-        const idx = t.indexOf(':')
-        const fmt = idx >= 0 ? rawType.substring(idx + 1) : 'yyyy-MM-dd HH:mm:ss'
-        return {uiType: 'date', dateFormat: fmt}
-      }
-      return {uiType: 'string', dateFormat: null}
     }
   }
 }

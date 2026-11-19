@@ -1220,6 +1220,19 @@ export default {
     }
   },
 
+  // 值获取器调试
+  valueGetter: {
+    literal: '字面值',
+    getterCall: 'Getter 调用',
+    nestedDepth: '嵌套第 {depth} 层',
+    literalPlaceholder: '请输入字面值',
+    selectGetter: '请选择 Getter',
+    pleaseSelect: '请选择',
+    pleaseInput: '请输入',
+    pleaseInputNumber: '请输入数字',
+    getterNotFound: '未找到 Getter：{id}'
+  },
+
   // 网络请求
   request: {
     networkError: '网络连接失败，请检查网络设置',

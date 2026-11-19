@@ -1216,6 +1216,19 @@ export default {
     }
   },
 
+  // Value getter debugger
+  valueGetter: {
+    literal: 'Literal',
+    getterCall: 'Getter call',
+    nestedDepth: 'Nested level {depth}',
+    literalPlaceholder: 'Enter a literal value',
+    selectGetter: 'Select a getter',
+    pleaseSelect: 'Please select',
+    pleaseInput: 'Please enter',
+    pleaseInputNumber: 'Please enter a number',
+    getterNotFound: 'Getter not found: {id}'
+  },
+
   // Network Request
   request: {
     networkError: 'Network connection failed, please check network settings',

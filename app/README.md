@@ -355,6 +355,15 @@ app:
 | `ConfigPropertyGetter` | 配置属性：仅允许 `tbs.`/`app.`/`server.` 前缀及 `spring.application.name`，含敏感词的 key 一律拒绝 |
 | `DataHolderGetter` | 运行时变量：按 holder 名与 key 只读访问本地/Redis DataHolder，默认 `defaultDataHolder` |
 | `RequestContextGetter` | 请求上下文：traceId 或自定义上下文变量 |
+| `ConditionGetter` | 布尔条件：对左右操作数比较输出 true/false，两个操作数都可以是另一次 getter 调用，可嵌套为复合条件 |
+
+`ConditionGetter` 的操作数中，普通字符串按字面量处理；以 `{` 开头的字符串按 JSON 解析为 getter 调用：
+
+```json
+{"getterId":"DateTimeGetter","paramValues":[{"value":"dayOfWeek"}]}
+```
+
+例如左操作数填上述 JSON、运算符选 `ge`、右操作数填 `5`，即「星期 >= 5 则返回 true」。两个操作数都可填 getter 调用以比较两个 getter 的返回值，也可嵌套 `ConditionGetter` 自身构建复合条件（内置循环引用检测，最大嵌套深度 8 层）。大小比较在两边均为数值时按数值比较，否则按字典序；任何取值失败均返回 false。
 
 `AbstractStringValueGetter` 收敛字符串结果构造、参数按下标读取与 i18n 文案解析。文案位于 `i18n/messages-app*.properties` 的 `value.getter.*` 命名空间。`@Component` 实现 `IValueGetter` 即被 `IRegistryCenter` 自动发现，新增 getter 无需改动注册代码。
 
@@ -433,7 +442,8 @@ com.tbs.app
 │   ├── AppExecutor             XXL-Job 任务执行器（树重建/日志刷盘）
 │   ├── CacheListenner          缓存键收集（DataHolder 登记）
 │   ├── getter/                 IValueGetter 实现：SystemInfo/CurrentUser/DateTime/
-│   │                           ConfigProperty/DataHolder/RequestContext（+抽象基类）
+│   │                           ConfigProperty/DataHolder/RequestContext/Condition
+│   │                           （+抽象基类）
 │   └── oss/UploadTaskProgressManager   上传进度注册表
 └── vo/                         UserInfoVO/RoleVO/UploadTaskProgressVO
 
