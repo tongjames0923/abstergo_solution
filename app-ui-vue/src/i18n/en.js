@@ -1387,6 +1387,57 @@ export default {
     errPattern: 'Format does not match the expected pattern'
   },
 
+  // Condition rules
+  conditionRule: {
+    title: 'Condition Rules',
+    desc: 'Persist condition and logic condition compositions as rules that can be evaluated by code at any time',
+    listTitle: 'Rules',
+    searchPlaceholder: 'Search code or name',
+    allStatus: 'All statuses',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    create: 'New rule',
+    empty: 'No rules yet',
+    baseTitle: 'Basics',
+    code: 'Rule code',
+    codePlaceholder: 'e.g. USER.VIP.CHECK',
+    name: 'Rule name',
+    namePlaceholder: 'Enter the rule name',
+    description: 'Description',
+    descriptionPlaceholder: 'Describe the purpose and scope of this rule',
+    editorTitle: 'Logic',
+    editorCondition: 'Condition',
+    editorLogic: 'Logic group',
+    save: 'Save rule',
+    saved: 'Rule saved',
+    removed: 'Rule deleted',
+    deleteConfirm: 'Delete this rule?',
+    test: 'Test run',
+    testHint: 'Runs the current composition immediately without touching the saved copy',
+    runTrue: 'True',
+    runFalse: 'False',
+    runSelf: 'Run',
+    selectFirst: 'Select a rule on the left, or create a new one',
+    enabledSwitch: 'Enabled',
+    loadFailed: 'Failed to load the rule',
+    ruleCodeRequired: 'Rule code is required',
+    ruleNameRequired: 'Rule name is required',
+    conditionRequired: 'Configure at least one valid condition',
+    notExists: 'Rule does not exist'
+  },
+
+  // Debugger rule integration
+  ruleDebug: {
+    loadRule: 'Load rule',
+    saveAsRule: 'Save as rule',
+    selectRule: 'Select a saved rule',
+    noRules: 'No saved rules',
+    loaded: 'Rule loaded',
+    saveTitle: 'Save as rule',
+    runSaved: 'Run saved rule',
+    runResult: 'Saved rule result: {result}'
+  },
+
   // Getter result display
   getterResult: {
     empty: 'No result',

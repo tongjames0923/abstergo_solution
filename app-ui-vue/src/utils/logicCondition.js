@@ -195,6 +195,26 @@ export function restoreLogicTree(op, conditionValues) {
 }
 
 /**
+ * 规范化表达式树节点，补齐缺失的 ID 与结构
+ *
+ * @param {Object} node 原始节点
+ * @returns {Object} 规范化后的节点
+ */
+export function normalizeGroup(node) {
+  if (!node || node.type !== 'group') {
+    return node && node.type === 'condition'
+      ? { id: node.id || nextNodeId(), type: 'condition', value: node.value || '' }
+      : createCondition('')
+  }
+  return {
+    id: node.id || nextNodeId(),
+    type: 'group',
+    op: node.op === 'or' ? 'or' : 'and',
+    children: (node.children || []).length ? node.children.map(normalizeGroup) : [createCondition()]
+  }
+}
+
+/**
  * 按节点 ID 更新树中的节点
  *
  * @param {Object} node 当前节点

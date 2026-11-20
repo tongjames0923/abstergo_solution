@@ -1391,6 +1391,57 @@ export default {
     errPattern: '格式不符合要求'
   },
 
+  // 条件规则
+  conditionRule: {
+    title: '条件规则',
+    desc: '把条件与逻辑条件编排固定为规则，可随时按编码调用',
+    listTitle: '规则列表',
+    searchPlaceholder: '搜索编码或名称',
+    allStatus: '全部状态',
+    enabled: '已启用',
+    disabled: '已停用',
+    create: '新建规则',
+    empty: '暂无规则',
+    baseTitle: '基础信息',
+    code: '规则编码',
+    codePlaceholder: '如 USER.VIP.CHECK',
+    name: '规则名称',
+    namePlaceholder: '请输入规则名称',
+    description: '规则说明',
+    descriptionPlaceholder: '说明该规则的用途与适用场景',
+    editorTitle: '判断逻辑',
+    editorCondition: '条件表达式',
+    editorLogic: '逻辑条件组',
+    save: '保存规则',
+    saved: '规则已保存',
+    removed: '规则已删除',
+    deleteConfirm: '确定删除该规则吗？',
+    test: '测试执行',
+    testHint: '使用当前编排立即执行，不影响已保存内容',
+    runTrue: '成立',
+    runFalse: '不成立',
+    runSelf: '执行',
+    selectFirst: '请从左侧选择规则，或新建一条规则',
+    enabledSwitch: '启用',
+    loadFailed: '规则加载失败',
+    ruleCodeRequired: '请填写规则编码',
+    ruleNameRequired: '请填写规则名称',
+    conditionRequired: '请至少填写一个有效条件',
+    notExists: '规则不存在'
+  },
+
+  // 调试页规则联动
+  ruleDebug: {
+    loadRule: '加载规则',
+    saveAsRule: '保存为规则',
+    selectRule: '选择已保存的规则',
+    noRules: '暂无已保存规则',
+    loaded: '规则已加载',
+    saveTitle: '保存为规则',
+    runSaved: '执行已保存规则',
+    runResult: '已保存规则结果：{result}'
+  },
+
   // 取值结果展示
   getterResult: {
     empty: '暂无结果',
