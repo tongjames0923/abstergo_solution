@@ -3,6 +3,7 @@ package com.tbs.app.service.impl.event;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.event.IEventActionService;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -17,14 +18,16 @@ import com.tbs.sql.dsl.IWhereClause;
 import com.tbs.sql.service.QueryEngine;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.EVENT_ACTION;
+import static com.tbs.app.service.impl.CacheNamesConstants.EVENT_ACTION_EVENT;
 
 /**
  * 事件动作绑定服务实现。
@@ -107,6 +110,35 @@ public class EventActionServiceImpl extends
         return Optional.of(AUDIT_SERVICE);
     }
 
+    @Caching(evict = {
+        @CacheEvict(cacheNames = EVENT_ACTION, key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
+        @CacheEvict(cacheNames = EVENT_ACTION_EVENT, allEntries = true)})
+    @Override
+    public List<SystemEventActionEntity> save(SystemEventActionEntity entity) {
+        return super.save(entity);
+    }
+
+    @Cacheable(cacheNames = EVENT_ACTION, key = "#id", unless = "#result==null")
+    @ExpireOn(cacheNames = EVENT_ACTION, value = 10, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public SystemEventActionEntity queryById(Long id) {
+        return super.queryById(id);
+    }
+
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_ACTION, key = "#id"),
+        @CacheEvict(cacheNames = EVENT_ACTION_EVENT, allEntries = true)})
+    @Override
+    public SystemEventActionEntity deleteById(Long id) {
+        return super.deleteById(id);
+    }
+
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_ACTION, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_ACTION_EVENT, allEntries = true)})
+    @Override
+    public int deleteByIds(Collection<Long> ids) {
+        return super.deleteByIds(ids);
+    }
+
     @Override
     protected SystemEventActionEntity insertNew(SystemEventActionEntity entity) {
         validateForSave(entity);
@@ -148,6 +180,8 @@ public class EventActionServiceImpl extends
         return oldOne;
     }
 
+    @Cacheable(cacheNames = EVENT_ACTION_EVENT, key = "#reporterId+':'+#eventCode")
+    @ExpireOn(cacheNames = EVENT_ACTION_EVENT, value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemEventActionEntity> listByEvent(String reporterId, String eventCode) {
         if (StrUtil.isBlank(reporterId) || StrUtil.isBlank(eventCode)) {
@@ -156,6 +190,8 @@ public class EventActionServiceImpl extends
         return queryByEvent(reporterId.trim(), eventCode.trim(), false);
     }
 
+    @Cacheable(cacheNames = EVENT_ACTION_EVENT, key = "'enabled:'+#reporterId+':'+#eventCode")
+    @ExpireOn(cacheNames = EVENT_ACTION_EVENT, value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemEventActionEntity> listEnabled(String reporterId, String eventCode) {
         if (StrUtil.isBlank(reporterId) || StrUtil.isBlank(eventCode)) {
@@ -164,6 +200,8 @@ public class EventActionServiceImpl extends
         return queryByEvent(reporterId.trim(), eventCode.trim(), true);
     }
 
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_ACTION, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_ACTION_EVENT, allEntries = true)})
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<SystemEventActionEntity> replaceByEvent(String reporterId, String eventCode,
@@ -218,6 +256,8 @@ public class EventActionServiceImpl extends
         return queryByEvent(reporter, event, false);
     }
 
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_ACTION, key = "#id"),
+        @CacheEvict(cacheNames = EVENT_ACTION_EVENT, allEntries = true)})
     @Override
     public void setEnabled(Long id, boolean enabled) {
         AssertUtil.isTrue(id == null).i18n("event.action.id.required")

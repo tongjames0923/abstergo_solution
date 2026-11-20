@@ -3,6 +3,7 @@ package com.tbs.app.service.impl.event;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.event.IEventSubscriptionService;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -17,14 +18,15 @@ import com.tbs.sql.dsl.IWhereClause;
 import com.tbs.sql.service.QueryEngine;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.*;
 
 /**
  * 事件订阅服务实现。
@@ -102,6 +104,38 @@ public class EventSubscriptionServiceImpl extends
         return Optional.of(AUDIT_SERVICE);
     }
 
+    @Caching(evict = {
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION, key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_EVENT, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_TRIGGER, allEntries = true)})
+    @Override
+    public List<SystemEventSubscriptionEntity> save(SystemEventSubscriptionEntity entity) {
+        return super.save(entity);
+    }
+
+    @Cacheable(cacheNames = EVENT_SUBSCRIPTION, key = "#id", unless = "#result==null")
+    @ExpireOn(cacheNames = EVENT_SUBSCRIPTION, value = 10, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public SystemEventSubscriptionEntity queryById(Long id) {
+        return super.queryById(id);
+    }
+
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_SUBSCRIPTION, key = "#id"),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_EVENT, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_TRIGGER, allEntries = true)})
+    @Override
+    public SystemEventSubscriptionEntity deleteById(Long id) {
+        return super.deleteById(id);
+    }
+
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_SUBSCRIPTION, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_EVENT, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_TRIGGER, allEntries = true)})
+    @Override
+    public int deleteByIds(Collection<Long> ids) {
+        return super.deleteByIds(ids);
+    }
+
     @Override
     protected SystemEventSubscriptionEntity insertNew(SystemEventSubscriptionEntity entity) {
         validateForSave(entity);
@@ -142,6 +176,8 @@ public class EventSubscriptionServiceImpl extends
         return oldOne;
     }
 
+    @Cacheable(cacheNames = EVENT_SUBSCRIPTION_EVENT, key = "#reporterId+':'+#eventCode")
+    @ExpireOn(cacheNames = EVENT_SUBSCRIPTION_EVENT, value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemEventSubscriptionEntity> listByEvent(String reporterId, String eventCode) {
         if (StrUtil.isBlank(reporterId) || StrUtil.isBlank(eventCode)) {
@@ -150,6 +186,8 @@ public class EventSubscriptionServiceImpl extends
         return queryByEvent(reporterId.trim(), eventCode.trim(), false);
     }
 
+    @Cacheable(cacheNames = EVENT_SUBSCRIPTION_EVENT, key = "'enabled:'+#reporterId+':'+#eventCode")
+    @ExpireOn(cacheNames = EVENT_SUBSCRIPTION_EVENT, value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public List<SystemEventSubscriptionEntity> listEnabled(String reporterId, String eventCode) {
         if (StrUtil.isBlank(reporterId) || StrUtil.isBlank(eventCode)) {
@@ -158,6 +196,9 @@ public class EventSubscriptionServiceImpl extends
         return queryByEvent(reporterId.trim(), eventCode.trim(), true);
     }
 
+    @Cacheable(cacheNames = EVENT_SUBSCRIPTION_TRIGGER, key = "#reporterId+':'+#eventCode+':'+#triggerId",
+        unless = "#result==null")
+    @ExpireOn(cacheNames = EVENT_SUBSCRIPTION_TRIGGER, value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public SystemEventSubscriptionEntity findEnabled(String reporterId, String eventCode, String triggerId) {
         if (StrUtil.isBlank(reporterId) || StrUtil.isBlank(eventCode) || StrUtil.isBlank(triggerId)) {
@@ -174,6 +215,9 @@ public class EventSubscriptionServiceImpl extends
         return CollUtil.isEmpty(result) ? null : result.get(0);
     }
 
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_SUBSCRIPTION, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_EVENT, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_TRIGGER, allEntries = true)})
     @Transactional(rollbackFor = Exception.class)
     @Override
     public List<SystemEventSubscriptionEntity> replaceByEvent(String reporterId, String eventCode,
@@ -228,6 +272,9 @@ public class EventSubscriptionServiceImpl extends
         return queryByEvent(reporter, event, false);
     }
 
+    @Caching(evict = {@CacheEvict(cacheNames = EVENT_SUBSCRIPTION, key = "#id"),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_EVENT, allEntries = true),
+        @CacheEvict(cacheNames = EVENT_SUBSCRIPTION_TRIGGER, allEntries = true)})
     @Override
     public void setEnabled(Long id, boolean enabled) {
         AssertUtil.isTrue(id == null).i18n("event.subscription.id.required")
