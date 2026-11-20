@@ -1,7 +1,7 @@
 package com.tbs.app.service.getter;
 
-import com.tbs.script.api.expressible.vo.ResultType;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.result.ResultType;
+import com.tbs.script.api.expressible.vo.result.ResultValue;
 
 /**
  * 布尔结果取值器抽象基类。

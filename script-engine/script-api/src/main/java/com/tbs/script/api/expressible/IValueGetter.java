@@ -2,10 +2,10 @@ package com.tbs.script.api.expressible;
 
 import com.tbs.common.provider.IRouteMeta;
 import com.tbs.common.provider.vo.InstanceMeta;
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ParamValue;
-import com.tbs.script.api.expressible.vo.ResultType;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.param.ParamType;
+import com.tbs.script.api.expressible.vo.param.ParamValue;
+import com.tbs.script.api.expressible.vo.result.ResultType;
+import com.tbs.script.api.expressible.vo.result.ResultValue;
 
 import java.util.Collection;
 import java.util.List;

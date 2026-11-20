@@ -1,9 +1,9 @@
 package com.tbs.app.service.getter;
 
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ParamUiMeta;
-import com.tbs.script.api.expressible.vo.ParamValue;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.param.ParamType;
+import com.tbs.script.api.expressible.vo.param.ParamUiMeta;
+import com.tbs.script.api.expressible.vo.param.ParamValue;
+import com.tbs.script.api.expressible.vo.result.ResultValue;
 import com.tbs.web.security.token.ITokenModel;
 import com.tbs.web.security.user.IUserLoginInfoService;
 import com.tbs.web.security.user.vo.LoginSessionVO;

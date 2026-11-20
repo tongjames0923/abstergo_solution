@@ -2,10 +2,10 @@ package com.tbs.app.service.getter;
 
 import com.tbs.common.provider.annotation.RoutingRef;
 import com.tbs.dic.service.IDataDicService;
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ParamUiMeta;
-import com.tbs.script.api.expressible.vo.ParamValue;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.param.ParamType;
+import com.tbs.script.api.expressible.vo.param.ParamUiMeta;
+import com.tbs.script.api.expressible.vo.param.ParamValue;
+import com.tbs.script.api.expressible.vo.result.ResultValue;
 import org.springframework.stereotype.Component;
 
 import java.util.Collection;
