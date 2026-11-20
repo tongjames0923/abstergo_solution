@@ -71,4 +71,11 @@ public final class ScriptI18nConstant {
      * 条件规则触发器描述：按订阅关系绑定的条件规则判断是否触发
      */
     public static final String TRIGGER_CONDITION_DESCRIPTION = "script.trigger.condition.description";
+
+    /* ===================== 触发器动作 ===================== */
+
+    /**
+     * 动作不存在提示：未找到触发器动作: {0}
+     */
+    public static final String TRIGGER_ACTION_NOT_FOUND = "script.trigger.action.not.found";
 }

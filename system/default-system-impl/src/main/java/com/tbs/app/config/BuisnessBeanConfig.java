@@ -4,12 +4,16 @@ import com.tbs.app.service.company.ISystemCompanyService;
 import com.tbs.app.service.condition.IConditionRuleService;
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
+import com.tbs.app.service.event.IEventActionService;
+import com.tbs.app.service.event.IEventSubscriptionService;
 import com.tbs.app.service.genericapi.IGenericApiService;
 import com.tbs.app.service.genericapi.ISystemGenericApiParamService;
 import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.service.impl.company.SimpleCompanyService;
 import com.tbs.app.service.impl.condition.ConditionRuleServiceImpl;
 import com.tbs.app.service.impl.department.DepartmentTreeStructService;
+import com.tbs.app.service.impl.event.EventActionServiceImpl;
+import com.tbs.app.service.impl.event.EventSubscriptionServiceImpl;
 import com.tbs.app.service.impl.department.SimpleDepartmentService;
 import com.tbs.app.service.impl.department.SimpleDepartmentUserRelationService;
 import com.tbs.app.service.impl.genericapi.GenericApiParamServiceImpl;
@@ -218,6 +222,20 @@ public class BuisnessBeanConfig {
     @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
     public IConditionRuleService conditionRuleService() {
         return new ConditionRuleServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IEventSubscriptionService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IEventSubscriptionService eventSubscriptionService() {
+        return new EventSubscriptionServiceImpl();
+    }
+
+    @Bean
+    @ConditionalOnMissingBean(IEventActionService.class)
+    @ConditionalOnProperty(prefix = "tbs.system", value = "enable", havingValue = "true")
+    public IEventActionService eventActionService() {
+        return new EventActionServiceImpl();
     }
 
     @Bean
