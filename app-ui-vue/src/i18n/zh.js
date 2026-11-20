@@ -1430,6 +1430,82 @@ export default {
     notExists: '规则不存在'
   },
 
+  // 事件编排公共文案
+  eventCommon: {
+    reporter: '事件上报器',
+    event: '事件',
+    reporterPlaceholder: '选择事件上报器',
+    eventPlaceholder: '选择事件',
+    eventParams: '事件参数',
+    noParams: '该事件未声明参数',
+    total: '共 {total} 条',
+    create: '新建编排',
+    listTitle: '配置列表',
+    searchPlaceholder: '搜索事件编码或名称',
+    allStatus: '全部状态',
+    enabled: '已启用',
+    disabled: '已停用',
+    empty: '暂无配置',
+    editorTitle: '编排配置',
+    selectFirst: '请从左侧选择一条配置，或新建一组编排',
+    enabledSwitch: '启用',
+    save: '保存配置',
+    saved: '配置已保存',
+    cancel: '取消',
+    reset: '重置',
+    remove: '删除',
+    removeConfirm: '确定删除该条配置吗？',
+    removed: '配置已删除',
+    status: '状态',
+    order: '顺序',
+    conditionRule: '条件规则',
+    noConditionRule: '不绑定条件规则',
+    goConditionRule: '去编排条件',
+    trigger: '触发器',
+    triggerPlaceholder: '选择触发器',
+    triggerRequired: '请选择触发器',
+    triggerDuplicate: '同一事件下触发器不能重复',
+    bindingRequired: '请至少配置一条订阅绑定',
+    bindings: '订阅绑定',
+    addRow: '新增一行',
+    noBindings: '尚未配置订阅，点击「新增一行」开始',
+    debug: '调试上报',
+    report: '上报并预览',
+    reportHint: '按当前事件参数模拟上报，不影响真实业务数据',
+    reportSuccess: '上报成功',
+    reportFailed: '上报失败',
+    elapsed: '耗时 {ms}ms',
+    triggerResults: '触发器明细',
+    noTriggerResults: '该事件暂无启用的订阅',
+    triggered: '已触发',
+    notTriggered: '未触发',
+    failed: '调用异常',
+    actions: '动作编排',
+    actionPlaceholder: '选择动作',
+    actionRequired: '请至少配置一个动作',
+    actionDuplicate: '同一事件下动作不能重复',
+    actionParamInvalid: '动作参数校验未通过',
+    paramEmpty: '该动作未声明参数',
+    noActions: '尚未配置动作，点击「新增一行」开始',
+    test: '测试执行',
+    testSuccess: '执行成功',
+    testFailed: '执行失败',
+    selectActionFirst: '请选择要测试的动作',
+    placeholderHint: '动作参数支持 {placeholder} 引用本次事件参数，如「新用户 {example}」'
+  },
+
+  // 事件订阅
+  eventSubscription: {
+    title: '事件订阅',
+    desc: '把事件、触发条件与执行顺序绑定起来，运行期按订阅关系分发'
+  },
+
+  // 事件动作
+  eventAction: {
+    title: '事件动作',
+    desc: '编排条件命中后要执行的业务动作，参数由动作声明的元数据动态渲染'
+  },
+
   // 调试页规则联动
   ruleDebug: {
     loadRule: '加载规则',

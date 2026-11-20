@@ -1426,6 +1426,82 @@ export default {
     notExists: 'Rule does not exist'
   },
 
+  // Event orchestration shared
+  eventCommon: {
+    reporter: 'Reporter',
+    event: 'Event',
+    reporterPlaceholder: 'Select an event reporter',
+    eventPlaceholder: 'Select an event',
+    eventParams: 'Event parameters',
+    noParams: 'This event declares no parameters',
+    total: '{total} in total',
+    create: 'New binding',
+    listTitle: 'Bindings',
+    searchPlaceholder: 'Search event code or name',
+    allStatus: 'All statuses',
+    enabled: 'Enabled',
+    disabled: 'Disabled',
+    empty: 'No bindings yet',
+    editorTitle: 'Binding editor',
+    selectFirst: 'Select a binding on the left, or create a new one',
+    enabledSwitch: 'Enabled',
+    save: 'Save binding',
+    saved: 'Binding saved',
+    cancel: 'Cancel',
+    reset: 'Reset',
+    remove: 'Delete',
+    removeConfirm: 'Delete this binding?',
+    removed: 'Binding deleted',
+    status: 'Status',
+    order: 'Order',
+    conditionRule: 'Condition rule',
+    noConditionRule: 'No condition rule',
+    goConditionRule: 'Edit conditions',
+    trigger: 'Trigger',
+    triggerPlaceholder: 'Select a trigger',
+    triggerRequired: 'Trigger is required',
+    triggerDuplicate: 'A trigger can only be bound once per event',
+    bindingRequired: 'Configure at least one subscription binding',
+    bindings: 'Subscription bindings',
+    addRow: 'Add row',
+    noBindings: 'No subscription yet, click "Add row" to start',
+    debug: 'Debug report',
+    report: 'Report and preview',
+    reportHint: 'Reports a simulated event with the parameters above without touching real data',
+    reportSuccess: 'Reported',
+    reportFailed: 'Report failed',
+    elapsed: '{ms}ms elapsed',
+    triggerResults: 'Trigger details',
+    noTriggerResults: 'No enabled subscription for this event',
+    triggered: 'Triggered',
+    notTriggered: 'Not triggered',
+    failed: 'Invocation failed',
+    actions: 'Action bindings',
+    actionPlaceholder: 'Select an action',
+    actionRequired: 'Configure at least one action',
+    actionDuplicate: 'An action can only be bound once per event',
+    actionParamInvalid: 'Action parameters are invalid',
+    paramEmpty: 'This action declares no parameters',
+    noActions: 'No action yet, click "Add row" to start',
+    test: 'Test run',
+    testSuccess: 'Executed',
+    testFailed: 'Execution failed',
+    selectActionFirst: 'Select an action to test',
+    placeholderHint: 'Action parameters support {placeholder} placeholders, e.g. "new user {example}"'
+  },
+
+  // Event subscription
+  eventSubscription: {
+    title: 'Event Subscriptions',
+    desc: 'Bind events, condition triggers and execution order; events are dispatched by subscription at runtime'
+  },
+
+  // Event actions
+  eventAction: {
+    title: 'Event Actions',
+    desc: 'Compose business actions executed after a condition matches; forms are rendered from action metadata'
+  },
+
   // Debugger rule integration
   ruleDebug: {
     loadRule: 'Load rule',

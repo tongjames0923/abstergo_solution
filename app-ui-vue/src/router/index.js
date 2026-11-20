@@ -80,6 +80,16 @@ export const constantRoutes = [
       path: '/condition-rule',
       component: () => import('@/views/dev/ConditionRuleManager'),
       meta: { title: '条件规则' }
+    },
+    {
+      path: '/event-subscription',
+      component: () => import('@/views/dev/EventSubscriptionManager'),
+      meta: { title: '事件订阅' }
+    },
+    {
+      path: '/event-action',
+      component: () => import('@/views/dev/EventActionManager'),
+      meta: { title: '事件动作' }
     }
 
     ]

@@ -6,7 +6,6 @@ import com.tbs.app.service.event.IEventActionService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
-import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.enums.CommonFlagEnum;
@@ -128,8 +127,13 @@ public class EventActionServiceImpl extends
             oldOne.setActionName(newOne.getActionName());
         }
         if (newOne.getParamJson() != null) {
-            validateParamJson(newOne.getParamJson());
-            oldOne.setParamJson(newOne.getParamJson());
+            String paramJson = newOne.getParamJson().trim();
+            if (paramJson.isEmpty()) {
+                oldOne.setParamJson(null);
+            } else {
+                validateParamJson(paramJson);
+                oldOne.setParamJson(paramJson);
+            }
         }
         if (newOne.getSortOrder() != null) {
             validateSortOrder(newOne.getSortOrder());
@@ -180,6 +184,7 @@ public class EventActionServiceImpl extends
                     .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
                 action.setReporterId(reporter);
                 action.setEventCode(event);
+                action.setId(null);
                 validateForSave(action);
                 normalize(action);
                 AssertUtil.isTrue(incoming.containsKey(action.getActionId()))
@@ -199,7 +204,7 @@ public class EventActionServiceImpl extends
                 continue;
             }
             current.setActionName(action.getActionName());
-            current.setParamJson(action.getParamJson());
+            current.setParamJson(action.getParamJson() == null ? "" : action.getParamJson());
             current.setSortOrder(action.getSortOrder());
             if (action.getEnabled() != null) {
                 current.setEnabled(action.getEnabled());

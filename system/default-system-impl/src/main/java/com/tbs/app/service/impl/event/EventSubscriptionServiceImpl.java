@@ -106,6 +106,9 @@ public class EventSubscriptionServiceImpl extends
     protected SystemEventSubscriptionEntity insertNew(SystemEventSubscriptionEntity entity) {
         validateForSave(entity);
         normalize(entity);
+        if (StrUtil.isEmpty(entity.getRuleCode())) {
+            entity.setRuleCode(null);
+        }
         entity.setEnabled(entity.getEnabled() == null ? ENABLED : entity.getEnabled());
         entity.setFlag(CommonFlagEnum.ACTIVE.getCode());
         getMapper().insert(entity);
@@ -117,9 +120,14 @@ public class EventSubscriptionServiceImpl extends
     @Override
     protected SystemEventSubscriptionEntity compareAndUpdateValue(SystemEventSubscriptionEntity newOne,
         SystemEventSubscriptionEntity oldOne) {
-        if (StrUtil.isNotEmpty(newOne.getRuleCode())) {
-            validateRuleCode(newOne.getRuleCode());
-            oldOne.setRuleCode(newOne.getRuleCode().trim());
+        if (newOne.getRuleCode() != null) {
+            String ruleCode = newOne.getRuleCode().trim();
+            if (ruleCode.isEmpty()) {
+                oldOne.setRuleCode(null);
+            } else {
+                validateRuleCode(ruleCode);
+                oldOne.setRuleCode(ruleCode);
+            }
         }
         if (newOne.getSortOrder() != null) {
             validateSortOrder(newOne.getSortOrder());
@@ -186,6 +194,7 @@ public class EventSubscriptionServiceImpl extends
                     .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
                 subscription.setReporterId(reporter);
                 subscription.setEventCode(event);
+                subscription.setId(null);
                 validateForSave(subscription);
                 normalize(subscription);
                 AssertUtil.isTrue(incoming.containsKey(subscription.getTriggerId()))
@@ -205,7 +214,7 @@ public class EventSubscriptionServiceImpl extends
                 getInstance().save(subscription);
                 continue;
             }
-            current.setRuleCode(subscription.getRuleCode());
+            current.setRuleCode(subscription.getRuleCode() == null ? "" : subscription.getRuleCode());
             current.setSortOrder(subscription.getSortOrder());
             if (subscription.getEnabled() != null) {
                 current.setEnabled(subscription.getEnabled());

@@ -153,6 +153,7 @@
 import {
   deleteConditionRule,
   evaluateConditionRule,
+  getConditionRuleByCode,
   queryConditionRules,
   saveConditionRule,
   setConditionRuleEnabled
@@ -211,8 +212,26 @@ export default {
   created() {
     this.loadGetters()
     this.loadRules()
+    this.openFromQuery()
   },
   methods: {
+    /**
+     * 按路由参数直接打开规则，供订阅页跳转定位
+     */
+    async openFromQuery() {
+      const ruleCode = this.$route && this.$route.query ? this.$route.query.ruleCode : ''
+      if (!ruleCode) {
+        return
+      }
+      try {
+        const res = await getConditionRuleByCode(ruleCode)
+        if (res.data) {
+          this.selectRule(res.data)
+        }
+      } catch (e) {
+        this.$message.warning(this.$t('conditionRule.notExists'))
+      }
+    },
     /**
      * 空表单
      *
