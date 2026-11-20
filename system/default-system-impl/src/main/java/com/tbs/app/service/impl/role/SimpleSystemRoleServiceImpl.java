@@ -96,7 +96,12 @@ public class SimpleSystemRoleServiceImpl
         @CacheEvict(cacheNames = SYSTEM_ROLE_NAME, allEntries = true)})
     @Override
     public List<SystemRoleEntity> save(SystemRoleEntity entity) {
-        return super.save(entity);
+        var result = super.save(entity);
+        // 权限名称与状态是组权限列表缓存的内容，改名/启停后必须按绑定组失源，否则组侧与用户快照最长 10 分钟仍是旧值
+        if (entity.getId() != null) {
+            SpringUtil.getBean(ISystemRoleGroupService.class).evictRoleRelatedGroupCache(entity.getId());
+        }
+        return result;
     }
 
     @Override

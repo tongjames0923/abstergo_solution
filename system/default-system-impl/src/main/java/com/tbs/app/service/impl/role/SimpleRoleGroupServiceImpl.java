@@ -123,6 +123,20 @@ public class SimpleRoleGroupServiceImpl
     }
 
     /**
+     * 按权限标识失效关联的组权限缓存
+     * <p>
+     * 权限名称与状态是组权限列表缓存的内容，权限变更后按绑定组逐个失源；组下用户的身份快照
+     * 由缓存框架的关联失效声明连带清除，不在此处重复展开。
+     * </p>
+     *
+     * @param roleId 权限标识
+     */
+    @Override
+    public void evictRoleRelatedGroupCache(Long roleId) {
+        getGroupListByRoleId(roleId).forEach(group -> evictCache(ROLE_GROUP, group.getId()));
+    }
+
+    /**
      * 获取角色组VO
      *
      * @param groupId
