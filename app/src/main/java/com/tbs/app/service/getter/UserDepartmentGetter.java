@@ -1,6 +1,9 @@
 package com.tbs.app.service.getter;
 
+import com.tbs.app.service.user.ISystemUserService;
+import com.tbs.app.service.user.IUserIdentityService;
 import com.tbs.app.service.user.model.ISystemUserDetails;
+import com.tbs.app.service.user.model.UserIdentity;
 import com.tbs.app.vo.DepartmentInfoVO;
 import com.tbs.script.api.expressible.vo.*;
 import com.tbs.web.uitl.AuthUtil;
@@ -15,8 +18,9 @@ import java.util.List;
 /**
  * 用户部门取值器。
  *
- * <p>判断当前登录用户是否属于指定部门，或当前部门是否为指定部门。
- * 未登录、部门 ID 非法或取值异常时返回 false，不中断脚本执行。</p>
+ * <p>判断指定用户是否属于指定部门，或当前部门是否为指定部门；用户名留空时表示当前登录用户。
+ * 指定用户没有会话「当前部门」概念，匹配范围取当前部门时按所属任一部门判断。
+ * 用户不存在、未登录、部门 ID 非法或取值异常时返回 false，不中断脚本执行。</p>
  *
  * @author abstergo
  */
@@ -43,6 +47,18 @@ public class UserDepartmentGetter extends AbstractBooleanValueGetter {
      */
     @Resource
     private AuthUtil authUtil;
+
+    /**
+     * 系统用户服务，用于按用户名反查用户 ID
+     */
+    @Resource
+    private ISystemUserService systemUserService;
+
+    /**
+     * 用户身份聚合服务，用于读取任意用户的部门归属
+     */
+    @Resource
+    private IUserIdentityService userIdentityService;
 
     /**
      * 获取取值器名称。
@@ -91,13 +107,17 @@ public class UserDepartmentGetter extends AbstractBooleanValueGetter {
                     .step(BigDecimal.ONE).build()).build(),
             ParamType.builder().isEnum(true).type("string").name(text(I18N_PREFIX + "param.scope.name"))
                 .description(text(I18N_PREFIX + "param.scope.description")).enumValues(scopes).sort(2)
-                .ui(ParamUiMeta.builder().inputType("select").build()).build());
+                .ui(ParamUiMeta.builder().inputType("select").build()).build(),
+            ParamType.builder().type("string").name(text(I18N_PREFIX + "param.username.name"))
+                .description(text(I18N_PREFIX + "param.username.description")).sort(3)
+                .ui(ParamUiMeta.builder().inputType("text").maxLength(128)
+                    .placeholder(text(I18N_PREFIX + "param.username.placeholder")).build()).build());
     }
 
     /**
      * 判断当前用户是否匹配指定部门。
      *
-     * @param paramValues 参数值集合，首个参数为部门 ID，第二个参数为匹配范围
+     * @param paramValues 参数值集合，依次为部门 ID、匹配范围、用户名（可为空）
      * @return 匹配返回 true，否则返回 false
      */
     @Override
@@ -106,21 +126,43 @@ public class UserDepartmentGetter extends AbstractBooleanValueGetter {
         if (departmentId == null) {
             return booleanResult(false);
         }
+        String scope = paramString(paramValues, 1);
+        String username = paramString(paramValues, 2);
+        UserIdentity identity = UserIdentityLookup.resolve(systemUserService, userIdentityService, username);
         try {
-            UserDetails user = authUtil.getCurrentUser();
-            if (!(user instanceof ISystemUserDetails details)) {
+            if (identity == null) {
+                return booleanResult(matchesCurrentUser(departmentId, scope));
+            }
+            if (!UserIdentityLookup.isActive(identity)) {
                 return booleanResult(false);
             }
-            if (SCOPE_CURRENT.equals(paramString(paramValues, 1))) {
-                DepartmentInfoVO current = details.getCurrentDepartment();
-                return booleanResult(current != null && departmentId.equals(current.getDepartmentId()));
-            }
-            List<DepartmentInfoVO> departments = details.getDepartments();
+            List<DepartmentInfoVO> departments = identity.getDepartments();
             return booleanResult(departments != null
                 && departments.stream().anyMatch(dept -> departmentId.equals(dept.getDepartmentId())));
         } catch (Exception e) {
             return booleanResult(false);
         }
+    }
+
+    /**
+     * 当前登录用户的部门匹配，保留「当前部门」的会话语义。
+     *
+     * @param departmentId 部门 ID
+     * @param scope        匹配范围
+     * @return 是否匹配
+     */
+    private boolean matchesCurrentUser(Long departmentId, String scope) {
+        UserDetails user = authUtil.getCurrentUser();
+        if (!(user instanceof ISystemUserDetails details)) {
+            return false;
+        }
+        if (SCOPE_CURRENT.equals(scope)) {
+            DepartmentInfoVO current = details.getCurrentDepartment();
+            return current != null && departmentId.equals(current.getDepartmentId());
+        }
+        List<DepartmentInfoVO> departments = details.getDepartments();
+        return departments != null
+            && departments.stream().anyMatch(dept -> departmentId.equals(dept.getDepartmentId()));
     }
 
     /**
