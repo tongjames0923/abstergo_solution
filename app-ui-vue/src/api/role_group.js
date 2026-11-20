@@ -78,6 +78,18 @@ export function getRoleListByGroupId(groupId) {
 }
 
 /**
+ * 获取绑定指定权限的角色组列表
+ * @param {number} roleId - 权限ID
+ * @returns {Promise} 绑定该权限的角色组列表
+ */
+export function getGroupListByRoleId(roleId) {
+  return request({
+    url: `/private/role/group/groups/${roleId}`,
+    method: 'get'
+  })
+}
+
+/**
  * 添加角色到角色组
  * @param {number} groupId - 角色组ID
  * @param {number} roleId - 角色ID

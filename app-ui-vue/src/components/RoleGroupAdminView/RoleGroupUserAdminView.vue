@@ -1,171 +1,180 @@
 <template>
-  <div class="role-group-user-admin-view">
-    <!-- 顶部标题栏 -->
-    <div class="header-bar">
-      <div class="header-left">
-        <h2 class="page-title">
-          <span class="title-icon">👥</span>
-          <span>角色组用户管理</span>
-        </h2>
+  <div class="member-workspace">
+    <div class="workspace-toolbar">
+      <div class="toolbar-heading">
+        <span class="heading-rail" />
+        <h3 class="heading-title">{{ $t('roleGroup.tabMembers') }}</h3>
+        <span class="heading-meta">{{ $t('roleGroup.totalMember', { count: assignedUsers.length }) }}</span>
       </div>
-      <div class="header-right">
-        <el-button
-          :type="showAddPanel ? 'default' : 'primary'"
-          class="toggle-add-btn"
-          @click="toggleAddPanel"
-        >
-          <i :class="showAddPanel ? 'el-icon-close' : 'el-icon-plus'" />
-          <span>{{ showAddPanel ? '收起面板' : '添加用户' }}</span>
-        </el-button>
-        <el-button
-          icon="el-icon-refresh"
-          circle
-          size="small"
-          class="refresh-btn"
-          :loading="loadingAssigned"
-          @click="fetchAllData"
-        />
+      <div class="toolbar-actions">
+        <el-tooltip :content="$t('common.refresh')" placement="bottom">
+          <el-button
+            size="small"
+            icon="el-icon-refresh"
+            circle
+            class="refresh-button"
+            :loading="loadingAssigned || loadingAvailable"
+            @click="fetchAllData"
+          />
+        </el-tooltip>
       </div>
     </div>
 
-    <!-- 主体内容区 -->
-    <div class="main-content">
-      <!-- 左侧：已分配用户 -->
-      <div class="panel assigned-panel">
-        <div class="panel-header">
-          <span class="panel-title">
-            <span class="panel-dot assigned" />
-            已分配用户
-          </span>
-          <span class="panel-count">{{ assignedUsers.length }}</span>
-        </div>
+    <div class="transfer-grid">
+      <section class="transfer-pane is-assigned">
+        <header class="pane-top">
+          <div class="pane-identity">
+            <span class="identity-dot dot-assigned" />
+            <span class="identity-name">{{ $t('roleGroup.assignedUsers') }}</span>
+            <span class="identity-count">{{ assignedUsers.length }}</span>
+          </div>
+          <div class="pane-search">
+            <i class="el-icon-search" />
+            <input
+              v-model="assignedKeyword"
+              :placeholder="$t('roleGroup.searchAssigned')"
+              class="pane-search-input"
+            >
+            <i
+              v-if="assignedKeyword"
+              class="el-icon-close search-clear"
+              @click="assignedKeyword = ''"
+            />
+          </div>
+        </header>
 
-        <div v-loading="loadingAssigned" class="panel-body">
-          <div v-if="assignedUsers.length === 0" class="empty-state">
-            <i class="el-icon-user" />
-            <p>暂未分配任何用户</p>
+        <div v-loading="loadingAssigned" class="pane-scroll">
+          <div v-if="filteredAssignedUsers.length === 0" class="pane-empty">
+            <div class="empty-glyph">
+              <i :class="assignedKeyword ? 'el-icon-search' : 'el-icon-user'" />
+            </div>
+            <p>{{ assignedKeyword ? $t('roleGroup.emptySearch') : $t('roleGroup.emptyAssignedUser') }}</p>
           </div>
 
-          <div v-else class="user-list">
-            <div
-              v-for="user in assignedUsers"
-              :key="user.userId"
-              class="user-card assigned"
+          <div v-else class="member-list">
+            <button
+              v-for="user in filteredAssignedUsers"
+              :key="user.userId || user.id"
+              type="button"
+              class="member-card is-assigned"
+              :title="$t('roleGroup.removeUserConfirm', { name: displayName(user) })"
               @click="handleRemoveUser(user)"
             >
-              <div class="user-avatar">
-                <el-avatar :size="36" :src="user.avatar">
-                  <i class="el-icon-user" />
-                </el-avatar>
-              </div>
-              <div class="user-info">
-                <span class="user-name" :title="user.nickName || user.userName">
-                  {{ user.nickName || user.userName }}
-                </span>
-                <span class="user-username" :title="user.userName">
-                  @{{ user.userName }}
-                </span>
-              </div>
-              <i class="el-icon-close remove-icon" />
-            </div>
+              <el-avatar :size="34" :src="user.avatar" class="member-avatar">
+                <i class="el-icon-user" />
+              </el-avatar>
+              <span class="member-info">
+                <span class="member-name">{{ displayName(user) }}</span>
+                <span class="member-account">@{{ user.userName }}</span>
+              </span>
+              <i class="el-icon-close member-action" />
+            </button>
           </div>
         </div>
+      </section>
+
+      <div class="transfer-bridge" aria-hidden="true">
+        <span class="bridge-line" />
+        <span class="bridge-symbol">⇄</span>
+        <span class="bridge-line" />
       </div>
 
-      <!-- 右侧：添加用户面板 -->
-      <transition name="slide-right">
-        <div v-if="showAddPanel" class="panel add-panel">
-          <div class="panel-header">
-            <span class="panel-title">
-              <span class="panel-dot available" />
-              可添加用户
-            </span>
-            <span class="panel-count">
-              {{ filteredAvailableUsers.length }}
-            </span>
+      <section class="transfer-pane is-available">
+        <header class="pane-top">
+          <div class="pane-identity">
+            <span class="identity-dot dot-available" />
+            <span class="identity-name">{{ $t('roleGroup.availableUsers') }}</span>
+            <span class="identity-count">{{ filteredAvailableUsers.length }}</span>
           </div>
-
-          <!-- 搜索 -->
-          <div class="filter-bar">
-            <div class="search-box">
-              <i class="el-icon-search" />
-              <input
-                v-model="searchKeyword"
-                placeholder="搜索用户名或昵称..."
-                class="search-input"
-              >
-              <i
-                v-if="searchKeyword"
-                class="el-icon-close clear-btn"
-                @click="searchKeyword = ''"
-              />
-            </div>
-          </div>
-
-          <!-- 操作栏 -->
-          <div class="action-bar">
-            <el-button
-              size="mini"
-              type="text"
-              class="select-all-btn"
-              :disabled="filteredAvailableUsers.length === 0"
-              @click="handleSelectAll"
+          <div class="pane-search">
+            <i class="el-icon-search" />
+            <input
+              v-model="searchKeyword"
+              :placeholder="$t('roleGroup.searchUser')"
+              class="pane-search-input"
             >
-              <i class="el-icon-check" /> 全选当前筛选结果
-            </el-button>
-            <el-button
-              size="mini"
-              type="primary"
-              class="batch-add-btn"
-              :disabled="selectedUserIds.length === 0"
-              :loading="batchAdding"
-              @click="handleBatchAdd"
-            >
-              批量添加 ({{ selectedUserIds.length }})
-            </el-button>
+            <i
+              v-if="searchKeyword"
+              class="el-icon-close search-clear"
+              @click="searchKeyword = ''"
+            />
+          </div>
+        </header>
+
+        <div v-loading="loadingAvailable" class="pane-scroll">
+          <div v-if="filteredAvailableUsers.length === 0" class="pane-empty">
+            <div class="empty-glyph">
+              <i :class="searchKeyword ? 'el-icon-search' : 'el-icon-user'" />
+            </div>
+            <p>{{ searchKeyword ? $t('roleGroup.emptySearch') : $t('roleGroup.emptyAvailableUser') }}</p>
           </div>
 
-          <!-- 可分配用户列表 -->
-          <div v-loading="loadingAvailable" class="panel-body">
-            <div v-if="filteredAvailableUsers.length === 0" class="empty-state">
-              <i class="el-icon-search" />
-              <p>{{ searchKeyword ? '未找到匹配的用户' : '没有可添加的用户' }}</p>
-            </div>
-
-            <div v-else class="user-list">
-              <div
-                v-for="user in filteredAvailableUsers"
-                :key="user.id"
-                class="user-card available"
-                :class="{ selected: selectedUserIds.includes(user.id) }"
-                @click="toggleUserSelection(user.id)"
-              >
-                <div class="user-avatar">
-                  <el-avatar :size="36" :src="user.avatar">
-                    <i class="el-icon-user" />
-                  </el-avatar>
-                </div>
-                <div class="user-info">
-                  <span class="user-name" :title="user.nickName || user.userName">
-                    {{ user.nickName || user.userName }}
-                  </span>
-                  <span class="user-username" :title="user.userName">
-                    @{{ user.userName }}
-                  </span>
-                </div>
-                <i class="el-icon-check check-icon" />
-              </div>
-            </div>
+          <div v-else class="member-list">
+            <button
+              v-for="user in filteredAvailableUsers"
+              :key="user.id"
+              type="button"
+              class="member-card is-available"
+              :class="{ 'is-selected': selectedUserIds.includes(user.id) }"
+              @click="toggleUserSelection(user.id)"
+            >
+              <el-avatar :size="34" :src="user.avatar" class="member-avatar">
+                <i class="el-icon-user" />
+              </el-avatar>
+              <span class="member-info">
+                <span class="member-name">{{ displayName(user) }}</span>
+                <span class="member-account">@{{ user.userName }}</span>
+              </span>
+              <i class="el-icon-check member-action" />
+            </button>
           </div>
         </div>
-      </transition>
+      </section>
     </div>
+
+    <footer class="workspace-footer">
+      <div class="footer-selection">
+        <span class="selection-badge">{{ selectedUserIds.length }}</span>
+        <span class="selection-label">{{ $t('roleGroup.pendingLabel') }}</span>
+        <el-button
+          type="text"
+          size="mini"
+          class="clear-link"
+          :disabled="selectedUserIds.length === 0"
+          @click="selectedUserIds = []"
+        >
+          {{ $t('roleGroup.clearSelection') }}
+        </el-button>
+      </div>
+      <div class="footer-actions">
+        <el-button
+          size="small"
+          type="text"
+          class="select-all-link"
+          :disabled="filteredAvailableUsers.length === 0"
+          @click="handleSelectAll"
+        >
+          {{ $t('roleGroup.selectAll') }}
+        </el-button>
+        <el-button
+          size="small"
+          type="primary"
+          class="commit-button"
+          :disabled="selectedUserIds.length === 0"
+          :loading="batchAdding"
+          @click="handleBatchAdd"
+        >
+          {{ $t('roleGroup.confirmAdd') }}
+        </el-button>
+      </div>
+    </footer>
   </div>
 </template>
 
 <script>
-import { getUserListByGroupId, appendUserToGroup, removeUserFromGroup } from '@/api/role_group'
-import { adminQueryUser } from '@/api/admin_user'
+import {appendUserToGroup, getUserListByGroupId, removeUserFromGroup} from '@/api/role_group'
+import {adminQueryUser} from '@/api/admin_user'
+import {runBatchWithLimit} from '@/utils/batch-request'
 
 export default {
   name: 'RoleGroupUserAdminView',
@@ -183,127 +192,173 @@ export default {
       assignedUsers: [],
       availableUsers: [],
       selectedUserIds: [],
-      showAddPanel: false,
-      searchKeyword: ''
+      searchKeyword: '',
+      assignedKeyword: ''
     }
   },
   computed: {
+    filteredAssignedUsers() {
+      if (!this.assignedKeyword) return this.assignedUsers
+      return this.assignedUsers.filter(user => this.matchKeyword(user, this.assignedKeyword))
+    },
     filteredAvailableUsers() {
-      let list = this.availableUsers.filter(
-        u => !this.assignedUsers.find(a => a.id === u.id)
-      )
-      if (this.searchKeyword) {
-        const kw = this.searchKeyword.toLowerCase()
-        list = list.filter(u =>
-          (u.userName && u.userName.toLowerCase().includes(kw)) ||
-          (u.nickName && u.nickName.toLowerCase().includes(kw))
-        )
-      }
-      return list
+      return this.availableUsers.filter(user => {
+        if (this.isAssigned(user)) return false
+        return !this.searchKeyword || this.matchKeyword(user, this.searchKeyword)
+      })
     }
   },
   mounted() {
-    this.fetchAssignedUsers()
+    this.fetchAllData()
   },
   methods: {
+    /**
+     * 列表接口返回的 id 与组内接口返回的 userId 口径不同，两侧都需要识别
+     * @param {Object} user - 待判断用户
+     * @returns {boolean} 是否已在当前组
+     */
+    isAssigned(user) {
+      return this.assignedUsers.some(assigned =>
+        (user.id && assigned.id === user.id) ||
+        (user.userId && assigned.userId === user.userId) ||
+        (assigned.userId && assigned.userId === user.id) ||
+        (assigned.id && assigned.id === user.userId)
+      )
+    },
+
+    /**
+     * 按用户名、昵称匹配关键词
+     * @param {Object} user - 用户项
+     * @param {string} keyword - 关键词
+     * @returns {boolean} 是否匹配
+     */
+    matchKeyword(user, keyword) {
+      const kw = keyword.toLowerCase()
+      return [user.userName, user.nickName]
+        .filter(Boolean)
+        .some(field => String(field).toLowerCase().includes(kw))
+    },
+
+    /**
+     * 用户展示名优先用昵称
+     * @param {Object} user - 用户项
+     * @returns {string} 展示名
+     */
+    displayName(user) {
+      return user.nickName || user.userName
+    },
+
+    /**
+     * 加载组内成员
+     * @returns {Promise} 加载结果
+     */
     async fetchAssignedUsers() {
       this.loadingAssigned = true
       try {
         const response = await getUserListByGroupId(this.groupId)
         this.assignedUsers = response.data || []
       } catch (error) {
-        console.error('获取已分配用户失败:', error)
+        console.error('获取组内成员失败:', error)
       } finally {
         this.loadingAssigned = false
       }
     },
 
+    /**
+     * 加载全量用户
+     * @returns {Promise} 加载结果
+     */
     async fetchAvailableUsers() {
       this.loadingAvailable = true
       try {
         const response = await adminQueryUser({}, 1, 1000)
         this.availableUsers = response.data?.data || []
       } catch (error) {
-        console.error('获取可分配用户失败:', error)
+        console.error('获取可添加用户失败:', error)
       } finally {
         this.loadingAvailable = false
       }
     },
 
-    fetchAllData() {
-      this.fetchAssignedUsers()
-      if (this.showAddPanel) {
-        this.fetchAvailableUsers()
-      }
+    /**
+     * 两侧一起刷新，保证分配后状态一致
+     * @returns {Promise} 加载结果
+     */
+    async fetchAllData() {
+      await Promise.all([this.fetchAssignedUsers(), this.fetchAvailableUsers()])
     },
 
-    toggleAddPanel() {
-      this.showAddPanel = !this.showAddPanel
-      if (this.showAddPanel && this.availableUsers.length === 0) {
-        this.fetchAvailableUsers()
-      }
-    },
-
+    /**
+     * 切换单个待添加成员
+     * @param {number} userId - 用户ID
+     */
     toggleUserSelection(userId) {
-      const idx = this.selectedUserIds.indexOf(userId)
-      if (idx > -1) {
-        this.selectedUserIds.splice(idx, 1)
+      const index = this.selectedUserIds.indexOf(userId)
+      if (index > -1) {
+        this.selectedUserIds.splice(index, 1)
       } else {
         this.selectedUserIds.push(userId)
       }
     },
 
+    /**
+     * 全选或取消当前筛选结果
+     */
     handleSelectAll() {
-      const allIds = this.filteredAvailableUsers.map(u => u.id)
+      const allIds = this.filteredAvailableUsers.map(user => user.id)
       const allSelected = allIds.every(id => this.selectedUserIds.includes(id))
-      if (allSelected) {
-        this.selectedUserIds = []
-      } else {
-        this.selectedUserIds = [...allIds]
-      }
+      this.selectedUserIds = allSelected ? [] : [...allIds]
     },
 
+    /**
+     * 并发批量添加成员，按成功/失败数量分别反馈
+     * @returns {Promise} 操作结果
+     */
     async handleBatchAdd() {
       if (this.selectedUserIds.length === 0) return
-
+      const ids = [...this.selectedUserIds]
       this.batchAdding = true
       try {
-        for (const userId of this.selectedUserIds) {
-          await appendUserToGroup(this.groupId, userId)
+        const results = await runBatchWithLimit(ids, id => appendUserToGroup(this.groupId, id))
+        const success = results.filter(result => result.ok).length
+        const fail = results.length - success
+        if (fail === 0) {
+          this.$message.success(this.$t('roleGroup.addSuccess', { count: success }))
+        } else {
+          this.$message.warning(this.$t('roleGroup.addPartialFail', { success, fail }))
         }
-        this.$message.success(`成功添加 ${this.selectedUserIds.length} 个用户`)
         this.selectedUserIds = []
-        await this.fetchAssignedUsers()
-        await this.fetchAvailableUsers()
+        await this.fetchAllData()
       } catch (error) {
-        console.error('批量添加用户失败:', error)
-        this.$message.error('添加部分用户失败，请重试')
+        console.error('批量添加成员失败:', error)
       } finally {
         this.batchAdding = false
       }
     },
 
+    /**
+     * 移除组内成员
+     * @param {Object} user - 用户项
+     * @returns {Promise} 操作结果
+     */
     async handleRemoveUser(user) {
       try {
         await this.$confirm(
-          `确定要移除用户 "${user.nickName || user.userName}" 吗？`,
-          '移除确认',
+          this.$t('roleGroup.removeUserConfirm', { name: this.displayName(user) }),
+          this.$t('roleGroup.removeConfirmTitle'),
           {
-            confirmButtonText: '确定移除',
-            cancelButtonText: '取消',
+            confirmButtonText: this.$t('roleGroup.removeConfirmBtn'),
+            cancelButtonText: this.$t('common.cancel'),
             type: 'warning',
             confirmButtonClass: 'el-button--danger'
           }
         )
-        await removeUserFromGroup(this.groupId, user.userId)
-        this.$message.success('已移除')
-        await this.fetchAssignedUsers()
-        if (this.showAddPanel) {
-          await this.fetchAvailableUsers()
-        }
+        await removeUserFromGroup(this.groupId, user.userId || user.id)
+        this.$message.success(this.$t('roleGroup.removeSuccess'))
+        await this.fetchAllData()
       } catch (error) {
         if (error !== 'cancel') {
-          console.error('移除用户失败:', error)
+          console.error('移除成员失败:', error)
         }
       }
     }
@@ -312,354 +367,439 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-.role-group-user-admin-view {
+@import '~@/styles/variables.scss';
+@import '~@/styles/mixin.scss';
+
+.member-workspace {
+  --ink: #16233c;
+  --muted: #7b8aa3;
+  --line: #e4eaf2;
+  --accent: #0b63ce;
+
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 14px;
+  min-height: 500px;
+  color: var(--ink);
 
-  /* ===== 顶部标题栏 ===== */
-  .header-bar {
+  .workspace-toolbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 20px;
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #e8ecf1;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-
-    .page-title {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 0;
-      font-size: 18px;
-      font-weight: 600;
-      color: #1a1a2e;
-
-      .title-icon {
-        font-size: 20px;
-        color: #0071e3;
-      }
-    }
-
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-
-      .toggle-add-btn {
-        height: 36px;
-        border-radius: 8px;
-        font-weight: 500;
-        transition: all 0.2s;
-
-        i {
-          margin-right: 4px;
-        }
-      }
-
-      .refresh-btn {
-        border-radius: 8px;
-      }
-    }
-  }
-
-  /* ===== 主体内容区 ===== */
-  .main-content {
-    display: flex;
     gap: 16px;
-    min-height: 400px;
+    padding: 14px 18px;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    background: linear-gradient(115deg, #f4f8ff 0%, #ffffff 62%);
+
+    .toolbar-heading {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .heading-rail {
+      width: 3px;
+      height: 22px;
+      border-radius: 3px;
+      background: linear-gradient(180deg, #0b63ce, #6aa7f5);
+    }
+
+    .heading-title {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 700;
+      letter-spacing: 0.2px;
+    }
+
+    .heading-meta {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .toolbar-actions {
+      flex-shrink: 0;
+    }
+
+    .refresh-button {
+      border-radius: 8px;
+    }
   }
 
-  /* ===== 面板公共样式 ===== */
-  .panel {
-    background: #fff;
-    border-radius: 12px;
-    border: 1px solid #e8ecf1;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  .transfer-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 36px minmax(0, 1fr);
+    align-items: stretch;
+    min-height: 380px;
+  }
+
+  .transfer-pane {
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    border: 1px solid var(--line);
+    background: #fff;
     overflow: hidden;
 
-    &.assigned-panel {
-      flex: 1;
+    &.is-assigned {
+      border-radius: 12px 0 0 12px;
+      border-right: none;
     }
 
-    &.add-panel {
-      flex: 1;
-      border: 2px dashed #0071e3;
-      border-color: rgba(0, 113, 227, 0.3);
-    }
-
-    .panel-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 14px 18px;
-      background: #fafbfc;
-      border-bottom: 1px solid #e8ecf1;
-
-      .panel-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        color: #374151;
-
-        .panel-dot {
-          width: 8px;
-          height: 8px;
-          border-radius: 50%;
-
-          &.assigned {
-            background: #34c759;
-            box-shadow: 0 0 6px rgba(52, 199, 89, 0.4);
-          }
-
-          &.available {
-            background: #0071e3;
-            box-shadow: 0 0 6px rgba(0, 113, 227, 0.4);
-          }
-        }
-      }
-
-      .panel-count {
-        background: #f0f2f5;
-        color: #6b7280;
-        font-size: 12px;
-        font-weight: 600;
-        padding: 2px 10px;
-        border-radius: 12px;
-      }
-    }
-
-    .panel-body {
-      flex: 1;
-      padding: 16px;
-      overflow-y: auto;
-      max-height: 500px;
+    &.is-available {
+      border-radius: 0 12px 12px 0;
+      border-left: none;
     }
   }
 
-  /* ===== 空状态 ===== */
-  .empty-state {
+  .transfer-bridge {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px 20px;
-    color: #9ca3af;
+    gap: 8px;
+    border-top: 1px solid var(--line);
+    border-bottom: 1px solid var(--line);
+    background: #f8fafc;
 
-    i {
-      font-size: 40px;
+    .bridge-line {
+      width: 1px;
+      height: 34%;
+      background: #dbe3ee;
+    }
+
+    .bridge-symbol {
+      width: 26px;
+      height: 26px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid #dbe3ee;
+      color: var(--accent);
+      font-size: 13px;
+      box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+    }
+  }
+
+  .pane-top {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--line);
+    background: #fbfcfe;
+  }
+
+  .pane-identity {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .identity-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+
+    &.dot-assigned {
+      background: #12996b;
+      box-shadow: 0 0 0 3px rgba(18, 153, 107, 0.12);
+    }
+
+    &.dot-available {
+      background: var(--accent);
+      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.12);
+    }
+  }
+
+  .identity-name {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+  }
+
+  .identity-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--muted);
+    background: #eef2f7;
+    border-radius: 10px;
+    padding: 1px 8px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .pane-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    height: 34px;
+    padding: 0 10px;
+    border: 1px solid #dbe3ee;
+    border-radius: 8px;
+    background: #fff;
+    transition: border-color 0.2s, box-shadow 0.2s;
+
+    &:focus-within {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(11, 99, 206, 0.1);
+    }
+
+    > i {
+      color: #9aa8bd;
+      font-size: 13px;
+    }
+
+    .search-clear {
+      cursor: pointer;
+
+      &:hover {
+        color: var(--ink);
+      }
+    }
+  }
+
+  .pane-search-input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    font-size: 13px;
+    color: var(--ink);
+    background: transparent;
+
+    &::placeholder {
+      color: #a8b4c6;
+    }
+  }
+
+  .pane-scroll {
+    flex: 1;
+    min-height: 300px;
+    max-height: 460px;
+    overflow-y: auto;
+    padding: 12px 16px;
+    overscroll-behavior: contain;
+  }
+
+  .pane-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 220px;
+    color: #a8b4c6;
+
+    .empty-glyph {
+      width: 52px;
+      height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 16px;
+      background: #f4f7fb;
       margin-bottom: 12px;
-      opacity: 0.5;
+
+      i {
+        font-size: 24px;
+      }
     }
 
     p {
       margin: 0;
-      font-size: 14px;
+      font-size: 13px;
     }
   }
 
-  /* ===== 筛选栏 ===== */
-  .filter-bar {
-    padding: 12px 18px;
-    border-bottom: 1px solid #e8ecf1;
-    background: #fafbfc;
-
-    .search-box {
-      display: flex;
-      align-items: center;
-      background: #fff;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      padding: 6px 12px;
-      transition: border-color 0.2s;
-
-      &:focus-within {
-        border-color: #0071e3;
-        box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
-      }
-
-      i {
-        color: #9ca3af;
-        font-size: 14px;
-
-        &.clear-btn {
-          cursor: pointer;
-          margin-left: auto;
-
-          &:hover {
-            color: #6b7280;
-          }
-        }
-      }
-
-      .search-input {
-        flex: 1;
-        border: none;
-        outline: none;
-        padding: 0 8px;
-        font-size: 13px;
-        color: #374151;
-        background: transparent;
-
-        &::placeholder {
-          color: #9ca3af;
-        }
-      }
-    }
-  }
-
-  /* ===== 操作栏 ===== */
-  .action-bar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 10px 18px;
-    border-bottom: 1px solid #e8ecf1;
-    background: #fafbfc;
-
-    .select-all-btn {
-      color: #0071e3;
-      font-weight: 500;
-    }
-
-    .batch-add-btn {
-      border-radius: 8px;
-      font-weight: 500;
-    }
-  }
-
-  /* ===== 用户列表 ===== */
-  .user-list {
+  .member-list {
     display: flex;
     flex-direction: column;
-    gap: 8px;
+    gap: 7px;
   }
 
-  .user-card {
+  .member-card {
+    appearance: none;
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: 1px solid #e5e7eb;
+    gap: 10px;
+    width: 100%;
+    padding: 9px 11px;
+    border: 1px solid #e6ebf2;
+    border-radius: 9px;
     background: #fff;
+    text-align: left;
     cursor: pointer;
-    transition: all 0.15s;
+    transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease, border-color 0.16s ease;
 
-    .user-avatar {
+    .member-avatar {
       flex-shrink: 0;
     }
 
-    .user-info {
+    .member-info {
       flex: 1;
       min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 2px;
-
-      .user-name {
-        font-size: 14px;
-        font-weight: 500;
-        color: #374151;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
-
-      .user-username {
-        font-size: 12px;
-        color: #9ca3af;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-      }
     }
 
-    .remove-icon {
-      font-size: 14px;
-      color: #d1d5db;
-      opacity: 0.5;
-      transition: all 0.15s;
+    .member-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #334155;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    .check-icon {
-      font-size: 14px;
-      color: #fff;
-      display: none;
+    .member-account {
+      font-size: 11px;
+      color: #94a3b8;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
-    /* 已分配状态 */
-    &.assigned {
+    .member-action {
+      flex-shrink: 0;
+      font-size: 12px;
+      color: #b6c2d2;
+    }
+
+    &.is-assigned {
+      background: #f8fafc;
+
       &:hover {
-        border-color: #ef4444;
-        background: rgba(239, 68, 68, 0.04);
-
-        .remove-icon {
-          opacity: 1;
-          color: #ef4444;
-        }
-      }
-    }
-
-    /* 可添加状态 */
-    &.available {
-      &:hover {
-        background: #f0f7ff;
-        border-color: #0071e3;
+        border-color: #f0a8a8;
+        background: #fff5f5;
         transform: translateY(-1px);
-        box-shadow: 0 2px 8px rgba(0, 113, 227, 0.15);
+
+        .member-action {
+          color: #d64545;
+        }
+      }
+    }
+
+    &.is-available {
+      .member-action {
+        display: none;
       }
 
-      &.selected {
-        background: #0071e3;
-        border-color: #0071e3;
-        color: #fff;
-        box-shadow: 0 2px 8px rgba(0, 113, 227, 0.3);
+      &:hover {
+        border-color: #9dc2ef;
+        background: #f4f9ff;
+        transform: translateY(-1px);
+        box-shadow: 0 3px 10px rgba(11, 99, 206, 0.1);
+      }
 
-        .check-icon {
-          display: inline-flex;
+      &.is-selected {
+        border-color: var(--accent);
+        background: var(--accent);
+        box-shadow: 0 3px 10px rgba(11, 99, 206, 0.24);
+
+        .member-name,
+        .member-account {
+          color: #fff;
         }
 
-        .user-name,
-        .user-username {
+        .member-action {
+          display: inline-flex;
           color: #fff;
         }
 
         &:hover {
-          background: #005bb5;
+          background: #0954af;
         }
       }
     }
   }
 
-  /* ===== 动画 ===== */
-  .slide-right-enter-active,
-  .slide-right-leave-active {
-    transition: all 0.3s ease;
+  .workspace-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 12px 18px;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    background: linear-gradient(115deg, #f8fafc 0%, #ffffff 70%);
   }
 
-  .slide-right-enter,
-  .slide-right-leave-to {
-    opacity: 0;
-    transform: translateX(20px);
+  .footer-selection {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
   }
 
-  /* 平板及以下：双栏改为上下堆叠，避免两个面板在窄屏被压到无法阅读 */
-  @media (max-width: 992px) {
-    .main-content {
-      flex-direction: column;
-      min-height: auto;
+  .selection-badge {
+    min-width: 26px;
+    height: 26px;
+    padding: 0 7px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: #eaf2fd;
+    color: var(--accent);
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .selection-label {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .clear-link,
+  .select-all-link {
+    font-size: 12px;
+  }
+
+  .footer-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-shrink: 0;
+  }
+
+  @include respond-to(mobile) {
+    .transfer-grid {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 12px;
     }
 
-    .header-bar {
+    .transfer-pane {
+      &.is-assigned,
+      &.is-available {
+        border: 1px solid var(--line);
+        border-radius: 12px;
+      }
+    }
+
+    .transfer-bridge {
+      display: none;
+    }
+
+    .pane-scroll {
+      max-height: 320px;
+      min-height: 200px;
+    }
+
+    .workspace-toolbar,
+    .workspace-footer {
       flex-wrap: wrap;
-      gap: 10px;
+    }
+
+    @include respond-to(phone) {
+      .pane-scroll {
+        max-height: 280px;
+      }
     }
   }
 }

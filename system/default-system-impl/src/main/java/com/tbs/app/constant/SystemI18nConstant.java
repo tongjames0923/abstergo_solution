@@ -128,6 +128,10 @@ public final class SystemI18nConstant {
     public static final String PERMISSION_GROUP_USER_EXISTS = "permission.group.user.exists";
     /** 权限分组用户不存在提示：权限分组用户不存在 */
     public static final String PERMISSION_GROUP_USER_NOT_EXISTS = "permission.group.user.not.exists";
+    /** 权限分组下有绑定用户不可删除提示：权限组下仍有 {0} 个绑定用户，请先移除后再删除 */
+    public static final String PERMISSION_GROUP_HAS_USERS_NOT_DELETE = "permission.group.has.users.not.delete";
+    /** 权限分组下有权限项不可删除提示：权限组下仍有 {0} 个权限项，请先移除后再删除 */
+    public static final String PERMISSION_GROUP_HAS_ROLES_NOT_DELETE = "permission.group.has.roles.not.delete";
 
     /* ===================== 通用接口（Generic API） ===================== */
 

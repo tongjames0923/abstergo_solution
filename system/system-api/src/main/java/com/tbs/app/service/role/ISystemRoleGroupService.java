@@ -23,6 +23,25 @@ public interface ISystemRoleGroupService extends IServiceTemplate<SystemRoleGrou
     List<SystemRoleEntity> getRoleList(Long groupId);
 
     /**
+     * 获取绑定了指定权限的角色组列表
+     *
+     * @param roleId 权限标识
+     * @return 绑定该权限的角色组列表，无绑定时返回空列表
+     */
+    List<SystemRoleGroupEntity> getGroupListByRoleId(Long roleId);
+
+    /**
+     * 按权限标识失效关联的组权限缓存
+     * <p>
+     * 权限名称与状态是组权限列表缓存的内容，权限变更后须按绑定组逐个失源；
+     * 组下用户的身份快照由缓存框架的关联失效声明在其后连带清除。
+     * </p>
+     *
+     * @param roleId 权限标识
+     */
+    void evictRoleRelatedGroupCache(Long roleId);
+
+    /**
      * 获取角色组VO
      *
      * @param groupId

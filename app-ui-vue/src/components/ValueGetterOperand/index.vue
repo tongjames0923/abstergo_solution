@@ -104,29 +104,40 @@
           </el-select>
         </el-form-item>
 
-        <el-form-item
-          v-for="field in draftFields"
-          :key="field.name"
-          :label="field.label"
-          :required="field.required"
-        >
-          <value-getter-operand
-            v-if="field.uiType === 'operand'"
-            :value="draftFormData[field.name]"
-            :getters="getters"
-            :depth="depth + 1"
-            :value-type="field.type"
-            @input="setDraftField(field.name, $event)"
-          />
-          <getter-param-field
-            v-else
-            :field="field"
-            :value="draftFormData[field.name]"
-            :error="draftErrorOf(field)"
-            @input="setDraftField(field.name, $event)"
-          />
-          <div v-if="field.description" class="field-desc">{{ field.description }}</div>
-        </el-form-item>
+        <logic-condition-builder
+          v-if="draftIsLogicCondition && logicTree"
+          :value="logicTree"
+          :getters="getters"
+          :operand-component="selfComponent"
+          :depth="depth + 1"
+          @input="setLogicTree"
+        />
+
+        <template v-else>
+          <el-form-item
+            v-for="field in draftFields"
+            :key="field.name"
+            :label="field.label"
+            :required="field.required"
+          >
+            <value-getter-operand
+              v-if="field.uiType === 'operand'"
+              :value="draftFormData[field.name]"
+              :getters="getters"
+              :depth="depth + 1"
+              :value-type="field.type"
+              @input="setDraftField(field.name, $event)"
+            />
+            <getter-param-field
+              v-else
+              :field="field"
+              :value="draftFormData[field.name]"
+              :error="draftErrorOf(field)"
+              @input="setDraftField(field.name, $event)"
+            />
+            <div v-if="field.description" class="field-desc">{{ field.description }}</div>
+          </el-form-item>
+        </template>
 
         <div v-if="!draftGetterId" class="dialog-empty">
           <i class="el-icon-cpu" />
@@ -155,9 +166,12 @@ import {
   validateFields
 } from '@/utils/valueGetter'
 import GetterParamField from '@/components/GetterParamField'
+import LogicConditionBuilder from '@/components/LogicConditionBuilder'
 import ResponsiveMixin from '@/mixins/responsive'
+import {compileGroup, countConditions, createGroup, hasCondition, restoreLogicTree} from '@/utils/logicCondition'
 
 const CONDITION_GETTER_ID = 'ConditionGetter'
+const LOGIC_CONDITION_GETTER_ID = 'LogicConditionGetter'
 
 /**
  * 嵌套 getter 调用操作数编辑器。
@@ -169,7 +183,7 @@ const CONDITION_GETTER_ID = 'ConditionGetter'
  */
 export default {
   name: 'ValueGetterOperand',
-  components: { GetterParamField },
+  components: { GetterParamField, LogicConditionBuilder },
   mixins: [ResponsiveMixin],
   props: {
     value: {
@@ -198,6 +212,7 @@ export default {
       dialogVisible: false,
       draftGetterId: '',
       draftFormData: {},
+      logicTree: null,
       showDraftErrors: false,
       pendingParams: null,
       emitting: false
@@ -298,6 +313,22 @@ export default {
       return this.draftGetter ? toParamFields(this.draftGetter.paramTypes, this.draftGetter.getterId) : []
     },
     /**
+     * 弹窗中是否选择了逻辑条件 getter
+     *
+     * @returns {boolean} 是否为逻辑条件 getter
+     */
+    draftIsLogicCondition() {
+      return this.draftGetterId === LOGIC_CONDITION_GETTER_ID
+    },
+    /**
+     * 自身组件构造器，注入给逻辑条件构建器实现递归编辑
+     *
+     * @returns {Object} 组件构造器
+     */
+    selfComponent() {
+      return this.constructor
+    },
+    /**
      * 弹窗中的参数校验结果
      *
      * @returns {Object} 参数名到失败规则的映射
@@ -330,6 +361,13 @@ export default {
       const fields = this.paramFields
       if (!fields.length) {
         return this.$t('valueGetter.noArgs')
+      }
+      if (this.selectedGetterId === LOGIC_CONDITION_GETTER_ID) {
+        const opField = fields.find(f => f.isEnum)
+        const op = opField ? this.formData[opField.name] : ''
+        const tree = restoreLogicTree(op, fields.filter(f => f.uiType === 'operand').map(f => this.formData[f.name]))
+        const mode = this.$t(op === 'or' ? 'logicCondition.any' : 'logicCondition.all')
+        return mode + ' · ' + this.$t('logicCondition.filled', { count: countConditions(tree) })
       }
       return fields.map(field => {
         const raw = this.formData[field.name]
@@ -451,8 +489,24 @@ export default {
         }
       })
       this.draftFormData = data
+      this.logicTree = this.draftIsLogicCondition ? this.buildDraftLogicTree() : null
       this.showDraftErrors = false
       this.dialogVisible = true
+    },
+
+    /**
+     * 从草稿参数位还原逻辑条件表达式树
+     *
+     * @returns {Object} 分组节点
+     */
+    buildDraftLogicTree() {
+      const fields = this.draftFields
+      const opField = fields.find(f => f.isEnum)
+      const operandFields = fields.filter(f => f.type === 'operand')
+      return restoreLogicTree(
+        opField ? this.draftFormData[opField.name] : 'and',
+        operandFields.map(f => this.draftFormData[f.name])
+      )
     },
 
     /**
@@ -463,6 +517,7 @@ export default {
     handleDraftGetterChange(getterId) {
       const getter = this.getters.find(g => g.getterId === getterId)
       this.draftFormData = buildFormData(getter ? toParamFields(getter.paramTypes, getter.getterId) : [])
+      this.logicTree = getterId === LOGIC_CONDITION_GETTER_ID ? createGroup() : null
       this.showDraftErrors = false
     },
 
@@ -474,6 +529,26 @@ export default {
      */
     setDraftField(name, val) {
       this.$set(this.draftFormData, name, val)
+    },
+
+    /**
+     * 更新逻辑条件表达式树并同步回各参数位
+     *
+     * @param {Object} val 分组节点
+     */
+    setLogicTree(val) {
+      this.logicTree = val
+      const params = compileGroup(val)
+      const fields = this.draftFields
+      const opField = fields.find(f => f.isEnum)
+      const operandFields = fields.filter(f => f.type === 'operand')
+      if (opField) {
+        this.$set(this.draftFormData, opField.name, val.op)
+      }
+      operandFields.forEach((field, index) => {
+        const param = params[index + 1]
+        this.$set(this.draftFormData, field.name, param && param.value ? param.value : '')
+      })
     },
 
     /**
@@ -495,6 +570,10 @@ export default {
         return
       }
       this.showDraftErrors = true
+      if (this.draftIsLogicCondition && !hasCondition(this.logicTree)) {
+        this.$message.warning(this.$t('logicCondition.requireOne'))
+        return
+      }
       if (Object.keys(this.draftErrors).length) {
         this.$message.warning(this.$t('valueGetter.fixParams'))
         return
@@ -512,6 +591,7 @@ export default {
     handleDialogClosed() {
       this.draftGetterId = ''
       this.draftFormData = {}
+      this.logicTree = null
       this.showDraftErrors = false
       if (this.mode === 'getter' && !this.selectedGetterId) {
         this.mode = 'literal'

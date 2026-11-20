@@ -36,7 +36,7 @@ import java.util.Date;
 @Table(name = "sys_role_group",
     indexes = {@jakarta.persistence.Index(name = "idx_sys_role_group_flag", columnList = "flag"),
         @jakarta.persistence.Index(name = "idx_sys_role_group_role_group_name", columnList = "role_group_name")})
-@LogicDeleteEntity(activeFlagValues = {1, 0})
+@LogicDeleteEntity(activeFlagValues = {1, -1})
 public class SystemRoleGroupEntity
     implements IBaseEntity<Long>, ICommonCreateAuditable<Long>, ICommonUpdateAuditable<Long>,
     ICommonDeleteAuditable<Long> {

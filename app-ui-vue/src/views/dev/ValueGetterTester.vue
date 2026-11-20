@@ -6,6 +6,25 @@
         <p class="page-desc">{{ $t('valueGetter.benchDesc') }}</p>
       </div>
       <div class="page-stats">
+        <el-select
+          v-model="loadedRuleCode"
+          size="small"
+          clearable
+          filterable
+          class="rule-select"
+          :placeholder="$t('ruleDebug.selectRule')"
+          @change="handleLoadRule"
+        >
+          <el-option
+            v-for="r in ruleOptions"
+            :key="r.id"
+            :label="r.ruleCode + ' · ' + r.ruleName"
+            :value="r.ruleCode"
+          />
+        </el-select>
+        <el-button size="small" icon="el-icon-document-add" :disabled="!currentGetter" @click="openSaveRule">
+          {{ $t('ruleDebug.saveAsRule') }}
+        </el-button>
         <el-tag size="small" type="info" effect="plain">
           {{ $t('valueGetter.statGetters') }} · {{ getterList.length }}
         </el-tag>
@@ -97,6 +116,13 @@
               v-if="isCondition(currentGetter)"
               v-model="condition"
               :getters="getterList"
+            />
+
+            <logic-condition-builder
+              v-else-if="isLogicCondition(currentGetter)"
+              v-model="logicTree"
+              :getters="getterList"
+              :operand-component="operandComponent"
             />
 
             <div v-else-if="!paramFields.length" class="no-params">
@@ -234,19 +260,53 @@
         </div>
       </el-card>
     </div>
+
+    <el-dialog
+      :title="$t('ruleDebug.saveTitle')"
+      :visible.sync="saveRuleVisible"
+      width="420px"
+      append-to-body
+    >
+      <el-form label-width="90px" size="small" @submit.native.prevent>
+        <el-form-item :label="$t('conditionRule.code')" required>
+          <el-input v-model="saveRuleForm.ruleCode" :placeholder="$t('conditionRule.codePlaceholder')" />
+        </el-form-item>
+        <el-form-item :label="$t('conditionRule.name')" required>
+          <el-input v-model="saveRuleForm.ruleName" :placeholder="$t('conditionRule.namePlaceholder')" />
+        </el-form-item>
+        <el-form-item :label="$t('conditionRule.description')">
+          <el-input
+            v-model="saveRuleForm.description"
+            type="textarea"
+            :rows="2"
+            :placeholder="$t('conditionRule.descriptionPlaceholder')"
+          />
+        </el-form-item>
+      </el-form>
+      <div slot="footer">
+        <el-button size="small" @click="saveRuleVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" size="small" :loading="savingRule" @click="handleSaveRule">
+          {{ $t('common.save') }}
+        </el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import {getConditionRuleByCode, queryConditionRules, saveConditionRule} from '@/api/conditionRule'
 import {getValueGetters, invokeValueGetter} from '@/api/script/valueGetter'
 import ConditionBuilder from '@/components/ConditionBuilder'
 import GetterParamField from '@/components/GetterParamField'
 import GetterResult from '@/components/GetterResult'
+import LogicConditionBuilder from '@/components/LogicConditionBuilder'
 import ValueGetterOperand from '@/components/ValueGetterOperand'
 import ResponsiveMixin from '@/mixins/responsive'
+import {compileGroup, createGroup, hasCondition, normalizeGroup, restoreLogicTree} from '@/utils/logicCondition'
 import {buildFormData, isBlank, toParamFields, toParamValues, validateFields} from '@/utils/valueGetter'
 
 const CONDITION_GETTER_ID = 'ConditionGetter'
+const LOGIC_CONDITION_GETTER_ID = 'LogicConditionGetter'
 const HISTORY_LIMIT = 8
 
 /**
@@ -259,7 +319,7 @@ const HISTORY_LIMIT = 8
  */
 export default {
   name: 'ValueGetterTester',
-  components: { ConditionBuilder, GetterParamField, GetterResult, ValueGetterOperand },
+  components: { ConditionBuilder, GetterParamField, GetterResult, LogicConditionBuilder, ValueGetterOperand },
   mixins: [ResponsiveMixin],
   data() {
     return {
@@ -272,6 +332,7 @@ export default {
       currentGetter: null,
       formData: {},
       condition: { left: '', op: 'eq', right: '' },
+      logicTree: createGroup(),
       touched: {},
       showErrors: false,
       result: null,
@@ -280,7 +341,12 @@ export default {
       resultKey: 0,
       rawView: false,
       history: [],
-      historySeq: 0
+      historySeq: 0,
+      ruleOptions: [],
+      loadedRuleCode: '',
+      saveRuleVisible: false,
+      savingRule: false,
+      saveRuleForm: { ruleCode: '', ruleName: '', description: '' }
     }
   },
   computed: {
@@ -291,6 +357,14 @@ export default {
      */
     paramFields() {
       return this.currentGetter ? toParamFields(this.currentGetter.paramTypes, this.currentGetter.getterId) : []
+    },
+    /**
+     * 操作数编辑器组件，注入给逻辑条件构建器以避免循环依赖
+     *
+     * @returns {Object} 组件构造器
+     */
+    operandComponent() {
+      return ValueGetterOperand
     },
     /**
      * 当前字段校验结果
@@ -364,6 +438,7 @@ export default {
   created() {
     this.debouncedFetch = this.debounce(() => this.fetchGetters(), 300)
     this.fetchGetters()
+    this.loadRuleOptions()
   },
   mounted() {
     document.addEventListener('keydown', this.handleKeydown)
@@ -395,6 +470,16 @@ export default {
      */
     isCondition(getter) {
       return !!getter && getter.getterId === CONDITION_GETTER_ID
+    },
+
+    /**
+     * 判断是否为逻辑组合条件 getter
+     *
+     * @param {Object} getter getter 元信息
+     * @returns {boolean} 是否为逻辑条件 getter
+     */
+    isLogicCondition(getter) {
+      return !!getter && getter.getterId === LOGIC_CONDITION_GETTER_ID
     },
 
     /**
@@ -447,6 +532,7 @@ export default {
       this.selectedGetterId = getter.getterId
       this.currentGetter = getter
       this.condition = { left: '', op: 'eq', right: '' }
+      this.logicTree = createGroup()
       this.formData = buildFormData(toParamFields(getter.paramTypes, getter.getterId))
       this.touched = {}
       this.showErrors = false
@@ -469,6 +555,7 @@ export default {
     resetForm() {
       this.formData = buildFormData(this.paramFields)
       this.condition = { left: '', op: 'eq', right: '' }
+      this.logicTree = createGroup()
       this.touched = {}
       this.showErrors = false
       this.resetOutput()
@@ -532,11 +619,171 @@ export default {
     },
 
     /**
+     * 加载已保存的规则选项
+     */
+    async loadRuleOptions() {
+      try {
+        const res = await queryConditionRules({}, 1, 100)
+        const page = (res && res.data) || {}
+        this.ruleOptions = page.data || []
+      } catch (e) {
+        this.ruleOptions = []
+      }
+    },
+
+    /**
+     * 加载已保存规则并还原到当前编辑器
+     *
+     * @param {string} ruleCode 规则编码
+     */
+    async handleLoadRule(ruleCode) {
+      if (!ruleCode) {
+        return
+      }
+      try {
+        const res = await getConditionRuleByCode(ruleCode)
+        const rule = res && res.data
+        if (!rule) {
+          this.$message.warning(this.$t('conditionRule.notExists'))
+          return
+        }
+        const getter = this.getterList.find(g => g.getterId === rule.getterId)
+        if (!getter) {
+          this.$message.warning(this.$t('valueGetter.getterNotFound', { id: rule.getterId }))
+          return
+        }
+        this.selectGetter(getter)
+        this.applyRuleSnapshot(rule)
+        this.$message.success(this.$t('ruleDebug.loaded'))
+      } catch (e) {
+        this.$message.error(this.$t('conditionRule.loadFailed'))
+      }
+    },
+
+    /**
+     * 按规则快照还原编辑器状态，缺少快照时回退到调用载荷
+     *
+     * @param {Object} rule 规则实体
+     */
+    applyRuleSnapshot(rule) {
+      let snapshot = null
+      try {
+        snapshot = rule.editorJson ? JSON.parse(rule.editorJson) : null
+      } catch (e) {
+        snapshot = null
+      }
+      if (snapshot && snapshot.editor === 'logic') {
+        this.logicTree = normalizeGroup(snapshot.state)
+        return
+      }
+      if (snapshot && snapshot.editor === 'condition' && snapshot.state) {
+        this.condition = {
+          left: snapshot.state.left || '',
+          op: snapshot.state.op || 'eq',
+          right: snapshot.state.right || ''
+        }
+        return
+      }
+      let params = []
+      try {
+        params = rule.invocationJson ? JSON.parse(rule.invocationJson) : []
+      } catch (e) {
+        params = []
+      }
+      if (rule.getterId === CONDITION_GETTER_ID) {
+        this.condition = {
+          left: params[0] ? params[0].value || '' : '',
+          op: params[1] ? params[1].value || 'eq' : 'eq',
+          right: params[2] ? params[2].value || '' : ''
+        }
+        return
+      }
+      if (rule.getterId === LOGIC_CONDITION_GETTER_ID) {
+        const op = params[0] ? params[0].value : 'and'
+        const conditions = params.slice(1).map(p => p && p.value).filter(v => v && String(v).trim())
+        this.logicTree = restoreLogicTree(op, conditions)
+        return
+      }
+      this.paramFields.forEach(field => {
+        const found = params.find(p => p && p.name === field.name)
+        if (found && found.value != null) {
+          this.setParam(field.name, found.value)
+        }
+      })
+    },
+
+    /**
+     * 构造编辑器快照
+     *
+     * @returns {Object} 编辑器快照
+     */
+    buildRuleEditorSnapshot() {
+      if (this.isCondition(this.currentGetter)) {
+        return { editor: 'condition', state: this.condition }
+      }
+      if (this.isLogicCondition(this.currentGetter)) {
+        return { editor: 'logic', state: this.logicTree }
+      }
+      return { editor: 'params', state: { formData: this.formData }}
+    },
+
+    /**
+     * 打开保存为规则弹窗
+     */
+    openSaveRule() {
+      if (!this.currentGetter) {
+        return
+      }
+      this.saveRuleForm = {
+        ruleCode: '',
+        ruleName: this.currentGetter.getterName || '',
+        description: ''
+      }
+      this.saveRuleVisible = true
+    },
+
+    /**
+     * 保存当前编排为规则
+     */
+    async handleSaveRule() {
+      const code = (this.saveRuleForm.ruleCode || '').trim()
+      const name = (this.saveRuleForm.ruleName || '').trim()
+      if (!code) {
+        this.$message.warning(this.$t('conditionRule.ruleCodeRequired'))
+        return
+      }
+      if (!name) {
+        this.$message.warning(this.$t('conditionRule.ruleNameRequired'))
+        return
+      }
+      this.savingRule = true
+      try {
+        await saveConditionRule({
+          ruleCode: code,
+          ruleName: name,
+          description: this.saveRuleForm.description,
+          getterId: this.selectedGetterId,
+          invocationJson: JSON.stringify(this.buildParams()),
+          editorJson: JSON.stringify(this.buildRuleEditorSnapshot()),
+          enabled: 1
+        })
+        this.$message.success(this.$t('conditionRule.saved'))
+        this.saveRuleVisible = false
+        this.loadRuleOptions()
+      } finally {
+        this.savingRule = false
+      }
+    },
+
+    /**
      * 构造调用参数
      *
      * @returns {Array} ParamValue 列表
      */
     buildParams() {
+      if (this.isLogicCondition(this.currentGetter)) {
+        return compileGroup(this.logicTree, this.paramFields)
+      }
       if (this.isCondition(this.currentGetter)) {
         const operands = this.paramFields.filter(f => f.uiType === 'operand')
         const op = this.paramFields.find(f => f.isEnum)
@@ -569,7 +816,12 @@ export default {
         return
       }
       this.showErrors = true
-      if (this.isCondition(this.currentGetter)) {
+      if (this.isLogicCondition(this.currentGetter)) {
+        if (!hasCondition(this.logicTree)) {
+          this.$message.warning(this.$t('logicCondition.requireOne'))
+          return
+        }
+      } else if (this.isCondition(this.currentGetter)) {
         if (isBlank(this.condition.left)) {
           this.$message.warning(this.$t('valueGetter.conditionLeftRequired'))
           return
@@ -614,6 +866,7 @@ export default {
         getterName: this.currentGetter ? this.currentGetter.getterName : this.selectedGetterId,
         paramValues,
         condition: { ...this.condition },
+        logicTree: JSON.parse(JSON.stringify(this.logicTree)),
         result: this.result,
         error: this.resultError,
         elapsedMs: this.elapsedMs,
@@ -651,6 +904,9 @@ export default {
       })
       this.formData = formData
       this.condition = { ...item.condition }
+      if (item.logicTree) {
+        this.logicTree = JSON.parse(JSON.stringify(item.logicTree))
+      }
       this.touched = {}
       this.showErrors = false
       this.result = item.result
@@ -778,7 +1034,12 @@ export default {
   .page-stats {
     display: flex;
     flex-wrap: wrap;
+    align-items: center;
     gap: 8px;
+
+    .rule-select {
+      width: 210px;
+    }
   }
 
   .bench-grid {

@@ -715,4 +715,28 @@ CREATE TABLE `view_route_version` (
   KEY `idx_group` (`route_group`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='视图路由版本表';
 
+-- ----------------------------
+-- Table structure for sys_condition_rule
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_condition_rule`;
+CREATE TABLE `sys_condition_rule` (
+  `id` bigint NOT NULL COMMENT '主键',
+  `rule_code` varchar(64) NOT NULL COMMENT '规则编码，全局唯一',
+  `rule_name` varchar(128) NOT NULL COMMENT '规则名称',
+  `description` varchar(500) DEFAULT NULL COMMENT '规则说明',
+  `getter_id` varchar(128) NOT NULL COMMENT '顶层取值器 ID',
+  `invocation_json` text NOT NULL COMMENT '运行时调用载荷（ParamValue 列表 JSON）',
+  `editor_json` text COMMENT '前端编辑器状态快照 JSON',
+  `enabled` int NOT NULL DEFAULT 1 COMMENT '是否启用：1 启用，0 停用',
+  `flag` int DEFAULT NULL COMMENT '逻辑删除标志：1 有效，0 删除',
+  `create_time` datetime(6) DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
+  `create_by` bigint DEFAULT NULL COMMENT '创建者',
+  `update_by` bigint DEFAULT NULL COMMENT '更新者',
+  PRIMARY KEY (`id`),
+  KEY `idx_condition_rule_code` (`rule_code`),
+  KEY `idx_condition_rule_enabled` (`enabled`),
+  KEY `idx_condition_rule_flag` (`flag`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='条件规则表';
+
 SET FOREIGN_KEY_CHECKS = 1;
