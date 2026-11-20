@@ -210,6 +210,10 @@ public interface IScriptContext extends IContext {   // destroy/rebuild/isValid 
 | `IEventSubscriptionRegistry` / `InMemoryEventSubscriptionRegistry` | 订阅关系存储（reporterId + eventCode + triggerId + ruleCode + order），默认内存实现，可替换为持久化实现 |
 | `IConditionEvaluator` | 条件求值 SPI，脚本模块不绑定具体规则实现；app 模块的 `ConditionRuleConditionEvaluator` 复用现有条件规则能力 |
 | `AbstractConditionTrigger` / `ConditionRuleTrigger` | 通用条件触发器：条件编码取订阅上的 `ruleCode`，命中后执行 `IConditionTriggerCallback` |
+| `AbstractActionConditionTriggerCallback` | 条件命中后的动作执行基类：抽象 `resolveActions` / `resolveActionParamValues`，逐动作执行并隔离单个动作异常 |
+| `ActionInvocation` | 动作调用模型：已解析的 `ITriggerAction` 实例 + `List<ParamValue>` 参数值 |
+| `TriggerQueryService` / `TriggerActionQueryService` | 触发器与动作元数据查询：`listTriggers` / `getTrigger`、`listActions` / `getAction` / `getActionInstance` / `execute`；经 `IRegistryCenter` 实时取实例，不做缓存 |
+| `TriggerMeta` / `ActionMeta` | 前端编排页下拉与动态表单的元数据载体（ID、名称、描述、参数声明、顺序） |
 
 执行语义：
 
@@ -218,6 +222,14 @@ public interface IScriptContext extends IContext {   // destroy/rebuild/isValid 
 - 订阅 `ruleCode` 为空时，条件触发器回退 `defaultConditionCode()`（默认 null），仍为空即不触发，避免误触发；
 - `IConditionEvaluator` 实现必须自行兜底：条件不存在、停用、载荷非法或执行异常一律返回 false，不抛异常；
 - 触发器实时从注册中心取用，不做缓存，运行时注册/注销立即生效。
+
+### 动作执行与元数据查询
+
+`AbstractActionConditionTriggerCallback` 提供向后兼容的批量解析钩子 `resolveInvocations(reporterId, eventCode, paramValues)`：默认实现按原有抽象方法一动作一查询，子类可一次取回全部动作绑定以避免 N+1。执行阶段单个动作的参数非法或实例缺失只记 warn 并跳过，不中断后续动作。
+
+`ITriggerAction` 与 `IValueGetter` 同构：通过 `requestParamTypes()` 暴露 `ParamType`（类型、名称、标签、必填、枚举、控件元数据），前端据此动态渲染参数表单；`ActionMeta` 复用该声明。`ITriggerAction` 继承 `Ordered`，元数据列表按 `getOrder()` 升序展示。
+
+> 脚本模块不依赖任何存储模块。持久化订阅与动作绑定由 `app` 模块提供：`DbEventSubscriptionRegistry`（`@Primary`）覆盖默认的内存订阅仓库，`ConditionActionTriggerCallback` 读取 `sys_event_action` 并把 `${paramName}` 占位符替换为本次事件参数后再执行动作。
 
 ```java
 @Resource
@@ -329,12 +341,13 @@ com.tbs.script
     │   └── impl      # SimpleLocalMapSciptContext / EmptySimpleScriptContextFactory
     ├── engine        # IScriptEngine / AbstractScriptEngine（+ impl.SpelScriptEngine）
     ├── executor      # ICompiledExecutor（+ impl.SimpleScriptRunnerExecutor）
-    └── expressible   # 表达式能力：值获取器 / 事件上报器 / 触发器
-        ├── impl      # IValueGetterService / EventReporterQueryService
-        ├── vo        # EventMeta / ParamType / ParamValue / ResultType / ResultValue
+    └── expressible   # 表达式能力：值获取器 / 事件上报器 / 触发器 / 动作
+        │   # 根包契约：IValueGetter / IEventReporter / ITrigger / ITriggerAction（后者继承 IRequestable + Ordered）
+        ├── impl      # IValueGetterService / EventReporterQueryService / TriggerQueryService / TriggerActionQueryService
+        ├── vo        # EventMeta / ParamType / ParamValue / TriggerMeta / ActionMeta / ActionInvocation
         ├── constant  # ScriptI18nConstant
         ├── orchestration  # IEventOrchestrator / IEventSubscriptionRegistry（+ vo / impl）
-        └── condition      # IConditionEvaluator / IConditionTriggerCallback / AbstractConditionTrigger
+        └── condition      # IConditionEvaluator / IConditionTriggerCallback / AbstractConditionTrigger / AbstractActionConditionTriggerCallback
             └── impl       # ConditionRuleTrigger（通用条件触发器）
 ```
 

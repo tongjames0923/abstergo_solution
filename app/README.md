@@ -13,6 +13,7 @@ Abstergo Solution 的**主应用入口**（pom 描述：后端 web 运行包）�
 - [核心配置类与服务](#核心配置类与服务)
 - [定时任务](#定时任务)
 - [特殊机制](#特殊机制)
+- [事件订阅与动作编排链路](#事件订阅与动作编排链路)
 - [构建与部署](#构建与部署)
 - [注意事项](#注意事项)
 - [包结构](#包结构)
@@ -277,6 +278,8 @@ app:
 | `GenricController` | `/private/genric` | 泛化 API 调用入口（认证版，当前用户注入） |
 | `AdminSystemLogController` | `/private/log` | 操作日志报表：`GET listWithOpType`、`GET operateTypes`、`POST listRecord`、`POST forceFlush` |
 | `PrivateTestController` | `/private` | 测试接口（条件装配）：`GET /test`、`GET /testAuth` |
+| `EventSubscriptionController` | `/private/event-subscription` | 订阅编排：`GET reporters` / `events?reporterId=` / `triggers` / `by-event`、`POST query` / `save` / `save-event` / `report`、`POST delete/{id}` / `enable/{id}` / `disable/{id}`；权限 `API.DEV.EVENT.SUBSCRIPTION.*` |
+| `EventActionController` | `/private/event-action` | 动作编排：`GET actions` / `by-event`、`POST query` / `save` / `save-event` / `test`、`POST delete/{id}` / `enable/{id}` / `disable/{id}`；权限 `API.DEV.EVENT.ACTION.*` |
 
 > 具体参数与响应结构见 `doc.html`（Swagger 注解齐全，含 `@AjaxResponseType` 包装响应 Schema）。
 
@@ -311,14 +314,15 @@ app:
 | `AppExecutor` | XXL-Job 任务执行器（见[定时任务](#定时任务)） |
 | `CacheListenner` | 缓存键收集器：`onPut`/`onEvict` 等事件把缓存键登记进 `CACHE_INFO_HOLDER` DataHolder（供 `CacheController` 的 keys 查询；经 Redis 持有，多实例共享） |
 | `getter/` | 值获取器集合（见[值获取器](#值获取器动态事件条件来源)）：系统信息/当前用户/日期时间/配置属性/数据持有者变量/请求上下文，供脚本与未来动态事件触发系统作为条件来源 |
+| `event/` | 事件上报与动作执行链路（见[事件订阅与动作编排链路](#事件订阅与动作编排链路)）：`EventReportSupport`、`DbEventSubscriptionRegistry`、`ActionParamInterpolator`、`ActionConfigValidator`，以及 `reporter/` / `action/` / `condition/` 子包实现 |
 | `oss/UploadTaskProgressManager` | 内存上传进度注册表：`register/updateTransferred/markSuccess/markFailed/get`，条目 10 分钟过期自动清理，供前端轮询 `GET /private/oss/upload/progress` |
 
 > 业务服务实现（用户/角色/字典/版本/树结构等）位于 `default-system-impl` 模块（同包名 `com.tbs.app.service`），本模块仅做控制器层装配。
 
 ### form / vo
 
-- form：`LoginForm`（登录）、`CacheForm`、`DicSaveForm`/`DicItemSaveForm`/`DicSearchForm`/`DicItemSearchForm`（字典）、`DisableTokenForm`（令牌禁用）
-- vo：`UserInfoVO`（用户信息聚合）、`RoleVO`、`UploadTaskProgressVO`（上传进度：taskId/status/totalBytes/transferredBytes/percentage）
+- form：`LoginForm`（登录）、`CacheForm`、`DicSaveForm`/`DicItemSaveForm`/`DicSearchForm`/`DicItemSearchForm`（字典）、`DisableTokenForm`（令牌禁用）、`EventSubscriptionSaveForm`/`EventActionSaveForm`（按事件整体替换绑定）、`EventActionTestForm`（单动作测试）
+- vo：`UserInfoVO`（用户信息聚合）、`RoleVO`、`UploadTaskProgressVO`（上传进度：taskId/status/totalBytes/transferredBytes/percentage）、`EventActionTestResultVO`（动作测试回执：actionId/success/elapsedMs/errorMsg）
 
 ## 定时任务（AppExecutor）
 
@@ -366,6 +370,43 @@ app:
 例如左操作数填上述 JSON、运算符选 `ge`、右操作数填 `5`，即「星期 >= 5 则返回 true」。两个操作数都可填 getter 调用以比较两个 getter 的返回值，也可嵌套 `ConditionGetter` 自身构建复合条件（内置循环引用检测，最大嵌套深度 8 层）。大小比较在两边均为数值时按数值比较，否则按字典序；任何取值失败均返回 false。
 
 `AbstractStringValueGetter` 收敛字符串结果构造、参数按下标读取与 i18n 文案解析。文案位于 `i18n/messages-app*.properties` 的 `value.getter.*` 命名空间。`@Component` 实现 `IValueGetter` 即被 `IRegistryCenter` 自动发现，新增 getter 无需改动注册代码。
+
+### 事件订阅与动作编排链路
+
+本模块是事件链路的**接入层**：脚本模块（`script-api`）提供事件/触发器/动作的契约与编排内核，`system` 模块提供服务与存储实现，本模块负责埋点、持久化覆盖、动作实现与 HTTP 管理接口。
+
+```
+业务代码埋点（AdminUserController / PrivateUserController）
+  → EventReportSupport.reportQuietly(reporterId, eventCode, params)
+  → IEventOrchestrator.report(envelope)
+      → BusinessEventReporter.report（编排层已完成校验，上报器记录审计日志；返回汇总结果由编排层组装）
+      → DbEventSubscriptionRegistry.find（sys_event_subscription，@Primary 覆盖内存实现）
+      → ConditionRuleTrigger → ConditionRuleConditionEvaluator → ConditionRuleEvaluator
+          → IValueGetterService.invokeValueGetter（sys_condition_rule 中 getter 编排）
+      → ConditionActionTriggerCallback
+          → sys_event_action（顺序读取启用绑定）
+          → ActionParamInterpolator（${paramName} 替换为事件参数）
+          → ITriggerAction.execute（PushNotifyAction / LogEventAction）
+```
+
+| 类 | 职责 |
+| --- | --- |
+| `service/event/EventReportSupport` | 统一上报门面：把 `Map`/`Collection` 参数转成 `ParamValue` 并构造 `EventEnvelope`；`reportQuietly` 捕获全部异常只记 warn，保证事件链路故障不影响主业务 |
+| `service/event/reporter/BusinessEventReporter` | 声明用户事件 `user.created` / `user.updated` / `user.deleted` / `user.loggedOut`，参数 `userId` / `userName` 均带 `ParamType` 元数据 |
+| `service/event/DbEventSubscriptionRegistry` | `@Primary` 覆盖脚本模块 `InMemoryEventSubscriptionRegistry`；每次读取实时查库，写操作走 `IEventSubscriptionService.replaceByEvent` 增量合并 |
+| `service/event/condition/ConditionActionTriggerCallback` | 继承 `AbstractActionConditionTriggerCallback`，一次查询解析全部动作绑定；参数 JSON 非法或动作未注册时跳过该动作并 warn |
+| `service/event/ActionParamInterpolator` | 用正则解析 `${paramName}` 占位符，仅替换本次事件参数中存在的同名参数 |
+| `service/event/ActionConfigValidator` | 保存前校验动作已注册、`paramJson` 为合法 `List<ParamValue>` 数组 |
+| `service/event/action/PushNotifyAction` | 复用 `IPushNotifyService.send`，参数含 `msgType` / `title` / `content` / `priority` / `topic` / `url`，`source` 固定为 `event` |
+| `service/event/action/LogEventAction` | 最小示例动作：分级日志输出事件编码与参数 |
+
+埋点位置：`AdminUserController.save`（按 id 是否为空区分 created/updated）、`AdminUserController.delete`、`PrivateUserController.logout`（在令牌失效前读取用户名）；均只在主流程成功后调用 `reportQuietly`。
+
+前端对接接口：`EventSubscriptionController` 提供上报器/事件/触发器元数据、订阅 CRUD 与 `POST report` 模拟上报（返回 `EventReportResult` 及触发器明细）；`EventActionController` 提供动作元数据、动作绑定 CRUD 与 `POST test` 单动作测试。
+
+持久化与初始化：两张表 `sys_event_subscription`、`sys_event_action` 由 `shared-pojo` 实体定义（索引声明在 `@Table`），DDL、API 权限（`API.DEV.EVENT.SUBSCRIPTION.*` / `API.DEV.EVENT.ACTION.*`）与开发者角色组绑定分别见 `etc/sql_file/sys_event_subscription.sql`、`etc/sql_file/sys_event_action.sql`，全量结构同步在 `etc/sql_file/app_system_struct.sql`。未执行权限脚本时管理接口会返回 403，前端下拉框将为空。
+
+i18n：校验与业务文案分别在 `i18n/messages-app*.properties`（`event.action.*` / `event.subscription.*`）与 `system` 模块的 `messages-system*.properties`（服务层校验）中维护，中英文同步。
 
 ### 登录与令牌链路
 
