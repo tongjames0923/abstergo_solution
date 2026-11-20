@@ -99,6 +99,13 @@
               :getters="getterList"
             />
 
+            <logic-condition-builder
+              v-else-if="isLogicCondition(currentGetter)"
+              v-model="logicTree"
+              :getters="getterList"
+              :operand-component="operandComponent"
+            />
+
             <div v-else-if="!paramFields.length" class="no-params">
               {{ $t('valueGetter.noParams') }}
             </div>
@@ -242,11 +249,14 @@ import {getValueGetters, invokeValueGetter} from '@/api/script/valueGetter'
 import ConditionBuilder from '@/components/ConditionBuilder'
 import GetterParamField from '@/components/GetterParamField'
 import GetterResult from '@/components/GetterResult'
+import LogicConditionBuilder from '@/components/LogicConditionBuilder'
 import ValueGetterOperand from '@/components/ValueGetterOperand'
 import ResponsiveMixin from '@/mixins/responsive'
+import {compileGroup, createGroup, hasCondition} from '@/utils/logicCondition'
 import {buildFormData, isBlank, toParamFields, toParamValues, validateFields} from '@/utils/valueGetter'
 
 const CONDITION_GETTER_ID = 'ConditionGetter'
+const LOGIC_CONDITION_GETTER_ID = 'LogicConditionGetter'
 const HISTORY_LIMIT = 8
 
 /**
@@ -259,7 +269,7 @@ const HISTORY_LIMIT = 8
  */
 export default {
   name: 'ValueGetterTester',
-  components: { ConditionBuilder, GetterParamField, GetterResult, ValueGetterOperand },
+  components: { ConditionBuilder, GetterParamField, GetterResult, LogicConditionBuilder, ValueGetterOperand },
   mixins: [ResponsiveMixin],
   data() {
     return {
@@ -272,6 +282,7 @@ export default {
       currentGetter: null,
       formData: {},
       condition: { left: '', op: 'eq', right: '' },
+      logicTree: createGroup(),
       touched: {},
       showErrors: false,
       result: null,
@@ -291,6 +302,14 @@ export default {
      */
     paramFields() {
       return this.currentGetter ? toParamFields(this.currentGetter.paramTypes, this.currentGetter.getterId) : []
+    },
+    /**
+     * 操作数编辑器组件，注入给逻辑条件构建器以避免循环依赖
+     *
+     * @returns {Object} 组件构造器
+     */
+    operandComponent() {
+      return ValueGetterOperand
     },
     /**
      * 当前字段校验结果
@@ -398,6 +417,16 @@ export default {
     },
 
     /**
+     * 判断是否为逻辑组合条件 getter
+     *
+     * @param {Object} getter getter 元信息
+     * @returns {boolean} 是否为逻辑条件 getter
+     */
+    isLogicCondition(getter) {
+      return !!getter && getter.getterId === LOGIC_CONDITION_GETTER_ID
+    },
+
+    /**
      * 全局快捷键：执行取值
      *
      * @param {KeyboardEvent} event 键盘事件
@@ -447,6 +476,7 @@ export default {
       this.selectedGetterId = getter.getterId
       this.currentGetter = getter
       this.condition = { left: '', op: 'eq', right: '' }
+      this.logicTree = createGroup()
       this.formData = buildFormData(toParamFields(getter.paramTypes, getter.getterId))
       this.touched = {}
       this.showErrors = false
@@ -469,6 +499,7 @@ export default {
     resetForm() {
       this.formData = buildFormData(this.paramFields)
       this.condition = { left: '', op: 'eq', right: '' }
+      this.logicTree = createGroup()
       this.touched = {}
       this.showErrors = false
       this.resetOutput()
@@ -537,6 +568,9 @@ export default {
      * @returns {Array} ParamValue 列表
      */
     buildParams() {
+      if (this.isLogicCondition(this.currentGetter)) {
+        return compileGroup(this.logicTree, this.paramFields)
+      }
       if (this.isCondition(this.currentGetter)) {
         const operands = this.paramFields.filter(f => f.uiType === 'operand')
         const op = this.paramFields.find(f => f.isEnum)
@@ -569,7 +603,12 @@ export default {
         return
       }
       this.showErrors = true
-      if (this.isCondition(this.currentGetter)) {
+      if (this.isLogicCondition(this.currentGetter)) {
+        if (!hasCondition(this.logicTree)) {
+          this.$message.warning(this.$t('logicCondition.requireOne'))
+          return
+        }
+      } else if (this.isCondition(this.currentGetter)) {
         if (isBlank(this.condition.left)) {
           this.$message.warning(this.$t('valueGetter.conditionLeftRequired'))
           return
@@ -614,6 +653,7 @@ export default {
         getterName: this.currentGetter ? this.currentGetter.getterName : this.selectedGetterId,
         paramValues,
         condition: { ...this.condition },
+        logicTree: JSON.parse(JSON.stringify(this.logicTree)),
         result: this.result,
         error: this.resultError,
         elapsedMs: this.elapsedMs,
@@ -651,6 +691,9 @@ export default {
       })
       this.formData = formData
       this.condition = { ...item.condition }
+      if (item.logicTree) {
+        this.logicTree = JSON.parse(JSON.stringify(item.logicTree))
+      }
       this.touched = {}
       this.showErrors = false
       this.result = item.result

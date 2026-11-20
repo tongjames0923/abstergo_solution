@@ -1243,6 +1243,27 @@ export default {
     opHintJudge: 'Only inspects the left operand; the right one is not used'
   },
 
+  // Logical condition builder
+  logicCondition: {
+    and: 'AND',
+    or: 'OR',
+    joinAnd: 'AND',
+    joinOr: 'OR',
+    hintAnd: 'True only when every condition holds; stops at the first false',
+    hintOr: 'True when any condition holds; stops at the first true',
+    add: 'Add condition',
+    addGroup: 'Add group',
+    remove: 'Remove condition',
+    removeGroup: 'Remove group',
+    condition: 'Condition',
+    group: 'Group',
+    count: '{current} / {max} nodes',
+    filled: '{count} configured',
+    itemPlaceholder: 'Boolean literal or a getter call',
+    nestedHint: 'A condition can be a true / false literal, or a nested boolean or logical condition; evaluated in order with short-circuiting.',
+    requireOne: 'Configure at least one condition'
+  },
+
   // Value getter debugger
   valueGetter: {
     literal: 'Literal',

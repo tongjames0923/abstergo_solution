@@ -1247,6 +1247,27 @@ export default {
     opHintJudge: '只判断左操作数，右操作数不参与运算'
   },
 
+  // 逻辑条件编排
+  logicCondition: {
+    and: '且（AND）',
+    or: '或（OR）',
+    joinAnd: '且',
+    joinOr: '或',
+    hintAnd: '全部条件成立才为真，遇到不成立立即结束',
+    hintOr: '任一条件成立即为真，遇到成立立即结束',
+    add: '添加条件',
+    addGroup: '添加分组',
+    remove: '移除条件',
+    removeGroup: '移除分组',
+    condition: '条件',
+    group: '条件组',
+    count: '{current} / {max} 个子节点',
+    filled: '已配置 {count} 项',
+    itemPlaceholder: '字面量布尔值，或选择 getter 调用',
+    nestedHint: '条件可以是 true / false 字面量，也可以嵌套布尔条件或逻辑条件；按列表顺序短路求值。',
+    requireOne: '请至少配置一个条件'
+  },
+
   // 值获取器调试
   valueGetter: {
     literal: '字面值',
