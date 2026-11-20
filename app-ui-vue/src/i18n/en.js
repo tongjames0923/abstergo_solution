@@ -223,6 +223,7 @@ export default {
     editUser: 'Edit User',
     deleteUser: 'Delete User',
     confirmDelete: 'Are you sure to delete this user?',
+    deleteInGroupWarning: 'User "{name}" is still in permission groups; deleting will invalidate those bindings as well. Continue?',
     viewDetail: 'Details',
     loginInfo: 'Login Info',
     noLoginInfo: 'No login info',
@@ -309,7 +310,8 @@ export default {
     dataScopeSelf: 'Self Data Only',
     dataScopeCustom: 'Custom Scope',
     noDescription: 'No description',
-    deleteConfirmText: 'Are you sure to delete permission "{name}"?'
+    deleteConfirmText: 'Are you sure to delete permission "{name}"?',
+    inUseByGroup: 'Permission "{name}" is bound to permission groups. Remove it from the groups before deleting'
   },
 
   // Role Group Permission Management
@@ -326,6 +328,7 @@ export default {
     managePerms: 'Manage Permissions',
     manageUsers: 'Manage Members',
     deleteConfirm: 'Delete permission group "{name}"? Its permission and member bindings will be invalidated as well',
+    notEmptyCannotDelete: 'Group "{name}" still contains {roles} permissions and {users} members. Clear them before deleting',
     workspaceTitle: 'Permission Group Workspace',
     currentGroup: 'Current Group',
     tabPermissions: 'Permissions',

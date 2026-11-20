@@ -339,7 +339,8 @@
 </template>
 
 <script>
-import { queryRoles, saveRole, deleteRole, activateRole, disableRole } from '@/api/role'
+import {activateRole, deleteRole, disableRole, queryRoles, saveRole} from '@/api/role'
+import {isRoleInAnyGroup} from '@/api/role_group'
 
 export default {
   name: 'PermissionControlPanel',
@@ -500,6 +501,13 @@ export default {
     },
     async handleDeleteRole(permission) {
       try {
+        // 删除前先检查占用：后端同样会拒绝，但前置提示能直接告知去处，而不是等报错
+        const checkResponse = await isRoleInAnyGroup(permission.id)
+        if (checkResponse.data === true) {
+          this.$message.warning(this.$t('role.inUseByGroup', { name: permission.name }))
+          return
+        }
+
         await this.$confirm(
           this.$t('role.deleteConfirmText', { name: permission.name }),
           this.$t('common.tip'),

@@ -1,6 +1,7 @@
 package com.tbs.shared.pojo.criteria;
 
 import com.tbs.shared.pojo.entity.SystemRoleGroupEntity;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.annotation.order.QueryOrderField;
@@ -8,9 +9,7 @@ import com.tbs.sql.constants.OrderConstants;
 import com.tbs.sql.criteria.impl.DefaultEntityCriteria;
 import com.tbs.sql.enums.ContrastEnum;
 import com.tbs.sql.order.impl.OrderedModel;
-import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 import java.util.Date;
 import java.util.List;
@@ -27,6 +26,7 @@ import java.util.List;
  * @author abstergo
  */
 @Data
+@LogicDeleteEntity(activeFlagValues = {1, -1})
 public class CommonSystemRoleGroupCriteria extends DefaultEntityCriteria {
 
     /**

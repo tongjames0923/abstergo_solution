@@ -227,6 +227,7 @@ export default {
     editUser: '编辑用户',
     deleteUser: '删除用户',
     confirmDelete: '确定要删除该用户吗？',
+    deleteInGroupWarning: '用户「{name}」仍在权限组中，删除后其组内绑定将一并失效。确定删除吗？',
     viewDetail: '详情',
     loginInfo: '登录信息',
     noLoginInfo: '暂无登录信息',
@@ -313,7 +314,8 @@ export default {
     dataScopeSelf: '仅本人数据',
     dataScopeCustom: '自定义权限',
     noDescription: '暂无描述',
-    deleteConfirmText: '确认要删除权限"{name}"吗？'
+    deleteConfirmText: '确认要删除权限"{name}"吗？',
+    inUseByGroup: '权限「{name}」已绑定到权限组，请先在权限组中移除后再删除'
   },
 
   // 权限组权限管理
@@ -330,6 +332,7 @@ export default {
     managePerms: '管理权限',
     manageUsers: '管理用户',
     deleteConfirm: '确定要删除权限组「{name}」吗？删除后组内权限与成员绑定将一并失效',
+    notEmptyCannotDelete: '权限组「{name}」下仍有 {roles} 个权限项、{users} 个成员，请清空后再删除',
     workspaceTitle: '权限组工作台',
     currentGroup: '当前权限组',
     tabPermissions: '权限分配',

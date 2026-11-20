@@ -67,9 +67,16 @@
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import RoleGroupRoleAdminView from '@/components/RoleGroupAdminView/RoleGroupRoleAdminView.vue'
 import RoleGroupUserAdminView from '@/components/RoleGroupAdminView/RoleGroupUserAdminView.vue'
-import { queryRoleGroups, saveRoleGroup, deleteRoleGroup } from '@/api/role_group'
-import { rangeQueryTransform } from '@/utils/query-help'
-import { roleGroupAddFormKey, roleGroupEditFormKey, roleGroupSearchFormKey } from '@/settings'
+import {
+  deleteRoleGroup,
+  getRoleGroupById,
+  getRoleListByGroupId,
+  getUserListByGroupId,
+  queryRoleGroups,
+  saveRoleGroup
+} from '@/api/role_group'
+import {rangeQueryTransform} from '@/utils/query-help'
+import {roleGroupAddFormKey, roleGroupEditFormKey, roleGroupSearchFormKey} from '@/settings'
 
 export default {
   name: 'RoleGroupAdminView',
@@ -131,7 +138,22 @@ export default {
      * @param {Object} row - 权限组行数据
      * @returns {Promise} 删除结果
      */
-    handleDeleteGroup(row) {
+    async handleDeleteGroup(row) {
+      // 后端会拒绝删除非空权限组，先在前端查占用并直接告知清空去处，省一次注定失败的确认
+      const [roleResponse, userResponse] = await Promise.all([
+        getRoleListByGroupId(row.id).catch(() => null),
+        getUserListByGroupId(row.id).catch(() => null)
+      ])
+      const roleCount = (roleResponse?.data || []).length
+      const userCount = (userResponse?.data || []).length
+      if (roleCount > 0 || userCount > 0) {
+        this.$message.warning(this.$t('roleGroup.notEmptyCannotDelete', {
+          name: row.roleGroupName,
+          roles: roleCount,
+          users: userCount
+        }))
+        return
+      }
       return deleteRoleGroup(row.id)
     },
 
@@ -181,6 +203,24 @@ export default {
       this.currentGroupDescription = row.description || ''
       this.activeTab = tab
       this.workspaceVisible = true
+      this.refreshGroupContext()
+    },
+
+    /**
+     * 打开后按 ID 拉取权限组最新信息，列表行数据在别处被编辑过时可能已过期
+     * @returns {Promise} 加载结果
+     */
+    async refreshGroupContext() {
+      try {
+        const response = await getRoleGroupById(this.currentGroupId)
+        const group = response.data
+        if (group) {
+          this.currentGroupName = group.roleGroupName || this.currentGroupName
+          this.currentGroupDescription = group.description || ''
+        }
+      } catch (error) {
+        console.error('获取权限组信息失败:', error)
+      }
     },
 
     /**

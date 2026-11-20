@@ -99,6 +99,7 @@
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserLoginInfoView from '@/components/UserAdminView/UserLoginInfoView.vue'
 import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
+import {isUserInAnyGroup} from '@/api/role_group'
 import {rangeQueryTransform} from '@/utils/query-help'
 import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
 
@@ -292,10 +293,19 @@ export default {
     },
 
     /**
-     * 删除用户
+     * 删除用户（删除前检查权限组占用，仍在组内时在确认文案中明确告知后果）
      */
     async handleDeleteUser(row) {
-      const confirmText = this.$t('user.confirmDelete')
+      let confirmText = this.$t('user.confirmDelete')
+      try {
+        // 占用检查失败不阻断删除，由后端兜底
+        const checkResponse = await isUserInAnyGroup(row.id)
+        if (checkResponse.data === true) {
+          confirmText = this.$t('user.deleteInGroupWarning', { name: row.nickName || row.userName })
+        }
+      } catch (error) {
+        console.error('检查用户权限组占用失败:', error)
+      }
       this.$confirm(confirmText, this.$t('common.tip'), {
         confirmButtonText: this.$t('common.confirm'),
         cancelButtonText: this.$t('common.cancel'),

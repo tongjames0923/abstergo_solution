@@ -16,10 +16,9 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.annotation.Resource;
 
 /**
  * 管理员管理角色组数据控制器
@@ -278,6 +277,40 @@ public class AdminRoleGroupController
     public AjaxResult getUserList(
         @Parameter(name = "groupId", description = "角色组ID", required = true) @PathVariable Long groupId) {
         return successResult(groupService.getUserList(groupId));
+    }
+
+    /**
+     * 检查权限是否存在于任意角色组
+     *
+     * @param roleId 权限ID
+     * @return 是否存在于任意角色组
+     */
+    @GetMapping("check/role/{roleId}")
+    @AjaxResponseType(Boolean.class)
+    @Operation(summary = "检查权限是否存在于任意角色组", description = "根据权限ID判断该权限是否已绑定到任意角色组")
+    @ApiResponse(responseCode = "200", description = "检查完成",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP')")
+    public AjaxResult checkRoleInAnyGroup(
+        @Parameter(name = "roleId", description = "权限ID", required = true) @PathVariable Long roleId) {
+        return successResult(groupService.isRoleInGroupAnyGroup(roleId));
+    }
+
+    /**
+     * 检查用户是否在任意角色组下
+     *
+     * @param userId 用户ID
+     * @return 是否在任意角色组下
+     */
+    @GetMapping("check/user/{userId}")
+    @AjaxResponseType(Boolean.class)
+    @Operation(summary = "检查用户是否在任意角色组下", description = "根据用户ID判断该用户是否已分配到任意角色组")
+    @ApiResponse(responseCode = "200", description = "检查完成",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP')")
+    public AjaxResult checkUserInAnyGroup(
+        @Parameter(name = "userId", description = "用户ID", required = true) @PathVariable Long userId) {
+        return successResult(groupService.isUserInGroupAnyGroup(userId));
     }
 
 }

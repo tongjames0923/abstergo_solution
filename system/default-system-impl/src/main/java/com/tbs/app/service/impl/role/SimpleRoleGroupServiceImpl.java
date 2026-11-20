@@ -13,6 +13,7 @@ import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -378,6 +379,31 @@ public class SimpleRoleGroupServiceImpl
         evictCache(ROLE_GROUP, id);
         firePermissionChanged(IPermissionChangeListener.ChangeType.GROUP_DELETED, id, group, userIds, null);
         return deleted;
+    }
+
+    /**
+     * 删除权限组前的业务校验
+     * <p>
+     * 组下仍绑定用户或权限项时拒绝删除：本类删除组不清理关联行（见 {@link #deleteById} 注释），
+     * 带着绑定删除会留下孤儿关联行，且绑定用户的权限在缓存 TTL 内仍会生效；
+     * 拒绝式口径与权限点删除（PERMISSION_IN_USE_NOT_DELETE）保持一致，不做级联清理。
+     * </p>
+     *
+     * @param entity 待删除的权限组实体
+     * @throws FormattedRuntimeException 校验不通过时抛出
+     */
+    @Override
+    protected void deletePending(SystemRoleGroupEntity entity) throws FormattedRuntimeException {
+        var userIds = boundUserIds(entity.getId());
+        AssertUtil.isTrue(CollUtil.isNotEmpty(userIds))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_HAS_USERS_NOT_DELETE)
+            .params(userIds.size()).throwIt();
+        var roleList = getRoleList(entity.getId());
+        AssertUtil.isTrue(CollUtil.isNotEmpty(roleList))
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR)
+            .i18n(com.tbs.app.constant.SystemI18nConstant.PERMISSION_GROUP_HAS_ROLES_NOT_DELETE)
+            .params(roleList.size()).throwIt();
     }
 
     /**
