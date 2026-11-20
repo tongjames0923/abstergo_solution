@@ -1251,6 +1251,10 @@ export default {
   logicCondition: {
     and: '且（AND）',
     or: '或（OR）',
+    groupPrefix: '满足以下',
+    all: '全部',
+    any: '任一',
+    groupSuffix: '条件',
     joinAnd: '且',
     joinOr: '或',
     hintAnd: '全部条件成立才为真，遇到不成立立即结束',

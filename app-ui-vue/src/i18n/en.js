@@ -1247,6 +1247,10 @@ export default {
   logicCondition: {
     and: 'AND',
     or: 'OR',
+    groupPrefix: 'Match',
+    all: 'all',
+    any: 'any',
+    groupSuffix: 'of these conditions',
     joinAnd: 'AND',
     joinOr: 'OR',
     hintAnd: 'True only when every condition holds; stops at the first false',

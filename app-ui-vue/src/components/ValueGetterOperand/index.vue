@@ -168,7 +168,7 @@ import {
 import GetterParamField from '@/components/GetterParamField'
 import LogicConditionBuilder from '@/components/LogicConditionBuilder'
 import ResponsiveMixin from '@/mixins/responsive'
-import { compileGroup, countConditions, createGroup, hasCondition, restoreLogicTree } from '@/utils/logicCondition'
+import {compileGroup, countConditions, createGroup, hasCondition, restoreLogicTree} from '@/utils/logicCondition'
 
 const CONDITION_GETTER_ID = 'ConditionGetter'
 const LOGIC_CONDITION_GETTER_ID = 'LogicConditionGetter'
@@ -366,7 +366,8 @@ export default {
         const opField = fields.find(f => f.isEnum)
         const op = opField ? this.formData[opField.name] : ''
         const tree = restoreLogicTree(op, fields.filter(f => f.uiType === 'operand').map(f => this.formData[f.name]))
-        return (op || 'and') + ' · ' + this.$t('logicCondition.filled', { count: countConditions(tree) })
+        const mode = this.$t(op === 'or' ? 'logicCondition.any' : 'logicCondition.all')
+        return mode + ' · ' + this.$t('logicCondition.filled', { count: countConditions(tree) })
       }
       return fields.map(field => {
         const raw = this.formData[field.name]
