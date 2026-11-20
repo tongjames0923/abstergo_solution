@@ -176,6 +176,10 @@
                     <i class="fas fa-edit" />
                     <span>{{ $t('common.edit') }}</span>
                   </el-dropdown-item>
+                  <el-dropdown-item command="bindings">
+                    <i class="fas fa-link" />
+                    <span>{{ $t('role.bindings') }}</span>
+                  </el-dropdown-item>
                   <el-dropdown-item
                     v-if="permission.flag !== 2"
                     :command="permission.flag === 1 ? 'disable' : 'enable'"
@@ -335,12 +339,46 @@
         </el-button>
       </div>
     </el-dialog>
+
+    <!-- 绑定信息弹窗：展示该权限被哪些权限组绑定 -->
+    <el-dialog
+      :title="$t('role.bindingsTitle', { name: bindingsPermission ? bindingsPermission.name : '' })"
+      :visible.sync="bindingsDialogVisible"
+      width="520px"
+      class="bindings-dialog"
+      :close-on-click-modal="false"
+    >
+      <div class="bindings-context">
+        <i class="fas fa-key" />
+        <span>{{ bindingsPermission ? bindingsPermission.role : '' }}</span>
+      </div>
+      <div v-loading="bindingsLoading" class="bindings-body">
+        <div v-if="!bindingsLoading && boundGroups.length === 0" class="bindings-empty">
+          <i class="fas fa-unlink" />
+          <p>{{ $t('role.noBindings') }}</p>
+        </div>
+        <div v-else class="bindings-list">
+          <div v-for="group in boundGroups" :key="group.id" class="bindings-item">
+            <div class="bindings-info">
+              <span class="bindings-name">{{ group.roleGroupName }}</span>
+              <span class="bindings-desc">{{ group.description || $t('role.noDescription') }}</span>
+            </div>
+            <span class="bindings-status" :class="getGroupStatusClass(group.flag)">
+              {{ getGroupStatusLabel(group.flag) }}
+            </span>
+          </div>
+        </div>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="bindingsDialogVisible = false">{{ $t('common.confirm') }}</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import {activateRole, deleteRole, disableRole, queryRoles, saveRole} from '@/api/role'
-import {isRoleInAnyGroup} from '@/api/role_group'
+import {getGroupListByRoleId, isRoleInAnyGroup} from '@/api/role_group'
 
 export default {
   name: 'PermissionControlPanel',
@@ -374,7 +412,11 @@ export default {
         type: [
           { required: true, message: this.$t('role.permissionType') + '不能为空', trigger: 'change' }
         ]
-      }
+      },
+      bindingsDialogVisible: false,
+      bindingsLoading: false,
+      bindingsPermission: null,
+      boundGroups: []
     }
   },
   computed: {
@@ -557,6 +599,9 @@ export default {
         case 'edit':
           this.handleEditRole(permission)
           break
+        case 'bindings':
+          this.handleShowBindings(permission)
+          break
         case 'enable':
         case 'disable':
           this.handleToggleStatus(permission)
@@ -565,6 +610,53 @@ export default {
           this.handleDeleteRole(permission)
           break
       }
+    },
+    /**
+     * 查看权限的绑定信息：该权限被哪些权限组绑定
+     * @param {Object} permission - 权限项
+     * @returns {Promise} 加载结果
+     */
+    async handleShowBindings(permission) {
+      this.bindingsPermission = permission
+      this.boundGroups = []
+      this.bindingsDialogVisible = true
+      this.bindingsLoading = true
+      try {
+        const response = await getGroupListByRoleId(permission.id)
+        this.boundGroups = response.data || []
+      } catch (error) {
+        console.error('Failed to fetch bound groups:', error)
+      } finally {
+        this.bindingsLoading = false
+      }
+    },
+    /**
+     * 权限组状态文案（组实体 flag 走 CommonFlagEnum：1 启用、-1 禁用）
+     * @param {number} flag - 状态标识
+     * @returns {string} 文案
+     */
+    getGroupStatusLabel(flag) {
+      if (flag === 1) {
+        return this.$t('roleGroup.normal')
+      }
+      if (flag === -1) {
+        return this.$t('roleGroup.disabled')
+      }
+      return this.$t('roleGroup.unknown')
+    },
+    /**
+     * 权限组状态样式类
+     * @param {number} flag - 状态标识
+     * @returns {string} 样式类名
+     */
+    getGroupStatusClass(flag) {
+      if (flag === 1) {
+        return 'is-normal'
+      }
+      if (flag === -1) {
+        return 'is-disabled'
+      }
+      return 'is-unknown'
     },
     getTypeLabel(type) {
       const typeMap = {
@@ -1424,6 +1516,151 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+/* ── Bindings Dialog ── */
+.bindings-dialog {
+  ::v-deep .el-dialog {
+    border-radius: $radius;
+    overflow: hidden;
+  }
+
+  ::v-deep .el-dialog__header {
+    background: linear-gradient(135deg, $primary 0%, #1E3A8A 100%);
+    padding: 20px 24px;
+    margin: 0;
+  }
+
+  ::v-deep .el-dialog__title {
+    color: white;
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: 16px;
+  }
+
+  ::v-deep .el-dialog__headerbtn .el-dialog__close {
+    color: white;
+  }
+
+  ::v-deep .el-dialog__body {
+    padding: 16px 24px;
+  }
+
+  ::v-deep .el-dialog__footer {
+    padding: 14px 24px;
+    background: #f8f9fa;
+    border-top: 1px solid $border;
+  }
+}
+
+.bindings-context {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  border-radius: $radius-xs;
+  background: rgba(30, 64, 175, 0.06);
+  color: $primary;
+  font-family: $font-display;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.bindings-body {
+  min-height: 120px;
+}
+
+.bindings-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  color: $text-3;
+
+  i {
+    font-size: 28px;
+    margin-bottom: 10px;
+    opacity: 0.5;
+  }
+
+  p {
+    margin: 0;
+    font-size: 13px;
+  }
+}
+
+.bindings-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.bindings-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid $border;
+  border-radius: $radius-xs;
+  background: #fff;
+
+  .bindings-info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .bindings-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: $text-1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bindings-desc {
+    font-size: 12px;
+    color: $text-2;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .bindings-status {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 10px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+
+    &.is-normal {
+      background: $green-bg;
+      color: $green;
+      border: 1px solid $green-bd;
+    }
+
+    &.is-disabled {
+      background: $amber-bg;
+      color: $amber;
+      border: 1px solid $amber-bd;
+    }
+
+    &.is-unknown {
+      background: rgba(0, 0, 0, 0.04);
+      color: $text-2;
+      border: 1px solid $border;
+    }
+  }
 }
 
 /* ── Animations ── */

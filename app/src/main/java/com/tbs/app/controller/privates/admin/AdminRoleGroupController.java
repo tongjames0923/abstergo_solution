@@ -313,4 +313,21 @@ public class AdminRoleGroupController
         return successResult(groupService.isUserInGroupAnyGroup(userId));
     }
 
+    /**
+     * 获取绑定指定权限的角色组列表
+     *
+     * @param roleId 权限ID
+     * @return 绑定该权限的角色组列表
+     */
+    @GetMapping("groups/{roleId}")
+    @AjaxResponseType(SystemRoleGroupEntity.class)
+    @Operation(summary = "获取绑定指定权限的角色组列表", description = "根据权限ID获取所有绑定了该权限的角色组列表")
+    @ApiResponse(responseCode = "200", description = "成功获取角色组列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.hasPermission('API.QUERY.ROLEGROUP')")
+    public AjaxResult getGroupListByRole(
+        @Parameter(name = "roleId", description = "权限ID", required = true) @PathVariable Long roleId) {
+        return successResult(groupService.getGroupListByRoleId(roleId));
+    }
+
 }

@@ -104,11 +104,12 @@ export default {
           prop: 'flag',
           label: this.$t('roleGroup.status'),
           width: 100,
+          // 组实体 flag 走 CommonFlagEnum：1 启用、-1 禁用、0 已删除（列表查询已过滤删除态）
           render: (h, scope) => {
             if (scope.row.flag === 1) {
               return <el-tag type='success'>{ this.$t('roleGroup.normal') }</el-tag>
             }
-            if (scope.row.flag === 0) {
+            if (scope.row.flag === -1) {
               return <el-tag type='danger'>{ this.$t('roleGroup.disabled') }</el-tag>
             }
             return <el-tag>{ this.$t('roleGroup.unknown') }</el-tag>

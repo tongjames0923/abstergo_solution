@@ -23,6 +23,14 @@ public interface ISystemRoleGroupService extends IServiceTemplate<SystemRoleGrou
     List<SystemRoleEntity> getRoleList(Long groupId);
 
     /**
+     * 获取绑定了指定权限的角色组列表
+     *
+     * @param roleId 权限标识
+     * @return 绑定该权限的角色组列表，无绑定时返回空列表
+     */
+    List<SystemRoleGroupEntity> getGroupListByRoleId(Long roleId);
+
+    /**
      * 获取角色组VO
      *
      * @param groupId

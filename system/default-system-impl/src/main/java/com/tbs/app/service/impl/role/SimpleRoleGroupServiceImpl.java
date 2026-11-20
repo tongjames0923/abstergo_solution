@@ -103,6 +103,26 @@ public class SimpleRoleGroupServiceImpl
     }
 
     /**
+     * 获取绑定了指定权限的角色组列表
+     * <p>
+     * 先查权限-组关联行（逻辑删除拦截器自动过滤已删除关联），再按组ID回读组实体，
+     * 已删除的组会被逻辑删除规则过滤，历史遗留孤儿关联不会出现在结果里。
+     * </p>
+     *
+     * @param roleId 权限标识
+     * @return 绑定该权限的角色组列表，无绑定时返回空列表
+     */
+    @Override
+    public List<SystemRoleGroupEntity> getGroupListByRoleId(Long roleId) {
+        var relation = new SystemRoleGroupRelationEntity();
+        relation.setRoleId(roleId);
+        return relationMapper.select(relation).stream()
+            .map(rel -> getInstance().queryById(rel.getGroupId()))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toList());
+    }
+
+    /**
      * 获取角色组VO
      *
      * @param groupId

@@ -26,6 +26,9 @@
         <el-dropdown-item command="resetPassword" @click.native="handleResetPassword(row)">
           {{ $t('user.resetPassword') }}
         </el-dropdown-item>
+        <el-dropdown-item command="showRoleGroups" @click.native="handleShowRoleGroups(row)">
+          {{ $t('user.roleGroups') }}
+        </el-dropdown-item>
         <el-dropdown-item command="deleteUser" divided @click.native="handleDeleteUser(row)">
           {{ $t('user.delete') }}
         </el-dropdown-item>
@@ -92,6 +95,60 @@
         <el-button @click="loginInfoDialogVisible = false">{{ $t('common.cancel') }}</el-button>
       </div>
     </el-dialog>
+
+    <!-- 所属权限组弹窗：展示该用户被分配到哪些权限组及组内权限 -->
+    <el-dialog
+      :title="$t('user.roleGroupsTitle', { name: roleGroupsUser ? (roleGroupsUser.nickName || roleGroupsUser.userName) : '' })"
+      :visible.sync="roleGroupsDialogVisible"
+      width="560px"
+      :modal-append-to-body="false"
+      :close-on-click-modal="false"
+      class="role-groups-dialog"
+      @close="handleRoleGroupsDialogClose"
+    >
+      <div v-loading="roleGroupsLoading" class="role-groups-body">
+        <div v-if="!roleGroupsLoading && userRoleGroups.length === 0" class="role-groups-empty">
+          <i class="el-icon-collection" />
+          <p>{{ $t('userDetail.noRoleGroups') }}</p>
+        </div>
+        <div v-else class="role-groups-list">
+          <div
+            v-for="item in userRoleGroups"
+            :key="item.group && item.group.id"
+            class="role-group-item"
+          >
+            <div class="role-group-head">
+              <span class="role-group-name">{{ item.group ? item.group.roleGroupName : '-' }}</span>
+              <span
+                class="role-group-status"
+                :class="getGroupStatusClass(item.group ? item.group.flag : null)"
+              >
+                {{ getGroupStatusLabel(item.group ? item.group.flag : null) }}
+              </span>
+              <span class="role-group-count">
+                {{ $t('roleGroup.totalPerm', { count: (item.permissions || []).length }) }}
+              </span>
+            </div>
+            <p v-if="item.group && item.group.description" class="role-group-desc">
+              {{ item.group.description }}
+            </p>
+            <div class="role-group-perms">
+              <el-tag
+                v-for="role in item.permissions || []"
+                :key="role.id"
+                size="mini"
+                effect="plain"
+              >
+                {{ role.name }}
+              </el-tag>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="roleGroupsDialogVisible = false">{{ $t('common.confirm') }}</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -99,7 +156,7 @@
 import QuickUseManagementView from '@/components/QuickUseManagementView/index.vue'
 import UserLoginInfoView from '@/components/UserAdminView/UserLoginInfoView.vue'
 import {activateUser, adminQueryUser, deleteUser, disableUser, saveUser} from '@/api/admin_user'
-import {isUserInAnyGroup} from '@/api/role_group'
+import {getUserRoleGroupVOList, isUserInAnyGroup} from '@/api/role_group'
 import {rangeQueryTransform} from '@/utils/query-help'
 import {userAddFormKey, userEditFormKey, userSearchFormKey} from '@/settings'
 
@@ -124,6 +181,10 @@ export default {
     return {
       resetPasswordDialogVisible: false,
       loginInfoDialogVisible: false,
+      roleGroupsDialogVisible: false,
+      roleGroupsLoading: false,
+      roleGroupsUser: null,
+      userRoleGroups: [],
       currentUserId: null,
       passwordForm: {
         id: undefined,
@@ -195,6 +256,64 @@ export default {
     handleLoginInfoDialogClose() {
       this.currentUserId = null
       this.loginInfoDialogVisible = false
+    },
+
+    /**
+     * 查看用户所属权限组及组内权限
+     * @param {Object} row - 用户行数据
+     * @returns {Promise} 加载结果
+     */
+    async handleShowRoleGroups(row) {
+      this.roleGroupsUser = row
+      this.userRoleGroups = []
+      this.roleGroupsDialogVisible = true
+      this.roleGroupsLoading = true
+      try {
+        const response = await getUserRoleGroupVOList(row.id)
+        this.userRoleGroups = response.data || []
+      } catch (error) {
+        console.error('获取用户权限组失败:', error)
+      } finally {
+        this.roleGroupsLoading = false
+      }
+    },
+
+    /**
+     * 关闭权限组弹窗时清空上下文
+     */
+    handleRoleGroupsDialogClose() {
+      this.roleGroupsUser = null
+      this.userRoleGroups = []
+    },
+
+    /**
+     * 权限组状态文案（组实体 flag 走 CommonFlagEnum：1 启用、-1 禁用）
+     * @param {number} flag - 状态标识
+     * @returns {string} 文案
+     */
+    getGroupStatusLabel(flag) {
+      if (flag === 1) {
+        return this.$t('roleGroup.normal')
+      }
+      if (flag === -1) {
+        return this.$t('roleGroup.disabled')
+      }
+      return this.$t('roleGroup.unknown')
+    },
+
+    /**
+     * 权限组状态样式类
+     * @param {number} flag - 状态标识
+     * @returns {string} 样式类名
+     */
+    getGroupStatusClass(flag) {
+      if (flag === 1) {
+        return 'is-normal'
+      }
+      if (flag === -1) {
+        return 'is-disabled'
+      }
+      return 'is-unknown'
     },
 
     saveUser,
@@ -377,6 +496,118 @@ export default {
   ::v-deep .el-dialog__footer {
     border-top: 1px solid #ebeef5;
     padding: 15px 20px;
+  }
+}
+
+.role-groups-dialog {
+  ::v-deep .el-dialog__body {
+    padding-top: 10px;
+  }
+
+  .role-groups-body {
+    min-height: 120px;
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  .role-groups-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    color: #9ca3af;
+
+    i {
+      font-size: 32px;
+      margin-bottom: 10px;
+      opacity: 0.5;
+    }
+
+    p {
+      margin: 0;
+      font-size: 13px;
+    }
+  }
+
+  .role-groups-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .role-group-item {
+    padding: 12px 14px;
+    border: 1px solid #ebeef5;
+    border-radius: 8px;
+    background: #fff;
+
+    .role-group-head {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .role-group-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #303133;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .role-group-status {
+      flex-shrink: 0;
+      display: inline-flex;
+      align-items: center;
+      padding: 1px 8px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+
+      &.is-normal {
+        background: #f0f9eb;
+        color: #67c23a;
+        border: 1px solid #e1f3d8;
+      }
+
+      &.is-disabled {
+        background: #fdf6ec;
+        color: #e6a23c;
+        border: 1px solid #faecd8;
+      }
+
+      &.is-unknown {
+        background: #f4f4f5;
+        color: #909399;
+        border: 1px solid #e9e9eb;
+      }
+    }
+
+    .role-group-count {
+      flex-shrink: 0;
+      margin-left: auto;
+      font-size: 12px;
+      color: #909399;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .role-group-desc {
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: #909399;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .role-group-perms {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
   }
 }
 </style>
