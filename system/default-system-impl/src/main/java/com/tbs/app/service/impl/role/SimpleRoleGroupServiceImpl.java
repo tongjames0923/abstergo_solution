@@ -280,8 +280,12 @@ public class SimpleRoleGroupServiceImpl
      */
     @Override
     public boolean isRoleInGroupAnyGroup(Long roleId) {
-        return CollUtil.isNotEmpty(Arrays.asList(
-            relationMapper.query().where().equal(SystemRoleGroupRelationEntity::getRoleId, roleId).pour().fetchOne()));
+        var r =
+            relationMapper.query().where().equal(SystemRoleGroupRelationEntity::getRoleId, roleId).pour().fetchOne();
+        if (r == null) {
+            return false;
+        }
+        return true;
     }
 
     /**
