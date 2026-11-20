@@ -2,11 +2,9 @@ package com.tbs.script.api.expressible;
 
 import com.tbs.common.provider.IRouteMeta;
 import com.tbs.common.provider.vo.InstanceMeta;
-import com.tbs.script.api.expressible.vo.param.ParamType;
 import com.tbs.script.api.expressible.vo.param.ParamValue;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * 事件触发器接口。
@@ -18,7 +16,7 @@ import java.util.List;
  * 由实现内部一次性完成"判断 + 执行"，返回值表示是否真正触发。 这样可以避免 isTrigger + trigger 双调用带来的重复计算与状态不一致（TOCTOU）。
  * {@link #isTrigger(String, String, Collection)} 仅用于"只查询不执行"的预览场景。</p>
  */
-public interface ITrigger extends IRouteMeta {
+public interface ITrigger extends IRouteMeta, IRequestable {
 
     /**
      * 尝试触发。实现内部先判断是否满足触发条件，满足则执行触发并返回 {@code true}， 不满足则直接返回 {@code false}，不产生副作用。
@@ -37,14 +35,6 @@ public interface ITrigger extends IRouteMeta {
      * 不要 isTrigger + trigger 双调用。</p>
      */
     boolean isTrigger(String reporterId, String eventCode, Collection<ParamValue> paramValues);
-
-    /**
-     * 触发器声明的参数定义，用于调用方校验与前端渲染。
-     * <p>默认为空列表，表示触发器不约束参数。</p>
-     */
-    default List<ParamType> requestParamTypes() {
-        return List.of();
-    }
 
     /**
      * 获取触发器ID，作为路由 business，全局唯一。

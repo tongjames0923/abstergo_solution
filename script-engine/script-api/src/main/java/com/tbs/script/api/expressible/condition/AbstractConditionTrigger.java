@@ -16,9 +16,8 @@ import java.util.List;
  * 条件触发器抽象基类。
  *
  * <p>把「条件是否命中」与「命中后做什么」解耦：条件编码优先取订阅关系上的 {@code ruleCode}
- * （通过 {@link IEventSubscriptionRegistry#find(String, String, String)} 反查），未配置时回退
- * {@link #defaultConditionCode()}；命中判断委托 {@link IConditionEvaluator}，命中后执行
- * {@link #onTriggered(String, String, Collection)}。</p>
+ * （通过 {@link IEventSubscriptionRegistry#find(String, String, String)} 反查），未配置时回退 {@link #defaultConditionCode()}；命中判断委托
+ * {@link IConditionEvaluator}，命中后执行 {@link #onTriggered(String, String, Collection)}。</p>
  *
  * <p>{@code isTrigger} 与 {@code trigger} 走同一套判断逻辑，且 {@code isTrigger} 不产生业务副作用，
  * 只在 {@code trigger} 命中后执行回调，避免「查询 + 执行」双调用带来的重复计算。</p>
@@ -56,8 +55,14 @@ public abstract class AbstractConditionTrigger implements ITrigger {
         if (!isTrigger(reporterId, eventCode, paramValues)) {
             return false;
         }
-        onTriggered(reporterId, eventCode, paramValues);
-        return true;
+        try {
+            onTriggered(reporterId, eventCode, paramValues);
+            return true;
+        } catch (Exception e) {
+            log.error("条件触发器回调异常, 视为未触发, triggerId={}, reporterId={}, eventCode={}, 原因={}",
+                getTriggerId(), reporterId, eventCode, e.getMessage());
+            return false;
+        }
     }
 
     /**
@@ -86,8 +91,8 @@ public abstract class AbstractConditionTrigger implements ITrigger {
                 getTriggerId(), reporterId, eventCode, conditionCode, matched);
             return matched;
         } catch (Exception e) {
-            log.warn("条件触发器求值异常, 视为未命中, triggerId={}, reporterId={}, eventCode={}, 原因={}", getTriggerId(),
-                reporterId, eventCode, e.getMessage());
+            log.warn("条件触发器求值异常, 视为未命中, triggerId={}, reporterId={}, eventCode={}, 原因={}",
+                getTriggerId(), reporterId, eventCode, e.getMessage());
             return false;
         }
     }
@@ -133,6 +138,5 @@ public abstract class AbstractConditionTrigger implements ITrigger {
      * @param eventCode   事件编码
      * @param paramValues 事件参数值
      */
-    protected abstract void onTriggered(String reporterId, String eventCode,
-        Collection<ParamValue> paramValues);
+    protected abstract void onTriggered(String reporterId, String eventCode, Collection<ParamValue> paramValues);
 }

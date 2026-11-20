@@ -2,18 +2,16 @@ package com.tbs.script.api.expressible;
 
 import com.tbs.common.provider.IRouteMeta;
 import com.tbs.common.provider.vo.InstanceMeta;
-import com.tbs.script.api.expressible.vo.param.ParamType;
 import com.tbs.script.api.expressible.vo.param.ParamValue;
 import com.tbs.script.api.expressible.vo.result.ResultType;
 import com.tbs.script.api.expressible.vo.result.ResultValue;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * 表达式值获取器接口
  */
-public interface IValueGetter extends IRouteMeta {
+public interface IValueGetter extends IRouteMeta, IRequestable,IResponseable {
     /**
      * 获取值获取器名称
      *
@@ -27,20 +25,6 @@ public interface IValueGetter extends IRouteMeta {
      * @return 返回值获取器ID
      */
     String getGetterId();
-
-    /**
-     * 获取请求参数类型
-     *
-     * @return 返回请求参数类型
-     */
-    List<ParamType> requestParamTypes();
-
-    /**
-     * 获取返回值类型
-     *
-     * @return 返回值类型
-     */
-    ResultType responseResultType();
 
     /**
      * 获取值获取器描述
