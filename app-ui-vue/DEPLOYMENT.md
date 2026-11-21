@@ -49,10 +49,10 @@ location /api {
 }
 ```
 
-### 公开下载码短链（可选，仅 nginx 层）
+### 公开下载码短链（nginx 层 + 前端默认）
 
-把后端长链 `GET /public/oss/download-code/download?code={code}` 缩成 `/{前缀}/{code}`，
-由 nginx 做路径映射，不改后端、**也不改前端代码**：
+前端 `buildPublicDownloadUrl` 生成 `<当前站点域名>/d/{code}` 短链，下载码面板复制/展示的就是它，可直接对外分享；
+nginx 把短链映射到后端长链 `GET /public/oss/download-code/download?code={code}`，不改后端代码：
 
 ```nginx
 location ^~ /d/ {
@@ -68,9 +68,9 @@ location ^~ /d/ {
 
 使用边界：
 
-- **下载码面板复制/展示的仍然是长链**（`buildPublicDownloadUrl` 不感知短链），长短链指向同一个后端接口。
-- 短链用于对外口头传播、短信、文档等场合，自行拼 `<域名或IP:端口>/d/{code}` 即可。
-- 若将来需要前端直接产出短链，再单独评估，不属本配置范围。
+- **下载码面板复制/展示的是带域名的短链**（如 `http://localhost:8866/d/ABC123`），长链 `/api/public/oss/download-code/download?code=` 仍保留兼容，两者指向同一个后端接口。
+- 前端短链不依赖 `VUE_APP_BASE_API`，staging 等环境前缀不同也不会生成失效链接。
+- 短链前缀 `/d/` 变更时，需同步修改 `vue.config.js` 的 devServer 代理、前端 `buildPublicDownloadUrl` 与 nginx 的 `location`/`rewrite`。
 - 前缀不要与前端路由撞车：`/d/` 只匹配 `/d/` 开头路径，`/dashboard` 等不受影响。
 - 必须用 `^~` 前缀匹配，否则会被上面的静态资源正则 `~* \.(js|css|…)$` 抢走。
 - 下载码只含 `[A-Za-z0-9_-]`，放进路径段安全；码不存在/已过期仍由后端返回业务错误。
@@ -122,7 +122,7 @@ location ^~ /d/ {
 3. `.env.production` 中的 `VUE_APP_BASE_API`（如果API路径变化）
 
 若启用了公开下载码短链，后端地址变更时 `location ^~ /d/` 里的 `proxy_pass` 需与 `/api/` 反向代理一并修改；
-短链前缀变更时只改 nginx 的 `location` 与 `rewrite`，前端无需改动。
+短链前缀变更时需同步修改 nginx 的 `location`/`rewrite`、前端 `buildPublicDownloadUrl` 与 `vue.config.js` 的 devServer 代理。
 
 ### 修改域名
 

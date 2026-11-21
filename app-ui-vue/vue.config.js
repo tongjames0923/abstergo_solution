@@ -40,6 +40,14 @@ module.exports = {
         pathRewrite: {
           '^/api': ''
         }
+      },
+      '/d': {
+        target: defaultSettings.backend,
+        changeOrigin: true,
+        pathRewrite: function(path) {
+          const matched = path.match(/^\/d\/([^?]+)/)
+          return matched ? '/public/oss/download-code/download?code=' + encodeURIComponent(matched[1]) : path
+        }
       }
     }
   },
