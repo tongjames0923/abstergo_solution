@@ -94,7 +94,7 @@ IDeptBelongEntity<K>（deptId：部门归属）
 
 其余：`SystemRoleTypeEnum`、`SystemDataScopeEnum`、`SystemRoleFlagEnum`、`SystemCompanyFlagEnum`、`SystemDepartmentFlagEnum`、`SystemTokenFlagEnum`（登录信息）、`DynamicFormConfigFlagEnum`、`AppVersionFlagEnum`、`AppVersionTypeEnum`、`AppVersionCompatibilityActionEnum`（版本兼容动作）。
 
-### 实体清单（24 个）
+### 实体清单（26 个）
 
 | 分组 | 实体 |
 |------|------|
@@ -102,13 +102,14 @@ IDeptBelongEntity<K>（deptId：部门归属）
 | 前端动态路由（`entity/`） | `ViewRouteConfigrationEntity` / `ViewRouteMetaEntity` / `ViewRouteRoleEntity` / `ViewRouteVersionEntity` |
 | 应用版本（`entity/version/`） | `AppVersionEntity` / `AppPackageEntity` / `AppVersionCompatibilityPolicyEntity` |
 | 动态视图（`entity/view/`） | `DynamicFormConfigrationEntity` / `FormFieldConfigrationEntity` / `FormFieldRelationEntity` / `PropertyRelationEntity` / `PropertyValueEntity` |
+| 事件编排（`entity/event/`） | `SystemEventSubscriptionEntity`（sys_event_subscription：reporterId/eventCode/triggerId/ruleCode/sortOrder/enabled）、`SystemEventActionEntity`（sys_event_action：reporterId/eventCode/actionId/actionName/paramJson/sortOrder/enabled） |
 
-> 用户-部门为多对多（`SystemUserDepartmentRelationEntity`），角色经"角色组"关联（`SystemRoleGroup*`）；**不存在**用户-角色直连关系表或用户-公司关系表。
+> 用户-部门为多对多（`SystemUserDepartmentRelationEntity`），角色经"角色组"关联（`SystemRoleGroup*`）；**不存在**用户-角色直连关系表或用户-公司关系表。事件编排两表均使用 `flag` 逻辑删除 + `enabled` 业务状态双字段，`@Table(indexes=...)` 声明 `(reporter_id,event_code,sort_order)` 复合索引及 `enabled` / `flag` 单列索引，DDL 见 `etc/sql_file/sys_event_subscription.sql` 与 `sys_event_action.sql`。
 
-### 查询条件（criteria，9 个）
+### 查询条件（criteria，12 个）
 
 - 基类 `ClassBaseQueryCriteria<T>`：按泛型实体类推导 SQL 资源路径（`sql/{EntitySimpleName}.sql`，前后缀可覆盖），设置实体类到查询模型；
-- 业务条件：`CommonSystemUserQueryCriteria`、`CommonSystemRoleQueryCriteria`、`CommonSystemRoleGroupCriteria`、`CommonSystemCompanyQueryCriteria`、`CommonSystemDepartmentQueryCriteria`、`CommonTokenQueryCriteria`、`CommonGenericApiCriteria`、`AppVersionCriteria`、`AppVersionCompatibilityPolicyCriteria`、`AppPackageCriteria`。
+- 业务条件：`CommonSystemUserQueryCriteria`、`CommonSystemRoleQueryCriteria`、`CommonSystemRoleGroupCriteria`、`CommonSystemCompanyQueryCriteria`、`CommonSystemDepartmentQueryCriteria`、`CommonTokenQueryCriteria`、`CommonGenericApiCriteria`、`AppVersionCriteria`、`AppVersionCompatibilityPolicyCriteria`、`AppPackageCriteria`、`EventSubscriptionCriteria`、`EventActionCriteria`（后两者按 reporterId / eventCode / triggerId 或 actionId / enabled 过滤，支持创建时间排序）。
 
 ### 序列化器（serialize）
 
@@ -160,7 +161,7 @@ IServiceTemplate<E,K> = ISaveableService（save→List<E>）
 
 `ITreeStructService`（getChildren / getNode / deleteLeaf / isLeaf / isRoot / setToTree）+ `AbstractTreeStructService`：经 `ITreeStore<Long>`（tree-struct 模块闭包表）按分组管理实体树；`setToTree` 自动补建缺失的父节点；`rebuildTree()` 重建结构。
 
-### Mapper 清单（27 个）
+### Mapper 清单（29 个）
 
 均继承 `IFrameworkMapper<E, K>`（sql 模块：`GenericMapper` 通用 CRUD + `SmartQueryMapper` 条件查询），`@Repository` 标注：
 
@@ -168,6 +169,7 @@ IServiceTemplate<E,K> = ISaveableService（save→List<E>）
 - **动态路由（4）**：ViewRouteConfigration / ViewRouteMeta / ViewRouteRole / ViewRouteVersion
 - **应用版本（3）**：AppVersion / AppVersionCompt / AppVersionPackage
 - **动态视图（5）**：FormConfig / FormFieldRelation / PropertyRelation / PropertyValue / RoleGroupUserRelation
+- **事件编排（2）**：`EventSubscriptionMapper` / `EventActionMapper`（`mapper/event/` 包，供 system 模块服务与 app 模块持久化订阅仓库使用）
 
 ## 校验框架（shared-api）
 

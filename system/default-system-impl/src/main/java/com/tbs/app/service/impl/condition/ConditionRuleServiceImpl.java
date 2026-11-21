@@ -3,6 +3,7 @@ package com.tbs.app.service.impl.condition;
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.condition.IConditionRuleService;
+import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
@@ -16,10 +17,18 @@ import com.tbs.shared.pojo.entity.condition.SystemConditionRuleEntity;
 import com.tbs.sql.service.QueryEngine;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
+
+import static com.tbs.app.service.impl.CacheNamesConstants.CONDITION_RULE;
+import static com.tbs.app.service.impl.CacheNamesConstants.CONDITION_RULE_CODE;
 
 /**
  * 条件规则服务实现。
@@ -97,6 +106,35 @@ public class ConditionRuleServiceImpl extends
         return Optional.of(AUDIT_SERVICE);
     }
 
+    @Caching(evict = {
+        @CacheEvict(cacheNames = CONDITION_RULE, key = "#entity.id", condition = "#entity!=null&&#entity.id!=null"),
+        @CacheEvict(cacheNames = CONDITION_RULE_CODE, allEntries = true)})
+    @Override
+    public List<SystemConditionRuleEntity> save(SystemConditionRuleEntity entity) {
+        return super.save(entity);
+    }
+
+    @Cacheable(cacheNames = CONDITION_RULE, key = "#id", unless = "#result==null")
+    @ExpireOn(cacheNames = CONDITION_RULE, value = 10, timeUnit = TimeUnit.MINUTES)
+    @Override
+    public SystemConditionRuleEntity queryById(Long id) {
+        return super.queryById(id);
+    }
+
+    @Caching(evict = {@CacheEvict(cacheNames = CONDITION_RULE, key = "#id"),
+        @CacheEvict(cacheNames = CONDITION_RULE_CODE, allEntries = true)})
+    @Override
+    public SystemConditionRuleEntity deleteById(Long id) {
+        return super.deleteById(id);
+    }
+
+    @Caching(evict = {@CacheEvict(cacheNames = CONDITION_RULE, allEntries = true),
+        @CacheEvict(cacheNames = CONDITION_RULE_CODE, allEntries = true)})
+    @Override
+    public int deleteByIds(Collection<Long> ids) {
+        return super.deleteByIds(ids);
+    }
+
     @Override
     protected SystemConditionRuleEntity insertNew(SystemConditionRuleEntity entity) {
         validateForSave(entity, true);
@@ -143,6 +181,8 @@ public class ConditionRuleServiceImpl extends
         return oldOne;
     }
 
+    @Cacheable(cacheNames = CONDITION_RULE_CODE, key = "#ruleCode", unless = "#result==null")
+    @ExpireOn(cacheNames = CONDITION_RULE_CODE, value = 10, timeUnit = TimeUnit.MINUTES)
     @Override
     public SystemConditionRuleEntity queryByCode(String ruleCode) {
         if (StrUtil.isEmpty(ruleCode)) {
@@ -156,6 +196,8 @@ public class ConditionRuleServiceImpl extends
         return rules.isEmpty() ? null : rules.get(0);
     }
 
+    @Caching(evict = {@CacheEvict(cacheNames = CONDITION_RULE, key = "#id"),
+        @CacheEvict(cacheNames = CONDITION_RULE_CODE, allEntries = true)})
     @Override
     public void setEnabled(Long id, boolean enabled) {
         AssertUtil.isTrue(id == null).i18n("condition.rule.id.required")
@@ -168,6 +210,8 @@ public class ConditionRuleServiceImpl extends
         log.info("条件规则状态变更, ruleCode={}, enabled={}", entity.getRuleCode(), enabled);
     }
 
+    @Caching(evict = {@CacheEvict(cacheNames = CONDITION_RULE, allEntries = true),
+        @CacheEvict(cacheNames = CONDITION_RULE_CODE, key = "#ruleCode")})
     @Override
     public void deleteByCode(String ruleCode) {
         SystemConditionRuleEntity entity = queryByCode(ruleCode);

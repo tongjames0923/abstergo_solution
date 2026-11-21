@@ -2,6 +2,8 @@ package com.tbs.app.controller.privates;
 
 import com.tbs.app.service.department.IDepartmentUserRelationService;
 import com.tbs.app.service.department.ISystemDepartmentService;
+import com.tbs.app.service.event.EventReportSupport;
+import com.tbs.app.service.event.reporter.BusinessEventReporter;
 import com.tbs.app.service.role.ISystemRoleGroupService;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.user.model.ISystemUserDetails;
@@ -33,6 +35,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.annotation.Resource;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -69,6 +73,9 @@ public class PrivateUserController extends BaseController {
     @Resource
     ISystemDepartmentService departmentService;
 
+    @Resource
+    EventReportSupport eventReportSupport;
+
     /**
      * 用户登出
      *
@@ -81,7 +88,7 @@ public class PrivateUserController extends BaseController {
         content = @Content(mediaType = "application/json",
             schema = @Schema(implementation = Boolean.class)))
     public AjaxResult logout() {
-
+        String logoutUserName = resolveCurrentUserName();
         try {
             ITokenModel tokenModel = AuthUtil.getInstance().getCurrentTokenModel();
             tokenRemover.inactiveToken(tokenModel);
@@ -99,7 +106,47 @@ public class PrivateUserController extends BaseController {
         } catch (Exception e) {
             log.warn("刷新Token失效失败 {}", e.getMessage());
         }
+        reportLogoutEvent(logoutUserName);
         return AjaxUtil.getInstance().success(null);
+    }
+
+    /**
+     * 解析当前登录用户名，解析失败返回 null。
+     *
+     * <p>登出流程会失效令牌，因此必须在失效前读取用户名。</p>
+     *
+     * @return 当前用户名；未登录或解析异常时返回 null
+     */
+    private String resolveCurrentUserName() {
+        try {
+            var user = AuthUtil.getInstance().getCurrentUser();
+            return user == null ? null : user.getUsername();
+        } catch (Exception e) {
+            log.debug("登出埋点解析当前用户失败, 原因={}", e.getMessage());
+            return null;
+        }
+    }
+
+    /**
+     * 上报用户登出事件，异常由上报门面吞掉。
+     *
+     * @param userName 登出用户名
+     */
+    private void reportLogoutEvent(String userName) {
+        Long userId = null;
+        if (userName != null) {
+            try {
+                userId = userService.queryByUserName(userName).stream().findFirst().map(SystemUserEntity::getId)
+                    .orElse(null);
+            } catch (Exception e) {
+                log.debug("登出埋点解析用户标识失败, userName={}, 原因={}", userName, e.getMessage());
+            }
+        }
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put(BusinessEventReporter.PARAM_USER_ID, userId);
+        params.put(BusinessEventReporter.PARAM_USER_NAME, userName);
+        eventReportSupport.reportQuietly(BusinessEventReporter.REPORTER_ID, BusinessEventReporter.EVENT_USER_LOGGED_OUT,
+            params);
     }
 
     /**

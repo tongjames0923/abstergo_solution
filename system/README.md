@@ -211,6 +211,19 @@ List<SystemFeatureFlagVO> all = featureFlagService.listAllSystemFeatureFlags();
 
 `AbstractCrudController<T, K, Q extends IQueryCriteria>`（继承 web 模块 `BaseController`）提供 `get` / `save` / `delete` / `query(criteria, pageNum, pageSize)` 四个方法，返回统一 `AjaxResult`，消息走 i18n（`SystemApiI18nConstant.CRUD_SAVE_SUCCESS` 等）。子类实现 `getService()` 并在控制器中暴露映射即可。
 
+### 14. 事件订阅与动作绑定服务
+
+`system-api` 的 `com.tbs.app.service.event` 提供两个服务契约，`default-system-impl` 的 `com.tbs.app.service.impl.event` 提供实现；`BuisnessBeanConfig` 在 `tbs.system.enable=true` 且容器中缺少同类型 Bean 时注册默认实现。
+
+| 服务契约 | 实现 | 核心方法 |
+|----------|------|----------|
+| `IEventSubscriptionService` | `EventSubscriptionServiceImpl` | `listByEvent` / `listEnabled` / `findEnabled(reporterId,eventCode,triggerId)` / `replaceByEvent` / `setEnabled` |
+| `IEventActionService` | `EventActionServiceImpl` | `listByEvent` / `listEnabled` / `replaceByEvent` / `setEnabled` |
+
+实现继承 `AbstractLogicDeleteFullFeatureServiceTemplate`（逻辑删除 `flag` + 业务状态 `enabled` 双字段），审计复用 `DefaultAuditService`。`replaceByEvent` 按触发器ID或动作ID做增量合并：已存在的更新条件规则、参数、顺序与启停，新增的插入，未出现在入参中的逻辑删除；空集合即清空该事件的全部配置。运行期查询 `listEnabled` 只返回 `enabled=1` 且未删除并按 `sortOrder` 升序的绑定。
+
+保存校验分别在 `insertNew`（全量）与 `compareAndUpdateValue`（增量）执行：必填字段、编码长度、同事件下触发器/动作重复、顺序与启停取值范围；动作绑定的 `paramJson` 必须是 `List<ParamValue>` 的合法 JSON 数组。对应实体、Criteria 与 Mapper 位于 `shared-pojo`/`shared-api` 的 `event` 子包，表结构见 `etc/sql_file/sys_event_subscription.sql` 与 `sys_event_action.sql`。
+
 ## 配置说明
 
 ### tbs.system（AppSettingProperty）
@@ -257,6 +270,7 @@ tbs:
 
 - `SystemMessageSourceProvider`（order=-500）注册 `messages-system.properties`（中）/ `messages-system_en_US.properties`（英）；
 - key 常量：`SystemI18nConstant`（用户/角色/部门/公司/令牌/版本等全量校验与业务消息，约 13KB）、`SystemApiI18nConstant`（CRUD 成功消息）；
+- 事件编排校验文案位于 `event.subscription.*` / `event.action.*` 命名空间（必填、编码非法、重复绑定、参数 JSON 非法等），与上层控制器/动作实现的 `messages-app.properties` 文案分工明确；
 - 新增 key 须中英文两份同步维护，消息经 `I18nUtil` 读取，占位符风格 `{0}`。
 
 ## 扩展开发

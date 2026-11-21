@@ -1,6 +1,8 @@
 package com.tbs.app.controller.privates.admin;
 
 import com.tbs.app.form.DisableTokenForm;
+import com.tbs.app.service.event.EventReportSupport;
+import com.tbs.app.service.event.reporter.BusinessEventReporter;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.web.AbstractCrudController;
 import com.tbs.common.data.PageVO;
@@ -27,7 +29,9 @@ import jakarta.validation.Valid;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -55,6 +59,9 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
 
     @Resource
     private ITokenRemover tokenRemover;
+
+    @Resource
+    private EventReportSupport eventReportSupport;
 
     @Override
     public IServiceTemplate<SystemUserEntity, Long> getService() {
@@ -99,7 +106,11 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
     @PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.USER')")
     public AjaxResult save(
         @Parameter(name = "entity", description = "用户信息", required = true) @RequestBody SystemUserEntity entity) {
-        return super.save(entity);
+        boolean created = entity != null && entity.getId() == null;
+        AjaxResult result = super.save(entity);
+        reportUserEvent(created ? BusinessEventReporter.EVENT_USER_CREATED : BusinessEventReporter.EVENT_USER_UPDATED,
+            entity == null ? null : entity.getId(), entity == null ? null : entity.getUserName());
+        return result;
     }
 
     /**
@@ -116,7 +127,26 @@ public class AdminUserController extends AbstractCrudController<SystemUserEntity
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.hasPermission('API.SAVE.USER')")
     public AjaxResult delete(@Parameter(name = "id", description = "用户ID", required = true) @PathVariable Long id) {
-        return super.delete(id);
+        SystemUserEntity user = service.queryById(id);
+        AjaxResult result = super.delete(id);
+        reportUserEvent(BusinessEventReporter.EVENT_USER_DELETED, id, user == null ? null : user.getUserName());
+        return result;
+    }
+
+    /**
+     * 上报用户事件。
+     *
+     * <p>埋点失败的异常由上报门面吞掉，不影响主流程返回。</p>
+     *
+     * @param eventCode 事件编码
+     * @param userId    用户ID
+     * @param userName  用户名
+     */
+    private void reportUserEvent(String eventCode, Long userId, String userName) {
+        Map<String, Object> params = new LinkedHashMap<>();
+        params.put(BusinessEventReporter.PARAM_USER_ID, userId);
+        params.put(BusinessEventReporter.PARAM_USER_NAME, userName);
+        eventReportSupport.reportQuietly(BusinessEventReporter.REPORTER_ID, eventCode, params);
     }
 
     /**

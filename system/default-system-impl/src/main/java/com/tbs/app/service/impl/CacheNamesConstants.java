@@ -94,6 +94,44 @@ public final class CacheNamesConstants {
      */
     public static final String WECOM_ACCESS_TOKEN = "app:wecom_access_token";
 
+    // ===== 条件规则 =====
+    /**
+     * 条件规则实体缓存（按 id）
+     */
+    public static final String CONDITION_RULE = "app:condition_rule";
+
+    /**
+     * 条件规则按编码缓存（按 ruleCode）
+     */
+    public static final String CONDITION_RULE_CODE = "app:condition_rule_code";
+
+    // ===== 事件动作绑定 =====
+    /**
+     * 事件动作绑定实体缓存（按 id）
+     */
+    public static final String EVENT_ACTION = "app:event_action";
+
+    /**
+     * 事件动作绑定按事件缓存（按 reporterId + eventCode，含启用/非启用两套键）
+     */
+    public static final String EVENT_ACTION_EVENT = "app:event_action_event";
+
+    // ===== 事件订阅 =====
+    /**
+     * 事件订阅实体缓存（按 id）
+     */
+    public static final String EVENT_SUBSCRIPTION = "app:event_subscription";
+
+    /**
+     * 事件订阅按事件缓存（按 reporterId + eventCode，含启用/非启用两套键）
+     */
+    public static final String EVENT_SUBSCRIPTION_EVENT = "app:event_subscription_event";
+
+    /**
+     * 事件订阅按事件与触发器缓存（按 reporterId + eventCode + triggerId）
+     */
+    public static final String EVENT_SUBSCRIPTION_TRIGGER = "app:event_subscription_trigger";
+
     private CacheNamesConstants() {
     }
 }

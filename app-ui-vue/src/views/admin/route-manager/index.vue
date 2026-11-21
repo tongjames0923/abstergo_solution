@@ -1,10 +1,10 @@
 <template>
   <div class="route-studio">
     <!-- Atmospheric background -->
-    <div class="bg">
+    <div class="bg" aria-hidden="true">
+      <div class="bg__grid" />
       <div class="bg__orb bg__orb--1" />
       <div class="bg__orb bg__orb--2" />
-      <div class="bg__orb bg__orb--3" />
       <div class="bg__grain" />
     </div>
 
@@ -21,7 +21,18 @@
               <p class="header-subtitle">{{ $t('routeManager.subtitle') }}</p>
             </div>
           </div>
-          <div class="header-actions">
+          <div class="header-right">
+            <div class="header-stats">
+              <div class="stat">
+                <span class="stat__num">{{ routeGroups.length }}</span>
+                <span class="stat__label">{{ $t('routeManager.groupsUnit') }}</span>
+              </div>
+              <span class="stat__sep" />
+              <div class="stat">
+                <span class="stat__num">{{ routeCount }}</span>
+                <span class="stat__label">{{ $t('routeManager.routesUnit') }}</span>
+              </div>
+            </div>
             <el-button class="ghost-btn" :loading="refreshing" @click="handleRefresh">
               <i v-if="!refreshing" class="fas fa-sync-alt" />
               <span>{{ $t('routeManager.refreshCache') }}</span>
@@ -54,15 +65,10 @@
               :class="{ _active: group === activeGroup }"
               @click="handleGroupSelect(group)"
             >
-              <span class="rail-item__dot" />
+              <span class="rail-item__bar" />
               <span class="rail-item__name">{{ group }}</span>
-              <span
-                v-if="group === activeGroup && saving"
-                class="rail-item__spin"
-              >
-                <i class="fas fa-circle-notch fa-spin" />
-              </span>
-              <button class="rail-item__del" @click.stop="handleDeleteGroup(group)">
+              <span class="rail-item__count">{{ groupRouteCounts[group] == null ? '·' : groupRouteCounts[group] }}</span>
+              <button class="rail-item__del" :title="$t('routeManager.deleteGroup')" @click.stop="handleDeleteGroup(group)">
                 <i class="fas fa-trash-alt" />
               </button>
             </div>
@@ -71,6 +77,11 @@
               <i class="fas fa-inbox" />
               <p>{{ $t('routeManager.noGroups') }}</p>
             </div>
+          </div>
+
+          <div class="rail-foot">
+            <i class="fas fa-lightbulb" />
+            <span>{{ $t('routeManager.railTip') }}</span>
           </div>
         </aside>
 
@@ -83,40 +94,30 @@
                   <i class="fas fa-folder-open" />
                   {{ activeGroup }}
                 </span>
-                <span class="pane-count">{{ routeCount }} {{ $t('routeManager.routesUnit') }}</span>
-                <transition name="fade">
-                  <span v-if="dirty" class="pane-dirty">
-                    <i class="fas fa-exclamation-circle" />
-                    {{ $t('routeManager.unsavedTip') }}
-                  </span>
-                </transition>
+                <span class="pane-stat"><b>{{ routeCount }}</b>{{ $t('routeManager.routesUnit') }}</span>
+                <span class="pane-stat pane-stat--dim"><b>{{ topLevelCount }}</b>{{ $t('routeManager.topRoutesUnit') }}</span>
               </div>
               <div class="pane-actions">
-                <el-button
+                <el-input
+                  v-model="searchKeyword"
+                  class="pane-search"
                   size="small"
-                  icon="el-icon-plus"
-                  :disabled="!activeGroup"
-                  @click="handleAddRoute"
-                >
+                  clearable
+                  prefix-icon="el-icon-search"
+                  :placeholder="$t('routeManager.searchPlaceholder')"
+                />
+                <el-tooltip :content="expandAll ? $t('routeManager.collapseAll') : $t('routeManager.expandAll')" placement="top">
+                  <button class="icon-btn" @click="handleToggleExpandAll">
+                    <i :class="expandAll ? 'el-icon-folder' : 'el-icon-folder-opened'" />
+                  </button>
+                </el-tooltip>
+                <el-tooltip :content="$t('routeManager.versionHistory')" placement="top">
+                  <button class="icon-btn" @click="handleOpenVersions">
+                    <i class="fas fa-history" />
+                  </button>
+                </el-tooltip>
+                <el-button type="primary" size="small" icon="el-icon-plus" @click="handleAddRoute">
                   {{ $t('routeManager.addRoute') }}
-                </el-button>
-                <el-button
-                  size="small"
-                  icon="el-icon-time"
-                  :disabled="!activeGroup"
-                  @click="handleOpenVersions"
-                >
-                  {{ $t('routeManager.versionHistory') }}
-                </el-button>
-                <el-button
-                  type="primary"
-                  size="small"
-                  icon="el-icon-check"
-                  :loading="saving"
-                  :disabled="!activeGroup || !dirty"
-                  @click="handleSaveRoutes"
-                >
-                  {{ $t('routeManager.saveConfig') }}
                 </el-button>
               </div>
             </div>
@@ -124,12 +125,49 @@
             <div v-loading="loadingRoutes" class="pane-table">
               <el-table
                 :key="tableVersion"
-                :data="currentRoutes"
-                row-key="path"
+                :data="filteredRoutes"
+                row-key="_rowKey"
                 :tree-props="{ children: 'children', hasChildren: 'hasChildren' }"
+                :default-expand-all="expandAll"
                 :header-cell-style="{ background: 'rgba(30,64,175,0.045)', color: '#5a6072', fontWeight: 600 }"
                 style="width: 100%"
               >
+                <el-table-column prop="path" :label="$t('routeManager.path')" min-width="260">
+                  <template slot-scope="scope">
+                    <div class="route-path-cell">
+                      <span class="level-pill" :class="'level-pill--' + (scope.row._level || 1)">
+                        L{{ scope.row._level || 1 }}
+                      </span>
+                      <span class="mono path-text">{{ scope.row.path }}</span>
+                      <span v-if="scope.row.component === 'Layout'" class="tag tag--layout">
+                        <i class="fas fa-columns" />Layout
+                      </span>
+                      <span v-else-if="scope.row.children && scope.row.children.length" class="tag tag--parent">
+                        <i class="fas fa-folder" />{{ $t('routeManager.parentRoute') }}
+                        <b class="child-count">{{ scope.row.children.length }}</b>
+                      </span>
+                      <span v-if="scope.row.hidden" class="tag tag--hidden">{{ $t('routeManager.hidden') }}</span>
+                    </div>
+                    <div v-if="scope.row._level > 1 && scope.row._chain.length > 1" class="route-chain mono" :title="scope.row._chain.join(' / ')">
+                      ↳ {{ scope.row._chain.slice(0, -1).join(' / ') }}
+                    </div>
+                    <div v-if="scope.row.meta && scope.row.meta.title" class="route-sub-cell">
+                      {{ scope.row.meta.title }}
+                    </div>
+                    <div class="route-sub-cell mono">
+                      <span v-if="scope.row.component && scope.row.component !== 'Layout'">{{ scope.row.component }}</span>
+                      <span v-if="scope.row.meta && scope.row.meta.icon" class="sub-sep">{{ scope.row.meta.icon }}</span>
+                      <span v-for="role in rolesOf(scope.row)" :key="role" class="role-chip">{{ role }}</span>
+                    </div>
+                  </template>
+                </el-table-column>
+                <el-table-column :label="$t('routeManager.level')" width="86" align="center">
+                  <template slot-scope="scope">
+                    <span class="level-tree" :class="'level-tree--' + (scope.row._level || 1)">
+                      <i v-for="n in (scope.row._level || 1)" :key="n" class="level-tree__dash" />
+                    </span>
+                  </template>
+                </el-table-column>
                 <el-table-column :label="$t('routeManager.sortOrder')" width="92" align="center">
                   <template slot-scope="scope">
                     <div class="sort-cell">
@@ -152,25 +190,7 @@
                     </div>
                   </template>
                 </el-table-column>
-                <el-table-column prop="path" :label="$t('routeManager.path')" min-width="170">
-                  <template slot-scope="scope">
-                    <span class="mono path-cell">{{ scope.row.path }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="component" :label="$t('routeManager.component')" min-width="190">
-                  <template slot-scope="scope">
-                    <el-tag
-                      v-if="scope.row.component === 'Layout'"
-                      size="mini"
-                      effect="plain"
-                      class="layout-tag"
-                    >
-                      <i class="fas fa-columns" /> Layout
-                    </el-tag>
-                    <span v-else class="mono comp-cell">{{ scope.row.component }}</span>
-                  </template>
-                </el-table-column>
-                <el-table-column prop="name" :label="$t('routeManager.name')" min-width="140">
+                <el-table-column prop="name" :label="$t('routeManager.name')" min-width="130">
                   <template slot-scope="scope">
                     <span class="name-cell">{{ scope.row.name }}</span>
                   </template>
@@ -183,42 +203,90 @@
                     <span v-else class="dim">—</span>
                   </template>
                 </el-table-column>
-                <el-table-column :label="$t('routeManager.hidden')" width="76" align="center">
+                <el-table-column :label="$t('routeManager.flags')" width="104" align="center">
                   <template slot-scope="scope">
-                    <span class="flag-dot" :class="scope.row.hidden ? 'flag-dot--warn' : 'flag-dot--ok'">
-                      {{ scope.row.hidden ? $t('routeManager.yes') : $t('routeManager.no') }}
-                    </span>
+                    <div class="inline-flags">
+                      <el-tooltip :content="$t('routeManager.hidden')" placement="top">
+                        <button
+                          class="flag-toggle flag-toggle--warn"
+                          :class="{ 'is-on': scope.row.hidden }"
+                          @click="handleToggleFlag(scope.row, 'hidden')"
+                        >
+                          <i class="fas fa-eye-slash" />
+                        </button>
+                      </el-tooltip>
+                      <el-tooltip :content="$t('routeManager.alwaysShow')" placement="top">
+                        <button
+                          class="flag-toggle"
+                          :class="{ 'is-on': scope.row.alwaysShow }"
+                          @click="handleToggleFlag(scope.row, 'alwaysShow')"
+                        >
+                          <i class="fas fa-stream" />
+                        </button>
+                      </el-tooltip>
+                    </div>
                   </template>
                 </el-table-column>
-                <el-table-column :label="$t('routeManager.alwaysShow')" width="86" align="center">
+                <el-table-column :label="$t('common.operation')" width="200" align="right">
                   <template slot-scope="scope">
-                    <span class="flag-dot" :class="scope.row.alwaysShow ? 'flag-dot--ok' : 'flag-dot--off'">
-                      {{ scope.row.alwaysShow ? $t('routeManager.yes') : $t('routeManager.no') }}
-                    </span>
+                    <div class="inline-ops">
+                      <button class="op-icon" :title="$t('routeManager.editRoute')" @click="handleEditRoute(scope.row)">
+                        <i class="fas fa-pen" />
+                      </button>
+                      <button class="op-icon" :title="$t('routeManager.addChildRoute')" @click="handleAddChildRoute(scope.row)">
+                        <i class="fas fa-plus" />
+                      </button>
+                      <button class="op-icon" :title="$t('routeManager.moveNode')" @click="handleMoveNode(scope.row)">
+                        <i class="fas fa-arrows-alt" />
+                      </button>
+                      <button class="op-icon" :title="$t('routeManager.copyNode')" @click="handleCopyNode(scope.row)">
+                        <i class="fas fa-copy" />
+                      </button>
+                      <button class="op-icon op-icon--danger" :title="$t('common.delete')" @click="handleDeleteRoute(scope.row)">
+                        <i class="fas fa-trash-alt" />
+                      </button>
+                    </div>
                   </template>
                 </el-table-column>
-                <el-table-column :label="$t('common.operation')" width="210" align="right">
-                  <template slot-scope="scope">
-                    <button class="op-btn" @click="handleEditRoute(scope.row)">
-                      <i class="fas fa-pen" /> {{ $t('routeManager.editRoute') }}
-                    </button>
-                    <button class="op-btn" @click="handleAddChildRoute(scope.row)">
-                      <i class="fas fa-plus" /> {{ $t('routeManager.addChildRoute') }}
-                    </button>
-                    <button class="op-btn op-btn--danger" @click="handleDeleteRoute(scope.row)">
-                      <i class="fas fa-trash-alt" />
-                    </button>
-                  </template>
-                </el-table-column>
-
                 <template slot="empty">
                   <div class="table-empty">
-                    <i class="fas fa-map-signs" />
-                    <p>{{ $t('routeManager.noRoutes') }}</p>
+                    <i :class="loadError ? 'fas fa-exclamation-triangle' : (searchKeyword ? 'fas fa-search' : 'fas fa-map-signs')" />
+                    <p v-if="loadError">{{ $t('routeManager.loadRoutesFailedTip') }}</p>
+                    <p v-else>{{ searchKeyword ? $t('routeManager.noSearchResult') : $t('routeManager.noRoutes') }}</p>
+                    <div class="table-empty__hint">
+                      <span class="mono">{{ activeGroup }}</span>
+                      <el-button v-if="loadError || !searchKeyword" size="mini" icon="el-icon-refresh" @click="handleReloadCurrentGroup">
+                        {{ $t('routeManager.reloadRoutes') }}
+                      </el-button>
+                      <el-button v-else size="mini" @click="searchKeyword = ''">
+                        {{ $t('routeManager.clearSearch') }}
+                      </el-button>
+                    </div>
                   </div>
                 </template>
               </el-table>
             </div>
+
+            <transition name="dirty-slide">
+              <div v-if="dirty" class="dirty-bar">
+                <div class="dirty-bar__msg">
+                  <span class="dirty-dot" />
+                  {{ $t('routeManager.unsavedShort') }}
+                </div>
+                <div class="dirty-bar__actions">
+                  <el-button size="mini" @click="handleRevert">{{ $t('routeManager.revertChanges') }}</el-button>
+                  <el-button
+                    type="primary"
+                    size="mini"
+                    :loading="saving"
+                    :title="$t('routeManager.saveShortcut')"
+                    @click="handleSaveRoutes"
+                  >
+                    {{ $t('routeManager.saveConfig') }}
+                  </el-button>
+                </div>
+              </div>
+            </transition>
           </template>
 
           <div v-else class="pane-placeholder">
@@ -235,96 +303,122 @@
     <el-dialog
       :title="dialogTitle"
       :visible.sync="dialogVisible"
-      width="640px"
+      width="720px"
       custom-class="route-dialog"
       @close="handleDialogClose"
     >
-      <el-form ref="routeForm" :model="routeForm" :rules="routeRules" label-width="104px">
-        <el-form-item :label="$t('routeManager.path')" prop="path">
-          <el-input v-model="routeForm.path" :placeholder="$t('routeManager.inputPath')" />
-        </el-form-item>
-        <el-form-item :label="$t('routeManager.component')" prop="component">
-          <el-select
-            v-model="routeForm.component"
-            filterable
-            allow-create
-            default-first-option
-            :placeholder="$t('routeManager.inputComponent')"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in viewComponents"
-              :key="item"
-              :label="item"
-              :value="item"
-            />
-          </el-select>
-        </el-form-item>
-        <el-form-item :label="$t('routeManager.name')" prop="name">
-          <el-input v-model="routeForm.name" :placeholder="$t('routeManager.inputName')" />
-        </el-form-item>
-        <el-form-item :label="$t('routeManager.redirect')" prop="redirect">
-          <el-input v-model="routeForm.redirect" :placeholder="$t('routeManager.inputRedirect')" />
-        </el-form-item>
-        <el-row :gutter="16">
-          <el-col :xs="24" :sm="12">
+      <div class="dialog-head">
+        <div class="dialog-head__icon"><i class="fas fa-route" /></div>
+        <div class="dialog-head__text">
+          <div class="dialog-head__title">{{ dialogTitle }}</div>
+          <div class="dialog-head__path mono">{{ $t('routeManager.previewPath') }} · {{ previewPath }}</div>
+        </div>
+      </div>
+
+      <el-form ref="routeForm" :model="routeForm" :rules="routeRules" label-width="96px" class="route-form">
+        <div class="form-section">
+          <div class="form-section__head">
+            <span class="form-section__no">01</span>{{ $t('routeManager.basicInfo') }}
+          </div>
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item :label="$t('routeManager.path')" prop="path">
+                <el-input v-model="routeForm.path" :placeholder="$t('routeManager.inputPath')" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item :label="$t('routeManager.component')" prop="component">
+                <el-select
+                  v-model="routeForm.component"
+                  filterable
+                  allow-create
+                  default-first-option
+                  :placeholder="$t('routeManager.inputComponent')"
+                  style="width: 100%"
+                >
+                  <el-option
+                    v-for="item in viewComponents"
+                    :key="item"
+                    :label="item"
+                    :value="item"
+                  />
+                </el-select>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item :label="$t('routeManager.name')" prop="name">
+                <el-input v-model="routeForm.name" :placeholder="$t('routeManager.inputName')" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item :label="$t('routeManager.redirect')" prop="redirect">
+                <el-input v-model="routeForm.redirect" :placeholder="$t('routeManager.inputRedirect')" />
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <div class="switch-grid">
             <el-form-item :label="$t('routeManager.hidden')">
               <el-switch v-model="routeForm.hidden" />
             </el-form-item>
-          </el-col>
-          <el-col :xs="24" :sm="12">
             <el-form-item :label="$t('routeManager.alwaysShow')">
               <el-switch v-model="routeForm.alwaysShow" />
             </el-form-item>
-          </el-col>
-        </el-row>
-
-        <el-divider content-position="left">{{ $t('routeManager.metaConfig') }}</el-divider>
-
-        <el-form-item label="title" prop="meta.title">
-          <el-input v-model="routeForm.meta.title" :placeholder="$t('routeManager.inputTitle')" />
-        </el-form-item>
-        <el-form-item :label="$t('routeManager.icon')" prop="meta.icon">
-          <el-input v-model="routeForm.meta.icon" :placeholder="$t('routeManager.inputIcon')">
-            <template v-if="routeForm.meta.icon" slot="append">
-              <i :class="routeForm.meta.icon" />
-            </template>
-          </el-input>
-        </el-form-item>
-        <el-form-item :label="$t('routeManager.roles')">
-          <el-select
-            ref="roleSelect"
-            v-model="routeForm.meta.roles"
-            multiple
-            filterable
-            default-first-option
-            :placeholder="$t('routeManager.selectRoles')"
-            style="width: 100%"
-          >
-            <el-option
-              v-for="item in availableRoles"
-              :key="item.role"
-              :label="item.name"
-              :value="item.role"
-            />
-            <!-- 下拉底部常驻入口：非 el-option，不受 filterable 过滤影响。
-                 权限编码一律走内联新增落库，不再允许手输，避免写入 system_role 中不存在的脏编码 -->
-            <div class="roles-add-entry" @click.stop.prevent="openAddRoleDialog">
-              <i class="el-icon-plus" />
-              {{ $t('routeManager.addMenuRole') }}
-            </div>
-          </el-select>
-        </el-form-item>
-        <el-row :gutter="16">
-          <el-col :xs="24" :sm="12">
             <el-form-item :label="$t('routeManager.breadcrumb')">
               <el-switch v-model="routeForm.meta.breadcrumb" />
             </el-form-item>
-          </el-col>
-        </el-row>
-        <el-form-item :label="$t('routeManager.activeMenu')" prop="meta.activeMenu">
-          <el-input v-model="routeForm.meta.activeMenu" :placeholder="$t('routeManager.inputActiveMenu')" />
-        </el-form-item>
+          </div>
+        </div>
+
+        <div class="form-section">
+          <div class="form-section__head">
+            <span class="form-section__no">02</span>{{ $t('routeManager.metaConfig') }}
+          </div>
+          <el-row :gutter="16">
+            <el-col :span="12">
+              <el-form-item label="title" prop="meta.title">
+                <el-input v-model="routeForm.meta.title" :placeholder="$t('routeManager.inputTitle')" />
+              </el-form-item>
+            </el-col>
+            <el-col :span="12">
+              <el-form-item :label="$t('routeManager.icon')" prop="meta.icon">
+                <el-input v-model="routeForm.meta.icon" :placeholder="$t('routeManager.inputIcon')">
+                  <template v-if="routeForm.meta.icon" slot="append">
+                    <i :class="routeForm.meta.icon" />
+                  </template>
+                </el-input>
+              </el-form-item>
+            </el-col>
+          </el-row>
+          <el-form-item :label="$t('routeManager.roles')">
+            <el-select
+              ref="roleSelect"
+              v-model="routeForm.meta.roles"
+              multiple
+              filterable
+              default-first-option
+              :placeholder="$t('routeManager.selectRoles')"
+              style="width: 100%"
+            >
+              <el-option
+                v-for="item in availableRoles"
+                :key="item.role"
+                :label="item.name"
+                :value="item.role"
+              />
+              <!-- 下拉底部常驻入口：非 el-option，不受 filterable 过滤影响。
+                   权限编码一律走内联新增落库，不再允许手输，避免写入 system_role 中不存在的脏编码 -->
+              <div class="roles-add-entry" @click.stop.prevent="openAddRoleDialog">
+                <i class="el-icon-plus" />
+                {{ $t('routeManager.addMenuRole') }}
+              </div>
+            </el-select>
+          </el-form-item>
+          <el-form-item :label="$t('routeManager.activeMenu')" prop="meta.activeMenu">
+            <el-input v-model="routeForm.meta.activeMenu" :placeholder="$t('routeManager.inputActiveMenu')" />
+          </el-form-item>
+        </div>
       </el-form>
       <span slot="footer" class="dialog-footer">
         <el-button @click="dialogVisible = false">{{ $t('common.cancel') }}</el-button>
@@ -400,6 +494,47 @@
       </span>
     </el-dialog>
 
+    <!-- Move / Copy node dialog -->
+    <el-dialog
+      :title="nodeOpTitle"
+      :visible.sync="nodeOpVisible"
+      width="600px"
+      custom-class="route-dialog"
+      append-to-body
+    >
+      <div class="node-op-source">
+        <span class="node-op-source__label">{{ $t('routeManager.sourceNode') }}</span>
+        <span class="mono">{{ nodeOpRoute ? nodeOpRoute.path : '' }}</span>
+        <span v-if="nodeOpRoute && nodeOpRoute.meta && nodeOpRoute.meta.title" class="node-op-source__title">
+          {{ nodeOpRoute.meta.title }}
+        </span>
+      </div>
+      <el-form label-width="96px">
+        <el-form-item :label="$t('routeManager.targetParent')">
+          <el-select v-model="nodeOpTargetKey" filterable clearable :placeholder="$t('routeManager.selectTargetParent')" style="width: 100%">
+            <el-option :label="$t('routeManager.rootLevel')" value="__root__" />
+            <el-option
+              v-for="opt in nodeOpParentOptions"
+              :key="opt.value"
+              :label="opt.label"
+              :value="opt.value"
+            />
+          </el-select>
+          <p class="node-op-hint">{{ $t('routeManager.targetParentTip') }}</p>
+        </el-form-item>
+        <el-form-item v-if="nodeOpMode === 'copy'" :label="$t('routeManager.copyPath')">
+          <el-input v-model="nodeOpCopyPath" :placeholder="$t('routeManager.inputPath')" />
+        </el-form-item>
+        <el-form-item v-if="nodeOpMode === 'copy'" :label="$t('routeManager.copyName')">
+          <el-input v-model="nodeOpCopyName" :placeholder="$t('routeManager.inputName')" />
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="nodeOpVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" @click="handleNodeOpConfirm">{{ $t('common.confirm') }}</el-button>
+      </span>
+    </el-dialog>
+
     <!-- Version history drawer -->
     <el-drawer
       :title="versionDrawerTitle"
@@ -408,6 +543,10 @@
       size="460px"
     >
       <div v-loading="loadingVersions" class="drawer-body">
+        <div class="drawer-summary">
+          <i class="fas fa-history" />
+          <span>{{ $t('routeManager.versionCount', { count: versionList.length }) }}</span>
+        </div>
         <el-timeline v-if="versionList.length">
           <el-timeline-item
             v-for="(v, idx) in versionList"
@@ -450,15 +589,15 @@
 
 <script>
 import {
-  getRouteGroups,
-  getRouteConfigsByGroup,
-  saveRouteConfigs,
   deleteRouteConfigs,
-  refreshRouteCache,
+  getRouteConfigsByGroup,
+  getRouteGroups,
   getRouteVersions,
-  rollbackRouteVersion
+  refreshRouteCache,
+  rollbackRouteVersion,
+  saveRouteConfigs
 } from '@/api/view'
-import { queryRoles, saveRole, activateRole } from '@/api/role'
+import {activateRole, queryRoles, saveRole} from '@/api/role'
 
 export default {
   name: 'RouteManager',
@@ -466,14 +605,24 @@ export default {
     return {
       ready: false,
       routeGroups: [],
+      groupRouteCounts: {},
       activeGroup: '',
       currentRoutes: [],
       loadingRoutes: false,
+      loadError: false,
       saving: false,
       refreshing: false,
       dirty: false,
-      // 版本号：路由树结构变化时递增，强制 el-table 重建（解决树表格重排不刷新问题）
+      searchKeyword: '',
+      expandAll: true,
       tableVersion: 0,
+      // 节点移动 / 复制
+      nodeOpVisible: false,
+      nodeOpMode: 'move', // move, copy
+      nodeOpRoute: null,
+      nodeOpTargetKey: '__root__',
+      nodeOpCopyPath: '',
+      nodeOpCopyName: '',
       dialogVisible: false,
       dialogType: 'add', // add, edit, addChild
       editingRoute: null,
@@ -518,10 +667,56 @@ export default {
     routeCount() {
       return this.countRoutes(this.currentRoutes)
     },
+    topLevelCount() {
+      return this.currentRoutes.length
+    },
+    filteredRoutes() {
+      const keyword = this.searchKeyword.trim().toLowerCase()
+      if (!keyword) return this.currentRoutes
+      const filterTree = routes => routes.reduce((acc, route) => {
+        const children = filterTree(route.children || [])
+        if (this.matchRoute(route, keyword) || children.length) {
+          acc.push({ ...route, children })
+        }
+        return acc
+      }, [])
+      return filterTree(this.currentRoutes)
+    },
+    nodeOpTitle() {
+      return this.nodeOpMode === 'copy'
+        ? this.$t('routeManager.copyNode')
+        : this.$t('routeManager.moveNode')
+    },
+    nodeOpParentOptions() {
+      const options = []
+      const walk = (routes, prefix) => {
+        routes.forEach(route => {
+          if (route === this.nodeOpRoute || this.isDescendant(this.nodeOpRoute, route)) return
+          const label = `${prefix}${route.path || '/'}`
+          options.push({ value: route._rowKey, label })
+          if (route.children && route.children.length) {
+            walk(route.children, `${label} / `)
+          }
+        })
+      }
+      walk(this.currentRoutes, '')
+      return options
+    },
+    previewPath() {
+      const path = (this.routeForm.path || '').trim()
+      if (this.dialogType !== 'addChild' || !this.editingRoute) return path || '/'
+      const parent = (this.editingRoute.path || '').replace(/\/$/, '')
+      return `${parent}/${path.replace(/^\//, '')}`
+    },
     versionDrawerTitle() {
       return this.activeGroup
         ? `${this.$t('routeManager.versionHistory')} · ${this.activeGroup}`
         : this.$t('routeManager.versionHistory')
+    }
+  },
+  watch: {
+    activeGroup() {
+      this.searchKeyword = ''
     }
   },
   created() {
@@ -531,6 +726,10 @@ export default {
   },
   mounted() {
     setTimeout(() => { this.ready = true }, 60)
+    window.addEventListener('keydown', this.handleGlobalKeydown)
+  },
+  beforeDestroy() {
+    window.removeEventListener('keydown', this.handleGlobalKeydown)
   },
   methods: {
     createEmptyForm() {
@@ -563,6 +762,57 @@ export default {
       return routes.reduce((acc, r) => {
         return acc + 1 + (r.children && r.children.length ? this.countRoutes(r.children) : 0)
       }, 0)
+    },
+
+    rolesOf(route) {
+      return (route.meta && route.meta.roles) || []
+    },
+
+    matchRoute(route, keyword) {
+      const meta = route.meta || {}
+      return [route.path, route.component, route.name, route.redirect, meta.title, meta.icon, meta.activeMenu]
+        .concat(this.rolesOf(route))
+        .some(value => String(value || '').toLowerCase().includes(keyword))
+    },
+
+    // 为树中每个节点分配唯一 key、层级和面包屑链，供 row-key 与层级展示使用
+    assignRowKeys(routes, parentKey = '', level = 1, chain = []) {
+      routes.forEach((route, index) => {
+        route._rowKey = `${parentKey}/${index}-${route.path || route.component || 'node'}`
+        route._level = level
+        route._chain = chain.concat(route.path || '/')
+        if (route.children && route.children.length) {
+          this.assignRowKeys(route.children, route._rowKey, level + 1, route._chain)
+        }
+      })
+    },
+
+    findRouteByKey(routes, key) {
+      for (const route of routes) {
+        if (route._rowKey === key) return route
+        if (route.children && route.children.length) {
+          const found = this.findRouteByKey(route.children, key)
+          if (found) return found
+        }
+      }
+      return null
+    },
+
+    isDescendant(parent, child) {
+      if (!parent || !child || !parent.children) return false
+      return parent.children.some(item => item === child || this.isDescendant(item, child))
+    },
+
+    // 解析搜索结果中的副本节点回真实节点（filteredRoutes 会 spread 出新对象）
+    resolveRoute(route) {
+      if (!route || !route._rowKey) return route
+      return this.findRouteByKey(this.currentRoutes, route._rowKey) || route
+    },
+
+    syncActiveGroupCount() {
+      if (this.activeGroup) {
+        this.$set(this.groupRouteCounts, this.activeGroup, this.routeCount)
+      }
     },
 
     async loadRouteGroups() {
@@ -709,8 +959,15 @@ export default {
       await this.loadRouteConfigs(group)
     },
 
+    handleReloadCurrentGroup() {
+      if (this.activeGroup) {
+        this.loadRouteConfigs(this.activeGroup)
+      }
+    },
+
     async loadRouteConfigs(group) {
       this.loadingRoutes = true
+      this.loadError = false
       try {
         const response = await getRouteConfigsByGroup(group)
         const routes = response.data || []
@@ -718,11 +975,14 @@ export default {
         this.normalizeSortOrder(routes)
         // 后端已按 sortOrder 排序，前端再兜底排序保证数组顺序与序号一致
         this.sortByOrder(routes)
+        this.assignRowKeys(routes)
         this.currentRoutes = routes
-        this.dirty = false
         this.tableVersion++
+        this.dirty = false
+        this.syncActiveGroupCount()
       } catch (error) {
         console.error('获取路由配置失败:', error)
+        this.loadError = true
         this.$message.error(this.$t('routeManager.fetchRoutesFailed'))
       } finally {
         this.loadingRoutes = false
@@ -774,29 +1034,132 @@ export default {
     },
 
     isFirst(route) {
-      const container = this.findContainer(this.currentRoutes, route)
-      return !container || container.indexOf(route) <= 0
+      const real = this.resolveRoute(route)
+      const container = this.findContainer(this.currentRoutes, real)
+      return !container || container.indexOf(real) <= 0
     },
 
     isLast(route) {
-      const container = this.findContainer(this.currentRoutes, route)
-      return !container || container.indexOf(route) >= container.length - 1
+      const real = this.resolveRoute(route)
+      const container = this.findContainer(this.currentRoutes, real)
+      return !container || container.indexOf(real) >= container.length - 1
     },
 
     // 上移 / 下移（direction: -1 上移, 1 下移），仅修改本地状态并标记未保存，点“保存配置”后才落库并产生新版本
     handleMove(route, direction) {
-      const container = this.findContainer(this.currentRoutes, route)
+      const real = this.resolveRoute(route)
+      const container = this.findContainer(this.currentRoutes, real)
       if (!container) return
-      const index = container.indexOf(route)
+      const index = container.indexOf(real)
       const target = index + direction
       if (target < 0 || target >= container.length) return
 
       container.splice(index, 1)
-      container.splice(target, 0, route)
+      container.splice(target, 0, real)
       this.reassignSortOrder(this.currentRoutes)
-      // 强制树表格重建，确保新顺序立即可见
+      this.assignRowKeys(this.currentRoutes)
       this.tableVersion++
       this.dirty = true
+    },
+
+    openNodeOp(route, mode) {
+      const real = this.resolveRoute(route)
+      if (!real) return
+      this.nodeOpRoute = real
+      this.nodeOpMode = mode
+      this.nodeOpTargetKey = '__root__'
+      if (mode === 'copy') {
+        this.nodeOpCopyPath = `${real.path || ''}_copy`
+        this.nodeOpCopyName = `${real.name || ''} 副本`
+      }
+      this.nodeOpVisible = true
+    },
+
+    handleMoveNode(route) {
+      this.openNodeOp(route, 'move')
+    },
+
+    handleCopyNode(route) {
+      this.openNodeOp(route, 'copy')
+    },
+
+    handleNodeOpConfirm() {
+      if (!this.nodeOpRoute) return
+      if (this.nodeOpMode === 'copy' && !this.nodeOpCopyPath.trim()) {
+        this.$message.warning(this.$t('routeManager.inputPath'))
+        return
+      }
+
+      const sourceContainer = this.findContainer(this.currentRoutes, this.nodeOpRoute)
+      if (!sourceContainer) return
+
+      let targetContainer = this.currentRoutes
+      if (this.nodeOpTargetKey !== '__root__') {
+        const target = this.findRouteByKey(this.currentRoutes, this.nodeOpTargetKey)
+        if (!target) return
+        if (!target.children) {
+          this.$set(target, 'children', [])
+        }
+        targetContainer = target.children
+      }
+
+      if (this.nodeOpMode === 'move') {
+        // 禁止把节点移动到自己或自己的子孙下
+        if (this.nodeOpTargetKey !== '__root__') {
+          const target = this.findRouteByKey(this.currentRoutes, this.nodeOpTargetKey)
+          if (target === this.nodeOpRoute || this.isDescendant(this.nodeOpRoute, target)) {
+            this.$message.warning(this.$t('routeManager.invalidMoveTarget'))
+            return
+          }
+        }
+        sourceContainer.splice(sourceContainer.indexOf(this.nodeOpRoute), 1)
+        targetContainer.push(this.nodeOpRoute)
+      } else {
+        const clone = JSON.parse(JSON.stringify(this.nodeOpRoute))
+        delete clone._rowKey
+        delete clone._level
+        delete clone._chain
+        clone.path = this.nodeOpCopyPath.trim()
+        clone.name = this.nodeOpCopyName.trim()
+        targetContainer.push(clone)
+      }
+
+      this.reassignSortOrder(this.currentRoutes)
+      this.assignRowKeys(this.currentRoutes)
+      this.tableVersion++
+      this.syncActiveGroupCount()
+      this.dirty = true
+      this.nodeOpVisible = false
+      this.$message.success(this.$t(this.nodeOpMode === 'move' ? 'routeManager.moveNodeSuccess' : 'routeManager.copyNodeSuccess'))
+    },
+
+    handleToggleExpandAll() {
+      this.expandAll = !this.expandAll
+      this.tableVersion++
+    },
+
+    handleToggleFlag(route, key) {
+      const real = this.resolveRoute(route)
+      this.$set(real, key, !real[key])
+      this.dirty = true
+    },
+
+    handleRevert() {
+      this.$confirm(this.$t('routeManager.revertConfirm'), this.$t('common.tip'), {
+        confirmButtonText: this.$t('common.confirm'),
+        cancelButtonText: this.$t('common.cancel'),
+        type: 'warning'
+      }).then(async() => {
+        await this.loadRouteConfigs(this.activeGroup)
+      }).catch(() => {})
+    },
+
+    handleGlobalKeydown(event) {
+      if (!(event.ctrlKey || event.metaKey) || event.key !== 's') return
+      if (this.dialogVisible || this.roleDialogVisible || this.saveDialogVisible || this.versionDrawerVisible) return
+      if (!this.dirty || !this.activeGroup) return
+      event.preventDefault()
+      this.handleSaveRoutes()
     },
 
     // 打开保存说明对话框，确认后再真正保存
@@ -806,6 +1169,7 @@ export default {
         return
       }
       this.reassignSortOrder(this.currentRoutes)
+      this.assignRowKeys(this.currentRoutes)
       this.saveDescription = ''
       this.saveDialogVisible = true
     },
@@ -816,6 +1180,7 @@ export default {
         const response = await saveRouteConfigs(this.activeGroup, this.currentRoutes, this.saveDescription)
         this.dirty = false
         this.saveDialogVisible = false
+        this.syncActiveGroupCount()
         const version = response && response.data ? response.data : null
         if (version && version.versionNo) {
           this.$message.success(this.$t('routeManager.saveAsSuccess', { version: version.versionNo }))
@@ -911,6 +1276,7 @@ export default {
       }).then(({ value }) => {
         if (!this.routeGroups.includes(value)) {
           this.routeGroups.push(value)
+          this.$set(this.groupRouteCounts, value, 0)
           this.$message.success(this.$t('routeManager.groupAddSuccess'))
           this.handleGroupSelect(value)
         } else {
@@ -928,6 +1294,7 @@ export default {
         try {
           await deleteRouteConfigs(group)
           this.routeGroups = this.routeGroups.filter(g => g !== group)
+          this.$delete(this.groupRouteCounts, group)
           if (this.activeGroup === group) {
             this.activeGroup = ''
             this.currentRoutes = []
@@ -952,21 +1319,22 @@ export default {
     },
 
     handleEditRoute(route) {
+      const real = this.resolveRoute(route)
       this.dialogType = 'edit'
-      this.editingRoute = route
+      this.editingRoute = real
       this.routeForm = {
-        path: route.path || '',
-        component: route.component || '',
-        name: route.name || '',
-        redirect: route.redirect || '',
-        hidden: route.hidden || false,
-        alwaysShow: route.alwaysShow || false,
+        path: real.path || '',
+        component: real.component || '',
+        name: real.name || '',
+        redirect: real.redirect || '',
+        hidden: real.hidden || false,
+        alwaysShow: real.alwaysShow || false,
         meta: {
-          title: route.meta?.title || '',
-          icon: route.meta?.icon || '',
-          roles: route.meta?.roles || [],
-          breadcrumb: route.meta?.breadcrumb !== false,
-          activeMenu: route.meta?.activeMenu || ''
+          title: real.meta?.title || '',
+          icon: real.meta?.icon || '',
+          roles: real.meta?.roles || [],
+          breadcrumb: real.meta?.breadcrumb !== false,
+          activeMenu: real.meta?.activeMenu || ''
         }
       }
       this.dialogVisible = true
@@ -974,20 +1342,23 @@ export default {
 
     handleAddChildRoute(parentRoute) {
       this.dialogType = 'addChild'
-      this.editingRoute = parentRoute
+      this.editingRoute = this.resolveRoute(parentRoute)
       this.routeForm = this.createEmptyForm()
       this.dialogVisible = true
     },
 
     handleDeleteRoute(route) {
-      this.$confirm(this.$t('routeManager.deleteRouteConfirm', { path: route.path }), this.$t('common.tip'), {
+      const real = this.resolveRoute(route)
+      this.$confirm(this.$t('routeManager.deleteRouteConfirm', { path: real.path }), this.$t('common.tip'), {
         confirmButtonText: this.$t('common.confirm'),
         cancelButtonText: this.$t('common.cancel'),
         type: 'warning'
       }).then(() => {
-        this.removeRouteFromTree(this.currentRoutes, route)
+        this.removeRouteFromTree(this.currentRoutes, real)
         this.reassignSortOrder(this.currentRoutes)
+        this.assignRowKeys(this.currentRoutes)
         this.tableVersion++
+        this.syncActiveGroupCount()
         this.dirty = true
       }).catch(() => {})
     },
@@ -1041,7 +1412,9 @@ export default {
         }
 
         this.reassignSortOrder(this.currentRoutes)
+        this.assignRowKeys(this.currentRoutes)
         this.tableVersion++
+        this.syncActiveGroupCount()
         this.dialogVisible = false
         this.dirty = true
       })
@@ -1056,26 +1429,27 @@ export default {
 
 <style lang="scss" scoped>
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Outfit:wght@300;400;500;600;700;800&display=swap');
-@import "~@/styles/variables.scss";
+@import '~@/styles/variables.scss';
+@import '~@/styles/mixin.scss';
 
 /* ── Palette ── */
-$bg: #f5f5f7;
-$surface: rgba(255, 255, 255, 0.72);
-$surface-h: rgba(255, 255, 255, 0.88);
-$border: rgba(0, 0, 0, 0.06);
-$border-h: rgba(0, 0, 0, 0.1);
-$primary: #1E40AF;
-$primary-l: #3B82F6;
-$primary-bg: rgba(30, 64, 175, 0.06);
-$amber: #F97316;
-$green: #10B981;
-$red: #EF4444;
-$text-1: #1a1d23;
-$text-2: #5a6072;
-$text-3: #8e95a9;
+$bg: #f6f7fb;
+$surface: rgba(255, 255, 255, 0.78);
+$surface-h: rgba(255, 255, 255, 0.92);
+$border: rgba(21, 26, 45, 0.07);
+$border-h: rgba(21, 26, 45, 0.12);
+$primary: #1d4ed8;
+$primary-l: #3b82f6;
+$primary-bg: rgba(29, 78, 216, 0.07);
+$amber: #d97706;
+$green: #0e9f6e;
+$red: #e5484d;
+$ink: #151a2d;
+$ink-2: #4b5571;
+$ink-3: #8b93a8;
+$ink-4: #b3bacb;
 $radius: 18px;
 $radius-sm: 12px;
-$radius-xs: 8px;
 $ease: cubic-bezier(0.22, 1, 0.36, 1);
 $font-display: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
 $font-body: 'DM Sans', -apple-system, BlinkMacSystemFont, 'PingFang SC', sans-serif;
@@ -1086,8 +1460,8 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   min-height: calc(100vh - 44px);
   background: $bg;
   font-family: $font-body;
-  color: $text-1;
-  overflow: hidden;
+  color: $ink;
+  overflow-x: hidden;
 }
 
 /* ── Atmospheric Background ── */
@@ -1099,53 +1473,55 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   overflow: hidden;
 }
 
+.bg__grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(29, 78, 216, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(29, 78, 216, 0.035) 1px, transparent 1px);
+  background-size: 36px 36px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, transparent 82%);
+  mask-image: linear-gradient(180deg, #000 0%, transparent 82%);
+}
+
 .bg__orb {
   position: absolute;
   border-radius: 50%;
-  filter: blur(80px);
-  opacity: 0.5;
+  filter: blur(90px);
+  opacity: 0.45;
   will-change: transform;
 }
 
 .bg__orb--1 {
-  width: 600px;
-  height: 600px;
-  top: -12%;
+  width: 560px;
+  height: 560px;
+  top: -14%;
   left: -8%;
-  background: radial-gradient(circle, rgba(30, 64, 175, 0.12) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(29, 78, 216, 0.14) 0%, transparent 70%);
   animation: orb-drift 20s ease-in-out infinite;
 }
 
 .bg__orb--2 {
-  width: 500px;
-  height: 500px;
-  top: 20%;
+  width: 460px;
+  height: 460px;
+  top: 24%;
   right: -10%;
-  background: radial-gradient(circle, rgba(249, 115, 22, 0.10) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(14, 159, 110, 0.11) 0%, transparent 70%);
   animation: orb-drift 25s ease-in-out infinite reverse;
-}
-
-.bg__orb--3 {
-  width: 400px;
-  height: 400px;
-  bottom: -5%;
-  left: 30%;
-  background: radial-gradient(circle, rgba(16, 185, 129, 0.10) 0%, transparent 70%);
-  animation: orb-drift 22s ease-in-out infinite 3s;
 }
 
 .bg__grain {
   position: absolute;
   inset: 0;
-  opacity: 0.35;
+  opacity: 0.3;
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
   background-size: 200px 200px;
 }
 
 @keyframes orb-drift {
   0%, 100% { transform: translate(0, 0) scale(1); }
-  33% { transform: translate(30px, -20px) scale(1.05); }
-  66% { transform: translate(-20px, 25px) scale(0.97); }
+  33% { transform: translate(28px, -18px) scale(1.05); }
+  66% { transform: translate(-18px, 22px) scale(0.97); }
 }
 
 /* ── Layout ── */
@@ -1176,32 +1552,35 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 22px 26px;
+  gap: 16px;
+  padding: 20px 26px;
   background: $surface;
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border-radius: $radius;
   border: 1px solid $border;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px rgba(21, 26, 45, 0.02), 0 4px 16px rgba(21, 26, 45, 0.03);
 }
 
 .header-left {
   display: flex;
   align-items: center;
   gap: 16px;
+  min-width: 0;
 }
 
 .header-icon {
   width: 54px;
   height: 54px;
   border-radius: 16px;
-  background: linear-gradient(135deg, $primary 0%, #1E3A8A 60%, #06B6D4 100%);
+  background: linear-gradient(135deg, $primary 0%, #1e3a8a 62%, #0e9f6e 100%);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #fff;
   font-size: 22px;
-  box-shadow: 0 8px 32px rgba(30, 64, 175, 0.25);
+  box-shadow: 0 8px 26px rgba(29, 78, 216, 0.24);
+  flex-shrink: 0;
 }
 
 .header-title {
@@ -1210,7 +1589,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   font-weight: 800;
   margin: 0 0 3px 0;
   letter-spacing: -0.5px;
-  background: linear-gradient(135deg, $text-1 0%, #374151 100%);
+  background: linear-gradient(135deg, $ink 0%, #374151 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -1218,25 +1597,65 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 
 .header-subtitle {
   font-size: 13px;
-  color: $text-3;
+  color: $ink-3;
   margin: 0;
   letter-spacing: 0.2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  line-height: 1.1;
+}
+
+.stat__num {
+  font-family: $font-display;
+  font-size: 20px;
+  font-weight: 700;
+  color: $ink;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat__label {
+  font-size: 11px;
+  color: $ink-3;
+  margin-top: 3px;
+}
+
+.stat__sep {
+  width: 1px;
+  height: 28px;
+  background: $border-h;
 }
 
 .ghost-btn {
   background: $surface-h;
   border: 1px solid $border-h;
   border-radius: $radius-sm;
-  padding: 10px 20px;
+  padding: 10px 18px;
   font-weight: 600;
-  color: $text-2;
+  color: $ink-2;
   transition: all 0.3s $ease;
 
   &:hover {
     color: $primary;
-    border-color: rgba(30, 64, 175, 0.3);
+    border-color: rgba(29, 78, 216, 0.3);
     transform: translateY(-1px);
-    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.12);
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.12);
   }
 
   i {
@@ -1247,7 +1666,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 /* ── Workspace ── */
 .workspace {
   display: grid;
-  grid-template-columns: 240px 1fr;
+  grid-template-columns: 252px 1fr;
   gap: 18px;
   flex: 1;
   min-height: 0;
@@ -1270,7 +1689,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   -webkit-backdrop-filter: blur(20px);
   border-radius: $radius;
   border: 1px solid $border;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px rgba(21, 26, 45, 0.02), 0 4px 16px rgba(21, 26, 45, 0.03);
   overflow: hidden;
 }
 
@@ -1286,7 +1705,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   font-family: $font-display;
   font-size: 14px;
   font-weight: 700;
-  color: $text-2;
+  color: $ink-2;
   letter-spacing: 0.4px;
 
   i {
@@ -1296,10 +1715,10 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 }
 
 .rail-add {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 9px;
-  border: 1px dashed rgba(30, 64, 175, 0.35);
+  border: 1px dashed rgba(29, 78, 216, 0.35);
   background: $primary-bg;
   color: $primary;
   cursor: pointer;
@@ -1331,14 +1750,14 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   display: flex;
   align-items: center;
   gap: 9px;
-  padding: 10px 12px;
-  border-radius: $radius-sm;
+  padding: 11px 11px 11px 14px;
+  border-radius: 11px;
   cursor: pointer;
   border: 1px solid transparent;
   transition: all 0.25s $ease;
 
   &:hover {
-    background: rgba(0, 0, 0, 0.03);
+    background: rgba(21, 26, 45, 0.035);
 
     .rail-item__del {
       opacity: 1;
@@ -1346,49 +1765,63 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   }
 
   &._active {
-    background: linear-gradient(135deg, rgba(30, 64, 175, 0.10) 0%, rgba(59, 130, 246, 0.07) 100%);
-    border-color: rgba(30, 64, 175, 0.18);
+    background: linear-gradient(135deg, rgba(29, 78, 216, 0.1) 0%, rgba(59, 130, 246, 0.06) 100%);
+    border-color: rgba(29, 78, 216, 0.18);
 
-    .rail-item__dot {
+    .rail-item__bar {
       background: $primary-l;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
     }
 
     .rail-item__name {
       color: $primary;
       font-weight: 700;
     }
+
+    .rail-item__count {
+      color: $primary;
+      background: rgba(255, 255, 255, 0.75);
+    }
   }
 }
 
-.rail-item__dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #c9cedb;
-  flex-shrink: 0;
-  transition: all 0.25s $ease;
+.rail-item__bar {
+  position: absolute;
+  left: 0;
+  top: 22%;
+  bottom: 22%;
+  width: 3px;
+  border-radius: 0 3px 3px 0;
+  background: transparent;
+  transition: background 0.25s $ease;
 }
 
 .rail-item__name {
   flex: 1;
   font-size: 13.5px;
-  color: $text-2;
+  color: $ink-2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.rail-item__spin {
-  color: $primary;
-  font-size: 12px;
+.rail-item__count {
+  font-family: $font-display;
+  font-size: 11px;
+  font-weight: 700;
+  color: $ink-3;
+  background: rgba(21, 26, 45, 0.05);
+  border-radius: 999px;
+  min-width: 24px;
+  text-align: center;
+  padding: 2px 6px;
+  font-variant-numeric: tabular-nums;
 }
 
 .rail-item__del {
   opacity: 0;
   border: none;
   background: none;
-  color: $text-3;
+  color: $ink-3;
   cursor: pointer;
   font-size: 12px;
   padding: 3px;
@@ -1398,14 +1831,14 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 
   &:hover {
     color: $red;
-    background: rgba(239, 68, 68, 0.1);
+    background: rgba(229, 72, 77, 0.1);
   }
 }
 
 .rail-empty {
   padding: 36px 12px;
   text-align: center;
-  color: $text-3;
+  color: $ink-3;
   font-size: 13px;
 
   i {
@@ -1419,6 +1852,22 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   }
 }
 
+.rail-foot {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  padding: 12px 14px;
+  border-top: 1px solid $border;
+  color: $ink-3;
+  font-size: 11px;
+  line-height: 1.5;
+
+  i {
+    color: $amber;
+    margin-top: 2px;
+  }
+}
+
 /* ── Route Pane ── */
 .route-pane {
   display: flex;
@@ -1428,7 +1877,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   -webkit-backdrop-filter: blur(20px);
   border-radius: $radius;
   border: 1px solid $border;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 16px rgba(0, 0, 0, 0.02);
+  box-shadow: 0 1px 2px rgba(21, 26, 45, 0.02), 0 4px 16px rgba(21, 26, 45, 0.03);
   overflow: hidden;
   min-width: 0;
 }
@@ -1437,7 +1886,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 18px;
+  padding: 13px 16px;
   border-bottom: 1px solid $border;
   flex-wrap: wrap;
   gap: 10px;
@@ -1447,6 +1896,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   display: flex;
   align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
 .pane-group-chip {
@@ -1455,48 +1905,93 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   gap: 7px;
   padding: 6px 14px;
   border-radius: 999px;
-  background: linear-gradient(135deg, rgba(30, 64, 175, 0.10), rgba(59, 130, 246, 0.07));
-  border: 1px solid rgba(30, 64, 175, 0.16);
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.1), rgba(59, 130, 246, 0.06));
+  border: 1px solid rgba(29, 78, 216, 0.16);
   color: $primary;
   font-family: $font-display;
   font-weight: 700;
   font-size: 13px;
 }
 
-.pane-count {
-  font-size: 12.5px;
-  color: $text-3;
-}
-
-.pane-dirty {
+.pane-stat {
   display: inline-flex;
-  align-items: center;
-  gap: 5px;
+  align-items: baseline;
+  gap: 4px;
   font-size: 12px;
-  color: $amber;
-  font-weight: 600;
+  color: $ink-3;
+
+  b {
+    font-family: $font-display;
+    font-size: 14px;
+    color: $ink-2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &--dim b {
+    color: $ink-3;
+  }
 }
 
 .pane-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+  flex-wrap: wrap;
+}
 
-  ::v-deep .el-button--primary {
-    background: linear-gradient(135deg, $primary 0%, #1E3A8A 100%);
-    border: none;
-    box-shadow: 0 3px 12px rgba(30, 64, 175, 0.28);
+.pane-search {
+  width: 230px;
 
-    &:hover {
-      box-shadow: 0 5px 18px rgba(30, 64, 175, 0.38);
-      transform: translateY(-1px);
+  ::v-deep .el-input__inner {
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.8);
+    border-color: $border-h;
+    font-size: 12.5px;
+
+    &:focus {
+      border-color: $primary-l;
     }
   }
 }
 
+.icon-btn {
+  width: 34px;
+  height: 32px;
+  border-radius: 10px;
+  border: 1px solid $border-h;
+  background: rgba(255, 255, 255, 0.72);
+  color: $ink-2;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s $ease;
+
+  &:hover {
+    color: $primary;
+    border-color: rgba(29, 78, 216, 0.32);
+    background: #fff;
+    transform: translateY(-1px);
+  }
+}
+
+.pane-actions ::v-deep .el-button--primary {
+  background: linear-gradient(135deg, $primary 0%, #1e3a8a 100%);
+  border: none;
+  box-shadow: 0 3px 12px rgba(29, 78, 216, 0.24);
+
+  &:hover {
+    box-shadow: 0 5px 18px rgba(29, 78, 216, 0.34);
+    transform: translateY(-1px);
+  }
+}
+
+/* ── Route Table ── */
 .pane-table {
   flex: 1;
   overflow: auto;
-  padding: 6px 10px 14px;
+  min-height: 180px;
 
   ::v-deep .el-table {
     background: transparent;
@@ -1523,77 +2018,136 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
     }
 
     .el-table__expand-icon {
-      color: $text-3;
+      color: $ink-3;
     }
   }
 }
 
-.mono {
-  font-family: $font-mono;
-  font-size: 12.5px;
+.route-path-cell {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.path-cell {
-  color: $text-1;
-  font-weight: 600;
-}
-
-.comp-cell {
-  color: $text-2;
-}
-
-.name-cell {
+.path-text {
   font-size: 13px;
-  color: $text-2;
+  font-weight: 700;
+  color: $ink;
+  word-break: break-all;
 }
 
-.redirect-cell {
-  color: $text-3;
-
-  i {
-    font-size: 10px;
-    margin-right: 3px;
-  }
-}
-
-.dim {
-  color: #c9cedb;
-}
-
-.layout-tag {
+.level-pill {
+  font-family: $font-mono;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: rgba(29, 78, 216, 0.09);
   color: $primary;
-  border-color: rgba(30, 64, 175, 0.25);
-  background: $primary-bg;
+  flex-shrink: 0;
+
+  &--2 { background: rgba(124, 58, 237, 0.09); color: #7c3aed; }
+  &--3 { background: rgba(217, 119, 6, 0.1); color: $amber; }
+  &--4 { background: rgba(14, 159, 110, 0.1); color: $green; }
+}
+
+.child-count {
+  margin-left: 4px;
+  font-family: $font-mono;
+  font-size: 10px;
+  opacity: 0.75;
+}
+
+.route-chain {
+  font-size: 10.5px;
+  color: $ink-3;
+  margin-top: 3px;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.level-tree {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+
+  &__dash {
+    display: inline-block;
+    width: 9px;
+    height: 3px;
+    border-radius: 2px;
+    background: $primary-l;
+
+    &:last-child {
+      background: $primary;
+    }
+  }
+}
+
+.route-sub-cell {
+  font-size: 11px;
+  color: $ink-3;
+  line-height: 1.7;
+  word-break: break-all;
+
+  .sub-sep {
+    margin-left: 8px;
+  }
+}
+
+.tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  white-space: nowrap;
 
   i {
     margin-right: 3px;
-  }
-}
-
-.flag-dot {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 999px;
-  font-size: 11.5px;
-  font-weight: 600;
-
-  &--ok {
-    color: $green;
-    background: rgba(16, 185, 129, 0.1);
+    font-size: 9px;
   }
 
-  &--warn {
+  &--layout {
+    color: $primary;
+    background: $primary-bg;
+  }
+
+  &--parent {
+    color: #7c3aed;
+    background: rgba(124, 58, 237, 0.08);
+  }
+
+  &--hidden {
     color: $amber;
-    background: rgba(249, 115, 22, 0.1);
-  }
-
-  &--off {
-    color: $text-3;
-    background: rgba(0, 0, 0, 0.04);
+    background: rgba(217, 119, 6, 0.1);
   }
 }
 
-/* ── Sort Cell ── */
+.role-chip {
+  font-family: $font-mono;
+  font-size: 10px;
+  color: $primary;
+  background: $primary-bg;
+  border: 1px solid rgba(29, 78, 216, 0.12);
+  padding: 1px 6px;
+  border-radius: 999px;
+  margin-left: 6px;
+}
+
+.inline-flags,
+.inline-ops {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.inline-ops {
+  justify-content: flex-end;
+}
+
 .sort-cell {
   display: inline-flex;
   align-items: center;
@@ -1607,7 +2161,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   border: none;
   background: transparent;
   cursor: pointer;
-  color: $text-2;
+  color: $ink-2;
   width: 24px;
   height: 24px;
   border-radius: 6px;
@@ -1629,41 +2183,90 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   }
 }
 
-/* ── Operation Buttons ── */
-.op-btn {
+.name-cell {
+  font-size: 12.5px;
+  color: $ink-2;
+}
+
+.redirect-cell {
+  color: $ink-3;
+
+  i {
+    font-size: 10px;
+    margin-right: 3px;
+  }
+}
+
+.dim {
+  color: #c9cedb;
+}
+
+.flag-toggle {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid $border;
+  background: rgba(255, 255, 255, 0.55);
+  color: $ink-4;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s $ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    border-color: rgba(29, 78, 216, 0.25);
+  }
+
+  &.is-on {
+    color: $primary;
+    background: $primary-bg;
+    border-color: rgba(29, 78, 216, 0.22);
+  }
+
+  &--warn.is-on {
+    color: $amber;
+    background: rgba(217, 119, 6, 0.1);
+    border-color: rgba(217, 119, 6, 0.28);
+  }
+}
+
+.op-icon {
+  width: 30px;
+  height: 30px;
   border: none;
   background: transparent;
+  color: $ink-2;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 12.5px;
-  color: $primary;
-  padding: 5px 8px;
-  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
   transition: all 0.2s $ease;
-  font-family: $font-body;
 
   &:hover {
     background: $primary-bg;
+    color: $primary;
   }
 
-  i {
-    margin-right: 4px;
-    font-size: 11px;
-  }
-
-  &--danger {
+  &--danger:hover {
+    background: rgba(229, 72, 77, 0.1);
     color: $red;
-
-    &:hover {
-      background: rgba(239, 68, 68, 0.08);
-    }
   }
+}
+
+.mono {
+  font-family: $font-mono;
 }
 
 /* ── Empty / Placeholder ── */
 .table-empty {
   padding: 44px 0;
   text-align: center;
-  color: $text-3;
+  color: $ink-3;
   font-size: 13px;
 
   i {
@@ -1673,7 +2276,19 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   }
 
   p {
-    margin: 0;
+    margin: 0 0 12px;
+  }
+}
+
+.table-empty__hint {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+
+  .mono {
+    color: $ink-3;
   }
 }
 
@@ -1684,7 +2299,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   align-items: center;
   justify-content: center;
   gap: 16px;
-  color: $text-3;
+  color: $ink-3;
   font-size: 13.5px;
   min-height: 320px;
 
@@ -1697,8 +2312,8 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   width: 84px;
   height: 84px;
   border-radius: 26px;
-  background: linear-gradient(135deg, rgba(30, 64, 175, 0.09), rgba(6, 182, 212, 0.08));
-  border: 1px solid rgba(30, 64, 175, 0.14);
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.09), rgba(14, 159, 110, 0.08));
+  border: 1px solid rgba(29, 78, 216, 0.14);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1712,21 +2327,77 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   50% { transform: translateY(-9px); }
 }
 
-/* ── Transitions ── */
-.fade-enter-active,
-.fade-leave-active {
-  transition: opacity 0.3s $ease;
+/* ── Dirty state bar ── */
+.dirty-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 12px 12px;
+  padding: 9px 14px;
+  border-radius: $radius-sm;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.1), rgba(245, 158, 11, 0.05));
+  border: 1px solid rgba(217, 119, 6, 0.22);
+  flex-wrap: wrap;
 }
 
-.fade-enter,
-.fade-leave-to {
+.dirty-bar__msg {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.dirty-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: $amber;
+  box-shadow: 0 0 0 4px rgba(217, 119, 6, 0.15);
+  animation: dirty-pulse 1.8s ease-in-out infinite;
+}
+
+.dirty-bar__actions {
+  display: flex;
+  gap: 8px;
+  margin-left: auto;
+}
+
+@keyframes dirty-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.45; }
+}
+
+.dirty-slide-enter-active,
+.dirty-slide-leave-active {
+  transition: all 0.3s $ease;
+}
+
+.dirty-slide-enter,
+.dirty-slide-leave-to {
   opacity: 0;
+  transform: translateY(10px);
 }
 
 /* ── Version history drawer ── */
 .drawer-body {
   padding: 4px 24px 24px;
   min-height: 200px;
+}
+
+.drawer-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  margin-bottom: 16px;
+  border-radius: 10px;
+  background: $primary-bg;
+  color: $primary;
+  font-size: 12.5px;
+  font-weight: 600;
 }
 
 .version-card {
@@ -1737,13 +2408,13 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   transition: all 0.25s $ease;
 
   &:hover {
-    border-color: rgba(30, 64, 175, 0.22);
-    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.08);
+    border-color: rgba(29, 78, 216, 0.22);
+    box-shadow: 0 4px 14px rgba(29, 78, 216, 0.08);
   }
 
   &--current {
-    border-color: rgba(16, 185, 129, 0.35);
-    background: rgba(16, 185, 129, 0.045);
+    border-color: rgba(14, 159, 110, 0.35);
+    background: rgba(14, 159, 110, 0.045);
   }
 }
 
@@ -1763,7 +2434,7 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 .rollback-btn {
   margin-left: auto;
   padding: 0;
-  color: $text-2;
+  color: $ink-2;
   font-weight: 600;
 
   &:hover {
@@ -1774,12 +2445,12 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
 .version-desc {
   margin: 8px 0 0;
   font-size: 13px;
-  color: $text-2;
+  color: $ink-2;
   line-height: 1.55;
   word-break: break-all;
 
   &.dim {
-    color: $text-3;
+    color: $ink-3;
   }
 }
 
@@ -1789,13 +2460,157 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   align-items: center;
   gap: 12px;
   padding: 48px 0;
-  color: $text-3;
+  color: $ink-3;
   font-size: 26px;
 
   p {
     margin: 0;
     font-size: 13px;
   }
+}
+
+/* ── Move / Copy node dialog ── */
+.node-op-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 14px;
+  margin-bottom: 18px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.08), rgba(14, 159, 110, 0.05));
+  border: 1px solid rgba(29, 78, 216, 0.14);
+
+  &__label {
+    font-size: 12px;
+    font-weight: 700;
+    color: $ink-2;
+  }
+
+  .mono {
+    font-size: 12.5px;
+    color: $primary;
+    font-weight: 700;
+  }
+
+  &__title {
+    font-size: 12px;
+    color: $ink-3;
+  }
+}
+
+.node-op-hint {
+  margin: 6px 0 0;
+  font-size: 11.5px;
+  color: $ink-3;
+  line-height: 1.5;
+}
+
+/* ── Dialog ── */
+.route-dialog {
+  border-radius: 20px !important;
+  overflow: hidden;
+
+  ::v-deep .el-dialog__header {
+    padding: 18px 24px 12px;
+    border-bottom: 1px solid $border;
+  }
+
+  ::v-deep .el-dialog__title {
+    font-family: $font-display;
+    font-weight: 700;
+    font-size: 18px;
+    color: $ink;
+  }
+
+  ::v-deep .el-dialog__body {
+    padding: 18px 24px 6px;
+    max-height: 66vh;
+    overflow-y: auto;
+  }
+
+  ::v-deep .el-dialog__footer {
+    padding: 12px 24px 18px;
+    border-top: 1px solid $border;
+  }
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 18px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(29, 78, 216, 0.08), rgba(14, 159, 110, 0.05));
+  border: 1px solid rgba(29, 78, 216, 0.14);
+}
+
+.dialog-head__icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 11px;
+  background: $primary;
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.dialog-head__text {
+  min-width: 0;
+}
+
+.dialog-head__title {
+  font-family: $font-display;
+  font-size: 14px;
+  font-weight: 700;
+  color: $ink;
+}
+
+.dialog-head__path {
+  margin-top: 3px;
+  font-size: 11.5px;
+  color: $primary;
+  word-break: break-all;
+}
+
+.form-section {
+  margin-bottom: 18px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.form-section__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding-bottom: 9px;
+  margin-bottom: 14px;
+  border-bottom: 1px dashed $border-h;
+  font-family: $font-display;
+  font-size: 13px;
+  font-weight: 700;
+  color: $ink;
+}
+
+.form-section__no {
+  font-family: $font-mono;
+  font-size: 10px;
+  color: $primary;
+  background: $primary-bg;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.switch-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
 }
 
 /* ── 权限角色下拉：内联新增入口 ── */
@@ -1820,8 +2635,17 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   }
 }
 
-/* ── 窄屏适配：路由组侧栏转为横向 chip 条，内容区单列堆叠 ── */
-@media only screen and (max-width: #{$bp-tablet}) {
+/* ── 触摸设备：不依赖 hover 的操作入口 ── */
+@media (hover: none) {
+  .rail-item__del,
+  .order-arrows,
+  .drag-grip {
+    opacity: 1;
+  }
+}
+
+/* ── 窄屏适配：分组栏转横向 chip，路由行改卡片布局 ── */
+@include respond-to(mobile) {
   .studio-inner {
     padding: 12px;
     gap: 12px;
@@ -1854,7 +2678,6 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
     padding: 10px 12px;
   }
 
-  /* 窄屏只保留图标，节省横向空间 */
   .rail-title {
     font-size: 0;
 
@@ -1875,6 +2698,10 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
   .rail-item {
     flex: 0 0 auto;
     padding: 8px 12px;
+
+    .rail-item__bar {
+      display: none;
+    }
   }
 
   .rail-item__name {
@@ -1882,18 +2709,20 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
     max-width: 140px;
   }
 
-  /* 触摸设备常显删除入口，不依赖 hover */
-  .rail-item__del {
-    opacity: 1;
+  .rail-foot {
+    display: none;
   }
 
-  .pane-actions {
-    flex-wrap: wrap;
-    gap: 8px;
+  .pane-search {
+    width: 100%;
+  }
+
+  .switch-grid {
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media only screen and (max-width: #{$bp-phone}) {
+@include respond-to(phone) {
   .studio-inner {
     padding: 10px 10px 16px;
   }
@@ -1908,12 +2737,24 @@ $font-mono: 'SF Mono', 'Fira Code', 'JetBrains Mono', Consolas, monospace;
     font-size: 20px;
   }
 
-  .header-actions {
+  .header-stats {
+    display: none;
+  }
+
+  .header-right {
     width: 100%;
   }
 
   .rail-item__name {
     max-width: 110px;
+  }
+
+  .switch-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .dirty-bar {
+    margin: 0 8px 8px;
   }
 }
 </style>

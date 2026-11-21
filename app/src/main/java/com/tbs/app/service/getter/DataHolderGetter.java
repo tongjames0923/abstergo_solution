@@ -3,10 +3,10 @@ package com.tbs.app.service.getter;
 import com.tbs.common.constant.DataHolderBeanNameConstant;
 import com.tbs.common.data.IDataHolder;
 import com.tbs.common.data.IDataHolderManager;
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ParamUiMeta;
-import com.tbs.script.api.expressible.vo.ParamValue;
-import com.tbs.script.api.expressible.vo.ResultValue;
+import com.tbs.script.api.expressible.vo.param.ParamType;
+import com.tbs.script.api.expressible.vo.param.ParamUiMeta;
+import com.tbs.script.api.expressible.vo.param.ParamValue;
+import com.tbs.script.api.expressible.vo.result.ResultValue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 

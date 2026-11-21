@@ -1,5 +1,6 @@
-package com.tbs.script.api.expressible.vo;
+package com.tbs.script.api.expressible.vo.param;
 
+import com.tbs.script.api.expressible.vo.EnumValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

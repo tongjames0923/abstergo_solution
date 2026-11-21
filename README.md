@@ -32,6 +32,7 @@
 - **append-only 版本化配置**：动态视图路由/表单配置支持版本历史与一键回滚（版本表为唯一事实来源）
 - **消息可靠性（v2 记录驱动模型）**：厂商无关 MQ 契约层——不信任厂商、信任自建落库记录，投递可靠性（主记录）与消费可靠性（逐消费者台账）分层承载，消息级单飞互斥、负载格式可插拔转换；提供内存基本实现，RabbitMQ 传输层适配器开箱可用
 - **多语言客户端 SDK**：Java（`sdk`，纯 OkHttp 无 Spring 依赖）与 C#（`sdk-csharp`，netstandard2.0）两套能力对齐的接入 SDK，封装统一登录（密码/企微/第三方）、推送消息中心与 SSE 长连接订阅、应用升级检查与安装包下载，供第三方/桌面端快速对接
+- **事件编排闭环**：后端代码埋点上报事件 → 前端可视化绑定订阅与条件规则（getter 编排）→ 条件命中后按序执行业务动作；订阅与动作绑定持久化在 `sys_event_subscription` / `sys_event_action`，支持模拟上报与单动作调试，见 [app/README.md](app/README.md)「事件订阅与动作编排链路」
 - **SQL 观测**：JDBC 装饰层全量 SQL 日志（含耗时），慢 SQL 阈值可配置告警（默认 2s）
 - **轻量 Go 提供者**：`dubbo-go-starter` + 一份 JSON 契约配置即可编译出单二进制 Dubbo 服务，仅 `dubbo` TCP + hessian2、无 IDL，注册到同一 Nacos 后可被 Dubbo Admin 查询/测试调用与 app 泛化链路直接消费，零 Java 接口 jar
 
@@ -123,7 +124,7 @@ flowchart LR
 | [system](system/README.md) | `system-api`：用户/角色组/公司/部门/版本/日志/泛化 API 等 20+ 服务契约 | [README](system/README.md) |
 | [dic](dic/README.md) | `dic-api`：数据字典契约（枚举值/标签/比对） | [README](dic/README.md) |
 | [logging](logging/README.md) | `logging-api`：日志记录/提取契约与报表 VO | [README](logging/README.md) |
-| [script-engine](script-engine/README.md) | `script-api`：脚本引擎四层模型（引擎/编译器/执行器/结果），内置 SpEL | [README](script-engine/README.md) |
+| [script-engine](script-engine/README.md) | `script-api`：脚本引擎四层模型（引擎/编译器/执行器/结果），内置 SpEL；表达式能力含值获取器、事件上报器、触发器与动作，并提供事件编排内核 | [README](script-engine/README.md) |
 | [oss](oss/README.md) | `oss-api`：对象存储统一门面（OssClient/OssOperations） | [README](oss/README.md) |
 | [push-mod](push-mod/README.md) | `push-api`：双向长连接推送——通信协议/消息帧/投递记录契约（零传输 SDK 依赖），`websocket-impl`/`sse-impl` 落地 WebSocket+SSE 组合通道；鉴权判定接口默认放行、交由业务接入方 | [README](push-mod/README.md) |
 | [cdc-mod](cdc-mod/README.md) | `cdc-api`：数据库变更数据捕获（CDC）——统一变更事件模型，`cdc-mysql-impl`/`cdc-sqlserver-impl` 基于 Debezium Embedded 监听增删改（无用户界面） | [README](cdc-mod/README.md) |
@@ -144,9 +145,9 @@ flowchart LR
 
 | 模块 | 定位 | 文档 |
 |------|------|------|
-| [app](app/README.md) | 主应用运行包：14 注解装配全平台能力，34 个控制器，`app-service` :8080 | [README](app/README.md) |
+| [app](app/README.md) | 主应用运行包：14 注解装配全平台能力，36 个控制器（含事件订阅/动作管理），`app-service` :8080 | [README](app/README.md) |
 | [cdc-service](cdc-service/README.md) | CDC 发出服务（可运行）：基于 cdc-mod 捕获 SQL Server 变更，按可配置交换机/路由键发布 `CdcEvent` 到 RabbitMQ 供下游（如 app）消费 | [README](cdc-service/README.md) |
-| [app-ui-vue](app-ui-vue/README.md) | 管理前端：动态路由/表单、用户/角色/字典/缓存/OSS/日志/版本管理 | [README](app-ui-vue/README.md) |
+| [app-ui-vue](app-ui-vue/README.md) | 管理前端：动态路由/表单、用户/角色/字典/缓存/OSS/日志/版本管理，以及事件订阅/动作/条件规则编排 | [README](app-ui-vue/README.md) |
 
 ### 客户端 SDK（对外接入）
 

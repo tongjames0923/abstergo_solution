@@ -1,6 +1,6 @@
 package com.tbs.app.form;
 
-import com.tbs.script.api.expressible.vo.ParamValue;
+import com.tbs.script.api.expressible.vo.param.ParamValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

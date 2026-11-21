@@ -1,4 +1,4 @@
-package com.tbs.script.api.expressible.vo;
+package com.tbs.script.api.expressible.vo.result;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

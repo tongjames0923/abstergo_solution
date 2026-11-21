@@ -1,7 +1,7 @@
 package com.tbs.app.vo;
 
-import com.tbs.script.api.expressible.vo.ParamType;
-import com.tbs.script.api.expressible.vo.ResultType;
+import com.tbs.script.api.expressible.vo.param.ParamType;
+import com.tbs.script.api.expressible.vo.result.ResultType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

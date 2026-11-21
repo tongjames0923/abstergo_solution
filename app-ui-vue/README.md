@@ -11,6 +11,7 @@
 - [请求封装与令牌刷新](#请求封装与令牌刷新)
 - [国际化](#国际化)
 - [API 模块清单](#api-模块清单)
+- [事件编排页面](#事件编排页面)
 - [项目结构](#项目结构)
 - [配置说明](#配置说明)
 - [开发代理与后端联调](#开发代理与后端联调)
@@ -161,7 +162,7 @@ state：`token`、`refreshToken`、`name`（昵称）、`userName`、`avatar`、
 
 ## API 模块清单
 
-`src/api/` 共 16 个模块（`utils/request.js` 统一封装）：
+`src/api/` 共 18 个模块（`utils/request.js` 统一封装）：
 
 | 模块 | 对接后端能力 |
 |------|------|
@@ -179,6 +180,30 @@ state：`token`、`refreshToken`、`name`（昵称）、`userName`、`avatar`、
 | `generic-api.js` | 泛化 API 调试（对接 `web` 模块 genric 调用入口） |
 | `trace.js` | 链路追踪查询 |
 | `table.js` | 表格演示数据 |
+| `eventSubscription.js` | 事件上报器/事件/触发器元数据、订阅 CRUD 与启停、`POST report` 模拟上报（对接 `private/event-subscription/*`） |
+| `eventAction.js` | 动作元数据、动作绑定 CRUD 与启停、`POST test` 单动作测试（对接 `private/event-action/*`） |
+
+## 事件编排页面
+
+`/event-subscription`（事件订阅）与 `/event-action`（事件动作）是开发者控制台中的两个静态路由，与 `/condition-rule` 同属"事件上报 → 订阅绑定 → 条件触发 → 业务执行"链路：条件规则继续在现有 `ConditionRuleManager.vue` 编排，订阅页通过 `?ruleCode=` 可直接跳转定位。
+
+两个页面均采用「左侧绑定列表 + 右侧编排」双栏结构（平板收窄、手机单列）：
+
+- **事件订阅页**：选择上报器 → 事件 → 触发器 → 条件规则 → 顺序与启停；`save-event` 按事件整体提交订阅列表；底部调试区按事件参数声明渲染模拟载荷，`report` 后展示上报结果与触发器明细（已触发/未触发/调用异常）。
+- **事件动作页**：选择上报器 → 事件 → 动作 → 动态参数表单；动作参数由后端 `ActionMeta.paramTypes` 驱动，复用 `src/utils/valueGetter.js` 的 `toParamFields/buildFormData/validateFields/toParamValues` 与公共组件 `GetterParamField`；支持 `${paramName}` 占位符引用事件参数，`test` 可单动作试跑。
+
+`src/views/dev/event/` 下的子组件：
+
+| 组件 | 职责 |
+|------|------|
+| `EventScopePicker.vue` | 上报器/事件两级下拉与事件参数只读标签；内部用 `reporterOptions` / `eventOptions` 兼容后端 `id|reporterId`、`code|eventCode` 两种字段命名 |
+| `SubscriptionRows.vue` | 订阅行编辑器：触发器、条件规则、顺序、启停、删除与重复校验 |
+| `ActionBindingPanel.vue` | 动作行编辑器：动作选择、参数表单回填与收集、顺序/启停 |
+| `EventParamForm.vue` | 基于 `ParamType` 的动态参数表单，暴露 `reset` / `setValues` / `validate` / `buildParamValues` |
+| `EventReportPanel.vue` | 模拟上报与触发器明细结果展示 |
+| `ActionTestPanel.vue` | 单动作测试执行与回执展示 |
+
+`src/utils/eventMeta.js` 统一解包 `data` / `data.data` / `list` / `records` 等响应包装并对齐字段名，页面只依赖规范化后的 `reporterId` / `code` / `triggerId` / `actionId` 等字段；元数据接口失败时以 `console.error` 输出，便于定位 403（权限脚本未执行）等问题。文案位于 `src/i18n/zh.js` / `en.js` 的 `eventCommon` / `eventSubscription` / `eventAction` 命名空间。
 
 ## 项目结构
 
@@ -186,7 +211,7 @@ state：`token`、`refreshToken`、`name`（昵称）、`userName`、`avatar`、
 app-ui-vue/
 ├── public/                       # 静态 HTML 模板
 ├── src/
-│   ├── api/                      # 16 个后端 API 模块（见上表）
+│   ├── api/                      # 18 个后端 API 模块（见上表）
 │   ├── assets/                   # 静态资源
 │   ├── components/               # 21 个公共组件目录
 │   │   ├── DynamicForm/          #   动态表单渲染（JSON 配置 → 表单）
@@ -217,7 +242,14 @@ app-ui-vue/
 │   ├── store/                    # Vuex（app/settings/user/FormConfig/routes 模块）
 │   ├── styles/                   # 全局样式（MacOS AppStore 风格侧边栏主题）
 │   ├── utils/                    # 工具（request/auth/route-cache/permission/excel/validate 等）
+│   │   └── eventMeta.js          #   事件编排元数据解包与字段归一化（见上文）
 │   ├── views/                    # 页面
+│   │   ├── dev/                  #   开发者控制台（见「事件编排页面」）
+│   │   │   ├── EventSubscriptionManager.vue   #   事件订阅编排
+│   │   │   ├── EventActionManager.vue         #   事件动作编排
+│   │   │   ├── ConditionRuleManager.vue       #   条件规则编排（支持 ?ruleCode= 直达）
+│   │   │   ├── ValueGetterTester.vue          #   值获取器调试
+│   │   │   └── event/                         #   事件编排公共子组件（6 个，见上文）
 │   │   ├── login/                #   登录页
 │   │   ├── dashboard/            #   欢迎页
 │   │   ├── admin/                #   管理页面

@@ -110,71 +110,85 @@
             <div class="section-head">
               <span class="section-label">{{ $t('conditionLab.params') }}</span>
               <span class="section-hint">{{ $t('valueGetter.paramsHint') }}</span>
+              <el-radio-group v-model="inputMode" size="mini" class="input-mode">
+                <el-radio-button label="graph">{{ $t('jsonMode.modeGraph') }}</el-radio-button>
+                <el-radio-button label="json">{{ $t('jsonMode.modeJson') }}</el-radio-button>
+              </el-radio-group>
             </div>
 
-            <condition-builder
-              v-if="isCondition(currentGetter)"
-              v-model="condition"
-              :getters="getterList"
-            />
+            <template v-if="inputMode === 'graph'">
+              <condition-builder
+                v-if="isCondition(currentGetter)"
+                v-model="condition"
+                :getters="getterList"
+              />
 
-            <logic-condition-builder
-              v-else-if="isLogicCondition(currentGetter)"
-              v-model="logicTree"
-              :getters="getterList"
-              :operand-component="operandComponent"
-            />
+              <logic-condition-builder
+                v-else-if="isLogicCondition(currentGetter)"
+                v-model="logicTree"
+                :getters="getterList"
+                :operand-component="operandComponent"
+              />
 
-            <div v-else-if="!paramFields.length" class="no-params">
-              {{ $t('valueGetter.noParams') }}
-            </div>
+              <div v-else-if="!paramFields.length" class="no-params">
+                {{ $t('valueGetter.noParams') }}
+              </div>
 
-            <el-form
-              v-else
-              :label-width="formLabelWidth"
-              :label-position="formLabelPosition"
-              size="small"
-              class="param-form"
-              @submit.native.prevent
-            >
-              <el-form-item
-                v-for="field in paramFields"
-                :key="field.name"
-                :required="field.required"
+              <el-form
+                v-else
+                :label-width="formLabelWidth"
+                :label-position="formLabelPosition"
+                size="small"
+                class="param-form"
+                @submit.native.prevent
               >
-                <template slot="label">
-                  <span class="param-label">{{ field.label }}</span>
-                  <el-tooltip v-if="field.description" :content="field.description" placement="top">
-                    <i class="el-icon-info param-info" />
-                  </el-tooltip>
-                </template>
-                <div class="param-control-row">
-                  <value-getter-operand
-                    v-if="field.uiType === 'operand'"
-                    :value="formData[field.name]"
-                    :getters="getterList"
-                    @input="setParam(field.name, $event)"
-                  />
-                  <getter-param-field
-                    v-else
-                    :field="field"
-                    :value="formData[field.name]"
-                    :error="errorOf(field)"
-                    @input="setParam(field.name, $event)"
-                  />
-                  <el-tag size="mini" type="info" effect="plain" class="param-type">
-                    {{ typeLabel(field) }}
-                  </el-tag>
-                </div>
-                <div v-if="field.uiType === 'operand' && errorOf(field)" class="param-error">
-                  {{ $t('valueGetter.errRequired') }}
-                </div>
-                <div v-if="field.description" class="field-desc">{{ field.description }}</div>
-              </el-form-item>
-            </el-form>
+                <el-form-item
+                  v-for="field in paramFields"
+                  :key="field.name"
+                  :required="field.required"
+                >
+                  <template slot="label">
+                    <span class="param-label">{{ field.label }}</span>
+                    <el-tooltip v-if="field.description" :content="field.description" placement="top">
+                      <i class="el-icon-info param-info" />
+                    </el-tooltip>
+                  </template>
+                  <div class="param-control-row">
+                    <value-getter-operand
+                      v-if="field.uiType === 'operand'"
+                      :value="formData[field.name]"
+                      :getters="getterList"
+                      @input="setParam(field.name, $event)"
+                    />
+                    <getter-param-field
+                      v-else
+                      :field="field"
+                      :value="formData[field.name]"
+                      :error="errorOf(field)"
+                      @input="setParam(field.name, $event)"
+                    />
+                    <el-tag size="mini" type="info" effect="plain" class="param-type">
+                      {{ typeLabel(field) }}
+                    </el-tag>
+                  </div>
+                  <div v-if="field.uiType === 'operand' && errorOf(field)" class="param-error">
+                    {{ $t('valueGetter.errRequired') }}
+                  </div>
+                  <div v-if="field.description" class="field-desc">{{ field.description }}</div>
+                </el-form-item>
+              </el-form>
+            </template>
+            <json-edit-panel
+              v-else
+              :value.sync="jsonText"
+              :hints="jsonHints"
+              :example="jsonExample"
+              @apply="applyJson"
+              @fill="fillJson"
+            />
           </div>
 
-          <div class="run-bar">
+          <div v-if="inputMode === 'graph'" class="run-bar">
             <el-button
               type="primary"
               size="small"
@@ -190,7 +204,7 @@
             <span class="run-hint">Ctrl / ⌘ + Enter</span>
           </div>
 
-          <details class="payload">
+          <details v-if="inputMode === 'graph'" class="payload">
             <summary class="payload-summary">
               <span class="payload-label">{{ $t('valueGetter.payload') }}</span>
               <span class="payload-hint">{{ $t('valueGetter.payloadHint') }}</span>
@@ -299,6 +313,7 @@ import {getValueGetters, invokeValueGetter} from '@/api/script/valueGetter'
 import ConditionBuilder from '@/components/ConditionBuilder'
 import GetterParamField from '@/components/GetterParamField'
 import GetterResult from '@/components/GetterResult'
+import JsonEditPanel from '@/components/JsonEditPanel'
 import LogicConditionBuilder from '@/components/LogicConditionBuilder'
 import ValueGetterOperand from '@/components/ValueGetterOperand'
 import ResponsiveMixin from '@/mixins/responsive'
@@ -319,7 +334,9 @@ const HISTORY_LIMIT = 8
  */
 export default {
   name: 'ValueGetterTester',
-  components: { ConditionBuilder, GetterParamField, GetterResult, LogicConditionBuilder, ValueGetterOperand },
+  components: {
+    ConditionBuilder, GetterParamField, GetterResult, JsonEditPanel, LogicConditionBuilder, ValueGetterOperand
+  },
   mixins: [ResponsiveMixin],
   data() {
     return {
@@ -333,6 +350,8 @@ export default {
       formData: {},
       condition: { left: '', op: 'eq', right: '' },
       logicTree: createGroup(),
+      inputMode: 'graph',
+      jsonText: '',
       touched: {},
       showErrors: false,
       result: null,
@@ -427,6 +446,31 @@ export default {
       }
     },
     /**
+     * JSON 模式编写提示
+     *
+     * @returns {Array} 提示文案列表
+     */
+    jsonHints() {
+      return [
+        this.$t('jsonMode.hintSnapshot'),
+        this.$t('jsonMode.hintCondition'),
+        this.$t('jsonMode.hintLogic'),
+        this.$t('jsonMode.hintParams'),
+        this.$t('jsonMode.hintTip')
+      ]
+    },
+    /**
+     * JSON 模式示例
+     *
+     * @returns {string} 示例文本
+     */
+    jsonExample() {
+      return JSON.stringify({
+        editor: 'condition',
+        state: { left: '${userName}', op: 'eq', right: 'admin' }
+      }, null, 2)
+    },
+    /**
      * 原始结果文本
      *
      * @returns {string} JSON 文本
@@ -488,7 +532,8 @@ export default {
      * @param {KeyboardEvent} event 键盘事件
      */
     handleKeydown(event) {
-      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && this.currentGetter) {
+      if ((event.ctrlKey || event.metaKey) && event.key === 'Enter' && this.currentGetter &&
+        this.inputMode === 'graph') {
         event.preventDefault()
         this.handleInvoke()
       }
@@ -536,6 +581,8 @@ export default {
       this.formData = buildFormData(toParamFields(getter.paramTypes, getter.getterId))
       this.touched = {}
       this.showErrors = false
+      this.inputMode = 'graph'
+      this.jsonText = ''
       this.resetOutput()
     },
 
@@ -558,6 +605,8 @@ export default {
       this.logicTree = createGroup()
       this.touched = {}
       this.showErrors = false
+      this.inputMode = 'graph'
+      this.jsonText = ''
       this.resetOutput()
     },
 
@@ -672,16 +721,7 @@ export default {
       } catch (e) {
         snapshot = null
       }
-      if (snapshot && snapshot.editor === 'logic') {
-        this.logicTree = normalizeGroup(snapshot.state)
-        return
-      }
-      if (snapshot && snapshot.editor === 'condition' && snapshot.state) {
-        this.condition = {
-          left: snapshot.state.left || '',
-          op: snapshot.state.op || 'eq',
-          right: snapshot.state.right || ''
-        }
+      if (this.applyEditorSnapshot(snapshot)) {
         return
       }
       let params = []
@@ -713,6 +753,86 @@ export default {
     },
 
     /**
+     * 应用编辑器快照，JSON 导入与规则回显共用
+     *
+     * @param {Object} snapshot 编辑器快照
+     * @returns {boolean} 是否成功应用
+     */
+    applyEditorSnapshot(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object') {
+        return false
+      }
+      if (snapshot.editor === 'logic') {
+        const tree = normalizeGroup(snapshot.state)
+        this.logicTree = tree.type === 'group' ? tree : createGroup()
+        return true
+      }
+      if (snapshot.editor === 'condition' && snapshot.state) {
+        this.condition = {
+          left: snapshot.state.left || '',
+          op: snapshot.state.op || 'eq',
+          right: snapshot.state.right || ''
+        }
+        return true
+      }
+      if (snapshot.editor === 'params' && snapshot.state && snapshot.state.formData) {
+        const formData = buildFormData(this.paramFields)
+        const source = snapshot.state.formData
+        Object.keys(source).forEach(name => {
+          if (Object.prototype.hasOwnProperty.call(formData, name)) {
+            this.$set(formData, name, source[name])
+          }
+        })
+        this.formData = formData
+        return true
+      }
+      return false
+    },
+
+    /**
+     * 用当前图形配置填充 JSON 文本
+     */
+    fillJson() {
+      this.jsonText = JSON.stringify(this.buildRuleEditorSnapshot(), null, 2)
+    },
+
+    /**
+     * 把粘贴的 JSON 快照回填到图形编辑器
+     *
+     * @param {Object} snapshot 编辑器快照
+     */
+    applyJson(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
+        this.$message.warning(this.$t('jsonMode.needObject'))
+        return
+      }
+      const editor = snapshot.editor
+      if (editor !== 'condition' && editor !== 'logic' && editor !== 'params') {
+        this.$message.warning(this.$t('jsonMode.needEditor'))
+        return
+      }
+      if (editor === 'params' && (this.isCondition(this.currentGetter) ||
+        this.isLogicCondition(this.currentGetter))) {
+        this.$message.warning(this.$t('jsonMode.paramsUnsupported'))
+        return
+      }
+      const getterId = editor === 'condition'
+        ? CONDITION_GETTER_ID
+        : editor === 'logic' ? LOGIC_CONDITION_GETTER_ID : this.selectedGetterId
+      const getter = this.getterList.find(item => item.getterId === getterId)
+      if (!getter) {
+        this.$message.warning(this.$t('valueGetter.getterNotFound', { id: getterId || '' }))
+        return
+      }
+      if (getterId !== this.selectedGetterId) {
+        this.selectGetter(getter)
+      }
+      this.applyEditorSnapshot(snapshot)
+      this.inputMode = 'graph'
+      this.$message.success(this.$t('jsonMode.applied'))
+    },
+
+    /**
      * 构造编辑器快照
      *
      * @returns {Object} 编辑器快照
@@ -732,6 +852,10 @@ export default {
      */
     openSaveRule() {
       if (!this.currentGetter) {
+        return
+      }
+      if (this.inputMode === 'json') {
+        this.$message.warning(this.$t('jsonMode.applyFirst'))
         return
       }
       this.saveRuleForm = {
@@ -894,6 +1018,8 @@ export default {
       }
       this.selectedGetterId = getter.getterId
       this.currentGetter = getter
+      this.inputMode = 'graph'
+      this.jsonText = ''
       const fields = toParamFields(getter.paramTypes, getter.getterId)
       const formData = buildFormData(fields)
       fields.forEach(field => {
@@ -1227,6 +1353,10 @@ export default {
     flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
+  }
+
+  .input-mode {
+    margin-left: auto;
   }
 
   .section-label {
