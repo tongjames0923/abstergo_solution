@@ -1,9 +1,12 @@
 package com.tbs.script.api.expressible.impl;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.provider.IRegistryCenter;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.script.api.expressible.IValueGetter;
+import com.tbs.script.api.expressible.constant.ScriptI18nConstant;
 import com.tbs.script.api.expressible.vo.EnumValue;
 import com.tbs.script.api.expressible.vo.param.ParamType;
 import com.tbs.script.api.expressible.vo.param.ParamValue;
@@ -142,14 +145,16 @@ public class IValueGetterService {
     public ResultValue invokeValueGetter(String getterId, Collection<ParamValue> paramValues) {
         if (StrUtil.isBlank(getterId)) {
             log.warn("调用值获取器失败, getterId 为空");
-            throw new IllegalArgumentException("getterId is empty");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get(ScriptI18nConstant.VALUE_GETTER_ID_REQUIRED)));
         }
         log.debug("调用值获取器开始, getterId={}, 参数数量={}", getterId, paramValues == null ? 0 : paramValues.size());
 
         IValueGetter valueGetter = getValueGetter(getterId);
         if (valueGetter == null) {
             log.warn("调用值获取器失败, 未找到值获取器, getterId={}", getterId);
-            throw new IllegalArgumentException("未找到值获取器: " + getterId);
+            AssertUtil.throwError(() -> new IllegalArgumentException(
+                I18nUtil.get(ScriptI18nConstant.VALUE_GETTER_NOT_FOUND, getterId)));
         }
 
         Collection<ParamValue> normalizedValues = paramValues;
@@ -218,16 +223,12 @@ public class IValueGetterService {
         }
 
         if (input.size() > sortedTypes.size()) {
-            String msg = "值获取器 [" +
-                valueGetter.getGetterId() +
-                "] 期望最多 " +
-                sortedTypes.size() +
-                " 个参数，实际传入 " +
-                input.size() +
-                " 个";
+            int actualCount = input.size();
             log.warn("值获取器参数数量超限, getterId={}, 声明数量={}, 实际数量={}, 声明参数={}",
-                valueGetter.getGetterId(), sortedTypes.size(), input.size(), summarizeParamTypes(sortedTypes));
-            throw new IllegalArgumentException(msg);
+                valueGetter.getGetterId(), sortedTypes.size(), actualCount, summarizeParamTypes(sortedTypes));
+            AssertUtil.throwError(() -> new IllegalArgumentException(I18nUtil.get(
+                ScriptI18nConstant.VALUE_GETTER_PARAM_OVERFLOW, valueGetter.getGetterId(), sortedTypes.size(),
+                actualCount)));
         }
         if (input.size() < sortedTypes.size()) {
             log.debug("值获取器参数少于声明数量, 将以 null 占位对齐, getterId={}, 声明数量={}, 实际数量={}",
@@ -249,8 +250,9 @@ public class IValueGetterService {
                         expected.getEnumValues().stream().map(EnumValue::getValue).collect(Collectors.joining(", "));
                     log.warn("值获取器枚举参数非法, getterId={}, 参数名={}, 传入值={}, 允许值={}",
                         valueGetter.getGetterId(), expected.getName(), actual.getValue(), allowed);
-                    throw new IllegalArgumentException(
-                        "参数 [" + expected.getName() + "] 的值 [" + actual.getValue() + "] 非法，允许的值: " + allowed);
+                    AssertUtil.throwError(() -> new IllegalArgumentException(I18nUtil.get(
+                        ScriptI18nConstant.VALUE_GETTER_ENUM_VALUE_INVALID, expected.getName(), actual.getValue(),
+                        allowed)));
                 }
             }
             result.add(actual);

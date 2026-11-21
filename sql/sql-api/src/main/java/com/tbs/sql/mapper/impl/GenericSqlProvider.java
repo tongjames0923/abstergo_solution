@@ -1,6 +1,7 @@
 package com.tbs.sql.mapper.impl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.dialect.IInsertExtractor;
 import com.tbs.sql.dialect.SqlDialect;
@@ -432,7 +433,10 @@ public class GenericSqlProvider {
         try {
             return column.getField().get(entity);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("读取实体字段失败：" + column.getProperty(), e);
+            IllegalStateException error = new IllegalStateException(
+                I18nUtil.get("sql.entity.field.read.failed", column.getProperty()), e);
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 

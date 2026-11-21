@@ -1,5 +1,7 @@
 package com.tbs.schedule.config;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.schedule.NoopTaskStore;
 import com.tbs.schedule.SchedulerCore;
@@ -172,10 +174,16 @@ public class ScheduleConfig {
             try {
                 return clazz.getConstructor().newInstance();
             } catch (Exception ex) {
-                throw new IllegalStateException("无法实例化调度策略: " + clazz.getName(), ex);
+                IllegalStateException error = new IllegalStateException(
+                    I18nUtil.get("schedule.strategy.instantiate.failed", clazz.getName()), ex);
+                AssertUtil.throwError(() -> error);
+                throw error;
             }
         } catch (Exception e) {
-            throw new IllegalStateException("无法实例化调度策略: " + clazz.getName(), e);
+            IllegalStateException error = new IllegalStateException(
+                I18nUtil.get("schedule.strategy.instantiate.failed", clazz.getName()), e);
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 }

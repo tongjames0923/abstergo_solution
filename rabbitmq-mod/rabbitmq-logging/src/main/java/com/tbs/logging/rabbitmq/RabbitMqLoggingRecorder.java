@@ -1,15 +1,16 @@
 package com.tbs.logging.rabbitmq;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.logging.core.ILogRecorder;
 import com.tbs.logging.form.LoggingRecordForm;
 import com.tbs.mq.v2.producer.IMqMessageProducer;
 import com.tbs.mq.v2.vo.MqMessageOutcomeVO;
+import jakarta.annotation.Resource;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
-
-import jakarta.annotation.Resource;
 
 /**
  * RabbitMQ 日志记录器（投递端）
@@ -44,10 +45,12 @@ public class RabbitMqLoggingRecorder implements ILogRecorder {
 
     public RabbitMqLoggingRecorder(String exchangeName, String routingKey) {
         if (StrUtil.isBlank(exchangeName)) {
-            throw new IllegalArgumentException("exchangeName can not be null");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get("mq.exchange.name.required")));
         }
         if (StrUtil.isBlank(routingKey)) {
-            throw new IllegalArgumentException("routingKey can not be null");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get("mq.routing.key.required")));
         }
         this.exchangeName = exchangeName;
         this.routingKey = routingKey;

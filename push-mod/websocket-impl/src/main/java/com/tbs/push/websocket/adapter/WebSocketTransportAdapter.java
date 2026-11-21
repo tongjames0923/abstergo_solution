@@ -1,5 +1,7 @@
 package com.tbs.push.websocket.adapter;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.push.api.frame.IPushCodec;
 import com.tbs.push.api.session.IConnectionSession;
 import com.tbs.push.api.transport.ITransportAdapter;
@@ -74,8 +76,9 @@ public class WebSocketTransportAdapter implements ITransportAdapter {
     @Override
     public IConnectionSession establish(String ticket, Object physicalChannel) {
         if (!(physicalChannel instanceof WebSocketSession)) {
-            throw new IllegalStateException("WebSocket传输要求物理通道为WebSocketSession, 实际: "
-                + (physicalChannel == null ? "null" : physicalChannel.getClass().getName()));
+            AssertUtil.throwError(() -> new IllegalStateException(I18nUtil.get(
+                "push.websocket.transport.channel.required",
+                physicalChannel == null ? "null" : physicalChannel.getClass().getName())));
         }
         WebSocketSession webSocketSession = (WebSocketSession) physicalChannel;
         PushCredential credential = orchestrator.consumeTicket(ticket);

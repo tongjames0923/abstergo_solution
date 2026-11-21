@@ -1,5 +1,7 @@
 package com.tbs.sql.mapper;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,11 +70,11 @@ public final class MapperEntityBindingRegistry {
 
         if (!problems.isEmpty()) {
             problems.keySet().forEach(BINDINGS::remove);
-            StringBuilder message = new StringBuilder("Mapper与实体绑定校验失败，共")
-                .append(problems.size()).append("个Mapper：");
+            StringBuilder detail = new StringBuilder();
             problems.forEach((mapperType, reason) ->
-                message.append("\n  - ").append(mapperType.getName()).append("：").append(reason));
-            throw new IllegalStateException(message.toString());
+                detail.append("\n  - ").append(mapperType.getName()).append("：").append(reason));
+            AssertUtil.throwError(() -> new IllegalStateException(
+                I18nUtil.get("sql.mapper.entity.binding.validation.failed", problems.size(), detail.toString())));
         }
         log.info("@SqlEntityScan 已完成 {} 个 Mapper 与实体的绑定，实体校验={}", BINDINGS.size(), validationEnabled);
     }
@@ -86,7 +88,8 @@ public final class MapperEntityBindingRegistry {
      */
     public static Class<?> getOrResolve(Class<?> mapperType) {
         if (mapperType == null) {
-            throw new IllegalStateException("无法解析当前对象对应的Mapper接口类型");
+            AssertUtil.throwError(() ->
+                new IllegalStateException(I18nUtil.get("sql.mapper.type.unresolved")));
         }
         Class<?> bound = BINDINGS.get(mapperType);
         if (bound != null) {
@@ -94,8 +97,8 @@ public final class MapperEntityBindingRegistry {
         }
         Class<?> resolved = MapperEntityTypeResolver.resolveEntityClass(mapperType);
         if (resolved == null) {
-            throw new IllegalStateException("无法解析Mapper接口" + mapperType.getName()
-                + "的实体类型，请确认其继承IFrameworkMapper/GenericMapper并声明实体泛型");
+            AssertUtil.throwError(() -> new IllegalStateException(
+                I18nUtil.get("sql.mapper.entity.type.unresolved", mapperType.getName())));
         }
         Class<?> raced = BINDINGS.putIfAbsent(mapperType, resolved);
         return raced != null ? raced : resolved;

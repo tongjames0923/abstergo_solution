@@ -1,5 +1,7 @@
 package com.tbs.sql.mapper;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.criteria.IQueryCriteria;
 import com.tbs.sql.dsl.IQueryBuilder;
@@ -69,7 +71,8 @@ public interface IFrameworkMapper<T, K> extends GenericMapper<T, K>, SmartQueryM
     default IQueryBuilder<T> query() {
         Class<?> mapperType = MapperEntityTypeResolver.resolveMapperType(this);
         if (mapperType == null) {
-            throw new IllegalStateException("无法从当前对象解析Mapper接口类型：" + this.getClass().getName());
+            AssertUtil.throwError(() -> new IllegalStateException(
+                I18nUtil.get("sql.mapper.type.resolve.failed.from.instance", this.getClass().getName())));
         }
         Class<?> entityClass = MapperEntityBindingRegistry.getOrResolve(mapperType);
         return (IQueryBuilder<T>)SpringUtil.getBean(IQueryEngine.class).query(entityClass);

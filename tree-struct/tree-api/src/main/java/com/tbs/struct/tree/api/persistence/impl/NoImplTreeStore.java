@@ -1,6 +1,8 @@
 package com.tbs.struct.tree.api.persistence.impl;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.struct.tree.api.persistence.ITreeStorable;
 import com.tbs.struct.tree.api.persistence.ITreeStore;
 import com.tbs.struct.tree.model.TreeNodeModel;
@@ -14,7 +16,8 @@ import java.util.List;
 public class NoImplTreeStore<ID> implements ITreeStore<ID> {
 
     public NoImplTreeStore() {
-        throw new FormattedRuntimeException("树类未实现");
+        AssertUtil.throwError(() ->
+            new FormattedRuntimeException(I18nUtil.get("tree.type.not.implemented")));
     }
 
     @Override

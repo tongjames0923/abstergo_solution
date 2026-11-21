@@ -42,6 +42,11 @@ public final class CommonI18nConstant {
      */
     public static final String COLL_SPLIT_SIZE_POSITIVE = "common.coll.split.size.positive";
 
+    /**
+     * 集合原始数据源为空校验提示：原始集合不能为null
+     */
+    public static final String COMMON_ORIGINAL_REQUIRED = "common.coll.original.required";
+
     /* ===================== Bean 构建相关 ===================== */
 
     /**

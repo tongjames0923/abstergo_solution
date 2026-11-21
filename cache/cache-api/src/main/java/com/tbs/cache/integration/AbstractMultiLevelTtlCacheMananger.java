@@ -1,6 +1,8 @@
 package com.tbs.cache.integration;
 
 import com.tbs.cache.policy.ICacheTtlPolicy;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
@@ -69,7 +71,8 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
      */
     protected AbstractMultiLevelTtlCacheMananger(List<ILevelCacheProvider> providers, ICacheTtlPolicy ttlPolicy) {
         if (providers == null || providers.isEmpty()) {
-            throw new IllegalArgumentException("At least one level cache provider is required");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get("cache.level.provider.required")));
         }
         List<ILevelCacheProvider> sorted = new ArrayList<>(providers);
         sorted.sort(Comparator.comparingInt(ILevelCacheProvider::getOrder));
@@ -168,7 +171,8 @@ public abstract class AbstractMultiLevelTtlCacheMananger extends AbstractTtlAdap
             log.error("No level cache provider supports cacheName: internalName={}, businessName={}, availableProviders={}",
                 name, businessName,
                 providers.stream().map(p -> p.getClass().getSimpleName()).collect(Collectors.joining(", ")));
-            throw new IllegalStateException("No level cache provider supports cacheName: " + name);
+            AssertUtil.throwError(() -> new IllegalStateException(
+                I18nUtil.get("cache.level.provider.not.found", name)));
         }
 
         if (!skippedProviders.isEmpty()) {

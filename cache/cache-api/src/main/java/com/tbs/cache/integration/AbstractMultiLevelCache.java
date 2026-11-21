@@ -1,6 +1,8 @@
 package com.tbs.cache.integration;
 
 import com.tbs.cache.IMultiLevelSupport;
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.Cache;
 
@@ -52,7 +54,8 @@ public abstract class AbstractMultiLevelCache implements Cache, IMultiLevelSuppo
      */
     protected AbstractMultiLevelCache(String name, List<Cache> levels) {
         if (levels == null || levels.isEmpty()) {
-            throw new IllegalArgumentException("At least one cache level is required");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get("cache.level.required")));
         }
         this.name = name;
         this.levels = Collections.unmodifiableList(new ArrayList<>(levels));

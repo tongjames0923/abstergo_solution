@@ -1,5 +1,8 @@
 package com.tbs.common;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
+
 import java.util.Objects;
 
 /**
@@ -132,10 +135,12 @@ public class Feature {
      */
     public Feature(String id, String description) {
         if (id == null || id.isEmpty()) {
-            throw new IllegalArgumentException("功能标识不能为空");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get("common.feature.id.required")));
         }
         if (description == null || description.isEmpty()) {
-            throw new IllegalArgumentException("功能描述不能为空");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get("common.feature.description.required")));
         }
         this.id = id;
         this.description = description;

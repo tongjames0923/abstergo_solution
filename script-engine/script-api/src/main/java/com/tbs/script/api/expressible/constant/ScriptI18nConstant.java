@@ -78,4 +78,26 @@ public final class ScriptI18nConstant {
      * 动作不存在提示：未找到触发器动作: {0}
      */
     public static final String TRIGGER_ACTION_NOT_FOUND = "script.trigger.action.not.found";
+
+    /* ===================== 值获取器 ===================== */
+
+    /**
+     * 值获取器ID为空校验提示：值获取器ID不能为空
+     */
+    public static final String VALUE_GETTER_ID_REQUIRED = "script.value.getter.id.required";
+
+    /**
+     * 值获取器不存在提示：未找到值获取器: {0}
+     */
+    public static final String VALUE_GETTER_NOT_FOUND = "script.value.getter.not.found";
+
+    /**
+     * 值获取器参数数量超限提示：值获取器 [{0}] 期望最多 {1} 个参数，实际传入 {2} 个
+     */
+    public static final String VALUE_GETTER_PARAM_OVERFLOW = "script.value.getter.param.overflow";
+
+    /**
+     * 值获取器枚举参数非法提示：参数 [{0}] 的值 [{1}] 非法，允许的值: {2}
+     */
+    public static final String VALUE_GETTER_ENUM_VALUE_INVALID = "script.value.getter.enum.value.invalid";
 }
