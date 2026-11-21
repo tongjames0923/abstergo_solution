@@ -1527,6 +1527,37 @@ export default {
     typeUnknown: '未知类型'
   },
 
+  // JSON 编辑模式
+  jsonMode: {
+    modeGraph: '图形编辑',
+    modeJson: 'JSON 编辑',
+    label: 'JSON 配置',
+    placeholder: '在此粘贴或输入 JSON，点击「应用到图形编辑」自动回填',
+    fillCurrent: '填入当前配置',
+    format: '格式化',
+    apply: '应用到图形编辑',
+    valid: '格式正确',
+    invalid: '格式错误',
+    invalidTip: 'JSON 解析失败：{error}。请检查引号、逗号与括号是否配对。',
+    applied: '已转换并回填到图形编辑器',
+    applyFirst: '请先点击「应用到图形编辑」',
+    paramsUnsupported: 'params 模式不适用于当前条件类取值器，请先选择普通取值器',
+    needObject: 'JSON 根节点必须是对象',
+    needArray: 'JSON 根节点必须是数组',
+    needEditor: 'editor 只能是 condition、logic 或 params',
+    invalidParamJson: 'paramJson 不是合法的 JSON，请检查后重试',
+    hintsTitle: 'JSON 编写说明',
+    exampleTitle: '示例（可复制修改，或点「填入当前配置」生成当前配置的样例）',
+    hintSnapshot: '根节点是对象：editor 表示编辑器类型（condition 条件 / logic 逻辑组 / params 普通参数），state 是对应编辑器的配置；该格式与保存的编辑器快照一致。',
+    hintCondition: 'condition 模式：state 是含 left、op、right 三个字段的对象。left 与 right 可写字面量，也可写 getter 调用 JSON；op 为运算符编码，例如 eq。',
+    hintLogic: 'logic 模式：state 是分组对象，含 type（固定为 group）、op（and 或 or）、children（子节点数组）。子节点 type 为 condition 时用 value 写条件串，为 group 时可继续嵌套；每组最多 8 个子节点，id 可省略。',
+    hintParams: 'params 模式：state 是含 formData 对象的结构，formData 的键为参数名（取值器声明的 ParamType.name），值为控件值；布尔参数写 true 或 false。',
+    hintRowsAction: '动作编排根节点是数组，每项含 actionId（动作ID）、actionName（动作名称）、paramJson（参数）、sortOrder（序号，从 0 开始）、enabled（1 启用 / 0 停用）。',
+    hintRowsSubscription: '订阅编排根节点是数组，每项含 triggerId（触发器ID）、ruleCode（条件规则编码，可为空）、sortOrder（序号，从 0 开始）、enabled（1 启用 / 0 停用）。',
+    hintParamJson: 'paramJson 推荐直接写 ParamValue 数组，每项含 type、name、sort、value；也可写等价的 JSON 字符串，导入时自动转成字符串。value 支持占位符引用本次事件参数。',
+    hintTip: '不确定字段怎么填时，先切回图形编辑配置一次，再点「填入当前配置」，即可得到一个可修改的真实样例。'
+  },
+
   // 网络请求
   request: {
     networkError: '网络连接失败，请检查网络设置',

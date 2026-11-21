@@ -99,9 +99,24 @@
             @change="handleScopeChange"
           />
 
-          <subscription-rows v-model="rows" :triggers="triggers" :rules="rules" />
+          <div class="editor-modes">
+            <el-radio-group v-model="inputMode" size="mini">
+              <el-radio-button label="graph">{{ $t('jsonMode.modeGraph') }}</el-radio-button>
+              <el-radio-button label="json">{{ $t('jsonMode.modeJson') }}</el-radio-button>
+            </el-radio-group>
+          </div>
 
-          <div class="editor-footer">
+          <subscription-rows v-if="inputMode === 'graph'" v-model="rows" :triggers="triggers" :rules="rules" />
+          <json-edit-panel
+            v-else
+            :value.sync="jsonText"
+            :hints="jsonHints"
+            :example="jsonExample"
+            @apply="applyJson"
+            @fill="fillJson"
+          />
+
+          <div v-if="inputMode === 'graph'" class="editor-footer">
             <el-button size="small" @click="cancelEdit">{{ $t('eventCommon.cancel') }}</el-button>
             <el-button size="small" icon="el-icon-setting" @click="openConditionRule">
               {{ $t('eventCommon.goConditionRule') }}
@@ -124,7 +139,7 @@
 </template>
 
 <script>
-import { queryConditionRules } from '@/api/conditionRule'
+import {queryConditionRules} from '@/api/conditionRule'
 import {
   deleteEventSubscription,
   getEventReporters,
@@ -135,8 +150,9 @@ import {
   saveEventSubscriptions,
   setEventSubscriptionEnabled
 } from '@/api/eventSubscription'
+import JsonEditPanel from '@/components/JsonEditPanel'
 import ResponsiveMixin from '@/mixins/responsive'
-import { toEventOptions, toReporterOptions, toTriggerOptions, unwrapList, unwrapPage } from '@/utils/eventMeta'
+import {toEventOptions, toReporterOptions, toTriggerOptions, unwrapList, unwrapPage} from '@/utils/eventMeta'
 import EventReportPanel from './event/EventReportPanel'
 import EventScopePicker from './event/EventScopePicker'
 import SubscriptionRows from './event/SubscriptionRows'
@@ -150,7 +166,7 @@ import SubscriptionRows from './event/SubscriptionRows'
  */
 export default {
   name: 'EventSubscriptionManager',
-  components: { EventReportPanel, EventScopePicker, SubscriptionRows },
+  components: { EventReportPanel, EventScopePicker, JsonEditPanel, SubscriptionRows },
   mixins: [ResponsiveMixin],
   data() {
     return {
@@ -171,7 +187,9 @@ export default {
       eventCode: '',
       loadedReporterId: '',
       enabled: 1,
-      rows: []
+      rows: [],
+      inputMode: 'graph',
+      jsonText: ''
     }
   },
   computed: {
@@ -183,6 +201,30 @@ export default {
     currentParamTypes() {
       const matched = this.events.find(item => item.code === this.eventCode)
       return matched && Array.isArray(matched.paramTypes) ? matched.paramTypes : []
+    },
+    /**
+     * JSON 模式编写提示
+     *
+     * @returns {Array} 提示文案列表
+     */
+    jsonHints() {
+      return [
+        this.$t('jsonMode.hintRowsSubscription'),
+        this.$t('jsonMode.hintTip')
+      ]
+    },
+    /**
+     * JSON 模式示例
+     *
+     * @returns {string} 示例文本
+     */
+    jsonExample() {
+      return JSON.stringify([{
+        triggerId: 'YOUR_TRIGGER_ID',
+        ruleCode: '',
+        sortOrder: 0,
+        enabled: 1
+      }], null, 2)
     }
   },
   created() {
@@ -279,6 +321,8 @@ export default {
      * @param {string} eventCode 事件编码
      */
     async loadGroup(reporterId, eventCode) {
+      this.inputMode = 'graph'
+      this.jsonText = ''
       try {
         const res = await getSubscriptionsByEvent(reporterId, eventCode)
         const list = unwrapList(res)
@@ -305,6 +349,8 @@ export default {
       this.enabled = 1
       this.rows = []
       this.events = []
+      this.inputMode = 'graph'
+      this.jsonText = ''
     },
     /**
      * 选中左侧订阅行，加载其所属事件的全部绑定
@@ -371,6 +417,8 @@ export default {
       this.reporterId = ''
       this.eventCode = ''
       this.loadedReporterId = ''
+      this.inputMode = 'graph'
+      this.jsonText = ''
     },
     /**
      * 跳转条件规则编排页，并携带当前绑定引用的规则编码
@@ -379,6 +427,46 @@ export default {
       const bound = this.rows.find(row => row.ruleCode)
       const query = bound ? { ruleCode: bound.ruleCode } : {}
       this.$router.push({ path: '/condition-rule', query })
+    },
+    /**
+     * 用当前图形配置填充 JSON 文本
+     */
+    fillJson() {
+      this.jsonText = JSON.stringify(this.rows.map(row => ({
+        triggerId: row.triggerId,
+        ruleCode: row.ruleCode,
+        sortOrder: row.sortOrder,
+        enabled: row.enabled
+      })), null, 2)
+    },
+    /**
+     * 把粘贴的 JSON 行回填到订阅编排面板
+     *
+     * @param {Array} rows 订阅行列表
+     */
+    applyJson(rows) {
+      if (!Array.isArray(rows)) {
+        this.$message.warning(this.$t('jsonMode.needArray'))
+        return
+      }
+      const normalized = []
+      for (let i = 0; i < rows.length; i++) {
+        const item = rows[i]
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+          this.$message.warning(this.$t('jsonMode.needObject'))
+          return
+        }
+        normalized.push({
+          id: item.id || null,
+          triggerId: item.triggerId || '',
+          ruleCode: item.ruleCode || '',
+          sortOrder: item.sortOrder == null ? i : item.sortOrder,
+          enabled: item.enabled === 0 ? 0 : 1
+        })
+      }
+      this.rows = normalized
+      this.inputMode = 'graph'
+      this.$message.success(this.$t('jsonMode.applied'))
     },
     /**
      * 保存订阅组
@@ -605,6 +693,14 @@ export default {
   text-align: center;
   font-size: 13px;
   color: #909399;
+}
+
+.editor-modes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .editor-footer {

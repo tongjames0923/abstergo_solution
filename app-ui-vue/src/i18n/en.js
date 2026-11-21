@@ -1523,6 +1523,37 @@ export default {
     typeUnknown: 'Unknown type'
   },
 
+  // JSON editing mode
+  jsonMode: {
+    modeGraph: 'Visual editor',
+    modeJson: 'JSON editor',
+    label: 'JSON configuration',
+    placeholder: 'Paste or enter JSON here, then click Apply to visual editor',
+    fillCurrent: 'Fill from current',
+    format: 'Format',
+    apply: 'Apply to visual editor',
+    valid: 'Valid JSON',
+    invalid: 'Invalid JSON',
+    invalidTip: 'JSON parse failed: {error}. Check quotes, commas and matching brackets.',
+    applied: 'Converted and applied to the visual editor',
+    applyFirst: 'Click Apply to visual editor first',
+    paramsUnsupported: 'params mode needs a regular getter; select one first',
+    needObject: 'The JSON root must be an object',
+    needArray: 'The JSON root must be an array',
+    needEditor: 'editor must be condition, logic or params',
+    invalidParamJson: 'paramJson is not valid JSON, please check and retry',
+    hintsTitle: 'JSON format guide',
+    exampleTitle: 'Example (copy to modify, or click Fill from current to sample the current configuration)',
+    hintSnapshot: 'The root is an object: editor selects the editor type (condition, logic or params) and state holds that editor configuration. This matches the persisted editor snapshot.',
+    hintCondition: 'condition: state is an object with left, op and right. left and right accept literals or getter call JSON; op is the operator code, for example eq.',
+    hintLogic: 'logic: state is a group object with type (always group), op (and or or) and children (node array). A child with type condition stores its text in value; a group child may nest further. Each group holds at most 8 children and ids may be omitted.',
+    hintParams: 'params: state contains a formData object whose keys are parameter names (ParamType.name declared by the getter) and whose values are control values; boolean parameters use true or false.',
+    hintRowsAction: 'Action bindings use a root array. Each item has actionId, actionName, paramJson, sortOrder (zero-based) and enabled (1 active / 0 inactive).',
+    hintRowsSubscription: 'Subscriptions use a root array. Each item has triggerId, ruleCode (condition rule code, may be empty), sortOrder (zero-based) and enabled (1 active / 0 inactive).',
+    hintParamJson: 'paramJson is best written as a ParamValue array with type, name, sort and value; an equivalent JSON string is also accepted and normalized on import. value supports placeholders referencing the event payload.',
+    hintTip: 'If unsure about a field, configure it once in the visual editor, then click Fill from current to obtain a modifiable sample.'
+  },
+
   // Network Request
   request: {
     networkError: 'Network connection failed, please check network settings',

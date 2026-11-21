@@ -103,14 +103,30 @@
             {{ $t('eventCommon.placeholderHint', { placeholder: '${paramName}', example: '${userName}' }) }}
           </p>
 
+          <div class="editor-modes">
+            <el-radio-group v-model="inputMode" size="mini">
+              <el-radio-button label="graph">{{ $t('jsonMode.modeGraph') }}</el-radio-button>
+              <el-radio-button label="json">{{ $t('jsonMode.modeJson') }}</el-radio-button>
+            </el-radio-group>
+          </div>
+
           <action-binding-panel
+            v-if="inputMode === 'graph'"
             :key="editorKey"
             ref="bindingPanel"
             v-model="rows"
             :actions="actions"
           />
+          <json-edit-panel
+            v-else
+            :value.sync="jsonText"
+            :hints="jsonHints"
+            :example="jsonExample"
+            @apply="applyJson"
+            @fill="fillJson"
+          />
 
-          <div class="editor-footer">
+          <div v-if="inputMode === 'graph'" class="editor-footer">
             <el-button size="small" @click="cancelEdit">{{ $t('eventCommon.cancel') }}</el-button>
             <el-button type="primary" size="small" :loading="saving" @click="handleSave">
               {{ $t('eventCommon.save') }}
@@ -133,9 +149,10 @@ import {
   saveEventActions,
   setEventActionEnabled
 } from '@/api/eventAction'
-import { getEventReporters, getReporterEvents } from '@/api/eventSubscription'
+import {getEventReporters, getReporterEvents} from '@/api/eventSubscription'
+import JsonEditPanel from '@/components/JsonEditPanel'
 import ResponsiveMixin from '@/mixins/responsive'
-import { toActionOptions, toEventOptions, toReporterOptions, unwrapList, unwrapPage } from '@/utils/eventMeta'
+import {toActionOptions, toEventOptions, toReporterOptions, unwrapList, unwrapPage} from '@/utils/eventMeta'
 import ActionBindingPanel from './event/ActionBindingPanel'
 import ActionTestPanel from './event/ActionTestPanel'
 import EventScopePicker from './event/EventScopePicker'
@@ -149,7 +166,7 @@ import EventScopePicker from './event/EventScopePicker'
  */
 export default {
   name: 'EventActionManager',
-  components: { ActionBindingPanel, ActionTestPanel, EventScopePicker },
+  components: { ActionBindingPanel, ActionTestPanel, EventScopePicker, JsonEditPanel },
   mixins: [ResponsiveMixin],
   data() {
     return {
@@ -170,7 +187,37 @@ export default {
       loadedReporterId: '',
       enabled: 1,
       rows: [],
-      editorKey: 0
+      editorKey: 0,
+      inputMode: 'graph',
+      jsonText: ''
+    }
+  },
+  computed: {
+    /**
+     * JSON 模式编写提示
+     *
+     * @returns {Array} 提示文案列表
+     */
+    jsonHints() {
+      return [
+        this.$t('jsonMode.hintRowsAction'),
+        this.$t('jsonMode.hintParamJson'),
+        this.$t('jsonMode.hintTip')
+      ]
+    },
+    /**
+     * JSON 模式示例
+     *
+     * @returns {string} 示例文本
+     */
+    jsonExample() {
+      return JSON.stringify([{
+        actionId: 'YOUR_ACTION_ID',
+        actionName: '',
+        paramJson: [{ type: 'string', name: 'userName', sort: 1, value: '${userName}' }],
+        sortOrder: 0,
+        enabled: 1
+      }], null, 2)
     }
   },
   created() {
@@ -254,6 +301,8 @@ export default {
      * @param {string} eventCode 事件编码
      */
     async loadGroup(reporterId, eventCode) {
+      this.inputMode = 'graph'
+      this.jsonText = ''
       try {
         const res = await getActionsByEvent(reporterId, eventCode)
         const list = unwrapList(res)
@@ -284,6 +333,8 @@ export default {
       this.rows = []
       this.events = []
       this.editorKey += 1
+      this.inputMode = 'graph'
+      this.jsonText = ''
     },
     /**
      * 选中左侧绑定行，加载其所属事件的全部动作
@@ -351,6 +402,83 @@ export default {
       this.eventCode = ''
       this.loadedReporterId = ''
       this.editorKey += 1
+      this.inputMode = 'graph'
+      this.jsonText = ''
+    },
+    /**
+     * 用当前图形配置填充 JSON 文本
+     */
+    fillJson() {
+      const panel = this.$refs.bindingPanel
+      const source = panel ? panel.collect() : this.rows
+      this.jsonText = JSON.stringify(source.map(row => ({
+        actionId: row.actionId,
+        actionName: row.actionName,
+        paramJson: this.parseParamJson(row.paramJson),
+        sortOrder: row.sortOrder,
+        enabled: row.enabled
+      })), null, 2)
+    },
+    /**
+     * JSON 字符串还原为参数数组，供样例展示
+     *
+     * @param {string} raw 参数 JSON 字符串
+     * @returns {*} 参数数组或原始字符串
+     */
+    parseParamJson(raw) {
+      if (!raw) {
+        return []
+      }
+      try {
+        return JSON.parse(raw)
+      } catch (e) {
+        return raw
+      }
+    },
+    /**
+     * 把粘贴的 JSON 行回填到动作编排面板
+     *
+     * @param {Array} rows 动作行列表
+     */
+    applyJson(rows) {
+      if (!Array.isArray(rows)) {
+        this.$message.warning(this.$t('jsonMode.needArray'))
+        return
+      }
+      const normalized = []
+      for (let i = 0; i < rows.length; i++) {
+        const item = rows[i]
+        if (!item || typeof item !== 'object' || Array.isArray(item)) {
+          this.$message.warning(this.$t('jsonMode.needObject'))
+          return
+        }
+        let paramJson = ''
+        const raw = item.paramJson
+        if (typeof raw === 'string') {
+          try {
+            JSON.parse(raw)
+            paramJson = raw
+          } catch (e) {
+            this.$message.warning(this.$t('jsonMode.invalidParamJson'))
+            return
+          }
+        } else if (raw !== null && raw !== undefined) {
+          paramJson = JSON.stringify(raw)
+        }
+        normalized.push({
+          uid: 'action-' + this.editorKey + '-' + i,
+          id: item.id || null,
+          actionId: item.actionId || '',
+          actionName: item.actionName || '',
+          paramJson,
+          sortOrder: item.sortOrder == null ? i : item.sortOrder,
+          enabled: item.enabled === 0 ? 0 : 1
+        })
+      }
+      this.rows = normalized
+      this.editorKey += 1
+      this.inputMode = 'graph'
+      this.$message.success(this.$t('jsonMode.applied'))
     },
     /**
      * 保存动作编排
@@ -575,6 +703,14 @@ export default {
   margin: 0 0 8px;
   font-size: 12px;
   color: #909399;
+}
+
+.editor-modes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
 .editor-footer {

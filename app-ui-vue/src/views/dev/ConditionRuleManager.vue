@@ -113,21 +113,37 @@
 
           <div class="section-title">
             <span>{{ $t('conditionRule.editorTitle') }}</span>
-            <el-radio-group v-model="editor" size="mini">
-              <el-radio-button label="condition">{{ $t('conditionRule.editorCondition') }}</el-radio-button>
-              <el-radio-button label="logic">{{ $t('conditionRule.editorLogic') }}</el-radio-button>
-            </el-radio-group>
+            <div class="editor-modes">
+              <el-radio-group v-model="inputMode" size="mini">
+                <el-radio-button label="graph">{{ $t('jsonMode.modeGraph') }}</el-radio-button>
+                <el-radio-button label="json">{{ $t('jsonMode.modeJson') }}</el-radio-button>
+              </el-radio-group>
+              <el-radio-group v-if="inputMode === 'graph'" v-model="editor" size="mini">
+                <el-radio-button label="condition">{{ $t('conditionRule.editorCondition') }}</el-radio-button>
+                <el-radio-button label="logic">{{ $t('conditionRule.editorLogic') }}</el-radio-button>
+              </el-radio-group>
+            </div>
           </div>
 
-          <condition-builder v-if="editor === 'condition'" v-model="condition" :getters="getterList" />
-          <logic-condition-builder
+          <template v-if="inputMode === 'graph'">
+            <condition-builder v-if="editor === 'condition'" v-model="condition" :getters="getterList" />
+            <logic-condition-builder
+              v-else
+              v-model="logicTree"
+              :getters="getterList"
+              :operand-component="operandComponent"
+            />
+          </template>
+          <json-edit-panel
             v-else
-            v-model="logicTree"
-            :getters="getterList"
-            :operand-component="operandComponent"
+            :value.sync="jsonText"
+            :hints="jsonHints"
+            :example="jsonExample"
+            @apply="applyJson"
+            @fill="fillJson"
           />
 
-          <div class="test-bar">
+          <div v-if="inputMode === 'graph'" class="test-bar">
             <el-button size="small" icon="el-icon-video-play" :loading="running" @click="handleTest">
               {{ $t('conditionRule.test') }}
             </el-button>
@@ -137,7 +153,7 @@
             </span>
           </div>
 
-          <div class="editor-footer">
+          <div v-if="inputMode === 'graph'" class="editor-footer">
             <el-button size="small" @click="cancelEdit">{{ $t('common.cancel') }}</el-button>
             <el-button type="primary" size="small" :loading="saving" @click="handleSave">
               {{ $t('conditionRule.save') }}
@@ -160,6 +176,7 @@ import {
 } from '@/api/conditionRule'
 import {getValueGetters, invokeValueGetter} from '@/api/script/valueGetter'
 import ConditionBuilder from '@/components/ConditionBuilder'
+import JsonEditPanel from '@/components/JsonEditPanel'
 import LogicConditionBuilder from '@/components/LogicConditionBuilder'
 import ValueGetterOperand from '@/components/ValueGetterOperand'
 import ResponsiveMixin from '@/mixins/responsive'
@@ -177,7 +194,7 @@ const LOGIC_GETTER_ID = 'LogicConditionGetter'
  */
 export default {
   name: 'ConditionRuleManager',
-  components: { ConditionBuilder, LogicConditionBuilder },
+  components: { ConditionBuilder, JsonEditPanel, LogicConditionBuilder },
   mixins: [ResponsiveMixin],
   data() {
     return {
@@ -194,6 +211,8 @@ export default {
       editing: false,
       form: this.blankForm(),
       editor: 'condition',
+      inputMode: 'graph',
+      jsonText: '',
       condition: { left: '', op: 'eq', right: '' },
       logicTree: createGroup(),
       result: null
@@ -207,6 +226,30 @@ export default {
      */
     operandComponent() {
       return ValueGetterOperand
+    },
+    /**
+     * JSON 模式编写提示
+     *
+     * @returns {Array} 提示文案列表
+     */
+    jsonHints() {
+      return [
+        this.$t('jsonMode.hintSnapshot'),
+        this.$t('jsonMode.hintCondition'),
+        this.$t('jsonMode.hintLogic'),
+        this.$t('jsonMode.hintTip')
+      ]
+    },
+    /**
+     * JSON 模式示例
+     *
+     * @returns {string} 示例文本
+     */
+    jsonExample() {
+      return JSON.stringify({
+        editor: 'condition',
+        state: { left: '${userName}', op: 'eq', right: 'admin' }
+      }, null, 2)
     }
   },
   created() {
@@ -299,6 +342,8 @@ export default {
       this.editing = true
       this.form = this.blankForm()
       this.editor = 'condition'
+      this.inputMode = 'graph'
+      this.jsonText = ''
       this.condition = { left: '', op: 'eq', right: '' }
       this.logicTree = createGroup()
       this.result = null
@@ -318,6 +363,8 @@ export default {
         enabled: rule.enabled === 0 ? 0 : 1
       }
       this.result = null
+      this.inputMode = 'graph'
+      this.jsonText = ''
       this.restoreEditor(rule)
     },
     /**
@@ -332,23 +379,74 @@ export default {
       } catch (e) {
         snapshot = null
       }
+      this.applyEditorSnapshot(snapshot, rule.getterId)
+    },
+    /**
+     * 应用编辑器快照，JSON 导入与规则回显共用
+     *
+     * @param {Object} snapshot 编辑器快照
+     * @param {string} fallbackGetterId 无快照时的兜底 getter ID
+     * @returns {boolean} 是否成功应用
+     */
+    applyEditorSnapshot(snapshot, fallbackGetterId) {
       if (snapshot && snapshot.editor === 'logic') {
+        const tree = normalizeGroup(snapshot.state)
         this.editor = 'logic'
-        this.logicTree = normalizeGroup(snapshot.state)
-        return
+        this.logicTree = tree.type === 'group' ? tree : createGroup()
+        return true
       }
       if (snapshot && snapshot.editor === 'condition') {
+        const state = snapshot.state || {}
         this.editor = 'condition'
         this.condition = {
-          left: snapshot.state && snapshot.state.left ? snapshot.state.left : '',
-          op: (snapshot.state && snapshot.state.op) || 'eq',
-          right: snapshot.state && snapshot.state.right ? snapshot.state.right : ''
+          left: state.left || '',
+          op: state.op || 'eq',
+          right: state.right || ''
         }
-        return
+        return true
       }
-      this.editor = rule.getterId === LOGIC_GETTER_ID ? 'logic' : 'condition'
+      if (!fallbackGetterId) {
+        return false
+      }
+      this.editor = fallbackGetterId === LOGIC_GETTER_ID ? 'logic' : 'condition'
       this.condition = { left: '', op: 'eq', right: '' }
       this.logicTree = createGroup()
+      return true
+    },
+    /**
+     * 构造编辑器快照，JSON 导出与规则保存共用
+     *
+     * @returns {Object} 编辑器快照
+     */
+    buildEditorSnapshot() {
+      return {
+        editor: this.editor,
+        state: this.editor === 'condition' ? this.condition : this.logicTree
+      }
+    },
+    /**
+     * 用当前图形配置填充 JSON 文本
+     */
+    fillJson() {
+      this.jsonText = JSON.stringify(this.buildEditorSnapshot(), null, 2)
+    },
+    /**
+     * 把粘贴的 JSON 快照回填到图形编辑器
+     *
+     * @param {Object} snapshot 编辑器快照
+     */
+    applyJson(snapshot) {
+      if (!snapshot || typeof snapshot !== 'object' || Array.isArray(snapshot)) {
+        this.$message.warning(this.$t('jsonMode.needObject'))
+        return
+      }
+      if (snapshot.editor !== 'condition' && snapshot.editor !== 'logic') {
+        this.$message.warning(this.$t('jsonMode.needEditor'))
+        return
+      }
+      this.applyEditorSnapshot(snapshot)
+      this.inputMode = 'graph'
+      this.$message.success(this.$t('jsonMode.applied'))
     },
     /**
      * 取消编辑
@@ -357,6 +455,8 @@ export default {
       this.editing = false
       this.form = this.blankForm()
       this.result = null
+      this.inputMode = 'graph'
+      this.jsonText = ''
     },
     /**
      * 构造调用载荷
@@ -435,10 +535,7 @@ export default {
         description: this.form.description,
         getterId: invocation.getterId,
         invocationJson: JSON.stringify(invocation.paramValues),
-        editorJson: JSON.stringify({
-          editor: this.editor,
-          state: this.editor === 'condition' ? this.condition : this.logicTree
-        }),
+        editorJson: JSON.stringify(this.buildEditorSnapshot()),
         enabled: this.form.enabled
       }
       if (this.form.id) {
@@ -654,11 +751,19 @@ export default {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-wrap: wrap;
   gap: 8px;
   margin: 8px 0 10px;
   font-size: 14px;
   font-weight: 600;
   color: #303133;
+}
+
+.editor-modes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .test-bar {
@@ -713,6 +818,11 @@ export default {
 
   .page-head {
     flex-direction: column;
+  }
+
+  .section-title {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }
 </style>
