@@ -37,7 +37,7 @@ public interface IInsertExtractor {
      *
      * @param tableName  表名
      * @param columns    列名清单，用于拼接插入列清单
-     * @param properties 属性名清单，用于生成参数占位符，顺序与列名清单一致
+     * @param properties 属性名清单（时间字段带 jdbcType 后缀），用于生成参数占位符，顺序与列名清单一致，须原样写入占位符
      * @param rowCount   行数，必须大于0
      * @return 批量插入SQL
      */

@@ -4,6 +4,7 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.sql.annotation.core.SelectSQL;
 import com.tbs.sql.annotation.core.SqlEntityScan;
+import com.tbs.sql.annotation.mapping.SqlJdbcType;
 import com.tbs.sql.model.select.SelectInfoModel;
 import com.tbs.sql.model.select.SelectItemModel;
 import com.tbs.sql.util.SqlUtils;
@@ -146,8 +147,9 @@ public class EntityMetadataExtractor {
             List<EntityColumnMetadata> columns = new LinkedList<>();
             for (Field field : SqlUtils.getPersistentFields(c)) {
                 field.setAccessible(true);
+                SqlJdbcType jdbcType = field.getAnnotation(SqlJdbcType.class);
                 columns.add(new EntityColumnMetadata(field.getName(), SqlUtils.getFieldNameWithMapping(field),
-                    field.isAnnotationPresent(Id.class), field));
+                    field.isAnnotationPresent(Id.class), field, jdbcType == null ? null : jdbcType.value()));
             }
             return new EntityTableMetadata(SqlUtils.getTableName(c), c, columns);
         });

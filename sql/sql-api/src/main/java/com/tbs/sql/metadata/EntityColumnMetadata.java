@@ -3,6 +3,7 @@ package com.tbs.sql.metadata;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.ibatis.type.JdbcType;
 
 import java.lang.reflect.Field;
 
@@ -34,4 +35,18 @@ public class EntityColumnMetadata {
     private boolean id;
     /** 反射字段，用于读取实体运行时值 */
     private Field field;
+    /** 字段显式声明的 JDBC 类型，未标注 @SqlJdbcType 时为 null */
+    private JdbcType jdbcType;
+
+    /**
+     * 兼容未声明 JDBC 类型的构造入口。
+     *
+     * @param property  Java 属性名
+     * @param column    数据库列名
+     * @param id        是否主键
+     * @param field     反射字段
+     */
+    public EntityColumnMetadata(String property, String column, boolean id, Field field) {
+        this(property, column, id, field, null);
+    }
 }
