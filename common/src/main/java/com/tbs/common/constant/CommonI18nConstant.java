@@ -113,6 +113,23 @@ public final class CommonI18nConstant {
      */
     public static final String SNOWFLAKE_NEGATIVE_ID = "snowflake.negative.id";
 
+    /* ===================== UUID 池化包装相关 ===================== */
+
+    /**
+     * 被包装 UUID 生成器为空校验提示：UUID 生成器不能为 null
+     */
+    public static final String UUID_DELEGATE_REQUIRED = "common.uuid.delegate.required";
+
+    /**
+     * UUID 池化缓冲容量非法校验提示：缓冲容量必须为正数，当前值：{0}
+     */
+    public static final String UUID_BUFFER_SIZE_INVALID = "common.uuid.buffer.size.invalid";
+
+    /**
+     * UUID 池化填充阈值非法校验提示：阈值必须大于 0 且小于缓冲容量 {0}，当前值：{1}
+     */
+    public static final String UUID_REFILL_THRESHOLD_INVALID = "common.uuid.refill.threshold.invalid";
+
     /* ===================== 多来源对象提供器相关 ===================== */
 
     /**

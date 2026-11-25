@@ -396,8 +396,20 @@ featureManager.getSupportedFeatures();                       // 已注册功能�
 
 - **SnowFlakeUUID**（默认，`tbs.uuid.type`）：CAS 无锁雪花算法。workerId 与 dataCenterId 范围 `[0,31]`，越界、时钟回退、时间戳溢出均抛出 i18n 化异常；无参构造自动计算（workerId 取本机 IP 末段对 32 取模，dataCenterId 取 `server.port` 对 32 取模）；`getUuidString` 以 16 进制拼接至期望长度。
 - **SimpleUUID**：基于随机数（`Random.nextLong()`）的 16 进制实现。
+- **PooledUuidGenerator**：通用池化包装器，可包装任意 `IUuidGenerator`（雪花、随机数等）以降低每次取 ID 的开销；双缓冲 + 异步预填充，缓冲耗尽时降级直调底层生成器。旧名 `PooledSnowFlakeUUID` 已废弃。
 
 装配（`UuidConfig`）：`tbs.uuid.type` 为 `SnowFlakeUUID` 时按配置传入 workerId / dataCenterId，否则按类型经无参构造实例化（缺省回退 `SnowFlakeUUID()`）。
+
+手动包装任意生成器（不改变 `tbs.uuid.type` 的默认装配）：
+
+```java
+IUuidGenerator pooled = new PooledUuidGenerator(new SnowFlakeUUID(0, 0), 4096);
+Long id = pooled.getUuidLong();
+```
+
+包装器预生成 ID，若底层算法把时间戳编入 ID，取用时刻会略晚于生成时刻；强依赖时间戳精确性时请减小缓冲容量。包装器实现 `AutoCloseable`，需在应用关闭时调用 `close()` 停止填充线程。
+
+池化适合“底层生成昂贵、消费突发”的场景；持续满速消费时单填充线程可能跟不上，降级计数会上升。对 `SimpleUUID` 这类本身极廉价的生成器，池化的原子与锁开销可能超过收益，建议按实测结果选用。
 
 使用方式（`UuidUtil` 为 Spring 组件，内部持有生成器与 `UuidProperty`）：
 
@@ -726,7 +738,7 @@ com.tbs.common
 │   ├── helper        # FeatureWrapperHelper / IFeatureWrapperExtension
 │   └── time          # TimeUtil
 └── uuid              # IUuidGenerator
-    └── impl          # SnowFlakeUUID / SimpleUUID
+    └── impl          # SnowFlakeUUID / SimpleUUID / PooledUuidGenerator / PooledSnowFlakeUUID(废弃兼容)
 ```
 
 ## 许可证
