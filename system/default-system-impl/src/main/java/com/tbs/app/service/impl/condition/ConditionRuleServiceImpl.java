@@ -7,6 +7,7 @@ import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.enums.CommonFlagEnum;
@@ -193,7 +194,7 @@ public class ConditionRuleServiceImpl extends
             .equal(SystemConditionRuleEntity::getRuleCode, ruleCode.trim())
             .equal(SystemConditionRuleEntity::getFlag, CommonFlagEnum.ACTIVE.getCode())
             .pour().fetch();
-        return rules.isEmpty() ? null : rules.get(0);
+        return CollUtil.getFirst(rules);
     }
 
     @Caching(evict = {@CacheEvict(cacheNames = CONDITION_RULE, key = "#id"),

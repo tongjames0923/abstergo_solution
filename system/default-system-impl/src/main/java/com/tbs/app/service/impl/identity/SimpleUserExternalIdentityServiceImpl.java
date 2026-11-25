@@ -10,20 +10,16 @@ import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.shared.mapper.SystemUserExternalIdentityMapper;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
 import com.tbs.shared.pojo.entity.SystemUserExternalIdentityEntity;
-import com.tbs.shared.mapper.SystemUserExternalIdentityMapper;
 import com.tbs.sql.dsl.IWhereClause;
 import com.tbs.sql.service.QueryEngine;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.Ordered;
 
-import jakarta.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -183,10 +179,8 @@ public class SimpleUserExternalIdentityServiceImpl implements IUserExternalIdent
             return null;
         }
         List<SystemUserEntity> users = systemUserService.queryByUserName(userName);
-        if (CollUtil.isEmpty(users)) {
-            return null;
-        }
-        return users.get(0).getId();
+        SystemUserEntity user = CollUtil.getFirst(users);
+        return user == null ? null : user.getId();
     }
 
     /**

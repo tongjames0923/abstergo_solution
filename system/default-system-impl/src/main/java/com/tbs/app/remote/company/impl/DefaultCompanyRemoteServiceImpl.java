@@ -8,8 +8,8 @@ import com.tbs.app.service.impl.company.CompanyTreeStructService;
 import com.tbs.app.vo.RemoteCompanyInfoVO;
 import com.tbs.shared.pojo.criteria.CommonSystemCompanyQueryCriteria;
 import com.tbs.shared.pojo.entity.SystemCompanyEntity;
-
 import jakarta.annotation.Resource;
+
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -62,10 +62,8 @@ public class DefaultCompanyRemoteServiceImpl implements ICompanyRemoteService {
         var qo = new CommonSystemCompanyQueryCriteria();
         qo.setEqualsTaxNumber(taxNumber);
         List<SystemCompanyEntity> companies = companyService.queryAndPage(qo, null).getData();
-        if (CollUtil.isEmpty(companies)) {
-            return null;
-        }
-        return convertToVO(companies.get(0));
+        SystemCompanyEntity company = CollUtil.getFirst(companies);
+        return company == null ? null : convertToVO(company);
     }
 
     @Override

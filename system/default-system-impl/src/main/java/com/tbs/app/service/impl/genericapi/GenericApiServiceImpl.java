@@ -197,7 +197,8 @@ public class GenericApiServiceImpl
     public SystemGenericApiEntity saveWithParams(SystemGenericApiEntity apiConfig,
         List<SystemGenericApiParamEntity> params) {
         List<SystemGenericApiEntity> saved = super.save(apiConfig);
-        SystemGenericApiEntity result = CollUtil.isEmpty(saved) ? apiConfig : saved.get(0);
+        SystemGenericApiEntity first = CollUtil.getFirst(saved);
+        SystemGenericApiEntity result = first == null ? apiConfig : first;
         replaceParams(result.getApiId(), params);
         return result;
     }

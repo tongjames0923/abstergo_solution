@@ -6,9 +6,9 @@ import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.shared.pojo.entity.SystemUserEntity;
+import jakarta.annotation.Resource;
 import org.springframework.core.Ordered;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 
 /**
@@ -43,9 +43,7 @@ public class UniqueKeyMatchResolver implements IExternalIdentityResolver {
             return null;
         }
         List<SystemUserEntity> users = systemUserService.queryByUserName(profile.getExternalId());
-        if (CollUtil.isEmpty(users)) {
-            return null;
-        }
-        return users.get(0).getId();
+        SystemUserEntity user = CollUtil.getFirst(users);
+        return user == null ? null : user.getId();
     }
 }

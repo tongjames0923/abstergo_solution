@@ -164,10 +164,8 @@ public class SimpleSystemUserServiceImpl
     public Long getUserIdByUserName(String username) {
         var users = getQueryWrapper().query().where().equal(SystemUserEntity::getUserName, username)
             .equal(SystemUserEntity::getFlag, SystemUserStatusEnum.ACTIVE.getCode()).pour().fetch();
-        if (CollUtil.isEmpty(users)) {
-            return null;
-        }
-        return users.get(0).getId();
+        SystemUserEntity user = CollUtil.getFirst(users);
+        return user == null ? null : user.getId();
     }
 
     @Override

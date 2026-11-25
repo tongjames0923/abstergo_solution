@@ -5,6 +5,7 @@ import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.i18n.I18nUtil;
+import com.tbs.common.util.base.CollUtil;
 import com.tbs.shared.mapper.ViewRouteConfigrationMapper;
 import com.tbs.shared.mapper.ViewRouteMetaMapper;
 import com.tbs.shared.mapper.ViewRouteRoleMapper;
@@ -14,10 +15,10 @@ import com.tbs.shared.pojo.entity.ViewRouteMetaEntity;
 import com.tbs.shared.pojo.entity.ViewRouteRoleEntity;
 import com.tbs.shared.pojo.entity.ViewRouteVersionEntity;
 import com.tbs.view.route.api.IViewRouteService;
+import com.tbs.view.route.constant.ViewRouteI18nConstant;
 import com.tbs.view.route.model.ViewRouteMetaModel;
 import com.tbs.view.route.model.ViewRouteModel;
 import com.tbs.view.route.model.ViewRouteVersionModel;
-import com.tbs.view.route.constant.ViewRouteI18nConstant;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -249,7 +250,8 @@ public class DatabaseViewRouteServiceImpl implements IViewRouteService, IStartup
      */
     private Long findLatestVersionId(String group) {
         List<ViewRouteVersionEntity> versions = viewRouteVersionMapper.findByGroupOrderByVersionNoDesc(group);
-        return versions.isEmpty() ? null : versions.get(0).getId();
+        ViewRouteVersionEntity latest = CollUtil.getFirst(versions);
+        return latest == null ? null : latest.getId();
     }
 
     /**

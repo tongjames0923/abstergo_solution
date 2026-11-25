@@ -212,7 +212,7 @@ public class EventSubscriptionServiceImpl extends
                 .equal(SystemEventSubscriptionEntity::getEnabled, ENABLED)
                 .equal(SystemEventSubscriptionEntity::getFlag, CommonFlagEnum.ACTIVE.getCode());
         List<SystemEventSubscriptionEntity> result = where.pour().fetch();
-        return CollUtil.isEmpty(result) ? null : result.get(0);
+        return CollUtil.getFirst(result);
     }
 
     @Caching(evict = {@CacheEvict(cacheNames = EVENT_SUBSCRIPTION, allEntries = true),
