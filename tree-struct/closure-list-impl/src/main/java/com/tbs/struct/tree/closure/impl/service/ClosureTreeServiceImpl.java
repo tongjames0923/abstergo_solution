@@ -5,6 +5,7 @@ import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.CollWrapper;
 import com.tbs.common.util.base.StrUtil;
@@ -16,6 +17,7 @@ import com.tbs.struct.tree.closure.impl.mapper.TreeNodeMapper;
 import com.tbs.struct.tree.closure.impl.mapper.TreeRelationMapper;
 import com.tbs.struct.tree.closure.impl.model.SimpleTreeStrorableModel;
 import com.tbs.struct.tree.model.TreeNodeModel;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.CacheEvict;
@@ -24,12 +26,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
-import static com.tbs.struct.tree.closure.impl.service.CacheNamesConstants.TREE_NODE_ENTITY;
-
-import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
+
+import static com.tbs.struct.tree.closure.impl.service.CacheNamesConstants.TREE_NODE_ENTITY;
 
 /**
  * 树结构存储实现
@@ -398,8 +399,9 @@ public class ClosureTreeServiceImpl implements ITreeStore<Long>, IStartup {
             // 创建一个Map来存储节点ID到TreeNodeEntity的映射，便于快速查找
             Map<String, TreeNodeEntity> nodeMap =
                 allNodes.stream().collect(Collectors.toMap(TreeNodeEntity::getNodeId, node -> node, (a, b) -> {
-                    throw new FormattedRuntimeException("树组[{}]中存在重复的节点ID：{}", a.getGroupName(),
-                        a.getNodeId());
+                    AssertUtil.throwError(() -> new FormattedRuntimeException(
+                        I18nUtil.get("tree.group.duplicate.node.id", a.getGroupName(), a.getNodeId())));
+                    return a;
                 }));
 
             List<TreeRelationEntity> relations = new ArrayList<>(allNodes.size() * 2);

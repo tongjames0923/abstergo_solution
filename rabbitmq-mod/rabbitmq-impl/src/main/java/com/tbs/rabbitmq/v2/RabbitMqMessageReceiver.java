@@ -1,5 +1,6 @@
 package com.tbs.rabbitmq.v2;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.StrUtil;
@@ -93,7 +94,10 @@ public abstract class RabbitMqMessageReceiver<T extends Serializable> extends Ab
             log.debug("[MQ-v2] deserialize via payload converter, format={}, payloadType={}", payloadFormat, payloadType);
             return payload;
         } catch (ClassNotFoundException e) {
-            throw new FormattedRuntimeException(e, I18nUtil.get("mq.v2.payload.deserialize.failed", payloadType));
+            FormattedRuntimeException error = new FormattedRuntimeException(e,
+                I18nUtil.get("mq.v2.payload.deserialize.failed", payloadType));
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 

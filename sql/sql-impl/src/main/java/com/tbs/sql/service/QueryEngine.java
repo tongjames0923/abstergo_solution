@@ -5,6 +5,7 @@ import com.tbs.common.IStartup;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.BeanUtil;
 import com.tbs.sql.assembler.ISqlAssembler;
 import com.tbs.sql.builder.EntitySqlDriver;
@@ -276,7 +277,8 @@ public class QueryEngine implements IStartup, IQueryEngine {
      */
     public static List<OrderInfo> collectOrderInfos(IQueryCriteria queryObject) {
         if (getInstance() == null) {
-            throw new FormattedRuntimeException("QueryEngine尚未初始化，请确保已引入 sql-impl(自动装配)与所选方言实现模块且应用已启动");
+            AssertUtil.throwError(() ->
+                new FormattedRuntimeException(I18nUtil.get("sql.engine.not.initialized")));
         }
         // 使用缓存的排序字段元数据，避免重复反射和注解检查
         List<OrderFieldMetadata> metadataList = getInstance().collectOrderFields(queryObject);

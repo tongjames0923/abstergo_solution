@@ -1,6 +1,7 @@
 package com.tbs.sql.mapper;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.dialect.IInsertExtractor;
@@ -316,7 +317,10 @@ public interface GenericMapper<T, K> {
         try {
             id = meta.getIdColumn().getField().get(entity);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("读取实体主键失败：" + meta.getIdColumn().getProperty(), e);
+            IllegalStateException error = new IllegalStateException(
+                I18nUtil.get("sql.entity.id.read.failed", meta.getIdColumn().getProperty()), e);
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
         if (id == null) {
             insert(entity);
@@ -363,7 +367,10 @@ public interface GenericMapper<T, K> {
             try {
                 id = idField.get(e);
             } catch (IllegalAccessException | IllegalArgumentException ex) {
-                throw new IllegalStateException("读取实体主键失败：" + meta.getIdColumn().getProperty(), ex);
+                IllegalStateException error = new IllegalStateException(
+                    I18nUtil.get("sql.entity.id.read.failed", meta.getIdColumn().getProperty()), ex);
+                AssertUtil.throwError(() -> error);
+                throw error;
             }
             if (id == null) {
                 insertList.add(e);

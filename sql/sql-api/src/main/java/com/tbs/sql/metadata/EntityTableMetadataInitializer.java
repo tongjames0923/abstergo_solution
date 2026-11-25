@@ -1,5 +1,7 @@
 package com.tbs.sql.metadata;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.sql.dialect.ISelectExtractor;
 import com.tbs.sql.dialect.SqlDialect;
 import com.tbs.sql.mapper.IFrameworkMapper;
@@ -97,8 +99,9 @@ public class EntityTableMetadataInitializer implements SmartInitializingSingleto
             }
         }
         if (!errors.isEmpty()) {
-            throw new IllegalStateException("实体表元数据启动期校验失败，共" + errors.size() + "个实体注解不完整：\n  - "
-                + String.join("\n  - ", errors));
+            AssertUtil.throwError(() -> new IllegalStateException(
+                I18nUtil.get("sql.entity.metadata.validation.failed", errors.size(),
+                    String.join("\n  - ", errors))));
         }
         log.info("@SqlEntityScan 启动期已校验并预热 {} 个 EntityTableMetadata，扫描包：{}", initialized, packages);
         warmSelectFragments(registered, packages);
@@ -236,7 +239,10 @@ public class EntityTableMetadataInitializer implements SmartInitializingSingleto
         try {
             resources = applicationContext.getResources(location);
         } catch (IOException e) {
-            throw new IllegalStateException("@SqlEntityScan 扫描包[" + basePackage + "]失败", e);
+            IllegalStateException error = new IllegalStateException(
+                I18nUtil.get("sql.entity.scan.package.failed", basePackage), e);
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
         if (resources.length == 0) {
             log.warn("@SqlEntityScan 扫描包[{}]未找到任何 class 资源，请确认包名是否正确", basePackage);
@@ -249,7 +255,10 @@ public class EntityTableMetadataInitializer implements SmartInitializingSingleto
             try {
                 metadataReader = readerFactory.getMetadataReader(resource);
             } catch (IOException e) {
-                throw new IllegalStateException("@SqlEntityScan 读取实体类元数据失败：" + resource, e);
+                IllegalStateException error = new IllegalStateException(
+                    I18nUtil.get("sql.entity.scan.resource.failed", resource), e);
+                AssertUtil.throwError(() -> error);
+                throw error;
             }
             AnnotationMetadata metadata = metadataReader.getAnnotationMetadata();
             if (metadata.hasAnnotation(ENTITY_ANNOTATION) || metadata.hasAnnotation(TABLE_ANNOTATION)) {

@@ -4,6 +4,7 @@ import com.tbs.common.constant.CommonI18nConstant;
 import com.tbs.common.data.IFeatureWrapper;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.i18n.I18nUtil;
 
 import java.util.*;
 import java.util.function.*;
@@ -134,7 +135,8 @@ public class CollWrapper<T> implements IFeatureWrapper<Collection<T>> {
     @Override
     public void setOriginal(Collection<T> orginal) {
         if (orginal == null) {
-            throw new IllegalArgumentException("Cannot set original to null");
+            AssertUtil.throwError(() ->
+                new IllegalArgumentException(I18nUtil.get(CommonI18nConstant.COMMON_ORIGINAL_REQUIRED)));
         }
         // CollWrapper 设计为不可变对象，不支持修改原始数据
         throw new UnsupportedOperationException("CollWrapper is immutable, cannot set original collection");

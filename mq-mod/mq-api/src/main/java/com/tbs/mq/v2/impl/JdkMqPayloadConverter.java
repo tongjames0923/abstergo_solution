@@ -1,15 +1,12 @@
 package com.tbs.mq.v2.impl;
 
+import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.mq.v2.core.IMqMessagePayloadConverter;
 import com.tbs.mq.v2.core.MqPayloadConverterRegistry;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 
 /**
  * JDK 序列化消息体转换器（v2 记录驱动模型 · 默认负载转换实现）
@@ -57,8 +54,10 @@ public class JdkMqPayloadConverter implements IMqMessagePayloadConverter {
             oos.flush();
             return bos.toByteArray();
         } catch (IOException e) {
-            throw new FormattedRuntimeException(e, I18nUtil.get("mq.v2.payload.serialize.failed",
-                clazz == null ? null : clazz.getName()));
+            FormattedRuntimeException error = new FormattedRuntimeException(e,
+                I18nUtil.get("mq.v2.payload.serialize.failed", clazz == null ? null : clazz.getName()));
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 
@@ -76,8 +75,10 @@ public class JdkMqPayloadConverter implements IMqMessagePayloadConverter {
         try (ByteArrayInputStream bis = new ByteArrayInputStream(payload); ObjectInputStream ois = new ObjectInputStream(bis)) {
             return (T)ois.readObject();
         } catch (IOException | ClassNotFoundException e) {
-            throw new FormattedRuntimeException(e, I18nUtil.get("mq.v2.payload.deserialize.failed",
-                clazz == null ? null : clazz.getName()));
+            FormattedRuntimeException error = new FormattedRuntimeException(e,
+                I18nUtil.get("mq.v2.payload.deserialize.failed", clazz == null ? null : clazz.getName()));
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 }

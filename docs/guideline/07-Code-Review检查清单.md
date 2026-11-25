@@ -46,6 +46,7 @@
 | [禁止] | 直接 `throw new FormattedRuntimeException/RuntimeException` |
 | [禁止] | 代码中拼接中文/英文字面量作为用户可见消息 |
 | [建议] | 带占位符的 key 使用 `.params(...)` 传参，文案占位 `{0}`/`{1}` |
+| [必须] | 有返回值的方法/表达式中用 `AssertUtil.throwError(...)` 包装异常后，须显式 `throw`/`return` 作为终止语句；`throwError` 返回 void，编译器不视其为终止，否则报「缺少返回语句」或「变量可能尚未初始化」 |
 
 ## 7.4 后端 - 实体与数据访问
 

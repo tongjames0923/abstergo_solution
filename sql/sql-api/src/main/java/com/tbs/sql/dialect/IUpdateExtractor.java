@@ -19,7 +19,7 @@ public interface IUpdateExtractor {
      *
      * @param tableName  表名
      * @param columns    参与 SET 的列名清单
-     * @param properties 参与 SET 的属性名清单，顺序与 columns 一致
+     * @param properties 参与 SET 的属性名清单（时间字段带 jdbcType 后缀），顺序与 columns 一致，须原样写入占位符
      * @param idColumn   主键列名
      * @param idProperty 主键属性名
      * @return UPDATE语句

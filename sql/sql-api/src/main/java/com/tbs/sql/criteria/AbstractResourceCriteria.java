@@ -3,6 +3,7 @@ package com.tbs.sql.criteria;
 import cn.hutool.core.io.resource.ResourceUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.sql.model.select.SelectInfoModel;
 
 import java.io.BufferedReader;
@@ -60,9 +61,14 @@ public abstract class AbstractResourceCriteria implements IQueryCriteria {
             reader.lines().forEach(sql::append);
             return SelectInfoModel.rawSql(sql.toString().trim());
         } catch (Exception e) {
-            AssertUtil.throwError(() -> new FormattedRuntimeException("加载SQL失败：{}", e, resourcePath));
+            FormattedRuntimeException error = new FormattedRuntimeException(
+                I18nUtil.get("sql.resource.load.failed", resourcePath), e);
+            AssertUtil.throwError(() -> error);
         }
-        throw new FormattedRuntimeException("加载SQL失败：{}", resourcePath);
+        FormattedRuntimeException error =
+            new FormattedRuntimeException(I18nUtil.get("sql.resource.load.failed", resourcePath));
+        AssertUtil.throwError(() -> error);
+        throw error;
     }
 
     protected void putResourcePath(String resourcePath) {

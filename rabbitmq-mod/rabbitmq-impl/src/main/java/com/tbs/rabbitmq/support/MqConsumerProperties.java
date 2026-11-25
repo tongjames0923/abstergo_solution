@@ -1,5 +1,7 @@
 package com.tbs.rabbitmq.support;
 
+import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import lombok.Data;
 import org.springframework.amqp.core.AcknowledgeMode;
 
@@ -475,7 +477,8 @@ public class MqConsumerProperties {
          */
         public MqConsumerProperties build() {
             if (props.getQueueName() == null || props.getQueueName().isEmpty()) {
-                throw new IllegalArgumentException("queueName must not be empty");
+                AssertUtil.throwError(() ->
+                    new IllegalArgumentException(I18nUtil.get("mq.consumer.queue.name.required")));
             }
             return props;
         }

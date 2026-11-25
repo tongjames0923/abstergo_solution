@@ -1,6 +1,7 @@
 package com.tbs.sql.mapper.impl;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.sql.dialect.IInsertExtractor;
 import com.tbs.sql.dialect.SqlDialect;
@@ -10,6 +11,7 @@ import com.tbs.sql.metadata.EntityColumnMetadata;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.metadata.EntityTableMetadata;
 import com.tbs.sql.util.SqlIdentifierUtils;
+import com.tbs.sql.util.SqlJdbcTypeUtils;
 import org.apache.ibatis.builder.annotation.ProviderContext;
 
 import java.util.ArrayList;
@@ -40,6 +42,8 @@ import java.util.function.Supplier;
  *   <li>条件拼接只取非空、非空串、非集合、非数组的字段，全空时退化为无 WHERE 的全表语句</li>
  *   <li>方言实例在语句生成时从 Spring 容器获取，此时容器必然已就绪</li>
  *   <li>静态语句（全字段插入、按主键查询/删除/更新）的 SQL 文本按实体类缓存，动态语句每次执行重建</li>
+ *   <li>占位符的 jdbcType 以 {@link com.tbs.sql.annotation.mapping.SqlJdbcType} 声明为准，
+ *       未标注时按 Java 类型推导，避免 SQL Server 把 null 绑定成 varbinary</li>
  * </ul>
  *
  * @author abstergo
@@ -97,7 +101,7 @@ public class GenericSqlProvider {
         List<String> properties = new ArrayList<>(metadata.getColumns().size());
         for (EntityColumnMetadata column : metadata.getColumns()) {
             columns.add(SqlIdentifierUtils.column(column.getColumn()));
-            properties.add(column.getProperty());
+            properties.add(SqlJdbcTypeUtils.withJdbcType(column.getProperty(), column));
         }
         IInsertExtractor extractor = getDialect().getInsertExtractor();
         return extractor.buildBatchInsert(metadata.getTableName(), columns, properties, records.size());
@@ -271,7 +275,9 @@ public class GenericSqlProvider {
             if (i > 0) {
                 builder.append(", ");
             }
-            builder.append("#{").append(paramName).append('.').append(columns.get(i).getProperty()).append('}');
+            builder.append("#{").append(paramName).append('.')
+                .append(SqlJdbcTypeUtils.withJdbcType(columns.get(i).getProperty(), columns.get(i)))
+                .append('}');
         }
         return builder.append(')').toString();
     }
@@ -322,7 +328,7 @@ public class GenericSqlProvider {
                 continue;
             }
             columnNames.add(SqlIdentifierUtils.column(column.getColumn()));
-            propertyNames.add(column.getProperty());
+            propertyNames.add(SqlJdbcTypeUtils.withJdbcType(column.getProperty(), column));
         }
         AssertUtil.isTrue(columnNames.isEmpty(), "更新" + metadata.getTableName()
             + "时除主键外没有任何参与SET的字段，无可更新内容");
@@ -432,7 +438,10 @@ public class GenericSqlProvider {
         try {
             return column.getField().get(entity);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("读取实体字段失败：" + column.getProperty(), e);
+            IllegalStateException error = new IllegalStateException(
+                I18nUtil.get("sql.entity.field.read.failed", column.getProperty()), e);
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 

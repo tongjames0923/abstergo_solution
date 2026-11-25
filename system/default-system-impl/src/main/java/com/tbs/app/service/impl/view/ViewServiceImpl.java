@@ -3,6 +3,7 @@ package com.tbs.app.service.impl.view;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
@@ -67,7 +68,8 @@ public class ViewServiceImpl implements IViewService {
                     result.put(propertyValue.getName(), value);
                 }
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException("属性值转换失败: " + propertyValue.getValue(), e);
+                AssertUtil.throwError(() -> new RuntimeException(
+                    I18nUtil.get("system.property.value.convert.failed", propertyValue.getValue()), e));
             }
         }
         return result;

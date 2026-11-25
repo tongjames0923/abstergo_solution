@@ -1,6 +1,6 @@
 import axios from 'axios'
 import request from '@/utils/request'
-import { getToken } from '@/utils/auth'
+import {getToken} from '@/utils/auth'
 import settings from '@/settings'
 import i18n from '@/i18n'
 
@@ -166,12 +166,17 @@ export function downloadObject(objectKey, bucket) {
 }
 
 /**
- * 构造公开下载码的免认证下载地址
+ * 构造公开下载码的免认证短链（nginx 将 /d/{code} 映射到后端公开下载接口）
+ * <p>
+ * 返回带当前站点域名的完整 URL，复制后可直接对外分享；不依赖 VUE_APP_BASE_API，
+ * 因此 staging 等环境前缀不同也不会生成失效链接。下载码为 URL 安全 Base64（[A-Za-z0-9_-]），可安全作为路径段。
+ * </p>
  * @param {string} code - 下载唯一码
- * @returns {string} 完整公开下载 URL
+ * @returns {string} 完整公开下载短链
  */
 export function buildPublicDownloadUrl(code) {
-  return process.env.VUE_APP_BASE_API + '/public/oss/download-code/download?code=' + encodeURIComponent(code)
+  const origin = typeof window === 'undefined' ? '' : window.location.origin
+  return origin + '/d/' + encodeURIComponent(code)
 }
 
 /**

@@ -1,6 +1,7 @@
 package com.tbs.sql.service;
 
 import com.tbs.common.error.AssertUtil;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.sql.metadata.EntityColumnMetadata;
 import com.tbs.sql.metadata.EntityMetadataExtractor;
 import com.tbs.sql.metadata.EntityTableMetadata;
@@ -124,7 +125,8 @@ public class BatchUpdateExecutor implements IBatchUpdateExecutor {
         try {
             InvocationHandler handler = Proxy.getInvocationHandler(mapperProxy);
             if (!(handler instanceof MapperProxy)) {
-                throw new IllegalStateException("批量更新的调用方不是MyBatis Mapper代理：" + handler.getClass().getName());
+                AssertUtil.throwError(() -> new IllegalStateException(
+                    I18nUtil.get("sql.batch.caller.not.mapper.proxy", handler.getClass().getName())));
             }
             Field field = mapperInterfaceField;
             if (field == null) {
@@ -134,7 +136,10 @@ public class BatchUpdateExecutor implements IBatchUpdateExecutor {
             }
             return ((Class<?>)field.get(handler)).getName();
         } catch (ReflectiveOperationException | IllegalArgumentException e) {
-            throw new IllegalStateException("批量更新无法解析当前Mapper接口类型，请确认方法经由MyBatis Mapper代理调用", e);
+            IllegalStateException error = new IllegalStateException(
+                I18nUtil.get("sql.batch.mapper.type.unresolved"), e);
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 
@@ -200,7 +205,10 @@ public class BatchUpdateExecutor implements IBatchUpdateExecutor {
         try {
             return idColumn.getField().get(entity);
         } catch (IllegalAccessException e) {
-            throw new IllegalStateException("读取实体主键失败：" + idColumn.getProperty(), e);
+            IllegalStateException error = new IllegalStateException(
+                I18nUtil.get("sql.entity.id.read.failed", idColumn.getProperty()), e);
+            AssertUtil.throwError(() -> error);
+            throw error;
         }
     }
 }

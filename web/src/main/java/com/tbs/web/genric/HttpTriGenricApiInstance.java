@@ -3,6 +3,7 @@ package com.tbs.web.genric;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.JsonUtils;
 import com.tbs.common.util.framework.SpringUtil;
@@ -141,7 +142,8 @@ public class HttpTriGenricApiInstance extends AbstractGenricApiInstance<Serializ
             } else {
                 log.warn("Triple HTTP调用失败, url={}, status={}, body={}", url, response.statusCode(),
                     response.body());
-                throw new RuntimeException("Triple HTTP调用失败: HTTP " + response.statusCode());
+                AssertUtil.throwError(() -> new RuntimeException(
+                    I18nUtil.get("web.generic.triple.http.failed", response.statusCode())));
             }
         } catch (FormattedRuntimeException e) {
             AssertUtil.isTrue(true).cause(e).throwIt();
