@@ -24,8 +24,7 @@ import java.util.Date;
  */
 @Entity
 @Table(name = "oss_download_code",
-    uniqueConstraints = {@UniqueConstraint(name = "uk_code", columnNames = "code")},
-    indexes = {@Index(name = "idx_flag", columnList = "flag")})
+    indexes = {@Index(name = "idx_code", columnList = "code"), @Index(name = "idx_flag", columnList = "flag")})
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
