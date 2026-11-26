@@ -1,8 +1,8 @@
 package com.tbs.logging.impl;
 
-import cn.hutool.core.date.DateUtil;
 import com.tbs.cache.expire.annotation.ExpireOn;
 import com.tbs.common.util.base.CollUtil;
+import com.tbs.common.util.time.TimeUtil;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
@@ -115,7 +115,7 @@ public class DbLogExtractor implements ILogExtractor {
     public List<String> getAllOperateTypes() {
         // 查询最近3个月的数据
         Date today = new Date();
-        Date threeMonthsAgo = DateUtil.offsetMonth(today, -3).toJdkDate();
+        Date threeMonthsAgo = TimeUtil.offsetMonth(today, -3);
 
         // 仅需 operateType 一列，投影排除 param/result/error 等 longtext 大字段，避免整行大字段回传
         var q = QueryEngine.getEntityQueryWrapper(new SystemOperateRecordEntity()).query().where()

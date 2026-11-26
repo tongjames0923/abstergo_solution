@@ -1,6 +1,7 @@
 package com.tbs.shared.pojo.criteria;
 
 import com.tbs.shared.pojo.entity.SystemTokenEntity;
+import com.tbs.sql.annotation.LogicDeleteEntity;
 import com.tbs.sql.annotation.condition.QueryField;
 import com.tbs.sql.annotation.mapping.QueryMapping;
 import com.tbs.sql.annotation.order.QueryOrderField;
@@ -25,6 +26,7 @@ import java.util.List;
  * @author abstergo
  */
 @Getter
+@LogicDeleteEntity(activeFlagValues = {1, -1, -2, -3})
 public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
     /**
      * 等值匹配的令牌字段 对应数据库中的token字段，使用EQUAL比较条件
@@ -160,7 +162,6 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
      */
     @QueryOrderField(mappedName = "create_time", order = OrderConstants.ORDERED_MODEL)
 
-
     private OrderedModel createTimeOrdered;
 
     /**
@@ -168,8 +169,16 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
      */
     @QueryOrderField(mappedName = "expire_time", order = OrderConstants.ORDERED_MODEL)
 
-
     private OrderedModel expireTimeOrdered;
+
+    /**
+     * 构造函数，初始化实体类
+     *
+     * @param entityClass 实体类
+     */
+    public CommonTokenQueryCriteria() {
+        super(SystemTokenEntity.class);
+    }
 
     /**
      * 设置创建时间排序模型
@@ -268,15 +277,6 @@ public class CommonTokenQueryCriteria extends DefaultEntityCriteria {
     public CommonTokenQueryCriteria setExpireTimeBefore(Date expireTimeBefore) {
         this.expireTimeBefore = expireTimeBefore;
         return this;
-    }
-
-    /**
-     * 构造函数，初始化实体类
-     *
-     * @param entityClass 实体类
-     */
-    public CommonTokenQueryCriteria() {
-        super(SystemTokenEntity.class);
     }
 
     public CommonTokenQueryCriteria setSessionIdEquals(String sessionIdEquals) {
