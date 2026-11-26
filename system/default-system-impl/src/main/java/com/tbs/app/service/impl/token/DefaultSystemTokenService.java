@@ -36,7 +36,7 @@ public class DefaultSystemTokenService
 
     @Override
     protected Integer getFlagDeleted() {
-        return 0;
+        return TokenStatusEnum.DELETED.getCode();
     }
 
     @Override
@@ -52,6 +52,8 @@ public class DefaultSystemTokenService
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         AssertUtil.isTrue(entity.getTokenType() == null).message("令牌类型不能为空")
             .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        var old = getMapper().query().where().equal(SystemTokenEntity::getToken, entity.getToken()).pour().fetchOne();
+        AssertUtil.isTrue(old != null).message("token已存在").errorLevel(ErrorLevelEnum.SYSTEM_ERROR).throwIt();
         entity.setFlag(TokenStatusEnum.ACTIVE.getCode());
         entity.setCreateTime(new Date());
         getMapper().insert(entity);
