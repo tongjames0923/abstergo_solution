@@ -57,6 +57,8 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
 
     /**
      * 标记
+     *
+     * @see com.tbs.web.enums.TokenStatusEnum
      */
     @Column(name = "flag")
     private Integer flag;
