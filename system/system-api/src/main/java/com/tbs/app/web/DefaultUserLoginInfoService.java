@@ -1,6 +1,5 @@
 package com.tbs.app.web;
 
-import cn.hutool.core.date.DateUtil;
 import com.tbs.app.service.user.ISystemUserService;
 import com.tbs.app.service.user.IUserIdentityService;
 import com.tbs.app.service.user.model.ISystemUserDetails;
@@ -15,6 +14,7 @@ import com.tbs.common.exception.FormattedRuntimeException;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.time.TimeUtil;
 import com.tbs.shared.enums.LoginInfoFlagEnum;
 import com.tbs.shared.mapper.LoginInfoMapper;
 import com.tbs.shared.pojo.entity.SystemLoginInfoEntity;
@@ -103,7 +103,7 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService im
      */
     IQueryBuilder<SystemLoginInfoEntity> getAvailableTokensQuery() {
         Date now = new Date();
-        Date availableTime = DateUtil.offsetDay(now, -28);
+        Date availableTime = TimeUtil.offsetDay(now, -28);
         return QueryEngine.getEntityQueryWrapper(SystemLoginInfoEntity.class).query().where()
             .greaterThanOrEqual(SystemLoginInfoEntity::getCreateTime, availableTime).pour();
     }
@@ -459,8 +459,8 @@ public class DefaultUserLoginInfoService extends AbstractUserLoginInfoService im
             // 如果创建时间都存在
             if (createTime1 != null && createTime2 != null) {
                 // 比较创建日期（年月日）
-                Date date1 = DateUtil.beginOfDay(createTime1);
-                Date date2 = DateUtil.beginOfDay(createTime2);
+                Date date1 = TimeUtil.beginOfDay(createTime1);
+                Date date2 = TimeUtil.beginOfDay(createTime2);
 
                 int dateCompare = date2.compareTo(date1); // 按创建日期降序排序
                 if (dateCompare != 0) {

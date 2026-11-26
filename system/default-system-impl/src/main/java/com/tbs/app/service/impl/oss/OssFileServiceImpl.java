@@ -1,6 +1,5 @@
 package com.tbs.app.service.impl.oss;
 
-import cn.hutool.core.date.DateUtil;
 import com.tbs.app.constant.FileProcessI18nConstant;
 import com.tbs.app.service.oss.IOssFileService;
 import com.tbs.app.service.oss.OssObjectStream;
@@ -10,6 +9,7 @@ import com.tbs.app.vo.UploadTaskProgressVO;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.time.TimeUtil;
 import com.tbs.oss.core.OssClient;
 import com.tbs.oss.core.ProgressListener;
 import com.tbs.oss.model.ListObjectsRequest;
@@ -303,7 +303,7 @@ public class OssFileServiceImpl implements IOssFileService {
      * @return 存储对象键
      */
     private String generateObjectKey(String originalFilename) {
-        String date = DateUtil.format(new Date(), "yyyyMMdd");
+        String date = TimeUtil.format(new Date(), "yyyyMMdd");
         String suffix = "";
         if (!StrUtil.isEmpty(originalFilename) && originalFilename.lastIndexOf('.') > 0) {
             suffix = originalFilename.substring(originalFilename.lastIndexOf('.'));

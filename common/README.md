@@ -497,7 +497,19 @@ boolean ok = JsonUtils.isJson(json);
 long millis = TimeUtil.getUtcTime();                    // UTC 毫秒时间戳
 long seconds = TimeUtil.getUtcTime(TimeUnit.SECONDS);   // 指定单位
 // 常量：DATE_FORMAT_yyyyMMddHHmmss_STR、DATE_FORMAT_yyyyMMddHHmm_STR 及对应 Formatter
+
+// 基于 Hutool DateUtil 封装：出入参均为 JDK 类型，返回的 Date 不会是 Hutool DateTime
+Date now = TimeUtil.now();
+Date weekAgo = TimeUtil.offsetDay(now, -7);             // 无需再手动 toJdkDate()
+Date monthStart = TimeUtil.beginOfMonth(now);
+String text = TimeUtil.format(now, "yyyyMMdd");
+Date parsed = TimeUtil.parse("2026-11-26", "yyyy-MM-dd");
+LocalDateTime dateTime = TimeUtil.parseLocalDateTime("2026-11-26 10:00:00", TimeUtil.DATE_FORMAT_yyyyMMddHHmmss_STR);
+long days = TimeUtil.between(weekAgo, now, ChronoUnit.DAYS);
 ```
+
+另有 `offsetSecond/Minute/Hour/Day/Week/Month/Year`、`begin|endOfDay`、`begin|endOfMonth`、
+`toLocalDateTime`/`toLocalDate`/`toDate`、`formatDateTime`、`isSameDay`、`isIn` 等方法，覆盖 Hutool 常用日期操作且对外不泄漏 Hutool 类型。
 
 #### 加密 - EncryptUitl / AESUtil / RSAUtil
 
