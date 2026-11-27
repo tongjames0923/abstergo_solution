@@ -15,6 +15,7 @@
 | [05-前端开发规范](docs/guideline/05-前端开发规范.md) | Vue 2 工程规范、API 封装、国际化、动态路由、组件开发约定、响应式适配（平板/手机） | 前端开发者 |
 | [06-部署与运维规范](docs/guideline/06-部署与运维规范.md) | Jenkins 流水线、Nginx 部署、Nacos 配置发布、Docker 基础设施 | 运维/全栈 |
 | [07-Code Review 检查清单](docs/guideline/07-Code-Review检查清单.md) | 后端/前端逐项检查清单（必须/建议/禁止三级），可直接用于人工与 AI 评审 | 评审者/AI |
+| [CRUD 控制器与前端默认能力开发指南](docs/crud-default-capabilities.md) | 后端 CRUD 控制器、前端表单/表格默认能力的设计思路、用法与使用规范 | 前后端开发者 |
 | [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md) | Go 侧独立 module 的实现、契约配置、类型口径、部署与验收 | Go 提供者开发者 / 运维 |
 
 ## 全局铁律（任何场景都必须遵守）
@@ -62,6 +63,11 @@
     对外方法签名、返回值与 DTO 字段**禁止出现 Hutool 特有类型**（`DateTime`、`DateUnit`、`DateField`、`DatePattern` 等），
     日期时间统一用 JDK `Date` / `LocalDateTime` / `LocalDate` / `long` / `String`。
     项目封装可能重写原方法语义（如 `StrUtil.format` 用 `{0}` 占位符，Hutool 原版为 `{}`），迁移时禁止机械替换 import。细则见 [02 分册 2.7](docs/guideline/02-中间件模块开发规范.md)。
+17. **默认能力优先（强制）**：项目已提供的默认能力，**能使用就使用默认能力**，禁止重复造轮子。
+    后端标准 CRUD 一律继承 `AbstractCrudController` 并使用服务模板，统一走 `AjaxResult` / `AssertUtil` / QueryEngine；
+    前端管理列表优先 `QuickUseManagementView` + `DynamicForm` + `DynamicTable`，请求统一走 `request.js`，响应式统一走 `ResponsiveMixin`。
+    只有默认能力确实无法满足时才允许定制，且必须通过配置项、props、插槽、服务钩子或覆写后调用 `super.*` 扩展，并在 MR 中说明理由；
+    **禁止复制默认实现另起一套**。能力与用法见 [CRUD 控制器与前端默认能力开发指南](docs/crud-default-capabilities.md)。
 
 ## AI 辅助开发使用说明
 
@@ -91,12 +97,13 @@ AI 助手在本项目中工作时：
 
 ---
 
-**版本**: 1.10.0　**最后更新**: 2026-11　**维护人**: abstergo
+**版本**: 1.12.0　**最后更新**: 2026-11　**维护人**: abstergo
 
 ## 变更记录
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 1.12.0 | 2026-11 | 新增全局铁律 17「默认能力优先」：项目已提供的默认能力能使用就使用，禁止复制默认实现；后端 CRUD 走 `AbstractCrudController` + 服务模板，前端管理页走 `QuickUseManagementView` + `DynamicForm` + `DynamicTable`，扩展走配置/插槽/钩子/`super.*` 并在 MR 说明原因；细则见 [CRUD 控制器与前端默认能力开发指南](docs/crud-default-capabilities.md) |
 | 1.11.0 | 2026-11 | AI 交付校验边界收紧：**AI 不主动执行编译/构建/lint**（`mvn compile`/`npm run lint`/`go build`/`go test` 等），由用户自行决定是否执行，仅用户明确要求时 AI 才运行；推翻 1.7.0/1.8.0/1.10.0 中「编译由 AI 执行确认」口径，未编译时交付结论标注「编译待用户自行执行」 |
 | 1.10.0 | 2026-11 | 新增 [Go 轻量提供者指南](docs/go-dubbo-provider-guide.md) 并纳入文档索引；铁律 1 增加「独立 Go module 轻量提供者」明确例外与能力边界；AI 交付校验边界的编译通过补入 Go 侧 `go build ./...` / 既有 `go test ./...` |
 | 1.9.0 | 2026-11 | 铁律 15 按评审意见修订：索引**声明入口唯一为 `@Table` 注解**（禁止绕过注解的手写 DDL）、**禁止任何唯一索引**（代替业务判重的索引不得出现）；**状态列必须建单列索引**、**小表不豁免**（推翻原两条）；新增「改实体结构/改查询必须复审索引」与增量更新原则，**删除索引只给建议、不主动 DROP**；细则见 03 分册 3.3.4 |
