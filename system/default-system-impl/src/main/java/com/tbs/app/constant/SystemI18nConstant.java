@@ -217,6 +217,8 @@ public final class SystemI18nConstant {
     public static final String VERSION_TYPE_REQUIRED = "version.type.required";
     /** 应用版本类型非法提示：应用版本类型非法 */
     public static final String VERSION_TYPE_INVALID = "version.type.invalid";
+    /** 复制新建时安装包文件复制失败提示 */
+    public static final String VERSION_CLONE_OSS_COPY_FAILED = "version.clone.oss.copy.failed";
     /** 应用版本平台为空校验提示：应用版本平台不能为空 */
     public static final String VERSION_PLATFORM_REQUIRED = "version.platform.required";
     /** 仅草稿状态可编辑提示：仅草稿状态的应用版本可编辑 */

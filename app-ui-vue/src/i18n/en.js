@@ -1179,6 +1179,8 @@ export default {
     copySuccess: 'Copied to clipboard',
     cloneVersion: 'Clone',
     cloneFrom: 'Cloned from {name}',
+    copyPackages: 'Copy Packages',
+    copyPackagesTip: 'The server creates an independent file copy for each package; the new version shares no files with the source',
     selectApp: 'Select app',
     helpTitle: 'User Guide',
     helpStep1Title: 'Create Version',

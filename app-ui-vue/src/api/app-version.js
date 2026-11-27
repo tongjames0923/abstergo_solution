@@ -27,6 +27,16 @@ export function saveVersion(data) {
   return request({ url: '/private/admin/app-version/save', method: 'post', data })
 }
 
+/** 基于已有版本复制新建，服务端复制安装包文件到新 key */
+export function cloneVersion(sourceId, data, copyPackages = true) {
+  return request({
+    url: `/private/admin/app-version/clone/${sourceId}`,
+    method: 'post',
+    params: { copyPackages },
+    data
+  })
+}
+
 /** 删除版本 */
 export function deleteVersion(id) {
   return request({ url: `/private/admin/app-version/delete/${id}`, method: 'post' })

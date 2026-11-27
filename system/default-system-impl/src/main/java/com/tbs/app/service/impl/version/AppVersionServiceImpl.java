@@ -2,26 +2,28 @@ package com.tbs.app.service.impl.version;
 
 import com.tbs.app.config.AppSettingProperty;
 import com.tbs.app.service.DefaultAuditService;
+import com.tbs.app.service.version.IAppPackageService;
 import com.tbs.app.service.version.IAppVersionService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
+import com.tbs.oss.core.OssClient;
+import com.tbs.oss.model.CopyObjectRequest;
 import com.tbs.shared.enums.AppVersionFlagEnum;
 import com.tbs.shared.enums.AppVersionTypeEnum;
 import com.tbs.shared.interfaces.service.AbstractLogicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
 import com.tbs.shared.mapper.version.AppVersionMapper;
+import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionEntity;
 import com.tbs.sql.service.QueryEngine;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -42,6 +44,10 @@ public class AppVersionServiceImpl
     private AppVersionMapper appVersionMapper;
     @Resource
     private AppSettingProperty property;
+    @Resource
+    private IAppPackageService appPackageService;
+    @Resource
+    private OssClient ossClient;
 
     @Override
     protected Class<? extends IDelegateInvoker> pageVoBuildType() {
@@ -223,6 +229,71 @@ public class AppVersionServiceImpl
             .notEqual(AppVersionEntity::getFlag, AppVersionFlagEnum.ARCHIVED.getCode()).pour().fetch();
         return versions.stream().map(AppVersionEntity::getAppKey).filter(StrUtil::isNotEmpty).distinct().sorted()
             .collect(Collectors.toList());
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public AppVersionEntity cloneVersion(Long sourceId, AppVersionEntity override, boolean copyPackages) {
+        AppVersionEntity source = getInstance().queryById(sourceId);
+        AssertUtil.isTrue(source == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(override == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        override.setId(null);
+        override.setFlag(AppVersionFlagEnum.DRAFT.getCode());
+        List<AppVersionEntity> saved = save(override);
+        AssertUtil.isTrue(saved.isEmpty()).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        AppVersionEntity target = saved.get(0);
+        if (!copyPackages) {
+            return target;
+        }
+        Map<String, String> copiedObjects = new LinkedHashMap<>();
+        try {
+            for (AppPackageEntity pkg : appPackageService.listByVersionId(sourceId)) {
+                AppPackageEntity copy = new AppPackageEntity();
+                copy.setVersionId(target.getId());
+                copy.setBucketName(pkg.getBucketName());
+                copy.setMd5(pkg.getMd5());
+                copy.setDownloadUrl(pkg.getDownloadUrl());
+                if (StrUtil.isNotEmpty(pkg.getObjectName())) {
+                    String targetKey = buildCopiedObjectKey(target.getId(), pkg.getObjectName());
+                    CopyObjectRequest.Builder builder = CopyObjectRequest.builder(pkg.getObjectName(), targetKey);
+                    if (StrUtil.isNotEmpty(pkg.getBucketName())) {
+                        builder.sourceBucketName(pkg.getBucketName()).targetBucketName(pkg.getBucketName());
+                    }
+                    ossClient.copyObject(builder.build());
+                    copiedObjects.put(targetKey, pkg.getBucketName());
+                    copy.setObjectName(targetKey);
+                }
+                appPackageService.save(copy);
+            }
+        } catch (RuntimeException e) {
+            log.error("复制安装包文件失败，sourceId={}, targetId={}", sourceId, target.getId(), e);
+            copiedObjects.forEach((key, bucket) -> {
+                try {
+                    ossClient.deleteObject(bucket, key);
+                } catch (RuntimeException cleanupError) {
+                    log.warn("清理复制失败的安装包对象失败，key={}", key, cleanupError);
+                }
+            });
+            AssertUtil.isTrue(true).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_CLONE_OSS_COPY_FAILED)
+                .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            return null;
+        }
+        return target;
+    }
+
+    /**
+     * 生成复制后的对象 key，保证新版本与源版本文件互不共享
+     *
+     * @param versionId 新版本ID
+     * @param sourceKey 源对象 key
+     * @return 新对象 key
+     */
+    private String buildCopiedObjectKey(Long versionId, String sourceKey) {
+        String fileName = sourceKey.contains("/") ? sourceKey.substring(sourceKey.lastIndexOf('/') + 1) : sourceKey;
+        return "app-package/" + versionId + "/" + UUID.randomUUID().toString().replace("-", "") + "_" + fileName;
     }
 
     /**

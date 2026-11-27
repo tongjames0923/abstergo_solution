@@ -79,7 +79,7 @@
     </div>
 
     <!-- 版本编辑弹窗 -->
-    <el-dialog :title="form.id ? $t('version.editVersion') : $t('version.addVersion')" :visible.sync="dialogVisible" width="600px" :close-on-click-modal="false" @close="handleDialogClose">
+    <el-dialog :title="cloneSourceId ? $t('version.cloneVersion') : (form.id ? $t('version.editVersion') : $t('version.addVersion'))" :visible.sync="dialogVisible" width="600px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="versionForm" :model="form" :rules="rules" label-width="100px">
         <el-form-item :label="$t('version.appKey')" prop="appKey">
           <!-- allow-create 支持直接输入新的应用标识创建首个版本 -->
@@ -120,6 +120,9 @@
         </el-form-item>
         <el-form-item :label="$t('version.buildInfo')">
           <el-input v-model="form.buildInfo" type="textarea" :rows="2" :placeholder="$t('version.buildInfoPh')" />
+        </el-form-item>
+        <el-form-item v-if="cloneSourceId" :label="$t('version.copyPackages')">
+          <el-checkbox v-model="copyPackages">{{ $t('version.copyPackagesTip') }}</el-checkbox>
         </el-form-item>
       </el-form>
       <div slot="footer">
@@ -169,6 +172,7 @@
 <script>
 import {
   archiveVersion,
+  cloneVersion,
   deleteVersion,
   getLatestReleased,
   getVersionDetail,
@@ -196,6 +200,7 @@ export default {
       quickStatus: '',
       quickStatuses: [0, 2, 1, -1, -2, -3],
       dialogVisible: false, saving: false,
+      cloneSourceId: null, copyPackages: true,
       form: this.defaultForm(),
       latestReleased: null,
       rules: {
@@ -276,16 +281,20 @@ export default {
     },
     handleAdd() {
       this.form = this.defaultForm()
+      this.cloneSourceId = null
+      this.copyPackages = true
       this.dialogVisible = true
       this.$nextTick(() => this.$refs.versionForm && this.$refs.versionForm.clearValidate())
     },
-    /** 基于现有版本快捷复制新建：预填 appKey/platform/versionType/releaseNote/buildInfo，清空 id/versionCode/versionName */
+    /** 基于现有版本复制新建：预填全部版本字段，候选版默认转为正式版，安装包由服务端复制到新 key */
     handleClone(row) {
       this.form = {
         id: null, appKey: row.appKey, versionCode: null, versionName: '',
-        versionType: row.versionType, platform: row.platform,
+        versionType: row.versionType === 4 ? 1 : row.versionType, platform: row.platform,
         releaseNote: row.releaseNote || '', buildInfo: row.buildInfo || ''
       }
+      this.cloneSourceId = row.id
+      this.copyPackages = true
       this.dialogVisible = true
       this.$nextTick(() => {
         this.$refs.versionForm && this.$refs.versionForm.clearValidate()
@@ -294,6 +303,8 @@ export default {
     },
     handleEdit(row) {
       this.form = { id: row.id, appKey: row.appKey, versionCode: row.versionCode, versionName: row.versionName, versionType: row.versionType, platform: row.platform, releaseNote: row.releaseNote || '', buildInfo: row.buildInfo || '' }
+      this.cloneSourceId = null
+      this.copyPackages = true
       this.dialogVisible = true
       this.$nextTick(() => this.$refs.versionForm && this.$refs.versionForm.clearValidate())
     },
@@ -306,7 +317,11 @@ export default {
       }
       this.saving = true
       try {
-        await saveVersion(this.form)
+        if (this.cloneSourceId) {
+          await cloneVersion(this.cloneSourceId, this.form, this.copyPackages)
+        } else {
+          await saveVersion(this.form)
+        }
         this.dialogVisible = false
         await this.loadVersions()
         this.$emit('version-changed')
@@ -372,6 +387,8 @@ export default {
     handleDialogClose() {
       this.$refs.versionForm && this.$refs.versionForm.resetFields()
       this.latestReleased = null
+      this.cloneSourceId = null
+      this.copyPackages = true
     }
   }
 }

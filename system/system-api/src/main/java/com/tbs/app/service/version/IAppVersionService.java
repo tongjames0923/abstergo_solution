@@ -85,4 +85,18 @@ public interface IAppVersionService extends IServiceTemplate<AppVersionEntity, L
      * @return 去重并按字典序排序的应用标识列表，无数据时返回空集合
      */
     List<String> listAppKeys();
+
+    /**
+     * 基于已有版本复制新建
+     * <p>
+     * 新版本为草稿，versionCode/versionName 由调用方指定；可选将源版本的安装包复制到新版本，
+     * 对象存储文件会复制到新 key，两个版本互不共享文件。
+     * </p>
+     *
+     * @param sourceId     来源版本ID
+     * @param override     新版本的字段覆盖值，id 会被忽略
+     * @param copyPackages 是否复制安装包
+     * @return 新建的版本实体
+     */
+    AppVersionEntity cloneVersion(Long sourceId, AppVersionEntity override, boolean copyPackages);
 }

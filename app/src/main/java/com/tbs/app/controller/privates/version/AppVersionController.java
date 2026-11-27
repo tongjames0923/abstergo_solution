@@ -83,6 +83,27 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     }
 
     /**
+     * 基于已有版本复制新建
+     *
+     * @param sourceId     来源版本ID
+     * @param entity       新版本字段覆盖值
+     * @param copyPackages 是否复制安装包
+     * @return 新建的版本实体
+     */
+    @PostMapping("clone/{sourceId}")
+    @AjaxResponseType(AppVersionEntity.class)
+    @Operation(summary = "复制新建版本", description = "基于已有版本复制新建草稿版本，可选复制安装包并生成独立对象文件")
+    @ApiResponse(responseCode = "200", description = "成功复制新建版本",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
+    public AjaxResult clone(
+        @Parameter(name = "sourceId", description = "来源版本ID", required = true) @PathVariable Long sourceId,
+        @Parameter(name = "entity", description = "新版本字段覆盖值", required = true) @RequestBody AppVersionEntity entity,
+        @Parameter(name = "copyPackages", description = "是否复制安装包") @RequestParam(defaultValue = "true") boolean copyPackages) {
+        return successResult(appVersionService.cloneVersion(sourceId, entity, copyPackages));
+    }
+
+    /**
      * 删除版本
      *
      * @param id 版本ID

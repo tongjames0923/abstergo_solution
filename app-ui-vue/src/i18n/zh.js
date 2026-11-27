@@ -1183,6 +1183,8 @@ export default {
     copySuccess: '已复制到剪贴板',
     cloneVersion: '复制新建',
     cloneFrom: '复制自 {name}',
+    copyPackages: '复制安装包',
+    copyPackagesTip: '服务端为每个安装包生成独立文件副本，新版本与来源版本不共享文件',
     selectApp: '选择应用',
     helpTitle: '使用帮助',
     helpStep1Title: '创建版本',
