@@ -31,6 +31,21 @@ public class UpdateInfo {
     private String action;
 
     /**
+     * 当前版本是否已废弃（已下线或已回滚）
+     */
+    private boolean currentVersionDeprecated;
+
+    /**
+     * 当前版本状态编码，已废弃时为 OFFLINE(-1) 或 ROLLED_BACK(-2)
+     */
+    private Integer currentVersionFlag;
+
+    /**
+     * 当前版本名称，已废弃时用于提示
+     */
+    private String currentVersionName;
+
+    /**
      * 最新版本号（服务端以字符串形式下发）
      */
     private String latestVersionCode;
@@ -83,6 +98,12 @@ public class UpdateInfo {
         UpdateInfo info = new UpdateInfo();
         info.needUpdate = dataNode.path("needUpdate").asBoolean(false);
         info.action = readText(dataNode, "action");
+        info.currentVersionDeprecated = dataNode.path("currentVersionDeprecated").asBoolean(false);
+        JsonNode currentFlagNode = dataNode.get("currentVersionFlag");
+        if (currentFlagNode != null && currentFlagNode.isNumber()) {
+            info.currentVersionFlag = currentFlagNode.asInt();
+        }
+        info.currentVersionName = readText(dataNode, "currentVersionName");
         info.latestVersionCode = readText(dataNode, "latestVersionCode");
         info.latestVersionName = readText(dataNode, "latestVersionName");
         info.releaseNote = readText(dataNode, "releaseNote");
@@ -167,6 +188,18 @@ public class UpdateInfo {
         return action;
     }
 
+    public boolean isCurrentVersionDeprecated() {
+        return currentVersionDeprecated;
+    }
+
+    public Integer getCurrentVersionFlag() {
+        return currentVersionFlag;
+    }
+
+    public String getCurrentVersionName() {
+        return currentVersionName;
+    }
+
     public String getLatestVersionCode() {
         return latestVersionCode;
     }
@@ -209,6 +242,8 @@ public class UpdateInfo {
     public String toString() {
         return "UpdateInfo{needUpdate=" + needUpdate
                 + ", action=" + action
+                + ", currentVersionDeprecated=" + currentVersionDeprecated
+                + ", currentVersionFlag=" + currentVersionFlag
                 + ", latestVersionCode=" + latestVersionCode
                 + ", latestVersionName=" + latestVersionName
                 + ", versionType=" + versionType

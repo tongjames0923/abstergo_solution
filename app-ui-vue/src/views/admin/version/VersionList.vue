@@ -79,7 +79,7 @@
     </div>
 
     <!-- 版本编辑弹窗 -->
-    <el-dialog :title="cloneSourceId ? $t('version.cloneVersion') : (form.id ? $t('version.editVersion') : $t('version.addVersion'))" :visible.sync="dialogVisible" width="600px" :close-on-click-modal="false" @close="handleDialogClose">
+    <el-dialog :title="cloneSourceId ? $t('version.cloneVersion') : (form.id ? $t('version.editVersion') : $t('version.addVersion'))" :visible.sync="dialogVisible" width="680px" :close-on-click-modal="false" @close="handleDialogClose">
       <el-form ref="versionForm" :model="form" :rules="rules" label-width="100px">
         <el-form-item :label="$t('version.appKey')" prop="appKey">
           <!-- allow-create 支持直接输入新的应用标识创建首个版本 -->
@@ -94,6 +94,20 @@
           <el-form-item :label="$t('version.versionName')" prop="versionName" class="form-row-item">
             <el-input v-model="form.versionName" :placeholder="$t('version.versionNamePh')" />
           </el-form-item>
+        </div>
+        <div class="field-helper-bar">
+          <div class="helper-group">
+            <span class="helper-label">{{ $t('version.versionCode') }}</span>
+            <el-button size="mini" type="text" :disabled="!!form.id || !latestReleased" @click="useSuggestedCode">{{ $t('version.suggestCode') }}</el-button>
+            <el-button size="mini" type="text" :disabled="!!form.id || !form.versionName" @click="codeFromName">{{ $t('version.codeFromName') }}</el-button>
+          </div>
+          <div class="helper-group">
+            <span class="helper-label">{{ $t('version.versionName') }}</span>
+            <el-button size="mini" type="text" :disabled="!suggestedVersionBase" @click="suggestVersionName('patch')">{{ $t('version.bumpPatch') }}</el-button>
+            <el-button size="mini" type="text" :disabled="!suggestedVersionBase" @click="suggestVersionName('minor')">{{ $t('version.bumpMinor') }}</el-button>
+            <el-button size="mini" type="text" :disabled="!suggestedVersionBase" @click="suggestVersionName('major')">{{ $t('version.bumpMajor') }}</el-button>
+            <el-button size="mini" type="text" :disabled="form.versionCode === null" @click="nameFromCode">{{ $t('version.nameFromCode') }}</el-button>
+          </div>
         </div>
         <div class="form-hint"><i class="el-icon-info" /> {{ latestHint }}</div>
         <div class="form-row">
@@ -217,6 +231,14 @@ export default {
     latestHint() {
       if (!this.latestReleased) return this.$t('version.latestNoVersion')
       return this.$t('version.latestHint', { name: this.latestReleased.versionName || '-', code: this.latestReleased.versionCode })
+    },
+    suggestedVersionBase() {
+      const base = this.parseVersionName(this.latestReleased && this.latestReleased.versionName)
+      return base ? { major: base.major, minor: base.minor, patch: base.patch } : null
+    },
+    versionPrefix() {
+      const base = this.parseVersionName(this.latestReleased && this.latestReleased.versionName)
+      return base ? base.prefix : ''
     }
   },
   watch: {
@@ -279,6 +301,55 @@ export default {
         console.error(e)
       }
     },
+    parseVersionName(name) {
+      if (typeof name !== 'string') return null
+      const parts = name.trim().match(/^([^\d]*)(\d+)\.(\d+)\.(\d+)([-+].*)?$/)
+      if (!parts) return null
+      return { prefix: parts[1], major: Number(parts[2]), minor: Number(parts[3]), patch: Number(parts[4]), suffix: parts[5] || '' }
+    },
+    useSuggestedCode() {
+      if (this.form.id) return
+      this.form.versionCode = ((this.latestReleased && this.latestReleased.versionCode) || 0) + 1
+    },
+    suggestVersionName(level) {
+      const base = this.suggestedVersionBase
+      if (!base) {
+        this.$message.warning(this.$t('version.versionNameNoBase'))
+        return
+      }
+      let parts
+      if (level === 'major') {
+        parts = [base.major + 1, 0, 0]
+      } else if (level === 'minor') {
+        parts = [base.major, base.minor + 1, 0]
+      } else {
+        parts = [base.major, base.minor, base.patch + 1]
+      }
+      this.form.versionName = `${this.versionPrefix}${parts.join('.')}`
+    },
+    codeFromName() {
+      const base = this.parseVersionName(this.form.versionName)
+      if (!base) {
+        this.$message.warning(this.$t('version.versionNameNoBase'))
+        return
+      }
+      if (base.minor > 9 || base.patch > 99) {
+        this.$message.warning(this.$t('version.versionNameOutOfRange'))
+        return
+      }
+      this.form.versionCode = base.major * 1000 + base.minor * 100 + base.patch
+    },
+    nameFromCode() {
+      const code = Number(this.form.versionCode)
+      if (!Number.isInteger(code) || code < 0) {
+        this.$message.warning(this.$t('version.versionCodeInvalid'))
+        return
+      }
+      const major = Math.floor(code / 1000)
+      const minor = Math.floor((code % 1000) / 100)
+      const patch = code % 100
+      this.form.versionName = `${this.versionPrefix}${major}.${minor}.${patch}`
+    },
     handleAdd() {
       this.form = this.defaultForm()
       this.cloneSourceId = null
@@ -288,8 +359,18 @@ export default {
     },
     /** 基于现有版本复制新建：预填全部版本字段，候选版默认转为正式版，安装包由服务端复制到新 key */
     handleClone(row) {
+      const base = this.parseVersionName(row.versionName)
+      let suggestedName = row.versionName || ''
+      if (base) {
+        suggestedName = row.versionType === 4 && base.suffix
+          ? `${base.prefix}${base.major}.${base.minor}.${base.patch}`
+          : `${base.prefix}${base.major}.${base.minor}.${base.patch + 1}`
+      }
+      const sourceCode = Number(row.versionCode) || 0
+      const latestCode = this.latestReleased && this.latestReleased.appKey === row.appKey
+        && this.latestReleased.platform === row.platform ? (Number(this.latestReleased.versionCode) || 0) : 0
       this.form = {
-        id: null, appKey: row.appKey, versionCode: null, versionName: '',
+        id: null, appKey: row.appKey, versionCode: Math.max(sourceCode, latestCode) + 1, versionName: suggestedName,
         versionType: row.versionType === 4 ? 1 : row.versionType, platform: row.platform,
         releaseNote: row.releaseNote || '', buildInfo: row.buildInfo || ''
       }
@@ -452,6 +533,36 @@ export default {
   }
 }
 
+.field-helper-bar {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: -4px 0 12px;
+  padding: 8px 10px;
+  background: var(--version-surface, #f8fafc);
+  border: 1px solid var(--version-line, #e2e8f0);
+  border-radius: 6px;
+}
+
+.helper-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  .helper-label {
+    flex-shrink: 0;
+    min-width: 56px;
+    font-size: 12px;
+    color: var(--version-muted, #64748b);
+  }
+
+  .el-button {
+    padding: 0;
+    font-size: 12px;
+  }
+}
+
 .build-info-block {
   margin: 0;
   white-space: pre-wrap;
@@ -477,7 +588,11 @@ export default {
 .form-row {
   display: flex;
   gap: 16px;
-  .form-row-item { flex: 1; }
+
+  .form-row-item {
+    flex: 1;
+    min-width: 0;
+  }
 }
 
 .success-text { color: #67c23a !important; }

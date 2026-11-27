@@ -151,6 +151,7 @@
       </el-form>
       <div v-if="checkResult" class="check-result">
         <el-alert :title="checkResult.needUpdate ? $t('version.needUpgrade') : $t('version.noNeedUpgrade')" :type="checkResult.needUpdate ? 'warning' : 'success'" show-icon :closable="false" />
+        <el-alert v-if="checkResult.currentVersionDeprecated" :title="$t('version.deprecatedCurrentVersion', { name: checkResult.currentVersionName || '-', status: statusLabel(checkResult.currentVersionFlag) })" type="error" show-icon :closable="false" style="margin-top:12px" />
         <el-alert v-if="checkResult.needUpdate && checkResult.versionType && checkResult.versionType !== 4" :title="$t('version.prereleaseCheckTip', { type: versionTypeLabel(checkResult.versionType) })" type="warning" show-icon :closable="false" style="margin-top:12px" />
         <el-descriptions v-if="checkResult.needUpdate" :column="1" border size="small" style="margin-top:12px">
           <el-descriptions-item :label="$t('version.checkLatestName')">
@@ -184,7 +185,7 @@ import {checkUpgrade, deletePolicy, disablePolicy, enablePolicy, queryPolicies, 
 
 export default {
   name: 'PolicyList',
-  inject: ['actionLabel', 'actionDesc', 'actionTagType', 'platformTagType', 'versionTypeLabel', 'copyText'],
+  inject: ['actionLabel', 'actionDesc', 'actionTagType', 'platformTagType', 'versionTypeLabel', 'statusLabel', 'copyText'],
   props: {
     appKeys: { type: Array, default: () => [] }
   },
