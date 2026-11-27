@@ -46,6 +46,16 @@ public class UpdateInfo {
     private String releaseNote;
 
     /**
+     * 最新版本类型，主数据为正式版，历史数据可能为null
+     */
+    private Integer versionType;
+
+    /**
+     * 非正式分支最新版本，老服务端不返回时为null
+     */
+    private PrereleaseUpdate prereleaseUpdate;
+
+    /**
      * 下载地址列表（旧格式兼容，优先从files聚合）
      */
     private List<String> downloadUrls = Collections.emptyList();
@@ -76,6 +86,14 @@ public class UpdateInfo {
         info.latestVersionCode = readText(dataNode, "latestVersionCode");
         info.latestVersionName = readText(dataNode, "latestVersionName");
         info.releaseNote = readText(dataNode, "releaseNote");
+        JsonNode versionTypeNode = dataNode.get("versionType");
+        if (versionTypeNode != null && versionTypeNode.isNumber()) {
+            info.versionType = versionTypeNode.asInt();
+        }
+        JsonNode prereleaseNode = dataNode.get("prereleaseUpdate");
+        if (prereleaseNode != null && prereleaseNode.isObject()) {
+            info.prereleaseUpdate = PrereleaseUpdate.parseFromJson(prereleaseNode);
+        }
         /*
          * 优先解析 files 数组（新格式）：
          * [{"name":"app.jar","downloadUrls":["http://..."]}, ...]
@@ -161,6 +179,14 @@ public class UpdateInfo {
         return releaseNote;
     }
 
+    public Integer getVersionType() {
+        return versionType;
+    }
+
+    public PrereleaseUpdate getPrereleaseUpdate() {
+        return prereleaseUpdate;
+    }
+
     public List<String> getDownloadUrls() {
         return downloadUrls;
     }
@@ -185,6 +211,8 @@ public class UpdateInfo {
                 + ", action=" + action
                 + ", latestVersionCode=" + latestVersionCode
                 + ", latestVersionName=" + latestVersionName
+                + ", versionType=" + versionType
+                + ", prereleaseUpdate=" + (prereleaseUpdate != null)
                 + ", files=" + files.size() + "个"
                 + ", downloadUrls=" + downloadUrls.size() + "个}";
     }

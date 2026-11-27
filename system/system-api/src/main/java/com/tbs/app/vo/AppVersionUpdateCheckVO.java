@@ -10,8 +10,7 @@ import java.util.List;
 /**
  * 应用版本升级检查结果视图
  * <p>
- * 面向客户端升级检查接口的返回视图，告知客户端是否需要升级、
- * 升级动作强度以及最新版本的基本信息与下载入口
+ * 面向客户端升级检查接口的返回视图，告知客户端是否需要升级、 升级动作强度以及最新版本的基本信息与下载入口
  *
  * @author abstergo
  */
@@ -47,6 +46,18 @@ public class AppVersionUpdateCheckVO implements Serializable {
      * 最新版本的更新日志
      */
     private String releaseNote;
+
+    /**
+     * 最新版本类型，仅用于向客户端标识是否为正式版
+     *
+     * @see com.tbs.shared.enums.AppVersionTypeEnum
+     */
+    private Integer versionType;
+
+    /**
+     * 预发布版本升级信息
+     */
+    private AppPrereleaseUpdateVO prereleaseUpdate;
 
     /**
      * 最新版本安装包的下载地址

@@ -5,6 +5,7 @@ import com.tbs.app.service.DefaultAuditService;
 import com.tbs.app.service.version.IAppPackageService;
 import com.tbs.app.service.version.IAppVersionCompatibilityPolicyService;
 import com.tbs.app.service.version.IAppVersionService;
+import com.tbs.app.vo.AppPrereleaseUpdateVO;
 import com.tbs.app.vo.AppVersionUpdateCheckVO;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
@@ -14,6 +15,8 @@ import com.tbs.common.util.framework.SpringUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.oss.core.OssClient;
 import com.tbs.shared.enums.AppVersionCompatibilityActionEnum;
+import com.tbs.shared.enums.AppVersionFlagEnum;
+import com.tbs.shared.enums.AppVersionTypeEnum;
 import com.tbs.shared.enums.CommonFlagEnum;
 import com.tbs.shared.interfaces.service.AbstractPhysicDeleteFullFeatureServiceTemplate;
 import com.tbs.shared.interfaces.service.IAuditService;
@@ -27,10 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static com.tbs.app.service.impl.CacheNamesConstants.APP_VERSION_COMPATIBILITY;
 
@@ -190,10 +190,40 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
         if (latest != null) {
             vo.setLatestVersionCode(latest.getVersionCode());
             vo.setLatestVersionName(latest.getVersionName());
+            vo.setVersionType(latest.getVersionType());
             vo.setReleaseNote(latest.getReleaseNote());
             vo.setDownloadUrls(resolveDownloadUrl(latest.getId()));
         }
+        AppVersionEntity prerelease = queryLatestPrereleased(appKey, platform);
+        if (prerelease != null) {
+            AppPrereleaseUpdateVO pre = new AppPrereleaseUpdateVO();
+            pre.setNeedUpdate(currentVersionCode != null && currentVersionCode < prerelease.getVersionCode());
+            pre.setVersionType(prerelease.getVersionType());
+            pre.setVersionCode(prerelease.getVersionCode());
+            pre.setVersionName(prerelease.getVersionName());
+            pre.setReleaseNote(prerelease.getReleaseNote());
+            pre.setDownloadUrls(resolveDownloadUrl(prerelease.getId()));
+            vo.setPrereleaseUpdate(pre);
+        }
         return vo;
+    }
+
+    /**
+     * 查询指定应用与平台下最新已发布的非正式版本
+     *
+     * @param appKey   应用标识
+     * @param platform 平台标识
+     * @return 最新非正式版本，不存在时返回null
+     */
+    private AppVersionEntity queryLatestPrereleased(String appKey, String platform) {
+        var qb = QueryEngine.getEntityQueryWrapper(new AppVersionEntity()).query();
+        qb.where().equal(AppVersionEntity::getAppKey, appKey)
+            .equal(AppVersionEntity::getPlatform, platform)
+            .equal(AppVersionEntity::getFlag, AppVersionFlagEnum.RELEASE.getCode())
+            .in(AppVersionEntity::getVersionType, Arrays.asList(AppVersionTypeEnum.ALPHA.getCode(),
+                AppVersionTypeEnum.BETA.getCode(), AppVersionTypeEnum.RC.getCode())).pour();
+        qb.getOrderSupport().ifPresent(order -> order.orderByDesc(AppVersionEntity::getVersionCode));
+        return qb.fetchOne();
     }
 
     /**

@@ -158,7 +158,7 @@ tbs:
 
 | 服务 | 能力 |
 |------|------|
-| `IAppVersionService` | 版本 CRUD + 状态流转：`DRAFT(0) → PENDING(2) → RELEASE(1) → OFFLINE(-1) → ARCHIVED(-3)`，`RELEASE` 可 `rollback` 至 `ROLLED_BACK(-2)`；`queryLatestReleased(appKey, platform)`、`listAppKeys()` |
+| `IAppVersionService` | 版本 CRUD + 状态流转：`DRAFT(0) → PENDING(2) → RELEASE(1) → OFFLINE(-1) → ARCHIVED(-3)`，`RELEASE` 可 `rollback` 至 `ROLLED_BACK(-2)`；`queryLatestReleased(appKey, platform)`（仅已发布正式版，历史 NULL 视为正式版）、`listAppKeys()` |
 | `IAppPackageService` | 安装包登记（`listByVersionId`），文件实体由 OSS 承担，本服务仅持存储坐标/下载地址 |
 | `IAppVersionCompatibilityPolicyService` | 跨应用版本兼容策略：`enablePolicy` / `disablePolicy` / `evaluateCompatibility(appKey, platform, currentVersionCode)`（先比对最新已发布版本，再匹配以该应用为目标的启用策略，取最高强制程度作为动作：强制更新/推荐更新/仅提示） |
 

@@ -104,6 +104,7 @@
         </div>
         <el-form-item :label="$t('version.minCompatVersion')" prop="minCompatVersion">
           <el-input-number v-model="form.minCompatVersion" :min="1" style="width:100%" />
+          <div class="form-tip">{{ $t('version.minCompatVersionTip') }}</div>
         </el-form-item>
         <el-form-item :label="$t('version.action')" prop="action">
           <el-radio-group v-model="form.action" class="action-radio-group">
@@ -150,8 +151,15 @@
       </el-form>
       <div v-if="checkResult" class="check-result">
         <el-alert :title="checkResult.needUpdate ? $t('version.needUpgrade') : $t('version.noNeedUpgrade')" :type="checkResult.needUpdate ? 'warning' : 'success'" show-icon :closable="false" />
+        <el-alert v-if="checkResult.needUpdate && checkResult.versionType && checkResult.versionType !== 4" :title="$t('version.prereleaseCheckTip', { type: versionTypeLabel(checkResult.versionType) })" type="warning" show-icon :closable="false" style="margin-top:12px" />
         <el-descriptions v-if="checkResult.needUpdate" :column="1" border size="small" style="margin-top:12px">
-          <el-descriptions-item :label="$t('version.checkLatestName')">{{ checkResult.latestVersionName || '-' }} ({{ checkResult.latestVersionCode }})</el-descriptions-item>
+          <el-descriptions-item :label="$t('version.checkLatestName')">
+            {{ checkResult.latestVersionName || '-' }} ({{ checkResult.latestVersionCode }})
+            <el-tag v-if="checkResult.versionType" type="success" size="mini">{{ versionTypeLabel(checkResult.versionType) }}</el-tag>
+          </el-descriptions-item>
+          <el-descriptions-item :label="$t('version.versionType')">
+            <el-tag :type="checkResult.versionType === 4 ? 'success' : 'warning'" size="mini">{{ checkResult.versionType ? versionTypeLabel(checkResult.versionType) : '-' }}</el-tag>
+          </el-descriptions-item>
           <el-descriptions-item :label="$t('version.checkAction')">
             <el-tag :type="actionTagType(checkResult.action)" size="mini">{{ actionLabel(checkResult.action) }}</el-tag>
           </el-descriptions-item>
@@ -176,7 +184,7 @@ import {checkUpgrade, deletePolicy, disablePolicy, enablePolicy, queryPolicies, 
 
 export default {
   name: 'PolicyList',
-  inject: ['actionLabel', 'actionDesc', 'actionTagType', 'platformTagType', 'copyText'],
+  inject: ['actionLabel', 'actionDesc', 'actionTagType', 'platformTagType', 'versionTypeLabel', 'copyText'],
   props: {
     appKeys: { type: Array, default: () => [] }
   },
@@ -188,6 +196,7 @@ export default {
       form: { id: null, sourceAppKey: '', sourceVersionLimit: false, sourceVersionCode: null, sourcePlatform: 'android', targetAppKey: '', targetPlatform: 'android', minCompatVersion: null, action: 1 },
       rules: {
         sourceAppKey: [{ required: true, message: this.$t('version.sourceAppKeyRequired'), trigger: 'change' }],
+        sourcePlatform: [{ required: true, message: this.$t('version.platformRequired'), trigger: 'change' }],
         targetAppKey: [{ required: true, message: this.$t('version.targetAppKeyRequired'), trigger: 'change' }],
         targetPlatform: [{ required: true, message: this.$t('version.targetPlatformRequired'), trigger: 'change' }],
         minCompatVersion: [{ required: true, message: this.$t('version.minCompatVersionRequired'), trigger: 'blur' }],

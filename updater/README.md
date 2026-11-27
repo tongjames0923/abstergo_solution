@@ -188,12 +188,21 @@ GUI 启动时会将该目录锚定到 **JAR 包所在目录**（`setLocalVersion
   "data": {
     "needUpdate": true,
     "action": "FORCE",
+    "versionType": 1,
     "latestVersionCode": "102",
     "latestVersionName": "v1.0.2",
     "releaseNote": "修复若干问题",
     "files": [
       { "name": "app.jar", "downloadUrls": ["https://a/app.jar", "https://b/app.jar"] }
-    ]
+    ],
+    "prereleaseUpdate": {
+      "needUpdate": true,
+      "versionType": 4,
+      "versionCode": "103",
+      "versionName": "v1.0.3-rc1",
+      "releaseNote": "候选版本",
+      "downloadUrls": ["https://a/app-rc.jar"]
+    }
   }
 }
 ```

@@ -5,11 +5,11 @@ import com.tbs.app.service.version.IAppVersionService;
 import com.tbs.app.vo.AppPackageVO;
 import com.tbs.app.vo.AppVersionDetailVO;
 import com.tbs.app.web.AbstractCrudController;
+import com.tbs.common.data.PageVO;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.pojo.criteria.AppVersionCriteria;
 import com.tbs.shared.pojo.entity.version.AppPackageEntity;
 import com.tbs.shared.pojo.entity.version.AppVersionEntity;
-import com.tbs.common.data.PageVO;
 import com.tbs.web.result.AjaxResult;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -17,10 +17,10 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -234,7 +234,7 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
      */
     @GetMapping("latest")
     @AjaxResponseType(AppVersionEntity.class)
-    @Operation(summary = "查询最新已发布版本", description = "查询指定应用与平台下的最新已发布版本")
+    @Operation(summary = "查询最新已发布正式版本", description = "查询指定应用与平台下的最新已发布正式版本，历史 NULL 类型视为正式版")
     @ApiResponse(responseCode = "200", description = "成功查询最新已发布版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.QUERY')")

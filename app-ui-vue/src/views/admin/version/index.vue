@@ -116,11 +116,11 @@ export default {
     },
     // ==================== 共享工具方法（通过 provide 注入子组件） ====================
     statusLabel(flag) {
-      const map = { 0: this.$t('version.statusDraft'), 1: this.$t('version.statusRelease'), 2: this.$t('version.statusPending'), '-1': this.$t('version.statusOffline'), '-2': this.$t('version.statusRolledBack') }
+      const map = { 0: this.$t('version.statusDraft'), 1: this.$t('version.statusRelease'), 2: this.$t('version.statusPending'), '-1': this.$t('version.statusOffline'), '-2': this.$t('version.statusRolledBack'), '-3': this.$t('version.statusArchived') }
       return map[flag] || flag
     },
     statusTagType(flag) {
-      const map = { 0: 'info', 1: 'success', 2: 'warning', '-1': '', '-2': 'danger' }
+      const map = { 0: 'info', 1: 'success', 2: 'warning', '-1': '', '-2': 'danger', '-3': 'info' }
       return map[flag] || 'info'
     },
     versionTypeLabel(type) {

@@ -5,8 +5,8 @@ import com.tbs.common.BaseEnum;
 /**
  * 应用版本类型枚举
  * <p>
- * 定义软件版本的发布阶段类型，编码值递增表示版本成熟度逐步提升。
- * 流转路径：ALPHA(1) -> BETA(2) -> RC(3) -> RELEASE(4)。
+ * 定义软件版本的发布阶段类型。编码沿用前端历史约定，与成熟度递增无关。
+ * 历史约定：RELEASE(1) -> BETA(2) -> ALPHA(3) -> RC(4)。
  *
  * @author abstergo
  */
@@ -14,9 +14,9 @@ public enum AppVersionTypeEnum implements BaseEnum<String> {
     /**
      * 版本发布阶段类型
      * <p>
-     * 编码值越大表示版本成熟度越高，RELEASE(4) 为最终正式发布版本
+     * 历史编码约定：RELEASE(1)、BETA(2)、ALPHA(3)、RC(4)
      */
-    ALPHA("alpha", 1), BETA("beta", 2), RC("rc", 3), RELEASE("release", 4);
+    ALPHA("alpha", 3), BETA("beta", 2), RC("rc", 4), RELEASE("release", 1);
 
     private String value;
     private int code;
@@ -25,7 +25,7 @@ public enum AppVersionTypeEnum implements BaseEnum<String> {
      * 构造版本类型枚举实例
      *
      * @param value 版本类型的英文标识，用于系统间交互
-     * @param code  版本类型编码，递增表示成熟度提升
+     * @param code  版本类型编码，沿用前端历史约定
      */
     AppVersionTypeEnum(String value, int code) {
         this.value = value;
@@ -45,7 +45,7 @@ public enum AppVersionTypeEnum implements BaseEnum<String> {
     /**
      * 获取版本类型编码
      *
-     * @return 版本类型的整数编码，值越大表示成熟度越高
+     * @return 版本类型的整数编码，沿用前端历史约定
      */
     @Override
     public Integer getCode() {

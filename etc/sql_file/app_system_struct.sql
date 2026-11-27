@@ -79,7 +79,7 @@ CREATE TABLE `app_version_info` (
   `update_time` datetime(6) DEFAULT NULL COMMENT '更新时间',
   `version_code` bigint DEFAULT NULL COMMENT '内部版本号（递增整数，用于版本比较）',
   `version_name` varchar(64) DEFAULT NULL COMMENT '外部版本名称（用户可见的版本号，如 1.2.0）',
-  `version_type` int DEFAULT NULL COMMENT '版本类型：1-alpha，2-beta，3-rc，4-release',
+  `version_type` int DEFAULT NULL COMMENT '版本类型：1-release，2-beta，3-alpha，4-rc',
   PRIMARY KEY (`id`),
   KEY `IDXj53bupwoxufnjtu17kpjk5gu2` (`app_key`,`version_code`),
   KEY `IDX9cd1jj6lob0wcwer68ly9akd0` (`version_name`),

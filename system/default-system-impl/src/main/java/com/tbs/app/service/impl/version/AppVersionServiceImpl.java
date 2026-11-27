@@ -209,7 +209,10 @@ public class AppVersionServiceImpl
     public AppVersionEntity queryLatestReleased(String appKey, String platform) {
         var qb = QueryEngine.getEntityQueryWrapper(new AppVersionEntity()).query();
         qb.where().equal(AppVersionEntity::getAppKey, appKey).equal(AppVersionEntity::getPlatform, platform)
-            .equal(AppVersionEntity::getFlag, AppVersionFlagEnum.RELEASE.getCode()).pour();
+            .equal(AppVersionEntity::getFlag, AppVersionFlagEnum.RELEASE.getCode())
+            .andInclude(sub -> sub
+                .equal(AppVersionEntity::getVersionType, AppVersionTypeEnum.RELEASE.getCode())
+                .or().isNull(AppVersionEntity::getVersionType)).pour();
         qb.getOrderSupport().ifPresent(order -> order.orderByDesc(AppVersionEntity::getVersionCode));
         return qb.fetchOne();
     }

@@ -68,11 +68,11 @@ public interface IAppVersionService extends IServiceTemplate<AppVersionEntity, L
     AppVersionEntity archive(Long id);
 
     /**
-     * 查询指定应用与平台下的最新已发布版本
+     * 查询指定应用与平台下的最新已发布正式版本，历史 NULL 类型视为正式版
      *
      * @param appKey   应用标识
      * @param platform 平台标识，如 ANDROID、IOS、WEB
-     * @return 最新已发布版本，不存在时返回 null
+     * @return 最新已发布正式版本，不存在时返回 null
      */
     AppVersionEntity queryLatestReleased(String appKey, String platform);
 

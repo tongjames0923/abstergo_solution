@@ -91,7 +91,7 @@ CREATE TABLE `app_version_info`  (
   `update_time` datetime(6) NULL DEFAULT NULL COMMENT '更新时间',
   `version_code` bigint NULL DEFAULT NULL COMMENT '内部版本号（递增整数，用于版本比较）',
   `version_name` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '外部版本名称（用户可见的版本号，如 1.2.0）',
-  `version_type` int NULL DEFAULT NULL COMMENT '版本类型：1-alpha，2-beta，3-rc，4-release',
+  `version_type` int NULL DEFAULT NULL COMMENT '版本类型：1-release，2-beta，3-alpha，4-rc',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `IDXj53bupwoxufnjtu17kpjk5gu2`(`app_key` ASC, `version_code` ASC) USING BTREE,
   INDEX `IDX9cd1jj6lob0wcwer68ly9akd0`(`version_name` ASC) USING BTREE,

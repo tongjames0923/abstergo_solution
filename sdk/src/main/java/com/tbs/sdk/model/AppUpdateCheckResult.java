@@ -1,8 +1,9 @@
 package com.tbs.sdk.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import java.util.List;
 import lombok.Data;
+
+import java.util.List;
 
 /**
  * 应用升级检查结果
@@ -41,6 +42,16 @@ public class AppUpdateCheckResult {
      * 最新版本的更新日志
      */
     private String releaseNote;
+
+    /**
+     * 最新版本类型，主数据固定为正式版（1-release），历史数据可能为null
+     */
+    private Integer versionType;
+
+    /**
+     * 非正式分支最新版本，老服务端不返回时为null
+     */
+    private AppPrereleaseUpdateResult prereleaseUpdate;
 
     /**
      * 安装包下载地址列表（多镜像容灾）
