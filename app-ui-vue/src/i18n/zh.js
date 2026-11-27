@@ -672,7 +672,20 @@ export default {
     edit: '编辑表单',
     delete: '删除表单',
     preview: '预览',
-    confirmDelete: '确定要删除该表单吗？'
+    confirmDelete: '确定要删除该表单吗？',
+    generateFromController: '从 Controller 生成',
+    generateFromControllerHint: '选择控制器后自动生成默认配置，确认后可继续微调',
+    controller: '控制器',
+    controllerPlaceholder: '请选择 CRUD 控制器',
+    scene: '生成场景',
+    sceneSearch: '查询表单',
+    sceneSave: '新增表单',
+    sceneEdit: '编辑表单',
+    generate: '生成配置',
+    generatePreview: '生成结果预览',
+    generateApply: '应用到编辑器',
+    generateConfirm: '应用生成的配置',
+    generateConfirmTip: '应用后将覆盖当前编辑区的配置，仍可继续手动微调。'
   },
 
   // 路由管理

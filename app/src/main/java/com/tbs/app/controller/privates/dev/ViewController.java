@@ -3,11 +3,13 @@ package com.tbs.app.controller.privates.dev;
 import com.tbs.app.config.property.GatewayProperty;
 import com.tbs.app.service.user.model.ISystemUserDetails;
 import com.tbs.app.service.user.model.impl.DefaultGrantedAuthority;
+import com.tbs.app.service.view.IFormConfigGenerateService;
 import com.tbs.app.service.view.IViewService;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.knife4j.annotation.AjaxResponseType;
 import com.tbs.shared.enums.SystemRoleTypeEnum;
+import com.tbs.shared.pojo.model.view.CrudControllerOption;
 import com.tbs.shared.pojo.model.view.FormConfig;
 import com.tbs.view.route.api.IViewRouteService;
 import com.tbs.view.route.impl.DatabaseViewRouteServiceImpl;
@@ -23,12 +25,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.annotation.Resource;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,6 +52,9 @@ public class ViewController extends BaseController {
 
     @Resource
     private IViewService viewService;
+
+    @Resource
+    private IFormConfigGenerateService formConfigGenerateService;
 
     @Resource
     private IViewRouteService viewRouteService;
@@ -91,6 +96,41 @@ public class ViewController extends BaseController {
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     public List<FormConfig> listForms(int pageNum, int pageSize) {
         return viewService.listForms(pageNum, pageSize);
+    }
+
+    /**
+     * 列出可生成默认配置的 CRUD 控制器
+     *
+     * @return 控制器选项列表
+     */
+    @GetMapping("/form/controllers")
+    @AjaxResponseType(value = List.class, genericArgs = {CrudControllerOption.class})
+    @Operation(summary = "列出可生成表单的控制器", description = "列出所有 AbstractCrudController 子类供 FormCreator 选择")
+    @ApiResponse(responseCode = "200", description = "成功获取控制器列表",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult listCrudControllers() {
+        return successResult(formConfigGenerateService.listControllers());
+    }
+
+    /**
+     * 根据 CRUD 控制器生成默认表单配置草稿
+     *
+     * @param controller 控制器类名或类级路径
+     * @param scene      场景：search / save / edit
+     * @return 默认表单配置草稿
+     */
+    @GetMapping("/form/generate")
+    @AjaxResponseType(FormConfig.class)
+    @Operation(summary = "生成默认表单配置", description = "根据控制器的泛型与字段元信息生成配置草稿")
+    @ApiResponse(responseCode = "200", description = "成功生成表单配置",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.accountActived")
+    public AjaxResult generateFormConfig(
+        @Parameter(name = "controller", description = "控制器类名或类级路径", required = true) @RequestParam String controller,
+        @Parameter(name = "scene", description = "生成场景：search / save / edit")
+        @RequestParam(defaultValue = "search") String scene) {
+        return successResult(formConfigGenerateService.generate(controller, scene));
     }
 
     /**

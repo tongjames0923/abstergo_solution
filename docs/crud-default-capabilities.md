@@ -111,13 +111,15 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
 | 渲染层 | `DynamicForm` | 按 `config.fields` 生成栅格表单；内置 5 种字段类型，其余交给 `customComponents` | 自定义页面中的查询区/编辑区 |
 | 数据展示层 | `DynamicTable` | 列配置、分页、排序、选择、操作列、加载状态；手机档自动切换 `MobileCardList` | 非标准 CRUD 的列表/详情表格 |
 | 字段/设备适配层 | `DynamicOptions`、`UrlImage`、`MobileCardList` | 动态选项、图片地址字段、手机卡片视图 | 一般不直接使用 |
-| 配置生产层 | `FormEditor` + `views/form/FormCreator.vue` | 可视化编辑并保存表单配置，形成“配一次、多处用”的闭环 | 需要新增/修改配置时 |
+| 配置生产层 | `FormEditor` + `views/form/FormCreator.vue` + 配置生成服务 | 从 CRUD 控制器元信息自动生成默认配置，可视化确认/微调后保存，形成“配一次、多处用”的闭环 | 需要新增/修改配置时 |
 
 `QuickUseManagementView` 设置 `inheritAttrs: false`，把 `$attrs` 全部透传给内部 `DynamicTable`，因此 `card-fields`、`title-field`、`selection`、`responsive` 等表格属性直接写在包装器上即可。
 
 ### 1.3.2 配置驱动与数据流
 
 表单配置的优先级（`DynamicFormWithApi.vue:149-199`）：**直接传 `config` > `loadConfigMethod(configName)` > Vuex `formConfigs/fetchFormConfig` > GET `apiUrl?key=configName`**。实际项目通常传 `configName`，由 Vuex 命中缓存或调用 `/private/view/form/{key}` 取配置。
+
+默认配置自动生成链路：`FormCreator` 先通过 `GET /private/view/form/controllers` 列出所有 `AbstractCrudController` 子类，再按类名或类级路径调用 `GET /private/view/form/generate?controller={name}&scene={search|save|edit}`。服务端用 `ResolvableType` 解析控制器的泛型 `Q`（查询场景）或 `T`（新增/编辑场景），按字段后缀与类型推导 `input` / `select` / `date-range` / `url-image`，返回可直接装载的 `FormConfig` 草稿；前端预览确认后再写入编辑器微调、保存。生成结果是草稿，**不替代人工确认**。
 
 查询链路：
 
@@ -364,7 +366,18 @@ export function adminQueryUser(data, pageNum, pageSize) {
 }
 ```
 
-**② 表单配置**：在 `settings.js` 登记配置键，通过 `FormCreator` 可视化生成或手工维护配置，再由 `formConfigs` 缓存。
+**② 表单配置**：优先在 `FormCreator` 点击「从 Controller 生成」，选择目标控制器与场景后得到默认配置，确认后再微调；当然也可以从零手工配置。配置键在 `settings.js` 登记，运行时由 `formConfigs` 缓存。
+
+```javascript
+// 与自动生成能力对应的 API 封装（src/api/view.js）
+import { listCrudControllers, generateFormConfigFromController } from '@/api/view'
+
+const options = await listCrudControllers()
+const configResponse = await generateFormConfigFromController(options.data[0].name, 'search')
+const formConfig = configResponse.data
+```
+
+生成的默认配置形如：
 
 ```javascript
 {
@@ -596,14 +609,14 @@ this.$refs.form.validate(valid => {
 
 **扩展字段类型**：传 `customComponents: { 'my-type': MyComponent }`，自定义组件需接收 `value` 并在值变化时触发 `input` 或 `change`；字段配置写 `{ prop: 'x', type: 'my-type' }`。
 
-**修改配置**：`FormCreator.vue` 使用 `FormConfigEditor` 编辑 → `getData()` 输出配置 → `saveFormConfig` / `updateFormConfig` 落库；`FormManager.vue` 可预览。新增字段类型时要同时改 `FormEditor/index.vue` 的类型分支和对应 `ConfigComponents/*Config.vue`。
+**生成与修改配置**：`FormCreator.vue` 点击「从 Controller 生成」→ 选择控制器/场景 → 生成配置草稿 → 预览 JSON → `$confirm` 确认应用到编辑器 → 在 `FormConfigEditor` 中微调 → `getData()` 输出配置 → `saveFormConfig` / `updateFormConfig` 落库；`FormManager.vue` 可预览。新增字段类型时要同时改生成器的类型推导规则、`FormEditor/index.vue` 的类型分支和对应 `ConfigComponents/*Config.vue`。
 
 **纯原生表格**：`views/admin/version/VersionList.vue` 展示了直接用 `el-table` 的场景；新列表页优先 `DynamicTable`，以便自动获得手机卡片视图。
 
 ## 2.3 端到端调用流程
 
 1. 后端登记 Controller 与四个端点，前端在 `src/api/{biz}.js` 封装 `query` / `save` / `delete`。
-2. 在 `settings.js` 登记查询/新增/编辑配置键，配置中包含与 `*Criteria` 字段一致的条件名。
+2. 用 `FormCreator` 的「从 Controller 生成」得到查询/新增/编辑配置草稿，确认微调后保存；在 `settings.js` 登记配置键，条件名与 `*Criteria` 字段保持一致。
 3. 页面用 `QuickUseManagementView` 组装；首次挂载触发表格 `loadData`，默认 `page=1, size=10`。
 4. 用户提交查询表单 → `searchForm` 更新 → 页码归 1 → `searchHandler(body, { pageNum, pageSize })` → 后端 `query`。
 5. 后端 `super.query` → Service `queryAndPage` → `PageVO` → `AjaxResult` → `request.js` → 表格显示。
@@ -747,4 +760,5 @@ this.$refs.form.validate(valid => {
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 1.1.0 | 2026-11 | 新增从 Controller 自动生成默认表单配置：`GET /private/view/form/controllers` + `GET /private/view/form/generate`，`FormCreator` 支持生成预览、确认应用与手动微调 |
 | 1.0.0 | 2026-11 | 初版：覆盖 CRUDController 与前端默认能力的设计思路、用法、使用规范 |

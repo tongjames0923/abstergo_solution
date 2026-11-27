@@ -17,6 +17,9 @@
           />
 
           <div class="config-actions">
+            <el-button type="warning" icon="el-icon-edit-outline" @click="openGenerateDialog">
+              {{ $t('form.generateFromController') }}
+            </el-button>
             <el-button type="primary" icon="el-icon-view" @click="previewForm">预览表单</el-button>
             <el-button type="success" icon="el-icon-document-checked" @click="saveForm">保存表单</el-button>
             <el-button type="info" icon="el-icon-refresh" @click="resetForm">重置配置</el-button>
@@ -95,13 +98,76 @@
         </div>
       </el-tab-pane>
     </el-tabs>
+
+    <el-dialog
+      :title="$t('form.generateFromController')"
+      :visible.sync="generateDialogVisible"
+      width="720px"
+      append-to-body
+      :close-on-click-modal="false"
+      class="generate-dialog"
+    >
+      <el-alert
+        :title="$t('form.generateFromControllerHint')"
+        type="info"
+        show-icon
+        class="generate-hint"
+      />
+
+      <div class="generate-controls">
+        <el-select
+          v-model="generateController"
+          filterable
+          :placeholder="$t('form.controllerPlaceholder')"
+          class="generate-controller"
+        >
+          <el-option
+            v-for="item in crudControllers"
+            :key="item.name"
+            :label="controllerOptionLabel(item)"
+            :value="item.name"
+          />
+        </el-select>
+        <el-select v-model="generateScene" class="generate-scene">
+          <el-option :label="$t('form.sceneSearch')" value="search" />
+          <el-option :label="$t('form.sceneSave')" value="save" />
+          <el-option :label="$t('form.sceneEdit')" value="edit" />
+        </el-select>
+        <el-button
+          type="primary"
+          :loading="generateLoading"
+          :disabled="!generateController"
+          @click="generateFormConfig"
+        >
+          {{ $t('form.generate') }}
+        </el-button>
+      </div>
+
+      <div v-if="generatedConfig" class="generate-preview">
+        <div class="generate-preview-title">{{ $t('form.generatePreview') }}</div>
+        <pre>{{ generatedConfigText }}</pre>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="generateDialogVisible = false">{{ $t('common.cancel') }}</el-button>
+        <el-button type="primary" :disabled="!generatedConfig" @click="applyGeneratedConfig">
+          {{ $t('form.generateApply') }}
+        </el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import Index from '@/components/FormEditor/index.vue'
 import DynamicForm from '@/components/DynamicForm/index.vue'
-import {getFormById, saveFormConfig, updateFormConfig} from '@/api/view'
+import {
+  generateFormConfigFromController,
+  getFormById,
+  listCrudControllers,
+  saveFormConfig,
+  updateFormConfig
+} from '@/api/view'
 
 export default {
   name: 'FormCreator',
@@ -122,7 +188,22 @@ export default {
       },
       previewConfig: null,
       formData: {},
-      collectedData: null
+      collectedData: null,
+      generateDialogVisible: false,
+      generateController: '',
+      generateScene: 'search',
+      crudControllers: [],
+      generatedConfig: null,
+      generateLoading: false
+    }
+  },
+  computed: {
+    /**
+     * 生成配置的 JSON 预览文本
+     * @returns {string} 格式化后的 JSON
+     */
+    generatedConfigText() {
+      return this.generatedConfig ? JSON.stringify(this.generatedConfig, null, 2) : ''
     }
   },
   created() {
@@ -156,6 +237,83 @@ export default {
         // 消息提示由后端统一控制
       } finally {
         this.loading = false
+      }
+    },
+
+    /**
+     * 控制器选项显示文本
+     * @param {Object} item - 控制器选项
+     * @returns {string} 显示文本
+     */
+    controllerOptionLabel(item) {
+      return item.path ? `${item.name}（${item.path}）` : item.name
+    },
+
+    /**
+     * 打开自动生成弹窗并加载控制器列表
+     * @returns {Promise} 加载结果
+     */
+    async openGenerateDialog() {
+      this.generateDialogVisible = true
+      if (this.crudControllers.length === 0) {
+        await this.loadCrudControllers()
+      }
+    },
+
+    /**
+     * 加载可生成配置的 CRUD 控制器
+     * @returns {Promise} 加载结果
+     */
+    async loadCrudControllers() {
+      try {
+        const response = await listCrudControllers()
+        this.crudControllers = Array.isArray(response.data) ? response.data : []
+        if (this.crudControllers.length > 0 && !this.generateController) {
+          this.generateController = this.crudControllers[0].name
+        }
+      } catch (error) {
+        // 消息提示由 request.js 统一处理
+      }
+    },
+
+    /**
+     * 根据所选控制器生成默认表单配置
+     * @returns {Promise} 生成结果
+     */
+    async generateFormConfig() {
+      this.generateLoading = true
+      try {
+        const response = await generateFormConfigFromController(this.generateController, this.generateScene)
+        this.generatedConfig = response.data || null
+      } catch (error) {
+        this.generatedConfig = null
+        // 消息提示由 request.js 统一处理
+      } finally {
+        this.generateLoading = false
+      }
+    },
+
+    /**
+     * 确认后将生成配置写入编辑器，用户可继续微调
+     * @returns {Promise} 应用结果
+     */
+    async applyGeneratedConfig() {
+      if (!this.generatedConfig) return
+      try {
+        await this.$confirm(
+          this.$t('form.generateConfirmTip'),
+          this.$t('form.generateConfirm'),
+          {
+            confirmButtonText: this.$t('common.confirm'),
+            cancelButtonText: this.$t('common.cancel'),
+            type: 'warning'
+          }
+        )
+        this.formConfig = JSON.parse(JSON.stringify(this.generatedConfig))
+        this.generateDialogVisible = false
+        this.activeTab = 'config'
+      } catch (error) {
+        // 用户取消应用
       }
     },
 
@@ -332,5 +490,46 @@ export default {
 .instructions-content li {
   margin-bottom: 8px;
   line-height: 1.6;
+}
+
+.generate-hint {
+  margin-bottom: 16px;
+}
+
+.generate-controls {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  max-width: 100%;
+}
+
+.generate-controller {
+  min-width: 240px;
+  max-width: 100%;
+}
+
+.generate-scene {
+  width: 160px;
+  max-width: 100%;
+}
+
+.generate-preview {
+  margin-top: 16px;
+}
+
+.generate-preview-title {
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.generate-preview pre {
+  padding: 12px;
+  border-radius: 4px;
+  background: #f5f7fa;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-height: 320px;
+  max-width: 100%;
+  overflow: auto;
 }
 </style>

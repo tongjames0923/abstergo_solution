@@ -668,7 +668,20 @@ export default {
     edit: 'Edit Form',
     delete: 'Delete Form',
     preview: 'Preview',
-    confirmDelete: 'Are you sure to delete this form?'
+    confirmDelete: 'Are you sure to delete this form?',
+    generateFromController: 'Generate from Controller',
+    generateFromControllerHint: 'Select a controller to generate a default config, then review and fine-tune it',
+    controller: 'Controller',
+    controllerPlaceholder: 'Select a CRUD controller',
+    scene: 'Scene',
+    sceneSearch: 'Search form',
+    sceneSave: 'Create form',
+    sceneEdit: 'Edit form',
+    generate: 'Generate config',
+    generatePreview: 'Generated config preview',
+    generateApply: 'Apply to editor',
+    generateConfirm: 'Apply generated config',
+    generateConfirmTip: 'Applying will replace the current draft in the editor. You can still fine-tune it afterwards.'
   },
 
   // Route Management

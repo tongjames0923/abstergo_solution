@@ -45,6 +45,31 @@ export function getFormById(id) {
   })
 }
 
+/**
+ * 列出可生成默认表单配置的 CRUD 控制器
+ * @returns {Promise} 控制器选项列表响应
+ */
+export function listCrudControllers() {
+  return request({
+    url: '/private/view/form/controllers',
+    method: 'get'
+  })
+}
+
+/**
+ * 根据 CRUD 控制器生成默认表单配置
+ * @param {string} controller - 控制器类名或类级路径
+ * @param {string} [scene=search] - 生成场景：search / save / edit
+ * @returns {Promise} 表单配置草稿响应
+ */
+export function generateFormConfigFromController(controller, scene = 'search') {
+  return request({
+    url: '/private/view/form/generate',
+    method: 'get',
+    params: { controller, scene }
+  })
+}
+
 export function getRoutes() {
   return request({
     url: '/private/view/routes',
