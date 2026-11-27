@@ -1,7 +1,7 @@
 package com.tbs.common;
 
 import com.tbs.common.error.AssertUtil;
-import com.tbs.common.i18n.I18nUtil;
+import com.tbs.common.error.ErrorLevelEnum;
 
 import java.util.Objects;
 
@@ -134,14 +134,10 @@ public class Feature {
      * @throws IllegalArgumentException 当id或description为空时抛出
      */
     public Feature(String id, String description) {
-        if (id == null || id.isEmpty()) {
-            AssertUtil.throwError(() ->
-                new IllegalArgumentException(I18nUtil.get("common.feature.id.required")));
-        }
-        if (description == null || description.isEmpty()) {
-            AssertUtil.throwError(() ->
-                new IllegalArgumentException(I18nUtil.get("common.feature.description.required")));
-        }
+        AssertUtil.isTrue(id == null || id.isEmpty()).i18n("common.feature.id.required")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(description == null || description.isEmpty()).i18n("common.feature.description.required")
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
         this.id = id;
         this.description = description;
     }

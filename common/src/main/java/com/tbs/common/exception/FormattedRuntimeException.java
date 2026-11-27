@@ -10,16 +10,15 @@ import com.tbs.common.util.base.StrUtil;
  * <p>
  * 支持消息格式化和国际化(i18n)的运行时异常类，实现了IExceptionLevel接口，可以设置异常级别。
  * <p>
- * 使用方式：
+ * 使用方式：业务校验统一走 {@link com.tbs.common.error.AssertUtil} 链式断言
  * <pre>
- * // 直接使用消息模板
- * throw new FormattedRuntimeException("用户{}不存在", userId);
+ * // 校验失败即抛出，文案走 i18n key
+ * AssertUtil.isTrue(user == null).i18n("user.not.found")
+ *     .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
  *
- * // 使用i18n key
- * throw FormattedRuntimeException.userInputErrorI18n("user.not.found");
- *
- * // 使用i18n key并带参数
- * throw FormattedRuntimeException.userInputErrorI18n("user.status.invalid", userStatus);
+ * // 需要构造异常并显式终止方法时
+ * AssertUtil.throwError(() -> new FormattedRuntimeException("user.not.found"));
+ * return null;
  * </pre>
  *
  * @author abstergo

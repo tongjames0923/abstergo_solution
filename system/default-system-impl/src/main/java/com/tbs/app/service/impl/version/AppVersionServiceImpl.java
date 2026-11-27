@@ -7,6 +7,8 @@ import com.tbs.app.service.version.IAppVersionService;
 import com.tbs.common.delegate.IDelegateInvoker;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.error.ErrorLevelEnum;
+import com.tbs.common.exception.FormattedRuntimeException;
+import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.base.StrUtil;
 import com.tbs.common.util.function.EnumUtil;
 import com.tbs.oss.core.OssClient;
@@ -277,8 +279,9 @@ public class AppVersionServiceImpl
                     log.warn("清理复制失败的安装包对象失败，key={}", key, cleanupError);
                 }
             });
-            AssertUtil.isTrue(true).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_CLONE_OSS_COPY_FAILED)
-                .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+            AssertUtil.throwError(() -> new FormattedRuntimeException(e,
+                I18nUtil.get(com.tbs.app.constant.SystemI18nConstant.VERSION_CLONE_OSS_COPY_FAILED))
+                .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR));
             return null;
         }
         return target;
