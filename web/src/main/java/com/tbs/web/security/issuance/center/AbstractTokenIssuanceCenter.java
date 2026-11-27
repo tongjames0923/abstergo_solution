@@ -1,9 +1,9 @@
 package com.tbs.web.security.issuance.center;
 
-import cn.hutool.core.date.DateUtil;
 import com.tbs.common.error.AssertUtil;
 import com.tbs.common.i18n.I18nUtil;
 import com.tbs.common.util.framework.SpringUtil;
+import com.tbs.common.util.time.TimeUtil;
 import com.tbs.web.config.property.WebAuthProperty;
 import com.tbs.web.enums.TokenStatusEnum;
 import com.tbs.web.enums.TokenTypeEnum;
@@ -354,7 +354,7 @@ public abstract class AbstractTokenIssuanceCenter implements ITokenIssuanceCente
     public Collection<ITokenModel> listSessions(String userName, Date beg, Date end) {
         AssertUtil.hasText(userName, I18nUtil.get(com.tbs.web.constant.WebI18nConstant.USER_NAME_REQUIRED));
         if (beg == null) {
-            beg = DateUtil.offsetDay(new Date(), -(28*6));
+            beg = TimeUtil.offsetDay(new Date(), -(28*6));
         }
         if (end == null) {
             end = new Date();

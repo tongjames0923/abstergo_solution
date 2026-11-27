@@ -20,8 +20,7 @@ import java.util.Date;
 @Table(name = "sys_token", indexes = {@Index(name = "ix_user", columnList = "user_name"),
     @Index(name = "ix_time", columnList = "create_time,update_time"), @Index(name = "ix_flag", columnList = "flag"),
     @Index(name = "ix_expire", columnList = "expire_time"), @Index(name = "ix_token_type", columnList = "token_type"),
-    @Index(name = "ix_session", columnList = "session_id")},
-    uniqueConstraints = {@UniqueConstraint(name = "uk_token", columnNames = {"token"})})
+    @Index(name = "ix_session", columnList = "session_id")})
 @Entity
 @ToString
 @Data
@@ -58,6 +57,8 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
 
     /**
      * 标记
+     *
+     * @see com.tbs.web.enums.TokenStatusEnum
      */
     @Column(name = "flag")
     private Integer flag;
@@ -92,7 +93,6 @@ public class SystemTokenEntity implements IBaseEntity<Long>, ICreateTimeAuditabl
 
     /**
      * 会话id
-     *
      */
     @Column(name = "session_id", length = 128)
     private String sessionId;

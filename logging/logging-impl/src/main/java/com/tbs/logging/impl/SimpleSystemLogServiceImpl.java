@@ -1,6 +1,5 @@
 package com.tbs.logging.impl;
 
-import cn.hutool.core.date.DateUtil;
 import com.tbs.app.service.log.ISystemLogService;
 import com.tbs.app.service.log.model.LogOperateTypeView;
 import com.tbs.common.data.PageVO;
@@ -8,11 +7,12 @@ import com.tbs.common.error.ErrorLevelEnum;
 import com.tbs.common.util.PageUtil;
 import com.tbs.common.util.base.CollUtil;
 import com.tbs.common.util.base.StrUtil;
+import com.tbs.common.util.time.TimeUtil;
 import com.tbs.logging.core.ILogExtractor;
 import com.tbs.logging.form.LoggingRecordExtractForm;
 import com.tbs.logging.vo.LogRecordVO;
-
 import jakarta.annotation.Resource;
+
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.*;
@@ -46,7 +46,7 @@ public class SimpleSystemLogServiceImpl implements ISystemLogService {
     @Override
     public List<LogOperateTypeView> getLogOperateTypeList(int lastDay) {
         Date today = new Date();
-        Date lastDayStart = DateUtil.offsetDay(today, -lastDay).toJdkDate();
+        Date lastDayStart = TimeUtil.offsetDay(today, -lastDay);
         var data = extractor.extract(new LoggingRecordExtractForm(null, lastDayStart, today, null, null));
 
         Map<String, LogOperateTypeView> dataMap = new HashMap<>();
