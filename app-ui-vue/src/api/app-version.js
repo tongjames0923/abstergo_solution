@@ -57,9 +57,14 @@ export function offlineVersion(id) {
   return request({ url: `/private/admin/app-version/offline/${id}`, method: 'post' })
 }
 
-/** 回滚版本 */
+/** 回滚版本（仅标记，不恢复旧版本） */
 export function rollbackVersion(id) {
   return request({ url: `/private/admin/app-version/rollback/${id}`, method: 'post' })
+}
+
+/** 回滚版本并恢复最近一个旧版本为已发布 */
+export function rollbackRestoreVersion(id) {
+  return request({ url: `/private/admin/app-version/rollback-restore/${id}`, method: 'post' })
 }
 
 /** 归档版本 */

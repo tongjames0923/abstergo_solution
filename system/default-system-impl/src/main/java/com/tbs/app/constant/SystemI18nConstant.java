@@ -231,6 +231,10 @@ public final class SystemI18nConstant {
     public static final String VERSION_STATUS_NOT_PENDING = "version.status.not.pending";
     /** 应用版本状态非已发布提示：应用版本状态非已发布 */
     public static final String VERSION_STATUS_NOT_RELEASE = "version.status.not.release";
+    /** 仅最新已发布版本可回滚提示 */
+    public static final String VERSION_ROLLBACK_NOT_LATEST = "version.rollback.not.latest";
+    /** 无可恢复旧版本提示 */
+    public static final String VERSION_ROLLBACK_NO_PREVIOUS = "version.rollback.no.previous";
     /** 应用版本状态非已下线提示：应用版本状态非已下线 */
     public static final String VERSION_STATUS_NOT_OFFLINE = "version.status.not.offline";
 

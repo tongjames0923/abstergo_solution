@@ -185,6 +185,7 @@ public class AppVersionServiceImpl
         return entity;
     }
 
+    @Deprecated
     @Transactional(rollbackFor = Exception.class)
     @Override
     public AppVersionEntity rollback(Long id) {
@@ -197,6 +198,38 @@ public class AppVersionServiceImpl
         entity.setFlag(AppVersionFlagEnum.ROLLED_BACK.getCode());
         getMapper().updateByPrimaryKey(entity);
         return entity;
+    }
+
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public AppVersionEntity rollbackAndRestore(Long id) {
+        AppVersionEntity current = getInstance().queryById(id);
+        AssertUtil.isTrue(current == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_NOT_EXISTS)
+            .errorLevel(ErrorLevelEnum.USER_INPUT_ERROR).throwIt();
+        AssertUtil.isTrue(!AppVersionFlagEnum.RELEASE.getCode().equals(current.getFlag()))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_STATUS_NOT_RELEASE)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        AppVersionEntity latest = queryLatestReleased(current.getAppKey(), current.getPlatform());
+        AssertUtil.isTrue(latest == null || !latest.getId().equals(current.getId()))
+            .i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_ROLLBACK_NOT_LATEST)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        var qb = QueryEngine.getEntityQueryWrapper(new AppVersionEntity()).query();
+        qb.where().equal(AppVersionEntity::getAppKey, current.getAppKey())
+            .equal(AppVersionEntity::getPlatform, current.getPlatform())
+            .lessThan(AppVersionEntity::getVersionCode, current.getVersionCode())
+            .in(AppVersionEntity::getFlag, Arrays.asList(AppVersionFlagEnum.RELEASE.getCode(),
+                AppVersionFlagEnum.OFFLINE.getCode(), AppVersionFlagEnum.ROLLED_BACK.getCode()))
+            .andInclude(sub -> sub.equal(AppVersionEntity::getVersionType, AppVersionTypeEnum.RELEASE.getCode())
+                .or().isNull(AppVersionEntity::getVersionType)).pour();
+        qb.getOrderSupport().ifPresent(order -> order.orderByDesc(AppVersionEntity::getVersionCode));
+        AppVersionEntity previous = qb.fetchOne();
+        AssertUtil.isTrue(previous == null).i18n(com.tbs.app.constant.SystemI18nConstant.VERSION_ROLLBACK_NO_PREVIOUS)
+            .errorLevel(ErrorLevelEnum.BUSINESS_LOGIC_ERROR).throwIt();
+        current.setFlag(AppVersionFlagEnum.ROLLED_BACK.getCode());
+        getMapper().updateByPrimaryKey(current);
+        previous.setFlag(AppVersionFlagEnum.RELEASE.getCode());
+        getMapper().updateByPrimaryKey(previous);
+        return current;
     }
 
     @Transactional(rollbackFor = Exception.class)

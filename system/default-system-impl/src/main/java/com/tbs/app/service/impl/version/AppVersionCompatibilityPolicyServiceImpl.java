@@ -187,6 +187,12 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
         AppVersionUpdateCheckVO vo = new AppVersionUpdateCheckVO();
         vo.setNeedUpdate(needUpdate);
         vo.setAction(strongestAction);
+        AppVersionEntity currentVersion = queryDeprecatedVersion(appKey, platform, currentVersionCode);
+        vo.setCurrentVersionDeprecated(currentVersion != null);
+        if (currentVersion != null) {
+            vo.setCurrentVersionFlag(currentVersion.getFlag());
+            vo.setCurrentVersionName(currentVersion.getVersionName());
+        }
         if (latest != null) {
             vo.setLatestVersionCode(latest.getVersionCode());
             vo.setLatestVersionName(latest.getVersionName());
@@ -206,6 +212,27 @@ public class AppVersionCompatibilityPolicyServiceImpl extends
             vo.setPrereleaseUpdate(pre);
         }
         return vo;
+    }
+
+    /**
+     * 查询客户端当前版本是否已下线或已回滚
+     *
+     * @param appKey           应用标识
+     * @param platform         平台标识
+     * @param currentVersionCode 客户端当前版本号
+     * @return 已废弃的版本记录，不存在时返回null
+     */
+    private AppVersionEntity queryDeprecatedVersion(String appKey, String platform, Long currentVersionCode) {
+        if (currentVersionCode == null) {
+            return null;
+        }
+        var qb = QueryEngine.getEntityQueryWrapper(new AppVersionEntity()).query();
+        qb.where().equal(AppVersionEntity::getAppKey, appKey)
+            .equal(AppVersionEntity::getPlatform, platform)
+            .equal(AppVersionEntity::getVersionCode, currentVersionCode)
+            .in(AppVersionEntity::getFlag, Arrays.asList(AppVersionFlagEnum.OFFLINE.getCode(),
+                AppVersionFlagEnum.ROLLED_BACK.getCode())).pour();
+        return qb.fetchOne();
     }
 
     /**

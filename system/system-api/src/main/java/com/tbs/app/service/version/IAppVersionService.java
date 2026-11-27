@@ -48,14 +48,28 @@ public interface IAppVersionService extends IServiceTemplate<AppVersionEntity, L
     AppVersionEntity offline(Long id);
 
     /**
-     * 回滚版本
+     * 回滚版本（仅标记，不恢复旧版本）
      * <p>
      * 将已发布状态的版本回滚，状态由 RELEASE 流转为 ROLLED_BACK
      *
      * @param id 版本ID
      * @return 流转后的版本实体
+     * @deprecated 使用 {@link #rollbackAndRestore(Long)}，新实现会将最近一个旧版本恢复为已发布
      */
+    @Deprecated
     AppVersionEntity rollback(Long id);
+
+    /**
+     * 回滚版本并恢复最近一个旧版本为已发布
+     * <p>
+     * 当前版本置为 ROLLED_BACK，同一应用/平台下版本号小于当前版本、且状态为
+     * 已发布/已下线/已回滚的正式版中，版本号最大的一条恢复为 RELEASE。
+     * 仅允许回滚当前最新已发布版本，且必须存在可恢复的旧版本。
+     *
+     * @param id 版本ID
+     * @return 流转后的当前版本实体
+     */
+    AppVersionEntity rollbackAndRestore(Long id);
 
     /**
      * 归档版本

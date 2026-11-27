@@ -193,19 +193,38 @@ public class AppVersionController extends AbstractCrudController<AppVersionEntit
     }
 
     /**
-     * 回滚版本
+     * 回滚版本（仅标记，不恢复旧版本）
      *
      * @param id 版本ID
      * @return 流转后的版本实体
+     * @deprecated 使用 {@code rollbackRestore/{id}}，新接口会恢复最近旧版本为已发布
      */
+    @Deprecated
     @PostMapping("rollback/{id}")
     @AjaxResponseType(AppVersionEntity.class)
-    @Operation(summary = "回滚版本", description = "将已发布状态的版本回滚")
+    @Operation(summary = "回滚版本", description = "将已发布状态的版本回滚，仅标记不恢复旧版本")
     @ApiResponse(responseCode = "200", description = "成功回滚版本",
         content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
     @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
     public AjaxResult rollback(@Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
         return successResult(appVersionService.rollback(id));
+    }
+
+    /**
+     * 回滚版本并恢复最近一个旧版本为已发布
+     *
+     * @param id 版本ID
+     * @return 流转后的当前版本实体
+     */
+    @PostMapping("rollback-restore/{id}")
+    @AjaxResponseType(AppVersionEntity.class)
+    @Operation(summary = "回滚并恢复旧版本", description = "将当前版本回滚，并把最近一个旧版本恢复为已发布")
+    @ApiResponse(responseCode = "200", description = "成功回滚并恢复旧版本",
+        content = @Content(mediaType = "application/json", schema = @Schema(implementation = AjaxResult.class)))
+    @PreAuthorize("@preAuthUtils.hasPermission('API.DEV.VERSION.SAVE')")
+    public AjaxResult rollbackRestore(
+        @Parameter(name = "id", description = "版本ID", required = true) @PathVariable Long id) {
+        return successResult(appVersionService.rollbackAndRestore(id));
     }
 
     /**

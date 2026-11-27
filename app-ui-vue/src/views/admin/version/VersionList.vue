@@ -179,7 +179,7 @@ import {
   offlineVersion,
   queryVersions,
   releaseVersion,
-  rollbackVersion,
+  rollbackRestoreVersion,
   saveVersion,
   submitVersion
 } from '@/api/app-version'
@@ -339,14 +339,14 @@ export default {
     async handleLifecycle(row, action) {
       try {
         await this.$confirm(this.$t('version.confirmLifecycle', { action: this.lifecycleLabel(action), name: row.versionName }), this.$t('common.tip'), { type: 'warning' })
-        const fnMap = { submit: submitVersion, release: releaseVersion, offline: offlineVersion, rollback: rollbackVersion, archive: archiveVersion }
+        const fnMap = { submit: submitVersion, release: releaseVersion, offline: offlineVersion, rollbackRestore: rollbackRestoreVersion, archive: archiveVersion }
         await fnMap[action](row.id)
         await this.loadVersions()
         this.$emit('version-changed')
       } catch (e) { if (e !== 'cancel') console.error(e) }
     },
     lifecycleLabel(action) {
-      const map = { submit: this.$t('version.submit'), release: this.$t('version.release'), offline: this.$t('version.offline'), rollback: this.$t('version.rollback'), archive: this.$t('version.archive') }
+      const map = { submit: this.$t('version.submit'), release: this.$t('version.release'), offline: this.$t('version.offline'), rollbackRestore: this.$t('version.rollbackRestore'), archive: this.$t('version.archive') }
       return map[action] || action
     },
     primaryAction(row) {
@@ -358,11 +358,11 @@ export default {
       return map[this.primaryAction(row)] || ''
     },
     rowCommands(row) {
-      const map = { 0: ['edit', 'clone', 'delete'], 1: ['clone', 'rollback'] }
+      const map = { 0: ['edit', 'clone', 'delete'], 1: ['clone', 'rollbackRestore'] }
       return map[row.flag] || []
     },
     commandLabel(cmd) {
-      const map = { edit: this.$t('common.edit'), clone: this.$t('version.cloneVersion'), rollback: this.$t('version.rollback'), archive: this.$t('version.archive'), delete: this.$t('common.delete') }
+      const map = { edit: this.$t('common.edit'), clone: this.$t('version.cloneVersion'), rollbackRestore: this.$t('version.rollbackRestore'), archive: this.$t('version.archive'), delete: this.$t('common.delete') }
       return map[cmd] || cmd
     },
     handleRowCommand(row, cmd) {

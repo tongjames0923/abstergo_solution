@@ -29,6 +29,21 @@ public class AppUpdateCheckResult {
     private Integer action;
 
     /**
+     * 当前版本是否已废弃（已下线或已回滚）
+     */
+    private Boolean currentVersionDeprecated;
+
+    /**
+     * 当前版本状态编码，已废弃时为 OFFLINE(-1) 或 ROLLED_BACK(-2)
+     */
+    private Integer currentVersionFlag;
+
+    /**
+     * 当前版本名称，已废弃时用于提示
+     */
+    private String currentVersionName;
+
+    /**
      * 最新已发布版本的内部版本号
      */
     private Long latestVersionCode;
