@@ -79,10 +79,15 @@ public class FormConfigGenerateServiceImpl implements IFormConfigGenerateService
     private static final String SUFFIX_LESS_THAN = "LessThan";
 
     /**
+     * 排序字段后缀，排序由表格处理，不生成到查询表单
+     */
+    private static final String SUFFIX_ORDER = "Order";
+
+    /**
      * 查询字段常见条件后缀
      */
     private static final List<String> CONDITION_SUFFIXES =
-        List.of("Equals", "Like", "In", "Start", "End", "Order");
+        List.of("Equals", "Like", "In", "Start", "End", SUFFIX_ORDER);
 
     /**
      * 查询表单标题 i18n key
@@ -262,7 +267,8 @@ public class FormConfigGenerateServiceImpl implements IFormConfigGenerateService
         for (Field field : sourceFields) {
             String prop = field.getName();
             boolean skip = SCENE_SEARCH.equals(scene)
-                ? SKIP_QUERY_FIELDS.contains(prop) : SKIP_ENTITY_FIELDS.contains(prop);
+                ? SKIP_QUERY_FIELDS.contains(prop) || prop.endsWith(SUFFIX_ORDER)
+                : SKIP_ENTITY_FIELDS.contains(prop);
             if (skip) {
                 continue;
             }

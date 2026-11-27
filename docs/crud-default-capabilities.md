@@ -119,7 +119,7 @@ public abstract class AbstractCrudController<T, K, Q extends IQueryCriteria> ext
 
 表单配置的优先级（`DynamicFormWithApi.vue:149-199`）：**直接传 `config` > `loadConfigMethod(configName)` > Vuex `formConfigs/fetchFormConfig` > GET `apiUrl?key=configName`**。实际项目通常传 `configName`，由 Vuex 命中缓存或调用 `/private/view/form/{key}` 取配置。
 
-默认配置自动生成链路：`FormCreator` 先通过 `GET /private/view/form/controllers` 列出所有 `AbstractCrudController` 子类，再按类名或类级路径调用 `GET /private/view/form/generate?controller={name}&scene={search|save|edit}`。服务端用 `ResolvableType` 解析控制器的泛型 `Q`（查询场景）或 `T`（新增/编辑场景），按字段后缀与类型推导 `input` / `select` / `date-range` / `url-image`，返回可直接装载的 `FormConfig` 草稿；前端预览确认后再写入编辑器微调、保存。生成结果是草稿，**不替代人工确认**。
+默认配置自动生成链路：`FormCreator` 先通过 `GET /private/view/form/controllers` 列出所有 `AbstractCrudController` 子类，再按类名或类级路径调用 `GET /private/view/form/generate?controller={name}&scene={search|save|edit}`。服务端用 `ResolvableType` 解析控制器的泛型 `Q`（查询场景）或 `T`（新增/编辑场景），按字段后缀与类型推导 `input` / `select` / `date-range` / `url-image`，并把 `xxxGreaterThan` / `xxxLessThan` 合并为 `xxxRange`；`xxxOrder` 等排序字段由表格处理，不生成到查询表单。返回可直接装载的 `FormConfig` 草稿，前端预览确认后再写入编辑器微调、保存。生成结果是草稿，**不替代人工确认**。
 
 查询链路：
 
