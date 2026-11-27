@@ -103,6 +103,8 @@
 | [必须] | 注解组合完整：`@Tag`、`@Operation`、`@ApiResponse`、`@AjaxResponseType`、`@Parameter` |
 | [必须] | 私有接口至少 `@PreAuthorize("@preAuthUtils.accountActived")`，管理接口按需加权限 |
 | [必须] | 返回统一 `successResult()/errorResult()`；继承 `BaseController` 并覆写 `getBusinessName()` |
+| [必须] | 标准 CRUD 继承 `AbstractCrudController` 并使用默认端点流程；**能使用就使用默认能力**，无理由不得重写 `get/save/delete/query` |
+| [禁止] | 复制默认 CRUD 实现另起一套；默认能力不足时未通过 `super.*` / 新增端点扩展且未在 MR 说明 |
 | [必须] | Form/VO 字段 `@Schema` 描述齐全，必填标 REQUIRED |
 | [必须] | 新增菜单/API 权限点已登记（type=1/2/3），前端 component 路径与 views 目录一致 |
 | [禁止] | Controller 内写业务校验、直接访问 Mapper |
@@ -162,8 +164,9 @@
 | [禁止] | 绕过 request.js 自建 axios；硬编码后端地址；硬编码业务菜单路由 |
 | [禁止] | Vue 3 语法混入；引入第二套 UI 框架；提交新增 console.log/debugger |
 | [禁止] | 页面内自行实现登录态/权限判断（应走 permission.js 与 utils/permission） |
+| [必须] | 标准 CRUD 管理页使用 `QuickUseManagementView` + `DynamicForm` + `DynamicTable` 默认能力，**能使用就使用默认能力**，无理由不得复制骨架 |
 | [建议] | 删除/危险操作有二次确认；列表页遵循 查询表单+表格+分页 标准结构 |
-| [建议] | 列表优先 `DynamicTable`（手机自动切卡片）；`el-descriptions` 手机档降为 1 列 |
+| [建议] | `el-descriptions` 手机档降为 1 列 |
 | [建议] | 样式使用 styles 变量；组件声明 PascalCase name；scoped 样式 |
 
 ## 7.10 配置与发布
@@ -195,6 +198,7 @@
 
 | 版本 | 时间 | 说明 |
 |------|------|------|
+| 1.18.0 | 2026-11 | 7.6/7.9 新增默认能力优先检查项：标准 CRUD 后端继承 `AbstractCrudController`、前端使用 `QuickUseManagementView` + `DynamicForm` + `DynamicTable`，禁止无理由复制默认实现；前端项由 [建议] 升为 [必须] |
 | 1.17.0 | 2026-11 | 7.1 编译检查项改为 **[禁止] AI 主动执行编译/构建/lint**：编译由用户自行决定是否执行，仅用户明确要求时 AI 才可运行；推翻 1.8.0「编译由 AI 执行确认」口径（配合总纲 1.11.0） |
 | 1.16.0 | 2026-11 | 7.2 新增工具类封装检查项：禁止直接 import Hutool 原始工具类、禁止对外暴露 Hutool 特有类型（配合总纲铁律 16 / 02 分册 2.7） |
 | 1.15.0 | 2026-11 | 7.8 新增 7.8.1「Go 轻量提供者」专项检查项：契约一致性、真实签名/POJO、仅 dubbo+hessian2、元数据与 group 坐标、契约兼容及禁止项；详见 [Go 轻量提供者指南](../go-dubbo-provider-guide.md) |
