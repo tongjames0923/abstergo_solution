@@ -1,39 +1,36 @@
 <template>
   <div class="version-list">
     <div class="tab-toolbar">
-      <div class="toolbar-main">
-        <div class="filter-row">
-          <el-select v-model="search.appKeyEquals" :placeholder="$t('version.appKey')" size="small" filterable clearable style="width:160px" @change="handleSearch">
-            <el-option v-for="key in appKeys" :key="key" :label="key" :value="key" />
-          </el-select>
-          <el-input v-model="search.versionNameLike" :placeholder="$t('version.versionName')" size="small" clearable style="width:160px" @keyup.enter.native="handleSearch" />
-          <el-select v-model="search.platformEquals" :placeholder="$t('version.platform')" size="small" clearable style="width:130px" @change="handleSearch">
-            <el-option label="Android" value="android" />
-            <el-option label="iOS" value="ios" />
-            <el-option label="Windows" value="windows" />
-            <el-option label="macOS" value="macos" />
-            <el-option label="Linux" value="linux" />
-          </el-select>
-          <el-select v-model="search.flagIn" :placeholder="$t('version.allStatus')" size="small" clearable multiple collapse-tags style="width:200px" @change="syncQuickStatus">
-            <el-option :label="$t('version.statusDraft')" :value="0" />
-            <el-option :label="$t('version.statusPending')" :value="2" />
-            <el-option :label="$t('version.statusRelease')" :value="1" />
-            <el-option :label="$t('version.statusOffline')" :value="-1" />
-            <el-option :label="$t('version.statusRolledBack')" :value="-2" />
-            <el-option :label="$t('version.statusArchived')" :value="-3" />
-          </el-select>
-          <el-button type="primary" icon="el-icon-search" size="small" @click="handleSearch">{{ $t('common.search') }}</el-button>
-          <el-button icon="el-icon-refresh-left" size="small" @click="handleReset">{{ $t('common.reset') }}</el-button>
-        </div>
-        <div class="quick-filter-row">
-          <span class="quick-filter-label">{{ $t('version.quickFilter') }}</span>
-          <el-radio-group v-model="quickStatus" size="mini" @change="handleQuickFilter">
-            <el-radio-button :label="''">{{ $t('version.allStatus') }}</el-radio-button>
-            <el-radio-button v-for="status in quickStatuses" :key="status" :label="status">{{ statusLabel(status) }}</el-radio-button>
-          </el-radio-group>
-        </div>
+      <div class="filter-row">
+        <el-select v-model="search.appKeyEquals" :placeholder="$t('version.appKey')" size="small" filterable clearable style="width:160px" @change="handleSearch">
+          <el-option v-for="key in appKeys" :key="key" :label="key" :value="key" />
+        </el-select>
+        <el-input v-model="search.versionNameLike" :placeholder="$t('version.versionName')" size="small" clearable style="width:160px" @keyup.enter.native="handleSearch" />
+        <el-select v-model="search.platformEquals" :placeholder="$t('version.platform')" size="small" clearable style="width:130px" @change="handleSearch">
+          <el-option label="Android" value="android" />
+          <el-option label="iOS" value="ios" />
+          <el-option label="Windows" value="windows" />
+          <el-option label="macOS" value="macos" />
+          <el-option label="Linux" value="linux" />
+        </el-select>
+        <el-select v-model="search.flagIn" :placeholder="$t('version.allStatus')" size="small" clearable multiple collapse-tags style="width:200px" @change="syncQuickStatus">
+          <el-option :label="$t('version.statusDraft')" :value="0" />
+          <el-option :label="$t('version.statusPending')" :value="2" />
+          <el-option :label="$t('version.statusRelease')" :value="1" />
+          <el-option :label="$t('version.statusOffline')" :value="-1" />
+          <el-option :label="$t('version.statusRolledBack')" :value="-2" />
+        </el-select>
+        <el-button type="primary" icon="el-icon-search" size="small" @click="handleSearch">{{ $t('common.search') }}</el-button>
+        <el-button icon="el-icon-refresh-left" size="small" @click="handleReset">{{ $t('common.reset') }}</el-button>
+        <el-button class="toolbar-add" type="primary" icon="el-icon-plus" size="small" @click="handleAdd">{{ $t('version.add') }}</el-button>
       </div>
-      <el-button class="toolbar-add" type="primary" icon="el-icon-plus" size="small" @click="handleAdd">{{ $t('version.add') }}</el-button>
+      <div class="quick-filter-row">
+        <span class="quick-filter-label">{{ $t('version.quickFilter') }}</span>
+        <el-radio-group v-model="quickStatus" size="mini" @change="handleQuickFilter">
+          <el-radio-button :label="''">{{ $t('version.allStatus') }}</el-radio-button>
+          <el-radio-button v-for="status in quickStatuses" :key="status" :label="status">{{ statusLabel(status) }}</el-radio-button>
+        </el-radio-group>
+      </div>
     </div>
 
     <el-table v-loading="loading" :data="list" :empty-text="$t('version.emptyList')" stripe border style="width:100%;margin-top:12px" size="small">
@@ -59,18 +56,20 @@
       <el-table-column prop="createTime" :label="$t('version.createTime')" width="155">
         <template slot-scope="{ row }">{{ formatTime(row.createTime) }}</template>
       </el-table-column>
-      <el-table-column :label="$t('common.operation')" min-width="220" fixed="right">
+      <el-table-column :label="$t('common.operation')" min-width="200" align="center">
         <template slot-scope="{ row }">
-          <el-button size="mini" type="text" @click="openDetail(row)"><i class="el-icon-view" /> {{ $t('version.detail') }}</el-button>
-          <el-button v-if="primaryAction(row)" size="mini" type="text" class="success-text" @click="handleLifecycle(row, primaryAction(row))">
-            <i :class="primaryActionIcon(row)" /> {{ lifecycleLabel(primaryAction(row)) }}
-          </el-button>
-          <el-dropdown v-if="rowCommands(row).length" size="mini" trigger="click" @command="cmd => handleRowCommand(row, cmd)">
-            <el-button size="mini" type="text">{{ $t('version.moreActions') }}<i class="el-icon-arrow-down el-icon--right" /></el-button>
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item v-for="cmd in rowCommands(row)" :key="cmd" :command="cmd" :divided="cmd === 'delete'">{{ commandLabel(cmd) }}</el-dropdown-item>
-            </el-dropdown-menu>
-          </el-dropdown>
+          <div class="row-actions">
+            <el-button size="mini" type="text" @click="openDetail(row)"><i class="el-icon-view" /> {{ $t('version.detail') }}</el-button>
+            <el-button v-if="primaryAction(row)" size="mini" type="text" class="success-text" @click="handleLifecycle(row, primaryAction(row))">
+              <i :class="primaryActionIcon(row)" /> {{ lifecycleLabel(primaryAction(row)) }}
+            </el-button>
+            <el-dropdown v-if="rowCommands(row).length" size="mini" trigger="click" @command="cmd => handleRowCommand(row, cmd)">
+              <el-button size="mini" type="text">{{ $t('version.moreActions') }}<i class="el-icon-arrow-down el-icon--right" /></el-button>
+              <el-dropdown-menu slot="dropdown">
+                <el-dropdown-item v-for="cmd in rowCommands(row)" :key="cmd" :command="cmd" :divided="cmd === 'delete'">{{ commandLabel(cmd) }}</el-dropdown-item>
+              </el-dropdown-menu>
+            </el-dropdown>
+          </div>
         </template>
       </el-table-column>
     </el-table>
@@ -212,7 +211,7 @@ export default {
       loading: false, list: [], total: 0, page: 1, pageSize: 10,
       search: { appKeyEquals: '', versionNameLike: '', platformEquals: '', flagIn: [] },
       quickStatus: '',
-      quickStatuses: [0, 2, 1, -1, -2, -3],
+      quickStatuses: [0, 2, 1, -1, -2],
       dialogVisible: false, saving: false,
       cloneSourceId: null, copyPackages: true,
       form: this.defaultForm(),
@@ -485,20 +484,12 @@ export default {
 
 .tab-toolbar {
   display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.toolbar-main {
-  display: flex;
   flex-direction: column;
   gap: 8px;
-  min-width: 0;
 }
 
 .toolbar-add {
+  margin-left: auto;
   flex-shrink: 0;
 }
 
@@ -577,6 +568,14 @@ export default {
   align-items: center;
   gap: 10px;
   flex-wrap: wrap;
+}
+
+.row-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0 4px;
 }
 
 .pagination-wrapper {
